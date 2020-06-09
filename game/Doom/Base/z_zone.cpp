@@ -5,12 +5,16 @@
 #include "PsxVm/PsxVm.h"
 
 #include <cstring>
+#include <memory>
 
 // The minimum size that a memory block must be
 static constexpr int32_t MINFRAGMENT = 64;
 
 // Size of the first two fields of the memory zone
 static constexpr size_t MEMZONE_HEADER_SIZE = offsetof(memzone_t, blocklist);
+
+// PC-PSX: the entire heap memory used by the game
+static std::unique_ptr<std::byte[]> gZoneHeap;
 
 // The main (and only) memory zone used by PSX DOOM
 memzone_t* gpMainMemZone;
@@ -30,9 +34,17 @@ void Z_Init() noexcept {
     constexpr uint32_t StackStartAddr = StackEndAddr - StackSize;
     constexpr uint32_t AlignedHeapSize = (StackStartAddr - WrappedHeapStartAddr + 3) & 0xFFFFFFFC;
 
-    // Setup and save the main memory zone (the only zone)
+    // PC-PSX: allocate the native heap for the application
+    //
     // FIXME: temporarily doubling the available heap space to accomodate larger structs due to 64-bit pointers
-    gpMainMemZone = Z_InitZone(vmAddrToPtr<void>(AlignedHeapStartAddr), AlignedHeapSize * 2);
+    // This setting should be handled properly in EngineLimits.h.
+    gZoneHeap.reset(new std::byte[AlignedHeapSize * 2]);
+
+    // Setup and save the main memory zone (the only zone)
+    //
+    // FIXME: temporarily doubling the available heap space to accomodate larger structs due to 64-bit pointers
+    // This setting should be handled properly in EngineLimits.h.
+    gpMainMemZone = Z_InitZone(gZoneHeap.get(), AlignedHeapSize * 2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
