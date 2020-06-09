@@ -32,11 +32,6 @@ static SDL_GameController*  gpGameController;
 static SDL_Joystick*        gpJoystick;
 static SDL_JoystickID       gJoystickId;
 
-namespace PsxVm {
-    // Address to function lookup for the VM
-    extern std::map<uint32_t, VmFunc> gFuncTable;
-}
-
 // Keys for input handling
 const std::string gPadBtnKey_Up = "controller/1/dpad_up";
 const std::string gPadBtnKey_Down = "controller/1/dpad_down";
@@ -92,23 +87,15 @@ static void rescanGameControllers() noexcept {
 // Setup and clear pointers for the VM environment
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void setupVmPointers() noexcept {
-    // System devices
     gpSystem = gSystem.get();
     gpGpu = gpSystem->gpu.get();
     gpSpu = gpSystem->spu.get();
     gpCdrom = gpSystem->cdrom.get();
     gpRam = gpSystem->ram.data();
     gpScratchpad = gpSystem->scratchpad.data();
-
-    // Native function to VM addresses
-    for (const auto& addrFuncPair : PsxVm::gFuncTable) {
-        gNativeFuncToVmAddr[(void*) addrFuncPair.second] = addrFuncPair.first;
-    }
 }
 
 static void clearVmPointers() noexcept {
-    gNativeFuncToVmAddr.clear();
-
     gpScratchpad = nullptr;
     gpRam = nullptr;
     gpCdrom = nullptr;
@@ -327,14 +314,4 @@ void PsxVm::submitGpuPrimitive(const void* const pPrim) noexcept {
         --dataWordsLeft;
         gpGpu->writeGP0(dataWord);
     }
-}
-
-VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {
-    auto iter = gFuncTable.find(addr);
-    return (iter != gFuncTable.end()) ? iter->second : nullptr;
-}
-
-uint32_t PsxVm::getNativeFuncVmAddr(void* const pFunc) noexcept {
-    auto iter = gNativeFuncToVmAddr.find(pFunc);
-    return (iter != gNativeFuncToVmAddr.end()) ? iter->second : 0;
 }

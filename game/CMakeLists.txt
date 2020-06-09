@@ -152,7 +152,6 @@ set(SOURCE_FILES
     "PcPsx/Video.cpp"
     "PcPsx/Video.h"
     "PsxVm/PsxVm.h"
-    "PsxVm/PsxVm_FuncTable.cpp"
     "PsxVm/PsxVm_VmControl.cpp"
     "PsxVm/PsxVm_VmInterface.cpp"
     "PsyQ/LIBAPI.cpp"

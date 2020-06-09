@@ -54,13 +54,6 @@ namespace PsxVm {
     // Updates inputs to the emulator from real inputs on the host machine
     void updateInput() noexcept;
 
-    // Lookup the function pointer to call for a given address
-    VmFunc getVmFuncForAddr(const uint32_t addr) noexcept;
-
-    // Give the PSX VM address for the given native C++ function.
-    // Will return '0' if the native function is not mapped to a VM address.
-    uint32_t getNativeFuncVmAddr(void* const pFunc) noexcept;
-
     // Get the button bits for the controller directly, bypassing emulation
     uint16_t getControllerButtonBits() noexcept;
 
