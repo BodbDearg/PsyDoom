@@ -27,14 +27,14 @@ int main(const int argc, const char** const argv) noexcept {
             std::printf("'Doom.cue' not found at current PsyDoom working directory! Changing PsyDoom working dir to: %s\n", appFolder.path.UTF8String);
             [fileMgr changeCurrentDirectoryPath: appFolder.path];
         }
-
+        
         // Parse command line arguments
         ProgArgs::init(argc, argv);
     
-        // Initialize the PSX VM using the NTSC-U BIOS, NTSC-U PSXDOOM.EXE and the CDROM .cue file
-        if (!PsxVm::init("PSXDOOM.EXE", "Doom.cue")) {
+        // Initialize the PSX VM using the NTSC-U PSX Doom disc (supplied as a .cue file).
+        // TODO: make this path configurable.
+        if (!PsxVm::init("Doom.cue"))
             return 1;
-        }
         
         // Initialize the modding manager
         ModMgr::init();

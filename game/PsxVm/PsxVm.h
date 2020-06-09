@@ -40,8 +40,7 @@ namespace PsxVm {
     extern device::cdrom::CDROM*    gpCdrom;
     extern uint8_t*                 gpScratchpad;       // Cache used as fast RAM (1 KiB) (TODO: make this a native app buffer)
 
-    // Initialize the VM with the original Playstation DOOM .EXE and CD file path (.cue format)
-    bool init(const char* const doomExePath, const char* const doomCdCuePath) noexcept;
+    bool init(const char* const doomCdCuePath) noexcept;
     void shutdown() noexcept;
 
     // Updates inputs to the emulator from real inputs on the host machine

@@ -101,7 +101,7 @@ static void clearVmPointers() noexcept {
     gpSystem = nullptr;
 }
 
-bool PsxVm::init(const char* const doomExePath, const char* const doomCdCuePath) noexcept {
+bool PsxVm::init(const char* const doomCdCuePath) noexcept {
     // Create a new system and setup vm pointers
     gSystem.reset(new System());
     System& system = *gSystem;
@@ -118,23 +118,8 @@ bool PsxVm::init(const char* const doomExePath, const char* const doomCdCuePath)
         FATAL_ERROR_F(
             "Couldn't open the .cue disc descriptor '%s'!\n"
             "Is it present in the current working directory?\n"
-            "This *MUST* be the .cue file for the US/NTSC-U 'Greatest Hits' version of PSX Doom (SLUS-00077).",
+            "This *MUST* be the .cue file for the US/NTSC-U 'Greatest Hits' version of PSX Doom (SLUS-00077).",     // TODO: relax this restriction eventually
             doomCdCuePath
-        );
-
-        shutdown();
-        return false;
-    }
-
-    // Load the DOOM .EXE so we get all of it's globals in RAM
-    disc::Data data = getFileContents(doomExePath);
-
-    if (!system.loadExeFile(data)) {
-        FATAL_ERROR_F(
-            "Couldn't load the PSX Doom .exe file '%s'!\n"
-            "Is it present in the current working directory?\n"
-            "This *MUST* be the .exe file for the US/NTSC-U 'Greatest Hits' version of PSX Doom (SLUS-00077).",
-            doomExePath
         );
 
         shutdown();
