@@ -304,8 +304,15 @@ void I_PSXInit() noexcept {
     // Present the resulting message
     I_DrawPresent();
 
+    // PC-PSX: if running in headless mode then terminate at this point rather than spinning forever
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode) {
+            std::exit(1);
+        }
+    #endif
+
     // Deliberate infinite loop...
-    // TODO: check for window close and then terminate forcefully here.
+    // The user can kill the app however by closing the window.
     while (true) {
         #if PC_PSX_DOOM_MODS
             Utils::doPlatformUpdates();
