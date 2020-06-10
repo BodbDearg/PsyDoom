@@ -1,6 +1,7 @@
 #include "LIBAPI.h"
 
 #include "PcPsx/Network.h"
+#include "PcPsx/ProgArgs.h"
 
 #include <algorithm>
 #include <chrono>
@@ -33,6 +34,10 @@ static RootCounter2 gRootCnt2 = {};
 // This is what drives the music sequencer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void generate_timer_events() noexcept {
+    // Don't do anything in headless mode: no audio
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
     // Don't do anything if we are not counting or if there is no interval defined
     if ((!gRootCnt2.bIsCounting) || (gRootCnt2.interruptIntervalSecs <= 0))
         return;

@@ -8,15 +8,35 @@
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
 
+#include <chrono>
 #include <SDL.h>
 #include <thread>
 
 BEGIN_NAMESPACE(Utils)
 
+typedef std::chrono::high_resolution_clock::time_point timepoint_t;
+
+// When we last did platform updates
+static timepoint_t gLastPlatformUpdateTime = {};
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Run update actions that have to be done periodically, including running the window and processing sound
 //------------------------------------------------------------------------------------------------------------------------------------------
 void doPlatformUpdates() noexcept {
+    // In headless mode we can skip this entirely
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
+    // Only do updates if enough time has elapsed.
+    // Do this to prevent excessive CPU usage in loops that are periodically trying to update sound etc. while waiting for some event.
+    const timepoint_t now = std::chrono::high_resolution_clock::now();
+    
+    if (now - gLastPlatformUpdateTime < std::chrono::milliseconds(4))
+        return;
+    
+    // Actually do the platform updates
+    gLastPlatformUpdateTime = now;
+
     generate_timer_events();
     emulate_sound_if_required();
     Network::doUpdates();

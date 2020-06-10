@@ -631,10 +631,19 @@ int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexce
     // Note: number of bytes read will not match request if there was an error!
     const int32_t retBytesRead = psxcd_async_read(pDest, numBytes, file);
 
-    // Continue reading until done
+    // Continue reading until done.
+    // PC-PSX: every so often do platform updates to make sure the window etc. stays responsive during long reads.
+    #if PC_PSX_DOOM_MODS
+        constexpr int32_t PLAT_UPDATE_INTERVAL = 1024 * 16;
+        int32_t ticksTillPlatUpdate = PLAT_UPDATE_INTERVAL;
+    #endif
+
     while (psxcd_async_on()) {
         #if PC_PSX_DOOM_MODS
-            Utils::doPlatformUpdates();
+            if (--ticksTillPlatUpdate <= 0) {
+                Utils::doPlatformUpdates();
+                ticksTillPlatUpdate = PLAT_UPDATE_INTERVAL;
+            }
         #endif
     }
     
