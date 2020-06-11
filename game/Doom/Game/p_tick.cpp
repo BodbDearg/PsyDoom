@@ -236,7 +236,12 @@ void P_CheckCheats() noexcept {
                 gMapNumToCheatWarpTo--;
 
                 if (gMapNumToCheatWarpTo <= 0) {
-                    gMapNumToCheatWarpTo = 1;
+                    // PC-PSX: wraparound for convenience: provides a fast way to access opposite ends of the list
+                    #if PC_PSX_DOOM_MODS
+                        gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                    #else
+                        gMapNumToCheatWarpTo = 1;
+                    #endif
                 }
                 
                 gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
@@ -245,7 +250,12 @@ void P_CheckCheats() noexcept {
                 gMapNumToCheatWarpTo++;
 
                 if (gMapNumToCheatWarpTo > MAX_CHEAT_WARP_LEVEL) {
-                    gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                    // PC-PSX: wraparound for convenience: provides a fast way to access opposite ends of the list
+                    #if PC_PSX_DOOM_MODS
+                        gMapNumToCheatWarpTo = 1;
+                    #else
+                        gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                    #endif
                 }
 
                 gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
