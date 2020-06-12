@@ -60,6 +60,7 @@ sector_t* gpCurDrawSector;
     static fixed_t      gOldViewY;
     static fixed_t      gOldViewZ;
     static angle_t      gOldViewAngle;
+    static bool         gbSnapViewZInterpolation;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -120,6 +121,11 @@ void R_RenderPlayerView() noexcept {
         const fixed_t newViewZ = player.viewz;
         const angle_t newViewAngle = playerMobj.angle;
         const fixed_t lerp = R_CalcLerpFactor();
+
+        if (gbSnapViewZInterpolation) {
+            gOldViewZ = newViewZ;
+            gbSnapViewZInterpolation = false;
+        }
 
         gViewX = R_LerpCoord(gOldViewX, newViewX, lerp) & (~FRACMASK);
         gViewY = R_LerpCoord(gOldViewY, newViewY, lerp) & (~FRACMASK);
@@ -339,7 +345,15 @@ void R_NextInterpolation() noexcept {
     gOldViewX = mobj.x;
     gOldViewY = mobj.y;
     gOldViewZ = player.viewz;
+    gbSnapViewZInterpolation = false;
     gOldViewAngle = mobj.angle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Kill the current interpolation of viewz and cause it to go immediately to the actual viewz value
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_SnapViewZInterpolation() noexcept {
+    gbSnapViewZInterpolation = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

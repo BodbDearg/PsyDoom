@@ -5,6 +5,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/Renderer/r_main.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
 #include "p_inter.h"
@@ -22,12 +23,21 @@ bool gbCrushChange;     // If 'true' then the current sector undergoing height c
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_ThingHeightClip(mobj_t& mobj) noexcept {
     // Is the thing currently on the floor?
-    const bool bWasOnFloor = (mobj.floorz == mobj.z);
+    const fixed_t oldFloorZ = mobj.floorz;
+    const bool bWasOnFloor = (oldFloorZ == mobj.z);
 
     // Get the current floor/ceiling Z values for the thing and update
     P_CheckPosition(mobj, mobj.x, mobj.y);
     mobj.floorz = gTmFloorZ;
     mobj.ceilingz = gTmCeilingZ;
+
+    // PC-PSX: If the thing is the current player and the floor moved up/down then snap the current Z interpolation.
+    // The player's viewpoint moves with the sector immediately in this instance because the player is being pushed/pulled:
+    #if PC_PSX_DOOM_MODS
+        if ((oldFloorZ != mobj.floorz) && (mobj.player == &gPlayers[gCurPlayerIndex])) {
+            R_SnapViewZInterpolation();
+        }
+    #endif
 
     // Things that were on the floor previously rise and fall as the sector floor rises and falls.
     // Otherwise, if a floating thing, clip against the ceiling.
