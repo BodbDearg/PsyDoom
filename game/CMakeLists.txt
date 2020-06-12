@@ -139,6 +139,8 @@ set(SOURCE_FILES
     "PcPsx/FileUtils.cpp"
     "PcPsx/FileUtils.h"
     "PcPsx/Finally.h"
+    "PcPsx/IniUtils.cpp"
+    "PcPsx/IniUtils.h"
     "PcPsx/Macros.h"
     "PcPsx/ModMgr.cpp"
     "PcPsx/ModMgr.h"
