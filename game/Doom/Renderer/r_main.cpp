@@ -2,9 +2,11 @@
 
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/m_fixed.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
+#include "PcPsx/ProgArgs.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -14,6 +16,10 @@
 #include "r_local.h"
 #include "r_sky.h"
 #include "r_things.h"
+
+#include <algorithm>
+#include <chrono>
+#include <cmath>
 
 // Incremented whenever checks are made
 int32_t gValidCount = 1;
@@ -44,6 +50,17 @@ int32_t         gNumDrawSubsectors;
 
 // What sector is currently being drawn
 sector_t* gpCurDrawSector;
+
+// PC-PSX: used for interpolation for uncapped framerates 
+#if PC_PSX_DOOM_MODS
+    typedef std::chrono::high_resolution_clock::time_point timepoint_t;
+
+    static timepoint_t  gPrevFrameTime;
+    static fixed_t      gOldViewX;
+    static fixed_t      gOldViewY;
+    static fixed_t      gOldViewZ;
+    static angle_t      gOldViewAngle;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // One time setup for the 3D view renderer
@@ -84,12 +101,38 @@ void R_RenderPlayerView() noexcept {
 
     // Store view parameters before drawing
     player_t& player = gPlayers[gCurPlayerIndex];
-
     gpViewPlayer = &player;
-    gViewX = player.mo->x & (~FRACMASK);
-    gViewY = player.mo->y & (~FRACMASK);
-    gViewZ = player.viewz & (~FRACMASK);
-    gViewAngle = player.mo->angle;
+    
+    // PC-PSX: use interpolation to update the actual view if doing an uncapped framerate
+    #if PC_PSX_DOOM_MODS
+        const bool bInterpolateFrame = ProgArgs::gbUseHighFpsHack;
+    #else
+        const bool bInterpolateFrame = false;
+    #endif
+
+    mobj_t& playerMobj = *player.mo;
+
+    if (bInterpolateFrame) {
+        // PC-PSX: this is new logic. Note that I am still truncating coords to integers (in spite of interpolation) because renderer
+        // artifacts will occur if we don't. The original renderer appears to be built with the assumption that coords are truncated.
+        const fixed_t newViewX = playerMobj.x;
+        const fixed_t newViewY = playerMobj.y;
+        const fixed_t newViewZ = player.viewz;
+        const angle_t newViewAngle = playerMobj.angle;
+        const fixed_t lerp = R_CalcLerpFactor();
+
+        gViewX = R_LerpCoord(gOldViewX, newViewX, lerp) & (~FRACMASK);
+        gViewY = R_LerpCoord(gOldViewY, newViewY, lerp) & (~FRACMASK);
+        gViewZ = R_LerpCoord(gOldViewZ, newViewZ, lerp) & (~FRACMASK);
+        gViewAngle = R_LerpAngle(gOldViewAngle, newViewAngle, lerp);
+    } else {
+        // Originally this is all that happened
+        gViewX = playerMobj.x & (~FRACMASK);
+        gViewY = playerMobj.y & (~FRACMASK);
+        gViewZ = player.viewz & (~FRACMASK);
+        gViewAngle = playerMobj.angle;
+    }
+
     gViewCos = gFineCosine[gViewAngle >> ANGLETOFINESHIFT];
     gViewSin = gFineSine[gViewAngle >> ANGLETOFINESHIFT];
     
@@ -281,3 +324,56 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
     const int32_t actualNodeNum = nodeNum & (~NF_SUBSECTOR);
     return &gpSubsectors[actualNodeNum];
 }
+
+#if PC_PSX_DOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX addition: update the 'previous' values used in interpolation to their current (actual) values.
+// Used before simulating an actual game tick, or when we want to snap immediately to the actual values - like when teleporting.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_NextInterpolation() noexcept {
+    player_t& player = gPlayers[gCurPlayerIndex];
+    mobj_t& mobj = *player.mo;
+
+    gPrevFrameTime = std::chrono::high_resolution_clock::now();
+    gOldViewX = mobj.x;
+    gOldViewY = mobj.y;
+    gOldViewZ = player.viewz;
+    gOldViewAngle = mobj.angle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX: compute the interpolation factor (0-1) by how much we are in between frames.
+// When the value is '0' it means use the old frame values, when '1' use the new frame values.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t R_CalcLerpFactor() noexcept {
+    // Get the elapsed time since the last frame we saved data for
+    const timepoint_t now = std::chrono::high_resolution_clock::now();
+    const double elapsedSeconds = std::chrono::duration<double>(now - gPrevFrameTime).count();
+
+    // How many tics per second can the game do maximum?
+    // For demo playback/recording the game is capped at 15 Hz for consistency, and the cap is 30 Hz for normal games.
+    const double ticsPerSec = (gbDemoPlayback || gbDemoRecording) ? 15.0 : 30.0;
+
+    // Compute the lerp factor in 16.16 format
+    const double elapsedGameTics = std::clamp(elapsedSeconds * ticsPerSec, 0.0, 1.0);
+    return (fixed_t)(elapsedGameTics * (double) FRACUNIT);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX: interpolate between the given old and new value by the given amount
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t R_LerpCoord(const fixed_t oldCoord, const fixed_t newCoord, const fixed_t mix) noexcept {
+    return FixedMul(oldCoord, FRACUNIT - mix) + FixedMul(newCoord, mix);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX: interpolate between the given old and new angle by the given amount
+//------------------------------------------------------------------------------------------------------------------------------------------
+angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_t mix) noexcept {
+    const int32_t diff = (int32_t)(newAngle - oldAngle);
+    const int32_t adjust = (diff >> 16) * mix;
+    return oldAngle + (angle_t) adjust;
+}
+
+#endif  // PC_PSX_DOOM_MODS

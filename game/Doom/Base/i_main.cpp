@@ -474,24 +474,31 @@ void I_DrawPresent() noexcept {
     #if PC_PSX_DOOM_MODS
         Video::displayFramebuffer();
     #endif
-        
-    // In PSX Doom the rendering rate was originally limited to 30 Hz
-    uint32_t minElapsedVBlanks = 2;
-
-    #if PC_PSX_DOOM_MODS
-        // FIXME: remove the high fps hack eventually
-        if (ProgArgs::gbUseHighFpsHack) {
-            minElapsedVBlanks = 1;
-        }
-    #endif
-
+    
     // Continously poll and wait until the required number of vblanks have elapsed before continuing
     while (true) {
-        gTotalVBlanks = LIBETC_VSync(-1);
-        gElapsedVBlanks = gTotalVBlanks - gLastTotalVBlanks;
+        const int32_t curVBlanks = LIBETC_VSync(-1);
+        const int32_t elapsedVBlanks = curVBlanks - gLastTotalVBlanks;
 
-        // Has the required time passed?
-        if (gElapsedVBlanks >= minElapsedVBlanks)
+        // PC-PSX: don't wait and spin here if doing an uncapped framerate - exit immediately. However, don't register any
+        // elapsed vblanks if we haven't passed the required interval (a 30 Hz tick for normal gameplay, a 15 Hz tick for demos).
+        // This prevents the game from ticking if it hasn't met the time requirements.
+        #if PC_PSX_DOOM_MODS
+            if (ProgArgs::gbUseHighFpsHack) {
+                const int32_t minTickVBlanks = (gbDemoPlayback || gbDemoRecording) ? 4 : 2;
+
+                if (elapsedVBlanks < minTickVBlanks) {
+                    gElapsedVBlanks = 0;
+                    return;
+                }
+            }
+        #endif
+
+        gTotalVBlanks = curVBlanks;
+        gElapsedVBlanks = elapsedVBlanks;
+        
+        // The original code spun in this loop to limit the framerate to 30 FPS (2 vblanks)
+        if (gElapsedVBlanks >= 2)
             break;
 
         // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
@@ -941,7 +948,7 @@ void I_NetSetup() noexcept {
         LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
     } else {
         // Player 2 writes a packet to Player 1 firstly
-        gCurPlayerIndex = true;
+        gCurPlayerIndex = 1;
         LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
         LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
 

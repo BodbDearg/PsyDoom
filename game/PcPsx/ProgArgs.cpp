@@ -12,7 +12,7 @@ BEGIN_NAMESPACE(ProgArgs)
 static constexpr int16_t DEFAULT_NET_PORT = 666;
 
 // Enable a temp hack to allow the engine to run beyond the original 30 FPS.
-// TODO: Eventually support any framerate and interpolate.
+// TODO: move into config and rename
 bool gbUseHighFpsHack = false;
 
 // If true then run the game without sound or graphics.

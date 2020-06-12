@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Game/g_game.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -44,6 +45,12 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
             // Only draw the thing if it's in the subsector we are interested in
             if (pThing->subsector != &subsec)
                 continue;
+
+            // PC-PSX: don't draw this player's thing
+            #if PC_PSX_DOOM_MODS
+                if (pThing->player && (pThing->player == &gPlayers[gCurPlayerIndex]))
+                    continue;
+            #endif
 
             // Get the sprite's viewspace position
             VECTOR viewpos;

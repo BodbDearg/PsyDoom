@@ -8,15 +8,15 @@ extern int32_t      gTicCon;
 extern int32_t      gPlayersElapsedVBlanks[MAXPLAYERS];
 extern uint32_t*    gpDemoBuffer;
 extern uint32_t*    gpDemo_p;
-
-#if PC_PSX_DOOM_MODS
-    extern uint32_t*    gpDemoBufferEnd;
-#endif
-
 extern skill_t      gStartSkill;
 extern int32_t      gStartMapOrEpisode;
 extern gametype_t   gStartGameType;
 extern bool         gbDidAbortGame;
+
+#if PC_PSX_DOOM_MODS
+    extern bool         gbIsFirstTick;
+    extern uint32_t*    gpDemoBufferEnd;
+#endif
 
 void D_DoomMain() noexcept;
 gameaction_t RunLegals() noexcept;

@@ -479,6 +479,18 @@ void P_CheckCheats() noexcept {
 gameaction_t P_Ticker() noexcept {
     gGameAction = ga_nothing;
 
+    #if PC_PSX_DOOM_MODS
+        // PC PSX: Don't do any updates if no vblanks have elapsed and it's not the first tick.
+        // This is required now because of the potentially uncapped framerate.
+        if ((!gbIsFirstTick) && (gElapsedVBlanks <= 0))
+            return gGameAction;
+
+        // PC-PSX: update the old values used for interpolation before simulating a new frame (if doing uncapped framerates)
+        if (ProgArgs::gbUseHighFpsHack) {
+            R_NextInterpolation();
+        }
+    #endif
+
     // Check for pause and cheats
     P_CheckCheats();
 
@@ -552,6 +564,13 @@ void P_Start() noexcept {
     
     AM_Start();
     M_ClearRandom();
+
+    // PC-PSX: don't interpolate the first draw frame if doing uncapped framerates
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbUseHighFpsHack) {
+            R_NextInterpolation();
+        }
+    #endif
 
     // Shouldn't be loading anything off the CDROM during gameplay after this point
     gbIsLevelDataCached = true;

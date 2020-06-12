@@ -33,12 +33,6 @@ int32_t gPlayersElapsedVBlanks[MAXPLAYERS];
 uint32_t* gpDemoBuffer;
 uint32_t* gpDemo_p;
 
-#if PC_PSX_DOOM_MODS
-    // PC-PSX: save the end pointer for the buffer, so we know when to end the demo.
-    // Do this instead of hardcoding the end.
-    uint32_t*   gpDemoBufferEnd;
-#endif
-
 // Game start parameters
 skill_t     gStartSkill         = sk_medium;
 int32_t     gStartMapOrEpisode  = 1;
@@ -46,6 +40,11 @@ gametype_t  gStartGameType      = gt_single;
 
 // Net games: set if a network game being started was aborted
 bool gbDidAbortGame = false;
+
+#if PC_PSX_DOOM_MODS
+    bool        gbIsFirstTick;      // Set to 'true' for the very first tick only, 'false' thereafter
+    uint32_t*   gpDemoBufferEnd;    // PC-PSX: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
+#endif
 
 // Debug draw string position
 static int32_t gDebugDrawStringXPos;
@@ -420,6 +419,10 @@ gameaction_t MiniLoop(
     gTicCon = 0;
     gLastTgtGameTicCount = 0;
 
+    #if PC_PSX_DOOM_MODS
+        gbIsFirstTick = true;
+    #endif
+
     // Run startup logic for this game loop beginning
     pStart();
 
@@ -431,90 +434,116 @@ gameaction_t MiniLoop(
     gameaction_t exitAction = ga_nothing;
 
     while (true) {
-        // Update timing and buttons
+        // Update timing and buttons.
+        // PC-PSX: only do if enough time has elapsed or if it's the first frame, due to potentially uncapped framerate.
         gPlayersElapsedVBlanks[gCurPlayerIndex] = gElapsedVBlanks;
 
-        for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
-            gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
-        }
+        #if PC_PSX_DOOM_MODS
+            const bool bUpdateInputsAndTiming = ((gElapsedVBlanks > 0) || gbIsFirstTick);
+        #else
+            const bool bUpdateInputsAndTiming = true;
+        #endif
+
+        if (bUpdateInputsAndTiming) {
+            for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+                gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
+            }
         
-        // Read pad inputs and save as the current pad buttons (overwritten if a demo)
-        uint32_t padBtns = I_ReadGamepad();
-        gTicButtons[gCurPlayerIndex] = padBtns;
+            // Read pad inputs and save as the current pad buttons (overwritten if a demo)
+            uint32_t padBtns = I_ReadGamepad();
+            gTicButtons[gCurPlayerIndex] = padBtns;
 
-        if (gNetGame != gt_single) {
-            // Updates for when we are in a networked game: abort from the game also if there is a problem
-            const bool bNetError = I_NetUpdate();
+            if (gNetGame != gt_single) {
+                // Updates for when we are in a networked game: abort from the game also if there is a problem
+                const bool bNetError = I_NetUpdate();
 
-            if (bNetError) {
-                // PC-PSX: if a network error occurs don't try to restart the level, the connection is most likely still gone.
-                // Exit to the main menu instead.
+                if (bNetError) {
+                    // PC-PSX: if a network error occurs don't try to restart the level, the connection is most likely still gone.
+                    // Exit to the main menu instead.
+                    #if PC_PSX_DOOM_MODS
+                        gGameAction = ga_exitdemo;
+                        exitAction = ga_exitdemo;
+                    #else
+                        gGameAction = ga_warped;
+                        exitAction = ga_warped;
+                    #endif
+
+                    break;
+                }
+            }
+            else if (gbDemoRecording || gbDemoPlayback) {
+                // Had to move the demo pointer increment and end of demo check to here to work with uncapped framerates.
+                // The demo pointer is now also only incremented whenever actual 'vblanks' are registered as elapsed, which
+                // occurs when the required interval (15 Hz tick for demos, 30 Hz tick for normal gameplay) has elapsed.
                 #if PC_PSX_DOOM_MODS
-                    gGameAction = ga_exitdemo;
-                    exitAction = ga_exitdemo;
-                #else
-                    gGameAction = ga_warped;
-                    exitAction = ga_warped;
+                    if (gElapsedVBlanks > 0) {
+                        gpDemo_p++;
+
+                        // Note: use a pointer to the end of the demo buffer to tell if the demo has ended for PC-PSX.
+                        // Don't assume the demo buffer is a fixed size, this allows us to work with demos of any size.
+                        // Also, the last tick of the demo does not get executed, hence +1...
+                        if (gpDemo_p + 1 >= gpDemoBufferEnd)
+                            break;
+                    }
                 #endif
 
-                break;
-            }
-        }
-        else if (gbDemoRecording || gbDemoPlayback) {
-            // Demo recording or playback.
-            // Need to either read inputs from or save them to a buffer.
-            if (gbDemoPlayback) {
-                // Demo playback: any button pressed on the gamepad will abort
-                exitAction = ga_exit;
+                // Demo recording or playback.
+                // Need to either read inputs from or save them to a buffer.
+                if (gbDemoPlayback) {
+                    // Demo playback: any button pressed on the gamepad will abort
+                    exitAction = ga_exit;
 
-                if (padBtns & PAD_ANY_BTNS)
+                    if (padBtns & PAD_ANY_BTNS)
+                        break;
+
+                    // Read inputs from the demo buffer and advance the demo.
+                    // N.B: Demo inputs override everything else from here on in.
+                    padBtns = *gpDemo_p;
+                    gTicButtons[gCurPlayerIndex] = padBtns;
+                }
+                else {
+                    // Demo recording: record pad inputs to the buffer
+                    *gpDemo_p = padBtns;
+                }
+
+                // PC-PSX: moving the demo pointer increment to above to work with uncapped framerates
+                #if !PC_PSX_DOOM_MODS
+                    gpDemo_p++;
+                #endif
+
+                // Abort demo recording?
+                exitAction = ga_exitdemo;
+
+                if (padBtns & PAD_START)
                     break;
-
-                // Read inputs from the demo buffer and advance the demo.
-                // N.B: Demo inputs override everything else from here on in.
-                padBtns = *gpDemo_p;
-                gTicButtons[gCurPlayerIndex] = padBtns;
-                gpDemo_p++;
-            }
-            else {
-                // Demo recording: record pad inputs to the buffer
-                *gpDemo_p = padBtns;
-                gpDemo_p++;
-            }
-
-            // Abort demo recording?
-            exitAction = ga_exitdemo;
-
-            if (padBtns & PAD_START)
-                break;
             
-            // PC-PSX: use the demo buffer end pointer to determine the actual demo end, rather than hardcoding:
-            #if PC_PSX_DOOM_MODS
-                if (gpDemo_p >= gpDemoBufferEnd)
-                    break;
-            #else
-                // Is the demo recording too big or are we at the end of the largest possible demo size? If so then stop right now...
-                const int32_t demoTicksElapsed = (int32_t)(gpDemo_p - gpDemoBuffer);
+                // PC-PSX: moving the end of demo check to above in order to work with uncapped framerates
+                #if !PC_PSX_DOOM_MODS
+                    // Is the demo recording too big or are we at the end of the largest possible demo size? If so then stop right now...
+                    const int32_t demoTicksElapsed = (int32_t)(gpDemo_p - gpDemoBuffer);
 
-                if (demoTicksElapsed >= MAX_DEMO_TICKS)
-                    break;
-            #endif
-        }
+                    if (demoTicksElapsed >= MAX_DEMO_TICKS)
+                        break;
+                #endif
+            }
 
-        // Advance the number of 60 Hz ticks passed.
-        // N.B: the tick count used here is ALWAYS for player 1, this is how time is kept in sync for a network game.
-        gTicCon += gPlayersElapsedVBlanks[0];
+            // Advance the number of 60 Hz ticks passed.
+            // N.B: the tick count used here is ALWAYS for player 1, this is how time is kept in sync for a network game.
+            gTicCon += gPlayersElapsedVBlanks[0];
         
-        // Advance to the next game tick if it is time.
-        // Video refreshes at 60 Hz but the game ticks at 15 Hz:
-        const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
+            // Advance to the next game tick if it is time.
+            // Video refreshes at 60 Hz but the game ticks at 15 Hz:
+            const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
         
-        if (gLastTgtGameTicCount < tgtGameTicCount) {
-            gLastTgtGameTicCount = tgtGameTicCount;
-            gGameTic++;
+            if (gLastTgtGameTicCount < tgtGameTicCount) {
+                gLastTgtGameTicCount = tgtGameTicCount;
+                gGameTic++;
+            }
         }
         
-        // Call the ticker function to do updates for the frame
+        // Call the ticker function to do updates for the frame.
+        // Note that I am calling this in all situations, even if the framerate is capped and if we haven't passed enough time for a game tick.
+        // That allows for possible update logic which runs > 30 Hz in future, like framerate uncapped turning movement.
         exitAction = pTicker();
 
         if (exitAction != ga_nothing)
@@ -524,11 +553,12 @@ gameaction_t MiniLoop(
         pDrawer();
         
         // Do we need to update sound? (sound updates at 15 Hz)
-        if (gPrevGameTic < gGameTic) {
+        if (gGameTic > gPrevGameTic) {
             S_UpdateSounds();
         }
 
         gPrevGameTic = gGameTic;
+        gbIsFirstTick = false;
     }
     
     // Run cleanup logic for this game loop ending

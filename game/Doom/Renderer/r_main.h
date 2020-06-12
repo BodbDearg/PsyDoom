@@ -42,3 +42,10 @@ int32_t R_SlopeDiv(const uint32_t num, const uint32_t den) noexcept;
 angle_t R_PointToAngle2(const fixed_t x1, const fixed_t y1, const fixed_t x2, const fixed_t y2) noexcept;
 int32_t R_PointOnSide(const fixed_t x, const fixed_t y, const node_t& node) noexcept;
 subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept;
+
+#if PC_PSX_DOOM_MODS
+    void R_NextInterpolation() noexcept;
+    fixed_t R_CalcLerpFactor() noexcept;
+    fixed_t R_LerpCoord(const fixed_t oldCoord, const fixed_t newCoord, const fixed_t mix) noexcept;
+    angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_t mix) noexcept;
+#endif
