@@ -527,9 +527,20 @@ void P_PlayerThink(player_t& player) noexcept {
 
     // Updates for when the game is NOT paused
     if (!gbGamePaused) {
-        // Do physical movements due to velocity and state transitions for the player
+        // Do physical movements due to velocity and state transitions for the player.
+        // PC-PSX: do this AFTER gathering inputs to reduce input lag, except in the case of demos (for compatibility).
+        #if PC_PSX_DOOM_MODS
+            const bool bUseOrigMovement = (gbDemoPlayback || gbDemoRecording);
+        #else
+            const bool bUseOrigMovement = false;
+        #endif
+
         mobj_t& playerMobj = *player.mo;
-        P_PlayerMobjThink(playerMobj);
+
+        // Originally the player was physically moved BEFORE gathering inputs
+        if (bUseOrigMovement) {
+            P_PlayerMobjThink(playerMobj);
+        }
 
         // Gather inputs for the next move
         P_BuildMove(player);
@@ -537,6 +548,11 @@ void P_PlayerThink(player_t& player) noexcept {
         // Is the player dead? If so do death updates, otherwise do all the normal updates
         if (player.playerstate == PST_DEAD) {
             P_DeathThink(player);
+
+            // PC-PSX: just being consistent with the 'alive' case if we are using tweaked movement
+            if (!bUseOrigMovement) {
+                P_PlayerMobjThink(playerMobj);
+            }
         } else {
             // Attacking with the chainsaw causes some movement forward
             if (playerMobj.flags & MF_JUSTATTACKED) {
@@ -551,6 +567,11 @@ void P_PlayerThink(player_t& player) noexcept {
                 P_MovePlayer(player);
             } else {
                 playerMobj.reactiontime--;
+            }
+
+            // PC-PSX: actually move the player at this point, AFTER inputs
+            if (!bUseOrigMovement) {
+                P_PlayerMobjThink(playerMobj);
             }
 
             // Adjust view height
