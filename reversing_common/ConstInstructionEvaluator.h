@@ -5,13 +5,13 @@
 struct ExeFile;
 struct ProgElem;
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Constant instruction evaluator: allows constant evaluation of instructions within the context of a single function.
 //
 // The aim of constant evaluation is to discover the known constant value of registers at various points in the code,
 // so the assembly code can be automatically commented accordingly. This allows loads/stores from/to various known
 // globals etc. to be commented and annotated, and makes reading disassembly much easier.
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 class ConstInstructionEvaluator {
 public:
     ConstInstructionEvaluator() noexcept;

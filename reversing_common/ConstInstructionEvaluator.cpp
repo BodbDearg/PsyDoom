@@ -8,9 +8,9 @@
 // This is used to make us stop evaluating loops forever and is set > 1 so we can find constant stuff within loops.
 static constexpr uint32_t MAX_INSTRUCTION_EVALUATIONS = 3;
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Does the actual work of evaluating a particular instruction
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void evalInstImpl(CpuInstruction& inst, const ConstEvalRegState& regIn, ConstEvalRegState& regOut) noexcept {
     const uint8_t resultGpr = inst.getDestGprIdx();
 

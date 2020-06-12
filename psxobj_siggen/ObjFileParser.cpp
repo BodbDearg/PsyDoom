@@ -8,10 +8,10 @@ struct ParseException {
     ParseException(const char* msg) noexcept : msg(msg) {}
 };
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      Header : LNK version 2
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseHeaderInfo(TextIStream& text, ObjFile& out) {
     TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("Header");
@@ -23,13 +23,13 @@ static void parseHeaderInfo(TextIStream& text, ObjFile& out) {
     line.ensureAtEnd();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //  76 : Function end :
 //      section 557c
 //      offset $000000f4
 //      end line 0
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseFunctionEndDirective(TextIStream& text, [[maybe_unused]] ObjFile& out) {
     // Note: just ignoring this directive and skipping past it all
     {
@@ -65,7 +65,7 @@ static void parseFunctionEndDirective(TextIStream& text, [[maybe_unused]] ObjFil
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //  74 : Function start :
 //      section 557c
@@ -78,7 +78,7 @@ static void parseFunctionEndDirective(TextIStream& text, [[maybe_unused]] ObjFil
 //      mask $00000000
 //      mask offset 0
 //      name _ExpAllocArea
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseFunctionStartDirective(TextIStream& text, [[maybe_unused]] ObjFile& out) {
     // Note: just ignoring this directive and skipping past it all
     {
@@ -173,10 +173,10 @@ static void parseFunctionStartDirective(TextIStream& text, [[maybe_unused]] ObjF
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      48 : XBSS symbol number 2b '_que' size 1800 in section 6
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseXBssSymbolDirective(TextIStream& text, ObjFile& out) {
     // Read symbol number
     TextIStream line = text.readNextLineAsStream();
@@ -207,10 +207,10 @@ static void parseXBssSymbolDirective(TextIStream& text, ObjFile& out) {
     line.ensureAtEnd();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      46 : Processor type 7
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseProcessorType(TextIStream& text, ObjFile& out) {
     TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("46");
@@ -222,10 +222,10 @@ static void parseProcessorType(TextIStream& text, ObjFile& out) {
     line.ensureAtEnd();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      28 : Define file number 9 as "C:\PSX\SRC\C2\SPRINTF.C"
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseFileNameDefinition(TextIStream& text, [[maybe_unused]] ObjFile& out) {
     // Just ensure the format is as expected then ignore the rest - we don't use this info
     TextIStream line = text.readNextLineAsStream();
@@ -238,10 +238,10 @@ static void parseFileNameDefinition(TextIStream& text, [[maybe_unused]] ObjFile&
     line.consumeSpaceSeparatedTokenAhead("as");
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      16 : Section symbol number 1 '.rdata' in group 0 alignment 8
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseSectionDefinition(TextIStream& text, ObjFile& out) {
     // Parse section number
     TextIStream line = text.readNextLineAsStream();
@@ -309,10 +309,10 @@ static void parseSectionDefinition(TextIStream& text, ObjFile& out) {
     section.alignment = (uint16_t) alignment;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      18 : Local symbol 'get_mode' at offset 1590 in section 2
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseLocalSymbolDirective(TextIStream& text, ObjFile& out) {
     // Read symbol name
     TextIStream line = text.readNextLineAsStream();
@@ -339,10 +339,10 @@ static void parseLocalSymbolDirective(TextIStream& text, ObjFile& out) {
     line.ensureAtEnd();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      14 : XREF symbol number c 'memchr'
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseXRefSymbolDirective(TextIStream& text, ObjFile& out) {
     // Read symbol number
     TextIStream line = text.readNextLineAsStream();
@@ -364,10 +364,10 @@ static void parseXRefSymbolDirective(TextIStream& text, ObjFile& out) {
     line.ensureAtEnd();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      12 : XDEF symbol number a 'sprintf' at offset 0 in section 2
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseXDefSymbolDirective(TextIStream& text, ObjFile& out) {
     // Read symbol number
     TextIStream line = text.readNextLineAsStream();
@@ -399,7 +399,7 @@ static void parseXDefSymbolDirective(TextIStream& text, ObjFile& out) {
     line.ensureAtEnd();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like any of the following lines formats:
 //      10 : Patch type 16 at offset c with (sectbase(2)+$1a0c)
 //      10 : Patch type 74 at offset 70 with [2e]
@@ -408,7 +408,7 @@ static void parseXDefSymbolDirective(TextIStream& text, ObjFile& out) {
 //
 // NOTE: in order to keep things simple, I ignore anything past the 'with' token.
 // I don't need to know what something is being patched WITH, just WHAT is being patched for function signature matching.
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parsePatchDirective(TextIStream& text, ObjFile& out) {
     // Get the current section
     ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
@@ -435,10 +435,10 @@ static void parsePatchDirective(TextIStream& text, ObjFile& out) {
     line.consumeSpaceSeparatedTokenAhead("with");
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      8 : Uninitialised data, 11 bytes
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseUnitializedDataDirective(TextIStream& text, ObjFile& out) {
     // Get the current section
     ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
@@ -462,10 +462,10 @@ static void parseUnitializedDataDirective(TextIStream& text, ObjFile& out) {
     sectionBytes.insert(sectionBytes.end(), numUninitializedBytes, (std::byte) 0);
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      6 : Switch to section 2
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseSwitchToSectionDirective(TextIStream& text, ObjFile& out) {
     // Read the current section number
     TextIStream line = text.readNextLineAsStream();
@@ -489,14 +489,14 @@ static void parseSwitchToSectionDirective(TextIStream& text, ObjFile& out) {
     out.curPatchBaseOffset = (uint32_t) pSection->data.size();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      2 : Code 37 bytes
 //
 //      0000:30 31 32 33 34 35 36 37 38 39 41 42 43 44 45 46 
 //      0010:00 00 00 00 30 31 32 33 34 35 36 37 38 39 61 62 
 //      0020:63 64 65 66 00 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseCodeDirective(TextIStream& text, ObjFile& out) {
     // Get the current section
     ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
@@ -548,10 +548,10 @@ static void parseCodeDirective(TextIStream& text, ObjFile& out) {
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses text like:
 //      0 : End of file
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void parseEndOfFileDirective(TextIStream& text, [[maybe_unused]] ObjFile& out) {
     TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("0");

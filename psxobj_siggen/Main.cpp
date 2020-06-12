@@ -6,9 +6,9 @@
 #include <cstdio>
 #include <fstream>
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Entry point for 'PSXObjSigGen'
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Program purpose:
 //
 //  This program parses the human readable textual output of the 'DUMPOBJ.EXE' tool included in the PlayStation SDK 
@@ -27,7 +27,7 @@
 //      (2) Invoke 'DUMPOBJ.EXE' on every SDK .OBJ file to produce the textual output that is an input to this tool.
 //      (3) Use this tool on all the dump output to build up the signature database.
 //      (4) Run pattern matching on the .EXE using the generated signature database to identify PsyQ functions in an EXE.
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char* argv[]) noexcept {
     if (argc != 3 && argc != 4) {        

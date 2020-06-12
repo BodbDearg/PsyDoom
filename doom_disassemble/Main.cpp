@@ -7,9 +7,9 @@
 #include <cstdio>
 #include <fstream>
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Entry point for 'DoomDisassemble'
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Program purpose:
 //
 //  This program functions as a sort of primitive 'interactive' disassembler specifically (and ONLY!) for the 
@@ -26,11 +26,11 @@
 //  on investigation, debugging and reverse engineering etc. This process is completed until more and more of the EXE is
 //  known and understood, and this work can be the basis for translation to higher level C/C++ code.
 //
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Output location:
 //
 //  The program will attempt to output to whatever directory is the current working directory.
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 // Number of 32-bit words in the above versions of PSX DOOM and Final DOOM.
 // Used for very basic verification and also to tell whether we are dealing with DOOM or Final DOOM.

@@ -495,9 +495,9 @@ static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, st
     out << "\n";
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Verify the program element definition is SANE and raise a fatal error if not
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void validateProgElemRange(const ExeFile& exe, const ProgElem& progElem) noexcept {
     const uint32_t exeStart = exe.baseAddress;
     const uint32_t exeEnd = exeStart + exe.sizeInWords * 4;

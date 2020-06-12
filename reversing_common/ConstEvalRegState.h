@@ -1,12 +1,12 @@
 #include "CpuGpr.h"
 #include <cassert>
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Constant evaluator register state:
 //      Structure containing current register state for the constant instruction evaluator.
 //      Stores whether the state of each register is known as a constant, just by inspecting the instructions and the
 //      exact value of each register if it is a known constant.
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 struct ConstEvalRegState {
     bool bGprValueKnown[CpuGpr::NUM_GPRS];      // Whether the value of each general purpose register is known as a constant
     bool bHiRegValueKnown;                      // Whether the value of the '$hi' register is known as a constant

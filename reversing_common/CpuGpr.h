@@ -1,9 +1,9 @@
 #include "CpuOpcode.h"
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Constants and utilities relating to CPU general purpose registers.
 // Source of info: https://problemkaputt.de/psx-spx.htm#cpuspecifications
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 namespace CpuGpr {
     constexpr uint8_t ZERO = 0;     // Constant (always 0) (this one isn't a real register)
     constexpr uint8_t AT = 1;       // Assembler temporary (destroyed by some pseudo opcodes!)

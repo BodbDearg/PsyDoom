@@ -5,10 +5,10 @@
 
 struct CpuInstruction;
 
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Manually handled logic for various instructions for the pseudo c++ printer.
 // For instructions we want to simplify/cleanup as much as possible.
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 namespace PseudoCppPrinter {
     void printInst_ramToCpuLoad(std::ostream& out, const CpuInstruction& inst);             // LW, LH, LHU etc.
     void printInst_cpuToRamStore(std::ostream& out, const CpuInstruction& inst);            // SW, SH, SB etc.
