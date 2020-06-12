@@ -1,8 +1,11 @@
 #include "p_telept.h"
 
+#include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/Renderer/r_main.h"
+#include "g_game.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -115,6 +118,13 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             mobj.momy = 0;
             mobj.momx = 0;
             mobj.angle = pDstMarker->angle;
+
+            // PC-PSX: if we just teleported this player then kill any interpolations
+            #if PC_PSX_DOOM_MODS
+                if (mobj.player == &gPlayers[gCurPlayerIndex]) {
+                    R_NextInterpolation();
+                }
+            #endif
 
             // Teleportation was a success!
             return true;
