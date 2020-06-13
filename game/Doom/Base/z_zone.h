@@ -9,11 +9,11 @@
 //  - Tags >= PU_PURGELEVEL are purgable whenever needed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr int16_t PU_STATIC      = 0x01;     // Static the entire execution time
-static constexpr int16_t PU_LEVEL       = 0x02;     // Remains until level is unloaded
-static constexpr int16_t PU_LEVSPEC     = 0x04;     // TODO: comment on typical use
-static constexpr int16_t PU_ANIMATION   = 0x08;     // TODO: comment on typical use
-static constexpr int16_t PU_PURGELEVEL  = 0x10;     // TODO: comment on typical use
-static constexpr int16_t PU_CACHE       = 0x20;     // TODO: comment on typical use
+static constexpr int16_t PU_LEVEL       = 0x02;     // Used by map geometry and things
+static constexpr int16_t PU_LEVSPEC     = 0x04;     // Used by level thinkers like floors, doors, lights and delayed actions
+static constexpr int16_t PU_ANIMATION   = 0x08;     // Used by sprites and animated textures
+static constexpr int16_t PU_PURGELEVEL  = 0x10;     // Not used by anything, serves as a marker for the beginning of memory types which can be evicted at any time
+static constexpr int16_t PU_CACHE       = 0x20;     // Used to temporarily cache textures in main RAM (before they are uploaded to VRAM)
 
 // All blocks must have this id
 static constexpr int16_t ZONEID = 0x1D4A;

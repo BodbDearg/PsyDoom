@@ -32,7 +32,6 @@
 //  (4) Following that, 11 pages are free to be used in any way for map textures and sprites.
 //      This is what is referred to as the 'texture cache'.
 //  (5) 1 texture page at the end appears to be reserved/unused during gameplay.
-//      TODO: find out more about why this is.
 //  (6) Each of the 11 256x256 pages are broken up into a grid of 16x16 cells, where each cell is 16 pixels wide and tall.
 //      Each cell stores a pointer to the 'texture_t' occupying the cell, if any.
 //  (7) When adding a sprite or texture to the cache, the code will search through the cells for a free space

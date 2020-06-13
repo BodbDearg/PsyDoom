@@ -138,7 +138,6 @@ struct seg_t {
     uint16_t    flags;              // TODO: find out more about the flags
     int16_t     visibleBegX;        // First visible screenspace column: only set if SGF_VISIBLE_COLS is set
     int16_t     visibleEndX;        // Last visible screenspace column (inclusive): only set if SGF_VISIBLE_COLS is set
-    uint16_t    pad;                // TODO: used for any purpose, or just padding?
 };
 
 // Describes an edge of a leaf.

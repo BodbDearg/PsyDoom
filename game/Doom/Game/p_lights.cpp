@@ -51,9 +51,8 @@ struct glow_t {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a light that flickers like fire
-// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_FireFlicker(fireflicker_t& flicker) noexcept {
+static void T_FireFlicker(fireflicker_t& flicker) noexcept {
     // Time to flicker yet?
     if (--flicker.count != 0)
         return;
@@ -90,9 +89,8 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a flashing light
-// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_LightFlash(lightflash_t& lightFlash) noexcept {
+static void T_LightFlash(lightflash_t& lightFlash) noexcept {
     // Time to flash yet?
     if (--lightFlash.count != 0)
         return;
@@ -130,9 +128,8 @@ void P_SpawnLightFlash(sector_t& sector) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a strobe flash light
-// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_StrobeFlash(strobe_t& strobe) noexcept {
+static void T_StrobeFlash(strobe_t& strobe) noexcept {
     // Time to flash yet?
     if (--strobe.count != 0)
         return;
@@ -284,9 +281,8 @@ void EV_LightTurnOn(line_t& line, const int32_t onLightLevel) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a glowing light
-// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_Glow(glow_t& glow) noexcept {
+static void T_Glow(glow_t& glow) noexcept {
     sector_t& sector = *glow.sector;
 
     if (glow.direction == -1) {

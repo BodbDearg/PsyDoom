@@ -29,9 +29,8 @@ static constexpr int32_t VDOORWAIT  = 70;               // How long vertical doo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a door: moves the door, does door state transitions and sounds etc.
-// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_VerticalDoor(vldoor_t& door) noexcept {
+static void T_VerticalDoor(vldoor_t& door) noexcept {
     // Which way is the door moving?
     switch (door.direction) {
         // Door is waiting

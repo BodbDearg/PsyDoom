@@ -116,9 +116,8 @@ bool PsxVm::init(const char* const doomCdCuePath) noexcept {
 
     if (!system.cdrom->disc) {
         FATAL_ERROR_F(
-            "Couldn't open the .cue disc descriptor '%s'!\n"
-            "Is it present in the current working directory?\n"
-            "This *MUST* be the .cue file for the US/NTSC-U 'Greatest Hits' version of PSX Doom (SLUS-00077).",     // TODO: relax this restriction eventually
+            "Couldn't open or failed to parse the .cue disc descriptor '%s'!\n"
+            "Is it present at the specified path and is it valid? This *MUST* be the .cue file for PlayStation Doom (PAL or NTSC).",
             doomCdCuePath
         );
 

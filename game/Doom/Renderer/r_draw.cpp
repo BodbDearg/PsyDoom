@@ -563,7 +563,7 @@ int32_t R_RightEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
 
         // Re-do perspective projection to compute screen x and scale for the vertex.
         //
-        // HACK: the +1 here appears to be an attempt to nudge the clipped seg over by 1 pixel unit.
+        // The +1 here appears to be a hack to nudge the clipped seg over by 1 pixel unit.
         // If I remove this adjustment then sometimes gaps appear for walls at the right side of the view.
         newVert.scale = ((HALF_SCREEN_W * FRACUNIT) / newVert.viewy) + 1;
         newVert.screenx = ((newVert.viewx * newVert.scale) >> FRACBITS) + HALF_SCREEN_W;

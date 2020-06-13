@@ -23,9 +23,8 @@ static void P_ActivateInStasisCeiling(line_t& line) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a moving ceiling or crusher: moves the ceiling, does state transitions and sounds etc.
-// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_MoveCeiling(ceiling_t& ceiling) noexcept {
+static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
     sector_t& ceilingSector = *ceiling.sector;
 
     switch (ceiling.direction) {

@@ -26,9 +26,8 @@ static void P_RemoveActivePlat(plat_t& plat) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a moving platform: moves the platform, does state transitions and sounds etc.
-// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_PlatRaise(plat_t& plat) noexcept {
+static void T_PlatRaise(plat_t& plat) noexcept {
     sector_t& sector = *plat.sector;
 
     switch (plat.status) {

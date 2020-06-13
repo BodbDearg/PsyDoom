@@ -264,7 +264,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     gLockedTexPagesMask &= 1;
     I_PurgeTexCache();
 
-    Z_FreeTags(*gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE | PU_ANIMATION | PU_LEVSPEC | PU_LEVEL);
     M_ClearRandom();
 
     // Save game params: note that in multiplayer these might be overriden later

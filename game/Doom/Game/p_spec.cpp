@@ -78,8 +78,7 @@ static anim_t*      gpLastAnim;                         // Points to the end of 
 static line_t*      gpLineSpecialList[MAXLINEANIMS];    // A list of scrolling lines for the level
 static int32_t      gNumLinespecials;                   // The number of scrolling lines in the level
 
-// TODO: Make private to the module eventually
-void T_DelayedAction(delayaction_t& action) noexcept;
+static void T_DelayedAction(delayaction_t& action) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches into RAM the textures for all animated flats and textures.
@@ -1088,7 +1087,6 @@ static void P_ScheduleDelayedAction(const int32_t delayTics, const delayed_actio
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker function for performing a delayed action: performs the action after the delay time has passed and removes the thinker when done
-// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void T_DelayedAction(delayaction_t& action) noexcept {
     if (--action.ticsleft <= 0) {

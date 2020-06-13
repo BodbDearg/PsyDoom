@@ -878,7 +878,7 @@ void P_Init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
     // Cleanup of memory and resetting the RNG before we start
-    Z_FreeTags(*gpMainMemZone, PU_CACHE|PU_LEVSPEC|PU_LEVEL);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE | PU_LEVSPEC| PU_LEVEL);
 
     if (!gbIsLevelBeingRestarted) {
         gLockedTexPagesMask &= 1;
