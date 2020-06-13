@@ -14,10 +14,31 @@
 
 BEGIN_NAMESPACE(Utils)
 
+static constexpr const char* const SAVE_FILE_ORG        = "com.codelobster";    // Root folder to save config in (in a OS specific writable prefs location)
+static constexpr const char* const SAVE_FILE_PRODUCT    = "PsyDoom";            // Sub-folder within the root folder to save the config in
+
+// Because typing this is a pain...
 typedef std::chrono::high_resolution_clock::time_point timepoint_t;
 
 // When we last did platform updates
 static timepoint_t gLastPlatformUpdateTime = {};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the folder that PsyDoom uses for user config and save data.
+// If the folder does not exist then it is created, and if that fails a fatal error is issued.
+// The Path is returned with a trailing path separator, so can be combined with a file name without any other modifications.
+//------------------------------------------------------------------------------------------------------------------------------------------
+std::string getOrCreateUserDataFolder() noexcept {
+    char* const pCfgFilePath = SDL_GetPrefPath(SAVE_FILE_ORG, SAVE_FILE_PRODUCT);
+
+    if (!pCfgFilePath) {
+        FATAL_ERROR("Unable to create or determine the user data folder (config/save folder) for PsyDoom!");
+    }
+
+    std::string path = pCfgFilePath;
+    SDL_free(pCfgFilePath);
+    return path;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Run update actions that have to be done periodically, including running the window and processing sound

@@ -3,6 +3,7 @@
 #include "Macros.h"
 
 #include <cstddef>
+#include <memory>
 
 BEGIN_NAMESPACE(FileUtils)
 

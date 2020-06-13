@@ -1,6 +1,7 @@
 #include "Video.h"
 
 #include "ProgArgs.h"
+#include "Config.h"
 #include "PsxVm/PsxVm.h"
 #include "Utils.h"
 
@@ -24,13 +25,23 @@ static uint32_t*        gpFrameBuffer;
 constexpr int32_t GAME_RES_X = 293;
 constexpr int32_t GAME_RES_Y = 240;
 
-// TODO: this is temporary until resolution is properly configurable
 static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
     // Get the screen resolution.
     // On high DPI screens like MacOS retina the resolution returned will be virtual not physical resolution.
     SDL_DisplayMode displayMode;
-    SDL_GetCurrentDisplayMode(0, &displayMode);
-    
+
+    if (SDL_GetCurrentDisplayMode(0, &displayMode) != 0) {
+        FATAL_ERROR("Failed to determine current screen video mode!");
+    }
+
+    // If in fullscreen then use the current screen resolution.
+    // TODO: allow the user to specify a fullscreen resolution in the config file, if required.
+    if (Config::gbFullscreen) {
+        w = displayMode.w;
+        h = displayMode.h;
+        return;
+    }
+
     // Make the windows multiple of the original resolution.
     // Allow some room for window edges and decoration.
     int32_t xMultiplier = std::max((displayMode.w - 20) / GAME_RES_X, 1);
@@ -139,24 +150,26 @@ void initVideo() noexcept {
         FATAL_ERROR("Unable to initialize SDL!");
     }
 
-    // TODO: Provide a way to switch between fullscreen and back...
-    Uint32 windowCreateFlags = SDL_WINDOW_RESIZABLE;
-
-    #ifndef __MACOSX__
-        windowCreateFlags |= SDL_WINDOW_OPENGL;
-    #endif
-
+    // This is the window title to use
     #ifdef GAME_VERSION_STR
         constexpr const char* gameVersionStr = "PsyDoom " GAME_VERSION_STR;
     #else
         constexpr const char* gameVersionStr = "PsyDoom <UNKNOWN_VERSION>";
     #endif
 
-    // TODO: this is temporary
+    // Determine the window creation flags
+    Uint32 windowCreateFlags = (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
+
+    #ifndef __MACOSX__
+        windowCreateFlags |= SDL_WINDOW_OPENGL;
+    #endif
+
+    // Decide what window size to use
     int32_t winSizeX = 0;
     int32_t winSizeY = 0;
     decideStartupResolution(winSizeX, winSizeY);
 
+    // Create the window
     gWindow = SDL_CreateWindow(
         gameVersionStr,
         SDL_WINDOWPOS_CENTERED,

@@ -1,28 +1,8 @@
 #include "Macros.h"
 
+#include <functional>
 #include <string>
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Utilities for parsing and writing ini files. 
-//
-// Notes:
-//  (1) The parser is NOT fully UTF-8 aware (does NOT handle special Unicode whitespace etc.).
-//      This is perfectly okay however for what I am using it for.
-//  (2) The parser will automatically trim whitespace at the beginning and end of keys/values
-//      unlike a lot of other ini parsers. This allows for instance spaces in the keys etc.
-//  (3) 'true' and 'false' in any case are accepted for boolean values, but the code prefers to
-//      write '0' and '1' when outputting since numbers are much more locale neutral.
-//  (4) Comments must be on their own dedicated lines and can start with either ';' or '#'.
-//      Comments on the same lines as key/value pairs or section headers are NOT supported.
-//  (5) Newlines in keys or values are NOT supported and cannot be escaped - single line mode only!
-//      Newlines in output keys/values will be skipped.
-//  (6) The following are valid escape sequences ONLY:
-//          \;
-//          \#
-//          \[
-//          \]
-//          \=
-//------------------------------------------------------------------------------------------------------------------------------------------
 BEGIN_NAMESPACE(IniUtils)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -99,10 +79,9 @@ struct Entry {
     }
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Represents a callback/handler that receives parsed ini entries (SAX style)
-//------------------------------------------------------------------------------------------------------------------------------------------
-typedef void (*EntryHandler)(const Entry& entry) noexcept;
+// Represents a callback/handler that receives parsed ini entries (SAX style).
+// Note: I would make this function prototype 'noexcept' but std::function<> doesn't handle that so well currently...
+typedef std::function<void (const Entry& entry)> EntryHandler;
 
 void parseIniFromString(const char* const pStr, const size_t len, const EntryHandler entryHandler) noexcept;
 

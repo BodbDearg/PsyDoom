@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Macros.h"
+
 #include <cstdint>
+#include <string>
 
 enum cheatseq_t : int32_t;
 
 BEGIN_NAMESPACE(Utils)
 
+std::string getOrCreateUserDataFolder() noexcept;
 void doPlatformUpdates() noexcept;
 void waitForSeconds(float seconds) noexcept;
 void waitForCdAudioPlaybackStart() noexcept;
