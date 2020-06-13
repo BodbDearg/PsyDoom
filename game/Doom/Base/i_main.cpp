@@ -6,6 +6,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "i_drawcmds.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
@@ -484,7 +485,7 @@ void I_DrawPresent() noexcept {
         // elapsed vblanks if we haven't passed the required interval (a 30 Hz tick for normal gameplay, a 15 Hz tick for demos).
         // This prevents the game from ticking if it hasn't met the time requirements.
         #if PC_PSX_DOOM_MODS
-            if (ProgArgs::gbUseHighFpsHack) {
+            if (Config::gbUncapFramerate) {
                 const int32_t minTickVBlanks = (gbDemoPlayback || gbDemoRecording) ? 4 : 2;
 
                 if (elapsedVBlanks < minTickVBlanks) {

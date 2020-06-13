@@ -37,8 +37,7 @@ struct ConfigFieldHandler {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Handlers for graphics config.
-// Note that the config is written to the config file in the order that it is defined in here.
+// Graphics config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     {
@@ -53,10 +52,26 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     }
 };
 
+bool    gbFullscreen;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
-// The actual config values themselves
+// Game config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool gbFullscreen;
+static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
+    {
+        "UncapFramerate",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Uncapped framerate toggle.\n"
+        "# Setting to '1' allows PsyDoom to run beyond the original 30 FPS cap of PSX Doom.\n"
+        "# Frames in-between the original 30 FPS keyframes will have movements and rotations interpolated.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "UncapFramerate = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },
+        []() { gbUncapFramerate = true; }
+    }
+};
+
+bool    gbUncapFramerate;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Other config parser related state
@@ -158,7 +173,8 @@ static void parseConfigFile(
 // Parse all config files
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void parseAllConfigFiles(const std::string& configFolder) noexcept {
-    parseConfigFile(configFolder, "graphics_cfg.ini", GRAPHICS_CFG_INI_HANDLERS, C_ARRAY_SIZE(GRAPHICS_CFG_INI_HANDLERS));
+    parseConfigFile(configFolder, "graphics_cfg.ini",   GRAPHICS_CFG_INI_HANDLERS,  C_ARRAY_SIZE(GRAPHICS_CFG_INI_HANDLERS));
+    parseConfigFile(configFolder, "game_cfg.ini",       GAME_CFG_INI_HANDLERS,      C_ARRAY_SIZE(GAME_CFG_INI_HANDLERS));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

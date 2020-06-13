@@ -5,7 +5,6 @@
 
 BEGIN_NAMESPACE(ProgArgs)
 
-extern bool         gbUseHighFpsHack;
 extern bool         gbHeadlessMode;
 extern const char*  gDataDirPath;
 extern const char*  gPlayDemoFilePath;

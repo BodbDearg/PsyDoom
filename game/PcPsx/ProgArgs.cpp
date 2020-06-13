@@ -11,10 +11,6 @@ BEGIN_NAMESPACE(ProgArgs)
 // The default client and server port
 static constexpr int16_t DEFAULT_NET_PORT = 666;
 
-// Enable a temp hack to allow the engine to run beyond the original 30 FPS.
-// TODO: move into config and rename
-bool gbUseHighFpsHack = false;
-
 // If true then run the game without sound or graphics.
 // Can only be used for single demo playback, the main game won't run in this mode;
 bool gbHeadlessMode = false;
@@ -38,15 +34,6 @@ static std::string gServerHost;
 // Takes in the current arguments list pointer and the number of arguments left, which is always expected to be at least '1'.
 // Returns the number of arguments consumed.
 typedef int (*ArgParser)(const int argc, const char** const argv);
-
-static int parseArg_highfps([[maybe_unused]] const int argc, const char** const argv) {
-    if (std::strcmp(argv[0], "-highfps") == 0) {
-        gbUseHighFpsHack = true;
-        return 1;
-    }
-
-    return 0;
-}
 
 static int parseArg_headless([[maybe_unused]] const int argc, const char** const argv) {
     if (std::strcmp(argv[0], "-headless") == 0) {
@@ -143,7 +130,6 @@ static int parseArg_client([[maybe_unused]] const int argc, const char** const a
 
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
-    parseArg_highfps,
     parseArg_headless,
     parseArg_datadir,
     parseArg_playdemo,
@@ -185,7 +171,6 @@ void init(const int argc, const char** const argv) noexcept {
 
 void shutdown() noexcept {
     // Reset everything back to its initial state and free any memory allocated (to help leak detection)
-    gbUseHighFpsHack = false;
     gbHeadlessMode = false;
     gDataDirPath = "";
     gPlayDemoFilePath = "";

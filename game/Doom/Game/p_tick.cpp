@@ -18,6 +18,7 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_user.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/DemoResult.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
@@ -486,7 +487,7 @@ gameaction_t P_Ticker() noexcept {
             return gGameAction;
 
         // PC-PSX: update the old values used for interpolation before simulating a new frame (if doing uncapped framerates)
-        if (ProgArgs::gbUseHighFpsHack) {
+        if (Config::gbUncapFramerate) {
             R_NextInterpolation();
         }
     #endif
@@ -567,7 +568,7 @@ void P_Start() noexcept {
 
     // PC-PSX: don't interpolate the first draw frame if doing uncapped framerates
     #if PC_PSX_DOOM_MODS
-        if (ProgArgs::gbUseHighFpsHack) {
+        if (Config::gbUncapFramerate) {
             R_NextInterpolation();
         }
     #endif

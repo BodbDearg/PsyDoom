@@ -6,7 +6,7 @@
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
-#include "PcPsx/ProgArgs.h"
+#include "PcPsx/Config.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -106,7 +106,7 @@ void R_RenderPlayerView() noexcept {
     
     // PC-PSX: use interpolation to update the actual view if doing an uncapped framerate
     #if PC_PSX_DOOM_MODS
-        const bool bInterpolateFrame = ProgArgs::gbUseHighFpsHack;
+        const bool bInterpolateFrame = Config::gbUncapFramerate;
     #else
         const bool bInterpolateFrame = false;
     #endif
