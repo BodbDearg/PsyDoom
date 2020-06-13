@@ -8,6 +8,14 @@
 #include <cstdint>
 #include <cstring>
 
+// MacOS: working around missing support for <filesystem> in everything except the latest bleeding edge OS and Xcode.
+// Use standard Unix file functions instead for now, but some day this can be removed.
+#ifdef __MACOSX__
+    #include <unistd.h>
+#else
+    #include <filesystem>
+#endif
+
 BEGIN_NAMESPACE(FileUtils)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,6 +108,25 @@ bool writeDataToFile(
 
     // Do the write and return the result
     return (std::fwrite(pData, dataSize, 1, pFile) == 1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the given file exists; if there is an error determining returns 'false'
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool fileExists(const char* filePath) noexcept {
+    ASSERT(filePath);
+
+    try {
+        // MacOS: working around missing support for <filesystem> in everything except the latest bleeding edge OS and Xcode.
+        // Use standard Unix file functions instead for now, but some day this can be removed.
+        #ifdef __MACOSX__
+            return (access(filePath, R_OK) == 0);
+        #else
+            return std::filesystem::exists(filePath);
+        #endif
+    } catch (...) {
+        return false;
+    }
 }
 
 END_NAMESPACE(FileUtils)

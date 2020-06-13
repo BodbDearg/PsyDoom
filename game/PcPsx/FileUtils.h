@@ -21,4 +21,6 @@ bool writeDataToFile(
     const bool bAppend = false
 ) noexcept;
 
+bool fileExists(const char* filePath) noexcept;
+
 END_NAMESPACE(FileUtils)
