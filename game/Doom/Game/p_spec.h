@@ -16,8 +16,6 @@ struct anim_t {
     uint32_t    ticmask;        // New field for PSX: controls which game tics the animation will advance on
 };
 
-static_assert(sizeof(anim_t) == 24);
-
 extern card_t   gMapBlueKeyType;
 extern card_t   gMapRedKeyType;
 extern card_t   gMapYellowKeyType;

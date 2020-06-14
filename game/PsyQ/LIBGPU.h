@@ -174,8 +174,6 @@ struct DISPENV {
     uint8_t     _pad[2];        // Unused/reserved
 };
 
-static_assert(sizeof(DISPENV) == 20);
-
 // Draw primitive for setting a new draw environment
 struct DR_ENV {
     uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
@@ -196,8 +194,6 @@ struct DRAWENV {
      uint8_t    r0, g0, b0;     // Clear color to use if 'isbg' is '1'.
      DR_ENV     dr_env;         // For internal PsyQ SDK use only
 };
-
-static_assert(sizeof(DRAWENV) == 92);
 
 void LIBGPU_ResetGraph(const int32_t resetMode) noexcept;
 void LIBGPU_SetGraphDebug(const int32_t debugLevel) noexcept;

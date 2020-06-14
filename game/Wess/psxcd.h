@@ -16,8 +16,6 @@ struct PsxCd_File {
     uint8_t     io_result[8];       // Result bytes from LIBCD for the last CD operation
 };
 
-static_assert(sizeof(PsxCd_File) == 40);
-
 // Seek mode for seeking: similar to the C standard library seek modes
 enum class PsxCd_SeekMode : int32_t {
     SET = 0,    // Set the offset
@@ -32,8 +30,6 @@ struct PsxCd_MapTblEntry {
     uint32_t    startSector;
     uint32_t    size;
 };
-
-static_assert(sizeof(PsxCd_MapTblEntry) == 8);
 
 // Sector buffer for when we are reading data
 extern uint8_t gPSXCD_sectorbuf[CD_SECTOR_SIZE];

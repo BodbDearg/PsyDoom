@@ -31,8 +31,6 @@ struct SpuExtAttr {
     int32_t     mix;        // Mix enabled/disabled
 };
 
-static_assert(sizeof(SpuExtAttr) == 12);
-
 // Common sound attributes/settings
 struct SpuCommonAttr {
     uint32_t    mask;       // Bitmask for what attributes are being set/applied
@@ -42,8 +40,6 @@ struct SpuCommonAttr {
     SpuExtAttr  cd;         // CD input settings
     SpuExtAttr  ext;        // External digital input settings
 };
-
-static_assert(sizeof(SpuCommonAttr) == 40);
 
 // Flags for specifying fields or sub-fields in 'SpuCommonAttr'
 static constexpr uint32_t SPU_COMMON_MVOLL      = 0x00000001;   // Master volume (left channel)
@@ -98,8 +94,6 @@ struct SpuVoiceAttr {
     uint16_t    adsr1;          // Envelope adsr (1st 16-bits, see above)
     uint16_t    adsr2;          // Envelope adsr (2nd 16-bits, see above)
 };
-
-static_assert(sizeof(SpuVoiceAttr) == 64);
 
 // Flags for specifying fields or sub-fields in 'SpuVoiceAttr'
 static constexpr uint32_t SPU_VOICE_VOLL        = 0x00000001;

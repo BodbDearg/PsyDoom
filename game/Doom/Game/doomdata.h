@@ -181,3 +181,14 @@ struct maptexture_t {
 };
 
 static_assert(sizeof(maptexture_t) == 8);
+
+// Definition for the header found at the start of PSX texture lumps.
+// Doesn't seem to be really used at all, but it is pretty useful for external WAD editing tools.
+struct texlump_header_t {
+    int16_t offsetX;    // Used for anchoring/offsetting in some UIs
+    int16_t offsetY;    // Used for anchoring/offsetting in some UIs
+    int16_t width;      // Pixel width of texture
+    int16_t height;     // Pixel height of texture
+};
+
+static_assert(sizeof(texlump_header_t) == 8);

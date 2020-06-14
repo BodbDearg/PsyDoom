@@ -2,6 +2,7 @@
 
 #include "d_vsprintf.h"
 #include "Doom/d_main.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"

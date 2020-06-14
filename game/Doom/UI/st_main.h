@@ -12,8 +12,6 @@ struct facesprite_t {
     uint8_t h;
 };
 
-static_assert(sizeof(facesprite_t) == 6);
-
 // Special face type
 enum spclface_e : int32_t {
     f_none,         // Not a face - no special face

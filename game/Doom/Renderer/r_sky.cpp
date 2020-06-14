@@ -3,6 +3,7 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
+#include "Doom/Game/doomdata.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
@@ -25,8 +26,8 @@ void R_DrawSky() noexcept {
     texture_t& skytex = *gpSkyTexture;
 
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        const void* const pLumpData = gpLumpCache[skytex.lumpNum];
-        const uint16_t* const pTexData = (const std::uint16_t*) pLumpData + 4;      // TODO: find out why it is skipping two words and comment
+        const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
+        const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
         RECT vramRect = getTextureVramRect(skytex);
 
         LIBGPU_LoadImage(vramRect, pTexData);

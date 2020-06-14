@@ -8,6 +8,7 @@
 #include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_firesky.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"

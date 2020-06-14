@@ -387,7 +387,7 @@ struct player_t {
     uint32_t        fixedcolormap;                  // Not used in PSX Doom other than being set to '0'; holdover from PC code
     uint32_t        colormap;                       // Not used in PSX Doom ever; holdover from PC code
     pspdef_t        psprites[NUMPSPRITES];          // Current state information for the player's weapon sprites (weapon + muzzle flash)
-    bool            didsecret;                      // Doesn't appear to be used at all in PSX Doom; holder from PC code
+    bool            didsecret;                      // Doesn't appear to be used at all in PSX Doom; holdover from PC code
     sector_t*       lastsoundsector;                // The last sector the player made noise from (used to early out from flood filling)
     int32_t         automapx;                       // View position in the automap: x
     int32_t         automapy;                       // View position in the automap: y

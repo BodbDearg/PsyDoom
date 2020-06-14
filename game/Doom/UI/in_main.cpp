@@ -22,8 +22,6 @@ struct pstats_t {
     int32_t     fragcount;
 };
 
-static_assert(sizeof(pstats_t) == 16);
-
 const char gMapNames[][32] = {
     "Hangar",
     "Plant",

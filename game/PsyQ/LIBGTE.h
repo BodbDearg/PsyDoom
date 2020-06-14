@@ -8,8 +8,6 @@ struct MATRIX {
     int32_t     t[3];       // Translation
 };
 
-static_assert(sizeof(MATRIX) == 32);
-
 // 3D vector with 32-bit elements
 struct VECTOR {
     int32_t     vx;
@@ -18,8 +16,6 @@ struct VECTOR {
     int32_t     pad;
 };
 
-static_assert(sizeof(VECTOR) == 16);
-
 // 3D vector with 16-bit elements
 struct SVECTOR {
     int16_t     vx;
@@ -27,8 +23,6 @@ struct SVECTOR {
     int16_t     vz;
     int16_t     pad;
 };
-
-static_assert(sizeof(SVECTOR) == 8);
 
 void LIBGTE_SetRotMatrix(const MATRIX& m) noexcept;
 void LIBGTE_SetTransMatrix(const MATRIX& m) noexcept;
