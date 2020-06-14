@@ -71,14 +71,14 @@ bool saveToJsonFile(const char* const jsonFilePath) noexcept {
             rapidjson::Value cardsJson(rapidjson::kArrayType);
 
             for (int32_t i = 0; i < NUMCARDS; ++i) {
-                cardsJson.PushBack(player.cards[i], allocator);
+                cardsJson.PushBack((int32_t) player.cards[i], allocator);   // N.B: serialize as int
             }
 
             playerJson.AddMember("cards", cardsJson, allocator);
         }
 
         // Backpack ownership and equipped weapon
-        playerJson.AddMember("backpack", player.backpack, allocator);
+        playerJson.AddMember("backpack", (int32_t) player.backpack, allocator);     // N.B: serialize as int
         playerJson.AddMember("readyweapon", player.readyweapon, allocator);
 
         // Which weapons are owned
@@ -86,7 +86,7 @@ bool saveToJsonFile(const char* const jsonFilePath) noexcept {
             rapidjson::Value weaponownedJson(rapidjson::kArrayType);
 
             for (int32_t i = 0; i < NUMWEAPONS; ++i) {
-                weaponownedJson.PushBack(player.weaponowned[i], allocator);
+                weaponownedJson.PushBack((int32_t) player.weaponowned[i], allocator);   // N.B: serialize as int
             }
 
             playerJson.AddMember("weaponowned", weaponownedJson, allocator);
@@ -164,11 +164,11 @@ static bool verifyJsonFieldMatches(const rapidjson::Value& jsonObj, const char* 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Verify an array field inside the given json object matches the expected value
 //------------------------------------------------------------------------------------------------------------------------------------------
-template <class T>
+template <class JsonT, class CppT>
 static bool verifyJsonArrayFieldMatches(
     const rapidjson::Value& jsonObj,
     const char* const arrayFieldName,
-    const T* const expectedValues,
+    const CppT* const expectedValues,
     const unsigned arraySize
 ) {
     const rapidjson::Value& field = getJsonFieldOrNull(jsonObj, arrayFieldName);
@@ -179,7 +179,7 @@ static bool verifyJsonArrayFieldMatches(
     for (unsigned i = 0; i < arraySize; ++i) {
         const rapidjson::Value& arrayValue = field[i];
         
-        if ((!arrayValue.Is<T>()) || (arrayValue.Get<T>() != expectedValues[i])) {
+        if ((!arrayValue.Is<JsonT>()) || ((CppT) arrayValue.Get<JsonT>() != expectedValues[i])) {
             return false;
         }
     }
@@ -230,12 +230,12 @@ bool verifyMatchesJsonFileResult(const char* const jsonFilePath) noexcept {
         verifyJsonFieldMatches(playerJson, "health", mobj.health) &&
         verifyJsonFieldMatches(playerJson, "armorpoints", player.armorpoints) &&
         verifyJsonFieldMatches(playerJson, "armortype", player.armortype) &&
-        verifyJsonArrayFieldMatches(playerJson, "powers", player.powers, NUMPOWERS) &&
-        verifyJsonArrayFieldMatches(playerJson, "cards", player.cards, NUMCARDS) &&
-        verifyJsonFieldMatches(playerJson, "backpack", player.backpack) &&
-        verifyJsonFieldMatches(playerJson, "readyweapon", (int32_t) player.readyweapon) &&
-        verifyJsonArrayFieldMatches(playerJson, "weaponowned", player.weaponowned, NUMWEAPONS) &&
-        verifyJsonArrayFieldMatches(playerJson, "ammo", player.ammo, NUMAMMO) &&
+        verifyJsonArrayFieldMatches<int32_t>(playerJson, "powers", player.powers, NUMPOWERS) &&                 // N.B: is serialized as int
+        verifyJsonArrayFieldMatches<int32_t>(playerJson, "cards", player.cards, NUMCARDS) &&                    // N.B: is serialized as int
+        verifyJsonFieldMatches(playerJson, "backpack", (int32_t) player.backpack) &&
+        verifyJsonFieldMatches(playerJson, "readyweapon", (int32_t) player.readyweapon) &&                      // N.B: is serialized as int
+        verifyJsonArrayFieldMatches<int32_t>(playerJson, "weaponowned", player.weaponowned, NUMWEAPONS) &&      // N.B: is serialized as int
+        verifyJsonArrayFieldMatches<int32_t>(playerJson, "ammo", player.ammo, NUMAMMO) &&
         verifyJsonFieldMatches(playerJson, "killcount", player.killcount) &&
         verifyJsonFieldMatches(playerJson, "itemcount", player.itemcount) &&
         verifyJsonFieldMatches(playerJson, "secretcount", player.secretcount)
