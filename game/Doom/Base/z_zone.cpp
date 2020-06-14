@@ -36,13 +36,13 @@ void Z_Init() noexcept {
 
     // PC-PSX: allocate the native heap for the application
     //
-    // FIXME: temporarily doubling the available heap space to accomodate larger structs due to 64-bit pointers
+    // TODO: (FIXME) temporarily doubling the available heap space to accomodate larger structs due to 64-bit pointers
     // This setting should be handled properly in EngineLimits.h.
     gZoneHeap.reset(new std::byte[AlignedHeapSize * 2]);
 
     // Setup and save the main memory zone (the only zone)
     //
-    // FIXME: temporarily doubling the available heap space to accomodate larger structs due to 64-bit pointers
+    // TODO: (FIXME) temporarily doubling the available heap space to accomodate larger structs due to 64-bit pointers
     // This setting should be handled properly in EngineLimits.h.
     gpMainMemZone = Z_InitZone(gZoneHeap.get(), AlignedHeapSize * 2);
 }

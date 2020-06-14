@@ -23,18 +23,18 @@ enum plat_e : int32_t {
 
 // Config and state for a moving platform
 struct plat_t {
-    thinker_t       thinker;
-    sector_t*       sector;
-    fixed_t         speed;
-    fixed_t         low;            // TODO: COMMENT
-    fixed_t         high;           // TODO: COMMENT
-    int32_t         wait;           // TODO: COMMENT
-    int32_t         count;          // TODO: COMMENT
-    plat_e          status;         // TODO: COMMENT
-    plat_e          oldstatus;      // TODO: COMMENT
-    bool32_t        crush;
-    int32_t         tag;            // TODO: COMMENT
-    plattype_e      type;
+    thinker_t       thinker;        // Basic thinker properties
+    sector_t*       sector;         // What sector is affected by the moving platform
+    fixed_t         speed;          // Speed that the platform moves at
+    fixed_t         low;            // Height of the lowest floor surrounding the platform's sector
+    fixed_t         high;           // Height of the highest floor surrounding the platform's sector
+    int32_t         wait;           // How long the moving platform waits before returning to it's original position
+    int32_t         count;          // Tick counter: how long of a wait there is left for the platform before it returns to it's original position
+    plat_e          status;         // Current platform state (up/down/wait/paused)
+    plat_e          oldstatus;      // Platform state before it was paused or put into stasis
+    bool            crush;          // If true then the moving platform damages things which don't fit
+    int32_t         tag;            // The tag for the line which activated this platform
+    plattype_e      type;           // What type of behavior the moving platform has
 };
 
 // Maximum number of platforms there can be active at once

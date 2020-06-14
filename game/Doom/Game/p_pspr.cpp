@@ -95,9 +95,9 @@ const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
 static constexpr int32_t BFGCELLS       = 40;               // Number of cells in a BFG shot
 static constexpr int32_t LOWERSPEED     = 12 * FRACUNIT;    // Speed of weapon lowering (pixels)
 static constexpr int32_t RAISESPEED     = 12 * FRACUNIT;    // Speed of weapon raising (pixels)
-static constexpr int32_t WEAPONX        = 1 * FRACUNIT;     // TODO: COMMENT
-static constexpr int32_t WEAPONBOTTOM   = 96 * FRACUNIT;    // TODO: COMMENT
-static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // TODO: COMMENT
+static constexpr int32_t WEAPONX        = 1 * FRACUNIT;     // X offset for weapons
+static constexpr int32_t WEAPONBOTTOM   = 96 * FRACUNIT;    // Y offset for weapons when they are lowered
+static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // Y offset for weapons when they are raised
 
 static mobj_t*  gpSoundTarget;                  // The current thing making noise
 static fixed_t  gBulletSlope;                   // Vertical aiming slope for shooting: computed by 'P_BulletSlope'

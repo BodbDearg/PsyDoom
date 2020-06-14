@@ -34,15 +34,15 @@ enum stair_e : int32_t {
 
 // Holds the state and settings for a moving floor
 struct floormove_t {
-    thinker_t   thinker;
-    floor_e     type;
-    bool        crush;              // Does the floor movement cause crushing?
+    thinker_t   thinker;            // Basic thinker properties
+    floor_e     type;               // What type of behavior the floor mover has
+    bool        crush;              // Does the floor movement cause crushing when things don't fit?
     sector_t*   sector;             // The sector affected
     int32_t     direction;          // 1 = up, -1 = down
-    int32_t     newspecial;         // TODO: comment
-    int16_t     texture;            // TODO: comment
-    fixed_t     floordestheight;
-    fixed_t     speed;
+    int32_t     newspecial;         // For certain floor mover types, a special to assign to the sector when the movement is done
+    int16_t     texture;            // For certain floor mover types, a texture to assign to the sector when the movement is done
+    fixed_t     floordestheight;    // Destination height for the floor mover
+    fixed_t     speed;              // Speed that the floor moves at
 };
 
 // Standard speed for floors moving up and down

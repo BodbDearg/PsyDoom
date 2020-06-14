@@ -179,10 +179,9 @@ void R_DrawWallPiece(
     // This code gets invoked constantly for animated textures like the blood or slime fall textures.
     // Only one frame of the animated texture stays in VRAM at a time!
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        // Decompress and get a pointer to the texture data.
-        // TODO: figure out what 8 bytes this is skipping past!
+        // Decompress and get a pointer to the texture data
         decode(gpLumpCache[tex.lumpNum], gTmpBuffer);
-        const uint16_t* const pTexData = (uint16_t*) gTmpBuffer + 4;
+        const uint16_t* const pTexData = (uint16_t*)(gTmpBuffer + sizeof(texlump_header_t));
 
         // Upload to the GPU and mark the texture as loaded this frame
         const RECT texRect = getTextureVramRect(tex);

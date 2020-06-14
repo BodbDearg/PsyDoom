@@ -16,9 +16,9 @@ static_assert(sizeof(facesprite_t) == 6);
 
 // Special face type
 enum spclface_e : int32_t {
-    f_none,
-    f_unknown1,     // TODO: what is this?
-    f_unknown2,     // TODO: what is this?
+    f_none,         // Not a face - no special face
+    f_normal,       // Regular face
+    f_eyebrow,      // Eyebrow raised face
     f_faceleft,     // Damaged and turn face left
     f_faceright,    // Damaged and turn face right
     f_hurtbad,      // Super surpised look when receiving a lot of damage
@@ -27,16 +27,17 @@ enum spclface_e : int32_t {
     NUMSPCLFACES
 };
 
-// Container for most status bar related state
+// Container for most status bar related state.
+// PC-PSX: all 'bool' fields here were originally 'uint32_t', changed them to express meaning better.
 struct stbar_t {
-    uint32_t        face;                   // TODO: COMMENT
-    spclface_e      specialFace;            // TODO: COMMENT
-    uint32_t        tryopen[NUMCARDS];      // TODO: COMMENT
-    uint32_t        gotgibbed;              // TODO: COMMENT
-    int32_t         gibframe;               // TODO: COMMENT
-    int32_t         gibframeTicsLeft;       // TODO: COMMENT
-    const char*     message;                // TODO: COMMENT
-    int32_t         messageTicsLeft;        // TODO: COMMENT
+    uint32_t        face;                   // Index of the face sprite to currently use
+    spclface_e      specialFace;            // What special face to do next
+    bool            tryopen[NUMCARDS];      // Whether we are doing a keycard flash for each of the key types
+    bool            gotgibbed;              // True if the player just got gibbed
+    int32_t         gibframe;               // What frame of the gib animation is currently showing
+    int32_t         gibframeTicsLeft;       // How many game ticks left in the current gib animation frame
+    const char*     message;                // The current message to show on the status bar (string must be valid at all times)
+    int32_t         messageTicsLeft;        // How many game ticks left to show the status bar message for
 };
 
 // The number of face sprite definitions there are

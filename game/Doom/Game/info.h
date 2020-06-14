@@ -8,6 +8,8 @@
 
 #include "Doom/doomdef.h"
 
+#include <cstddef>
+
 enum sfxenum_t : int32_t;
 
 // PC-PSX: Helper typedefs for the two possible forms of state_t function: one for map objects (things) and one for player sprites (weapons)

@@ -24,6 +24,15 @@ static constexpr uint32_t TITLEPAL              = 17;   // PSX Doom: title scree
 static constexpr uint32_t IDCREDITS1PAL         = 18;   // PSX Doom: id credits screen palette
 static constexpr uint32_t WCREDITS1PAL          = 19;   // PSX Doom: williams credits screen palette
 
+// Definition for the header found at the start of PSX texture lumps.
+// Doesn't seem to be really used at all, but it is pretty useful for external WAD editing tools.
+struct texlump_header_t {
+    int16_t offsetX;    // Used for anchoring/offsetting in some UIs
+    int16_t offsetY;    // Used for anchoring/offsetting in some UIs
+    int16_t width;      // Pixel width of texture
+    int16_t height;     // Pixel height of texture
+};
+
 // Stores information about a texture, including it's dimensions, lump info and texture cache info
 struct texture_t {
     int16_t         offsetX;                // Used for anchoring/offsetting in some UIs

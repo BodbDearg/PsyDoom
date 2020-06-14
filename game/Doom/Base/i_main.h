@@ -2,6 +2,8 @@
 
 #include "Doom/doomdef.h"
 
+#include <cstddef>
+
 struct DISPENV;
 struct DRAWENV;
 struct texture_t;

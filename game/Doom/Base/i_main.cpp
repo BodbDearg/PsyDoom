@@ -32,6 +32,7 @@
 //  (4) Following that, 11 pages are free to be used in any way for map textures and sprites.
 //      This is what is referred to as the 'texture cache'.
 //  (5) 1 texture page at the end appears to be reserved/unused during gameplay.
+//      Perhaps it was held off limits in case memory got tight and a quick fix was needed, or kept reserved for debug stuff?
 //  (6) Each of the 11 256x256 pages are broken up into a grid of 16x16 cells, where each cell is 16 pixels wide and tall.
 //      Each cell stores a pointer to the 'texture_t' occupying the cell, if any.
 //  (7) When adding a sprite or texture to the cache, the code will search through the cells for a free space
@@ -64,12 +65,9 @@ static constexpr uint32_t TCACHE_BASE_PAGE = 4;
 
 // The texture coordinates of each texture cache page in VRAM.
 // Notes:
-//  (1) Since the PsyQ SDK expects these coordinates to be in terms of a 16-bit texture, X is halved here
-//      because Doom's textures are actually 8 bit.
+//  (1) Since the PsyQ SDK expects these coordinates to be in terms of a 16-bit texture, X is halved here because Doom's textures are actually 8 bit.
 //  (2) The coordinates ignore the first 4 pages in VRAM, since that is used for the framebuffer.
-//  (3) The extra 'reserved' texture page that is not used in the cache is also here too, hence 1 extra coordinate.
-//      TODO: find out more about this.
-//
+//  (3) The extra 'reserved' or unused texture page that is not used in the cache is also here too, hence 1 extra coordinate.
 constexpr uint16_t TEX_PAGE_VRAM_TEXCOORDS[NUM_TCACHE_PAGES + 1][2] = {
     { 512,  0,  },
     { 640,  0,  },
@@ -665,7 +663,7 @@ void I_CacheTex(texture_t& tex) noexcept {
     tex.ppTexCacheEntries = pTexStartCacheCell;
 
     // Make sure the texture's lump is loaded and decompress if required
-    const void* pTexData = W_CacheLumpNum(tex.lumpNum, PU_CACHE, false);
+    const std::byte* pTexData = (const std::byte*) W_CacheLumpNum(tex.lumpNum, PU_CACHE, false);
     const bool bIsTexCompressed = (!gpbIsUncompressedLump[tex.lumpNum]);
 
     if (bIsTexCompressed) {
@@ -687,7 +685,7 @@ void I_CacheTex(texture_t& tex) noexcept {
             tex.height
         );
 
-        LIBGPU_LoadImage(dstVramRect, (uint16_t*) pTexData + 4);    // TODO: figure out what 8 bytes is being skipped
+        LIBGPU_LoadImage(dstVramRect, (uint16_t*)(pTexData + sizeof(texlump_header_t)));
     }
 
     // Save the textures page coordinate

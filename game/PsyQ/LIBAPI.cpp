@@ -85,7 +85,7 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept {
         }
     }
 
-    // FIXME: support SerialIO events here!
+    // TODO: (FIXME) support SerialIO events here!
 
     // Failed to close the event if we've gotten to here!
     return false;
@@ -97,7 +97,7 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept {
 void LIBAPI_EnterCriticalSection() noexcept {}
 
 int32_t LIBAPI_write([[maybe_unused]] const int32_t fileDesc, const void* const pBuffer, const int32_t numBytes) noexcept {
-    // FIXME: IMPLEMENT PROPERLY - return value: bytes written or -1 on error
+    // TODO: (FIXME) IMPLEMENT PROPERLY - return value: bytes written or -1 on error
     return Network::sendBytes(pBuffer, numBytes) ? numBytes : -1;
 }
 
@@ -116,7 +116,7 @@ bool LIBAPI_EnableEvent(const int32_t event) noexcept {
         }
     }
 
-    // FIXME: support SerialIO events here!
+    // TODO: (FIXME) support SerialIO events here!
 
     // Failed to enable the event if we've gotten to here!
     return false;
@@ -188,7 +188,7 @@ bool LIBAPI_DisableEvent(const int32_t event) noexcept {
         }
     }
 
-    // FIXME: support SerialIO events here!
+    // TODO: (FIXME) support SerialIO events here!
 
     // Failed to disable the event if we've gotten to here!
     return false;
@@ -227,19 +227,19 @@ int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t 
         }
     }
 
-    // FIXME: support SerialIO events here!
+    // TODO: (FIXME) support SerialIO events here!
 
     // This is the failure value which means we didn't open an event
     return -1;
 }
 
 int32_t LIBAPI_read([[maybe_unused]] const int32_t fileDesc, void* const pBuffer, const int32_t numBytes) noexcept {
-    // FIXME: IMPLEMENT PROPERLY - return value: bytes read or -1 on error
+    // TODO: (FIXME) IMPLEMENT PROPERLY - return value: bytes read or -1 on error
     return Network::recvBytes(pBuffer, numBytes) ? numBytes : -1;
 }
 
 bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept {
-    // FIXME: IMPLEMENT ME
+    // TODO: (FIXME) IMPLEMENT ME
     return true;
 }
 
@@ -249,7 +249,7 @@ bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept 
 void LIBAPI_ExitCriticalSection() noexcept {}
 
 int32_t LIBAPI_open([[maybe_unused]] const char* const pPath, [[maybe_unused]] const uint32_t flags) noexcept {
-    // FIXME: IMPLEMENT ME
+    // TODO: (FIXME) IMPLEMENT ME
     return -1;
 }
 

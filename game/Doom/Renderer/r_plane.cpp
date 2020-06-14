@@ -41,11 +41,11 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     // Most normal flats however will already be uploaded to VRAM on level start.
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Decompress the lump data to the temporary buffer if required
-        const void* pLumpData;
+        const std::byte* pLumpData;
         const bool bIsUncompressedLump = gpbIsUncompressedLump[tex.lumpNum];
 
         if (bIsUncompressedLump) {
-            pLumpData = gpLumpCache[tex.lumpNum];
+            pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
         } else {
             const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
             decode(pCompressedLumpData, gTmpBuffer);
@@ -54,7 +54,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
 
         // Load the decompressed texture to the required part of VRAM and mark as loaded
         const RECT vramRect = getTextureVramRect(tex);
-        LIBGPU_LoadImage(vramRect, (uint16_t*) pLumpData + 4);      // TODO: figure out what 8 bytes are being skipped
+        LIBGPU_LoadImage(vramRect, (uint16_t*)(pLumpData + sizeof(texlump_header_t)));
         tex.uploadFrameNum = gNumFramesDrawn;
     }
 
@@ -222,7 +222,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
             spanR = oldSpanL;
         }
 
-        // Hack that extends the span bounds, presumably so they join with walls etc.
+        // A hack that extends the span bounds, presumably so they join with walls etc.
         // This does cause some visual bugs in places, particularly around steps.
         // If you look at some steps in PSX DOOM the flat sometimes extends past where it should into the 'air'...
         spanL -= 2;

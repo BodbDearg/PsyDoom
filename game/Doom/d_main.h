@@ -2,6 +2,8 @@
 
 #include "doomdef.h"
 
+#include <cstddef>
+
 enum class CdMapTbl_File : int32_t;
 
 extern int32_t      gTicCon;

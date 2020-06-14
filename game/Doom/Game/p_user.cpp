@@ -120,9 +120,8 @@ static void P_PlayerZMovement(mobj_t& mobj) noexcept {
 
     // Do smooth stepping up a step
     if (mobj.z < mobj.floorz) {
-        // TODO: comment on exactly what this is doing
-        player.viewheight -= mobj.floorz - mobj.z;
-        player.deltaviewheight = (VIEWHEIGHT - player.viewheight) >> 2;
+        player.viewheight -= mobj.floorz - mobj.z;                          // Adjust the view height by the difference
+        player.deltaviewheight = (VIEWHEIGHT - player.viewheight) >> 2;     // This does a nice curved motion up (fast at first, then slowing down)
     }
     
     // Advance z position by the velocity

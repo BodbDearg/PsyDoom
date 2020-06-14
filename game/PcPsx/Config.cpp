@@ -63,7 +63,7 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Uncapped framerate toggle.\n"
         "# Setting to '1' allows PsyDoom to run beyond the original 30 FPS cap of PSX Doom.\n"
-        "# Frames in-between the original 30 FPS keyframes will have movements and rotations interpolated.\n"
+        "# Frames in between the original 30 FPS keyframes will have movements and rotations interpolated.\n"
         "#---------------------------------------------------------------------------------------------------\n"
         "UncapFramerate = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },

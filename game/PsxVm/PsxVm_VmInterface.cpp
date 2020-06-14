@@ -31,7 +31,7 @@ void emulate_sound_if_required() noexcept {
             soundBufferSize = Sound::buffer.size();
         }
 
-        // FIXME: temp hack - fill the sound buffers up a decent amount to prevent skipping
+        // TODO: (FIXME) temp hack - fill the sound buffers up a decent amount to prevent skipping
         if (soundBufferSize >= 1024 * 2)
             return;
         

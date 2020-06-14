@@ -23,7 +23,7 @@ void P_UpdateFireSky(texture_t& skyTex) noexcept {
 
     // Grab the lump data for the fire sky and the 1st (top) row of fire
     uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
-    uint8_t* const pRow0 = pLumpData + 8;     // TODO: comment what is being skipped
+    uint8_t* const pRow0 = pLumpData + sizeof(texlump_header_t);
     
     // Fire propagates up, so we always sample from a row below the destination
     uint8_t* pSrcRow = pRow0 + FIRESKY_W;
