@@ -68,11 +68,11 @@ static int32_t              gOptionsMenuSize;
 static const menuitem_t*    gpOptionsMenuItems;
 
 // The marble floor texture used as a background for the options menu
-texture_t   gTex_MARB01;
+texture_t gTex_MARB01;
 
 // Current options music and sound volume
-int32_t     gOptionsSndVol = 100;           // TODO: make constant
-int32_t     gOptionsMusVol = 100;           // TODO: make constant
+int32_t gOptionsSndVol = S_MAX_VOL;
+int32_t gOptionsMusVol = S_MAX_VOL;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the options menu
