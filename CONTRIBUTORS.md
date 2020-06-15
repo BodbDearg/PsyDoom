@@ -41,6 +41,8 @@ PsyDoom contributors (sorted alphabetically)
         * Pointing out issues with 'Nightmare' mode passwords and a fix:
             https://github.com/BodbDearg/PsyDoom/commit/53219ed02236d96b3a628bc8db43233928954f8d
             https://github.com/Erick194/PSXDOOM-RE/commit/7d1a37385c32c5c8f3026c3d8164647c8e67ff00
+        * Support for extended password map numbers (0-255, instead of 0-63):
+            https://github.com/Erick194/PSXDOOM-RE/commit/2a5b73503db5479131702ee29dc946056bcf026a
 
 * **[Jakub Czekański (JaCzekanski)](https://github.com/JaCzekanski)**
 

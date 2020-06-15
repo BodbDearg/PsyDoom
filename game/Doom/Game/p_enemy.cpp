@@ -981,6 +981,7 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     // skulls found in that list. We can't fix the issue however for PSX Doom without breaking demo compatibility, so I'm
     // just going to disable the code instead since it is somewhat ill formed (with strange casts), and does nothing.
     //
+    // TODO: fix the lost soul limit and make the fix configurable
     #if !PC_PSX_DOOM_MODS
         // Count the number of skulls active in the level: if there are 21 or more then don't spawn any additional ones
         int32_t numActiveSkulls = 0;

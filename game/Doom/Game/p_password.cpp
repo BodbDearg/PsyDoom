@@ -65,6 +65,11 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     // Encode byte: armor type
     pwdata[5] = (uint8_t)(player.armortype << 3);
 
+    // PC-PSX: incorporating an improvement from PSXDOOM-RE to encode an additional 2 map number bits.
+    // This allows for map numbers from 0-255 instead of just 0-63, if required.
+    pwdata[5] |= (gNextMap & 64) ? 0x20 : 0;
+    pwdata[5] |= (gNextMap & 128) ? 0x40 : 0;
+
     // PC-PSX: encode if the game is operating in nightmare mode in the top bit of the last unencrypted byte.
     // This change is compatible with a similar change in 'PSXDOOM-RE' so passwords should be compatible beween both projects.
     //
@@ -76,7 +81,7 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
         }
     #endif
 
-    // Convert the the regular 8-bit bytes that we just encoded to 5-bit bytes which can encode 32 values.
+    // Convert the regular 8-bit bytes that we just encoded to 5-bit bytes which can encode 32 values.
     // This is so we can use ASCII characters and numbers to encode the data.
     // This expands the size of the password from 6 bytes to 9 bytes, as we need to encode 45 bits.
     constexpr int32_t BITS_TO_ENCODE = 45;
@@ -167,8 +172,15 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
         pwdata[dstByteIdx] = dstByte;
     }
     
-    // Decode byte: current map and skill
-    const int32_t mapNum = pwdata[0] >> 2;
+    // Decode byte: current map and skill.
+    // PC-PSX: incorporating an improvement from PSXDOOM-RE to decode an additional 2 map number bits.
+    // This allows for map numbers from 0-255 instead of just 0-63, if required.
+    #if PC_PSX_DOOM_MODS
+        const int32_t mapNum = (pwdata[0] >> 2) + ((pwdata[5] & 0x20) ? 64 : 0) + ((pwdata[5] & 0x40) ? 128 : 0);
+    #else
+        const int32_t mapNum = pwdata[0] >> 2;
+    #endif
+
     mapNumOut = mapNum;
 
     if ((mapNum == 0) || (mapNum > 59))
