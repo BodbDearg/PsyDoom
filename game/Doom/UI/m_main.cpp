@@ -15,6 +15,13 @@
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
+// PC-PSX: move this up slightly to make room for the 'quit' option
+#if PC_PSX_DOOM_MODS
+    static constexpr int32_t DOOM_LOGO_YPOS = 10;
+#else
+    static constexpr int32_t DOOM_LOGO_YPOS = 20;
+#endif
+
 texture_t   gTex_BACK;                  // The background texture for the main menu
 int32_t     gCursorPos[MAXPLAYERS];     // Which of the menu options each player's cursor is over (see 'menu_t')
 int32_t     gCursorFrame;               // Current frame that the menu cursor is displaying
@@ -26,16 +33,30 @@ enum menu_t : int32_t {
     level,
     difficulty,
     options,
+#if PC_PSX_DOOM_MODS    // PC-PSX: add a quit option to the main menu
+    menu_quit,
+#endif
     NUMMENUITEMS
 };
 
-// The position of each main menu option
-static const int16_t gMenuYPos[NUMMENUITEMS] = {
-    91,     // gamemode
-    133,    // level
-    158,    // difficulty
-    200     // options
-};
+// The position of each main menu option.
+// PC-PSX: had to move everything up to make room for 'quit'
+#if PC_PSX_DOOM_MODS
+    static const int16_t gMenuYPos[NUMMENUITEMS] = {
+        81,     // gamemode
+        123,    // level
+        148,    // difficulty
+        190,    // options
+        215     // quit
+    };
+#else
+    static const int16_t gMenuYPos[NUMMENUITEMS] = {
+        91,     // gamemode
+        133,    // level
+        158,    // difficulty
+        200     // options
+    };
+#endif
 
 // Game mode names and skill names
 static const char gGameTypeNames[NUMGAMETYPES][16] = {
@@ -62,14 +83,22 @@ static int32_t      gMaxStartEpisodeOrMap;      // Restricts what maps or episod
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunMenu() noexcept {
     do {
-        // Run the menu: abort to the title screen & demos if the menu timed out
-        if (MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer) == ga_timeout)
-            return ga_timeout;
+        // Run the menu: abort to the title screen & demos if the menu timed out.
+        // PC-PSX: also quit if app quit is requested.
+        const gameaction_t menuResult = MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
+
+        #if PC_PSX_DOOM_MODS
+            if ((menuResult == ga_timeout) || (menuResult == ga_quitapp))
+                return menuResult;
+        #else
+            if (menuResult == ga_timeout)
+                return menuResult;
+        #endif
 
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
-        I_CacheAndDrawSprite(gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
+        I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[TITLEPAL]);
         I_SubmitGpuCmds();
         I_DrawPresent();
 
@@ -238,6 +267,12 @@ gameaction_t M_Ticker() noexcept {
                 if (MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer) == ga_warped)
                     return ga_warped;
             }
+
+            // PC-PSX: quit the game if that option is chosen
+            #if PC_PSX_DOOM_MODS
+                if (gCursorPos[0] == menu_quit)
+                    return ga_quitapp;
+            #endif
         }
     }
 
@@ -371,7 +406,7 @@ void M_Drawer() noexcept {
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
     // Draw the DOOM logo
-    I_CacheAndDrawSprite(gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
+    I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[TITLEPAL]);
 
     // Draw the skull cursor
     I_DrawSprite(
@@ -406,6 +441,10 @@ void M_Drawer() noexcept {
     I_DrawString(74, gMenuYPos[difficulty], "Difficulty");
     I_DrawString(90, gMenuYPos[difficulty] + 20, gSkillNames[gStartSkill]);
     I_DrawString(74, gMenuYPos[options], "Options");
+
+    #if PC_PSX_DOOM_MODS
+        I_DrawString(74, gMenuYPos[menu_quit], "Quit");
+    #endif
     
     // Finish up the frame
     I_SubmitGpuCmds();

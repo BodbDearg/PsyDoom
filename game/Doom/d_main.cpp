@@ -89,8 +89,6 @@ void D_DoomMain() noexcept {
             return;
     #endif
 
-    // TODO: PC-PSX: allow this loop to exit if the application is quit
-    //
     // The main intro and demo scenes flow.
     // Continue looping until there is input and then execute the main menu until it times out.
     while (true) {
@@ -104,8 +102,17 @@ void D_DoomMain() noexcept {
         }
         
         while (true) {
-            if (RunMenu() == ga_timeout)
+            // Go back to the title screen if timing out
+            const gameaction_t result = RunMenu();
+
+            if (result == ga_timeout)
                 break;
+
+            // PC-PSX: quit the application entirely if requested
+            #if PC_PSX_DOOM_MODS
+                if (result == ga_quitapp)
+                    return;
+            #endif
         }
     }
 }

@@ -110,6 +110,9 @@ enum gameaction_t : int32_t {
     ga_timeout,         // PSX DOOM: player died or menu timed out
     ga_restart,         // PSX DOOM: player restarted the level
     ga_exit,            // PSX DOOM: Exit the current screen or demo
+#if PC_PSX_DOOM_MODS
+    ga_quitapp          // PC-PSX: exit the application entirely
+#endif
 };
 
 // Coordinate indexes in a bounding box
