@@ -13,6 +13,7 @@
 #include "PcPsx/FatalErrors.h"
 #include "PcPsx/FileUtils.h"
 #include "PcPsx/ProgArgs.h"
+#include "PcPsx/PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Renderer/r_data.h"

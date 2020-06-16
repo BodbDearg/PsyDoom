@@ -10,6 +10,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "PcPsx/PsxPadButtons.h"
 #include "pw_main.h"
 #include "Wess/psxspu.h"
 

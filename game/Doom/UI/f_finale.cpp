@@ -12,6 +12,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "m_main.h"
+#include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"

@@ -10,6 +10,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "o_main.h"
+#include "PcPsx/PsxPadButtons.h"
 
 // Names for all the control bindings
 static const char gCtrlBindingNames[NUM_CTRL_BINDS][16] = {

@@ -156,6 +156,7 @@ set(SOURCE_FILES
     "PcPsx/Network.h"
     "PcPsx/ProgArgs.cpp"
     "PcPsx/ProgArgs.h"
+    "PcPsx/PsxPadButtons.h"
     "PcPsx/PsxVm.cpp"
     "PcPsx/PsxVm.h"
     "PcPsx/Types.h"

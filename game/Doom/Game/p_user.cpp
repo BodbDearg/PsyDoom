@@ -15,6 +15,7 @@
 #include "p_slide.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 
 #include <algorithm>

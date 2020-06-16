@@ -21,6 +21,7 @@
 #include "PcPsx/Config.h"
 #include "PcPsx/DemoResult.h"
 #include "PcPsx/ProgArgs.h"
+#include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"

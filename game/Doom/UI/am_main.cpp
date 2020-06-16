@@ -8,6 +8,7 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
+#include "PcPsx/PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 

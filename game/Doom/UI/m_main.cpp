@@ -11,6 +11,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
 #include "PcPsx/Network.h"
+#include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"

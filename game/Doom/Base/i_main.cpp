@@ -11,6 +11,7 @@
 #include "PcPsx/Config.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
+#include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
 #include "PsyQ/LIBAPI.h"

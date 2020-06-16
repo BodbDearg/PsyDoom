@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "ProgArgs.h"
+#include "PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
 #include "Utils.h"
 #include "Video.h"
