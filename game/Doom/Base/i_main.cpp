@@ -7,6 +7,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "i_drawcmds.h"
+#include "PcPsx/Assert.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"

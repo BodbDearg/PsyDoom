@@ -10,6 +10,7 @@
 #include "cdmaptbl.h"
 #include "Game/g_game.h"
 #include "Game/p_tick.h"
+#include "PcPsx/FatalErrors.h"
 #include "PcPsx/FileUtils.h"
 #include "PcPsx/ProgArgs.h"
 #include "PsyQ/LIBETC.h"
@@ -198,7 +199,7 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
     size_t demoFileSize = 0;
 
     if (!FileUtils::getContentsOfFile(filePath, pDemoFileBytes, demoFileSize)) {
-        FATAL_ERROR_F("Unable to read demo file '%s'! Is the file path valid?", filePath);
+        FatalErrors::raiseF("Unable to read demo file '%s'! Is the file path valid?", filePath);
     }
 
     // Setup the demo buffers and play the demo file

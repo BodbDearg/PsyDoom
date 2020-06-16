@@ -1,7 +1,8 @@
 #include "Video.h"
 
-#include "ProgArgs.h"
+#include "Assert.h"
 #include "Config.h"
+#include "ProgArgs.h"
 #include "PsxVm/PsxVm.h"
 #include "Utils.h"
 
@@ -31,7 +32,7 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
     SDL_DisplayMode displayMode;
 
     if (SDL_GetCurrentDisplayMode(0, &displayMode) != 0) {
-        FATAL_ERROR("Failed to determine current screen video mode!");
+        FatalErrors::raise("Failed to determine current screen video mode!");
     }
 
     // If in fullscreen then use the current screen resolution.
@@ -56,7 +57,7 @@ static void lockFramebufferTexture() noexcept {
     int pitch = 0;
 
     if (SDL_LockTexture(gFramebufferTexture, nullptr, reinterpret_cast<void**>(&gpFrameBuffer), &pitch) != 0) {
-        FATAL_ERROR("Failed to lock the framebuffer texture for writing!");
+        FatalErrors::raise("Failed to lock the framebuffer texture for writing!");
     }
 }
 
@@ -147,7 +148,7 @@ void initVideo() noexcept {
 
     // Initialize SDL subsystems
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-        FATAL_ERROR("Unable to initialize SDL!");
+        FatalErrors::raise("Unable to initialize SDL!");
     }
 
     // This is the window title to use
@@ -180,14 +181,14 @@ void initVideo() noexcept {
     );
 
     if (!gWindow) {
-        FATAL_ERROR("Unable to create a window!");
+        FatalErrors::raise("Unable to create a window!");
     }
 
     // Create the renderer and framebuffer texture
     gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     if (!gRenderer) {
-        FATAL_ERROR("Failed to create renderer!");
+        FatalErrors::raise("Failed to create renderer!");
     }
 
     gFramebufferTexture = SDL_CreateTexture(
@@ -199,7 +200,7 @@ void initVideo() noexcept {
     );
 
     if (!gFramebufferTexture) {
-        FATAL_ERROR("Failed to create a framebuffer texture!");
+        FatalErrors::raise("Failed to create a framebuffer texture!");
     }
 
     // Clear the renderer to black

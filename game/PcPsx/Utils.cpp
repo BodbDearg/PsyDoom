@@ -1,6 +1,7 @@
 #include "Utils.h"
 
 #include "Doom/Game/p_tick.h"
+#include "FatalErrors.h"
 #include "Network.h"
 #include "ProgArgs.h"
 #include "PsxVm/PsxVm.h"
@@ -32,7 +33,7 @@ std::string getOrCreateUserDataFolder() noexcept {
     char* const pCfgFilePath = SDL_GetPrefPath(SAVE_FILE_ORG, SAVE_FILE_PRODUCT);
 
     if (!pCfgFilePath) {
-        FATAL_ERROR("Unable to create or determine the user data folder (config/save folder) for PsyDoom!");
+        FatalErrors::raise("Unable to create or determine the user data folder (config/save folder) for PsyDoom!");
     }
 
     std::string path = pCfgFilePath;

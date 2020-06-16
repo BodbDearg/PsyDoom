@@ -4,6 +4,7 @@
 #include "FileUtils.h"
 
 #include "Finally.h"
+#include "PcPsx/Assert.h"
 
 #include <cstdint>
 #include <cstring>

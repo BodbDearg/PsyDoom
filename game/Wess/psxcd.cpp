@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxcd.h"
 
+#include "PcPsx/FatalErrors.h"
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
@@ -475,7 +476,7 @@ PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
     // Sanity check the file is valid!
     #if PC_PSX_DOOM_MODS
         if (discFile >= CdMapTbl_File::END) {
-            FATAL_ERROR("psxcd_open: invalid file specified!");
+            FatalErrors::raise("psxcd_open: invalid file specified!");
         }
     #endif
 

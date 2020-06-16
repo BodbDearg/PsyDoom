@@ -11,6 +11,7 @@
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
+#include "PcPsx/Assert.h"
 #include "PcPsx/Macros.h"
 
 #include <algorithm>

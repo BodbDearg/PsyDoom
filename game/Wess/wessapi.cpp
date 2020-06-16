@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessapi.h"
 
+#include "PcPsx/Assert.h"
 #include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
 #include "wessapi_t.h"

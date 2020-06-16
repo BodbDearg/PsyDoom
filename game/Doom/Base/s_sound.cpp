@@ -7,6 +7,7 @@
 #include "EngineLimits.h"
 #include "i_main.h"
 #include "m_fixed.h"
+#include "PcPsx/FatalErrors.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
 #include "sounds.h"
@@ -505,7 +506,7 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
 
     #if PC_PSX_DOOM_MODS
         if (!pFile) {
-            FATAL_ERROR("Failed to open DOOMSFX.WMD!");
+            FatalErrors::raise("Failed to open DOOMSFX.WMD!");
         }
     #endif
 

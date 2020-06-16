@@ -5,6 +5,7 @@
 #include "LIBGPU.h"
 
 #include "LIBETC.h"
+#include "PcPsx/Assert.h"
 #include "PsxVm/PsxVm.h"
 
 #include <cstdarg>

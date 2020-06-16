@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "ModMgr.h"
 
+#include "Assert.h"
 #include "ProgArgs.h"
 
 #include <filesystem>
@@ -64,7 +65,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
         }
     }
     catch (...) {
-        FATAL_ERROR_F("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
+        FatalErrors::raiseF("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
     }
 #endif
 }
@@ -78,7 +79,7 @@ static uint8_t findFreeOpenFileSlotIndex() noexcept {
             return i;
     }
 
-    FATAL_ERROR("findFreeOpenFileSlotIndex: out of available open file slots, too many files open!");
+    FatalErrors::raise("findFreeOpenFileSlotIndex: out of available open file slots, too many files open!");
     return UINT8_MAX;
 }
 
@@ -128,7 +129,7 @@ bool openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut) noexce
 
     // Figure out the path for the file
     if (discFile >= CdMapTbl_File::END) {
-        FATAL_ERROR("ModMgr::openOverridenFile: invalid file specified!");
+        FatalErrors::raise("ModMgr::openOverridenFile: invalid file specified!");
     }
 
     const char* const filename = CD_MAP_FILENAMES[(uint32_t) discFile];

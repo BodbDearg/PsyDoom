@@ -4,6 +4,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "PsxVm.h"
 
+#include "PcPsx/Assert.h"
+
 #include <map>
 #include <SDL.h>
 
@@ -115,7 +117,7 @@ bool PsxVm::init(const char* const doomCdCuePath) noexcept {
     system.cdrom->setShell(false);
 
     if (!system.cdrom->disc) {
-        FATAL_ERROR_F(
+        FatalErrors::raiseF(
             "Couldn't open or failed to parse the .cue disc descriptor '%s'!\n"
             "Is it present at the specified path and is it valid? This *MUST* be the .cue file for PlayStation Doom (PAL or NTSC).",
             doomCdCuePath
