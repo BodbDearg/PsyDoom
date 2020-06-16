@@ -1,8 +1,25 @@
 #include "LIBETC.h"
 
 #include "PsxVm/PsxVm.h"
+#include "PcPsx/Assert.h"
 
 #include <ctime>
+
+// An imitation of the 1 KiB scratchpad memory/cache that the PlayStation had; now just a simple c-array
+static uint8_t gScratchpad[1024];
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return a pointer to the specified 32-bit word in the PSX 'scratchpad' memory/cache.
+// There is 1 KiB of memory in total in the scratchpad.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void* LIBETC_getScratchAddr(const uint32_t word32Index) {
+    // Sanity check: allow the 'end' pointer to be taken, but no further...
+    constexpr int32_t SCRATCHPAD_END_WORD_IDX = sizeof(gScratchpad) / sizeof(uint32_t);
+    ASSERT(word32Index <= SCRATCHPAD_END_WORD_IDX);
+
+    // Return the requested memory
+    return gScratchpad + word32Index * sizeof(uint32_t);
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize system callbacks and interrupt handlers: doesn't need to do anything for PsyDoom!
@@ -26,6 +43,7 @@ int32_t LIBETC_VSync(const int32_t mode) noexcept {
 
     if (mode < 0) {
         // For the VBLANK count emulation use the time since the program started to get the count.
+        // TODO: changes here to support the PAL version?
         const clock_t now = clock();
         double vblanks = ((double) now * 60.0) / (double) CLOCKS_PER_SEC;
         return (int32_t) vblanks;

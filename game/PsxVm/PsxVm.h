@@ -38,7 +38,6 @@ namespace PsxVm {
     extern gpu::GPU*                gpGpu;
     extern spu::SPU*                gpSpu;
     extern device::cdrom::CDROM*    gpCdrom;
-    extern uint8_t*                 gpScratchpad;       // Cache used as fast RAM (1 KiB) (TODO: make this a native app buffer)
 
     bool init(const char* const doomCdCuePath) noexcept;
     void shutdown() noexcept;

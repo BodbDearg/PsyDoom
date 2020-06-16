@@ -210,12 +210,9 @@ void initVideo() noexcept {
     // Immediately lock the framebuffer texture for updating
     lockFramebufferTexture();
 
-    // TODO: re-enable this later once mouse input works
-    #if 0
-        // Grab input and hide the cursor
-        SDL_SetWindowGrab(gWindow, SDL_TRUE);
-        SDL_ShowCursor(SDL_DISABLE);
-    #endif
+    // Grab input and hide the cursor
+    SDL_SetWindowGrab(gWindow, SDL_TRUE);
+    SDL_ShowCursor(SDL_DISABLE);
 }
 
 void shutdownVideo() noexcept {
