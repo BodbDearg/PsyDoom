@@ -5,8 +5,8 @@
 #include "PsxVm.h"
 
 #include "PcPsx/Assert.h"
+#include "ProgArgs.h"
 
-#include <map>
 #include <SDL.h>
 
 BEGIN_DISABLE_HEADER_WARNINGS
@@ -17,20 +17,20 @@ BEGIN_DISABLE_HEADER_WARNINGS
     #include <system.h>
 END_DISABLE_HEADER_WARNINGS
 
-using namespace PsxVm;
+BEGIN_NAMESPACE(PsxVm)
 
-static std::unique_ptr<System>          gSystem;
-static std::unique_ptr<InputManager>    gInputMgr;
-
-System*                 PsxVm::gpSystem;
-gpu::GPU*               PsxVm::gpGpu;
-spu::SPU*               PsxVm::gpSpu;
-device::cdrom::CDROM*   PsxVm::gpCdrom;
+System*                 gpSystem;
+gpu::GPU*               gpGpu;
+spu::SPU*               gpSpu;
+device::cdrom::CDROM*   gpCdrom;
 
 // TODO: this is a temp hack for gamepad support
 static SDL_GameController*  gpGameController;
 static SDL_Joystick*        gpJoystick;
 static SDL_JoystickID       gJoystickId;
+
+static std::unique_ptr<System>          gSystem;
+static std::unique_ptr<InputManager>    gInputMgr;
 
 // Keys for input handling
 const std::string gPadBtnKey_Up = "controller/1/dpad_up";
@@ -48,11 +48,10 @@ const std::string gPadBtnKey_R2 = "controller/1/r2";
 const std::string gPadBtnKey_L1 = "controller/1/l1";
 const std::string gPadBtnKey_R1 = "controller/1/r1";
 
-// A mapping from native functions to a VM address
-static std::map<void*, Uint32> gNativeFuncToVmAddr;
-
+//------------------------------------------------------------------------------------------------------------------------------------------
 // TODO: temp function to check for game controller connection/disconnection.
 // Eventually should live elsewhere and be broken up into separate close / rescan functions.
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void rescanGameControllers() noexcept {
     if (gpGameController) {
         if (!SDL_GameControllerGetAttached(gpGameController)) {
@@ -84,27 +83,17 @@ static void rescanGameControllers() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Setup and clear pointers for the VM environment
+// Initialize emulated PlayStation system components and use the given .cue file for the game disc
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void setupVmPointers() noexcept {
+bool init(const char* const doomCdCuePath) noexcept {
+    // Create a new system and setup vm pointers
+    gSystem.reset(new System());
+
+    System& system = *gSystem;
     gpSystem = gSystem.get();
     gpGpu = gpSystem->gpu.get();
     gpSpu = gpSystem->spu.get();
     gpCdrom = gpSystem->cdrom.get();
-}
-
-static void clearVmPointers() noexcept {
-    gpCdrom = nullptr;
-    gpSpu = nullptr;
-    gpGpu = nullptr;
-    gpSystem = nullptr;
-}
-
-bool PsxVm::init(const char* const doomCdCuePath) noexcept {
-    // Create a new system and setup vm pointers
-    gSystem.reset(new System());
-    System& system = *gSystem;
-    setupVmPointers();
 
     // GPU: disable logging - this eats up TONS of memory!
     gpGpu->gpuLogEnabled = false;
@@ -136,15 +125,25 @@ bool PsxVm::init(const char* const doomCdCuePath) noexcept {
     return true;
 }
 
-void PsxVm::shutdown() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tear down emulated PlayStation components
+//------------------------------------------------------------------------------------------------------------------------------------------
+void shutdown() noexcept {
     Sound::close();
     InputManager::setInstance(nullptr);
     gInputMgr.reset();
-    clearVmPointers();
+    
+    gpCdrom = nullptr;
+    gpSpu = nullptr;
+    gpGpu = nullptr;
+    gpSystem = nullptr;
     gSystem.reset();
 }
 
-void PsxVm::updateInput() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Updates inputs to the emulator from real inputs on the host machine
+//------------------------------------------------------------------------------------------------------------------------------------------
+void updateInput() noexcept {
     // TODO: support configurable input
     // TODO: support game controller
     const uint8_t* const pKbState = SDL_GetKeyboardState(nullptr);
@@ -249,13 +248,14 @@ void PsxVm::updateInput() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Gets the state of the controller directly to bypass input lag caused by emulation
+// Gets the state of an emulated PlayStation digital controller, telling which buttons are pressed in the returned bit-mask.
+// TODO: move getting PSX controller buttons to a controls module and make the PSX button bindings configurable.
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint16_t PsxVm::getControllerButtonBits() noexcept {
+uint16_t getControllerButtonBits() noexcept {
     uint16_t buttonBits = 0;
     InputManager& inputMgr = *InputManager::getInstance();
-
-    // TODO: make constants for these outside of LIBETC
+    
+    // TODO: don't use hardcoded constants for the button bits
     if (inputMgr.getDigital(gPadBtnKey_Up))         { buttonBits |= 0x1000; }
     if (inputMgr.getDigital(gPadBtnKey_Down))       { buttonBits |= 0x4000; }
     if (inputMgr.getDigital(gPadBtnKey_Left))       { buttonBits |= 0x8000; }
@@ -274,8 +274,11 @@ uint16_t PsxVm::getControllerButtonBits() noexcept {
     return buttonBits;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Submit a drawing primitive to the GPU
 // TODO: replace with a more readable solution; don't write to GP0 and setup the GPU and submit primitives directly
-void PsxVm::submitGpuPrimitive(const void* const pPrim) noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+void submitGpuPrimitive(const void* const pPrim) noexcept {
     ASSERT(pPrim);
     
     // Get the primitive tag and consequently how many data words there are in the primitive
@@ -295,3 +298,43 @@ void PsxVm::submitGpuPrimitive(const void* const pPrim) noexcept {
         gpGpu->writeGP0(dataWord);
     }
 }
+
+void emulateSoundIfRequired() noexcept {
+    // Do no sound emulation in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
+    while (true) {
+        size_t soundBufferSize;
+
+        {
+            std::unique_lock<std::mutex> lock(Sound::audioMutex);
+            soundBufferSize = Sound::buffer.size();
+        }
+
+        // TODO: (FIXME) temp hack - fill the sound buffers up a decent amount to prevent skipping
+        if (soundBufferSize >= 1024 * 2)
+            return;
+        
+        spu::SPU& spu = *gpSpu;
+        device::cdrom::CDROM& cdrom = *gpCdrom;
+
+        while (!spu.bufferReady) {
+            // Read more CD data if we are playing music
+            if (cdrom.stat.play && cdrom.audio.empty()) {
+                cdrom.bForceSectorRead = true;  // Force an immediate read on the next step
+                stepCdromWithCallbacks();
+            }
+
+            // Step the spu to emulate it's functionality
+            spu.step(&cdrom);
+        }
+
+        if (spu.bufferReady) {
+            spu.bufferReady = false;
+            Sound::appendBuffer(spu.audioBuffer.begin(), spu.audioBuffer.end());
+        }
+    }
+}
+
+END_NAMESPACE(PsxVm)

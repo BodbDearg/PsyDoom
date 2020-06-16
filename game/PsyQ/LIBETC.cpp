@@ -1,7 +1,7 @@
 #include "LIBETC.h"
 
-#include "PsxVm/PsxVm.h"
 #include "PcPsx/Assert.h"
+#include "PcPsx/PsxVm.h"
 
 #include <ctime>
 

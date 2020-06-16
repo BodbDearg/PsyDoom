@@ -6,7 +6,7 @@
 
 #include "PcPsx/Assert.h"
 #include "PcPsx/Finally.h"
-#include "PsxVm/PsxVm.h"
+#include "PcPsx/PsxVm.h"
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <device/cdrom/cdrom.h>
@@ -66,7 +66,7 @@ static uint8_t readCdCmdResultByte() noexcept {
 // NEW for PC-PSX: step the CD-ROM and invoke 'data ready' callbacks if a new sector was read.
 // This method is CRUCIAL for correct functionality (to invoke callbacks) because I do not use emulated interrupts at all.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void stepCdromWithCallbacks() noexcept {
+void PsxVm::stepCdromWithCallbacks() noexcept {
     // Advance the cdrom emulation: this may result in a sector being read
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
 
@@ -264,7 +264,7 @@ void LIBCD_CdFlush() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 CdlSyncStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[8]) noexcept {
     // Just step the CDROM a little in case this is being polled
-    stepCdromWithCallbacks();
+    PsxVm::stepCdromWithCallbacks();
 
     // Give the caller the result of the last cd operation if required
     if (pResult) {
@@ -295,7 +295,7 @@ CdlSyncStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept {
         } else {
             // No data: make a read of some happen immediately
             cdrom.bForceSectorRead = true;
-            stepCdromWithCallbacks();
+            PsxVm::stepCdromWithCallbacks();
             ASSERT(!cdrom.isBufferEmpty());
 
             return CdlDataReady;
@@ -304,7 +304,7 @@ CdlSyncStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept {
     else {
         // Just querying whether there is data or not.
         // Emulate the CD a little in case this is being polled in a loop and return the status.
-        stepCdromWithCallbacks();
+        PsxVm::stepCdromWithCallbacks();
         return (!cdrom.isBufferEmpty()) ? CdlDataReady : CdlNoIntr;
     }
 }

@@ -3,7 +3,7 @@
 #include "Assert.h"
 #include "Config.h"
 #include "ProgArgs.h"
-#include "PsxVm/PsxVm.h"
+#include "PsxVm.h"
 #include "Utils.h"
 
 #include <SDL.h>

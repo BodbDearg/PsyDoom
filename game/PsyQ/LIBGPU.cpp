@@ -6,7 +6,7 @@
 
 #include "LIBETC.h"
 #include "PcPsx/Assert.h"
-#include "PsxVm/PsxVm.h"
+#include "PcPsx/PsxVm.h"
 
 #include <cstdarg>
 

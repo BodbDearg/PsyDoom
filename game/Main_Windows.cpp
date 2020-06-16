@@ -5,7 +5,7 @@
 #include "PcPsx/Config.h"
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
-#include "PsxVm/PsxVm.h"
+#include "PcPsx/PsxVm.h"
 
 int main(const int argc, const char** const argv) {
     // Parse command line arguments and configuration

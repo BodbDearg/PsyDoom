@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBSPU.h"
 
-#include "PsxVm/PsxVm.h"
+#include "PcPsx/PsxVm.h"
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <system.h>

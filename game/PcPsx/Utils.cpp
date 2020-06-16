@@ -4,7 +4,7 @@
 #include "FatalErrors.h"
 #include "Network.h"
 #include "ProgArgs.h"
-#include "PsxVm/PsxVm.h"
+#include "PsxVm.h"
 #include "Video.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
@@ -59,8 +59,8 @@ void doPlatformUpdates() noexcept {
     // Actually do the platform updates
     gLastPlatformUpdateTime = now;
 
-    generate_timer_events();
-    emulate_sound_if_required();
+    PsxVm::generateTimerEvents();
+    PsxVm::emulateSoundIfRequired();
     Network::doUpdates();
     Video::handleSdlWindowEvents();
 }

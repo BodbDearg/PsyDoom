@@ -1,5 +1,6 @@
 #include "LIBAPI.h"
 
+#include "PcPsx/PsxVm.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
 
@@ -33,7 +34,7 @@ static RootCounter2 gRootCnt2 = {};
 // Not a part of the original LIBAPI: this is called by the host application to generate hardware timer related events (fake 'interrupts').
 // This is what drives the music sequencer.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void generate_timer_events() noexcept {
+void PsxVm::generateTimerEvents() noexcept {
     // Don't do anything in headless mode: no audio
     if (ProgArgs::gbHeadlessMode)
         return;

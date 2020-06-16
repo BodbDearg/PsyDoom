@@ -16,7 +16,6 @@
 #include "p_mobj.h"
 #include "p_tick.h"
 #include "PcPsx/Assert.h"
-#include "PsxVm/PsxVm.h"
 
 const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
     {   // Fist

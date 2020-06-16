@@ -5,7 +5,7 @@
 #include "i_drawcmds.h"
 
 #include "PcPsx/Assert.h"
-#include "PsxVm/PsxVm.h"
+#include "PcPsx/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 
 // GPU packets beginning and end pointer and the 64 KiB buffer used to hold GPU primitives

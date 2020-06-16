@@ -8,7 +8,6 @@
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
 #include "psxspu.h"
-#include "PsxVm/PsxVm.h"
 
 // PSXCD module commands within PsxCd_Command
 enum PsxCd_CmdOp : int32_t {
