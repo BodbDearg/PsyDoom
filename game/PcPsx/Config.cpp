@@ -113,13 +113,12 @@ static void parseConfigFile(
     }
 
     if (bCfgFileExists) {
-        std::byte* pConfigFileBytes = nullptr;
-        size_t configFileSize = 0;
+        const FileData fileData = FileUtils::getContentsOfFile(configFilePath.c_str(), 8, std::byte(0));
 
-        if (FileUtils::getContentsOfFile(configFilePath.c_str(), pConfigFileBytes, configFileSize, 8, std::byte(0))) {
+        if (fileData.bytes) {
             IniUtils::parseIniFromString(
-                (const char*) pConfigFileBytes,
-                configFileSize,
+                (const char*) fileData.bytes.get(),
+                fileData.size,
                 [&](const IniUtils::Entry& iniEntry) noexcept {
                     // Try to find a matching config field handler.
                     // This is not an especially smart or fast way of doing it, but performance isn't an issue here:
@@ -136,8 +135,6 @@ static void parseConfigFile(
                 }
             );
         }
-
-        delete[] pConfigFileBytes;
     }
 
     // If we are missing expected config fields then we need to reopen the config and append to it

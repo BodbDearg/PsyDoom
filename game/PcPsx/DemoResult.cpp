@@ -193,20 +193,15 @@ static bool verifyJsonArrayFieldMatches(
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool verifyMatchesJsonFileResult(const char* const jsonFilePath) noexcept {
     // Read the input json file
-    std::byte* pJsonFileBytes = nullptr;
-    size_t jsonFileSize = 0;
+    const FileData fileData = FileUtils::getContentsOfFile(jsonFilePath, 8, std::byte(0));
 
-    if (!FileUtils::getContentsOfFile(jsonFilePath, pJsonFileBytes, jsonFileSize, 8, (std::byte) 0))
+    if (!fileData.bytes)
         return false;
-
-    auto freeJsonMem = finally([&]() noexcept {
-        delete[] pJsonFileBytes;
-    });
 
     // Parse the json
     rapidjson::Document document;
 
-    if (document.ParseInsitu((char*) pJsonFileBytes).HasParseError())
+    if (document.ParseInsitu((char*) fileData.bytes.get()).HasParseError())
         return false;
 
     // Validate everything

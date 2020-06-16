@@ -5,12 +5,20 @@
 #include <cstddef>
 #include <memory>
 
+// Holds a reference to the data and size of a file
+struct FileData {
+    FileData() noexcept = default;
+    FileData(const FileData& other) = delete;   // Only move is allowed: if you want a copy, you need to do manually
+    FileData(FileData&& other) = default;
+
+    std::unique_ptr<std::byte>  bytes;
+    size_t                      size;
+};
+
 BEGIN_NAMESPACE(FileUtils)
 
-bool getContentsOfFile(
+FileData getContentsOfFile(
     const char* const filePath,
-    std::byte*& pOutputMem,
-    size_t& outputSize,
     const size_t numExtraBytes = 0,
     const std::byte extraBytesValue = std::byte(0)
 ) noexcept;

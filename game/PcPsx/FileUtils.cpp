@@ -29,25 +29,17 @@ BEGIN_NAMESPACE(FileUtils)
 //  (2) The output memory is allocated with C++ 'new[]' so should be deallocated with C++ 'delete[]'.
 //  (3) The output size does NOT include the extra bytes added.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool getContentsOfFile(
+FileData getContentsOfFile(
     const char* const filePath,
-    std::byte*& pOutputMem,
-    size_t& outputSize,
     const size_t numExtraBytes,
     const std::byte extraBytesValue
 ) noexcept {
-    ASSERT(filePath);
-
-    // Clear output firstly
-    pOutputMem = nullptr;
-    outputSize = 0;
-
     // Open the file firstly and ensure it will be closed on exit
+    ASSERT(filePath);
     FILE* pFile = std::fopen(filePath, "rb");
 
-    if (!pFile) {
-        return false;
-    }
+    if (!pFile)
+        return FileData();
 
     auto closeFile = finally([&]() noexcept {
         std::fclose(pFile);
@@ -55,22 +47,22 @@ bool getContentsOfFile(
 
     // Figure out what size it is and rewind back to the start
     if (std::fseek(pFile, 0, SEEK_END) != 0)
-        return false;
+        return FileData();
     
     const long fileSize = std::ftell(pFile);
 
     if (fileSize <= 0 || fileSize >= INT32_MAX)
-        return false;
+        return FileData();
     
     if (std::fseek(pFile, 0, SEEK_SET) != 0)
-        return false;
+        return FileData();
     
     // Try to read the file contents
     std::byte* const pTmpBuffer = new std::byte[(size_t) fileSize + numExtraBytes];
 
     if (std::fread(pTmpBuffer, (uint32_t) fileSize, 1, pFile) != 1) {
         delete[] pTmpBuffer;
-        return false;
+        return FileData();
     }
 
     // Success! Set the value of the extra bytes (if specified)
@@ -79,9 +71,10 @@ bool getContentsOfFile(
     }
 
     // Save the result and return 'true' for success
-    pOutputMem = pTmpBuffer;
-    outputSize = (size_t) fileSize;
-    return true;
+    FileData fileData;
+    fileData.bytes.reset(pTmpBuffer);
+    fileData.size = fileSize;
+    return fileData;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -24,6 +24,8 @@
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
 
+#include <memory>
+
 // The current number of 60Hz ticks
 int32_t gTicCon;
 
@@ -153,9 +155,9 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     #if PC_PSX_DOOM_MODS
         const int32_t demoFileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
 
-        uint8_t* const pDemoBuffer(new uint8_t[demoFileSize]);      // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
-        gpDemoBuffer = (uint32_t*) pDemoBuffer;
-        gpDemoBufferEnd = (uint32_t*)(pDemoBuffer + demoFileSize);
+        std::unique_ptr<uint8_t[]> pDemoBuffer(new uint8_t[demoFileSize]);
+        gpDemoBuffer = (uint32_t*) pDemoBuffer.get();
+        gpDemoBufferEnd = (uint32_t*)(pDemoBuffer.get() + demoFileSize);
 
         SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
         ReadFile(openFileIdx, gpDemoBuffer, demoFileSize);
@@ -171,13 +173,8 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     // Play the demo, free the demo buffer and return the exit action
     const gameaction_t exitAction = G_PlayDemoPtr();
 
-    // PC-PSX: the demo buffer is no longer allocated through the zone memory system.
-    // Also cleanup the buffer pointers when we're done.
-    #if PC_PSX_DOOM_MODS
-        delete[] pDemoBuffer;   // TODO: remove this once we use std::unique_ptr<>
-        gpDemoBuffer = nullptr;
-        gpDemoBufferEnd = nullptr;
-    #else
+    // PC-PSX: the demo buffer is no longer allocated through the zone memory system; std::unique_ptr will also cleanup after itself
+    #if !PC_PSX_DOOM_MODS
         Z_Free2(*gpMainMemZone, gpDemoBuffer);
     #endif
 
@@ -195,22 +192,21 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
     }
 
     // Read the demo file into memory
-    std::byte* pDemoFileBytes = nullptr;    // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
-    size_t demoFileSize = 0;
+    const FileData fileData = FileUtils::getContentsOfFile(filePath);
 
-    if (!FileUtils::getContentsOfFile(filePath, pDemoFileBytes, demoFileSize)) {
+    if (!fileData.bytes) {
         FatalErrors::raiseF("Unable to read demo file '%s'! Is the file path valid?", filePath);
     }
 
     // Setup the demo buffers and play the demo file
-    gpDemoBuffer = (uint32_t*) pDemoFileBytes;
-    gpDemoBufferEnd = (uint32_t*)(pDemoFileBytes + demoFileSize);
+    gpDemoBuffer = (uint32_t*) fileData.bytes.get();
+    gpDemoBufferEnd = (uint32_t*)(fileData.bytes.get() + fileData.size);
 
     const gameaction_t exitAction = G_PlayDemoPtr();
 
+    // Cleanup after we are done and return the exit action
     gpDemoBuffer = nullptr;
     gpDemoBufferEnd = nullptr;
-    delete[] pDemoFileBytes;        // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
 
     return exitAction;
 }
