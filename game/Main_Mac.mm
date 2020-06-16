@@ -1,8 +1,4 @@
 #include "Doom/psx_main.h"
-#include "Doom/psx_main.h"
-#include "PcPsx/ModMgr.h"
-#include "PcPsx/ProgArgs.h"
-#include "PsxVm/PsxVm.h"
 
 #include <Foundation/Foundation.h>
 #include <cstdio>
@@ -28,24 +24,6 @@ int main(const int argc, const char** const argv) noexcept {
             [fileMgr changeCurrentDirectoryPath: appFolder.path];
         }
         
-        // Parse command line arguments
-        ProgArgs::init(argc, argv);
-    
-        // Initialize the PSX VM using the NTSC-U PSX Doom disc (supplied as a .cue file).
-        // TODO: make this path configurable.
-        if (!PsxVm::init("Doom.cue"))
-            return 1;
-        
-        // Initialize the modding manager
-        ModMgr::init();
-
-        // Run the game! This is the actual PSXDOOM.EXE entrypoint...
-        psx_main();
-
-        // We're done: shutdown
-        PsxVm::shutdown();
-        ModMgr::shutdown();
+        return psx_main(argc, argv);
     }
-
-    return 0;
 }

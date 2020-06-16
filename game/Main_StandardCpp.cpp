@@ -1,7 +1,5 @@
-#include "Game/DoomMain.h"
+#include "Doom/psx_main.h"
 
-int main() noexcept {
-    // FIXME: this needs work for Linux
-    D_DoomMain();
-    return 0;
+int main(const int argc, const char** const argv) {
+    return psx_main(argc, argv);
 }
