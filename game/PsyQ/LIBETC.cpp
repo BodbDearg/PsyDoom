@@ -61,6 +61,5 @@ int32_t LIBETC_VSync(const int32_t mode) noexcept {
 // The input parameter is not used, and should be set to '0'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t LIBETC_PadRead([[maybe_unused]] const uint32_t unusedControllerId) noexcept {
-    PsxVm::updateInput();
     return PsxVm::getControllerButtonBits();
 }

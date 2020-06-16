@@ -1,3 +1,6 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Display setup and manipulation
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "Video.h"
 
 #include "Assert.h"
@@ -120,23 +123,6 @@ static void copyPsxToSdlFramebuffer() noexcept {
             );
 
             ++pDstPixel;
-        }
-    }
-}
-
-void handleSdlWindowEvents() noexcept {
-    // Ignore call in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
-
-    // TODO: handle events and maybe move this elsewhere
-    SDL_Event event = {};
-
-    while (SDL_PollEvent(&event) != 0) {
-        // TODO: temp hack to allow quitting
-        if (event.type == SDL_QUIT) {
-            PsxVm::shutdown();
-            std::exit(0);
         }
     }
 }

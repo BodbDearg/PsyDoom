@@ -3,6 +3,8 @@
 #include "ControllerInput.h"
 #include "Config.h"
 #include "FatalErrors.h"
+#include "ProgArgs.h"
+#include "PsxVm.h"
 #include "Video.h"
 
 #include <algorithm>
@@ -167,6 +169,11 @@ static void handleSdlEvents() noexcept {
     while (SDL_PollEvent(&sdlEvent) != 0) {
         switch (sdlEvent.type) {
             case SDL_QUIT:
+                // TODO: dirty hack to allow quitting temporarily
+                PsxVm::shutdown();
+                std::exit(0);
+
+                // TODO: eventually we'll use the 'quit requested' flag and exit properly
                 gbIsQuitRequested = true;
                 break;
             
@@ -393,6 +400,10 @@ void shutdown() noexcept {
 // Generates input events like key down; should be called once per frame
 //------------------------------------------------------------------------------------------------------------------------------------------
 void update() noexcept {
+    // Ignore call in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
     zeroMouseMovementDeltas();      // Cancel any mouse movement deltas unless we get more
     consumeEvents();                // Released/pressed events are now cleared
     handleSdlEvents();              // Process events that SDL is sending to us

@@ -2,6 +2,7 @@
 
 #include "Doom/Game/p_tick.h"
 #include "FatalErrors.h"
+#include "Input.h"
 #include "Network.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
@@ -62,7 +63,7 @@ void doPlatformUpdates() noexcept {
     PsxVm::generateTimerEvents();
     PsxVm::emulateSoundIfRequired();
     Network::doUpdates();
-    Video::handleSdlWindowEvents();
+    Input::update();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
