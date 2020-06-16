@@ -9,6 +9,16 @@ struct SampleBlock;
 // Max DOOM volume level (0-100)
 const int32_t S_MAX_VOL = 100;
 
+// Default levels for music and sound.
+// PC-PSX: incorporate an improvement from Final Doom and change the default mixing levels so that music is heard better.
+#if PC_PSX_DOOM_MODS
+    const int32_t S_SND_DEFAULT_VOL = 85;
+#else
+    const int32_t S_SND_DEFAULT_VOL = 100;
+#endif
+
+const int32_t S_MUS_DEFAULT_VOL = 100;
+
 // Enum for a CD music piece and also an index into the 'gCDTrackNum' array to get an actual track number
 enum cdmusic_t : int32_t {
     cdmusic_title_screen,

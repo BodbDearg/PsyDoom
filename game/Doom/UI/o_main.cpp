@@ -71,8 +71,8 @@ static const menuitem_t*    gpOptionsMenuItems;
 texture_t gTex_MARB01;
 
 // Current options music and sound volume
-int32_t gOptionsSndVol = S_MAX_VOL;
-int32_t gOptionsMusVol = S_MAX_VOL;
+int32_t gOptionsSndVol = S_SND_DEFAULT_VOL;
+int32_t gOptionsMusVol = S_MUS_DEFAULT_VOL;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the options menu
