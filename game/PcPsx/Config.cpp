@@ -98,9 +98,19 @@ static void parseConfigFile(
     std::vector<bool> executedConfigHandler;
     executedConfigHandler.resize(numConfigFieldHandlers);
 
-    // Read and parse the ini file (if it exists)
-    const std::string configFilePath = configFolder + fileName;
-    const bool bCfgFileExists = FileUtils::fileExists(configFilePath.c_str());
+    // Read and parse the ini file (if it exists).
+    // Allow the file to exist in two different locations: (1) The current working directory and (2) The normal config folder.
+    // The configuration file in the current working directory takes precedence over the one in the config folder.
+    std::string configFilePath;
+    bool bCfgFileExists;
+    
+    if (FileUtils::fileExists(fileName)) {
+        configFilePath = fileName;
+        bCfgFileExists = true;
+    } else {
+        configFilePath = configFolder + fileName;
+        bCfgFileExists = FileUtils::fileExists(configFilePath.c_str());
+    }
 
     if (bCfgFileExists) {
         std::byte* pConfigFileBytes = nullptr;
@@ -188,15 +198,19 @@ void init() noexcept {
     // If we generated new config inform the user so changes can be made if required
     if (gbDidGenerateNewConfig) {
         std::string cfgFileMessage =
-            "Hey, just a heads up! PsyDoom has generated new (defaulted) config .ini files or appended new settings to existing .ini files.\n"
-            "If you would like to edit PsyDoom's configuration, you can find the files at the following location:\n\n";
+            "Hey, just a heads up! PsyDoom has generated and defaulted some new configuration settings in one or more .ini files.\n"
+            "If you would like to review or edit PsyDoom's settings, you can normally find the .ini files at the following location:\n\n";
 
         cfgFileMessage.append(configFolder, 0, configFolder.length() - 1);
-        cfgFileMessage += "\n\nEdit these files before proceeding to modify game settings.\n";
+        cfgFileMessage += "\n\n";
+        cfgFileMessage += "Change these files before proceeding to customize game settings.\n";
+        cfgFileMessage += "\n";
+        cfgFileMessage += "Note: if you wish, you can copy the .ini files to the application's working directory and these .ini\n";
+        cfgFileMessage += "files will be recognized and take precedence over the ones in the folder mentioned above.";
 
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_INFORMATION,
-            "How to configure PsyDoom",
+            "Configuring PsyDoom: new settings available",
             cfgFileMessage.c_str(),
             nullptr
         );
