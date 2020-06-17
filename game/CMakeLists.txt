@@ -252,22 +252,18 @@ if (COMPILER_MSVC)
     target_compile_options(${GAME_TGT_NAME} PUBLIC /W4)         # Enable all warnings (except the ones disabled above)
     
     # MSVC: Don't complain about using regular 'std::fopen()' etc.
-    target_compile_definitions(${GAME_TGT_NAME} PUBLIC -D_CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)
 else()
     add_common_target_compile_options(${GAME_TGT_NAME})
 endif()
 
 # Setup target compile options
 if (PLATFORM_WINDOWS)
-    # Disable for now!
-    # set_property(TARGET ${GAME_TGT_NAME} PROPERTY WIN32_EXECUTABLE true)
-endif()
-
-if (PLATFORM_MAC)
+    set_property(TARGET ${GAME_TGT_NAME} PROPERTY WIN32_EXECUTABLE true)        # Win32 GUI APP
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DUNICODE -D_UNICODE)   # Use Unicode WinMain()
+elseif(PLATFORM_MAC)
     # Disable for now!
     # SET_TARGET_PROPERTIES(${GAME_TGT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
-endif()
-
-if (PLATFORM_LINUX)
+elseif (PLATFORM_LINUX)
     target_compile_options(${GAME_TGT_NAME} PRIVATE -pthread)
 endif()
