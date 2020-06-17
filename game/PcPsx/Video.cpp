@@ -145,11 +145,8 @@ void initVideo() noexcept {
     #endif
 
     // Determine the window creation flags
-    Uint32 windowCreateFlags = (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
-
-    #ifndef __MACOSX__
-        windowCreateFlags |= SDL_WINDOW_OPENGL;
-    #endif
+    Uint32 windowCreateFlags = SDL_WINDOW_OPENGL;
+    windowCreateFlags |= (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
 
     // Decide what window size to use
     int32_t winSizeX = 0;
@@ -196,9 +193,10 @@ void initVideo() noexcept {
     // Immediately lock the framebuffer texture for updating
     lockFramebufferTexture();
 
-    // Grab input and hide the cursor
+    // Grab input, focus the window and hide the cursor    
     SDL_SetWindowGrab(gWindow, SDL_TRUE);
     SDL_ShowCursor(SDL_DISABLE);
+    SDL_SetWindowInputFocus(gWindow);
 }
 
 void shutdownVideo() noexcept {

@@ -189,18 +189,8 @@ static uint8_t gPadInputBuffer_2[34];
 // I'm just calling 'I_Main()' so as not to confuse it with this port's 'main()'...
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Main() noexcept {
-    // PsyQ SDK initialization stuff
     LIBSN__main();
-
-    #if PC_PSX_DOOM_MODS
-        Video::initVideo();
-    #endif
-
     D_DoomMain();
-
-    #if PC_PSX_DOOM_MODS
-        Video::shutdownVideo();
-    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
