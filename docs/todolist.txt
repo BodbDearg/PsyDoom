@@ -1,10 +1,15 @@
 - Fixup networking code for analog movements.
 - Add mouse support & mouse sensitivity setting.
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
+- Investigate and fix issues with network play and uncapped framerates.
+    - Might need an extra frame of latency to interpolate properly
+    - Can maybe avoid that with rollback networking
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
+- Make the floor rendering fix configurable
+- Incorporate the player missile damage fix and make it an optional setting (off by default)
 - Incorporate lost soul spawn limit fix but make configurable and off by default.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
@@ -17,7 +22,24 @@
 - Make all file I/O bypass LIBCD and the emulated cdrom.
     - Free the cd-rom for just audio use, and potentially safely running on another thread.
     - Remove low level LIBCD stuff that will no longer be needed.
+- Incorporate Final Doom mouse sensitivity UI option
+- Incorporate Final Doom 'exit' option in password menu
+- Detect game type (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
+    - Incorporate into network packet ids
 - Final Doom support!
+    - Map format support.
+    - New linedef flag.
+    - New animated textures.
+    - New palettes.
+    - Player movement changes - does it result in different behavior? Or just a refactor?
+    - Demo format support.
+    - Map names/episode changing logic.
+    - Menu/UI changes.
+    - Finale changes.
+    - Player movement changes? Investigate...
+    - Need to record demos against original game for verification.
+    - Other miscellaneous changes.
+    - Any FSM changes?
 - Investigate moving sound processing onto another thread and triggered in demand to output buffer requirements.
     - Should fix all stuttering, and free up main thread resources.
 - Allow turning outside of the 30 FPS cap to improve responsiveness.
@@ -33,6 +55,7 @@
     - Might need a completely new set of state_t etc. with different timings.    
 - Break the link between the SPU and Avocado 'system' (entire PSX)
 - Break the link between the GPU and Avocado 'system' (entire PSX)
+- Implement playing the intro movies and legal text
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
 - Investigate a possible 'high res' or crispy mode.
@@ -41,7 +64,17 @@
 - Investigate expanding or removing VRAM limit
 - Investigate the possibility of dithering to improve rendering output.
 - Investigate a MAPINFO format for naming maps, choosing music etc.
-- Investigate and fix issues with network play and uncapped framerates.
 - Investigate rollback networking to combat latency.
+    - Could also be used for a rewind feature??!
+- Linux support.
+- Verify NTSC stretched resolution is fully correct.
+- Make file overrides (basic mod system) work on MacOS
+- Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
+- Support a clean exit from the game everywhere (except I_Error)
+- Investigate shutdown code and properly cleanup everything
+- Move reversing tools into their own folder and only include optionally in the cmake project.
+    - Shouldn't be needed to compile the game.
 - Do a final pass to revert any Avocado mods which are no longer needed.
+- Do a final review/diff against PSXDOOM-RE to double check for any inconsistencies.
+- Writeup final readmes and docs.
 - Do a final pass to optimize #includes.
