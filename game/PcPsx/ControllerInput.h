@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Macros.h"
+
 #include <cstdint>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,8 +36,11 @@ enum class ControllerInput : uint8_t {
 
 static constexpr uint8_t NUM_CONTROLLER_INPUTS = (uint32_t) ControllerInput::INVALID;
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Convert an SDL button or axis to a controller input enum
-//------------------------------------------------------------------------------------------------------------------------------------------
-ControllerInput sdlControllerButtonToInput(const uint8_t button) noexcept;
-ControllerInput sdlControllerAxisToInput(const uint8_t axis) noexcept;
+BEGIN_NAMESPACE(ControllerInputUtils)
+
+bool isAxis(const ControllerInput input) noexcept;
+ControllerInput getOppositeAxis(const ControllerInput input) noexcept;
+ControllerInput sdlButtonToInput(const uint8_t button) noexcept;
+ControllerInput sdlAxisToInput(const uint8_t axis) noexcept;
+
+END_NAMESPACE(ControllerInputUtils)

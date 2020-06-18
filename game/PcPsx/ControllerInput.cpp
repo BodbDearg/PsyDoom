@@ -2,7 +2,46 @@
 
 #include <SDL.h>
 
-ControllerInput sdlControllerButtonToInput(const uint8_t button) noexcept {
+BEGIN_NAMESPACE(ControllerInputUtils)
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tell if an input is an axis of some sort
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isAxis(const ControllerInput input) noexcept {
+    switch (input) {
+        case ControllerInput::AXIS_LEFT_X:
+        case ControllerInput::AXIS_LEFT_Y:
+        case ControllerInput::AXIS_RIGHT_X:
+        case ControllerInput::AXIS_RIGHT_Y:
+        case ControllerInput::AXIS_TRIG_LEFT:
+        case ControllerInput::AXIS_TRIG_RIGHT:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// If an axis has an opposite axis (complementing 2d axis pair) then the function returns the opposite axis.
+// Otherwise the input axis is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+ControllerInput getOppositeAxis(const ControllerInput input) noexcept {
+    switch (input) {
+        case ControllerInput::AXIS_LEFT_X:      return ControllerInput::AXIS_LEFT_Y;
+        case ControllerInput::AXIS_LEFT_Y:      return ControllerInput::AXIS_LEFT_X;
+        case ControllerInput::AXIS_RIGHT_X:     return ControllerInput::AXIS_RIGHT_Y;
+        case ControllerInput::AXIS_RIGHT_Y:     return ControllerInput::AXIS_RIGHT_X;
+
+        default:
+            return input;
+    }    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convert an SDL button to a controller input enum
+//------------------------------------------------------------------------------------------------------------------------------------------
+ControllerInput sdlButtonToInput(const uint8_t button) noexcept {
     switch (button) {
         case SDL_CONTROLLER_BUTTON_A:               return ControllerInput::BTN_A;
         case SDL_CONTROLLER_BUTTON_B:               return ControllerInput::BTN_B;
@@ -25,7 +64,10 @@ ControllerInput sdlControllerButtonToInput(const uint8_t button) noexcept {
     }
 }
 
-ControllerInput sdlControllerAxisToInput(const uint8_t axis) noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convert an SDL axis to a controller input enum
+//------------------------------------------------------------------------------------------------------------------------------------------
+ControllerInput sdlAxisToInput(const uint8_t axis) noexcept {
     switch (axis) {
         case SDL_CONTROLLER_AXIS_LEFTX:             return ControllerInput::AXIS_LEFT_X;
         case SDL_CONTROLLER_AXIS_LEFTY:             return ControllerInput::AXIS_LEFT_Y;
@@ -38,3 +80,5 @@ ControllerInput sdlControllerAxisToInput(const uint8_t axis) noexcept {
             return ControllerInput::INVALID;
     }
 }
+
+END_NAMESPACE(ControllerInputUtils)

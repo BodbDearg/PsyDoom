@@ -15,10 +15,13 @@
 #include "p_slide.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "PcPsx/Config.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 
 #include <algorithm>
+#include <cmath>
 
 // Accelerating turn speeds: normal
 static constexpr fixed_t ANGLE_TURN[10] = { 
@@ -34,6 +37,8 @@ static constexpr fixed_t STOPSPEED              = FRACUNIT / 16;                
 static constexpr fixed_t FRICTION               = 0xd200;                       // Friction amount to apply to player movement: approximately 0.82
 static constexpr fixed_t FORWARD_MOVE[2]        = { 0x40000, 0x60000 };         // Movement speeds: forward/back
 static constexpr fixed_t SIDE_MOVE[2]           = { 0x38000, 0x58000 };         // Movement speeds: strafe left/right
+static constexpr fixed_t MAX_FORWARD_MOVE       = FORWARD_MOVE[1];              // For convenience
+static constexpr fixed_t MAX_SIDE_MOVE          = SIDE_MOVE[1];                 // For convenience
 static constexpr int32_t TURN_ACCEL_TICS        = C_ARRAY_SIZE(ANGLE_TURN);     // Number of tics/stages in turn acceleration before it hits max speed
 static constexpr int32_t TURN_TO_ANGLE_SHIFT    = 17;                           // How many bits to shift the turn amount left to scale it to an angle
 static constexpr fixed_t MAXBOB                 = 16 * FRACUNIT;                // Maximum amount of view bobbing per frame (16 pixels)
@@ -224,6 +229,8 @@ static void P_BuildMove(player_t& player) noexcept {
     }
 
     // Do turning or strafing controls (if strafe button held)
+    const bool bDoFastTurn = ((speedMode != 0) && ((curBtns & (PAD_UP | PAD_DOWN)) == 0));
+
     if (curBtns & pBtnBindings[cbind_strafe]) {
         // Strafe button held: turn buttons become strafing buttons
         if (curBtns & PAD_LEFT) {
@@ -237,7 +244,7 @@ static void P_BuildMove(player_t& player) noexcept {
         // No strafe button held: do normal turning
         fixed_t turnAmt = 0;
 
-        if ((speedMode != 0) && ((curBtns & (PAD_UP | PAD_DOWN)) == 0)) {
+        if (bDoFastTurn) {
             // Do fast turning when run is pressed and we are not moving forward/back
             if (curBtns & PAD_LEFT) {
                 turnAmt = +FAST_ANGLE_TURN[player.turnheld];
@@ -259,14 +266,51 @@ static void P_BuildMove(player_t& player) noexcept {
         player.angleturn = turnAmt << TURN_TO_ANGLE_SHIFT;
     }
 
+    // PC-PSX: do analog controller turning.
+    // TODO: make the controller turn axes bindable/configurable.
+    #if PC_PSX_DOOM_MODS
+    {
+        // Get the axis value adjusted for the deadzone
+        const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_RIGHT_X, Config::gGamepadDeadZone);
+
+        // Figure out how much of the high and low turn speeds to use.
+        // Use the higher turn speed as the stick is pressed more:
+        const float turnSpeedLow = (bDoFastTurn) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
+        const float turnSpeedHigh = (bDoFastTurn) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
+        const float turnSpeedMix = std::abs(axis);
+        const float turnSpeed = turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix;
+
+        // Apply the turn
+        fixed_t analogTurn = (fixed_t)(axis * turnSpeed);
+        analogTurn *= elapsedVBlanks;
+        analogTurn /= VBLANKS_PER_TIC;
+        player.angleturn -= analogTurn << TURN_TO_ANGLE_SHIFT;
+    }
+    #endif
+
     // Do forward/backward movement controls
     if (curBtns & PAD_UP) {
         player.forwardmove = (+FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-    }
-    else if (curBtns & PAD_DOWN) {
+    } else if (curBtns & PAD_DOWN) {
         player.forwardmove = (-FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     }
     
+    // PC-PSX: do analog movements.
+    // TODO: make the controller move axes bindable/configurable.
+    {
+        const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone);
+        const fixed_t move = (fixed_t)(axis * FORWARD_MOVE[speedMode]);
+        player.forwardmove -= (move * elapsedVBlanks) / VBLANKS_PER_TIC;
+        player.forwardmove = std::clamp(player.forwardmove, -MAX_FORWARD_MOVE, +MAX_FORWARD_MOVE);
+    }
+
+    {
+        const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone);
+        const fixed_t move = (fixed_t)(axis * SIDE_MOVE[speedMode]);
+        player.sidemove += (move * elapsedVBlanks) / VBLANKS_PER_TIC;
+        player.sidemove = std::clamp(player.sidemove, -MAX_SIDE_MOVE, +MAX_SIDE_MOVE);
+    }
+
     // If the player is not moving at all change the animation frame to standing
     mobj_t& mobj = *player.mo;
 

@@ -1,0 +1,43 @@
+- Fixup networking code for analog movements.
+- Add mouse support & mouse sensitivity setting.
+- Add 'dev mode' setting and gate the pause convenience cheats behind that.
+- Fix separate movement directions (left/right) not cancelling each other out.
+- Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
+- Incorporate lost soul spawn limit fix but make configurable and off by default.
+- Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
+    - Still support old format for playback, add signature to demo start to identify.
+- Implement a .cue parser seperate to Avocado with working multi-track support.
+- Implement a class that can read directly from the CD-ROM image without using the emulator cdrom.
+    - Allow both audio and data to be read.
+    - Thread safe with multiple instances and works independently.
+- Make all file I/O bypass LIBCD and the emulated cdrom.
+    - Free the cd-rom for just audio use, and potentially safely running on another thread.
+    - Remove low level LIBCD stuff that will no longer be needed.
+- Final Doom support!
+- Investigate moving sound processing onto another thread and triggered in demand to output buffer requirements.
+    - Should fix all stuttering, and free up main thread resources.
+- Allow turning outside of the 30 FPS cap to improve responsiveness.
+    - Can get rid of interpolations for view rotations.
+- Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
+    - Need to run at capped framerate to see properly.
+- Fix bug in cmd queue stuff - occasional geometry weirdness.
+- Investigate interpolation for sprites and sectors in addition to player view.
+- Make GPU primitives go more directly to the rasterizer rather than through a buffer.
+- Implement fully bindable/configurable controls.
+- Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
+- Investigate why PAL demos are breaking.
+    - Might need a completely new set of state_t etc. with different timings.    
+- Break the link between the SPU and Avocado 'system' (entire PSX)
+- Break the link between the GPU and Avocado 'system' (entire PSX)
+- Investigate being able to add override/new lumps via map wads.
+- Investigate being able to add override/new lumps via custom user wads.
+- Investigate a possible 'high res' or crispy mode.
+    - May need an extended framebuffer for this
+- Investigate engine limits and try to remove/expand where possible
+- Investigate expanding or removing VRAM limit
+- Investigate the possibility of dithering to improve rendering output.
+- Investigate a MAPINFO format for naming maps, choosing music etc.
+- Investigate and fix issues with network play and uncapped framerates.
+- Investigate rollback networking to combat latency.
+- Do a final pass to revert any Avocado mods which are no longer needed.
+- Do a final pass to optimize #includes.

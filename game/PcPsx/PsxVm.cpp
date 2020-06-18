@@ -139,24 +139,6 @@ uint16_t getControllerButtonBits() noexcept {
     // TODO: don't hardcode the analog to digital threshold
     const float DIGITAL_THRESHOLD = 0.5f;
 
-    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) >= DIGITAL_THRESHOLD) {
-        pressedButtonBits |= PAD_R1;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) <= -DIGITAL_THRESHOLD) {
-        pressedButtonBits |= PAD_L1;
-    }
-
-    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) >= DIGITAL_THRESHOLD) {
-        pressedButtonBits |= PAD_DOWN;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) <= -DIGITAL_THRESHOLD) {
-        pressedButtonBits |= PAD_UP;
-    }
-
-    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) >= DIGITAL_THRESHOLD) {
-        pressedButtonBits |= PAD_RIGHT;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) <= -DIGITAL_THRESHOLD) {
-        pressedButtonBits |= PAD_LEFT;
-    }
-
     if (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= DIGITAL_THRESHOLD) {
         pressedButtonBits |= PAD_TRIANGLE;
     }

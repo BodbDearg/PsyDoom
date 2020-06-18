@@ -2,8 +2,18 @@
 
 BEGIN_NAMESPACE(Config)
 
-extern bool     gbFullscreen;
+// Game settings
 extern bool     gbUncapFramerate;
+
+// Video settings
+extern bool     gbFullscreen;
+
+// Input settings
+extern float    gGamepadDeadZone;
+extern float    gGamepadFastTurnSpeed_High;
+extern float    gGamepadFastTurnSpeed_Low;
+extern float    gGamepadTurnSpeed_High;
+extern float    gGamepadTurnSpeed_Low;
 
 void init() noexcept;
 void shutdown() noexcept;

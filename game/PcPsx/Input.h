@@ -55,6 +55,7 @@ bool isControllerInputPressed(const ControllerInput input) noexcept;
 bool isControllerInputJustPressed(const ControllerInput input) noexcept;
 bool isControllerInputJustReleased(const ControllerInput input) noexcept;
 float getControllerInputValue(const ControllerInput input) noexcept;
+float getAdjustedControllerInputValue(const ControllerInput input, float deadZone) noexcept;
 
 // Get the amount of mouse movement this frame on the x and y axes
 float getMouseXMovement() noexcept;

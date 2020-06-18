@@ -259,7 +259,7 @@ static void handleSdlEvents() noexcept {
 
             case SDL_CONTROLLERAXISMOTION: {
                 if (sdlEvent.cbutton.which == gJoystickId) {
-                    const ControllerInput input = sdlControllerAxisToInput(sdlEvent.caxis.axis);
+                    const ControllerInput input = ControllerInputUtils::sdlAxisToInput(sdlEvent.caxis.axis);
 
                     if (input != ControllerInput::INVALID) {
                         const float pressedThreshold = 0.5f;    // TODO - don't hardcode: Config::gInputAnalogToDigitalThreshold;
@@ -270,10 +270,9 @@ static void handleSdlEvents() noexcept {
                         const float inputF = sdlAxisValueToFloat(sdlEvent.caxis.value);
                         const float inputFAbs = std::abs(inputF);
                         const bool bNowPressed = (inputFAbs >= pressedThreshold);
-                        const bool bPassedDeadZone = (inputFAbs > 0.125f);  // TODO - don't hardcode: (inputFAbs >= Config::gGamepadDeadZone);
 
                         // Update input value
-                        gControllerInputs[inputIdx] = (bPassedDeadZone) ? inputF : 0.0f;
+                        gControllerInputs[inputIdx] = inputF;
 
                         // Generate events for the analog input
                         if (bPrevPressed != bNowPressed) {
@@ -293,7 +292,7 @@ static void handleSdlEvents() noexcept {
 
             case SDL_CONTROLLERBUTTONDOWN: {
                 if (sdlEvent.cbutton.which == gJoystickId) {
-                    const ControllerInput input = sdlControllerButtonToInput(sdlEvent.cbutton.button);
+                    const ControllerInput input = ControllerInputUtils::sdlButtonToInput(sdlEvent.cbutton.button);
 
                     if (input != ControllerInput::INVALID) {
                         removeValueFromVector(input, gControllerInputsJustReleased);
@@ -306,7 +305,7 @@ static void handleSdlEvents() noexcept {
 
             case SDL_CONTROLLERBUTTONUP: {
                 if (sdlEvent.cbutton.which == gJoystickId) {
-                    const ControllerInput input = sdlControllerButtonToInput(sdlEvent.cbutton.button);
+                    const ControllerInput input = ControllerInputUtils::sdlButtonToInput(sdlEvent.cbutton.button);
 
                     if (input != ControllerInput::INVALID) {
                         gControllerInputsJustReleased.push_back(input);
@@ -543,6 +542,42 @@ bool isControllerInputJustReleased(const ControllerInput input) noexcept {
 float getControllerInputValue(const ControllerInput input) noexcept {
     const uint8_t inputIdx = (uint8_t) input;
     return (inputIdx < NUM_CONTROLLER_INPUTS) ? gControllerInputs[inputIdx] : 0.0f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get an input which is adjusted for the given deadzone, such that the range of input values (0-1) starts just outside the deadzone.
+// If the input has an opposite axis (2d axis pair), then the deadzone is treated like a circle and the following adjustment method is used:
+//  https://www.gamasutra.com/blogs/JoshSutphin/20130416/190541/Doing_Thumbstick_Dead_Zones_Right.php
+// If the controller input is not analog then no deadzone adjustments are performed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+float getAdjustedControllerInputValue(const ControllerInput input, const float deadZone) noexcept {
+    const float rawAxis = getControllerInputValue(input);
+    const float clampedDeadZone = std::clamp(deadZone, 0.0f, 0.9999f);
+    
+    const ControllerInput oppositeInput = ControllerInputUtils::getOppositeAxis(input);
+    const bool b2dAxisPair = (input != oppositeInput);
+    
+    if (b2dAxisPair) {
+        // A 2d-axis pair
+        const float rawAxisOpp = getControllerInputValue(oppositeInput);
+        const float axisVecLen = std::sqrtf(rawAxis * rawAxis + rawAxisOpp * rawAxisOpp);
+
+        const float axisNormalized = (axisVecLen > 0) ? rawAxis / axisVecLen : 0.0f;
+        const float axisRescale = std::max((axisVecLen - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f);
+
+        if (axisNormalized < 0.0f) {
+            return std::clamp(axisNormalized * axisRescale, -1.0f, 0.0f);
+        } else {
+            return std::clamp(axisNormalized * axisRescale, 0.0f, 1.0f);
+        }
+    }
+
+    if (ControllerInputUtils::isAxis(input)) {
+        // Simple 1d axis: just rescale based on the deadzone
+        return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f, 1.0f);
+    }
+
+    return rawAxis;
 }
 
 float getMouseXMovement() noexcept {

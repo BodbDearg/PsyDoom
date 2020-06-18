@@ -74,6 +74,63 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
 bool    gbUncapFramerate;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Input config settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
+    {
+        "GamepadDeadZone",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# 0-1 range: controls when minor controller inputs are discarded.\n"
+        "# The default of '0.125' only registers movement if the stick is at least 12.5% moved.\n"
+        "# Setting too low may result in unwanted jitter and movement when the controller is resting.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "GamepadDeadZone = 0.125\n",
+        [](const IniUtils::Entry& iniEntry) { gGamepadDeadZone = iniEntry.getFloatValue(0.125f); },
+        []() { gGamepadDeadZone = 0.125f; }
+    },
+    {
+        "GamepadFastTurnSpeed_High",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# How fast to turn when running ('FastTurnSpeed') and when NOT running ('TurnSpeed').\n"
+        "# The game will mix between the 'High' and 'Low' speed values for when running or walking depending\n"
+        "# on how far the stick is pushed, using the 'high' speed value completely when the gamepad axis\n"
+        "# fully pushed in it's move direction. This replaces the accelerating turning movement of the\n"
+        "# original game and allows for more precise control. For reference, the original speed value ranges\n"
+        "# with the PSX D-PAD were:\n"
+        "#  Walk: 300 - 1000\n"
+        "#  Run:  800 - 1400\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "GamepadFastTurnSpeed_High = 1400.0",
+        [](const IniUtils::Entry& iniEntry) { gGamepadFastTurnSpeed_High = iniEntry.getFloatValue(1400.0f); },
+        []() { gGamepadFastTurnSpeed_High = 1400.0f; }
+    },
+    {
+        "GamepadFastTurnSpeed_Low",
+        "GamepadFastTurnSpeed_Low = 800.0",
+        [](const IniUtils::Entry& iniEntry) { gGamepadFastTurnSpeed_Low = iniEntry.getFloatValue(800.0f); },
+        []() { gGamepadFastTurnSpeed_Low = 800.0f; }
+    },
+    {
+        "GamepadTurnSpeed_High",
+        "GamepadTurnSpeed_High = 1000.0",
+        [](const IniUtils::Entry& iniEntry) { gGamepadTurnSpeed_High = iniEntry.getFloatValue(1000.0f); },
+        []() { gGamepadTurnSpeed_High = 1000.0f; }
+    },
+    {
+        "GamepadTurnSpeed_Low",
+        "GamepadTurnSpeed_Low = 600.0",
+        [](const IniUtils::Entry& iniEntry) { gGamepadTurnSpeed_Low = iniEntry.getFloatValue(600.0f); },
+        []() { gGamepadTurnSpeed_Low = 600.0f; }
+    },
+};
+
+float   gGamepadDeadZone;
+float   gGamepadFastTurnSpeed_High;
+float   gGamepadFastTurnSpeed_Low;
+float   gGamepadTurnSpeed_High;
+float   gGamepadTurnSpeed_Low;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Other config parser related state
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -182,6 +239,7 @@ static void parseConfigFile(
 static void parseAllConfigFiles(const std::string& configFolder) noexcept {
     parseConfigFile(configFolder, "graphics_cfg.ini",   GRAPHICS_CFG_INI_HANDLERS,  C_ARRAY_SIZE(GRAPHICS_CFG_INI_HANDLERS));
     parseConfigFile(configFolder, "game_cfg.ini",       GAME_CFG_INI_HANDLERS,      C_ARRAY_SIZE(GAME_CFG_INI_HANDLERS));
+    parseConfigFile(configFolder, "input_cfg.ini",      INPUT_CFG_INI_HANDLERS,     C_ARRAY_SIZE(INPUT_CFG_INI_HANDLERS));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
