@@ -136,6 +136,20 @@ uint16_t getControllerButtonBits() noexcept {
     bindControllerInput(ControllerInput::BTN_START, PAD_START);
     bindControllerInput(ControllerInput::BTN_BACK, PAD_SELECT);
 
+    if (Input::isMouseButtonPressed(MouseButton::LEFT)) {
+        pressedButtonBits |= PAD_TRIANGLE;
+    }
+
+    if (Input::isMouseButtonPressed(MouseButton::RIGHT)) {
+        pressedButtonBits |= PAD_CIRCLE;
+    }
+
+    if (Input::getMouseWheelAxisMovement(1) < 0) {
+        pressedButtonBits |= PAD_L2;
+    } else if (Input::getMouseWheelAxisMovement(1) > 0) {
+        pressedButtonBits |= PAD_R2;
+    }
+
     // TODO: don't hardcode the analog to digital threshold
     const float DIGITAL_THRESHOLD = 0.5f;
 

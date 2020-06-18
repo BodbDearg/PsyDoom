@@ -249,8 +249,8 @@ static void handleSdlEvents() noexcept {
                 static_assert(NUM_MOUSE_WHEEL_AXES == 2);
 
                 if (windowHasFocus()) {
-                    gMouseWheelAxisMovements[0] = (float) sdlEvent.wheel.x;
-                    gMouseWheelAxisMovements[1] = (float) sdlEvent.wheel.y;
+                    gMouseWheelAxisMovements[0] += (float) sdlEvent.wheel.x;
+                    gMouseWheelAxisMovements[1] += (float) sdlEvent.wheel.y;
                 } else {
                     gMouseWheelAxisMovements[0] = 0.0f;
                     gMouseWheelAxisMovements[1] = 0.0f;
@@ -327,13 +327,6 @@ static void handleSdlEvents() noexcept {
     }
 }
 
-static void zeroMouseMovementDeltas() noexcept {
-    gMouseMovementX = 0.0f;
-    gMouseMovementY = 0.0f;
-    gMouseWheelAxisMovements[0] = 0.0f;
-    gMouseWheelAxisMovements[1] = 0.0f;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize input handling
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -399,20 +392,17 @@ void shutdown() noexcept {
 // Generates input events like key down; should be called once per frame
 //------------------------------------------------------------------------------------------------------------------------------------------
 void update() noexcept {
-    // Ignore call in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
-
-    zeroMouseMovementDeltas();      // Cancel any mouse movement deltas unless we get more
-    consumeEvents();                // Released/pressed events are now cleared
-    handleSdlEvents();              // Process events that SDL is sending to us
-    centerMouse();                  // Ensure the mouse remains centered
+    if (!ProgArgs::gbHeadlessMode) {
+        handleSdlEvents();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Discards input events
+// Discards input events and movements.
+// Should be called whenever inputs have been processed for a frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void consumeEvents() noexcept {
+    // Clear all events
     gKeyboardKeysJustPressed.clear();
     gKeyboardKeysJustReleased.clear();
     gMouseButtonsJustPressed.clear();
@@ -420,9 +410,16 @@ void consumeEvents() noexcept {
     gControllerInputsJustPressed.clear();
     gControllerInputsJustReleased.clear();
 
+    // Clear all movement deltas
+    gMouseMovementX = 0;
+    gMouseMovementY = 0;
+
     static_assert(NUM_MOUSE_WHEEL_AXES == 2);
     gMouseWheelAxisMovements[0] = 0.0f;
     gMouseWheelAxisMovements[1] = 0.0f;
+
+    // Center the mouse again: future deltas will be relative to the center
+    centerMouse(); 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

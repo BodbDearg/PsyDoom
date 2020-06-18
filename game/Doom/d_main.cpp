@@ -12,6 +12,7 @@
 #include "Game/p_tick.h"
 #include "PcPsx/FatalErrors.h"
 #include "PcPsx/FileUtils.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
@@ -46,8 +47,9 @@ gametype_t  gStartGameType      = gt_single;
 bool gbDidAbortGame = false;
 
 #if PC_PSX_DOOM_MODS
-    bool        gbIsFirstTick;      // Set to 'true' for the very first tick only, 'false' thereafter
-    uint32_t*   gpDemoBufferEnd;    // PC-PSX: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
+    bool        gbIsFirstTick;          // Set to 'true' for the very first tick only, 'false' thereafter
+    bool        gbKeepInputEvents;      // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
+    uint32_t*   gpDemoBufferEnd;        // PC-PSX: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
 #endif
 
 // Debug draw string position
@@ -426,6 +428,7 @@ gameaction_t MiniLoop(
 
     #if PC_PSX_DOOM_MODS
         gbIsFirstTick = true;
+        Input::consumeEvents();     // Clear any input events leftover
     #endif
 
     // Run startup logic for this game loop beginning
@@ -553,6 +556,16 @@ gameaction_t MiniLoop(
 
         if (exitAction != ga_nothing)
             break;
+
+        // PC-PSX: done with input events after the ticker has been called.
+        // Unless the ticker has requested that we hold onto them.
+        #if PC_PSX_DOOM_MODS
+            if (!gbKeepInputEvents) {
+                Input::consumeEvents();
+            } else {
+                gbKeepInputEvents = false;  // Temporary request only!
+            }
+        #endif
 
         // Call the drawer function to do drawing for the frame
         pDrawer();

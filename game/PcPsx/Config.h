@@ -9,6 +9,7 @@ extern bool     gbUncapFramerate;
 extern bool     gbFullscreen;
 
 // Input settings
+extern float    gMouseTurnSpeed;
 extern float    gGamepadDeadZone;
 extern float    gGamepadFastTurnSpeed_High;
 extern float    gGamepadFastTurnSpeed_Low;

@@ -20,6 +20,7 @@
 #include "p_user.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/DemoResult.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
@@ -484,8 +485,11 @@ gameaction_t P_Ticker() noexcept {
     #if PC_PSX_DOOM_MODS
         // PC PSX: Don't do any updates if no vblanks have elapsed and it's not the first tick.
         // This is required now because of the potentially uncapped framerate.
-        if ((!gbIsFirstTick) && (gElapsedVBlanks <= 0))
+        // Hold onto any input events until when we actually process a tick however...
+        if ((!gbIsFirstTick) && (gElapsedVBlanks <= 0)) {
+            gbKeepInputEvents = true;
             return gGameAction;
+        }
 
         // PC-PSX: update the old values used for interpolation before simulating a new frame (if doing uncapped framerates)
         if (Config::gbUncapFramerate) {

@@ -17,6 +17,7 @@ extern bool         gbDidAbortGame;
 
 #if PC_PSX_DOOM_MODS
     extern bool         gbIsFirstTick;
+    extern bool         gbKeepInputEvents;
     extern uint32_t*    gpDemoBufferEnd;
 #endif
 

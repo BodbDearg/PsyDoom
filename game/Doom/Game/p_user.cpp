@@ -288,6 +288,15 @@ static void P_BuildMove(player_t& player) noexcept {
     }
     #endif
 
+    // PC-PSX: do mouse turning
+    #if PC_PSX_DOOM_MODS
+    {
+        const float timeScale = (float) elapsedVBlanks / (float) VBLANKS_PER_TIC;
+        const fixed_t mouseTurn = (fixed_t)(Input::getMouseXMovement() * Config::gMouseTurnSpeed * timeScale);
+        player.angleturn -= mouseTurn << TURN_TO_ANGLE_SHIFT;
+    }
+    #endif
+
     // Do forward/backward movement controls
     if (curBtns & PAD_UP) {
         player.forwardmove = (+FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;

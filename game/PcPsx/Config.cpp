@@ -78,6 +78,15 @@ bool    gbUncapFramerate;
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
     {
+        "MouseTurnSpeed",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# How much turning movement to apply per pixel of mouse movement\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "MouseTurnSpeed = 70.0\n",
+        [](const IniUtils::Entry& iniEntry) { gMouseTurnSpeed = iniEntry.getFloatValue(70.0f); },
+        []() { gMouseTurnSpeed = 70.0f; }
+    },
+    {
         "GamepadDeadZone",
         "#---------------------------------------------------------------------------------------------------\n"
         "# 0-1 range: controls when minor controller inputs are discarded.\n"
@@ -118,12 +127,13 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
     },
     {
         "GamepadTurnSpeed_Low",
-        "GamepadTurnSpeed_Low = 600.0",
+        "GamepadTurnSpeed_Low = 600.0\n",
         [](const IniUtils::Entry& iniEntry) { gGamepadTurnSpeed_Low = iniEntry.getFloatValue(600.0f); },
         []() { gGamepadTurnSpeed_Low = 600.0f; }
     },
 };
 
+float   gMouseTurnSpeed;
 float   gGamepadDeadZone;
 float   gGamepadFastTurnSpeed_High;
 float   gGamepadFastTurnSpeed_Low;
