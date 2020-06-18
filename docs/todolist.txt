@@ -1,6 +1,8 @@
 - Fixup networking code for analog movements.
 - Add mouse support & mouse sensitivity setting.
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
+- Fix up view bobbing inconsistency (15 vs 30 Hz)
+- Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
 - Incorporate lost soul spawn limit fix but make configurable and off by default.
@@ -10,6 +12,8 @@
 - Implement a class that can read directly from the CD-ROM image without using the emulator cdrom.
     - Allow both audio and data to be read.
     - Thread safe with multiple instances and works independently.
+- Implement reading the ISO filesystem on the CD and providing info on where files are located.
+- Replace hardcoded file offsets with ISO filesystem results.
 - Make all file I/O bypass LIBCD and the emulated cdrom.
     - Free the cd-rom for just audio use, and potentially safely running on another thread.
     - Remove low level LIBCD stuff that will no longer be needed.
