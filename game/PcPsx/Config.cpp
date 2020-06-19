@@ -82,9 +82,9 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# How much turning movement to apply per pixel of mouse movement\n"
         "#---------------------------------------------------------------------------------------------------\n"
-        "MouseTurnSpeed = 40.0\n",
-        [](const IniUtils::Entry& iniEntry) { gMouseTurnSpeed = iniEntry.getFloatValue(40.0f); },
-        []() { gMouseTurnSpeed = 40.0f; }
+        "MouseTurnSpeed = 30.0\n",
+        [](const IniUtils::Entry& iniEntry) { gMouseTurnSpeed = iniEntry.getFloatValue(30.0f); },
+        []() { gMouseTurnSpeed = 30.0f; }
     },
     {
         "GamepadDeadZone",

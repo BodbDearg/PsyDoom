@@ -114,7 +114,7 @@ gameaction_t RunMenu() noexcept {
         // Once the net connection has been established, re-draw the background in prep for a loading or error plaque
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
-        I_CacheAndDrawSprite(gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
+        I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[TITLEPAL]);
         I_SubmitGpuCmds();
         I_DrawPresent();
         

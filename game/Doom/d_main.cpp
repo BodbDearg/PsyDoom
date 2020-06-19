@@ -456,7 +456,7 @@ gameaction_t MiniLoop(
             for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
                 gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
             }
-        
+            
             // Read pad inputs and save as the current pad buttons (overwritten if a demo)
             uint32_t padBtns = I_ReadGamepad();
             gTicButtons[gCurPlayerIndex] = padBtns;
