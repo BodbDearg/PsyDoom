@@ -139,6 +139,9 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_client
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the arguments parser and parses the given list of arguments
+//------------------------------------------------------------------------------------------------------------------------------------------
 void init(const int argc, const char** const argv) noexcept {
     // Consume all the arguments using parsers until there are none.
     // Note: first arg is the program name and that is always skipped.
@@ -169,6 +172,9 @@ void init(const int argc, const char** const argv) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Cleanup parsed argument stuff
+//------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
     // Reset everything back to its initial state and free any memory allocated (to help leak detection)
     gbHeadlessMode = false;

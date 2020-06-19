@@ -1,5 +1,7 @@
 ﻿#include "Doom/psx_main.h"
 
+#include "PcPsx/Macros.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -25,11 +27,30 @@ static Args getCmdLineArgs(const PWSTR lpCmdLine) {
     Args args = {};
     LPWSTR* const argvW = CommandLineToArgvW(lpCmdLine, &argc);
 
-    // Makeup a combined argument string with all arguments separated by a null character
-    args.argStr.reserve(256);
+    // Makeup a combined argument string with all arguments separated by a null character.
+    // Add in the program name first of all, then the split up the arguments:
+    args.argStr.reserve(512);
+
+    {
+        // Get the name of the .exe: reserve initially MAX_PATH and keep doubling the buffer size until we have enough to hold the .exe path
+        std::wstring exeFileName;
+        exeFileName.resize(MAX_PATH);
+
+        while (GetModuleFileNameW(NULL, exeFileName.data(), (DWORD) exeFileName.size()) >= exeFileName.size()) {
+            exeFileName.resize(exeFileName.size() * 2);
+        }
+
+        // Figure out how much of a buffer is needed for this string in UTF-8 (including the null terminator, by specifying length '-1') and allocate it
+        const int bufferSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, exeFileName.c_str(), -1, nullptr, 0, 0, 0);
+        const size_t argStrOldSize = args.argStr.size();
+        args.argStr.resize(argStrOldSize + bufferSizeNeeded);
+
+        // Convert the string to UTF-8 and include the null terminator
+        WideCharToMultiByte(CP_UTF8, 0, exeFileName.c_str(), -1, args.argStr.data() + argStrOldSize, bufferSizeNeeded, 0, 0);
+    }
 
     for (int argIdx = 0; argIdx < argc; ++argIdx) {
-        // Figure out how much of a buffer is needed for this string (including null terminator, by specifying length '-1') and allocate it
+        // Figure out how much of a buffer is needed for this string (including the null terminator, by specifying length '-1') and allocate it
         const int bufferSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, argvW[argIdx], -1, nullptr, 0, 0, 0);
         const size_t argStrOldSize = args.argStr.size();
         args.argStr.resize(argStrOldSize + bufferSizeNeeded);
