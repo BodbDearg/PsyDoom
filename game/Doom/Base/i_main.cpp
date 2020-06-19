@@ -15,7 +15,6 @@
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
 #include "PsyQ/LIBAPI.h"
-#include "PsyQ/LIBCOMB.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -164,15 +163,6 @@ texture_t gTex_LOADING;
 texture_t gTex_NETERR;
 texture_t gTex_CONNECT;
 
-// PSX Kernel events that fire when reads and writes complete for Serial I/O in a multiplayer game
-static uint32_t gSioReadDoneEvent;
-static uint32_t gSioWriteDoneEvent;
-
-// File descriptors for the input/output streams used for multiplayer games.
-// These are opened against the Serial I/O device (PlayStation Link Cable).
-static int32_t gNetInputFd;
-static int32_t gNetOutputFd;
-
 // The packet buffers for sending and receiving in a multiplayer game.
 // The link cable allows 8 bytes to be sent and received at a time.
 static uint8_t gNetInputPacket[NET_PACKET_SIZE];
@@ -232,29 +222,33 @@ void I_PSXInit() noexcept {
     // Start off presenting this framebuffer
     gCurDispBufferIdx = 0;
     
-    // Not sure why interrupts are being disabled and then immediately re-enabled, perhaps to flush out some state?
+    // Not sure why interrupts were being disabled and then immediately re-enabled, perhaps to flush out some state?
     LIBAPI_EnterCriticalSection();
     LIBAPI_ExitCriticalSection();
 
-    // Setup serial (PlayStation link cable) communications:
-    //  (1) Install the serial I/O driver.
-    //  (2) Setup events for read and write done, so we can detect when these operations complete.
-    //  (3) Open the serial I/O files that we use for input and output
-    //  (4) Set data transmission rate (bits per second)
-    //
-    LIBCOMB_AddCOMB();
+    // PC-PSX: no longer need to setup serial I/O stuff.
+    // We setup networking on demand when the user goes to start a networked game.
+    #if !PC_PSX_DOOM_MODS
+        // Setup serial (PlayStation link cable) communications:
+        //  (1) Install the serial I/O driver.
+        //  (2) Setup events for read and write done, so we can detect when these operations complete.
+        //  (3) Open the serial I/O files that we use for input and output
+        //  (4) Set data transmission rate (bits per second)
+        //
+        LIBCOMB_AddCOMB();
     
-    gSioReadDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOER, EvMdNOINTR, nullptr);
-    LIBAPI_EnableEvent(gSioReadDoneEvent);
-    
-    gSioWriteDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOEW, EvMdNOINTR, nullptr);
-    LIBAPI_EnableEvent(gSioWriteDoneEvent);
-
-    gNetOutputFd = LIBAPI_open("sio:", O_WRONLY);
-    gNetInputFd = LIBAPI_open("sio:", O_RDONLY | O_NOWAIT);
-
-    LIBCOMB_CombSetBPS(38400);
+        gSioReadDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOER, EvMdNOINTR, nullptr);
+        LIBAPI_EnableEvent(gSioReadDoneEvent);
         
+        gSioWriteDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOEW, EvMdNOINTR, nullptr);
+        LIBAPI_EnableEvent(gSioWriteDoneEvent);
+
+        gNetOutputFd = LIBAPI_open("sio:", O_WRONLY);
+        gNetInputFd = LIBAPI_open("sio:", O_RDONLY | O_NOWAIT);
+
+        LIBCOMB_CombSetBPS(38400);
+    #endif
+    
     // Clear both draw buffers by swapping twice (clears on swap)
     I_DrawPresent();
     I_DrawPresent();
@@ -887,128 +881,60 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
     }
 }
 
+#if PC_PSX_DOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Does the setup for a network game: synchronizes between players, then sends the game details and control bindings
+// Does the setup for a network game: synchronizes between players, then sends the game details and control bindings.
+// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetSetup() noexcept {
-    // Set the output packet header
+    // Establish a connection over TCP for the server and client of the game.
+    // If it fails or aborted then abort the game start attempt.
+    const bool bHaveNetConn = (ProgArgs::gbIsNetServer) ? Network::initForServer() : Network::initForClient();
+
+    if (!bHaveNetConn) {
+        gbDidAbortGame = true;
+        return;
+    }
+
+    // Player number determination: use the client/server setting
+    const bool bIsPlayer1 = ProgArgs::gbIsNetServer;
+    gCurPlayerIndex = (bIsPlayer1) ? 0 : 1;
+
+    // Fill in the packet header, game details and this player's control bindings for the output packet and send it.
+    // Note that player 1 decides the game, so the game details are zeroed for player 2:
     gNetOutputPacket[0] = NET_PACKET_HEADER;
 
-    // PsyDoom: logic to establish a connection over TCP for the server and client of the game.
-    // If it fails or aborted then abort the game start attempt.
-    #if PC_PSX_DOOM_MODS
-        const bool bHaveNetConn = (ProgArgs::gbIsNetServer) ? Network::initForServer() : Network::initForClient();
-
-        if (!bHaveNetConn) {
-            gbDidAbortGame = true;
-            return;
-        }
-    #endif
-
-    // Player number determination: if the current PlayStation is first in the game (NOT cleared to send) then it becomes Player 1.
-    // PC-PSX: use the client/server setting to determine this instead.
-    #if PC_PSX_DOOM_MODS
-        const bool bIsPlayer1 = ProgArgs::gbIsNetServer;
-    #else
-        const bool bIsPlayer1 = (!LIBCOMB_CombCTS());
-    #endif
-
-    // Read and write a dummy 8 bytes between the two players.
-    // Allow the player to abort with the select button also, if a network game is no longer desired.
-    if (bIsPlayer1) {
-        // Player 1 waits to read from Player 2 firstly
-        gCurPlayerIndex = 0;
-        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
-
-        // PC-PSX: don't need do any of this anymore, read blocks until complete and clear to send no longer applies!
-        #if !PC_PSX_DOOM_MODS
-            // Wait until the read is done before continuing, or abort if 'select' is pressed
-            do {
-                if (LIBETC_PadRead(0) & PAD_SELECT) {
-                    gbDidAbortGame = true;
-                    LIBCOMB_CombCancelRead();
-                    return;
-                }
-            } while (!LIBAPI_TestEvent(gSioReadDoneEvent));
-
-            // Wait until we are cleared to send to the receiver
-            while (!LIBCOMB_CombCTS()) {}
-        #endif
-
-        // Send the dummy packet to the client
-        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
-    } else {
-        // Player 2 writes a packet to Player 1 firstly
-        gCurPlayerIndex = 1;
-        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
-        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
-
-        // PC-PSX: don't need do any of this anymore, read blocks until complete...
-        #if !PC_PSX_DOOM_MODS
-            // Wait until the read is done before continuing, or abort if 'select' is pressed
-            do {
-                if (LIBETC_PadRead(0) & PAD_SELECT) {
-                    gbDidAbortGame = true;
-                    LIBCOMB_CombCancelRead();
-                    return;
-                }
-            } while (!LIBAPI_TestEvent(gSioReadDoneEvent));
-        #endif
-    }
-    
-    // Do a synchronization handshake between the players
-    I_NetHandshake();
-
-    // Send the game details if player 1, if player 2 then receive them:
     if (gCurPlayerIndex == 0) {
-        // Fill in the packet details with game type, skill, map and this player's control bindings
         gNetOutputPacket[1] = (uint8_t) gStartGameType;
         gNetOutputPacket[2] = (uint8_t) gStartSkill;
         gNetOutputPacket[3] = (uint8_t) gStartMapOrEpisode;
+    } else {
+        gNetOutputPacket[1] = 0;
+        gNetOutputPacket[2] = 0;
+        gNetOutputPacket[3] = 0;
+    }
 
+    {
         const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings);
         gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
         gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
         gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
         gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
-
-        // Wait until cleared to send then send the packet.
-        // PC-PSX: clear to send wait no longer required.
-        #if !PC_PSX_DOOM_MODS
-            while (!LIBCOMB_CombCTS()) {}
-        #endif
-
-        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
-
-        // Read the control bindings for the other player and wait until it is read.
-        // PC-PSX: read already blocks, no need to wait.
-        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
-
-        #if !PC_PSX_DOOM_MODS
-            while (!LIBAPI_TestEvent(gSioReadDoneEvent)) {}
-        #endif
-
-        const uint32_t otherPlayerBtns = (
-            ((uint32_t) gNetInputPacket[4] << 0) |
-            ((uint32_t) gNetInputPacket[5] << 8) |
-            ((uint32_t) gNetInputPacket[6] << 16) |
-            ((uint32_t) gNetInputPacket[7] << 24)
-        );
-
-        // Save the control bindings for both players
-        gpPlayerCtrlBindings[0] = gCtrlBindings;
-        gpPlayerCtrlBindings[1] = I_NetButtonsToLocal(otherPlayerBtns);
     }
-    else {
-        // Read the game details and control bindings for the other player and wait until it is read.
-        // PC-PSX: read already blocks, no need to wait.
-        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
 
-        #if !PC_PSX_DOOM_MODS
-            while (!LIBAPI_TestEvent(gSioReadDoneEvent)) {}
-        #endif
-        
-        // Save the game details and the control bindings
+    Network::sendBytes(gNetOutputPacket, NET_PACKET_SIZE);
+
+    // Read the input packet from the other player and verify the header is OK (abort if not).
+    Network::recvBytes(gNetInputPacket, NET_PACKET_SIZE);
+
+    if (gNetInputPacket[0] != NET_PACKET_HEADER) {
+        gbDidAbortGame = true;
+        return;
+    }
+
+    // Parse the other player's control bindings and save what controls both players have
+    {
         const uint32_t otherPlayerBtns = (
             ((uint32_t) gNetInputPacket[4] << 0) |
             ((uint32_t) gNetInputPacket[5] << 8) |
@@ -1016,39 +942,33 @@ void I_NetSetup() noexcept {
             ((uint32_t) gNetInputPacket[7] << 24)
         );
 
+        if (gCurPlayerIndex == 0) {
+            gpPlayerCtrlBindings[0] = gCtrlBindings;
+            gpPlayerCtrlBindings[1] = I_NetButtonsToLocal(otherPlayerBtns);
+        } else {
+            gpPlayerCtrlBindings[0] = I_NetButtonsToLocal(otherPlayerBtns);
+            gpPlayerCtrlBindings[1] = gCtrlBindings;
+        }
+    }
+
+    // Player 2 gets the details of the game from player 1 and must setup the game accordingly
+    if (gCurPlayerIndex != 0) {
         gStartGameType = (gametype_t) gNetInputPacket[1];
         gStartSkill = (skill_t) gNetInputPacket[2];
         gStartMapOrEpisode = gNetInputPacket[3];
-        gpPlayerCtrlBindings[0] = I_NetButtonsToLocal(otherPlayerBtns);
-        gpPlayerCtrlBindings[1] = gCtrlBindings;
-
-        // For the output packet send the control bindings of this player to the other player
-        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings);
-        gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
-        gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
-        gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
-        gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
-        
-        // Wait until we are cleared to send to the receiver and send the output packet.
-        // PC-PSX: clear to send wait no longer required.
-        #if !PC_PSX_DOOM_MODS
-            while (!LIBCOMB_CombCTS()) {}
-        #endif
-        
-        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
     }
 
-    // PC-PSX: one last check to see if the network connection was killed.
+    // One last check to see if the network connection was killed.
     // This will happen if an error occurred, and if this is the case then we should abort the connection attempt:
-    #if PC_PSX_DOOM_MODS
-        if (!Network::isConnected()) {
-            gbDidAbortGame = true;
-            return;
-        }
-    #endif
+    if (!Network::isConnected()) {
+        gbDidAbortGame = true;
+        return;
+    }
 
     gbDidAbortGame = false;
 }
+
+#endif  // #if PC_PSX_DOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sends the packet for the current frame in a networked game and receives the packet from the other player.
@@ -1150,101 +1070,24 @@ bool I_NetUpdate() noexcept {
     return false;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Performs a synchronization handshake between the two PlayStations involved in a networked game over Serial Cable.
-// Sends a sequence of expected 8 bytes, and expects to receive the same 8 bytes back.
-//------------------------------------------------------------------------------------------------------------------------------------------
-void I_NetHandshake() noexcept {
-    // PC-PSX: this is no longer neccessary and is in fact wasteful since the underlying protocol (TCP)
-    // now guarantees correct ordering and reliability for packets - disable:
-    #if !PC_PSX_DOOM_MODS
-        // Send the values 0-7 and verify we get the same values back
-        uint8_t syncByte = 0;
-
-        while (syncByte < 8) {
-            // Send the sync byte and get the other one back
-            gNetOutputPacket[0] = syncByte;
-            I_NetSendRecv();
-        
-            // Is it what we expected? If it isn't then start over, otherwise move onto the next sync byte:
-            if (gNetInputPacket[0] == gNetOutputPacket[0]) {
-                syncByte++;
-            } else {
-                syncByte = 0;
-            }
-        }
-    #endif
-}
+#if PC_PSX_DOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Sends and receives a single packet of data between the two players in a networked game (over the serial link cable)
+// Used to do a synchronization handshake between the two players over the serial cable.
+// Now does nothing since the underlying transport protocol (TCP) guarantees reliability and packet ordering.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_NetHandshake() noexcept {}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sends and receives a single packet of data between the two players in a networked game (over the serial link cable).
+// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetSendRecv() noexcept {
-    while (true) {
-        // Which of the two players are we doing comms for?
-        if (gCurPlayerIndex == 0) {
-            // Player 1: start by waiting until we are clear to send.
-            // PC-PSX: No wait for clear to send here.
-            #if !PC_PSX_DOOM_MODS
-                while (!LIBCOMB_CombCTS()) {}
-            #endif
-            
-            // Write the output packet
-            LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
-
-            // Read the input packet and wait until it's done.
-            // Timeout after 5 seconds and retry the entire send/receive procedure.
-            LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
-
-            // PC-PSX: don't need to wait here - read now blocks itself:
-            #if PC_PSX_DOOM_MODS
-                break;
-            #else
-                const int32_t startVBlanks = LIBETC_VSync(-1);
-            
-                while (true) {
-                    // If the read is done then we can finish up this round of sending/receiving
-                    if (LIBAPI_TestEvent(gSioReadDoneEvent))
-                        return;
-
-                    // Timeout after 5 seconds if the read still isn't done...
-                    if (LIBETC_VSync(-1) - startVBlanks >= VBLANKS_PER_SEC * 5)
-                        break;
-                }
-            #endif
-        } else {
-            // Player 2: start by reading the input packet
-            LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
-            
-            // Wait until the input packet is read.
-            // Timeout after 5 seconds and retry the entire send/receive procedure.
-            // PC-PSX: no need to wait since the read operation already blocks, go straight to sending.
-            #if PC_PSX_DOOM_MODS
-                LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
-                break;
-            #else
-                const int32_t startVBlanks = LIBETC_VSync(-1);
-
-                while (true) {
-                    // Is the input packet done yet?
-                    if (LIBAPI_TestEvent(gSioReadDoneEvent)) {
-                        // Yes we read it! Write the output packet and finish up once we are clear to send.
-                        while (!LIBCOMB_CombCTS()) {}
-                        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
-                        return;
-                    }
-
-                    // Timeout after 5 seconds if the read still isn't done...
-                    if (LIBETC_VSync(-1) - startVBlanks >= VBLANKS_PER_SEC * 5)
-                        break;
-                }
-            #endif
-        }
-
-        // Clear the error bits before we retry the send again
-        LIBCOMB_CombResetError();
-    }
+    Network::sendBytes(gNetOutputPacket, NET_PACKET_SIZE);
+    Network::recvBytes(gNetInputPacket, NET_PACKET_SIZE);
 }
+
+#endif  // #if PC_PSX_DOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Submits any pending draw primitives in the gpu commands buffer to the GPU

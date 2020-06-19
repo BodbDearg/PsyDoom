@@ -1,5 +1,7 @@
 #pragma once
 
+#if !PC_PSX_DOOM_MODS
+
 #include <cstdint>
 
 void LIBCOMB_AddCOMB() noexcept;
@@ -11,3 +13,5 @@ bool LIBCOMB_CombCTS() noexcept;
 int32_t LIBCOMB_CombResetError() noexcept;
 int32_t LIBCOMB_CombCancelRead() noexcept;
 int32_t LIBCOMB_CombSetBPS(const int32_t commsBps) noexcept;
+
+#endif

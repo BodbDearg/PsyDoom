@@ -1,0 +1,207 @@
+#include "Doom/Base/i_main.h"
+
+#if !PC_PSX_DOOM_MODS
+
+// PSX Kernel events that fire when reads and writes complete for Serial I/O in a multiplayer game
+static uint32_t gSioReadDoneEvent;
+static uint32_t gSioWriteDoneEvent;
+
+// File descriptors for the input/output streams used for multiplayer games.
+// These are opened against the Serial I/O device (PlayStation Link Cable).
+static int32_t gNetInputFd;
+static int32_t gNetOutputFd;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the setup for a network game: synchronizes between players, then sends the game details and control bindings
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_NetSetup() noexcept {
+    // Set the output packet header
+    gNetOutputPacket[0] = NET_PACKET_HEADER;
+
+    // Player number determination: if the current PlayStation is first in the game (NOT cleared to send) then it becomes Player 1.
+    const bool bIsPlayer1 = (!LIBCOMB_CombCTS());
+
+    // Read and write a dummy 8 bytes between the two players.
+    // Allow the player to abort with the select button also, if a network game is no longer desired.
+    if (bIsPlayer1) {
+        // Player 1 waits to read from Player 2 firstly
+        gCurPlayerIndex = 0;
+        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
+
+        // Wait until the read is done before continuing, or abort if 'select' is pressed
+        do {
+            if (LIBETC_PadRead(0) & PAD_SELECT) {
+                gbDidAbortGame = true;
+                LIBCOMB_CombCancelRead();
+                return;
+            }
+        } while (!LIBAPI_TestEvent(gSioReadDoneEvent));
+
+        // Wait until we are cleared to send to the receiver
+        while (!LIBCOMB_CombCTS()) {}
+
+        // Send the dummy packet to the client
+        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
+    } else {
+        // Player 2 writes a packet to Player 1 firstly
+        gCurPlayerIndex = 1;
+        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
+        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
+
+        // Wait until the read is done before continuing, or abort if 'select' is pressed
+        do {
+            if (LIBETC_PadRead(0) & PAD_SELECT) {
+                gbDidAbortGame = true;
+                LIBCOMB_CombCancelRead();
+                return;
+            }
+        } while (!LIBAPI_TestEvent(gSioReadDoneEvent));
+    }
+    
+    // Do a synchronization handshake between the players
+    I_NetHandshake();
+
+    // Send the game details if player 1, if player 2 then receive them:
+    if (gCurPlayerIndex == 0) {
+        // Fill in the packet details with game type, skill, map and this player's control bindings
+        gNetOutputPacket[1] = (uint8_t) gStartGameType;
+        gNetOutputPacket[2] = (uint8_t) gStartSkill;
+        gNetOutputPacket[3] = (uint8_t) gStartMapOrEpisode;
+
+        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings);
+        gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
+        gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
+        gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
+        gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
+
+        // Wait until cleared to send then send the packet.
+        while (!LIBCOMB_CombCTS()) {}
+        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
+
+        // Read the control bindings for the other player and wait until it is read.
+        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
+        while (!LIBAPI_TestEvent(gSioReadDoneEvent)) {}
+
+        const uint32_t otherPlayerBtns = (
+            ((uint32_t) gNetInputPacket[4] << 0) |
+            ((uint32_t) gNetInputPacket[5] << 8) |
+            ((uint32_t) gNetInputPacket[6] << 16) |
+            ((uint32_t) gNetInputPacket[7] << 24)
+        );
+
+        // Save the control bindings for both players
+        gpPlayerCtrlBindings[0] = gCtrlBindings;
+        gpPlayerCtrlBindings[1] = I_NetButtonsToLocal(otherPlayerBtns);
+    }
+    else {
+        // Read the game details and control bindings for the other player and wait until it is read.
+        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
+        while (!LIBAPI_TestEvent(gSioReadDoneEvent)) {}
+        
+        // Save the game details and the control bindings
+        const uint32_t otherPlayerBtns = (
+            ((uint32_t) gNetInputPacket[4] << 0) |
+            ((uint32_t) gNetInputPacket[5] << 8) |
+            ((uint32_t) gNetInputPacket[6] << 16) |
+            ((uint32_t) gNetInputPacket[7] << 24)
+        );
+
+        gStartGameType = (gametype_t) gNetInputPacket[1];
+        gStartSkill = (skill_t) gNetInputPacket[2];
+        gStartMapOrEpisode = gNetInputPacket[3];
+        gpPlayerCtrlBindings[0] = I_NetButtonsToLocal(otherPlayerBtns);
+        gpPlayerCtrlBindings[1] = gCtrlBindings;
+
+        // For the output packet send the control bindings of this player to the other player
+        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings);
+        gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
+        gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
+        gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
+        gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
+        
+        // Wait until we are cleared to send to the receiver and send the output packet.
+        while (!LIBCOMB_CombCTS()) {}
+        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
+    }
+
+    gbDidAbortGame = false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Performs a synchronization handshake between the two PlayStations involved in a networked game over Serial Cable.
+// Sends a sequence of expected 8 bytes, and expects to receive the same 8 bytes back.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_NetHandshake() noexcept {
+    // Send the values 0-7 and verify we get the same values back
+    uint8_t syncByte = 0;
+
+    while (syncByte < 8) {
+        // Send the sync byte and get the other one back
+        gNetOutputPacket[0] = syncByte;
+        I_NetSendRecv();
+        
+        // Is it what we expected? If it isn't then start over, otherwise move onto the next sync byte:
+        if (gNetInputPacket[0] == gNetOutputPacket[0]) {
+            syncByte++;
+        } else {
+            syncByte = 0;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sends and receives a single packet of data between the two players in a networked game (over the serial link cable)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_NetSendRecv() noexcept {
+    while (true) {
+        // Which of the two players are we doing comms for?
+        if (gCurPlayerIndex == 0) {
+            // Player 1: start by waiting until we are clear to send
+            while (!LIBCOMB_CombCTS()) {}
+            
+            // Write the output packet
+            LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
+
+            // Read the input packet and wait until it's done.
+            // Timeout after 5 seconds and retry the entire send/receive procedure.
+            LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
+            const int32_t startVBlanks = LIBETC_VSync(-1);
+            
+            while (true) {
+                // If the read is done then we can finish up this round of sending/receiving
+                if (LIBAPI_TestEvent(gSioReadDoneEvent))
+                    return;
+
+                // Timeout after 5 seconds if the read still isn't done...
+                if (LIBETC_VSync(-1) - startVBlanks >= VBLANKS_PER_SEC * 5)
+                    break;
+            }
+        } else {
+            // Player 2: start by reading the input packet
+            LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
+            
+            // Wait until the input packet is read.
+            // Timeout after 5 seconds and retry the entire send/receive procedure.
+            const int32_t startVBlanks = LIBETC_VSync(-1);
+
+            while (true) {
+                // Is the input packet done yet?
+                if (LIBAPI_TestEvent(gSioReadDoneEvent)) {
+                    // Yes we read it! Write the output packet and finish up once we are clear to send.
+                    while (!LIBCOMB_CombCTS()) {}
+                    LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
+                    return;
+                }
+
+                // Timeout after 5 seconds if the read still isn't done...
+                if (LIBETC_VSync(-1) - startVBlanks >= VBLANKS_PER_SEC * 5)
+                    break;
+            }
+        }
+
+        // Clear the error bits before we retry the send again
+        LIBCOMB_CombResetError();
+    }
+}
+
+#endif  // !PC_PSX_DOOM_MODS

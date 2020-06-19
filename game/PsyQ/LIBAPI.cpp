@@ -1,8 +1,9 @@
 #include "LIBAPI.h"
 
-#include "PcPsx/PsxVm.h"
+#include "PcPsx/Assert.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
+#include "PcPsx/PsxVm.h"
 
 #include <algorithm>
 #include <chrono>
@@ -75,7 +76,7 @@ void PsxVm::generateTimerEvents() noexcept {
 // Close the specified hardware event object
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBAPI_CloseEvent(const int32_t event) noexcept {
-    // Only supporting the root counter 2 event for DOOM
+    // PC-PSX: only supporting the root counter 2 event here for Doom - that's all we need
     if (event == RCNT2_EVENT_ID) {
         if (gRootCnt2.bIsEventOpened) {
             gRootCnt2 = {};
@@ -86,10 +87,7 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept {
         }
     }
 
-    // TODO: (FIXME) support SerialIO events here!
-
-    // Failed to close the event if we've gotten to here!
-    return false;
+    return false;   // Failed to close the event!
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,17 +95,13 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBAPI_EnterCriticalSection() noexcept {}
 
-int32_t LIBAPI_write([[maybe_unused]] const int32_t fileDesc, const void* const pBuffer, const int32_t numBytes) noexcept {
-    // TODO: (FIXME) IMPLEMENT PROPERLY - return value: bytes written or -1 on error
-    return Network::sendBytes(pBuffer, numBytes) ? numBytes : -1;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Enable the specified hardware event object.
 // Note: timers require an additional step (calling 'StartRCnt') in order to actually start generating event interrupts.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBAPI_EnableEvent(const int32_t event) noexcept {
-    // Only supporting the root counter 2 event for DOOM
+    // PC-PSX: only supporting the root counter 2 event here for Doom - that's all we need.
+    // Originally this was called to enable SIO (Serial I/O) read/write done events but we don't need that functionality anymore.
     if (event == RCNT2_EVENT_ID) {
         if (gRootCnt2.bIsEventOpened) {
             gRootCnt2.bIsEventEnabled = true;
@@ -117,10 +111,7 @@ bool LIBAPI_EnableEvent(const int32_t event) noexcept {
         }
     }
 
-    // TODO: (FIXME) support SerialIO events here!
-
-    // Failed to enable the event if we've gotten to here!
-    return false;
+    return false;   // Failed to enable the event!
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -179,7 +170,7 @@ bool LIBAPI_StartRCnt(const int32_t cntType) noexcept {
 // Note: timers require an additional step (calling 'StartRCnt') in order to actually start generating event interrupts.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBAPI_DisableEvent(const int32_t event) noexcept {
-    // Only supporting the root counter 2 event for DOOM
+    // PC-PSX: only supporting the root counter 2 event here for Doom - that's all we need.
     if (event == RCNT2_EVENT_ID) {
         if (gRootCnt2.bIsEventOpened) {
             gRootCnt2.bIsEventEnabled = false;
@@ -189,19 +180,14 @@ bool LIBAPI_DisableEvent(const int32_t event) noexcept {
         }
     }
 
-    // TODO: (FIXME) support SerialIO events here!
-
-    // Failed to disable the event if we've gotten to here!
-    return false;
+    return false;   // Failed to disable the event!
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyQ BIOS function which starts reading controller data on a regular basis; always returns 'true'.
 // Not implemented for PsyDoom because we don't need it.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool LIBAPI_StartPAD() noexcept {
-    return true;
-}
+bool LIBAPI_StartPAD() noexcept { return true; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyQ BIOS function which determines how controller input is read from interrupts.
@@ -213,7 +199,8 @@ void LIBAPI_ChangeClearPAD([[maybe_unused]] const int32_t val) noexcept {}
 // Open a specified hardware event (which can be listened to) and return the event descriptor
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t mode, int32_t (* const pHandler)()) noexcept {
-    // Only supporting interrupts generated by 'root counter 2' for DOOM
+    // Only supporting interrupts generated by 'root counter 2' for Doom - that's all we need.
+    // Originally this was called to open SIO (Serial I/O) read/write done events but we don't need that functionality anymore.
     if ((cause == RCntCNT2) && (type == EvSpINT) && (mode == EvMdINTR)) {
         // A handler must be given and the event must not be already opened!
         if (pHandler && (!gRootCnt2.bIsEventOpened)) {
@@ -222,37 +209,15 @@ int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t 
             gRootCnt2.pHandler = pHandler;
             return RCNT2_EVENT_ID;
         }
-        else {
-            // Failed to open the event! -1 means failure:
-            return -1;
-        }
     }
 
-    // TODO: (FIXME) support SerialIO events here!
-
-    // This is the failure value which means we didn't open an event
-    return -1;
-}
-
-int32_t LIBAPI_read([[maybe_unused]] const int32_t fileDesc, void* const pBuffer, const int32_t numBytes) noexcept {
-    // TODO: (FIXME) IMPLEMENT PROPERLY - return value: bytes read or -1 on error
-    return Network::recvBytes(pBuffer, numBytes) ? numBytes : -1;
-}
-
-bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept {
-    // TODO: (FIXME) IMPLEMENT ME
-    return true;
+    return -1;  // Didn't open an event!
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Re-enables PlayStation hardware interrupts; not using PSX interrupts anymore in PsyDoom, so this call now does nothing...
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBAPI_ExitCriticalSection() noexcept {}
-
-int32_t LIBAPI_open([[maybe_unused]] const char* const pPath, [[maybe_unused]] const uint32_t flags) noexcept {
-    // TODO: (FIXME) IMPLEMENT ME
-    return -1;
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Flushes the instruction cache: doesn't need to do anything in PsyDoom

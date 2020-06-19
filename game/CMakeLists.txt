@@ -1,3 +1,12 @@
+# This setting includes old stuff in the project
+set(PSYDOOM_INCLUDE_OLD_CODE FALSE CACHE BOOL 
+"If TRUE include source files from the 'Old' directory of the PsyDoom project.\n\
+These files contain original or older versions of various functions, variables and data structures.\n\
+These pieces of code are archived for future reference in case we need to refer back to the way things originally worked.\n\
+Most of these functions etc. have either been completely rewritten or so drastically altered that the '#if PC_PSX_DOOM_MODS'\n\
+mechanism no longer makes sense or is too unwieldly to use."
+)
+
 # Platform agnostic sources
 set(SOURCE_FILES
     "Doom/Base/d_vsprintf.cpp"
@@ -168,8 +177,6 @@ set(SOURCE_FILES
     "PsyQ/LIBAPI.h"
     "PsyQ/LIBCD.cpp"
     "PsyQ/LIBCD.h"
-    "PsyQ/LIBCOMB.cpp"
-    "PsyQ/LIBCOMB.h"
     "PsyQ/LIBETC.cpp"
     "PsyQ/LIBETC.h"
     "PsyQ/LIBGPU.cpp"
@@ -207,6 +214,16 @@ set(SOURCE_FILES
     "Wess/wessseq.cpp"
     "Wess/wessseq.h"
 )
+
+if (PSYDOOM_INCLUDE_OLD_CODE)
+    list(APPEND SOURCE_FILES
+        "Old/Doom/Base/Old_i_main.cpp"
+        "Old/PsyQ/Old_LIBAPI.cpp"
+        "Old/PsyQ/Old_LIBAPI.h"
+        "Old/PsyQ/Old_LIBCOMB.cpp"
+        "Old/PsyQ/Old_LIBCOMB.h"
+    )
+endif()
 
 set(OTHER_FILES
 )

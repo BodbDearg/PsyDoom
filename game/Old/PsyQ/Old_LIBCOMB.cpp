@@ -1,4 +1,10 @@
-#include "LIBCOMB.h"
+//------------------------------------------------------------------------------------------------------------------------------------------
+// The entire LIBCOMB (Serial I/O) library is no longer needed anymore.
+// Note: these are NOT the original functions, merely stubs and partial reimplementations that I previously used for a while.
+//------------------------------------------------------------------------------------------------------------------------------------------
+#include "Old_LIBCOMB.h"
+
+#if !PC_PSX_DOOM_MODS
 
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
@@ -68,3 +74,5 @@ int32_t LIBCOMB_CombCancelRead() noexcept {
 int32_t LIBCOMB_CombSetBPS(const int32_t commsBps) noexcept {
     return LIBCOMB__comb_control(1, 3, commsBps);
 }
+
+#endif
