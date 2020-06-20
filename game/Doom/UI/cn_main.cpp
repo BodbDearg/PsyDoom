@@ -29,11 +29,11 @@ static const padbuttons_t gDefaultCtrlBindings[NUM_CTRL_BINDS] = {
     PAD_TRIANGLE,   // cbind_attack
     PAD_CIRCLE,     // cbind_use
     PAD_CROSS,      // cbind_strafe
-    PAD_SQUARE,     // cbind_speed
+    PAD_SQUARE,     // cbind_run
     PAD_L1,         // cbind_strafe_left
     PAD_R1,         // cbind_strafe_right
-    PAD_L2,         // cbind_weapon_back
-    PAD_R2          // cbind_weapon_forward
+    PAD_L2,         // cbind_prev_weapon
+    PAD_R2          // cbind_next_weapon
 };
 
 // Graphic containing sprites for all of the 8 bindable buttons

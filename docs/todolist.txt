@@ -68,6 +68,9 @@
     - Could also be used for a rewind feature??!
 - Linux support.
 - Verify NTSC stretched resolution is fully correct.
+- Options sliders analog control
+- Analog control in menus
+- Automap zoom/pan with mouse.
 - Make file overrides (basic mod system) work on MacOS
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Support a clean exit from the game everywhere (except I_Error)

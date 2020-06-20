@@ -562,16 +562,20 @@ float getAdjustedControllerInputValue(const ControllerInput input, const float d
         const float axisNormalized = (axisVecLen > 0) ? rawAxis / axisVecLen : 0.0f;
         const float axisRescale = std::max((axisVecLen - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f);
 
-        if (axisNormalized < 0.0f) {
-            return std::clamp(axisNormalized * axisRescale, -1.0f, 0.0f);
-        } else {
+        if (axisNormalized >= 0.0f) {
             return std::clamp(axisNormalized * axisRescale, 0.0f, 1.0f);
+        } else {
+            return std::clamp(axisNormalized * axisRescale, -1.0f, 0.0f);
         }
     }
 
     if (ControllerInputUtils::isAxis(input)) {
         // Simple 1d axis: just rescale based on the deadzone
-        return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f, 1.0f);
+        if (rawAxis >= 0) {
+            return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f, 1.0f);
+        } else {
+            return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), -1.0f, 0.0f);
+        }
     }
 
     return rawAxis;

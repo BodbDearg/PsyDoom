@@ -18,6 +18,7 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_user.h"
+#include "PcPsx/Assert.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/DemoResult.h"
 #include "PcPsx/Input.h"
@@ -28,6 +29,8 @@
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
 #include "Wess/wessapi.h"
+
+#include <SDL.h>
 
 // The maximum level for the warp cheat.
 // PC-PSX: For this version of the game I'm allowing the user to warp to the secret levels!
@@ -638,3 +641,331 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
         }
     }
 }
+
+#if PC_PSX_DOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the inputs to use for the next tick
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_GatherTickInputs(TickInputs& inputs) noexcept {
+    inputs = {};
+
+    // TODO: don't hardcode the analog to digital threshold
+    const float DIGITAL_THRESHOLD = 0.5f;
+
+    // TODO: don't hardcode these bindings like this.
+    // TODO: translate inputs bound to original PSX 'buttons' based on the control bindings.
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_UP) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_W) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_DPAD_UP)
+    ) {
+        inputs.bMenuUp = true;
+        inputs.bMoveForward = true;
+        inputs.bAutomapMoveUp = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_DOWN) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_S) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_DPAD_DOWN)
+    ) {
+        inputs.bMenuDown = true;
+        inputs.bMoveBackward = true;
+        inputs.bAutomapMoveDown = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LEFT) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_DPAD_LEFT)
+    ) {
+        inputs.bMenuLeft = true;
+        inputs.bTurnLeft = true;
+        inputs.bAutomapMoveLeft = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_RIGHT) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_DPAD_RIGHT)
+    ) {
+        inputs.bMenuRight = true;
+        inputs.bTurnRight = true;
+        inputs.bAutomapMoveRight = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_A)) {
+        inputs.bStrafeLeft = true;
+        inputs.bAutomapZoomIn = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_D)) {
+        inputs.bStrafeRight = true;
+        inputs.bAutomapZoomOut = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAGEDOWN) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_Q) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_LEFT_SHOULDER) ||
+        (Input::getMouseWheelAxisMovement(1) < 0)
+    ) {
+        inputs.bPrevWeapon = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAGEUP) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_E) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_RIGHT_SHOULDER) ||
+        (Input::getMouseWheelAxisMovement(1) > 0)
+    ) {
+        inputs.bNextWeapon = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_SPACE) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_B) ||
+        Input::isMouseButtonPressed(MouseButton::RIGHT)
+    ) {
+        inputs.bUse = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LSHIFT) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_RSHIFT) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_X) ||
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= DIGITAL_THRESHOLD)
+    ) {
+        inputs.bRun = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LCTRL) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_RCTRL) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_F) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_Y) ||
+        Input::isMouseButtonPressed(MouseButton::LEFT) ||
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= DIGITAL_THRESHOLD)
+    ) {
+        inputs.bAttack = true;
+        inputs.bRespawn = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LALT) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_RALT) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_A)
+    ) {
+        inputs.bAutomapPan = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAUSE) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_P) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_START)
+    ) {
+        inputs.bTogglePause = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_RETURN) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_LCTRL) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_RCTRL) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_SPACE) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_F) ||
+        Input::isMouseButtonPressed(MouseButton::LEFT) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_A) ||
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= DIGITAL_THRESHOLD)
+    ) {
+        inputs.bMenuOk = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_ESCAPE) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_TAB) ||
+        Input::isMouseButtonPressed(MouseButton::RIGHT) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_B) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_BACK)
+    ) {
+        inputs.bMenuBack = true;
+    }
+
+    if (Input::isControllerInputPressed(ControllerInput::BTN_START)) {
+        inputs.bMenuStart = true;
+    }
+
+    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) >= DIGITAL_THRESHOLD) {
+        inputs.bMenuUp = true;
+    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) <= -DIGITAL_THRESHOLD) { 
+        inputs.bMenuDown = true;
+    }
+
+    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) >= DIGITAL_THRESHOLD) {
+        inputs.bMenuUp = true;
+    }  else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) <= -DIGITAL_THRESHOLD) { 
+        inputs.bMenuDown = true;
+    }
+
+    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) >= DIGITAL_THRESHOLD) {
+        inputs.bMenuRight = true;
+    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) <= -DIGITAL_THRESHOLD) { 
+        inputs.bMenuLeft = true;
+    }
+
+    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) >= DIGITAL_THRESHOLD) {
+        inputs.bMenuRight = true;
+    } else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) <= -DIGITAL_THRESHOLD) { 
+        inputs.bMenuLeft = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_RETURN) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_SPACE) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_LCTRL) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_RCTRL) ||
+        Input::isMouseButtonPressed(MouseButton::LEFT) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_A) ||
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= DIGITAL_THRESHOLD)
+    ) {
+        inputs.bEnterPasswordChar = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_DELETE) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_BACKSPACE) ||
+        Input::isMouseButtonPressed(MouseButton::RIGHT) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_X) ||
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= DIGITAL_THRESHOLD)
+    ) {
+        inputs.bDeletePasswordChar = true;
+    }
+
+    inputs.analogForwardMove = (fixed_t) Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone);
+    inputs.analogSideMove = (fixed_t) Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone);
+
+    // Gamepad turn amount: this varies depending on configuration.
+    // Here we must boil it down to the final number to be applied before framerate adjustments, so it sent to other players.
+    {
+        // Get the deadzone adjusted axis value
+        const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_RIGHT_X, Config::gGamepadDeadZone);
+
+        // Figure out how much of the high and low turn speeds to use; use the higher turn speed as the stick is pressed more:
+        const float turnSpeedLow = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
+        const float turnSpeedHigh = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
+        const float turnSpeedMix = std::abs(axis);
+        const float turnSpeed = turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix;
+
+        inputs.analogTurn += (fixed_t) turnSpeed;
+    }
+
+    // Mouse turn amount: this varies depending on configuration.
+    // Here we must boil it down to the final number to be applied before framerate adjustments, so it sent to other players.
+    {
+        const float turnSpeed = Input::getMouseXMovement() * Config::gMouseTurnSpeed;
+        inputs.analogTurn += (fixed_t) turnSpeed;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convert PlayStation gamepad buttons to tick inputs.
+// Used to convert the original demo format inputs to the new 'TickInputs' format.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* const pControlBindings, TickInputs& inputs) noexcept {
+    ASSERT(pControlBindings);
+    inputs = {};
+
+    if (buttons & PAD_UP) {
+        inputs.bMoveForward = true;
+        inputs.bMenuUp = true;
+        inputs.bAutomapMoveUp = true;
+    }
+
+    if (buttons & PAD_DOWN) {
+        inputs.bMoveBackward = true;
+        inputs.bMenuDown = true;
+        inputs.bAutomapMoveDown = true;
+    }
+
+    if (buttons & PAD_LEFT) {
+        inputs.bTurnLeft = true;
+        inputs.bMenuLeft = true;
+        inputs.bAutomapMoveLeft = true;
+    }
+
+    if (buttons & PAD_RIGHT) {
+        inputs.bTurnRight = true;
+        inputs.bMenuRight = true;
+        inputs.bAutomapMoveRight = true;
+    }
+
+    if (buttons & PAD_TRIANGLE) {
+        inputs.bDeletePasswordChar = true;
+        inputs.bMenuOk = true;
+        inputs.bRespawn = true;
+    }
+
+    if (buttons & PAD_CROSS) {
+        inputs.bEnterPasswordChar = true;
+        inputs.bMenuOk = true;
+        inputs.bAutomapPan = true;
+        inputs.bRespawn = true;
+    }
+
+    if (buttons & PAD_SQUARE) {
+        inputs.bEnterPasswordChar = true;
+        inputs.bMenuOk = true;
+        inputs.bRespawn = true;
+    }
+
+    if (buttons & PAD_CIRCLE) {
+        inputs.bEnterPasswordChar = true;
+        inputs.bMenuOk = true;
+        inputs.bRespawn = true;
+    }
+
+    if (buttons & PAD_L1) {
+        inputs.bAutomapZoomIn = true;
+        inputs.bRespawn = true;
+    }
+
+    if (buttons & PAD_R1) {
+        inputs.bAutomapZoomOut = true;
+        inputs.bRespawn = true;
+    }
+
+    if (buttons & PAD_L2) {
+        inputs.bRespawn = true;
+    }
+
+    if (buttons & PAD_R2) {
+        inputs.bRespawn = true;
+    }
+
+    if (buttons & PAD_START) {
+        inputs.bMenuStart = true;
+        inputs.bTogglePause = true;
+    }
+
+    if (buttons & PAD_SELECT) {
+        inputs.bMenuBack = true;
+        inputs.bToggleMap = true;
+    }
+
+    if (buttons & pControlBindings[cbind_attack]) {
+        inputs.bAttack = true;
+    }
+
+    if (buttons & pControlBindings[cbind_strafe]) {
+        inputs.bStrafe = true;
+    }
+
+    if (buttons & pControlBindings[cbind_run]) {
+        inputs.bRun = true;
+    }
+
+    if (buttons & pControlBindings[cbind_use]) {
+        inputs.bUse = true;
+    }
+
+    if (buttons & pControlBindings[cbind_strafe_left]) {
+        inputs.bStrafeLeft = true;
+    }
+
+    if (buttons & pControlBindings[cbind_strafe_right]) {
+        inputs.bStrafeRight = true;
+    }
+
+    if (buttons & pControlBindings[cbind_prev_weapon]) {
+        inputs.bPrevWeapon = true;
+    }
+
+    if (buttons & pControlBindings[cbind_next_weapon]) {
+        inputs.bNextWeapon = true;
+    }
+}
+
+#endif

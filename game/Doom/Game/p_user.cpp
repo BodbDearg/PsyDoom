@@ -218,7 +218,7 @@ static void P_BuildMove(player_t& player) noexcept {
     player.forwardmove = 0;
 
     // What movement speed is being used, run or normal?
-    const uint32_t speedMode = (curBtns & pBtnBindings[cbind_speed]) ? 1 : 0;
+    const uint32_t speedMode = (curBtns & pBtnBindings[cbind_run]) ? 1 : 0;
     
     // Do strafe left/right controls
     if (curBtns & pBtnBindings[cbind_strafe_left]) {
@@ -306,6 +306,7 @@ static void P_BuildMove(player_t& player) noexcept {
     
     // PC-PSX: do analog movements.
     // TODO: make the controller move axes bindable/configurable.
+    #if PC_PSX_DOOM_MODS
     {
         const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone);
         const fixed_t move = (fixed_t)(axis * FORWARD_MOVE[speedMode]);
@@ -319,6 +320,7 @@ static void P_BuildMove(player_t& player) noexcept {
         player.sidemove += (move * elapsedVBlanks) / VBLANKS_PER_TIC;
         player.sidemove = std::clamp(player.sidemove, -MAX_SIDE_MOVE, +MAX_SIDE_MOVE);
     }
+    #endif
 
     // If the player is not moving at all change the animation frame to standing
     mobj_t& mobj = *player.mo;
@@ -524,8 +526,8 @@ void P_PlayerThink(player_t& player) noexcept {
         int32_t nextWeaponIdx = weaponMicroBoxIdx;
 
         // See if next/previous weapon buttons have just been pressed
-        const bool bGotoPrevWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_weapon_back], curBtns, oldBtns);
-        const bool bGotoNextWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_weapon_forward], curBtns, oldBtns);
+        const bool bGotoPrevWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_prev_weapon], curBtns, oldBtns);
+        const bool bGotoNextWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_next_weapon], curBtns, oldBtns);
 
         // See if we are switching weapons
         if (bGotoPrevWeapon) {

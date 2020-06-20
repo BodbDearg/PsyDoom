@@ -24,7 +24,8 @@ static std::unique_ptr<asio::ip::tcp::socket>   gpSocket;
 // Checks for user input to cancel an abortable network operation like establishing a connection
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool isCancelNetworkConnectionRequested() noexcept {
-    // This is the original behavior of PSX Doom: the 'select' button was used to cancel 
+    // This is the original behavior of PSX Doom: the 'select' button was used to cancel.
+    // TODO: replace with control binding.
     if (LIBETC_PadRead(0) & PAD_SELECT) {
         return true;
     }

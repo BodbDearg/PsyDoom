@@ -26,11 +26,11 @@ enum controlbinding_t : int32_t {
     cbind_attack,
     cbind_use,
     cbind_strafe,
-    cbind_speed,
+    cbind_run,
     cbind_strafe_left,
     cbind_strafe_right,
-    cbind_weapon_back,
-    cbind_weapon_forward,
+    cbind_prev_weapon,
+    cbind_next_weapon,
     NUM_CTRL_BINDS
 };
 
