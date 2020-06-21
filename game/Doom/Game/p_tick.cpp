@@ -77,13 +77,14 @@ mobj_t      gMObjHead;                              // Dummy map object which se
 // PC-PSX: PSX gamepad button presses are now confined to just this player, and are just used for entering the original cheat sequences.
 // For a networked game we use the tick inputs sent across with each packet.
 #if PC_PSX_DOOM_MODS
-    TickInputs  gTickInputs[MAXPLAYERS];
-    TickInputs  gOldTickInputs[MAXPLAYERS];
-    uint32_t    gTicButtons;                        // Currently PSX pad buttons for this player
-    uint32_t    gOldTicButtons;                     // Previously pressed PSX buttons for this player
+    TickInputs  gTickInputs[MAXPLAYERS];        // Current tick inputs for the current 30 Hz tick
+    TickInputs  gOldTickInputs[MAXPLAYERS];     // Previous tick inputs for the last 30 Hz tick
+    TickInputs  gNextTickInputs;                // Network games only: what inputs we told the other player we will use next; sent ahead of time to reduce lag
+    uint32_t    gTicButtons;                    // Currently PSX pad buttons for this player
+    uint32_t    gOldTicButtons;                 // Previously pressed PSX buttons for this player    
 #else
-    uint32_t    gTicButtons[MAXPLAYERS];            // Currently pressed buttons by all players
-    uint32_t    gOldTicButtons[MAXPLAYERS];         // Previously pressed buttons by all players
+    uint32_t    gTicButtons[MAXPLAYERS];        // Currently pressed buttons by all players
+    uint32_t    gOldTicButtons[MAXPLAYERS];     // Previously pressed buttons by all players
 #endif
 
 static int32_t      gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
@@ -544,6 +545,10 @@ gameaction_t P_Ticker() noexcept {
         if (Config::gbUncapFramerate) {
             R_NextInterpolation();
         }
+
+        // PC-PSX: only run the following logic if there is elapsed vblanks
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
     #endif
 
     // Check for pause and cheats

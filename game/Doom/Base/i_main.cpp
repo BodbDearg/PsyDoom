@@ -157,31 +157,42 @@ texture_t gTex_LOADING;
 texture_t gTex_NETERR;
 texture_t gTex_CONNECT;
 
-// Game ids for networking
-static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
-static constexpr int32_t NET_GAMEID_FINAL_DOOM  = 0xAB11AB22;
+#if PC_PSX_DOOM_MODS
 
-// Packet sent/received by all players when connecting to a game
-struct NetPacket_Connect {
-    uint32_t    gameId;             // Must match the expected game id
-    gametype_t  startGameType;      // Only sent by the server for the game: what type of game will be played
-    skill_t     startGameSkill;     // Only sent by the server for the game: what skill level will be used
-    int32_t     startMap;           // Only sent by the server for the game: what starting map will be used
-};
+    // Game ids for networking
+    static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
+    static constexpr int32_t NET_GAMEID_FINAL_DOOM  = 0xAB11AB22;
 
-static NetPacket_Connect gNetInPacket_Connect;
-static NetPacket_Connect gNetOutPacket_Connect;
+    // Packet sent/received by all players when connecting to a game
+    struct NetPacket_Connect {
+        uint32_t    gameId;             // Must match the expected game id
+        gametype_t  startGameType;      // Only sent by the server for the game: what type of game will be played
+        skill_t     startGameSkill;     // Only sent by the server for the game: what skill level will be used
+        int32_t     startMap;           // Only sent by the server for the game: what starting map will be used
+    };
 
-// Packet sent/received by all players to share per-tick updates for a network game
-struct NetPacket_Tick {
-    uint32_t    gameId;             // Must match the expected game id
-    uint32_t    errorCheck;         // Error checking bits for detecting if all players are in sync: populated using the current position and angle for all players
-    int32_t     elapsedVBlanks;     // How many vblanks have elapsed for the player sending the update
-    TickInputs  inputs;             // Inputs for the player sending this update
-};
+    static NetPacket_Connect gNetInPacket_Connect;
+    static NetPacket_Connect gNetOutPacket_Connect;
 
-static NetPacket_Tick gNetInPacket_Tick;
-static NetPacket_Tick gNetOutPacket_Tick;
+    // Packet sent/received by all players to share per-tick updates for a network game
+    struct NetPacket_Tick {
+        uint32_t    gameId;             // Must match the expected game id
+        uint32_t    errorCheck;         // Error checking bits for detecting if all players are in sync: populated using the current position and angle for all players
+        int32_t     elapsedVBlanks;     // How many vblanks have elapsed for the player sending the update
+        TickInputs  inputs;             // Inputs for the player sending this update
+    };
+
+    static NetPacket_Tick gNetInPacket_Tick;
+    static NetPacket_Tick gNetOutPacket_Tick;
+
+    // Previous game error checking value when we last sent to the other player.
+    // Have to store this because we always send 1 packet ahead for the next frame.
+    static uint32_t gNetPrevErrorCheck;
+
+    // Flag set to true upon connection and cleared the first call to 'I_NetUpdate'.
+    // Lets us know when we are sending the first update packet of the session.
+    static bool gbNetIsFirstNetUpdate;
+#endif
 
 // Buffers used originally by the PsyQ SDK to store gamepad input.
 // In PsyDoom they are just here for historical reference.
@@ -918,6 +929,9 @@ void I_NetSetup() noexcept {
     const bool bIsPlayer1 = ProgArgs::gbIsNetServer;
     gCurPlayerIndex = (bIsPlayer1) ? 0 : 1;
 
+    // Clear this value initially
+    gNetPrevErrorCheck = {};
+
     // Fill in the connect output packet; note that player 1 decides the game params, so theese are zeroed for player 2:
     // TODO: set a different game id here depending on DOOM vs FINAL DOOM.
     NetPacket_Connect& outPkt = gNetOutPacket_Connect;
@@ -971,7 +985,9 @@ void I_NetSetup() noexcept {
         return;
     }
 
+    // Starting the game and the next call to I_NetUpdate will be the first:
     gbDidAbortGame = false;
+    gbNetIsFirstNetUpdate = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -981,22 +997,52 @@ void I_NetSetup() noexcept {
 // PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool I_NetUpdate() noexcept {
+    // Compute the value used for error checking.
+    // Only do this while we are in the level however...
+    uint32_t errorCheck = 0;
+
+    if (gbIsLevelDataCached) {
+        for (int32_t i = 0; i < MAXPLAYERS; ++i) {
+            mobj_t& mobj = *gPlayers[i].mo;
+            errorCheck ^= mobj.x;
+            errorCheck ^= mobj.y;
+            errorCheck ^= mobj.z;
+            errorCheck ^= mobj.angle;
+        }
+    }
+
+    // If it's the very first network update for this session send a dummy packet with no inputs to the other player.
+    // This kick starts the sequence of always sending one packet ahead on both ends and helps to reduce lag.
+    if (gbNetIsFirstNetUpdate) {
+        // Populate and send the output packet
+        NetPacket_Tick outPkt = {};
+        outPkt.gameId = Endian::hostToLittle(NET_GAMEID_DOOM);
+        outPkt.errorCheck = Endian::hostToLittle(errorCheck);
+
+        Network::sendBytes(&outPkt, sizeof(outPkt));
+
+        // Make sure these are set correctly for what we expect
+        gNextTickInputs = {};
+        gNextPlayerElapsedVBlanks = 0;
+        gNetPrevErrorCheck = errorCheck;
+    }
+
+    // No longer the first network update
+    gbNetIsFirstNetUpdate = false;
+
+    // For networked games the current inputs become the ones we send to the other player as our NEXT move.
+    // The next inputs we said we'd previously use become the CURRENT move.
+    // We do this sending ahead of time of the next move to try and workaround latency, and also do it for 'elapsed vblanks'.
+    std::swap(gTickInputs[gCurPlayerIndex], gNextTickInputs);
+    std::swap(gPlayersElapsedVBlanks[gCurPlayerIndex], gNextPlayerElapsedVBlanks);
+
     // Makeup the output packet including error detection bits.
     // TODO: use a different game id here depending on DOOM vs FINAL DOOM.
     NetPacket_Tick& outPkt = gNetOutPacket_Tick;
     outPkt.gameId = NET_GAMEID_DOOM;
-    outPkt.errorCheck = 0;
-
-    for (int32_t i = 0; i < MAXPLAYERS; ++i) {
-        mobj_t& mobj = *gPlayers[i].mo;
-        outPkt.errorCheck ^= mobj.x;
-        outPkt.errorCheck ^= mobj.y;
-        outPkt.errorCheck ^= mobj.z;
-        outPkt.errorCheck ^= mobj.angle;
-    }
-
-    outPkt.elapsedVBlanks = gPlayersElapsedVBlanks[gCurPlayerIndex];
-    outPkt.inputs = gTickInputs[gCurPlayerIndex];
+    outPkt.errorCheck = errorCheck;
+    outPkt.elapsedVBlanks = gNextPlayerElapsedVBlanks;
+    outPkt.inputs = gNextTickInputs;
 
     // Endian correct the output packet
     outPkt.gameId = Endian::hostToLittle(outPkt.gameId);
@@ -1019,9 +1065,12 @@ bool I_NetUpdate() noexcept {
     inPkt.inputs.analogSideMove = Endian::littleToHost(inPkt.inputs.analogSideMove);
     inPkt.inputs.analogTurn = Endian::littleToHost(inPkt.inputs.analogTurn);
 
-    // See if the packet we received from the other player is what we expect.
-    // If it isn't then show a 'network error' message:
-    const bool bNetworkError = ((outPkt.gameId != inPkt.gameId) || (outPkt.errorCheck != inPkt.errorCheck));
+    // See if the packet we received from the other player is what we expect; if it isn't then show a 'network error' message.
+    // Note: we only check the 'errorCheck' field while in game.
+    const bool bNetworkError = (
+        (outPkt.gameId != inPkt.gameId) ||
+        (gbIsLevelDataCached && (gNetPrevErrorCheck != inPkt.errorCheck))
+    );
 
     if (bNetworkError) {
         // Uses the current image as the basis for the next frame; copy the presented framebuffer to the drawing framebuffer:
@@ -1052,12 +1101,14 @@ bool I_NetUpdate() noexcept {
         // Try and do a sync handshake between the players
         I_NetHandshake();
 
-        // Clear the other player's inputs, and this player's previous inputs (not sure why that would matter)
+        // Clear all inputs
         for (int32_t i = 1; i < MAXPLAYERS; ++i) {
             gTickInputs[i] = {};
+            gOldTickInputs[i] = {};
         }
 
-        gOldTickInputs[0] = {};
+        gNextTickInputs = {};
+        gNextPlayerElapsedVBlanks = 0;
 
         // PC-PSX: wait for 2 seconds so the network error can be displayed.
         // When done clear the screen so the 'loading' message displays clearly and not overlapped with the 'network error' message:
@@ -1078,7 +1129,8 @@ bool I_NetUpdate() noexcept {
         gPlayersElapsedVBlanks[0] = inPkt.elapsedVBlanks;
     }
 
-    // No network error occured
+    // No network error occured, save the error checking value for verification of the other player's game state next time around
+    gNetPrevErrorCheck = errorCheck;
     return false;
 }
 

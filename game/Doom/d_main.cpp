@@ -34,6 +34,11 @@ int32_t gTicCon;
 // The number of elapsed vblanks (60Hz) for all players
 int32_t gPlayersElapsedVBlanks[MAXPLAYERS];
 
+// PC-PSX: networking - what amount of elapsed vblanks we told the other player we will simulate next
+#if PC_PSX_DOOM_MODS
+    int32_t gNextPlayerElapsedVBlanks;
+#endif
+
 // Pointer to a buffer holding the demo and the current pointer within the buffer for playback/recording
 uint32_t* gpDemoBuffer;
 uint32_t* gpDemo_p;
@@ -84,6 +89,7 @@ void D_DoomMain() noexcept {
             gOldTickInputs[playerIdx] = {};
         }
 
+        gNextTickInputs = {};
         gTicButtons = 0;
         gOldTicButtons = 0;
     #else

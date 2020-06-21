@@ -110,6 +110,7 @@ extern mobj_t       gMObjHead;
 #if PC_PSX_DOOM_MODS
     extern TickInputs   gTickInputs[MAXPLAYERS];
     extern TickInputs   gOldTickInputs[MAXPLAYERS];
+    extern TickInputs   gNextTickInputs;
     extern uint32_t     gTicButtons;
     extern uint32_t     gOldTicButtons;
 #else

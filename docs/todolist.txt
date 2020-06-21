@@ -1,7 +1,4 @@
 - Allow direct weapon switching using number keys.
-- Investigate and fix issues with network play and uncapped framerates.
-    - Might need an extra frame of latency to interpolate properly
-    - Can maybe avoid that with rollback networking
 - Allow turning outside of the 30 FPS cap to improve responsiveness.
     - Can get rid of interpolations for view rotations.
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
