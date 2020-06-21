@@ -17,8 +17,13 @@ static constexpr uint32_t TCACHE_CELLS_Y        = TCACHE_PAGE_SIZE / TCACHE_CELL
 static constexpr uint32_t NUM_TCACHE_PAGE_CELLS = TCACHE_CELLS_X * TCACHE_CELLS_Y;
 static constexpr uint32_t ALL_TPAGES_MASK       = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
 
-// Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB
-static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
+// Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB.
+// PC-PSX: small adjustment of +8 so that the textures for the 'legals' UI (and other large textures) can load without overflow.
+#if PC_PSX_DOOM_MODS
+    static constexpr uint32_t TMP_BUFFER_SIZE = 0x10008;
+#else
+    static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
+#endif
 
 // Game control binding index: these are the actions which are configurable to different buttons.
 // These also must be synchronized in a network game.

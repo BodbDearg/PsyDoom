@@ -344,6 +344,7 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     const bool bIsCompressed = (!gpbIsUncompressedLump[lumpNum]);
 
     if (bIsCompressed) {
+        ASSERT(getDecodedSize(pLumpData) <= TMP_BUFFER_SIZE);
         decode(pLumpData, gTmpBuffer);
         pLumpData = gTmpBuffer;
     }
@@ -669,6 +670,7 @@ void I_CacheTex(texture_t& tex) noexcept {
     const bool bIsTexCompressed = (!gpbIsUncompressedLump[tex.lumpNum]);
 
     if (bIsTexCompressed) {
+        ASSERT(getDecodedSize(pTexData) <= TMP_BUFFER_SIZE);
         decode(pTexData, gTmpBuffer);
         pTexData = gTmpBuffer;
     }

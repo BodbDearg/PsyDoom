@@ -50,6 +50,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
             pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
         } else {
             const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
+            ASSERT(getDecodedSize(pCompressedLumpData) <= TMP_BUFFER_SIZE);
             decode(pCompressedLumpData, gTmpBuffer);
             pLumpData = gTmpBuffer;
         }

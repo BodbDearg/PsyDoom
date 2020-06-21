@@ -4,6 +4,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
+#include "PcPsx/Assert.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
@@ -180,6 +181,7 @@ void R_DrawWallPiece(
     // Only one frame of the animated texture stays in VRAM at a time!
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Decompress and get a pointer to the texture data
+        ASSERT(getDecodedSize(gpLumpCache[tex.lumpNum]) < sizeof(TMP_BUFFER_SIZE));
         decode(gpLumpCache[tex.lumpNum], gTmpBuffer);
         const uint16_t* const pTexData = (uint16_t*)(gTmpBuffer + sizeof(texlump_header_t));
 
