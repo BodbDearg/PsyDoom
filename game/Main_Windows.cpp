@@ -80,6 +80,8 @@ static Args getCmdLineArgs(const PWSTR lpCmdLine) {
     return args;
 }
 
+#if !NDEBUG
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Allocates a debug console for the application and redirects standard streams to it
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -91,6 +93,8 @@ static void openDebugConsoleWindow() noexcept {
     freopen_s(&pDummyFile, "CONOUT$", "w", stderr);
     freopen_s(&pDummyFile, "CONOUT$", "w", stdout);
 }
+
+#endif  // #if !NDEBUG
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Windows entrypoint for PsyDoom

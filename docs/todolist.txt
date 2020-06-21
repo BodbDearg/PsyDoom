@@ -46,6 +46,8 @@
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
     - Need to run at capped framerate to see properly.
 - Fix bug in cmd queue stuff - occasional geometry weirdness.
+- Fix not being able to bind the Circle/B button in the controls menu.
+    - Should maybe consider removing this menu, as it is confusing now for PC?
 - Investigate interpolation for sprites and sectors in addition to player view.
 - Make GPU primitives go more directly to the rasterizer rather than through a buffer.
 - Implement fully bindable/configurable controls.
