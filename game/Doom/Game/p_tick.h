@@ -104,10 +104,18 @@ extern bool         gbGamePaused;
 extern int32_t      gPlayerNum;
 extern int32_t      gMapNumToCheatWarpTo;
 extern int32_t      gVramViewerTexPage;
-extern uint32_t     gTicButtons[MAXPLAYERS];
-extern uint32_t     gOldTicButtons[MAXPLAYERS];
 extern thinker_t    gThinkerCap;
 extern mobj_t       gMObjHead;
+
+#if PC_PSX_DOOM_MODS
+    extern TickInputs   gTickInputs[MAXPLAYERS];
+    extern TickInputs   gOldTickInputs[MAXPLAYERS];
+    extern uint32_t     gTicButtons;
+    extern uint32_t     gOldTicButtons;
+#else
+    extern uint32_t     gTicButtons[MAXPLAYERS];
+    extern uint32_t     gOldTicButtons[MAXPLAYERS];
+#endif
 
 void P_AddThinker(thinker_t& thinker) noexcept;
 void P_RemoveThinker(thinker_t& thinker) noexcept;

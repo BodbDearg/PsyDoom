@@ -334,9 +334,14 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
     }
 
     // If the fire button is pressed then try fire the player's weapon
-    const padbuttons_t fireBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
+    #if PC_PSX_DOOM_MODS
+        const bool bAttack = gTickInputs[gPlayerNum].bAttack;
+    #else
+        const padbuttons_t attackBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
+        const bool bAttack = gTicButtons[gPlayerNum] & attackBtn;
+    #endif
 
-    if (gTicButtons[gPlayerNum] & fireBtn) {
+    if (bAttack) {
         P_FireWeapon(player);
         return;
     }
@@ -355,9 +360,14 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
 // Otherwise switch to another weapon if out of ammo after firing.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_ReFire(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
-    const padbuttons_t fireBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
+    #if PC_PSX_DOOM_MODS
+        const bool bAttack = gTickInputs[gPlayerNum].bAttack;
+    #else
+        const padbuttons_t attackBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
+        const bool bAttack = (gTicButtons[gPlayerNum] & attackBtn);
+    #endif
 
-    if ((gTicButtons[gPlayerNum] & fireBtn) && (player.pendingweapon == wp_nochange) && (player.health != 0)) {
+    if (bAttack && (player.pendingweapon == wp_nochange) && (player.health != 0)) {
         player.refire++;
         P_FireWeapon(player);
     } else {

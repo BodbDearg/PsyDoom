@@ -134,11 +134,24 @@ void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the Ultimate DOOM finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t F1_Ticker() noexcept {
+    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PC_PSX_DOOM_MODS
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
+    #endif
+
     // Grab inputs and set global game action
     gGameAction = ga_nothing;
 
-    const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
-    const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
+    #if PC_PSX_DOOM_MODS
+        const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
+        const TickInputs& oldInputs = gOldTickInputs[gCurPlayerIndex];
+        const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
+    #else
+        const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
+        const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
+        const bool bMenuOk = ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS));
+    #endif
 
     // Not sure why this screen is updating cheats or checking for pause...
     P_CheckCheats();
@@ -166,7 +179,7 @@ gameaction_t F1_Ticker() noexcept {
             gFinIncomingLineLen++;
         }
     }
-    else if ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
+    else if (bMenuOk) {
         // If all the lines are done and an action button is just pressed then exit the screen
         return ga_exit;
     }
@@ -263,11 +276,24 @@ void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the DOOM II finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t F2_Ticker() noexcept {
+    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PC_PSX_DOOM_MODS
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
+    #endif
+
     // Grab inputs and set global game action
     gGameAction = ga_nothing;
 
-    const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
-    const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
+    #if PC_PSX_DOOM_MODS
+        const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
+        const TickInputs& oldInputs = gOldTickInputs[gCurPlayerIndex];
+        const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
+    #else
+        const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
+        const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
+        const bool bMenuOk = ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS));
+    #endif
 
     // Not sure why this screen is updating cheats or checking for pause...
     P_CheckCheats();
@@ -310,7 +336,7 @@ gameaction_t F2_Ticker() noexcept {
     }
     else if (gFinaleStage == F_STAGE_CAST)  {
         // Doing the cast call: see first if the player is shooting the current character
-        if ((!gbCastDeath) && (ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
+        if ((!gbCastDeath) && bMenuOk) {
             // Shooting this character! Play the shotgun sound:
             S_StartSound(nullptr, sfx_shotgn);
 

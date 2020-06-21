@@ -87,36 +87,6 @@ uint16_t getControllerButtonBits() noexcept {
     uint16_t pressedButtonBits = 0;
 
     // TODO: don't hardcode these bindings to PSX controller buttons
-    auto bindKeyboardInput = [&](const uint16_t key, const uint16_t toButtonBits) noexcept {
-        if (Input::isKeyboardKeyPressed(key)) {
-            pressedButtonBits |= toButtonBits;
-        }
-    };
-
-    bindKeyboardInput(SDL_SCANCODE_UP, PAD_UP);
-    bindKeyboardInput(SDL_SCANCODE_W, PAD_UP);
-    bindKeyboardInput(SDL_SCANCODE_DOWN, PAD_DOWN);
-    bindKeyboardInput(SDL_SCANCODE_S, PAD_DOWN);
-    bindKeyboardInput(SDL_SCANCODE_LEFT, PAD_LEFT);
-    bindKeyboardInput(SDL_SCANCODE_RIGHT, PAD_RIGHT);
-    bindKeyboardInput(SDL_SCANCODE_A, PAD_L1);
-    bindKeyboardInput(SDL_SCANCODE_D, PAD_R1);
-    bindKeyboardInput(SDL_SCANCODE_PAGEDOWN, PAD_L2);
-    bindKeyboardInput(SDL_SCANCODE_Q, PAD_L2);
-    bindKeyboardInput(SDL_SCANCODE_PAGEUP, PAD_R2);
-    bindKeyboardInput(SDL_SCANCODE_E, PAD_R2);
-    bindKeyboardInput(SDL_SCANCODE_SPACE, PAD_CIRCLE);
-    bindKeyboardInput(SDL_SCANCODE_LSHIFT, PAD_SQUARE);
-    bindKeyboardInput(SDL_SCANCODE_RSHIFT, PAD_SQUARE);
-    bindKeyboardInput(SDL_SCANCODE_LCTRL, PAD_TRIANGLE);
-    bindKeyboardInput(SDL_SCANCODE_RCTRL, PAD_TRIANGLE);
-    bindKeyboardInput(SDL_SCANCODE_F, PAD_TRIANGLE);
-    bindKeyboardInput(SDL_SCANCODE_LALT, PAD_CROSS);
-    bindKeyboardInput(SDL_SCANCODE_RALT, PAD_CROSS);
-    bindKeyboardInput(SDL_SCANCODE_RETURN, PAD_START);
-    bindKeyboardInput(SDL_SCANCODE_TAB, PAD_SELECT);
-    bindKeyboardInput(SDL_SCANCODE_ESCAPE, PAD_SELECT);
-
     auto bindControllerInput = [&](const ControllerInput input, const uint16_t toButtonBits) noexcept {
         if (Input::isControllerInputPressed(input)) {
             pressedButtonBits |= toButtonBits;
@@ -127,39 +97,16 @@ uint16_t getControllerButtonBits() noexcept {
     bindControllerInput(ControllerInput::BTN_DPAD_DOWN, PAD_DOWN);
     bindControllerInput(ControllerInput::BTN_DPAD_LEFT, PAD_LEFT);
     bindControllerInput(ControllerInput::BTN_DPAD_RIGHT, PAD_RIGHT);
-    bindControllerInput(ControllerInput::BTN_LEFT_SHOULDER, PAD_L2);
-    bindControllerInput(ControllerInput::BTN_RIGHT_SHOULDER, PAD_R2);
     bindControllerInput(ControllerInput::BTN_Y, PAD_TRIANGLE);
     bindControllerInput(ControllerInput::BTN_X, PAD_SQUARE);
     bindControllerInput(ControllerInput::BTN_B, PAD_CIRCLE);
     bindControllerInput(ControllerInput::BTN_A, PAD_CROSS);
+    bindControllerInput(ControllerInput::BTN_LEFT_SHOULDER, PAD_L1);
+    bindControllerInput(ControllerInput::BTN_RIGHT_SHOULDER, PAD_R1);
+    bindControllerInput(ControllerInput::AXIS_TRIG_LEFT, PAD_L2);
+    bindControllerInput(ControllerInput::AXIS_TRIG_RIGHT, PAD_R2);
     bindControllerInput(ControllerInput::BTN_START, PAD_START);
     bindControllerInput(ControllerInput::BTN_BACK, PAD_SELECT);
-
-    if (Input::isMouseButtonPressed(MouseButton::LEFT)) {
-        pressedButtonBits |= PAD_TRIANGLE;
-    }
-
-    if (Input::isMouseButtonPressed(MouseButton::RIGHT)) {
-        pressedButtonBits |= PAD_CIRCLE;
-    }
-
-    if (Input::getMouseWheelAxisMovement(1) < 0) {
-        pressedButtonBits |= PAD_L2;
-    } else if (Input::getMouseWheelAxisMovement(1) > 0) {
-        pressedButtonBits |= PAD_R2;
-    }
-
-    // TODO: don't hardcode the analog to digital threshold
-    const float DIGITAL_THRESHOLD = 0.5f;
-
-    if (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= DIGITAL_THRESHOLD) {
-        pressedButtonBits |= PAD_TRIANGLE;
-    }
-
-    if (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= DIGITAL_THRESHOLD) {
-        pressedButtonBits |= PAD_SQUARE;
-    }
 
     return pressedButtonBits;
 }

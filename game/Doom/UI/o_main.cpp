@@ -119,6 +119,12 @@ void O_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Runs update logic for the options menu: does menu controls
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t O_Control() noexcept {
+    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PC_PSX_DOOM_MODS
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
+    #endif
+
     // Animate the skull cursor
     if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {
         gCursorFrame ^= 1;
@@ -131,17 +137,40 @@ gameaction_t O_Control() noexcept {
             continue;
 
         // Exit the menu if start or select is pressed
-        const padbuttons_t ticButtons = gTicButtons[playerIdx];
-        const padbuttons_t oldTicButtons = gOldTicButtons[playerIdx];
+        #if PC_PSX_DOOM_MODS
+            const TickInputs& inputs = gTickInputs[playerIdx];
+            const TickInputs& oldInputs = gOldTickInputs[playerIdx];
+
+            const bool bMenuStart = (inputs.bMenuStart && (!oldInputs.bMenuStart));
+            const bool bMenuBack = (inputs.bMenuBack && (!oldInputs.bMenuBack));
+            const bool bMenuOk = inputs.bMenuOk;
+            const bool bMenuUp = inputs.bMenuUp;
+            const bool bMenuDown = inputs.bMenuDown;
+            const bool bMenuLeft = inputs.bMenuLeft;
+            const bool bMenuRight = inputs.bMenuRight;
+            const bool bMenuMove = (bMenuUp || bMenuDown || bMenuLeft || bMenuRight);
+        #else
+            const padbuttons_t ticButtons = gTicButtons[playerIdx];
+            const padbuttons_t oldTicButtons = gOldTicButtons[playerIdx];
+
+            const bool bMenuStart = ((ticButtons != oldTicButtons) && (ticButtons & PAD_START));
+            const bool bMenuBack = ((ticButtons != oldTicButtons) && (ticButtons & PAD_SELECT));
+            const bool bMenuOk = (ticButtons & PAD_ACTION_BTNS);
+            const bool bMenuUp = (ticButtons & PAD_UP);
+            const bool bMenuDown = (ticButtons & PAD_DOWN);
+            const bool bMenuLeft = (ticButtons & PAD_LEFT);
+            const bool bMenuRight = (ticButtons & PAD_RIGHT);
+            const bool bMenuMove = (ticButtons & PAD_DIRECTION_BTNS);
+        #endif
 
         // Allow the start or select buttons to close the menu
-        if ((ticButtons != oldTicButtons) && (ticButtons & (PAD_START | PAD_SELECT))) {
+        if (bMenuStart || bMenuBack) {
             S_StartSound(nullptr, sfx_pistol);
             return ga_exit;
         }
         
         // Check for up/down movement
-        if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
+        if (!bMenuMove) {
             // If there are no direction buttons pressed then the next move is allowed instantly
             gVBlanksUntilMenuMove[playerIdx] = 0;
         } else {
@@ -151,7 +180,7 @@ gameaction_t O_Control() noexcept {
             if (gVBlanksUntilMenuMove[playerIdx] <= 0) {
                 gVBlanksUntilMenuMove[playerIdx] = 15;
                 
-                if (ticButtons & PAD_DOWN) {
+                if (bMenuDown) {
                     gCursorPos[playerIdx]++;
 
                     if (gCursorPos[playerIdx] >= gOptionsMenuSize) {
@@ -163,7 +192,7 @@ gameaction_t O_Control() noexcept {
                         S_StartSound(nullptr, sfx_pstop);
                     }
                 }
-                else if (ticButtons & PAD_UP) {
+                else if (bMenuUp) {
                     gCursorPos[playerIdx]--;
 
                     if (gCursorPos[playerIdx] < 0) {
@@ -186,7 +215,7 @@ gameaction_t O_Control() noexcept {
             case opt_music: {
                 // Only process audio updates for this player
                 if (playerIdx == gCurPlayerIndex) {
-                    if (ticButtons & PAD_RIGHT) {
+                    if (bMenuRight) {
                         gOptionsMusVol++;
                         
                         if (gOptionsMusVol > S_MAX_VOL) {
@@ -201,7 +230,7 @@ gameaction_t O_Control() noexcept {
                         
                         gCdMusicVol = (gOptionsMusVol * PSXSPU_MAX_CD_VOL) / S_MAX_VOL;
                     }
-                    else if (ticButtons & PAD_LEFT) {
+                    else if (bMenuLeft) {
                         gOptionsMusVol--;
 
                         if (gOptionsMusVol < 0) {
@@ -223,7 +252,7 @@ gameaction_t O_Control() noexcept {
             case opt_sound: {
                 // Only process audio updates for this player
                 if (playerIdx == gCurPlayerIndex) {
-                    if (ticButtons & PAD_RIGHT) {
+                    if (bMenuRight) {
                         gOptionsSndVol++;
 
                         if (gOptionsSndVol > S_MAX_VOL) {
@@ -236,8 +265,8 @@ gameaction_t O_Control() noexcept {
                             }
                         }
                     }
-                    else if (ticButtons & PAD_LEFT) {
-                        gOptionsSndVol -= 1;
+                    else if (bMenuLeft) {
+                        gOptionsSndVol--;
 
                         if (gOptionsSndVol < 0) {
                             gOptionsSndVol = 0;
@@ -254,7 +283,7 @@ gameaction_t O_Control() noexcept {
 
             // Password entry
             case opt_password: {
-                if (ticButtons & PAD_ACTION_BTNS) {
+                if (bMenuOk) {
                     if (MiniLoop(START_PasswordScreen, STOP_PasswordScreen, TIC_PasswordScreen, DRAW_PasswordScreen) == ga_warped)
                         return ga_warped;
                 }
@@ -262,14 +291,14 @@ gameaction_t O_Control() noexcept {
 
             // Controller configuration
             case opt_config: {
-                if (ticButtons & PAD_ACTION_BTNS) {
+                if (bMenuOk) {
                     MiniLoop(START_ControlsScreen, STOP_ControlsScreen, TIC_ControlsScreen, DRAW_ControlsScreen);
                 }
             }   break;
 
             // Main menu option
             case opt_main_menu: {
-                if (ticButtons & PAD_ACTION_BTNS) {
+                if (bMenuOk) {
                     S_StartSound(nullptr, sfx_pistol);
                     return ga_exitdemo;
                 }
@@ -277,7 +306,7 @@ gameaction_t O_Control() noexcept {
 
             // Restart option
             case opt_restart: {
-                if (ticButtons & PAD_ACTION_BTNS) {
+                if (bMenuOk) {
                     S_StartSound(nullptr, sfx_pistol);
                     return ga_restart;
                 }

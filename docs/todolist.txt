@@ -1,13 +1,15 @@
-- Fixup networking code for analog movements.
-- Add mouse support & mouse sensitivity setting.
-- Add 'dev mode' setting and gate the pause convenience cheats behind that.
+- Fix network desync on level end.
+- Allow direct weapon switching using number keys.
 - Investigate and fix issues with network play and uncapped framerates.
     - Might need an extra frame of latency to interpolate properly
     - Can maybe avoid that with rollback networking
+- Allow turning outside of the 30 FPS cap to improve responsiveness.
+    - Can get rid of interpolations for view rotations.
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
+- Add 'dev mode' setting and gate the pause convenience cheats behind that.
 - Make the floor rendering fix configurable
 - Incorporate the player missile damage fix and make it an optional setting (off by default)
 - Incorporate lost soul spawn limit fix but make configurable and off by default.
@@ -42,8 +44,6 @@
     - Any FSM changes?
 - Investigate moving sound processing onto another thread and triggered in demand to output buffer requirements.
     - Should fix all stuttering, and free up main thread resources.
-- Allow turning outside of the 30 FPS cap to improve responsiveness.
-    - Can get rid of interpolations for view rotations.
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
     - Need to run at capped framerate to see properly.
 - Fix bug in cmd queue stuff - occasional geometry weirdness.
@@ -68,13 +68,12 @@
     - Could also be used for a rewind feature??!
 - Linux support.
 - Verify NTSC stretched resolution is fully correct.
-- Options sliders analog control
-- Analog control in menus
 - Automap zoom/pan with mouse.
 - Make file overrides (basic mod system) work on MacOS
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Support a clean exit from the game everywhere (except I_Error)
 - Investigate shutdown code and properly cleanup everything
+- Is there a bug with the game not switching to the chaingun (if you have it) when out of shotgun ammo?
 - Move reversing tools into their own folder and only include optionally in the cmake project.
     - Shouldn't be needed to compile the game.
 - Do a final pass to revert any Avocado mods which are no longer needed.

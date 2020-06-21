@@ -235,10 +235,40 @@ void M_Stop(const gameaction_t exitAction) noexcept {
 // Update/ticker logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t M_Ticker() noexcept {
-    // Reset the menu timeout if buttons are being pressed
-    const padbuttons_t ticButtons = gTicButtons[0];
+    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PC_PSX_DOOM_MODS
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
+    #endif
 
-    if (ticButtons != 0) {
+    // Reset the menu timeout if buttons are being pressed.
+    // PC-PSX: just restrict that to valid menu inputs only.
+    #if PC_PSX_DOOM_MODS
+        const TickInputs& inputs = gTickInputs[0];
+        const TickInputs& oldInputs = gOldTickInputs[0];
+
+        const bool bMenuStart = (inputs.bMenuStart && (inputs.bMenuStart != oldInputs.bMenuStart));
+        const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
+        const bool bMenuUp = inputs.bMenuUp;
+        const bool bMenuDown = inputs.bMenuDown;
+        const bool bMenuLeft = inputs.bMenuLeft;
+        const bool bMenuRight = inputs.bMenuRight;
+        const bool bMenuMove = (bMenuUp || bMenuDown || bMenuLeft || bMenuRight);
+        const bool bMenuAnyInput = (bMenuMove || bMenuOk || bMenuStart || inputs.bMenuBack);
+    #else
+        const padbuttons_t ticButtons = gTicButtons[0];
+
+        const bool bMenuStart = ((ticButtons != gOldTicButtons[0]) && (ticButtons & PAD_START));
+        const bool bMenuOk = ((ticButtons != gOldTicButtons[0]) && (ticButtons & PAD_ACTION_BTNS));
+        const bool bMenuUp = (ticButtons & PAD_UP);
+        const bool bMenuDown = (ticButtons & PAD_DOWN);
+        const bool bMenuLeft = (ticButtons & PAD_LEFT);
+        const bool bMenuRight = (ticButtons & PAD_RIGHT);
+        const bool bMenuMove = (ticButtons & PAD_DIRECTION_BTNS);
+        const bool bMenuAnyInput = (ticButtons != 0);
+    #endif
+
+    if (bMenuAnyInput) {
         gMenuTimeoutStartTicCon = gTicCon;
     }
 
@@ -251,35 +281,32 @@ gameaction_t M_Ticker() noexcept {
         gCursorFrame ^= 1;
     }
     
-    // Check for game start or options open actions
-    if (ticButtons != gOldTicButtons[0]) {
-        // If start is pressed then begin a game, no matter what menu option is picked
-        if (ticButtons & PAD_START)
-            return ga_exit;
+    // If start is pressed then begin a game, no matter what menu option is picked
+    if (bMenuStart)
+        return ga_exit;
     
-        // If an action button is pressed then we can either start a map or open the options
-        if ((ticButtons & PAD_ACTION_BTNS) && (gCursorPos[0] >= gamemode)) {
-            if (gCursorPos[0] < options)
-                return ga_exit;
+    // If an 'ok' button is pressed then we can either start a map or open the options
+    if (bMenuOk && (gCursorPos[0] >= gamemode)) {
+        if (gCursorPos[0] < options)
+            return ga_exit;
 
-            if (gCursorPos[0] == options) {
-                // Options entry pressed: run the options menu.
-                // Note that if a level password is entered correctly there, we exit with 'ga_warped' as the action.
-                if (MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer) == ga_warped)
-                    return ga_warped;
-            }
-
-            // PC-PSX: quit the game if that option is chosen
-            #if PC_PSX_DOOM_MODS
-                if (gCursorPos[0] == menu_quit)
-                    return ga_quitapp;
-            #endif
+        if (gCursorPos[0] == options) {
+            // Options entry pressed: run the options menu.
+            // Note that if a level password is entered correctly there, we exit with 'ga_warped' as the action.
+            if (MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer) == ga_warped)
+                return ga_warped;
         }
+
+        // PC-PSX: quit the game if that option is chosen
+        #if PC_PSX_DOOM_MODS
+            if (gCursorPos[0] == menu_quit)
+                return ga_quitapp;
+        #endif
     }
 
     // Check for movement with the DPAD direction buttons.
     // If there is none then we can just stop here:
-    if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
+    if (!bMenuMove) {
         gVBlanksUntilMenuMove[0] = 0;
         return ga_nothing;
     }
@@ -293,7 +320,7 @@ gameaction_t M_Ticker() noexcept {
     gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
 
     // Do menu up/down movements
-    if (ticButtons & PAD_DOWN) {
+    if (bMenuDown) {
         gCursorPos[0]++;
         
         if (gCursorPos[0] == NUMMENUITEMS) {
@@ -302,7 +329,7 @@ gameaction_t M_Ticker() noexcept {
 
         S_StartSound(nullptr, sfx_pstop);
     }
-    else if (ticButtons & PAD_UP) {
+    else if (bMenuUp) {
         gCursorPos[0]--;
 
         if (gCursorPos[0] == -1) {
@@ -314,7 +341,7 @@ gameaction_t M_Ticker() noexcept {
 
     if (gCursorPos[0] == gamemode) {
         // Menu left/right movements: game mode
-        if (ticButtons & PAD_RIGHT) {
+        if (bMenuRight) {
             if (gStartGameType < gt_deathmatch) {
                 gStartGameType = (gametype_t)((uint32_t) gStartGameType + 1);
                 
@@ -325,7 +352,7 @@ gameaction_t M_Ticker() noexcept {
                 S_StartSound(nullptr, sfx_swtchx);
             }
         }
-        else if (ticButtons & PAD_LEFT) {
+        else if (bMenuLeft) {
             if (gStartGameType != gt_single) {
                 gStartGameType = (gametype_t)((uint32_t) gStartGameType -1);
 
@@ -351,7 +378,7 @@ gameaction_t M_Ticker() noexcept {
     }
     else if (gCursorPos[0] == level) {
         // Menu left/right movements: level/episode select
-        if (ticButtons & PAD_RIGHT) {
+        if (bMenuRight) {
             gStartMapOrEpisode += 1;
             
             if (gStartMapOrEpisode <= gMaxStartEpisodeOrMap) {
@@ -360,7 +387,7 @@ gameaction_t M_Ticker() noexcept {
                 gStartMapOrEpisode = gMaxStartEpisodeOrMap;
             }
         }
-        else if (ticButtons & PAD_LEFT) {
+        else if (bMenuLeft) {
             gStartMapOrEpisode -= 1;
             
             if (gStartMapOrEpisode > 0) {
@@ -374,7 +401,7 @@ gameaction_t M_Ticker() noexcept {
     }
     else if (gCursorPos[0] == difficulty) {
         // Menu left/right movements: difficulty select
-        if (ticButtons & PAD_RIGHT) {
+        if (bMenuRight) {
             // PC-PSX: allow the previously hidden 'Nightmare' skill to be selected
             #if PC_PSX_DOOM_MODS
                 constexpr skill_t MAX_ALLOWED_SKILL = sk_nightmare;
@@ -387,7 +414,7 @@ gameaction_t M_Ticker() noexcept {
                 S_StartSound(nullptr, sfx_swtchx);
             }
         }
-        else if (ticButtons & PAD_LEFT) {
+        else if (bMenuLeft) {
             if (gStartSkill != sk_baby) {
                 gStartSkill = (skill_t)((uint32_t) gStartSkill - 1);
                 S_StartSound(nullptr, sfx_swtchx);

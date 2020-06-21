@@ -33,8 +33,18 @@ void START_PasswordScreen() noexcept {
 
     // Reset control related stuff and password entry status
     gVBlanksUntilMenuMove[0] = 0;
-    gOldTicButtons[0] = gTicButtons[0];
-    gOldTicButtons[1] = gTicButtons[1];
+
+    #if PC_PSX_DOOM_MODS
+        for (int32_t i = 0; i < MAXPLAYERS; ++i) {
+            gOldTickInputs[i] = gTickInputs[i];
+        }
+
+        gOldTicButtons = gTicButtons;
+    #else
+        for (int32_t i = 0; i < MAXPLAYERS; ++i) {
+            gOldTicButtons[i] = gTicButtons[i];
+        }
+    #endif
 
     gInvalidPasswordFlashTicsLeft = 0;
     gCurPasswordCharIdx = 0;
@@ -55,6 +65,12 @@ void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 // Update logic for the password screen, entering password characters and so on...
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_PasswordScreen() noexcept {
+    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PC_PSX_DOOM_MODS
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
+    #endif
+
     // Do invalid password flash sfx every so often if currently active
     if (gInvalidPasswordFlashTicsLeft != 0) {
         if (gGameTic > gPrevGameTic) {
@@ -67,10 +83,31 @@ gameaction_t TIC_PasswordScreen() noexcept {
     }
 
     // Handle up/down/left/right movements
-    const padbuttons_t ticButtons = gTicButtons[0];
-    const padbuttons_t oldTicButtons = gOldTicButtons[0];
+    #if PC_PSX_DOOM_MODS
+        const TickInputs& inputs = gTickInputs[0];
+        const TickInputs& oldInputs = gOldTickInputs[0];
 
-    if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
+        const bool bMenuUp = inputs.bMenuUp;
+        const bool bMenuDown = inputs.bMenuDown;
+        const bool bMenuLeft = inputs.bMenuLeft;
+        const bool bMenuRight = inputs.bMenuRight;
+        const bool bMenuStart = inputs.bMenuStart;
+        const bool bMenuBack = inputs.bMenuBack;
+        const bool bMenuMove = (bMenuUp || bMenuDown || bMenuLeft || bMenuRight);
+    #else
+        const padbuttons_t ticButtons = gTicButtons[0];
+        const padbuttons_t oldTicButtons = gOldTicButtons[0];
+
+        const bool bMenuUp = (ticButtons & PAD_UP);
+        const bool bMenuDown = (ticButtons & PAD_DOWN);
+        const bool bMenuLeft = (ticButtons & PAD_LEFT);
+        const bool bMenuRight = (ticButtons & PAD_RIGHT);
+        const bool bMenuStart = (ticButtons & PAD_START);
+        const bool bMenuBack = (ticButtons & PAD_SELECT);
+        const bool bMenuMove = (ticButtons & PAD_DIRECTION_BTNS);
+    #endif
+
+    if (!bMenuMove) {
         // If there are no direction buttons pressed this frame then we can move immediately next time
         gVBlanksUntilMenuMove[0] = 0;
     } else {
@@ -80,20 +117,20 @@ gameaction_t TIC_PasswordScreen() noexcept {
         if (gVBlanksUntilMenuMove[0] <= 0) {
             gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
             
-            if (ticButtons & PAD_UP) {
+            if (bMenuUp) {
                 if (gCurPasswordCharIdx >= 8) {
                     gCurPasswordCharIdx -= 8;
                     S_StartSound(nullptr, sfx_pstop);
                 }
             }
-            else if (ticButtons & PAD_DOWN) {
+            else if (bMenuDown) {
                 if (gCurPasswordCharIdx + 8 < NUM_PW_CHARS) {
                     gCurPasswordCharIdx += 8;
                     S_StartSound(nullptr, sfx_pstop);
                 }
             }
 
-            if (ticButtons & PAD_LEFT) {
+            if (bMenuLeft) {
                 gCurPasswordCharIdx -= 1;
 
                 if (gCurPasswordCharIdx < 0) {
@@ -102,7 +139,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
                     S_StartSound(nullptr, sfx_pstop);
                 }
             }
-            else if (ticButtons & PAD_RIGHT) {
+            else if (bMenuRight) {
                 gCurPasswordCharIdx += 1;
 
                 if (gCurPasswordCharIdx >= NUM_PW_CHARS) {
@@ -115,14 +152,25 @@ gameaction_t TIC_PasswordScreen() noexcept {
     }
 
     // Exit this screen if start or select are pressed
-    if (ticButtons & (PAD_START | PAD_SELECT))
+    if (bMenuStart | bMenuBack)
         return ga_exit;
 
     // Nothing more to do if new buttons are not pressed
-    if (ticButtons == oldTicButtons)
-        return ga_nothing;
+    #if !PC_PSX_DOOM_MODS
+        if (ticButtons == oldTicButtons)
+            return ga_nothing;
+    #endif
 
-    if (ticButtons & (PAD_SQUARE | PAD_CROSS | PAD_CIRCLE)) {
+    // Entering or deleting a password character?
+    #if PC_PSX_DOOM_MODS
+        const bool bEnterPasswordChar = (inputs.bEnterPasswordChar && (!oldInputs.bEnterPasswordChar));
+        const bool bDeletePasswordChar = (inputs.bDeletePasswordChar && (!oldInputs.bDeletePasswordChar));
+    #else
+        const bool bEnterPasswordChar = (ticButtons & (PAD_SQUARE | PAD_CROSS | PAD_CIRCLE));
+        const bool bDeletePasswordChar = (ticButtons & PAD_TRIANGLE);
+    #endif
+
+    if (bEnterPasswordChar) {
         // Entering a password character (if there is a free slot)
         S_StartSound(nullptr, sfx_swtchx);
 
@@ -154,7 +202,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
             gInvalidPasswordFlashTicsLeft = 16;
         }
     }
-    else if (ticButtons & PAD_TRIANGLE) {
+    else if (bDeletePasswordChar) {
         // Delete a password sequence character and reset it's value in the buffer to the default
         S_StartSound(nullptr, sfx_swtchx);
         gNumPasswordCharsEntered--;

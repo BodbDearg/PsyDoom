@@ -71,10 +71,20 @@ bool        gbGamePaused;                           // Whether the game is curre
 int32_t     gPlayerNum;                             // Current player number being updated/processed
 int32_t     gMapNumToCheatWarpTo;                   // What map the player currently has selected for cheat warp
 int32_t     gVramViewerTexPage;                     // What page of texture memory to display in the VRAM viewer
-uint32_t    gTicButtons[MAXPLAYERS];                // Currently pressed buttons by all players
-uint32_t    gOldTicButtons[MAXPLAYERS];             // Previously pressed buttons by all players
 thinker_t   gThinkerCap;                            // Dummy thinker which serves as both the head and tail of the thinkers list.
 mobj_t      gMObjHead;                              // Dummy map object which serves as both the head and tail of the map objects linked list.
+
+// PC-PSX: PSX gamepad button presses are now confined to just this player, and are just used for entering the original cheat sequences.
+// For a networked game we use the tick inputs sent across with each packet.
+#if PC_PSX_DOOM_MODS
+    TickInputs  gTickInputs[MAXPLAYERS];
+    TickInputs  gOldTickInputs[MAXPLAYERS];
+    uint32_t    gTicButtons;                        // Currently PSX pad buttons for this player
+    uint32_t    gOldTicButtons;                     // Previously pressed PSX buttons for this player
+#else
+    uint32_t    gTicButtons[MAXPLAYERS];            // Currently pressed buttons by all players
+    uint32_t    gOldTicButtons[MAXPLAYERS];         // Previously pressed buttons by all players
+#endif
 
 static int32_t      gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
 static uint16_t     gCheatSequenceBtns[CHEAT_SEQ_LEN];      // Cheat sequence buttons inputted by the player
@@ -148,11 +158,22 @@ void P_CheckCheats() noexcept {
         if (!gbPlayerInGame[playerIdx])
             continue;
 
-        const uint32_t padBtns = gTicButtons[playerIdx];
-        const uint32_t oldPadBtns = gOldTicButtons[playerIdx];
+        #if PC_PSX_DOOM_MODS
+            const TickInputs& inputs = gTickInputs[playerIdx];
+            const TickInputs& oldInputs = gOldTickInputs[playerIdx];
+        #else
+            const uint32_t padBtns = gTicButtons[playerIdx];
+            const uint32_t oldPadBtns = gOldTicButtons[playerIdx];
+        #endif
         
         // Toggling pause?
-        if (Utils::padBtnJustPressed(PAD_START, padBtns, oldPadBtns)) {
+        #if PC_PSX_DOOM_MODS
+            const bool bPauseJustPressed = (inputs.bTogglePause && (!oldInputs.bTogglePause));
+        #else
+            const bool bPauseJustPressed = Utils::padBtnJustPressed(PAD_START, padBtns, oldPadBtns);
+        #endif
+
+        if (bPauseJustPressed) {
             gbGamePaused = (!gbGamePaused);
 
             // Handle the game being paused, if just pausing
@@ -193,7 +214,13 @@ void P_CheckCheats() noexcept {
 
         // Showing the options menu if the game is paused and the options button has just been pressed.
         // Otherwise do not do any of the logic below...
-        if ((!Utils::padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns)) || (!gbGamePaused))
+        #if PC_PSX_DOOM_MODS
+            const bool bMenuBackJustPressed = (inputs.bMenuBack && (!oldInputs.bMenuBack));
+        #else
+            const bool bMenuBackJustPressed = Utils::padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns);
+        #endif
+
+        if ((!bMenuBackJustPressed) || (!gbGamePaused))
             continue;
         
         // About to open up the options menu, disable these player cheats and present what we have to the screen
@@ -222,13 +249,36 @@ void P_CheckCheats() noexcept {
 
     // Grab inputs for the 1st player.
     // The rest of the cheat logic is for singleplayer mode only!
-    const uint32_t padBtns = gTicButtons[0];
-    const uint32_t oldPadBtns = gOldTicButtons[0];
+    #if PC_PSX_DOOM_MODS
+        const uint32_t padBtns = gTicButtons;
+        const uint32_t oldPadBtns = gOldTicButtons;
 
-    // If there is no current input then you can move immediately next frame
-    if (padBtns == 0) {
-        gVBlanksUntilMenuMove[0] = 0;
-    }
+        const bool bMenuLeft = gTickInputs[0].bMenuLeft;
+        const bool bMenuRight = gTickInputs[0].bMenuRight;
+        const bool bJustPressedMenuLeft = (gTickInputs[0].bMenuLeft && (!gOldTickInputs[0].bMenuLeft));
+        const bool bJustPressedMenuRight = (gTickInputs[0].bMenuRight && (!gOldTickInputs[0].bMenuRight));
+        const bool bJustPressedMenuOk = (gTickInputs[0].bMenuOk && (!gOldTickInputs[0].bMenuOk));
+    #else
+        const uint32_t padBtns = gTicButtons[0];
+        const uint32_t oldPadBtns = gOldTicButtons[0];
+
+        const bool bMenuLeft = (padBtns & PAD_LEFT);
+        const bool bMenuRight = (padBtns & PAD_RIGHT);
+        const bool bJustPressedMenuLeft = (bMenuLeft && (padBtns != oldPadBtns));
+        const bool bJustPressedMenuRight = (bMenuRight && (padBtns != oldPadBtns));
+        const bool bJustPressedMenuOk = ((padBtns != oldPadBtns) && (padBtns & PAD_ACTION_BTNS));
+    #endif
+
+    // If there is no current input then you can move immediately on the next frame
+    #if PC_PSX_DOOM_MODS
+        if ((!bMenuLeft) && (!bMenuRight)) {
+            gVBlanksUntilMenuMove[0] = 0;
+        }
+    #else
+        if (padBtns == 0) {
+            gVBlanksUntilMenuMove[0] = 0;
+        }
+    #endif
     
     // Are we showing the cheat warp menu?
     // If so then do the controls for that and exit.
@@ -238,7 +288,7 @@ void P_CheckCheats() noexcept {
         gVBlanksUntilMenuMove[0] -= gPlayersElapsedVBlanks[0];
 
         if (gVBlanksUntilMenuMove[0] <= 0) {
-            if ((padBtns & PAD_LEFT) != 0) {
+            if (bMenuLeft) {
                 gMapNumToCheatWarpTo--;
 
                 if (gMapNumToCheatWarpTo <= 0) {
@@ -252,7 +302,7 @@ void P_CheckCheats() noexcept {
                 
                 gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
             }
-            else if ((padBtns & PAD_RIGHT) != 0) {
+            else if (bMenuRight) {
                 gMapNumToCheatWarpTo++;
 
                 if (gMapNumToCheatWarpTo > MAX_CHEAT_WARP_LEVEL) {
@@ -269,14 +319,12 @@ void P_CheckCheats() noexcept {
         }
 
         // Are we initiating the the actual warp?
-        if (padBtns != oldPadBtns) {
-            if (padBtns & PAD_ACTION_BTNS) {
-                // Button pressed to initiate the level warp - kick it off!
-                gGameAction = ga_warped;
-                player.cheats &= (~CF_WARPMENU);
-                gStartMapOrEpisode = gMapNumToCheatWarpTo;
-                gGameMap = gMapNumToCheatWarpTo;
-            }
+        if (bJustPressedMenuOk) {
+            // Button pressed to initiate the level warp - kick it off!
+            gGameAction = ga_warped;
+            player.cheats &= (~CF_WARPMENU);
+            gStartMapOrEpisode = gMapNumToCheatWarpTo;
+            gGameMap = gMapNumToCheatWarpTo;
         }
 
         return;
@@ -285,20 +333,18 @@ void P_CheckCheats() noexcept {
     // Are we showing the VRAM viewer?
     // If so then do the controls for that and exit.
     if (player.cheats & CF_VRAMVIEWER) {
-        if (padBtns != oldPadBtns) {
-            if (padBtns & PAD_LEFT) {
-                gVramViewerTexPage--;
+        if (bJustPressedMenuLeft) {
+            gVramViewerTexPage--;
 
-                if (gVramViewerTexPage < 0) {
-                    gVramViewerTexPage = 0;
-                }
+            if (gVramViewerTexPage < 0) {
+                gVramViewerTexPage = 0;
             }
-            else if (padBtns & PAD_RIGHT) {
-                gVramViewerTexPage++;
+        }
+        else if (bJustPressedMenuRight) {
+            gVramViewerTexPage++;
 
-                if (gVramViewerTexPage > 10) {
-                    gVramViewerTexPage = 10;
-                }
+            if (gVramViewerTexPage > 10) {
+                gVramViewerTexPage = 10;
             }
         }
 
@@ -699,6 +745,18 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         inputs.bAutomapZoomOut = true;
     }
 
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_MINUS) ||
+        Input::isControllerInputPressed(ControllerInput::AXIS_TRIG_LEFT)
+    ) {
+        inputs.bAutomapZoomOut = true;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_EQUALS) ||
+        Input::isControllerInputPressed(ControllerInput::AXIS_TRIG_RIGHT)
+    ) {
+        inputs.bAutomapZoomIn = true;
+    }
+
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAGEDOWN) ||
         Input::isKeyboardKeyPressed(SDL_SCANCODE_Q) ||
         Input::isControllerInputPressed(ControllerInput::BTN_LEFT_SHOULDER) ||
@@ -750,6 +808,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAUSE) ||
         Input::isKeyboardKeyPressed(SDL_SCANCODE_P) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_RETURN) ||
         Input::isControllerInputPressed(ControllerInput::BTN_START)
     ) {
         inputs.bTogglePause = true;
@@ -776,19 +835,26 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         inputs.bMenuBack = true;
     }
 
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_TAB) ||
+        Input::isKeyboardKeyPressed(SDL_SCANCODE_M) ||
+        Input::isControllerInputPressed(ControllerInput::BTN_BACK)
+    ) {
+        inputs.bToggleMap = true;
+    }
+
     if (Input::isControllerInputPressed(ControllerInput::BTN_START)) {
         inputs.bMenuStart = true;
     }
 
-    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) >= DIGITAL_THRESHOLD) {
+    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) <= -DIGITAL_THRESHOLD) {
         inputs.bMenuUp = true;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) <= -DIGITAL_THRESHOLD) { 
+    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) >= DIGITAL_THRESHOLD) { 
         inputs.bMenuDown = true;
     }
 
-    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) >= DIGITAL_THRESHOLD) {
+    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) <= -DIGITAL_THRESHOLD) {
         inputs.bMenuUp = true;
-    }  else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) <= -DIGITAL_THRESHOLD) { 
+    }  else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) >= DIGITAL_THRESHOLD) { 
         inputs.bMenuDown = true;
     }
 
@@ -824,8 +890,8 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         inputs.bDeletePasswordChar = true;
     }
 
-    inputs.analogForwardMove = (fixed_t) Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone);
-    inputs.analogSideMove = (fixed_t) Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone);
+    inputs.analogForwardMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone) * FRACUNIT);
+    inputs.analogSideMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone) * FRACUNIT);
 
     // Gamepad turn amount: this varies depending on configuration.
     // Here we must boil it down to the final number to be applied before framerate adjustments, so it sent to other players.
@@ -839,14 +905,16 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         const float turnSpeedMix = std::abs(axis);
         const float turnSpeed = turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix;
 
-        inputs.analogTurn += (fixed_t) turnSpeed;
+        inputs.analogTurn += (fixed_t)(turnSpeed * axis);
     }
 
     // Mouse turn amount: this varies depending on configuration.
     // Here we must boil it down to the final number to be applied before framerate adjustments, so it sent to other players.
     {
-        const float turnSpeed = Input::getMouseXMovement() * Config::gMouseTurnSpeed;
-        inputs.analogTurn += (fixed_t) turnSpeed;
+        const float axis = Input::getMouseXMovement();
+        const float turnSpeed = Config::gMouseTurnSpeed;
+
+        inputs.analogTurn += (fixed_t)(turnSpeed * axis);
     }
 }
 

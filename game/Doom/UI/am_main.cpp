@@ -50,9 +50,35 @@ void AM_Control(player_t& player) noexcept {
         return;
     
     // Toggle the automap on and off if select has just been pressed
-    const padbuttons_t ticButtons = gTicButtons[gPlayerNum];
-    
-    if ((ticButtons & PAD_SELECT) && ((gOldTicButtons[gPlayerNum] & PAD_SELECT) == 0)) {
+    #if PC_PSX_DOOM_MODS
+        TickInputs& inputs = gTickInputs[gPlayerNum];
+        const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
+
+        const bool bMenuBack = (inputs.bToggleMap && (!oldInputs.bToggleMap));
+        const bool bAutomapPan = inputs.bAutomapPan;
+        const bool bPanFast = inputs.bRun;
+        const bool bAutomapMoveLeft = inputs.bAutomapMoveLeft;
+        const bool bAutomapMoveRight = inputs.bAutomapMoveRight;
+        const bool bAutomapMoveUp = inputs.bAutomapMoveUp;
+        const bool bAutomapMoveDown = inputs.bAutomapMoveDown;
+        const bool bAutomapZoomIn = inputs.bAutomapZoomIn;
+        const bool bAutomapZoomOut = inputs.bAutomapZoomOut;
+    #else
+        const padbuttons_t ticButtons = gTicButtons[gPlayerNum];
+        const padbuttons_t oldTicButtons = gOldTicButtons[gPlayerNum];
+
+        const bool bMenuBack = ((ticButtons & PAD_SELECT) && ((oldTicButtons & PAD_SELECT) == 0));
+        const bool bAutomapPan = (ticButtons & PAD_CROSS);
+        const bool bPanFast = (ticButtons & PAD_SQUARE);
+        const bool bAutomapMoveLeft = (ticButtons & PAD_LEFT);
+        const bool bAutomapMoveRight = (ticButtons & PAD_RIGHT);
+        const bool bAutomapMoveUp = (ticButtons & PAD_UP);
+        const bool bAutomapMoveDown = (ticButtons & PAD_DOWN);
+        const bool bAutomapZoomIn = (ticButtons & PAD_L1);
+        const bool bAutomapZoomOut = (ticButtons & PAD_R1);
+    #endif
+
+    if (bMenuBack) {
         player.automapflags ^= AF_ACTIVE;
         player.automapx = player.mo->x;
         player.automapy = player.mo->y;
@@ -67,7 +93,7 @@ void AM_Control(player_t& player) noexcept {
 
     // Follow the player unless the cross button is pressed.
     // The rest of the logic is for when we are NOT following the player.
-    if ((ticButtons & PAD_CROSS) == 0) {
+    if (!bAutomapPan) {
         player.automapflags &= ~AF_FOLLOW;
         return;
     }
@@ -80,7 +106,7 @@ void AM_Control(player_t& player) noexcept {
     }
     
     // Figure out the movement amount for manual camera movement
-    const fixed_t moveStep = (ticButtons & PAD_SQUARE) ? MOVESTEP * 2 : MOVESTEP;
+    const fixed_t moveStep = (bPanFast) ? MOVESTEP * 2 : MOVESTEP;
 
     // Not sure why this check was done, it can never be true due to the logic above.
     // PC-PSX: remove this block as it is useless...
@@ -90,14 +116,14 @@ void AM_Control(player_t& player) noexcept {
     #endif
 
     // Left/right movement
-    if (ticButtons & PAD_RIGHT) {
+    if (bAutomapMoveRight) {
         player.automapx += moveStep;
 
         if (player.automapx > gAutomapXMax) {
             player.automapx = gAutomapXMax;
         }
     }
-    else if (ticButtons & PAD_LEFT) {
+    else if (bAutomapMoveLeft) {
         player.automapx -= moveStep;
 
         if (player.automapx < gAutomapXMin) {
@@ -106,14 +132,14 @@ void AM_Control(player_t& player) noexcept {
     }
 
     // Up/down movement
-    if (ticButtons & PAD_UP) {
+    if (bAutomapMoveUp) {
         player.automapy += moveStep;
 
         if (player.automapy > gAutomapYMax) {
             player.automapy = gAutomapYMax;
         }
     }
-    else if (ticButtons & PAD_DOWN) {
+    else if (bAutomapMoveDown) {
         player.automapy -= moveStep;
 
         if (player.automapy < gAutomapYMin) {
@@ -122,14 +148,14 @@ void AM_Control(player_t& player) noexcept {
     }
     
     // Scale up and down
-    if (ticButtons & PAD_R1) {
+    if (bAutomapZoomOut) {
         player.automapscale -= SCALESTEP;
         
         if (player.automapscale < MINSCALE) {
             player.automapscale = MINSCALE;
         }
     }
-    else if (ticButtons & PAD_L1) {
+    else if (bAutomapZoomIn) {
         player.automapscale += SCALESTEP;
 
         if (player.automapscale > MAXSCALE) {
@@ -138,7 +164,20 @@ void AM_Control(player_t& player) noexcept {
     }
 
     // When not in follow mode, consume these inputs so that we don't move the player in the level
-    gTicButtons[gPlayerNum] &= ~(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_R1 | PAD_L1);
+    #if PC_PSX_DOOM_MODS
+        inputs.bMoveForward = false;
+        inputs.bMoveBackward = false;
+        inputs.bAttack = false;
+        inputs.bTurnLeft = false;
+        inputs.bTurnRight = false;
+        inputs.bStrafeLeft = false;
+        inputs.bStrafeRight = false;
+        inputs.analogForwardMove = 0;
+        inputs.analogSideMove = 0;
+        inputs.analogTurn = 0;
+    #else
+        gTicButtons[gPlayerNum] &= ~(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_R1 | PAD_L1);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

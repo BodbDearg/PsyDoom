@@ -92,9 +92,15 @@ void STOP_Title([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the main title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Title() noexcept {
-    // End the title screen if any buttons are pressed
-    if (gTicButtons[0] != 0)
-        return ga_exit;
+    // End the title screen if any buttons are pressed.
+    // PC-PSX: just accept menu start/ok/back:
+    #if PC_PSX_DOOM_MODS
+        if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
+            return ga_exit;
+    #else
+        if (gTicButtons[0] != 0)
+            return ga_exit;
+    #endif
     
     // Decrement the time until the title sprite moves
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gCurPlayerIndex];

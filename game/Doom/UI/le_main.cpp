@@ -40,6 +40,12 @@ void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the 'legals' screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Legals() noexcept {
+    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PC_PSX_DOOM_MODS
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
+    #endif
+
     // Scroll the legal text, otherwise check for timeout
     if (gTitleScreenSpriteY > 0) {
         gTitleScreenSpriteY--;
@@ -55,8 +61,14 @@ gameaction_t TIC_Legals() noexcept {
             if (waitTicsElapsed >= 180)
                 return ga_timeout;
             
-            if (gTicButtons[0] != 0)
-                return ga_exit;
+            // PC-PSX: only accept main menu buttons to skip
+            #if PC_PSX_DOOM_MODS
+                if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
+                    return ga_exit;
+            #else
+                if (gTicButtons[0] != 0)
+                    return ga_exit;
+            #endif
         }
     }
 

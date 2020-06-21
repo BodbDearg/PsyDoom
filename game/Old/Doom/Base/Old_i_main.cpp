@@ -2,6 +2,15 @@
 
 #if !PC_PSX_DOOM_MODS
 
+constexpr int32_t   NET_PACKET_SIZE     = 8;        // The size of a packet and the packet buffers in a networked game
+constexpr uint8_t   NET_PACKET_HEADER   = 0xAA;     // The 1st byte in every network packet: used for error detection purposes
+
+// Pointer to control bindings for player 1 and 2
+padbuttons_t* gpPlayerCtrlBindings[MAXPLAYERS];
+
+// Control bindings for the remote player
+static padbuttons_t gOtherPlayerCtrlBindings[NUM_CTRL_BINDS];
+
 // PSX Kernel events that fire when reads and writes complete for Serial I/O in a multiplayer game
 static uint32_t gSioReadDoneEvent;
 static uint32_t gSioWriteDoneEvent;
@@ -150,6 +159,95 @@ void I_NetHandshake() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Sends the packet for the current frame in a networked game and receives the packet from the other player.
+// Also does error checking, to make sure that the connection is still OK.
+// Returns 'true' if a network error has occurred.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool I_NetUpdate() noexcept {
+    // The 1st two bytes of the network packet are for error detection, header and position sanity check:
+    mobj_t& player1Mobj = *gPlayers[0].mo;
+    mobj_t& player2Mobj = *gPlayers[1].mo;
+
+    gNetOutputPacket[0] = NET_PACKET_HEADER;
+    gNetOutputPacket[1] = (uint8_t)(player1Mobj.x ^ player1Mobj.y ^ player2Mobj.x ^ player2Mobj.y);
+
+    // Send the elapsed tics for this player and the buttons pressed
+    gNetOutputPacket[2] = (uint8_t)(gPlayersElapsedVBlanks[gCurPlayerIndex]);
+
+    const uint32_t thisPlayerBtns = gTicButtons[gCurPlayerIndex];
+    gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
+    gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
+    gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
+    gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
+
+    I_NetSendRecv();
+
+    // See if the packet we received from the other player is what we expect.
+    // If it isn't then show a 'network error' message:
+    const bool bNetworkError = (
+        (gNetInputPacket[0] != NET_PACKET_HEADER) ||
+        (gNetInputPacket[1] != gNetOutputPacket[1])
+    );
+
+    if (bNetworkError) {
+        // Uses the current image as the basis for the next frame; copy the presented framebuffer to the drawing framebuffer:
+        LIBGPU_DrawSync(0);
+        LIBGPU_MoveImage(
+            gDispEnvs[gCurDispBufferIdx].disp,
+            gDispEnvs[gCurDispBufferIdx ^ 1].disp.x,
+            gDispEnvs[gCurDispBufferIdx ^ 1].disp.y
+        );
+
+        // Show the 'Network error' plaque
+        I_IncDrawnFrameCount();
+        I_CacheTex(gTex_NETERR);
+        I_DrawSprite(
+            gTex_NETERR.texPageId,
+            gPaletteClutIds[UIPAL],
+            84,
+            109,
+            gTex_NETERR.texPageCoordX,
+            gTex_NETERR.texPageCoordY,
+            gTex_NETERR.width,
+            gTex_NETERR.height
+        );
+
+        I_SubmitGpuCmds();
+        I_DrawPresent();
+
+        // Try and do a sync handshake between the players
+        I_NetHandshake();
+
+        // Clear the other player's buttons, and this player's previous buttons (not sure why that would matter)
+        gTicButtons[1] = 0;
+        gOldTicButtons[0] = 0;
+
+        // There was a network error!
+        return true;
+    }
+
+    // Read and save the buttons for the other player and their elapsed vblank count.
+    // Note that the vblank count for player 1 is what determines the speed of the game for both players.
+    const uint32_t otherPlayerBtns = (
+        ((uint32_t) gNetInputPacket[4] << 0) |
+        ((uint32_t) gNetInputPacket[5] << 8) |
+        ((uint32_t) gNetInputPacket[6] << 16) |
+        ((uint32_t) gNetInputPacket[7] << 24)
+    );
+
+    if (gCurPlayerIndex == 0) {
+        gTicButtons[1] = otherPlayerBtns;
+        gPlayersElapsedVBlanks[1] = gNetInputPacket[2];
+    } else {
+        gTicButtons[0] = otherPlayerBtns;
+        gPlayersElapsedVBlanks[0] = gNetInputPacket[2];
+    }
+
+    // No network error occured
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Sends and receives a single packet of data between the two players in a networked game (over the serial link cable)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetSendRecv() noexcept {
@@ -202,6 +300,45 @@ void I_NetSendRecv() noexcept {
         // Clear the error bits before we retry the send again
         LIBCOMB_CombResetError();
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Encodes the given control bindings into a 32-bit integer suitable for network/link-cable transmission
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t I_LocalButtonsToNet(const padbuttons_t pCtrlBindings[NUM_CTRL_BINDS]) noexcept {
+    // Encode each control binding using 4-bits.
+    // Technically it could be done in 3 bits since there are only 8 possible buttons, but 8 x 4-bits will still fit in the 32-bits also.
+    uint32_t encodedBindings = 0;
+
+    for (int32_t bindingIdx = 0; bindingIdx < NUM_CTRL_BINDS; ++bindingIdx) {
+        // Find out which button this action is bound to
+        int32_t buttonIdx = 0;
+
+        for (; buttonIdx < NUM_BINDABLE_BTNS; ++buttonIdx) {
+            // Is this the button used for this action?
+            if (gBtnMasks[buttonIdx] == pCtrlBindings[bindingIdx])
+                break;
+        }
+        
+        // Encode the button using a 4 bit slot in the 32-bit integer
+        encodedBindings |= buttonIdx << (bindingIdx * 4);
+    }
+
+    return encodedBindings;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// The reverse operation to 'I_LocalButtonsToNet'.
+// Decodes the given 32-bit integer containing control bindings for the other player in the networked game.
+// The bindings are saved to the 'gOtherPlayerCtrlBindings' global array and this is also what is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+padbuttons_t* I_NetButtonsToLocal(const uint32_t encodedBindings) noexcept {
+    for (int32_t bindingIdx = 0; bindingIdx < NUM_CTRL_BINDS; ++bindingIdx) {
+        const uint32_t buttonIdx = (encodedBindings >> (bindingIdx * 4)) & 0xF;     // Note: Vulnerability/overflow: button index CAN be out of bounds!
+        gOtherPlayerCtrlBindings[bindingIdx] = gBtnMasks[buttonIdx];
+    }
+
+    return gOtherPlayerCtrlBindings;
 }
 
 #endif  // !PC_PSX_DOOM_MODS

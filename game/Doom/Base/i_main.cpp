@@ -85,9 +85,6 @@ constexpr uint16_t TEX_PAGE_VRAM_TEXCOORDS[NUM_TCACHE_PAGES + 1][2] = {
     { 896,  256 }
 };
 
-constexpr int32_t   NET_PACKET_SIZE     = 8;        // The size of a packet and the packet buffers in a networked game
-constexpr uint8_t   NET_PACKET_HEADER   = 0xAA;     // The 1st byte in every network packet: used for error detection purposes
-
 // Texture cache variables.
 // The texture cache data structure, where we are filling in the cache next and the current fill row height (in cells).
 static tcache_t* gpTexCache;
@@ -138,9 +135,6 @@ padbuttons_t gCtrlBindings[NUM_CTRL_BINDS] = {
     PAD_R2
 };
 
-padbuttons_t  gOtherPlayerCtrlBindings[NUM_CTRL_BINDS];       // Control bindings for the remote player
-padbuttons_t* gpPlayerCtrlBindings[MAXPLAYERS];               // Pointer to control bindings for player 1 and 2
-
 // Bit masks for each of the bindable buttons
 const padbuttons_t gBtnMasks[NUM_BINDABLE_BTNS] = {
     PAD_TRIANGLE,   // bindablebtn_triangle
@@ -163,10 +157,31 @@ texture_t gTex_LOADING;
 texture_t gTex_NETERR;
 texture_t gTex_CONNECT;
 
-// The packet buffers for sending and receiving in a multiplayer game.
-// The link cable allows 8 bytes to be sent and received at a time.
-static uint8_t gNetInputPacket[NET_PACKET_SIZE];
-static uint8_t gNetOutputPacket[NET_PACKET_SIZE];
+// Game ids for networking
+static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
+static constexpr int32_t NET_GAMEID_FINAL_DOOM  = 0xAB11AB22;
+
+// Packet sent/received by all players when connecting to a game
+struct NetPacket_Connect {
+    uint32_t    gameId;             // Must match the expected game id
+    gametype_t  startGameType;      // Only sent by the server for the game: what type of game will be played
+    skill_t     startGameSkill;     // Only sent by the server for the game: what skill level will be used
+    int32_t     startMap;           // Only sent by the server for the game: what starting map will be used
+};
+
+static NetPacket_Connect gNetInPacket_Connect;
+static NetPacket_Connect gNetOutPacket_Connect;
+
+// Packet sent/received by all players to share per-tick updates for a network game
+struct NetPacket_Tick {
+    uint32_t    gameId;             // Must match the expected game id
+    uint32_t    errorCheck;         // Error checking bits for detecting if all players are in sync: populated using the current position and angle for all players
+    int32_t     elapsedVBlanks;     // How many vblanks have elapsed for the player sending the update
+    TickInputs  inputs;             // Inputs for the player sending this update
+};
+
+static NetPacket_Tick gNetInPacket_Tick;
+static NetPacket_Tick gNetOutPacket_Tick;
 
 // Buffers used originally by the PsyQ SDK to store gamepad input.
 // In PsyDoom they are just here for historical reference.
@@ -901,61 +916,50 @@ void I_NetSetup() noexcept {
     const bool bIsPlayer1 = ProgArgs::gbIsNetServer;
     gCurPlayerIndex = (bIsPlayer1) ? 0 : 1;
 
-    // Fill in the packet header, game details and this player's control bindings for the output packet and send it.
-    // Note that player 1 decides the game, so the game details are zeroed for player 2:
-    gNetOutputPacket[0] = NET_PACKET_HEADER;
+    // Fill in the connect output packet; note that player 1 decides the game params, so theese are zeroed for player 2:
+    // TODO: set a different game id here depending on DOOM vs FINAL DOOM.
+    NetPacket_Connect& outPkt = gNetOutPacket_Connect;
+    outPkt.gameId = NET_GAMEID_DOOM;
 
     if (gCurPlayerIndex == 0) {
-        gNetOutputPacket[1] = (uint8_t) gStartGameType;
-        gNetOutputPacket[2] = (uint8_t) gStartSkill;
-        gNetOutputPacket[3] = (uint8_t) gStartMapOrEpisode;
+        outPkt.startGameType = gStartGameType;
+        outPkt.startGameSkill = gStartSkill;
+        outPkt.startMap = gStartMapOrEpisode;
     } else {
-        gNetOutputPacket[1] = 0;
-        gNetOutputPacket[2] = 0;
-        gNetOutputPacket[3] = 0;
+        outPkt.startGameType = {};
+        outPkt.startGameSkill = {};
+        outPkt.startMap = {};
     }
 
-    {
-        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings);
-        gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
-        gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
-        gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
-        gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
-    }
+    // Endian correct the output packet and send
+    outPkt.gameId = Endian::hostToLittle(outPkt.gameId);
+    outPkt.startGameType = Endian::hostToLittle(outPkt.startGameType);
+    outPkt.startGameSkill = Endian::hostToLittle(outPkt.startGameSkill);
+    outPkt.startMap = Endian::hostToLittle(outPkt.startMap);
 
-    Network::sendBytes(gNetOutputPacket, NET_PACKET_SIZE);
+    Network::sendBytes(&outPkt, sizeof(outPkt));
 
-    // Read the input packet from the other player and verify the header is OK (abort if not).
-    Network::recvBytes(gNetInputPacket, NET_PACKET_SIZE);
+    // Read the input connect packet from the other player and endian correct
+    NetPacket_Connect& inPkt = gNetInPacket_Connect;
+    Network::recvBytes(&inPkt, sizeof(inPkt));
 
-    if (gNetInputPacket[0] != NET_PACKET_HEADER) {
+    inPkt.gameId = Endian::littleToHost(inPkt.gameId);
+    inPkt.startGameType = Endian::littleToHost(inPkt.startGameType);
+    inPkt.startGameSkill = Endian::littleToHost(inPkt.startGameSkill);
+    inPkt.startMap = Endian::littleToHost(inPkt.startMap);
+
+    // Verify the game id is OK (abort if not).
+    // TODO: use a different game id here depending on DOOM vs FINAL DOOM.
+    if (inPkt.gameId != NET_GAMEID_DOOM) {
         gbDidAbortGame = true;
         return;
     }
 
-    // Parse the other player's control bindings and save what controls both players have
-    {
-        const uint32_t otherPlayerBtns = (
-            ((uint32_t) gNetInputPacket[4] << 0) |
-            ((uint32_t) gNetInputPacket[5] << 8) |
-            ((uint32_t) gNetInputPacket[6] << 16) |
-            ((uint32_t) gNetInputPacket[7] << 24)
-        );
-
-        if (gCurPlayerIndex == 0) {
-            gpPlayerCtrlBindings[0] = gCtrlBindings;
-            gpPlayerCtrlBindings[1] = I_NetButtonsToLocal(otherPlayerBtns);
-        } else {
-            gpPlayerCtrlBindings[0] = I_NetButtonsToLocal(otherPlayerBtns);
-            gpPlayerCtrlBindings[1] = gCtrlBindings;
-        }
-    }
-
     // Player 2 gets the details of the game from player 1 and must setup the game accordingly
     if (gCurPlayerIndex != 0) {
-        gStartGameType = (gametype_t) gNetInputPacket[1];
-        gStartSkill = (skill_t) gNetInputPacket[2];
-        gStartMapOrEpisode = gNetInputPacket[3];
+        gStartGameType = inPkt.startGameType;
+        gStartSkill = inPkt.startGameSkill;
+        gStartMapOrEpisode = inPkt.startMap;
     }
 
     // One last check to see if the network connection was killed.
@@ -968,42 +972,54 @@ void I_NetSetup() noexcept {
     gbDidAbortGame = false;
 }
 
-#endif  // #if PC_PSX_DOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sends the packet for the current frame in a networked game and receives the packet from the other player.
 // Also does error checking, to make sure that the connection is still OK.
 // Returns 'true' if a network error has occurred.
+// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool I_NetUpdate() noexcept {
-    // The 1st two bytes of the network packet are for error detection, header and position sanity check:
-    mobj_t& player1Mobj = *gPlayers[0].mo;
-    mobj_t& player2Mobj = *gPlayers[1].mo;
+    // Makeup the output packet including error detection bits.
+    // TODO: use a different game id here depending on DOOM vs FINAL DOOM.
+    NetPacket_Tick& outPkt = gNetOutPacket_Tick;
+    outPkt.gameId = NET_GAMEID_DOOM;
+    outPkt.errorCheck = 0;
 
-    gNetOutputPacket[0] = NET_PACKET_HEADER;
-    gNetOutputPacket[1] = (uint8_t)(player1Mobj.x ^ player1Mobj.y ^ player2Mobj.x ^ player2Mobj.y);
+    for (int32_t i = 0; i < MAXPLAYERS; ++i) {
+        mobj_t& mobj = *gPlayers[i].mo;
+        outPkt.errorCheck ^= mobj.x;
+        outPkt.errorCheck ^= mobj.y;
+        outPkt.errorCheck ^= mobj.z;
+        outPkt.errorCheck ^= mobj.angle;
+    }
 
-    // Send the elapsed tics for this player and the buttons pressed
-    gNetOutputPacket[2] = (uint8_t)(gPlayersElapsedVBlanks[gCurPlayerIndex]);
+    outPkt.elapsedVBlanks = gPlayersElapsedVBlanks[gCurPlayerIndex];
+    outPkt.inputs = gTickInputs[gCurPlayerIndex];
 
-    const uint32_t thisPlayerBtns = gTicButtons[gCurPlayerIndex];
-    gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
-    gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
-    gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
-    gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
+    // Endian correct the output packet
+    outPkt.gameId = Endian::hostToLittle(outPkt.gameId);
+    outPkt.errorCheck = Endian::hostToLittle(outPkt.errorCheck);
+    outPkt.elapsedVBlanks = Endian::hostToLittle(outPkt.elapsedVBlanks);
+    outPkt.inputs.analogForwardMove = Endian::hostToLittle(outPkt.inputs.analogForwardMove);
+    outPkt.inputs.analogSideMove = Endian::hostToLittle(outPkt.inputs.analogSideMove);
+    outPkt.inputs.analogTurn = Endian::hostToLittle(outPkt.inputs.analogTurn);
 
-    I_NetSendRecv();
+    // Send and receive the same packet from the opposite end; endian correct before using:
+    NetPacket_Tick& inPkt = gNetInPacket_Tick;
+
+    Network::sendBytes(&outPkt, sizeof(outPkt));
+    Network::recvBytes(&inPkt, sizeof(inPkt));
+
+    inPkt.gameId = Endian::littleToHost(inPkt.gameId);
+    inPkt.errorCheck = Endian::littleToHost(inPkt.errorCheck);
+    inPkt.elapsedVBlanks = Endian::littleToHost(inPkt.elapsedVBlanks);
+    inPkt.inputs.analogForwardMove = Endian::littleToHost(inPkt.inputs.analogForwardMove);
+    inPkt.inputs.analogSideMove = Endian::littleToHost(inPkt.inputs.analogSideMove);
+    inPkt.inputs.analogTurn = Endian::littleToHost(inPkt.inputs.analogTurn);
 
     // See if the packet we received from the other player is what we expect.
     // If it isn't then show a 'network error' message:
-    const bool bNetworkError = (
-        (gNetInputPacket[0] != NET_PACKET_HEADER) ||
-        (gNetInputPacket[1] != gNetOutputPacket[1]) ||
-        // PC-PSX: connection loss is also a network error
-        #if PC_PSX_DOOM_MODS
-            (!Network::isConnected())
-        #endif
-    );
+    const bool bNetworkError = ((outPkt.gameId != inPkt.gameId) || (outPkt.errorCheck != inPkt.errorCheck));
 
     if (bNetworkError) {
         // Uses the current image as the basis for the next frame; copy the presented framebuffer to the drawing framebuffer:
@@ -1034,58 +1050,42 @@ bool I_NetUpdate() noexcept {
         // Try and do a sync handshake between the players
         I_NetHandshake();
 
-        // Clear the other player's buttons, and this player's previous buttons (not sure why that would matter)
-        gTicButtons[1] = 0;
-        gOldTicButtons[0] = 0;
+        // Clear the other player's inputs, and this player's previous inputs (not sure why that would matter)
+        for (int32_t i = 1; i < MAXPLAYERS; ++i) {
+            gTickInputs[i] = {};
+        }
+
+        gOldTickInputs[0] = {};
 
         // PC-PSX: wait for 2 seconds so the network error can be displayed.
         // When done clear the screen so the 'loading' message displays clearly and not overlapped with the 'network error' message:
-        #if PC_PSX_DOOM_MODS
-            Utils::waitForSeconds(2.0f);
-            I_DrawPresent();
-        #endif
+        Utils::waitForSeconds(2.0f);
+        I_DrawPresent();
 
         // There was a network error!
         return true;
     }
 
-    // Read and save the buttons for the other player and their elapsed vblank count.
+    // Read and save the inputs for the other player and their elapsed vblank count.
     // Note that the vblank count for player 1 is what determines the speed of the game for both players.
-    const uint32_t otherPlayerBtns = (
-        ((uint32_t) gNetInputPacket[4] << 0) |
-        ((uint32_t) gNetInputPacket[5] << 8) |
-        ((uint32_t) gNetInputPacket[6] << 16) |
-        ((uint32_t) gNetInputPacket[7] << 24)
-    );
-
     if (gCurPlayerIndex == 0) {
-        gTicButtons[1] = otherPlayerBtns;
-        gPlayersElapsedVBlanks[1] = gNetInputPacket[2];
+        gTickInputs[1] = inPkt.inputs;
+        gPlayersElapsedVBlanks[1] = inPkt.elapsedVBlanks;
     } else {
-        gTicButtons[0] = otherPlayerBtns;
-        gPlayersElapsedVBlanks[0] = gNetInputPacket[2];
+        gTickInputs[0] = inPkt.inputs;
+        gPlayersElapsedVBlanks[0] = inPkt.elapsedVBlanks;
     }
 
     // No network error occured
     return false;
 }
 
-#if PC_PSX_DOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Used to do a synchronization handshake between the two players over the serial cable.
 // Now does nothing since the underlying transport protocol (TCP) guarantees reliability and packet ordering.
-//------------------------------------------------------------------------------------------------------------------------------------------
-void I_NetHandshake() noexcept {}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Sends and receives a single packet of data between the two players in a networked game (over the serial link cable).
 // PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void I_NetSendRecv() noexcept {
-    Network::sendBytes(gNetOutputPacket, NET_PACKET_SIZE);
-    Network::recvBytes(gNetInputPacket, NET_PACKET_SIZE);
-}
+void I_NetHandshake() noexcept {}
 
 #endif  // #if PC_PSX_DOOM_MODS
 
@@ -1104,52 +1104,4 @@ void I_SubmitGpuCmds() noexcept {
     // Clear the primitives list
     gpGpuPrimsBeg = gGpuCmdsBuffer;
     gpGpuPrimsEnd = gGpuCmdsBuffer;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Encodes the given control bindings into a 32-bit integer suitable for network/link-cable transmission
-//------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t I_LocalButtonsToNet(const padbuttons_t pCtrlBindings[NUM_CTRL_BINDS]) noexcept {
-    // Encode each control binding using 4-bits.
-    // Technically it could be done in 3 bits since there are only 8 possible buttons, but 8 x 4-bits will still fit in the 32-bits also.
-    uint32_t encodedBindings = 0;
-
-    for (int32_t bindingIdx = 0; bindingIdx < NUM_CTRL_BINDS; ++bindingIdx) {
-        // Find out which button this action is bound to
-        int32_t buttonIdx = 0;
-
-        for (; buttonIdx < NUM_BINDABLE_BTNS; ++buttonIdx) {
-            // Is this the button used for this action?
-            if (gBtnMasks[buttonIdx] == pCtrlBindings[bindingIdx])
-                break;
-        }
-        
-        // Encode the button using a 4 bit slot in the 32-bit integer
-        encodedBindings |= buttonIdx << (bindingIdx * 4);
-    }
-
-    return encodedBindings;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// The reverse operation to 'I_LocalButtonsToNet'.
-// Decodes the given 32-bit integer containing control bindings for the other player in the networked game.
-// The bindings are saved to the 'gOtherPlayerCtrlBindings' global array and this is also what is returned.
-//------------------------------------------------------------------------------------------------------------------------------------------
-padbuttons_t* I_NetButtonsToLocal(const uint32_t encodedBindings) noexcept {
-    for (int32_t bindingIdx = 0; bindingIdx < NUM_CTRL_BINDS; ++bindingIdx) {
-        // PC-PSX: use '7' as the mask here, because there are only 7 bindable buttons.
-        // Also assert the assumption here that there are only 8 buttons which can be bound.
-        static_assert(NUM_BINDABLE_BTNS == 8);
-
-        #if PC_PSX_DOOM_MODS
-            const uint32_t buttonIdx = (encodedBindings >> (bindingIdx * 4)) & 7;
-        #else
-            const uint32_t buttonIdx = (encodedBindings >> (bindingIdx * 4)) & 0xF;
-        #endif
-
-        gOtherPlayerCtrlBindings[bindingIdx] = gBtnMasks[buttonIdx];
-    }
-
-    return gOtherPlayerCtrlBindings;
 }

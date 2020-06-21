@@ -1,6 +1,7 @@
 #include "p_user.h"
 
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/m_fixed.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
@@ -195,16 +196,43 @@ static void P_PlayerMobjThink(mobj_t& mobj) noexcept {
 // Reads inputs to decide how much the player will try to move and turn for a tic
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_BuildMove(player_t& player) noexcept {
-    // Grab some useful stuff: elapsed vblanks, currend and old buttons and gamepad bindings
+    // Grab some useful stuff: elapsed vblanks, current and old inputs etc.
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
-    const uint32_t curBtns = gTicButtons[gPlayerNum];
-    const uint32_t oldBtns = gOldTicButtons[gPlayerNum];
 
-    const padbuttons_t* const pBtnBindings = gpPlayerCtrlBindings[gPlayerNum];
+    #if PC_PSX_DOOM_MODS
+        const TickInputs& inputs = gTickInputs[gPlayerNum];
+        const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
+
+        const bool bTurnLeft = inputs.bTurnLeft;
+        const bool bOldTurnLeft = oldInputs.bTurnLeft;
+        const bool bTurnRight = inputs.bTurnRight;
+        const bool bOldTurnRight = oldInputs.bTurnRight;
+        const bool bStrafeLeft = inputs.bStrafeLeft;
+        const bool bStrafeRight = inputs.bStrafeRight;
+        const bool bMoveForward = inputs.bMoveForward;
+        const bool bMoveBackward = inputs.bMoveBackward;
+        const bool bRun = inputs.bRun;
+        const bool bStrafe = inputs.bStrafe;
+    #else
+        const uint32_t curBtns = gTicButtons[gPlayerNum];
+        const uint32_t oldBtns = gOldTicButtons[gPlayerNum];
+        const padbuttons_t* const pBtnBindings = gpPlayerCtrlBindings[gPlayerNum];
+
+        const bool bTurnLeft = (curBtns & PAD_LEFT);
+        const bool bOldTurnLeft = (oldBtns & PAD_LEFT);
+        const bool bTurnRight = (curBtns & PAD_RIGHT);
+        const bool bOldTurnRight = (oldBtns & PAD_RIGHT);
+        const bool bStrafeLeft = (curBtns & pBtnBindings[cbind_strafe_left]);
+        const bool bStrafeRight = (curBtns & pBtnBindings[cbind_strafe_right]);
+        const bool bMoveForward = (curBtns & PAD_UP);
+        const bool bMoveBackward = (curBtns & PAD_DOWN);
+        const bool bRun = (curBtns & pBtnBindings[cbind_run]);
+        const bool bStrafe = (curBtns & pBtnBindings[cbind_strafe]);
+    #endif
     
     // Do turn acceleration if turn is held continously for 2 frames or more
-    const bool bLeftTurnAccel = ((curBtns & PAD_LEFT) && (oldBtns & PAD_LEFT));
-    const bool bRightTurnAccel = ((curBtns & PAD_RIGHT) && (oldBtns & PAD_RIGHT));
+    const bool bLeftTurnAccel = (bTurnLeft && bOldTurnLeft);
+    const bool bRightTurnAccel = (bTurnRight && bOldTurnRight);
     
     if (bLeftTurnAccel || bRightTurnAccel) {
         player.turnheld = std::min(player.turnheld + 1, TURN_ACCEL_TICS - 1);
@@ -218,44 +246,42 @@ static void P_BuildMove(player_t& player) noexcept {
     player.forwardmove = 0;
 
     // What movement speed is being used, run or normal?
-    const uint32_t speedMode = (curBtns & pBtnBindings[cbind_run]) ? 1 : 0;
+    const uint32_t speedMode = (bRun) ? 1 : 0;
     
     // Do strafe left/right controls
-    if (curBtns & pBtnBindings[cbind_strafe_left]) {
+    if (bStrafeLeft) {
         player.sidemove = (-SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-    }
-    else if (curBtns & pBtnBindings[cbind_strafe_right]) {
+    } else if (bStrafeRight) {
         player.sidemove = (+SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     }
 
     // Do turning or strafing controls (if strafe button held)
-    const bool bDoFastTurn = ((speedMode != 0) && ((curBtns & (PAD_UP | PAD_DOWN)) == 0));
+    const bool bDoFastTurn = ((speedMode != 0) && (!bMoveForward) && (!bMoveBackward));
 
-    if (curBtns & pBtnBindings[cbind_strafe]) {
+    if (bStrafe) {
         // Strafe button held: turn buttons become strafing buttons
-        if (curBtns & PAD_LEFT) {
+        if (bTurnLeft) {
             player.sidemove = (-SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-        }
-        else if (curBtns & PAD_RIGHT) {
+        } else if (bTurnRight) {
             player.sidemove = (+SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
-    } 
+    }  
     else {
         // No strafe button held: do normal turning
         fixed_t turnAmt = 0;
 
         if (bDoFastTurn) {
             // Do fast turning when run is pressed and we are not moving forward/back
-            if (curBtns & PAD_LEFT) {
+            if (bTurnLeft) {
                 turnAmt = +FAST_ANGLE_TURN[player.turnheld];
-            } else if (curBtns & PAD_RIGHT) {
+            } else if (bTurnRight) {
                 turnAmt = -FAST_ANGLE_TURN[player.turnheld];
             }
         } else {
             // Otherwise do the slow turning speed
-            if (curBtns & PAD_LEFT) {
+            if (bTurnLeft) {
                 turnAmt = +ANGLE_TURN[player.turnheld];
-            } else if (curBtns & PAD_RIGHT) {
+            } else if (bTurnRight) {
                 turnAmt = -ANGLE_TURN[player.turnheld];
             }
         }
@@ -266,57 +292,30 @@ static void P_BuildMove(player_t& player) noexcept {
         player.angleturn = turnAmt << TURN_TO_ANGLE_SHIFT;
     }
 
-    // PC-PSX: do analog controller turning.
-    // TODO: make the controller turn axes bindable/configurable.
+    // PC-PSX: do analog controller turning (from gamepad or mouse)
     #if PC_PSX_DOOM_MODS
     {
-        // Get the axis value adjusted for the deadzone
-        const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_RIGHT_X, Config::gGamepadDeadZone);
-
-        // Figure out how much of the high and low turn speeds to use.
-        // Use the higher turn speed as the stick is pressed more:
-        const float turnSpeedLow = (bDoFastTurn) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
-        const float turnSpeedHigh = (bDoFastTurn) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
-        const float turnSpeedMix = std::abs(axis);
-        const float turnSpeed = turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix;
-
-        // Apply the turn
-        fixed_t analogTurn = (fixed_t)(axis * turnSpeed);
-        analogTurn *= elapsedVBlanks;
-        analogTurn /= VBLANKS_PER_TIC;
+        const fixed_t analogTurn = (fixed_t)(((int64_t) inputs.analogTurn * elapsedVBlanks) / VBLANKS_PER_TIC);
         player.angleturn -= analogTurn << TURN_TO_ANGLE_SHIFT;
     }
     #endif
 
-    // PC-PSX: do mouse turning
-    #if PC_PSX_DOOM_MODS
-    {
-        const float timeScale = (float) elapsedVBlanks / (float) VBLANKS_PER_TIC;
-        const fixed_t mouseTurn = (fixed_t)(Input::getMouseXMovement() * Config::gMouseTurnSpeed * timeScale);
-        player.angleturn -= mouseTurn << TURN_TO_ANGLE_SHIFT;
-    }
-    #endif
-
     // Do forward/backward movement controls
-    if (curBtns & PAD_UP) {
+    if (bMoveForward) {
         player.forwardmove = (+FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-    } else if (curBtns & PAD_DOWN) {
+    } else if (bMoveBackward) {
         player.forwardmove = (-FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     }
     
-    // PC-PSX: do analog movements.
-    // TODO: make the controller move axes bindable/configurable.
+    // PC-PSX: do analog movements
     #if PC_PSX_DOOM_MODS
     {
-        const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone);
-        const fixed_t move = (fixed_t)(axis * FORWARD_MOVE[speedMode]);
+        const fixed_t move = FixedMul(inputs.analogForwardMove, FORWARD_MOVE[speedMode]);
         player.forwardmove -= (move * elapsedVBlanks) / VBLANKS_PER_TIC;
         player.forwardmove = std::clamp(player.forwardmove, -MAX_FORWARD_MOVE, +MAX_FORWARD_MOVE);
     }
-
     {
-        const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone);
-        const fixed_t move = (fixed_t)(axis * SIDE_MOVE[speedMode]);
+        const fixed_t move = FixedMul(inputs.analogSideMove, SIDE_MOVE[speedMode]);
         player.sidemove += (move * elapsedVBlanks) / VBLANKS_PER_TIC;
         player.sidemove = std::clamp(player.sidemove, -MAX_SIDE_MOVE, +MAX_SIDE_MOVE);
     }
@@ -500,7 +499,11 @@ static void P_DeathThink(player_t& player) noexcept {
     }
 
     // Respawn if the right buttons are pressed and the player's view has dropped enough
-    const bool bRespawnBtnPressed = (gTicButtons[gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS));
+    #if PC_PSX_DOOM_MODS
+        const bool bRespawnBtnPressed = gTickInputs[gPlayerNum].bRespawn;
+    #else
+        const bool bRespawnBtnPressed = (gTicButtons[gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS));
+    #endif
 
     if (bRespawnBtnPressed && (player.viewheight <= 8 * FRACUNIT)) {
         player.playerstate = PST_REBORN;
@@ -511,10 +514,25 @@ static void P_DeathThink(player_t& player) noexcept {
 // Does all player updates such as movement, controls, weapon switching and so forth
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerThink(player_t& player) noexcept {
-    // Grab the current and previous buttons, and the gamepad bindings
-    const uint32_t curBtns = gTicButtons[gPlayerNum];
-    const uint32_t oldBtns = gOldTicButtons[gPlayerNum];
-    const padbuttons_t* pBtnBindings = gpPlayerCtrlBindings[gPlayerNum];
+    // Grab the current and previous inputs
+    #if PC_PSX_DOOM_MODS
+        const TickInputs& inputs = gTickInputs[gPlayerNum];
+        const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
+
+        const bool bPrevWeapon = (inputs.bPrevWeapon && (!oldInputs.bPrevWeapon));
+        const bool bNextWeapon = (inputs.bNextWeapon && (!oldInputs.bNextWeapon));
+        const bool bUse = inputs.bUse;
+        const bool bAttack = inputs.bAttack;
+    #else
+        const uint32_t curBtns = gTicButtons[gPlayerNum];
+        const uint32_t oldBtns = gOldTicButtons[gPlayerNum];
+        const padbuttons_t* pBtnBindings = gpPlayerCtrlBindings[gPlayerNum];
+
+        const bool bPrevWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_prev_weapon], curBtns, oldBtns);
+        const bool bNextWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_next_weapon], curBtns, oldBtns);
+        const bool bUse = (curBtns & pBtnBindings[cbind_use]);
+        const bool bAttack = (curBtns & pBtnBindings[cbind_attack]);
+    #endif
 
     // Do weapon switching if the player is still alive (and even if paused)
     if (player.playerstate == PST_LIVE) {
@@ -525,12 +543,8 @@ void P_PlayerThink(player_t& player) noexcept {
         int32_t weaponMicroBoxIdx = WEAPON_MICRO_INDEXES[curWeaponType];
         int32_t nextWeaponIdx = weaponMicroBoxIdx;
 
-        // See if next/previous weapon buttons have just been pressed
-        const bool bGotoPrevWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_prev_weapon], curBtns, oldBtns);
-        const bool bGotoNextWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_next_weapon], curBtns, oldBtns);
-
         // See if we are switching weapons
-        if (bGotoPrevWeapon) {
+        if (bPrevWeapon) {
             // Try to go to the previous weapon
             if ((weaponMicroBoxIdx == 0) && player.weaponowned[wp_chainsaw]) {
                 // When we are on the 1st slot and own the chainsaw then allow toggling between fists and chainsaw.
@@ -547,7 +561,7 @@ void P_PlayerThink(player_t& player) noexcept {
                 }
             }
         }
-        else if (bGotoNextWeapon) {
+        else if (bNextWeapon) {
             // Go to the next weapon: keep incrementing the weapon index until we find one that is owned or hit the last microbox index
             if (weaponMicroBoxIdx < 8) {
                 nextWeaponIdx++;
@@ -641,7 +655,7 @@ void P_PlayerThink(player_t& player) noexcept {
             }
 
             // Use special lines if the use button is pressed
-            if (curBtns & pBtnBindings[cbind_use]) {
+            if (bUse) {
                 if (!player.usedown) {
                     P_UseLines(player);
                     player.usedown = true;
@@ -651,7 +665,7 @@ void P_PlayerThink(player_t& player) noexcept {
             }
 
             // Go into the attack state and update the status bar for this player if fire is pressed for a long time on certain weapons
-            if (curBtns & pBtnBindings[cbind_attack]) {
+            if (bAttack) {
                 P_SetMObjState(playerMobj, S_PLAY_ATK1);
                 player.attackdown++;
 

@@ -64,15 +64,41 @@ void STOP_ControlsScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 // Update logic for the control configuration screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_ControlsScreen() noexcept {
+    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PC_PSX_DOOM_MODS
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
+    #endif
+
     // Animate the cursor every so often
     if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {
         gCursorFrame ^= 1;
     }
     
     // Do menu up/down movements
-    const uint32_t ticButtons = gTicButtons[0];
+    #if PC_PSX_DOOM_MODS
+        const TickInputs& tickInputs = gTickInputs[0];
+        const TickInputs& oldTickInputs = gOldTickInputs[0];
+
+        const bool bMenuUp = tickInputs.bMenuUp;
+        const bool bMenuDown = tickInputs.bMenuDown;
+        const bool bMenuMove = (bMenuUp || bMenuDown || tickInputs.bMenuLeft || tickInputs.bMenuRight);
+        const bool bMenuStart = tickInputs.bMenuStart;
+        const bool bMenuBack = tickInputs.bMenuBack;
+        const bool bMenuOk = (tickInputs.bMenuOk && (!oldTickInputs.bMenuOk));
+    #else
+        const uint32_t ticButtons = gTicButtons[0];
+        const uint32_t oldTicButtons = gOldTicButtons[0];
+
+        const bool bMenuUp = (ticButtons & PAD_UP);
+        const bool bMenuDown = (ticButtons & PAD_DOWN);
+        const bool bMenuMove = (ticButtons & PAD_DIRECTION_BTNS);
+        const bool bMenuStart = (ticButtons & PAD_START);
+        const bool bMenuBack = (ticButtons & PAD_SELECT);
+        const bool bMenuOk = ((ticButtons != oldTicButtons) && PAD_ACTION_BTNS);
+    #endif
     
-    if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
+    if (!bMenuMove) {
         // If no buttons are currently pressed then you can move immediately next time they are
         gVBlanksUntilMenuMove[0] = 0;
     } else {
@@ -83,7 +109,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
         if (gVBlanksUntilMenuMove[0] <= 0) {
             gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
 
-            if (ticButtons & PAD_DOWN) {
+            if (bMenuDown) {
                 // Down is pressed and movement is allowed: move, wraparound (if required) and play a sound
                 gCursorPos[0]++;
                 
@@ -93,7 +119,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
 
                 S_StartSound(nullptr, sfx_pstop);
             }
-            else if (ticButtons & PAD_UP) {
+            else if (bMenuUp) {
                 // Up is pressed and movement is allowed: move, wraparound (if required) and play a sound
                 gCursorPos[0]--;
                 
@@ -107,14 +133,28 @@ gameaction_t TIC_ControlsScreen() noexcept {
     }
 
     // Exit out of the controls screen if start or select are pressed
-    if (ticButtons & (PAD_START | PAD_SELECT))
+    if (bMenuStart || bMenuBack)
         return ga_exit;
 
-    // Check for inputs to change control bindings if no new buttons are pressed just finish up now
-    if (ticButtons == gOldTicButtons[0])
-        return ga_nothing;
+    // PC-PSX: moved this check to where we are actually trying to bind a PSX button
+    #if !PC_PSX_DOOM_MODS
+        // Check for inputs to change control bindings if no new buttons are pressed just finish up now
+        if (ticButtons == gOldTicButtons[0])
+            return ga_nothing;
+    #endif
     
     if (gCursorPos[0] < 8) {
+        // PC-PSX: only getting the PSX buttons at this point and only do a PSX binding if there is a change.
+        // This controls menu is purely concerned with the original PSX controller inputs, not anything the PC might be using.
+        // To bind PC inputs to game actions, the configuration .ini file must be used.
+        #if PC_PSX_DOOM_MODS
+            const uint32_t ticButtons = gTicButtons;
+            const uint32_t oldTicButtons = gOldTicButtons;
+
+            if (ticButtons == oldTicButtons)
+                return ga_nothing;
+        #endif
+
         // Skull cursor is over a bindable action slot.
         // See if any of the buttons which are bindable have been pressed:
         for (int16_t btnIdx = 0; btnIdx < NUM_BINDABLE_BTNS; ++btnIdx) {
@@ -130,7 +170,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
             }
         }
     }
-    else if (ticButtons & PAD_ACTION_BTNS) {
+    else if (bMenuOk) {
         // One of the right action buttons is pressed on the default configuration slot.
         // Restore the control bindings to their defaults and play a sound to acknowledge the change:
         D_memcpy(gCtrlBindings, gDefaultCtrlBindings, sizeof(gDefaultCtrlBindings));

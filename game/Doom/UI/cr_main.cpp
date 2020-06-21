@@ -61,9 +61,21 @@ void STOP_Credits([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Credits() noexcept {
-    // If any controller buttons are pressed then exit the credits
-    if (gTicButtons[0] != 0)
-        return ga_exit;
+    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PC_PSX_DOOM_MODS
+        if (gPlayersElapsedVBlanks[0] <= 0)
+            return ga_nothing;
+    #endif
+
+    // If any controller buttons are pressed then exit the credits.
+    // PC-PSX: just accept certain menu inputs for this.
+    #if PC_PSX_DOOM_MODS
+        if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
+            return ga_exit;
+    #else
+        if (gTicButtons[0] != 0)
+            return ga_exit;
+    #endif
     
     // We only update/scroll this screen periodically, see if it is time
     gVBlanksUntilCreditScreenUpdate -= gPlayersElapsedVBlanks[0];

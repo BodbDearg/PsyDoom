@@ -78,10 +78,20 @@ void D_DoomMain() noexcept {
     gLastTgtGameTicCount = 0;
     gTicCon = 0;
 
-    for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
-        gTicButtons[playerIdx] = 0;
-        gOldTicButtons[playerIdx] = 0;
-    }
+    #if PC_PSX_DOOM_MODS
+        for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+            gTickInputs[playerIdx] = {};
+            gOldTickInputs[playerIdx] = {};
+        }
+
+        gTicButtons = 0;
+        gOldTicButtons = 0;
+    #else
+        for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+            gTicButtons[playerIdx] = 0;
+            gOldTicButtons[playerIdx] = 0;
+        }
+    #endif
 
     // PC-PSX: play a single demo file and exit if commanded.
     // Also, if in headless mode then don't run the main game - only single demo playback is allowed.
@@ -453,13 +463,26 @@ gameaction_t MiniLoop(
         #endif
 
         if (bUpdateInputsAndTiming) {
-            for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
-                gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
-            }
-            
-            // Read pad inputs and save as the current pad buttons (overwritten if a demo)
-            uint32_t padBtns = I_ReadGamepad();
-            gTicButtons[gCurPlayerIndex] = padBtns;
+            // Read pad inputs and save as the current pad buttons (note: overwritten if a demo); also save old inputs for button just pressed detection.
+            // PC-PSX: read tick inputs in addition to raw gamepad inputs, this is now the primary input source.
+            #if PC_PSX_DOOM_MODS
+                for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+                    gOldTickInputs[playerIdx] = gTickInputs[playerIdx];
+                }
+
+                gOldTicButtons = gTicButtons;
+
+                TickInputs& tickInputs = gTickInputs[gCurPlayerIndex];
+                P_GatherTickInputs(tickInputs);
+                gTicButtons = I_ReadGamepad();
+            #else
+                for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+                    gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
+                }
+
+                uint32_t padBtns = I_ReadGamepad();
+                gTicButtons[gCurPlayerIndex] = padBtns;
+            #endif
 
             if (gNetGame != gt_single) {
                 // Updates for when we are in a networked game: abort from the game also if there is a problem
@@ -498,20 +521,37 @@ gameaction_t MiniLoop(
                 // Demo recording or playback.
                 // Need to either read inputs from or save them to a buffer.
                 if (gbDemoPlayback) {
-                    // Demo playback: any button pressed on the gamepad will abort
+                    // Demo playback: any button pressed on the gamepad will abort.
+                    // PC-PSX: just use the menu action buttons to abort.
                     exitAction = ga_exit;
 
-                    if (padBtns & PAD_ANY_BTNS)
-                        break;
+                    #if PC_PSX_DOOM_MODS
+                        if (tickInputs.bMenuOk || tickInputs.bMenuBack || tickInputs.bMenuStart)
+                            break;
+                    #else
+                        if (padBtns & PAD_ANY_BTNS)
+                            break;
+                    #endif
 
                     // Read inputs from the demo buffer and advance the demo.
                     // N.B: Demo inputs override everything else from here on in.
-                    padBtns = *gpDemo_p;
-                    gTicButtons[gCurPlayerIndex] = padBtns;
+                    #if PC_PSX_DOOM_MODS
+                        const uint32_t padBtns = *gpDemo_p;
+                        gTicButtons = padBtns;
+                        P_PsxButtonsToTickInputs(padBtns, gCtrlBindings, gTickInputs[gCurPlayerIndex]);
+                    #else
+                        padBtns = *gpDemo_p;
+                        gTicButtons[gCurPlayerIndex] = padBtns;
+                    #endif
                 }
                 else {
-                    // Demo recording: record pad inputs to the buffer
-                    *gpDemo_p = padBtns;
+                    // Demo recording: record pad inputs to the buffer.
+                    // FIXME: need to implement a new demo format to support analog movements etc. - this won't work.
+                    #if PC_PSX_DOOM_MODS
+                        *gpDemo_p = gTicButtons;
+                    #else
+                        *gpDemo_p = padBtns;
+                    #endif
                 }
 
                 // PC-PSX: moving the demo pointer increment to above to work with uncapped framerates
@@ -522,8 +562,13 @@ gameaction_t MiniLoop(
                 // Abort demo recording?
                 exitAction = ga_exitdemo;
 
-                if (padBtns & PAD_START)
-                    break;
+                #if PC_PSX_DOOM_MODS
+                    if (gTickInputs[gCurPlayerIndex].bTogglePause)
+                        break;
+                #else
+                    if (padBtns & PAD_START)
+                        break;
+                #endif
             
                 // PC-PSX: moving the end of demo check to above in order to work with uncapped framerates
                 #if !PC_PSX_DOOM_MODS
@@ -582,10 +627,18 @@ gameaction_t MiniLoop(
     // Run cleanup logic for this game loop ending
     pStop(exitAction);
 
-    // Current pad buttons become the old ones
-    for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
-        gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
-    }
+    // Current inputs become the old ones
+    #if PC_PSX_DOOM_MODS
+        for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+            gOldTickInputs[playerIdx] = gTickInputs[playerIdx];
+        }
+
+        gOldTicButtons = gTicButtons;
+    #else
+        for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+            gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
+        }
+    #endif
 
     // Return the exit game action
     return exitAction;

@@ -293,7 +293,12 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     gbPlayerInGame[0] = true;
 
     if (gameType == gt_single) {
-        gpPlayerCtrlBindings[0] = gCtrlBindings;
+        // PC-PSX: we don't need sets of pointers to the bindings for each player anymore.
+        // We only store PSX control bindings for the current player in any game type (networked or single player).
+        #if !PC_PSX_DOOM_MODS
+            gpPlayerCtrlBindings[0] = gCtrlBindings;
+        #endif
+
         gbPlayerInGame[1] = false;
     }
     else if ((gameType == gt_deathmatch) || (gameType == gt_coop)) {
