@@ -1,4 +1,3 @@
-- Fix network desync on level end.
 - Allow direct weapon switching using number keys.
 - Investigate and fix issues with network play and uncapped framerates.
     - Might need an extra frame of latency to interpolate properly

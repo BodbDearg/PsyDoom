@@ -452,6 +452,15 @@ gameaction_t MiniLoop(
     gameaction_t exitAction = ga_nothing;
 
     while (true) {
+        // PC-PSX: initially assume no elasped vblanks for all players until found otherwise.
+        // For net games we should get some elapsed vblanks from the other player in their packet, if it's time to read a new packet.
+        // It will be time to read a new packet if we update inputs and timing.
+        #if PC_PSX_DOOM_MODS
+            for (int32_t i = 0; i < MAXPLAYERS; ++i) {
+                gPlayersElapsedVBlanks[i] = 0;
+            }
+        #endif
+
         // Update timing and buttons.
         // PC-PSX: only do if enough time has elapsed or if it's the first frame, due to potentially uncapped framerate.
         gPlayersElapsedVBlanks[gCurPlayerIndex] = gElapsedVBlanks;
