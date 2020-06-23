@@ -539,7 +539,7 @@ gameaction_t P_Ticker() noexcept {
         // PC-PSX: Don't do any updates if no vblanks have elapsed and it's not the first tick.
         // This is required now because of the potentially uncapped framerate.
         // Hold onto any input events until when we actually process a tick however...
-        if ((!gbIsFirstTick) && (gPlayersElapsedVBlanks[0] <= 0)) {
+        if ((!gbIsFirstTick) && (gElapsedVBlanks <= 0)) {
             gbKeepInputEvents = true;
             return gGameAction;
         }
