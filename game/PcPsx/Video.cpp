@@ -193,10 +193,12 @@ void initVideo() noexcept {
     // Immediately lock the framebuffer texture for updating
     lockFramebufferTexture();
 
-    // Grab input, focus the window and hide the cursor
+    // Grab input, focus the window and hide the cursor.
+    // Also request the mouse to be always centered in the window and mouse input to be relative.
     SDL_SetWindowGrab(gWindow, SDL_TRUE);
     SDL_ShowCursor(SDL_DISABLE);
     SDL_SetWindowInputFocus(gWindow);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void shutdownVideo() noexcept {

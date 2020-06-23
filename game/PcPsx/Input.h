@@ -23,6 +23,7 @@ void init() noexcept;
 void shutdown() noexcept;
 void update() noexcept;
 void consumeEvents() noexcept;
+void consumeMouseMovements() noexcept;
 bool isQuitRequested() noexcept;
 void requestQuit() noexcept;
 bool areAnyKeysOrButtonsPressed() noexcept;
@@ -61,6 +62,5 @@ float getAdjustedControllerInputValue(const ControllerInput input, float deadZon
 float getMouseXMovement() noexcept;
 float getMouseYMovement() noexcept;
 float getMouseWheelAxisMovement(const uint8_t axis) noexcept;
-void centerMouse() noexcept;
 
 END_NAMESPACE(Input)

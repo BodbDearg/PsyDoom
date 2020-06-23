@@ -850,13 +850,14 @@ void P_PlayerDoTurning() noexcept {
             gPlayerUncommittedAxisTurning -= (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
         }
 
-        // Do turning from the mouse: we set this value absolutely because the mouse is not recentered until the next 30 Hz tick
+        // Do turning from the mouse and consume the movements after we have counted them
         {
             const float axis = -Input::getMouseXMovement();
             const float turnSpeed = Config::gMouseTurnSpeed;
             const fixed_t turnAmt = (fixed_t)(turnSpeed * axis);
 
-            gPlayerUncommittedMouseTurning = (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
+            gPlayerUncommittedMouseTurning += (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
+            Input::consumeMouseMovements();
         }
     } 
     else {

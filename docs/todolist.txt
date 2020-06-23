@@ -42,7 +42,6 @@
     - Should fix all stuttering, and free up main thread resources.
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
     - Need to run at capped framerate to see properly.
-- Fix bug in cmd queue stuff - occasional geometry weirdness.
 - Fix not being able to bind the Circle/B button in the controls menu.
     - Should maybe consider removing this menu, as it is confusing now for PC?
 - Investigate interpolation for sprites and sectors in addition to player view.
@@ -74,6 +73,8 @@
 - Is there a bug with the game not switching to the chaingun (if you have it) when out of shotgun ammo?
 - Move reversing tools into their own folder and only include optionally in the cmake project.
     - Shouldn't be needed to compile the game.
+- Fix bug in cmd queue stuff - occasional geometry weirdness.
+    - Not triggered in practice? Might be just a theoretical bug.
 - Do a final pass to revert any Avocado mods which are no longer needed.
 - Do a final review/diff against PSXDOOM-RE to double check for any inconsistencies.
 - Writeup final readmes and docs.

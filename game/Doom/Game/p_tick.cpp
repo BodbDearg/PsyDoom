@@ -910,9 +910,6 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 
     gPlayerUncommittedAxisTurning = 0;
     gPlayerUncommittedMouseTurning = 0;
-
-    // Center the mouse after this so that mouse movement is consumed also
-    Input::centerMouse();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

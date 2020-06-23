@@ -132,20 +132,12 @@ static bool windowHasFocus() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the center point for mouse movement: any movement away from this location is registered as a movement delta
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void getMouseMoveCenter(int32_t& x, int32_t& y) noexcept {
-    SDL_GetWindowSize(Video::getWindow(), &x, &y);
-    x /= 2;
-    y /= 2;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Handle events sent by SDL (keypresses and such)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void handleSdlEvents() noexcept {
     SDL_Event sdlEvent;
-
+    bool bWindowGotFocused = false;
+    
     while (SDL_PollEvent(&sdlEvent) != 0) {
         switch (sdlEvent.type) {
             case SDL_QUIT:
@@ -162,15 +154,13 @@ static void handleSdlEvents() noexcept {
                     case SDL_WINDOWEVENT_FOCUS_GAINED:
                         SDL_ShowCursor(SDL_DISABLE);
                         SDL_SetWindowGrab(Video::getWindow(), SDL_TRUE);
+                        SDL_SetRelativeMouseMode(SDL_TRUE);
+                        bWindowGotFocused = true;
                         break;
 
                     case SDL_WINDOWEVENT_FOCUS_LOST:
                         SDL_ShowCursor(SDL_ENABLE);
                         SDL_SetWindowGrab(Video::getWindow(), SDL_FALSE);
-                        break;
-
-                    case SDL_WINDOWEVENT_ENTER:
-                        centerMouse();
                         break;
                 }
             }   break;
@@ -217,12 +207,8 @@ static void handleSdlEvents() noexcept {
 
             case SDL_MOUSEMOTION: {
                 if (windowHasFocus()) {
-                    int32_t mouseCenterX = {};
-                    int32_t mouseCenterY = {};
-                    getMouseMoveCenter(mouseCenterX, mouseCenterY);
-
-                    gMouseMovementX = (float)(sdlEvent.motion.x - mouseCenterX);
-                    gMouseMovementY = (float)(sdlEvent.motion.y - mouseCenterY);
+                    gMouseMovementX += (float) sdlEvent.motion.xrel;
+                    gMouseMovementY += (float) sdlEvent.motion.yrel;
                 } else {
                     gMouseMovementX = 0.0f;
                     gMouseMovementY = 0.0f;
@@ -309,6 +295,10 @@ static void handleSdlEvents() noexcept {
                 break;
         }
     }
+
+    if (bWindowGotFocused) {
+        consumeEvents();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -319,7 +309,7 @@ void init() noexcept {
         FatalErrors::raise("Failed to initialize the SDL joystick input subsystem!");
     }
 
-    SDL_GameControllerEventState(SDL_ENABLE);   // Want game controller events
+    SDL_GameControllerEventState(SDL_ENABLE);       // Want game controller events    
 
     gbIsQuitRequested = false;
     gpKeyboardState = SDL_GetKeyboardState(&gNumKeyboardStateKeys);
@@ -395,15 +385,19 @@ void consumeEvents() noexcept {
     gControllerInputsJustReleased.clear();
 
     // Clear all movement deltas
-    gMouseMovementX = 0;
-    gMouseMovementY = 0;
-
     static_assert(NUM_MOUSE_WHEEL_AXES == 2);
     gMouseWheelAxisMovements[0] = 0.0f;
     gMouseWheelAxisMovements[1] = 0.0f;
 
-    // Center the mouse again: future deltas will be relative to the center
-    centerMouse(); 
+    consumeMouseMovements();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Consumes all current mouse movement deltas
+//------------------------------------------------------------------------------------------------------------------------------------------
+void consumeMouseMovements() noexcept {
+    gMouseMovementX = 0;
+    gMouseMovementY = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -584,30 +578,6 @@ float getMouseYMovement() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 float getMouseWheelAxisMovement(const uint8_t axis) noexcept {
     return (axis < 2) ? gMouseWheelAxisMovements[axis] : 0.0f;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Centers the mouse in the window (if focused)
-//------------------------------------------------------------------------------------------------------------------------------------------
-void centerMouse() noexcept {
-    if (!windowHasFocus())
-        return;
-
-    // Ignore the forthcoming mouse movement as an event
-    SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-
-    // Center the mouse in the window
-    int32_t mouseCenterX = {};
-    int32_t mouseCenterY = {};
-    getMouseMoveCenter(mouseCenterX, mouseCenterY);
-    SDL_WarpMouseInWindow(Video::getWindow(), mouseCenterX, mouseCenterY);
-
-    // Resume handling mouse events as normal
-    SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
-    
-    // Mouse motion is zeroed after this
-    gMouseMovementX = 0;
-    gMouseMovementY = 0;
 }
 
 END_NAMESPACE(Input)
