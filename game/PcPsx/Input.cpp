@@ -168,6 +168,10 @@ static void handleSdlEvents() noexcept {
                         SDL_ShowCursor(SDL_ENABLE);
                         SDL_SetWindowGrab(Video::getWindow(), SDL_FALSE);
                         break;
+
+                    case SDL_WINDOWEVENT_ENTER:
+                        centerMouse();
+                        break;
                 }
             }   break;
 
