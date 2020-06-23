@@ -5,6 +5,7 @@
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/Game/p_user.h"
 #include "Doom/Renderer/r_data.h"
 #include "i_drawcmds.h"
 #include "PcPsx/Assert.h"
@@ -158,7 +159,6 @@ texture_t gTex_NETERR;
 texture_t gTex_CONNECT;
 
 #if PC_PSX_DOOM_MODS
-
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
     static constexpr int32_t NET_GAMEID_FINAL_DOOM  = 0xAB11AB22;
@@ -999,9 +999,10 @@ void I_NetSetup() noexcept {
 bool I_NetUpdate() noexcept {
     // Compute the value used for error checking.
     // Only do this while we are in the level however...
+    const bool bInGame = gbIsLevelDataCached;
     uint32_t errorCheck = 0;
 
-    if (gbIsLevelDataCached) {
+    if (bInGame) {
         for (int32_t i = 0; i < MAXPLAYERS; ++i) {
             mobj_t& mobj = *gPlayers[i].mo;
             errorCheck ^= mobj.x;
@@ -1031,8 +1032,20 @@ bool I_NetUpdate() noexcept {
     gbNetIsFirstNetUpdate = false;
 
     // For networked games the current inputs become the ones we send to the other player as our NEXT move.
-    // The next inputs we said we'd previously use become the CURRENT move.
-    // We do this sending ahead of time of the next move to try and workaround latency, and also do it for 'elapsed vblanks'.
+    // The next inputs we said we'd previously use become the CURRENT move. 
+    // Inputs are sent 1 frame ahead of when they are used to help combat network latency, and we also do the same for elapsed vblanks.
+    // 
+    // HOWEVER, in spite of all this (using the previous instead of the current move) we preserve the current effective view angle because
+    // you are now allowed to turn at any time outside of the regular 30 Hz update loop for the player.
+    {
+        // Note: this code assumes uncommitted turning has been rolled into this 'TickInput' prior to this function being called
+        ASSERT(gPlayerUncommittedAxisTurning == 0);
+        ASSERT(gPlayerUncommittedMouseTurning == 0);
+
+        const angle_t playerAngle = (bInGame) ? gPlayers[gCurPlayerIndex].mo->angle : 0;
+        gPlayerNextTickViewAngle = playerAngle + gTickInputs[gCurPlayerIndex].analogTurn + gNextTickInputs.analogTurn;
+    }
+
     std::swap(gTickInputs[gCurPlayerIndex], gNextTickInputs);
     std::swap(gPlayersElapsedVBlanks[gCurPlayerIndex], gNextPlayerElapsedVBlanks);
 

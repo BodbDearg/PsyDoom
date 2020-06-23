@@ -45,23 +45,22 @@ bool isKeyboardKeyPressed(const uint16_t key) noexcept;
 bool isKeyboardKeyJustPressed(const uint16_t key) noexcept;
 bool isKeyboardKeyReleased(const uint16_t key) noexcept;
 bool isKeyboardKeyJustReleased(const uint16_t key) noexcept;
-
 bool isMouseButtonPressed(const MouseButton button) noexcept;
 bool isMouseButtonJustPressed(const MouseButton button) noexcept;
 bool isMouseButtonReleased(const MouseButton button) noexcept;
 bool isMouseButtonJustReleased(const MouseButton button) noexcept;
-
 bool isControllerInputPressed(const ControllerInput input) noexcept;
 bool isControllerInputJustPressed(const ControllerInput input) noexcept;
 bool isControllerInputJustReleased(const ControllerInput input) noexcept;
+
+// Controller inputs
 float getControllerInputValue(const ControllerInput input) noexcept;
 float getAdjustedControllerInputValue(const ControllerInput input, float deadZone) noexcept;
 
-// Get the amount of mouse movement this frame on the x and y axes
+// Mouse inputs
 float getMouseXMovement() noexcept;
 float getMouseYMovement() noexcept;
-
-// The the current movement amount for a mouse wheel axis
 float getMouseWheelAxisMovement(const uint8_t axis) noexcept;
+void centerMouse() noexcept;
 
 END_NAMESPACE(Input)

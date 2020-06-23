@@ -6,6 +6,7 @@
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
+#include "Doom/Game/p_user.h"
 #include "PcPsx/Config.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -59,7 +60,6 @@ sector_t* gpCurDrawSector;
     static fixed_t      gOldViewX;
     static fixed_t      gOldViewY;
     static fixed_t      gOldViewZ;
-    static angle_t      gOldViewAngle;
     static bool         gbSnapViewZInterpolation;
 #endif
 
@@ -119,7 +119,6 @@ void R_RenderPlayerView() noexcept {
         const fixed_t newViewX = playerMobj.x;
         const fixed_t newViewY = playerMobj.y;
         const fixed_t newViewZ = player.viewz;
-        const angle_t newViewAngle = playerMobj.angle;
         const fixed_t lerp = R_CalcLerpFactor();
 
         if (gbSnapViewZInterpolation) {
@@ -130,8 +129,17 @@ void R_RenderPlayerView() noexcept {
         gViewX = R_LerpCoord(gOldViewX, newViewX, lerp) & (~FRACMASK);
         gViewY = R_LerpCoord(gOldViewY, newViewY, lerp) & (~FRACMASK);
         gViewZ = R_LerpCoord(gOldViewZ, newViewZ, lerp) & (~FRACMASK);
-        gViewAngle = R_LerpAngle(gOldViewAngle, newViewAngle, lerp);
-    } else {
+
+        // View angle is not interpolated but turning movements are now completely framerate uncapped.
+        // Take into consideration how much turning movement we haven't committed to the player object yet here.
+        // Note that for net games also we must also use the view angle we said we would use NEXT as that is the most up-to-date angle:
+        if (gNetGame == gt_single) {
+            gViewAngle = playerMobj.angle + gPlayerUncommittedAxisTurning + gPlayerUncommittedMouseTurning;
+        } else {
+            gViewAngle = gPlayerNextTickViewAngle + gPlayerUncommittedAxisTurning + gPlayerUncommittedMouseTurning;
+        }
+    }
+    else {
         // Originally this is all that happened
         gViewX = playerMobj.x & (~FRACMASK);
         gViewY = playerMobj.y & (~FRACMASK);
@@ -346,7 +354,6 @@ void R_NextInterpolation() noexcept {
     gOldViewY = mobj.y;
     gOldViewZ = player.viewz;
     gbSnapViewZInterpolation = false;
-    gOldViewAngle = mobj.angle;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

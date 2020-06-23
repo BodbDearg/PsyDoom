@@ -533,10 +533,13 @@ gameaction_t P_Ticker() noexcept {
     gGameAction = ga_nothing;
 
     #if PC_PSX_DOOM_MODS
-        // PC PSX: Don't do any updates if no vblanks have elapsed and it's not the first tick.
+        // PC-PSX: do framerate uncapped turning for the current player
+        P_PlayerDoTurning();
+
+        // PC-PSX: Don't do any updates if no vblanks have elapsed and it's not the first tick.
         // This is required now because of the potentially uncapped framerate.
         // Hold onto any input events until when we actually process a tick however...
-        if ((!gbIsFirstTick) && (gElapsedVBlanks <= 0)) {
+        if ((!gbIsFirstTick) && (gPlayersElapsedVBlanks[0] <= 0)) {
             gbKeepInputEvents = true;
             return gGameAction;
         }
@@ -545,10 +548,6 @@ gameaction_t P_Ticker() noexcept {
         if (Config::gbUncapFramerate) {
             R_NextInterpolation();
         }
-
-        // PC-PSX: only run the following logic if there is elapsed vblanks
-        if (gPlayersElapsedVBlanks[0] <= 0)
-            return ga_nothing;
     #endif
 
     // Check for pause and cheats
@@ -625,8 +624,11 @@ void P_Start() noexcept {
     AM_Start();
     M_ClearRandom();
 
-    // PC-PSX: don't interpolate the first draw frame if doing uncapped framerates
     #if PC_PSX_DOOM_MODS
+        // PC-PSX: initialize the new framerate uncapped turning system
+        P_PlayerInitTurning();
+
+        // PC-PSX: don't interpolate the first draw frame if doing uncapped framerates
         if (Config::gbUncapFramerate) {
             R_NextInterpolation();
         }
@@ -898,29 +900,19 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.analogForwardMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone) * FRACUNIT);
     inputs.analogSideMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone) * FRACUNIT);
 
-    // Gamepad turn amount: this varies depending on configuration.
-    // Here we must boil it down to the final number to be applied before framerate adjustments, so it sent to other players.
-    {
-        // Get the deadzone adjusted axis value
-        const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_RIGHT_X, Config::gGamepadDeadZone);
+    // Do one more update of the player's turning before gathering the input
+    P_PlayerDoTurning();
 
-        // Figure out how much of the high and low turn speeds to use; use the higher turn speed as the stick is pressed more:
-        const float turnSpeedLow = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
-        const float turnSpeedHigh = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
-        const float turnSpeedMix = std::abs(axis);
-        const float turnSpeed = turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix;
+    // Apply uncommited turning outside of the 30 Hz update loop from analog controllers, mouse and keyboard.
+    // This all gets committed under the 'analogTurn' field now:
+    inputs.analogTurn += gPlayerUncommittedAxisTurning;
+    inputs.analogTurn += gPlayerUncommittedMouseTurning;
 
-        inputs.analogTurn += (fixed_t)(turnSpeed * axis);
-    }
+    gPlayerUncommittedAxisTurning = 0;
+    gPlayerUncommittedMouseTurning = 0;
 
-    // Mouse turn amount: this varies depending on configuration.
-    // Here we must boil it down to the final number to be applied before framerate adjustments, so it sent to other players.
-    {
-        const float axis = Input::getMouseXMovement();
-        const float turnSpeed = Config::gMouseTurnSpeed;
-
-        inputs.analogTurn += (fixed_t)(turnSpeed * axis);
-    }
+    // Center the mouse after this so that mouse movement is consumed also
+    Input::centerMouse();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

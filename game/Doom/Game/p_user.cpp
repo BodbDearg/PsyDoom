@@ -22,6 +22,7 @@
 #include "PcPsx/Utils.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 
 // Accelerating turn speeds: normal
@@ -44,7 +45,29 @@ static constexpr int32_t TURN_ACCEL_TICS        = C_ARRAY_SIZE(ANGLE_TURN);     
 static constexpr int32_t TURN_TO_ANGLE_SHIFT    = 17;                           // How many bits to shift the turn amount left to scale it to an angle
 static constexpr fixed_t MAXBOB                 = 16 * FRACUNIT;                // Maximum amount of view bobbing per frame (16 pixels)
 
-static bool gbOnGround;     // Flag set to true when the player is on the ground
+// Flag set to true when the player is on the ground
+static bool gbOnGround;
+
+#if PC_PSX_DOOM_MODS
+    // Convenience typedef
+    typedef std::chrono::high_resolution_clock::time_point time_point_t;
+
+    // How much turning done (due to mouse movement) which hasn't been merged into the player's map object.
+    // This eventually gets rolled into the player's actual angle, but is used in the intermediate to update the renderer.
+    angle_t gPlayerUncommittedMouseTurning;
+
+    // Same as uncommitted turning due to mouse movement, but for gamepad or keyboard movement instead.
+    // This needs to be handled differently to mouse movement, hence separate vars.
+    angle_t gPlayerUncommittedAxisTurning;
+
+    // Only used in network games: the view angle the player will use on the next frame.
+    // Used in networked games to preserve any turning the user did, even though it won't be used until the next frame.
+    // The view angle for rendering is allowed to be 1 frame ahead of where it actually is.
+    angle_t gPlayerNextTickViewAngle;
+
+    // When we last did framerate uncapped turning movements for the current player
+    static time_point_t gLastPlayerTurnTime;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to move the given player map object according to it's current velocity.
@@ -265,39 +288,49 @@ static void P_BuildMove(player_t& player) noexcept {
         } else if (bTurnRight) {
             player.sidemove = (+SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
-    }  
+    }
     else {
-        // No strafe button held: do normal turning
-        fixed_t turnAmt = 0;
+        // No strafe button held: do normal turning.
+        // PC-PSX: we now only do this if playing back a demo, turning movements are now done outside of 30 Hz ticks and only committed here.
+        #if PC_PSX_DOOM_MODS
+            const bool bDoTurning = gbDemoPlayback;
+        #else
+            const bool bDoTurning = true;
+        #endif
 
-        if (bDoFastTurn) {
-            // Do fast turning when run is pressed and we are not moving forward/back
-            if (bTurnLeft) {
-                turnAmt = +FAST_ANGLE_TURN[player.turnheld];
-            } else if (bTurnRight) {
-                turnAmt = -FAST_ANGLE_TURN[player.turnheld];
+        if (bDoTurning) {
+            fixed_t turnAmt = 0;
+
+            if (bDoFastTurn) {
+                // Do fast turning when run is pressed and we are not moving forward/back
+                if (bTurnLeft) {
+                    turnAmt = +FAST_ANGLE_TURN[player.turnheld];
+                } else if (bTurnRight) {
+                    turnAmt = -FAST_ANGLE_TURN[player.turnheld];
+                }
+            } else {
+                // Otherwise do the slow turning speed
+                if (bTurnLeft) {
+                    turnAmt = +ANGLE_TURN[player.turnheld];
+                } else if (bTurnRight) {
+                    turnAmt = -ANGLE_TURN[player.turnheld];
+                }
             }
-        } else {
-            // Otherwise do the slow turning speed
-            if (bTurnLeft) {
-                turnAmt = +ANGLE_TURN[player.turnheld];
-            } else if (bTurnRight) {
-                turnAmt = -ANGLE_TURN[player.turnheld];
-            }
+
+
+            // Apply the turn amount adjusted for framerate
+            turnAmt *= elapsedVBlanks;
+            turnAmt /= VBLANKS_PER_TIC;
+            player.angleturn = turnAmt << TURN_TO_ANGLE_SHIFT;
         }
-
-        // Apply the turn amount adjusted for framerate
-        turnAmt *= elapsedVBlanks;
-        turnAmt /= VBLANKS_PER_TIC;
-        player.angleturn = turnAmt << TURN_TO_ANGLE_SHIFT;
     }
 
-    // PC-PSX: do analog controller turning (from gamepad or mouse)
+    // PC-PSX: apply analog turning movements; this has already been adjusted for framerate, so is applied directly.
+    // We ignore the new turning system however when playing back demos.
     #if PC_PSX_DOOM_MODS
-    {
-        const fixed_t analogTurn = (fixed_t)(((int64_t) inputs.analogTurn * elapsedVBlanks) / VBLANKS_PER_TIC);
-        player.angleturn -= analogTurn << TURN_TO_ANGLE_SHIFT;
-    }
+        if (!gbDemoPlayback) {
+            player.angleturn += inputs.analogTurn;
+        }
     #endif
 
     // Do forward/backward movement controls
@@ -511,7 +544,8 @@ static void P_DeathThink(player_t& player) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Does all player updates such as movement, controls, weapon switching and so forth
+// Does all player updates such as movement, controls, weapon switching and so forth.
+// This is called 30 times a second for the NTSC version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerThink(player_t& player) noexcept {
     // Grab the current and previous inputs
@@ -735,3 +769,104 @@ void P_PlayerThink(player_t& player) noexcept {
         }
     }
 }
+
+#if PC_PSX_DOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX: initialize the new (framerate uncapped) turning system for the current player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PlayerInitTurning() noexcept {
+    gLastPlayerTurnTime = std::chrono::high_resolution_clock::now();
+    gPlayerUncommittedMouseTurning = 0;
+    gPlayerUncommittedAxisTurning = 0;
+    gPlayerNextTickViewAngle = gPlayers[gCurPlayerIndex].mo->angle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX: do the newly added framerate uncapped turning for the current player.
+// We now allow turning at any point in time and without any interpolation, to reduce input lag.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PlayerDoTurning() noexcept {
+    const time_point_t now = std::chrono::high_resolution_clock::now();
+    const player_t& player = gPlayers[gCurPlayerIndex];
+
+    // Make sure we have the latest input data
+    Input::update();
+
+    // Only do these turning updates if the player is not dead, the game is active, and if we're not doing a demo
+    const bool bCanTurn = (
+        (!gbDemoPlayback) &&
+        (player.playerstate == PST_LIVE) &&
+        (!gbGamePaused)
+    );
+
+    if (bCanTurn) {
+        // Get how much time has elapsed in terms of 60 Hz ticks (vblanks)
+        const float timeDeltaF = std::chrono::duration<float>(now - gLastPlayerTurnTime).count();
+        const float ticks60F = timeDeltaF * 60.0f;
+        const fixed_t ticks60 = (fixed_t)(ticks60F * FRACUNIT);
+
+        // Do keyboard turning if the 'strafe' button is not pressed (that makes turn keys act as strafe instead)
+        const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
+
+        if (!inputs.bStrafe) {
+            fixed_t turnAmt = 0;
+
+            if (inputs.bRun && (!inputs.bMoveForward) && (!inputs.bMoveBackward)) {
+                // Do fast turning when run is pressed and we are not moving forward/back
+                if (inputs.bTurnLeft) {
+                    turnAmt = +FAST_ANGLE_TURN[player.turnheld];
+                } else if (inputs.bTurnRight) {
+                    turnAmt = -FAST_ANGLE_TURN[player.turnheld];
+                }
+            } else {
+                // Otherwise do the slow turning speed
+                if (inputs.bTurnLeft) {
+                    turnAmt = +ANGLE_TURN[player.turnheld];
+                } else if (inputs.bTurnRight) {
+                    turnAmt = -ANGLE_TURN[player.turnheld];
+                }
+            }
+
+            turnAmt = FixedMul(turnAmt, ticks60);
+            turnAmt /= VBLANKS_PER_TIC;
+            gPlayerUncommittedAxisTurning += (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
+        }
+
+        // Do analog controller turning from the gamepad
+        {
+            // Get the deadzone adjusted axis value.
+            // TODO: don't hardcode the controller axis used for turning - make it configurable. 
+            const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_RIGHT_X, Config::gGamepadDeadZone);
+
+            // Figure out how much of the high and low turn speeds to use; use the higher turn speed as the stick is pressed more:
+            const float turnSpeedLow = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
+            const float turnSpeedHigh = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
+            const float turnSpeedMix = std::abs(axis);
+            const float turnSpeed = turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix;
+
+            fixed_t turnAmt = FixedMul((fixed_t)(turnSpeed * axis), ticks60);
+            turnAmt /= VBLANKS_PER_TIC;
+            gPlayerUncommittedAxisTurning -= (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
+        }
+
+        // Do turning from the mouse: we set this value absolutely because the mouse is not recentered until the next 30 Hz tick
+        {
+            const float axis = -Input::getMouseXMovement();
+            const float turnSpeed = Config::gMouseTurnSpeed;
+            const fixed_t turnAmt = (fixed_t)(turnSpeed * axis);
+
+            gPlayerUncommittedMouseTurning = (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
+        }
+    } 
+    else {
+        // No turning currently allowed!
+        gPlayerUncommittedMouseTurning = 0;
+        gPlayerUncommittedAxisTurning = 0;
+    }
+
+    // Remember the last time we did turning updates
+    gLastPlayerTurnTime = now;
+}
+
+#endif

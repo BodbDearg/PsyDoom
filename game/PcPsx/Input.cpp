@@ -141,26 +141,6 @@ static void getMouseMoveCenter(int32_t& x, int32_t& y) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Centers the mouse in the window (if focused)
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void centerMouse() noexcept {
-    if (!windowHasFocus())
-        return;
-
-    // Ignore the forthcoming mouse movement as an event
-    SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-
-    // Center the mouse in the window
-    int32_t mouseCenterX = {};
-    int32_t mouseCenterY = {};
-    getMouseMoveCenter(mouseCenterX, mouseCenterY);
-    SDL_WarpMouseInWindow(Video::getWindow(), mouseCenterX, mouseCenterY);
-
-    // Resume handling mouse events as normal
-    SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Handle events sent by SDL (keypresses and such)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void handleSdlEvents() noexcept {
@@ -581,16 +561,49 @@ float getAdjustedControllerInputValue(const ControllerInput input, const float d
     return rawAxis;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the amount of mouse movement since events were last consumed (x-axis)
+//------------------------------------------------------------------------------------------------------------------------------------------
 float getMouseXMovement() noexcept {
     return gMouseMovementX;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the amount of mouse movement since events were last consumed (y-axis)
+//------------------------------------------------------------------------------------------------------------------------------------------
 float getMouseYMovement() noexcept {
     return gMouseMovementY;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the current movement amount for a mouse wheel axis
+//------------------------------------------------------------------------------------------------------------------------------------------
 float getMouseWheelAxisMovement(const uint8_t axis) noexcept {
     return (axis < 2) ? gMouseWheelAxisMovements[axis] : 0.0f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Centers the mouse in the window (if focused)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void centerMouse() noexcept {
+    if (!windowHasFocus())
+        return;
+
+    // Ignore the forthcoming mouse movement as an event
+    SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+
+    // Center the mouse in the window
+    int32_t mouseCenterX = {};
+    int32_t mouseCenterY = {};
+    getMouseMoveCenter(mouseCenterX, mouseCenterY);
+    SDL_WarpMouseInWindow(Video::getWindow(), mouseCenterX, mouseCenterY);
+
+    // Resume handling mouse events as normal
+    SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+    
+    // Mouse motion is zeroed after this
+    gMouseMovementX = 0;
+    gMouseMovementY = 0;
 }
 
 END_NAMESPACE(Input)
