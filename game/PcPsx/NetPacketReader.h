@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Assert.h"
+#include "Network.h"
 
 #include <asio.hpp>
 #include <chrono>
@@ -104,89 +105,29 @@ public:
     //--------------------------------------------------------------------------------------------------------------------------------------
     bool asyncFillPacketBuffer() noexcept {
         const int32_t curNumRequests = numPacketsRequested();
-
-        if (curNumRequests < BufferSize) {
-            return asyncReadNumPackets(BufferSize - curNumRequests);
-        } else {
-            return true;
-        }
+        return (curNumRequests < BufferSize) ? asyncReadNumPackets(BufferSize - curNumRequests) : true;
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // Get a packet from the buffer; if there are no packets in the buffer then one is requested.
-    // Blocks until a packet is received or an error occurs or the request is canceled. While the read is happening platform updates
-    // such as the window and sound etc. are peformed to keep the app responsive, in addition to required network updates.
-    // A callback can be specified which is invoked periodically to do logic and if it returns 'false' then the request is cancelled.
+    // Pop a previously requested packet from the packet buffer; if no packets were previously requested, an error occurs.
+    // Blocks until a packet is received or an error occurs or the request is canceled.
+    // While waiting for a packet, platform updates such as the window and sound etc. are peformed to keep the app responsive.
+    // A callback can be specified that is invoked periodically to do logic and if it returns 'false' then the request is cancelled.
     //--------------------------------------------------------------------------------------------------------------------------------------
     template <class UpdateCancelCB>
-    bool popPacket(PacketT& packet, TimePointT& receiveTime, const UpdateCancelCB& callback) noexcept {
-        // If the stream is in error then the request immediately fails
-        if (mbError) {
+    bool popRequestedPacket(PacketT& packet, TimePointT& receiveTime, const UpdateCancelCB& callback) noexcept {
+        // If the stream is in error, no packets were requested or waiting for a packet fails then issue an error
+        if (mbError || (numPacketsRequested() <= 0) || (!waitForPacketReady(callback))) {
             packet = {};
             receiveTime = {};
             return false;
         }
 
-        // If we already have a packet ready then we can just return it
-        if (hasPacketReady()) {
-            packet = mBuffer[mBufBegIdx];
-            receiveTime = mReceiveTime[mBufBegIdx];
-            consumeCurrentPacket();
-            return true;
-        }
-
-        // If there are no packets requested then ask for one now and abort if that fails
-        if (numPacketsRequested() <= 0) {
-            if (!asyncReadNumPackets(1)) {
-                packet = {};
-                receiveTime = {};
-                return false;
-            }
-        }
-
-        // If we already have a packet ready after kicking off the read then we can just return it
-        if (hasPacketReady()) {
-            packet = mBuffer[mBufBegIdx];
-            receiveTime = mReceiveTime[mBufBegIdx];
-            consumeCurrentPacket();
-            return true;
-        }
-
-        while (true) {
-            // Update the platform, and handle network related events: this might cause the operation to complete
-            Utils::doPlatformUpdates();
-
-            // If an error occurred then we are done
-            if (mbError) {
-                packet = {};
-                receiveTime = {};
-                return false;
-            }
-
-            // If we have a packet ready then return it
-            if (hasPacketReady()) {
-                packet = mBuffer[mBufBegIdx];
-                receiveTime = mReceiveTime[mBufBegIdx];
-                consumeCurrentPacket();
-                return true;
-            }
-
-            // Call the cancel/update callback (if given) and abort if it asks
-            if (callback) {
-                const bool bCancel = callback();
-
-                if (bCancel) {
-                    handleStreamError();
-                    return false;
-                }
-            }
-
-            // Yield some CPU time before trying this all over again
-            Utils::threadYield();
-        }
-
-        ASSERT_FAIL("Should never reach here!");
-        return false;
+        // Success: return the requested packet and consume it
+        packet = mBuffer[mBufBegIdx];
+        receiveTime = mReceiveTime[mBufBegIdx];
+        consumeCurrentPacket();
+        return true;
     }
 
 private:
@@ -205,6 +146,7 @@ private:
     //--------------------------------------------------------------------------------------------------------------------------------------
     void tryBeginPendingPacketReads() noexcept {
         while ((!mbError) && (mNumPacketsPending > 0) && (numPacketsRequested() < BufferSize)) {
+            mNumPacketsPending--;
             beginPacketRead();
         }
     }
@@ -218,11 +160,11 @@ private:
         ASSERT(numPacketsRequested() < BufferSize);
 
         try {
-            // Kick off the async read.
-            // Note: defaulting the receive time marks the packet as not yet received.
+            // Default the receive time to mark the packet as not yet received
             int32_t dstBufIdx = mBufEndIdx;
             mReceiveTime[dstBufIdx] = {};
 
+            // Kick off the async read
             asio::async_read(
                 mTcpSocket,
                 asio::buffer(&mBuffer[dstBufIdx], sizeof(PacketT)),
@@ -251,6 +193,48 @@ private:
         catch (...) {
             handleStreamError();
         }
+    }
+
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // Wait for a packet to become ready to read and return 'true' on success.
+    // The given update/cancel callback can be invoked periodically to do logic and cancel the operation by returning 'false'.
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    template <class UpdateCancelCB>
+    bool waitForPacketReady(const UpdateCancelCB& callback) noexcept {       
+        // If there is a packet already ready then we are done
+        if (hasPacketReady())
+            return true;
+
+        while (numPacketsRequested() > 0) {
+            // Update networking and do platform updates periodically to keep the app responsive: this might cause the operation to complete.
+            // Note that platform updates also include networking, but they are restricted to run only so often to keep CPU usage down.
+            // Adding an explicit call here means we do updates on every single loop iteration for networking, while we are waiting.
+            Network::doUpdates();
+            Utils::doPlatformUpdates();
+
+            // Did something go wrong?
+            if (mbError)
+                return false;
+            
+            // If there is a packet now ready then we are done
+            if (hasPacketReady())
+                return true;
+
+            // Call the cancel/update callback (if given) and abort if it asks
+            if (callback) {
+                const bool bContinueWaiting = callback();
+
+                if (!bContinueWaiting) {
+                    handleStreamError();
+                    return false;
+                }
+            }
+
+            // Yield some CPU time before trying this all over again
+            Utils::threadYield();
+        }
+
+        return false;   // No more requested packets, wait fails...
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
