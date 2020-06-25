@@ -3,6 +3,11 @@
 #include "Assert.h"
 #include "Network.h"
 
+// This prevents warnings in ASIO about the Windows SDK target version not being specified
+#if _WIN32
+    #include <sdkddkver.h>
+#endif
+
 #include <asio.hpp>
 #include <chrono>
 #include <cstdint>
@@ -18,8 +23,8 @@ public:
     typedef std::chrono::system_clock   ClockT;
     typedef ClockT::time_point          TimePointT;
     
-    NetPacketReader(SockeT& socket) noexcept 
-        : mTcpSocket()
+    NetPacketReader(SocketT& socket) noexcept 
+        : mTcpSocket(socket)
         , mBufBegIdx(0)
         , mBufEndIdx(0)
         , mBuffer{}
@@ -61,7 +66,7 @@ public:
     // Tells if a packet is ready to be read
     //--------------------------------------------------------------------------------------------------------------------------------------
     inline bool hasPacketReady() const noexcept {
-        return ((mBufEndIdx != mBufBegIdx) && (mReceiveTime[mBufBegIdx] != {}));
+        return ((mBufEndIdx != mBufBegIdx) && (mReceiveTime[mBufBegIdx] != TimePointT{}));
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -170,7 +175,7 @@ private:
                 mTcpSocket,
                 asio::buffer(&mBuffer[dstBufIdx], sizeof(PacketT)),
                 [=](const asio::error_code error, const std::size_t bytesRead) noexcept {
-                    if ((!error) && (bytesRead == sizeof(PacketT)) {
+                    if ((!error) && (bytesRead == sizeof(PacketT))) {
                         // Record the receive time for the packet to mark it as received and kick off any pending packet reads that we can now do.
                         // Only do this however if the stream has not since been flagged as having an error.
                         if (!mbError) {
@@ -222,12 +227,14 @@ private:
                 return true;
 
             // Call the cancel/update callback (if given) and abort if it asks
-            if (callback) {
-                const bool bContinueWaiting = callback();
+            if constexpr (!std::is_same_v<std::nullptr_t, UpdateCancelCB>) {
+                if (callback) {
+                    const bool bContinueWaiting = callback();
 
-                if (!bContinueWaiting) {
-                    handleStreamError();
-                    return false;
+                    if (!bContinueWaiting) {
+                        handleStreamError();
+                        return false;
+                    }
                 }
             }
 

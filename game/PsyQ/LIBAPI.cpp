@@ -1,7 +1,6 @@
 #include "LIBAPI.h"
 
 #include "PcPsx/Assert.h"
-#include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxVm.h"
 

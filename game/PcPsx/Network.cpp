@@ -2,6 +2,8 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/p_tick.h"
+#include "NetPacketReader.h"
+#include "NetPacketWriter.h"
 #include "ProgArgs.h"
 #include "PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
@@ -17,9 +19,13 @@
 
 BEGIN_NAMESPACE(Network)
 
-static bool                                     gbIsSendingBytes;
-static std::unique_ptr<asio::io_context>        gpIoContext;
-static std::unique_ptr<asio::ip::tcp::socket>   gpSocket;
+// Maximum number of input/output tick packets that can be buffered
+static constexpr int32_t MAX_TICK_PKTS = 2;
+
+static std::unique_ptr<asio::io_context>                                    gpIoContext;
+static std::unique_ptr<asio::ip::tcp::socket>                               gpSocket;
+static std::unique_ptr<NetPacketReader<NetPacket_Tick, MAX_TICK_PKTS>>      gTickPacketReader;
+static std::unique_ptr<NetPacketWriter<NetPacket_Tick, MAX_TICK_PKTS>>      gTickPacketWriter;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Checks for user input to cancel an abortable network operation like establishing a connection
@@ -37,8 +43,12 @@ static bool isCancelNetworkConnectionRequested() noexcept {
 // While the operation is being waited on, platform updates are performed. The operation can also be marked non abortable too.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) noexcept {
+    if (bFinishedFlag)
+        return true;
+
     while (true) {
-        // Update the platform, and handle network related events: this might cause the operation to complete
+        // Update the platform, and handle network related events: this might cause the operation to complete.
+        doUpdates();
         Utils::doPlatformUpdates();
 
         if (bFinishedFlag)
@@ -56,9 +66,10 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Setup options and preferences for the given socket
+// Setup options and preferences for the given socket among other stuff
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void setSocketOptions(asio::ip::tcp::socket& socket) noexcept {
+static void postConnectSetup(asio::ip::tcp::socket& socket) noexcept {
+    // Set all the socket options
     auto trySetOption = [&](auto option) noexcept {
         try {
             socket.set_option(option);
@@ -74,6 +85,10 @@ static void setSocketOptions(asio::ip::tcp::socket& socket) noexcept {
     trySetOption(asio::socket_base::keep_alive(false));                 // Shouldn't be neccessary when client + server are talking constantly
     trySetOption(asio::socket_base::send_low_watermark(0));             // Don't wait to batch up sends/receives (Doom only sends a small amount of data)
     trySetOption(asio::socket_base::receive_low_watermark(0));          // Don't wait to batch up sends/receives (Doom only sends a small amount of data)
+
+    // Setup the tick packet reader/writers
+    gTickPacketReader.reset(new NetPacketReader<NetPacket_Tick, MAX_TICK_PKTS>(*gpSocket));
+    gTickPacketWriter.reset(new NetPacketWriter<NetPacket_Tick, MAX_TICK_PKTS>(*gpSocket));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,7 +121,7 @@ bool initForServer() noexcept {
         waitForAsyncNetworkOp(bDoneAsyncOp, true);
 
         if (gpSocket && bWasSuccessful) {
-            setSocketOptions(*gpSocket);
+            postConnectSetup(*gpSocket);
         }
     }
     catch (...) {
@@ -170,7 +185,7 @@ bool initForClient() noexcept {
                 waitForAsyncNetworkOp(bDoneAsyncOp, true);
 
                 if (gpSocket && bWasSuccessful) {
-                    setSocketOptions(*gpSocket);
+                    postConnectSetup(*gpSocket);
                 }
 
                 break;
@@ -195,7 +210,6 @@ bool initForClient() noexcept {
 void shutdown() noexcept {
     gpSocket.reset();
     gpIoContext.reset();
-    gbIsSendingBytes = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -203,6 +217,13 @@ void shutdown() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool isConnected() noexcept {
     return (gpSocket && gpSocket->is_open());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the scoket for the current network connection
+//------------------------------------------------------------------------------------------------------------------------------------------
+asio::ip::tcp::socket* getSocket() noexcept {
+    return gpSocket.get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -216,15 +237,11 @@ void doUpdates() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Send the specified number of bytes along the network connection but do not wait for completion, for performance reasons.
-// Returns 'true' if an attempt (only) was made to send the bytes - no guarantee they will all arrive OK.
+// Send the specified number of bytes along the network connection and wait for completion.
+// Returns 'true' on success completion, 'false' in all other error cases.
 //
 // Notes:
-//  (1) This call does NOT block and wait until all the bytes are confirmed sent OK, however only one send is allowed to proceed at a time.
-//      If there was a previous send active, then this call WILL wait until that finishes.
-//      This allows the sender to keep re-using the same packet buffer over and over.
-//  (2) The buffer MUST remain valid for the duration of the network call
-//  (3) If the send attempt fails immediately then the connection is killed immediately
+//  (1) If the write attempt fails then the connection is killed immediately
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool sendBytes(const void* const pBuffer, const int32_t numBytes) noexcept {
     // If there is no valid socket or the byte count is bad then this fails immediately
@@ -236,46 +253,42 @@ bool sendBytes(const void* const pBuffer, const int32_t numBytes) noexcept {
         return false;
     }
 
-    // If there was a previous write then wait for that finish up, only one is allowed at a time!
-    if (gbIsSendingBytes) {
-        Utils::doPlatformUpdates();
-
-        while (gbIsSendingBytes) {
-            Utils::threadYield();
-            Utils::doPlatformUpdates();
-        }
-    }
-
-    // If we killed the connection in a lambda then stop now
-    if (!isConnected())
-        return false;
+    // Begin writing the bytes and wait until that is done
+    bool bWasSuccessful = false;
+    bool bDoneAsyncOp = false;
     
-    // Send the bytes but don't wait for the operation to finish
     try {
         asio::async_write(
             *gpSocket,
             asio::buffer(pBuffer, (size_t) numBytes),
-            [&]([[maybe_unused]] const asio::error_code& error, [[maybe_unused]] const std::size_t bytesWritten) noexcept {
-                gbIsSendingBytes = false;
+            [&](const asio::error_code& error, const std::size_t bytesWritten) noexcept {
+                bDoneAsyncOp = true;
+                bWasSuccessful = ((!error) && (bytesWritten == numBytes));
             }
         );
 
-        gbIsSendingBytes = true;
+        waitForAsyncNetworkOp(bDoneAsyncOp, false);
     }
     catch (...) {
         // Send attempt failed for some reason - kill the connection...
+        shutdown();
         return false;
     }
 
-    return true;
+    // If the send attempt failed for some reason then kill the connection
+    if (!bWasSuccessful) {
+        shutdown();
+    }
+
+    return bWasSuccessful;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Receive the specified number of bytes from the network connection and wait for completion.
+// Read the specified number of bytes from the network connection and wait for completion.
 // Returns 'true' on success completion, 'false' in all other error cases.
 //
 // Notes:
-//  (1) If the receive attempt fails then the connection is killed immediately
+//  (1) If the read attempt fails then the connection is killed immediately
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool recvBytes(void* pBuffer, const int32_t numBytes) noexcept {
     // If there is no valid socket or the byte count is bad then this fails immediately
@@ -315,6 +328,52 @@ bool recvBytes(void* pBuffer, const int32_t numBytes) noexcept {
     }
 
     return bWasSuccessful;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Send a tick update packet: this call may or may not block, depending on whether the outgoing packet queue is full or not.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool sendTickPacket(const NetPacket_Tick& packet) noexcept {
+    if (!isConnected())
+        return false;
+
+    if (!gTickPacketWriter->writePacket(packet, nullptr)) {
+        shutdown();
+        return false;
+    }
+    
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Request that the tick packet buffer be filled as much as possible and kick off as many packet reads as we can.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool requestTickPackets() noexcept {
+    if (!isConnected())
+        return false;
+
+    if (!gTickPacketReader->asyncFillPacketBuffer()) {
+        shutdown();
+        return false;
+    }
+    
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read one tick packet and block until it is available or an error occurs, in which case 'false' is returned.
+// Returns the time that the packet was received at also.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool recvTickPacket(NetPacket_Tick& packet, std::chrono::system_clock::time_point& receiveTime) noexcept {
+    if (!isConnected())
+        return false;
+
+    if (!gTickPacketReader->popRequestedPacket(packet, receiveTime, nullptr)) {
+        shutdown();
+        return false;
+    }
+    
+    return true;
 }
 
 END_NAMESPACE(Network)

@@ -3,6 +3,11 @@
 #include "Assert.h"
 #include "Network.h"
 
+// This prevents warnings in ASIO about the Windows SDK target version not being specified
+#if _WIN32
+    #include <sdkddkver.h>
+#endif
+
 #include <asio.hpp>
 #include <chrono>
 #include <cstdint>
@@ -16,8 +21,8 @@ class NetPacketWriter {
 public:
     typedef asio::ip::tcp::socket SocketT;
 
-    NetPacketWriter(SockeT& socket) noexcept 
-        : mTcpSocket()
+    NetPacketWriter(SocketT& socket) noexcept 
+        : mTcpSocket(socket)
         , mBufBegIdx(0)
         , mBufEndIdx(0)
         , mBuffer{}
@@ -64,7 +69,7 @@ public:
     // A callback can be specified that is invoked periodically to do logic and if it returns 'false' then the request is cancelled.
     //--------------------------------------------------------------------------------------------------------------------------------------
     template <class UpdateCancelCB>
-    bool writePacket(PacketT& packet, const UpdateCancelCB& callback) noexcept {
+    bool writePacket(const PacketT& packet, const UpdateCancelCB& callback) noexcept {
         // If the stream is in error then this fails immediately
         if (mbError)
             return false;
@@ -88,12 +93,15 @@ private:
         ASSERT(hasFreeOutgoingPacketSlot());
 
         try {
+            // Copy the packet into the buffer
+            mBuffer[mBufEndIdx] = packet;
+
             // Kick off the async write
             asio::async_write(
                 mTcpSocket,
                 asio::buffer(&mBuffer[mBufEndIdx], sizeof(PacketT)),
                 [=](const asio::error_code error, const std::size_t bytesWritten) noexcept {
-                    if ((!error) && (bytesWritten == sizeof(PacketT)) {
+                    if ((!error) && (bytesWritten == sizeof(PacketT))) {
                         // Note: this logic assumes an in-order network protocol, which in this case is TCP.
                         // When the write is done simply move forward the beginning of the queue marker and wraparound.
                         mBufBegIdx = (mBufBegIdx + 1) % BufferSize;
@@ -142,12 +150,14 @@ private:
                 return true;
 
             // Call the cancel/update callback (if given) and abort if it asks
-            if (callback) {
-                const bool bContinueWaiting = callback();
+            if constexpr (!std::is_same_v<std::nullptr_t, UpdateCancelCB>) {
+                if (callback) {
+                    const bool bContinueWaiting = callback();
 
-                if (!bContinueWaiting) {
-                    handleStreamError();
-                    return false;
+                    if (!bContinueWaiting) {
+                        handleStreamError();
+                        return false;
+                    }
                 }
             }
 

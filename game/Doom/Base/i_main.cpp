@@ -163,28 +163,6 @@ texture_t gTex_CONNECT;
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
     static constexpr int32_t NET_GAMEID_FINAL_DOOM  = 0xAB11AB22;
 
-    // Packet sent/received by all players when connecting to a game
-    struct NetPacket_Connect {
-        uint32_t    gameId;             // Must match the expected game id
-        gametype_t  startGameType;      // Only sent by the server for the game: what type of game will be played
-        skill_t     startGameSkill;     // Only sent by the server for the game: what skill level will be used
-        int32_t     startMap;           // Only sent by the server for the game: what starting map will be used
-    };
-
-    static NetPacket_Connect gNetInPacket_Connect;
-    static NetPacket_Connect gNetOutPacket_Connect;
-
-    // Packet sent/received by all players to share per-tick updates for a network game
-    struct NetPacket_Tick {
-        uint32_t    gameId;             // Must match the expected game id
-        uint32_t    errorCheck;         // Error checking bits for detecting if all players are in sync: populated using the current position and angle for all players
-        int32_t     elapsedVBlanks;     // How many vblanks have elapsed for the player sending the update
-        TickInputs  inputs;             // Inputs for the player sending this update
-    };
-
-    static NetPacket_Tick gNetInPacket_Tick;
-    static NetPacket_Tick gNetOutPacket_Tick;
-
     // Previous game error checking value when we last sent to the other player.
     // Have to store this because we always send 1 packet ahead for the next frame.
     static uint32_t gNetPrevErrorCheck;
@@ -934,7 +912,7 @@ void I_NetSetup() noexcept {
 
     // Fill in the connect output packet; note that player 1 decides the game params, so theese are zeroed for player 2:
     // TODO: set a different game id here depending on DOOM vs FINAL DOOM.
-    NetPacket_Connect& outPkt = gNetOutPacket_Connect;
+    NetPacket_Connect outPkt = {};
     outPkt.gameId = NET_GAMEID_DOOM;
 
     if (gCurPlayerIndex == 0) {
@@ -956,7 +934,7 @@ void I_NetSetup() noexcept {
     Network::sendBytes(&outPkt, sizeof(outPkt));
 
     // Read the input connect packet from the other player and endian correct
-    NetPacket_Connect& inPkt = gNetInPacket_Connect;
+    NetPacket_Connect inPkt;
     Network::recvBytes(&inPkt, sizeof(inPkt));
 
     inPkt.gameId = Endian::littleToHost(inPkt.gameId);
@@ -988,6 +966,9 @@ void I_NetSetup() noexcept {
     // Starting the game and the next call to I_NetUpdate will be the first:
     gbDidAbortGame = false;
     gbNetIsFirstNetUpdate = true;
+
+    // Start requesting tick packets
+    Network::requestTickPackets();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1020,7 +1001,7 @@ bool I_NetUpdate() noexcept {
         outPkt.gameId = Endian::hostToLittle(NET_GAMEID_DOOM);
         outPkt.errorCheck = Endian::hostToLittle(errorCheck);
 
-        Network::sendBytes(&outPkt, sizeof(outPkt));
+        Network::sendTickPacket(outPkt);
 
         // Make sure these are set correctly for what we expect
         gNextTickInputs = {};
@@ -1051,7 +1032,7 @@ bool I_NetUpdate() noexcept {
 
     // Makeup the output packet including error detection bits.
     // TODO: use a different game id here depending on DOOM vs FINAL DOOM.
-    NetPacket_Tick& outPkt = gNetOutPacket_Tick;
+    NetPacket_Tick outPkt = {};
     outPkt.gameId = NET_GAMEID_DOOM;
     outPkt.errorCheck = errorCheck;
     outPkt.elapsedVBlanks = gNextPlayerElapsedVBlanks;
@@ -1066,10 +1047,11 @@ bool I_NetUpdate() noexcept {
     outPkt.inputs.analogTurn = Endian::hostToLittle(outPkt.inputs.analogTurn);
 
     // Send and receive the same packet from the opposite end; endian correct before using:
-    NetPacket_Tick& inPkt = gNetInPacket_Tick;
+    NetPacket_Tick inPkt;
+    std::chrono::system_clock::time_point inPktRecvTime;
 
-    Network::sendBytes(&outPkt, sizeof(outPkt));
-    Network::recvBytes(&inPkt, sizeof(inPkt));
+    Network::sendTickPacket(outPkt);
+    Network::recvTickPacket(inPkt, inPktRecvTime);
 
     inPkt.gameId = Endian::littleToHost(inPkt.gameId);
     inPkt.errorCheck = Endian::littleToHost(inPkt.errorCheck);
@@ -1081,6 +1063,7 @@ bool I_NetUpdate() noexcept {
     // See if the packet we received from the other player is what we expect; if it isn't then show a 'network error' message.
     // Note: we only check the 'errorCheck' field while in game.
     const bool bNetworkError = (
+        (!Network::isConnected()) ||
         (outPkt.gameId != inPkt.gameId) ||
         (gbIsLevelDataCached && (gNetPrevErrorCheck != inPkt.errorCheck))
     );
@@ -1142,8 +1125,10 @@ bool I_NetUpdate() noexcept {
         gPlayersElapsedVBlanks[0] = inPkt.elapsedVBlanks;
     }
 
-    // No network error occured, save the error checking value for verification of the other player's game state next time around
+    // No network error occured, save the error checking value for verification of the other player's game state next time around.
+    // Also request more tick packets to be ready for next time we want them.
     gNetPrevErrorCheck = errorCheck;
+    Network::requestTickPackets();
     return false;
 }
 
