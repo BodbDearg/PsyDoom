@@ -14,8 +14,9 @@
 template <class PacketT, int32_t BufferSize>
 class NetPacketReader {
 public:
-    typedef asio::ip::tcp::socket SocketT;
-    typedef std::chrono::system_clock::time_point TimePointT;
+    typedef asio::ip::tcp::socket       SocketT;
+    typedef std::chrono::system_clock   ClockT;
+    typedef ClockT::time_point          TimePointT;
     
     NetPacketReader(SockeT& socket) noexcept 
         : mTcpSocket()
@@ -45,7 +46,7 @@ public:
         if (mBufEndIdx >= mBufBegIdx) {
             return (mBufEndIdx - mBufBegIdx) + mNumPacketsPending;
         } else {
-            return (BufferSize - mBufBegIdx) + 1 + mBufEndIdx + mNumPacketsPending;
+            return (BufferSize - mBufBegIdx) + mBufEndIdx + mNumPacketsPending;
         }
     }
 
@@ -117,7 +118,7 @@ public:
     template <class UpdateCancelCB>
     bool popRequestedPacket(PacketT& packet, TimePointT& receiveTime, const UpdateCancelCB& callback) noexcept {
         // If the stream is in error, no packets were requested or waiting for a packet fails then issue an error
-        if (mbError || (numPacketsRequested() <= 0) || (!waitForPacketReady(callback))) {
+        if (mbError || (numPacketsRequested() <= 0) || (!waitForFreePacketSlot(callback))) {
             packet = {};
             receiveTime = {};
             return false;
@@ -200,7 +201,7 @@ private:
     // The given update/cancel callback can be invoked periodically to do logic and cancel the operation by returning 'false'.
     //--------------------------------------------------------------------------------------------------------------------------------------
     template <class UpdateCancelCB>
-    bool waitForPacketReady(const UpdateCancelCB& callback) noexcept {       
+    bool waitForFreePacketSlot(const UpdateCancelCB& callback) noexcept {
         // If there is a packet already ready then we are done
         if (hasPacketReady())
             return true;

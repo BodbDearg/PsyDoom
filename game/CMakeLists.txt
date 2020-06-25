@@ -162,6 +162,7 @@ set(SOURCE_FILES
     "PcPsx/ModMgr.h"
     "PcPsx/MouseButton.h"
     "PcPsx/NetPacketReader.h"
+    "PcPsx/NetPacketWriter.h"
     "PcPsx/Network.cpp"
     "PcPsx/Network.h"
     "PcPsx/ProgArgs.cpp"
