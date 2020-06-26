@@ -7,11 +7,12 @@
 #include "PcPsx/Assert.h"
 
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 
 // MacOS: working around missing support for <filesystem> in everything except the latest bleeding edge OS and Xcode.
 // Use standard Unix file functions instead for now, but some day this can be removed.
-#ifdef __MACOSX__
+#ifdef __APPLE__
     #include <unistd.h>
 #else
     #include <filesystem>
@@ -113,7 +114,7 @@ bool fileExists(const char* filePath) noexcept {
     try {
         // MacOS: working around missing support for <filesystem> in everything except the latest bleeding edge OS and Xcode.
         // Use standard Unix file functions instead for now, but some day this can be removed.
-        #ifdef __MACOSX__
+        #ifdef __APPLE__
             return (access(filePath, R_OK) == 0);
         #else
             return std::filesystem::exists(filePath);

@@ -83,6 +83,8 @@ static uint8_t findFreeOpenFileSlotIndex() noexcept {
     return UINT8_MAX;
 }
 
+#if ASSERTS_ENABLED
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tell if the given file is validly open through the user file overrides system
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,6 +95,8 @@ static bool isValidOverridenFile(const PsxCd_File& file) noexcept {
         (gOpenFileSlots[file.file.pos.minute] != nullptr)
     );
 }
+
+#endif  // #if ASSERTS_ENABLED
 
 void init() noexcept {
     determineFileOverridesInUserDataDir();

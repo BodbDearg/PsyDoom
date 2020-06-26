@@ -14,7 +14,7 @@
 #include "p_setup.h"
 #include "p_tick.h"
 
-#include <cmath>
+#include <cstdlib>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Telefrags map objects (that can be shot) around the given object when placed at the specified position

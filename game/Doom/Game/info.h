@@ -1064,7 +1064,7 @@ struct statefn_t {
     };
 
     inline statefn_t() noexcept : mobjFn(nullptr) {}
-    inline statefn_t(const nullptr_t) noexcept : mobjFn(nullptr) {}
+    inline statefn_t(const std::nullptr_t) noexcept : mobjFn(nullptr) {}
     inline statefn_t(const statefn_mobj_t mobjFn) noexcept : mobjFn(mobjFn) {}
     inline statefn_t(const statefn_pspr_t psprFn) noexcept : psprFn(psprFn) {}
 

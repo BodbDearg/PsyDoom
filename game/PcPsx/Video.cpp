@@ -145,7 +145,12 @@ void initVideo() noexcept {
     #endif
 
     // Determine the window creation flags
-    Uint32 windowCreateFlags = SDL_WINDOW_OPENGL;
+    Uint32 windowCreateFlags = 0;
+    
+    #if !__APPLE__
+        windowCreateFlags |= SDL_WINDOW_OPENGL;
+    #endif
+    
     windowCreateFlags |= (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
 
     // Decide what window size to use

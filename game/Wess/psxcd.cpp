@@ -85,14 +85,18 @@ static CdlCmd   gPSXCD_cdl_com = CdlPause;      // The last command issued to th
 static CdlCmd   gPSXCD_cdl_err_com;             // The last command issued to the cdrom via 'LIBCD_CdControl' which was an error
 static uint8_t  gPSXCD_cd_param[8];             // Parameters for the last command issued to the cdrom via 'LIBCD_CdControl' (if there were parameters)
 static int32_t  gPSXCD_cdl_intr;                // Int result of the last read command issued to the cdrom
-static int32_t  gPSXCD_sync_intr;               // Int result of the last 'LIBCD_CdSync' call when waiting until command completion
 static int32_t  gPSXCD_check_intr;              // Int result of the last 'LIBCD_CdSync' call when querying the status of something
 static int32_t  gPSXCD_cdl_err_intr;            // Int result of the last 'LIBCD_CdSync' call with an error
-static uint8_t  gPSXCD_sync_result[8];          // Result bytes for the last 'LIBCD_CdSync' call when waiting until command completion
 static uint8_t  gPSXCD_check_result[8];         // Result bytes for the last 'LIBCD_CdSync' call when querying the status of something
 static int32_t  gPSXCD_cdl_err_count;           // A count of how many cd errors that occurred
 static uint8_t  gPSXCD_cdl_stat;                // The first result byte (status byte) for the last read command
 static uint8_t  gPSXCD_cdl_err_stat;            // The first result byte (status byte) for when the last error which occurred
+
+// PC-PSX: these result vars are no longer used - don't compile to avoid unused var warnings
+#if !PC_PSX_DOOM_MODS
+    static int32_t  gPSXCD_sync_intr;           // Int result of the last 'LIBCD_CdSync' call when waiting until command completion
+    static uint8_t  gPSXCD_sync_result[8];      // Result bytes for the last 'LIBCD_CdSync' call when waiting until command completion
+#endif
 
 // Previous 'CdReadyCallback' and 'CDSyncCallback' functions used by LIBCD prior to initializing this module.
 // Used for restoring once we shutdown this module.

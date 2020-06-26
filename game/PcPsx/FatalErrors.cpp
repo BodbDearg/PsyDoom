@@ -7,6 +7,7 @@
 #include "ProgArgs.h"
 #include "Video.h"
 
+#include <cstdio>
 #include <SDL.h>
 #include <vector>
 

@@ -29,7 +29,6 @@ static constexpr int32_t MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY = 1024 * 48;
 // How many maps are in a map folder and the number of files per maps folder etc.
 static constexpr int32_t LEVELS_PER_MAP_FOLDER = (uint32_t) CdMapTbl_File::MAPSPR01_IMG - (uint32_t) CdMapTbl_File::MAP01_WAD;
 static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
-static constexpr int32_t FILES_PER_MAP_FOLDER = LEVELS_PER_MAP_FOLDER * NUM_FILES_PER_LEVEL;
 
 // Sky stuff
 static constexpr const char* SKY_LUMP_NAME = "F_SKY";

@@ -2,6 +2,7 @@
 
 #include "Assert.h"
 #include "Network.h"
+#include "Utils.h"
 
 // This prevents warnings in ASIO about the Windows SDK target version not being specified
 #if _WIN32
@@ -34,7 +35,7 @@ public:
     // Did an error occur with any write operation? If this flag is set then the socket and packet writer should NOT be used any further.
     //--------------------------------------------------------------------------------------------------------------------------------------
     inline bool hasError() const noexcept {
-        return mError;
+        return mbError;
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------

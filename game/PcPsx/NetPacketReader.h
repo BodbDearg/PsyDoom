@@ -2,6 +2,7 @@
 
 #include "Assert.h"
 #include "Network.h"
+#include "Utils.h"
 
 // This prevents warnings in ASIO about the Windows SDK target version not being specified
 #if _WIN32
@@ -40,7 +41,7 @@ public:
     // In this situation the connection should be destroyed.
     //--------------------------------------------------------------------------------------------------------------------------------------
     inline bool hasError() const noexcept {
-        return mError;
+        return mbError;
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -78,7 +79,7 @@ public:
 
         // A packet is ready if the receive timestamp is non defaulted
         for (int32_t i = mBufBegIdx; i != mBufEndIdx; i = (i + 1) % BufferSize) {
-            if (mReceiveTime[i] != {}) {
+            if (mReceiveTime[i] != TimePointT{}) {
                 ++numReady;
             }
         }

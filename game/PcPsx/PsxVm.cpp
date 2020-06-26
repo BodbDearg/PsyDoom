@@ -46,16 +46,13 @@ bool init(const char* const doomCdCuePath) noexcept {
     // Open the DOOM cdrom
     system.cdrom->disc = disc::load(doomCdCuePath);
     system.cdrom->setShell(false);
-
+    
     if (!system.cdrom->disc) {
         FatalErrors::raiseF(
             "Couldn't open or failed to parse the .cue disc descriptor '%s'!\n"
             "Is it present at the specified path and is it valid? This *MUST* be the .cue file for PlayStation Doom (PAL or NTSC).",
             doomCdCuePath
         );
-
-        shutdown();
-        return false;
     }
 
     // Setup sound.

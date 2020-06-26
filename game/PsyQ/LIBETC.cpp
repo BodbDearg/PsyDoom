@@ -14,9 +14,11 @@ static uint8_t gScratchpad[1024];
 //------------------------------------------------------------------------------------------------------------------------------------------
 void* LIBETC_getScratchAddr(const uint32_t word32Index) {
     // Sanity check: allow the 'end' pointer to be taken, but no further...
-    constexpr int32_t SCRATCHPAD_END_WORD_IDX = sizeof(gScratchpad) / sizeof(uint32_t);
-    ASSERT(word32Index <= SCRATCHPAD_END_WORD_IDX);
-
+    #if ASSERTS_ENABLED
+        constexpr int32_t SCRATCHPAD_END_WORD_IDX = sizeof(gScratchpad) / sizeof(uint32_t);
+        ASSERT(word32Index <= SCRATCHPAD_END_WORD_IDX);
+    #endif
+    
     // Return the requested memory
     return gScratchpad + word32Index * sizeof(uint32_t);
 }

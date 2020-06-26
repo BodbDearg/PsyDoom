@@ -17,7 +17,6 @@
 // Maximum number of sounds that can be in an LCD file
 static constexpr uint32_t MAX_LCD_SOUNDS = 100;
 
-static PsxCd_File           gWess_open_lcd_file;                // The currently open LCD file
 static patch_group_data*    gpWess_lcd_load_patchGroup;         // Saved reference to the PSX driver patch group
 static patch*               gpWess_lcd_load_patches;            // Saved reference to the master status patches list
 static patch_voice*         gpWess_lcd_load_patchVoices;        // Saved reference to the master status patch voices list
@@ -28,6 +27,11 @@ static uint32_t             gWess_lcd_load_soundNum;            // Which sound n
 static uint16_t             gWess_lcd_load_numSounds;           // How many sounds are being loaded in total from the LCD file
 static uint8_t*             gpWess_lcd_load_headerBuf;          // This buffer contains the LCD file header (2048 bytes max)
 static uint32_t             gWess_lcd_load_samplePos;           // This is the current address in SPU RAM to upload sound to: incremented as we load
+
+// PC-PSX: no longer used, don't compile to avoid unused var warnings
+#if !PC_PSX_DOOM_MODS
+    static PsxCd_File gWess_open_lcd_file;  // The currently open LCD file
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the LCD loader with the specified master status struct

@@ -26,6 +26,7 @@
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
 
+#include <cstdio>
 #include <memory>
 
 // The current number of 60Hz ticks
