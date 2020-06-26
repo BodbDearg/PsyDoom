@@ -49,10 +49,22 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "Fullscreen = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbFullscreen = iniEntry.getBoolValue(true); },
         []() { gbFullscreen = true; }
+    },
+    {
+        "FloorRenderGapFix",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Enable/disable a precision fix for the floor renderer to prevent gaps in the floor on some maps.\n"
+        "# This fix helps prevent some noticeable glitches on larger outdoor maps like 'Tower Of Babel'.\n"
+        "# Set to '1' to enable the fix, and '0' to disable.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "FloorRenderGapFix = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
+        []() { gbFloorRenderGapFix = true; }
     }
 };
 
 bool    gbFullscreen;
+bool    gbFloorRenderGapFix;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Game config settings

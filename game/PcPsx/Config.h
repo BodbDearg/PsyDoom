@@ -7,6 +7,7 @@ extern bool     gbUncapFramerate;
 
 // Video settings
 extern bool     gbFullscreen;
+extern bool     gbFloorRenderGapFix;
 
 // Input settings
 extern float    gMouseTurnSpeed;

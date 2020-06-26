@@ -3,7 +3,6 @@
 - Fix separate movement directions (left/right) not cancelling each other out.
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
-- Make the floor rendering fix configurable
 - Incorporate the player missile damage fix and make it an optional setting (off by default)
 - Incorporate lost soul spawn limit fix but make configurable and off by default.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
@@ -64,6 +63,7 @@
 - Verify NTSC stretched resolution is fully correct.
 - Automap zoom/pan with mouse.
 - Make file overrides (basic mod system) work on MacOS
+- Fix the small gaps at the side of the screen during screen fades.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Support a clean exit from the game everywhere (except I_Error)
 - Investigate shutdown code and properly cleanup everything

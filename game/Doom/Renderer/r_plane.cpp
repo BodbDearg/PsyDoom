@@ -5,6 +5,7 @@
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
 #include "PcPsx/Assert.h"
+#include "PcPsx/Config.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
@@ -194,10 +195,12 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         }
     }
 
-    // PC-PSX: sanity check these bounds
+    // PC-PSX: sanity check these bounds and get whether to apply the floor gap fix
     #if PC_PSX_DOOM_MODS
         ASSERT((planeBegY >= planeEndY) || (planeBegY >= 0 && planeBegY <  VIEW_3D_H));
         ASSERT((planeBegY >= planeEndY) || (planeEndY >= 0 && planeEndY <= VIEW_3D_H));
+
+        const bool bFixFloorGaps = Config::gbFloorRenderGapFix;
     #endif
 
     // Fill in the parts of the draw primitive that are common to all flat spans
@@ -397,10 +400,12 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 // PC-PSX: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
                 // TODO: make this tweak configurable according to user prefs.
                 #if PC_PSX_DOOM_MODS
-                    if (pieceIdx + 1 >= numSpanPieces) {
-                        spanR = origSpanR;
-                        spanUR = origSpanUR;
-                        spanVR = origSpanVR;
+                    if (bFixFloorGaps) {
+                        if (pieceIdx + 1 >= numSpanPieces) {
+                            spanR = origSpanR;
+                            spanUR = origSpanUR;
+                            spanVR = origSpanVR;
+                        }
                     }
                 #endif
                 

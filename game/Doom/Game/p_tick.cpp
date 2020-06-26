@@ -904,7 +904,8 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // Direct weapon switching with the keyboard
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_1)) {
         player_t& player = gPlayers[gCurPlayerIndex];
-        inputs.directSwitchToWeapon = ((player.readyweapon == wp_chainsaw) || (!player.weaponowned[wp_chainsaw])) ? wp_fist : wp_chainsaw;
+        const weapontype_t nextWeapon = ((player.readyweapon == wp_chainsaw) || (!player.weaponowned[wp_chainsaw])) ? wp_fist : wp_chainsaw;
+        inputs.directSwitchToWeapon = (uint8_t) nextWeapon;
     }
 
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_2)) { inputs.directSwitchToWeapon = wp_pistol;         }
