@@ -476,6 +476,7 @@ struct player_t {
         uint32_t    gameId;             // Must match the expected game id
         uint32_t    errorCheck;         // Error checking bits for detecting if all players are in sync: populated using the current position and angle for all players
         int32_t     elapsedVBlanks;     // How many vblanks have elapsed for the player sending the update
+        int32_t     lastPacketDelayMs;  // Message from this peer: how long the last packet received was delayed from when we expected it (MS). Used to adjust time.
         TickInputs  inputs;             // Inputs for the player sending this update
     };
 #endif

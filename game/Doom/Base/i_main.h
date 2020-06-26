@@ -113,3 +113,7 @@ void I_NetSetup() noexcept;
 bool I_NetUpdate() noexcept;
 void I_NetHandshake() noexcept;
 void I_SubmitGpuCmds() noexcept;
+
+#if PC_PSX_DOOM_MODS
+    int32_t I_GetTotalVBlanks() noexcept;
+#endif

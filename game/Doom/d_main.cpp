@@ -450,8 +450,14 @@ gameaction_t MiniLoop(
     // Run startup logic for this game loop beginning
     pStart();
 
-    // Update the video refresh timers
-    gLastTotalVBlanks = LIBETC_VSync(-1);
+    // Update the video refresh timers.
+    // PC-PSX: use 'I_GetTotalVBlanks' because it can adjust time in networked games.
+    #if PC_PSX_DOOM_MODS
+        gLastTotalVBlanks = I_GetTotalVBlanks();
+    #else
+        gLastTotalVBlanks = LIBETC_VSync(-1);
+    #endif
+
     gElapsedVBlanks = 0;
 
     // Continue running the game loop until something causes us to exit
