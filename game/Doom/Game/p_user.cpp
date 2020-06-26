@@ -626,6 +626,15 @@ void P_PlayerThink(player_t& player) noexcept {
             // Actually change the weapon
             player.pendingweapon = (weapontype_t) nextWeaponIdx;
         }
+
+        // PC-PSX: do direct weapon switching too if requested, if the weapon is valid and different to the current equipped weapon
+        #if PC_PSX_DOOM_MODS
+            if ((inputs.directSwitchToWeapon != wp_nochange) && (inputs.directSwitchToWeapon < NUMWEAPONS)) {
+                if (player.weaponowned[inputs.directSwitchToWeapon] && (inputs.directSwitchToWeapon != player.readyweapon)) {
+                    player.pendingweapon = (weapontype_t) inputs.directSwitchToWeapon;
+                }
+            }
+        #endif
     }
 
     // Updates for when the game is NOT paused

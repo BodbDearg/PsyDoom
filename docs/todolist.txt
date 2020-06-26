@@ -1,6 +1,3 @@
-- Allow direct weapon switching using number keys.
-- Allow turning outside of the 30 FPS cap to improve responsiveness.
-    - Can get rid of interpolations for view rotations.
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.

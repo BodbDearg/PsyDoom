@@ -702,6 +702,7 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs = {};
+    inputs.directSwitchToWeapon = wp_nochange;
 
     // TODO: don't hardcode the analog to digital threshold
     const float DIGITAL_THRESHOLD = 0.5f;
@@ -899,6 +900,20 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 
     inputs.analogForwardMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone) * FRACUNIT);
     inputs.analogSideMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone) * FRACUNIT);
+
+    // Direct weapon switching with the keyboard
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_1)) {
+        player_t& player = gPlayers[gCurPlayerIndex];
+        inputs.directSwitchToWeapon = ((player.readyweapon == wp_chainsaw) || (!player.weaponowned[wp_chainsaw])) ? wp_fist : wp_chainsaw;
+    }
+
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_2)) { inputs.directSwitchToWeapon = wp_pistol;         }
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_3)) { inputs.directSwitchToWeapon = wp_shotgun;        }
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_4)) { inputs.directSwitchToWeapon = wp_supershotgun;   }
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_5)) { inputs.directSwitchToWeapon = wp_chaingun;       }
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_6)) { inputs.directSwitchToWeapon = wp_missile;        }
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_7)) { inputs.directSwitchToWeapon = wp_plasma;         }
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_8)) { inputs.directSwitchToWeapon = wp_bfg;            }
 
     // Do one more update of the player's turning before gathering the input
     P_PlayerDoTurning();
