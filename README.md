@@ -14,6 +14,7 @@ As of right now the game mostly runs correctly, with a few minor issues. Here is
 The original goal of this project was to have a complete replacement for the original PlayStation Doom .EXE for modern systems. Now that this objective has been achieved, the focus turns to adding quality of life improvements, 'Final Doom' support and more.
 
 ## Running
+- Download the latest release build here: https://github.com/BodbDearg/PsyDoom/releases
 - Make sure to have the latest Visual C redistributable installed:
   - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 - The following items must be present in the working directory of the application:
