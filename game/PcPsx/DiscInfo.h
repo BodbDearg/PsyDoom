@@ -38,11 +38,13 @@ struct DiscPos {
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct DiscTrack {
     std::string     sourceFilePath;         // Which file the track data comes from
-    int64_t         sourceFileTotalSize;    // The total size of the file containing the track data
+    int32_t         sourceFileTotalSize;    // The total size of the file containing the track data
     int32_t         trackNum;               // The track number
     int32_t         fileOffset;             // Where the track is located in the file
     int32_t         blockSize;              // Size of each block/sector in the track
     int32_t         blockCount;             // The number of blocks in the track
+    int32_t         trackPhysicalSize;      // Block count x block size
+    int32_t         trackPayloadSize;       // Block count x block payload size
     int32_t         blockPayloadOffset;     // Where the actual data is located in each block/sector
     int32_t         blockPayloadSize;       // The size of the actual data in each block/sector
     bool            bIsData;                // Audio or data track?

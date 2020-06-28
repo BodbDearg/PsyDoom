@@ -22,7 +22,7 @@ static const std::regex gRegexCmd_Index = std::regex(R"(INDEX\s+(\d+)\s+(\d+)\s*
 struct CueParseCtx {
     DiscInfo&       disc;       // The disc to save the results to
     std::string     file;       // File to read the current track data from
-    int64_t         fileSize;   // Total size in bytes of the file pointed to by 'file'
+    int32_t         fileSize;   // Total size in bytes of the file pointed to by 'file'
     std::string     line;       // The current .cue line
     std::string     errorMsg;   // Error message if something went wrong
 };
@@ -72,7 +72,7 @@ static bool parseCueCmd_File(CueParseCtx& ctx) noexcept {
     }
 
     ctx.file = matches[1].str();
-    ctx.fileSize = FileUtils::getFileSize(ctx.file.c_str());
+    ctx.fileSize = (int32_t) FileUtils::getFileSize(ctx.file.c_str());
 
     if (ctx.fileSize < 0) {
         if (!FileUtils::fileExists(ctx.file.c_str())) {
@@ -361,6 +361,8 @@ static bool determineTrackOffsetsAndSizes(DiscInfo& disc, std::string& errorMsg)
         }
 
         track.blockCount = endLba - track.index1;
+        track.trackPhysicalSize = track.blockCount * track.blockSize;
+        track.trackPayloadSize = track.blockCount * track.blockPayloadSize;
     }
 
     return true;

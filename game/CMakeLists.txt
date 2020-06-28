@@ -149,6 +149,8 @@ set(SOURCE_FILES
     "PcPsx/DemoResult.h"
     "PcPsx/DiscInfo.cpp"
     "PcPsx/DiscInfo.h"
+    "PcPsx/DiscReader.cpp"
+    "PcPsx/DiscReader.h"
     "PcPsx/Endian.h"
     "PcPsx/FatalErrors.cpp"
     "PcPsx/FatalErrors.h"
