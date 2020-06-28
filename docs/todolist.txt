@@ -59,8 +59,10 @@
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate rollback networking to combat latency.
     - Could also be used for a rewind feature??!
+    - Could also be used for a save feature.
 - Linux support.
 - Verify NTSC stretched resolution is fully correct.
+- Allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Automap zoom/pan with mouse.
 - Make file overrides (basic mod system) work on MacOS
 - Fix the small gaps at the side of the screen during screen fades.

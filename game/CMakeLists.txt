@@ -147,6 +147,8 @@ set(SOURCE_FILES
     "PcPsx/ControllerInput.h"
     "PcPsx/DemoResult.cpp"
     "PcPsx/DemoResult.h"
+    "PcPsx/DiscInfo.cpp"
+    "PcPsx/DiscInfo.h"
     "PcPsx/Endian.h"
     "PcPsx/FatalErrors.cpp"
     "PcPsx/FatalErrors.h"

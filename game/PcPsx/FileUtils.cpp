@@ -124,4 +124,28 @@ bool fileExists(const char* filePath) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the size of the given file and return '-1' if there is an error
+//------------------------------------------------------------------------------------------------------------------------------------------
+int64_t getFileSize(const char* filePath) noexcept {
+    ASSERT(filePath);
+
+    try {
+        // MacOS: working around missing support for <filesystem> in everything except the latest bleeding edge OS and Xcode.
+        // Use standard Unix file functions instead for now, but some day this can be removed.
+        #ifdef __APPLE__
+            struct stat fileInfo;
+
+            if (stat(filePath, &fileInfo) < 0)
+                return -1;
+
+            return (fileInfo.st_size >= 0) ? (int64_t) fileInfo.st_size : (int64_t) -1;
+        #else
+            return (int64_t) std::filesystem::file_size(filePath);
+        #endif
+    } catch (...) {
+        return -1;
+    }
+}
+
 END_NAMESPACE(FileUtils)

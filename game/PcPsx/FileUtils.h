@@ -31,5 +31,6 @@ bool writeDataToFile(
 ) noexcept;
 
 bool fileExists(const char* filePath) noexcept;
+int64_t getFileSize(const char* filePath) noexcept;
 
 END_NAMESPACE(FileUtils)
