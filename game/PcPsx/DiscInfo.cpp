@@ -134,7 +134,8 @@ static bool parseCueCmd_Track(CueParseCtx& ctx) noexcept {
     std::string mode = matches[2];
     std::for_each(mode.c_str(), mode.c_str() + mode.size(), ::toupper);
 
-    // Set these block/track parameters based on the mode
+    // Set these block/track parameters based on the mode.
+    // See 'Bin2ISO : https://gist.github.com/ceritium/139577' for more details on some of these.
     if ((mode == "MODE1/2048") || (mode == "MODE2/2048")) {
         track.bIsData = true;
         track.blockSize = 2048;
@@ -147,23 +148,23 @@ static bool parseCueCmd_Track(CueParseCtx& ctx) noexcept {
         track.blockPayloadOffset = 16;
         track.blockPayloadSize = 2048;
     }
-    else if (mode == "MODE2/2324") {
-        track.bIsData = true;
-        track.blockSize = 2324;
-        track.blockPayloadOffset = 0;
-        track.blockPayloadSize = 2324;
-    }
-    else if (mode == "MODE2/2336") {
-        track.bIsData = true;
-        track.blockSize = 2336;
-        track.blockPayloadOffset = 0;
-        track.blockPayloadSize = 2336;
-    }
     else if (mode == "MODE2/2352") {
         track.bIsData = true;
         track.blockSize = 2352;
-        track.blockPayloadOffset = 16;
-        track.blockPayloadSize = 2336;
+        track.blockPayloadOffset = 24;
+        track.blockPayloadSize = 2048;
+    }
+    else if (mode == "MODE2/2336") {
+        track.bIsData = true;
+        track.blockSize = 2352;
+        track.blockPayloadOffset = 8;
+        track.blockPayloadSize = 2048;
+    }
+    else if (mode == "MODE2/2324") {
+        track.bIsData = true;
+        track.blockSize = 2352;
+        track.blockPayloadOffset = 24;
+        track.blockPayloadSize = 2324;
     }
     else if (mode == "AUDIO") {
         track.bIsData = false;
