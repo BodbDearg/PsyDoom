@@ -90,9 +90,9 @@ static uint8_t findFreeOpenFileSlotIndex() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool isValidOverridenFile(const PsxCd_File& file) noexcept {
     return (
-        (file.file.pos.track == 255) &&
-        (file.file.pos.minute < MAX_OPEN_FILES) &&
-        (gOpenFileSlots[file.file.pos.minute] != nullptr)
+        (file.overrideFileHandle > 0) &&
+        (file.overrideFileHandle <= MAX_OPEN_FILES) &&
+        (gOpenFileSlots[file.overrideFileHandle - 1] != nullptr)
     );
 }
 
@@ -122,9 +122,7 @@ bool areOverridesAvailableForFile(const CdMapTbl_File discFile) noexcept {
 }
 
 bool isFileOverriden(const PsxCd_File& file) noexcept {
-    // The opened file is overriden if the track is set to 255.
-    // This is how we mark the file as overriden.
-    return (file.file.pos.track == 255);
+    return (file.overrideFileHandle != 0);
 }
 
 bool openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut) noexcept {
@@ -173,46 +171,43 @@ bool openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut) noexce
 
     // Save file details and return 'true' for success
     fileOut = {};
-    fileOut.file.pos.minute = fileSlotIdx;      // Save the index of the open file in this field
-    fileOut.file.pos.track = 255u;              // Special marker to indicate that the file is overriden
-    fileOut.file.size = fileSize;
-
-    std::strncpy(fileOut.file.name, filename, C_ARRAY_SIZE(fileOut.file.name) - 1);
-    fileOut.file.name[C_ARRAY_SIZE(fileOut.file.name) - 1] = 0;
-
+    fileOut.overrideFileHandle = fileSlotIdx + 1;   // Note: handle is the index + 1
+    fileOut.size = fileSize;
     return true;
 }
 
 void closeOverridenFile(PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
-    std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
+    std::FILE* const pFile = gOpenFileSlots[file.overrideFileHandle - 1];
     std::fclose(pFile);
-    gOpenFileSlots[file.file.pos.minute] = nullptr;
+    gOpenFileSlots[file.overrideFileHandle - 1] = nullptr;
     file = {};
 }
 
 int32_t readFromOverridenFile(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
-    std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
+    std::FILE* const pFile = gOpenFileSlots[file.overrideFileHandle - 1];
     return (std::fread(pDest, (size_t) numBytes, 1, pFile) == 1) ? numBytes : -1;
 }
 
 int32_t seekForOverridenFile(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept {
     ASSERT(isValidOverridenFile(file));
-    std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
+    std::FILE* const pFile = gOpenFileSlots[file.overrideFileHandle - 1];
     
     if (mode == PsxCd_SeekMode::SET) {
         return (std::fseek(pFile, offset, SEEK_SET) == 0) ? 0 : -1;
     } else if (mode == PsxCd_SeekMode::CUR) {
         return (std::fseek(pFile, offset, SEEK_CUR) == 0) ? 0 : -1;
-    } else {
+    } else if (mode == PsxCd_SeekMode::END) {
         return (std::fseek(pFile, -offset, SEEK_END) == 0) ? 0 : -1;
+    } else {
+        return -1;  // Bad seek mode!
     }
 }
 
 int32_t tellForOverridenFile(const PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
-    std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
+    std::FILE* const pFile = gOpenFileSlots[file.overrideFileHandle - 1];
     return (int32_t) std::ftell(pFile);
 }
 

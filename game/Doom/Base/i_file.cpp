@@ -12,7 +12,12 @@ static PsxCd_File gOpenPsxCdFiles[MAX_OPEN_FILES];
 //------------------------------------------------------------------------------------------------------------------------------------------
 void InitOpenFileSlots() noexcept {
     for (int32_t i = 0; i < MAX_OPEN_FILES; ++i) {
-        gOpenPsxCdFiles[i].file.size = 0;
+        // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
+        #if PC_PSX_DOOM_MODS
+            gOpenPsxCdFiles[i] = {};
+        #else
+            gOpenPsxCdFiles[i].file.size = 0;
+        #endif
     }
 }
 
@@ -33,8 +38,14 @@ int32_t OpenFile(const CdMapTbl_File discFile) noexcept {
     int32_t fileSlotIdx = 0;
 
     for (; fileSlotIdx < MAX_OPEN_FILES; ++fileSlotIdx) {
-        if (gOpenPsxCdFiles[fileSlotIdx].file.size == 0)
-            break;
+        // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
+        #if PC_PSX_DOOM_MODS
+            if (gOpenPsxCdFiles[fileSlotIdx].size == 0)
+                break;
+        #else
+            if (gOpenPsxCdFiles[fileSlotIdx].file.size == 0)
+                break;
+        #endif
     }
     
     if (fileSlotIdx >= MAX_OPEN_FILES) {
@@ -52,7 +63,13 @@ int32_t OpenFile(const CdMapTbl_File discFile) noexcept {
 void CloseFile(const int32_t fileSlotIdx) noexcept {
     PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
     psxcd_close(file);
-    file.file.size = 0;
+
+    // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
+    #if PC_PSX_DOOM_MODS
+        file = {};
+    #else
+        file.file.size = 0;
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -70,32 +87,33 @@ int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const P
 // If the read fails then the program dies with an error.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t size) noexcept {
-    // Grab the file being read and see what offset we are at in the file.
-    // We will seek to that offset before the read:
     PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
-    const int32_t curFileOffset = psxcd_tell(file);
 
-    // This is really strange... PSX DOOM appears to do some sort of dummy read of 8192 bytes at the start of the file
-    // before reading the actual data that has been requested. I don't know why this was done, maybe perhaps to flush
-    // out whatever the CD-ROM is currently doing with audio or something like that?
-    //
-    // I tried disabling this previously because I thought it would be useless in an emulated PSX environment but
-    // it turns out that it actually DOES cause problems if I omit this code.
-    // Will need to read up more on the PSX hardware to find out why this is required.
+    // PC-PSX: this is no longer neccessary
+    #if !PC_PSX_DOOM_MODS
     {
-        constexpr uint32_t WARMUP_READ_MAX_SIZE = 8192;
-        uint32_t warmupReadSize = size;
+        // This is really strange... PSX DOOM appears to do some sort of dummy read of 8192 bytes at the start of the file
+        // before reading the actual data that has been requested. I don't know why this was done, maybe perhaps to flush
+        // out whatever the CD-ROM is currently doing with audio or something like that?
+        const int32_t curFileOffset = psxcd_tell(file);
+
+        {
+            constexpr uint32_t WARMUP_READ_MAX_SIZE = 8192;
+            uint32_t warmupReadSize = size;
     
-        if (size > WARMUP_READ_MAX_SIZE) {
-            warmupReadSize = WARMUP_READ_MAX_SIZE;
+            if (size > WARMUP_READ_MAX_SIZE) {
+                warmupReadSize = WARMUP_READ_MAX_SIZE;
+            }
+
+            psxcd_seek(file, 0, PsxCd_SeekMode::SET);
+            psxcd_read(pBuffer, warmupReadSize, file);
         }
 
-        psxcd_seek(file, 0, PsxCd_SeekMode::SET);
-        psxcd_read(pBuffer, warmupReadSize, file);
+        // Restore the proper offset
+        psxcd_seek(file, curFileOffset, PsxCd_SeekMode::SET);
     }
+    #endif
 
-    // This is where we actually seek to the file offset and read it
-    psxcd_seek(file, curFileOffset, PsxCd_SeekMode::SET);
     const int32_t numBytesRead = psxcd_read(pBuffer, (int32_t) size, file);
 
     // If the read failed then kill the program with an error

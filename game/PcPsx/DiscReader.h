@@ -17,6 +17,7 @@ public:
 
     int32_t getTrack() const noexcept;
     bool setTrack(int32_t trackNum) noexcept;
+    bool isTrackOpen() noexcept;
     void closeTrack() noexcept;
     bool trackSeekAbs(const int32_t offsetAbs) noexcept;
     bool trackSeekRel(const int32_t offsetRel) noexcept;

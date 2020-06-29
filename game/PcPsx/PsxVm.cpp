@@ -5,6 +5,7 @@
 #include "PsxVm.h"
 
 #include "Assert.h"
+#include "DiscInfo.h"
 #include "Input.h"
 #include "ProgArgs.h"
 #include "PsxPadButtons.h"
@@ -20,6 +21,7 @@ END_DISABLE_HEADER_WARNINGS
 
 BEGIN_NAMESPACE(PsxVm)
 
+DiscInfo                gDiscInfo;
 System*                 gpSystem;
 gpu::GPU*               gpGpu;
 spu::SPU*               gpSpu;
@@ -42,17 +44,26 @@ bool init(const char* const doomCdCuePath) noexcept {
 
     // GPU: disable logging - this eats up TONS of memory!
     gpGpu->gpuLogEnabled = false;
+
+    // Parse the .cue info for the game disc
+    {
+        std::string parseErrorMsg;
+
+        if (!gDiscInfo.parseFromCueFile(doomCdCuePath, parseErrorMsg)) {
+            FatalErrors::raiseF(
+                "Couldn't open or failed to parse the game disc .cue file '%s'!\nError message: %s",
+                doomCdCuePath,
+                parseErrorMsg.c_str()
+            );
+        }
+    }
     
-    // Open the DOOM cdrom
+    // Open the DOOM cdrom with Avocado
     system.cdrom->disc = disc::load(doomCdCuePath);
     system.cdrom->setShell(false);
-    
+
     if (!system.cdrom->disc) {
-        FatalErrors::raiseF(
-            "Couldn't open or failed to parse the .cue disc descriptor '%s'!\n"
-            "Is it present at the specified path and is it valid? This *MUST* be the .cue file for PlayStation Doom (PAL or NTSC).",
-            doomCdCuePath
-        );
+        FatalErrors::raiseF("Couldn't open or failed to parse the game disc .cue file '%s'!\n", doomCdCuePath);
     }
 
     // Setup sound.

@@ -8,8 +8,7 @@
 static PsxCd_File gWess_open_lcd_file;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Opens the specified file for the LCD loader.
-// PC-PSX: removed to fix compiler warnings as it is unreferenced and no longer used.
+// Opens the specified file for the LCD loader
 //------------------------------------------------------------------------------------------------------------------------------------------
 static PsxCd_File* wess_dig_lcd_data_open(const CdMapTbl_File file) noexcept {
     PsxCd_File* const pFile = psxcd_open(file);

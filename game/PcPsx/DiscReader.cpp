@@ -60,7 +60,7 @@ bool DiscReader::setTrack(int32_t trackNum) noexcept {
     mCurTrackIdx = trackNum - 1;
     
     // Seek to where we should be in the track data
-    mCurOffset = 0;
+    mCurOffset = -1;
 
     if (!trackSeekAbs(0)) {
         closeTrack();
@@ -69,6 +69,13 @@ bool DiscReader::setTrack(int32_t trackNum) noexcept {
 
     // All good if we've got to here
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Is a track currently open for reading?
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool DiscReader::isTrackOpen() noexcept {
+    return (mpOpenFile != nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,6 +107,10 @@ bool DiscReader::trackSeekAbs(const int32_t offsetAbs) noexcept {
     if ((offsetAbs < 0) || (offsetAbs > mpCurTrack->trackPayloadSize))
         return false;
 
+    // If we are already at this offset then there is nothing we need do
+    if (mCurOffset == offsetAbs)
+        return true;
+    
     // Do the seek and save the result if successful
     const int32_t physicalOffset = dataOffsetToPhysical(offsetAbs);
     
@@ -123,6 +134,10 @@ bool DiscReader::trackSeekRel(const int32_t offsetRel) noexcept {
 
     if ((newOffset < 0) || (newOffset > mpCurTrack->trackPayloadSize))
         return false;
+
+    // If we are already at this offset then there is nothing we need do
+    if (mCurOffset == newOffset)
+        return true;
 
     // Do the seek and save the result if successful
     const int32_t physicalOffset = dataOffsetToPhysical(newOffset);
@@ -150,12 +165,14 @@ bool DiscReader::read(void* const pBuffer, const int32_t numBytes) noexcept {
     }
 
     // Continue reading until there no bytes left
+    const int32_t blockPayloadSize = mpCurTrack->blockPayloadSize;
+
     std::byte* pDstBytes = (std::byte*) pBuffer;
     int32_t bytesLeft = numBytes;
 
     while (bytesLeft > 0) {
         // How many bytes are left in this sector? Try and read as much as we can or need from the sector:
-        const int32_t sectorBytesLeft = mpCurTrack->blockPayloadSize - (mCurOffset % mpCurTrack->blockPayloadSize);
+        const int32_t sectorBytesLeft = blockPayloadSize - (mCurOffset % blockPayloadSize);
         const int32_t thisReadSize = std::min(bytesLeft, sectorBytesLeft);
 
         if (std::fread(pDstBytes, thisReadSize, 1, (FILE*) mpOpenFile) != 1) {
@@ -163,23 +180,14 @@ bool DiscReader::read(void* const pBuffer, const int32_t numBytes) noexcept {
             return false;
         }
 
-        // Read succeeded: seek to the next sector.
-        //
-        // Optimization: if the block payload size is the same as the physical sector size then we are already there.
-        // In that case all we need to do is update the current offset.
+        // Read succeeded: seek to the next sector if we have consumed all of this sector's bytes
         bytesLeft -= thisReadSize;
+        pDstBytes += thisReadSize;
 
-        if (mpCurTrack->blockPayloadSize != mpCurTrack->blockSize) {
-            // Need to seek past sector stuff we are not interested in to get to the actual payload
-            if (!trackSeekAbs(mCurOffset + thisReadSize)) {
-                // If seeking failed then try to go back to where we were and error out
-                trackSeekAbs(mCurOffset);
-                std::memset(pBuffer, 0, (size_t) numBytes);
-                return false;
-            }
-        } else {
-            // Don't need to seek with I/O because we are already in the right place: just update the current offset
-            mCurOffset += thisReadSize;
+        // Try to seek past what we just read and issue an error if that fails
+        if (!trackSeekRel(thisReadSize)) {
+            std::memset(pBuffer, 0, (size_t) numBytes);
+            return false;
         }
     }
 

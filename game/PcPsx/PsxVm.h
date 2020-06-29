@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+struct DiscInfo;
+
 // Forward declaring avocado types
 struct System;
 
@@ -12,6 +14,9 @@ namespace spu               { struct SPU;   }
 namespace device::cdrom     { class CDROM;  }
 
 BEGIN_NAMESPACE(PsxVm)
+
+// Information for the game disc
+extern DiscInfo gDiscInfo;
 
 // Access to emulated Avocado devices
 extern System*                  gpSystem;

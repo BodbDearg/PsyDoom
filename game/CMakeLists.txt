@@ -231,6 +231,8 @@ if (PSYDOOM_INCLUDE_OLD_CODE)
         "Old/PsyQ/Old_LIBCOMB.h"
         "Old/Wess/Old_lcdload.cpp"
         "Old/Wess/Old_lcdload.h"
+        "Old/Wess/Old_psxcd.cpp"
+        "Old/Wess/Old_psxcd.h"
     )
 endif()
 

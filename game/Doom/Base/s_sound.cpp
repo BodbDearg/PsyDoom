@@ -510,7 +510,13 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
         }
     #endif
 
-    psxcd_read(pTmpWmdLoadBuffer, pFile->file.size, *pFile);
+    // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
+    #if PC_PSX_DOOM_MODS
+        psxcd_read(pTmpWmdLoadBuffer, pFile->size, *pFile);
+    #else
+        psxcd_read(pTmpWmdLoadBuffer, pFile->file.size, *pFile);
+    #endif
+
     psxcd_close(*pFile);
 
     // Initialize the sample blocks used to keep track what sounds are uploaded to where in SPU RAM

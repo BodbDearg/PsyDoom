@@ -9,11 +9,12 @@ static constexpr int32_t CD_SECTOR_SIZE = 2048;
 
 // Tracks an open file on the CD-ROM.
 // Contains info about the file as well as the current IO location and status.
+// PC-PSX: this data structure was completely changed. See the 'old' folder for the original version.
 struct PsxCd_File {
-    CdlFILE     file;               // Details about the file itself
-    CdlLOC      new_io_loc;         // Current I/O location
-    uint32_t    io_block_offset;    // Offset within the current sector for IO
-    uint8_t     io_result[8];       // Result bytes from LIBCD for the last CD operation
+    int32_t     size;                   // How big the file is in bytes
+    int32_t     startSector;            // Which 2,048 byte disc sector the file starts on
+    int32_t     fileHandle;             // Handle to an open file on the game disc
+    int32_t     overrideFileHandle;     // Handle to a host machine file which overrides this file on the original game disc; allows user mods/overrides of files
 };
 
 // Seek mode for seeking: similar to the C standard library seek modes
@@ -27,8 +28,8 @@ enum class PsxCd_SeekMode : int32_t {
 // Used by the retail version of the game for fast file access, presumably not used during development as that would be painful.
 // The location is stored in terms of start sector (2048 byte sector) number.
 struct PsxCd_MapTblEntry {
-    uint32_t    startSector;
-    uint32_t    size;
+    int32_t     startSector;
+    int32_t     size;
 };
 
 // Sector buffer for when we are reading data

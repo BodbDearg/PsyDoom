@@ -192,7 +192,7 @@ int32_t wess_dig_lcd_data_read(
 // Optionally, details for the uploaded sounds can be saved to the given sample block.
 // The 'override' flag also specifies whether existing sound patches are to have their details overwritten or not.
 //
-// PC-PSX: I've completely rewritten this function for PsyDoom to get rid of all the low level I/O stuff.
+// PC-PSX: this function has been rewritten to get rid of low level I/O stuff, for the original version see the 'Old' folder.
 // The goal of the rewrite is to enable modding of the game with new .LCD files for custom maps, since the 'psxcd' I/O functions support
 // replacing original game files with alternate versions on the user's computer.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -215,9 +215,6 @@ int32_t wess_dig_lcd_load(
     auto closeLcdFileOnExit = finally([&]() noexcept {
         psxcd_close(*pLcdFile);
     });
-
-    if (pLcdFile->file.pos == 0)
-        return 0;
 
     // Read the LCD file header to sector buffer 1
     struct LCDHeader {
@@ -248,7 +245,13 @@ int32_t wess_dig_lcd_load(
         return 0;
 
     // Read all of the sound data and upload to the SPU using sector buffer 2 as a temporary
-    int32_t lcdBytesLeft = pLcdFile->file.size;
+    #if PC_PSX_DOOM_MODS
+        // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
+        int32_t lcdBytesLeft = pLcdFile->size;
+    #else
+        int32_t lcdBytesLeft = pLcdFile->file.size;
+    #endif
+
     int32_t numSpuBytesWritten = 0;
 
     while (lcdBytesLeft > 0) {
