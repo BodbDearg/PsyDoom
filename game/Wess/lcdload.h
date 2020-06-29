@@ -27,8 +27,6 @@ int32_t wess_dig_lcd_data_read(
     const bool bOverride
 ) noexcept;
 
-int32_t wess_dig_lcd_psxcd_sync() noexcept;
-
 int32_t wess_dig_lcd_load(
     const CdMapTbl_File lcdFileToLoad,
     const uint32_t destSpuAddr,
