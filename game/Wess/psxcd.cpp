@@ -16,27 +16,6 @@
     static constexpr int32_t MAX_OPEN_FILES = 4;
 #endif
 
-// PSXCD module commands within PsxCd_Command
-enum PsxCd_CmdOp : int32_t {
-    PSXCD_COMMAND_END       = 0,    // Finish up the async read
-    PSXCD_COMMAND_COPY      = 1,    // Copy from the sector buffer to the destination
-    PSXCD_COMMAND_SEEK      = 2,    // Seek to a location
-    PSXCD_COMMAND_READ      = 3,    // Read a number of whole sectors to the destination
-    PSXCD_COMMAND_READCOPY  = 4     // Read a partial sector to the destination, using the sector buffer as an intermediate location
-};
-
-// Holds a command to read sector data
-struct PsxCd_Command {
-    PsxCd_CmdOp     command;        // What command was executed
-    int32_t         amount;         // Number of bytes involved in the read/copy operation
-    uint8_t*        pdest;          // Destination to save bytes to (if required by command type)
-    uint8_t*        psrc;           // Source to get bytes from (if required by command type)
-    CdlLOC          io_loc;         // I/O location for the command
-};
-
-// Sector buffer for when we are reading data
-uint8_t gPSXCD_sectorbuf[CD_SECTOR_SIZE];
-
 // Time it takes to fade out CD audio (milliseconds)
 static constexpr int32_t FADE_TIME_MS = 250;
 
@@ -308,9 +287,8 @@ PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
     }
 
     // Modding mechanism: allow files to be overriden with user files in a specified directory.
-    if (ModMgr::areOverridesAvailableForFile(discFile)) {
+    if (ModMgr::areOverridesAvailableForFile(discFile))
         return (ModMgr::openOverridenFile(discFile, gPSXCD_cdfile)) ? &gPSXCD_cdfile : nullptr;
-    }
 
     // Find a free disc reader slot to accomodate this file
     int32_t discReaderIdx = -1;
@@ -362,9 +340,8 @@ bool psxcd_waiting_for_pause() noexcept { return gbPSXCD_waiting_for_pause; }
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept {
     // Modding mechanism: allow files to be overriden with user files in a specified directory
-    if (ModMgr::isFileOverriden(file)) {
+    if (ModMgr::isFileOverriden(file))
         return ModMgr::readFromOverridenFile(pDest, numBytes, file);
-    }
 
     // If the file does not have a valid handle then the read fails
     if ((file.fileHandle <= 0) || (file.fileHandle > MAX_OPEN_FILES))
@@ -391,9 +368,8 @@ int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexce
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept {
     // Modding mechanism: allow files to be overriden with user files in a specified directory
-    if (ModMgr::isFileOverriden(file)) {
+    if (ModMgr::isFileOverriden(file))
         return ModMgr::seekForOverridenFile(file, offset, mode);
-    }
 
     // If the file handle is invalid then the seek fails
     if ((file.fileHandle <= 0) || (file.fileHandle > MAX_OPEN_FILES))
@@ -437,9 +413,8 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_tell(const PsxCd_File& file) noexcept {
     // Modding mechanism: allow files to be overriden with user files in a specified directory
-    if (ModMgr::isFileOverriden(file)) {
+    if (ModMgr::isFileOverriden(file))
         return ModMgr::tellForOverridenFile(file);
-    }
 
     // If the file handle is invalid then the tell fails
     if ((file.fileHandle <= 0) || (file.fileHandle > MAX_OPEN_FILES))

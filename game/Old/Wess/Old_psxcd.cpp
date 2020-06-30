@@ -2,6 +2,27 @@
 
 #if !PC_PSX_DOOM_MODS
 
+// PSXCD module commands within PsxCd_Command
+enum PsxCd_CmdOp : int32_t {
+    PSXCD_COMMAND_END       = 0,    // Finish up the async read
+    PSXCD_COMMAND_COPY      = 1,    // Copy from the sector buffer to the destination
+    PSXCD_COMMAND_SEEK      = 2,    // Seek to a location
+    PSXCD_COMMAND_READ      = 3,    // Read a number of whole sectors to the destination
+    PSXCD_COMMAND_READCOPY  = 4     // Read a partial sector to the destination, using the sector buffer as an intermediate location
+};
+
+// Holds a command to read sector data
+struct PsxCd_Command {
+    PsxCd_CmdOp     command;        // What command was executed
+    int32_t         amount;         // Number of bytes involved in the read/copy operation
+    uint8_t*        pdest;          // Destination to save bytes to (if required by command type)
+    uint8_t*        psrc;           // Source to get bytes from (if required by command type)
+    CdlLOC          io_loc;         // I/O location for the command
+};
+
+// Sector buffer for when we are reading data
+uint8_t gPSXCD_sectorbuf[CD_SECTOR_SIZE];
+
 // Various flags
 static bool gbPSXCD_init_pos;               // If this flag is false then we need to initialize the cd position for data reading (we don't know it), true if we initialized the cd position
 static bool gbPSXCD_async_on;               // True when there is an asynchronous read happening in data mode
