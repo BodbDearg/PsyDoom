@@ -35,8 +35,6 @@ struct PsxCd_MapTblEntry {
 // Sector buffer for when we are reading data
 extern uint8_t gPSXCD_sectorbuf[CD_SECTOR_SIZE];
 
-void psxcd_sync() noexcept;
-bool psxcd_critical_sync() noexcept;
 void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept;
 void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept;
 void psxcd_disable_callbacks() noexcept;
@@ -45,8 +43,6 @@ void psxcd_init() noexcept;
 void psxcd_exit() noexcept;
 void psxcd_set_data_mode() noexcept;
 PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept;
-void psxcd_init_pos() noexcept;
-bool psxcd_async_on() noexcept;
 bool psxcd_seeking_for_play() noexcept;
 bool psxcd_waiting_for_pause() noexcept;
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;

@@ -13,4 +13,9 @@ struct PsxCd_File {
     uint8_t     io_result[8];       // Result bytes from LIBCD for the last CD operation
 };
 
+void psxcd_sync() noexcept;
+bool psxcd_critical_sync() noexcept;
+bool psxcd_async_on() noexcept;
+void psxcd_init_pos() noexcept;
+
 #endif  // #if !PC_PSX_DOOM_MODS
