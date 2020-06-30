@@ -445,7 +445,7 @@ uint32_t getDecodedSize(const void* const pSrc) noexcept {
             // We are only interested in the byte count in this instance.
             const uint32_t srcByte2 = pSrcByte[1];
             pSrcByte += 2;
-            const int32_t numRepeatedBytes = (srcByte2 & 0xF) + 1;
+            const uint32_t numRepeatedBytes = (srcByte2 & 0xF) + 1;
 
             if (numRepeatedBytes == 1)
                 break;
