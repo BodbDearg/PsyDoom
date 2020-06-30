@@ -244,14 +244,9 @@ int32_t wess_dig_lcd_load(
     if (psxcd_seek(*pLcdFile, CD_SECTOR_SIZE, PsxCd_SeekMode::SET) != 0)
         return 0;
 
-    // Read all of the sound data and upload to the SPU using sector buffer 2 as a temporary
-    #if PC_PSX_DOOM_MODS
-        // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
-        int32_t lcdBytesLeft = pLcdFile->size;
-    #else
-        int32_t lcdBytesLeft = pLcdFile->file.size;
-    #endif
-
+    // Read all of the sound data and upload to the SPU using sector buffer 2 as a temporary.
+    // Note: we've already consumed 1 sector from the file, so the byte count left is adjusted accordingly.
+    int32_t lcdBytesLeft = pLcdFile->size - CD_SECTOR_SIZE;
     int32_t numSpuBytesWritten = 0;
 
     while (lcdBytesLeft > 0) {
