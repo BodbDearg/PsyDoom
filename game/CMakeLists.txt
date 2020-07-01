@@ -161,6 +161,8 @@ set(SOURCE_FILES
     "PcPsx/IniUtils.h"
     "PcPsx/Input.cpp"
     "PcPsx/Input.h"
+    "PcPsx/IsoFileSys.cpp"
+    "PcPsx/IsoFileSys.h"
     "PcPsx/Macros.h"
     "PcPsx/ModMgr.cpp"
     "PcPsx/ModMgr.h"

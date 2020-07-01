@@ -24,7 +24,7 @@ DiscReader::~DiscReader() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the current track which is open for reading or '0' if none
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t DiscReader::getTrack() const noexcept {
+int32_t DiscReader::getTrackNum() const noexcept {
     return mCurTrackIdx + 1;
 }
 
@@ -32,7 +32,7 @@ int32_t DiscReader::getTrack() const noexcept {
 // Switch to the specified track for reading and return 'true' if successful.
 // Note: the offset in the track is initialized to '0' if the current track is changed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool DiscReader::setTrack(int32_t trackNum) noexcept {
+bool DiscReader::setTrackNum(int32_t trackNum) noexcept {
     // If not changing tracks then do nothing
     if (trackNum == mCurTrackIdx + 1)
         return true;

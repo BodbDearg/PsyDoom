@@ -308,7 +308,7 @@ PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
     const PsxCd_MapTblEntry& fileTableEntry = CD_MAP_TBL[(uint32_t) discFile];
     DiscReader& discReader = gDiscReaders[discReaderIdx];
 
-    if (!discReader.setTrack(1)) {
+    if (!discReader.setTrackNum(1)) {
         FatalErrors::raise("psxcd_open: failed to open a disc reader for the data track!");
     }
 

@@ -15,10 +15,13 @@ public:
     DiscReader(DiscInfo& discInfo) noexcept;
     ~DiscReader() noexcept;
 
-    int32_t getTrack() const noexcept;
-    bool setTrack(int32_t trackNum) noexcept;
+    int32_t getTrackNum() const noexcept;
+    bool setTrackNum(int32_t trackNum) noexcept;
+
     bool isTrackOpen() noexcept;
     void closeTrack() noexcept;
+    inline const DiscTrack* getOpenTrack() const { return mpCurTrack; }
+
     bool trackSeekAbs(const int32_t offsetAbs) noexcept;
     bool trackSeekRel(const int32_t offsetRel) noexcept;
     bool read(void* const pBuffer, const int32_t numBytes) noexcept;
