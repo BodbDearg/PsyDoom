@@ -93,7 +93,7 @@ void waitForCdAudioPlaybackStart() noexcept {
     // Wait until some cd audio has been read...
     // This is all the original PSX Doom code did, nothing else:
     while (psxcd_elapsed_sectors() == 0) {
-        // PC-PSX: also update everything (sound etc.) so we can eventually escape this loop and the user can close the window if required.
+        // Also update everything (sound etc.) so we can eventually escape this loop and the user can close the window if required.
         // Since we are waiting a bit we can also yield some CPU time.
         Utils::doPlatformUpdates();
         Utils::threadYield();
@@ -106,13 +106,13 @@ void waitForCdAudioPlaybackStart() noexcept {
 // This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void waitForCdAudioFadeOut() noexcept {
-    // PC-PSX: never wait for fades in headless mode
+    // Never wait for fades in headless mode
     if (ProgArgs::gbHeadlessMode)
         return;
 
     // Wait for the fade to complete...
     while (psxspu_get_cd_fade_status()) {
-        // PC-PSX: also update everything (sound etc.) so we can eventually escape this loop and the user can close the window if required.
+        // Also update everything (sound etc.) so we can eventually escape this loop and the user can close the window if required.
         // Since we are waiting a bit we can also yield some CPU time.
         Utils::doPlatformUpdates();
         Utils::threadYield();
