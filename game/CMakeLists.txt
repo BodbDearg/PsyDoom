@@ -227,6 +227,7 @@ if (PSYDOOM_INCLUDE_OLD_CODE)
     list(APPEND SOURCE_FILES
         "Old/Doom/Base/Old_i_main.cpp"
         "Old/Doom/Base/Old_i_main.h"
+        "Old/Doom/Game/Old_p_setup.cpp"
         "Old/PsyQ/Old_LIBAPI.cpp"
         "Old/PsyQ/Old_LIBAPI.h"
         "Old/PsyQ/Old_LIBCOMB.cpp"
