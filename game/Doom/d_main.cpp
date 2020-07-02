@@ -116,9 +116,9 @@ void D_DoomMain() noexcept {
     // Continue looping until there is input and then execute the main menu until it times out.
     while (true) {
         if (RunTitle() != ga_exit) {
-            if (RunDemo(CdMapTbl_File::DEMO1_LMP) != ga_exit) {
+            if (RunDemo(CdFileId::DEMO1_LMP) != ga_exit) {
                 if (RunCredits() != ga_exit) {
-                    if (RunDemo(CdMapTbl_File::DEMO2_LMP) != ga_exit)
+                    if (RunDemo(CdFileId::DEMO2_LMP) != ga_exit)
                         continue;
                 }
             }
@@ -159,7 +159,7 @@ gameaction_t RunTitle() noexcept {
 // Load and run the specified demo file.
 // The maximum allowed demo size to be handled by this function is 16 KiB.
 //------------------------------------------------------------------------------------------------------------------------------------------
-gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
+gameaction_t RunDemo(const CdFileId file) noexcept {
     // PC-PSX: ensure this required graphic is loaded before starting the demo
     #if PC_PSX_DOOM_MODS
         if (gTex_LOADING.texPageId == 0) {

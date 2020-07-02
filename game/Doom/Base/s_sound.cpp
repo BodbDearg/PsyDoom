@@ -51,7 +51,7 @@ const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
 
 // Defines the settings for one music sequencer track
 struct musicseq_t {
-    CdMapTbl_File   lcdFile;            // LCD file containing the samples used by the music track
+    CdFileId        lcdFile;            // LCD file containing the samples used by the music track
     int32_t         seqIdx;             // What sequence to trigger for the track (from the module file)
     SpuReverbMode   reverbMode;         // What type of reverb to use
     int16_t         reverbDepthL;       // Reverb depth: left
@@ -61,37 +61,37 @@ struct musicseq_t {
 // Definitions for all of the available music sequences in the game.
 // Note that not all of these are unique songs, some of the tracks are simply with different reverb settings.
 static const musicseq_t gMusicSeqDefs[31] = {
-    { CdMapTbl_File{},          0,      SPU_REV_MODE_OFF,       0x0000, 0x0000 },
-    { CdMapTbl_File::MUSLEV1,   90,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
-    { CdMapTbl_File::MUSLEV2,   91,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
-    { CdMapTbl_File::MUSLEV3,   92,     SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
-    { CdMapTbl_File::MUSLEV4,   93,     SPU_REV_MODE_HALL,      0x17FF, 0x17FF },
-    { CdMapTbl_File::MUSLEV5,   94,     SPU_REV_MODE_STUDIO_A,  0x23FF, 0x23FF },
-    { CdMapTbl_File::MUSLEV6,   95,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV7,   96,     SPU_REV_MODE_STUDIO_C,  0x26FF, 0x26FF },
-    { CdMapTbl_File::MUSLEV8,   97,     SPU_REV_MODE_STUDIO_B,  0x2DFF, 0x2DFF },
-    { CdMapTbl_File::MUSLEV9,   98,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
-    { CdMapTbl_File::MUSLEV10,  99,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
-    { CdMapTbl_File::MUSLEV11,  100,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV12,  101,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV13,  102,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
-    { CdMapTbl_File::MUSLEV14,  103,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV15,  104,    SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
-    { CdMapTbl_File::MUSLEV16,  105,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
-    { CdMapTbl_File::MUSLEV17,  106,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV18,  107,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
-    { CdMapTbl_File::MUSLEV19,  108,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV20,  109,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
-    { CdMapTbl_File::MUSLEV19,  108,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
-    { CdMapTbl_File::MUSLEV2,   91,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV1,   90,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV13,  102,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV7,   96,     SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
-    { CdMapTbl_File::MUSLEV16,  105,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
-    { CdMapTbl_File::MUSLEV5,   94,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
-    { CdMapTbl_File::MUSLEV1,   90,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
-    { CdMapTbl_File::MUSLEV17,  106,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
-    { CdMapTbl_File{},          0,      SPU_REV_MODE_OFF,       0x0000, 0x0000 }
+    { CdFileId{},               0,      SPU_REV_MODE_OFF,       0x0000, 0x0000 },
+    { CdFileId::MUSLEV1_LCD,    90,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdFileId::MUSLEV2_LCD,    91,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdFileId::MUSLEV3_LCD,    92,     SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
+    { CdFileId::MUSLEV4_LCD,    93,     SPU_REV_MODE_HALL,      0x17FF, 0x17FF },
+    { CdFileId::MUSLEV5_LCD,    94,     SPU_REV_MODE_STUDIO_A,  0x23FF, 0x23FF },
+    { CdFileId::MUSLEV6_LCD,    95,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV7_LCD,    96,     SPU_REV_MODE_STUDIO_C,  0x26FF, 0x26FF },
+    { CdFileId::MUSLEV8_LCD,    97,     SPU_REV_MODE_STUDIO_B,  0x2DFF, 0x2DFF },
+    { CdFileId::MUSLEV9_LCD,    98,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdFileId::MUSLEV10_LCD,   99,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdFileId::MUSLEV11_LCD,   100,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV12_LCD,   101,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV13_LCD,   102,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdFileId::MUSLEV14_LCD,   103,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV15_LCD,   104,    SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
+    { CdFileId::MUSLEV16_LCD,   105,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdFileId::MUSLEV17_LCD,   106,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV18_LCD,   107,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdFileId::MUSLEV19_LCD,   108,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV20_LCD,   109,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdFileId::MUSLEV19_LCD,   108,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdFileId::MUSLEV2_LCD,    91,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV1_LCD,    90,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV13_LCD,   102,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV7_LCD,    96,     SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
+    { CdFileId::MUSLEV16_LCD,   105,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdFileId::MUSLEV5_LCD,    94,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdFileId::MUSLEV1_LCD,    90,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdFileId::MUSLEV17_LCD,   106,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdFileId{},               0,      SPU_REV_MODE_OFF,       0x0000, 0x0000 }
 };
 
 // How many music sequence tracks there are in the game
@@ -99,74 +99,74 @@ static constexpr uint32_t NUM_MUSIC_SEQS = 20;
 
 // Defines what LCD file to load for a map and what music sequence definition to use
 struct mapaudiodef_t {
-    CdMapTbl_File   sfxLcdFile;     // LCD file SFX for monsters on the map
-    uint32_t        musicSeqIdx;    // Index of the music sequence to use
+    CdFileId    sfxLcdFile;     // LCD file SFX for monsters on the map
+    uint32_t    musicSeqIdx;    // Index of the music sequence to use
 };
 
 // What sound LCD file and music track to use for all maps in the game
 static const mapaudiodef_t gMapAudioDefs[62] = {
-    { CdMapTbl_File{},              0   },
-    { CdMapTbl_File::MAP01_LCD,     1   },
-    { CdMapTbl_File::MAP02_LCD,     2   },
-    { CdMapTbl_File::MAP03_LCD,     3   },
-    { CdMapTbl_File::MAP04_LCD,     4   },
-    { CdMapTbl_File::MAP05_LCD,     5   },
-    { CdMapTbl_File::MAP06_LCD,     6   },
-    { CdMapTbl_File::MAP07_LCD,     7   },
-    { CdMapTbl_File::MAP08_LCD,     8   },
-    { CdMapTbl_File::MAP09_LCD,     11  },
-    { CdMapTbl_File::MAP10_LCD,     9   },
-    { CdMapTbl_File::MAP11_LCD,     15  },
-    { CdMapTbl_File::MAP12_LCD,     10  },
-    { CdMapTbl_File::MAP13_LCD,     21  },
-    { CdMapTbl_File::MAP14_LCD,     22  },
-    { CdMapTbl_File::MAP15_LCD,     23  },
-    { CdMapTbl_File::MAP16_LCD,     12  },
-    { CdMapTbl_File::MAP17_LCD,     16  },
-    { CdMapTbl_File::MAP18_LCD,     17  },
-    { CdMapTbl_File::MAP19_LCD,     6   },
-    { CdMapTbl_File::MAP20_LCD,     18  },
-    { CdMapTbl_File::MAP21_LCD,     24  },
-    { CdMapTbl_File::MAP22_LCD,     14  },
-    { CdMapTbl_File::MAP23_LCD,     3   },
-    { CdMapTbl_File::MAP24_LCD,     20  },
-    { CdMapTbl_File::MAP25_LCD,     11  },
-    { CdMapTbl_File::MAP26_LCD,     25  },
-    { CdMapTbl_File::MAP27_LCD,     4   },
-    { CdMapTbl_File::MAP28_LCD,     5   },
-    { CdMapTbl_File::MAP29_LCD,     10  },
-    { CdMapTbl_File::MAP30_LCD,     19  },
-    { CdMapTbl_File::MAP31_LCD,     1   },
-    { CdMapTbl_File::MAP32_LCD,     9   },
-    { CdMapTbl_File::MAP33_LCD,     14  },
-    { CdMapTbl_File::MAP34_LCD,     12  },
-    { CdMapTbl_File::MAP35_LCD,     8   },
-    { CdMapTbl_File::MAP36_LCD,     13  },
-    { CdMapTbl_File::MAP37_LCD,     18  },
-    { CdMapTbl_File::MAP38_LCD,     20  },
-    { CdMapTbl_File::MAP39_LCD,     15  },
-    { CdMapTbl_File::MAP40_LCD,     19  },
-    { CdMapTbl_File::MAP41_LCD,     11  },
-    { CdMapTbl_File::MAP42_LCD,     26  },
-    { CdMapTbl_File::MAP43_LCD,     12  },
-    { CdMapTbl_File::MAP44_LCD,     29  },
-    { CdMapTbl_File::MAP45_LCD,     6   },
-    { CdMapTbl_File::MAP46_LCD,     27  },
-    { CdMapTbl_File::MAP47_LCD,     9   },
-    { CdMapTbl_File::MAP48_LCD,     22  },
-    { CdMapTbl_File::MAP49_LCD,     3   },
-    { CdMapTbl_File::MAP50_LCD,     28  },
-    { CdMapTbl_File::MAP51_LCD,     7   },
-    { CdMapTbl_File::MAP52_LCD,     8   },
-    { CdMapTbl_File::MAP53_LCD,     15  },
-    { CdMapTbl_File::MAP54_LCD,     4   },
-    { CdMapTbl_File::MAP55_LCD,     17  },
-    { CdMapTbl_File::MAP56_LCD,     18  },
-    { CdMapTbl_File::MAP57_LCD,     10  },
-    { CdMapTbl_File::MAP58_LCD,     16  },
-    { CdMapTbl_File::MAP59_LCD,     13  },
-    { CdMapTbl_File::MAP60_LCD,     0   },
-    { CdMapTbl_File{},              0   }
+    { CdFileId{},           0   },
+    { CdFileId::MAP01_LCD,  1   },
+    { CdFileId::MAP02_LCD,  2   },
+    { CdFileId::MAP03_LCD,  3   },
+    { CdFileId::MAP04_LCD,  4   },
+    { CdFileId::MAP05_LCD,  5   },
+    { CdFileId::MAP06_LCD,  6   },
+    { CdFileId::MAP07_LCD,  7   },
+    { CdFileId::MAP08_LCD,  8   },
+    { CdFileId::MAP09_LCD,  11  },
+    { CdFileId::MAP10_LCD,  9   },
+    { CdFileId::MAP11_LCD,  15  },
+    { CdFileId::MAP12_LCD,  10  },
+    { CdFileId::MAP13_LCD,  21  },
+    { CdFileId::MAP14_LCD,  22  },
+    { CdFileId::MAP15_LCD,  23  },
+    { CdFileId::MAP16_LCD,  12  },
+    { CdFileId::MAP17_LCD,  16  },
+    { CdFileId::MAP18_LCD,  17  },
+    { CdFileId::MAP19_LCD,  6   },
+    { CdFileId::MAP20_LCD,  18  },
+    { CdFileId::MAP21_LCD,  24  },
+    { CdFileId::MAP22_LCD,  14  },
+    { CdFileId::MAP23_LCD,  3   },
+    { CdFileId::MAP24_LCD,  20  },
+    { CdFileId::MAP25_LCD,  11  },
+    { CdFileId::MAP26_LCD,  25  },
+    { CdFileId::MAP27_LCD,  4   },
+    { CdFileId::MAP28_LCD,  5   },
+    { CdFileId::MAP29_LCD,  10  },
+    { CdFileId::MAP30_LCD,  19  },
+    { CdFileId::MAP31_LCD,  1   },
+    { CdFileId::MAP32_LCD,  9   },
+    { CdFileId::MAP33_LCD,  14  },
+    { CdFileId::MAP34_LCD,  12  },
+    { CdFileId::MAP35_LCD,  8   },
+    { CdFileId::MAP36_LCD,  13  },
+    { CdFileId::MAP37_LCD,  18  },
+    { CdFileId::MAP38_LCD,  20  },
+    { CdFileId::MAP39_LCD,  15  },
+    { CdFileId::MAP40_LCD,  19  },
+    { CdFileId::MAP41_LCD,  11  },
+    { CdFileId::MAP42_LCD,  26  },
+    { CdFileId::MAP43_LCD,  12  },
+    { CdFileId::MAP44_LCD,  29  },
+    { CdFileId::MAP45_LCD,  6   },
+    { CdFileId::MAP46_LCD,  27  },
+    { CdFileId::MAP47_LCD,  9   },
+    { CdFileId::MAP48_LCD,  22  },
+    { CdFileId::MAP49_LCD,  3   },
+    { CdFileId::MAP50_LCD,  28  },
+    { CdFileId::MAP51_LCD,  7   },
+    { CdFileId::MAP52_LCD,  8   },
+    { CdFileId::MAP53_LCD,  15  },
+    { CdFileId::MAP54_LCD,  4   },
+    { CdFileId::MAP55_LCD,  17  },
+    { CdFileId::MAP56_LCD,  18  },
+    { CdFileId::MAP57_LCD,  10  },
+    { CdFileId::MAP58_LCD,  16  },
+    { CdFileId::MAP59_LCD,  13  },
+    { CdFileId::MAP60_LCD,  0   },
+    { CdFileId{},           0   }
 };
 
 static constexpr fixed_t S_CLIPPING_DIST    = 1124 * FRACUNIT;      // Distance at which (or after) sounds stop playing
@@ -328,7 +328,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     } else {
         // In all other cases ensure it is loaded
         if (!gbDidLoadDoomSfxLcd) {
-            gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdMapTbl_File::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
+            gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdFileId::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
             gbDidLoadDoomSfxLcd = true;
         }
     }
@@ -353,7 +353,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     gLoadedSoundAndMusMapNum = mapIdx;
 
     // Load the sound LCD file for the map
-    if (gMapAudioDefs[mapIdx].sfxLcdFile != CdMapTbl_File{}) {
+    if (gMapAudioDefs[mapIdx].sfxLcdFile != CdFileId{}) {
         wess_dig_lcd_load(gMapAudioDefs[mapIdx].sfxLcdFile, destSpuAddr, &gMapSndBlock, false);
     }
 }
@@ -502,7 +502,7 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     psxcd_init();
 
     // Read the WMD file into the given buffer (assumes it is big enough)
-    PsxCd_File* const pFile = psxcd_open(CdMapTbl_File::DOOMSFX_WMD);
+    PsxCd_File* const pFile = psxcd_open(CdFileId::DOOMSFX_WMD);
 
     #if PC_PSX_DOOM_MODS
         if (!pFile) {
@@ -530,7 +530,7 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     // Initialize the music sequence and LCD (samples file) loaders
     master_status_structure& mstat = *wess_get_master_status();
     wess_dig_lcd_loader_init(&mstat);
-    wess_seq_loader_init(&mstat, CdMapTbl_File::DOOMSFX_WMD, true);
+    wess_seq_loader_init(&mstat, CdFileId::DOOMSFX_WMD, true);
 
     // Load all of the very simple 'music sequences' for sound effects in the game.
     // These are kept loaded at all times since they are small.
@@ -546,7 +546,7 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     // Load the main SFX LCD: this is required for the main menu.
     // Also set the next location to upload to SPU RAM at after the load finishes.
     gbDidLoadDoomSfxLcd = false;
-    gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdMapTbl_File::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
+    gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdFileId::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
     gbDidLoadDoomSfxLcd = true;
 }
 

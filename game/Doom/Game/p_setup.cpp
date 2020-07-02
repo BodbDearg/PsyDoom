@@ -27,7 +27,7 @@
 static constexpr int32_t MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY = 1024 * 48;
 
 // How many maps are in a map folder and the number of files per maps folder etc.
-static constexpr int32_t LEVELS_PER_MAP_FOLDER = (uint32_t) CdMapTbl_File::MAPSPR01_IMG - (uint32_t) CdMapTbl_File::MAP01_WAD;
+static constexpr int32_t LEVELS_PER_MAP_FOLDER = (uint32_t) CdFileId::MAPSPR01_IMG - (uint32_t) CdFileId::MAP01_WAD;
 static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
 
 // Sky stuff
@@ -923,7 +923,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
     const int32_t mapIdxInFolder = mapIndex - mapFolderIdx * LEVELS_PER_MAP_FOLDER;
     const int32_t mapFolderOffset = mapFolderIdx * NUM_FILES_PER_LEVEL * LEVELS_PER_MAP_FOLDER;
-    const CdMapTbl_File mapWadFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
+    const CdFileId mapWadFile = (CdFileId)((int32_t) CdFileId::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
     
     // Open the map wad
     void* const pMapWadFileData = W_OpenMapWad(mapWadFile);
@@ -973,8 +973,8 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
     // Loading map textures and sprites
     if (!gbIsLevelBeingRestarted) {
-        const CdMapTbl_File mapTexFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPTEX01_IMG + mapIdxInFolder + mapFolderOffset);
-        const CdMapTbl_File mapSprFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
+        const CdFileId mapTexFile = (CdFileId)((int32_t) CdFileId::MAPTEX01_IMG + mapIdxInFolder + mapFolderOffset);
+        const CdFileId mapSprFile = (CdFileId)((int32_t) CdFileId::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
         
         P_LoadBlocks(mapTexFile);
         P_Init();
@@ -1020,7 +1020,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PC_PSX_DOOM_MODS
 
-void P_LoadBlocks(const CdMapTbl_File file) noexcept {
+void P_LoadBlocks(const CdFileId file) noexcept {
     // Open the blocks file and get it's size
     const int32_t openFileIdx = OpenFile(file);
     const int32_t fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
@@ -1091,7 +1091,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
 
 #else
 
-void P_LoadBlocks(const CdMapTbl_File file) noexcept {
+void P_LoadBlocks(const CdFileId file) noexcept {
     // Try and load the memory blocks containing lumps from the given file.
     // Retry this a number of times before giving up, if the initial load attempt fails.
     // Presumably this was to try and recover from a bad CD...

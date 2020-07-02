@@ -2,7 +2,7 @@
 
 #include "PcPsx/Endian.h"
 
-enum class CdMapTbl_File : int32_t;
+enum class CdFileId : int32_t;
 
 // This is a mask to chop off the highest bit of the 1st 32-bit word in a lump name.
 // That bit is not part of the name, it is used to indicate whether the lump is compressed or not.
@@ -41,7 +41,7 @@ int32_t W_LumpLength(const int32_t lumpNum) noexcept;
 void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept;
 void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool bDecompress) noexcept;
 void* W_CacheLumpName(const char* const name, const int16_t allocTag, const bool bDecompress) noexcept;
-void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept;
+void* W_OpenMapWad(const CdFileId discFile) noexcept;
 int32_t W_MapLumpLength(const int32_t lumpNum) noexcept;
 int32_t W_MapCheckNumForName(const char* const name) noexcept;
 void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept;

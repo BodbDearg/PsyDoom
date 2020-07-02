@@ -225,7 +225,7 @@ void F2_Start() noexcept {
 
     // Load the background and sprites needed
     I_LoadAndCacheTexLump(gTex_DEMON, "DEMON", 0);
-    P_LoadBlocks(CdMapTbl_File::MAPSPR60_IMG);
+    P_LoadBlocks(CdFileId::MAPSPR60_IMG);
 
     // Initialize the finale text
     const mobjinfo_t& mobjInfo = gMObjInfo[gCastOrder[0].type];

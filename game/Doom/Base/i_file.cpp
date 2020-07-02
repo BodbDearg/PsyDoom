@@ -26,7 +26,7 @@ void InitOpenFileSlots() noexcept {
 // Returns the index of the file in the list file slots.
 // Kills the program with an error on failure to open.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t OpenFile(const CdMapTbl_File discFile) noexcept {
+int32_t OpenFile(const CdFileId discFile) noexcept {
     // Open the file and do a non recoverable error if it fails
     const PsxCd_File* const pOpenedFile = psxcd_open(discFile);
 

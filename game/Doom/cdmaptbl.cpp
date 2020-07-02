@@ -208,26 +208,26 @@ const PsxCd_MapTblEntry CD_MAP_TBL[] = {
     { 0x71D2, 0x8000   },   // MAPTEX64_PAD
     { 0x71E3, 0x2B3D0  },   // DOOMSFX_LCD
     { 0x723A, 0xD8CE   },   // DOOMSFX_WMD
-    { 0x7256, 0xEF30   },   // MUSLEV1
-    { 0x7274, 0x12DE0  },   // MUSLEV10
-    { 0x729A, 0x192D0  },   // MUSLEV11
-    { 0x72CD, 0x1B560  },   // MUSLEV12
-    { 0x7304, 0x120F0  },   // MUSLEV13
-    { 0x7329, 0x198D0  },   // MUSLEV14
-    { 0x735D, 0x14DF0  },   // MUSLEV15
-    { 0x7387, 0x11560  },   // MUSLEV16
-    { 0x73AA, 0x14680  },   // MUSLEV17
-    { 0x73D3, 0x16BD0  },   // MUSLEV18
-    { 0x7401, 0x16970  },   // MUSLEV19
-    { 0x742F, 0x106D0  },   // MUSLEV2
-    { 0x7450, 0x1D8A0  },   // MUSLEV20
-    { 0x748C, 0x21530  },   // MUSLEV3
-    { 0x74CF, 0x193A0  },   // MUSLEV4
-    { 0x7502, 0x1C720  },   // MUSLEV5
-    { 0x753B, 0x18B30  },   // MUSLEV6
-    { 0x756D, 0x19850  },   // MUSLEV7
-    { 0x75A1, 0x1C8D0  },   // MUSLEV8
-    { 0x75DB, 0x1D980  },   // MUSLEV9
+    { 0x7256, 0xEF30   },   // MUSLEV1_LCD
+    { 0x7274, 0x12DE0  },   // MUSLEV10_LCD
+    { 0x729A, 0x192D0  },   // MUSLEV11_LCD
+    { 0x72CD, 0x1B560  },   // MUSLEV12_LCD
+    { 0x7304, 0x120F0  },   // MUSLEV13_LCD
+    { 0x7329, 0x198D0  },   // MUSLEV14_LCD
+    { 0x735D, 0x14DF0  },   // MUSLEV15_LCD
+    { 0x7387, 0x11560  },   // MUSLEV16_LCD
+    { 0x73AA, 0x14680  },   // MUSLEV17_LCD
+    { 0x73D3, 0x16BD0  },   // MUSLEV18_LCD
+    { 0x7401, 0x16970  },   // MUSLEV19_LCD
+    { 0x742F, 0x106D0  },   // MUSLEV2_LCD
+    { 0x7450, 0x1D8A0  },   // MUSLEV20_LCD
+    { 0x748C, 0x21530  },   // MUSLEV3_LCD
+    { 0x74CF, 0x193A0  },   // MUSLEV4_LCD
+    { 0x7502, 0x1C720  },   // MUSLEV5_LCD
+    { 0x753B, 0x18B30  },   // MUSLEV6_LCD
+    { 0x756D, 0x19850  },   // MUSLEV7_LCD
+    { 0x75A1, 0x1C8D0  },   // MUSLEV8_LCD
+    { 0x75DB, 0x1D980  },   // MUSLEV9_LCD
     { 0x7618, 0x23110  },   // MAP01_LCD
     { 0x765F, 0x22FD0  },   // MAP02_LCD
     { 0x76A5, 0x22FD0  },   // MAP03_LCD

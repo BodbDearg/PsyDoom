@@ -2,7 +2,7 @@
 
 #include "PsyQ/LIBCD.h"
 
-enum class CdMapTbl_File : int32_t;
+enum class CdFileId : int32_t;
 
 // Number of bytes in a CD-ROM sector
 static constexpr int32_t CD_SECTOR_SIZE = 2048;
@@ -42,7 +42,7 @@ void psxcd_enable_callbacks() noexcept;
 void psxcd_init() noexcept;
 void psxcd_exit() noexcept;
 void psxcd_set_data_mode() noexcept;
-PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept;
+PsxCd_File* psxcd_open(const CdFileId discFile) noexcept;
 bool psxcd_seeking_for_play() noexcept;
 bool psxcd_waiting_for_pause() noexcept;
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;

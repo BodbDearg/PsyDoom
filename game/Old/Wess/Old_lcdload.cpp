@@ -10,7 +10,7 @@ static PsxCd_File gWess_open_lcd_file;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Opens the specified file for the LCD loader
 //------------------------------------------------------------------------------------------------------------------------------------------
-static PsxCd_File* wess_dig_lcd_data_open(const CdMapTbl_File file) noexcept {
+static PsxCd_File* wess_dig_lcd_data_open(const CdFileId file) noexcept {
     PsxCd_File* const pFile = psxcd_open(file);
     gWess_open_lcd_file = *pFile;
     return pFile;
@@ -47,7 +47,7 @@ int32_t wess_dig_lcd_psxcd_sync() noexcept {
 // The 'override' flag also specifies whether existing sound patches are to have their details overwritten or not.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_dig_lcd_load(
-    const CdMapTbl_File lcdFileToLoad,
+    const CdFileId lcdFileToLoad,
     const uint32_t destSpuAddr,
     SampleBlock* const pSampleBlock,
     const bool bOverride

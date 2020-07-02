@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum class CdMapTbl_File : int32_t;
+enum class CdFileId : int32_t;
 struct master_status_structure;
 struct SampleBlock;
 
@@ -28,7 +28,7 @@ int32_t wess_dig_lcd_data_read(
 ) noexcept;
 
 int32_t wess_dig_lcd_load(
-    const CdMapTbl_File lcdFileToLoad,
+    const CdFileId lcdFileToLoad,
     const uint32_t destSpuAddr,
     SampleBlock* const pSampleBlock,
     const bool bOverride

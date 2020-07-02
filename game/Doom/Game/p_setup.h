@@ -47,6 +47,6 @@ extern void (*gUpdateFireSkyFunc)(texture_t& skyTex);
 
 void P_Init() noexcept;
 void P_SetupLevel(const int32_t mapNum, const skill_t skill) noexcept;
-void P_LoadBlocks(const CdMapTbl_File file) noexcept;
+void P_LoadBlocks(const CdFileId file) noexcept;
 void P_CacheSprite() noexcept;
 void P_CacheMapTexturesWithWidth(const int32_t width) noexcept;

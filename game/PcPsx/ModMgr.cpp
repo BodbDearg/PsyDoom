@@ -16,7 +16,7 @@ BEGIN_NAMESPACE(ModMgr)
 static constexpr uint8_t MAX_OPEN_FILES = 16;
 
 // A list of booleans indicating whether each file in the game can be overriden by a file in the user given 'datadir'.
-// The list is indexed by a 'CdMapTbl_File' value.
+// The list is indexed by a 'CdFileId' value.
 static std::vector<bool> gbFileHasOverrides;
 
 // A list of currently open files.
@@ -31,7 +31,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
 #ifdef WIN32
     // If there is no data dir then there is no overrides
     gbFileHasOverrides.clear();
-    gbFileHasOverrides.resize((uint32_t) CdMapTbl_File::END);
+    gbFileHasOverrides.resize((uint32_t) CdFileId::END);
 
     if (!ProgArgs::gDataDirPath[0])
         return;
@@ -39,7 +39,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
     // Build a map from filename to file index
     std::map<std::string, uint32_t> nameToFileIndex;
 
-    for (uint32_t i = 0; i < (uint32_t) CdMapTbl_File::END; ++i) {
+    for (uint32_t i = 0; i < (uint32_t) CdFileId::END; ++i) {
         nameToFileIndex[CD_MAP_FILENAMES[i]] = i;
     }
 
@@ -116,7 +116,7 @@ void shutdown() noexcept {
     gbFileHasOverrides.shrink_to_fit();
 }
 
-bool areOverridesAvailableForFile(const CdMapTbl_File discFile) noexcept {
+bool areOverridesAvailableForFile(const CdFileId discFile) noexcept {
     const uint32_t fileIdx = (uint32_t) discFile;
     return (fileIdx < gbFileHasOverrides.size() && gbFileHasOverrides[fileIdx]);
 }
@@ -125,12 +125,12 @@ bool isFileOverriden(const PsxCd_File& file) noexcept {
     return (file.overrideFileHandle != 0);
 }
 
-bool openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut) noexcept {
+bool openOverridenFile(const CdFileId discFile, PsxCd_File& fileOut) noexcept {
     // Grab a free open file slot index
     const uint8_t fileSlotIdx = findFreeOpenFileSlotIndex();
 
     // Figure out the path for the file
-    if (discFile >= CdMapTbl_File::END) {
+    if (discFile >= CdFileId::END) {
         FatalErrors::raise("ModMgr::openOverridenFile: invalid file specified!");
     }
 

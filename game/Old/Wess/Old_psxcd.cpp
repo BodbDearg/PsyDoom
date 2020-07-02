@@ -341,7 +341,7 @@ void psxcd_set_data_mode() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Open a specified CD file for reading
 //------------------------------------------------------------------------------------------------------------------------------------------
-PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
+PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
     // Figure out where the file is on disc and save it's size
     const PsxCd_MapTblEntry& fileTableEntry = CD_MAP_TBL[(uint32_t) discFile];
     LIBCD_CdIntToPos(fileTableEntry.startSector, gPSXCD_cdfile.file.pos);

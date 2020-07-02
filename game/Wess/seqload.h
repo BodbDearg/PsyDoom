@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum class CdMapTbl_File : int32_t;
+enum class CdFileId : int32_t;
 struct master_status_structure;
 
 // Types of sequence loader errors
@@ -22,7 +22,7 @@ void wess_seq_loader_install_error_handler(const SeqLoaderErrorHandler handler, 
 bool Is_Seq_Seq_Num_Valid(const int32_t seqIdx) noexcept;
 bool open_sequence_data() noexcept;
 void close_sequence_data() noexcept;
-bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_File moduleFileId, const bool bOpenModuleFile) noexcept;
+bool wess_seq_loader_init(master_status_structure* const pMStat, const CdFileId moduleFileId, const bool bOpenModuleFile) noexcept;
 void wess_seq_loader_exit() noexcept;
 int32_t wess_seq_sizeof(const int32_t seqIdx) noexcept;
 int32_t wess_seq_load(const int32_t seqIdx, void* const pSeqMem) noexcept;

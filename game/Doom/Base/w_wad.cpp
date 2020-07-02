@@ -38,7 +38,7 @@ lumpinfo_t*     gpMapWadLumpInfo;
 void W_Init() noexcept {
     // Initialize the list of open file slots and open the main IWAD file
     InitOpenFileSlots();
-    gMainWadFileIdx = OpenFile(CdMapTbl_File::PSXDOOM_WAD);
+    gMainWadFileIdx = OpenFile(CdFileId::PSXDOOM_WAD);
 
     // Read the header for the IWAD and ensure it has the correct id/magic
     wadinfo_t wadinfo = {};
@@ -249,7 +249,7 @@ void* W_CacheLumpName(const char* const name, const int16_t allocTag, const bool
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Open the specified map wad file, load it entirely into memory and return a pointer to it's data
 //------------------------------------------------------------------------------------------------------------------------------------------
-void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept {
+void* W_OpenMapWad(const CdFileId discFile) noexcept {
     // Load the entire map WAD into memory
     {
         const uint32_t openFileIdx = OpenFile(discFile);

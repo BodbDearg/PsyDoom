@@ -11,7 +11,7 @@ bool gbWess_seq_loader_enable;      // Has the sequence loader been initialized?
 static int32_t                      gWess_num_sequences;            // The number of sequences in the loaded module file
 static int32_t                      gWess_seqld_moduleRefCount;     // Reference count for the opened module file - closed upon reaching '0'
 static PsxCd_File*                  gpWess_seqld_moduleFile;        // The module file from which sequences are loaded
-static CdMapTbl_File                gWess_seqld_moduleFileId;       // File id for the module file
+static CdFileId                     gWess_seqld_moduleFileId;       // File id for the module file
 static master_status_structure*     gpWess_seqld_mstat;             // Saved reference to the master status structure
 static track_header                 gWess_seqld_seqTrackHdr;        // Track header for the current sequence track being loaded
 static track_header                 gWess_seqld_emptyTrackHdr;      // Track header for a generated dummy track for empty sequences with no tracks
@@ -268,7 +268,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
 // Initializes the sequencer loader using the given master status structure and module file, returns 'true' on success.
 // Optionally the module file can be pre-opened in preparation for access later.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_File moduleFileId, const bool bOpenModuleFile) noexcept {
+bool wess_seq_loader_init(master_status_structure* const pMStat, const CdFileId moduleFileId, const bool bOpenModuleFile) noexcept {
     // Some very basic initialization
     gbWess_seq_loader_enable = false;
     gWess_seqld_moduleFileId = moduleFileId;

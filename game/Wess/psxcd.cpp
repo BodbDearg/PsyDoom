@@ -278,11 +278,11 @@ void psxcd_set_data_mode() noexcept {
 // Open a specified CD file for reading.
 // PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
-PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
+PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
     // Zero init the temporary file structure and sanity check the file is valid!
     gPSXCD_cdfile = {};
 
-    if (((int32_t) discFile < 0) || (discFile >= CdMapTbl_File::END)) {
+    if (((int32_t) discFile < 0) || (discFile >= CdFileId::END)) {
         FatalErrors::raise("psxcd_open: invalid file specified!");
     }
 

@@ -159,7 +159,7 @@ bool Wess_init_for_LoadFileData() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Perform I/O while reading a module file: open the specified module file for reading and return it's pointer
 //------------------------------------------------------------------------------------------------------------------------------------------
-PsxCd_File* module_open(const CdMapTbl_File fileId) noexcept {
+PsxCd_File* module_open(const CdFileId fileId) noexcept {
     PsxCd_File* const pFile = psxcd_open(fileId);
     gWess_module_fileref = *pFile;
     return &gWess_module_fileref;
@@ -205,7 +205,7 @@ int32_t get_num_Wess_Sound_Drivers([[maybe_unused]] const int32_t* const* const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Open the given sound file for reading
 //------------------------------------------------------------------------------------------------------------------------------------------
-PsxCd_File* data_open(const CdMapTbl_File fileId) noexcept {
+PsxCd_File* data_open(const CdFileId fileId) noexcept {
     const PsxCd_File* const pFile = psxcd_open(fileId);
     gWess_data_fileref = *pFile;
     return &gWess_data_fileref;

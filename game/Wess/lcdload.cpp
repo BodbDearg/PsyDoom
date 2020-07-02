@@ -197,7 +197,7 @@ int32_t wess_dig_lcd_data_read(
 // replacing original game files with alternate versions on the user's computer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_dig_lcd_load(
-    const CdMapTbl_File lcdFileToLoad,
+    const CdFileId lcdFileToLoad,
     const uint32_t destSpuAddr,
     SampleBlock* const pSampleBlock,
     const bool bOverride

@@ -4,7 +4,7 @@
 
 #include <cstddef>
 
-enum class CdMapTbl_File : int32_t;
+enum class CdFileId : int32_t;
 
 extern int32_t      gTicCon;
 extern int32_t      gPlayersElapsedVBlanks[MAXPLAYERS];
@@ -29,7 +29,7 @@ extern bool         gbDidAbortGame;
 void D_DoomMain() noexcept;
 gameaction_t RunLegals() noexcept;
 gameaction_t RunTitle() noexcept;
-gameaction_t RunDemo(const CdMapTbl_File file) noexcept;
+gameaction_t RunDemo(const CdFileId file) noexcept;
 
 #if PC_PSX_DOOM_MODS
     gameaction_t RunDemoAtPath(const char* const filePath) noexcept;
