@@ -1,0 +1,4366 @@
+From 5f48c56bf636776341b11a230cb9296b69a9b9e8 Mon Sep 17 00:00:00 2001
+From: "darraghcoy@runbox.com" <darraghcoy@runbox.com>
+Date: Mon, 15 Jun 2020 00:48:45 -0700
+Subject: [PATCH] Diffs of interest between Doom and Final Doom
+
+This patch patches the 'PSXDOOM-RE' repository (at 0723d253eaa9e5a36ab2b59c95f7e730514affac) to match 'PSXFINALDOOM-RE' (at 5b81285ca35f1b947bc88a33c598e208ede5ff60).
+It is indended to serve as a quick reference for all the differences between PSX Doom and Final Doom.
+Some unimportant comment differences like changed variable addresses in the original binary are omitted for brevity.
+
+For the full versions of these repositories, visit:
+    https://github.com/Erick194/PSXDOOM-RE
+    https://github.com/Erick194/PSXFINALDOOM-RE
+
+Many thanks to Erick Vásquez García for his work on both these reverse engineering projects, making this easy diff possible.
+
+---
+ PSXDOOM/PSXCDABS.C | 446 +++++++++++++++++----------------------------
+ PSXDOOM/PSXCDABS.H | 444 +++++++++++++++++---------------------------
+ PSXDOOM/PSX_PAD.C  |  60 ++++++
+ PSXDOOM/c_main.c   |  58 ++++--
+ PSXDOOM/cf_main.c  | 346 +++++++++++++++++++++++++++++++----
+ PSXDOOM/d_main.c   |  26 ++-
+ PSXDOOM/doomdata.h |  10 +-
+ PSXDOOM/doomdef.h  |  73 +++++---
+ PSXDOOM/f_main.c   | 200 ++++++++++++++------
+ PSXDOOM/g_game.c   | 110 ++++-------
+ PSXDOOM/in_main.c  | 105 ++++-------
+ PSXDOOM/l_main.c   |   7 +-
+ PSXDOOM/m_main.c   |  49 ++---
+ PSXDOOM/o_main.c   |  71 +++++---
+ PSXDOOM/p_enemy.c  |  26 +--
+ PSXDOOM/p_mobj.c   |   1 -
+ PSXDOOM/p_setup.c  | 107 +++++++++--
+ PSXDOOM/p_spec.c   |   4 +-
+ PSXDOOM/p_spec.h   |   2 +-
+ PSXDOOM/p_switch.c |   2 +
+ PSXDOOM/p_tick.c   |   8 +-
+ PSXDOOM/p_user.c   | 153 ++++++++++------
+ PSXDOOM/psxmain.c  | 159 +++++++++++++---
+ PSXDOOM/pw_main.c  |  66 ++++---
+ PSXDOOM/r_data.c   |   5 -
+ PSXDOOM/r_local.h  |   3 +-
+ PSXDOOM/r_phase2.c |   6 +
+ PSXDOOM/s_sound.c  | 174 ++++++++----------
+ PSXDOOM/st_main.c  |   4 +-
+ PSXDOOM/t_main.c   | 101 +++++-----
+ PSXDOOM/z_zone.c   |   3 +-
+ 31 files changed, 1616 insertions(+), 1213 deletions(-)
+ create mode 100644 PSXDOOM/PSX_PAD.C
+
+diff --git a/PSXDOOM/PSXCDABS.C b/PSXDOOM/PSXCDABS.C
+index 6de623a..052aabe 100644
+--- a/PSXDOOM/PSXCDABS.C
++++ b/PSXDOOM/PSXCDABS.C
+@@ -2,286 +2,170 @@
+ PsxCd_MapTbl cdmaptbl[] = 
+ {
+ 	{23,	68},
+-	{24,	907264},
+-	{469,	32768},
+-	{485,	32768},
+-	{501,	657392},
+-	{822,	3387200},
+-	{2272,	374784},
+-	{2455,	4806088},
+-	{4803,	28196},
+-	{4817,	58304},
+-	{4846,	54552},
+-	{4873,	46124},
+-	{4896,	44844},
+-	{4918,	61588},
+-	{4949,	55100},
+-	{4976,	24416},
+-	{4988,	590344},
+-	{5277,	538668},
+-	{5541,	539124},
+-	{5805,	599804},
+-	{6098,	542608},
+-	{6363,	540092},
+-	{6627,	610152},
+-	{6925,	569128},
+-	{7203,	90744},
+-	{7248,	98652},
+-	{7297,	87032},
+-	{7340,	89728},
+-	{7384,	96636},
+-	{7432,	102092},
+-	{7482,	94632},
+-	{7529,	89024},
+-	{7574,	23512},
+-	{7586,	47200},
+-	{7610,	37120},
+-	{7629,	58980},
+-	{7658,	41452},
+-	{7679,	41744},
+-	{7700,	40452},
+-	{7720,	13212},
+-	{7727,	681400},
+-	{8060,	538364},
+-	{8323,	839084},
+-	{8733,	712692},
+-	{9081,	815644},
+-	{9480,	849720},
+-	{9895,	851488},
+-	{10311,	560564},
+-	{10585,	115168},
+-	{10642,	64668},
+-	{10674,	117700},
+-	{10732,	96036},
+-	{10779,	114880},
+-	{10836,	100588},
+-	{10886,	118028},
+-	{10944,	75608},
+-	{10982,	26192},
+-	{10995,	34844},
+-	{11013,	37460},
+-	{11032,	67584},
+-	{11065,	44536},
+-	{11087,	54204},
+-	{11114,	16240},
+-	{11122,	25256},
+-	{11135,	655924},
+-	{11456,	754608},
+-	{11825,	711920},
+-	{12173,	609232},
+-	{12471,	947256},
+-	{12934,	698412},
+-	{13276,	783292},
+-	{13659,	503360},
+-	{13905,	94700},
+-	{13952,	99824},
+-	{14001,	90168},
+-	{14046,	113084},
+-	{14102,	119052},
+-	{14161,	101824},
+-	{14211,	93508},
+-	{14257,	122260},
+-	{14318,	36092},
+-	{14336,	55228},
+-	{14363,	38620},
+-	{14382,	71392},
+-	{14417,	79124},
+-	{14456,	70688},
+-	{14491,	23548},
+-	{14503,	30096},
+-	{14518,	658696},
+-	{14840,	811608},
+-	{15237,	617220},
+-	{15539,	713644},
+-	{15888,	690772},
+-	{16226,	658504},
+-	{16548,	303772},
+-	{16697,	453732},
+-	{16919,	120520},
+-	{16978,	95616},
+-	{17025,	134144},
+-	{17091,	138792},
+-	{17159,	115788},
+-	{17216,	107636},
+-	{17269,	111304},
+-	{17324,	99928},
+-	{17374,	34424},
+-	{17391,	31812},
+-	{17407,	54264},
+-	{17434,	61796},
+-	{17465,	12760},
+-	{17472,	40412},
+-	{17492,	46432},
+-	{17515,	64972},
+-	{17547,	536376},
+-	{17809,	540772},
+-	{18074,	786920},
+-	{18459,	781336},
+-	{18841,	563728},
+-	{19117,	891472},
+-	{19553,	925360},
+-	{20005,	726232},
+-	{20360,	92832},
+-	{20406,	79672},
+-	{20445,	95636},
+-	{20492,	101916},
+-	{20542,	67744},
+-	{20576,	135548},
+-	{20643,	109668},
+-	{20697,	108968},
+-	{20752,	56652},
+-	{20780,	53028},
+-	{20806,	89220},
+-	{20850,	54560},
+-	{20877,	77656},
+-	{20915,	54032},
+-	{20942,	93852},
+-	{20988,	28216},
+-	{21002,	748724},
+-	{21368,	808468},
+-	{21763,	581464},
+-	{22047,	842888},
+-	{22459,	677172},
+-	{22790,	809260},
+-	{23186,	617784},
+-	{23488,	881152},
+-	{23919,	131496},
+-	{23984,	135640},
+-	{24051,	113068},
+-	{24107,	128592},
+-	{24170,	135508},
+-	{24237,	137308},
+-	{24305,	127780},
+-	{24368,	148004},
+-	{24442,	35168},
+-	{24460,	32840},
+-	{24477,	53120},
+-	{24503,	59788},
+-	{24533,	64036},
+-	{24565,	22640},
+-	{24577,	9828},
+-	{24582,	40960},
+-	{24602,	536716},
+-	{24865,	861136},
+-	{25286,	813132},
+-	{25684,	738880},
+-	{26045,	763852},
+-	{26418,	898916},
+-	{26857,	418288},
+-	{27062,	601328},
+-	{27356,	131980},
+-	{27421,	145340},
+-	{27492,	161620},
+-	{27571,	128848},
+-	{27634,	155948},
+-	{27711,	106412},
+-	{27763,	50408},
+-	{27788,	86568},
+-	{27832,	30796},
+-	{27848,	91964},
+-	{27893,	37592},
+-	{27912,	32768},
+-	{27928,	32768},
+-	{27944,	32768},
+-	{27960,	32768},
+-	{27976,	32768},
+-	{27992,	688812},
+-	{28329,	661156},
+-	{28652,	417300},
+-	{28856,	32768},
+-	{28872,	32768},
+-	{28888,	32768},
+-	{28904,	32768},
+-	{28920,	32768},
+-	{28936,	117464},
+-	{28994,	131544},
+-	{29059,	124532},
+-	{29120,	32768},
+-	{29136,	32768},
+-	{29152,	32768},
+-	{29168,	32768},
+-	{29184,	32768},
+-	{29201,	177104},
+-	{29288,	55502},
+-	{29316,	61232},
+-	{29346,	77280},
+-	{29384,	103120},
+-	{29435,	111968},
+-	{29490,	73968},
+-	{29527,	104656},
+-	{29579,	85488},
+-	{29621,	71008},
+-	{29656,	83584},
+-	{29697,	93136},
+-	{29743,	92528},
+-	{29789,	67280},
+-	{29822,	120992},
+-	{29882,	136496},
+-	{29949,	103328},
+-	{30000,	116512},
+-	{30057,	101168},
+-	{30107,	104528},
+-	{30159,	116944},
+-	{30217,	121216},
+-	{30278,	143632},
+-	{30349,	143312},
+-	{30419,	143312},
+-	{30489,	168112},
+-	{30572,	143312},
+-	{30642,	143312},
+-	{30712,	184160},
+-	{30802,	131872},
+-	{30867,	199920},
+-	{30965,	158576},
+-	{31043,	229632},
+-	{31156,	202112},
+-	{31255,	226912},
+-	{31366,	242960},
+-	{31485,	236304},
+-	{31601,	134800},
+-	{31667,	202384},
+-	{31766,	219632},
+-	{31874,	202112},
+-	{31973,	155664},
+-	{32051,	247024},
+-	{32172,	170960},
+-	{32256,	137200},
+-	{32323,	160832},
+-	{32402,	199920},
+-	{32500,	219632},
+-	{32608,	181248},
+-	{32697,	199920},
+-	{32795,	181248},
+-	{32884,	206496},
+-	{32985,	111456},
+-	{33040,	143312},
+-	{33110,	143312},
+-	{33180,	143312},
+-	{33250,	199920},
+-	{33348,	222544},
+-	{33457,	122240},
+-	{33517,	158352},
+-	{33595,	240768},
+-	{33713,	209920},
+-	{33817,	189056},
+-	{33910,	236480},
+-	{34026,	164176},
+-	{34107,	219792},
+-	{34215,	161536},
+-	{34294,	219904},
+-	{34402,	182400},
+-	{34492,	226480},
+-	{34603,	160832},
+-	{34682,	250064},
+-	{34805,	209216},
+-	{34908,	199920},
+-	{35006,	222544},
+-	{35115,	89712},
+-	{35159,	80992},
+-	{35199,	168112},
+-	{35282,	120416},
+-	{35341,	206496},
+-	{35442,	69888},
+-	{35477,	425904},
++	{24,	913408},
++	{472,	16384},
++	{480,	16384},
++	{488,	3387200},
++	{1938,	376832},
++	{2122,	5136600},
++	{4632,	85868},
++	{4674,	67988},
++	{4708,	78404},
++	{4747,	51376},
++	{4773,	75840},
++	{4811,	51724},
++	{4837,	99460},
++	{4886,	86356},
++	{4929,	686056},
++	{5264,	732792},
++	{5622,	716652},
++	{5972,	444732},
++	{6190,	698124},
++	{6531,	784608},
++	{6915,	614896},
++	{7216,	649376},
++	{7534,	132784},
++	{7599,	129480},
++	{7663,	136540},
++	{7730,	102480},
++	{7781,	110356},
++	{7835,	107072},
++	{7888,	124092},
++	{7949,	117552},
++	{8008,	57568},
++	{8037,	81988},
++	{8078,	57900},
++	{8107,	62468},
++	{8138,	87788},
++	{8181,	32396},
++	{8197,	46772},
++	{8220,	87672},
++	{8263,	781504},
++	{8645,	645684},
++	{8961,	789280},
++	{9347,	713148},
++	{9696,	615120},
++	{9997,	856336},
++	{10416,	771696},
++	{10793,	526456},
++	{11051,	118976},
++	{11110,	120884},
++	{11170,	99168},
++	{11219,	132384},
++	{11284,	133332},
++	{11350,	100776},
++	{11400,	128900},
++	{11463,	134756},
++	{11530,	103792},
++	{11581,	76864},
++	{11619,	113652},
++	{11675,	59648},
++	{11705,	95884},
++	{11752,	62544},
++	{11783,	104704},
++	{11835,	72684},
++	{11871,	598040},
++	{12164,	719768},
++	{12516,	487476},
++	{12755,	748404},
++	{13121,	596992},
++	{13413,	809008},
++	{13809,	597436},
++	{14101,	649132},
++	{14418,	118976},
++	{14477,	111900},
++	{14532,	167684},
++	{14614,	109696},
++	{14668,	129760},
++	{14732,	132596},
++	{14797,	161984},
++	{14877,	156996},
++	{14955,	66776},
++	{14988,	76200},
++	{15026,	67720},
++	{15060,	80656},
++	{15100,	63044},
++	{15131,	64892},
++	{15163,	8},
++	{15164,	8},
++	{15165,	645020},
++	{15480,	713964},
++	{15829,	813564},
++	{16227,	642416},
++	{16541,	835336},
++	{16949,	778648},
++	{17330,	657392},
++	{17651,	8},
++	{17652,	116796},
++	{17710,	137288},
++	{17778,	143776},
++	{17849,	133496},
++	{17915,	128796},
++	{17978,	116360},
++	{18035,	8},
++	{18036,	8},
++	{18038,	205024},
++	{18139,	199920},
++	{18237,	179056},
++	{18325,	111456},
++	{18380,	167280},
++	{18462,	186336},
++	{18553,	181696},
++	{18642,	181568},
++	{18731,	207360},
++	{18833,	184160},
++	{18923,	199920},
++	{19021,	183328},
++	{19111,	179056},
++	{19199,	167696},
++	{19281,	180544},
++	{19370,	164176},
++	{19451,	170832},
++	{19535,	184160},
++	{19625,	143312},
++	{19695,	229824},
++	{19809,	152304},
++	{19884,	201680},
++	{19983,	160832},
++	{20062,	182544},
++	{20152,	184032},
++	{20242,	194800},
++	{20338,	175424},
++	{20424,	165232},
++	{20505,	231712},
++	{20619,	167568},
++	{20702,	105632},
++	{20754,	69600},
++	{20788,	83424},
++	{20829,	88192},
++	{20873,	97808},
++	{20921,	89376},
++	{20965,	109408},
++	{21019,	111120},
++	{21074,	115008},
++	{21131,	141792},
++	{21201,	425904},
++	{21410,	177104},
++	{21497,	104766},
++	{21549,	61232},
++	{21579,	67280},
++	{21612,	136496},
++	{21679,	103328},
++	{21730,	116512},
++	{21787,	101168},
++	{21837,	104528},
++	{21889,	116944},
++	{21947,	121216},
++	{22007,	77280},
++	{22045,	103120},
++	{22096,	111968},
++	{22151,	73968},
++	{22188,	104656},
++	{22240,	85488},
++	{22282,	71008},
++	{22317,	83584},
++	{22358,	93136},
++	{22404,	92528},
++	{22450,	120992},
+ 	{0,	0}
+ };
+\ No newline at end of file
+diff --git a/PSXDOOM/PSXCDABS.H b/PSXDOOM/PSXCDABS.H
+index 9f0cbb0..f853c11 100644
+--- a/PSXDOOM/PSXCDABS.H
++++ b/PSXDOOM/PSXCDABS.H
+@@ -1,283 +1,167 @@
+ #define _SYSTEM_CNF	0
+-#define _SLUS_000_77	1
++#define _SLUS_003_31	1
+ #define _DEMO1_LMP	2
+ #define _DEMO2_LMP	3
+-#define _MAPSPR60_IMG	4
+-#define _MOVIE_STR	5
+-#define _PSXDOOM_EXE	6
+-#define _PSXDOOM_WAD	7
+-#define _MAP01_WAD	8
+-#define _MAP02_WAD	9
+-#define _MAP03_WAD	10
+-#define _MAP04_WAD	11
+-#define _MAP05_WAD	12
+-#define _MAP06_WAD	13
+-#define _MAP07_WAD	14
+-#define _MAP08_WAD	15
+-#define _MAPSPR01_IMG	16
+-#define _MAPSPR02_IMG	17
+-#define _MAPSPR03_IMG	18
+-#define _MAPSPR04_IMG	19
+-#define _MAPSPR05_IMG	20
+-#define _MAPSPR06_IMG	21
+-#define _MAPSPR07_IMG	22
+-#define _MAPSPR08_IMG	23
+-#define _MAPTEX01_IMG	24
+-#define _MAPTEX02_IMG	25
+-#define _MAPTEX03_IMG	26
+-#define _MAPTEX04_IMG	27
+-#define _MAPTEX05_IMG	28
+-#define _MAPTEX06_IMG	29
+-#define _MAPTEX07_IMG	30
+-#define _MAPTEX08_IMG	31
+-#define _MAP09_WAD	32
+-#define _MAP10_WAD	33
+-#define _MAP11_WAD	34
+-#define _MAP12_WAD	35
+-#define _MAP13_WAD	36
+-#define _MAP14_WAD	37
+-#define _MAP15_WAD	38
+-#define _MAP16_WAD	39
+-#define _MAPSPR09_IMG	40
+-#define _MAPSPR10_IMG	41
+-#define _MAPSPR11_IMG	42
+-#define _MAPSPR12_IMG	43
+-#define _MAPSPR13_IMG	44
+-#define _MAPSPR14_IMG	45
+-#define _MAPSPR15_IMG	46
+-#define _MAPSPR16_IMG	47
+-#define _MAPTEX09_IMG	48
+-#define _MAPTEX10_IMG	49
+-#define _MAPTEX11_IMG	50
+-#define _MAPTEX12_IMG	51
+-#define _MAPTEX13_IMG	52
+-#define _MAPTEX14_IMG	53
+-#define _MAPTEX15_IMG	54
+-#define _MAPTEX16_IMG	55
+-#define _MAP17_WAD	56
+-#define _MAP18_WAD	57
+-#define _MAP19_WAD	58
+-#define _MAP20_WAD	59
+-#define _MAP21_WAD	60
+-#define _MAP22_WAD	61
+-#define _MAP23_WAD	62
+-#define _MAP24_WAD	63
+-#define _MAPSPR17_IMG	64
+-#define _MAPSPR18_IMG	65
+-#define _MAPSPR19_IMG	66
+-#define _MAPSPR20_IMG	67
+-#define _MAPSPR21_IMG	68
+-#define _MAPSPR22_IMG	69
+-#define _MAPSPR23_IMG	70
+-#define _MAPSPR24_IMG	71
+-#define _MAPTEX17_IMG	72
+-#define _MAPTEX18_IMG	73
+-#define _MAPTEX19_IMG	74
+-#define _MAPTEX20_IMG	75
+-#define _MAPTEX21_IMG	76
+-#define _MAPTEX22_IMG	77
+-#define _MAPTEX23_IMG	78
+-#define _MAPTEX24_IMG	79
+-#define _MAP25_WAD	80
+-#define _MAP26_WAD	81
+-#define _MAP27_WAD	82
+-#define _MAP28_WAD	83
+-#define _MAP29_WAD	84
+-#define _MAP30_WAD	85
+-#define _MAP31_WAD	86
+-#define _MAP32_WAD	87
+-#define _MAPSPR25_IMG	88
+-#define _MAPSPR26_IMG	89
+-#define _MAPSPR27_IMG	90
+-#define _MAPSPR28_IMG	91
+-#define _MAPSPR29_IMG	92
+-#define _MAPSPR30_IMG	93
+-#define _MAPSPR31_IMG	94
+-#define _MAPSPR32_IMG	95
+-#define _MAPTEX25_IMG	96
+-#define _MAPTEX26_IMG	97
+-#define _MAPTEX27_IMG	98
+-#define _MAPTEX28_IMG	99
+-#define _MAPTEX29_IMG	100
+-#define _MAPTEX30_IMG	101
+-#define _MAPTEX31_IMG	102
+-#define _MAPTEX32_IMG	103
+-#define _MAP33_WAD	104
+-#define _MAP34_WAD	105
+-#define _MAP35_WAD	106
+-#define _MAP36_WAD	107
+-#define _MAP37_WAD	108
+-#define _MAP38_WAD	109
+-#define _MAP39_WAD	110
+-#define _MAP40_WAD	111
+-#define _MAPSPR33_IMG	112
+-#define _MAPSPR34_IMG	113
+-#define _MAPSPR35_IMG	114
+-#define _MAPSPR36_IMG	115
+-#define _MAPSPR37_IMG	116
+-#define _MAPSPR38_IMG	117
+-#define _MAPSPR39_IMG	118
+-#define _MAPSPR40_IMG	119
+-#define _MAPTEX33_IMG	120
+-#define _MAPTEX34_IMG	121
+-#define _MAPTEX35_IMG	122
+-#define _MAPTEX36_IMG	123
+-#define _MAPTEX37_IMG	124
+-#define _MAPTEX38_IMG	125
+-#define _MAPTEX39_IMG	126
+-#define _MAPTEX40_IMG	127
+-#define _MAP41_WAD	128
+-#define _MAP42_WAD	129
+-#define _MAP43_WAD	130
+-#define _MAP44_WAD	131
+-#define _MAP45_WAD	132
+-#define _MAP46_WAD	133
+-#define _MAP47_WAD	134
+-#define _MAP48_WAD	135
+-#define _MAPSPR41_IMG	136
+-#define _MAPSPR42_IMG	137
+-#define _MAPSPR43_IMG	138
+-#define _MAPSPR44_IMG	139
+-#define _MAPSPR45_IMG	140
+-#define _MAPSPR46_IMG	141
+-#define _MAPSPR47_IMG	142
+-#define _MAPSPR48_IMG	143
+-#define _MAPTEX41_IMG	144
+-#define _MAPTEX42_IMG	145
+-#define _MAPTEX43_IMG	146
+-#define _MAPTEX44_IMG	147
+-#define _MAPTEX45_IMG	148
+-#define _MAPTEX46_IMG	149
+-#define _MAPTEX47_IMG	150
+-#define _MAPTEX48_IMG	151
+-#define _MAP49_WAD	152
+-#define _MAP50_WAD	153
+-#define _MAP51_WAD	154
+-#define _MAP52_WAD	155
+-#define _MAP53_WAD	156
+-#define _MAP54_WAD	157
+-#define _MAP55_WAD	158
+-#define _MAP56_WAD	159
+-#define _MAPSPR49_IMG	160
+-#define _MAPSPR50_IMG	161
+-#define _MAPSPR51_IMG	162
+-#define _MAPSPR52_IMG	163
+-#define _MAPSPR53_IMG	164
+-#define _MAPSPR54_IMG	165
+-#define _MAPSPR55_IMG	166
+-#define _MAPSPR56_IMG	167
+-#define _MAPTEX49_IMG	168
+-#define _MAPTEX50_IMG	169
+-#define _MAPTEX51_IMG	170
+-#define _MAPTEX52_IMG	171
+-#define _MAPTEX53_IMG	172
+-#define _MAPTEX54_IMG	173
+-#define _MAPTEX55_IMG	174
+-#define _MAPTEX56_IMG	175
+-#define _MAP57_WAD	176
+-#define _MAP58_WAD	177
+-#define _MAP59_WAD	178
+-#define _MAP60_PAD	179
+-#define _MAP61_PAD	180
+-#define _MAP62_PAD	181
+-#define _MAP63_PAD	182
+-#define _MAP64_PAD	183
+-#define _MAPSPR57_IMG	184
+-#define _MAPSPR58_IMG	185
+-#define _MAPSPR59_IMG	186
+-#define _MAPSPR60_PAD	187
+-#define _MAPSPR61_PAD	188
+-#define _MAPSPR62_PAD	189
+-#define _MAPSPR63_PAD	190
+-#define _MAPSPR64_PAD	191
+-#define _MAPTEX57_IMG	192
+-#define _MAPTEX58_IMG	193
+-#define _MAPTEX59_IMG	194
+-#define _MAPTEX60_PAD	195
+-#define _MAPTEX61_PAD	196
+-#define _MAPTEX62_PAD	197
+-#define _MAPTEX63_PAD	198
+-#define _MAPTEX64_PAD	199
+-#define _DOOMSFX_LCD	200
+-#define _DOOMSND_WMD	201
+-#define _MUSLEV1_LCD	202
+-#define _MUSLEV10_LCD	203
+-#define _MUSLEV11_LCD	204
+-#define _MUSLEV12_LCD	205
+-#define _MUSLEV13_LCD	206
+-#define _MUSLEV14_LCD	207
+-#define _MUSLEV15_LCD	208
+-#define _MUSLEV16_LCD	209
+-#define _MUSLEV17_LCD	210
+-#define _MUSLEV18_LCD	211
+-#define _MUSLEV19_LCD	212
+-#define _MUSLEV2_LCD	213
+-#define _MUSLEV20_LCD	214
+-#define _MUSLEV3_LCD	215
+-#define _MUSLEV4_LCD	216
+-#define _MUSLEV5_LCD	217
+-#define _MUSLEV6_LCD	218
+-#define _MUSLEV7_LCD	219
+-#define _MUSLEV8_LCD	220
+-#define _MUSLEV9_LCD	221
+-#define _MAP01_LCD	222
+-#define _MAP02_LCD	223
+-#define _MAP03_LCD	224
+-#define _MAP04_LCD	225
+-#define _MAP05_LCD	226
+-#define _MAP06_LCD	227
+-#define _MAP07_LCD	228
+-#define _MAP08_LCD	229
+-#define _MAP09_LCD	230
+-#define _MAP10_LCD	231
+-#define _MAP11_LCD	232
+-#define _MAP12_LCD	233
+-#define _MAP13_LCD	234
+-#define _MAP14_LCD	235
+-#define _MAP15_LCD	236
+-#define _MAP16_LCD	237
+-#define _MAP17_LCD	238
+-#define _MAP18_LCD	239
+-#define _MAP19_LCD	240
+-#define _MAP20_LCD	241
+-#define _MAP21_LCD	242
+-#define _MAP22_LCD	243
+-#define _MAP23_LCD	244
+-#define _MAP24_LCD	245
+-#define _MAP25_LCD	246
+-#define _MAP26_LCD	247
+-#define _MAP27_LCD	248
+-#define _MAP28_LCD	249
+-#define _MAP29_LCD	250
+-#define _MAP30_LCD	251
+-#define _MAP31_LCD	252
+-#define _MAP32_LCD	253
+-#define _MAP33_LCD	254
+-#define _MAP34_LCD	255
+-#define _MAP35_LCD	256
+-#define _MAP36_LCD	257
+-#define _MAP37_LCD	258
+-#define _MAP38_LCD	259
+-#define _MAP39_LCD	260
+-#define _MAP40_LCD	261
+-#define _MAP41_LCD	262
+-#define _MAP42_LCD	263
+-#define _MAP43_LCD	264
+-#define _MAP44_LCD	265
+-#define _MAP45_LCD	266
+-#define _MAP46_LCD	267
+-#define _MAP47_LCD	268
+-#define _MAP48_LCD	269
+-#define _MAP49_LCD	270
+-#define _MAP50_LCD	271
+-#define _MAP51_LCD	272
+-#define _MAP52_LCD	273
+-#define _MAP53_LCD	274
+-#define _MAP54_LCD	275
+-#define _MAP55_LCD	276
+-#define _MAP56_LCD	277
+-#define _MAP57_LCD	278
+-#define _MAP58_LCD	279
+-#define _MAP59_LCD	280
+-#define _MAP60_LCD	281
+-#define MAX_ABS_FILES	282
++#define _MOVIE_STR	4
++#define _PSXDOOM_EXE	5
++#define _PSXDOOM_WAD	6
++#define _MAP01_ROM	7
++#define _MAP02_ROM	8
++#define _MAP03_ROM	9
++#define _MAP04_ROM	10
++#define _MAP05_ROM	11
++#define _MAP06_ROM	12
++#define _MAP07_ROM	13
++#define _MAP08_ROM	14
++#define _MAPSPR01_IMG	15
++#define _MAPSPR02_IMG	16
++#define _MAPSPR03_IMG	17
++#define _MAPSPR04_IMG	18
++#define _MAPSPR05_IMG	19
++#define _MAPSPR06_IMG	20
++#define _MAPSPR07_IMG	21
++#define _MAPSPR08_IMG	22
++#define _MAPTEX01_IMG	23
++#define _MAPTEX02_IMG	24
++#define _MAPTEX03_IMG	25
++#define _MAPTEX04_IMG	26
++#define _MAPTEX05_IMG	27
++#define _MAPTEX06_IMG	28
++#define _MAPTEX07_IMG	29
++#define _MAPTEX08_IMG	30
++#define _MAP09_ROM	31
++#define _MAP10_ROM	32
++#define _MAP11_ROM	33
++#define _MAP12_ROM	34
++#define _MAP13_ROM	35
++#define _MAP14_ROM	36
++#define _MAP15_ROM	37
++#define _MAP16_ROM	38
++#define _MAPSPR09_IMG	39
++#define _MAPSPR10_IMG	40
++#define _MAPSPR11_IMG	41
++#define _MAPSPR12_IMG	42
++#define _MAPSPR13_IMG	43
++#define _MAPSPR14_IMG	44
++#define _MAPSPR15_IMG	45
++#define _MAPSPR16_IMG	46
++#define _MAPTEX09_IMG	47
++#define _MAPTEX10_IMG	48
++#define _MAPTEX11_IMG	49
++#define _MAPTEX12_IMG	50
++#define _MAPTEX13_IMG	51
++#define _MAPTEX14_IMG	52
++#define _MAPTEX15_IMG	53
++#define _MAPTEX16_IMG	54
++#define _MAP17_ROM	55
++#define _MAP18_ROM	56
++#define _MAP19_ROM	57
++#define _MAP20_ROM	58
++#define _MAP21_ROM	59
++#define _MAP22_ROM	60
++#define _MAP23_ROM	61
++#define _MAP24_ROM	62
++#define _MAPSPR17_IMG	63
++#define _MAPSPR18_IMG	64
++#define _MAPSPR19_IMG	65
++#define _MAPSPR20_IMG	66
++#define _MAPSPR21_IMG	67
++#define _MAPSPR22_IMG	68
++#define _MAPSPR23_IMG	69
++#define _MAPSPR24_IMG	70
++#define _MAPTEX17_IMG	71
++#define _MAPTEX18_IMG	72
++#define _MAPTEX19_IMG	73
++#define _MAPTEX20_IMG	74
++#define _MAPTEX21_IMG	75
++#define _MAPTEX22_IMG	76
++#define _MAPTEX23_IMG	77
++#define _MAPTEX24_IMG	78
++#define _MAP25_ROM	79
++#define _MAP26_ROM	80
++#define _MAP27_ROM	81
++#define _MAP28_ROM	82
++#define _MAP29_ROM	83
++#define _MAP30_ROM	84
++#define _MAP31_ROM	85
++#define _MAP32_ROM	86
++#define _MAPSPR25_IMG	87
++#define _MAPSPR26_IMG	88
++#define _MAPSPR27_IMG	89
++#define _MAPSPR28_IMG	90
++#define _MAPSPR29_IMG	91
++#define _MAPSPR30_IMG	92
++#define _MAPSPR31_IMG	93
++#define _MAPSPR32_IMG	94
++#define _MAPTEX25_IMG	95
++#define _MAPTEX26_IMG	96
++#define _MAPTEX27_IMG	97
++#define _MAPTEX28_IMG	98
++#define _MAPTEX29_IMG	99
++#define _MAPTEX30_IMG	100
++#define _MAPTEX31_IMG	101
++#define _MAPTEX32_IMG	102
++#define _MAP01_LCD	103
++#define _MAP02_LCD	104
++#define _MAP03_LCD	105
++#define _MAP04_LCD	106
++#define _MAP05_LCD	107
++#define _MAP06_LCD	108
++#define _MAP07_LCD	109
++#define _MAP08_LCD	110
++#define _MAP09_LCD	111
++#define _MAP10_LCD	112
++#define _MAP11_LCD	113
++#define _MAP12_LCD	114
++#define _MAP13_LCD	115
++#define _MAP14_LCD	116
++#define _MAP15_LCD	117
++#define _MAP16_LCD	118
++#define _MAP17_LCD	119
++#define _MAP18_LCD	120
++#define _MAP19_LCD	121
++#define _MAP20_LCD	122
++#define _MAP21_LCD	123
++#define _MAP22_LCD	124
++#define _MAP23_LCD	125
++#define _MAP24_LCD	126
++#define _MAP25_LCD	127
++#define _MAP26_LCD	128
++#define _MAP27_LCD	129
++#define _MAP28_LCD	130
++#define _MAP29_LCD	131
++#define _MAP30_LCD	132
++#define _MUSLEV21_LCD	133
++#define _MUSLEV22_LCD	134
++#define _MUSLEV23_LCD	135
++#define _MUSLEV24_LCD	136
++#define _MUSLEV25_LCD	137
++#define _MUSLEV26_LCD	138
++#define _MUSLEV27_LCD	139
++#define _MUSLEV28_LCD	140
++#define _MUSLEV29_LCD	141
++#define _MUSLEV30_LCD	142
++#define _MAP60_LCD	143
++#define _DOOMSFX_LCD	144
++#define _DOOMSND_WMD	145
++#define _MUSLEV1_LCD	146
++#define _MUSLEV2_LCD	147
++#define _MUSLEV3_LCD	148
++#define _MUSLEV4_LCD	149
++#define _MUSLEV5_LCD	150
++#define _MUSLEV6_LCD	151
++#define _MUSLEV7_LCD	152
++#define _MUSLEV8_LCD	153
++#define _MUSLEV9_LCD	154
++#define _MUSLEV10_LCD	155
++#define _MUSLEV11_LCD	156
++#define _MUSLEV12_LCD	157
++#define _MUSLEV13_LCD	158
++#define _MUSLEV14_LCD	159
++#define _MUSLEV15_LCD	160
++#define _MUSLEV16_LCD	161
++#define _MUSLEV17_LCD	162
++#define _MUSLEV18_LCD	163
++#define _MUSLEV19_LCD	164
++#define _MUSLEV20_LCD	165
++#define MAX_ABS_FILES	166
+diff --git a/PSXDOOM/PSX_PAD.C b/PSXDOOM/PSX_PAD.C
+new file mode 100644
+index 0000000..4d1a61c
+--- /dev/null
++++ b/PSXDOOM/PSX_PAD.C
+@@ -0,0 +1,60 @@
++#include "doomdef.h"
++
++/*
++=================
++=
++= Get_PadButtons
++= PS1 Mouse or PS1 Control
++=
++=================
++*/
++
++int Get_PadButtons(int *buttons)//L80038FDC()
++{
++    int mouse_x, mouse_y;
++    int b_code, b_code1, b_code2;
++
++    /* Apply current buttons */
++    b_code1 = *buttons;
++
++    /* Reads the X / Y movement of the mouse, the left / right buttons, */
++    /* and converts them into flag codes like a normal control */
++
++    mouse_x = ((m_sensitivity + 5) * (signed char)(b_code1 >> 16)) / 100;
++    mouse_y = ((m_sensitivity + 5) * (signed char)(b_code1 >> 24)) / 100;
++
++    if (mouse_y >= 2)
++    {
++        b_code1 |= PAD_DOWN;
++    }
++    else if (mouse_y < -1)
++    {
++        b_code1 |= PAD_UP;
++    }
++
++    if (mouse_x >= 2)
++    {
++        b_code1 |= PAD_RIGHT;
++    }
++    else if (mouse_x < -1)
++    {
++        b_code1 |= PAD_LEFT;
++    }
++
++    b_code2 = b_code1;
++    if (b_code1 & MOUSE_RIGHT)
++    {
++        b_code2 = b_code1 | PAD_TRIANGLE;
++        *buttons = *buttons | PAD_TRIANGLE;
++    }
++
++    b_code = b_code2 & 0xffff;
++    if (b_code1 & MOUSE_LEFT)
++    {
++        *buttons = *buttons | PAD_CROSS;
++        b_code = b_code2 & 0xffff | PAD_CROSS;
++    }
++
++    return b_code;
++}
++
+diff --git a/PSXDOOM/c_main.c b/PSXDOOM/c_main.c
+index 48feff2..6c7a655 100644
+--- a/PSXDOOM/c_main.c
++++ b/PSXDOOM/c_main.c
+@@ -5,6 +5,7 @@
+ 
+ psxobj_t idcredpic[2];  //80097910, 80097930
+ psxobj_t wmscredpic[2]; //80097950, 80097970
++psxobj_t levelcredpic;  //8009a6f0
+ 
+ int c_vframe1 = 0;	    //80077AFC iGp000006ec
+ int c_yscroll;		    //80078080 uGp00000c70
+@@ -20,10 +21,12 @@ int c_next;		        //80077FCC uGp00000bbc
+ 
+ void C_Start(void)//L800369D8()
+ {
++    ImageToVram(&titlepic, "TITLE", 0);
+ 	ImageToVram(&idcredpic[0], "IDCRED1", 0);
+ 	ImageToVram(&idcredpic[1], "IDCRED2", 0);
+ 	ImageToVram(&wmscredpic[0], "WMSCRED1", 0);
+ 	ImageToVram(&wmscredpic[1], "WMSCRED2", 0);
++	ImageToVram(&levelcredpic, "LEVCRED2", 0);
+ 
+ 	c_yscroll = 240;//80078080
+ 	c_next = 0;//80077FCC
+@@ -70,24 +73,28 @@ int C_Ticker(void)//L80036AC0()
+         {
+             c_vframe1 = 2;
+             c_yscroll--;
+-            if (c_next == 0)
++            if (c_next > -1)
+             {
+-                if (c_yscroll < -182)
++                if (c_next < 2)
+                 {
+-                    c_vframe1 = 2;
+-                    c_next = 1;
+-                    c_yscroll = 240;
++                    if (c_yscroll < -256)
++                    {
++                        c_vframe1 = 2;
++                        c_next += 1;
++                        c_yscroll = 240;
++                    }
+                 }
+-            }
+-            else
+-            {
+-                if (c_next != 1)
+-                    c_vframe1 = 2;
+-
+-                if (c_yscroll < -228)
++                else
+                 {
+-                    c_vframe1 = 2;
+-                    exit = ga_exitdemo;
++                    if (c_next != 2)
++                    {
++                        c_vframe1 = 2;
++                    }
++                    else if (c_yscroll < -256)
++                    {
++                        c_vframe1 = 2;
++                        exit = ga_exitdemo;
++                    }
+                 }
+             }
+         }
+@@ -107,23 +114,34 @@ int C_Ticker(void)//L80036AC0()
+ void C_Draw(void) //L80036B58()
+ {
+     int xpos;
++    int pal;
+     psxobj_t *pic;
+ 
+     NextTextureCacheIdx();
+     if (c_next == 0)
+     {
+-        pic = &idcredpic[1];
+-        DrawStaticImage(&idcredpic[0],0,0,(int)palette[18]);
+-        xpos = 9;
++        DrawStaticImage(&titlepic,0,0,(int)palette[17]);
++        pic = &levelcredpic;
++        pal = palette[19];
++        xpos = 11;
+     }
+     else if (c_next == 1)
+     {
+-        pic = &wmscredpic[1];
+         DrawStaticImage(&wmscredpic[0],0,0,(int)palette[19]);
+-        xpos = 7;
++        pic = &wmscredpic[1];
++        pal = palette[19];
++        xpos = 5;
+     }
++    else if (c_next == 2)
++    {
++        DrawStaticImage(&idcredpic[0],0,0,(int)palette[18]);
++        pic = &idcredpic[1];
++        pal = palette[19];
++        xpos = 9;
++    }
++
++    DrawStaticImage(pic, xpos, c_yscroll, pal);
+ 
+-    DrawStaticImage(pic, xpos, c_yscroll, palette[16]);
+     UpdateDrawOTag();
+     DrawRender();
+ }
+diff --git a/PSXDOOM/cf_main.c b/PSXDOOM/cf_main.c
+index 992b9f0..308c893 100644
+--- a/PSXDOOM/cf_main.c
++++ b/PSXDOOM/cf_main.c
+@@ -14,9 +14,17 @@ char fuctionsnames[][16] =//80073B9C
+ 	"Strafe Left",
+ 	"Strafe Right",
+ 	"Weapon Backward",
+-	"Weapon Forward"
++	"Weapon Forward",
++	///New Final Doom
++	"Move Backward",
++	"Move Forward"
+ };
+ 
++// Mouse Variables
++int m_sensitivity   = 50;   //80077FB4|iGp00000664
++int m_leftbutton    = 0;    //80077FB8|iGp00000668
++int m_rightbutton   = 2;    //80077FBC|iGp0000066c
++
+ /*
+ =================
+ =
+@@ -41,10 +49,12 @@ void CF_Start(void)//L8003773C()
+ =================
+ */
+ 
++#define Control_Pad 4
++
+ void CF_Stop(int exit)//L80037780()
+ {
+ 	S_StartSound(NULL, sfx_pistol);
+-	cursorpos[0] = options;
++	cursorpos[0] = Control_Pad;
+ }
+ 
+ /*
+@@ -63,7 +73,7 @@ int CF_Ticker(void)//L800377AC()
+     if ((gamevbls < (int)gametic) && ((gametic & 3) == 0))
+         cursorframe ^= 1;
+ 
+-	buttons = ticbuttons[0];
++	buttons = Get_PadButtons(&ticbuttons[0]);//ticbuttons[0];
+ 
+ 	if (buttons & PAD_ARROWS)
+ 	{
+@@ -75,7 +85,7 @@ int CF_Ticker(void)//L800377AC()
+             if (buttons & PAD_DOWN)
+ 			{
+ 				cursorpos[0]++;
+-				if (cursorpos[0] > 8)
++				if (cursorpos[0] > 9)
+ 					cursorpos[0] = 0;
+ 
+ 				S_StartSound(NULL, sfx_pstop);
+@@ -84,7 +94,7 @@ int CF_Ticker(void)//L800377AC()
+ 			{
+ 				cursorpos[0]--;
+ 				if (cursorpos[0] < 0)
+-					cursorpos[0] = 8;
++					cursorpos[0] = 9;
+ 
+ 				S_StartSound(NULL, sfx_pstop);
+ 			}
+@@ -98,26 +108,41 @@ int CF_Ticker(void)//L800377AC()
+ 	if (buttons & (PAD_START | PAD_SELECT))
+ 		return ga_exit;
+ 
+-	if (buttons != oldticbuttons[0])
++	if (buttons != (unsigned short)oldticbuttons[0])
+ 	{
+-		if (cursorpos[0] < 8)
+-		{
+-			tmpcfg = TempConfiguration;
+-			for (cnt = 0; cnt < 8; cnt++, tmpcfg++)
+-			{
+-				if (buttons & *tmpcfg)
+-				{
+-					ActualConfiguration[cursorpos[0]] = *tmpcfg;
+-					S_StartSound(NULL, sfx_swtchx);
+-					break;
+-				}
+-			}
+-		}
+-		else if (buttons & PAD_ACTION) // Set Default Configuration
+-		{
+-			D_memcpy(&ActualConfiguration, &DefaultConfiguration, sizeof(int) * 8);
+-			S_StartSound(NULL, sfx_swtchx);
+-		}
++        if (cursorpos[0] == 8) // Default
++        {
++            if (buttons & PAD_ACTION)
++            {
++                D_memcpy(&ActualConfiguration, &DefaultConfiguration, sizeof(int) * 8);
++
++                // Apply Mouse Flag Binds
++                ActualConfiguration[m_leftbutton] |= MOUSE_LEFT;
++                ActualConfiguration[m_rightbutton] |= MOUSE_RIGHT;
++
++                S_StartSound(NULL, sfx_swtchx);
++            }
++        }
++        else
++        {
++            if (cursorpos[0] < 8) // Set New Flag Bind
++            {
++                tmpcfg = TempConfiguration;
++                for (cnt = 0; cnt < 8; cnt++, tmpcfg++)
++                {
++                    if ((buttons & *tmpcfg) && !(buttons & (MOUSE_LEFT|MOUSE_RIGHT)))
++                    {
++                        ActualConfiguration[cursorpos[0]] = *tmpcfg;
++                        S_StartSound(NULL, sfx_swtchx);
++                        break;
++                    }
++                }
++            }
++            else if ((cursorpos[0] == 9) && (buttons & PAD_ACTION)) // Exit
++            {
++                return ga_exit;
++            }
++        }
+ 	}
+ 
+ 	return ga_nothing;
+@@ -144,17 +169,17 @@ void CF_Drawer(void)//L80037984()
+ 	{
+ 		for (xpos = 0; xpos < 4; xpos++)
+ 		{
+-			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[0]);
++			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[20]);
+ 		}
+ 	}
+ 
+-	ST_DrawText(-1, 20, "Configuration");//Draw Text
++	ST_DrawText(-1, 15, "Control Pad");//Draw Text
+ 
+ 	//Draw Skull Selector
+-	DrawImage(statuspic.vtpage, palette[16], 10, (cursorpos[0] * 20) + 43, (cursorframe * M_SKULL_W) + M_SKULL_VX, M_SKULL_VY, M_SKULL_W, M_SKULL_H);
++	DrawImage(statuspic.vtpage, palette[16], 10, (cursorpos[0] * 20) + 38, (cursorframe * M_SKULL_W) + M_SKULL_VX, M_SKULL_VY, M_SKULL_W, M_SKULL_H);
+ 
+ 	//Draw Psx Buttons Graphics
+-	ypos = 45;
++	ypos = 40;
+ 	actcfg = ActualConfiguration;
+ 	for (cnt = 0; cnt < 8; cnt++, actcfg++)
+ 	{
+@@ -163,29 +188,282 @@ void CF_Drawer(void)//L80037984()
+ 		tmpcfg = TempConfiguration;
+ 		for (cnt2 = 0; cnt2 < 8; cnt2++, tmpcfg++)
+ 		{
+-			if(*actcfg == *tmpcfg)
++			if(*actcfg & *tmpcfg)
+ 				break;
+ 
+ 			picid++;
+ 		}
+ 		//Draw Buttons PSX
+         if (cursorpos[0] != cnt || !(ticon & 8))
+-            DrawImage(buttonspic.vtpage, palette[0], 32, ypos, buttonspic.vramx + (picid * 16), buttonspic.vramy, 16, 16);
++            DrawImage(buttonspic.vtpage, palette[20], 38, ypos, buttonspic.vramx + (picid * 16), buttonspic.vramy, 16, 16);
+ 
+ 		ypos += 20;
+ 	}
+ 
+ 	//Draw Options names
+-	ypos = 45;
++	ypos = 40;
+ 	for (cnt = 0; cnt < 8; cnt++)
+ 	{
+-		ST_DrawText(70, ypos, fuctionsnames[cnt]);
++		ST_DrawText(65, ypos, fuctionsnames[cnt]);
+ 		ypos += 20;
+ 	}
+ 
+ 	//Draw Default Text
+-    if (cursorpos[0] != cnt || !(ticon & 8))
+-        ST_DrawText(70, (cnt * 20) + 45, "Default");
++    ST_DrawText(65, 200, "Default");
++
++    //Draw Exit Text
++    ST_DrawText(65, 220, "Exit"); /* FIXME */
++
++	UpdateDrawOTag();
++	DrawRender();
++}
++
++/*
++==================================
++=
++=   Mouse Configuration from Final Doom
++=
++==================================
++*/
++
++/*
++=================
++=
++= CFM_Start
++=
++=================
++*/
++
++void CFM_Start(void)//L800381D8()
++{
++	S_StartSound(NULL, sfx_pistol);
++    cursorframe = 0;
++	cursorpos[0] = 0;
++	ImageToVram(&buttonspic, "BUTTONS", 0);
++
++    ActualConfiguration[m_leftbutton ] &= ~MOUSE_LEFT;
++    ActualConfiguration[m_rightbutton] &= ~MOUSE_RIGHT;
++}
++
++/*
++=================
++=
++= CFM_Stop
++=
++=================
++*/
++
++#define Mouse 3
++
++void CFM_Stop(int exit)//L8003825C()
++{
++	S_StartSound(NULL, sfx_pistol);
++
++    ActualConfiguration[m_leftbutton ] |= MOUSE_LEFT;
++    ActualConfiguration[m_rightbutton] |= MOUSE_RIGHT;
++    M_SENSITIVITY[0] = (m_sensitivity * (100*FRACUNIT)) / 92;
++
++	cursorpos[0] = Mouse;
++}
++
++/*
++=================
++=
++= CFM_Ticker
++=
++=================
++*/
++
++int CFM_Ticker(void)//L80038300()
++{
++	unsigned int *tmpcfg;
++	int cnt, buttons, oldbuttons;
++
++    buttons = Get_PadButtons(&ticbuttons[0]);
++    oldbuttons = (unsigned short)oldticbuttons[0];
++
++    if ((gamevbls < (int)gametic) && !(gametic & 3))
++        cursorframe ^= 1;
++
++    if ((buttons != oldbuttons) && (buttons & (PAD_START | PAD_SELECT)))
++    {
++        return ga_exit;
++    }
++
++    if (!(buttons & (PAD_ARROWS | PAD_ACTION)))
++    {
++        m_vframe1[0] = 0;
++        return ga_nothing;
++    }
++
++    m_vframe1[0] -= vblsinframe[0];
++    if (m_vframe1[0] <= 0)
++    {
++        m_vframe1[0] = TICRATE;
++
++        if (buttons & PAD_DOWN)
++        {
++            cursorpos[0]++;
++            if (cursorpos[0] > 4)
++                cursorpos[0] = 0;
++
++            S_StartSound(NULL, sfx_pstop);
++        }
++        else if (buttons & PAD_UP)
++        {
++            cursorpos[0]--;
++            if (cursorpos[0] < 0)
++                cursorpos[0] = 4;
++
++            S_StartSound(NULL, sfx_pstop);
++        }
++
++        if(cursorpos[0] == 1)
++        {
++            if (buttons & PAD_RIGHT)
++			{
++				m_leftbutton++;
++				if (m_leftbutton > 9)
++					m_leftbutton = 9;
++                else
++                    S_StartSound(NULL, sfx_swtchx);
++			}
++			else if (buttons & PAD_LEFT)
++			{
++				m_leftbutton--;
++				if (m_leftbutton < 0)
++					m_leftbutton = 0;
++                else
++                    S_StartSound(NULL, sfx_swtchx);
++			}
++        }
++        else if(cursorpos[0] == 2)
++        {
++            if (buttons & PAD_RIGHT)
++			{
++				m_rightbutton++;
++				if (m_rightbutton > 9)
++					m_rightbutton = 9;
++                else
++                    S_StartSound(NULL, sfx_swtchx);
++			}
++			else if (buttons & PAD_LEFT)
++			{
++				m_rightbutton--;
++				if (m_rightbutton < 0)
++					m_rightbutton = 0;
++                else
++                    S_StartSound(NULL, sfx_swtchx);
++			}
++        }
++    }
++
++    if(cursorpos[0] == 3)//default
++    {
++        if ((buttons != oldbuttons) && (buttons & PAD_ACTION))
++        {
++            m_sensitivity = 50;
++            m_leftbutton = 0;
++            m_rightbutton = 2;
++            S_StartSound(NULL, sfx_swtchx);
++            return ga_nothing;
++        }
++    }
++    else
++    {
++        if (cursorpos[0] < 4)
++        {
++            if (cursorpos[0] == 0)//sensitivity
++            {
++                if (buttons & PAD_RIGHT)
++                {
++                    m_sensitivity++;
++                    if (m_sensitivity > 92)
++                    {
++                        m_sensitivity = 92;
++                        return ga_nothing;
++                    }
++                }
++                else if (buttons & PAD_LEFT)
++                {
++                    m_sensitivity--;
++                    if (m_sensitivity < 8)
++                    {
++                        m_sensitivity = 8;
++                        return ga_nothing;
++                    }
++                }
++
++                if ((m_sensitivity & 1) != 0)
++                {
++                    S_StartSound(NULL, sfx_stnmov);
++                    return ga_nothing;
++                }
++            }
++        }
++        else
++        {
++            if (cursorpos[0] == 4)//exit
++            {
++                if ((buttons != oldbuttons) && (buttons & PAD_ACTION))
++                {
++                    return ga_exit;
++                }
++            }
++        }
++    }
++
++	return ga_nothing;
++}
++
++/*
++=================
++=
++= CFM_Drawer
++=
++=================
++*/
++
++void CFM_Drawer(void)//L80038628()
++{
++	int		picid, cnt, cnt2, xpos, ypos;
++	unsigned int *tmpcfg;
++	unsigned int *actcfg;
++
++	NextTextureCacheIdx();
++
++	//Draw Backround MARB01 Pic
++	for (ypos = 0; ypos < 4; ypos++)
++	{
++		for (xpos = 0; xpos < 4; xpos++)
++		{
++			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[20]);
++		}
++	}
++
++	ST_DrawText(-1, 20, "Mouse");
++	ST_DrawText(64, 50, "Sensitivity");
++
++	//Draw Bar Dial
++	DrawImage(statuspic.vtpage, palette[16], 65, 70, 0, 184, 108, 11);
++	DrawImage(statuspic.vtpage, palette[16], m_sensitivity + 66, 70, 108, 184, 6, 11);
++
++	ST_DrawText(64, 95, "Left Button");
++	ST_DrawText(74, 115, fuctionsnames[m_leftbutton]);
++
++	ST_DrawText(64, 140, "Right_Button");
++	ST_DrawText(74, 160, fuctionsnames[m_rightbutton]);
++
++	ST_DrawText(64, 185, "Default");
++	ST_DrawText(64, 210, "Exit");
++
++	//Draw Skull Selector
++	if(cursorpos[0] == 4)
++        ypos = (cursorpos[0] * 45) + 30;
++    else
++        ypos = (cursorpos[0] * 45) + 48;
++
++	DrawImage(statuspic.vtpage, palette[16], 40, ypos, (cursorframe * M_SKULL_W) + M_SKULL_VX, M_SKULL_VY, M_SKULL_W, M_SKULL_H);
+ 
+ 	UpdateDrawOTag();
+ 	DrawRender();
+diff --git a/PSXDOOM/d_main.c b/PSXDOOM/d_main.c
+index 95fe3f2..d0324d1 100644
+--- a/PSXDOOM/d_main.c
++++ b/PSXDOOM/d_main.c
+@@ -45,19 +45,27 @@ mobj_t		mobjhead;	/* head and tail of mobj list */                    //800A8C74
+ buttons_t   *BT_DATA[MAXPLAYERS];//80077DF4, 80077DF8
+ line_t	    *linespeciallist[MAXLINEANIMS];//0x800973a4
+ 
++//NEW FINAL DOOM
++int M_SENSITIVITY[MAXPLAYERS];  //80078358, 8007835c
++
+ void D_DoomMain (void) //L80012274()
+ {
+ 	byte		*data;
+-	data = (byte *)tempbuffer;
++	//data = (byte *)tempbuffer;
+ 
+ 	//printf("MASTER EDITION BY GEC\n");
+ 
+ 	PSX_INIT();
+ 
++	Z_Init();
++	data = (byte *)Z_Alloc(0x1e000,PU_STATIC,NULL);
++
+ 	/* WMS Sound System Init */
+ 	PsxSoundInit(SetVolPsx(SfxVolume), SetVolPsx(MusVolume), data);
+ 
+-	Z_Init();
++	Z_Free(data);
++
++	//Z_Init();
+ 	Init_Vram_Cache();
+ 	W_Init();
+ 	R_Init();
+@@ -157,7 +167,7 @@ void D_DebugPrint(const char *text, ...)//L800124F8()
+ 	SetShadeTex(debugsprite, 0);
+ 
+ 	setRGB0(debugsprite, 128, 128, 128);
+-	debugsprite->clut = palette[0];
++	debugsprite->clut = palette[16];
+ 
+ 	va_start(args, text);
+ 	D_vsprintf(buffer, text, args);
+diff --git a/PSXDOOM/doomdata.h b/PSXDOOM/doomdata.h
+index 6672f27..89e0294 100644
+--- a/PSXDOOM/doomdata.h
++++ b/PSXDOOM/doomdata.h
+@@ -35,7 +35,8 @@ typedef struct
+ {
+ 	short		textureoffset;
+ 	short		rowoffset;
+-	char		toptexture[8], bottomtexture[8], midtexture[8];
++	//char		toptexture[8], bottomtexture[8], midtexture[8];
++	short		toptexture, bottomtexture, midtexture;
+ 	short		sector;				/* on viewer's side */
+ } mapsidedef_t;
+ 
+@@ -68,12 +69,15 @@ typedef struct
+ // Psx Doom New Flags
+ #define ML_MIDMASKED		0x200
+ #define ML_MIDTRANSLUCENT	0x400
+-#define ML_BLOCKPRJECTILE	0x800
++#define ML_BLOCKPRJECTILE	0x800
++// Psx Final Doom New Flag
++#define ML_MIDCLIPTEXTURE	0x1000
+ 
+ typedef	struct
+ {
+ 	short		floorheight, ceilingheight; //*, *2
+-	char		floorpic[8], ceilingpic[8]; //*4 ,*12
++	//char		floorpic[8], ceilingpic[8]; //*4 ,*12
++	short       floorpic, ceilingpic;
+ 	char		lightlevel;                 //*20
+ 	char		colorid;                    //*21
+ 	short		special, tag;               //*22, *24
+diff --git a/PSXDOOM/doomdef.h b/PSXDOOM/doomdef.h
+index 6133eac..667b693 100644
+--- a/PSXDOOM/doomdef.h
++++ b/PSXDOOM/doomdef.h
+@@ -76,7 +76,7 @@
+ 
+ // PSX Doom
+ 
+-#define LASTLEVEL   60  // 60 is defined as it is the last level map entry, it does not contain a specific map, it is used to limit passwords, load sounds for credits.
++#define LASTLEVEL   31  // 60 is defined as it is the last level map entry, it does not contain a specific map, it is used to limit passwords, load sounds for credits.
+ 
+ /*
+ // Stores information about a texture, including it's dimensions, lump info and texture cache info
+@@ -467,13 +467,18 @@ typedef struct player_s
+ 	int			damagecount, bonuscount;/* for screen flashing */
+ 	mobj_t		*attacker;				/* who did damage (NULL for floors) */
+ 	int			extralight;				/* so gun flashes light up areas */
+-	int			fixedcolormap;			/* can be set to REDCOLORMAP, etc */
+-	int			colormap;				/* 0-3 for which color to draw player */
++	//int		fixedcolormap;			/* can be set to REDCOLORMAP, etc */
++	//int		colormap;				/* 0-3 for which color to draw player */
+ 	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
+ 	boolean		didsecret;				/* true if secret level has been done */
+ 	void		*lastsoundsector;		/* don't flood noise every time */
+ 
+ 	int			automapx, automapy, automapscale, automapflags;
++
++
++	int         mousereactionuse;
++	boolean     mouseuse;
++
+ 	int			turnheld;				/* for accelerative turning */
+ } player_t;
+ 
+@@ -836,6 +841,15 @@ void CF_Stop (int exit);
+ int CF_Ticker (void);
+ void CF_Drawer (void);
+ 
++/*----- */
++/*MOUSE CONFIGURATION */
++/*----- */
++void CFM_Start (void);
++void CFM_Stop (int exit);
++int CFM_Ticker (void);
++void CFM_Drawer (void);
++int Get_PadButtons(int *buttons);
++
+ /*----- */
+ /*STATUS */
+ /*----- */
+@@ -885,27 +899,29 @@ extern	int		vblsinframe[MAXPLAYERS];		/* range from 4 to 8 */
+ /*----- */
+ 
+ /* CONTROL PAD */
+-#define PAD_UP			(1<<12)//4096
+-#define PAD_DOWN		(1<<14)//16384
+-#define PAD_LEFT		(1<<15)//32768
+-#define PAD_RIGHT		(1<<13)//8192
+-#define PAD_TRIANGLE	(1<< 4)//16
+-#define PAD_CROSS		(1<< 6)//64
+-#define PAD_SQUARE		(1<< 7)//128
+-#define PAD_CIRCLE		(1<< 5)//32
+-#define PAD_L1			(1<< 2)//4
+-#define PAD_L2			(1<< 0)//1
+-#define PAD_R1			(1<< 3)//8
+-#define PAD_R2			(1<< 1)//2
+-#define PAD_START		(1<<11)//2048
+-#define PAD_SELECT		(1<< 8)//256
++#define PAD_UP			4096    //(1<<12)
++#define PAD_DOWN		16384   //(1<<14)
++#define PAD_LEFT		32768   //(1<<15)
++#define PAD_RIGHT		8192    //(1<<13)
++#define PAD_TRIANGLE	16      //(1<< 4)
++#define PAD_CROSS		64      //(1<< 6)
++#define PAD_SQUARE		128     //(1<< 7)
++#define PAD_CIRCLE		32      //(1<< 5)
++#define PAD_L1			4       //(1<< 2)
++#define PAD_L2			1       //(1<< 0)
++#define PAD_R1			8       //(1<< 3)
++#define PAD_R2			2       //(1<< 1)
++#define PAD_START		2048    //(1<<11)
++#define PAD_SELECT		256     //(1<< 8)
+ #define PAD_LR			(PAD_L1 | PAD_L2 | PAD_R1 | PAD_R2)//15
+ #define PAD_ARROWS		(PAD_UP | PAD_RIGHT | PAD_DOWN | PAD_LEFT)//61440
+ #define PAD_ACTION		(PAD_TRIANGLE | PAD_CIRCLE | PAD_CROSS | PAD_SQUARE)//240
+ #define PAD_ALL			(PAD_ARROWS | PAD_START | PAD_SELECT | PAD_ACTION | PAD_LR)//63999
+ //MOUSE PAD
+-#define MOUSE_LEFT		(1<<3)//8
+-#define MOUSE_RIGHT		(1<<2)//4
++//#define MOUSE_LEFT		(1<<3)//8
++//#define MOUSE_RIGHT		(1<<2)//4
++#define MOUSE_LEFT		1024    //(1<<10)
++#define MOUSE_RIGHT		512     //(1<< 9)
+ 
+ 
+ typedef struct
+@@ -918,10 +934,17 @@ typedef struct
+ 	unsigned int BT_STRAFERIGHT;	//*20
+ 	unsigned int BT_WEAPONBACKWARD;	//*24
+ 	unsigned int BT_WEAPONFORWARD;	//*28
++	unsigned int BT_MOUSELEFT;	    //*32
++	unsigned int BT_MOUSERIGHT;	    //*36
+ } buttons_t;
+ 
+ extern buttons_t *BT_DATA[MAXPLAYERS];//80077DF4, 80077DF8
+ 
++extern int M_SENSITIVITY[MAXPLAYERS];   //80078358, 8007835c
++extern int m_sensitivity;               //80077FB4|iGp00000664
++extern int m_leftbutton;                //80077FB8|iGp00000668
++extern int m_rightbutton;               //80077FBC|iGp0000066c
++
+ /* psxmain.c */
+ #define MAX_VRAMMEM				256     // # of entries in manager cache
+ #define MAX_DYNAMIC_TPAGE		11      // max # of tpages supported for dynamic memory
+@@ -942,7 +965,12 @@ extern long drawside;
+ extern int	drawsync1;//80077FE4
+ extern int	drawsync2;//80077F3C
+ 
++#define MAX_PAD 34
++extern char    buff_1[MAX_PAD], buff_2[MAX_PAD];   //80099050, 80099074
++extern signed char   *PAD_Rbuf1, *PAD_Rbuf2;       //puGp00000c40, puGp00000c44
++
+ void I_Error(char *error, ...);
++unsigned int I_PadRead(void);// New Final Doom
+ void ImageToVram(psxobj_t *pic, char *name, int lump);
+ void DrawStaticImage(psxobj_t *psxobj, int xpos, int ypos, int pal);
+ void DrawImage(int vtpage, int pal, int xpos, int ypos,  char vramx, char vramy, int width, int height);
+@@ -958,9 +986,9 @@ void Vram_Viewer(int page);
+ 
+ extern boolean cancel_link;
+ extern unsigned int TempConfiguration[8];
+-extern unsigned int ActualConfiguration[8];
+ extern unsigned int DefaultConfiguration[8];
+-extern unsigned int NewConfiguration[8];
++extern unsigned int ActualConfiguration[10];
++extern unsigned int NewConfiguration[10];
+ 
+ void Link_Conection(void);
+ boolean Update_Conection(void);
+@@ -1016,8 +1044,7 @@ enum cdmusic_t {
+     cdmusic_credits_demo,
+     cdmusic_intermission,
+     cdmusic_club_doom,
+-    cdmusic_finale_doom1,
+-    cdmusic_finale_doom2,
++    cdmusic_finale_final_doom,
+     NUM_CD_MUSIC_TRACKS
+ };
+ 
+diff --git a/PSXDOOM/f_main.c b/PSXDOOM/f_main.c
+index b6cafd4..d50d647 100644
+--- a/PSXDOOM/f_main.c
++++ b/PSXDOOM/f_main.c
+@@ -6,34 +6,106 @@
+ #include "r_local.h"
+ 
+ 
+-char endcluster1[][25] =        //8007466c
++#define C_END1_TXT01	"you have assaulted and"
++#define C_END1_TXT02	"triumphed over the most"
++#define C_END1_TXT03	"vicious realms that the"
++#define C_END1_TXT04	"demented minds of our"
++#define C_END1_TXT05	"designers could devise."
++#define C_END1_TXT06	"the havoc you left"
++#define C_END1_TXT07	"behind you as you"
++#define C_END1_TXT08	"smashed your way"
++#define C_END1_TXT09	"through the master"
++#define C_END1_TXT10	"levels is mute tribute"
++#define C_END1_TXT11	"to your prowess."
++#define C_END1_TXT12	"you have earned the"
++#define C_END1_TXT13	"title of"
++#define C_END1_TXT14	"Master of Destruction."
++
++#define C_END2_TXT01	"suddenly all is silent"
++#define C_END2_TXT02	"from one horizon to the"
++#define C_END2_TXT03	"other."
++#define C_END2_TXT04	"the agonizing echo of"
++#define C_END2_TXT05	"hell fades away."
++#define C_END2_TXT06	"the nightmare sky"
++#define C_END2_TXT07	"turns blue."
++#define C_END2_TXT08	"the heaps of monster"
++#define C_END2_TXT09	"corpses begin to dissolve"
++#define C_END2_TXT10	"along with the evil stench"
++#define C_END2_TXT11	"that filled the air."
++#define C_END2_TXT12	"maybe you_have done it."
++#define C_END2_TXT13	"Have you really won..."
++
++#define C_END3_TXT01	"you_gloat_over_the"
++#define C_END3_TXT02	"carcass_of_the_guardian."
++#define C_END3_TXT03	"with_its_death_you_have"
++#define C_END3_TXT04	"wrested_the_accelerator"
++#define C_END3_TXT05	"from_the_stinking_claws"
++#define C_END3_TXT06	"of_hell._you_are_done."
++#define C_END3_TXT07	"hell_has_returned_to"
++#define C_END3_TXT08	"pounding_dead_folks"
++#define C_END3_TXT09	"instead_of_good_live_ones."
++#define C_END3_TXT10	"remember_to_tell_your"
++#define C_END3_TXT11	"grandkids_to_put_a_rocket"
++#define C_END3_TXT12	"launcher_in_your_coffin."
++#define C_END3_TXT13	"If_you_go_to_hell_when"
++#define C_END3_TXT14	"you_die_you_will_need_it"
++#define C_END3_TXT15	"for_some_cleaning_up."
++
++char *endcluster1[] =   //8007517C
+ {
+-	"you have won!",
+-	"your victory enabled",
+-	"humankind to evacuate",
+-	"earth and escape the",
+-	"nightmare.",
+-	"but then earth control",
+-	"pinpoints the source",
+-	"of the alien invasion.",
+-	"you are their only hope.",
+-	"you painfully get up",
+-	"and return to the fray."
++    C_END1_TXT01,
++	C_END1_TXT02,
++	C_END1_TXT03,
++	C_END1_TXT04,
++	C_END1_TXT05,
++	C_END1_TXT06,
++	C_END1_TXT07,
++	C_END1_TXT08,
++	C_END1_TXT09,
++	C_END1_TXT10,
++	C_END1_TXT11,
++	C_END1_TXT12,
++	C_END1_TXT13,
++	C_END1_TXT14,
++	NULL
+ };
+ 
+-char endcluster2[][25] =
++char *endcluster2[] =   //800751B8
+ {
+-	"you did it!",
+-	"by turning the evil of",
+-	"the horrors of hell in",
+-	"upon itself you have",
+-	"destroyed the power of",
+-	"the demons.",
+-	"their dreadful invasion",
+-	"has been stopped cold!",
+-	"now you can retire to",
+-	"a lifetime of frivolity.",
+-	"congratulations!"
++    C_END2_TXT01,
++	C_END2_TXT02,
++	C_END2_TXT03,
++	C_END2_TXT04,
++	C_END2_TXT05,
++	C_END2_TXT06,
++	C_END2_TXT07,
++	C_END2_TXT08,
++	C_END2_TXT09,
++	C_END2_TXT10,
++	C_END2_TXT11,
++	C_END2_TXT12,
++	C_END2_TXT13,
++	NULL
++};
++
++char *endcluster3[] =   //800751F0
++{
++    C_END3_TXT01,
++	C_END3_TXT02,
++	C_END3_TXT03,
++	C_END3_TXT04,
++	C_END3_TXT05,
++	C_END3_TXT06,
++	C_END3_TXT07,
++	C_END3_TXT08,
++	C_END3_TXT09,
++	C_END3_TXT10,
++	C_END3_TXT11,
++	C_END3_TXT12,
++	C_END3_TXT13,
++	C_END3_TXT14,
++	C_END3_TXT15,
++	NULL
+ };
+ 
+ //
+@@ -102,6 +174,8 @@ static int textline;			//80077F38 uGp00000b28
+ static int textcount;			//80077D84 uGp00000974
+ static byte text_array[28];	//L800A8E2C
+ 
++static int textypos;			//uGp00000950
++static char **text;			    //ppuGp00000b5c
+ /*
+ =================
+ =
+@@ -112,16 +186,27 @@ static byte text_array[28];	//L800A8E2C
+ 
+ void END1_Start(void)//L8003D440()
+ {
+-	P_LoadingPlaque(&loadingpic, 95, 109, palette[16]);
++	P_LoadingPlaque(&loadingpic, 95, 109, palette[20]);
+ 	Valloc_Init();
+ 
+ 	TextureCache(&backpic);
+ 
++    if (nextmap == 14)
++    {
++        textypos = 22;
++        text = endcluster1;
++    }
++    else
++    {
++        textypos = 29;
++        text = endcluster2;
++    }
++
+ 	textline = 0;
+ 	textcount = 0;
+ 	text_array[0] = '\0';
+ 
+-	psxcd_play_at_andloop(CD_TRACK[cdmusic_finale_doom1],CDVolume,0,0,CD_TRACK[cdmusic_credits_demo],CDVolume,0,0);
++	psxcd_play_at_andloop(CD_TRACK[cdmusic_finale_final_doom],CDVolume,0,0,CD_TRACK[cdmusic_credits_demo],CDVolume,0,0);
+ 	do { } while (psxcd_elapsed_sectors() == 0);
+ }
+ 
+@@ -149,12 +234,13 @@ void END1_Stop(int exit)//L8003D4E4()
+ 
+ int END1_Ticker(void)//L8003D50C()
+ {
+-	int buttons, oldbuttons, exit;
++	unsigned int buttons, oldbuttons, exit;
++	char *textdata;
+ 
+ 	gameaction = ga_nothing;
+ 
+ 	buttons = ticbuttons[consoleplayer];
+-	oldbuttons = oldticbuttons[consoleplayer];
++	oldbuttons = (unsigned short)oldticbuttons[consoleplayer];
+ 
+ 	P_CheckCheats();
+ 
+@@ -163,24 +249,27 @@ int END1_Ticker(void)//L8003D50C()
+ 	if (gamepaused == false)
+ 	{
+ 	    exit = ga_nothing;
+-        if (textline < 11)
++
++        textdata = text[textline];
++        if(textdata)
+         {
+             if ((gamevbls < (int)gametic) && !(gametic & 1))
+             {
+-                if (endcluster1[textline][textcount] == '\0')
++                if (textdata[textcount] == '\0')
+                 {
+                     textcount = 0;
+                     textline++;
+                 }
+                 else
+                 {
+-                    D_strncpy(text_array, endcluster1[textline], textcount);
++                    D_strncpy(text_array, textdata, textcount);
+                 }
++
+                 text_array[textcount] = '\0';
+                 textcount++;
+             }
+         }
+-        else if ((buttons != oldbuttons) && (buttons & PAD_ACTION))
++        else if (((buttons & 0xffff) != oldbuttons) && (buttons & (PAD_ACTION|MOUSE_LEFT|MOUSE_RIGHT)))
+         {
+             exit = ga_exit;
+         }
+@@ -203,12 +292,12 @@ void END1_Drawer(void)//L8003D660()
+ 
+ 	NextTextureCacheIdx();
+ 
+-	DrawStaticImage(&backpic, 0, 0, palette[0]);
++	DrawStaticImage(&backpic, 0, 0, palette[17]);
+ 
+-	ypos = 45;
++	ypos = textypos;
+ 	for (i = 0; i < textline; i++)
+ 	{
+-		ST_DrawText(-1, ypos, endcluster1[i]);
++		ST_DrawText(-1, ypos, text[i]);
+ 		ypos += 14;
+ 	}
+ 
+@@ -232,7 +321,6 @@ static state_t         *caststate;		//80077DD4 puGp000009c4
+ static boolean			castdeath;		//80077DA4 uGp00000994
+ static int				castframes;		//80077EB4 uGp00000aa4
+ static int				castonmelee;	//80077F90 uGp00000b80
+-static int				textypos;		//80077D3C uGp0000092c
+ static finalestage_t	finalestage;	//80077F94 uGp00000b84
+ 
+ /*
+@@ -245,12 +333,12 @@ static finalestage_t	finalestage;	//80077F94 uGp00000b84
+ 
+ void Cast_Start(void)//L8003D734
+ {
+-	P_LoadingPlaque(&loadingpic, 95, 109, palette[16]);
++	P_LoadingPlaque(&loadingpic, 95, 109, palette[20]);
+ 	Valloc_Init();
+ 
+ 	ImageToVram(&demonpic, "DEMON", 0);
+ 
+-	P_LoadBlocks((char *)_MAPSPR60_IMG);
++	P_LoadBlocks((char *)_MAPSPR31_IMG);
+ 
+ 	text_array[0] = '\0';
+ 
+@@ -263,10 +351,10 @@ void Cast_Start(void)//L8003D734
+ 	castonmelee = 0;
+ 	caststate = &states[mobjinfo[castorder[castnum].type].seestate];
+ 	casttics = states[mobjinfo[castorder[castnum].type].seestate].tics;
+-	textypos = 45;
++	textypos = 15;
+ 
+ 	S_Lcd_Load(LASTLEVEL);
+-	psxcd_play_at_andloop(CD_TRACK[cdmusic_finale_doom2],CDVolume,0,0,CD_TRACK[cdmusic_credits_demo],CDVolume,0,0);
++	psxcd_play_at_andloop(CD_TRACK[cdmusic_finale_final_doom],CDVolume,0,0,CD_TRACK[cdmusic_credits_demo],CDVolume,0,0);
+ 	do {} while (psxcd_elapsed_sectors() == 0);
+ }
+ 
+@@ -294,13 +382,14 @@ void Cast_Stop(int exit)//L8003D860()
+ 
+ int Cast_Ticker(void)//L8003D888()
+ {
+-    int buttons, oldbuttons;
++    unsigned int buttons, oldbuttons;
+ 	int	st, sfx;
++	char *textdata;
+ 
+ 	gameaction = ga_nothing;
+ 
+ 	buttons = ticbuttons[consoleplayer];
+-	oldbuttons = oldticbuttons[consoleplayer];
++	oldbuttons = (unsigned short)oldticbuttons[consoleplayer];
+ 
+ 	P_CheckCheats();
+ 
+@@ -314,20 +403,25 @@ int Cast_Ticker(void)//L8003D888()
+ 		{
+ 			if ((gamevbls < (int)gametic) && !(gametic & 1))
+             {
+-                if (endcluster2[textline][textcount] == '\0')
++                textdata = endcluster3[textline];
++                if(textdata)
+                 {
+-                    textcount = 0;
+-                    textline++;
+-
+-                    if (textline >= 11)//wait all text
+-                        finalestage = F_STAGE_SCROLLTEXT;
++                    if (textdata[textcount] == '\0')
++                    {
++                        textcount = 0;
++                        textline++;
++                    }
++                    else
++                    {
++                        D_strncpy(text_array, textdata, textcount);
++                    }
++                    text_array[textcount] = '\0';
++                    textcount++;
+                 }
+                 else
+                 {
+-                    D_strncpy(text_array, endcluster2[textline], textcount);
++                    finalestage = F_STAGE_SCROLLTEXT;
+                 }
+-                text_array[textcount] = '\0';
+-                textcount++;
+             }
+ 		}
+ 		else if(finalestage == F_STAGE_SCROLLTEXT)
+@@ -341,7 +435,7 @@ int Cast_Ticker(void)//L8003D888()
+ 		{
+ 			if (castdeath == false)
+ 			{
+-				if ((buttons != oldbuttons) && (buttons & PAD_ACTION))
++                if (((buttons & 0xffff) != oldbuttons) && (buttons & (PAD_ACTION|MOUSE_LEFT|MOUSE_RIGHT)))
+ 				{
+ 					S_StartSound(NULL, sfx_shotgn);
+ 
+@@ -488,7 +582,7 @@ void Cast_Drawer(void)//L8003E098()
+ 		ypos = textypos;
+ 		for (i = 0; i < textline; i++)
+ 		{
+-			ST_DrawText(-1, ypos, endcluster2[i]);
++			ST_DrawText(-1, ypos, endcluster3[i]);
+ 			ypos += 14;
+ 		}
+ 
+diff --git a/PSXDOOM/g_game.c b/PSXDOOM/g_game.c
+index ec4c542..2a28adf 100644
+--- a/PSXDOOM/g_game.c
++++ b/PSXDOOM/g_game.c
+@@ -45,7 +45,12 @@ void G_DoLoadLevel (void) //L80012E04()
+ {
+ 	int i;
+ 
+-	P_LoadingPlaque(&loadingpic, 95, 109, palette[16]);
++	P_LoadingPlaque(&loadingpic, 95, 109, palette[20]);
++
++    do {
++        do {} while (wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING);
++    } while (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING);
++
+     S_Lcd_Load(gamemap);
+ 
+ 	for (i = 0; i < MAXPLAYERS; i++)
+@@ -94,7 +99,6 @@ void G_PlayerFinishLevel (int player)//L80012ED4()
+ 	D_memset (p->cards, 0, sizeof (p->cards));
+ 	p->mo->flags &= ~(MF_BLENDMASK1|MF_BLENDMASK2|MF_BLENDMASK3); /* cancel invisibility  */ //PC DOOM ~MF_SHADOW
+ 	p->extralight = 0;                      /* cancel gun flashes  */
+-	p->fixedcolormap = 0;                   /* cancel ir gogles  */
+ 	p->damagecount = 0;                     /* no palette changes  */
+ 	p->bonuscount = 0;
+ }
+@@ -149,68 +153,6 @@ void G_PlayerReborn (int player) //L80012F5C()
+ 
+ void P_SpawnPlayer (mapthing_t *mthing);
+ 
+-#if 0
+-boolean G_CheckSpot (int playernum, mapthing_t *mthing)
+-{
+-	fixed_t         x,y;
+-	subsector_t *ss;
+-	int                     an;
+-	mobj_t		*mo;
+-
+-	x = mthing->x << FRACBITS;
+-	y = mthing->y << FRACBITS;
+-
+-	if (!P_CheckPosition (players[playernum].mo, x, y) )
+-		return false;
+-
+-	ss = R_PointInSubsector (x,y);
+-	an = ( ANG45 * (mthing->angle/45) ) >> ANGLETOFINESHIFT;
+-
+-/* spawn a teleport fog  */
+-	mo = P_SpawnMobj (x+20*finecosine[an], y+20*finesine[an], ss->sector->floorheight
+-	, MT_TFOG);
+-	S_StartSound (mo, sfx_telept);
+-
+-	return true;
+-}
+-#endif
+-
+-/*
+-====================
+-=
+-= G_DeathMatchSpawnPlayer
+-=
+-= Spawns a player at one of the random death match spots
+-= called at level load and each death
+-====================
+-*/
+-
+-#if 0
+-void G_DeathMatchSpawnPlayer (int playernum)
+-{
+-	int             i,j;
+-	int				selections;
+-
+-	selections = deathmatch_p - deathmatchstarts;
+-	if (selections < 4)
+-		I_Error ("Only %i deathmatch spots, 4 required", selections);
+-
+-	for (j=0 ; j<20 ; j++)
+-	{
+-		i = P_Random()%selections;
+-		if (G_CheckSpot (playernum, &deathmatchstarts[i]) )
+-		{
+-			deathmatchstarts[i].type = playernum+1;
+-			P_SpawnPlayer (&deathmatchstarts[i]);
+-			return;
+-		}
+-	}
+-
+-/* no good spot, so the player will probably get stuck  */
+-	P_SpawnPlayer (&playerstarts[playernum]);
+-}
+-#endif
+-
+ /*
+ ====================
+ =
+@@ -384,10 +326,17 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype) //L80013368()
+ 	{
+ 	    playeringame[1] = false;
+ 		BT_DATA[0] = (buttons_t *)ActualConfiguration;
++
++		// New Final Doom Mouse
++		M_SENSITIVITY[0] = (m_sensitivity * (100*FRACUNIT)) / 92;
+ 	}
+ 	else if (netgame <= gt_deathmatch)
+ 	{
+ 		playeringame[1] = true;
++
++		// New Final Doom Mouse
++        M_SENSITIVITY[0] = (M_SENSITIVITY[0] * (100*FRACUNIT)) / 92;
++        M_SENSITIVITY[1] = (M_SENSITIVITY[1] * (100*FRACUNIT)) / 92;
+ 	}
+ 
+ 	demorecording = false;
+@@ -467,7 +416,8 @@ void G_RunGame (void)//L800134FC()
+         /* run a stats intermission */
+         MiniLoop(IN_Start,IN_Stop,IN_Ticker,IN_Drawer);
+ 
+-        if ((!netgame && (gamemap == 30)) && (nextmap == 31))
++        if((!netgame) && (((gamemap == 13) && (nextmap == 14)) ||
++                          ((gamemap == 24) && (nextmap == 25))))
+         {
+             /* run the finale if needed */
+             MiniLoop(END1_Start,END1_Stop,END1_Ticker,END1_Drawer);
+@@ -477,16 +427,13 @@ void G_RunGame (void)//L800134FC()
+ 
+             if(gameaction == ga_restart)
+                 continue;
+-            else
+-            {
+-                if (gameaction != ga_exitdemo)
+-                    startmap = 2;
++
++            if (gameaction == ga_exitdemo)
+                 return;
+-            }
+         }
+         else
+         {
+-            if (nextmap > LASTLEVEL)
++            if (nextmap >= LASTLEVEL)
+             {
+                 /* run the finale if needed */
+                 MiniLoop(Cast_Start, Cast_Stop, Cast_Ticker, Cast_Drawer);
+@@ -499,9 +446,10 @@ void G_RunGame (void)//L800134FC()
+                 else
+                     return;
+             }
+-
+-            gamemap = nextmap;
+         }
++
++        // Set Next Level
++        gamemap = nextmap;
+ 	}
+ }
+ 
+@@ -510,7 +458,8 @@ int G_PlayDemoPtr (void)//(int *demo) L800136E8()
+ {
+ 	int		exit;
+ 	int		skill, map;
+-	int		config[8];
++	int		config[10];// Final Doom change 8 to 10
++	int     sensitivity;
+ 
+ 	skill = BIGLONG(demo_p[0]);
+ 	map = BIGLONG(demo_p[1]);
+@@ -521,7 +470,15 @@ int G_PlayDemoPtr (void)//(int *demo) L800136E8()
+ 
+ 	//set new key configuration
+ 	D_memcpy(ActualConfiguration, demobuffer, sizeof(config));
+-	demobuffer += 8;
++
++	//copy mouse m_sensitivity
++	sensitivity = m_sensitivity;
++
++	//set new mouse m_sensitivity
++	m_sensitivity = demobuffer[10];
++
++	//skip mouse and key configuration
++	demobuffer += 11;// Final Doom change 8 to 1
+ 
+ 	G_InitNew (skill, map, gt_single);
+ 	G_DoLoadLevel ();
+@@ -532,6 +489,9 @@ int G_PlayDemoPtr (void)//(int *demo) L800136E8()
+ 	//restore key configuration
+ 	D_memcpy(ActualConfiguration, config, sizeof(config));
+ 
++	//restore mouse m_sensitivity
++	m_sensitivity = sensitivity;
++
+ 	V_PagFlags &= 1;
+ 	Z_FreeTags(mainzone, (PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE));
+ 	return exit;
+diff --git a/PSXDOOM/in_main.c b/PSXDOOM/in_main.c
+index 76de979..91f84fb 100644
+--- a/PSXDOOM/in_main.c
++++ b/PSXDOOM/in_main.c
+@@ -31,68 +31,39 @@ typedef struct pstats_s
+ //psx
+ char mapnames[][32] =
+ {
+-	//Ultimate Doom
+-	"Hangar",
+-	"Plant",
+-	"Toxin Refinery",
+-	"Command Control",
+-	"Phobos Lab",
+-	"Central Processing",
+-	"Computer Station",
+-	"Phobos Anomaly",
+-	"Deimos Anomaly",
+-	"Containment Area",
+-	"Refinery",
+-	"Deimos Lab",
+-	"Command Center",
+-	"Halls of the Damned",
+-	"Spawning Vats",
+-	"Hell Gate",
+-	"Hell Keep",
+-	"Pandemonium",
+-	"House of Pain",
+-	"Unholy Cathedral",
+-	"Mt. Erebus",
+-	"Limbo",
+-	"Tower Of Babel",
+-	"Hell Beneath",
+-	"Perfect Hatred",
+-	"Sever The Wicked",
+-	"Unruly Evil",
+-	"Unto The Cruel",
+-	"Twilight Descends",
+-	"Threshold of Pain",
+-	//Doom II
+-	"Entryway",
+-	"Underhalls",
+-	"The Gantlet",
+-	"The Focus",
+-	"The Waste Tunnels",
+-	"The Crusher",
+-	"Dead Simple",
+-	"Tricks And Traps",
+-	"The Pit",
+-	"Refueling Base",
+-	"O of Destruction!",
+-	"The Factory",
+-	"The Inmost Dens",
+-	"Suburbs",
+-	"Tenements",
+-	"The Courtyard",
+-	"The Citadel",
+-	"Nirvana",
+-	"The Catacombs",
+-	"Barrels of Fun",
+-	"Bloodfalls",
+-	"The Abandoned Mines",
+-	"Monster Condo",
+-	"Redemption Denied",
+-	//Secret Levels
+-	"Fortress of Mystery",
+-	"The Military Base",
+-	"The Marshes",
+-	"The Mansion",
+-	"Club Doom"
++	// Master Levels
++	"Attack",
++    "Virgil",
++    "Canyon",
++    "Combine",
++    "Catwalk",
++    "Fistula",
++    "Geryon",
++    "Minos",
++    "Nessus",
++    "Paradox",
++    "Subspace",
++    "Subterra",
++    "Vesperas",
++    // TNT
++    "System Control",
++    "Human Barbeque",
++    "Wormhole",
++    "Crater",
++    "Nukage Processing",
++    "Deepest Reaches",
++    "Processing Area",
++    "Lunar Mining Project",
++    "Quarry",
++    "Ballistyx",
++    "Heck",
++    // Plutonia
++    "Congo",
++    "Aztec",
++    "Ghost Town",
++    "Baron's Lair",
++    "The Death Domain",
++    "Onslaught"
+ };
+ 
+ pstats_t	pstats[MAXPLAYERS];//0x80097a04
+@@ -171,9 +142,9 @@ int IN_Ticker(void)//L8003C7FC()
+ 		for (i = 0; i < MAXPLAYERS; i++)
+ 		{
+ 			buttons = ticbuttons[i];
+-			oldbuttons = oldticbuttons[i];
++			oldbuttons = (unsigned short)oldticbuttons[i];
+ 
+-			if ((buttons != oldbuttons) && (buttons & PAD_ACTION))
++			if (((buttons & 0xffff) != oldbuttons) && (buttons & (PAD_ACTION|MOUSE_LEFT|MOUSE_RIGHT)))
+ 			{
+                 acceleratestage++;
+                 if (acceleratestage == 1)
+@@ -301,7 +272,7 @@ void IN_SingleDrawer(void)//L8003CC54()
+ 	int i;
+ 	char password[16];
+ 
+-	DrawStaticImage(&backpic, 0, 0, palette[0]);
++	DrawStaticImage(&backpic, 0, 0, palette[17]);
+ 
+ 	ST_DrawText(-1, 20, mapnames[gamemap-1]);
+ 
+@@ -344,7 +315,7 @@ void IN_CooperativeDrawer(void)//L8003CE24()
+ 	int i;
+ 	char password[16];
+ 
+-	DrawStaticImage(&backpic, 0, 0, palette[0]);
++	DrawStaticImage(&backpic, 0, 0, palette[17]);
+ 
+ 	DrawImage(statuspic.vtpage, palette[16], 139, 20, facedata[0].x, facedata[0].y, facedata[0].w, facedata[0].h);
+ 	ST_DrawText(130, 52, "you");
+@@ -398,7 +369,7 @@ void IN_DeathMachtDrawer(void)//L8003D1B8()
+ 	int i;
+ 	facedata_t *player1, *player2;
+ 
+-	DrawStaticImage(&backpic, 0, 0, palette[0]);
++	DrawStaticImage(&backpic, 0, 0, palette[17]);
+ 
+ 	ST_DrawText(-1, 20, mapnames[gamemap-1]);
+ 	ST_DrawText(-1, 36, "Finished");
+diff --git a/PSXDOOM/l_main.c b/PSXDOOM/l_main.c
+index 677b67b..dbb1eda 100644
+--- a/PSXDOOM/l_main.c
++++ b/PSXDOOM/l_main.c
+@@ -1,11 +1,10 @@
+ /* l_main.c -- legal intro */
+ 
++#if 0 // Final Doom has no legal introduction
++
+ #include "doomdef.h"
+ #include "r_local.h"
+ 
+-int y_scroll;//80077FB8 uGp00000ba8
+-int last_ticon;//80077D38 iGp00000928
+-
+ psxobj_t legalspic;//0x800979b0
+ 
+ /*
+@@ -85,3 +84,5 @@ void L_Draw(void)//L80034E54()
+ 	UpdateDrawOTag();
+ 	DrawRender();
+ }
++
++#endif // 0
+diff --git a/PSXDOOM/m_main.c b/PSXDOOM/m_main.c
+index 86ebe21..30f4495 100644
+--- a/PSXDOOM/m_main.c
++++ b/PSXDOOM/m_main.c
+@@ -26,6 +26,13 @@ char skillnames[][16] = //80073B3C
+ 	#endif // ENABLE_NIGHTMARE
+ };
+ 
++char episodenames[][16] = //80074968
++{
++	"Master Levels",
++	"TNT",
++	"Plutonia"
++};
++
+ typedef enum
+ {
+ 	single,
+@@ -55,18 +62,18 @@ int RunMenu(void)//L8003592C()
+ 			return ga_timeout;
+ 
+ 		NextTextureCacheIdx();
+-		DrawStaticImage(&backpic, 0, 0, palette[0]);
+-		DrawStaticImage(&doompic, 75, 20, palette[17]);
++		DrawStaticImage(&backpic, 0, 0, palette[17]);
++		DrawStaticImage(&doompic, 75, 20, palette[16]);
+ 		UpdateDrawOTag();
+ 		DrawRender();
+ 
+ 		if(starttype == gt_single) break;
+ 
+-		P_LoadingPlaque(&connectpic, 54, 103, palette[0]);
++		P_LoadingPlaque(&connectpic, 54, 103, palette[20]);
+ 		Link_Conection();
+ 		NextTextureCacheIdx();
+-		DrawStaticImage(&backpic, 0, 0, palette[0]);
+-		DrawStaticImage(&doompic, 75, 20, palette[17]);
++		DrawStaticImage(&backpic, 0, 0, palette[17]);
++		DrawStaticImage(&doompic, 75, 20, palette[16]);
+ 		UpdateDrawOTag();
+ 		DrawRender();
+ 		S_StartSound(NULL, sfx_pistol);// SNDPSTOL.mid
+@@ -103,7 +110,7 @@ void M_Start(void)//L80035A9C()
+ 	Valloc_Init();
+ 
+ 	ImageToVram(&loadingpic, "LOADING", 0);
+-	P_LoadingPlaque(&loadingpic, 95, 109, palette[16]);
++	P_LoadingPlaque(&loadingpic, 95, 109, palette[20]);
+ 	S_Lcd_Load(0);
+ 
+ 	ImageToVram(&backpic, "BACK", 0);
+@@ -115,23 +122,23 @@ void M_Start(void)//L80035A9C()
+ 	m_vframe1[0] = 0;
+ 
+ 	if (starttype == gt_single)
+-		movecount = 2;  // Episode '1' = Ultimate DOOM, '2' = Doom II
++		movecount = 3;  // Episode '1' = Master Levels, '2' = TNT , '3' = Plutonia
+     else
+-        movecount = 54; // For multiplayer any of the normal (non secret) maps can be selected
++        movecount = 30; // For multiplayer any of the normal (non secret) maps can be selected
+ 
+ 	if (movecount < startmap)
+     {
+         // Wrap back around if we have to...
+ 		startmap = 1;
+     }
+-    #if GH_UPDATES == 1
++    /*#if GH_UPDATES == 1
+     else if (startmap < 0)
+     {
+         // Start map or episode will be set to '< 0' when the Doom I is finished.
+         // This implies we want to point the user to Doom II:
+         startmap = 2;
+     }
+-    #endif // GH_UPDATES
++    #endif // GH_UPDATES*/
+ 
+     psxcd_play_at_andloop(CD_TRACK[cdmusic_main_menu],CDVolume,0,0,CD_TRACK[cdmusic_main_menu],CDVolume,0,0);
+ 	do {} while (psxcd_elapsed_sectors() == 0);
+@@ -167,7 +174,10 @@ void M_Stop(int exit)//L80035C40()
+ 
+     if (((exit == ga_exit) && (starttype == gt_single)) && (startmap != 1))
+     {
+-        startmap = 31;
++        if(startmap == 2)
++            startmap = 14;
++        else
++            startmap = 25;
+     }
+ }
+ 
+@@ -183,7 +193,7 @@ int M_Ticker(void)//L80035CC4()
+ {
+     int buttons;
+ 
+-    buttons = ticbuttons[0];
++    buttons = Get_PadButtons(&ticbuttons[0]);//ticbuttons[0];
+ 
+     /* exit menu if button press */
+     if (ticbuttons[0] != 0)
+@@ -197,7 +207,7 @@ int M_Ticker(void)//L80035CC4()
+     if ((gamevbls < (int)gametic) && ((gametic & 3) == 0))
+         cursorframe ^= 1;
+ 
+-    if (ticbuttons[0] != oldticbuttons[0])
++    if (ticbuttons[0] != (unsigned short)oldticbuttons[0])
+     {
+         if ((ticbuttons[0] & PAD_START) != 0)
+         {
+@@ -309,9 +319,9 @@ int M_Ticker(void)//L80035CC4()
+                     }
+ 
+                     if (starttype != gt_single)
+-                        movecount = 54;
++                        movecount = 30;
+                     else
+-                        movecount = 2;
++                        movecount = 3;
+ 
+                     if (startmap > movecount)
+                         startmap = 1;
+@@ -335,8 +345,8 @@ int M_Ticker(void)//L80035CC4()
+ void M_Drawer(void)//L80036058()
+ {
+     NextTextureCacheIdx();
+-    DrawStaticImage(&backpic, 0, 0, palette[0]);
+-    DrawStaticImage(&doompic, 75, 20, palette[17]);
++    DrawStaticImage(&backpic, 0, 0, palette[17]);
++    DrawStaticImage(&doompic, 75, 20, palette[16]);
+ 
+     DrawImage(statuspic.vtpage, palette[16], CURSORX, CURSORY(cursorpos[0]) - 2, M_SKULL_VX + (cursorframe * M_SKULL_W), M_SKULL_VY, M_SKULL_W, M_SKULL_H);
+ 
+@@ -344,10 +354,7 @@ void M_Drawer(void)//L80036058()
+     ST_DrawText(90, STARTY[0]+20, gametypenames[starttype]);
+     if (starttype == 0)
+     {
+-        if (startmap == 1)
+-            ST_DrawText(74, STARTY[1], "Ultimate Doom");
+-        else
+-            ST_DrawText(74, STARTY[1], "Doom II");
++        ST_DrawText(74, STARTY[1], episodenames[startmap-1]);
+     }
+     else
+     {
+diff --git a/PSXDOOM/o_main.c b/PSXDOOM/o_main.c
+index 7512332..fd92de2 100644
+--- a/PSXDOOM/o_main.c
++++ b/PSXDOOM/o_main.c
+@@ -16,7 +16,9 @@ char optionsnames[][16] = //8007491C
+ 	"Music Volume",
+ 	"Sound Volume",
+ 	"Password",
+-	"Configuration",
++	//"Configuration",
++	"Mouse",
++	"Control Pad",
+ 	"Main Menu",
+ 	"Restart Level"
+ };
+@@ -28,31 +30,37 @@ typedef struct
+ 	int y;		 //*8
+ } menuitem_t;
+ 
+-menuitem_t menu_intro[5] = //8007497c
++#define MAX_INTRO 6
++#define MAX_SINGLE 7
++#define MAX_NET 4
++
++menuitem_t menu_intro[MAX_INTRO] = //80075328
+ {
+-	{ 0, 62, 65 },
+-	{ 1, 62, 105 },
+-	{ 2, 62, 145 },
+-	{ 3, 62, 170 },
+-	{ 4, 62, 195 },
++	{ 0, 62, 55 },
++	{ 1, 62, 95 },
++	{ 2, 62, 135 },
++	{ 3, 62, 160 },
++	{ 4, 62, 185 },
++	{ 5, 62, 210 },
+ };
+ 
+-menuitem_t menu_single[6] = //800749B8
++menuitem_t menu_single[MAX_SINGLE] = //80075370
+ {
+-	{ 0, 62, 50 },
+-	{ 1, 62, 90 },
+-	{ 2, 62, 130 },
+-	{ 3, 62, 155 },
+-	{ 4, 62, 180 },
+-	{ 5, 62, 205 },
++    { 0, 62, 45 },
++	{ 1, 62, 85 },
++	{ 2, 62, 125 },
++	{ 3, 62, 145 },
++	{ 4, 62, 165 },
++	{ 5, 62, 185 },
++	{ 6, 62, 205 },
+ };
+ 
+-menuitem_t menu_net[4] = //80074A00
++menuitem_t menu_net[MAX_NET] = //800753C4
+ {
+ 	{ 0, 62, 70 },
+ 	{ 1, 62, 110 },
+-	{ 4, 62, 150 },
+-	{ 5, 62, 175 },
++	{ 5, 62, 150 },
++	{ 6, 62, 175 }
+ };
+ 
+ menuitem_t *menuitem;   //800780E4 puGp00000cd4
+@@ -85,18 +93,18 @@ void O_Start(void)//L8003E680()
+         if (gamepaused)
+ 		{
+ 			menuitem = menu_single;
+-			itemlines = 6;
++			itemlines = MAX_SINGLE;
+ 		}
+ 		else
+ 		{
+ 			menuitem = menu_intro;
+-			itemlines = 5;
++			itemlines = MAX_INTRO;
+ 		}
+     }
+ 	else
+ 	{
+ 		menuitem = menu_net;
+-		itemlines = 4;
++		itemlines = MAX_NET;
+ 	}
+ }
+ 
+@@ -137,8 +145,8 @@ int O_Ticker(void)//L8003E764()
+     {
+         if (playeringame[i] != 0)
+         {
+-            buttons = ticbuttons[i];
+-            oldbuttons = oldticbuttons[i];
++            buttons = Get_PadButtons(&ticbuttons[i]); //ticbuttons[i];
++            oldbuttons = (unsigned short)oldticbuttons[i];
+ 
+             if ((buttons != oldbuttons) && (buttons & (PAD_START|PAD_SELECT)))
+             {
+@@ -249,26 +257,33 @@ int O_Ticker(void)//L8003E764()
+                     }
+                     break;
+                 case 2://Password
+-                    if (buttons & PAD_ACTION)
++                    if ((buttons != oldbuttons) && (buttons & PAD_ACTION))
+                     {
+                         if (MiniLoop(PW_Start, PW_Stop, PW_Ticker, PW_Drawer) == ga_warped)
+                             return ga_warped;
+                     }
+                     break;
+-                case 3://Configuration
+-                    if (buttons & PAD_ACTION)
++                case 3://Configuration Mouse
++                    if ((buttons != oldbuttons) && (buttons & PAD_ACTION) &&
++                        ((*(unsigned int*)&PAD_Rbuf2[0]& 0xf0ff) == 0x1000))//Check Mouse
++                    {
++                        MiniLoop(CFM_Start, CFM_Stop, CFM_Ticker, CFM_Drawer);
++                    }
++                    break;
++                case 4://Configuration Pad
++                    if ((buttons != oldbuttons) && (buttons & PAD_ACTION))
+                     {
+                         MiniLoop(CF_Start, CF_Stop, CF_Ticker, CF_Drawer);
+                     }
+                     break;
+-                case 4://Main Menu
++                case 5://Main Menu
+                     if (buttons & PAD_ACTION)
+                     {
+                         S_StartSound(0, sfx_pistol);
+                         return ga_exitdemo;
+                     }
+                     break;
+-                case 5:// Restar Level
++                case 6:// Restar Level
+                     if (buttons & PAD_ACTION)
+                     {
+                         S_StartSound(0, sfx_pistol);
+@@ -305,7 +320,7 @@ void O_Drawer(void)//L8003EC38()
+ 	{
+ 		for (xpos = 0; xpos < 4; xpos++)
+ 		{
+-			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[0]);
++			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[20]);
+ 		}
+ 	}
+ 
+diff --git a/PSXDOOM/p_enemy.c b/PSXDOOM/p_enemy.c
+index 5ba7265..9979f9c 100644
+--- a/PSXDOOM/p_enemy.c
++++ b/PSXDOOM/p_enemy.c
+@@ -1125,40 +1125,22 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)//L80018194()
+ 	int		prestep;
+ 	int		count;
+ 
+-	#if FIX_PE_SKULL_LIMIT == 1
+ 	mobj_t	*mo;
+-	#else
+-	thinker_t*	currentthinker;
+-	#endif // FIX_PE_SKULL_LIMIT
+-
+ 
+ 	// count total number of skull currently on the level
+ 	count = 0;
+-	#if FIX_PE_SKULL_LIMIT == 1
+ 	for (mo=mobjhead.next ; mo != &mobjhead ; mo=mo->next)
+ 	{
+ 		if ((mo->type == MT_SKULL))
+         {
+             count++;
+-        }
+-	}
+ 
+-	#else
+-	currentthinker = thinkercap.next;
+-	while (currentthinker != &thinkercap)
+-	{
+-		if ((currentthinker->function == P_MobjThinker) && ((mobj_t *)currentthinker)->type == MT_SKULL)
+-        {
+-			count++;
++            // if there are allready 16 skulls on the level,
++            // don't spit another one
++            if (count > 16)
++                return;
+         }
+-		currentthinker = currentthinker->next;
+ 	}
+-	#endif // FIX_PE_SKULL_LIMIT
+-
+-	// if there are allready 20 skulls on the level,
+-	// don't spit another one
+-	if (count > 20)
+-		return;
+ 
+ 	// okay, there's playe for another one
+ 	an = angle >> ANGLETOFINESHIFT;
+diff --git a/PSXDOOM/p_mobj.c b/PSXDOOM/p_mobj.c
+index 5ee93c2..19e4738 100644
+--- a/PSXDOOM/p_mobj.c
++++ b/PSXDOOM/p_mobj.c
+@@ -295,7 +295,6 @@ void P_SpawnPlayer (mapthing_t *mthing)//L8001CDD8()
+ 	p->damagecount = 0;
+ 	p->bonuscount = 0;
+ 	p->extralight = 0;
+-	p->fixedcolormap = 0;
+ 	p->viewheight = VIEWHEIGHT;
+ 	p->automapscale = 36;
+ 	p->viewz = mobj->z + VIEWHEIGHT;        //new line psxdoom
+diff --git a/PSXDOOM/p_setup.c b/PSXDOOM/p_setup.c
+index ec94687..4abe419 100644
+--- a/PSXDOOM/p_setup.c
++++ b/PSXDOOM/p_setup.c
+@@ -189,6 +189,10 @@ void P_LoadSectors (int lump)//L80021E5C()
+ 	sector_t		*ss;
+ 	int				skytexture;
+ 	char		    skyname[16];
++
++	// New Final Doom
++	skytexture = W_GetNumForName("F_SKY01") - firstflat;
++
+ 	skyname[0] = 'S';
+ 	skyname[1] = 'K';
+ 	skyname[2] = 'Y';
+@@ -219,7 +223,18 @@ void P_LoadSectors (int lump)//L80021E5C()
+ 		ss->tag = LITTLESHORT(ms->tag);
+ 		ss->flags = LITTLELONG(ms->flags);
+ 
+-		ss->floorpic = R_FlatNumForName(ms->floorpic);
++
++		// New Final Doom
++        ss->floorpic = LITTLESHORT(ms->floorpic);
++        ss->ceilingpic = LITTLESHORT(ms->ceilingpic);
++        if (skytexture <= ss->ceilingpic)
++        {
++            skyname[3] = '0';
++            skyname[4] = '1' + (ss->ceilingpic - skytexture);
++            ss->ceilingpic = -1;
++        }
++
++		/*ss->floorpic = R_FlatNumForName(ms->floorpic);
+ 		if (!D_strncasecmp(ms->ceilingpic, "F_SKY", 5))
+ 		{
+ 			ss->ceilingpic = -1;
+@@ -229,7 +244,7 @@ void P_LoadSectors (int lump)//L80021E5C()
+ 		else
+ 		{
+ 			ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
+-		}
++		}*/
+ 	}
+ 
+ 	skytexturep = NULL;
+@@ -288,23 +303,40 @@ void P_LoadNodes (int lump)//L8002209C()
+ =
+ =================
+ */
++
++int numthings; //iGp00000d44 New From Final Doom
++
+ //inline
+ void P_LoadThings (int lump)//L80022210()
+ {
+ 	byte			*data;
+-	int				i;
+-	mapthing_t		*mt;
+-	int				numthings;
+ 
+ 	if (W_MapLumpLength(lump) > 65536)
+ 		I_Error("P_LoadThings: lump > 64K");
+ 
++    numthings = W_MapLumpLength(lump) / sizeof(mapthing_t);
++
+ 	data = (byte *)tempbuffer;
+ 	W_ReadMapLump(lump, data, true);
++}
+ 
+-	numthings = W_MapLumpLength(lump) / sizeof(mapthing_t);
++/*
++=================
++=
++= P_SpawnThings
++= Exclusive PSX Final Doom
++= Load things from the map into memory like map object
++= Previously it was part of the P_LoadThings function in PSX Doom
++=
++=================
++*/
++//inline
++void P_SpawnThings (void)//L80022730()
++{
++	int				i;
++	mapthing_t		*mt;
+ 
+-	mt = (mapthing_t *)data;
++	mt = (mapthing_t *)tempbuffer;
+ 	for (i=0 ; i<numthings ; i++, mt++)
+ 	{
+ 		mt->x = LITTLESHORT(mt->x);
+@@ -444,9 +476,14 @@ void P_LoadSideDefs (int lump)//L800225E8()
+ 		sd->rowoffset = LITTLESHORT(msd->rowoffset)<<FRACBITS;
+ 		sd->sector = &sectors[LITTLESHORT(msd->sector)];
+ 
+-		sd->toptexture = R_TextureNumForName(msd->toptexture);
++		/*sd->toptexture = R_TextureNumForName(msd->toptexture);
+ 		sd->midtexture = R_TextureNumForName(msd->midtexture);
+-		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
++		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);*/
++
++		// New Final Doom
++		sd->toptexture = LITTLESHORT(msd->toptexture);
++		sd->midtexture = LITTLESHORT(msd->midtexture);
++		sd->bottomtexture = LITTLESHORT(msd->bottomtexture);
+ 	}
+ }
+ 
+@@ -712,7 +749,7 @@ void P_Init (void)//L80022E00()
+ 
+ 	if (skytexturep)
+ 	{
+-		if (lumpinfo[skytexturep->lump].name[4] == '9')// initialize fire sky
++		/*if (lumpinfo[skytexturep->lump].name[4] == '9')// initialize fire sky
+ 		{
+ 			W_CacheLumpNum(skytexturep->lump, PU_ANIMATION, true);
+ 
+@@ -721,7 +758,38 @@ void P_Init (void)//L80022E00()
+ 
+ 			for (i = 0; i < 64; i++)
+ 				P_FireSky(skytexturep);
+-		}
++		}*/
++
++		// New Final Doom
++        switch(lumpinfo[skytexturep->lump].name[4])
++        {
++            case '2':
++                skypalette = palette[21];
++                break;
++            case '3':
++                skypalette = palette[22];
++                break;
++            case '4':
++                skypalette = palette[23];
++                break;
++            case '5':
++                skypalette = palette[24];
++                break;
++            case '6':
++                skypalette = palette[25];
++                break;
++            case '9':
++                W_CacheLumpNum(skytexturep->lump, PU_ANIMATION, true);
++
++                spreadfire = P_FireSky;
++                skypalette = palette[15];
++
++                for (i = 0; i < 64; i++)
++                    P_FireSky(skytexturep);
++                break;
++            default:
++                break;
++        }
+ 
+ 		TextureCache(skytexturep);
+ 	}
+@@ -813,7 +881,7 @@ void P_SetupLevel(int map, skill_t skill)//L8002306C()
+ 
+     map_file = (map_index + ((map_folder / 8) * 16));
+ 
+-	map_ptr = W_OpenMapWad((char *)map_file + _MAP01_WAD /*8*/);//MAP%%.WAD
++	map_ptr = W_OpenMapWad((char *)map_file + _MAP01_ROM /*8*/);//MAP%%.WAD
+ 
+ 	/* */
+ 	/* look for a regular (development) map first */
+@@ -833,16 +901,16 @@ void P_SetupLevel(int map, skill_t skill)//L8002306C()
+     }
+ 
+ 	/* note: most of this ordering is important	 */
+-	P_LoadBlockMap(lumpnum + ML_BLOCKMAP);
+-	P_LoadVertexes(lumpnum + ML_VERTEXES);
+ 	P_LoadSectors(lumpnum + ML_SECTORS);
+ 	P_LoadSideDefs(lumpnum + ML_SIDEDEFS);
++	P_LoadVertexes(lumpnum + ML_VERTEXES);
+ 	P_LoadLineDefs(lumpnum + ML_LINEDEFS);
+ 	P_LoadSubsectors(lumpnum + ML_SSECTORS);
+ 	P_LoadNodes(lumpnum + ML_NODES);
+ 	P_LoadSegs(lumpnum + ML_SEGS);
+ 	P_LoadLeafs(lumpnum + ML_LEAFS);
+ 	P_LoadReject(lumpnum + ML_REJECT);
++	P_LoadBlockMap(lumpnum + ML_BLOCKMAP);
+ 
+ 	P_GroupLines();
+ 
+@@ -853,9 +921,16 @@ void P_SetupLevel(int map, skill_t skill)//L8002306C()
+ 
+ 	P_LoadThings(lumpnum + ML_THINGS);
+ 
++	/* Free the loaded map data */
++	Z_Free(map_ptr);
++
++	/* Unlike PSX Doom, this feature takes advantage */
++	/* of deleting map data "map_ptr" to store new map objects in memory. */
++	P_SpawnThings();
++
+ 	/* set up world state */
+ 	P_SpawnSpecials();
+-	Z_Free(map_ptr);
++
+ 
+ 	if (!restarlevel)
+ 	{
+@@ -865,7 +940,7 @@ void P_SetupLevel(int map, skill_t skill)//L8002306C()
+ 	}
+ 
+ 	memory = Z_FreeMemory(mainzone);
+-	if (memory < 0xc000)
++	if (memory < 0x8000)
+ 	{
+ 		Z_DumpHeap(mainzone);
+ 		I_Error("P_SetupLevel: not enough free memory %d", memory);
+diff --git a/PSXDOOM/p_spec.c b/PSXDOOM/p_spec.c
+index 417375f..f219d37 100644
+--- a/PSXDOOM/p_spec.c
++++ b/PSXDOOM/p_spec.c
+@@ -21,6 +21,7 @@ animdef_t		animdefs[MAXANIMS] =//0x80067074
+ 	{ false, "LAVA01", "LAVA04", 3 },
+ 	{ false, "WATER01", "WATER04", 3 },
+ 	{ false, "SLIME01", "SLIME03", 3 },
++	{ false, "GLOW01", "GLOW04", 3 },       // New Final Doom
+ 	{ true, "BFALL1", "BFALL1", 3 },
+ 	{ true, "ENERGY01", "ENERGY04", 3 },
+ 	{ true, "FIRE01", "FIRE02", 3 },
+@@ -29,7 +30,8 @@ animdef_t		animdefs[MAXANIMS] =//0x80067074
+ 	{ true, "SFALL1", "SFALL4", 3 },
+ 	{ true, "SLIM01", "SLIM04", 3 },
+ 	{ true, "TVSNOW01", "TVSNOW03", 1 },
+-	{ true, "WARN01", "WARN02", 3 }
++	{ true, "WARN01", "WARN02", 3 },
++	{ true, "WFALL1", "WFALL4", 3 }         // New Final Doom
+ };
+ 
+ anim_t	/*anims[MAXANIMS],*/ *lastanim;//800861d4, ||80077F8C, pbGp00000b7c
+diff --git a/PSXDOOM/p_spec.h b/PSXDOOM/p_spec.h
+index 421b65d..7f75d59 100644
+--- a/PSXDOOM/p_spec.h
++++ b/PSXDOOM/p_spec.h
+@@ -34,7 +34,7 @@ typedef struct
+ 	int		speed;			//*24
+ } animdef_t;
+ 
+-#define	MAXANIMS		16  //[psx] change to 16
++#define	MAXANIMS		18  //[psx] final doom change to 16
+ 
+ extern	anim_t	anims[MAXANIMS], *lastanim;
+ 
+diff --git a/PSXDOOM/p_switch.c b/PSXDOOM/p_switch.c
+index 3e01d05..d84e753 100644
+--- a/PSXDOOM/p_switch.c
++++ b/PSXDOOM/p_switch.c
+@@ -8,6 +8,7 @@
+ /*================================================================== */
+ 
+ #define     numswitches 49
++//#define     numswitches 50 // PSXDOOM: ME
+ switchlist_t alphSwitchList[numswitches] = //80067234
+ {
+ 	{ "SW1BMET",	"SW2BMET" },
+@@ -59,6 +60,7 @@ switchlist_t alphSwitchList[numswitches] = //80067234
+ 	{ "SW1SKULL",	"SW2SKULL" },
+ 	{ "SW1STAR",	"SW2STAR" },
+ 	{ "SW1STEEL",	"SW2STEEL" },
++	//{ "SW1SKUL2",	"SW2SKUL2" },   // Psx Doom: Master Edition restore this missing switch
+ };
+ 
+ //int			switchlist[MAXSWITCHES * 2];//80097424
+diff --git a/PSXDOOM/p_tick.c b/PSXDOOM/p_tick.c
+index dbeef23..25eb1e1 100644
+--- a/PSXDOOM/p_tick.c
++++ b/PSXDOOM/p_tick.c
+@@ -159,7 +159,7 @@ typedef enum
+ 	CH_ALLTHINGS,	//1
+ 	CH_GODMODE,		//2
+ 	CH_AMMOWEAPONS,	//3
+-	CH_NOCLIP,		//4 Enabled in Station Doom
++	CH_NOCLIP,		//4 Enabled in PsyDoom (StationDoom)
+ 	CH_WARPLEVEL,	//5
+ 	CH_NULL2,		//6
+ 	CH_VRAMVIEWER,	//7 Enabled in GEC Master Edition
+@@ -273,14 +273,14 @@ void P_CheckCheats (void)//L80028C74()
+ 			{
+ 				warpmap += 1;
+ 
+-				if (warpmap >= 55)
+-					warpmap = 54;
++				if (warpmap > 30)// Max MAP
++					warpmap = 30;
+ 
+ 				m_vframe1[0] = TICRATE;
+ 			}
+ 		}
+ 
+-		if ((buttons != oldbuttons) && (buttons & PAD_ACTION))
++		if ((buttons != oldbuttons) && (buttons & (PAD_ACTION|MOUSE_LEFT|MOUSE_RIGHT)))
+ 		{
+             gameaction = ga_warped;
+             p->cheats &= ~CF_WARPLEVEL;
+diff --git a/PSXDOOM/p_user.c b/PSXDOOM/p_user.c
+index c47a405..a828606 100644
+--- a/PSXDOOM/p_user.c
++++ b/PSXDOOM/p_user.c
+@@ -4,7 +4,7 @@
+ #include "p_local.h"
+ #include "st_main.h"
+ 
+-
++/*
+ fixed_t 		forwardmove[2] = {0x40000, 0x60000};//80067668
+ fixed_t 		sidemove[2] = {0x38000, 0x58000}; //80067670
+ 
+@@ -12,7 +12,16 @@ fixed_t 		sidemove[2] = {0x38000, 0x58000}; //80067670
+ fixed_t			angleturn[] = //80067678
+ 	{300,300,500,500,600,700,800,900,900,1000};
+ fixed_t			fastangleturn[] = //800676A0
+-	{800,800,900,1000,1000,1200,1200,1300,1300,1400};
++	{800,800,900,1000,1000,1200,1200,1300,1300,1400};*/
++
++fixed_t 		forwardmove[2] = {0xE000, 0x16000};//80077ECC
++fixed_t 		sidemove[2] = {0xE000, 0x16000}; //80077ED4
++
++#define SLOWTURNTICS    10
++fixed_t			angleturn[] = //800684D4
++	{75,75,125,125,150,175,200,225,225,250};
++fixed_t			fastangleturn[] = //800684FC
++	{200,200,225,250,250,300,300,325,325,350};
+ 
+ 
+ /*============================================================================= */
+@@ -29,8 +38,12 @@ void P_PlayerMove (mobj_t *mo)//L80029670()
+ 	line_t		*latchedline;
+ 	fixed_t		latchedx, latchedy;
+ 
+-	momx = vblsinframe[playernum] * (mo->momx>>2);
+-	momy = vblsinframe[playernum] * (mo->momy>>2);
++	//momx = vblsinframe[playernum] * (mo->momx>>2);
++	//momy = vblsinframe[playernum] * (mo->momy>>2);
++
++	// Change on Final Doom
++	momx = mo->momx;
++	momy = mo->momy;
+ 
+ 	slidething = mo;
+ 
+@@ -240,10 +253,20 @@ void P_BuildMove (player_t *player) //L80029CA4()
+ 	fixed_t		ForwardMove, SideMove;
+ 	angle_t		AngleTurn;
+ 
++	int		    Mouse_X, Mouse_Y;
++
++	// defaults
++	AngleTurn = 0;
++	SideMove = 0;
++	ForwardMove = 0;
++
+ 	cbutton = BT_DATA[playernum];
+ 	buttons = ticbuttons[playernum];
+ 	oldbuttons = oldticbuttons[playernum];
+ 
++    Mouse_X = (0 - (signed char)(buttons >> 16)) * M_SENSITIVITY[playernum];
++    Mouse_Y = (0 - (signed char)(buttons >> 24)) * 3000;
++
+ 	speed = (buttons & cbutton->BT_SPEED) > 0;
+ 
+ 	/*  */
+@@ -257,39 +280,28 @@ void P_BuildMove (player_t *player) //L80029CA4()
+ 	if (player->turnheld >= SLOWTURNTICS)
+ 		player->turnheld = SLOWTURNTICS-1;
+ 
+-	player->forwardmove = player->sidemove = player->angleturn = 0;
+-
+ 	if (buttons & cbutton->BT_STRAFELEFT)
+ 	{
+-		SideMove = -vblsinframe[playernum] * sidemove[speed];
+-		if (SideMove < 0) { SideMove += 3; }
+-
+-		player->sidemove = (SideMove >> 2);
++		SideMove -= sidemove[speed];
+ 	}
+-	else if (buttons & cbutton->BT_STRAFERIGHT)
++	//else
++	if (buttons & cbutton->BT_STRAFERIGHT)
+ 	{
+-		SideMove = vblsinframe[playernum] * sidemove[speed];
+-		if (SideMove < 0) { SideMove += 3; }
+-
+-		player->sidemove = (SideMove >> 2);
++		SideMove += sidemove[speed];
+ 	}
+ 
+     if (buttons & cbutton->BT_STRAFE)
+ 	{
+ 		if (buttons & PAD_LEFT)
+ 		{
+-			SideMove = -vblsinframe[playernum] * sidemove[speed];
+-			if (SideMove < 0) { SideMove += 3; }
+-
+-			player->sidemove = (SideMove >> 2);
++            SideMove -= sidemove[speed];
+ 		}
+ 		else if (buttons & PAD_RIGHT)
+ 		{
+-			SideMove = vblsinframe[playernum] * sidemove[speed];
+-			if (SideMove < 0) { SideMove += 3; }
+-
+-			player->sidemove = (SideMove >> 2);
++            SideMove += sidemove[speed];
+ 		}
++
++		SideMove -= Mouse_X;
+ 	}
+ 	else
+ 	{
+@@ -297,62 +309,86 @@ void P_BuildMove (player_t *player) //L80029CA4()
+ 		{
+ 			if (buttons & PAD_LEFT)
+ 			{
+-				AngleTurn =  vblsinframe[playernum] * fastangleturn[player->turnheld];
+-				if (AngleTurn < 0) { AngleTurn += 3; }
+-				AngleTurn >>= 2;
+-
+-				player->angleturn = AngleTurn << 17;
++				AngleTurn += fastangleturn[player->turnheld] << 17;
+ 			}
+ 			else if (buttons & PAD_RIGHT)
+ 			{
+-				AngleTurn = vblsinframe[playernum] * fastangleturn[player->turnheld];
+-				if (AngleTurn < 0) { AngleTurn += 3; }
+-				AngleTurn >>= 2;
+-
+-				player->angleturn = -AngleTurn << 17;
++				AngleTurn -= fastangleturn[player->turnheld] << 17;
+ 			}
+ 		}
+ 		else
+ 		{
+ 			if (buttons & PAD_LEFT)
+ 			{
+-				AngleTurn = vblsinframe[playernum] * angleturn[player->turnheld];
+-				if (AngleTurn < 0) { AngleTurn += 3; }
+-				AngleTurn >>= 2;
+-
+-				player->angleturn = AngleTurn << 17;
++				AngleTurn += angleturn[player->turnheld] << 17;
+ 			}
+ 			else if (buttons & PAD_RIGHT)
+ 			{
+-				AngleTurn = vblsinframe[playernum] * angleturn[player->turnheld];
+-				if (AngleTurn < 0) { AngleTurn += 3; }
+-				AngleTurn >>= 2;
+-
+-				player->angleturn = -AngleTurn << 17;
++				AngleTurn -= angleturn[player->turnheld] << 17;
+ 			}
+ 		}
++
++		AngleTurn += Mouse_X;
+ 	}
+ 
+-	if (buttons & PAD_UP)
+-	{
+-		ForwardMove = vblsinframe[playernum] * forwardmove[speed];
+-		if (ForwardMove < 0) { ForwardMove += 3; }
++	/*  */
++	/* It allows to use the possibility of executing line actions */
++	/* by quickly pressing any mouse button, apart from the USE button */
++    /*  */
++    if (buttons & (MOUSE_LEFT|MOUSE_RIGHT))
++    {
++        if ((unsigned int)(player->mousereactionuse - 1) < 9)
++        {
++            player->mouseuse = true;
++            player->mousereactionuse = 0;
++        }
++        else if (player->mousereactionuse != 0)
++        {
++            player->mousereactionuse = 11;
++        }
++    }
++    else
++    {
++        player->mousereactionuse -= 1;
++    }
+ 
+-		player->forwardmove = (ForwardMove >> 2);
++	if (buttons & (cbutton->BT_MOUSERIGHT | PAD_UP))
++	{
++		ForwardMove += forwardmove[speed];
+ 	}
+-	else if (buttons & PAD_DOWN)
++	else if (buttons & (cbutton->BT_MOUSELEFT | PAD_DOWN))
+ 	{
+-		ForwardMove = -vblsinframe[playernum] * forwardmove[speed];
+-		if (ForwardMove < 0) { ForwardMove += 3; }
+-
+-		player->forwardmove = (ForwardMove >> 2);
++		ForwardMove -= forwardmove[speed];
+ 	}
++    ForwardMove += Mouse_Y;
++
++    if (ForwardMove > 0x16000)
++    {
++        ForwardMove = 0x16000;
++    }
++    else if (ForwardMove < -0x16000)
++    {
++        ForwardMove = -0x16000;
++    }
++
++    if (SideMove > 0x16000)
++    {
++        SideMove = 0x16000;
++    }
++    else if (SideMove < -0x16000)
++    {
++        SideMove = -0x16000;
++    }
+ 
+ 	/* */
+ 	/* if slowed down to a stop, change to a standing frame */
+ 	/* */
+ 	mo = player->mo;
+ 
++    player->sidemove = SideMove;
++    player->forwardmove = ForwardMove;
++    player->angleturn = AngleTurn;
++
+ 	if (!mo->momx && !mo->momy && player->forwardmove == 0 && player->sidemove == 0 )
+ 	{	/* if in a walking frame, stop moving */
+ 		if (mo->state == &states[S_PLAY_RUN1]
+@@ -388,6 +424,7 @@ boolean		onground;//80077FF4, iGp00000be4
+ //inline
+ void P_Thrust (player_t *player, angle_t angle, fixed_t move) //L8002A188()
+ {
++    move *= vblsinframe[playernum];
+ 	angle >>= ANGLETOFINESHIFT;
+ 	player->mo->momx += (move >> 8)*(finecosine[angle] >> 8);
+ 	player->mo->momy += (move >> 8)*(finesine[angle] >> 8);
+@@ -479,7 +516,7 @@ void P_CalcHeight (player_t *player) //L8002A1FC()
+ 
+ void P_MovePlayer (player_t *player)//L8002A3B8()
+ {
+-	player->mo->angle += player->angleturn;
++	player->mo->angle += vblsinframe[playernum] * player->angleturn;
+ 
+ 	/* don't let the player control movement if not onground */
+ 	onground = (player->mo->z <= player->mo->floorz);
+@@ -535,7 +572,9 @@ void P_DeathThink (player_t *player)//L8002A570()
+ 		player->damagecount--;
+ 
+ 
+-	if (((byte)ticbuttons[playernum] != 0) && (player->viewheight <= 8*FRACUNIT))
++	//if (((byte)ticbuttons[playernum] != 0) && (player->viewheight <= 8*FRACUNIT))
++	if (((ticbuttons[playernum] & (MOUSE_LEFT|MOUSE_RIGHT|PAD_ACTION|PAD_LR)) != 0) &&
++        (player->viewheight <= 8*FRACUNIT))
+     {
+ 		player->playerstate = PST_REBORN;
+     }
+@@ -676,8 +715,10 @@ void P_PlayerThink (player_t *player)//L8002A6C8()
+ 		/* check for use */
+ 		/* */
+ 
+-		if (buttons & cbutton->BT_USE)
++		if ((buttons & cbutton->BT_USE) || (player->mouseuse))
+ 		{
++		    player->mouseuse = false; // New
++
+ 			if (player->usedown == false)
+ 			{
+ 				P_UseLines(player);
+diff --git a/PSXDOOM/psxmain.c b/PSXDOOM/psxmain.c
+index e0d28db..9cb25f5 100644
+--- a/PSXDOOM/psxmain.c
++++ b/PSXDOOM/psxmain.c
+@@ -68,6 +68,13 @@ int xcount = 0;   //*(r28 + 3320)
+ int ycount = 0;   //*(r28 + 3324)
+ int V_PagFlags = 0;//*(r28 + 1576)//80077A38
+ 
++/*
++ * Limitations
++ */
++char    buff_1[MAX_PAD], buff_2[MAX_PAD];   //80099050, 80099074
++signed char   *PAD_Rbuf1, *PAD_Rbuf2;       //puGp00000c40, puGp00000c44
++
++
+ int main()
+ {
+ 	D_DoomMain ();
+@@ -77,7 +84,9 @@ int main()
+ void PSX_INIT(void)//L80032804()
+ {
+     ResetCallback();
+-    PadInit(0);
++    //#if ENABLE_MOUSE == 0
++    //PadInit(0);
++    //#endif // ENABLE_MOUSE
+     ResetGraph(0);
+     SetGraphDebug(0);
+ 
+@@ -94,6 +103,26 @@ void PSX_INIT(void)//L80032804()
+     SetDefDispEnv(&disp[0], 256, 0, 256, 240);
+     SetDefDispEnv(&disp[1], 0, 0, 256, 240);
+ 
++    //#if ENABLE_MOUSE == 1
++    //Control Pad Initialization from FinalDoom
++    {
++        InitPAD(buff_1, MAX_PAD, buff_2, MAX_PAD);
++        StartPAD();
++        ChangeClearPAD(0);
++        VSync(0);
++        if ((*(unsigned int *)&buff_1[0] & 0xf0ff) == 0x1000)
++        {
++            PAD_Rbuf1 = (signed char *)buff_2;
++            PAD_Rbuf2 = (signed char *)buff_1;
++        }
++        else
++        {
++            PAD_Rbuf1 = (signed char *)buff_1;
++            PAD_Rbuf2 = (signed char *)buff_2;
++        }
++    }
++    //#endif // ENABLE_MOUSE
++
+     drawside = 0;
+ 
+     EnterCriticalSection();
+@@ -150,6 +179,34 @@ void I_Error(char *error, ...)//L800329BC
+ 	while (1){} // draw and display forever
+ }
+ 
++//#if ENABLE_MOUSE == 1
++unsigned int I_PadRead(void)//L80032E8C()
++{
++    unsigned int out_code, pad_code1, pad_code2, pad_code3;
++    unsigned int *pad_buf1, *pad_buf2;
++
++    pad_buf1 = (unsigned int *)PAD_Rbuf1;
++    pad_buf2 = (unsigned int *)PAD_Rbuf2;
++
++    pad_code1 = pad_buf1[0] ^ -0x10000;
++    pad_code2 = pad_buf2[0] ^ -0x10000;
++
++    out_code = 0;
++    if((pad_code1 & 0xF0FF) == 0x4000)
++    {
++        out_code = pad_code1 >> 8 & 65280 | pad_code1 >> 24;
++    }
++
++    if((pad_code2 & 0xF0FF) == 0x1000)
++    {
++        pad_code3 = pad_buf2[1] << 16 & -0x10000;
++        out_code = out_code | (pad_code2 >> 17) & 0x600 | pad_code3;
++    }
++
++    return out_code;
++}
++//#endif // ENABLE_MOUSE
++
+ void ImageToVram(psxobj_t *pic, char *name, int lump)//L80032A68()
+ {
+ 	int w, h;
+@@ -564,12 +621,21 @@ void Vram_Viewer(int page)//80033938
+ boolean cancel_link; //0x80077A3C *(r28 + 1580)
+ 
+ unsigned int TempConfiguration[8] = { PAD_TRIANGLE, PAD_CIRCLE, PAD_CROSS, PAD_SQUARE, PAD_L1, PAD_R1, PAD_L2, PAD_R2 };//80073c1c
+-unsigned int ActualConfiguration[8] = { PAD_TRIANGLE, PAD_CIRCLE, PAD_CROSS, PAD_SQUARE, PAD_L1, PAD_R1, PAD_L2, PAD_R2 };	//80073c3c
+ unsigned int DefaultConfiguration[8] = { PAD_TRIANGLE, PAD_CIRCLE, PAD_CROSS, PAD_SQUARE, PAD_L1, PAD_R1, PAD_L2, PAD_R2 };	//80073C5C
+-unsigned int NewConfiguration[8];//0x80078120
++
++unsigned int ActualConfiguration[10] = { PAD_TRIANGLE|MOUSE_LEFT, PAD_CIRCLE, PAD_CROSS|MOUSE_RIGHT, PAD_SQUARE, PAD_L1, PAD_R1, PAD_L2, PAD_R2 , 0, 0};	//80073c3c
++unsigned int NewConfiguration[10];//0x80078120
++
++// Mouse
++extern int m_sensitivity;   //80077FB4|iGp00000664
++extern int m_leftbutton;    //80077FB8|iGp00000668
++extern int m_rightbutton;   //80077FBC|iGp0000066c
+ 
+ void Link_Conection(void)//L800345A0()
+ {
++    unsigned int out_code, pad_code1;
++    unsigned int *pad_buf1;
++
+ 	/* The following lines enclosed by square brackets are necessary for the current PSYQ SDK libcomb.lib */
+ 	/* This is due to the version of libcomb.lib library used in the original PSXDOOM, it worked differently. */
+ 	/* Also the CompaCTS macros were added as it is the current way to create links between two consoles */
+@@ -578,7 +644,16 @@ void Link_Conection(void)//L800345A0()
+         /* wait for other PlayStation to be powered-up */
+         while((CombSioStatus() & (COMB_DSR|COMB_CTS)) == 0x180 )
+         {
+-            if (PadRead(0) & PAD_SELECT)
++            //if (PadRead(0) & PAD_SELECT)
++            pad_buf1 = (unsigned int *)PAD_Rbuf1;
++
++            pad_code1 = pad_buf1[0] ^ -0x10000;
++
++            out_code = 0;
++            if((pad_code1 & 0xF0FF) == 0x4000)
++                out_code = pad_code1 >> 8 & 65280;
++
++            if(out_code & PAD_SELECT)
+             {
+                 cancel_link = true;
+                 CombCancelRead(); // Cancel async read request
+@@ -587,6 +662,8 @@ void Link_Conection(void)//L800345A0()
+         };
+ 	}
+ 
++	senbuf[0] = 171;    //171 on Final Doom
++
+ 	//if (_comb_control(3,0,0) != 0)	//Original line
+ 	if(CombCTS() == 0)  /* Return status of CTS */
+     {
+@@ -594,7 +671,16 @@ void Link_Conection(void)//L800345A0()
+         read(fr, recbuf, BUFFSIZE);
+         do
+         {
+-            if (PadRead(0) & PAD_SELECT)
++            //if (PadRead(0) & PAD_SELECT)
++            pad_buf1 = (unsigned int *)PAD_Rbuf1;
++
++            pad_code1 = pad_buf1[0] ^ -0x10000;
++
++            out_code = 0;
++            if((pad_code1 & 0xF0FF) == 0x4000)
++                out_code = pad_code1 >> 8 & 65280;
++
++            if(out_code & PAD_SELECT)
+ 			{
+ 				cancel_link = true;
+ 				CombCancelRead(); // Cancel async read request
+@@ -614,7 +700,16 @@ void Link_Conection(void)//L800345A0()
+         read(fr, recbuf, BUFFSIZE);
+         do
+         {
+-            if (PadRead(0) & PAD_SELECT)
++            //if (PadRead(0) & PAD_SELECT)
++            pad_buf1 = (unsigned int *)PAD_Rbuf1;
++
++            pad_code1 = pad_buf1[0] ^ -0x10000;
++
++            out_code = 0;
++            if((pad_code1 & 0xF0FF) == 0x4000)
++                out_code = pad_code1 >> 8 & 65280;
++
++            if(out_code & PAD_SELECT)
+ 			{
+ 				cancel_link = true;
+ 				CombCancelRead(); // Cancel async read request
+@@ -627,9 +722,10 @@ void Link_Conection(void)//L800345A0()
+ 
+ 	if (consoleplayer == 0)
+ 	{
+-		senbuf[1] = (char)starttype;
+-		senbuf[2] = (char)startskill;
+-		senbuf[3] = (char)startmap;
++        senbuf[0] = (char)starttype << 4 | (char)startskill;
++        senbuf[1] = (char)startmap;
++        senbuf[2] = (char)m_sensitivity;
++        senbuf[3] = (char)m_leftbutton << 4 | (char)m_rightbutton;
+ 		*(int*)&senbuf[4] = Get_CfgCode(ActualConfiguration);
+ 
+ 		//do {} while (_comb_control(3,0,0) == 0);   //Original line
+@@ -640,8 +736,13 @@ void Link_Conection(void)//L800345A0()
+ 
+ 		do {} while (TestEvent(ev_r) == 0);
+ 
++        M_SENSITIVITY[1] = (char)recbuf[2];
++        M_SENSITIVITY[0] = m_sensitivity;
++
+ 		BT_DATA[0] = (buttons_t *)ActualConfiguration;
+ 		BT_DATA[1] = (buttons_t *)Get_CfgByCode(*(int*)&recbuf[4]);
++        (&BT_DATA[1]->BT_ATTACK)[recbuf[3] >> 4 ] |= MOUSE_LEFT;
++        (&BT_DATA[1]->BT_ATTACK)[recbuf[3] & 0xf] |= MOUSE_RIGHT;
+ 	}
+ 	else
+ 	{
+@@ -649,12 +750,20 @@ void Link_Conection(void)//L800345A0()
+ 
+ 		do {} while (TestEvent(ev_r) == 0);
+ 
+-		starttype = recbuf[1];
+-		startskill = recbuf[2];
+-		startmap = recbuf[3];
++        M_SENSITIVITY[0] = (char)recbuf[2];
++        M_SENSITIVITY[1] = m_sensitivity;
++
++        starttype   = (char)recbuf[0] >> 4;
++        startskill  = (char)recbuf[0] & 0xf;
++        startmap    = (char)recbuf[1];
++
++        BT_DATA[1] = (buttons_t *)ActualConfiguration;
++        BT_DATA[0] = (buttons_t *)Get_CfgByCode(*(int*)&recbuf[4]);
++        (&BT_DATA[0]->BT_ATTACK)[recbuf[3] >> 4 ] |= MOUSE_LEFT;
++        (&BT_DATA[0]->BT_ATTACK)[recbuf[3] & 0xf] |= MOUSE_RIGHT;
+ 
+-		BT_DATA[1] = (buttons_t *)ActualConfiguration;
+-		BT_DATA[0] = (buttons_t *)Get_CfgByCode(*(int*)&recbuf[4]);
++        senbuf[2] = (char)m_sensitivity;
++        senbuf[3] = (char)m_leftbutton << 4 | (char)m_rightbutton;
+ 
+ 		*(int*)&senbuf[4] = Get_CfgCode(ActualConfiguration);
+ 
+@@ -675,14 +784,14 @@ boolean Update_Conection(void)//L80034868()
+     up2 = up1 ^ (up1 >> 8);
+     up2 = up2 ^ (up1 >> 16);
+ 
+-	senbuf[0] = 170;//171 on final doom
+-	senbuf[1] = up2;
++	senbuf[0] = 171; // 171 on final doom
++	senbuf[1] = (char) up2;
+     senbuf[2] = *(char *)(vblsinframe + consoleplayer);
+ 	*(int*)&senbuf[4] = ticbuttons[consoleplayer];
+ 
+ 	Sync_Read_Write();
+ 
+-	if (recbuf[0] == 170 && (recbuf[1] == senbuf[1]))//171 on final doom
++	if (recbuf[0] == 171 && (recbuf[1] == senbuf[1]))//171 on final doom
+ 	{
+         if (consoleplayer == 0)
+         {
+@@ -711,7 +820,7 @@ boolean Update_Conection(void)//L80034868()
+         NextTextureCacheIdx();
+         TextureCache(&neterrpic);
+ 
+-        DrawImage(neterrpic.vtpage, palette[16], 84, 109, neterrpic.vramx, neterrpic.vramy, neterrpic.w, neterrpic.h);
++        DrawImage(neterrpic.vtpage, palette[20], 84, 109, neterrpic.vramx, neterrpic.vramy, neterrpic.w, neterrpic.h);
+ 
+         UpdateDrawOTag();
+         DrawRender();
+@@ -763,8 +872,8 @@ void Sync_Read_Write (void) //L80034B1C()
+ 			//do {} while (_comb_control(3,0,0) == 0);   //Original line
+ 			do {} while (CombCTS() == 0);   /* Return status of CTS */
+ 
+-			write(fw, &senbuf, BUFFSIZE);
+-			read(fr, &recbuf, BUFFSIZE);
++			write(fw, senbuf, BUFFSIZE);
++			read(fr, recbuf, BUFFSIZE);
+ 
+ 			sync = VSync(-1);
+ 			do
+@@ -775,7 +884,7 @@ void Sync_Read_Write (void) //L80034B1C()
+ 		}
+ 		else
+         {
+-			read(fr, &recbuf, BUFFSIZE);
++			read(fr, recbuf, BUFFSIZE);
+ 
+ 			sync = VSync(-1);
+ 			do
+@@ -784,7 +893,7 @@ void Sync_Read_Write (void) //L80034B1C()
+                 {
+ 					//do {} while (_comb_control(3,0,0) == 0);   //Original line
+ 					do {} while (CombCTS() == 0);   /* Return status of CTS */
+-					write(fw, &senbuf, BUFFSIZE);
++					write(fw, senbuf, BUFFSIZE);
+ 					return;
+ 				}
+ 
+@@ -819,7 +928,7 @@ void UpdateDrawOTag(void)//80034C60
+ unsigned int Get_CfgCode(unsigned int *cfgdata)//L80034CAC
+ {
+     unsigned int *tmpcfg;
+-	int i, j, cfgcode;
++	unsigned int i, j, cfgcode;
+ 
+ 	tmpcfg = TempConfiguration;
+ 	cfgcode = 0;
+@@ -828,7 +937,7 @@ unsigned int Get_CfgCode(unsigned int *cfgdata)//L80034CAC
+ 	{
+ 		for(j = 0; j < 8; j++, tmpcfg++)
+ 		{
+-			if (*cfgdata == *tmpcfg)
++			if (*cfgdata & *tmpcfg)
+ 				break;
+ 		}
+ 
+@@ -852,7 +961,7 @@ unsigned int *Get_CfgByCode(unsigned int cfgcode)//L80034D0C
+ {
+     unsigned int *tmpcfg;
+ 	unsigned int *newcfg;
+-	int i, code;
++	unsigned int i, code;
+ 
+ 	tmpcfg = TempConfiguration;
+ 	newcfg = NewConfiguration;
+diff --git a/PSXDOOM/pw_main.c b/PSXDOOM/pw_main.c
+index a76a8ca..471230b 100644
+--- a/PSXDOOM/pw_main.c
++++ b/PSXDOOM/pw_main.c
+@@ -68,7 +68,7 @@ int PW_Ticker(void)//L80036CA0()
+             S_StartSound(0,0x18);
+     }
+ 
+-    buttons = ticbuttons[0];
++    buttons = Get_PadButtons(&ticbuttons[0]);//ticbuttons[0];
+ 
+     if (buttons & PAD_ARROWS)
+ 	{
+@@ -79,11 +79,16 @@ int PW_Ticker(void)//L80036CA0()
+ 
+             if (buttons & PAD_DOWN)
+ 			{
+-				if (PassCodePos < 24)
++				if (PassCodePos < 32)//24
+                 {
+                     PassCodePos += 8;
+                     S_StartSound(NULL, sfx_pstop);
+                 }
++
++                //new
++                if (PassCodePos > 32)
++                    PassCodePos = 32;
++
+ 			}
+ 			else if (buttons & PAD_UP)
+ 			{
+@@ -97,8 +102,8 @@ int PW_Ticker(void)//L80036CA0()
+ 			if (buttons & PAD_RIGHT)
+ 			{
+                 PassCodePos += 1;
+-                if (PassCodePos >= 32)
+-                    PassCodePos = 31;
++                if (PassCodePos >= 33)
++                    PassCodePos = 32;
+                 else
+                     S_StartSound(NULL, sfx_pstop);
+ 			}
+@@ -120,8 +125,11 @@ int PW_Ticker(void)//L80036CA0()
+ 	if (buttons & (PAD_START | PAD_SELECT))
+ 		return ga_exit;// exit
+ 
+-    if (buttons != oldticbuttons[0])
++    if (buttons != (unsigned short)oldticbuttons[0])
+ 	{
++	    if ((PassCodePos == 32) && (buttons & PAD_ACTION))
++            return ga_exit;// exit
++
+         if (buttons & (PAD_SQUARE | PAD_CROSS| PAD_CIRCLE))
+         {
+             S_StartSound(NULL, sfx_swtchx);
+@@ -186,7 +194,7 @@ void PW_Drawer(void) //L80036F34()
+ 	{
+ 		for (xpos = 0; xpos < 4; xpos++)
+ 		{
+-			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[0]);
++			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[20]);
+ 		}
+ 	}
+ 
+@@ -212,7 +220,7 @@ void PW_Drawer(void) //L80036F34()
+ 
+         if (PassCodePos == cnt)
+ 		{
+-			if (!(ticon & 4)) continue;
++			if (!(ticon & 8)) continue;
+ 			setRGB0(textsprite, 255, 0, 0);
+ 		}
+ 
+@@ -243,30 +251,36 @@ void PW_Drawer(void) //L80036F34()
+ 
+ 	ST_DrawText(-1,20,"Password");
+ 
+-	xpos = 58;
+-	ypos = 160;
+-	for (cnt = 0; cnt < CurPasswordSlot; cnt++)
++	if (PassInvalidTic & 4)//80077E58
+ 	{
+-	    pass[0] = passwordChar[Passwordbuff[cnt]];
+-		ST_DrawText(xpos, ypos, pass);//Draw Text
+-		xpos += 14;
++		ST_DrawText(-1, 160, "Invalid Password");//Draw Text
+ 	}
++	else
++    {
++        xpos = 58;
++        for (cnt = 0; cnt < CurPasswordSlot; cnt++)
++        {
++            pass[0] = passwordChar[Passwordbuff[cnt]];
++            ST_DrawText(xpos, 160, pass);//Draw Text
++            xpos += 14;
++        }
+ 
+-	if (cnt < 10)
+-	{
+-		xpos = (cnt * 14) + 58;
+-		do
+-		{
+-			ST_DrawText(xpos, ypos, ".");//Draw Text
+-			xpos += 14;
+-			cnt++;
+-		} while (cnt < 10);
++        if (cnt < 10)
++        {
++            xpos = (cnt * 14) + 58;
++            do
++            {
++                ST_DrawText(xpos, 160, ".");//Draw Text
++                xpos += 14;
++                cnt++;
++            } while (cnt < 10);
++        }
+ 	}
+ 
+-	if (PassInvalidTic & 4)//80077E58
+-	{
+-		ST_DrawText(-1, 200, "Invalid Password");//Draw Text
+-	}
++    if ((PassCodePos != 32) || ((ticon & 8) == 0))
++    {
++        ST_DrawText(-1,200,"Exit");
++    }
+ 
+ 	UpdateDrawOTag();
+ 	DrawRender();
+diff --git a/PSXDOOM/r_data.c b/PSXDOOM/r_data.c
+index 0415f04..e0e4063 100644
+--- a/PSXDOOM/r_data.c
++++ b/PSXDOOM/r_data.c
+@@ -25,11 +25,6 @@ int			*texturetranslation;	//80077D98|puGp0000097c /* for global animation */
+ short		skypalette;				//800780F0 psx doom
+ psxobj_t	*skytexturep;			//80077E7C
+ 
+-#define MAX_PALETTES 20
+-extern light_t *lights;			    //80077E94
+-extern short palette[MAX_PALETTES];	//800A8E68
+-extern short palettebase;			//80077DA8
+-
+ void R_InitTextures(void);
+ void R_InitFlats(void);
+ void R_InitSprite(void);
+diff --git a/PSXDOOM/r_local.h b/PSXDOOM/r_local.h
+index d5e2090..abc51fb 100644
+--- a/PSXDOOM/r_local.h
++++ b/PSXDOOM/r_local.h
+@@ -333,8 +333,7 @@ extern	psxobj_t	*texflats;
+ extern	int			firstsprite, lastsprite, numsprites;
+ extern	psxobj_t	*texsprites;
+ 
+-
+-#define MAX_PALETTES 20
++#define MAX_PALETTES 26 //Final Doom 20 to 26
+ extern	short palette[MAX_PALETTES];
+ extern	short palettebase;
+ extern	light_t		*lights;
+diff --git a/PSXDOOM/r_phase2.c b/PSXDOOM/r_phase2.c
+index a695509..683756d 100644
+--- a/PSXDOOM/r_phase2.c
++++ b/PSXDOOM/r_phase2.c
+@@ -602,6 +602,12 @@ void R_WallPrep(leaf_t *lf)//L8002D27C
+ 		}
+ 	}
+ 
++	// Clip the texture from the base of the floor
++	if (li->flags & ML_MIDCLIPTEXTURE)
++	{
++	    m_top = m_bottom + -128;
++	}
++
+ 	height = m_bottom - m_top;
+ 	if (height >= 256)
+         height = 255;
+diff --git a/PSXDOOM/s_sound.c b/PSXDOOM/s_sound.c
+index 85da3b3..3c39ce1 100644
+--- a/PSXDOOM/s_sound.c
++++ b/PSXDOOM/s_sound.c
+@@ -10,8 +10,7 @@ int CD_TRACK[NUM_CD_MUSIC_TRACKS] = { //80073C7C
+     4,      // cdmusic_credits_demo
+     5,      // cdmusic_intermission
+     6,      // cdmusic_club_doom
+-    7,      // cdmusic_finale_doom1
+-    8       // cdmusic_finale_doom2
++    7,      // cdmusic_finale_final_doom
+ };
+ 
+ typedef struct mapaudio_s
+@@ -60,10 +59,11 @@ enum Musics
+     MUSAMB26,
+     MUSAMB27,
+     MUSAMB28,
+-    MUSAMB29
++    MUSAMB29,
++    MUSAMB30
+ };
+ 
+-static mapaudio_t Map_Audio[62] =  //800754FC
++static mapaudio_t Map_Audio[34] =  //800754FC
+ {
+     { 0             , NO_MUSIC },
+     { _MAP01_LCD    , MUSAMB01 },
+@@ -73,62 +73,37 @@ static mapaudio_t Map_Audio[62] =  //800754FC
+     { _MAP05_LCD    , MUSAMB05 },
+     { _MAP06_LCD    , MUSAMB06 },
+     { _MAP07_LCD    , MUSAMB07 },
+-    { _MAP08_LCD    , MUSAMB08 },
+-    { _MAP09_LCD    , MUSAMB11 },
+-    { _MAP10_LCD    , MUSAMB09 },
+-    { _MAP11_LCD    , MUSAMB15 },
+-    { _MAP12_LCD    , MUSAMB10 },
+-    { _MAP13_LCD    , MUSAMB21 },
+-    { _MAP14_LCD    , MUSAMB22 },
+-    { _MAP15_LCD    , MUSAMB23 },
+-    { _MAP16_LCD    , MUSAMB12 },
+-    { _MAP17_LCD    , MUSAMB16 },
+-    { _MAP18_LCD    , MUSAMB17 },
+-    { _MAP19_LCD    , MUSAMB06 },
+-    { _MAP20_LCD    , MUSAMB18 },
+-    { _MAP21_LCD    , MUSAMB24 },
+-    { _MAP22_LCD    , MUSAMB14 },
+-    { _MAP23_LCD    , MUSAMB03 },
+-    { _MAP24_LCD    , MUSAMB20 },
+-    { _MAP25_LCD    , MUSAMB11 },
+-    { _MAP26_LCD    , MUSAMB25 },
+-    { _MAP27_LCD    , MUSAMB04 },
+-    { _MAP28_LCD    , MUSAMB05 },
+-    { _MAP29_LCD    , MUSAMB10 },
+-    { _MAP30_LCD    , MUSAMB19 },
+-    { _MAP31_LCD    , MUSAMB01 },
+-    { _MAP32_LCD    , MUSAMB09 },
+-    { _MAP33_LCD    , MUSAMB14 },
+-    { _MAP34_LCD    , MUSAMB12 },
+-    { _MAP35_LCD    , MUSAMB08 },
+-    { _MAP36_LCD    , MUSAMB13 },
+-    { _MAP37_LCD    , MUSAMB18 },
+-    { _MAP38_LCD    , MUSAMB20 },
+-    { _MAP39_LCD    , MUSAMB15 },
+-    { _MAP40_LCD    , MUSAMB19 },
+-    { _MAP41_LCD    , MUSAMB11 },
+-    { _MAP42_LCD    , MUSAMB26 },
+-    { _MAP43_LCD    , MUSAMB12 },
+-    { _MAP44_LCD    , MUSAMB29 },
+-    { _MAP45_LCD    , MUSAMB06 },
+-    { _MAP46_LCD    , MUSAMB27 },
+-    { _MAP47_LCD    , MUSAMB09 },
+-    { _MAP48_LCD    , MUSAMB22 },
+-    { _MAP49_LCD    , MUSAMB03 },
+-    { _MAP50_LCD    , MUSAMB28 },
+-    { _MAP51_LCD    , MUSAMB07 },
+-    { _MAP52_LCD    , MUSAMB08 },
+-    { _MAP53_LCD    , MUSAMB15 },
+-    { _MAP54_LCD    , MUSAMB04 },
+-    { _MAP55_LCD    , MUSAMB17 },
+-    { _MAP56_LCD    , MUSAMB18 },
+-    { _MAP57_LCD    , MUSAMB10 },
+-    { _MAP58_LCD    , MUSAMB16 },
+-    { _MAP59_LCD    , MUSAMB13 },
++
++    { _MAP10_LCD    , MUSAMB08 },//bug? bebería ser _MAP08_LCD
++    { _MAP08_LCD    , MUSAMB09 },//bug? bebería ser _MAP09_LCD
++    { _MAP09_LCD    , MUSAMB10 },//bug? bebería ser _MAP10_LCD
++
++    { _MAP11_LCD    , MUSAMB11 },
++    { _MAP12_LCD    , MUSAMB12 },
++    { _MAP13_LCD    , MUSAMB13 },
++    { _MAP14_LCD    , MUSAMB14 },
++    { _MAP15_LCD    , MUSAMB15 },
++    { _MAP16_LCD    , MUSAMB16 },
++    { _MAP17_LCD    , MUSAMB17 },
++    { _MAP18_LCD    , MUSAMB18 },
++    { _MAP19_LCD    , MUSAMB19 },
++    { _MAP20_LCD    , MUSAMB20 },
++    { _MAP21_LCD    , MUSAMB21 },
++    { _MAP22_LCD    , MUSAMB22 },
++    { _MAP23_LCD    , MUSAMB23 },
++    { _MAP24_LCD    , MUSAMB24 },
++    { _MAP25_LCD    , MUSAMB25 },
++    { _MAP26_LCD    , MUSAMB26 },
++    { _MAP27_LCD    , MUSAMB27 },
++    { _MAP28_LCD    , MUSAMB28 },
++    { _MAP29_LCD    , MUSAMB29 },
++    { _MAP30_LCD    , MUSAMB30 },
+     { _MAP60_LCD    , NO_MUSIC },
+     { 0             , NO_MUSIC }
+ };
+ 
++
++/* //DOOM
+ static music_t Music[31] = //8007530C
+ {
+ 	{ 0  , 0  , PSXSPU_REV_MODE_OFF     , 0    , 0 },// No Music
+@@ -162,44 +137,44 @@ static music_t Music[31] = //8007530C
+ 	{ _MUSLEV1_LCD, 90 , PSXSPU_REV_MODE_STUDIO_C, 12287, 12287 },// MUSAMB01
+ 	{ _MUSLEV17_LCD, 106, PSXSPU_REV_MODE_STUDIO_C, 12287, 12287 },// MUSAMB17
+ 	{ 0  , 0  , PSXSPU_REV_MODE_OFF     , 0    , 0 },// No Music
+-};
++};*/
+ 
+-/*//FINAL DOOM
+-music_t Music[30] = //80075310
++//FINAL DOOM
++music_t Music[32] = //80075310
+ {
+-	{ 0, 0, 0, 0, 0,
+-	{ _MUSLEV23, 112, 5, 8191 , 8191 },// MUSAMB23
+-	{ _MUSLEV29, 118, 4, 9983 , 9983 },// MUSAMB29
+-	{ _MUSLEV24, 113, 6, 8191 , 8191 },// MUSAMB24
+-	{ _MUSLEV30, 119, 6, 4095 , 4095 },// MUSAMB30
+-	{ _MUSLEV21, 110, 6, 8191 , 8191 },// MUSAMB21
+-	{ _MUSLEV27, 116, 5, 8191 , 8191 },// MUSAMB27
+-	{ _MUSLEV25, 114, 6, 4095 , 4095 },// MUSAMB25
+-	{ _MUSLEV28, 117, 5, 8191 , 8191 },// MUSAMB28
+-	{ _MUSLEV22, 111, 6, 8191 , 8191 },// MUSAMB22
+-	{ _MUSLEV26, 115, 6, 4095 , 4095 },// MUSAMB26
+-	{ _MUSLEV1 , 90 , 6, 4095 , 4095 },// MUSAMB01
+-	{ _MUSLEV2 , 91 , 6, 4095 , 4095 },// MUSAMB02
+-	{ _MUSLEV3 , 92 , 3, 10239, 10239},// MUSAMB03
+-	{ _MUSLEV4 , 93 , 5, 6143 , 6143 },// MUSAMB04
+-	{ _MUSLEV5 , 94 , 2, 9215 , 9215 },// MUSAMB05
+-	{ _MUSLEV6 , 95 , 5, 8191 , 8191 },// MUSAMB06
+-	{ _MUSLEV7 , 96 , 4, 9983 , 9983 },// MUSAMB07
+-	{ _MUSLEV8 , 97 , 3, 11775, 11775},// MUSAMB08
+-	{ _MUSLEV9 , 98 , 4, 12287, 12287},// MUSAMB09
+-	{ _MUSLEV10, 99 , 3, 10239, 10239},// MUSAMB10
+-	{ _MUSLEV11, 100, 5, 8191 , 8191 },// MUSAMB11
+-	{ _MUSLEV12, 101, 4, 12287, 12287},// MUSAMB12
+-	{ _MUSLEV13, 102, 6, 4095 , 4095 },// MUSAMB13
+-	{ _MUSLEV14, 103, 5, 8191 , 8191 },// MUSAMB14
+-	{ _MUSLEV15, 104, 3, 10239, 10239},// MUSAMB15
+-	{ _MUSLEV16, 105, 6, 4095 , 4095 },// MUSAMB16
+-	{ _MUSLEV17, 106, 5, 8191 , 8191 },// MUSAMB17
+-	{ _MUSLEV18, 107, 6, 4095 , 4095 },// MUSAMB18
+-	{ _MUSLEV22, 111, 4, 12287, 12287},// MUSAMB22
+-	{ _MUSLEV26, 115, 4, 12287, 12287},// MUSAMB26
++	{ 0  , 0  , PSXSPU_REV_MODE_OFF     , 0    , 0 },           // No Music
++	{ _MUSLEV23_LCD, 112, PSXSPU_REV_MODE_HALL      , 8191 , 8191 },// MUSAMB23
++	{ _MUSLEV29_LCD, 118, PSXSPU_REV_MODE_STUDIO_C  , 9983 , 9983 },// MUSAMB29
++	{ _MUSLEV24_LCD, 113, PSXSPU_REV_MODE_SPACE     , 8191 , 8191 },// MUSAMB24
++	{ _MUSLEV30_LCD, 119, PSXSPU_REV_MODE_SPACE     , 4095 , 4095 },// MUSAMB30
++	{ _MUSLEV21_LCD, 110, PSXSPU_REV_MODE_SPACE     , 8191 , 8191 },// MUSAMB21
++	{ _MUSLEV27_LCD, 116, PSXSPU_REV_MODE_HALL      , 8191 , 8191 },// MUSAMB27
++	{ _MUSLEV25_LCD, 114, PSXSPU_REV_MODE_SPACE     , 4095 , 4095 },// MUSAMB25
++	{ _MUSLEV28_LCD, 117, PSXSPU_REV_MODE_HALL      , 8191 , 8191 },// MUSAMB28
++	{ _MUSLEV22_LCD, 111, PSXSPU_REV_MODE_SPACE     , 8191 , 8191 },// MUSAMB22
++	{ _MUSLEV26_LCD, 115, PSXSPU_REV_MODE_SPACE     , 4095 , 4095 },// MUSAMB26
++	{ _MUSLEV1_LCD , 90 , PSXSPU_REV_MODE_SPACE     , 4095 , 4095 },// MUSAMB01
++	{ _MUSLEV2_LCD , 91 , PSXSPU_REV_MODE_SPACE     , 4095 , 4095 },// MUSAMB02
++	{ _MUSLEV3_LCD , 92 , PSXSPU_REV_MODE_STUDIO_B  , 10239, 10239},// MUSAMB03
++	{ _MUSLEV4_LCD , 93 , PSXSPU_REV_MODE_HALL      , 6143 , 6143 },// MUSAMB04
++	{ _MUSLEV5_LCD , 94 , PSXSPU_REV_MODE_STUDIO_A  , 9215 , 9215 },// MUSAMB05
++	{ _MUSLEV6_LCD , 95 , PSXSPU_REV_MODE_HALL      , 8191 , 8191 },// MUSAMB06
++	{ _MUSLEV7_LCD , 96 , PSXSPU_REV_MODE_STUDIO_C  , 9983 , 9983 },// MUSAMB07
++	{ _MUSLEV8_LCD , 97 , PSXSPU_REV_MODE_STUDIO_B  , 11775, 11775},// MUSAMB08
++	{ _MUSLEV9_LCD , 98 , PSXSPU_REV_MODE_STUDIO_C  , 12287, 12287},// MUSAMB09
++	{ _MUSLEV10_LCD, 99 , PSXSPU_REV_MODE_STUDIO_B  , 10239, 10239},// MUSAMB10
++	{ _MUSLEV11_LCD, 100, PSXSPU_REV_MODE_HALL      , 8191 , 8191 },// MUSAMB11
++	{ _MUSLEV12_LCD, 101, PSXSPU_REV_MODE_STUDIO_C  , 12287, 12287},// MUSAMB12
++	{ _MUSLEV13_LCD, 102, PSXSPU_REV_MODE_SPACE     , 4095 , 4095 },// MUSAMB13
++	{ _MUSLEV14_LCD, 103, PSXSPU_REV_MODE_HALL      , 8191 , 8191 },// MUSAMB14
++	{ _MUSLEV15_LCD, 104, PSXSPU_REV_MODE_STUDIO_B  , 10239, 10239},// MUSAMB15
++	{ _MUSLEV16_LCD, 105, PSXSPU_REV_MODE_SPACE     , 4095 , 4095 },// MUSAMB16
++	{ _MUSLEV17_LCD, 106, PSXSPU_REV_MODE_HALL      , 8191 , 8191 },// MUSAMB17
++	{ _MUSLEV18_LCD, 107, PSXSPU_REV_MODE_SPACE     , 4095 , 4095 },// MUSAMB18
++	{ _MUSLEV22_LCD, 111, PSXSPU_REV_MODE_STUDIO_C  , 12287, 12287},// MUSAMB22
++	{ _MUSLEV26_LCD, 115, PSXSPU_REV_MODE_STUDIO_C  , 12287, 12287},// MUSAMB26
++	{ 0  , 0  , PSXSPU_REV_MODE_OFF     , 0    , 0 },// No Music
+ };
+-*/
+ 
+ extern int psxsettings[SNDHW_TAG_MAX*2];
+ extern int *settings_list[2];
+@@ -324,7 +299,7 @@ void S_DoBlockClear(SampleBlock *sampblk)//80040E10
+ 
+ void S_Lcd_Load(int map_indx)//80040E88
+ {
+-	int sram_pos_tmp;
++	int sram_pos_tmp, master_vol;
+ 	if (lcd_file_indx != map_indx)
+ 	{
+ 		if (lcd_file_indx != 0)
+@@ -333,7 +308,7 @@ void S_Lcd_Load(int map_indx)//80040E88
+ 			{
+ 				S_StopMusic();
+ 				do{} while (wess_seq_status(Music[music_indx].midi_indx) != SEQUENCE_INACTIVE);
+-				wess_seq_range_free(90, 20);
++				wess_seq_range_free(90, 30);
+ 			}
+ 			S_DoBlockClear(&mapsfxblk);
+ 		}
+@@ -361,9 +336,16 @@ void S_Lcd_Load(int map_indx)//80040E88
+ 		}
+ 		else
+ 		{
++		    /* Save Master Volume */
++		    master_vol = psxspu_get_master_vol();
++
++            psxspu_set_master_vol(0);
+ 			psxspu_init_reverb(Music[music_indx].rev_mode, Music[music_indx].depthleft, Music[music_indx].depthright, 0, 0);
+ 			wess_seq_load(Music[music_indx].midi_indx, trackptr);
+ 			sram_pos_tmp += wess_dig_lcd_load((char *)Music[music_indx].lcd_indx, (void *)sram_pos_tmp, &mapsfxblk, 0);
++
++			/* Restore Master Volume */
++			psxspu_set_master_vol(master_vol);
+ 		}
+ 
+ 		lcd_file_indx = map_indx;
+@@ -591,7 +573,9 @@ void PsxSoundInit(int sfx_volume, int mus_volume, void *data)//8004135C
+     S_SetMusicVolume(mus_volume);
+ 
+     sram_load = 0;
+-    sram_pos += wess_dig_lcd_load((char *)_DOOMSFX_LCD,(void *)SRAM_START, &doomsfxblk, 0);
++    sram_pos = wess_dig_lcd_load((char *)_DOOMSFX_LCD,(void *)SRAM_START, &doomsfxblk, 0);
++    sram_pos += SRAM_START;
++
+     //printf("sram_pos %d\n",sram_pos);
+     sram_load = 1;
+ }
+diff --git a/PSXDOOM/st_main.c b/PSXDOOM/st_main.c
+index 93c228c..24fd83d 100644
+--- a/PSXDOOM/st_main.c
++++ b/PSXDOOM/st_main.c
+@@ -649,7 +649,7 @@ void ST_CheatDraw(void)//L8003AA80()
+ 	//Draw Pause Graphic
+ 	if (!(p->cheats & CF_PAUSE) )
+ 	{
+-		DrawStaticImage(&pausepic, 107, 108, palette[0]);
++		DrawStaticImage(&pausepic, 107, 108, palette[20]);
+ 	}
+ 
+ 	if (p->cheats & CF_WARPLEVEL)
+@@ -807,7 +807,7 @@ void ST_DrawText(int x, int y, char *text)//L8003B0A0()
+ 	W_AddPrim(drawmode);// add to order table
+ 
+ 	/* make sprite status*/
+-	SetSprt(sprtstat);
++	setSprt(sprtstat);
+ 	setShadeTex(sprtstat, 1);
+ 	sprtstat->clut = palette[16];
+ 
+diff --git a/PSXDOOM/t_main.c b/PSXDOOM/t_main.c
+index a1d26a1..d0126f8 100644
+--- a/PSXDOOM/t_main.c
++++ b/PSXDOOM/t_main.c
+@@ -7,6 +7,9 @@
+ int vframe1 = 0; //80077AB4 iGp000006a4
+ int vframe2 = 0; //80077AB8 iGp000006a8
+ 
++int y_scroll;//80077FB8 uGp00000ba8
++int last_ticon;//80077D38 iGp00000928
++
+ psxobj_t loadingpic;//0x80097870
+ psxobj_t marb01pic;//0x80097890
+ psxobj_t buttonspic;//0x800978B0
+@@ -27,19 +30,19 @@ void T_Start(void)//L80034EA0()
+ 	int lump;
+ 
+ 	Valloc_Init();
+-	Z_FreeTags(mainzone,PU_CACHE);//test
++	//Z_FreeTags(mainzone,PU_CACHE);//test
+ 
+ 	W_CacheLumpName("LOADING", PU_STATIC, 0);
+ 	ImageToVram(&loadingpic, "LOADING", 0);
+-	P_LoadingPlaque(&loadingpic, 95, 109, palette[16]);
++	P_LoadingPlaque(&loadingpic, 95, 109, palette[20]);
+ 	S_Lcd_Load(0);
+ 
+-	W_CacheLumpName("MARB01", PU_STATIC, 0);
++	W_CacheLumpName("TILE", PU_STATIC, 0);//MARB01
+ 	W_CacheLumpName("BUTTONS", PU_STATIC, 0);
+ 	W_CacheLumpName("NETERR", PU_STATIC, 0);
+ 	W_CacheLumpName("PAUSE", PU_STATIC, 0);
+ 
+-	ImageToVram(&marb01pic, "MARB01", 0);
++	ImageToVram(&marb01pic, "TILE", 0);//MARB01
+ 	ImageToVram(&buttonspic, "BUTTONS", 0);
+ 	ImageToVram(&neterrpic, "NETERR", 0);
+ 	ImageToVram(&pausepic, "PAUSE", 0);
+@@ -53,7 +56,7 @@ void T_Start(void)//L80034EA0()
+ 
+ 	TextureCache(skytexturep);
+ 
+-	y_scroll = 250;
++	y_scroll = 0;
+ 
+ 	psxcd_play(CD_TRACK[cdmusic_title_screen], CDVolume);
+ 	do {} while(psxcd_elapsed_sectors() == 0);
+@@ -95,39 +98,16 @@ int T_Ticker(void)//L8003509C()
+     else
+     {
+         vframe1 -= vblsinframe[consoleplayer];
+-        if (vframe1 <= 0)
++        if ((vframe1 <= 0) && (y_scroll >= 128))
+         {
+             vframe1 = 2;
+-            if (y_scroll != 0)
+-            {
+-                y_scroll--;
+-                if (y_scroll == 0)
+-                    last_ticon = ticon;
+-            }
+-        }
+-
+-        vframe2 -= vblsinframe[consoleplayer];
+-        if (vframe2 <= 0)
+-        {
+-            vframe2 = 2;
+-
+-            //Fire Out
+-            if (((y_scroll < 50) & (y_scroll ^ 1) & 1) != 0)
+-            {
+-                cache = (byte *)(lumpcache[skytexturep->lump].cache) + 8;
+-
+-                pixel = *(cache + FIREPOS1) - 1;
+-                if (pixel < 0)
+-                    pixel = 0;
+-
+-                cachetmp = (cache + FIREPOS2);
+-                for (i = (FIRESKY_WIDTH - 1); i >= 0; i--)
+-                    *cachetmp-- = pixel;
+-            }
+             P_FireSky(skytexturep);
+         }
+ 
+-        if (y_scroll == 0)
++        if (y_scroll < 129)
++            y_scroll += 4;
++
++        if (y_scroll >= 128)
+             exit = -((unsigned int)(ticon - last_ticon < 1800) ^ 1) & 7;
+     }
+ 
+@@ -157,29 +137,6 @@ void T_Draw(void)//L80035214()
+ 
+ 	NextTextureCacheIdx();
+ 
+-	// Draw Title Textures
+-	setPolyFT4(&poly1);
+-	setRGB0(&poly1, 128, 128, 128);
+-
+-	//setUV4(p,_u0,_v0,_u1,_v1,_u2,_v2,_u3,_v3)
+-	setUV4(&poly1,
+-		0  , 0  ,
+-		255, 0  ,
+-		0  , 239,
+-		255, 239);
+-
+-	//setXY4(p,_x0,_y0,_x1,_y1,_x2,_y2,_x3,_y3)
+-	setXY4(&poly1,
+-		0  , y_scroll,
+-		255, y_scroll,
+-		0  , y_scroll + 239,
+-		255, y_scroll + 239);
+-
+-	poly1.tpage = titlepic.vtpage;
+-	poly1.clut = palette[17];
+-
+-	W_AddPrim(&poly1);// add to order table
+-
+ 	// Draw 4 Fire Textures
+ 	if (skytexturep->index == -1)
+ 	{
+@@ -204,10 +161,10 @@ void T_Draw(void)//L80035214()
+ 
+ 	//setXY4(p,_x0,_y0,_x1,_y1,_x2,_y2,_x3,_y3)
+ 	setXY4(&poly1,
+-		0, 116,
+-		SKY_W, 116,
+-		0, 243,
+-		SKY_W, 243);
++		0, 112,
++		SKY_W, 112,
++		0, 239,
++		SKY_W, 239);
+ 
+ 	poly1.tpage = skytexturep->vtpage;
+ 	poly1.clut = skypalette;
+@@ -221,6 +178,30 @@ void T_Draw(void)//L80035214()
+ 		poly1.x3 += SKY_W;
+ 	}
+ 
++	// Draw Title Textures
++	setPolyFT4(&poly1);
++
++	//setXY4(p,_x0,_y0,_x1,_y1,_x2,_y2,_x3,_y3)
++	setXY4(&poly1,
++		0  , 0,
++		255, 0,
++		0  , 239,
++		255, 239);
++
++	//setUV4(p,_u0,_v0,_u1,_v1,_u2,_v2,_u3,_v3)
++	setUV4(&poly1,
++		0  , 0  ,
++		255, 0  ,
++		0  , 239,
++		255, 239);
++
++    setRGB0(&poly1, y_scroll, y_scroll, y_scroll);
++
++	poly1.tpage = titlepic.vtpage;
++	poly1.clut = palette[17];
++
++	W_AddPrim(&poly1);// add to order table
++
+ 	UpdateDrawOTag();
+ 	DrawRender();
+ }
+diff --git a/PSXDOOM/z_zone.c b/PSXDOOM/z_zone.c
+index 231b32b..55eef66 100644
+--- a/PSXDOOM/z_zone.c
++++ b/PSXDOOM/z_zone.c
+@@ -35,7 +35,8 @@ extern unsigned int _bbsstart;      // bss start free memory ram
+ extern unsigned long _ramsize;      // megabytes of RAM
+ extern unsigned long _stacksize;    // kilobytes of stack
+ 
+-unsigned int _bbsstart2 = 0x800A9CA8;//tmp addres
++//unsigned int _bbsstart2 = 0x800A9CA8;//tmp addres
++unsigned int _bbsstart2 = 0x800AC9F0;//tmp addres Final Doom
+ void Z_Init (void)//L80032014()
+ {
+ 	byte	*mem;
+-- 
+2.17.1.windows.2
+
