@@ -3866,36 +3866,6 @@ index a76a8ca..471230b 100644
  
  	UpdateDrawOTag();
  	DrawRender();
-diff --git a/PSXDOOM/r_data.c b/PSXDOOM/r_data.c
-index 0415f04..e0e4063 100644
---- a/PSXDOOM/r_data.c
-+++ b/PSXDOOM/r_data.c
-@@ -25,11 +25,6 @@ int			*texturetranslation;	//80077D98|puGp0000097c /* for global animation */
- short		skypalette;				//800780F0 psx doom
- psxobj_t	*skytexturep;			//80077E7C
- 
--#define MAX_PALETTES 20
--extern light_t *lights;			    //80077E94
--extern short palette[MAX_PALETTES];	//800A8E68
--extern short palettebase;			//80077DA8
--
- void R_InitTextures(void);
- void R_InitFlats(void);
- void R_InitSprite(void);
-diff --git a/PSXDOOM/r_local.h b/PSXDOOM/r_local.h
-index d5e2090..abc51fb 100644
---- a/PSXDOOM/r_local.h
-+++ b/PSXDOOM/r_local.h
-@@ -333,8 +333,7 @@ extern	psxobj_t	*texflats;
- extern	int			firstsprite, lastsprite, numsprites;
- extern	psxobj_t	*texsprites;
- 
--
--#define MAX_PALETTES 20
-+#define MAX_PALETTES 26 //Final Doom 20 to 26
- extern	short palette[MAX_PALETTES];
- extern	short palettebase;
- extern	light_t		*lights;
 diff --git a/PSXDOOM/r_phase2.c b/PSXDOOM/r_phase2.c
 index a695509..683756d 100644
 --- a/PSXDOOM/r_phase2.c

@@ -27,7 +27,7 @@ int32_t*    gpFlatTranslation;
 light_t*    gpLightsLump;
 
 // Palette stuff
-uint16_t    gPaletteClutIds[NUMPALETTES];       // CLUT ids for all of the game's palettes. These are all held in VRAM.
+uint16_t    gPaletteClutIds[MAXPALETTES];       // CLUT ids for all of the game's palettes. These are all held in VRAM.
 uint16_t    g3dViewPaletteClutId;               // Currently active in-game palette. Changes as effects are applied in the game.
 
 // Lump number ranges
@@ -296,12 +296,13 @@ void R_InitPalette() noexcept {
     firstLight.g = 255;
     firstLight.b = 255;
 
-    // Load the palettes lump and sanity check its size
+    // Load the palettes lump and sanity check its size.
+    // Accept either the Doom or Final Doom palette count.
     const int32_t playpalLumpNum = W_GetNumForName("PLAYPAL");
     const palette_t* const pGamePalettes = (const palette_t*) W_CacheLumpNum(playpalLumpNum, PU_CACHE, true);
     const int32_t numPalettes = W_LumpLength(playpalLumpNum) / sizeof(palette_t);
-    
-    if (numPalettes != NUMPALETTES) {
+
+    if ((numPalettes != NUMPALETTES_DOOM) && (numPalettes != NUMPALETTES_FINAL_DOOM)) {
         I_Error("R_InitPalettes: palette foulup\n");
     }
 
@@ -314,7 +315,7 @@ void R_InitPalette() noexcept {
         const palette_t* pPalette = pGamePalettes;
         uint16_t* pClutId = gPaletteClutIds;
 
-        for (int32_t palIdx = 0; palIdx < NUMPALETTES; ++palIdx, ++pPalette, ++pClutId) {
+        for (int32_t palIdx = 0; palIdx < numPalettes; ++palIdx, ++pPalette, ++pClutId) {
             // How many palettes we can squeeze onto a VRAM texture page that also has a framebuffer.
             // The palettes for the game are packed into some of the unused rows of the framebuffer.
             constexpr int32_t PAL_ROWS_PER_TPAGE = 256 - SCREEN_H;

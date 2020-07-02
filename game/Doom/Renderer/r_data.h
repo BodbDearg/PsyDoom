@@ -7,8 +7,10 @@ struct RECT;
 // Constant for an invalid or undefined (not yet set) upload frame number for a texture
 static constexpr uint32_t TEX_INVALID_UPLOAD_FRAME_NUM = UINT32_MAX;
 
-// The number of palettes available in the game
-static constexpr uint32_t NUMPALETTES = 20;
+// The number of palettes available in the game for Doom and Final Doom and maximum the engine supports
+static constexpr uint32_t NUMPALETTES_DOOM          = 20;
+static constexpr uint32_t NUMPALETTES_FINAL_DOOM    = 26;
+static constexpr uint32_t MAXPALETTES               = NUMPALETTES_FINAL_DOOM;
 
 // Palette indices and ranges
 static constexpr uint32_t MAINPAL               = 0;    // Used for most sprites and textures in the game
@@ -66,7 +68,7 @@ extern texture_t*   gpSkyTexture;
 extern int32_t*     gpTextureTranslation;
 extern int32_t*     gpFlatTranslation;
 extern light_t*     gpLightsLump;
-extern uint16_t     gPaletteClutIds[NUMPALETTES];
+extern uint16_t     gPaletteClutIds[MAXPALETTES];
 extern uint16_t     g3dViewPaletteClutId;
 extern int32_t      gFirstTexLumpNum;
 extern int32_t      gLastTexLumpNum;
