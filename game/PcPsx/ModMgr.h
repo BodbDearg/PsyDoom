@@ -17,5 +17,6 @@ void closeOverridenFile(PsxCd_File& file) noexcept;
 int32_t readFromOverridenFile(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;
 int32_t seekForOverridenFile(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept;
 int32_t tellForOverridenFile(const PsxCd_File& file) noexcept;
+int32_t getOverridenFileSize(const CdFileId discFile) noexcept;
 
 END_NAMESPACE(ModMgr)

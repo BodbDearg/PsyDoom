@@ -4,6 +4,7 @@
 #include "ModMgr.h"
 
 #include "Assert.h"
+#include "FileUtils.h"
 #include "ProgArgs.h"
 
 #include <filesystem>
@@ -98,6 +99,21 @@ static bool isValidOverridenFile(const PsxCd_File& file) noexcept {
 
 #endif  // #if ASSERTS_ENABLED
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the path to an overriden file
+//------------------------------------------------------------------------------------------------------------------------------------------
+static std::string getOverridenFilePath(const CdFileId discFile) noexcept {
+    const char* const filename = gCdMapTblFileNames[(uint32_t) discFile];
+
+    std::string filePath;
+    filePath.reserve(255);
+    filePath = ProgArgs::gDataDirPath;
+    filePath.push_back('/');
+    filePath += filename;
+
+    return filePath;
+}
+
 void init() noexcept {
     determineFileOverridesInUserDataDir();
 }
@@ -134,11 +150,7 @@ bool openOverridenFile(const CdFileId discFile, PsxCd_File& fileOut) noexcept {
         FatalErrors::raise("ModMgr::openOverridenFile: invalid file specified!");
     }
 
-    const char* const filename = gCdMapTblFileNames[(uint32_t) discFile];
-
-    std::string filePath = ProgArgs::gDataDirPath;
-    filePath.push_back('/');
-    filePath += filename;
+    std::string filePath = getOverridenFilePath(discFile);
     
     // Open the file and save it in the file slot index
     std::FILE* const pFile = std::fopen(filePath.c_str(), "rb");
@@ -209,6 +221,15 @@ int32_t tellForOverridenFile(const PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
     std::FILE* const pFile = gOpenFileSlots[file.overrideFileHandle - 1];
     return (int32_t) std::ftell(pFile);
+}
+
+int32_t getOverridenFileSize(const CdFileId discFile) noexcept {
+    if (discFile >= CdFileId::END) {
+        FatalErrors::raise("ModMgr::getOverridenFileSize: invalid file specified!");
+    }
+
+    std::string filePath = getOverridenFilePath(discFile);
+    return (int32_t) FileUtils::getFileSize(filePath.c_str());
 }
 
 END_NAMESPACE(ModMgr)

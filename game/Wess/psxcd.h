@@ -73,3 +73,7 @@ void psxcd_pause() noexcept;
 void psxcd_restart(const int32_t vol) noexcept;
 int32_t psxcd_elapsed_sectors() noexcept;
 void psxcd_set_stereo(const bool bStereo) noexcept;
+
+#if PC_PSX_DOOM_MODS
+    int32_t psxcd_get_file_size(const CdFileId discFile) noexcept;
+#endif

@@ -783,3 +783,18 @@ void psxcd_set_stereo(const bool bStereo) noexcept {
 
     LIBCD_CdMix(gPSXCD_cdatv);
 }
+
+#if PC_PSX_DOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the size of a file
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t psxcd_get_file_size(const CdFileId discFile) noexcept {
+    // Modding mechanism: allow files to be overriden with user files in a specified directory
+    if (ModMgr::areOverridesAvailableForFile(discFile))
+        return ModMgr::getOverridenFileSize(discFile);
+
+    return gCdMapTbl[(int32_t) discFile].size;
+}
+
+#endif  // #if PC_PSX_DOOM_MODS
