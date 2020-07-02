@@ -18,5 +18,11 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr bool IS_64_BIT_BUILD = (sizeof(void*) > 4);
 
-// How much memory is available to hold the load .WMD (Williams Module File) for the game and also any currently loaded music sequences
-static constexpr uint32_t WMD_MEM_SIZE = 26000 * (IS_64_BIT_BUILD ? 2 : 1);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// How much memory is available to hold the load .WMD (Williams Module File) for the game and also any currently loaded music sequences.
+//
+// The size of this memory chunk is as follows for the original games:
+//  - Doom          : 26,000 bytes
+//  - Final Doom    : 36,000 bytes
+//------------------------------------------------------------------------------------------------------------------------------------------
+static constexpr uint32_t WMD_MEM_SIZE = 36000 * (IS_64_BIT_BUILD ? 2 : 1);
