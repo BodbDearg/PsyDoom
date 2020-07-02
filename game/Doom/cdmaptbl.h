@@ -207,7 +207,7 @@ enum class CdFileId : int32_t {
     MAPTEX63_PAD,
     MAPTEX64_PAD,
     DOOMSFX_LCD,
-    DOOMSFX_WMD,
+    DOOMSND_WMD,
     MUSLEV1_LCD,
     MUSLEV10_LCD,
     MUSLEV11_LCD,
@@ -293,7 +293,11 @@ enum class CdFileId : int32_t {
 
 // A list of all the files in the game, their start sector on the CD and size.
 // This table can be indexed by using the enum above:
-extern const PsxCd_MapTblEntry CD_MAP_TBL[];
+extern PsxCd_MapTblEntry gCdMapTbl[(uint32_t) CdFileId::END];
 
-// The names of all the files
-extern const char* const CD_MAP_FILENAMES[];
+#if PC_PSX_DOOM_MODS
+    extern const char* const gCdMapTblFileNames[(uint32_t) CdFileId::END];      // The names of all the files in the CD map table
+    extern const char* const gCdMapTblFilePaths[(uint32_t) CdFileId::END];      // The paths of all the files in the CD map table
+
+    void CdMapTbl_Init() noexcept;
+#endif

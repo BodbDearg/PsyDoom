@@ -40,7 +40,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
     std::map<std::string, uint32_t> nameToFileIndex;
 
     for (uint32_t i = 0; i < (uint32_t) CdFileId::END; ++i) {
-        nameToFileIndex[CD_MAP_FILENAMES[i]] = i;
+        nameToFileIndex[gCdMapTblFileNames[i]] = i;
     }
 
     // Next search the data dir for overrides.
@@ -134,7 +134,7 @@ bool openOverridenFile(const CdFileId discFile, PsxCd_File& fileOut) noexcept {
         FatalErrors::raise("ModMgr::openOverridenFile: invalid file specified!");
     }
 
-    const char* const filename = CD_MAP_FILENAMES[(uint32_t) discFile];
+    const char* const filename = gCdMapTblFileNames[(uint32_t) discFile];
 
     std::string filePath = ProgArgs::gDataDirPath;
     filePath.push_back('/');

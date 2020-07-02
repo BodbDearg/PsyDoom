@@ -6,7 +6,9 @@
 
 #include "Assert.h"
 #include "DiscInfo.h"
+#include "DiscReader.h"
 #include "Input.h"
+#include "IsoFileSys.h"
 #include "ProgArgs.h"
 #include "PsxPadButtons.h"
 
@@ -22,6 +24,7 @@ END_DISABLE_HEADER_WARNINGS
 BEGIN_NAMESPACE(PsxVm)
 
 DiscInfo                gDiscInfo;
+IsoFileSys              gIsoFileSys;
 System*                 gpSystem;
 gpu::GPU*               gpGpu;
 spu::SPU*               gpSpu;
@@ -54,6 +57,18 @@ bool init(const char* const doomCdCuePath) noexcept {
                 "Couldn't open or failed to parse the game disc .cue file '%s'!\nError message: %s",
                 doomCdCuePath,
                 parseErrorMsg.c_str()
+            );
+        }
+    }
+
+    // Build up the ISO file system from the game disc
+    {
+        DiscReader discReader(gDiscInfo);
+
+        if (!gIsoFileSys.build(discReader)) {
+            FatalErrors::raise(
+                "Failed to extract the ISO 9960 filesystem records from the game's disc! "
+                "Is the disc in a strange format, or is the image corrupt?"
             );
         }
     }

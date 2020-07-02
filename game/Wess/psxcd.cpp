@@ -305,7 +305,7 @@ PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
     }
 
     // Figure out where the file is on disc, open up the disc reader for it and save it's details
-    const PsxCd_MapTblEntry& fileTableEntry = CD_MAP_TBL[(uint32_t) discFile];
+    const PsxCd_MapTblEntry& fileTableEntry = gCdMapTbl[(uint32_t) discFile];
     DiscReader& discReader = gDiscReaders[discReaderIdx];
 
     if (!discReader.setTrackNum(1)) {

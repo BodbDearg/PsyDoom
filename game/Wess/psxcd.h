@@ -28,7 +28,7 @@ enum class PsxCd_SeekMode : int32_t {
 // Used by the retail version of the game for fast file access, presumably not used during development as that would be painful.
 // The location is stored in terms of start sector (2048 byte sector) number.
 struct PsxCd_MapTblEntry {
-    int32_t     startSector;
+    int32_t     startSector;    // PC-PSX: if this is '0' then it means the file is not present on the disc
     int32_t     size;
 };
 

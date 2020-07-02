@@ -1,6 +1,7 @@
 #include "psx_main.h"
 
 #include "Base/i_main.h"
+#include "cdmaptbl.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/ModMgr.h"
@@ -42,6 +43,9 @@ int32_t psx_main(const int argc, const char** const argv) noexcept {
         // TODO: make this path configurable.
         if (!PsxVm::init("Doom.cue"))
             return 1;
+
+        // Initialize the table of files on the CD from the file system
+        CdMapTbl_Init();
         
         // Initialize the display and the modding manager
         Video::initVideo();

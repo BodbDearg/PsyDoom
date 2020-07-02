@@ -502,7 +502,7 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     psxcd_init();
 
     // Read the WMD file into the given buffer (assumes it is big enough)
-    PsxCd_File* const pFile = psxcd_open(CdFileId::DOOMSFX_WMD);
+    PsxCd_File* const pFile = psxcd_open(CdFileId::DOOMSND_WMD);
 
     #if PC_PSX_DOOM_MODS
         if (!pFile) {
@@ -530,7 +530,7 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     // Initialize the music sequence and LCD (samples file) loaders
     master_status_structure& mstat = *wess_get_master_status();
     wess_dig_lcd_loader_init(&mstat);
-    wess_seq_loader_init(&mstat, CdFileId::DOOMSFX_WMD, true);
+    wess_seq_loader_init(&mstat, CdFileId::DOOMSND_WMD, true);
 
     // Load all of the very simple 'music sequences' for sound effects in the game.
     // These are kept loaded at all times since they are small.

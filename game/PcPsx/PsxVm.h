@@ -5,6 +5,7 @@
 #include <cstdint>
 
 struct DiscInfo;
+struct IsoFileSys;
 
 // Forward declaring avocado types
 struct System;
@@ -15,8 +16,9 @@ namespace device::cdrom     { class CDROM;  }
 
 BEGIN_NAMESPACE(PsxVm)
 
-// Information for the game disc
-extern DiscInfo gDiscInfo;
+// Information for the game disc and the filesystem
+extern DiscInfo     gDiscInfo;
+extern IsoFileSys   gIsoFileSys;
 
 // Access to emulated Avocado devices
 extern System*                  gpSystem;
