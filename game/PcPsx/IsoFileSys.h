@@ -33,5 +33,8 @@ struct IsoFileSys {
     uint32_t                        logicalBlockSize;       // Size of a logical sector for the CD-ROM, normally 2,048 bytes
 
     bool build(DiscReader& discReader) noexcept;
-    int32_t find(const char* path) noexcept;
+    int32_t getEntryIndex(const char* const path) const noexcept;
+    int32_t getEntryIndex(const IsoFileSysEntry& root, const char* const path) const noexcept;
+    const IsoFileSysEntry* getEntry(const char* const path) const noexcept;
+    const IsoFileSysEntry* getEntry(const IsoFileSysEntry& root, const char* const path) const noexcept;
 };

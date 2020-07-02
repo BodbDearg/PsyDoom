@@ -4,6 +4,7 @@
 #include "DiscReader.h"
 #include "Endian.h"
 
+#include <cstring>
 #include <queue>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -127,6 +128,10 @@ struct DirToProcess {
 // Sector that the primary volume descriptor is found on for the ISO 9960 file system
 //------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr int32_t VOL_DESC_SECTOR = 16;
+
+static bool isPathSeparator(const char c) noexcept {
+    return ((c == '\\') || (c == '/'));
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the entire ISO 9960 filesystem from the given disc's data track (01).
@@ -289,7 +294,76 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
     return true;
 }
 
-int32_t IsoFileSys::find(const char* path) noexcept {
-    // TODO
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Lookup the index of the file system entry for the given path (case insensitive), relative to the root of the filesystem.
+// Returns '-1' if the file system entry is not found.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t IsoFileSys::getEntryIndex(const char* const path) const noexcept {
+    return (!entries.empty()) ? getEntryIndex(entries[0], path) : -1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Lookup the index of the file system entry for the given path (case insensitive), relative to the give filesystem root.
+// Returns '-1' if the file system entry is not found.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t IsoFileSys::getEntryIndex(const IsoFileSysEntry& root, const char* const path) const noexcept {
+    // Skip root separators in the given path
+    if (path[0] == '.') {
+        if (isPathSeparator(path[1]))
+            return getEntryIndex(root, path + 2);
+    }
+    else if (isPathSeparator(path[0])) {
+        return getEntryIndex(root, path + 1);
+    }
+
+    // Try to match the path against all the entries in the given root
+    for (int32_t childIdx = 0; childIdx < root.numChildren; ++childIdx) {
+        const int32_t childEntryIdx = root.firstChildIdx + childIdx;
+        const IsoFileSysEntry& childEntry = entries[childEntryIdx];
+
+        for (int32_t charIdx = 0; charIdx < C_ARRAY_SIZE(childEntry.name); ++charIdx) {
+            // Do case insensitive comparison
+            const char c1 = (char) std::toupper(childEntry.name[charIdx]);
+            const char c2 = (char) std::toupper(path[charIdx]);
+
+            // Is the filesystem name at the end?
+            if (c1 == 0) {
+                // If the search string is also at an end then they are matched:
+                if (c2 == 0)
+                    return childEntryIdx;
+
+                // If the search string is on a path separator then we might be able to recurse into a directory.
+                // If this is the case then chop off the part of the path that we have matched and recurse:
+                if (isPathSeparator(c2)) {
+                    if (childEntry.bIsDirectory)
+                        return getEntryIndex(childEntry, path + charIdx + 1);
+                }
+
+                // Otherwise the paths are not matched: move onto 
+                break;
+            }
+
+            // If the search string is not matching then this filesystem entry is not a match for the path
+            if (c1 != c2)
+                break;
+        }
+    }
+
     return -1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convenience overload: lookup a file system entry directly by path
+//------------------------------------------------------------------------------------------------------------------------------------------
+const IsoFileSysEntry* IsoFileSys::getEntry(const char* const path) const noexcept {
+    const int32_t entryIndex = getEntryIndex(path);
+    return (entryIndex >= 0) ? &entries[entryIndex] : nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convenience overload: lookup a file system entry directly by path within a given parent
+//------------------------------------------------------------------------------------------------------------------------------------------
+const IsoFileSysEntry* IsoFileSys::getEntry(const IsoFileSysEntry& root, const char* const path) const noexcept {
+    const int32_t entryIndex = getEntryIndex(root, path);
+    return (entryIndex >= 0) ? &entries[entryIndex] : nullptr;
 }
