@@ -107,10 +107,8 @@ void waitForCdAudioPlaybackStart() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void waitForCdAudioFadeOut() noexcept {
     // PC-PSX: never wait for fades in headless mode
-    #if PC_PSX_DOOM_MODS
-        if (ProgArgs::gbHeadlessMode)
-            return;
-    #endif
+    if (ProgArgs::gbHeadlessMode)
+        return;
 
     // Wait for the fade to complete...
     while (psxspu_get_cd_fade_status()) {
