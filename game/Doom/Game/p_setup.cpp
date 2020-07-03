@@ -63,6 +63,9 @@ mapthing_t      gPlayerStarts[MAXPLAYERS];
 mapthing_t      gDeathmatchStarts[MAX_DEATHMATCH_STARTS];
 mapthing_t*     gpDeathmatchP;                                  // Points past the end of the deathmatch starts list
 
+// Is the map being loaded a Final Doom format map?
+static bool gbLoadingFinalDoomMap;
+
 // Function to update the fire sky.
 // Set when the map has a fire sky, otherwise null.
 void (*gUpdateFireSkyFunc)(texture_t& skyTex) = nullptr;
@@ -210,7 +213,12 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     }
 
     // Alloc ram for the runtime sectors and zero initialize
-    gNumSectors = lumpSize / sizeof(mapsector_t);
+    if (gbLoadingFinalDoomMap) {
+        gNumSectors = lumpSize / sizeof(mapsector_final_t);
+    } else {
+        gNumSectors = lumpSize / sizeof(mapsector_t);
+    }
+
     gpSectors = (sector_t*) Z_Malloc(*gpMainMemZone, gNumSectors * sizeof(sector_t), PU_LEVEL, nullptr);
     D_memset(gpSectors, std::byte(0), gNumSectors * sizeof(sector_t));
 
@@ -218,8 +226,16 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD sectors and convert them into runtime sectors
-    {
-        const mapsector_t* pSrcSec = (const mapsector_t*) gTmpBuffer;
+    auto processWadSectors = [&](auto pWadSectors) noexcept {
+        // Which sector type are we dealing with and is it Final Doom?
+        typedef std::remove_reference_t<decltype(*pWadSectors)> wadsector_t;
+        constexpr bool bFinalDoom = std::is_same_v<wadsector_t, mapsector_final_t>;
+
+        // This is required for the Final Doom case
+        const int32_t firstSkyTexPic = W_GetNumForName("F_SKY01") - gFirstFlatLumpNum;
+
+        // Process the sectors
+        const wadsector_t* pSrcSec = pWadSectors;
         sector_t* pDstSec = gpSectors;
 
         for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
@@ -233,26 +249,56 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
             pDstSec->tag = Endian::littleToHost(pSrcSec->tag);
             pDstSec->flags = Endian::littleToHost(pSrcSec->flags);
 
-            // Figure out floor texture number
-            pDstSec->floorpic = R_FlatNumForName(pSrcSec->floorpic);
+            if constexpr (bFinalDoom) {
+                // Final Doom specific stuff: we have the actual floor and ceiling texture indexes in this case: no lookup needed!
+                const int32_t ceilingPic = Endian::littleToHost(pSrcSec->ceilingpic);
 
-            // Figure out ceiling texture numebr.
-            // Note: if the ceiling has a sky then figure out the sky lump name for it instead - will load the sky lump later on.
-            const bool bCeilHasSky = (D_strncasecmp(pSrcSec->ceilingpic, SKY_LUMP_NAME, SKY_LUMP_NAME_LEN) == 0);
+                pDstSec->floorpic = Endian::littleToHost(pSrcSec->floorpic);
+                pDstSec->ceilingpic = ceilingPic;
 
-            if (bCeilHasSky) {
-                // No ceiling texture: extract and save the 2 digits for the sky number ('01', '02' etc.)
-                pDstSec->ceilingpic = -1;
-                skyLumpName[3] = pSrcSec->ceilingpic[5];
-                skyLumpName[4] = pSrcSec->ceilingpic[6];
+                // Note: if the ceiling has a sky then remove it's texture figure out the sky lump name for it - will load the sky lump later on
+                if (ceilingPic >= firstSkyTexPic) {
+                    pDstSec->ceilingpic = -1;
+
+                    // PC-PSX: add support for more than 9 sky variants (up to 99)
+                    #if PC_PSX_DOOM_MODS
+                        skyLumpName[3] = '0' + (char)((ceilingPic - firstSkyTexPic) / 10);
+                        skyLumpName[4] = '1' + (char)((ceilingPic - firstSkyTexPic) % 10);
+                    #else
+                        skyLumpName[3] = '0';
+                        skyLumpName[4] = '1' + (char)(ceilingPic - firstSkyTexPic);     // Note: only supports up to 9 sky variants!
+                    #endif
+                }
             } else {
-                // Normal case: ceiling has a texture, save it's number
-                pDstSec->ceilingpic = R_FlatNumForName(pSrcSec->ceilingpic);
+                // Original PSX Doom specific stuff, have to lookup flat numbers from names.
+                // First, figure out the floor texture number:
+                pDstSec->floorpic = R_FlatNumForName(pSrcSec->floorpic);
+
+                // Figure out ceiling texture numebr.
+                // Note: if the ceiling has a sky then figure out the sky lump name for it instead - will load the sky lump later on.
+                const bool bCeilHasSky = (D_strncasecmp(pSrcSec->ceilingpic, SKY_LUMP_NAME, SKY_LUMP_NAME_LEN) == 0);
+
+                if (bCeilHasSky) {
+                    // No ceiling texture: extract and save the 2 digits for the sky number ('01', '02' etc.)
+                    pDstSec->ceilingpic = -1;
+                    skyLumpName[3] = pSrcSec->ceilingpic[5];
+                    skyLumpName[4] = pSrcSec->ceilingpic[6];
+                } else {
+                    // Normal case: ceiling has a texture, save it's number
+                    pDstSec->ceilingpic = R_FlatNumForName(pSrcSec->ceilingpic);
+                }
             }
 
             ++pSrcSec;
             ++pDstSec;
         }
+    };
+
+    // Process the sectors found in the WAD file as Final Doom or original Doom format
+    if (gbLoadingFinalDoomMap) {
+        processWadSectors((mapsector_final_t*) gTmpBuffer);
+    } else {
+        processWadSectors((mapsector_t*) gTmpBuffer);
     }
 
     // Set the sky texture pointer
@@ -458,19 +504,40 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD sidedefs and convert them into runtime sidedefs
-    const mapsidedef_t* pSrcSide = (const mapsidedef_t*) gTmpBuffer;
-    side_t* pDstSide = gpSides;
+    auto processWadSidedefs = [&](auto pWadSidedefs) noexcept {
+        // Which sidedef type are we dealing with and is it Final Doom?
+        typedef std::remove_reference_t<decltype(*pWadSidedefs)> wadsidedef_t;
+        constexpr bool bFinalDoom = std::is_same_v<wadsidedef_t, mapsidedef_final_t>;
 
-    for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx) {
-        pDstSide->textureoffset = (fixed_t) Endian::littleToHost(pSrcSide->textureoffset) << FRACBITS;
-        pDstSide->rowoffset = (fixed_t) Endian::littleToHost(pSrcSide->rowoffset) << FRACBITS;
-        pDstSide->sector = &gpSectors[Endian::littleToHost(pSrcSide->sector)];
-        pDstSide->toptexture = R_TextureNumForName(pSrcSide->toptexture);
-        pDstSide->midtexture = R_TextureNumForName(pSrcSide->midtexture);
-        pDstSide->bottomtexture = R_TextureNumForName(pSrcSide->bottomtexture);
+        const wadsidedef_t* pSrcSide = pWadSidedefs;
+        side_t* pDstSide = gpSides;
 
-        ++pSrcSide;
-        ++pDstSide;
+        for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx) {
+            pDstSide->textureoffset = (fixed_t) Endian::littleToHost(pSrcSide->textureoffset) << FRACBITS;
+            pDstSide->rowoffset = (fixed_t) Endian::littleToHost(pSrcSide->rowoffset) << FRACBITS;
+            pDstSide->sector = &gpSectors[Endian::littleToHost(pSrcSide->sector)];
+
+            // For Final Doom we don't need to do any lookup, we have the numbers already...
+            if constexpr (bFinalDoom) {
+                pDstSide->toptexture = Endian::littleToHost(pSrcSide->toptexture);
+                pDstSide->midtexture = Endian::littleToHost(pSrcSide->midtexture);
+                pDstSide->bottomtexture = Endian::littleToHost(pSrcSide->bottomtexture);
+            } else {
+                pDstSide->toptexture = R_TextureNumForName(pSrcSide->toptexture);
+                pDstSide->midtexture = R_TextureNumForName(pSrcSide->midtexture);
+                pDstSide->bottomtexture = R_TextureNumForName(pSrcSide->bottomtexture);
+            }
+
+            ++pSrcSide;
+            ++pDstSide;
+        }
+    };
+
+    // Process the sides found in the WAD file as Final Doom or original Doom format
+    if (gbLoadingFinalDoomMap) {
+        processWadSidedefs((mapsidedef_final_t*) gTmpBuffer);
+    } else {
+        processWadSidedefs((mapsidedef_t*) gTmpBuffer);
     }
 }
 
@@ -915,7 +982,9 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     gDeadPlayerRemovalQueueIdx = 0;
 
     // Figure out which file to open for the map WAD.
+    //
     // Note: for Final Doom I've added logic to allow for MAPXX.WAD or MAPXX.ROM, with a preference for the .WAD file.
+    // Also, if the file for the map has the .ROM extension then it is assumed the map data is in Final Doom format.
     const int32_t mapIndex = mapNum - 1;
     const int32_t mapFolderIdx = mapIndex / LEVELS_PER_MAP_FOLDER;
     const int32_t mapIdxInFolder = mapIndex - mapFolderIdx * LEVELS_PER_MAP_FOLDER;
@@ -923,7 +992,9 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
     const CdFileId mapWadFile_doom = (CdFileId)((int32_t) CdFileId::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
     const CdFileId mapWadFile_finalDoom = (CdFileId)((int32_t) CdFileId::MAP01_ROM + mapIdxInFolder + mapFolderOffset);
-    const CdFileId mapWadFile = (gCdMapTbl[(int32_t) mapWadFile_doom].startSector) ? mapWadFile_doom : mapWadFile_finalDoom;
+    gbLoadingFinalDoomMap = (!gCdMapTbl[(int32_t) mapWadFile_doom].startSector);
+
+    const CdFileId mapWadFile = (gbLoadingFinalDoomMap) ? mapWadFile_finalDoom : mapWadFile_doom;
     
     // Open the map wad
     void* const pMapWadFileData = W_OpenMapWad(mapWadFile);

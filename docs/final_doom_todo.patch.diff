@@ -1615,16 +1615,6 @@ diff --git a/PSXDOOM/doomdata.h b/PSXDOOM/doomdata.h
 index 6672f27..89e0294 100644
 --- a/PSXDOOM/doomdata.h
 +++ b/PSXDOOM/doomdata.h
-@@ -35,7 +35,8 @@ typedef struct
- {
- 	short		textureoffset;
- 	short		rowoffset;
--	char		toptexture[8], bottomtexture[8], midtexture[8];
-+	//char		toptexture[8], bottomtexture[8], midtexture[8];
-+	short		toptexture, bottomtexture, midtexture;
- 	short		sector;				/* on viewer's side */
- } mapsidedef_t;
- 
 @@ -68,12 +69,15 @@ typedef struct
  // Psx Doom New Flags
  #define ML_MIDMASKED		0x200
@@ -2857,46 +2847,6 @@ diff --git a/PSXDOOM/p_setup.c b/PSXDOOM/p_setup.c
 index ec94687..4abe419 100644
 --- a/PSXDOOM/p_setup.c
 +++ b/PSXDOOM/p_setup.c
-@@ -189,6 +189,10 @@ void P_LoadSectors (int lump)//L80021E5C()
- 	sector_t		*ss;
- 	int				skytexture;
- 	char		    skyname[16];
-+
-+	// New Final Doom
-+	skytexture = W_GetNumForName("F_SKY01") - firstflat;
-+
- 	skyname[0] = 'S';
- 	skyname[1] = 'K';
- 	skyname[2] = 'Y';
-@@ -219,7 +223,18 @@ void P_LoadSectors (int lump)//L80021E5C()
- 		ss->tag = LITTLESHORT(ms->tag);
- 		ss->flags = LITTLELONG(ms->flags);
- 
--		ss->floorpic = R_FlatNumForName(ms->floorpic);
-+
-+		// New Final Doom
-+        ss->floorpic = LITTLESHORT(ms->floorpic);
-+        ss->ceilingpic = LITTLESHORT(ms->ceilingpic);
-+        if (skytexture <= ss->ceilingpic)
-+        {
-+            skyname[3] = '0';
-+            skyname[4] = '1' + (ss->ceilingpic - skytexture);
-+            ss->ceilingpic = -1;
-+        }
-+
-+		/*ss->floorpic = R_FlatNumForName(ms->floorpic);
- 		if (!D_strncasecmp(ms->ceilingpic, "F_SKY", 5))
- 		{
- 			ss->ceilingpic = -1;
-@@ -229,7 +244,7 @@ void P_LoadSectors (int lump)//L80021E5C()
- 		else
- 		{
- 			ss->ceilingpic = R_FlatNumForName(ms->ceilingpic);
--		}
-+		}*/
- 	}
- 
- 	skytexturep = NULL;
 @@ -288,23 +303,40 @@ void P_LoadNodes (int lump)//L8002209C()
  =
  =================
@@ -2943,23 +2893,6 @@ index ec94687..4abe419 100644
  	for (i=0 ; i<numthings ; i++, mt++)
  	{
  		mt->x = LITTLESHORT(mt->x);
-@@ -444,9 +476,14 @@ void P_LoadSideDefs (int lump)//L800225E8()
- 		sd->rowoffset = LITTLESHORT(msd->rowoffset)<<FRACBITS;
- 		sd->sector = &sectors[LITTLESHORT(msd->sector)];
- 
--		sd->toptexture = R_TextureNumForName(msd->toptexture);
-+		/*sd->toptexture = R_TextureNumForName(msd->toptexture);
- 		sd->midtexture = R_TextureNumForName(msd->midtexture);
--		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);
-+		sd->bottomtexture = R_TextureNumForName(msd->bottomtexture);*/
-+
-+		// New Final Doom
-+		sd->toptexture = LITTLESHORT(msd->toptexture);
-+		sd->midtexture = LITTLESHORT(msd->midtexture);
-+		sd->bottomtexture = LITTLESHORT(msd->bottomtexture);
- 	}
- }
- 
 @@ -712,7 +749,7 @@ void P_Init (void)//L80022E00()
  
  	if (skytexturep)

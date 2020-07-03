@@ -80,7 +80,8 @@ struct mapvertex_t {
 
 static_assert(sizeof(mapvertex_t) == 8);
 
-// Map data for a sectors, sides, lines, subsectors, nodes and line segments in a WAD
+// Data for a sector in a WAD file - original PSX Doom format.
+// Final Doom uses a different variant of this.
 struct mapsector_t {
     int16_t     floorheight;        // Integer floor height for the sector
     int16_t     ceilingheight;      // Integer ceiling height for the sector
@@ -95,6 +96,24 @@ struct mapsector_t {
 
 static_assert(sizeof(mapsector_t) == 28);
 
+// The Final Doom version of the 'mapsector_t' data structure.
+// This eliminates the strings for floor and ceiling pic and replaces them with indexes instead.
+struct mapsector_final_t {
+    int16_t     floorheight;        // Integer floor height for the sector
+    int16_t     ceilingheight;      // Integer ceiling height for the sector
+    int16_t     floorpic;           // Floor flat texture index
+    int16_t     ceilingpic;         // Ceiling flat texture index
+    uint8_t     lightlevel;         // Light level for the sector (normally 0-255)
+    uint8_t     colorid;            // Which of the sector light colors to use for the sector
+    int16_t     special;            // Special action for the sector: damage, secret, light flicker etc.
+    int16_t     tag;                // Tag for the sector for use in targetted actions (triggered by switches, line crossings etc.)
+    uint16_t    flags;              // Affects sound fx (TODO: figure out what this means)
+};
+
+static_assert(sizeof(mapsector_final_t) == 16);
+
+// Data for a line side in a WAD file - original PSX Doom format.
+// Final Doom uses a different variant of this.
 struct mapsidedef_t {
     int16_t     textureoffset;          // Texture x offset
     int16_t     rowoffset;              // Texture y offset
@@ -106,6 +125,20 @@ struct mapsidedef_t {
 
 static_assert(sizeof(mapsidedef_t) == 30);
 
+// The Final Doom version of the 'mapsidedef_t' data structure.
+// This eliminates the strings for all textures and replaces them with indexes instead.
+struct mapsidedef_final_t {
+    int16_t     textureoffset;          // Texture x offset
+    int16_t     rowoffset;              // Texture y offset
+    int16_t     toptexture;             // Upper texture index
+    int16_t     bottomtexture;          // Lower texture index
+    int16_t     midtexture;             // Mid or wall texture lump index
+    int16_t     sector;                 // Which sector (by index) the side belongs to
+};
+
+static_assert(sizeof(mapsidedef_final_t) == 12);
+
+// Data for a line in a WAD file
 struct maplinedef_t {
     int16_t     vertex1;        // Index of the 1st vertex in the line
     int16_t     vertex2;        // Index of the 2nd vertex in the line
@@ -117,6 +150,7 @@ struct maplinedef_t {
 
 static_assert(sizeof(maplinedef_t) == 14);
 
+// Data for a subsector of a sector in a WAD file
 struct mapsubsector_t {
     int16_t     numsegs;        // How many segs this subsector has
     int16_t     firstseg;       // Index of the first seg this subsector has (all are stored sequentially)
@@ -124,6 +158,7 @@ struct mapsubsector_t {
 
 static_assert(sizeof(mapsubsector_t) == 4);
 
+// Data for a BSP tree node in a WAD file
 struct mapnode_t {
     int16_t     x;              // The partition line: 1st point in integer coords (x & y) 
     int16_t     y;
@@ -135,6 +170,7 @@ struct mapnode_t {
 
 static_assert(sizeof(mapnode_t) == 28);
 
+// Data for a line segment in a WAD file
 struct mapseg_t {
     int16_t     vertex1;        // Index of the 1st vertex in the line segment
     int16_t     vertex2;        // Index of the 2nd vertex in the line segment
