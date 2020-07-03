@@ -21,10 +21,10 @@
 #include "p_switch.h"
 #include "p_tick.h"
 
-// How much heap space is required after loading the map in order to run the game (48 KiB).
-// If we don't have this much then the game craps out with an error.
+// How much heap space is required after loading the map in order to run the game (48 KiB in Doom, 32 KiB in Final Doom).
+// If we don't have this much then the game dies with an error; I'm adopting the Final Doom requirement here since it is the lowest.
 // Need to be able to support various small allocs throughout gameplay for particles and so forth.
-static constexpr int32_t MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY = 1024 * 48;
+static constexpr int32_t MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY = 1024 * 32;
 
 // How many maps are in a map folder and the number of files per maps folder etc.
 static constexpr int32_t LEVELS_PER_MAP_FOLDER = (uint32_t) CdFileId::MAPSPR01_IMG - (uint32_t) CdFileId::MAP01_WAD;

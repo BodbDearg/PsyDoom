@@ -1,53 +1,3 @@
-From 5f48c56bf636776341b11a230cb9296b69a9b9e8 Mon Sep 17 00:00:00 2001
-From: "darraghcoy@runbox.com" <darraghcoy@runbox.com>
-Date: Mon, 15 Jun 2020 00:48:45 -0700
-Subject: [PATCH] Diffs of interest between Doom and Final Doom
-
-This patch patches the 'PSXDOOM-RE' repository (at 0723d253eaa9e5a36ab2b59c95f7e730514affac) to match 'PSXFINALDOOM-RE' (at 5b81285ca35f1b947bc88a33c598e208ede5ff60).
-It is indended to serve as a quick reference for all the differences between PSX Doom and Final Doom.
-Some unimportant comment differences like changed variable addresses in the original binary are omitted for brevity.
-
-For the full versions of these repositories, visit:
-    https://github.com/Erick194/PSXDOOM-RE
-    https://github.com/Erick194/PSXFINALDOOM-RE
-
-Many thanks to Erick Vásquez García for his work on both these reverse engineering projects, making this easy diff possible.
-
----
- PSXDOOM/PSXCDABS.C | 446 +++++++++++++++++----------------------------
- PSXDOOM/PSXCDABS.H | 444 +++++++++++++++++---------------------------
- PSXDOOM/PSX_PAD.C  |  60 ++++++
- PSXDOOM/c_main.c   |  58 ++++--
- PSXDOOM/cf_main.c  | 346 +++++++++++++++++++++++++++++++----
- PSXDOOM/d_main.c   |  26 ++-
- PSXDOOM/doomdata.h |  10 +-
- PSXDOOM/doomdef.h  |  73 +++++---
- PSXDOOM/f_main.c   | 200 ++++++++++++++------
- PSXDOOM/g_game.c   | 110 ++++-------
- PSXDOOM/in_main.c  | 105 ++++-------
- PSXDOOM/l_main.c   |   7 +-
- PSXDOOM/m_main.c   |  49 ++---
- PSXDOOM/o_main.c   |  71 +++++---
- PSXDOOM/p_enemy.c  |  26 +--
- PSXDOOM/p_mobj.c   |   1 -
- PSXDOOM/p_setup.c  | 107 +++++++++--
- PSXDOOM/p_spec.c   |   4 +-
- PSXDOOM/p_spec.h   |   2 +-
- PSXDOOM/p_switch.c |   2 +
- PSXDOOM/p_tick.c   |   8 +-
- PSXDOOM/p_user.c   | 153 ++++++++++------
- PSXDOOM/psxmain.c  | 159 +++++++++++++---
- PSXDOOM/pw_main.c  |  66 ++++---
- PSXDOOM/r_data.c   |   5 -
- PSXDOOM/r_local.h  |   3 +-
- PSXDOOM/r_phase2.c |   6 +
- PSXDOOM/s_sound.c  | 174 ++++++++----------
- PSXDOOM/st_main.c  |   4 +-
- PSXDOOM/t_main.c   | 101 +++++-----
- PSXDOOM/z_zone.c   |   3 +-
- 31 files changed, 1616 insertions(+), 1213 deletions(-)
- create mode 100644 PSXDOOM/PSX_PAD.C
-
 diff --git a/PSXDOOM/PSXCDABS.C b/PSXDOOM/PSXCDABS.C
 index 6de623a..052aabe 100644
 --- a/PSXDOOM/PSXCDABS.C
@@ -2843,19 +2793,6 @@ index 5ee93c2..19e4738 100644
  	p->viewheight = VIEWHEIGHT;
  	p->automapscale = 36;
  	p->viewz = mobj->z + VIEWHEIGHT;        //new line psxdoom
-diff --git a/PSXDOOM/p_setup.c b/PSXDOOM/p_setup.c
-index ec94687..4abe419 100644
---- a/PSXDOOM/p_setup.c
-+++ b/PSXDOOM/p_setup.c
-@@ -865,7 +940,7 @@ void P_SetupLevel(int map, skill_t skill)//L8002306C()
- 	}
- 
- 	memory = Z_FreeMemory(mainzone);
--	if (memory < 0xc000)
-+	if (memory < 0x8000)
- 	{
- 		Z_DumpHeap(mainzone);
- 		I_Error("P_SetupLevel: not enough free memory %d", memory);
 diff --git a/PSXDOOM/p_spec.c b/PSXDOOM/p_spec.c
 index 417375f..f219d37 100644
 --- a/PSXDOOM/p_spec.c

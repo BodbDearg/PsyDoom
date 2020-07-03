@@ -157,6 +157,8 @@ set(SOURCE_FILES
     "PcPsx/FileUtils.cpp"
     "PcPsx/FileUtils.h"
     "PcPsx/Finally.h"
+    "PcPsx/GameUtils.cpp"
+    "PcPsx/GameUtils.h"
     "PcPsx/IniUtils.cpp"
     "PcPsx/IniUtils.h"
     "PcPsx/Input.cpp"

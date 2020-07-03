@@ -3,6 +3,7 @@
 #include "Base/i_main.h"
 #include "cdmaptbl.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/GameUtils.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
@@ -44,8 +45,9 @@ int32_t psx_main(const int argc, const char** const argv) noexcept {
         if (!PsxVm::init("Doom.cue"))
             return 1;
 
-        // Initialize the table of files on the CD from the file system
+        // Initialize the table of files on the CD from the file system and determine the game type
         CdMapTbl_Init();
+        GameUtils::determineGameTypeAndVariant();
         
         // Initialize the display and the modding manager
         Video::initVideo();
