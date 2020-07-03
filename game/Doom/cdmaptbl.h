@@ -2,9 +2,13 @@
 
 #include "Wess/psxcd.h"
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // A list of file ids representing files on the disc.
 // These ids are used when opening files for IO, to index a table of harcoded file locations, rather than strings.
 // The retail version of the game uses this mechanism for efficiency rather than needing to consult the filesystem.
+//
+// Note: depending on the game (Doom vs Final Doom) not all of these files will be present or available.
+//------------------------------------------------------------------------------------------------------------------------------------------
 enum class CdFileId : int32_t {
     SYSTEM_CNF,
     SLUS_000_77,
@@ -288,6 +292,39 @@ enum class CdFileId : int32_t {
     MAP58_LCD,
     MAP59_LCD,
     MAP60_LCD,
+    // Final Doom specific
+    MAP01_ROM,
+    MAP02_ROM,
+    MAP03_ROM,
+    MAP04_ROM,
+    MAP05_ROM,
+    MAP06_ROM,
+    MAP07_ROM,
+    MAP08_ROM,
+    MAP09_ROM,
+    MAP10_ROM,
+    MAP11_ROM,
+    MAP12_ROM,
+    MAP13_ROM,
+    MAP14_ROM,
+    MAP15_ROM,
+    MAP16_ROM,
+    MAP17_ROM,
+    MAP18_ROM,
+    MAP19_ROM,
+    MAP20_ROM,
+    MAP21_ROM,
+    MAP22_ROM,
+    MAP23_ROM,
+    MAP24_ROM,
+    MAP25_ROM,
+    MAP26_ROM,
+    MAP27_ROM,
+    MAP28_ROM,
+    MAP29_ROM,
+    MAP30_ROM,
+    MAP31_ROM,
+    MAP32_ROM,
     END             // Note: not an actual entry, used as an end of list marker
 };
 

@@ -915,15 +915,15 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     gDeadPlayerRemovalQueueIdx = 0;
 
     // Figure out which file to open for the map WAD.
-    // Not sure why the PSX code was checking for a negative map index here, maybe a special dev/test thing?
+    // Note: for Final Doom I've added logic to allow for MAPXX.WAD or MAPXX.ROM, with a preference for the .WAD file.
     const int32_t mapIndex = mapNum - 1;
-    const int32_t mapFolderIdx = (mapIndex >= 0) ?
-        (mapIndex / LEVELS_PER_MAP_FOLDER) :
-        (mapIndex + LEVELS_PER_MAP_FOLDER - 1) / LEVELS_PER_MAP_FOLDER;
-
+    const int32_t mapFolderIdx = mapIndex / LEVELS_PER_MAP_FOLDER;
     const int32_t mapIdxInFolder = mapIndex - mapFolderIdx * LEVELS_PER_MAP_FOLDER;
     const int32_t mapFolderOffset = mapFolderIdx * NUM_FILES_PER_LEVEL * LEVELS_PER_MAP_FOLDER;
-    const CdFileId mapWadFile = (CdFileId)((int32_t) CdFileId::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
+
+    const CdFileId mapWadFile_doom = (CdFileId)((int32_t) CdFileId::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
+    const CdFileId mapWadFile_finalDoom = (CdFileId)((int32_t) CdFileId::MAP01_ROM + mapIdxInFolder + mapFolderOffset);
+    const CdFileId mapWadFile = (gCdMapTbl[(int32_t) mapWadFile_doom].startSector) ? mapWadFile_doom : mapWadFile_finalDoom;
     
     // Open the map wad
     void* const pMapWadFileData = W_OpenMapWad(mapWadFile);
