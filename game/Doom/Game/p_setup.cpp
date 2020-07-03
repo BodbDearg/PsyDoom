@@ -496,7 +496,12 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     }
 
     // Alloc ram for the runtime sidedefs and zero initialize
-    gNumSides = lumpSize / sizeof(mapsidedef_t);
+    if (gbLoadingFinalDoomMap) {
+        gNumSides = lumpSize / sizeof(mapsidedef_final_t);
+    } else {
+        gNumSides = lumpSize / sizeof(mapsidedef_t);
+    }
+
     gpSides = (side_t*) Z_Malloc(*gpMainMemZone, gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
     D_memset(gpSides, std::byte(0), gNumSides  * sizeof(side_t));
 
@@ -991,7 +996,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     const int32_t mapFolderOffset = mapFolderIdx * NUM_FILES_PER_LEVEL * LEVELS_PER_MAP_FOLDER;
 
     const CdFileId mapWadFile_doom = (CdFileId)((int32_t) CdFileId::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
-    const CdFileId mapWadFile_finalDoom = (CdFileId)((int32_t) CdFileId::MAP01_ROM + mapIdxInFolder + mapFolderOffset);
+    const CdFileId mapWadFile_finalDoom = (CdFileId)((int32_t) CdFileId::MAP01_ROM + mapIndex);
     gbLoadingFinalDoomMap = (!gCdMapTbl[(int32_t) mapWadFile_doom].startSector);
 
     const CdFileId mapWadFile = (gbLoadingFinalDoomMap) ? mapWadFile_finalDoom : mapWadFile_doom;
