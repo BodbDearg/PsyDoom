@@ -828,8 +828,8 @@ void SeqEngine() noexcept {
                     gWess_CmdFuncArr[trackStat.driver_id][TrkOff](trackStat);
                 }
                 else {
-                    // Not a timed track or not reached the end. Continue executing sequencer commands while the track's time marker is >=
-                    // to when the next command happens and while the track remains active and not stopped:
+                    // Not a timed track or not reached the end. Continue executing sequencer commands while the track's time
+                    // marker is >= to when the next command happens and while the track remains active and not stopped:
                     while ((trackStat.deltatime_qnp >= trackStat.qnp_till_next_cmd) && trackStat.active && (!trackStat.stopped)) {
                         // Time to execute a new sequencer command: read that command firstly
                         const uint8_t seqCmd = trackStat.pcur_cmd[0];

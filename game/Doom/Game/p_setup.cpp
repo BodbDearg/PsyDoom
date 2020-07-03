@@ -888,6 +888,17 @@ void P_Init() noexcept {
             }
         }
 
+        // Final Doom: if the last digit in 'SKYXX' matches one of these digits, then use whatever palette is for that sky:
+        if (gbLoadingFinalDoomMap) {
+            switch (skyTexLump.name.chars[4]) {
+                case '2':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL1];    break;
+                case '3':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL2];    break;
+                case '4':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL3];    break;
+                case '5':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL4];    break;
+                case '6':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL5];    break;
+            }
+        }
+
         // Ensure the sky texture is in VRAM
         I_CacheTex(skyTex);
     }

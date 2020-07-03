@@ -25,6 +25,12 @@ static constexpr uint32_t UIPAL                 = 16;   // PSX Doom: ui elements
 static constexpr uint32_t TITLEPAL              = 17;   // PSX Doom: title screen palette
 static constexpr uint32_t IDCREDITS1PAL         = 18;   // PSX Doom: id credits screen palette
 static constexpr uint32_t WCREDITS1PAL          = 19;   // PSX Doom: williams credits screen palette
+static constexpr uint32_t UIPAL2                = 20;   // PSX Final Doom: additional UI palette (used for plaques etc.)
+static constexpr uint32_t SKYPAL1               = 21;   // PSX Final Doom: additional sky palette
+static constexpr uint32_t SKYPAL2               = 22;   // PSX Final Doom: additional sky palette
+static constexpr uint32_t SKYPAL3               = 23;   // PSX Final Doom: additional sky palette
+static constexpr uint32_t SKYPAL4               = 24;   // PSX Final Doom: additional sky palette
+static constexpr uint32_t SKYPAL5               = 25;   // PSX Final Doom: additional sky palette
 
 // Stores information about a texture, including it's dimensions, lump info and texture cache info
 struct texture_t {

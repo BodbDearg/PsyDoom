@@ -5,6 +5,8 @@
 #include "Doom/Game/doomdata.h"
 #include "PsyQ/LIBGPU.h"
 
+#include <cstring>
+
 // Structure for a palette in the game: contains 256 RGBA5551 color values.
 struct palette_t {
     uint16_t colors[256];
@@ -305,6 +307,11 @@ void R_InitPalette() noexcept {
     if ((numPalettes != NUMPALETTES_DOOM) && (numPalettes != NUMPALETTES_FINAL_DOOM)) {
         I_Error("R_InitPalettes: palette foulup\n");
     }
+
+    // PC-PSX: zero init the palettes list so nothing is undefined if we don't load some (have less palettes for Doom)
+    #if PC_PSX_DOOM_MODS
+        std::memset(gPaletteClutIds, 0, sizeof(gPaletteClutIds));
+    #endif
 
     // Upload all the palettes into VRAM
     {
