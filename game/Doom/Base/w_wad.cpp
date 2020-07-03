@@ -314,8 +314,8 @@ int32_t W_MapCheckNumForName(const char* const name) noexcept {
     // Try to find the given lump name and compare names using 32-bit words rather than single chars
     lumpinfo_t* pLump = gpMapWadLumpInfo;
     int32_t lumpIdx = 0;
-
-    while (lumpIdx < gNumLumps) {
+    
+    while (lumpIdx < gNumMapWadLumps) {
         // Note: must mask the highest bit of the first character of the lump name.
         // This bit is used to indicate whether the lump is compressed or not.
         const uint32_t lumpNameW1 = ((uint32_t&) pLump->name.chars[0]) & NAME_WORD_MASK;
