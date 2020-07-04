@@ -1451,45 +1451,13 @@ diff --git a/PSXDOOM/d_main.c b/PSXDOOM/d_main.c
 index 95fe3f2..d0324d1 100644
 --- a/PSXDOOM/d_main.c
 +++ b/PSXDOOM/d_main.c
-@@ -45,19 +45,27 @@ mobj_t		mobjhead;	/* head and tail of mobj list */                    //800A8C74
+@@ -45,3 +45,6 @@ mobj_t		mobjhead;	/* head and tail of mobj list */                    //800A8C74
  buttons_t   *BT_DATA[MAXPLAYERS];//80077DF4, 80077DF8
  line_t	    *linespeciallist[MAXLINEANIMS];//0x800973a4
  
 +//NEW FINAL DOOM
 +int M_SENSITIVITY[MAXPLAYERS];  //80078358, 8007835c
 +
- void D_DoomMain (void) //L80012274()
- {
- 	byte		*data;
--	data = (byte *)tempbuffer;
-+	//data = (byte *)tempbuffer;
- 
- 	//printf("MASTER EDITION BY GEC\n");
- 
- 	PSX_INIT();
- 
-+	Z_Init();
-+	data = (byte *)Z_Alloc(0x1e000,PU_STATIC,NULL);
-+
- 	/* WMS Sound System Init */
- 	PsxSoundInit(SetVolPsx(SfxVolume), SetVolPsx(MusVolume), data);
- 
--	Z_Init();
-+	Z_Free(data);
-+
-+	//Z_Init();
- 	Init_Vram_Cache();
- 	W_Init();
- 	R_Init();
-@@ -157,7 +167,7 @@ void D_DebugPrint(const char *text, ...)//L800124F8()
- 	SetShadeTex(debugsprite, 0);
- 
- 	setRGB0(debugsprite, 128, 128, 128);
--	debugsprite->clut = palette[0];
-+	debugsprite->clut = palette[16];
- 
- 	va_start(args, text);
- 	D_vsprintf(buffer, text, args);
 diff --git a/PSXDOOM/doomdata.h b/PSXDOOM/doomdata.h
 index 6672f27..89e0294 100644
 --- a/PSXDOOM/doomdata.h
@@ -2643,18 +2611,6 @@ index 5ba7265..9979f9c 100644
  
  	// okay, there's playe for another one
  	an = angle >> ANGLETOFINESHIFT;
-diff --git a/PSXDOOM/p_mobj.c b/PSXDOOM/p_mobj.c
-index 5ee93c2..19e4738 100644
---- a/PSXDOOM/p_mobj.c
-+++ b/PSXDOOM/p_mobj.c
-@@ -295,7 +295,6 @@ void P_SpawnPlayer (mapthing_t *mthing)//L8001CDD8()
- 	p->damagecount = 0;
- 	p->bonuscount = 0;
- 	p->extralight = 0;
--	p->fixedcolormap = 0;
- 	p->viewheight = VIEWHEIGHT;
- 	p->automapscale = 36;
- 	p->viewz = mobj->z + VIEWHEIGHT;        //new line psxdoom
 diff --git a/PSXDOOM/p_spec.c b/PSXDOOM/p_spec.c
 index 417375f..f219d37 100644
 --- a/PSXDOOM/p_spec.c
@@ -2714,15 +2670,6 @@ diff --git a/PSXDOOM/p_tick.c b/PSXDOOM/p_tick.c
 index dbeef23..25eb1e1 100644
 --- a/PSXDOOM/p_tick.c
 +++ b/PSXDOOM/p_tick.c
-@@ -159,7 +159,7 @@ typedef enum
- 	CH_ALLTHINGS,	//1
- 	CH_GODMODE,		//2
- 	CH_AMMOWEAPONS,	//3
--	CH_NOCLIP,		//4 Enabled in Station Doom
-+	CH_NOCLIP,		//4 Enabled in PsyDoom (StationDoom)
- 	CH_WARPLEVEL,	//5
- 	CH_NULL2,		//6
- 	CH_VRAMVIEWER,	//7 Enabled in GEC Master Edition
 @@ -273,14 +273,14 @@ void P_CheckCheats (void)//L80028C74()
  			{
  				warpmap += 1;

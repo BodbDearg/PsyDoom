@@ -12,6 +12,7 @@
 #include "Game/p_tick.h"
 #include "PcPsx/FatalErrors.h"
 #include "PcPsx/FileUtils.h"
+#include "PcPsx/GameUtils.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
@@ -264,6 +265,9 @@ void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept {
 // The string also scrolls down the screen with repeated calls.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
+    // Some UI elements are handled differently for Final Doom
+    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+
     // Setup the drawing mode
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
@@ -285,7 +289,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         LIBGPU_SetSemiTrans(&spritePrim, false);
         LIBGPU_SetShadeTex(&spritePrim, false);
         LIBGPU_setRGB0(spritePrim, 128, 128, 128);
-        spritePrim.clut = gPaletteClutIds[MAINPAL];
+        spritePrim.clut = gPaletteClutIds[(bIsFinalDoom) ? UIPAL : MAINPAL];
     }
     
     // Format the message and print
