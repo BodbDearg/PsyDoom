@@ -15,7 +15,7 @@
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
 #include "o_main.h"
-#include "PcPsx/GameUtils.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -36,7 +36,7 @@ static int32_t gVBlanksUntilTitleFireMove;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_Title() noexcept {
     // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
 
     // Cleanup the texture cache and remove anything we can
     I_PurgeTexCache();

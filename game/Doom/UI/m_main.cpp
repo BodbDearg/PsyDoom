@@ -10,7 +10,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
-#include "PcPsx/GameUtils.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
@@ -85,7 +85,7 @@ static int32_t      gMaxStartEpisodeOrMap;      // Restricts what maps or episod
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunMenu() noexcept {
     // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
 
     do {
         // Run the menu: abort to the title screen & demos if the menu timed out.
@@ -144,7 +144,7 @@ gameaction_t RunMenu() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Start() noexcept {
     // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
 
     // Assume no networked game initially
     gNetGame = gt_single;
@@ -175,7 +175,7 @@ void M_Start() noexcept {
     if (gStartGameType == gt_single) {
         gMaxStartEpisodeOrMap = MAX_EPISODE;
     } else {
-        gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;   // For multiplayer any of the normal (non secret) maps can be selected
+        gMaxStartEpisodeOrMap = Game::getNumRegularMaps();  // For multiplayer any of the normal (non secret) maps can be selected
     }
     
     if (gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
@@ -374,7 +374,7 @@ gameaction_t M_Ticker() noexcept {
         if (gStartGameType == gt_single) {
             gMaxStartEpisodeOrMap = MAX_EPISODE;
         } else {
-            gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;
+            gMaxStartEpisodeOrMap = Game::getNumRegularMaps();
         }
 
         if (gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
@@ -437,7 +437,7 @@ gameaction_t M_Ticker() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Drawer() noexcept {
     // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
 
     // Draw the menu background and increment frame count for the texture cache.
     I_IncDrawnFrameCount();

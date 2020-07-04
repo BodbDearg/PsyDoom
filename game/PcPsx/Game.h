@@ -17,11 +17,13 @@ enum class GameVariant : int32_t {
     PAL         // European version (PAL)
 };
 
-BEGIN_NAMESPACE(GameUtils)
+BEGIN_NAMESPACE(Game)
 
 extern GameType     gGameType;
 extern GameVariant  gGameVariant;
 
 void determineGameTypeAndVariant() noexcept;
+int32_t getNumMaps() noexcept;
+int32_t getNumRegularMaps() noexcept;
 
-END_NAMESPACE(GameUtils)
+END_NAMESPACE(Game)

@@ -10,6 +10,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "pw_main.h"
@@ -23,7 +24,8 @@ struct pstats_t {
     int32_t     fragcount;
 };
 
-const char gMapNames[][32] = {
+const char gMapNames_Doom[][32] = {
+    // Doom 1
     "Hangar",
     "Plant",
     "Toxin Refinery",
@@ -54,6 +56,7 @@ const char gMapNames[][32] = {
     "Unto The Cruel",
     "Twilight Descends",
     "Threshold of Pain",
+    // Doom 2
     "Entryway",
     "Underhalls",
     "The Gantlet",
@@ -85,7 +88,44 @@ const char gMapNames[][32] = {
     "Club Doom"
 };
 
-static_assert(C_ARRAY_SIZE(gMapNames) == NUM_MAPS);
+const char gMapNames_FinalDoom[][32] = {
+    // Master Levels
+    "Attack",
+    "Virgil",
+    "Canyon",
+    "Combine",
+    "Catwalk",
+    "Fistula",
+    "Geryon",
+    "Minos",
+    "Nessus",
+    "Paradox",
+    "Subspace",
+    "Subterra",
+    "Vesperas",
+    // TNT
+    "System Control",
+    "Human Barbeque",
+    "Wormhole",
+    "Crater",
+    "Nukage Processing",
+    "Deepest Reaches",
+    "Processing Area",
+    "Lunar Mining Project",
+    "Quarry",
+    "Ballistyx",
+    "Heck",
+    // Plutonia
+    "Congo",
+    "Aztec",
+    "Ghost Town",
+    "Baron's Lair",
+    "The Death Domain",
+    "Onslaught"
+};
+
+static_assert(C_ARRAY_SIZE(gMapNames_Doom) == 59);
+static_assert(C_ARRAY_SIZE(gMapNames_FinalDoom) == 30);
 
 // The final stats to display for each player
 static pstats_t gPStats[MAXPLAYERS];
@@ -146,7 +186,7 @@ void IN_Start() noexcept {
     gMenuTimeoutStartTicCon = gTicCon;
 
     // Compute the password for the next map and mark it as entered (so we don't do a pistol start)
-    if (gNextMap <= NUM_MAPS) {
+    if (gNextMap <= Game::getNumMaps()) {
         P_ComputePassword(gPasswordCharBuffer);
         gNumPasswordCharsEntered = 10;
     }
@@ -192,7 +232,6 @@ gameaction_t IN_Ticker() noexcept {
 
     // Checking for inputs from all players to speed up the intermission
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
-
         #if PC_PSX_DOOM_MODS
             const TickInputs& inputs = gTickInputs[playerIdx];
             const TickInputs& oldInputs = gOldTickInputs[playerIdx];
@@ -334,9 +373,13 @@ void IN_Drawer() noexcept {
 // Draws the single player intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_SingleDrawer() noexcept {
+    // Some different logic here for Final Doom
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
+    const auto mapNames = (bIsFinalDoom) ? gMapNames_FinalDoom : gMapNames_Doom;
+
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
-    I_DrawString(-1, 20, gMapNames[gGameMap - 1]);
+    I_DrawString(-1, 20, mapNames[gGameMap - 1]);
     I_DrawString(-1, 36, "Finished");
 
     I_DrawString(57, 65, "Kills");
@@ -352,9 +395,9 @@ void IN_SingleDrawer() noexcept {
     I_DrawNumber(170, 117, gSecretValue[0]);
     
     // Only draw the next map and password if there is a next map
-    if (gNextMap <= NUM_MAPS) {
+    if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 145, "Entering");
-        I_DrawString(-1, 161, gMapNames[gNextMap - 1]);
+        I_DrawString(-1, 161, mapNames[gNextMap - 1]);
         I_DrawString(-1, 187, "Password");
 
         char passwordStr[PW_SEQ_LEN + 1];
@@ -372,6 +415,10 @@ void IN_SingleDrawer() noexcept {
 // Draws the cooperative mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_CoopDrawer() noexcept {
+    // Some different logic here for Final Doom
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
+    const auto mapNames = (bIsFinalDoom) ? gMapNames_FinalDoom : gMapNames_Doom;
+
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
     I_DrawSprite(
@@ -419,9 +466,9 @@ void IN_CoopDrawer() noexcept {
     I_DrawNumber(216, 123, gSecretValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     // Only draw the next map and password if there is a next map
-    if (gNextMap < 60) {
+    if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 149, "Entering");
-        I_DrawString(-1, 165, gMapNames[gNextMap - 1]);
+        I_DrawString(-1, 165, mapNames[gNextMap - 1]);
 
         // Well this is mean! The current player only gets to see a password if not dead :(
         if (gPlayers[gCurPlayerIndex].health > 0) {
@@ -443,9 +490,13 @@ void IN_CoopDrawer() noexcept {
 // Draws the deathmatch mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_DeathmatchDrawer() noexcept {
+    // Some different logic here for Final Doom
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
+    const auto mapNames = (bIsFinalDoom) ? gMapNames_FinalDoom : gMapNames_Doom;
+
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
-    I_DrawString(-1, 20, gMapNames[gGameMap - 1]);
+    I_DrawString(-1, 20, mapNames[gGameMap - 1]);
     I_DrawString(-1, 36, "Finished");
 
     const facesprite_t* pFaceSpriteP1;
@@ -510,8 +561,8 @@ void IN_DeathmatchDrawer() noexcept {
     I_DrawNumber(206, 138, gFragValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     // Only draw the next map if there is one
-    if (gNextMap <= NUM_MAPS) {
+    if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 190, "Entering");
-        I_DrawString(-1, 206, gMapNames[gNextMap - 1]);
+        I_DrawString(-1, 206, mapNames[gNextMap - 1]);
     }
 }

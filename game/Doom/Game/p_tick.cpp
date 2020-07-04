@@ -21,6 +21,7 @@
 #include "PcPsx/Assert.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/DemoResult.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
@@ -31,15 +32,6 @@
 #include "Wess/wessapi.h"
 
 #include <SDL.h>
-
-// The maximum level for the warp cheat.
-// PC-PSX: For this version of the game I'm allowing the user to warp to the secret levels!
-// If you're cheating you can more or less do anything anyway, so not much point in hiding these.
-#if PC_PSX_DOOM_MODS
-    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = NUM_MAPS;
-#else
-    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = NUM_REGULAR_MAPS;
-#endif
 
 // The number of buttons in a cheat sequence and a list of all the cheat sequences and their indices
 static constexpr uint32_t CHEAT_SEQ_LEN = 8;
@@ -152,6 +144,15 @@ void P_RunMobjLate() noexcept {
 //  (4) Controls for cheats that require them (VRAM viewer, level warp).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckCheats() noexcept {
+    // The maximum level for the warp cheat.
+    // PC-PSX: For this version of the game I'm allowing the user to warp to the secret levels!
+    // If you're cheating you can more or less do anything anyway, so not much point in hiding these.
+    #if PC_PSX_DOOM_MODS
+        const int32_t maxCheatWarpLevel = Game::getNumMaps();
+    #else
+        const int32_t maxCheatWarpLevel = Game::getNumRegularMaps();
+    #endif
+
     // Check for pause or options menu actions by any player.
     // Note that one player doing the action causes the action to happen for other players too.
     for (int32_t playerIdx = MAXPLAYERS - 1; playerIdx >= 0; --playerIdx) {
@@ -287,7 +288,7 @@ void P_CheckCheats() noexcept {
     
     if (player.cheats & CF_WARPMENU) {
         gVBlanksUntilMenuMove[0] -= gPlayersElapsedVBlanks[0];
-
+        
         if (gVBlanksUntilMenuMove[0] <= 0) {
             if (bMenuLeft) {
                 gMapNumToCheatWarpTo--;
@@ -295,7 +296,7 @@ void P_CheckCheats() noexcept {
                 if (gMapNumToCheatWarpTo <= 0) {
                     // PC-PSX: wraparound for convenience: provides a fast way to access opposite ends of the list
                     #if PC_PSX_DOOM_MODS
-                        gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                        gMapNumToCheatWarpTo = maxCheatWarpLevel;
                     #else
                         gMapNumToCheatWarpTo = 1;
                     #endif
@@ -306,12 +307,12 @@ void P_CheckCheats() noexcept {
             else if (bMenuRight) {
                 gMapNumToCheatWarpTo++;
 
-                if (gMapNumToCheatWarpTo > MAX_CHEAT_WARP_LEVEL) {
+                if (gMapNumToCheatWarpTo > maxCheatWarpLevel) {
                     // PC-PSX: wraparound for convenience: provides a fast way to access opposite ends of the list
                     #if PC_PSX_DOOM_MODS
                         gMapNumToCheatWarpTo = 1;
                     #else
-                        gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                        gMapNumToCheatWarpTo = maxCheatWarpLevel;
                     #endif
                 }
 
@@ -485,8 +486,8 @@ void P_CheckCheats() noexcept {
                 case CHT_SEQ_LEVEL_WARP: {
                     player.cheats |= CF_WARPMENU;
                     
-                    if (gGameMap > MAX_CHEAT_WARP_LEVEL) {
-                        gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                    if (gGameMap > maxCheatWarpLevel) {
+                        gMapNumToCheatWarpTo = maxCheatWarpLevel;
                     } else {
                         gMapNumToCheatWarpTo = gGameMap;
                     }

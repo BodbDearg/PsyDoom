@@ -12,7 +12,7 @@
 #include "Game/p_tick.h"
 #include "PcPsx/FatalErrors.h"
 #include "PcPsx/FileUtils.h"
-#include "PcPsx/GameUtils.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
@@ -266,7 +266,7 @@ void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
 
     // Setup the drawing mode
     {

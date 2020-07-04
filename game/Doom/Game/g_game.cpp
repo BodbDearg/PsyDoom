@@ -18,7 +18,7 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PcPsx/Endian.h"
-#include "PcPsx/GameUtils.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/Utils.h"
 #include "Wess/wessapi.h"
 
@@ -65,7 +65,7 @@ static mobj_t gEmptyMObj;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_DoLoadLevel() noexcept {
     // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
 
     // Draw the loading plaque
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : UIPAL]);

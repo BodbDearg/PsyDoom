@@ -10,7 +10,7 @@
 #include "i_drawcmds.h"
 #include "PcPsx/Assert.h"
 #include "PcPsx/Config.h"
-#include "PcPsx/GameUtils.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
@@ -1007,7 +1007,7 @@ void I_NetSetup() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool I_NetUpdate() noexcept {
     // Some logic is handled differently for Final Doom
-    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
 
     // Compute the value used for error checking.
     // Only do this while we are in the level however...

@@ -325,6 +325,16 @@ enum class CdFileId : int32_t {
     MAP30_ROM,
     MAP31_ROM,
     MAP32_ROM,
+    MUSLEV21_LCD,
+    MUSLEV22_LCD,
+    MUSLEV23_LCD,
+    MUSLEV24_LCD,
+    MUSLEV25_LCD,
+    MUSLEV26_LCD,
+    MUSLEV27_LCD,
+    MUSLEV28_LCD,
+    MUSLEV29_LCD,
+    MUSLEV30_LCD,
     END             // Note: not an actual entry, used as an end of list marker
 };
 

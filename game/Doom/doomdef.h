@@ -132,10 +132,6 @@ enum episodenum_t : int32_t {
 static constexpr uint32_t MIN_EPISODE = episode_doom1;
 static constexpr uint32_t MAX_EPISODE = episode_doom2;
 
-// Number of maps in the game and number of regular (non secret) maps
-static constexpr uint32_t NUM_MAPS = 59;
-static constexpr uint32_t NUM_REGULAR_MAPS = 54;
-
 // Maximum number of ticks in a demo.
 // The maximum allowed demo size in the original game is 16384 ticks (demo size ~64 KiB).
 const int32_t MAX_DEMO_TICKS = 16384;

@@ -2,7 +2,8 @@
 
 #include "Doom/doomdef.h"
 
-extern const char gMapNames[][32];
+extern const char gMapNames_Doom[][32];
+extern const char gMapNames_FinalDoom[][32];
 
 void IN_Start() noexcept;
 void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept;

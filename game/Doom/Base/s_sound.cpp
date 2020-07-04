@@ -8,6 +8,7 @@
 #include "i_main.h"
 #include "m_fixed.h"
 #include "PcPsx/FatalErrors.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
 #include "sounds.h"
@@ -58,9 +59,9 @@ struct musicseq_t {
     int16_t         reverbDepthR;       // Reverb depth: right
 };
 
-// Definitions for all of the available music sequences in the game.
+// Definitions for all of the available music sequences in the game: Doom and Final Doom.
 // Note that not all of these are unique songs, some of the tracks are simply with different reverb settings.
-static const musicseq_t gMusicSeqDefs[31] = {
+static const musicseq_t gMusicSeqDefs_Doom[31] = {
     { CdFileId{},               0,      SPU_REV_MODE_OFF,       0x0000, 0x0000 },
     { CdFileId::MUSLEV1_LCD,    90,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
     { CdFileId::MUSLEV2_LCD,    91,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
@@ -94,8 +95,43 @@ static const musicseq_t gMusicSeqDefs[31] = {
     { CdFileId{},               0,      SPU_REV_MODE_OFF,       0x0000, 0x0000 }
 };
 
-// How many music sequence tracks there are in the game
-static constexpr uint32_t NUM_MUSIC_SEQS = 20;
+static const musicseq_t gMusicSeqDefs_FinalDoom[32] = {
+    { CdFileId{},               0,      SPU_REV_MODE_OFF,       0x0000, 0x0000  },
+    { CdFileId::MUSLEV23_LCD,   112,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV29_LCD,   118,    SPU_REV_MODE_STUDIO_C,  0x26FF, 0x26FF  },
+    { CdFileId::MUSLEV24_LCD,   113,    SPU_REV_MODE_SPACE,     0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV30_LCD,   119,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF  },
+    { CdFileId::MUSLEV21_LCD,   110,    SPU_REV_MODE_SPACE,     0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV27_LCD,   116,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV25_LCD,   114,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF  },
+    { CdFileId::MUSLEV28_LCD,   117,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV22_LCD,   111,    SPU_REV_MODE_SPACE,     0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV26_LCD,   115,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF  },
+    { CdFileId::MUSLEV1_LCD,    90,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF  },
+    { CdFileId::MUSLEV2_LCD,    91,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF  },
+    { CdFileId::MUSLEV3_LCD,    92,     SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF  },
+    { CdFileId::MUSLEV4_LCD,    93,     SPU_REV_MODE_HALL,      0x17FF, 0x17FF  },
+    { CdFileId::MUSLEV5_LCD,    94,     SPU_REV_MODE_STUDIO_A,  0x23FF, 0x23FF  },
+    { CdFileId::MUSLEV6_LCD,    95,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV7_LCD,    96,     SPU_REV_MODE_STUDIO_C,  0x26FF, 0x26FF  },
+    { CdFileId::MUSLEV8_LCD,    97,     SPU_REV_MODE_STUDIO_B,  0x2DFF, 0x2DFF  },
+    { CdFileId::MUSLEV9_LCD,    98,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF  },
+    { CdFileId::MUSLEV10_LCD,   99,     SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF  },
+    { CdFileId::MUSLEV11_LCD,   100,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV12_LCD,   101,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF  },
+    { CdFileId::MUSLEV13_LCD,   102,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF  },
+    { CdFileId::MUSLEV14_LCD,   103,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV15_LCD,   104,    SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF  },
+    { CdFileId::MUSLEV16_LCD,   105,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF  },
+    { CdFileId::MUSLEV17_LCD,   106,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF  },
+    { CdFileId::MUSLEV18_LCD,   107,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF  },
+    { CdFileId::MUSLEV22_LCD,   111,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF  },
+    { CdFileId::MUSLEV26_LCD,   115,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF  },
+    { CdFileId{},               0,      SPU_REV_MODE_OFF,       0x0000, 0x0000  },
+};
+
+static constexpr uint32_t NUM_MUSIC_SEQS_DOOM       = 20;   // How many music sequence tracks there are in the game: Doom
+static constexpr uint32_t NUM_MUSIC_SEQS_FINAL_DOOM = 30;   // How many music sequence tracks there are in the game: Final Doom
 
 // Defines what LCD file to load for a map and what music sequence definition to use
 struct mapaudiodef_t {
@@ -103,8 +139,8 @@ struct mapaudiodef_t {
     uint32_t    musicSeqIdx;    // Index of the music sequence to use
 };
 
-// What sound LCD file and music track to use for all maps in the game
-static const mapaudiodef_t gMapAudioDefs[62] = {
+// What sound LCD file and music track to use for all maps in the game: Doom
+static const mapaudiodef_t gMapAudioDefs_Doom[62] = {
     { CdFileId{},           0   },
     { CdFileId::MAP01_LCD,  1   },
     { CdFileId::MAP02_LCD,  2   },
@@ -165,6 +201,43 @@ static const mapaudiodef_t gMapAudioDefs[62] = {
     { CdFileId::MAP57_LCD,  10  },
     { CdFileId::MAP58_LCD,  16  },
     { CdFileId::MAP59_LCD,  13  },
+    { CdFileId::MAP60_LCD,  0   },
+    { CdFileId{},           0   }
+};
+
+// What sound LCD file and music track to use for all maps in the game: Final Doom
+static mapaudiodef_t gMapAudioDefs_FinalDoom[33] = {
+    { CdFileId{},           0   },
+    { CdFileId::MAP01_LCD,  1   },
+    { CdFileId::MAP02_LCD,  2   },
+    { CdFileId::MAP03_LCD,  3   },
+    { CdFileId::MAP04_LCD,  4   },
+    { CdFileId::MAP05_LCD,  5   },
+    { CdFileId::MAP06_LCD,  6   },
+    { CdFileId::MAP07_LCD,  7   },
+    { CdFileId::MAP10_LCD,  8   },  // Note: LCD file is out of order - bug or last minute map shuffling?
+    { CdFileId::MAP08_LCD,  9   },  // Note: LCD file is out of order - bug or last minute map shuffling?
+    { CdFileId::MAP09_LCD,  10  },  // Note: LCD file is out of order - bug or last minute map shuffling?
+    { CdFileId::MAP11_LCD,  11  },
+    { CdFileId::MAP12_LCD,  12  },
+    { CdFileId::MAP13_LCD,  13  },
+    { CdFileId::MAP14_LCD,  14  },
+    { CdFileId::MAP15_LCD,  15  },
+    { CdFileId::MAP16_LCD,  16  },
+    { CdFileId::MAP17_LCD,  17  },
+    { CdFileId::MAP18_LCD,  18  },
+    { CdFileId::MAP19_LCD,  19  },
+    { CdFileId::MAP20_LCD,  20  },
+    { CdFileId::MAP21_LCD,  21  },
+    { CdFileId::MAP22_LCD,  22  },
+    { CdFileId::MAP23_LCD,  23  },
+    { CdFileId::MAP24_LCD,  24  },
+    { CdFileId::MAP25_LCD,  25  },
+    { CdFileId::MAP26_LCD,  26  },
+    { CdFileId::MAP27_LCD,  27  },
+    { CdFileId::MAP28_LCD,  28  },
+    { CdFileId::MAP29_LCD,  29  },
+    { CdFileId::MAP30_LCD,  30  },
     { CdFileId::MAP60_LCD,  0   },
     { CdFileId{},           0   }
 };
@@ -245,8 +318,12 @@ void S_SetMusicVolume(const int32_t musVol) noexcept {
 // Stop the currently playing music track
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StopMusic() noexcept {
+    // Final Doom has different music and map sounds
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
+
     if (gCurMusicSeqIdx != 0) {
-        wess_seq_stop(gMusicSeqDefs[gCurMusicSeqIdx].seqIdx);
+        const musicseq_t& musicSeqDef = (bIsFinalDoom) ? gMusicSeqDefs_FinalDoom[gCurMusicSeqIdx] : gMusicSeqDefs_Doom[gCurMusicSeqIdx];
+        wess_seq_stop(musicSeqDef.seqIdx);
     }
 }
 
@@ -254,6 +331,9 @@ void S_StopMusic() noexcept {
 // Start playing the selected music track (stops if currently playing)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StartMusic() noexcept {
+    // Final Doom has different music and map sounds
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
+
     // PC-PSX: ignore this command in headless mode
     #if PC_PSX_DOOM_MODS
         if (ProgArgs::gbHeadlessMode)
@@ -263,7 +343,8 @@ void S_StartMusic() noexcept {
     S_StopMusic();
 
     if (gCurMusicSeqIdx != 0) {
-        wess_seq_trigger(gMusicSeqDefs[gCurMusicSeqIdx].seqIdx);
+        const musicseq_t& musicSeqDef = (bIsFinalDoom) ? gMusicSeqDefs_FinalDoom[gCurMusicSeqIdx] : gMusicSeqDefs_Doom[gCurMusicSeqIdx];
+        wess_seq_trigger(musicSeqDef.seqIdx);
     }
 }
 
@@ -290,6 +371,10 @@ void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept {
 // Loads all sound and music for the given map number (Note: '0' if menu, '60' if finale)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
+    // Final Doom has different music and map sounds
+    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
+    const musicseq_t* const pMusicSeqDefs = (bIsFinalDoom) ? gMusicSeqDefs_FinalDoom : gMusicSeqDefs_Doom;
+
     // PC-PSX: ignore this command in headless mode
     #if PC_PSX_DOOM_MODS
         if (ProgArgs::gbHeadlessMode)
@@ -304,8 +389,8 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     if (gLoadedSoundAndMusMapNum != 0) {
         if (gCurMusicSeqIdx != 0) {
             S_StopMusic();
-
-            while (wess_seq_status(gMusicSeqDefs[gCurMusicSeqIdx].seqIdx) != SequenceStatus::SEQUENCE_INACTIVE) {
+            
+            while (wess_seq_status(pMusicSeqDefs[gCurMusicSeqIdx].seqIdx) != SequenceStatus::SEQUENCE_INACTIVE) {
                 // PC-PSX: need to update sound to escape this loop, also ensure the window stays responsive etc.
                 #if PC_PSX_DOOM_MODS
                     Utils::doPlatformUpdates();
@@ -313,14 +398,16 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
                 #endif
             }
 
-            wess_seq_range_free(0 + NUMSFX, NUM_MUSIC_SEQS);
+            wess_seq_range_free(0 + NUMSFX, (bIsFinalDoom) ? NUM_MUSIC_SEQS_FINAL_DOOM : NUM_MUSIC_SEQS_DOOM);
         }
 
         S_UnloadSampleBlock(gMapSndBlock);
     }
 
     // Either load or unload the main Doom SFX LCD
-    if (mapIdx == 60) {
+    const int32_t finaleMapNum = Game::getNumMaps() + 1;
+
+    if (mapIdx == finaleMapNum) {
         // For the finale unload the LCD to free up RAM
         S_UnloadSampleBlock(gDoomSndBlock);
         gbDidLoadDoomSfxLcd = false;
@@ -335,7 +422,8 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
 
     // Load the music sequence and lcd file for the map music.
     // Also initialize the reverb mode depending on the music.
-    gCurMusicSeqIdx = gMapAudioDefs[mapIdx].musicSeqIdx;
+    const mapaudiodef_t& mapAudioDef = (bIsFinalDoom) ? gMapAudioDefs_FinalDoom[mapIdx] : gMapAudioDefs_Doom[mapIdx];
+    gCurMusicSeqIdx = mapAudioDef.musicSeqIdx;
     uint32_t destSpuAddr = gSound_CurSpuAddr;
 
     if (gCurMusicSeqIdx == 0) {
@@ -343,7 +431,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
         psxspu_init_reverb(SPU_REV_MODE_OFF, 0, 0, 0, 0);
     } else {
         // Normal case: playing a map music sequence
-        const musicseq_t& musicseq = gMusicSeqDefs[gCurMusicSeqIdx];
+        const musicseq_t& musicseq = pMusicSeqDefs[gCurMusicSeqIdx];
         psxspu_init_reverb(musicseq.reverbMode, musicseq.reverbDepthL, musicseq.reverbDepthR, 0, 0);
         wess_seq_load(musicseq.seqIdx, gpSound_MusicSeqData);
         destSpuAddr += wess_dig_lcd_load(musicseq.lcdFile, destSpuAddr, &gMapSndBlock, false);
@@ -353,8 +441,8 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     gLoadedSoundAndMusMapNum = mapIdx;
 
     // Load the sound LCD file for the map
-    if (gMapAudioDefs[mapIdx].sfxLcdFile != CdFileId{}) {
-        wess_dig_lcd_load(gMapAudioDefs[mapIdx].sfxLcdFile, destSpuAddr, &gMapSndBlock, false);
+    if (mapAudioDef.sfxLcdFile != CdFileId{}) {
+        wess_dig_lcd_load(mapAudioDef.sfxLcdFile, destSpuAddr, &gMapSndBlock, false);
     }
 }
 
