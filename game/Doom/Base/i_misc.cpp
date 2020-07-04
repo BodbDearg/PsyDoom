@@ -7,8 +7,10 @@
 #include "Doom/UI/in_main.h"
 #include "i_drawcmds.h"
 #include "i_main.h"
+#include "PcPsx/GameUtils.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
+
 #include <cstdio>
 
 const fontchar_t gBigFontChars[NUM_BIG_FONT_CHARS] = {
@@ -207,11 +209,15 @@ void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) 
 // Draw pause screen elements, including the plaque and level warp and vram viewer cheats
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawPausedOverlay() noexcept {
+    // Some UI elements are handled differently for Final Doom
+    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+    
     // Draw the paused plaque unless disabled
     const player_t& player = gPlayers[gCurPlayerIndex];
 
     if ((player.cheats & CF_NOPAUSEMSG) == 0) {
-        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, gPaletteClutIds[MAINPAL]);
+        const uint16_t paletteClutId = gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : MAINPAL];
+        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, paletteClutId);
     }
 
     if (player.cheats & CF_WARPMENU) {

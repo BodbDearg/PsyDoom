@@ -18,6 +18,7 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PcPsx/Endian.h"
+#include "PcPsx/GameUtils.h"
 #include "PcPsx/Utils.h"
 #include "Wess/wessapi.h"
 
@@ -63,8 +64,11 @@ static mobj_t gEmptyMObj;
 // Displays a loading message then loads the current map
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_DoLoadLevel() noexcept {
+    // Some UI elements are handled differently for Final Doom
+    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+
     // Draw the loading plaque
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : UIPAL]);
 
     // Wait for the pistol and barrel explode menu sounds to stop playing
     while ((wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING) || (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING)) {

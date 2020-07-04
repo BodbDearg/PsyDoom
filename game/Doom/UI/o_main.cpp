@@ -10,6 +10,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "PcPsx/GameUtils.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "pw_main.h"
 #include "Wess/psxspu.h"
@@ -68,8 +69,8 @@ static const menuitem_t gOptMenuItems_NetGame[] = {
 static int32_t              gOptionsMenuSize;
 static const menuitem_t*    gpOptionsMenuItems;
 
-// The marble floor texture used as a background for the options menu
-texture_t gTex_MARB01;
+// Texture used as a background for the options menu
+texture_t gTex_OptionsBg;
 
 // Current options music and sound volume
 int32_t gOptionsSndVol = S_SND_DEFAULT_VOL;
@@ -321,12 +322,19 @@ gameaction_t O_Control() noexcept {
 // Draws the options menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void O_Drawer() noexcept {
+    // Some UI elements are handled differently for Final Doom
+    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+
     // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
 
-    for (int16_t y = 0; y < 4; ++y) {
-        for (int16_t x = 0; x < 4; ++x) {
-            I_CacheAndDrawSprite(gTex_MARB01, x * 64, y * 64, gPaletteClutIds[MAINPAL]);
+    {
+        const uint16_t bgPaletteClutId = gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : MAINPAL];
+
+        for (int16_t y = 0; y < 4; ++y) {
+            for (int16_t x = 0; x < 4; ++x) {
+                I_CacheAndDrawSprite(gTex_OptionsBg, x * 64, y * 64, bgPaletteClutId);
+            }
         }
     }
 

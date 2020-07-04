@@ -10,6 +10,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "o_main.h"
+#include "PcPsx/GameUtils.h"
 #include "PcPsx/PsxPadButtons.h"
 
 // Names for all the control bindings
@@ -184,12 +185,19 @@ gameaction_t TIC_ControlsScreen() noexcept {
 // Renders the control configuration screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_ControlsScreen() noexcept {
+    // Some UI elements are handled differently for Final Doom
+    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+
     // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
 
-    for (int32_t y = 0; y < 4; ++y) {
-        for (int32_t x = 0; x < 4; ++x) {
-            I_CacheAndDrawSprite(gTex_MARB01, (int16_t) x * 64, (int16_t) y * 64, gPaletteClutIds[MAINPAL]);
+    {
+        const uint16_t bgPaletteClutId = gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : MAINPAL];
+
+        for (int32_t y = 0; y < 4; ++y) {
+            for (int32_t x = 0; x < 4; ++x) {
+                I_CacheAndDrawSprite(gTex_OptionsBg, (int16_t) x * 64, (int16_t) y * 64, bgPaletteClutId);
+            }
         }
     }
 
@@ -236,7 +244,7 @@ void DRAW_ControlsScreen() noexcept {
 
                 I_DrawSprite(
                     gTex_BUTTONS.texPageId,
-                    gPaletteClutIds[MAINPAL],
+                    gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : MAINPAL],
                     38,
                     ypos,
                     gTex_BUTTONS.texPageCoordX + (uint8_t) bindableBtnIdx * BTN_SPRITE_SIZE,

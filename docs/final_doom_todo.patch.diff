@@ -907,72 +907,6 @@ index 9f0cbb0..f853c11 100644
 +#define _MUSLEV19_LCD	164
 +#define _MUSLEV20_LCD	165
 +#define MAX_ABS_FILES	166
-diff --git a/PSXDOOM/PSX_PAD.C b/PSXDOOM/PSX_PAD.C
-new file mode 100644
-index 0000000..4d1a61c
---- /dev/null
-+++ b/PSXDOOM/PSX_PAD.C
-@@ -0,0 +1,60 @@
-+#include "doomdef.h"
-+
-+/*
-+=================
-+=
-+= Get_PadButtons
-+= PS1 Mouse or PS1 Control
-+=
-+=================
-+*/
-+
-+int Get_PadButtons(int *buttons)//L80038FDC()
-+{
-+    int mouse_x, mouse_y;
-+    int b_code, b_code1, b_code2;
-+
-+    /* Apply current buttons */
-+    b_code1 = *buttons;
-+
-+    /* Reads the X / Y movement of the mouse, the left / right buttons, */
-+    /* and converts them into flag codes like a normal control */
-+
-+    mouse_x = ((m_sensitivity + 5) * (signed char)(b_code1 >> 16)) / 100;
-+    mouse_y = ((m_sensitivity + 5) * (signed char)(b_code1 >> 24)) / 100;
-+
-+    if (mouse_y >= 2)
-+    {
-+        b_code1 |= PAD_DOWN;
-+    }
-+    else if (mouse_y < -1)
-+    {
-+        b_code1 |= PAD_UP;
-+    }
-+
-+    if (mouse_x >= 2)
-+    {
-+        b_code1 |= PAD_RIGHT;
-+    }
-+    else if (mouse_x < -1)
-+    {
-+        b_code1 |= PAD_LEFT;
-+    }
-+
-+    b_code2 = b_code1;
-+    if (b_code1 & MOUSE_RIGHT)
-+    {
-+        b_code2 = b_code1 | PAD_TRIANGLE;
-+        *buttons = *buttons | PAD_TRIANGLE;
-+    }
-+
-+    b_code = b_code2 & 0xffff;
-+    if (b_code1 & MOUSE_LEFT)
-+    {
-+        *buttons = *buttons | PAD_CROSS;
-+        b_code = b_code2 & 0xffff | PAD_CROSS;
-+    }
-+
-+    return b_code;
-+}
-+
 diff --git a/PSXDOOM/c_main.c b/PSXDOOM/c_main.c
 index 48feff2..6c7a655 100644
 --- a/PSXDOOM/c_main.c
@@ -1207,12 +1141,7 @@ index 992b9f0..308c893 100644
  	}
  
  	return ga_nothing;
-@@ -144,17 +169,17 @@ void CF_Drawer(void)//L80037984()
- 	{
- 		for (xpos = 0; xpos < 4; xpos++)
- 		{
--			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[0]);
-+			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[20]);
+@@ -148,13 +173,13 @@ void CF_Drawer(void)//L80037984()
  		}
  	}
  
@@ -2080,20 +2009,6 @@ diff --git a/PSXDOOM/g_game.c b/PSXDOOM/g_game.c
 index ec4c542..2a28adf 100644
 --- a/PSXDOOM/g_game.c
 +++ b/PSXDOOM/g_game.c
-@@ -45,7 +45,12 @@ void G_DoLoadLevel (void) //L80012E04()
- {
- 	int i;
- 
--	P_LoadingPlaque(&loadingpic, 95, 109, palette[16]);
-+	P_LoadingPlaque(&loadingpic, 95, 109, palette[20]);
-+
-+    do {
-+        do {} while (wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING);
-+    } while (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING);
-+
-     S_Lcd_Load(gamemap);
- 
- 	for (i = 0; i < MAXPLAYERS; i++)
 @@ -94,7 +99,6 @@ void G_PlayerFinishLevel (int player)//L80012ED4()
  	D_memset (p->cards, 0, sizeof (p->cards));
  	p->mo->flags &= ~(MF_BLENDMASK1|MF_BLENDMASK2|MF_BLENDMASK3); /* cancel invisibility  */ //PC DOOM ~MF_SHADOW
@@ -2456,39 +2371,6 @@ index 86ebe21..30f4495 100644
  typedef enum
  {
  	single,
-@@ -55,18 +62,18 @@ int RunMenu(void)//L8003592C()
- 			return ga_timeout;
- 
- 		NextTextureCacheIdx();
--		DrawStaticImage(&backpic, 0, 0, palette[0]);
--		DrawStaticImage(&doompic, 75, 20, palette[17]);
-+		DrawStaticImage(&backpic, 0, 0, palette[17]);
-+		DrawStaticImage(&doompic, 75, 20, palette[16]);
- 		UpdateDrawOTag();
- 		DrawRender();
- 
- 		if(starttype == gt_single) break;
- 
--		P_LoadingPlaque(&connectpic, 54, 103, palette[0]);
-+		P_LoadingPlaque(&connectpic, 54, 103, palette[20]);
- 		Link_Conection();
- 		NextTextureCacheIdx();
--		DrawStaticImage(&backpic, 0, 0, palette[0]);
--		DrawStaticImage(&doompic, 75, 20, palette[17]);
-+		DrawStaticImage(&backpic, 0, 0, palette[17]);
-+		DrawStaticImage(&doompic, 75, 20, palette[16]);
- 		UpdateDrawOTag();
- 		DrawRender();
- 		S_StartSound(NULL, sfx_pistol);// SNDPSTOL.mid
-@@ -103,7 +110,7 @@ void M_Start(void)//L80035A9C()
- 	Valloc_Init();
- 
- 	ImageToVram(&loadingpic, "LOADING", 0);
--	P_LoadingPlaque(&loadingpic, 95, 109, palette[16]);
-+	P_LoadingPlaque(&loadingpic, 95, 109, palette[20]);
- 	S_Lcd_Load(0);
- 
- 	ImageToVram(&backpic, "BACK", 0);
 @@ -115,23 +122,23 @@ void M_Start(void)//L80035A9C()
  	m_vframe1[0] = 0;
  
@@ -2559,17 +2441,6 @@ index 86ebe21..30f4495 100644
  
                      if (startmap > movecount)
                          startmap = 1;
-@@ -335,8 +345,8 @@ int M_Ticker(void)//L80035CC4()
- void M_Drawer(void)//L80036058()
- {
-     NextTextureCacheIdx();
--    DrawStaticImage(&backpic, 0, 0, palette[0]);
--    DrawStaticImage(&doompic, 75, 20, palette[17]);
-+    DrawStaticImage(&backpic, 0, 0, palette[17]);
-+    DrawStaticImage(&doompic, 75, 20, palette[16]);
- 
-     DrawImage(statuspic.vtpage, palette[16], CURSORX, CURSORY(cursorpos[0]) - 2, M_SKULL_VX + (cursorframe * M_SKULL_W), M_SKULL_VY, M_SKULL_W, M_SKULL_H);
- 
 @@ -344,10 +354,7 @@ void M_Drawer(void)//L80036058()
      ST_DrawText(90, STARTY[0]+20, gametypenames[starttype]);
      if (starttype == 0)
@@ -2723,15 +2594,6 @@ index 7512332..fd92de2 100644
                      if (buttons & PAD_ACTION)
                      {
                          S_StartSound(0, sfx_pistol);
-@@ -305,7 +320,7 @@ void O_Drawer(void)//L8003EC38()
- 	{
- 		for (xpos = 0; xpos < 4; xpos++)
- 		{
--			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[0]);
-+			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[20]);
- 		}
- 	}
- 
 diff --git a/PSXDOOM/p_enemy.c b/PSXDOOM/p_enemy.c
 index 5ba7265..9979f9c 100644
 --- a/PSXDOOM/p_enemy.c
@@ -3207,41 +3069,6 @@ index e0d28db..9cb25f5 100644
      drawside = 0;
  
      EnterCriticalSection();
-@@ -150,6 +179,34 @@ void I_Error(char *error, ...)//L800329BC
- 	while (1){} // draw and display forever
- }
- 
-+//#if ENABLE_MOUSE == 1
-+unsigned int I_PadRead(void)//L80032E8C()
-+{
-+    unsigned int out_code, pad_code1, pad_code2, pad_code3;
-+    unsigned int *pad_buf1, *pad_buf2;
-+
-+    pad_buf1 = (unsigned int *)PAD_Rbuf1;
-+    pad_buf2 = (unsigned int *)PAD_Rbuf2;
-+
-+    pad_code1 = pad_buf1[0] ^ -0x10000;
-+    pad_code2 = pad_buf2[0] ^ -0x10000;
-+
-+    out_code = 0;
-+    if((pad_code1 & 0xF0FF) == 0x4000)
-+    {
-+        out_code = pad_code1 >> 8 & 65280 | pad_code1 >> 24;
-+    }
-+
-+    if((pad_code2 & 0xF0FF) == 0x1000)
-+    {
-+        pad_code3 = pad_buf2[1] << 16 & -0x10000;
-+        out_code = out_code | (pad_code2 >> 17) & 0x600 | pad_code3;
-+    }
-+
-+    return out_code;
-+}
-+//#endif // ENABLE_MOUSE
-+
- void ImageToVram(psxobj_t *pic, char *name, int lump)//L80032A68()
- {
- 	int w, h;
 @@ -564,12 +621,21 @@ void Vram_Viewer(int page)//80033938
  boolean cancel_link; //0x80077A3C *(r28 + 1580)
  
@@ -3266,206 +3093,6 @@ index e0d28db..9cb25f5 100644
  	/* The following lines enclosed by square brackets are necessary for the current PSYQ SDK libcomb.lib */
  	/* This is due to the version of libcomb.lib library used in the original PSXDOOM, it worked differently. */
  	/* Also the CompaCTS macros were added as it is the current way to create links between two consoles */
-@@ -578,7 +644,16 @@ void Link_Conection(void)//L800345A0()
-         /* wait for other PlayStation to be powered-up */
-         while((CombSioStatus() & (COMB_DSR|COMB_CTS)) == 0x180 )
-         {
--            if (PadRead(0) & PAD_SELECT)
-+            //if (PadRead(0) & PAD_SELECT)
-+            pad_buf1 = (unsigned int *)PAD_Rbuf1;
-+
-+            pad_code1 = pad_buf1[0] ^ -0x10000;
-+
-+            out_code = 0;
-+            if((pad_code1 & 0xF0FF) == 0x4000)
-+                out_code = pad_code1 >> 8 & 65280;
-+
-+            if(out_code & PAD_SELECT)
-             {
-                 cancel_link = true;
-                 CombCancelRead(); // Cancel async read request
-@@ -587,6 +662,8 @@ void Link_Conection(void)//L800345A0()
-         };
- 	}
- 
-+	senbuf[0] = 171;    //171 on Final Doom
-+
- 	//if (_comb_control(3,0,0) != 0)	//Original line
- 	if(CombCTS() == 0)  /* Return status of CTS */
-     {
-@@ -594,7 +671,16 @@ void Link_Conection(void)//L800345A0()
-         read(fr, recbuf, BUFFSIZE);
-         do
-         {
--            if (PadRead(0) & PAD_SELECT)
-+            //if (PadRead(0) & PAD_SELECT)
-+            pad_buf1 = (unsigned int *)PAD_Rbuf1;
-+
-+            pad_code1 = pad_buf1[0] ^ -0x10000;
-+
-+            out_code = 0;
-+            if((pad_code1 & 0xF0FF) == 0x4000)
-+                out_code = pad_code1 >> 8 & 65280;
-+
-+            if(out_code & PAD_SELECT)
- 			{
- 				cancel_link = true;
- 				CombCancelRead(); // Cancel async read request
-@@ -614,7 +700,16 @@ void Link_Conection(void)//L800345A0()
-         read(fr, recbuf, BUFFSIZE);
-         do
-         {
--            if (PadRead(0) & PAD_SELECT)
-+            //if (PadRead(0) & PAD_SELECT)
-+            pad_buf1 = (unsigned int *)PAD_Rbuf1;
-+
-+            pad_code1 = pad_buf1[0] ^ -0x10000;
-+
-+            out_code = 0;
-+            if((pad_code1 & 0xF0FF) == 0x4000)
-+                out_code = pad_code1 >> 8 & 65280;
-+
-+            if(out_code & PAD_SELECT)
- 			{
- 				cancel_link = true;
- 				CombCancelRead(); // Cancel async read request
-@@ -627,9 +722,10 @@ void Link_Conection(void)//L800345A0()
- 
- 	if (consoleplayer == 0)
- 	{
--		senbuf[1] = (char)starttype;
--		senbuf[2] = (char)startskill;
--		senbuf[3] = (char)startmap;
-+        senbuf[0] = (char)starttype << 4 | (char)startskill;
-+        senbuf[1] = (char)startmap;
-+        senbuf[2] = (char)m_sensitivity;
-+        senbuf[3] = (char)m_leftbutton << 4 | (char)m_rightbutton;
- 		*(int*)&senbuf[4] = Get_CfgCode(ActualConfiguration);
- 
- 		//do {} while (_comb_control(3,0,0) == 0);   //Original line
-@@ -640,8 +736,13 @@ void Link_Conection(void)//L800345A0()
- 
- 		do {} while (TestEvent(ev_r) == 0);
- 
-+        M_SENSITIVITY[1] = (char)recbuf[2];
-+        M_SENSITIVITY[0] = m_sensitivity;
-+
- 		BT_DATA[0] = (buttons_t *)ActualConfiguration;
- 		BT_DATA[1] = (buttons_t *)Get_CfgByCode(*(int*)&recbuf[4]);
-+        (&BT_DATA[1]->BT_ATTACK)[recbuf[3] >> 4 ] |= MOUSE_LEFT;
-+        (&BT_DATA[1]->BT_ATTACK)[recbuf[3] & 0xf] |= MOUSE_RIGHT;
- 	}
- 	else
- 	{
-@@ -649,12 +750,20 @@ void Link_Conection(void)//L800345A0()
- 
- 		do {} while (TestEvent(ev_r) == 0);
- 
--		starttype = recbuf[1];
--		startskill = recbuf[2];
--		startmap = recbuf[3];
-+        M_SENSITIVITY[0] = (char)recbuf[2];
-+        M_SENSITIVITY[1] = m_sensitivity;
-+
-+        starttype   = (char)recbuf[0] >> 4;
-+        startskill  = (char)recbuf[0] & 0xf;
-+        startmap    = (char)recbuf[1];
-+
-+        BT_DATA[1] = (buttons_t *)ActualConfiguration;
-+        BT_DATA[0] = (buttons_t *)Get_CfgByCode(*(int*)&recbuf[4]);
-+        (&BT_DATA[0]->BT_ATTACK)[recbuf[3] >> 4 ] |= MOUSE_LEFT;
-+        (&BT_DATA[0]->BT_ATTACK)[recbuf[3] & 0xf] |= MOUSE_RIGHT;
- 
--		BT_DATA[1] = (buttons_t *)ActualConfiguration;
--		BT_DATA[0] = (buttons_t *)Get_CfgByCode(*(int*)&recbuf[4]);
-+        senbuf[2] = (char)m_sensitivity;
-+        senbuf[3] = (char)m_leftbutton << 4 | (char)m_rightbutton;
- 
- 		*(int*)&senbuf[4] = Get_CfgCode(ActualConfiguration);
- 
-@@ -675,14 +784,14 @@ boolean Update_Conection(void)//L80034868()
-     up2 = up1 ^ (up1 >> 8);
-     up2 = up2 ^ (up1 >> 16);
- 
--	senbuf[0] = 170;//171 on final doom
--	senbuf[1] = up2;
-+	senbuf[0] = 171; // 171 on final doom
-+	senbuf[1] = (char) up2;
-     senbuf[2] = *(char *)(vblsinframe + consoleplayer);
- 	*(int*)&senbuf[4] = ticbuttons[consoleplayer];
- 
- 	Sync_Read_Write();
- 
--	if (recbuf[0] == 170 && (recbuf[1] == senbuf[1]))//171 on final doom
-+	if (recbuf[0] == 171 && (recbuf[1] == senbuf[1]))//171 on final doom
- 	{
-         if (consoleplayer == 0)
-         {
-@@ -711,7 +820,7 @@ boolean Update_Conection(void)//L80034868()
-         NextTextureCacheIdx();
-         TextureCache(&neterrpic);
- 
--        DrawImage(neterrpic.vtpage, palette[16], 84, 109, neterrpic.vramx, neterrpic.vramy, neterrpic.w, neterrpic.h);
-+        DrawImage(neterrpic.vtpage, palette[20], 84, 109, neterrpic.vramx, neterrpic.vramy, neterrpic.w, neterrpic.h);
- 
-         UpdateDrawOTag();
-         DrawRender();
-@@ -763,8 +872,8 @@ void Sync_Read_Write (void) //L80034B1C()
- 			//do {} while (_comb_control(3,0,0) == 0);   //Original line
- 			do {} while (CombCTS() == 0);   /* Return status of CTS */
- 
--			write(fw, &senbuf, BUFFSIZE);
--			read(fr, &recbuf, BUFFSIZE);
-+			write(fw, senbuf, BUFFSIZE);
-+			read(fr, recbuf, BUFFSIZE);
- 
- 			sync = VSync(-1);
- 			do
-@@ -775,7 +884,7 @@ void Sync_Read_Write (void) //L80034B1C()
- 		}
- 		else
-         {
--			read(fr, &recbuf, BUFFSIZE);
-+			read(fr, recbuf, BUFFSIZE);
- 
- 			sync = VSync(-1);
- 			do
-@@ -784,7 +893,7 @@ void Sync_Read_Write (void) //L80034B1C()
-                 {
- 					//do {} while (_comb_control(3,0,0) == 0);   //Original line
- 					do {} while (CombCTS() == 0);   /* Return status of CTS */
--					write(fw, &senbuf, BUFFSIZE);
-+					write(fw, senbuf, BUFFSIZE);
- 					return;
- 				}
- 
-@@ -819,7 +928,7 @@ void UpdateDrawOTag(void)//80034C60
- unsigned int Get_CfgCode(unsigned int *cfgdata)//L80034CAC
- {
-     unsigned int *tmpcfg;
--	int i, j, cfgcode;
-+	unsigned int i, j, cfgcode;
- 
- 	tmpcfg = TempConfiguration;
- 	cfgcode = 0;
-@@ -828,7 +937,7 @@ unsigned int Get_CfgCode(unsigned int *cfgdata)//L80034CAC
- 	{
- 		for(j = 0; j < 8; j++, tmpcfg++)
- 		{
--			if (*cfgdata == *tmpcfg)
-+			if (*cfgdata & *tmpcfg)
- 				break;
- 		}
- 
-@@ -852,7 +961,7 @@ unsigned int *Get_CfgByCode(unsigned int cfgcode)//L80034D0C
- {
-     unsigned int *tmpcfg;
- 	unsigned int *newcfg;
--	int i, code;
-+	unsigned int i, code;
- 
- 	tmpcfg = TempConfiguration;
- 	newcfg = NewConfiguration;
 diff --git a/PSXDOOM/pw_main.c b/PSXDOOM/pw_main.c
 index a76a8ca..471230b 100644
 --- a/PSXDOOM/pw_main.c
@@ -3521,15 +3148,6 @@ index a76a8ca..471230b 100644
          if (buttons & (PAD_SQUARE | PAD_CROSS| PAD_CIRCLE))
          {
              S_StartSound(NULL, sfx_swtchx);
-@@ -186,7 +194,7 @@ void PW_Drawer(void) //L80036F34()
- 	{
- 		for (xpos = 0; xpos < 4; xpos++)
- 		{
--			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[0]);
-+			DrawStaticImage(&marb01pic, xpos << 6, ypos << 6, palette[20]);
- 		}
- 	}
- 
 @@ -212,7 +220,7 @@ void PW_Drawer(void) //L80036F34()
  
          if (PassCodePos == cnt)
@@ -3856,28 +3474,6 @@ index 85da3b3..3c39ce1 100644
      //printf("sram_pos %d\n",sram_pos);
      sram_load = 1;
  }
-diff --git a/PSXDOOM/st_main.c b/PSXDOOM/st_main.c
-index 93c228c..24fd83d 100644
---- a/PSXDOOM/st_main.c
-+++ b/PSXDOOM/st_main.c
-@@ -649,7 +649,7 @@ void ST_CheatDraw(void)//L8003AA80()
- 	//Draw Pause Graphic
- 	if (!(p->cheats & CF_PAUSE) )
- 	{
--		DrawStaticImage(&pausepic, 107, 108, palette[0]);
-+		DrawStaticImage(&pausepic, 107, 108, palette[20]);
- 	}
- 
- 	if (p->cheats & CF_WARPLEVEL)
-@@ -807,7 +807,7 @@ void ST_DrawText(int x, int y, char *text)//L8003B0A0()
- 	W_AddPrim(drawmode);// add to order table
- 
- 	/* make sprite status*/
--	SetSprt(sprtstat);
-+	setSprt(sprtstat);
- 	setShadeTex(sprtstat, 1);
- 	sprtstat->clut = palette[16];
- 
 diff --git a/PSXDOOM/t_main.c b/PSXDOOM/t_main.c
 index a1d26a1..d0126f8 100644
 --- a/PSXDOOM/t_main.c
@@ -3892,30 +3488,6 @@ index a1d26a1..d0126f8 100644
  psxobj_t loadingpic;//0x80097870
  psxobj_t marb01pic;//0x80097890
  psxobj_t buttonspic;//0x800978B0
-@@ -27,19 +30,19 @@ void T_Start(void)//L80034EA0()
- 	int lump;
- 
- 	Valloc_Init();
--	Z_FreeTags(mainzone,PU_CACHE);//test
-+	//Z_FreeTags(mainzone,PU_CACHE);//test
- 
- 	W_CacheLumpName("LOADING", PU_STATIC, 0);
- 	ImageToVram(&loadingpic, "LOADING", 0);
--	P_LoadingPlaque(&loadingpic, 95, 109, palette[16]);
-+	P_LoadingPlaque(&loadingpic, 95, 109, palette[20]);
- 	S_Lcd_Load(0);
- 
--	W_CacheLumpName("MARB01", PU_STATIC, 0);
-+	W_CacheLumpName("TILE", PU_STATIC, 0);//MARB01
- 	W_CacheLumpName("BUTTONS", PU_STATIC, 0);
- 	W_CacheLumpName("NETERR", PU_STATIC, 0);
- 	W_CacheLumpName("PAUSE", PU_STATIC, 0);
- 
--	ImageToVram(&marb01pic, "MARB01", 0);
-+	ImageToVram(&marb01pic, "TILE", 0);//MARB01
- 	ImageToVram(&buttonspic, "BUTTONS", 0);
- 	ImageToVram(&neterrpic, "NETERR", 0);
- 	ImageToVram(&pausepic, "PAUSE", 0);
 @@ -53,7 +56,7 @@ void T_Start(void)//L80034EA0()
  
  	TextureCache(skytexturep);

@@ -4,7 +4,7 @@
 
 struct texture_t;
 
-extern texture_t    gTex_MARB01;
+extern texture_t    gTex_OptionsBg;
 extern int32_t      gOptionsSndVol;
 extern int32_t      gOptionsMusVol;
 

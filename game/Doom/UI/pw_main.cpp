@@ -11,6 +11,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
+#include "PcPsx/GameUtils.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -221,12 +222,19 @@ gameaction_t TIC_PasswordScreen() noexcept {
 // Renders the password screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_PasswordScreen() noexcept {
+    // Some UI elements are handled differently for Final Doom
+    const bool bIsFinalDoom = (GameUtils::gGameType == GameType::FinalDoom);
+
     // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
 
-    for (int16_t y = 0; y < 4; ++y) {
-        for (int16_t x = 0; x < 4; ++x) {
-            I_CacheAndDrawSprite(gTex_MARB01, x * 64, y * 64, gPaletteClutIds[MAINPAL]);
+    {
+        const uint16_t bgPaletteClutId = gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : MAINPAL];
+
+        for (int16_t y = 0; y < 4; ++y) {
+            for (int16_t x = 0; x < 4; ++x) {
+                I_CacheAndDrawSprite(gTex_OptionsBg, x * 64, y * 64, bgPaletteClutId);
+            }
         }
     }
 
