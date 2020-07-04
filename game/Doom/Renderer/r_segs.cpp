@@ -113,6 +113,13 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             return;
     }
     
+    // Final Doom: force the mid wall to be 128 units in height if this flag is specified.
+    // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
+    if (line.flags & ML_MIDHEIGHT_128) {
+        // Note again, since texture space coords are opposite to view space coords, we do a -128 instead of +128 as you would expect:
+        mid_ty = mid_by - 128;
+    }
+
     // Drawing the mid wall
     {
         // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way

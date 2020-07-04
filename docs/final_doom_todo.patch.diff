@@ -1458,28 +1458,6 @@ index 95fe3f2..d0324d1 100644
 +//NEW FINAL DOOM
 +int M_SENSITIVITY[MAXPLAYERS];  //80078358, 8007835c
 +
-diff --git a/PSXDOOM/doomdata.h b/PSXDOOM/doomdata.h
-index 6672f27..89e0294 100644
---- a/PSXDOOM/doomdata.h
-+++ b/PSXDOOM/doomdata.h
-@@ -68,12 +69,15 @@ typedef struct
- // Psx Doom New Flags
- #define ML_MIDMASKED		0x200
- #define ML_MIDTRANSLUCENT	0x400
--#define ML_BLOCKPRJECTILE	0x800
-+#define ML_BLOCKPRJECTILE	0x800
-+// Psx Final Doom New Flag
-+#define ML_MIDCLIPTEXTURE	0x1000
- 
- typedef	struct
- {
- 	short		floorheight, ceilingheight; //*, *2
--	char		floorpic[8], ceilingpic[8]; //*4 ,*12
-+	//char		floorpic[8], ceilingpic[8]; //*4 ,*12
-+	short       floorpic, ceilingpic;
- 	char		lightlevel;                 //*20
- 	char		colorid;                    //*21
- 	short		special, tag;               //*22, *24
 diff --git a/PSXDOOM/doomdef.h b/PSXDOOM/doomdef.h
 index 6133eac..667b693 100644
 --- a/PSXDOOM/doomdef.h
@@ -3160,23 +3138,6 @@ index a76a8ca..471230b 100644
  
  	UpdateDrawOTag();
  	DrawRender();
-diff --git a/PSXDOOM/r_phase2.c b/PSXDOOM/r_phase2.c
-index a695509..683756d 100644
---- a/PSXDOOM/r_phase2.c
-+++ b/PSXDOOM/r_phase2.c
-@@ -602,6 +602,12 @@ void R_WallPrep(leaf_t *lf)//L8002D27C
- 		}
- 	}
- 
-+	// Clip the texture from the base of the floor
-+	if (li->flags & ML_MIDCLIPTEXTURE)
-+	{
-+	    m_top = m_bottom + -128;
-+	}
-+
- 	height = m_bottom - m_top;
- 	if (height >= 256)
-         height = 255;
 diff --git a/PSXDOOM/s_sound.c b/PSXDOOM/s_sound.c
 index 85da3b3..3c39ce1 100644
 --- a/PSXDOOM/s_sound.c

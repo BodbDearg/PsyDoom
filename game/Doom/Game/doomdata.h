@@ -36,6 +36,7 @@ static constexpr int16_t ML_MAPPED          = 0x100;    // Set when the line is 
 static constexpr int16_t ML_MIDMASKED       = 0x200;    // PSX DOOM: Middle texture has translucent or alpha blended pixels
 static constexpr int16_t ML_MIDTRANSLUCENT  = 0x400;    // PSX DOOM: Middle texture drawn with alpha blending
 static constexpr int16_t ML_BLOCKPRJECTILE  = 0x800;    // PSX DOOM: Line stops projectiles
+static constexpr int16_t ML_MIDHEIGHT_128   = 0x1000;   // PSX FINAL DOOM: forces the middle part of a wall to be a fixed 128 units in height. Used for fences and such in Final Doom, so they don't repeat vertically.
 
 // Map thing flags
 static constexpr int16_t MTF_EASY               = 0x1;      // Difficulty flags, determines which difficulties the thing appears at
