@@ -26,5 +26,6 @@ void determineGameTypeAndVariant() noexcept;
 int32_t getNumMaps() noexcept;
 int32_t getNumRegularMaps() noexcept;
 const char* getMapName(const int32_t mapNum) noexcept;
+uint16_t getTexPalette_BACK() noexcept;
 
 END_NAMESPACE(Game)

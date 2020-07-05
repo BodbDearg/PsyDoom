@@ -1221,37 +1221,6 @@ index ec4c542..2a28adf 100644
  	V_PagFlags &= 1;
  	Z_FreeTags(mainzone, (PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE));
  	return exit;
-diff --git a/PSXDOOM/in_main.c b/PSXDOOM/in_main.c
-index 76de979..91f84fb 100644
---- a/PSXDOOM/in_main.c
-+++ b/PSXDOOM/in_main.c
-@@ -301,7 +272,7 @@ void IN_SingleDrawer(void)//L8003CC54()
- 	int i;
- 	char password[16];
- 
--	DrawStaticImage(&backpic, 0, 0, palette[0]);
-+	DrawStaticImage(&backpic, 0, 0, palette[17]);
- 
- 	ST_DrawText(-1, 20, mapnames[gamemap-1]);
- 
-@@ -344,7 +315,7 @@ void IN_CooperativeDrawer(void)//L8003CE24()
- 	int i;
- 	char password[16];
- 
--	DrawStaticImage(&backpic, 0, 0, palette[0]);
-+	DrawStaticImage(&backpic, 0, 0, palette[17]);
- 
- 	DrawImage(statuspic.vtpage, palette[16], 139, 20, facedata[0].x, facedata[0].y, facedata[0].w, facedata[0].h);
- 	ST_DrawText(130, 52, "you");
-@@ -398,7 +369,7 @@ void IN_DeathMachtDrawer(void)//L8003D1B8()
- 	int i;
- 	facedata_t *player1, *player2;
- 
--	DrawStaticImage(&backpic, 0, 0, palette[0]);
-+	DrawStaticImage(&backpic, 0, 0, palette[17]);
- 
- 	ST_DrawText(-1, 20, mapnames[gamemap-1]);
- 	ST_DrawText(-1, 36, "Finished");
 diff --git a/PSXDOOM/l_main.c b/PSXDOOM/l_main.c
 index 677b67b..dbb1eda 100644
 --- a/PSXDOOM/l_main.c

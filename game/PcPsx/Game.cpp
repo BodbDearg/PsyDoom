@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game.h"
 
+#include "Doom/Renderer/r_data.h"
 #include "Doom/UI/in_main.h"
 #include "FatalErrors.h"
 #include "IsoFileSys.h"
@@ -80,6 +81,13 @@ const char* getMapName(const int32_t mapNum) noexcept {
     }
 
     return "Unknown Mapname";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the palette to use for various textures
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t getTexPalette_BACK() noexcept {
+    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? TITLEPAL : MAINPAL];
 }
 
 END_NAMESPACE(Game)

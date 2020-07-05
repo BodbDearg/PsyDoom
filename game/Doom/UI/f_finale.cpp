@@ -12,6 +12,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "m_main.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "PsyQ/LIBETC.h"
@@ -193,7 +194,7 @@ gameaction_t F1_Ticker() noexcept {
 void F1_Drawer() noexcept {
     // Increment the frame count (for the texture cache) and draw the background
     I_IncDrawnFrameCount();
-    I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
 
     // Show both the incoming and fully displayed text lines
     int32_t ypos = 45;

@@ -102,7 +102,7 @@ gameaction_t RunMenu() noexcept {
 
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
         I_IncDrawnFrameCount();
-        I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[(bIsFinalDoom) ? TITLEPAL : MAINPAL]);
+        I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
         I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[(bIsFinalDoom) ? UIPAL : TITLEPAL]);
         I_SubmitGpuCmds();
         I_DrawPresent();
@@ -117,7 +117,7 @@ gameaction_t RunMenu() noexcept {
 
         // Once the net connection has been established, re-draw the background in prep for a loading or error plaque
         I_IncDrawnFrameCount();
-        I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[(bIsFinalDoom) ? TITLEPAL : MAINPAL]);
+        I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
         I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[(bIsFinalDoom) ? UIPAL : TITLEPAL]);
         I_SubmitGpuCmds();
         I_DrawPresent();
@@ -441,7 +441,7 @@ void M_Drawer() noexcept {
 
     // Draw the menu background and increment frame count for the texture cache.
     I_IncDrawnFrameCount();
-    I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[(bIsFinalDoom) ? TITLEPAL : MAINPAL]);
+    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
 
     // Draw the DOOM logo
     I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[(bIsFinalDoom) ? UIPAL : TITLEPAL]);
