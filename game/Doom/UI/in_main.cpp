@@ -373,13 +373,9 @@ void IN_Drawer() noexcept {
 // Draws the single player intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_SingleDrawer() noexcept {
-    // Some different logic here for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-    const auto mapNames = (bIsFinalDoom) ? gMapNames_FinalDoom : gMapNames_Doom;
-
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
-    I_DrawString(-1, 20, mapNames[gGameMap - 1]);
+    I_DrawString(-1, 20, Game::getMapName(gGameMap));
     I_DrawString(-1, 36, "Finished");
 
     I_DrawString(57, 65, "Kills");
@@ -397,7 +393,7 @@ void IN_SingleDrawer() noexcept {
     // Only draw the next map and password if there is a next map
     if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 145, "Entering");
-        I_DrawString(-1, 161, mapNames[gNextMap - 1]);
+        I_DrawString(-1, 161, Game::getMapName(gNextMap));
         I_DrawString(-1, 187, "Password");
 
         char passwordStr[PW_SEQ_LEN + 1];
@@ -415,10 +411,6 @@ void IN_SingleDrawer() noexcept {
 // Draws the cooperative mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_CoopDrawer() noexcept {
-    // Some different logic here for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-    const auto mapNames = (bIsFinalDoom) ? gMapNames_FinalDoom : gMapNames_Doom;
-
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
     I_DrawSprite(
@@ -468,7 +460,7 @@ void IN_CoopDrawer() noexcept {
     // Only draw the next map and password if there is a next map
     if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 149, "Entering");
-        I_DrawString(-1, 165, mapNames[gNextMap - 1]);
+        I_DrawString(-1, 165, Game::getMapName(gNextMap));
 
         // Well this is mean! The current player only gets to see a password if not dead :(
         if (gPlayers[gCurPlayerIndex].health > 0) {
@@ -490,13 +482,9 @@ void IN_CoopDrawer() noexcept {
 // Draws the deathmatch mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_DeathmatchDrawer() noexcept {
-    // Some different logic here for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-    const auto mapNames = (bIsFinalDoom) ? gMapNames_FinalDoom : gMapNames_Doom;
-
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
-    I_DrawString(-1, 20, mapNames[gGameMap - 1]);
+    I_DrawString(-1, 20, Game::getMapName(gGameMap));
     I_DrawString(-1, 36, "Finished");
 
     const facesprite_t* pFaceSpriteP1;
@@ -563,6 +551,6 @@ void IN_DeathmatchDrawer() noexcept {
     // Only draw the next map if there is one
     if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 190, "Entering");
-        I_DrawString(-1, 206, mapNames[gNextMap - 1]);
+        I_DrawString(-1, 206, Game::getMapName(gNextMap));
     }
 }

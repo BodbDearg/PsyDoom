@@ -290,10 +290,6 @@ void ST_Ticker() noexcept {
 // Do drawing for the HUD status bar
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ST_Drawer() noexcept {
-    // Some different logic here for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-    const auto mapNames = (bIsFinalDoom) ? gMapNames_FinalDoom : gMapNames_Doom;
-
     // Setup the current texture page and texture window.
     // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that.
     {
@@ -328,7 +324,7 @@ void ST_Drawer() noexcept {
 
             // PC-PSX: use 'snprintf' just to be safe here
             #if PC_PSX_DOOM_MODS
-                std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, gGameMap, mapNames[gGameMap - 1]);
+                std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, gGameMap, Game::getMapName(gGameMap));
             #else
                 std::sprintf(mapTitle, MAP_TITLE_FMT, gGameMap, gMapNames[gGameMap - 1]);
             #endif

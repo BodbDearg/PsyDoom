@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game.h"
 
+#include "Doom/UI/in_main.h"
 #include "FatalErrors.h"
 #include "IsoFileSys.h"
 #include "PsxVm.h"
@@ -20,6 +21,9 @@ static constexpr uint32_t NUM_REGULAR_MAPS_FINAL_DOOM = 30;
 GameType        gGameType;
 GameVariant     gGameVariant;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Determine which game type we are playing and from what region
+//------------------------------------------------------------------------------------------------------------------------------------------
 void determineGameTypeAndVariant() noexcept {
     if (PsxVm::gIsoFileSys.getEntry("SLUS_000.77")) {
         gGameType = GameType::Doom;
@@ -47,12 +51,35 @@ void determineGameTypeAndVariant() noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the total number of maps for this game
+//------------------------------------------------------------------------------------------------------------------------------------------
 int32_t getNumMaps() noexcept {
     return (gGameType == GameType::FinalDoom) ? NUM_MAPS_FINAL_DOOM : NUM_MAPS_DOOM;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the total number of maps excluding secret levels for this game
+//------------------------------------------------------------------------------------------------------------------------------------------
 int32_t getNumRegularMaps() noexcept {
     return (gGameType == GameType::FinalDoom) ? NUM_REGULAR_MAPS_FINAL_DOOM : NUM_REGULAR_MAPS_DOOM;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the name of the specified map number
+//------------------------------------------------------------------------------------------------------------------------------------------
+const char* getMapName(const int32_t mapNum) noexcept {
+    if (gGameType == GameType::Doom) {
+        if (mapNum >= 1 && mapNum <= 59) {
+            return gMapNames_Doom[mapNum - 1];
+        }
+    } else if (gGameType == GameType::FinalDoom) {
+        if (mapNum >= 1 && mapNum <= 30) {
+            return gMapNames_FinalDoom[mapNum - 1];
+        }
+    }
+
+    return "Unknown Mapname";
 }
 
 END_NAMESPACE(Game)

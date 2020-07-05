@@ -211,7 +211,6 @@ void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) 
 void I_DrawPausedOverlay() noexcept {
     // Some UI elements are handled differently for Final Doom
     const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-    const auto mapNames = (bIsFinalDoom) ? gMapNames_FinalDoom : gMapNames_Doom;
     
     // Draw the paused plaque unless disabled
     const player_t& player = gPlayers[gCurPlayerIndex];
@@ -226,7 +225,7 @@ void I_DrawPausedOverlay() noexcept {
         char warpmsg[64];
         std::sprintf(warpmsg, "warp to level %d", gMapNumToCheatWarpTo);
         I_DrawString(-1, 40, warpmsg);
-        I_DrawString(-1, 60, mapNames[gMapNumToCheatWarpTo - 1]);
+        I_DrawString(-1, 60, Game::getMapName(gMapNumToCheatWarpTo));
     }
     else if (player.cheats & CF_VRAMVIEWER) {
         // Draw the vram viewer: first clear the background to black and then draw it
