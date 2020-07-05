@@ -23,6 +23,7 @@ extern GameType     gGameType;
 extern GameVariant  gGameVariant;
 
 void determineGameTypeAndVariant() noexcept;
+bool isFinalDoom() noexcept;
 int32_t getNumMaps() noexcept;
 int32_t getNumRegularMaps() noexcept;
 const char* getMapName(const int32_t mapNum) noexcept;

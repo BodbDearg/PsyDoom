@@ -20,8 +20,8 @@
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
-// Current position of the DOOM logo.
-// Also adopted by the 'legals' screen for the same purpose.
+// Doom: current position of the DOOM logo; also adopted by the 'legals' screen for the same purpose.
+// Final Doom: this is repurposed as the current fade/color-multiplier for the title screen image.
 int32_t gTitleScreenSpriteY;
 
 // The DOOM logo texture
@@ -70,8 +70,13 @@ void START_Title() noexcept {
         I_CacheTex(skyTex);
     }
     
-    // Initially the DOOM logo is offscreen
-    gTitleScreenSpriteY = SCREEN_H + 10;
+    // Doom: initially the DOOM logo is offscreen.
+    // Final Doom: it doesn't move and covers the fire.
+    if (Game::isFinalDoom()) {
+        gTitleScreenSpriteY = 0;
+    } else {
+        gTitleScreenSpriteY = SCREEN_H + 10;
+    }
 
     // Play the music for the title screen
     psxcd_play(gCDTrackNum[cdmusic_title_screen], gCdMusicVol);
@@ -106,62 +111,91 @@ gameaction_t TIC_Title() noexcept {
     // Decrement the time until the title sprite moves
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gCurPlayerIndex];
     gVBlanksUntilTitleSprMove -= elapsedVBlanks;
-    
-    // If it is time to move the title sprite then do that.
-    // Stop the title sprite also once it reaches the top of the screen and begin the menu timeout counter.
-    if (gVBlanksUntilTitleSprMove <= 0) {
-        gVBlanksUntilTitleSprMove = 2;
 
-        if (gTitleScreenSpriteY != 0) {
-            gTitleScreenSpriteY -= 1;
+    // For Final Doom the scroll value is actually an RGB color multiply for the title image.
+    // The logic to update it is different in that case.
+    if (Game::isFinalDoom()) {
+        // PC-PSX: don't run this too fast
+        #if PC_PSX_DOOM_MODS
+            if (gPlayersElapsedVBlanks[gCurPlayerIndex] <= 0)
+                return ga_nothing;
+        #endif
 
-            if (gTitleScreenSpriteY == 0) {
-                gMenuTimeoutStartTicCon = gTicCon;      // Start the timeout process...
-            }
+        // Update the fire sky after a certain number of ticks have elapsed
+        if ((gVBlanksUntilTitleSprMove <= 0) && (gTitleScreenSpriteY >= 128)) {
+            gVBlanksUntilTitleSprMove = 2;
+            P_UpdateFireSky(*gpSkyTexture);
+        }
+
+        // Do the fade in of the title screen
+        if (gTitleScreenSpriteY <= 128) {
+            gTitleScreenSpriteY += 4;
+        }
+
+        // Once the title is full faded in, timeout after a while...
+        if (gTitleScreenSpriteY >= 128) {
+            const bool bHasTimedOut = (gTicCon - gMenuTimeoutStartTicCon >= 1800);
+            return (bHasTimedOut) ? ga_timeout : ga_nothing;
         }
     }
+    else {
+        // Regular Doom: if it is time to move the title sprite then do that.
+        // Stop the title sprite also once it reaches the top of the screen and begin the menu timeout counter.
+        if (gVBlanksUntilTitleSprMove <= 0) {
+            gVBlanksUntilTitleSprMove = 2;
 
-    // Update the fire sky if it is time to do that
-    gVBlanksUntilTitleFireMove -= elapsedVBlanks;
-    
-    if (gVBlanksUntilTitleFireMove <= 0) {
-        gVBlanksUntilTitleFireMove = 2;
+            if (gTitleScreenSpriteY != 0) {
+                gTitleScreenSpriteY -= 1;
 
-        // Once the title screen sprite is above a certain height, begin to fizzle out the fire.
-        // Do this for every even y position that the title screen sprite is at.
-        // Eventually it will settle at position '0' so we will do this all the time then and completely put out the fire.
-        if ((gTitleScreenSpriteY < 50) && ((gTitleScreenSpriteY & 1) == 0)) {
-            // Get the pixels for the last row in the fire sky
-            texture_t& skyTex = *gpSkyTexture;
-            uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
-            uint8_t* const pFSkyRows = pLumpData + sizeof(texlump_header_t);
-            uint8_t* const pFSkyLastRow = pFSkyRows + FIRESKY_W * (FIRESKY_H - 1);
-
-            // Sample the first pixel of the last row (the fire generator row) and decrease its 'temperature' by 1.
-            // We will apply this temperature to the entire last row of the fire sky.
-            uint8_t newFireTemp = pFSkyLastRow[0];
-
-            if (newFireTemp > 0) {
-                --newFireTemp;
-            }
-
-            // Apply the new temperature to the generator row of the fire to decrease it's intensity
-            for (int32_t x = 0; x < FIRESKY_W; ++x) {
-                pFSkyLastRow[x] = newFireTemp;
+                if (gTitleScreenSpriteY == 0) {
+                    gMenuTimeoutStartTicCon = gTicCon;      // Start the timeout process...
+                }
             }
         }
 
-        // Run the fire sky simulation
-        P_UpdateFireSky(*gpSkyTexture);
+        // Update the fire sky if it is time to do that
+        gVBlanksUntilTitleFireMove -= elapsedVBlanks;
+    
+        if (gVBlanksUntilTitleFireMove <= 0) {
+            gVBlanksUntilTitleFireMove = 2;
+
+            // Once the title screen sprite is above a certain height, begin to fizzle out the fire.
+            // Do this for every even y position that the title screen sprite is at.
+            // Eventually it will settle at position '0' so we will do this all the time then and completely put out the fire.
+            if ((gTitleScreenSpriteY < 50) && ((gTitleScreenSpriteY & 1) == 0)) {
+                // Get the pixels for the last row in the fire sky
+                texture_t& skyTex = *gpSkyTexture;
+                uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
+                uint8_t* const pFSkyRows = pLumpData + sizeof(texlump_header_t);
+                uint8_t* const pFSkyLastRow = pFSkyRows + FIRESKY_W * (FIRESKY_H - 1);
+
+                // Sample the first pixel of the last row (the fire generator row) and decrease its 'temperature' by 1.
+                // We will apply this temperature to the entire last row of the fire sky.
+                uint8_t newFireTemp = pFSkyLastRow[0];
+
+                if (newFireTemp > 0) {
+                    --newFireTemp;
+                }
+
+                // Apply the new temperature to the generator row of the fire to decrease it's intensity
+                for (int32_t x = 0; x < FIRESKY_W; ++x) {
+                    pFSkyLastRow[x] = newFireTemp;
+                }
+            }
+
+            // Run the fire sky simulation
+            P_UpdateFireSky(*gpSkyTexture);
+        }
+    
+        // Once the title sprite reaches the top of the screen, timeout after a while...
+        if (gTitleScreenSpriteY == 0) {
+            const bool bHasTimedOut = (gTicCon - gMenuTimeoutStartTicCon >= 1800);
+            return (bHasTimedOut) ? ga_timeout : ga_nothing;
+        }
     }
-    
-    // If the title sprite has not reached the top of the screen then we don't ever timeout
-    if (gTitleScreenSpriteY != 0)
-        return ga_nothing;
-    
-    // Once the title sprite reaches the top of the screen, timeout after a while...
-    const bool bHasTimedOut = (gTicCon - gMenuTimeoutStartTicCon >= 1800);
-    return (bHasTimedOut) ? ga_timeout : ga_nothing;
+
+    // Continue running the screen
+    return ga_nothing;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -170,8 +204,9 @@ gameaction_t TIC_Title() noexcept {
 void DRAW_Title() noexcept {
     I_IncDrawnFrameCount();
 
-    // Draw the title logo
-    {
+    // Draw the title logo.
+    // Final Doom: this is drawn on top of everything instead.
+    if (!Game::isFinalDoom()) {
         POLY_FT4 polyPrim;
         LIBGPU_SetPolyFT4(polyPrim);
         LIBGPU_setRGB0(polyPrim, 128, 128, 128);
@@ -188,8 +223,8 @@ void DRAW_Title() noexcept {
         LIBGPU_setXY4(polyPrim,
             0,      titleY,
             255,    titleY,
-            0,      239 + titleY,
-            255,    239 + titleY
+            0,      titleY + 239,
+            255,    titleY + 239
         );
 
         polyPrim.tpage = gTex_TITLE.texPageId;
@@ -234,12 +269,22 @@ void DRAW_Title() noexcept {
         texU + SKY_W,   texV + 127
     );
 
-    LIBGPU_setXY4(polyPrim,
-        0,      116,
-        SKY_W,  116,
-        0,      243,
-        SKY_W,  243
-    );
+    if (Game::isFinalDoom()) {
+        // Slightly tweaked positions for Final Doom
+        LIBGPU_setXY4(polyPrim,
+            0,      112,
+            SKY_W,  112,
+            0,      239,
+            SKY_W,  239
+        );
+    } else {
+        LIBGPU_setXY4(polyPrim,
+            0,      116,
+            SKY_W,  116,
+            0,      243,
+            SKY_W,  243
+        );
+    }
 
     polyPrim.tpage = skytex.texPageId;
     polyPrim.clut = gPaletteClutId_CurMapSky;
@@ -252,6 +297,34 @@ void DRAW_Title() noexcept {
         polyPrim.x1 += SKY_W;
         polyPrim.x2 += SKY_W;
         polyPrim.x3 += SKY_W;
+    }
+
+    // Draw the title logo for Final Doom (on top of everything):
+    if (Game::isFinalDoom()) {;
+        LIBGPU_SetPolyFT4(polyPrim);
+        LIBGPU_setUV4(polyPrim,
+            0,      0,
+            255,    0,
+            0,      239,
+            255,    239
+        );
+
+        const int16_t titleY = (int16_t) gTitleScreenSpriteY;
+
+        LIBGPU_setXY4(polyPrim,
+            0,      0,
+            255,    0,
+            0,      239,
+            255,    239
+        );
+
+        const uint8_t rgbMul = (uint8_t) gTitleScreenSpriteY;
+        LIBGPU_setRGB0(polyPrim, rgbMul, rgbMul, rgbMul);
+
+        polyPrim.tpage = gTex_TITLE.texPageId;
+        polyPrim.clut = gPaletteClutIds[TITLEPAL];
+
+        I_AddPrim(&polyPrim);
     }
 
     I_SubmitGpuCmds();

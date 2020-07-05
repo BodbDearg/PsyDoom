@@ -318,11 +318,8 @@ void S_SetMusicVolume(const int32_t musVol) noexcept {
 // Stop the currently playing music track
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StopMusic() noexcept {
-    // Final Doom has different music and map sounds
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     if (gCurMusicSeqIdx != 0) {
-        const musicseq_t& musicSeqDef = (bIsFinalDoom) ? gMusicSeqDefs_FinalDoom[gCurMusicSeqIdx] : gMusicSeqDefs_Doom[gCurMusicSeqIdx];
+        const musicseq_t& musicSeqDef = (Game::isFinalDoom()) ? gMusicSeqDefs_FinalDoom[gCurMusicSeqIdx] : gMusicSeqDefs_Doom[gCurMusicSeqIdx];
         wess_seq_stop(musicSeqDef.seqIdx);
     }
 }
@@ -331,9 +328,6 @@ void S_StopMusic() noexcept {
 // Start playing the selected music track (stops if currently playing)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StartMusic() noexcept {
-    // Final Doom has different music and map sounds
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     // PC-PSX: ignore this command in headless mode
     #if PC_PSX_DOOM_MODS
         if (ProgArgs::gbHeadlessMode)
@@ -343,7 +337,7 @@ void S_StartMusic() noexcept {
     S_StopMusic();
 
     if (gCurMusicSeqIdx != 0) {
-        const musicseq_t& musicSeqDef = (bIsFinalDoom) ? gMusicSeqDefs_FinalDoom[gCurMusicSeqIdx] : gMusicSeqDefs_Doom[gCurMusicSeqIdx];
+        const musicseq_t& musicSeqDef = (Game::isFinalDoom()) ? gMusicSeqDefs_FinalDoom[gCurMusicSeqIdx] : gMusicSeqDefs_Doom[gCurMusicSeqIdx];
         wess_seq_trigger(musicSeqDef.seqIdx);
     }
 }
@@ -372,8 +366,7 @@ void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     // Final Doom has different music and map sounds
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-    const musicseq_t* const pMusicSeqDefs = (bIsFinalDoom) ? gMusicSeqDefs_FinalDoom : gMusicSeqDefs_Doom;
+    const musicseq_t* const pMusicSeqDefs = (Game::isFinalDoom()) ? gMusicSeqDefs_FinalDoom : gMusicSeqDefs_Doom;
 
     // PC-PSX: ignore this command in headless mode
     #if PC_PSX_DOOM_MODS
@@ -398,7 +391,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
                 #endif
             }
 
-            wess_seq_range_free(0 + NUMSFX, (bIsFinalDoom) ? NUM_MUSIC_SEQS_FINAL_DOOM : NUM_MUSIC_SEQS_DOOM);
+            wess_seq_range_free(0 + NUMSFX, (Game::isFinalDoom()) ? NUM_MUSIC_SEQS_FINAL_DOOM : NUM_MUSIC_SEQS_DOOM);
         }
 
         S_UnloadSampleBlock(gMapSndBlock);
@@ -422,7 +415,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
 
     // Load the music sequence and lcd file for the map music.
     // Also initialize the reverb mode depending on the music.
-    const mapaudiodef_t& mapAudioDef = (bIsFinalDoom) ? gMapAudioDefs_FinalDoom[mapIdx] : gMapAudioDefs_Doom[mapIdx];
+    const mapaudiodef_t& mapAudioDef = (Game::isFinalDoom()) ? gMapAudioDefs_FinalDoom[mapIdx] : gMapAudioDefs_Doom[mapIdx];
     gCurMusicSeqIdx = mapAudioDef.musicSeqIdx;
     uint32_t destSpuAddr = gSound_CurSpuAddr;
 
