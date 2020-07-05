@@ -72,6 +72,11 @@ static const switchlist_t gAlphSwitchList[] = {
     { "SW1SKULL", "SW2SKULL" },
     { "SW1STAR",  "SW2STAR"  },
     { "SW1STEEL", "SW2STEEL" },
+// PC-PSX: make this previously unused switch type available to use.
+// The "GEC PSX Doom Master Edition" levels might make use of it going forward.
+#if PC_PSX_DOOM_MODS
+	{ "SW1SKUL2", "SW2SKUL2" },
+#endif
 };
 
 static constexpr int32_t NUM_SWITCHES   = C_ARRAY_SIZE(gAlphSwitchList);    // Number of switch types in the game

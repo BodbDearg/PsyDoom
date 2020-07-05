@@ -335,7 +335,8 @@ enum class CdFileId : int32_t {
     MUSLEV28_LCD,
     MUSLEV29_LCD,
     MUSLEV30_LCD,
-    END             // Note: not an actual entry, used as an end of list marker
+    // Note: not an actual entry, used as an end of list marker
+    END
 };
 
 // A list of all the files in the game, their start sector on the CD and size.

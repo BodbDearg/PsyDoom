@@ -43,7 +43,7 @@ struct delayaction_t {
 };
 
 // The number of animated floor/texture types in the game
-static constexpr int32_t MAXANIMS = 16;
+static constexpr int32_t MAXANIMS = 18;
 
 // Definitions for all flat and texture animations in the game
 static const animdef_t gAnimDefs[MAXANIMS] = {
@@ -54,6 +54,7 @@ static const animdef_t gAnimDefs[MAXANIMS] = {
     { 0, "LAVA01",   "LAVA04",   3 },
     { 0, "WATER01",  "WATER04",  3 },
     { 0, "SLIME01",  "SLIME03",  3 },
+    { 0, "GLOW01",   "GLOW04",   3 },   // Final Doom only
     { 1, "BFALL1",   "BFALL4",   3 },
     { 1, "ENERGY01", "ENERGY04", 3 },
     { 1, "FIRE01",   "FIRE02",   3 },
@@ -62,7 +63,8 @@ static const animdef_t gAnimDefs[MAXANIMS] = {
     { 1, "SFALL1",   "SFALL4",   3 },
     { 1, "SLIM01",   "SLIM04",   3 },
     { 1, "TVSNOW01", "TVSNOW03", 1 },
-    { 1, "WARN01",   "WARN02",   3 }
+    { 1, "WARN01",   "WARN02",   3 },
+	{ 1, "WFALL1",   "WFALL4",   3 }    // New Final Doom
 };
 
 static constexpr int32_t MAXLINEANIMS   = 32;           // Maximum number of line animations allowed
