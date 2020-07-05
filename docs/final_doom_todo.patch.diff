@@ -1854,20 +1854,5 @@ index 85da3b3..3c39ce1 100644
  		}
  
  		lcd_file_indx = map_indx;
-diff --git a/PSXDOOM/z_zone.c b/PSXDOOM/z_zone.c
-index 231b32b..55eef66 100644
---- a/PSXDOOM/z_zone.c
-+++ b/PSXDOOM/z_zone.c
-@@ -35,7 +35,8 @@ extern unsigned int _bbsstart;      // bss start free memory ram
- extern unsigned long _ramsize;      // megabytes of RAM
- extern unsigned long _stacksize;    // kilobytes of stack
- 
--unsigned int _bbsstart2 = 0x800A9CA8;//tmp addres
-+//unsigned int _bbsstart2 = 0x800A9CA8;//tmp addres
-+unsigned int _bbsstart2 = 0x800AC9F0;//tmp addres Final Doom
- void Z_Init (void)//L80032014()
- {
- 	byte	*mem;
 -- 
 2.17.1.windows.2
-

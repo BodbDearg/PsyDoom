@@ -19,6 +19,15 @@
 static constexpr bool IS_64_BIT_BUILD = (sizeof(void*) > 4);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// How much heap space is available to Doom's zone memory allocator, via functions like 'Z_Malloc'.
+//
+// The heap space available was roughly as follows for the original games:
+//  - Doom          : 1,368,380 bytes
+//  - Final Doom    : 1,357,328 bytes
+//------------------------------------------------------------------------------------------------------------------------------------------
+static constexpr uint32_t Z_HEAP_SIZE = 1368380 * (IS_64_BIT_BUILD ? 2 : 1);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // How much memory is available to hold the load .WMD (Williams Module File) for the game and also any currently loaded music sequences.
 //
 // The size of this memory chunk is as follows for the original games:
