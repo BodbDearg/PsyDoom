@@ -84,9 +84,6 @@ static int32_t      gMaxStartEpisodeOrMap;      // Restricts what maps or episod
 // Starts up the main menu and returns the action to do on exit
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunMenu() noexcept {
-    // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     do {
         // Run the menu: abort to the title screen & demos if the menu timed out.
         // PC-PSX: also quit if app quit is requested.
@@ -103,7 +100,7 @@ gameaction_t RunMenu() noexcept {
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
-        I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[(bIsFinalDoom) ? UIPAL : TITLEPAL]);
+        I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
         I_SubmitGpuCmds();
         I_DrawPresent();
 
@@ -112,13 +109,13 @@ gameaction_t RunMenu() noexcept {
         if (gStartGameType == gt_single)
             break;
         
-        I_DrawLoadingPlaque(gTex_CONNECT, 54, 103, gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : MAINPAL]);
+        I_DrawLoadingPlaque(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());
         I_NetSetup();
 
         // Once the net connection has been established, re-draw the background in prep for a loading or error plaque
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
-        I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[(bIsFinalDoom) ? UIPAL : TITLEPAL]);
+        I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
         I_SubmitGpuCmds();
         I_DrawPresent();
         
@@ -143,9 +140,6 @@ gameaction_t RunMenu() noexcept {
 // Setup/init logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Start() noexcept {
-    // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     // Assume no networked game initially
     gNetGame = gt_single;
     gCurPlayerIndex = 0;
@@ -157,7 +151,7 @@ void M_Start() noexcept {
     
     // Show the loading plaque
     I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
     
     // Load sounds for the menu
     S_LoadMapSoundAndMusic(0);
@@ -436,15 +430,12 @@ gameaction_t M_Ticker() noexcept {
 // Renders the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Drawer() noexcept {
-    // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     // Draw the menu background and increment frame count for the texture cache.
     I_IncDrawnFrameCount();
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
 
     // Draw the DOOM logo
-    I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, gPaletteClutIds[(bIsFinalDoom) ? UIPAL : TITLEPAL]);
+    I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
 
     // Draw the skull cursor
     I_DrawSprite(

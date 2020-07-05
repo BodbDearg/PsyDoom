@@ -35,27 +35,24 @@ static int32_t gVBlanksUntilTitleFireMove;
 // Initialization logic for the main title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_Title() noexcept {
-    // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     // Cleanup the texture cache and remove anything we can
     I_PurgeTexCache();
 
     // Show the loading plaque
     W_CacheLumpName("LOADING", PU_STATIC, false);
     I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
     
     // Load sounds for the menu
     S_LoadMapSoundAndMusic(0);
     
     // Cache commonly used UI lumps for fast access and upload them to VRAM
-    W_CacheLumpName((bIsFinalDoom) ? "TILE" : "MARB01", PU_STATIC, false);
+    W_CacheLumpName(Game::getTexLumpName_OptionsBg(), PU_STATIC, false);
     W_CacheLumpName("BUTTONS", PU_STATIC, false);
     W_CacheLumpName("NETERR", PU_STATIC, false);
     W_CacheLumpName("PAUSE", PU_STATIC, false);
 
-    I_LoadAndCacheTexLump(gTex_OptionsBg, (bIsFinalDoom) ? "TILE" : "MARB01", 0);
+    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg(), 0);
     I_LoadAndCacheTexLump(gTex_BUTTONS, "BUTTONS", 0);
     I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);

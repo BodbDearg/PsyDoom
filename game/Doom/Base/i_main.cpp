@@ -1006,9 +1006,6 @@ void I_NetSetup() noexcept {
 // PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool I_NetUpdate() noexcept {
-    // Some logic is handled differently for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     // Compute the value used for error checking.
     // Only do this while we are in the level however...
     const bool bInGame = gbIsLevelDataCached;
@@ -1125,7 +1122,7 @@ bool I_NetUpdate() noexcept {
         I_CacheTex(gTex_NETERR);
         I_DrawSprite(
             gTex_NETERR.texPageId,
-            gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : UIPAL],
+            Game::getTexPalette_NETERR(),
             84,
             109,
             gTex_NETERR.texPageCoordX,

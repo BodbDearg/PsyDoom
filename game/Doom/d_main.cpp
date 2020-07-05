@@ -265,9 +265,6 @@ void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept {
 // The string also scrolls down the screen with repeated calls.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
-    // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     // Setup the drawing mode
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
@@ -289,7 +286,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         LIBGPU_SetSemiTrans(&spritePrim, false);
         LIBGPU_SetShadeTex(&spritePrim, false);
         LIBGPU_setRGB0(spritePrim, 128, 128, 128);
-        spritePrim.clut = gPaletteClutIds[(bIsFinalDoom) ? UIPAL : MAINPAL];
+        spritePrim.clut = Game::getTexPalette_DebugFontSmall();
     }
     
     // Format the message and print

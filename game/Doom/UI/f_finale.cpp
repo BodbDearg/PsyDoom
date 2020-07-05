@@ -98,7 +98,7 @@ static texture_t        gTex_DEMON;             // The demon (icon of sin) backg
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Start() noexcept {
     // Draw the loading plaque, purge the texture cache and load up the background needed
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
     I_PurgeTexCache();
     I_CacheTex(gTex_BACK);
 
@@ -221,7 +221,7 @@ void F1_Drawer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Start() noexcept {
     // Show the loading plaque and purge the texture cache
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
     I_PurgeTexCache();
 
     // Load the background and sprites needed

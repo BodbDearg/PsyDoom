@@ -64,11 +64,8 @@ static mobj_t gEmptyMObj;
 // Displays a loading message then loads the current map
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_DoLoadLevel() noexcept {
-    // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-
     // Draw the loading plaque
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
 
     // Wait for the pistol and barrel explode menu sounds to stop playing
     while ((wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING) || (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING)) {

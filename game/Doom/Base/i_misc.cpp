@@ -209,15 +209,11 @@ void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) 
 // Draw pause screen elements, including the plaque and level warp and vram viewer cheats
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawPausedOverlay() noexcept {
-    // Some UI elements are handled differently for Final Doom
-    const bool bIsFinalDoom = (Game::gGameType == GameType::FinalDoom);
-    
     // Draw the paused plaque unless disabled
     const player_t& player = gPlayers[gCurPlayerIndex];
 
     if ((player.cheats & CF_NOPAUSEMSG) == 0) {
-        const uint16_t paletteClutId = gPaletteClutIds[(bIsFinalDoom) ? UIPAL2 : MAINPAL];
-        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, paletteClutId);
+        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, Game::getTexPalette_PAUSE());
     }
 
     if (player.cheats & CF_WARPMENU) {
