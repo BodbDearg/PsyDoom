@@ -167,7 +167,7 @@ void M_Start() noexcept {
     gVBlanksUntilMenuMove[0] = 0;
     
     if (gStartGameType == gt_single) {
-        gMaxStartEpisodeOrMap = MAX_EPISODE;
+        gMaxStartEpisodeOrMap = Game::getNumEpisodes();
     } else {
         gMaxStartEpisodeOrMap = Game::getNumRegularMaps();  // For multiplayer any of the normal (non secret) maps can be selected
     }
@@ -225,10 +225,7 @@ void M_Stop(const gameaction_t exitAction) noexcept {
 
     // Single player: adjust the start map for the episode that was selected
     if ((exitAction == ga_exit) && (gStartGameType == gt_single)) {
-        // If DOOM II is selected: point to the first map of DOOM II
-        if (gStartMapOrEpisode != episode_doom1) {
-            gStartMapOrEpisode = 31;
-        }
+        gStartMapOrEpisode = Game::getEpisodeStartMap(gStartMapOrEpisode);
     }
 }
 
@@ -366,7 +363,7 @@ gameaction_t M_Ticker() noexcept {
         }
 
         if (gStartGameType == gt_single) {
-            gMaxStartEpisodeOrMap = MAX_EPISODE;
+            gMaxStartEpisodeOrMap = Game::getNumEpisodes();
         } else {
             gMaxStartEpisodeOrMap = Game::getNumRegularMaps();
         }
@@ -454,11 +451,7 @@ void M_Drawer() noexcept {
     I_DrawString(90, gMenuYPos[gamemode] + 20, gGameTypeNames[gStartGameType]);
 
     if (gStartGameType == gt_single) {
-        if (gStartMapOrEpisode == 1) {
-            I_DrawString(74, gMenuYPos[level], "Ultimate Doom");
-        } else {
-            I_DrawString(74, gMenuYPos[level], "Doom II");
-        }
+        I_DrawString(74, gMenuYPos[level], Game::getEpisodeName(gStartMapOrEpisode));
     } else {
         // Coop or deathmatch game, draw the level number rather than episode
         I_DrawString(74, gMenuYPos[level], "Level");

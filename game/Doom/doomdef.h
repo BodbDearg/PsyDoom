@@ -123,15 +123,6 @@ enum : int32_t {
     BOXRIGHT        // Right box coordinate (max y)
 };
 
-// Episode numbers
-enum episodenum_t : int32_t {
-    episode_doom1 = 1,
-    episode_doom2 = 2
-};
-
-static constexpr uint32_t MIN_EPISODE = episode_doom1;
-static constexpr uint32_t MAX_EPISODE = episode_doom2;
-
 // Maximum number of ticks in a demo.
 // The maximum allowed demo size in the original game is 16384 ticks (demo size ~64 KiB).
 const int32_t MAX_DEMO_TICKS = 16384;
