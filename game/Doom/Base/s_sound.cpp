@@ -46,8 +46,8 @@ const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
     4,      // cdmusic_credits_demo
     5,      // cdmusic_intermission
     6,      // cdmusic_club_doom
-    7,      // cdmusic_finale_doom1
-    8       // cdmusic_finale_doom2
+    7,      // cdmusic_finale_doom1_final_doom
+    8,      // cdmusic_finale_doom2
 };
 
 // Defines the settings for one music sequencer track
@@ -423,11 +423,19 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
         // No music sequences for this map - turn off reverb
         psxspu_init_reverb(SPU_REV_MODE_OFF, 0, 0, 0, 0);
     } else {
-        // Normal case: playing a map music sequence
+        // Normal case: playing a map music sequence and initializing reverb.
+        // Note: incorporating a change Final Doom made for all versions here, mute all audio first to prevent artifacts when initializing reverb:
+        const int32_t masterVol = psxspu_get_master_vol();
+        psxspu_set_master_vol(0);
+
         const musicseq_t& musicseq = pMusicSeqDefs[gCurMusicSeqIdx];
         psxspu_init_reverb(musicseq.reverbMode, musicseq.reverbDepthL, musicseq.reverbDepthR, 0, 0);
         wess_seq_load(musicseq.seqIdx, gpSound_MusicSeqData);
         destSpuAddr += wess_dig_lcd_load(musicseq.lcdFile, destSpuAddr, &gMapSndBlock, false);
+
+        // Restore the master volume to what it was.
+        // Again, this mute/restore was only added in Final Doom, but I'm going to do it for all Doom versions:
+        psxspu_set_master_vol(masterVol);
     }
 
     // Remember what map we have loaded sound and music for

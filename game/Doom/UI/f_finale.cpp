@@ -109,7 +109,7 @@ void F1_Start() noexcept {
 
     // Play the finale cd track
     psxcd_play_at_andloop(
-        gCDTrackNum[cdmusic_finale_doom1],
+        gCDTrackNum[cdmusic_finale_doom1_final_doom],
         gCdMusicVol,
         0,
         0,

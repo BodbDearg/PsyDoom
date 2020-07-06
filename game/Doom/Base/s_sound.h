@@ -26,7 +26,7 @@ enum cdmusic_t : int32_t {
     cdmusic_credits_demo,
     cdmusic_intermission,
     cdmusic_club_doom,
-    cdmusic_finale_doom1,
+    cdmusic_finale_doom1_final_doom,
     cdmusic_finale_doom2,
     NUM_CD_MUSIC_TRACKS
 };

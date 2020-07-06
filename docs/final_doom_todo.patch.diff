@@ -1705,45 +1705,5 @@ index a76a8ca..471230b 100644
  
  	UpdateDrawOTag();
  	DrawRender();
-diff --git a/PSXDOOM/s_sound.c b/PSXDOOM/s_sound.c
-index 85da3b3..3c39ce1 100644
---- a/PSXDOOM/s_sound.c
-+++ b/PSXDOOM/s_sound.c
-@@ -10,8 +10,7 @@ int CD_TRACK[NUM_CD_MUSIC_TRACKS] = { //80073C7C
-     4,      // cdmusic_credits_demo
-     5,      // cdmusic_intermission
-     6,      // cdmusic_club_doom
--    7,      // cdmusic_finale_doom1
--    8       // cdmusic_finale_doom2
-+    7,      // cdmusic_finale_final_doom
- };
- 
- typedef struct mapaudio_s
-@@ -324,7 +299,7 @@ void S_DoBlockClear(SampleBlock *sampblk)//80040E10
- 
- void S_Lcd_Load(int map_indx)//80040E88
- {
--	int sram_pos_tmp;
-+	int sram_pos_tmp, master_vol;
- 	if (lcd_file_indx != map_indx)
- 	{
- 		if (lcd_file_indx != 0)
-@@ -361,9 +336,16 @@ void S_Lcd_Load(int map_indx)//80040E88
- 		}
- 		else
- 		{
-+		    /* Save Master Volume */
-+		    master_vol = psxspu_get_master_vol();
-+
-+            psxspu_set_master_vol(0);
- 			psxspu_init_reverb(Music[music_indx].rev_mode, Music[music_indx].depthleft, Music[music_indx].depthright, 0, 0);
- 			wess_seq_load(Music[music_indx].midi_indx, trackptr);
- 			sram_pos_tmp += wess_dig_lcd_load((char *)Music[music_indx].lcd_indx, (void *)sram_pos_tmp, &mapsfxblk, 0);
-+
-+			/* Restore Master Volume */
-+			psxspu_set_master_vol(master_vol);
- 		}
- 
- 		lcd_file_indx = map_indx;
 -- 
 2.17.1.windows.2
