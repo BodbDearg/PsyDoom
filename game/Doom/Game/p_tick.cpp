@@ -936,6 +936,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* const pControlBindings, TickInputs& inputs) noexcept {
     ASSERT(pControlBindings);
     inputs = {};
+    inputs.directSwitchToWeapon = wp_nochange;
 
     if (buttons & PAD_UP) {
         inputs.bMoveForward = true;
