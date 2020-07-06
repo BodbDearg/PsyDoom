@@ -60,6 +60,7 @@ sector_t* gpCurDrawSector;
     static fixed_t      gOldViewX;
     static fixed_t      gOldViewY;
     static fixed_t      gOldViewZ;
+    static angle_t      gOldViewAngle;
     static bool         gbSnapViewZInterpolation;
 #endif
 
@@ -119,6 +120,7 @@ void R_RenderPlayerView() noexcept {
         const fixed_t newViewX = playerMobj.x;
         const fixed_t newViewY = playerMobj.y;
         const fixed_t newViewZ = player.viewz;
+        const angle_t newViewAngle = playerMobj.angle;
         const fixed_t lerp = R_CalcLerpFactor();
 
         if (gbSnapViewZInterpolation) {
@@ -129,14 +131,18 @@ void R_RenderPlayerView() noexcept {
         gViewX = R_LerpCoord(gOldViewX, newViewX, lerp) & (~FRACMASK);
         gViewY = R_LerpCoord(gOldViewY, newViewY, lerp) & (~FRACMASK);
         gViewZ = R_LerpCoord(gOldViewZ, newViewZ, lerp) & (~FRACMASK);
-
-        // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped.
-        // Take into consideration how much turning movement we haven't committed to the player object yet here.
-        // Note that for net games also we must also use the view angle we said we would use NEXT as that is the most up-to-date angle:
-        if (gNetGame == gt_single) {
-            gViewAngle = playerMobj.angle + gPlayerUncommittedAxisTurning + gPlayerUncommittedMouseTurning;
+        
+        // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped
+        if (gbDemoPlayback) {
+            gViewAngle = R_LerpAngle(gOldViewAngle, newViewAngle, lerp);
         } else {
-            gViewAngle = gPlayerNextTickViewAngle + gPlayerUncommittedAxisTurning + gPlayerUncommittedMouseTurning;
+            // Normal gameplay: take into consideration how much turning movement we haven't committed to the player object yet here.
+            // For net games, we must use the view angle we said we would use NEXT as that is the most up-to-date angle.
+            if (gNetGame == gt_single) {
+                gViewAngle = playerMobj.angle + gPlayerUncommittedAxisTurning + gPlayerUncommittedMouseTurning;
+            } else {
+                gViewAngle = gPlayerNextTickViewAngle + gPlayerUncommittedAxisTurning + gPlayerUncommittedMouseTurning;
+            }
         }
     }
     else {
@@ -353,6 +359,7 @@ void R_NextInterpolation() noexcept {
     gOldViewX = mobj.x;
     gOldViewY = mobj.y;
     gOldViewZ = player.viewz;
+    gOldViewAngle = mobj.angle;
     gbSnapViewZInterpolation = false;
 }
 
