@@ -130,7 +130,7 @@ void R_RenderPlayerView() noexcept {
         gViewY = R_LerpCoord(gOldViewY, newViewY, lerp) & (~FRACMASK);
         gViewZ = R_LerpCoord(gOldViewZ, newViewZ, lerp) & (~FRACMASK);
 
-        // View angle is not interpolated but turning movements are now completely framerate uncapped.
+        // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped.
         // Take into consideration how much turning movement we haven't committed to the player object yet here.
         // Note that for net games also we must also use the view angle we said we would use NEXT as that is the most up-to-date angle:
         if (gNetGame == gt_single) {
