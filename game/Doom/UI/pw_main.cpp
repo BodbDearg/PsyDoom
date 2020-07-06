@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Handles the display and logic for the password input screen.
+// Note: this version is mostly based on the tweaked/improved Final Doom password screen, which includes a nice "Exit" option at the bottom.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "pw_main.h"
 
 #include "Doom/Base/i_drawcmds.h"
@@ -15,6 +19,8 @@
 #include "PcPsx/PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
+
+#include <algorithm>
 
 // The list of password characters
 const char gPasswordChars[NUM_PW_CHARS + 1] = "bcdfghjklmnpqrstvwxyz0123456789!";
@@ -125,8 +131,9 @@ gameaction_t TIC_PasswordScreen() noexcept {
                 }
             }
             else if (bMenuDown) {
-                if (gCurPasswordCharIdx + 8 < NUM_PW_CHARS) {
-                    gCurPasswordCharIdx += 8;
+                // Note: the menu position is allowed to go onto index 'NUM_PW_CHARS', which is the 'Exit' option
+                if (gCurPasswordCharIdx < NUM_PW_CHARS) {
+                    gCurPasswordCharIdx = std::min(gCurPasswordCharIdx + 8, NUM_PW_CHARS);
                     S_StartSound(nullptr, sfx_pstop);
                 }
             }
@@ -141,10 +148,11 @@ gameaction_t TIC_PasswordScreen() noexcept {
                 }
             }
             else if (bMenuRight) {
+                // Note: the menu position is allowed to go onto index 'NUM_PW_CHARS', which is the 'Exit' option
                 gCurPasswordCharIdx += 1;
 
-                if (gCurPasswordCharIdx >= NUM_PW_CHARS) {
-                    gCurPasswordCharIdx = NUM_PW_CHARS - 1;
+                if (gCurPasswordCharIdx > NUM_PW_CHARS) {
+                    gCurPasswordCharIdx = NUM_PW_CHARS;
                 } else {
                     S_StartSound(nullptr, sfx_pstop);
                 }
@@ -162,8 +170,9 @@ gameaction_t TIC_PasswordScreen() noexcept {
             return ga_nothing;
     #endif
 
-    // Entering or deleting a password character?
+    // Entering or deleting a password character, or pressing the 'menu ok' command?
     #if PC_PSX_DOOM_MODS
+        const bool bMenuOkPressed = (inputs.bMenuOk && (!oldInputs.bMenuOk));
         const bool bEnterPasswordChar = (inputs.bEnterPasswordChar && (!oldInputs.bEnterPasswordChar));
         const bool bDeletePasswordChar = (inputs.bDeletePasswordChar && (!oldInputs.bDeletePasswordChar));
     #else
@@ -171,6 +180,12 @@ gameaction_t TIC_PasswordScreen() noexcept {
         const bool bDeletePasswordChar = (ticButtons & PAD_TRIANGLE);
     #endif
 
+    // If we are on the 'Exit' option then handle that specially
+    if (gCurPasswordCharIdx == NUM_PW_CHARS) {
+        return (bMenuOkPressed) ? ga_exit : ga_nothing;
+    }
+
+    // Handle entering or deleting a password character otherwise 
     if (bEnterPasswordChar) {
         // Entering a password character (if there is a free slot)
         S_StartSound(nullptr, sfx_swtchx);
@@ -268,9 +283,9 @@ void DRAW_PasswordScreen() noexcept {
         int16_t charX = (int16_t)((charCol * CHAR_SPACING) + 48);
         int16_t charY = (int16_t)((charRow * CHAR_SPACING) + 60);
 
-        // Flash (don't display every 4 frames) the currently selected password character and make it over-bright
+        // Flash (don't display every 8 frames) the currently selected password character and make it over-bright
         if (gCurPasswordCharIdx == pwCharIdx) {
-            if (gTicCon & 4)
+            if (gTicCon & 8)
                 continue;
             
             LIBGPU_setRGB0(spritePrim, 255, 0, 0);          // Selected characters are color multiplied almost 2x and only red
@@ -337,8 +352,13 @@ void DRAW_PasswordScreen() noexcept {
         
         // Flash the invalid password message if a password was entered wrong
         if (gInvalidPasswordFlashTicsLeft & 4) {
-            I_DrawString(-1, 200, "Invalid Password");
+            I_DrawString(-1, 160, "Invalid Password");
         }
+    }
+
+    // Draw the exit option
+    if ((gCurPasswordCharIdx != NUM_PW_CHARS) || ((gTicCon & 8) == 0)) {
+        I_DrawString(-1, 200, "Exit");
     }
 
     // Finish up the draw

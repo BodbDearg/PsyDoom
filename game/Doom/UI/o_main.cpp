@@ -137,14 +137,16 @@ gameaction_t O_Control() noexcept {
         if (!gbPlayerInGame[playerIdx])
             continue;
 
-        // Exit the menu if start or select is pressed
+        // Exit the menu if start or select is pressed.
+        // Note: checking for buttons newly pressed (as opposed to just pressed) here is a change incorporated from Final Doom.
+        // It's required due to some changes made in other UIs like the password screen.
         #if PC_PSX_DOOM_MODS
             const TickInputs& inputs = gTickInputs[playerIdx];
             const TickInputs& oldInputs = gOldTickInputs[playerIdx];
 
             const bool bMenuStart = (inputs.bMenuStart && (!oldInputs.bMenuStart));
             const bool bMenuBack = (inputs.bMenuBack && (!oldInputs.bMenuBack));
-            const bool bMenuOk = inputs.bMenuOk;
+            const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
             const bool bMenuUp = inputs.bMenuUp;
             const bool bMenuDown = inputs.bMenuDown;
             const bool bMenuLeft = inputs.bMenuLeft;

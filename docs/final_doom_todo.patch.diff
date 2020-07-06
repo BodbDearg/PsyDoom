@@ -444,23 +444,7 @@ diff --git a/PSXDOOM/doomdef.h b/PSXDOOM/doomdef.h
 index 6133eac..667b693 100644
 --- a/PSXDOOM/doomdef.h
 +++ b/PSXDOOM/doomdef.h
-@@ -76,7 +76,7 @@
- 
- // PSX Doom
- 
--#define LASTLEVEL   60  // 60 is defined as it is the last level map entry, it does not contain a specific map, it is used to limit passwords, load sounds for credits.
-+#define LASTLEVEL   31  // 60 is defined as it is the last level map entry, it does not contain a specific map, it is used to limit passwords, load sounds for credits.
- 
- /*
- // Stores information about a texture, including it's dimensions, lump info and texture cache info
-@@ -467,13 +467,18 @@ typedef struct player_s
- 	int			damagecount, bonuscount;/* for screen flashing */
- 	mobj_t		*attacker;				/* who did damage (NULL for floors) */
- 	int			extralight;				/* so gun flashes light up areas */
--	int			fixedcolormap;			/* can be set to REDCOLORMAP, etc */
--	int			colormap;				/* 0-3 for which color to draw player */
-+	//int		fixedcolormap;			/* can be set to REDCOLORMAP, etc */
-+	//int		colormap;				/* 0-3 for which color to draw player */
+@@ -467,8 +467,13 @@ typedef struct player_s
  	pspdef_t	psprites[NUMPSPRITES];	/* view sprites (gun, etc) */
  	boolean		didsecret;				/* true if secret level has been done */
  	void		*lastsoundsector;		/* don't flood noise every time */
@@ -579,16 +563,6 @@ index 6133eac..667b693 100644
  
  void Link_Conection(void);
  boolean Update_Conection(void);
-@@ -1016,8 +1044,7 @@ enum cdmusic_t {
-     cdmusic_credits_demo,
-     cdmusic_intermission,
-     cdmusic_club_doom,
--    cdmusic_finale_doom1,
--    cdmusic_finale_doom2,
-+    cdmusic_finale_final_doom,
-     NUM_CD_MUSIC_TRACKS
- };
- 
 diff --git a/PSXDOOM/f_main.c b/PSXDOOM/f_main.c
 index b6cafd4..d50d647 100644
 --- a/PSXDOOM/f_main.c
@@ -937,14 +911,6 @@ diff --git a/PSXDOOM/g_game.c b/PSXDOOM/g_game.c
 index ec4c542..2a28adf 100644
 --- a/PSXDOOM/g_game.c
 +++ b/PSXDOOM/g_game.c
-@@ -94,7 +99,6 @@ void G_PlayerFinishLevel (int player)//L80012ED4()
- 	D_memset (p->cards, 0, sizeof (p->cards));
- 	p->mo->flags &= ~(MF_BLENDMASK1|MF_BLENDMASK2|MF_BLENDMASK3); /* cancel invisibility  */ //PC DOOM ~MF_SHADOW
- 	p->extralight = 0;                      /* cancel gun flashes  */
--	p->fixedcolormap = 0;                   /* cancel ir gogles  */
- 	p->damagecount = 0;                     /* no palette changes  */
- 	p->bonuscount = 0;
- }
 @@ -384,10 +326,17 @@ void G_InitNew (skill_t skill, int map, gametype_t gametype) //L80013368()
  	{
  	    playeringame[1] = false;
@@ -1585,125 +1551,5 @@ index e0d28db..9cb25f5 100644
  	/* The following lines enclosed by square brackets are necessary for the current PSYQ SDK libcomb.lib */
  	/* This is due to the version of libcomb.lib library used in the original PSXDOOM, it worked differently. */
  	/* Also the CompaCTS macros were added as it is the current way to create links between two consoles */
-diff --git a/PSXDOOM/pw_main.c b/PSXDOOM/pw_main.c
-index a76a8ca..471230b 100644
---- a/PSXDOOM/pw_main.c
-+++ b/PSXDOOM/pw_main.c
-@@ -68,7 +68,7 @@ int PW_Ticker(void)//L80036CA0()
-             S_StartSound(0,0x18);
-     }
- 
--    buttons = ticbuttons[0];
-+    buttons = Get_PadButtons(&ticbuttons[0]);//ticbuttons[0];
- 
-     if (buttons & PAD_ARROWS)
- 	{
-@@ -79,11 +79,16 @@ int PW_Ticker(void)//L80036CA0()
- 
-             if (buttons & PAD_DOWN)
- 			{
--				if (PassCodePos < 24)
-+				if (PassCodePos < 32)//24
-                 {
-                     PassCodePos += 8;
-                     S_StartSound(NULL, sfx_pstop);
-                 }
-+
-+                //new
-+                if (PassCodePos > 32)
-+                    PassCodePos = 32;
-+
- 			}
- 			else if (buttons & PAD_UP)
- 			{
-@@ -97,8 +102,8 @@ int PW_Ticker(void)//L80036CA0()
- 			if (buttons & PAD_RIGHT)
- 			{
-                 PassCodePos += 1;
--                if (PassCodePos >= 32)
--                    PassCodePos = 31;
-+                if (PassCodePos >= 33)
-+                    PassCodePos = 32;
-                 else
-                     S_StartSound(NULL, sfx_pstop);
- 			}
-@@ -120,8 +125,11 @@ int PW_Ticker(void)//L80036CA0()
- 	if (buttons & (PAD_START | PAD_SELECT))
- 		return ga_exit;// exit
- 
--    if (buttons != oldticbuttons[0])
-+    if (buttons != (unsigned short)oldticbuttons[0])
- 	{
-+	    if ((PassCodePos == 32) && (buttons & PAD_ACTION))
-+            return ga_exit;// exit
-+
-         if (buttons & (PAD_SQUARE | PAD_CROSS| PAD_CIRCLE))
-         {
-             S_StartSound(NULL, sfx_swtchx);
-@@ -212,7 +220,7 @@ void PW_Drawer(void) //L80036F34()
- 
-         if (PassCodePos == cnt)
- 		{
--			if (!(ticon & 4)) continue;
-+			if (!(ticon & 8)) continue;
- 			setRGB0(textsprite, 255, 0, 0);
- 		}
- 
-@@ -243,30 +251,36 @@ void PW_Drawer(void) //L80036F34()
- 
- 	ST_DrawText(-1,20,"Password");
- 
--	xpos = 58;
--	ypos = 160;
--	for (cnt = 0; cnt < CurPasswordSlot; cnt++)
-+	if (PassInvalidTic & 4)//80077E58
- 	{
--	    pass[0] = passwordChar[Passwordbuff[cnt]];
--		ST_DrawText(xpos, ypos, pass);//Draw Text
--		xpos += 14;
-+		ST_DrawText(-1, 160, "Invalid Password");//Draw Text
- 	}
-+	else
-+    {
-+        xpos = 58;
-+        for (cnt = 0; cnt < CurPasswordSlot; cnt++)
-+        {
-+            pass[0] = passwordChar[Passwordbuff[cnt]];
-+            ST_DrawText(xpos, 160, pass);//Draw Text
-+            xpos += 14;
-+        }
- 
--	if (cnt < 10)
--	{
--		xpos = (cnt * 14) + 58;
--		do
--		{
--			ST_DrawText(xpos, ypos, ".");//Draw Text
--			xpos += 14;
--			cnt++;
--		} while (cnt < 10);
-+        if (cnt < 10)
-+        {
-+            xpos = (cnt * 14) + 58;
-+            do
-+            {
-+                ST_DrawText(xpos, 160, ".");//Draw Text
-+                xpos += 14;
-+                cnt++;
-+            } while (cnt < 10);
-+        }
- 	}
- 
--	if (PassInvalidTic & 4)//80077E58
--	{
--		ST_DrawText(-1, 200, "Invalid Password");//Draw Text
--	}
-+    if ((PassCodePos != 32) || ((ticon & 8) == 0))
-+    {
-+        ST_DrawText(-1,200,"Exit");
-+    }
- 
- 	UpdateDrawOTag();
- 	DrawRender();
 -- 
 2.17.1.windows.2
