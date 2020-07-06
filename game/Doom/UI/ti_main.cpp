@@ -25,7 +25,7 @@
 int32_t gTitleScreenSpriteY;
 
 // The DOOM logo texture
-static texture_t gTex_TITLE;
+texture_t gTex_TITLE;
 
 // Controls how frequently the title sprite and fire sky update and move
 static int32_t gVBlanksUntilTitleSprMove;

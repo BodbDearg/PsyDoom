@@ -2,7 +2,10 @@
 
 #include "Doom/doomdef.h"
 
-extern int32_t gTitleScreenSpriteY;
+struct texture_t;
+
+extern int32_t      gTitleScreenSpriteY;
+extern texture_t    gTex_TITLE;
 
 void START_Title() noexcept;
 void STOP_Title(const gameaction_t exitAction) noexcept;
