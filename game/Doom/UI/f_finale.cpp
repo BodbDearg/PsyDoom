@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Logic for the various finale screens, including the end of game cast sequence.
+// Note that I have adopted and mixed some of the code from Final Doom here because it is more flexible to support multiple games.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "f_finale.h"
 
 #include "Doom/Base/i_drawcmds.h"
@@ -18,34 +22,98 @@
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
-// Win text for Doom 1 and 2
-static const char gDoom1WinText[][24 + 1] = {
-    { "you have won!"               },
-    { "your victory enabled"        },
-    { "humankind to evacuate"       },
-    { "earth and escape the"        },
-    { "nightmare."                  },
-    { "but then earth control"      },
-    { "pinpoints the source"        },
-    { "of the alien invasion."      },
-    { "you are their only hope."    },
-    { "you painfully get up"        },
-    { "and return to the fray."     }
+// Win text for Doom 1 and 2, and Final Doom.
+// Note that this is all in the Final Doom format, which is an unbounded C-String.
+static const char* const gDoom1WinText[] = {
+    "you have won!",
+    "your victory enabled",
+    "humankind to evacuate",
+    "earth and escape the",
+    "nightmare.",
+    "but then earth control",
+    "pinpoints the source",
+    "of the alien invasion.",
+    "you are their only hope.",
+    "you painfully get up",
+    "and return to the fray.",
+    nullptr
 };
 
-static const char gDoom2WinText[][24 + 1] = {
-    { "you did it!"                 },
-    { "by turning the evil of"      },
-    { "the horrors of hell in"      },
-    { "upon itself you have"        },
-    { "destroyed the power of"      },
-    { "the demons."                 },
-    { "their dreadful invasion"     },
-    { "has been stopped cold!"      },
-    { "now you can retire to"       },
-    { "a lifetime of frivolity."    },
-    { "congratulations!"            }
+static const char* const gDoom2WinText[] = {
+    "you did it!",
+    "by turning the evil of",
+    "the horrors of hell in",
+    "upon itself you have",
+    "destroyed the power of",
+    "the demons.",
+    "their dreadful invasion",
+    "has been stopped cold!",
+    "now you can retire to",
+    "a lifetime of frivolity.",
+    "congratulations!",
+    nullptr
 };
+
+static const char* const gFinalDoomWinText_MasterLevels[] = {
+    "you have assaulted and",
+    "triumphed over the most",
+    "vicious realms that the",
+    "demented minds of our",
+    "designers could devise.",
+    "the havoc you left",
+    "behind you as you",
+    "smashed your way",
+    "through the master",
+    "levels is mute tribute",
+    "to your prowess.",
+    "you have earned the",
+    "title of",
+    "Master of Destruction.",
+    nullptr
+};
+
+static const char* const gFinalDoomWinText_Tnt[] = {
+    "suddenly all is silent",
+    "from one horizon to the",
+    "other.",
+    "the agonizing echo of",
+    "hell fades away.",
+    "the nightmare sky",
+    "turns blue.",
+    "the heaps of monster",
+    "corpses begin to dissolve",
+    "along with the evil stench",
+    "that filled the air.",
+    "maybe you_have done it.",
+    "Have you really won...",
+    nullptr
+};
+
+static const char* const gFinalDoomWinText_Plutonia[] = {
+    "you_gloat_over_the",
+    "carcass_of_the_guardian.",
+    "with_its_death_you_have",
+    "wrested_the_accelerator",
+    "from_the_stinking_claws",
+    "of_hell._you_are_done.",
+    "hell_has_returned_to",
+    "pounding_dead_folks",
+    "instead_of_good_live_ones.",
+    "remember_to_tell_your",
+    "grandkids_to_put_a_rocket",
+    "launcher_in_your_coffin.",
+    "If_you_go_to_hell_when",
+    "you_die_you_will_need_it",
+    "for_some_cleaning_up.",
+    nullptr
+};
+
+// The top y position of the win text for Doom 1 and 2, and Final Doom
+static constexpr int32_t DOOM1_TEXT_YPOS = 45;
+static constexpr int32_t DOOM2_TEXT_YPOS = 45;
+static constexpr int32_t MASTERLEV_TEXT_YPOS = 22;
+static constexpr int32_t TNT_TEXT_YPOS = 29;
+static constexpr int32_t PLUTONIA_TEXT_YPOS = 15;
 
 // The cast of characters to display
 struct castinfo_t {
@@ -80,18 +148,19 @@ enum finalestage_t : int32_t {
     F_STAGE_CAST,
 };
 
-static finalestage_t    gFinaleStage;           // What stage of the finale we are on
-static int32_t          gFinTextYPos;           // Current y position of the top finale line
-static char             gFinIncomingLine[28];   // Text for the incoming line
-static int32_t          gFinIncomingLineLen;    // How many characters are being displayed for the incomming text line
-static int32_t          gFinLinesDone;          // How many full lines we are displaying
-static int32_t          gCastNum;               // Which of the cast characters (specified by index) we are showing
-static int32_t          gCastTics;              // Tracks current time in the current cast state
-static int32_t          gCastFrames;            // Tracks how many frames a cast member has done - used to decide when to attack
-static int32_t          gCastOnMelee;           // If non zero then the cast member should do a melee attack
-static bool             gbCastDeath;            // Are we killing the current cast member?
-static const state_t*   gpCastState;            // Current state being displayed for the cast character
-static texture_t        gTex_DEMON;             // The demon (icon of sin) background for the DOOM II finale
+static finalestage_t        gFinaleStage;           // What stage of the finale we are on
+static int32_t              gFinTextYPos;           // Current y position of the top finale line
+static char                 gFinIncomingLine[64];   // Text for the incoming line
+static int32_t              gFinIncomingLineLen;    // How many characters are being displayed for the incomming text line
+static const char* const*   gFinTextLines;          // Which text lines we are using for this finale text?
+static int32_t              gFinLinesDone;          // How many full lines we are displaying
+static int32_t              gCastNum;               // Which of the cast characters (specified by index) we are showing
+static int32_t              gCastTics;              // Tracks current time in the current cast state
+static int32_t              gCastFrames;            // Tracks how many frames a cast member has done - used to decide when to attack
+static int32_t              gCastOnMelee;           // If non zero then the cast member should do a melee attack
+static bool                 gbCastDeath;            // Are we killing the current cast member?
+static const state_t*       gpCastState;            // Current state being displayed for the cast character
+static texture_t            gTex_DEMON;             // The demon (icon of sin) background for the DOOM II finale
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the Ultimate DOOM style finale (text only, no cast sequence) screen
@@ -106,6 +175,19 @@ void F1_Start() noexcept {
     gFinLinesDone = 0;
     gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
+
+    if (Game::isFinalDoom()) {
+        if (Game::getMapEpisode(gGameMap) == 1) {
+            gFinTextLines = gFinalDoomWinText_MasterLevels;
+            gFinTextYPos = MASTERLEV_TEXT_YPOS;
+        } else {
+            gFinTextLines = gFinalDoomWinText_Tnt;
+            gFinTextYPos = TNT_TEXT_YPOS;
+        }
+    } else {
+        gFinTextLines = gDoom1WinText;
+        gFinTextYPos = DOOM1_TEXT_YPOS;
+    }
 
     // Play the finale cd track
     psxcd_play_at_andloop(
@@ -161,12 +243,12 @@ gameaction_t F1_Ticker() noexcept {
         return gGameAction;
 
     // Check to see if the text needs to advance more, or if we can exit
-    if (gFinLinesDone < 11) {
+    const char* const textLine = gFinTextLines[gFinLinesDone];
+
+    if (textLine) {
         // Text is not yet done popping up: only advance if time has elapsed and on every 2nd tick
         if ((gGameTic > gPrevGameTic) && ((gGameTic & 1) == 0)) {
             // Get the current incoming text line text and see if we need to move onto another
-            const char* const textLine = gDoom1WinText[gFinLinesDone];
-
             if (textLine[gFinIncomingLineLen] == 0) {
                 // We've reached the end of this line, move onto a new one
                 gFinIncomingLineLen = 0;
@@ -197,10 +279,10 @@ void F1_Drawer() noexcept {
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
 
     // Show both the incoming and fully displayed text lines
-    int32_t ypos = 45;
+    int32_t ypos = gFinTextYPos;
     
     for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
-        I_DrawString(-1, ypos, gDoom1WinText[lineIdx]);
+        I_DrawString(-1, ypos, gFinTextLines[lineIdx]);
         ypos += 14;
     }
     
@@ -224,9 +306,14 @@ void F2_Start() noexcept {
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
     I_PurgeTexCache();
 
-    // Load the background and sprites needed
+    // Load the background and sprites needed.
     I_LoadAndCacheTexLump(gTex_DEMON, "DEMON", 0);
-    P_LoadBlocks(CdFileId::MAPSPR60_IMG);
+
+    #if !PC_PSX_DOOM_MODS
+        // PC_PSX: don't bother loading the sprites yet, let the code grab them from the main IWAD as required.
+        // This means we don't need to worry about loading the correct blocks file for various different game types.
+        P_LoadBlocks(CdFileId::MAPSPR60_IMG);
+    #endif
 
     // Initialize the finale text
     const mobjinfo_t& mobjInfo = gMObjInfo[gCastOrder[0].type];
@@ -236,7 +323,14 @@ void F2_Start() noexcept {
     gFinLinesDone = 0;
     gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
-    gFinTextYPos = 45;
+
+    if (Game::isFinalDoom()) {
+        gFinTextLines = gFinalDoomWinText_Plutonia;
+        gFinTextYPos = PLUTONIA_TEXT_YPOS;
+    } else {
+        gFinTextLines = gDoom2WinText;
+        gFinTextYPos = DOOM2_TEXT_YPOS;
+    }
     
     // Initialize the cast display
     gCastNum = 0;
@@ -251,7 +345,7 @@ void F2_Start() noexcept {
 
     // Play the finale cd track
     psxcd_play_at_andloop(
-        gCDTrackNum[cdmusic_finale_doom2],
+        gCDTrackNum[(Game::isFinalDoom()) ? cdmusic_finale_doom1_final_doom : cdmusic_finale_doom2],
         gCdMusicVol,
         0,
         0,
@@ -307,19 +401,19 @@ gameaction_t F2_Ticker() noexcept {
         // Currently popping up text: only advance if time has elapsed and on every 2nd tick
         if ((gGameTic > gPrevGameTic) && ((gGameTic & 1) == 0)) {
             // Get the current incoming text line text and see if we need to move onto another
-            const char* const textLine = gDoom2WinText[gFinLinesDone];
+            const char* const textLine = gFinTextLines[gFinLinesDone];
 
-            if (textLine[gFinIncomingLineLen] == 0) {
-                // We've reached the end of this line, move onto a new one
-                gFinLinesDone++;
-                gFinIncomingLineLen = 0;
-
-                // If we're done all the lines then begin scrolling the text up
-                if (gFinLinesDone >= 11) {
-                    gFinaleStage = F_STAGE_SCROLLTEXT;
+            if (textLine) {
+                if (textLine[gFinIncomingLineLen] == 0) {
+                    // We've reached the end of this line, move onto a new one
+                    gFinLinesDone++;
+                    gFinIncomingLineLen = 0;
+                } else {
+                    D_strncpy(gFinIncomingLine, textLine, gFinIncomingLineLen);
                 }
             } else {
-                D_strncpy(gFinIncomingLine, textLine, gFinIncomingLineLen);
+                // If we're done all the lines then begin scrolling the text up
+                gFinaleStage = F_STAGE_SCROLLTEXT;
             }
 
             // Null terminate the incomming text line and include this character in the length
@@ -486,7 +580,7 @@ void F2_Drawer() noexcept {
         int32_t ypos = gFinTextYPos;
 
         for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
-            I_DrawString(-1, ypos, gDoom2WinText[lineIdx]);
+            I_DrawString(-1, ypos, gFinTextLines[lineIdx]);
             ypos += 14;
         }
         

@@ -367,11 +367,20 @@ void G_RunGame() noexcept {
 
         // Should we do the Ultimate DOOM style (text only, no cast sequence) finale?
         // Note that for Final Doom this will show when finishing the first 2 out of 3 episodes.
+        //
+        // PC-PSX: I'm also restricting endings to the Doom and Final Doom games specifically.
+        // If some other game type is playing then we simply won't do them.
+        const bool bDoFinales = ((Game::gGameType == GameType::Doom) || (Game::gGameType == GameType::FinalDoom));
         const int32_t curEpisodeNum = Game::getMapEpisode(gGameMap);
         const int32_t nextEpisodeNum = Game::getMapEpisode(gNextMap);
 
         if ((gNetGame == gt_single) && (curEpisodeNum != nextEpisodeNum)) {
-            MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+            if (bDoFinales) {
+                MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+            } else {
+                gGameAction = ga_nothing;
+                break;
+            }
 
             if (gGameAction == ga_warped || gGameAction == ga_restart)
                 continue;
@@ -389,7 +398,12 @@ void G_RunGame() noexcept {
             continue;
         }
 
-        MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
+        if (bDoFinales) {
+            MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
+        } else {
+            gGameAction = ga_nothing;
+            break;
+        }
 
         if ((gGameAction != ga_warped) && (gGameAction != ga_restart))
             break;

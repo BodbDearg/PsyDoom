@@ -42,6 +42,7 @@
     - Need to record demos against original game for verification.
     - Other miscellaneous changes.
     - Any FSM changes?
+- Add partial support for the awful "PSX Doom Forever" rom-hack/bootleg.
 - Investigate moving sound processing onto another thread and triggered in demand to output buffer requirements.
     - Should fix all stuttering, and free up main thread resources.
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.

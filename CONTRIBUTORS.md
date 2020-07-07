@@ -4,7 +4,8 @@ PsyDoom contributors (sorted alphabetically)
 * **[Erick Vásquez García (Erick194)](https://github.com/Erick194)**
 
     * Author of the sister project of PsyDoom: [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE)
-        * This project which completely recreates the PSX Doom source code for the original hardware serves as an invaluable source of information for this project. It helps greatly accelerate PsyDoom's transition to native C++.
+        * This project which completely recreates the PSX Doom source code for the original hardware serves as an invaluable source of information for this project. It helped to greatly accelerate PsyDoom's transition to native C++.
+        * Also, for the reversed Final Doom code also see: [PSXFINALDOOM-RE](https://github.com/Erick194/PSXFINALDOOM-RE)
     * Bug fixes, including:
         * "R_InitTextures & R_InitFlats : fix loop issues spotted by @Erick194"
             https://github.com/BodbDearg/PsyDoom/commit/67b693aef8bf1ea71fe564b82395db9af9554742
