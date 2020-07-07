@@ -929,49 +929,6 @@ index ec4c542..2a28adf 100644
  	}
  
  	demorecording = false;
-@@ -467,7 +416,8 @@ void G_RunGame (void)//L800134FC()
-         /* run a stats intermission */
-         MiniLoop(IN_Start,IN_Stop,IN_Ticker,IN_Drawer);
- 
--        if ((!netgame && (gamemap == 30)) && (nextmap == 31))
-+        if((!netgame) && (((gamemap == 13) && (nextmap == 14)) ||
-+                          ((gamemap == 24) && (nextmap == 25))))
-         {
-             /* run the finale if needed */
-             MiniLoop(END1_Start,END1_Stop,END1_Ticker,END1_Drawer);
-@@ -477,16 +427,13 @@ void G_RunGame (void)//L800134FC()
- 
-             if(gameaction == ga_restart)
-                 continue;
--            else
--            {
--                if (gameaction != ga_exitdemo)
--                    startmap = 2;
-+
-+            if (gameaction == ga_exitdemo)
-                 return;
--            }
-         }
-         else
-         {
--            if (nextmap > LASTLEVEL)
-+            if (nextmap >= LASTLEVEL)
-             {
-                 /* run the finale if needed */
-                 MiniLoop(Cast_Start, Cast_Stop, Cast_Ticker, Cast_Drawer);
-@@ -499,9 +446,10 @@ void G_RunGame (void)//L800134FC()
-                 else
-                     return;
-             }
--
--            gamemap = nextmap;
-         }
-+
-+        // Set Next Level
-+        gamemap = nextmap;
- 	}
- }
- 
 @@ -510,7 +458,8 @@ int G_PlayDemoPtr (void)//(int *demo) L800136E8()
  {
  	int		exit;

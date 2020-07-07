@@ -30,6 +30,7 @@ const char* getMapName(const int32_t mapNum) noexcept;
 int32_t getNumEpisodes() noexcept;
 const char* getEpisodeName(const int32_t episodeNum) noexcept;
 int32_t getEpisodeStartMap(const int32_t episodeNum) noexcept;
+int32_t getMapEpisode(const int32_t mapNum) noexcept;
 uint16_t getTexPalette_BACK() noexcept;
 uint16_t getTexPalette_LOADING() noexcept;
 uint16_t getTexPalette_PAUSE() noexcept;

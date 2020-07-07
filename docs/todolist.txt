@@ -1,3 +1,11 @@
+- Fix not being able to close the window to kill the game
+- Fix Redemption Denied animated floor bug
+    - Only enable the animation for Final Doom
+    - Check other animations added in case they conflict too
+- Investigate sticky mouse wheel weapon changing
+    - Sometimes seems to not register
+- Investigate reported bug from Doomworld about weapon switching with the number keys
+    - "@intacowetrust I noticed when switching with the number keys, if you try to switch too fast, you can't immediately go back to the weapon you were just on. You also can't switch back when the game is paused."
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.

@@ -94,7 +94,7 @@ static const state_t*   gpCastState;            // Current state being displayed
 static texture_t        gTex_DEMON;             // The demon (icon of sin) background for the DOOM II finale
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes the Ultimate DOOM finale screen
+// Initializes the Ultimate DOOM style finale (text only, no cast sequence) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Start() noexcept {
     // Draw the loading plaque, purge the texture cache and load up the background needed
@@ -124,7 +124,7 @@ void F1_Start() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Called to shut down the Ultimate DOOM finale screen
+// Called to shut down the Ultimate DOOM style finale (text only, no cast sequence) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     gbGamePaused = false;
@@ -132,7 +132,7 @@ void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Update logic for the Ultimate DOOM finale screen
+// Update logic for the Ultimate DOOM style finale (text only, no cast sequence) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t F1_Ticker() noexcept {
     // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
@@ -189,7 +189,7 @@ gameaction_t F1_Ticker() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Does the rendering for the Doom I finale screen (text popping up gradually)
+// Does the rendering for the Ultimate Doom style finale screen (text popping up gradually)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Drawer() noexcept {
     // Increment the frame count (for the texture cache) and draw the background
@@ -217,7 +217,7 @@ void F1_Drawer() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes the DOOM II finale screen
+// Initializes the DOOM II style finale (text, followed by cast) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Start() noexcept {
     // Show the loading plaque and purge the texture cache
@@ -247,7 +247,7 @@ void F2_Start() noexcept {
     gCastOnMelee = 0;
     
     // Load sound for the finale
-    S_LoadMapSoundAndMusic(60);
+    S_LoadMapSoundAndMusic(Game::getNumMaps() + 1);
 
     // Play the finale cd track
     psxcd_play_at_andloop(
@@ -266,7 +266,7 @@ void F2_Start() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Called to shut down the DOOM II finale screen
+// Called to shut down the DOOM II style finale (text, followed by cast) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     gbGamePaused = false;
@@ -274,7 +274,7 @@ void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Update logic for the DOOM II finale screen
+// Update logic for the DOOM II style finale (text, followed by cast) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t F2_Ticker() noexcept {
     // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
@@ -473,7 +473,7 @@ gameaction_t F2_Ticker() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Does the rendering for the Doom II finale screen (text, then cast of characters)
+// Does the rendering for the Doom II style finale screen (text, then cast of characters)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Drawer() noexcept {
     // Draw the icon of sin background and increment frame count for the texture cache

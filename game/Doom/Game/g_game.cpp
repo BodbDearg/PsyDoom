@@ -365,8 +365,12 @@ void G_RunGame() noexcept {
         // Do the intermission
         MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
-        // Should we do the Ultimate DOOM finale?
-        if ((gNetGame == gt_single) && (gGameMap == 30) && (gNextMap == 31)) {
+        // Should we do the Ultimate DOOM style (text only, no cast sequence) finale?
+        // Note that for Final Doom this will show when finishing the first 2 out of 3 episodes.
+        const int32_t curEpisodeNum = Game::getMapEpisode(gGameMap);
+        const int32_t nextEpisodeNum = Game::getMapEpisode(gNextMap);
+
+        if ((gNetGame == gt_single) && (curEpisodeNum != nextEpisodeNum)) {
             MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
             if (gGameAction == ga_warped || gGameAction == ga_restart)
@@ -375,12 +379,12 @@ void G_RunGame() noexcept {
             if (gGameAction == ga_exitdemo)
                 break;
 
-            gStartMapOrEpisode = -2;
+            gStartMapOrEpisode = -nextEpisodeNum;   // The '-' instructs the main menu to select this episode automatically
             break;
         }
 
-        // If there is a next map go onto it, otherwise show the DOOM II finale
-        if (gNextMap < 60) {
+        // If there is a next map go onto it, otherwise show the DOOM II style finale (text, followed by cast)
+        if (gNextMap <= Game::getNumMaps()) {
             gGameMap = gNextMap;
             continue;
         }

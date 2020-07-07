@@ -147,6 +147,21 @@ int32_t getEpisodeStartMap(const int32_t episodeNum) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Get the episode for a specified map number.
+// Note: the episode number returned is always 1-NumEpisodes, even if the map number is out of range.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t getMapEpisode(const int32_t mapNum) noexcept {
+    const int32_t numEpisodes = getNumEpisodes();
+    int32_t episodeNum = 1;
+
+    while ((episodeNum + 1 <= numEpisodes) && (mapNum >= getEpisodeStartMap(episodeNum + 1))) {
+        ++episodeNum;
+    }
+
+    return episodeNum;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Get the palette or lump name to use for various textures
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t getTexPalette_BACK() noexcept {

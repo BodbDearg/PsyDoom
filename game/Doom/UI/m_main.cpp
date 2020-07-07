@@ -17,6 +17,8 @@
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
+#include <algorithm>
+
 // PC-PSX: move this up slightly to make room for the 'quit' option
 #if PC_PSX_DOOM_MODS
     static constexpr int32_t DOOM_LOGO_YPOS = 10;
@@ -177,9 +179,14 @@ void M_Start() noexcept {
         gStartMapOrEpisode = 1;
     }
     else if (gStartMapOrEpisode < 0) {
-        // Start map or episode will be set to '< 0' when the Doom I is finished.
-        // This implies we want to point the user to Doom II:
-        gStartMapOrEpisode = 2;
+        // Start map or episode will be set to '-NextEpisodeNum' when an episode like 'Ultimate Doom' is finished, which has a next episode.
+        // This means we want to point the user to the next episode automatically, upon entering the main menu.
+        gStartMapOrEpisode = -gStartMapOrEpisode;
+
+        // PC-PSX: an added check, just in case...
+        #if PC_PSX_DOOM_MODS
+            gStartMapOrEpisode = std::min(gStartMapOrEpisode, gMaxStartEpisodeOrMap);
+        #endif
     }
 
     // Play the main menu music
