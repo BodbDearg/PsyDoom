@@ -386,6 +386,8 @@ struct player_t {
     uint32_t        automapscale;                   // Render scaling for the automap
     uint32_t        automapflags;                   // Automap related (AF_XXX) flags
     int32_t         turnheld;                       // How many ticks one of the turn buttons has been pressed: used for turn acceleration
+    int32_t         psxMouseUseCountdown;           // Final Doom demo playback only: used to countdown to when a 'use' action can be done via the psx mouse by double clicking quickly
+    bool            psxMouseUse;                    // Final Doom demo playback only: try to do a 'use' action via the psx mouse
 };
 
 #if PC_PSX_DOOM_MODS
@@ -430,7 +432,8 @@ struct player_t {
         uint8_t bAutomapMoveDown : 1;
         uint8_t bAutomapPan : 1;            // Manually pan the automap
         uint8_t bRespawn : 1;               // Respawn in deathmatch
-        uint8_t _unused1 : 2;
+        uint8_t bPsxMouseUse : 1;           // Used for Final Doom classic demo playback only: try and do 'use' action via the psx mouse left/right buttons
+        uint8_t _unused1 : 1;
 
         // UI: whether various action buttons are pressed
         uint8_t bMenuUp : 1;
@@ -445,9 +448,10 @@ struct player_t {
         uint8_t bDeletePasswordChar : 1;
         uint8_t _unused2 : 7;
 
-        // Unused bytes to pad the struct out to 24 bytes: can be repurposed later if need be
-        uint8_t _unused3;
-        uint8_t _unused4;
+        // Playstation mouse input movement deltas: used for classic 'Final Doom' demo playback only.
+        // These inputs should always be zeroed in all other cases.
+        int8_t psxMouseDx;
+        int8_t psxMouseDy;
     };
 
     // Packet sent/received by all players when connecting to a game

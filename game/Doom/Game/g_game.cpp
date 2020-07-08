@@ -422,14 +422,24 @@ gameaction_t G_PlayDemoPtr() noexcept {
 
     gpDemo_p += 2;
 
-    // Read the control bindings for the demo and save the previous ones before that
+    // Read the control bindings for the demo and save the previous ones before that.
+    //
+    // Note: for original PSX Doom there are 8 bindings, for Final Doom there are 10.
+    // Need to adjust demo reading accordingly depending on which game version we are dealing with.
     padbuttons_t prevCtrlBindings[NUM_BINDABLE_BTNS];
-    
     D_memcpy(prevCtrlBindings, gCtrlBindings, sizeof(prevCtrlBindings));
-    D_memcpy(gCtrlBindings, gpDemo_p, sizeof(prevCtrlBindings));
+
+    if (Game::isFinalDoom()) {
+        D_memcpy(gCtrlBindings, gpDemo_p, sizeof(padbuttons_t) * NUM_BINDABLE_BTNS);
+    } else {
+        // Note: original Doom did not have the move forward/backward bindings (due to no mouse support) - hence they are zeroed here:
+        D_memcpy(gCtrlBindings, gpDemo_p, sizeof(padbuttons_t) * 8);
+        gCtrlBindings[8] = 0;
+        gCtrlBindings[9] = 0;
+    }
 
     #if PC_PSX_DOOM_MODS
-        // PC-PSX: endian correct the controls written to the demo also
+        // PC-PSX: endian correct the controls read from the demo
         if constexpr (!Endian::isLittle()) {
             for (uint32_t i = 0; i < NUM_BINDABLE_BTNS; ++i) {
                 gCtrlBindings[i] = Endian::littleToHost(gCtrlBindings[i]);
@@ -437,8 +447,21 @@ gameaction_t G_PlayDemoPtr() noexcept {
         }
     #endif
 
-    static_assert(sizeof(prevCtrlBindings) == 32);
-    gpDemo_p += 8;
+    static_assert(sizeof(prevCtrlBindings) == 40);
+
+    if (Game::isFinalDoom()) {
+        gpDemo_p += NUM_BINDABLE_BTNS;
+    } else {
+        gpDemo_p += 8;
+    }
+
+    // For Final Doom read the mouse sensitivity and save the old value to restore later:
+    const int32_t oldPsxMouseSensitivity = gPsxMouseSensitivity;
+
+    if (Game::isFinalDoom()) {
+        gPsxMouseSensitivity = Endian::littleToHost((int32_t) *gpDemo_p);
+        gpDemo_p++;
+    }
     
     // Initialize the demo pointer, game and load the level
     G_InitNew(skill, mapNum, gt_single);
@@ -449,8 +472,10 @@ gameaction_t G_PlayDemoPtr() noexcept {
     const gameaction_t exitAction = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     gbDemoPlayback = false;
 
-    // Restore the previous control bindings and cleanup
+    // Restore the previous control bindings, mouse sensitivity and cleanup
     D_memcpy(gCtrlBindings, prevCtrlBindings, sizeof(prevCtrlBindings));
+    gPsxMouseSensitivity = oldPsxMouseSensitivity;
+
     gLockedTexPagesMask &= 1;
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 

@@ -127,28 +127,38 @@ uint32_t gNumFramesDrawn;
 // The index of the user's player in the array of players: whether you are player 1 or 2 in other words
 int32_t gCurPlayerIndex;
 
-// This player's control bindings
+// Original PSX Doom: this player's control bindings.
+// This is only used for playback of original PSX Doom demos now, to translate PSX buttons into a 'TickInputs' structure.
+// PsyDoom has it's own more flexible configuration system that supercedes this mechanism. 
 padbuttons_t gCtrlBindings[NUM_CTRL_BINDS] = {
-    PAD_TRIANGLE,
+    PAD_TRIANGLE | PSX_MOUSE_LEFT,
     PAD_CIRCLE,
-    PAD_CROSS,
+    PAD_CROSS | PSX_MOUSE_RIGHT,
     PAD_SQUARE,
     PAD_L1,
     PAD_R1,
     PAD_L2,
-    PAD_R2
+    PAD_R2,
+    0,          // Move forward is default unbound
+    0           // Move backward is default unbound
 };
+
+// Original PSX Doom: mouse sensitivity.
+// This is only used for playback of original PSX Doom demos now.
+int32_t gPsxMouseSensitivity = 50;
 
 // Bit masks for each of the bindable buttons
 const padbuttons_t gBtnMasks[NUM_BINDABLE_BTNS] = {
-    PAD_TRIANGLE,   // bindablebtn_triangle
-    PAD_CIRCLE,     // bindablebtn_circle
-    PAD_CROSS,      // bindablebtn_cross
-    PAD_SQUARE,     // bindablebtn_square
-    PAD_L1,         // bindablebtn_l1
-    PAD_R1,         // bindablebtn_r1
-    PAD_L2,         // bindablebtn_l2
-    PAD_R2          // bindablebtn_r2
+    PAD_TRIANGLE,       // bindablebtn_triangle
+    PAD_CIRCLE,         // bindablebtn_circle
+    PAD_CROSS,          // bindablebtn_cross
+    PAD_SQUARE,         // bindablebtn_square
+    PAD_L1,             // bindablebtn_l1
+    PAD_R1,             // bindablebtn_r1
+    PAD_L2,             // bindablebtn_l2
+    PAD_R2,             // bindablebtn_r2
+    PSX_MOUSE_LEFT,     // bindablebtn_mouse_left
+    PSX_MOUSE_RIGHT     // bindablebtn_mouse_right
 };
 
 // The main UI texture atlas for the game.

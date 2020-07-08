@@ -36,10 +36,12 @@ enum controlbinding_t : int32_t {
     cbind_strafe_right,
     cbind_prev_weapon,
     cbind_next_weapon,
+    cbind_move_backward,
+    cbind_move_forward,
     NUM_CTRL_BINDS
 };
 
-// Configurable buttons on the d-pad.
+// Configurable buttons on the PlayStation's digital controller and the PlayStation mouse.
 // These give an index into the array of button masks for configurable buttons.
 // That in turn allows us to match buttons to bindable actions.
 enum : int32_t {
@@ -51,6 +53,8 @@ enum : int32_t {
     bindablebtn_r1,
     bindablebtn_l2,
     bindablebtn_r2,
+    bindablebtn_mouse_left,
+    bindablebtn_mouse_right,
     NUM_BINDABLE_BTNS
 };
 
@@ -73,6 +77,7 @@ extern DRAWENV              gDrawEnvs[2];
 extern uint32_t             gNumFramesDrawn;
 extern int32_t              gCurPlayerIndex;
 extern padbuttons_t         gCtrlBindings[NUM_CTRL_BINDS];
+extern int32_t              gPsxMouseSensitivity;
 extern const padbuttons_t   gBtnMasks[NUM_BINDABLE_BTNS];
 extern texture_t            gTex_STATUS;
 extern texture_t            gTex_PAUSE;

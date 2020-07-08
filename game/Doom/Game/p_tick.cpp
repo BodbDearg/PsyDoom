@@ -938,6 +938,9 @@ void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* co
     inputs = {};
     inputs.directSwitchToWeapon = wp_nochange;
 
+    inputs.psxMouseDx = -(int8_t)(buttons >> 16);
+    inputs.psxMouseDy = -(int8_t)(buttons >> 24);
+
     if (buttons & PAD_UP) {
         inputs.bMoveForward = true;
         inputs.bMenuUp = true;
@@ -1015,6 +1018,10 @@ void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* co
         inputs.bToggleMap = true;
     }
 
+    if (buttons & PSX_MOUSE_ANY_BTNS) {
+        inputs.bPsxMouseUse = true;
+    }
+
     if (buttons & pControlBindings[cbind_attack]) {
         inputs.bAttack = true;
     }
@@ -1045,6 +1052,16 @@ void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* co
 
     if (buttons & pControlBindings[cbind_next_weapon]) {
         inputs.bNextWeapon = true;
+    }
+
+    if (buttons & pControlBindings[cbind_move_forward]) {
+        inputs.bMoveForward = true;
+        inputs.bAutomapMoveUp = true;
+    }
+
+    if (buttons & pControlBindings[cbind_move_backward]) {
+        inputs.bMoveBackward = true;
+        inputs.bAutomapMoveDown = true;
     }
 }
 

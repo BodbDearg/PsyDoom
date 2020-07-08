@@ -17,6 +17,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
@@ -37,9 +38,9 @@ static constexpr fixed_t FAST_ANGLE_TURN[10] = {
 
 static constexpr fixed_t STOPSPEED              = FRACUNIT / 16;                // Stop the player completely if velocity falls under this amount
 static constexpr fixed_t FRICTION               = 0xd200;                       // Friction amount to apply to player movement: approximately 0.82
-static constexpr fixed_t FORWARD_MOVE[2]        = { 0x40000, 0x60000 };         // Movement speeds: forward/back
-static constexpr fixed_t SIDE_MOVE[2]           = { 0x38000, 0x58000 };         // Movement speeds: strafe left/right
-static constexpr fixed_t MAX_FORWARD_MOVE       = FORWARD_MOVE[1];              // For convenience
+static constexpr fixed_t FORWARD_MOVE_DOOM[2]   = { 0x40000, 0x60000 };         // Movement speeds: forward/back (Doom)
+static constexpr fixed_t FORWARD_MOVE_FDOOM[2]  = { 0x38000, 0x58000 };         // Movement speeds: forward/back (Final Doom)
+static constexpr fixed_t SIDE_MOVE[2]           = { 0x38000, 0x58000 };         // Movement speeds (Doom): strafe left/right
 static constexpr fixed_t MAX_SIDE_MOVE          = SIDE_MOVE[1];                 // For convenience
 static constexpr int32_t TURN_ACCEL_TICS        = C_ARRAY_SIZE(ANGLE_TURN);     // Number of tics/stages in turn acceleration before it hits max speed
 static constexpr int32_t TURN_TO_ANGLE_SHIFT    = 17;                           // How many bits to shift the turn amount left to scale it to an angle
@@ -281,13 +282,21 @@ static void P_BuildMove(player_t& player) noexcept {
     // Do turning or strafing controls (if strafe button held)
     const bool bDoFastTurn = ((speedMode != 0) && (!bMoveForward) && (!bMoveBackward));
 
+    const int32_t psxMouseSensitivityX = (gPsxMouseSensitivity * 100 * FRACUNIT) / 92;
+    const int32_t psxMouseSensitivityY = 3000;
+    const int32_t psxMouseMoveX = inputs.psxMouseDx * psxMouseSensitivityX * elapsedVBlanks;
+    const int32_t psxMouseMoveY = inputs.psxMouseDy * psxMouseSensitivityY * elapsedVBlanks;
+
     if (bStrafe) {
-        // Strafe button held: turn buttons become strafing buttons
+        // Strafe button held: turn buttons and x psx mouse movements translate to strafing
         if (bTurnLeft) {
             player.sidemove = (-SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         } else if (bTurnRight) {
             player.sidemove = (+SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
+
+        // Handle Final Doom psx mouse movements that become strafing
+        player.sidemove -= psxMouseMoveX;
     }
     else {
         // No strafe button held: do normal turning.
@@ -317,12 +326,29 @@ static void P_BuildMove(player_t& player) noexcept {
                 }
             }
 
-
             // Apply the turn amount adjusted for framerate
             turnAmt *= elapsedVBlanks;
             turnAmt /= VBLANKS_PER_TIC;
             player.angleturn = turnAmt << TURN_TO_ANGLE_SHIFT;
+
+            // Apply Final Doom mouse turning also
+            player.angleturn += psxMouseMoveX;
         }
+    }
+
+    // Final Doom classic demo playback only: try and do a 'use' action when the mouse is double clicked quickly
+    if (inputs.bPsxMouseUse) {
+        if ((player.psxMouseUseCountdown > 0) && (player.psxMouseUseCountdown < 10)) {
+            // Rapid double click with the psx mouse done: try and do a use action and force the user to release the mouse before using again
+            player.psxMouseUse = true;
+            player.psxMouseUseCountdown = 0;
+        } else if (player.psxMouseUseCountdown != 0) {
+            // Initial click: you must release the mouse for at least 2 ticks then click again for the use action to register
+            player.psxMouseUseCountdown = 11;
+        }
+    } else {
+        // Mouse buttons not pressed: reduce the time the player has left to do the double click (or allow initial click again)
+        player.psxMouseUseCountdown--;
     }
 
     // PC-PSX: apply analog turning movements; this has already been adjusted for framerate, so is applied directly.
@@ -334,18 +360,24 @@ static void P_BuildMove(player_t& player) noexcept {
     #endif
 
     // Do forward/backward movement controls
+    const fixed_t* forwardMove = (Game::isFinalDoom()) ? FORWARD_MOVE_FDOOM : FORWARD_MOVE_DOOM;
+    const fixed_t maxForwardMove = std::max(forwardMove[0], forwardMove[1]);
+
     if (bMoveForward) {
-        player.forwardmove = (+FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
+        player.forwardmove = (+forwardMove[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     } else if (bMoveBackward) {
-        player.forwardmove = (-FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
+        player.forwardmove = (-forwardMove[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     }
+
+    // Apply Final Doom mouse movement also
+    player.forwardmove += psxMouseMoveY;
     
     // PC-PSX: do analog movements
     #if PC_PSX_DOOM_MODS
     {
-        const fixed_t move = FixedMul(inputs.analogForwardMove, FORWARD_MOVE[speedMode]);
+        const fixed_t move = FixedMul(inputs.analogForwardMove, forwardMove[speedMode]);
         player.forwardmove -= (move * elapsedVBlanks) / VBLANKS_PER_TIC;
-        player.forwardmove = std::clamp(player.forwardmove, -MAX_FORWARD_MOVE, +MAX_FORWARD_MOVE);
+        player.forwardmove = std::clamp(player.forwardmove, -maxForwardMove, +maxForwardMove);
     }
     {
         const fixed_t move = FixedMul(inputs.analogSideMove, SIDE_MOVE[speedMode]);
@@ -698,7 +730,9 @@ void P_PlayerThink(player_t& player) noexcept {
             }
 
             // Use special lines if the use button is pressed
-            if (bUse) {
+            if (bUse || player.psxMouseUse) {
+                player.psxMouseUse = false;
+
                 if (!player.usedown) {
                     P_UseLines(player);
                     player.usedown = true;
