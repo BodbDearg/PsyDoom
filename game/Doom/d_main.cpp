@@ -507,7 +507,9 @@ gameaction_t MiniLoop(
 
                 gOldTicButtons = gTicButtons;
 
+                // Note: ensure we have the latest input events prior to this with a call to 'Input::update'
                 TickInputs& tickInputs = gTickInputs[gCurPlayerIndex];
+                Input::update();
                 P_GatherTickInputs(tickInputs);
                 gTicButtons = I_ReadGamepad();
             #else

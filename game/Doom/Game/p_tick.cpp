@@ -919,7 +919,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_8)) { inputs.directSwitchToWeapon = wp_bfg;            }
 
     // Direct weapon switching with the mouse wheel
-    const float mouseWheelMovement = Input::getMouseWheelAxisMovement(1);
+    const int32_t mouseWheelMovement = (int32_t) Input::getMouseWheelAxisMovement(1);
 
     if (mouseWheelMovement != 0) {
         // Get all of the owned weapons in a flat list in order of switching priority: this makes scrolling logic easier
@@ -949,8 +949,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 
         // Get the index of the next weapon to select and schedule it to be selected
         if (numOwnedWeapons > 0) {
-            const int32_t moveWeaponSlots = (int32_t)((mouseWheelMovement < 0) ? std::floor(mouseWheelMovement) : std::ceil(mouseWheelMovement)) % numOwnedWeapons;
-            const int32_t nextWeaponIdx = std::clamp(selectedWeaponIdx + moveWeaponSlots, 0, numOwnedWeapons - 1);
+            const int32_t nextWeaponIdx = std::clamp(selectedWeaponIdx + mouseWheelMovement, 0, numOwnedWeapons - 1);
             inputs.directSwitchToWeapon = (uint8_t) ownedWeapons[nextWeaponIdx];
         }
     }

@@ -840,10 +840,13 @@ void P_PlayerDoTurning() noexcept {
     const time_point_t now = std::chrono::high_resolution_clock::now();
     const player_t& player = gPlayers[gCurPlayerIndex];
 
-    // Make sure we have the latest input data
-    Input::update();
-
-    // Only do these turning updates if the player is not dead, the game is active, and if we're not doing a demo
+    // Only do these turning updates if the player is not dead, the game is active, and if we're not doing a demo.
+    //
+    // IMPORTANT: I previously had a call to 'Input::update()' here to get the very latest inputs but that caused bugs
+    // and it should NOT be added back in. If inputs are updated here then any new events received might be consumed prior
+    // to rendering, because we consume used input events once the game tick is processed. The rule of thumb is that no
+    // event polling should be done WHILE game logic is being processed. Inputs should only be updated BEFORE the tick starts.
+    //
     const bool bCanTurn = (
         (!gbDemoPlayback) &&
         (player.playerstate == PST_LIVE) &&
