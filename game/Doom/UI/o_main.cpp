@@ -1,6 +1,5 @@
 #include "o_main.h"
 
-#include "cn_main.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
@@ -20,7 +19,10 @@ enum option_t : int32_t {
     opt_music,
     opt_sound,
     opt_password,
+// PC-PSX: Removing the psx controller configuration menu
+#if !PC_PSX_DOOM_MODS
     opt_config,
+#endif
     opt_main_menu,
     opt_restart
 };
@@ -29,7 +31,10 @@ const char gOptionNames[][16] = {
     { "Music Volume"    },
     { "Sound Volume"    },
     { "Password"        },
+// PC-PSX: Removing the psx controller configuration menu
+#if !PC_PSX_DOOM_MODS
     { "Configuration"   },
+#endif
     { "Main Menu"       },
     { "Restart Level"   }
 };
@@ -45,17 +50,28 @@ static const menuitem_t gOptMenuItems_MainMenu[] = {
     { opt_music,        62, 65  },
     { opt_sound,        62, 105 },
     { opt_password,     62, 145 },
+// PC-PSX: Removing the psx controller configuration menu
+#if PC_PSX_DOOM_MODS
+    { opt_main_menu,    62, 170 },
+#else
     { opt_config,       62, 170 },
     { opt_main_menu,    62, 195 },
+#endif
 };
 
 static const menuitem_t gOptMenuItems_Single[] = {
     { opt_music,        62, 50  },
     { opt_sound,        62, 90  },
     { opt_password,     62, 130 },
+// PC-PSX: Removing the psx controller configuration menu
+#if PC_PSX_DOOM_MODS
+    { opt_main_menu,    62, 155 },
+    { opt_restart,      62, 180 },
+#else
     { opt_config,       62, 155 },
     { opt_main_menu,    62, 180 },
     { opt_restart,      62, 205 },
+#endif
 };
 
 static const menuitem_t gOptMenuItems_NetGame[] = {
@@ -80,8 +96,7 @@ int32_t gOptionsMusVol = S_MUS_DEFAULT_VOL;
 // Initializes the options menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void O_Init() noexcept {
-    // BAM
-    S_StartSound(nullptr, sfx_pistol);
+    S_StartSound(nullptr, sfx_pistol);      // Bam!
 
     // Initialize cursor position and vblanks until move for all players
     gCursorFrame = 0;
@@ -94,15 +109,15 @@ void O_Init() noexcept {
     // Set what menu layout to use
     if (gNetGame != gt_single) {
         gpOptionsMenuItems = gOptMenuItems_NetGame;
-        gOptionsMenuSize = 4;
+        gOptionsMenuSize = C_ARRAY_SIZE(gOptMenuItems_NetGame);
     }
     else if (gbGamePaused) {
         gpOptionsMenuItems = gOptMenuItems_Single;
-        gOptionsMenuSize = 6;
+        gOptionsMenuSize = C_ARRAY_SIZE(gOptMenuItems_Single);
     }
     else {
         gpOptionsMenuItems = gOptMenuItems_MainMenu;
-        gOptionsMenuSize = 5;
+        gOptionsMenuSize = C_ARRAY_SIZE(gOptMenuItems_MainMenu);
     }
 }
 
@@ -292,12 +307,15 @@ gameaction_t O_Control() noexcept {
                 }
             }   break;
 
+        // PC-PSX: Removing the psx controller configuration menu
+        #if !PC_PSX_DOOM_MODS
             // Controller configuration
             case opt_config: {
                 if (bMenuOk) {
                     MiniLoop(START_ControlsScreen, STOP_ControlsScreen, TIC_ControlsScreen, DRAW_ControlsScreen);
                 }
             }   break;
+        #endif
 
             // Main menu option
             case opt_main_menu: {

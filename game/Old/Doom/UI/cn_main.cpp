@@ -1,3 +1,6 @@
+// PC-PSX: no longer using the controller configuration screen
+#if !PC_PSX_DOOM_MODS
+
 #include "cn_main.h"
 
 #include "Doom/Base/i_main.h"
@@ -276,3 +279,5 @@ void DRAW_ControlsScreen() noexcept {
     I_SubmitGpuCmds();
     I_DrawPresent();
 }
+
+#endif  // #if !PC_PSX_DOOM_MODS

@@ -1,6 +1,5 @@
 #include "ti_main.h"
 
-#include "cn_main.h"
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
@@ -48,15 +47,19 @@ void START_Title() noexcept {
     
     // Cache commonly used UI lumps for fast access and upload them to VRAM
     W_CacheLumpName(Game::getTexLumpName_OptionsBg(), PU_STATIC, false);
-    W_CacheLumpName("BUTTONS", PU_STATIC, false);
     W_CacheLumpName("NETERR", PU_STATIC, false);
     W_CacheLumpName("PAUSE", PU_STATIC, false);
 
     I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg(), 0);
-    I_LoadAndCacheTexLump(gTex_BUTTONS, "BUTTONS", 0);
     I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
     I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
+
+    // PC-PSX: no longer required to be cached since we don't have the controls screen
+    #if !PC_PSX_DOOM_MODS
+        W_CacheLumpName("BUTTONS", PU_STATIC, false);
+        I_LoadAndCacheTexLump(gTex_BUTTONS, "BUTTONS", 0);
+    #endif
     
     // Cache the fire sky texture used in the title screen and save it's reference
     {
