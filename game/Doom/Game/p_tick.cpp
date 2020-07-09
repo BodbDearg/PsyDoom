@@ -31,6 +31,8 @@
 #include "Wess/psxspu.h"
 #include "Wess/wessapi.h"
 
+#include <algorithm>
+#include <cmath>
 #include <SDL.h>
 
 // The number of buttons in a cheat sequence and a list of all the cheat sequences and their indices
@@ -768,16 +770,14 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAGEDOWN) ||
         Input::isKeyboardKeyPressed(SDL_SCANCODE_Q) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_LEFT_SHOULDER) ||
-        (Input::getMouseWheelAxisMovement(1) < 0)
+        Input::isControllerInputPressed(ControllerInput::BTN_LEFT_SHOULDER)
     ) {
         inputs.bPrevWeapon = true;
     }
 
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAGEUP) ||
         Input::isKeyboardKeyPressed(SDL_SCANCODE_E) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_RIGHT_SHOULDER) ||
-        (Input::getMouseWheelAxisMovement(1) > 0)
+        Input::isControllerInputPressed(ControllerInput::BTN_RIGHT_SHOULDER)
     ) {
         inputs.bNextWeapon = true;
     }
@@ -903,8 +903,9 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.analogSideMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone) * FRACUNIT);
 
     // Direct weapon switching with the keyboard
+    player_t& player = gPlayers[gCurPlayerIndex];
+
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_1)) {
-        player_t& player = gPlayers[gCurPlayerIndex];
         const weapontype_t nextWeapon = ((player.readyweapon == wp_chainsaw) || (!player.weaponowned[wp_chainsaw])) ? wp_fist : wp_chainsaw;
         inputs.directSwitchToWeapon = (uint8_t) nextWeapon;
     }
@@ -916,6 +917,43 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_6)) { inputs.directSwitchToWeapon = wp_missile;        }
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_7)) { inputs.directSwitchToWeapon = wp_plasma;         }
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_8)) { inputs.directSwitchToWeapon = wp_bfg;            }
+
+    // Direct weapon switching with the mouse wheel
+    const float mouseWheelMovement = Input::getMouseWheelAxisMovement(1);
+
+    if (mouseWheelMovement != 0) {
+        // Get all of the owned weapons in a flat list in order of switching priority: this makes scrolling logic easier
+        weapontype_t ownedWeapons[NUMWEAPONS] = { wp_nochange };
+        int32_t numOwnedWeapons = 0;
+
+        if (player.weaponowned[wp_fist])            { ownedWeapons[numOwnedWeapons++] = wp_fist;            }
+        if (player.weaponowned[wp_chainsaw])        { ownedWeapons[numOwnedWeapons++] = wp_chainsaw;        }
+        if (player.weaponowned[wp_pistol])          { ownedWeapons[numOwnedWeapons++] = wp_pistol;          }
+        if (player.weaponowned[wp_shotgun])         { ownedWeapons[numOwnedWeapons++] = wp_shotgun;         }
+        if (player.weaponowned[wp_supershotgun])    { ownedWeapons[numOwnedWeapons++] = wp_supershotgun;    }
+        if (player.weaponowned[wp_chaingun])        { ownedWeapons[numOwnedWeapons++] = wp_chaingun;        }
+        if (player.weaponowned[wp_missile])         { ownedWeapons[numOwnedWeapons++] = wp_missile;         }
+        if (player.weaponowned[wp_plasma])          { ownedWeapons[numOwnedWeapons++] = wp_plasma;          }
+        if (player.weaponowned[wp_bfg])             { ownedWeapons[numOwnedWeapons++] = wp_bfg;             }
+
+        // Figure out the index of the currently selected weapon in this list
+        const weapontype_t selectedWeapon = (player.pendingweapon != wp_nochange) ? player.pendingweapon : player.readyweapon;
+        int32_t selectedWeaponIdx = 0;
+
+        for (int32_t i = 0; i < numOwnedWeapons; ++i) {
+            if (ownedWeapons[i] == selectedWeapon) {
+                selectedWeaponIdx = i;
+                break;
+            }
+        }
+
+        // Get the index of the next weapon to select and schedule it to be selected
+        if (numOwnedWeapons > 0) {
+            const int32_t moveWeaponSlots = (int32_t)((mouseWheelMovement < 0) ? std::floor(mouseWheelMovement) : std::ceil(mouseWheelMovement)) % numOwnedWeapons;
+            const int32_t nextWeaponIdx = std::clamp(selectedWeaponIdx + moveWeaponSlots, 0, numOwnedWeapons - 1);
+            inputs.directSwitchToWeapon = (uint8_t) ownedWeapons[nextWeaponIdx];
+        }
+    }
 
     // Do one more update of the player's turning before gathering the input
     P_PlayerDoTurning();

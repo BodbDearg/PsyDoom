@@ -662,7 +662,14 @@ void P_PlayerThink(player_t& player) noexcept {
         // PC-PSX: do direct weapon switching too if requested, if the weapon is valid and different to the current equipped weapon
         #if PC_PSX_DOOM_MODS
             if ((inputs.directSwitchToWeapon != wp_nochange) && (inputs.directSwitchToWeapon < NUMWEAPONS)) {
-                if (player.weaponowned[inputs.directSwitchToWeapon] && (inputs.directSwitchToWeapon != player.readyweapon)) {
+                const bool bAllowSwitch = (
+                    player.weaponowned[inputs.directSwitchToWeapon] && (            // Must own the weapon to switch to it
+                        (inputs.directSwitchToWeapon != player.readyweapon) ||      // Don't allow switching to already held weapon 
+                        (player.pendingweapon != wp_nochange)                       // But DO allow switching back to the held back if another switch was started (cancel switch)
+                    )
+                );
+
+                if (bAllowSwitch) {
                     player.pendingweapon = (weapontype_t) inputs.directSwitchToWeapon;
                 }
             }

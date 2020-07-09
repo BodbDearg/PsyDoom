@@ -1,54 +1,31 @@
+- Verify demo compatibility with Final Doom
 - Fix not being able to close the window to kill the game
 - Fix Redemption Denied animated floor bug
     - Only enable the animation for Final Doom
     - Check other animations added in case they conflict too
 - Investigate sticky mouse wheel weapon changing
     - Sometimes seems to not register
-- Investigate reported bug from Doomworld about weapon switching with the number keys
-    - "@intacowetrust I noticed when switching with the number keys, if you try to switch too fast, you can't immediately go back to the weapon you were just on. You also can't switch back when the game is paused."
+- Is there a bug with the game not switching to the chaingun (if you have it) when out of shotgun ammo?    
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.
+    - This behavior might have to be otherwise preserved though for demo compatibility.
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
 - Incorporate the player missile damage fix and make it an optional setting (off by default)
-- Incorporate lost soul spawn limit fix but make configurable and off by default.
+- Incorporate lost soul spawn limit fix
+    - For Doom make configurable and off by default (20 skulls was the intended limit).
+    - For Final Doom it was fixed and should NOT be configurable - 16 skulls is the limit (see Final Doom diffs)
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
-- Implement a .cue parser seperate to Avocado with working multi-track support.
-- Implement a class that can read directly from the CD-ROM image without using the emulator cdrom.
-    - Allow both audio and data to be read.
-    - Thread safe with multiple instances and works independently.
-- Implement reading the ISO filesystem on the CD and providing info on where files are located.
-- Replace hardcoded file offsets with ISO filesystem results.
-- Make all file I/O bypass LIBCD and the emulated cdrom.
-    - Free the cd-rom for just audio use, and potentially safely running on another thread.
-    - Remove low level LIBCD stuff that will no longer be needed.
-- Incorporate Final Doom mouse sensitivity UI option
-- Incorporate Final Doom 'exit' option in password menu
-- Detect game type (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
-    - Incorporate into network packet ids
-- Final Doom support!
-    - Map format support.
-    - New linedef flag.
-    - New animated textures.
-    - New palettes.
-    - Player movement changes - does it result in different behavior? Or just a refactor?
-    - Demo format support.
-    - Map names/episode changing logic.
-    - Menu/UI changes.
-    - Finale changes.
-    - Player movement changes? Investigate...
-    - Need to record demos against original game for verification.
-    - Other miscellaneous changes.
-    - Any FSM changes?
+- Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
 - Add partial support for the awful "PSX Doom Forever" rom-hack/bootleg.
+- Make CD audio use the new disc reader and not the emulator CD-ROM.
+    - Thread safe and should also work with multi bin .cue.
 - Investigate moving sound processing onto another thread and triggered in demand to output buffer requirements.
     - Should fix all stuttering, and free up main thread resources.
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
     - Need to run at capped framerate to see properly.
-- Fix not being able to bind the Circle/B button in the controls menu.
-    - Should maybe consider removing this menu, as it is confusing now for PC?
 - Investigate interpolation for sprites and sectors in addition to player view.
 - Make GPU primitives go more directly to the rasterizer rather than through a buffer.
 - Implement fully bindable/configurable controls.
@@ -62,8 +39,14 @@
 - Investigate being able to add override/new lumps via custom user wads.
 - Investigate a possible 'high res' or crispy mode.
     - May need an extended framebuffer for this
+    - May be more feasible in a completely rewritten renderer
 - Investigate engine limits and try to remove/expand where possible
-- Investigate expanding or removing VRAM limit
+    - No texture cache overflow
+    - Expanded VRAM
+    - Expanded SRAM
+    - Greatly enlargened heap
+    - Remove temporary buffer limits
+    - Remove geometry clipping limits where possible
 - Investigate the possibility of dithering to improve rendering output.
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate rollback networking to combat latency.
@@ -77,12 +60,15 @@
 - Fix the small gaps at the side of the screen during screen fades.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Support a clean exit from the game everywhere (except I_Error)
+- Replace I_Error with an error dialog?
+    - More friendly in modern environments.
 - Investigate shutdown code and properly cleanup everything
-- Is there a bug with the game not switching to the chaingun (if you have it) when out of shotgun ammo?
 - Move reversing tools into their own folder and only include optionally in the cmake project.
     - Shouldn't be needed to compile the game.
 - Fix bug in cmd queue stuff - occasional geometry weirdness.
     - Not triggered in practice? Might be just a theoretical bug.
+- Investigate rendering glitch when above a sprite sometimes (appears enlargened on screen)
+    - May need tools to help with this
 - Do a final pass to revert any Avocado mods which are no longer needed.
 - Do a final review/diff against PSXDOOM-RE to double check for any inconsistencies.
 - Writeup final readmes and docs.
