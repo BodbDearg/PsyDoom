@@ -136,7 +136,7 @@ static bool windowHasFocus() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void handleSdlEvents() noexcept {
     SDL_Event sdlEvent;
-    bool bWindowGotFocused = false;
+    bool bConsumeEvents = false;
     
     while (SDL_PollEvent(&sdlEvent) != 0) {
         switch (sdlEvent.type) {
@@ -153,15 +153,15 @@ static void handleSdlEvents() noexcept {
             case SDL_WINDOWEVENT: {
                 switch (sdlEvent.window.event) {
                     case SDL_WINDOWEVENT_FOCUS_GAINED:
-                        SDL_ShowCursor(SDL_DISABLE);
-                        SDL_SetWindowGrab(Video::getWindow(), SDL_TRUE);
-                        SDL_SetRelativeMouseMode(SDL_TRUE);
-                        bWindowGotFocused = true;
+                        // Note: don't grab mouse input here, wait until the window's client area is actually clicked.
+                        // This makes resizing and such easier in windowed mode.
+                        bConsumeEvents = true;
                         break;
 
                     case SDL_WINDOWEVENT_FOCUS_LOST:
                         SDL_ShowCursor(SDL_ENABLE);
                         SDL_SetWindowGrab(Video::getWindow(), SDL_FALSE);
+                        SDL_SetRelativeMouseMode(SDL_FALSE);
                         break;
                 }
             }   break;
@@ -187,6 +187,15 @@ static void handleSdlEvents() noexcept {
             }   break;
 
             case SDL_MOUSEBUTTONDOWN: {
+                // Capture the mouse on a click if we haven't captured it yet
+                if (!SDL_GetRelativeMouseMode()) {
+                    SDL_ShowCursor(SDL_DISABLE);
+                    SDL_SetWindowGrab(Video::getWindow(), SDL_TRUE);
+                    SDL_SetRelativeMouseMode(SDL_TRUE);
+                    bConsumeEvents = true;
+                }
+
+                // Handle the button click
                 const MouseButton button = (MouseButton)(sdlEvent.button.button - 1);
 
                 if ((uint8_t) button < NUM_MOUSE_BUTTONS) {
@@ -207,7 +216,8 @@ static void handleSdlEvents() noexcept {
             } break;
 
             case SDL_MOUSEMOTION: {
-                if (windowHasFocus()) {
+                // Only register movement if we have captured the mouse
+                if (SDL_GetRelativeMouseMode()) {
                     gMouseMovementX += (float) sdlEvent.motion.xrel;
                     gMouseMovementY += (float) sdlEvent.motion.yrel;
                 } else {
@@ -217,9 +227,8 @@ static void handleSdlEvents() noexcept {
             } break;
 
             case SDL_MOUSEWHEEL: {
-                static_assert(NUM_MOUSE_WHEEL_AXES == 2);
-
-                if (windowHasFocus()) {
+                // Only register movement if we have captured the mouse
+                if (SDL_GetRelativeMouseMode()) {
                     gMouseWheelAxisMovements[0] += (float) sdlEvent.wheel.x;
                     gMouseWheelAxisMovements[1] += (float) sdlEvent.wheel.y;
                 } else {
@@ -297,7 +306,7 @@ static void handleSdlEvents() noexcept {
         }
     }
 
-    if (bWindowGotFocused) {
+    if (bConsumeEvents) {
         consumeEvents();
     }
 }
