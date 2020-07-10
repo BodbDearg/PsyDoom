@@ -17,7 +17,6 @@
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
 - Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
-- Add partial support for the awful "PSX Doom Forever" rom-hack/bootleg.
 - Make CD audio use the new disc reader and not the emulator CD-ROM.
     - Thread safe and should also work with multi bin .cue.
 - Investigate moving sound processing onto another thread and triggered in demand to output buffer requirements.

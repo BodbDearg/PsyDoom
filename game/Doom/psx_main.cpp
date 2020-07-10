@@ -45,9 +45,9 @@ int psx_main(const int argc, const char** const argv) noexcept {
         if (!PsxVm::init("Doom.cue"))
             return 1;
 
-        // Initialize the table of files on the CD from the file system and determine the game type
-        CdMapTbl_Init();
+        // Determine the game type and variant and initialize the table of files on the CD from the file system
         Game::determineGameTypeAndVariant();
+        CdMapTbl_Init();
         
         // Initialize the display and the modding manager
         Video::initVideo();

@@ -33,11 +33,14 @@ static const char* const gEpisodeNames_FinalDoom[] = {
 
 GameType        gGameType;
 GameVariant     gGameVariant;
+bool            gbIsPsxDoomForever;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Determine which game type we are playing and from what region
 //------------------------------------------------------------------------------------------------------------------------------------------
 void determineGameTypeAndVariant() noexcept {
+    gbIsPsxDoomForever = false;
+
     if (PsxVm::gIsoFileSys.getEntry("SLUS_000.77")) {
         gGameType = GameType::Doom;
         gGameVariant = GameVariant::NTSC_U;
@@ -56,6 +59,11 @@ void determineGameTypeAndVariant() noexcept {
     } else if (PsxVm::gIsoFileSys.getEntry("SLES_004.87")) {
         gGameType = GameType::FinalDoom;
         gGameVariant = GameVariant::PAL;
+    } else if (PsxVm::gIsoFileSys.getEntry("ZONE3D/ABIN/ZONE3D.WAD")) {
+        // This appears to be the 'PSX Doom Forever' ROM hack: pretend it's Final Doom, because it's basically just a re-skin of it
+        gGameType = GameType::FinalDoom;
+        gGameVariant = GameVariant::NTSC_U;
+        gbIsPsxDoomForever = true;
     } else {
         FatalErrors::raise(
             "Unknown/unrecognized PSX Doom game disc provided!\n"

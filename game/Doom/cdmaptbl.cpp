@@ -1,7 +1,10 @@
 #include "cdmaptbl.h"
 
+#include "PcPsx/Game.h"
 #include "PcPsx/IsoFileSys.h"
 #include "PcPsx/PsxVm.h"
+
+#include <string>
 
 // The start sector index and size of each file on the game's CD-ROM.
 // PC-PSX: if a file is not present on the disc then the start sector is now assigned a '0' as an indicator.
@@ -674,7 +677,48 @@ extern const char* const gCdMapTblFilePaths[] = {
     "PSXDOOM/SNDMAPS3/MUSLEV30.LCD",
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the cd map table for the "PSX Doom Forever" ROM hack, which is a re-skin of Final Doom
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void CdMapTbl_Init_PsxDoomForever() noexcept {
+    std::string modifiedFilePath;
+    modifiedFilePath.reserve(256);
+
+    for (int32_t i = 0; i < C_ARRAY_SIZE(gCdMapTblFilePaths); ++i) {
+        const CdFileId cdFileId = (CdFileId) i;
+        PsxCd_MapTblEntry& cdMapTblEntry = gCdMapTbl[i];
+        modifiedFilePath = gCdMapTblFilePaths[i];
+
+        if (cdFileId == CdFileId::PSXDOOM_WAD) {
+            modifiedFilePath = "ZONE3D/ABIN/ZONE3D.WAD";
+        } else if (cdFileId == CdFileId::PSXDOOM_EXE) {
+            modifiedFilePath = "ZONE3D/ABIN/ZONE3D.EXE";
+        } else if (modifiedFilePath.find("PSXDOOM/") == 0) {
+            modifiedFilePath.replace(0, sizeof("PSXDOOM/") - 1, "ZONE3D/");
+        }
+
+        const IsoFileSysEntry* const pFsEntry = PsxVm::gIsoFileSys.getEntry(modifiedFilePath.c_str());
+
+        if (pFsEntry) {
+            cdMapTblEntry.size = pFsEntry->size;
+            cdMapTblEntry.startSector = pFsEntry->startLba;
+        } else {
+            cdMapTblEntry = {};
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the cd map table and figure out where each file is on disc and file sizes
+//------------------------------------------------------------------------------------------------------------------------------------------
 void CdMapTbl_Init() noexcept {
+    // Special case the PSX Doom Forever ROM Hack
+    if (Game::gbIsPsxDoomForever) {
+        CdMapTbl_Init_PsxDoomForever();
+        return;
+    }
+
+    // Regular Doom or Final Doom game disc
     for (int32_t i = 0; i < C_ARRAY_SIZE(gCdMapTblFilePaths); ++i) {
         PsxCd_MapTblEntry& cdMapTblEntry = gCdMapTbl[i];
         const char* const filePath = gCdMapTblFilePaths[i];
