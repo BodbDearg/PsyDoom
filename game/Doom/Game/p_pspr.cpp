@@ -790,11 +790,18 @@ void P_SetupPsprites(const int32_t playerIdx) noexcept {
 // Updates/ticks player weapon sprites
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_MovePsprites(player_t& player) noexcept {
+    // This is the length of a player sprite tick (in vblanks)
+    #if PC_PSX_DOOM_MODS
+        const int32_t tickVblLength = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
+    #else
+        const int32_t tickVblLength = VBLANKS_PER_TIC;
+    #endif
+
     // Keep simulating player sprite tics while we are behind by one tick
-    gTicRemainder[gPlayerNum] += gPlayersElapsedVBlanks[gPlayerNum];
+    gTicRemainder[gPlayerNum] += gPlayersElapsedVBlanks[gPlayerNum]; 
     
-    while (gTicRemainder[gPlayerNum] >= VBLANKS_PER_TIC) {
-        gTicRemainder[gPlayerNum] -= VBLANKS_PER_TIC;
+    while (gTicRemainder[gPlayerNum] >= tickVblLength) {
+        gTicRemainder[gPlayerNum] -= tickVblLength;
         
         // Tic all player sprites and advance them to the next state if required
         for (int32_t playerSprIdx = 0; playerSprIdx < NUMPSPRITES; ++playerSprIdx) {

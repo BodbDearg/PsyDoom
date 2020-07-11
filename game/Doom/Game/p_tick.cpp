@@ -596,9 +596,11 @@ void P_Drawer() noexcept {
     // Keep the framerate at 15-Hz for consistent demo playback (4 60Hz vblanks).
     #if PC_PSX_DOOM_MODS
         if (ProgArgs::gbHeadlessMode) {
-            gTotalVBlanks += 4;
+            const int32_t demoTickVBlanks = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
+
+            gTotalVBlanks += demoTickVBlanks;
             gLastTotalVBlanks = gTotalVBlanks;
-            gElapsedVBlanks = 4;
+            gElapsedVBlanks = demoTickVBlanks;
             return;
         }
     #endif

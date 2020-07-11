@@ -1,6 +1,6 @@
-This is a hack which patches the Avocado PSX emulator to make the 'Greatest Hits' version of DOOM to start recording a demo
-upon starting a level. When the level is done, the recorded demo is saved to 'DEMO1.LMP' in the current working directory.
-About 31 minutes of gameplay can be recorded in total.
+This is a hack which patches the Avocado PSX emulator at commit 356191e81f165c52122b165db3efc19c84cc5762 to make the NTSC-U 'Greatest Hits'
+version of Doom (1.1) start recording a demo upon starting a level. When the level is done, the recorded demo is saved to 'DEMO1.LMP' in
+the current working directory. About 31 minutes of gameplay can be recorded in total.
 
 This patch also includes the 'Avocado hack' which loads PSXDOOM.EXE directly upon opening 'Doom.cue'.
 That hack is required here because it preserves the original addresses and offsets as specified in PSXDOOM.EXE.
@@ -14,7 +14,7 @@ index 1e1ae8f..e6cb867 100644
 @@ -93,6 +93,50 @@ bool CPU::executeInstructions(int count) {
          uint32_t maskedPc = PC & 0x1fff'ffff;
          if (maskedPc == 0xa0 || maskedPc == 0xb0 || maskedPc == 0xc0) sys->handleBiosFunction();
-
+ 
 +        // DOOM: hacks for demo recording
 +        if ((maskedPc | 0x80000000) == 0x80013564) {    // G_RunGame(): jal -> MiniLoop
 +            // Prep for demo recording.

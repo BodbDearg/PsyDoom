@@ -56,6 +56,12 @@ bool gbDemoRecording;
 // Is the level being restarted?
 bool gbIsLevelBeingRestarted;
 
+#if PC_PSX_DOOM_MODS
+    // PC-PSX: are we playing an original PAL format demo?
+    // Some game timing adjustments need to be made for that case.
+    bool gbPlayingPalDemo;
+#endif
+
 // An empty map object initially assigned to players during network game setup, for net consistency checks.
 // This is all zeroed out initially.
 static mobj_t gEmptyMObj;
@@ -414,6 +420,11 @@ void G_RunGame() noexcept {
 // Plays back the current demo in the demo buffer
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t G_PlayDemoPtr() noexcept {
+    // Playing a PAL format demo?
+    #if PC_PSX_DOOM_MODS
+        gbPlayingPalDemo = (Game::gGameVariant == GameVariant::PAL);
+    #endif
+
     // Read the demo skill and map number
     gpDemo_p = gpDemoBuffer;
 
@@ -479,9 +490,10 @@ gameaction_t G_PlayDemoPtr() noexcept {
     gLockedTexPagesMask &= 1;
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 
-    // PC-PSX: cleanup the demo pointer when we're done
+    // PC-PSX: cleanup the demo pointer when we're done and mark us as no longer playing a PAL demo (if playing one)
     #if PC_PSX_DOOM_MODS
         gpDemo_p = nullptr;
+        gbPlayingPalDemo = false;
     #endif
 
     return exitAction;

@@ -488,6 +488,13 @@ void I_DrawPresent() noexcept {
     #if PC_PSX_DOOM_MODS
         Video::displayFramebuffer();
     #endif
+
+    // How many vblanks there are in a demo tick
+    #if PC_PSX_DOOM_MODS
+        const int32_t demoTickVBlanks = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
+    #else
+        const int32_t demoTickVBlanks = VBLANKS_PER_TIC;
+    #endif
     
     // Continously poll and wait until the required number of vblanks have elapsed before continuing
     while (true) {
@@ -505,7 +512,7 @@ void I_DrawPresent() noexcept {
         // This prevents the game from ticking if it hasn't met the time requirements.
         #if PC_PSX_DOOM_MODS
             if (Config::gbUncapFramerate) {
-                const int32_t minTickVBlanks = (gbDemoPlayback || gbDemoRecording) ? 4 : 2;
+                const int32_t minTickVBlanks = (gbDemoPlayback || gbDemoRecording) ? demoTickVBlanks : 2;
 
                 if (elapsedVBlanks < minTickVBlanks) {
                     gElapsedVBlanks = 0;
@@ -532,7 +539,7 @@ void I_DrawPresent() noexcept {
     // Demo playback or recording is forced to run at 15 Hz all of the time (the game simulation rate).
     // Probably done so the simulation remains consistent!
     if (gbDemoPlayback || gbDemoRecording) {
-        while (gElapsedVBlanks < 4) {
+        while (gElapsedVBlanks < (uint32_t) demoTickVBlanks) {
             // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
             #if PC_PSX_DOOM_MODS
                 Utils::doPlatformUpdates();
@@ -549,7 +556,7 @@ void I_DrawPresent() noexcept {
             gElapsedVBlanks = gTotalVBlanks - gLastTotalVBlanks;
         }
 
-        gElapsedVBlanks = 4;
+        gElapsedVBlanks = demoTickVBlanks;
     }
 
     // So we can compute the elapsed vblank amount next time round

@@ -620,11 +620,15 @@ gameaction_t MiniLoop(
             // Advance the number of 60 Hz ticks passed.
             // N.B: the tick count used here is ALWAYS for player 1, this is how time is kept in sync for a network game.
             gTicCon += gPlayersElapsedVBlanks[0];
-        
-            // Advance to the next game tick if it is time.
-            // Video refreshes at 60 Hz but the game ticks at 15 Hz:
-            const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
-        
+
+            // Advance to the next game tick if it is time; video refreshes at 60 Hz but the game ticks at 15 Hz.
+            // PC-PSX: some tweaks to get PAL format demos working, if playing those.
+            #if PC_PSX_DOOM_MODS
+                const int32_t tgtGameTicCount = (!gbPlayingPalDemo) ? gTicCon >> VBLANK_TO_TIC_SHIFT : gTicCon / 3;
+            #else
+                const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
+            #endif
+
             if (gLastTgtGameTicCount < tgtGameTicCount) {
                 gLastTgtGameTicCount = tgtGameTicCount;
                 gGameTic++;
