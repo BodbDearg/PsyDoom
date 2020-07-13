@@ -307,12 +307,11 @@ static void P_BuildMove(player_t& player) noexcept {
             player.sidemove += SIDE_MOVE_FDOOM[speedMode];
         }
     } else {
-        const fixed_t moveSpeed = (SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-
+        // N.B: Applying the direction sign here before dividing is *VERY* important for demo compatibility
         if (bStrafeLeft) {
-            player.sidemove -= moveSpeed;
+            player.sidemove += (-SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         } else if (bStrafeRight) {
-            player.sidemove += moveSpeed;
+            player.sidemove += (+SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
     }
 
@@ -326,20 +325,20 @@ static void P_BuildMove(player_t& player) noexcept {
     const int32_t psxMouseMoveY = inputs.psxMouseDy * psxMouseSensitivityY * psxMouseTimeScale;
 
     if (bStrafe) {
-        // Strafe button held: turn buttons and x psx mouse movements translate to strafing
+        // Strafe button held: turn buttons and x psx mouse movements translate to strafing.
+        // Note: this action also overwrites any strafe buttons held.
         if (bIsFinalDoom) {
             if (bTurnLeft) {
-                player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
+                player.sidemove = SIDE_MOVE_FDOOM[speedMode];
             } else if (bTurnRight) {
-                player.sidemove += SIDE_MOVE_FDOOM[speedMode];
+                player.sidemove = SIDE_MOVE_FDOOM[speedMode];
             }
         } else {
-            const fixed_t moveSpeed = (SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-
+            // N.B: Applying the direction sign here before dividing is *VERY* important for demo compatibility
             if (bTurnLeft) {
-                player.sidemove -= moveSpeed;
+                player.sidemove = (-SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
             } else if (bTurnRight) {
-                player.sidemove += moveSpeed;
+                player.sidemove = (+SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
             }
         }
 
@@ -422,12 +421,11 @@ static void P_BuildMove(player_t& player) noexcept {
             player.forwardmove -= FORWARD_MOVE_FDOOM[speedMode];
         }
     } else {
-        const fixed_t moveSpeed = (FORWARD_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-
+        // N.B: Applying the direction sign here before dividing is *VERY* important for demo compatibility
         if (bMoveForward) {
-            player.forwardmove += moveSpeed;
+            player.forwardmove += (+FORWARD_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         } else if (bMoveBackward) {
-            player.forwardmove -= moveSpeed;
+            player.forwardmove += (-FORWARD_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
     }
 

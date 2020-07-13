@@ -1,8 +1,17 @@
+0.5.0:
 - Verify demo compatibility with Final Doom
+    - Record a full playthrough and verify OK
 - Fix Redemption Denied animated floor bug
     - Only enable the animation for Final Doom
     - Check other animations added in case they conflict too
 - Is there a bug with the game not switching to the chaingun (if you have it) when out of shotgun ammo?    
+- Incorporate lost soul spawn limit fix
+    - For Doom make configurable and off by default (20 skulls was the intended limit).
+    - For Final Doom it was fixed and should NOT be configurable - 16 skulls is the limit (see Final Doom diffs)
+- Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
+- Fix the small gaps at the side of the screen during screen fades.
+
+Future:
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.
@@ -10,12 +19,8 @@
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
 - Incorporate the player missile damage fix and make it an optional setting (off by default)
-- Incorporate lost soul spawn limit fix
-    - For Doom make configurable and off by default (20 skulls was the intended limit).
-    - For Final Doom it was fixed and should NOT be configurable - 16 skulls is the limit (see Final Doom diffs)
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
-- Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
 - Make CD audio use the new disc reader and not the emulator CD-ROM.
     - Thread safe and should also work with multi bin .cue.
 - Investigate moving sound processing onto another thread and triggered in demand to output buffer requirements.
@@ -26,8 +31,6 @@
 - Make GPU primitives go more directly to the rasterizer rather than through a buffer.
 - Implement fully bindable/configurable controls.
 - Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
-- Investigate why PAL demos are breaking.
-    - Might need a completely new set of state_t etc. with different timings.    
 - Break the link between the SPU and Avocado 'system' (entire PSX)
 - Break the link between the GPU and Avocado 'system' (entire PSX)
 - Implement playing the intro movies and legal text
@@ -53,7 +56,6 @@
 - Allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Automap zoom/pan with mouse.
 - Make file overrides (basic mod system) work on MacOS
-- Fix the small gaps at the side of the screen during screen fades.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Support a clean exit from the game everywhere (except I_Error)
 - Replace I_Error with an error dialog?
