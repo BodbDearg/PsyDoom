@@ -301,9 +301,12 @@ static void P_BuildMove(player_t& player) noexcept {
     
     // Do strafe left/right controls
     if (bIsFinalDoom) {
+        // N.B: for Final Doom the movements CAN cancel here
         if (bStrafeLeft) {
             player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
-        } else if (bStrafeRight) {
+        }
+        
+        if (bStrafeRight) {
             player.sidemove += SIDE_MOVE_FDOOM[speedMode];
         }
     } else {
@@ -326,15 +329,15 @@ static void P_BuildMove(player_t& player) noexcept {
 
     if (bStrafe) {
         // Strafe button held: turn buttons and x psx mouse movements translate to strafing.
-        // Note: this action also overwrites any strafe buttons held.
         if (bIsFinalDoom) {
             if (bTurnLeft) {
-                player.sidemove = SIDE_MOVE_FDOOM[speedMode];
+                player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
             } else if (bTurnRight) {
-                player.sidemove = SIDE_MOVE_FDOOM[speedMode];
+                player.sidemove += SIDE_MOVE_FDOOM[speedMode];
             }
         } else {
-            // N.B: Applying the direction sign here before dividing is *VERY* important for demo compatibility
+            // Note that for the original Doom this action also overwrites any strafe buttons held.
+            // N.B: Applying the direction sign here before dividing is *VERY* important for demo compatibility.
             if (bTurnLeft) {
                 player.sidemove = (-SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
             } else if (bTurnRight) {
