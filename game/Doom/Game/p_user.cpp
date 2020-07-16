@@ -501,7 +501,14 @@ static void P_CalcHeight(player_t& player) noexcept {
         const int32_t speedY = mobj.momy >> 8;
 
         player.bob = (speedX * speedX) + (speedY * speedY);
-        player.bob >>= 4;
+
+        // For some reason the PAL version divides this amount by 3 rather than 8...
+        if (gbPlayingPalDemo) {
+            player.bob /= 3;
+        } else {
+            player.bob >>= 4;
+        }
+
         player.bob = std::min(player.bob, MAXBOB);
     }
     

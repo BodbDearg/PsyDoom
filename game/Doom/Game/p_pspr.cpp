@@ -798,7 +798,7 @@ void P_MovePsprites(player_t& player) noexcept {
     #endif
 
     // Keep simulating player sprite tics while we are behind by one tick
-    gTicRemainder[gPlayerNum] += gPlayersElapsedVBlanks[gPlayerNum]; 
+    gTicRemainder[gPlayerNum] += gPlayersElapsedVBlanks[gPlayerNum];
     
     while (gTicRemainder[gPlayerNum] >= tickVblLength) {
         gTicRemainder[gPlayerNum] -= tickVblLength;
