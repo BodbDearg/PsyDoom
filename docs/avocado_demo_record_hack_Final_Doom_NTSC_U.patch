@@ -1,0 +1,84 @@
+This is a hack which patches the Avocado PSX emulator at commit 356191e81f165c52122b165db3efc19c84cc5762 to make the PAL version
+of Final Doom start recording a demo upon starting a level. When the level is done, the recorded demo is saved to 'DEMO1.LMP' in
+the current working directory. About 31 minutes of gameplay can be recorded in total.
+
+This patch also includes the 'Avocado hack' which loads PSXDOOM.EXE directly upon opening 'Doom.cue'.
+That hack is required here because it preserves the original addresses and offsets as specified in PSXDOOM.EXE.
+When PSXDOOM.EXE is launched as a child process via 'SLES_004.87' the addresses shift somewhat.
+============================================================================================================================================
+
+diff --git a/src/cpu/cpu.cpp b/src/cpu/cpu.cpp
+index 1e1ae8f..e6cb867 100644
+--- a/src/cpu/cpu.cpp
++++ b/src/cpu/cpu.cpp
+@@ -93,6 +93,53 @@ bool CPU::executeInstructions(int count) {
+         uint32_t maskedPc = PC & 0x1fff'ffff;
+         if (maskedPc == 0xa0 || maskedPc == 0xb0 || maskedPc == 0xc0) sys->handleBiosFunction();
+ 
++        // DOOM: hacks for demo recording
++        if ((maskedPc | 0x80000000) == 0x80013A14) {    // G_RunGame(): jal -> MiniLoop
++            // Prep for demo recording.
++            // Use the expansion area (starting 0x1F000000, 8 MiB) to record.
++            sys->writeMemory32(0x8007854C, 1);                                  // gbDemoRecording = true
++            sys->writeMemory32(0x1F000000, sys->readMemory32(0x80078600));      // ((uint32_t*) EXPANSION)[0] = gGameSkill
++            sys->writeMemory32(0x1F000004, sys->readMemory32(0x800783E4));      // ((uint32_t*) EXPANSION)[1] = gGameMap
++            sys->writeMemory32(0x1F000008, sys->readMemory32(0x80074B08));      // ((uint32_t*) EXPANSION)[2] = gCtrlBindings[0]
++            sys->writeMemory32(0x1F00000C, sys->readMemory32(0x80074B0C));      // ((uint32_t*) EXPANSION)[3] = gCtrlBindings[1]
++            sys->writeMemory32(0x1F000010, sys->readMemory32(0x80074B10));      // ((uint32_t*) EXPANSION)[4] = gCtrlBindings[2]
++            sys->writeMemory32(0x1F000014, sys->readMemory32(0x80074B14));      // ((uint32_t*) EXPANSION)[5] = gCtrlBindings[3]
++            sys->writeMemory32(0x1F000018, sys->readMemory32(0x80074B18));      // ((uint32_t*) EXPANSION)[6] = gCtrlBindings[4]
++            sys->writeMemory32(0x1F00001C, sys->readMemory32(0x80074B1C));      // ((uint32_t*) EXPANSION)[7] = gCtrlBindings[5]
++            sys->writeMemory32(0x1F000020, sys->readMemory32(0x80074B20));      // ((uint32_t*) EXPANSION)[8] = gCtrlBindings[6]
++            sys->writeMemory32(0x1F000024, sys->readMemory32(0x80074B24));      // ((uint32_t*) EXPANSION)[9] = gCtrlBindings[7]
++            sys->writeMemory32(0x1F000028, sys->readMemory32(0x80074B28));      // ((uint32_t*) EXPANSION)[10] = gCtrlBindings[8]
++            sys->writeMemory32(0x1F00002C, sys->readMemory32(0x80074B2C));      // ((uint32_t*) EXPANSION)[11] = gCtrlBindings[9]
++            sys->writeMemory32(0x1F000030, sys->readMemory32(0x80077FB4));      // ((uint32_t*) EXPANSION)[12] = gMouseSensitivity
++            sys->writeMemory32(0x80077958, 0x1F000000);                         // gpDemoBuffer = &((uint32_t*) EXPANSION)[0]
++            sys->writeMemory32(0x8007795C, 0x1F000034);                         // gpDemo_p     = &((uint32_t*) EXPANSION)[13]
++
++            // Patch the comparison instruction at 80013120 to allow for slightly bigger demos (in case it's required)
++            //
++            // Change the code from:
++            //  'SLTI $v0 $v0 0x4000' (0x28424000)
++            // To:
++            //  'SLTI $v0 $v0 0x7000' (0x28427000)
++            //
++            // This is the comparison 'if (demoTicksElapsed >= MAX_DEMO_TICKS)'
++            // And the update changes 'MAX_DEMO_TICS' from '16384' to '28672' (31 minutes of gameplay)
++            //
++            sys->writeMemory32(0x80013120, 0x28427000);
++        }
++        else if ((maskedPc | 0x80000000) == 0x80013A24) {   // G_RunGame(): sw $zero, [$gp + A40]         ; Store to: gbIsLevelBeingRestarted (80078390)
++            // End demo recording and save the demo file
++            const uint32_t endDemoP = sys->readMemory32(0x8007795C);
++            const int32_t demoSize = (int32_t)(endDemoP - 0x1F000000u);
++            std::FILE* const pFile = std::fopen("DEMO1.LMP", "wb");
++
++            if (pFile) {
++                std::fwrite(sys->expansion.data(), demoSize, 1, pFile);
++                std::fflush(pFile);
++            }
++
++            std::fclose(pFile);
++        }
++
+         saveStateForException();
+         checkForInterrupts();
+         handleHardwareBreakpoints();
+diff --git a/src/system_tools.cpp b/src/system_tools.cpp
+index 688cdae..52bbf11 100644
+--- a/src/system_tools.cpp
++++ b/src/system_tools.cpp
+@@ -88,6 +88,12 @@ void loadFile(std::unique_ptr<System>& sys, const std::string& path) {
+     if (disc) {
+         sys->cdrom->disc = std::move(disc);
+         sys->cdrom->setShell(false);
++
++        sys->loadBios("C:\\Bin\\avocado_psx_emulator\\data\\bios\\SCPH1001.bin");
++        sys->cpu->breakpoints.emplace(0x80030000, mips::CPU::Breakpoint(true));
++        while (sys->state == System::State::run) sys->emulateFrame();
++        sys->loadExeFile(getFileContents("C:\\Bin\\avocado_psx_emulator\\data\\iso\\PSXDOOM.EXE"));
++
+         toast(fmt::format("{} loaded", filenameExt));
+     } else {
+         toast(fmt::format("Cannot load {}", filenameExt));
