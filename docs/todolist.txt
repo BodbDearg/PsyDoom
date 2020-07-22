@@ -11,9 +11,6 @@
     - Check other animations added in case they conflict too
 - Double sound buffer size (or more?)
 - Is there a bug with the game not switching to the chaingun (if you have it) when out of shotgun ammo?    
-- Incorporate lost soul spawn limit fix
-    - For Doom make configurable and off by default (20 skulls was the intended limit).
-    - For Final Doom it was fixed and should NOT be configurable - 16 skulls is the limit (see Final Doom diffs)
 - Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
 - Incorporate network protocol version into multiplayer game setup packet.
 - Fix the small gaps at the side of the screen during screen fades.
@@ -33,6 +30,7 @@ Future:
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
 - Incorporate the player missile damage fix and make it an optional setting (off by default)
+- Allow the Lost Soul limit to be configurable (default off for PSX Doom, 16 for Final Doom)
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
 - Make CD audio use the new disc reader and not the emulator CD-ROM.

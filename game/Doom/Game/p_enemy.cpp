@@ -20,6 +20,7 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
+#include "PcPsx/Game.h"
 
 #include <algorithm>
 
@@ -964,8 +965,9 @@ void A_SkullAttack(mobj_t& actor) noexcept {
 // If the skull is spawned in a wall, then it is immediately killed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
-    // PC-PSX: disabling this logic as it was broken in PSX DOOM and NEVER limits the amount of skulls in a map.
-    // It effectively did nothing except consuming CPU cycles.
+    // PC-PSX: disabling this logic as it was broken in the original PSX DOOM and NEVER limits the amount of skulls in a map.
+    // It effectively did nothing except consuming CPU cycles. Note also that Final Doom fixes this issue and limits the skull
+    // count to '16', instead of the original limit of '24' on PC.
     //
     // In PC Doom 'mobj_t' used to be a thinker but in Jaguar Doom changes were made so that 'mobj_t' is no longer a thinker
     // or found in the global list of thinkers. In PSX Doom no thinker will ever have 'P_MobjThinker' assigned to it as the
@@ -980,7 +982,6 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     // skulls found in that list. We can't fix the issue however for PSX Doom without breaking demo compatibility, so I'm
     // just going to disable the code instead since it is somewhat ill formed (with strange casts), and does nothing.
     //
-    // TODO: fix the lost soul limit and make the fix configurable
     #if !PC_PSX_DOOM_MODS
         // Count the number of skulls active in the level: if there are 21 or more then don't spawn any additional ones
         int32_t numActiveSkulls = 0;
@@ -997,6 +998,23 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
         if (numActiveSkulls >= 21)
             return;
     #endif
+
+    // Corrected logic from Final Doom for limiting the skull count.
+    // TODO: make the skull limit configurable.
+    const int32_t skullLimit = (Game::isFinalDoom()) ? 16 : -1;
+
+    if (skullLimit > 0) {
+        int32_t numSkulls = 0;
+
+        for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
+            if (pmobj->type == MT_SKULL) {
+                numSkulls++;
+
+                if (numSkulls > skullLimit)
+                    return;
+            }
+        }
+    }
 
     // Figure out where to spawn the skull
     const fixed_t spawnDist = gMObjInfo[MT_SKULL].radius + actor.info->radius + 4 * FRACUNIT;
