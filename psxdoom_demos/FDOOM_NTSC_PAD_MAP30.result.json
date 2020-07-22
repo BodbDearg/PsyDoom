@@ -1,0 +1,52 @@
+{
+    "player": {
+        "x": -132028419,
+        "y": 83589288,
+        "z": 1966080,
+        "angle": 3444572160,
+        "momx": -246120,
+        "momy": -996240,
+        "momz": -262144,
+        "health": 200,
+        "armorpoints": 200,
+        "armortype": 2,
+        "powers": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ],
+        "cards": [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+        ],
+        "backpack": 1,
+        "readyweapon": 6,
+        "weaponowned": [
+            1,
+            1,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0
+        ],
+        "ammo": [
+            155,
+            96,
+            163,
+            39
+        ],
+        "killcount": 73,
+        "itemcount": 3,
+        "secretcount": 1
+    }
+}
