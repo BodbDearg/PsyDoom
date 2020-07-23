@@ -17,9 +17,16 @@ demosets = {
     "doom_ntsc" : {
         "cue_file" : "Doom_NTSC.cue",
         "tests" : [
-            [ "DOOM_MAP{0:02}.LMP".format(i), "DOOM_MAP{0:02}.result.json".format(i) ] for i in range(1, 60)
+            [ "DOOM_NTSC_MAP{0:02}.LMP".format(i), "DOOM_NTSC_MAP{0:02}.result.json".format(i) ] for i in range(1, 60)
         ]
-    }
+    },
+    # Final Doom: NTSC-U or NTSC-J (Gamepad playthrough) 
+    "final_doom_pad_ntsc" : {
+        "cue_file" : "FinalDoom_NTSC.cue",
+        "tests" : [
+            [ "FDOOM_NTSC_PAD_MAP{0:02}.LMP".format(i), "FDOOM_NTSC_PAD_MAP{0:02}.result.json".format(i) ] for i in range(1, 30)
+        ]
+    },
 }
 
 # This function executes the demo in a worker process
@@ -72,7 +79,7 @@ def main():
     all_tests_passed = True
     start_time = time.time()
     jobs = []
-    
+
     for demoset in run_demosets:
         for demo_and_result in demoset["tests"]:
             job = multiprocessing.Process(
