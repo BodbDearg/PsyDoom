@@ -42,8 +42,11 @@ demosets = {
             # Gamepad playthrough
             [ "FDOOM_NTSC_PAD_MAP{0:02}.LMP".format(i), "FDOOM_NTSC_PAD_MAP{0:02}.result.json".format(i) ] for i in range(1, 31)
         ] + [
-            # Mouse playthrough
-            # TODO: Record demos
+            # Mouse demos - just a couple to verify mouse controls
+            [ "FDOOM_NTSC_MOUSE_MAP01.LMP", "FDOOM_NTSC_MOUSE_MAP01.result.json" ],
+            [ "FDOOM_NTSC_MOUSE_MAP02.LMP", "FDOOM_NTSC_MOUSE_MAP02.result.json" ],
+            [ "FDOOM_NTSC_MOUSE_MAP16.LMP", "FDOOM_NTSC_MOUSE_MAP16.result.json" ],
+            [ "FDOOM_NTSC_MOUSE_MAP17.LMP", "FDOOM_NTSC_MOUSE_MAP17.result.json" ],
         ] + [
             # Original game demos - make sure these work too
             [ "FDOOM_NTSC_DEMO1.LMP", "FDOOM_NTSC_DEMO1.result.json" ],
