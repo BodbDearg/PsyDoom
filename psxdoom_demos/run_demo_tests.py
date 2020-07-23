@@ -13,14 +13,17 @@ import time
 
 # These are the lists of demo sets and expected result files
 demosets = {
-    # PSX DOOM: "Greatest Hits" edition (v1.1)
-    "doom" : [
-        [ "DOOM_MAP{0:02}.LMP".format(i), "DOOM_MAP{0:02}.result.json".format(i) ] for i in range(1, 60)
-    ]
+    # PSX Doom: NTSC-U or NTSC-J, original or Greatest Hits (1.1)
+    "doom_ntsc" : {
+        "cue_file" : "Doom_NTSC.cue",
+        "tests" : [
+            [ "DOOM_MAP{0:02}.LMP".format(i), "DOOM_MAP{0:02}.result.json".format(i) ] for i in range(1, 60)
+        ]
+    }
 }
 
 # This function executes the demo in a worker process
-def run_demo(demo_and_result, psydoom_path, demos_dir):
+def run_demo(psydoom_path, cue_file_path, demos_dir, demo_and_result):
     # Show what demo we are about to run
     demo_path = os.path.join(demos_dir, demo_and_result[0])
     result_path = os.path.join(demos_dir, demo_and_result[1])    
@@ -28,7 +31,7 @@ def run_demo(demo_and_result, psydoom_path, demos_dir):
     # Execute the demo using PsyDoom in headless mode and verify the result.
     # PsyDoom will return '0' if the demo was successful.
     result = subprocess.call(
-        [psydoom_path, "-headless", "-playdemo", demo_path, "-checkresult", result_path],
+        [psydoom_path, "-cue", cue_file_path, "-headless", "-playdemo", demo_path, "-checkresult", result_path],
         shell=False,
         stdout=subprocess.PIPE,     # Hide output
         stderr=subprocess.PIPE      # Hide output
@@ -46,28 +49,38 @@ def run_demo(demo_and_result, psydoom_path, demos_dir):
 def main():    
     # Verify program args
     if len(sys.argv) != 4:
-        print("Usage: python run_demo_tests.py <demoset> <psydoom_path> <demos_dir>")
+        print("Usage: python run_demo_tests.py <demoset|all> <psydoom_path> <demos_dir>")
         sys.exit(1)
 
     psydoom_path = sys.argv[2]
     demos_dir = sys.argv[3]
 
-    # Verify demoset is okay
-    demoset = demosets.get(sys.argv[1])
+    # Verify demoset argument is okay or 'all' is specified
+    demoset_arg = sys.argv[1]
+    single_demoset = demosets.get(demoset_arg)
 
-    if not demoset:
-        print("Invalid demoset '{0:s}'!".format(sys.argv[1]))
+    if not single_demoset and demoset_arg != "all":
+        print("Invalid demoset '{0:s}'!".format(demoset_arg))
         sys.exit(1)
+
+    if single_demoset:
+        run_demosets = [ single_demoset ]
+    else:
+        run_demosets = demosets.values()
 
     # Start running the demos and verify they match the expected results
     all_tests_passed = True
     start_time = time.time()
     jobs = []
-
-    for demo_and_result in demoset:
-        job = multiprocessing.Process(target=run_demo, args=(demo_and_result, psydoom_path, demos_dir,))
-        job.start()
-        jobs.append(job)
+    
+    for demoset in run_demosets:
+        for demo_and_result in demoset["tests"]:
+            job = multiprocessing.Process(
+                target=run_demo,
+                args=(psydoom_path, demoset["cue_file"], demos_dir, demo_and_result)
+            )
+            job.start()
+            jobs.append(job)
 
     for job in jobs:
         job.join()
