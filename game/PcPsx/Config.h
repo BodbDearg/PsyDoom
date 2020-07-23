@@ -3,6 +3,7 @@
 BEGIN_NAMESPACE(Config)
 
 // Game settings
+const char*     getCueFilePath() noexcept;
 extern bool     gbUncapFramerate;
 
 // Video settings

@@ -5,6 +5,7 @@
 
 BEGIN_NAMESPACE(ProgArgs)
 
+extern const char*  gCueFileOverride;
 extern bool         gbHeadlessMode;
 extern const char*  gDataDirPath;
 extern const char*  gPlayDemoFilePath;

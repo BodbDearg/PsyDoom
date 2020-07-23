@@ -40,9 +40,10 @@ int psx_main(const int argc, const char** const argv) noexcept {
         Config::init();
         Input::init();
 
-        // Initialize the emulated PSX components using the PSX Doom disc (supplied as a .cue file).
-        // TODO: make this path configurable.
-        if (!PsxVm::init("Doom.cue"))
+        // Initialize the emulated PSX components using the PSX Doom disc (supplied as a .cue file)
+        const char* const cueFilePath = (ProgArgs::gCueFileOverride) ? ProgArgs::gCueFileOverride : Config::getCueFilePath();
+
+        if (!PsxVm::init(cueFilePath))
             return 1;
 
         // Determine the game type and variant and initialize the table of files on the CD from the file system

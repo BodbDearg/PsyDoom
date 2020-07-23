@@ -123,15 +123,6 @@ static void rescanGameControllers() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tells if the window is currently focused
-//------------------------------------------------------------------------------------------------------------------------------------------
-static bool windowHasFocus() noexcept {
-    constexpr uint32_t FOCUSED_WINDOW_FLAGS = SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
-    const uint32_t windowFlags = SDL_GetWindowFlags(Video::getWindow());
-    return ((windowFlags & FOCUSED_WINDOW_FLAGS) == FOCUSED_WINDOW_FLAGS);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Handle events sent by SDL (keypresses and such)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void handleSdlEvents() noexcept {

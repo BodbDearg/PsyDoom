@@ -5,8 +5,9 @@
 #include "IniUtils.h"
 #include "Utils.h"
 
-#include <SDL.h>
 #include <functional>
+#include <SDL.h>
+#include <string>
 #include <vector>
 
 BEGIN_NAMESPACE(Config)
@@ -39,6 +40,9 @@ struct ConfigFieldHandler {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Graphics config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
+bool    gbFullscreen;
+bool    gbFloorRenderGapFix;
+
 static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     {
         "Fullscreen",
@@ -60,16 +64,31 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "FloorRenderGapFix = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
         []() { gbFloorRenderGapFix = true; }
-    }
+    },
 };
-
-bool    gbFullscreen;
-bool    gbFloorRenderGapFix;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Game config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
+static std::string      gCueFilePath;
+bool                    gbUncapFramerate;
+
+const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
+
 static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
+    {
+        "CueFilePath",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Path to the .cue file for the PlayStation 'Doom' or 'Final Doom' disc, or other supported mod.\n"
+        "# A valid .cue (cue sheet) file for the desired game must be provided in order to run PsyDoom.\n"
+        "# A relative or absolute path can be used; relative paths are relative to the current OS working\n"
+        "# directory, which is normally the directory that the PsyDoom executable is found in.\n"
+        "# Note: this setting can also be overriden with the '-cue <CUE_PATH>' command-line argument.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "CueFilePath = Doom.cue\n",
+        [](const IniUtils::Entry& iniEntry) { gCueFilePath = iniEntry.value; },
+        []() { gCueFilePath = "Doom.cue"; }
+    },
     {
         "UncapFramerate",
         "#---------------------------------------------------------------------------------------------------\n"
@@ -80,14 +99,19 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "UncapFramerate = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },
         []() { gbUncapFramerate = true; }
-    }
+    },
 };
-
-bool    gbUncapFramerate;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Input config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
+float   gMouseTurnSpeed;
+float   gGamepadDeadZone;
+float   gGamepadFastTurnSpeed_High;
+float   gGamepadFastTurnSpeed_Low;
+float   gGamepadTurnSpeed_High;
+float   gGamepadTurnSpeed_Low;
+
 static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
     {
         "MouseTurnSpeed",
@@ -144,13 +168,6 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         []() { gGamepadTurnSpeed_Low = 600.0f; }
     },
 };
-
-float   gMouseTurnSpeed;
-float   gGamepadDeadZone;
-float   gGamepadFastTurnSpeed_High;
-float   gGamepadFastTurnSpeed_Low;
-float   gGamepadTurnSpeed_High;
-float   gGamepadTurnSpeed_Low;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Other config parser related state
