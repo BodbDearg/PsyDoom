@@ -3,7 +3,7 @@
 # Used for automated testing of the game.
 #
 # Usage:
-#   python run_demo_tests.py <demoset> <psydoom_path> <demos_dir>
+#   python run_demo_tests.py <demoset|all> <psydoom_path> <demos_dir>
 ############################################################################################################################################
 import multiprocessing
 import os
