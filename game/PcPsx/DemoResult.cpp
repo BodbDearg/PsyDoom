@@ -158,7 +158,11 @@ static const rapidjson::Value& getJsonFieldOrNull(const rapidjson::Value& jsonOb
 template <class T>
 static bool verifyJsonFieldMatches(const rapidjson::Value& jsonObj, const char* const fieldName, const T expectedVal) noexcept {
     const rapidjson::Value& field = getJsonFieldOrNull(jsonObj, fieldName);
-    return (field.Is<T>() && (field.Get<T>() == expectedVal));
+
+    if ((!field.Is<T>()) || (field.Get<T>() != expectedVal))
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -222,7 +226,7 @@ bool verifyMatchesJsonFileResult(const char* const jsonFilePath) noexcept {
         verifyJsonFieldMatches(playerJson, "momx", mobj.momx) &&
         verifyJsonFieldMatches(playerJson, "momy", mobj.momy) &&
         verifyJsonFieldMatches(playerJson, "momz", mobj.momz) &&
-        verifyJsonFieldMatches(playerJson, "health", mobj.health) &&
+        verifyJsonFieldMatches(playerJson, "health", player.health) &&
         verifyJsonFieldMatches(playerJson, "armorpoints", player.armorpoints) &&
         verifyJsonFieldMatches(playerJson, "armortype", player.armortype) &&
         verifyJsonArrayFieldMatches<int32_t>(playerJson, "powers", player.powers, NUMPOWERS) &&                 // N.B: is serialized as int
