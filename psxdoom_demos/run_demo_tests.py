@@ -18,13 +18,51 @@ demosets = {
         "cue_file" : "Doom_NTSC.cue",
         "tests" : [
             [ "DOOM_NTSC_MAP{0:02}.LMP".format(i), "DOOM_NTSC_MAP{0:02}.result.json".format(i) ] for i in range(1, 60)
+        ] + [
+            # Original game demos - make sure these work too
+            [ "DOOM_NTSC_DEMO1.LMP", "DOOM_NTSC_DEMO1.result.json" ],
+            [ "DOOM_NTSC_DEMO2.LMP", "DOOM_NTSC_DEMO2.result.json" ]
         ]
     },
-    # Final Doom: NTSC-U or NTSC-J (Gamepad playthrough) 
-    "final_doom_pad_ntsc" : {
+    # PSX Doom: PAL, original or Platinum (1.1)
+    "doom_pal" : {
+        "cue_file" : "Doom_PAL.cue",
+        "tests" :  [
+            # TODO: Record demos
+        ] + [
+            # Original game demos - make sure these work too
+            [ "DOOM_PAL_DEMO1.LMP", "DOOM_PAL_DEMO1.result.json" ],
+            [ "DOOM_PAL_DEMO2.LMP", "DOOM_PAL_DEMO2.result.json" ]
+        ]
+    },
+    # Final Doom: NTSC-U or NTSC-J
+    "final_doom_ntsc" : {
         "cue_file" : "FinalDoom_NTSC.cue",
         "tests" : [
-            [ "FDOOM_NTSC_PAD_MAP{0:02}.LMP".format(i), "FDOOM_NTSC_PAD_MAP{0:02}.result.json".format(i) ] for i in range(1, 30)
+            # Gamepad playthrough
+            [ "FDOOM_NTSC_PAD_MAP{0:02}.LMP".format(i), "FDOOM_NTSC_PAD_MAP{0:02}.result.json".format(i) ] for i in range(1, 31)
+        ] + [
+            # Mouse playthrough
+            # TODO: Record demos
+        ] + [
+            # Original game demos - make sure these work too
+            [ "FDOOM_NTSC_DEMO1.LMP", "FDOOM_NTSC_DEMO1.result.json" ],
+            [ "FDOOM_NTSC_DEMO2.LMP", "FDOOM_NTSC_DEMO2.result.json" ]
+        ]
+    },
+    # Final Doom: PAL
+    "final_doom_pal" : {
+        "cue_file" : "FinalDoom_PAL.cue",
+        "tests" : [
+            # Gamepad playthrough
+            # TODO: Record demos
+        ] + [
+            # Mouse playthrough
+            # TODO: Record demos
+        ] + [
+            # Original game demos - make sure these work too
+            [ "FDOOM_PAL_DEMO1.LMP", "FDOOM_PAL_DEMO1.result.json" ],
+            [ "FDOOM_PAL_DEMO2.LMP", "FDOOM_PAL_DEMO2.result.json" ]
         ]
     },
 }
