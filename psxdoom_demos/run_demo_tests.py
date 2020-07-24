@@ -58,10 +58,14 @@ demosets = {
         "cue_file" : "FinalDoom_PAL.cue",
         "tests" : [
             # Gamepad playthrough
+            [ "FDOOM_PAL_PAD_MAP{0:02}.LMP".format(i), "FDOOM_PAL_PAD_MAP{0:02}.result.json".format(i) ] for i in range(1, 21)
+        ] + [
+            # Mouse demos - just a couple to verify mouse controls
             # TODO: Record demos
         ] + [
-            # Mouse playthrough
-            # TODO: Record demos
+            # These demos were problem cases previously
+            [ "FDOOM_PAL_PAD_MAP01_2.LMP", "FDOOM_PAL_PAD_MAP01_2.result.json" ],
+            [ "FDOOM_PAL_PAD_MAP01_3.LMP", "FDOOM_PAL_PAD_MAP01_3.result.json" ],
         ] + [
             # Original game demos - make sure these work too
             [ "FDOOM_PAL_DEMO1.LMP", "FDOOM_PAL_DEMO1.result.json" ],
