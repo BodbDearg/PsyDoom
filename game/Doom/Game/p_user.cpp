@@ -418,9 +418,12 @@ static void P_BuildMove(player_t& player) noexcept {
 
     // Do forward/backward movement controls
     if (bIsFinalDoom) {
+        // N.B: for Final Doom the movements CAN cancel here
         if (bMoveForward) {
             player.forwardmove += FORWARD_MOVE_FDOOM[speedMode];
-        } else if (bMoveBackward) {
+        }
+
+        if (bMoveBackward) {
             player.forwardmove -= FORWARD_MOVE_FDOOM[speedMode];
         }
     } else {
