@@ -618,7 +618,7 @@ static void P_DeathThink(player_t& player) noexcept {
     P_MovePsprites(player);
 
     // Lower the view to the ground
-    if (player.viewheight > 0x80000) {
+    if (player.viewheight > 8 * FRACUNIT) {
         player.viewheight -= FRACUNIT;
     }
 

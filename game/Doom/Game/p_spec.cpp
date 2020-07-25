@@ -252,7 +252,7 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
         int32_t numHigherHeights = 0;
 
         for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-            line_t& line = *sector.lines[lineIdx].get();
+            line_t& line = *sector.lines[lineIdx];
             sector_t* const pNextSector = getNextSector(line, sector);
 
             if (pNextSector && (pNextSector->floorheight > baseHeight)) {
@@ -265,7 +265,7 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
         fixed_t minHigherHeight = higherHeights[0];
 
         for (int32_t i = 1; i < numHigherHeights; ++i) {
-            minHigherHeight = std::min(minHigherHeight, higherHeights[i]);
+            minHigherHeight = (minHigherHeight < higherHeights[i]) ? minHigherHeight : higherHeights[i];
         }
 
         return minHigherHeight;
