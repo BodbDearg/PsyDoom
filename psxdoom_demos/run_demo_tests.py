@@ -58,7 +58,7 @@ demosets = {
         "cue_file" : "FinalDoom_PAL.cue",
         "tests" : [
             # Gamepad playthrough
-            [ "FDOOM_PAL_PAD_MAP{0:02}.LMP".format(i), "FDOOM_PAL_PAD_MAP{0:02}.result.json".format(i) ] for i in range(1, 21)
+            [ "FDOOM_PAL_PAD_MAP{0:02}.LMP".format(i), "FDOOM_PAL_PAD_MAP{0:02}.result.json".format(i) ] for i in range(1, 25)
         ] + [
             # Mouse demos - just a couple to verify mouse controls
             # TODO: Record demos
