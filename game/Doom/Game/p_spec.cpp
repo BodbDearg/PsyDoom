@@ -226,7 +226,21 @@ fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept {
 // It also no longer overflows buffers when checking > 20 adjoining sectors.
 //------------------------------------------------------------------------------------------------------------------------------------------
 fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexcept {
-    // PC-PSX: rewrite this to eliminate potential buffer overflow and also an undefined answer when there is no next higher floor
+    // PC-PSX: rewrite this to eliminate potential buffer overflow and also an undefined answer when there is no next higher floor.
+    // Note that the PC version does NOT have the undefined height/answer bug - it returns the input height when there is no next highest floor.
+    // The PC version DOES have a limit of 20 adjacent sectors however, so it can miss stuff in more complex maps.
+    //
+    // For an example of where this bug produced undefined behavior in PSX Doom see MAP24 in Final Doom, 'Heck'.
+    // In the area leading down to the yellow skull key, you cross a line to trigger a platform to rise to the floor level.
+    // The same trigger also causes the floor in a small alcove to rise and meet the floor, releasing Imps upon the player.
+    // If you go into the alcove previously containing the Imps then the same 'rise to next highest floor' action is triggered again
+    // on both sectors. For the alcove sector it rises up to meet a ledge, but for the platform there is no next highest sector so
+    // undefined behavior will result. During playtesting and demo recording in the Avocado emulator I found this caused the platform
+    // to rise slightly again, creating a small lip with the floor surrounding it. Since the behavior relies on on an uninitialized stack
+    // value however, recreating this behavior exactly in PsyDoom would be extremely difficult or impossible. Because of this the demo
+    // I recorded did de-synchronize when played back in PsyDoom and this is unfortunately unavoidable as undefined behavior is by
+    // definition not reproducible under anything but the exact same hardware, execution conditions and compiler etc.
+    //
     #if PC_PSX_DOOM_MODS
         fixed_t nextHighestFloor = INT32_MAX;
 
