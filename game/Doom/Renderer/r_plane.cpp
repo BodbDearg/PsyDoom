@@ -195,8 +195,8 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         }
     }
 
-    // PC-PSX: sanity check these bounds and get whether to apply the floor gap fix
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: sanity check these bounds and get whether to apply the floor gap fix
+    #if PSYDOOM_MODS
         ASSERT((planeBegY >= planeEndY) || (planeBegY >= 0 && planeBegY <  VIEW_3D_H));
         ASSERT((planeBegY >= planeEndY) || (planeEndY >= 0 && planeEndY <= VIEW_3D_H));
 
@@ -379,12 +379,12 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
             const int32_t uStep = (spanUR - spanUL) / numSpanPieces;
             const int32_t vStep = (spanVR - spanVL) / numSpanPieces;
 
-            // PC-PSX: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
+            // PsyDoom: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
             // Store the coords where the last span should end, and use those for the right side of the last span instead of
             // the somewhat truncated/imprecise stepped coords.
             // 
             // TODO: make this tweak configurable according to user prefs.
-            #if PC_PSX_DOOM_MODS
+            #if PSYDOOM_MODS
                 const int32_t origSpanR = spanR;
                 const int32_t origSpanUR = spanUR;
                 const int32_t origSpanVR = spanVR;
@@ -397,9 +397,9 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 spanUR = spanUL + uStep;
                 spanVR = spanVL + vStep;
 
-                // PC-PSX: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
+                // PsyDoom: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
                 // TODO: make this tweak configurable according to user prefs.
-                #if PC_PSX_DOOM_MODS
+                #if PSYDOOM_MODS
                     if (bFixFloorGaps) {
                         if (pieceIdx + 1 >= numSpanPieces) {
                             spanR = origSpanR;

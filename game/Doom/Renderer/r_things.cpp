@@ -46,8 +46,8 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
             if (pThing->subsector != &subsec)
                 continue;
 
-            // PC-PSX: don't draw this player's thing
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: don't draw this player's thing
+            #if PSYDOOM_MODS
                 if (pThing->player && (pThing->player == &gPlayers[gCurPlayerIndex]))
                     continue;
             #endif

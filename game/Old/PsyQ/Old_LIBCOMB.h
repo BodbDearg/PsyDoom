@@ -1,6 +1,6 @@
 #pragma once
 
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 #include <cstdint>
 

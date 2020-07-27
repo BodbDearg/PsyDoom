@@ -230,9 +230,9 @@ static fixed_t SL_CrossFrac() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the line defined by P1/P2 crosses the line defined by P3/P4; this function is unused in PSX Doom.
 //
-// PC-PSX: not compiling this as it generates an unused warning.
+// PsyDoom: not compiling this as it generates an unused warning.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 static bool CheckLineEnds() noexcept {
     // Compute line normal

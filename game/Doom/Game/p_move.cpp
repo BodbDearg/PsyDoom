@@ -143,9 +143,9 @@ void P_TryMove2() noexcept {
 // Tell what side of the given line a point is on: returns '0' if on the front side, '1' if on the back side.
 // Same logic as 'R_PointOnSide' pretty much, but without the special optimized cases.
 //
-// PC-PSX: not compiling this as it is unused, and generates an unused warning.
+// PsyDoom: not compiling this as it is unused, and generates an unused warning.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 static int32_t PM_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept {
     const int32_t dx = x - line.vertex1->x;
@@ -155,7 +155,7 @@ static int32_t PM_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t
     return (rprod >= lprod);
 }
 
-#endif  // !PC_PSX_DOOM_MODS
+#endif  // !PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Unlinks the given thing from sector thing lists and the blockmap.
@@ -186,9 +186,9 @@ static void PM_UnsetThingPosition(mobj_t& thing) noexcept {
             const int32_t blockx = (thing.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
             const int32_t blocky = (thing.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
 
-            // PC-PSX: prevent buffer overflow if the map object is out of bounds.
+            // PsyDoom: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
-            #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+            #if PSYDOOM_MODS && PSYDOOM_FIX_UB
                 if ((blockx >= 0) && (blockx < gBlockmapWidth)) {
                     if ((blocky >= 0) && (blocky < gBlockmapHeight)) {
                         gppBlockLinks[blocky * gBlockmapWidth + blockx] = thing.bnext;

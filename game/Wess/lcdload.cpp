@@ -146,8 +146,8 @@ int32_t wess_dig_lcd_data_read(
             gWess_lcd_load_samplePos = destSpuAddr + sndDataOffset;
 
             // If uploading this sound would cause us to go beyond the bounds of SPU ram then do not try to upload this sound
-            #if PC_PSX_DOOM_MODS
-                // PC-PSX: I think this condition was slightly wrong?
+            #if PSYDOOM_MODS
+                // PsyDoom: I think this condition was slightly wrong?
                 const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + sndDataOffset + nextPatchSample.size  > (int32_t) gPsxSpu_sram_end);
             #else
                 const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchSample.size > (int32_t)(gPsxSpu_sram_end + sndDataOffset));
@@ -192,7 +192,7 @@ int32_t wess_dig_lcd_data_read(
 // Optionally, details for the uploaded sounds can be saved to the given sample block.
 // The 'override' flag also specifies whether existing sound patches are to have their details overwritten or not.
 //
-// PC-PSX: this function has been rewritten to get rid of low level I/O stuff, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten to get rid of low level I/O stuff, for the original version see the 'Old' folder.
 // The goal of the rewrite is to enable modding of the game with new .LCD files for custom maps, since the 'psxcd' I/O functions support
 // replacing original game files with alternate versions on the user's computer.
 //------------------------------------------------------------------------------------------------------------------------------------------

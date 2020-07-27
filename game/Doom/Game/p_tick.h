@@ -14,17 +14,17 @@ enum cheatseq_t : int32_t {
     CHT_SEQ_SHOW_ALL_MAP_THINGS,
     CHT_SEQ_GOD_MODE,
     CHT_SEQ_WEAPONS_AND_AMMO,
-// PC-PSX: turning this into a noclip cheat
-#if PC_PSX_DOOM_MODS
+// PsyDoom: turning this into a noclip cheat
+#if PSYDOOM_MODS
     CHT_SEQ_NOCLIP,
 #else
     CHT_SEQ_UNUSED_04,
 #endif
     CHT_SEQ_LEVEL_WARP,
     CHT_SEQ_UNUSED_06,
-// PC-PSX: reactivating the VRAM viewer - provide a cheat for it!
+// PsyDoom: reactivating the VRAM viewer - provide a cheat for it!
 // This is the same cheat code for the VRAM viewer used by the "GEC PlayStation Doom: Master Edition" project also.
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     CHT_SEQ_VRAM_VIEWER,
 #else
     CHT_SEQ_UNUSED_07,
@@ -44,7 +44,7 @@ extern int32_t      gVramViewerTexPage;
 extern thinker_t    gThinkerCap;
 extern mobj_t       gMObjHead;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     extern TickInputs   gTickInputs[MAXPLAYERS];
     extern TickInputs   gOldTickInputs[MAXPLAYERS];
     extern TickInputs   gNextTickInputs;
@@ -65,7 +65,7 @@ void P_Drawer() noexcept;
 void P_Start() noexcept;
 void P_Stop(const gameaction_t exitAction) noexcept;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     void P_GatherTickInputs(TickInputs& inputs) noexcept;
     void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* const pControlBindings, TickInputs& inputs) noexcept;
 #endif

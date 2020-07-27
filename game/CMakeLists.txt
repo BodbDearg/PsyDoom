@@ -3,7 +3,7 @@ set(PSYDOOM_INCLUDE_OLD_CODE FALSE CACHE BOOL
 "If TRUE include source files from the 'Old' directory of the PsyDoom project.\n\
 These files contain original or older versions of various functions, variables and data structures.\n\
 These pieces of code are archived for future reference in case we need to refer back to the way things originally worked.\n\
-Most of these functions etc. have either been completely rewritten or so drastically altered that the '#if PC_PSX_DOOM_MODS'\n\
+Most of these functions etc. have either been completely rewritten or so drastically altered that the '#if PSYDOOM_MODS'\n\
 mechanism no longer makes sense or is too unwieldly to use."
 )
 
@@ -276,7 +276,7 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
 target_compile_definitions(${GAME_TGT_NAME} PRIVATE
     -DGAME_VERSION_STR="${GAME_VERSION_STR}"    # Game version string - set in main CMakeLists.txt
-    -DPC_PSX_DOOM_MODS=1                        # Defined to mark areas where we changed the code from the PSX version
+    -DPSYDOOM_MODS=1                            # Defined to mark areas where we changed the code from the PSX version
 )
 
 if (PSYDOOM_FIX_UB)

@@ -33,7 +33,7 @@ static char gDbgMsgBuf[DBG_MSG_BUF_SIZE];
 static int32_t gDbgMsgBufPos;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX helper function that clears the current drawing area to the specified color
+// PsyDoom helper function that clears the current drawing area to the specified color
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void clearDrawingArea(const uint8_t r, const uint8_t g, const uint8_t b) noexcept {
     gpu::GPU& gpu = *PsxVm::gpGpu;
@@ -54,7 +54,7 @@ static void clearDrawingArea(const uint8_t r, const uint8_t g, const uint8_t b) 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX helper function that sets the current texture page on the GPU.
+// PsyDoom helper function that sets the current texture page on the GPU.
 // Note that this will also set the semi-transparency mode, in addition to the texture bit depth.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void setGpuTPage(const uint16_t tpageId) noexcept {
@@ -223,7 +223,7 @@ int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t 
 // Submit a linked list of GPU drawing primitives.
 // These may include drawing primitves, or primitives that set GPU state.
 //
-// PC-PSX: had to add a pointer to the base of the GPU commands buffer.
+// PsyDoom: had to add a pointer to the base of the GPU commands buffer.
 // This is because the 'next primitive pointer' is now a 24-bit offset within the command buffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBGPU_DrawOTag(const void* const pPrimList, std::byte* const pGpuCmdBuffer) noexcept {

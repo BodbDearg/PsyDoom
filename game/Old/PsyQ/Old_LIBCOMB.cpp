@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "Old_LIBCOMB.h"
 
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"

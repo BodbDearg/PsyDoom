@@ -33,8 +33,8 @@
 //      Doom's own heap would have been corrupted if LIBAPI's heap was in conflicting use of the same memory.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int psx_main(const int argc, const char** const argv) noexcept {
-    // PC-PSX: setup logic for the new game host environment
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: setup logic for the new game host environment
+    #if PSYDOOM_MODS
         // Parse command line arguments and configuration and initialize input systems
         ProgArgs::init(argc, argv);
         Config::init();
@@ -58,8 +58,8 @@ int psx_main(const int argc, const char** const argv) noexcept {
     // Call the original PSX Doom 'main()' function
     I_Main();
 
-    // PC-PSX: cleanup logic after Doom itself is done
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: cleanup logic after Doom itself is done
+    #if PSYDOOM_MODS
         PsxVm::shutdown();
         ModMgr::shutdown();
         Input::shutdown();

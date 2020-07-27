@@ -41,7 +41,7 @@ void START_PasswordScreen() noexcept {
     // Reset control related stuff and password entry status
     gVBlanksUntilMenuMove[0] = 0;
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         for (int32_t i = 0; i < MAXPLAYERS; ++i) {
             gOldTickInputs[i] = gTickInputs[i];
         }
@@ -72,8 +72,8 @@ void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 // Update logic for the password screen, entering password characters and so on...
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_PasswordScreen() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
@@ -90,7 +90,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
     }
 
     // Handle up/down/left/right movements
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[0];
         const TickInputs& oldInputs = gOldTickInputs[0];
 
@@ -165,13 +165,13 @@ gameaction_t TIC_PasswordScreen() noexcept {
         return ga_exit;
 
     // Nothing more to do if new buttons are not pressed
-    #if !PC_PSX_DOOM_MODS
+    #if !PSYDOOM_MODS
         if (ticButtons == oldTicButtons)
             return ga_nothing;
     #endif
 
     // Entering or deleting a password character, or pressing the 'menu ok' command?
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const bool bMenuOkPressed = (inputs.bMenuOk && (!oldInputs.bMenuOk));
         const bool bEnterPasswordChar = (inputs.bEnterPasswordChar && (!oldInputs.bEnterPasswordChar));
         const bool bDeletePasswordChar = (inputs.bDeletePasswordChar && (!oldInputs.bDeletePasswordChar));
@@ -254,8 +254,8 @@ void DRAW_PasswordScreen() noexcept {
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
-        // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
+        #if PSYDOOM_MODS
             RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else

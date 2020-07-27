@@ -263,8 +263,8 @@ int32_t psxspu_get_cd_vol() noexcept {
 // Begin doing a fade of cd music to the specified volume in the specified amount of time
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_start_cd_fade(const int32_t fadeTimeMs, const int32_t destVol) noexcept {
-    // PC-PSX: ignore the command in headless mode
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ignore the command in headless mode
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif

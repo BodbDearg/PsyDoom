@@ -9,7 +9,7 @@ enum class CdFileId : int32_t;
 extern int32_t      gTicCon;
 extern int32_t      gPlayersElapsedVBlanks[MAXPLAYERS];
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     extern int32_t  gNextPlayerElapsedVBlanks;
 #endif
 
@@ -20,7 +20,7 @@ extern int32_t      gStartMapOrEpisode;
 extern gametype_t   gStartGameType;
 extern bool         gbDidAbortGame;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     extern bool         gbIsFirstTick;
     extern bool         gbKeepInputEvents;
     extern uint32_t*    gpDemoBufferEnd;
@@ -31,7 +31,7 @@ gameaction_t RunLegals() noexcept;
 gameaction_t RunTitle() noexcept;
 gameaction_t RunDemo(const CdFileId file) noexcept;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     gameaction_t RunDemoAtPath(const char* const filePath) noexcept;
 #endif
 

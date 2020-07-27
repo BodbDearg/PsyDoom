@@ -1,7 +1,7 @@
 #pragma once
 
-// PC-PSX: no longer using the controller configuration screen
-#if !PC_PSX_DOOM_MODS
+// PsyDoom: no longer using the controller configuration screen
+#if !PSYDOOM_MODS
 
 #include "Doom/doomdef.h"
 
@@ -14,4 +14,4 @@ void STOP_ControlsScreen(const gameaction_t exitAction) noexcept;
 gameaction_t TIC_ControlsScreen() noexcept;
 void DRAW_ControlsScreen() noexcept;
 
-#endif  // #if !PC_PSX_DOOM_MODS
+#endif  // #if !PSYDOOM_MODS

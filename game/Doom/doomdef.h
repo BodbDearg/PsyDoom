@@ -80,7 +80,7 @@ enum gametype_t : int32_t {
     gt_single,
     gt_coop,
     gt_deathmatch,
-#if PC_PSX_DOOM_MODS    // PC-PSX: adding for convenience
+#if PSYDOOM_MODS        // PsyDoom: adding for convenience
     NUMGAMETYPES
 #endif
 };
@@ -92,7 +92,7 @@ enum skill_t : int32_t {
     sk_medium,
     sk_hard,
     sk_nightmare,
-#if PC_PSX_DOOM_MODS    // PC-PSX: adding for convenience
+#if PSYDOOM_MODS        // PsyDoom: adding for convenience
     NUMSKILLS
 #endif
 };
@@ -110,8 +110,8 @@ enum gameaction_t : int32_t {
     ga_timeout,         // PSX DOOM: player died or menu timed out
     ga_restart,         // PSX DOOM: player restarted the level
     ga_exit,            // PSX DOOM: Exit the current screen or demo
-#if PC_PSX_DOOM_MODS
-    ga_quitapp          // PC-PSX: exit the application entirely
+#if PSYDOOM_MODS
+    ga_quitapp          // PsyDoom: exit the application entirely
 #endif
 };
 
@@ -361,7 +361,7 @@ struct player_t {
     uint32_t        _unused;                        // An unknown/unused field: can't tell what it is for because there are no uses of it :(
     weapontype_t    readyweapon;                    // The currently equipped weapon
     weapontype_t    pendingweapon;                  // The weapon to equip next or 'wp_nochange' if no weapon change is pending
-    bool            weaponowned[NUMWEAPONS];        // Whether each of the weapons is owned (PC-PSX: originally these were 32-bit bools, made them 'bool' instead)
+    bool            weaponowned[NUMWEAPONS];        // Whether each of the weapons is owned (PsyDoom: originally these were 32-bit bools, made them 'bool' instead)
     int32_t         ammo[NUMAMMO];                  // How much of each ammo type the player has
     int32_t         maxammo[NUMAMMO];               // Current maximum amount of each ammo type for the player
     uint32_t        attackdown;                     // Number of ticks the player has had the fire/attack button pressed
@@ -390,7 +390,7 @@ struct player_t {
     bool            psxMouseUse;                    // Final Doom demo playback only: try to do a 'use' action via the psx mouse
 };
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     //--------------------------------------------------------------------------------------------------------------------------------------
     // A data structure used to hold all of the inputs and actions for a player for a particular frame.
     // This is now used in networking and as well as single player to drive all game inputs, instead of raw button codes.

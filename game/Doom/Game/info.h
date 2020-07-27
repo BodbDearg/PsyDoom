@@ -12,7 +12,7 @@
 
 enum sfxenum_t : int32_t;
 
-// PC-PSX: Helper typedefs for the two possible forms of state_t function: one for map objects (things) and one for player sprites (weapons)
+// PsyDoom: Helper typedefs for the two possible forms of state_t function: one for map objects (things) and one for player sprites (weapons)
 typedef void (*statefn_mobj_t)(mobj_t&) noexcept;
 typedef void (*statefn_pspr_t)(player_t&, pspdef_t&) noexcept;
 
@@ -1055,7 +1055,7 @@ enum mobjtype_t : int32_t {
     NUMMOBJTYPES
 };
 
-// PC-PSX helper: represents a state action function.
+// PsyDoom helper: represents a state action function.
 // Can accept one of two different function formats, one for things and another for player sprite (player weapon) states.
 struct statefn_t {
     union {

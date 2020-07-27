@@ -1,6 +1,6 @@
 #include "Doom/Base/i_main.h"
 
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 constexpr int32_t   NET_PACKET_SIZE     = 8;        // The size of a packet and the packet buffers in a networked game
 constexpr uint8_t   NET_PACKET_HEADER   = 0xAA;     // The 1st byte in every network packet: used for error detection purposes
@@ -341,4 +341,4 @@ padbuttons_t* I_NetButtonsToLocal(const uint32_t encodedBindings) noexcept {
     return gOtherPlayerCtrlBindings;
 }
 
-#endif  // !PC_PSX_DOOM_MODS
+#endif  // !PSYDOOM_MODS

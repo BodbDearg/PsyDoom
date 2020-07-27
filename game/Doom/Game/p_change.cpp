@@ -31,9 +31,9 @@ bool P_ThingHeightClip(mobj_t& mobj) noexcept {
     mobj.floorz = gTmFloorZ;
     mobj.ceilingz = gTmCeilingZ;
 
-    // PC-PSX: If the thing is the current player and the floor moved up/down then snap the current Z interpolation.
+    // PsyDoom: If the thing is the current player and the floor moved up/down then snap the current Z interpolation.
     // The player's viewpoint moves with the sector immediately in this instance because the player is being pushed/pulled:
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if ((oldFloorZ != mobj.floorz) && (mobj.player == &gPlayers[gCurPlayerIndex])) {
             R_SnapViewZInterpolation();
         }

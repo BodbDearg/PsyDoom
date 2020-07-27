@@ -43,7 +43,7 @@ angle_t R_PointToAngle2(const fixed_t x1, const fixed_t y1, const fixed_t x2, co
 int32_t R_PointOnSide(const fixed_t x, const fixed_t y, const node_t& node) noexcept;
 subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     void R_NextInterpolation() noexcept;
     void R_SnapViewZInterpolation() noexcept;
     fixed_t R_CalcLerpFactor() noexcept;

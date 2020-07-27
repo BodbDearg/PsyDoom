@@ -1,4 +1,4 @@
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 #include "Doom/cdmaptbl.h"
 

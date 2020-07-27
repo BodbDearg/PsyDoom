@@ -284,14 +284,14 @@ static SavedVoiceList gPausedMusVoiceState;
 static uint32_t gNumSoundTics;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX Helper: converts from a DOOM volume level (0-100) to a WESS API volume level (0-127)
+// PsyDoom Helper: converts from a DOOM volume level (0-100) to a WESS API volume level (0-127)
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t doomToWessVol(const int32_t doomVol) noexcept {
     return (doomVol * WESS_MAX_MASTER_VOL) / S_MAX_VOL;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX Helper: converts from a DOOM volume level (0-100) to a WESS PSXSPU API volume level (0-127)
+// PsyDoom Helper: converts from a DOOM volume level (0-100) to a WESS PSXSPU API volume level (0-127)
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t doomToPsxSpuVol(const int32_t doomVol) noexcept {
     return (doomVol * WESS_MAX_MASTER_VOL) / S_MAX_VOL;
@@ -328,8 +328,8 @@ void S_StopMusic() noexcept {
 // Start playing the selected music track (stops if currently playing)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StartMusic() noexcept {
-    // PC-PSX: ignore this command in headless mode
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ignore this command in headless mode
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif
@@ -368,8 +368,8 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     // Final Doom has different music and map sounds
     const musicseq_t* const pMusicSeqDefs = (Game::isFinalDoom()) ? gMusicSeqDefs_FinalDoom : gMusicSeqDefs_Doom;
 
-    // PC-PSX: ignore this command in headless mode
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ignore this command in headless mode
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif
@@ -384,8 +384,8 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
             S_StopMusic();
             
             while (wess_seq_status(pMusicSeqDefs[gCurMusicSeqIdx].seqIdx) != SequenceStatus::SEQUENCE_INACTIVE) {
-                // PC-PSX: need to update sound to escape this loop, also ensure the window stays responsive etc.
-                #if PC_PSX_DOOM_MODS
+                // PsyDoom: need to update sound to escape this loop, also ensure the window stays responsive etc.
+                #if PSYDOOM_MODS
                     Utils::doPlatformUpdates();
                     Utils::threadYield();
                 #endif
@@ -482,8 +482,8 @@ void S_StopAll() noexcept {
 // I've just removed this unknown 3rd param here for this reimplementation, since it serves no purpose.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
-    // PC-PSX: ignore this command in headless mode
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ignore this command in headless mode
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif
@@ -497,8 +497,8 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
     int32_t vol = WESS_MAX_MASTER_VOL;
     int32_t pan = WESS_PAN_CENTER;
     
-    #if PC_PSX_DOOM_MODS
-        // PC-PSX: adding an extra safety check here
+    #if PSYDOOM_MODS
+        // PsyDoom: adding an extra safety check here
         const bool bAttenuateSound = (pOrigin && pListener && (pOrigin != pListener));
     #else
         const bool bAttenuateSound = (pOrigin && (pOrigin != pListener));
@@ -593,14 +593,14 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     // Read the WMD file into the given buffer (assumes it is big enough)
     PsxCd_File* const pFile = psxcd_open(CdFileId::DOOMSND_WMD);
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if (!pFile) {
             FatalErrors::raise("Failed to open DOOMSFX.WMD!");
         }
     #endif
 
-    // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: the 'PsxCd_File' struct has changed layout & contents
+    #if PSYDOOM_MODS
         psxcd_read(pTmpWmdLoadBuffer, pFile->size, *pFile);
     #else
         psxcd_read(pTmpWmdLoadBuffer, pFile->file.size, *pFile);
@@ -644,5 +644,5 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PsxSoundExit() noexcept {
     // Did nothing - not required for a PS1 game...
-    // TODO: PC-PSX should cleanup logic be considered here?
+    // TODO: PsyDoom: should cleanup logic be considered here?
 }

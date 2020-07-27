@@ -9,7 +9,7 @@ static constexpr int32_t CD_SECTOR_SIZE = 2048;
 
 // Tracks an open file on the CD-ROM.
 // Contains info about the file as well as the current IO location and status.
-// PC-PSX: this data structure was completely changed. See the 'old' folder for the original version.
+// PsyDoom: this data structure was completely changed. See the 'old' folder for the original version.
 struct PsxCd_File {
     int32_t     size;                   // How big the file is in bytes
     int32_t     startSector;            // Which 2,048 byte disc sector the file starts on
@@ -28,7 +28,7 @@ enum class PsxCd_SeekMode : int32_t {
 // Used by the retail version of the game for fast file access, presumably not used during development as that would be painful.
 // The location is stored in terms of start sector (2048 byte sector) number.
 struct PsxCd_MapTblEntry {
-    int32_t     startSector;    // PC-PSX: if this is '0' then it means the file is not present on the disc
+    int32_t     startSector;    // PsyDoom: if this is '0' then it means the file is not present on the disc
     int32_t     size;
 };
 
@@ -74,6 +74,6 @@ void psxcd_restart(const int32_t vol) noexcept;
 int32_t psxcd_elapsed_sectors() noexcept;
 void psxcd_set_stereo(const bool bStereo) noexcept;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     int32_t psxcd_get_file_size(const CdFileId discFile) noexcept;
 #endif

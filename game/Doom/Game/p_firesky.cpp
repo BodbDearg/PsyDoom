@@ -18,7 +18,7 @@ static uint32_t gFireSkyRndIndex;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_UpdateFireSky(texture_t& skyTex) noexcept {
     // Check that the texture is actually the size it's supposed to be...
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         ASSERT(skyTex.width == FIRESKY_W);
         ASSERT(skyTex.height == FIRESKY_H);
     #endif

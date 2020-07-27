@@ -20,7 +20,7 @@ const std::byte*    gGpuCmdsBufferEnd = gGpuCmdsBuffer + GPU_CMD_BUFFER_SIZE;
 //------------------------------------------------------------------------------------------------------------------------------------------
 static uint32_t makePrimTag(const uint32_t primSize, void* const pNextPrim) noexcept {
     // Sanity check
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         ASSERT(primSize % 4 == 0 && primSize >= 4);
     #endif
 
@@ -31,9 +31,9 @@ static uint32_t makePrimTag(const uint32_t primSize, void* const pNextPrim) noex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // GPU status check: tells if CPU to GPU dma enabled
-// PC-PSX: this is not needed anymore.
+// PsyDoom: this is not needed anymore.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 static bool isCpuToGpuDmaEnabled() noexcept {
     return (getGpuStat() & 0x04000000);
 }
@@ -48,10 +48,10 @@ static void flushGpuCmds() noexcept {
         // Abort for now if CPU to GPU DMA is off; hope that it gets turned on later or the queue gets cleared somehow?
         // Not sure what situation is would occur in...
         //
-        // PC-PSX: I'm disabling this check for good measure, just to be on the safe side.
+        // PsyDoom: I'm disabling this check for good measure, just to be on the safe side.
         // Drawing is pretty much native now so emulator DMA should not be getting in our way.
         //
-        #if !PC_PSX_DOOM_MODS
+        #if !PSYDOOM_MODS
             if (!isCpuToGpuDmaEnabled())
                 break;
         #endif

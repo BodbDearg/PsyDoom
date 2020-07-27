@@ -121,8 +121,8 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             mobj.momx = 0;
             mobj.angle = pDstMarker->angle;
 
-            // PC-PSX: if we just teleported this player then kill any interpolations
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: if we just teleported this player then kill any interpolations
+            #if PSYDOOM_MODS
                 if (mobj.player == &gPlayers[gCurPlayerIndex]) {
                     R_NextInterpolation();
                 }

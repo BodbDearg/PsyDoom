@@ -21,7 +21,7 @@ const int LINE_VBLANK_START_NTSC = 243;
 const int LINES_TOTAL_NTSC = 263;
 
 class GPU {
-// PC-PSX DOOM: allowing some lower level access to the GPU for speed
+// PsyDoom: allowing some lower level access to the GPU for speed
 #if DOOM_AVOCADO_MODS
 public:
 #endif
@@ -109,7 +109,7 @@ public:
     ivec2 clutCachePos{-1, -1};
     ColorDepth clutCacheColorDepth = ColorDepth::NONE;
 
-// PC-PSX DOOM: allowing some lower level access to the GPU for speed
+// PsyDoom: allowing some lower level access to the GPU for speed
 #if !DOOM_AVOCADO_MODS
    private:
 #endif

@@ -19,7 +19,7 @@ extern bool             gbDemoPlayback;
 extern bool             gbDemoRecording;
 extern bool             gbIsLevelBeingRestarted;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     extern bool gbPlayingPalDemo;
 #endif
 

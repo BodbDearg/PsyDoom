@@ -1,6 +1,6 @@
 #include "Wess/lcdload.h"
 
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 #include "PsyQ/LIBCD.h"
 
@@ -67,8 +67,8 @@ int32_t wess_dig_lcd_load(
         psxcd_set_data_mode();
         PsxCd_File* const pLcdFile = wess_dig_lcd_data_open(lcdFileToLoad);
 
-        // If the file returned is not present (PC-PSX added check) or invalid then just stop now
-        #if PC_PSX_DOOM_MODS
+        // If the file returned is not present (PsyDoom added check) or invalid then just stop now
+        #if PSYDOOM_MODS
             if ((!pLcdFile) || (pLcdFile->file.pos == 0))
                 return 0;
         #else
@@ -175,4 +175,4 @@ int32_t wess_dig_lcd_load(
     return 0;
 }
 
-#endif  // !PC_PSX_DOOM_MODS
+#endif  // !PSYDOOM_MODS

@@ -517,16 +517,16 @@ int32_t wess_load_module(
                 voice.ref_idx = hwVoiceIdx;
                 ++hwVoiceIdx;
 
-                // PC-PSX: fix a small logic issue, which shouldn't be a problem in practice.
+                // PsyDoom: fix a small logic issue, which shouldn't be a problem in practice.
                 // Move onto the next voice status struct *ONLY* if we actually assigned it to a hardware voice.
                 // Previously, if a driver had '0' hardware voices then we might leak or leave unused one 'voice status' struct:
-                #if PC_PSX_DOOM_MODS
+                #if PSYDOOM_MODS
                     ++voiceIdx;
                 #endif
             }
 
-            // PC-PSX: part of the fix mentioned above, only preform this increment conditionally now
-            #if !PC_PSX_DOOM_MODS
+            // PsyDoom: part of the fix mentioned above, only preform this increment conditionally now
+            #if !PSYDOOM_MODS
                 ++voiceIdx;
             #endif
         }
@@ -730,8 +730,8 @@ int32_t wess_load_module(
     // This is maximum sequence number that can be triggered
     gWess_end_seq_num = module.hdr.num_sequences;
 
-    // PC-PSX: sanity check we haven't overflowed module memory
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: sanity check we haven't overflowed module memory
+    #if PSYDOOM_MODS
         ASSERT(gpWess_wmd_end - gpWess_wmd_mem <= gWess_mem_limit);
     #endif
     

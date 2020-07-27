@@ -13,7 +13,7 @@ static constexpr int32_t MINFRAGMENT = 64;
 // Size of the first two fields of the memory zone
 static constexpr size_t MEMZONE_HEADER_SIZE = offsetof(memzone_t, blocklist);
 
-// PC-PSX: the entire heap memory used by the game
+// PsyDoom: the entire heap memory used by the game
 static std::unique_ptr<std::byte[]> gZoneHeap;
 
 // The main (and only) memory zone used by PSX DOOM
@@ -23,7 +23,7 @@ memzone_t* gpMainMemZone;
 // Initializes the zone memory management system. DOOM doesn't use any PsyQ SDK allocation functions AT ALL (either directly or indirectly)
 // so it just gobbles up the entire of the available heap space on the system for it's own purposes.
 //
-// PC-PSX: this function has been rewritten and now just does a simple fixed size allocation for the entire heap.
+// PsyDoom: this function has been rewritten and now just does a simple fixed size allocation for the entire heap.
 // Some of the old logic is preserved in the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Z_Init() noexcept {    
@@ -46,7 +46,7 @@ memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {
 
     // This field was not being initialized in PSX DOOM.
     // It was not serving any useful purpose anyway so probably doesn't matter? Just initialize here though for good measure:
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         pZone->blocklist.lockframe = -1;
     #endif
 
@@ -318,11 +318,11 @@ void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept {
             // Note: in the original code there was no null check when updating this pointer block following the next block.
             // Perhaps the PSX simply ignored a write to address 0x14 or that was a valid write to BIOS reserved memory?
             // In any case that won't fly on PC obviously, so I'm adding a safety check here:
-            #if PC_PSX_DOOM_MODS
+            #if PSYDOOM_MODS
                 if (pNextBlock->next) {
             #endif
                     pNextBlock->next->prev = pBlock;
-            #if PC_PSX_DOOM_MODS
+            #if PSYDOOM_MODS
                 }
             #endif
             

@@ -88,7 +88,7 @@ void add_music_mute_note(
     SavedVoiceList* const pSavedVoices = gpWess_savedVoices;
 
     if (pSavedVoices) {
-        // PC-PSX: sanity check we haven't exceeded the bounds of the saved notes array.
+        // PsyDoom: sanity check we haven't exceeded the bounds of the saved notes array.
         // This shouldn't be called more times than there are hardware voices available!
         ASSERT(pSavedVoices->size < SPU_NUM_VOICES);
 
@@ -764,8 +764,8 @@ void PSX_voiceon(
     voiceStat.note = voiceNote;
     voiceStat.volume = voiceVol;
 
-    #if PC_PSX_DOOM_MODS
-        // PC-PSX: this field was always being set to SFX, it should be using the track sound class
+    #if PSYDOOM_MODS
+        // PsyDoom: this field was always being set to SFX, it should be using the track sound class
         voiceStat.sound_class = trackStat.sound_class;
     #else
         voiceStat.sound_class = SNDFX_CLASS;
@@ -834,12 +834,12 @@ void PSX_voicenote(
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept {
-    // PC-PSX: these were previously globals in the original code, but only used in this function.
+    // PsyDoom: these were previously globals in the original code, but only used in this function.
     // I've converted them to first to statics so they don't pollute global scope and can be seen only where they are used.
     //
     // Next I decided to make them locals, since the previous leftover values might cause a voice not to be triggered in very rare cases.
     // I would rather have a sound play and steal another voice than not if we are at the hardware voice limit (which is a rare case).
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         voice_status* pStolenVoiceStat = nullptr;
         uint32_t stolenVoicePriority = 256;                 // N.B: max priority is 255 (UINT8_MAX), so this guarantees we steal the first active voice we run into
         uint32_t stolenVoiceOnOffAbsTime = 0xFFFFFFFF;
@@ -873,10 +873,10 @@ void PSX_voicenote(
 
         // If this voice is lower priority than the previously stolen voice then just steal it.
         //
-        // PC-PSX: also added a null check here for the previously stolen voice just to be safe.
+        // PsyDoom: also added a null check here for the previously stolen voice just to be safe.
         // The initial assignment of 'stolenVoicePriority' should mean that we always have a valid voice
         // status for the stolen voice, but this makes that a little more obvious at least.
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             bStealVoice = ((!pStolenVoiceStat) || (voiceStat.priority < stolenVoicePriority));
         #else
             bStealVoice = (voiceStat.priority < stolenVoicePriority);

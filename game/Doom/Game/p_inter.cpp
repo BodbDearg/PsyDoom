@@ -52,8 +52,8 @@ bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numCl
         return false;
     
     // Sanity check ammo type.
-    // PC-PSX: don't accept 'NUMAMMO' as a valid ammo type here, that's not valid either.
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: don't accept 'NUMAMMO' as a valid ammo type here, that's not valid either.
+    #if PSYDOOM_MODS
         const bool bValidAmmoType = (ammoType < NUMAMMO);
     #else
         const bool bValidAmmoType = (ammoType < am_noammo);
@@ -269,7 +269,7 @@ bool P_GivePower(player_t& player, const powertype_t power) noexcept {
 // Tries to make the given touching object pickup the special object.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
-    // PC-PSX: document/assert usage assumptions: should only be called for player things!
+    // PsyDoom: document/assert usage assumptions: should only be called for player things!
     ASSERT(toucher.player);
 
     // See if the thing is out of reach vertically: do not pickup if that is the case

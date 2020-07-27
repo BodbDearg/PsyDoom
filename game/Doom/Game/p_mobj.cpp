@@ -459,7 +459,7 @@ void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32
 // Moves a missile a little after spawning to see if it spawned in a wall or something, and explodes it immediately if so
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
-    // PC-PSX: fix for a bug where sometimes the player does not take damage from rocket blasts.
+    // PsyDoom: fix for a bug where sometimes the player does not take damage from rocket blasts.
     // I am not applying this fix by default however, because it breaks demo compatibility (and automated testing) in some cases.
     // For more on this bug see: https://doomwiki.org/wiki/Sony_PlayStation#Bugs
     //
@@ -475,7 +475,7 @@ void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
     // If the check fails then explode the rocket, otherwise execute the existing logic of moving first and THEN checking the position.
     //
     // TODO: Make this fix configurable at runtime.
-    #if PC_PSX_DOOM_MODS && DOOM_ROCKET_BLAST_FIX
+    #if PSYDOOM_MODS && PSYDOOM_ROCKET_BLAST_FIX
         // Just do this as a collision check: don't actually move yet (that's done below).
         // If the missile has spawned in a position where it would be blocked then explode it immediately.
         gbCheckPosOnly = true;

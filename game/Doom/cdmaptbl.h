@@ -343,7 +343,7 @@ enum class CdFileId : int32_t {
 // This table can be indexed by using the enum above:
 extern PsxCd_MapTblEntry gCdMapTbl[(uint32_t) CdFileId::END];
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     extern const char* const gCdMapTblFileNames[(uint32_t) CdFileId::END];      // The names of all the files in the CD map table
     extern const char* const gCdMapTblFilePaths[(uint32_t) CdFileId::END];      // The paths of all the files in the CD map table
 

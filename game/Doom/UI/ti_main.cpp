@@ -55,8 +55,8 @@ void START_Title() noexcept {
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
     I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
 
-    // PC-PSX: no longer required to be cached since we don't have the controls screen
-    #if !PC_PSX_DOOM_MODS
+    // PsyDoom: no longer required to be cached since we don't have the controls screen
+    #if !PSYDOOM_MODS
         W_CacheLumpName("BUTTONS", PU_STATIC, false);
         I_LoadAndCacheTexLump(gTex_BUTTONS, "BUTTONS", 0);
     #endif
@@ -102,8 +102,8 @@ void STOP_Title([[maybe_unused]] const gameaction_t exitAction) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Title() noexcept {
     // End the title screen if any buttons are pressed.
-    // PC-PSX: just accept menu start/ok/back:
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: just accept menu start/ok/back:
+    #if PSYDOOM_MODS
         if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
             return ga_exit;
     #else
@@ -118,8 +118,8 @@ gameaction_t TIC_Title() noexcept {
     // For Final Doom the scroll value is actually an RGB color multiply for the title image.
     // The logic to update it is different in that case.
     if (Game::isFinalDoom()) {
-        // PC-PSX: don't run this too fast
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: don't run this too fast
+        #if PSYDOOM_MODS
             if (gPlayersElapsedVBlanks[gCurPlayerIndex] <= 0)
                 return ga_nothing;
         #endif
@@ -259,8 +259,8 @@ void DRAW_Title() noexcept {
     const uint8_t texU = skytex.texPageCoordX;
     const uint8_t texV = skytex.texPageCoordY;
 
-    #if PC_PSX_DOOM_MODS
-        constexpr uint8_t SKY_W = 64;   // PC-PSX: fix a 4 pixel gap at the right side of the screen with the fire
+    #if PSYDOOM_MODS
+        constexpr uint8_t SKY_W = 64;   // PsyDoom: fix a 4 pixel gap at the right side of the screen with the fire
     #else
         constexpr uint8_t SKY_W = 63;
     #endif

@@ -19,8 +19,8 @@
 
 #include <algorithm>
 
-// PC-PSX: move this up slightly to make room for the 'quit' option
-#if PC_PSX_DOOM_MODS
+// PsyDoom: move this up slightly to make room for the 'quit' option
+#if PSYDOOM_MODS
     static constexpr int32_t DOOM_LOGO_YPOS = 10;
 #else
     static constexpr int32_t DOOM_LOGO_YPOS = 20;
@@ -37,15 +37,15 @@ enum menu_t : int32_t {
     level,
     difficulty,
     options,
-#if PC_PSX_DOOM_MODS    // PC-PSX: add a quit option to the main menu
+#if PSYDOOM_MODS        // PsyDoom: add a quit option to the main menu
     menu_quit,
 #endif
     NUMMENUITEMS
 };
 
 // The position of each main menu option.
-// PC-PSX: had to move everything up to make room for 'quit'
-#if PC_PSX_DOOM_MODS
+// PsyDoom: had to move everything up to make room for 'quit'
+#if PSYDOOM_MODS
     static const int16_t gMenuYPos[NUMMENUITEMS] = {
         81,     // gamemode
         123,    // level
@@ -74,7 +74,7 @@ static const char gSkillNames[NUMSKILLS][16] = {
     "Not Too Rough",
     "Hurt Me Plenty",
     "Ultra Violence",
-#if PC_PSX_DOOM_MODS    // PC-PSX: exposing the unused 'Nightmare' mode
+#if PSYDOOM_MODS        // PsyDoom: exposing the unused 'Nightmare' mode
     "Nightmare!"
 #endif
 };
@@ -88,10 +88,10 @@ static int32_t      gMaxStartEpisodeOrMap;      // Restricts what maps or episod
 gameaction_t RunMenu() noexcept {
     do {
         // Run the menu: abort to the title screen & demos if the menu timed out.
-        // PC-PSX: also quit if app quit is requested.
+        // PsyDoom: also quit if app quit is requested.
         const gameaction_t menuResult = MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
 
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             if ((menuResult == ga_timeout) || (menuResult == ga_quitapp))
                 return menuResult;
         #else
@@ -130,8 +130,8 @@ gameaction_t RunMenu() noexcept {
     G_InitNew(gStartSkill, gStartMapOrEpisode, gStartGameType);
     G_RunGame();
 
-    // PC-PSX: cleanup any network connections if we were doing a net game
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: cleanup any network connections if we were doing a net game
+    #if PSYDOOM_MODS
         Network::shutdown();
     #endif
 
@@ -183,8 +183,8 @@ void M_Start() noexcept {
         // This means we want to point the user to the next episode automatically, upon entering the main menu.
         gStartMapOrEpisode = -gStartMapOrEpisode;
 
-        // PC-PSX: an added check, just in case...
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: an added check, just in case...
+        #if PSYDOOM_MODS
             gStartMapOrEpisode = std::min(gStartMapOrEpisode, gMaxStartEpisodeOrMap);
         #endif
     }
@@ -240,15 +240,15 @@ void M_Stop(const gameaction_t exitAction) noexcept {
 // Update/ticker logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t M_Ticker() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
 
     // Reset the menu timeout if buttons are being pressed.
-    // PC-PSX: just restrict that to valid menu inputs only.
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: just restrict that to valid menu inputs only.
+    #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[0];
         const TickInputs& oldInputs = gOldTickInputs[0];
 
@@ -302,8 +302,8 @@ gameaction_t M_Ticker() noexcept {
                 return ga_warped;
         }
 
-        // PC-PSX: quit the game if that option is chosen
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: quit the game if that option is chosen
+        #if PSYDOOM_MODS
             if (gCursorPos[0] == menu_quit)
                 return ga_quitapp;
         #endif
@@ -407,8 +407,8 @@ gameaction_t M_Ticker() noexcept {
     else if (gCursorPos[0] == difficulty) {
         // Menu left/right movements: difficulty select
         if (bMenuRight) {
-            // PC-PSX: allow the previously hidden 'Nightmare' skill to be selected
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: allow the previously hidden 'Nightmare' skill to be selected
+            #if PSYDOOM_MODS
                 constexpr skill_t MAX_ALLOWED_SKILL = sk_nightmare;
             #else
                 constexpr skill_t MAX_ALLOWED_SKILL = sk_hard;
@@ -471,7 +471,7 @@ void M_Drawer() noexcept {
     I_DrawString(90, gMenuYPos[difficulty] + 20, gSkillNames[gStartSkill]);
     I_DrawString(74, gMenuYPos[options], "Options");
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         I_DrawString(74, gMenuYPos[menu_quit], "Quit");
     #endif
     

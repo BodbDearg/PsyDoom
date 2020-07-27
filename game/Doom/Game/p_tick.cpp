@@ -48,10 +48,10 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
     { PAD_TRIANGLE, PAD_TRIANGLE, PAD_L2,     PAD_R2,     PAD_L2,       PAD_R2,       PAD_R1,     PAD_CIRCLE },     // CHT_SEQ_SHOW_ALL_MAP_THINGS
     { PAD_DOWN,     PAD_L2,       PAD_SQUARE, PAD_R1,     PAD_RIGHT,    PAD_L1,       PAD_LEFT,   PAD_CIRCLE },     // CHT_SEQ_GOD_MODE
     { PAD_CROSS,    PAD_TRIANGLE, PAD_L1,     PAD_UP,     PAD_DOWN,     PAD_R2,       PAD_LEFT,   PAD_LEFT   },     // CHT_SEQ_WEAPONS_AND_AMMO
-    { PAD_UP,       PAD_UP,       PAD_UP,     PAD_UP,     PAD_UP,       PAD_UP,       PAD_UP,     PAD_R1     },     // PC-PSX: CHT_SEQ_NOCLIP (PSX: CHT_SEQ_UNUSED_04)
+    { PAD_UP,       PAD_UP,       PAD_UP,     PAD_UP,     PAD_UP,       PAD_UP,       PAD_UP,     PAD_R1     },     // PsyDoom: CHT_SEQ_NOCLIP (PSX: CHT_SEQ_UNUSED_04)
     { PAD_RIGHT,    PAD_LEFT,     PAD_R2,     PAD_R1,     PAD_TRIANGLE, PAD_L1,       PAD_CIRCLE, PAD_CROSS  },     // CHT_SEQ_LEVEL_WARP
     { PAD_LEFT,     PAD_LEFT,     PAD_LEFT,   PAD_LEFT,   PAD_LEFT,     PAD_LEFT,     PAD_LEFT,   PAD_LEFT   },     // CHT_SEQ_UNUSED_06
-    { PAD_TRIANGLE, PAD_SQUARE,   PAD_UP,     PAD_LEFT,   PAD_DOWN,     PAD_RIGHT,    PAD_CROSS,  PAD_CIRCLE },     // PC-PSX: CHT_SEQ_VRAM_VIEWER (PSX: CHT_SEQ_UNUSED_07)
+    { PAD_TRIANGLE, PAD_SQUARE,   PAD_UP,     PAD_LEFT,   PAD_DOWN,     PAD_RIGHT,    PAD_CROSS,  PAD_CIRCLE },     // PsyDoom: CHT_SEQ_VRAM_VIEWER (PSX: CHT_SEQ_UNUSED_07)
     { PAD_CROSS,    PAD_CROSS,    PAD_CROSS,  PAD_CROSS,  PAD_CROSS,    PAD_CROSS,    PAD_CROSS,  PAD_CROSS  },     // CHT_SEQ_UNUSED_08
     { PAD_L1,       PAD_R2,       PAD_L2,     PAD_R1,     PAD_RIGHT,    PAD_TRIANGLE, PAD_CROSS,  PAD_RIGHT  },     // CHT_SEQ_XRAY_VISION
     { PAD_CIRCLE,   PAD_CIRCLE,   PAD_CIRCLE, PAD_CIRCLE, PAD_CIRCLE,   PAD_CIRCLE,   PAD_CIRCLE, PAD_CIRCLE },     // CHT_SEQ_UNUSED_10
@@ -68,9 +68,9 @@ int32_t     gVramViewerTexPage;                     // What page of texture memo
 thinker_t   gThinkerCap;                            // Dummy thinker which serves as both the head and tail of the thinkers list.
 mobj_t      gMObjHead;                              // Dummy map object which serves as both the head and tail of the map objects linked list.
 
-// PC-PSX: PSX gamepad button presses are now confined to just this player, and are just used for entering the original cheat sequences.
+// PsyDoom: PSX gamepad button presses are now confined to just this player, and are just used for entering the original cheat sequences.
 // For a networked game we use the tick inputs sent across with each packet.
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     TickInputs  gTickInputs[MAXPLAYERS];        // Current tick inputs for the current 30 Hz tick
     TickInputs  gOldTickInputs[MAXPLAYERS];     // Previous tick inputs for the last 30 Hz tick
     TickInputs  gNextTickInputs;                // Network games only: what inputs we told the other player we will use next; sent ahead of time to reduce lag
@@ -147,9 +147,9 @@ void P_RunMobjLate() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckCheats() noexcept {
     // The maximum level for the warp cheat.
-    // PC-PSX: For this version of the game I'm allowing the user to warp to the secret levels!
+    // PsyDoom: For this version of the game I'm allowing the user to warp to the secret levels!
     // If you're cheating you can more or less do anything anyway, so not much point in hiding these.
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const int32_t maxCheatWarpLevel = Game::getNumMaps();
     #else
         const int32_t maxCheatWarpLevel = Game::getNumRegularMaps();
@@ -162,7 +162,7 @@ void P_CheckCheats() noexcept {
         if (!gbPlayerInGame[playerIdx])
             continue;
 
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             const TickInputs& inputs = gTickInputs[playerIdx];
             const TickInputs& oldInputs = gOldTickInputs[playerIdx];
         #else
@@ -171,7 +171,7 @@ void P_CheckCheats() noexcept {
         #endif
         
         // Toggling pause?
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             const bool bPauseJustPressed = (inputs.bTogglePause && (!oldInputs.bTogglePause));
         #else
             const bool bPauseJustPressed = Utils::padBtnJustPressed(PAD_START, padBtns, oldPadBtns);
@@ -218,7 +218,7 @@ void P_CheckCheats() noexcept {
 
         // Showing the options menu if the game is paused and the options button has just been pressed.
         // Otherwise do not do any of the logic below...
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             const bool bMenuBackJustPressed = (inputs.bMenuBack && (!oldInputs.bMenuBack));
         #else
             const bool bMenuBackJustPressed = Utils::padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns);
@@ -253,7 +253,7 @@ void P_CheckCheats() noexcept {
 
     // Grab inputs for the 1st player.
     // The rest of the cheat logic is for singleplayer mode only!
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const uint32_t padBtns = gTicButtons;
         const uint32_t oldPadBtns = gOldTicButtons;
 
@@ -274,7 +274,7 @@ void P_CheckCheats() noexcept {
     #endif
 
     // If there is no current input then you can move immediately on the next frame
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if ((!bMenuLeft) && (!bMenuRight)) {
             gVBlanksUntilMenuMove[0] = 0;
         }
@@ -296,8 +296,8 @@ void P_CheckCheats() noexcept {
                 gMapNumToCheatWarpTo--;
 
                 if (gMapNumToCheatWarpTo <= 0) {
-                    // PC-PSX: wraparound for convenience: provides a fast way to access opposite ends of the list
-                    #if PC_PSX_DOOM_MODS
+                    // PsyDoom: wraparound for convenience: provides a fast way to access opposite ends of the list
+                    #if PSYDOOM_MODS
                         gMapNumToCheatWarpTo = maxCheatWarpLevel;
                     #else
                         gMapNumToCheatWarpTo = 1;
@@ -310,8 +310,8 @@ void P_CheckCheats() noexcept {
                 gMapNumToCheatWarpTo++;
 
                 if (gMapNumToCheatWarpTo > maxCheatWarpLevel) {
-                    // PC-PSX: wraparound for convenience: provides a fast way to access opposite ends of the list
-                    #if PC_PSX_DOOM_MODS
+                    // PsyDoom: wraparound for convenience: provides a fast way to access opposite ends of the list
+                    #if PSYDOOM_MODS
                         gMapNumToCheatWarpTo = 1;
                     #else
                         gMapNumToCheatWarpTo = maxCheatWarpLevel;
@@ -359,8 +359,8 @@ void P_CheckCheats() noexcept {
     if (!gbGamePaused)
         return;
 
-    // PC-PSX: allow cheats to be easily input using keyboard keys in dev builds
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: allow cheats to be easily input using keyboard keys in dev builds
+    #if PSYDOOM_MODS
         static cheatseq_t prevDevCheatSeq = (cheatseq_t) UINT32_MAX;
         cheatseq_t devCheatSeq = Utils::getDevCheatSequenceToExec();
 
@@ -374,9 +374,9 @@ void P_CheckCheats() noexcept {
     #endif
 
     // Only check for cheat sequences if some new buttons were pressed.
-    // PC-PSX: also check for cheats if any dev cheats are input.
+    // PsyDoom: also check for cheats if any dev cheats are input.
     if ((!padBtns) || (padBtns == oldPadBtns)) {
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             if (devCheatSeq >= NUM_CHEAT_SEQ)
                 return;
         #else
@@ -401,8 +401,8 @@ void P_CheckCheats() noexcept {
             ++numMatchingBtns;
         }
 
-        // PC-PSX: allow cheats to be easily input using keyboard keys in dev builds
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: allow cheats to be easily input using keyboard keys in dev builds
+        #if PSYDOOM_MODS
             if (devCheatSeq < NUM_CHEAT_SEQ && cheatSeqIdx == devCheatSeq) {
                 // Force a match if dev cheat keys specify this cheat must be used!
                 numMatchingBtns = CHEAT_SEQ_LEN;
@@ -500,7 +500,7 @@ void P_CheckCheats() noexcept {
                     player.cheats ^= CF_XRAYVISION;
                     break;
 
-            #if PC_PSX_DOOM_MODS
+            #if PSYDOOM_MODS
                 // Re-add in the VRAM viewer that was not available in the retail build
                 case CHT_SEQ_VRAM_VIEWER: {
                     player.cheats ^= CF_VRAMVIEWER;
@@ -535,11 +535,11 @@ void P_CheckCheats() noexcept {
 gameaction_t P_Ticker() noexcept {
     gGameAction = ga_nothing;
 
-    #if PC_PSX_DOOM_MODS
-        // PC-PSX: do framerate uncapped turning for the current player
+    #if PSYDOOM_MODS
+        // PsyDoom: do framerate uncapped turning for the current player
         P_PlayerDoTurning();
 
-        // PC-PSX: Don't do any updates if no vblanks have elapsed and it's not the first tick.
+        // PsyDoom: Don't do any updates if no vblanks have elapsed and it's not the first tick.
         // This is required now because of the potentially uncapped framerate.
         // Hold onto any input events until when we actually process a tick however...
         if ((!gbIsFirstTick) && (gElapsedVBlanks <= 0)) {
@@ -547,7 +547,7 @@ gameaction_t P_Ticker() noexcept {
             return gGameAction;
         }
 
-        // PC-PSX: update the old values used for interpolation before simulating a new frame (if doing uncapped framerates)
+        // PsyDoom: update the old values used for interpolation before simulating a new frame (if doing uncapped framerates)
         if (Config::gbUncapFramerate) {
             R_NextInterpolation();
         }
@@ -592,9 +592,9 @@ gameaction_t P_Ticker() noexcept {
 // Does all drawing for main gameplay
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_Drawer() noexcept {
-    // PC-PSX: no drawing in headless mode, but do advance the elapsed time.
+    // PsyDoom: no drawing in headless mode, but do advance the elapsed time.
     // Keep the framerate at 15-Hz for consistent demo playback (4 60Hz vblanks).
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode) {
             const int32_t demoTickVBlanks = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
 
@@ -629,11 +629,11 @@ void P_Start() noexcept {
     AM_Start();
     M_ClearRandom();
 
-    #if PC_PSX_DOOM_MODS
-        // PC-PSX: initialize the new framerate uncapped turning system
+    #if PSYDOOM_MODS
+        // PsyDoom: initialize the new framerate uncapped turning system
         P_PlayerInitTurning();
 
-        // PC-PSX: don't interpolate the first draw frame if doing uncapped framerates
+        // PsyDoom: don't interpolate the first draw frame if doing uncapped framerates
         if (Config::gbUncapFramerate) {
             R_NextInterpolation();
         }
@@ -667,8 +667,8 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     // Finish up any GPU related work
     LIBGPU_DrawSync(0);
 
-    // PC-PSX: save/check demo result if requested
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: save/check demo result if requested
+    #if PSYDOOM_MODS
         if (gbDemoPlayback || gbDemoRecording) {
             if (ProgArgs::gSaveDemoResultFilePath[0]) {
                 DemoResult::saveToJsonFile(ProgArgs::gSaveDemoResultFilePath);
@@ -700,7 +700,7 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     }
 }
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the inputs to use for the next tick

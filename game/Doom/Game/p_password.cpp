@@ -6,7 +6,7 @@
 #include "p_inter.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX helper to make the encoding logic byte bit cleaner and remove some redundancy.
+// PsyDoom helper to make the encoding logic byte bit cleaner and remove some redundancy.
 // Divide 'byte' by 'b' and do byte 'ceil' operation on the potentially non integer result.
 // Returns the answer as an unsigned 8-bit integer.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,17 +65,17 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     // Encode byte: armor type
     pwdata[5] = (uint8_t)(player.armortype << 3);
 
-    // PC-PSX: incorporating an improvement from PSXDOOM-RE to encode an additional 2 map number bits.
+    // PsyDoom: incorporating an improvement from PSXDOOM-RE to encode an additional 2 map number bits.
     // This allows for map numbers from 0-255 instead of just 0-63, if required.
     pwdata[5] |= (gNextMap & 64) ? 0x20 : 0;
     pwdata[5] |= (gNextMap & 128) ? 0x40 : 0;
 
-    // PC-PSX: encode if the game is operating in nightmare mode in the top bit of the last unencrypted byte.
+    // PsyDoom: encode if the game is operating in nightmare mode in the top bit of the last unencrypted byte.
     // This change is compatible with a similar change in 'PSXDOOM-RE' so passwords should be compatible beween both projects.
     //
     // Note: only the top 5 bits of the last unencrypted byte are encoded to a password. 2 bits are used by armortype, and now
     // 1 extra bit is used by nightmare mode. Therefore there are still 2 bits left for over purposes, perhaps extended level support?
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if (gGameSkill == sk_nightmare) {
             pwdata[5] |= 0x80;
         }
@@ -173,9 +173,9 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
     }
     
     // Decode byte: current map and skill.
-    // PC-PSX: incorporating an improvement from PSXDOOM-RE to decode an additional 2 map number bits.
+    // PsyDoom: incorporating an improvement from PSXDOOM-RE to decode an additional 2 map number bits.
     // This allows for map numbers from 0-255 instead of just 0-63, if required.
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const int32_t mapNum = (pwdata[0] >> 2) + ((pwdata[5] & 0x20) ? 64 : 0) + ((pwdata[5] & 0x40) ? 128 : 0);
     #else
         const int32_t mapNum = pwdata[0] >> 2;
@@ -188,8 +188,8 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
 
     skillOut = (skill_t)(pwdata[0] & 3);
 
-    #if PC_PSX_DOOM_MODS
-        // PC-PSX: support the nightmare skill level in passwords!
+    #if PSYDOOM_MODS
+        // PsyDoom: support the nightmare skill level in passwords!
         if (pwdata[5] & 0x80) {
             skillOut = sk_nightmare;
         }
@@ -217,8 +217,8 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
         return false;
     
     // Decode byte: armor type
-    #if PC_PSX_DOOM_MODS
-        const int32_t armorType = (pwdata[5] >> 3) & 0x3;  // PC-PSX: added a mask operation here on account of the 'nightmare' flag now being in the top bit
+    #if PSYDOOM_MODS
+        const int32_t armorType = (pwdata[5] >> 3) & 0x3;  // PsyDoom: added a mask operation here on account of the 'nightmare' flag now being in the top bit
     #else
         const int32_t armorType = pwdata[5] >> 3;
     #endif

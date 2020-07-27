@@ -63,7 +63,7 @@ static uint8_t readCdCmdResultByte() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// NEW for PC-PSX: step the CD-ROM and invoke 'data ready' callbacks if a new sector was read.
+// NEW for PsyDoom: step the CD-ROM and invoke 'data ready' callbacks if a new sector was read.
 // This method is CRUCIAL for correct functionality (to invoke callbacks) because I do not use emulated interrupts at all.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PsxVm::stepCdromWithCallbacks() noexcept {

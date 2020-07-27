@@ -67,7 +67,7 @@ static constexpr fixed_t MAXBOB                 = 16 * FRACUNIT;                
 // Flag set to true when the player is on the ground
 static bool gbOnGround;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     // Convenience typedef
     typedef std::chrono::high_resolution_clock::time_point time_point_t;
 
@@ -250,7 +250,7 @@ static void P_BuildMove(player_t& player) noexcept {
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
     const bool bIsFinalDoom = Game::isFinalDoom();
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gPlayerNum];
         const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
 
@@ -350,8 +350,8 @@ static void P_BuildMove(player_t& player) noexcept {
     }
     else {
         // No strafe button held: do normal turning.
-        // PC-PSX: we now only do this if playing back a demo, turning movements are now done outside of 30 Hz ticks and only committed here.
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: we now only do this if playing back a demo, turning movements are now done outside of 30 Hz ticks and only committed here.
+        #if PSYDOOM_MODS
             const bool bDoTurning = gbDemoPlayback;
         #else
             const bool bDoTurning = true;
@@ -408,9 +408,9 @@ static void P_BuildMove(player_t& player) noexcept {
         player.psxMouseUseCountdown--;
     }
 
-    // PC-PSX: apply analog turning movements; this has already been adjusted for framerate, so is applied directly.
+    // PsyDoom: apply analog turning movements; this has already been adjusted for framerate, so is applied directly.
     // We ignore the new turning system however when playing back demos.
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if (!gbDemoPlayback) {
             player.angleturn += inputs.analogTurn;
         }
@@ -438,8 +438,8 @@ static void P_BuildMove(player_t& player) noexcept {
     // Apply Final Doom mouse movement also
     player.forwardmove += psxMouseMoveY;
     
-    // PC-PSX: do analog movements
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: do analog movements
+    #if PSYDOOM_MODS
         if (bIsFinalDoom) {
             player.forwardmove -= FixedMul(inputs.analogForwardMove, FORWARD_MOVE_FDOOM[speedMode]);
             player.sidemove += FixedMul(inputs.analogSideMove, SIDE_MOVE_FDOOM[speedMode]);
@@ -575,9 +575,9 @@ static void P_MovePlayer(player_t& player) noexcept {
     mobj_t& mobj = *player.mo;
 
     if (Game::isFinalDoom()) {
-        // PC-PSX: we only need to apply the vblank scale if playing a demo.
+        // PsyDoom: we only need to apply the vblank scale if playing a demo.
         // If not playing a demo then it has already been applied.
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             if (!gbDemoPlayback) {
                 mobj.angle += player.angleturn;
             } else {
@@ -662,7 +662,7 @@ static void P_DeathThink(player_t& player) noexcept {
     }
 
     // Respawn if the right buttons are pressed and the player's view has dropped enough
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const bool bRespawnBtnPressed = gTickInputs[gPlayerNum].bRespawn;
     #else
         const bool bRespawnBtnPressed = (gTicButtons[gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS));
@@ -679,7 +679,7 @@ static void P_DeathThink(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerThink(player_t& player) noexcept {
     // Grab the current and previous inputs
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gPlayerNum];
         const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
 
@@ -757,8 +757,8 @@ void P_PlayerThink(player_t& player) noexcept {
             player.pendingweapon = (weapontype_t) nextWeaponIdx;
         }
 
-        // PC-PSX: do direct weapon switching too if requested, if the weapon is valid and different to the current equipped weapon
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: do direct weapon switching too if requested, if the weapon is valid and different to the current equipped weapon
+        #if PSYDOOM_MODS
             if ((inputs.directSwitchToWeapon != wp_nochange) && (inputs.directSwitchToWeapon < NUMWEAPONS)) {
                 const bool bAllowSwitch = (
                     player.weaponowned[inputs.directSwitchToWeapon] && (            // Must own the weapon to switch to it
@@ -777,8 +777,8 @@ void P_PlayerThink(player_t& player) noexcept {
     // Updates for when the game is NOT paused
     if (!gbGamePaused) {
         // Do physical movements due to velocity and state transitions for the player.
-        // PC-PSX: do this AFTER gathering inputs to reduce input lag, except in the case of demos (for compatibility).
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: do this AFTER gathering inputs to reduce input lag, except in the case of demos (for compatibility).
+        #if PSYDOOM_MODS
             const bool bUseOrigMovement = (gbDemoPlayback || gbDemoRecording);
         #else
             const bool bUseOrigMovement = false;
@@ -798,7 +798,7 @@ void P_PlayerThink(player_t& player) noexcept {
         if (player.playerstate == PST_DEAD) {
             P_DeathThink(player);
 
-            // PC-PSX: just being consistent with the 'alive' case if we are using tweaked movement
+            // PsyDoom: just being consistent with the 'alive' case if we are using tweaked movement
             if (!bUseOrigMovement) {
                 P_PlayerMobjThink(playerMobj);
             }
@@ -818,7 +818,7 @@ void P_PlayerThink(player_t& player) noexcept {
                 playerMobj.reactiontime--;
             }
 
-            // PC-PSX: actually move the player at this point, AFTER inputs
+            // PsyDoom: actually move the player at this point, AFTER inputs
             if (!bUseOrigMovement) {
                 P_PlayerMobjThink(playerMobj);
             }
@@ -918,10 +918,10 @@ void P_PlayerThink(player_t& player) noexcept {
     }
 }
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX: initialize the new (framerate uncapped) turning system for the current player
+// PsyDoom: initialize the new (framerate uncapped) turning system for the current player
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerInitTurning() noexcept {
     gLastPlayerTurnTime = std::chrono::high_resolution_clock::now();
@@ -931,7 +931,7 @@ void P_PlayerInitTurning() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX: do the newly added framerate uncapped turning for the current player.
+// PsyDoom: do the newly added framerate uncapped turning for the current player.
 // We now allow turning at any point in time and without any interpolation, to reduce input lag.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerDoTurning() noexcept {

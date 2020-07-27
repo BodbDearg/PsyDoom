@@ -19,8 +19,8 @@ enum option_t : int32_t {
     opt_music,
     opt_sound,
     opt_password,
-// PC-PSX: Removing the psx controller configuration menu
-#if !PC_PSX_DOOM_MODS
+// PsyDoom: Removing the psx controller configuration menu
+#if !PSYDOOM_MODS
     opt_config,
 #endif
     opt_main_menu,
@@ -31,8 +31,8 @@ const char gOptionNames[][16] = {
     { "Music Volume"    },
     { "Sound Volume"    },
     { "Password"        },
-// PC-PSX: Removing the psx controller configuration menu
-#if !PC_PSX_DOOM_MODS
+// PsyDoom: Removing the psx controller configuration menu
+#if !PSYDOOM_MODS
     { "Configuration"   },
 #endif
     { "Main Menu"       },
@@ -50,8 +50,8 @@ static const menuitem_t gOptMenuItems_MainMenu[] = {
     { opt_music,        62, 65  },
     { opt_sound,        62, 105 },
     { opt_password,     62, 145 },
-// PC-PSX: Removing the psx controller configuration menu
-#if PC_PSX_DOOM_MODS
+// PsyDoom: Removing the psx controller configuration menu
+#if PSYDOOM_MODS
     { opt_main_menu,    62, 170 },
 #else
     { opt_config,       62, 170 },
@@ -63,8 +63,8 @@ static const menuitem_t gOptMenuItems_Single[] = {
     { opt_music,        62, 50  },
     { opt_sound,        62, 90  },
     { opt_password,     62, 130 },
-// PC-PSX: Removing the psx controller configuration menu
-#if PC_PSX_DOOM_MODS
+// PsyDoom: Removing the psx controller configuration menu
+#if PSYDOOM_MODS
     { opt_main_menu,    62, 155 },
     { opt_restart,      62, 180 },
 #else
@@ -135,8 +135,8 @@ void O_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Runs update logic for the options menu: does menu controls
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t O_Control() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
@@ -155,7 +155,7 @@ gameaction_t O_Control() noexcept {
         // Exit the menu if start or select is pressed.
         // Note: checking for buttons newly pressed (as opposed to just pressed) here is a change incorporated from Final Doom.
         // It's required due to some changes made in other UIs like the password screen.
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             const TickInputs& inputs = gTickInputs[playerIdx];
             const TickInputs& oldInputs = gOldTickInputs[playerIdx];
 
@@ -307,8 +307,8 @@ gameaction_t O_Control() noexcept {
                 }
             }   break;
 
-        // PC-PSX: Removing the psx controller configuration menu
-        #if !PC_PSX_DOOM_MODS
+        // PsyDoom: Removing the psx controller configuration menu
+        #if !PSYDOOM_MODS
             // Controller configuration
             case opt_config: {
                 if (bMenuOk) {

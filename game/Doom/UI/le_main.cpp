@@ -40,8 +40,8 @@ void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the 'legals' screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Legals() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
@@ -61,8 +61,8 @@ gameaction_t TIC_Legals() noexcept {
             if (waitTicsElapsed >= 180)
                 return ga_timeout;
             
-            // PC-PSX: only accept main menu buttons to skip
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: only accept main menu buttons to skip
+            #if PSYDOOM_MODS
                 if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
                     return ga_exit;
             #else

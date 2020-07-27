@@ -1,7 +1,7 @@
 #pragma once
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// IMPORTANT note for PC-PSX: GPU primitive encoding changes:
+// IMPORTANT note for PsyDoom: GPU primitive encoding changes:
 //
 //  Originally the 'pointer to the next primitive' field for all GPU primitives was a 24-bit absolute memory address within the 2 MiB of
 //  the PlayStation. I changed it's meaning/semantics to be relative to the start of the GPU command buffer currently in use, since the
@@ -26,7 +26,7 @@ static_assert(sizeof(RECT) == 8);
 
 // Drawing primitive: unconnected flat shaded line
 struct LINE_F2 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PC-PSX: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
     uint8_t     r0;         // Line color
     uint8_t     g0;
     uint8_t     b0;
@@ -41,7 +41,7 @@ static_assert(sizeof(LINE_F2) == 16);
 
 // Drawing primitive: flat shaded textured triangle (polygon 3)
 struct POLY_FT3 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PC-PSX: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
     uint8_t     r0;         // Color to shade the primitive with
     uint8_t     g0;
     uint8_t     b0;
@@ -67,7 +67,7 @@ static_assert(sizeof(POLY_FT3) == 32);
 
 // Drawing primitive: flat shaded colored quad (polygon 4)
 struct POLY_F4 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PC-PSX: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
     uint8_t     r0;         // Color to shade the primitive with
     uint8_t     g0;
     uint8_t     b0;
@@ -86,7 +86,7 @@ static_assert(sizeof(POLY_F4) == 24);
 
 // Drawing primitive: flat shaded textured quad (polygon 4)
 struct POLY_FT4 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PC-PSX: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
     uint8_t     r0;         // Color to shade the primitive with
     uint8_t     g0;
     uint8_t     b0;
@@ -117,7 +117,7 @@ static_assert(sizeof(POLY_FT4) == 40);
 
 // Drawing primitive: arbitrarily sized sprite
 struct SPRT {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive (PC-PSX: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive (PsyDoom: now 24-bit cmd buffer offset)
     uint8_t     r0;         // Color to apply to the sprite
     uint8_t     g0;
     uint8_t     b0;
@@ -135,7 +135,7 @@ static_assert(sizeof(SPRT) == 20);
 
 // Drawing primitive: 8x8 sprite
 struct SPRT_8 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive (PC-PSX: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive (PsyDoom: now 24-bit cmd buffer offset)
     uint8_t     r0;         // Color to apply to the sprite
     uint8_t     g0;
     uint8_t     b0;
@@ -159,7 +159,7 @@ static_assert(sizeof(DR_MODE) == 12);
 
 // Drawing primitive: modify the current texture window as specified by 'LIBGPU_SetTexWindow()'
 struct DR_TWIN {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PC-PSX: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
     uint32_t    code[2];    // The settings made via 'LIBGPU_SetTexWindow()'
 };
 

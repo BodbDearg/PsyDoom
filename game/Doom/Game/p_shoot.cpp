@@ -129,9 +129,9 @@ bool PA_DoIntercept(void* const pObj, const bool bIsLine, const fixed_t hitFrac)
     if ((test_hitFrac == 0) || (test_hitFrac >= FRACUNIT))
         return true;
 
-    // PC-PSX: added safety - just in case.
+    // PsyDoom: added safety - just in case.
     // I don't think it's ever possible to get into a scenario where the test object is null here, but I'm going to guarantee it anyhow...
-    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+    #if PSYDOOM_MODS && PSYDOOM_FIX_UB
         if (!test_pObj)
             return true;
     #else

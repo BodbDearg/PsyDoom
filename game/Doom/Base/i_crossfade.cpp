@@ -107,8 +107,8 @@ void I_CrossFadeFrameBuffers() noexcept {
         LIBGPU_PutDrawEnv(drawEnvs[framebufferIdx]);
         LIBGPU_PutDispEnv(dispEnvs[framebufferIdx]);
 
-        // PC-PSX: copy the PSX framebuffer to the display
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: copy the PSX framebuffer to the display
+        #if PSYDOOM_MODS
             Video::displayFramebuffer();
         #endif
     }

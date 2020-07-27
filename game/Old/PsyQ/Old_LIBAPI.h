@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Flags for 'LIBAPI_open' to specify how the stream behaves
@@ -19,4 +19,4 @@ int32_t LIBAPI_read(const int32_t fileDesc, void* const pBuffer, const int32_t n
 int32_t LIBAPI_write(const int32_t fileDesc, const void* const pBuffer, const int32_t numBytes) noexcept;
 bool LIBAPI_TestEvent(const uint32_t eventDescriptor) noexcept;
 
-#endif  // #if !PC_PSX_DOOM_MODS
+#endif  // #if !PSYDOOM_MODS

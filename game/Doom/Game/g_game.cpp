@@ -56,8 +56,8 @@ bool gbDemoRecording;
 // Is the level being restarted?
 bool gbIsLevelBeingRestarted;
 
-#if PC_PSX_DOOM_MODS
-    // PC-PSX: are we playing an original PAL format demo?
+#if PSYDOOM_MODS
+    // PsyDoom: are we playing an original PAL format demo?
     // Some game timing adjustments need to be made for that case.
     bool gbPlayingPalDemo;
 #endif
@@ -75,8 +75,8 @@ void G_DoLoadLevel() noexcept {
 
     // Wait for the pistol and barrel explode menu sounds to stop playing
     while ((wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING) || (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING)) {
-        // PC-PSX: need to update sound to escape this loop, also ensure the window stays responsive etc.
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: need to update sound to escape this loop, also ensure the window stays responsive etc.
+        #if PSYDOOM_MODS
             Utils::doPlatformUpdates();
             Utils::threadYield();
         #endif
@@ -117,7 +117,7 @@ void G_PlayerFinishLevel(int32_t playerIdx) noexcept {
     D_memset(gPlayers[playerIdx].cards, std::byte(0), sizeof(player_t::cards));
 
     // Clear blending flags on the player.
-    // PC-PSX: preserve the noclip cheat also, if active.
+    // PsyDoom: preserve the noclip cheat also, if active.
     mobj_t& mobj = *gPlayers[playerIdx].mo;
     mobj.flags &= (~MF_ALL_BLEND_FLAGS);
 
@@ -300,9 +300,9 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     gbPlayerInGame[0] = true;
 
     if (gameType == gt_single) {
-        // PC-PSX: we don't need sets of pointers to the bindings for each player anymore.
+        // PsyDoom: we don't need sets of pointers to the bindings for each player anymore.
         // We only store PSX control bindings for the current player in any game type (networked or single player).
-        #if !PC_PSX_DOOM_MODS
+        #if !PSYDOOM_MODS
             gpPlayerCtrlBindings[0] = gCtrlBindings;
         #endif
 
@@ -374,7 +374,7 @@ void G_RunGame() noexcept {
         // Should we do the Ultimate DOOM style (text only, no cast sequence) finale?
         // Note that for Final Doom this will show when finishing the first 2 out of 3 episodes.
         //
-        // PC-PSX: I'm also restricting endings to the Doom and Final Doom games specifically.
+        // PsyDoom: I'm also restricting endings to the Doom and Final Doom games specifically.
         // If some other game type is playing then we simply won't do them.
         const bool bDoFinales = ((Game::gGameType == GameType::Doom) || (Game::gGameType == GameType::FinalDoom));
         const int32_t curEpisodeNum = Game::getMapEpisode(gGameMap);
@@ -421,7 +421,7 @@ void G_RunGame() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t G_PlayDemoPtr() noexcept {
     // Playing a PAL format demo?
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         gbPlayingPalDemo = (Game::gGameVariant == GameVariant::PAL);
     #endif
 
@@ -449,8 +449,8 @@ gameaction_t G_PlayDemoPtr() noexcept {
         gCtrlBindings[9] = 0;
     }
 
-    #if PC_PSX_DOOM_MODS
-        // PC-PSX: endian correct the controls read from the demo
+    #if PSYDOOM_MODS
+        // PsyDoom: endian correct the controls read from the demo
         if constexpr (!Endian::isLittle()) {
             for (uint32_t i = 0; i < NUM_BINDABLE_BTNS; ++i) {
                 gCtrlBindings[i] = Endian::littleToHost(gCtrlBindings[i]);
@@ -490,8 +490,8 @@ gameaction_t G_PlayDemoPtr() noexcept {
     gLockedTexPagesMask &= 1;
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 
-    // PC-PSX: cleanup the demo pointer when we're done and mark us as no longer playing a PAL demo (if playing one)
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: cleanup the demo pointer when we're done and mark us as no longer playing a PAL demo (if playing one)
+    #if PSYDOOM_MODS
         gpDemo_p = nullptr;
         gbPlayingPalDemo = false;
     #endif

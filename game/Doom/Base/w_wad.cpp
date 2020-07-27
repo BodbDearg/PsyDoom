@@ -139,7 +139,7 @@ void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress
     // Note: modified this check to disallow reading the last lump.
     // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
     // We shouldn't be reading the last WAD lump anyway as it's an end marker...
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if (lumpNum + 1 >= gNumLumps) {
             I_Error("W_ReadLump: %i + 1 >= numlumps", lumpNum);
         }
@@ -184,7 +184,7 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
     // Note: modified this check to disallow caching the last lump.
     // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
     // We shouldn't be reading the last WAD lump anyway as it's an end marker...
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if (lumpNum + 1 >= gNumLumps) {
             I_Error("W_CacheLumpNum: %i + 1 >= numlumps", lumpNum);
         }
@@ -202,9 +202,9 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
         // Because CD-ROM I/O is so slow, this would cause very serious stalls and slowdowns during gameplay, so consider it a fatal error.
         // Unlike PC DOOM the PSX version cannot simply stream in lumps on the fly...
         //
-        // PC-PSX: waive this restriction and allow lumps to be loaded in on the fly.
+        // PsyDoom: waive this restriction and allow lumps to be loaded in on the fly.
         // This change means that levels no longer need to ship with 'MAPSPR--.IMG' and 'MAPTEX--.IMG' files.
-        #if !PC_PSX_DOOM_MODS
+        #if !PSYDOOM_MODS
             if (gbIsLevelDataCached) {
                 I_Error("cache miss on lump %i", lumpNum);
             }
@@ -263,11 +263,11 @@ void* W_OpenMapWad(const CdFileId discFile) noexcept {
 
     // Make sure the file id is valid.
     // Note that PSX DOOM expects the identifier "IWAD" also in it's map wads, rather then "PWAD".
-    // I am relaxing this restriction for the PC-PSX version however and accepting "PWAD" if there:
+    // I am relaxing this restriction for PsyDoom however and accepting "PWAD" if there:
     const wadinfo_t& wadinfo = *(wadinfo_t*) gpMapWadFileData;
 
     const bool bIsValidWad = (
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             D_strncasecmp(wadinfo.fileid, "PWAD", sizeof(wadinfo.fileid) != 0) ||
         #endif
             D_strncasecmp(wadinfo.fileid, "IWAD", sizeof(wadinfo.fileid) != 0)
@@ -341,7 +341,7 @@ void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompr
     // Note: modified this check to disallow reading the last lump.
     // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
     // We shouldn't be reading the last WAD lump anyway as it's an end marker...
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if (lumpNum + 1 >= gNumMapWadLumps) {
             I_Error("W_ReadMapLump: lump %d + 1 out of range", lumpNum);
         }

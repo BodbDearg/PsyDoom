@@ -4,7 +4,7 @@
 
 struct player_t;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     extern angle_t gPlayerUncommittedMouseTurning;
     extern angle_t gPlayerUncommittedAxisTurning;
     extern angle_t gPlayerNextTickViewAngle;
@@ -12,7 +12,7 @@ struct player_t;
 
 void P_PlayerThink(player_t& player) noexcept;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     void P_PlayerInitTurning() noexcept;
     void P_PlayerDoTurning() noexcept;
 #endif

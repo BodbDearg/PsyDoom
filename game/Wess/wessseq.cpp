@@ -715,8 +715,8 @@ void Eng_TrkGosub(track_status& trackStat) noexcept {
   
     if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
         // Save the return location to after this command in the track's location stack.
-        // PC-PSX: small correction here, though makes no difference - the command length taken should be 'TrkGosub' instead of 'SeqGosub'.
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: small correction here, though makes no difference - the command length taken should be 'TrkGosub' instead of 'SeqGosub'.
+        #if PSYDOOM_MODS
             *trackStat.ploc_stack_cur = trackStat.pcur_cmd + gWess_seq_CmdLength[TrkGosub];
         #else
             *trackStat.ploc_stack_cur = trackStat.pcur_cmd + gWess_seq_CmdLength[SeqGosub];

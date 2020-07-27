@@ -171,7 +171,7 @@ texture_t gTex_LOADING;
 texture_t gTex_NETERR;
 texture_t gTex_CONNECT;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     // Max tolerated packet delay in milliseconds: after which we start adjusting clocks
     static int32_t MAX_PACKET_DELAY_MS = 15;
 
@@ -254,9 +254,9 @@ void I_PSXInit() noexcept {
     LIBAPI_EnterCriticalSection();
     LIBAPI_ExitCriticalSection();
 
-    // PC-PSX: no longer need to setup serial I/O stuff.
+    // PsyDoom: no longer need to setup serial I/O stuff.
     // We setup networking on demand when the user goes to start a networked game.
-    #if !PC_PSX_DOOM_MODS
+    #if !PSYDOOM_MODS
         // Setup serial (PlayStation link cable) communications:
         //  (1) Install the serial I/O driver.
         //  (2) Setup events for read and write done, so we can detect when these operations complete.
@@ -317,8 +317,8 @@ void I_PSXInit() noexcept {
     // Present the resulting message
     I_DrawPresent();
 
-    // PC-PSX: if running in headless mode then terminate at this point rather than spinning forever
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: if running in headless mode then terminate at this point rather than spinning forever
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode) {
             std::exit(1);
         }
@@ -327,7 +327,7 @@ void I_PSXInit() noexcept {
     // Deliberate infinite loop...
     // The user can kill the app however by closing the window.
     while (true) {
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             Utils::doPlatformUpdates();
         #endif
     }
@@ -437,8 +437,8 @@ void I_DrawSprite(
 // Useful for drawing a loading message before doing a long running load or connect operation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept {
-    // PC-PSX: ignore in headless mdoe
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ignore in headless mdoe
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif
@@ -476,7 +476,7 @@ void I_DrawPresent() noexcept {
     LIBGPU_DrawSync(0);
 
     // Wait until a VBlank occurs to swap the framebuffers.
-    // PC-PSX: Note: this call now does nothing as that would inferfere with frame pacing - here just for historical reference!
+    // PsyDoom: Note: this call now does nothing as that would inferfere with frame pacing - here just for historical reference!
     LIBETC_VSync(0);
 
     // Swap the framebuffers
@@ -484,13 +484,13 @@ void I_DrawPresent() noexcept {
     LIBGPU_PutDrawEnv(gDrawEnvs[gCurDispBufferIdx]);
     LIBGPU_PutDispEnv(gDispEnvs[gCurDispBufferIdx]);
 
-    // PC-PSX: copy the PSX framebuffer to the display
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: copy the PSX framebuffer to the display
+    #if PSYDOOM_MODS
         Video::displayFramebuffer();
     #endif
 
     // How many vblanks there are in a demo tick
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const int32_t demoTickVBlanks = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
     #else
         const int32_t demoTickVBlanks = VBLANKS_PER_TIC;
@@ -498,8 +498,8 @@ void I_DrawPresent() noexcept {
     
     // Continously poll and wait until the required number of vblanks have elapsed before continuing
     while (true) {
-        // PC-PSX: use 'I_GetTotalVBlanks' because it can adjust time in networked games
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: use 'I_GetTotalVBlanks' because it can adjust time in networked games
+        #if PSYDOOM_MODS
             const int32_t curVBlanks = I_GetTotalVBlanks();
         #else
             const int32_t curVBlanks = LIBETC_VSync(-1);
@@ -507,10 +507,10 @@ void I_DrawPresent() noexcept {
 
         const int32_t elapsedVBlanks = curVBlanks - gLastTotalVBlanks;
 
-        // PC-PSX: don't wait and spin here if doing an uncapped framerate - exit immediately. However, don't register any
+        // PsyDoom: don't wait and spin here if doing an uncapped framerate - exit immediately. However, don't register any
         // elapsed vblanks if we haven't passed the required interval (a 30 Hz tick for normal gameplay, a 15 Hz tick for demos).
         // This prevents the game from ticking if it hasn't met the time requirements.
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             if (Config::gbUncapFramerate) {
                 const int32_t minTickVBlanks = (gbDemoPlayback || gbDemoRecording) ? demoTickVBlanks : 2;
 
@@ -528,8 +528,8 @@ void I_DrawPresent() noexcept {
         if (gElapsedVBlanks >= 2)
             break;
 
-        // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
+        #if PSYDOOM_MODS
             Utils::doPlatformUpdates();
             Utils::threadYield();
         #endif
@@ -540,14 +540,14 @@ void I_DrawPresent() noexcept {
     // Probably done so the simulation remains consistent!
     if (gbDemoPlayback || gbDemoRecording) {
         while (gElapsedVBlanks < (uint32_t) demoTickVBlanks) {
-            // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
+            #if PSYDOOM_MODS
                 Utils::doPlatformUpdates();
                 Utils::threadYield();
             #endif
 
-            // PC-PSX: use 'I_GetTotalVBlanks' because it can adjust time in networked games
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: use 'I_GetTotalVBlanks' because it can adjust time in networked games
+            #if PSYDOOM_MODS
                 gTotalVBlanks = I_GetTotalVBlanks();
             #else
                 gTotalVBlanks = LIBETC_VSync(-1);
@@ -611,9 +611,9 @@ void I_CacheTex(texture_t& tex) noexcept {
         if (gTCacheFillCellY + tex.height16 > TCACHE_CELLS_Y) {
             const uint32_t lockedTPages = gLockedTexPagesMask;
 
-            // PC-PSX: if all the pages are locked this code will loop forever.
+            // PsyDoom: if all the pages are locked this code will loop forever.
             // If this situation arises go straight to the overflow error so we can at least report the problem.
-            #if PC_PSX_DOOM_MODS
+            #if PSYDOOM_MODS
                 if ((lockedTPages & ALL_TPAGES_MASK) != ALL_TPAGES_MASK) {
             #endif
                     // Continue moving to the next texture page and wraparound if required until we find one that is not locked
@@ -621,7 +621,7 @@ void I_CacheTex(texture_t& tex) noexcept {
                         gTCacheFillPage++;
                         gTCacheFillPage -= (gTCacheFillPage / NUM_TCACHE_PAGES) * NUM_TCACHE_PAGES;
                     } while ((lockedTPages >> gTCacheFillPage) & 1);
-            #if PC_PSX_DOOM_MODS
+            #if PSYDOOM_MODS
                 }
             #endif
 
@@ -750,8 +750,8 @@ void I_CacheTex(texture_t& tex) noexcept {
 // Note this should only be called if the texture is actually in the cache!
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_RemoveTexCacheEntry(texture_t& tex) noexcept {
-    // PC-PSX: added sanity check: this could trash textures in the cache if the texture is already freed!
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: added sanity check: this could trash textures in the cache if the texture is already freed!
+    #if PSYDOOM_MODS
         ASSERT(tex.texPageId != 0);
     #endif
 
@@ -780,10 +780,10 @@ void I_PurgeTexCache() noexcept {
         // Leave this texture page alone and skip past it if it is locked
         const uint32_t lockedTCachePages = gLockedTexPagesMask;
 
-        // PC-PSX: this could potentially skip past the last texture cache page if it is locked.
+        // PsyDoom: this could potentially skip past the last texture cache page if it is locked.
         // It doesn't happen in practice because the last pages are always used for sprites and unlocked, but
         // change the method used here to skip just in case we do get undefined behavior...
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             if ((lockedTCachePages >> texPageIdx) & 1)
                 continue;
         #else
@@ -823,12 +823,12 @@ void I_PurgeTexCache() noexcept {
 
     // Decide on the initial texture cache fill page: find the first page that is not locked.
     //
-    // PC-PSX: I also added an additional safety check here.
+    // PsyDoom: I also added an additional safety check here.
     // If all the pages are locked for some reason this code would loop forever, check for that situation first.
     const uint32_t lockedTPages = gLockedTexPagesMask;
     gTCacheFillPage = 0;
     
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if ((lockedTPages & ALL_TPAGES_MASK) != ALL_TPAGES_MASK) {
     #endif
             // Move onto the next texture cache page and wraparound, until we find an unlocked page to settle on
@@ -836,7 +836,7 @@ void I_PurgeTexCache() noexcept {
                 gTCacheFillPage++;
                 gTCacheFillPage -= (gTCacheFillPage / NUM_TCACHE_PAGES) * NUM_TCACHE_PAGES;
             }
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         }
     #endif
 
@@ -930,11 +930,11 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
     }
 }
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does the setup for a network game: synchronizes between players, then sends the game details and control bindings.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetSetup() noexcept {
     // Establish a connection over TCP for the server and client of the game.
@@ -1020,7 +1020,7 @@ void I_NetSetup() noexcept {
 // Sends the packet for the current frame in a networked game and receives the packet from the other player.
 // Also does error checking, to make sure that the connection is still OK.
 // Returns 'true' if a network error has occurred.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool I_NetUpdate() noexcept {
     // Compute the value used for error checking.
@@ -1163,7 +1163,7 @@ bool I_NetUpdate() noexcept {
         gNextTickInputs = {};
         gNextPlayerElapsedVBlanks = 0;
 
-        // PC-PSX: wait for 2 seconds so the network error can be displayed.
+        // PsyDoom: wait for 2 seconds so the network error can be displayed.
         // When done clear the screen so the 'loading' message displays clearly and not overlapped with the 'network error' message:
         Utils::waitForSeconds(2.0f);
         I_DrawPresent();
@@ -1198,11 +1198,11 @@ bool I_NetUpdate() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Used to do a synchronization handshake between the two players over the serial cable.
 // Now does nothing since the underlying transport protocol (TCP) guarantees reliability and packet ordering.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetHandshake() noexcept {}
 
-#endif  // #if PC_PSX_DOOM_MODS
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Submits any pending draw primitives in the gpu commands buffer to the GPU
@@ -1221,10 +1221,10 @@ void I_SubmitGpuCmds() noexcept {
     gpGpuPrimsEnd = gGpuCmdsBuffer;
 }
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX: get the total number of vblanks elapsed, and use the current time adjustment in networked games
+// PsyDoom: get the total number of vblanks elapsed, and use the current time adjustment in networked games
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t I_GetTotalVBlanks() noexcept {
     typedef std::chrono::system_clock::time_point               time_point_t;

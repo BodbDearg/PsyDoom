@@ -18,8 +18,8 @@ static constexpr uint32_t NUM_TCACHE_PAGE_CELLS = TCACHE_CELLS_X * TCACHE_CELLS_
 static constexpr uint32_t ALL_TPAGES_MASK       = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
 
 // Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB.
-// PC-PSX: small adjustment of +8 so that the textures for the 'legals' UI (and other large textures) can load without overflow.
-#if PC_PSX_DOOM_MODS
+// PsyDoom: small adjustment of +8 so that the textures for the 'legals' UI (and other large textures) can load without overflow.
+#if PSYDOOM_MODS
     static constexpr uint32_t TMP_BUFFER_SIZE = 0x10008;
 #else
     static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
@@ -119,6 +119,6 @@ bool I_NetUpdate() noexcept;
 void I_NetHandshake() noexcept;
 void I_SubmitGpuCmds() noexcept;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     int32_t I_GetTotalVBlanks() noexcept;
 #endif

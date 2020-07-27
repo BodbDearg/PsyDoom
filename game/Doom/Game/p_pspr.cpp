@@ -334,7 +334,7 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
     }
 
     // If the fire button is pressed then try fire the player's weapon
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const bool bAttack = gTickInputs[gPlayerNum].bAttack;
     #else
         const padbuttons_t attackBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
@@ -360,7 +360,7 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
 // Otherwise switch to another weapon if out of ammo after firing.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_ReFire(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const bool bAttack = gTickInputs[gPlayerNum].bAttack;
     #else
         const padbuttons_t attackBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
@@ -710,7 +710,7 @@ void A_Light2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
 // Up to 40 explosions are created.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_BFGSpray(mobj_t& mobj) noexcept {
-    // PC-PSX: add extra assert here - it's expected the map object has a target (the firer of the BFG, i.e the player thing)
+    // PsyDoom: add extra assert here - it's expected the map object has a target (the firer of the BFG, i.e the player thing)
     ASSERT(mobj.target);
     mobj_t& target = *mobj.target;
 
@@ -791,7 +791,7 @@ void P_SetupPsprites(const int32_t playerIdx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_MovePsprites(player_t& player) noexcept {
     // This is the length of a player sprite tick (in vblanks)
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const int32_t tickVblLength = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
     #else
         const int32_t tickVblLength = VBLANKS_PER_TIC;

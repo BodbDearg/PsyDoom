@@ -36,8 +36,8 @@ int32_t gTicCon;
 // The number of elapsed vblanks (60Hz) for all players
 int32_t gPlayersElapsedVBlanks[MAXPLAYERS];
 
-// PC-PSX: networking - what amount of elapsed vblanks we told the other player we will simulate next
-#if PC_PSX_DOOM_MODS
+// PsyDoom: networking - what amount of elapsed vblanks we told the other player we will simulate next
+#if PSYDOOM_MODS
     int32_t gNextPlayerElapsedVBlanks;
 #endif
 
@@ -53,10 +53,10 @@ gametype_t  gStartGameType      = gt_single;
 // Net games: set if a network game being started was aborted
 bool gbDidAbortGame = false;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     bool        gbIsFirstTick;          // Set to 'true' for the very first tick only, 'false' thereafter
     bool        gbKeepInputEvents;      // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
-    uint32_t*   gpDemoBufferEnd;        // PC-PSX: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
+    uint32_t*   gpDemoBufferEnd;        // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
 #endif
 
 // Debug draw string position
@@ -71,10 +71,10 @@ void D_DoomMain() noexcept {
     // PlayStation specific setup
     I_PSXInit();
 
-    // PC-PSX: Sound init: allocate a buffer big enough to hold the WMD file (as it is on disk) temporarily.
+    // PsyDoom: Sound init: allocate a buffer big enough to hold the WMD file (as it is on disk) temporarily.
     // The original PSX Doom used the 64 KiB static 'temp' buffer for this purpose; Final Doom did a temp 'Z_EndMalloc' of 122,880 bytes
     // because it's WMD file was much bigger. This method is more flexible and will allow for practically any sized WMD.
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
     {
         const int32_t wmdFileSize = psxcd_get_file_size(CdFileId::DOOMSND_WMD);
         std::unique_ptr<std::byte[]> wmdFileBuffer(new std::byte[wmdFileSize]);
@@ -97,7 +97,7 @@ void D_DoomMain() noexcept {
     gLastTgtGameTicCount = 0;
     gTicCon = 0;
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
             gTickInputs[playerIdx] = {};
             gOldTickInputs[playerIdx] = {};
@@ -113,9 +113,9 @@ void D_DoomMain() noexcept {
         }
     #endif
 
-    // PC-PSX: play a single demo file and exit if commanded.
+    // PsyDoom: play a single demo file and exit if commanded.
     // Also, if in headless mode then don't run the main game - only single demo playback is allowed.
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         if (ProgArgs::gPlayDemoFilePath[0]) {
             RunDemoAtPath(ProgArgs::gPlayDemoFilePath);
             return;
@@ -144,8 +144,8 @@ void D_DoomMain() noexcept {
             if (result == ga_timeout)
                 break;
 
-            // PC-PSX: quit the application entirely if requested
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: quit the application entirely if requested
+            #if PSYDOOM_MODS
                 if (result == ga_quitapp)
                     return;
             #endif
@@ -173,8 +173,8 @@ gameaction_t RunTitle() noexcept {
 // The maximum allowed demo size to be handled by this function is 16 KiB.
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemo(const CdFileId file) noexcept {
-    // PC-PSX: ensure this required graphic is loaded before starting the demo
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ensure this required graphic is loaded before starting the demo
+    #if PSYDOOM_MODS
         if (gTex_LOADING.texPageId == 0) {
             I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
         }
@@ -183,9 +183,9 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
     // Open the demo file
     const uint32_t openFileIdx = OpenFile(file);
 
-    // PC-PSX: determine the file size to read and only read the actual size of the demo rather than assuming it's 16 KiB.
+    // PsyDoom: determine the file size to read and only read the actual size of the demo rather than assuming it's 16 KiB.
     // Also allocate the demo buffer on the native host heap, so as to allow very large demos without affecting zone memory.
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const int32_t demoFileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
 
         std::unique_ptr<uint8_t[]> pDemoBuffer(new uint8_t[demoFileSize]);
@@ -206,17 +206,17 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
     // Play the demo, free the demo buffer and return the exit action
     const gameaction_t exitAction = G_PlayDemoPtr();
 
-    // PC-PSX: the demo buffer is no longer allocated through the zone memory system; std::unique_ptr will also cleanup after itself
-    #if !PC_PSX_DOOM_MODS
+    // PsyDoom: the demo buffer is no longer allocated through the zone memory system; std::unique_ptr will also cleanup after itself
+    #if !PSYDOOM_MODS
         Z_Free2(*gpMainMemZone, gpDemoBuffer);
     #endif
 
     return exitAction;
 }
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX: load and run the specified demo file at the specified path on the host machine
+// PsyDoom: load and run the specified demo file at the specified path on the host machine
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
     // Ensure this required graphic is loaded before starting the demo
@@ -243,7 +243,7 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
 
     return exitAction;
 }
-#endif  // #if PC_PSX_DOOM_MODS
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs the credits screen
@@ -269,8 +269,8 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
-        // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
+        #if PSYDOOM_MODS
             RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
@@ -296,8 +296,8 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         va_list args;
         va_start(args, fmtMsg);
 
-        // PC-PSX: Use 'vsnprint' as it's safer!
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: Use 'vsnprint' as it's safer!
+        #if PSYDOOM_MODS
             std::vsnprintf(msgBuffer, C_ARRAY_SIZE(msgBuffer), fmtMsg, args);
         #else
             D_vsprintf(msgBuffer, fmtMsg, args);
@@ -408,7 +408,7 @@ int32_t D_strncasecmp(const char* str1, const char* str2, int32_t maxCount) noex
         // Bug fix: if the function is called with 'maxCount' as '0' for some reason then prevent a near infinite loop
         // due to wrapping around to '-1'. I don't think this happened in practice but just guard against it here anyway
         // in case future mods happen to trigger this issue...
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             if (maxCount <= 0)
                 return 0;
         #else
@@ -456,7 +456,7 @@ gameaction_t MiniLoop(
     gTicCon = 0;
     gLastTgtGameTicCount = 0;
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         gbIsFirstTick = true;
         Input::consumeEvents();     // Clear any input events leftover
     #endif
@@ -465,8 +465,8 @@ gameaction_t MiniLoop(
     pStart();
 
     // Update the video refresh timers.
-    // PC-PSX: use 'I_GetTotalVBlanks' because it can adjust time in networked games.
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: use 'I_GetTotalVBlanks' because it can adjust time in networked games.
+    #if PSYDOOM_MODS
         gLastTotalVBlanks = I_GetTotalVBlanks();
     #else
         gLastTotalVBlanks = LIBETC_VSync(-1);
@@ -478,20 +478,20 @@ gameaction_t MiniLoop(
     gameaction_t exitAction = ga_nothing;
 
     while (true) {
-        // PC-PSX: initially assume no elasped vblanks for all players until found otherwise.
+        // PsyDoom: initially assume no elasped vblanks for all players until found otherwise.
         // For net games we should get some elapsed vblanks from the other player in their packet, if it's time to read a new packet.
         // It will be time to read a new packet if we update inputs and timing.
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             for (int32_t i = 0; i < MAXPLAYERS; ++i) {
                 gPlayersElapsedVBlanks[i] = 0;
             }
         #endif
 
         // Update timing and buttons.
-        // PC-PSX: only do if enough time has elapsed or if it's the first frame, due to potentially uncapped framerate.
+        // PsyDoom: only do if enough time has elapsed or if it's the first frame, due to potentially uncapped framerate.
         gPlayersElapsedVBlanks[gCurPlayerIndex] = gElapsedVBlanks;
 
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             const bool bUpdateInputsAndTiming = ((gElapsedVBlanks > 0) || gbIsFirstTick);
         #else
             const bool bUpdateInputsAndTiming = true;
@@ -499,8 +499,8 @@ gameaction_t MiniLoop(
 
         if (bUpdateInputsAndTiming) {
             // Read pad inputs and save as the current pad buttons (note: overwritten if a demo); also save old inputs for button just pressed detection.
-            // PC-PSX: read tick inputs in addition to raw gamepad inputs, this is now the primary input source.
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: read tick inputs in addition to raw gamepad inputs, this is now the primary input source.
+            #if PSYDOOM_MODS
                 for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
                     gOldTickInputs[playerIdx] = gTickInputs[playerIdx];
                 }
@@ -526,9 +526,9 @@ gameaction_t MiniLoop(
                 const bool bNetError = I_NetUpdate();
 
                 if (bNetError) {
-                    // PC-PSX: if a network error occurs don't try to restart the level, the connection is most likely still gone.
+                    // PsyDoom: if a network error occurs don't try to restart the level, the connection is most likely still gone.
                     // Exit to the main menu instead.
-                    #if PC_PSX_DOOM_MODS
+                    #if PSYDOOM_MODS
                         gGameAction = ga_exitdemo;
                         exitAction = ga_exitdemo;
                     #else
@@ -543,11 +543,11 @@ gameaction_t MiniLoop(
                 // Had to move the demo pointer increment and end of demo check to here to work with uncapped framerates.
                 // The demo pointer is now also only incremented whenever actual 'vblanks' are registered as elapsed, which
                 // occurs when the required interval (15 Hz tick for demos, 30 Hz tick for normal gameplay) has elapsed.
-                #if PC_PSX_DOOM_MODS
+                #if PSYDOOM_MODS
                     if (gElapsedVBlanks > 0) {
                         gpDemo_p++;
 
-                        // Note: use a pointer to the end of the demo buffer to tell if the demo has ended for PC-PSX.
+                        // Note: use a pointer to the end of the demo buffer to tell if the demo has ended for PsyDoom.
                         // Don't assume the demo buffer is a fixed size, this allows us to work with demos of any size.
                         // Also, the last tick of the demo does not get executed, hence +1...
                         if (gpDemo_p + 1 >= gpDemoBufferEnd)
@@ -559,10 +559,10 @@ gameaction_t MiniLoop(
                 // Need to either read inputs from or save them to a buffer.
                 if (gbDemoPlayback) {
                     // Demo playback: any button pressed on the gamepad will abort.
-                    // PC-PSX: just use the menu action buttons to abort.
+                    // PsyDoom: just use the menu action buttons to abort.
                     exitAction = ga_exit;
 
-                    #if PC_PSX_DOOM_MODS
+                    #if PSYDOOM_MODS
                         if (tickInputs.bMenuOk || tickInputs.bMenuBack || tickInputs.bMenuStart)
                             break;
                     #else
@@ -572,7 +572,7 @@ gameaction_t MiniLoop(
 
                     // Read inputs from the demo buffer and advance the demo.
                     // N.B: Demo inputs override everything else from here on in.
-                    #if PC_PSX_DOOM_MODS
+                    #if PSYDOOM_MODS
                         const uint32_t padBtns = *gpDemo_p;
                         gTicButtons = padBtns;
                         P_PsxButtonsToTickInputs(padBtns, gCtrlBindings, gTickInputs[gCurPlayerIndex]);
@@ -584,22 +584,22 @@ gameaction_t MiniLoop(
                 else {
                     // Demo recording: record pad inputs to the buffer.
                     // FIXME: need to implement a new demo format to support analog movements etc. - this won't work.
-                    #if PC_PSX_DOOM_MODS
+                    #if PSYDOOM_MODS
                         *gpDemo_p = gTicButtons;
                     #else
                         *gpDemo_p = padBtns;
                     #endif
                 }
 
-                // PC-PSX: moving the demo pointer increment to above to work with uncapped framerates
-                #if !PC_PSX_DOOM_MODS
+                // PsyDoom: moving the demo pointer increment to above to work with uncapped framerates
+                #if !PSYDOOM_MODS
                     gpDemo_p++;
                 #endif
 
                 // Abort demo recording?
                 exitAction = ga_exitdemo;
 
-                #if PC_PSX_DOOM_MODS
+                #if PSYDOOM_MODS
                     if (gTickInputs[gCurPlayerIndex].bTogglePause)
                         break;
                 #else
@@ -607,8 +607,8 @@ gameaction_t MiniLoop(
                         break;
                 #endif
             
-                // PC-PSX: moving the end of demo check to above in order to work with uncapped framerates
-                #if !PC_PSX_DOOM_MODS
+                // PsyDoom: moving the end of demo check to above in order to work with uncapped framerates
+                #if !PSYDOOM_MODS
                     // Is the demo recording too big or are we at the end of the largest possible demo size? If so then stop right now...
                     const int32_t demoTicksElapsed = (int32_t)(gpDemo_p - gpDemoBuffer);
 
@@ -622,8 +622,8 @@ gameaction_t MiniLoop(
             gTicCon += gPlayersElapsedVBlanks[0];
 
             // Advance to the next game tick if it is time; video refreshes at 60 Hz but the game ticks at 15 Hz.
-            // PC-PSX: some tweaks to get PAL format demos working, if playing those.
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: some tweaks to get PAL format demos working, if playing those.
+            #if PSYDOOM_MODS
                 const int32_t tgtGameTicCount = (!gbPlayingPalDemo) ? gTicCon >> VBLANK_TO_TIC_SHIFT : gTicCon / 3;
             #else
                 const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
@@ -643,9 +643,9 @@ gameaction_t MiniLoop(
         if (exitAction != ga_nothing)
             break;
 
-        // PC-PSX: done with input events after the ticker has been called.
+        // PsyDoom: done with input events after the ticker has been called.
         // Unless the ticker has requested that we hold onto them.
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             if (!gbKeepInputEvents) {
                 Input::consumeEvents();
             } else {
@@ -669,7 +669,7 @@ gameaction_t MiniLoop(
     pStop(exitAction);
 
     // Current inputs become the old ones
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
             gOldTickInputs[playerIdx] = gTickInputs[playerIdx];
         }

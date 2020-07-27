@@ -39,7 +39,7 @@ void LIBETC_ResetCallback() noexcept {}
 //    < 0   Return the total number of vertical blank units elapsed since program start.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBETC_VSync(const int32_t mode) noexcept {
-    // PC-PSX: Wait for VBLANK not supported anymore! Just ignore the call.
+    // PsyDoom: Wait for VBLANK not supported anymore! Just ignore the call.
     if (mode == 0)
         return 0;
 

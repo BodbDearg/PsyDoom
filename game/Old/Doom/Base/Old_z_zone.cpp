@@ -1,4 +1,4 @@
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 #include <cstdint>
 
@@ -20,7 +20,7 @@ void Z_Init() noexcept {
     constexpr uint32_t StackStartAddr = StackEndAddr - StackSize;
     constexpr uint32_t AlignedHeapSize = (StackStartAddr - WrappedHeapStartAddr + 3) & 0xFFFFFFFC;
 
-    // PC-PSX: allocate the native heap for the application
+    // PsyDoom: allocate the native heap for the application
     gZoneHeap.reset(new std::byte[AlignedHeapSize]);
 
     // Setup and save the main memory zone (the only zone)

@@ -223,11 +223,11 @@ fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Find the lowest floor height in the sectors surrounding a given sector which is higher than the given input 'base' height.
 //
-// PC-PSX: if there is no such sector, the input base height will be returned rather than an undefined/garbage height value.
+// PsyDoom: if there is no such sector, the input base height will be returned rather than an undefined/garbage height value.
 // It also no longer overflows buffers when checking > 20 adjoining sectors.
 //------------------------------------------------------------------------------------------------------------------------------------------
 fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexcept {
-    // PC-PSX: rewrite this to eliminate potential buffer overflow and also an undefined answer when there is no next higher floor.
+    // PsyDoom: rewrite this to eliminate potential buffer overflow and also an undefined answer when there is no next higher floor.
     // Note that the PC version does NOT have the undefined height/answer bug - it returns the input height when there is no next highest floor.
     // The PC version DOES have a limit of 20 adjacent sectors however, so it can miss stuff in more complex maps.
     //
@@ -242,7 +242,7 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
     // I recorded did de-synchronize when played back in PsyDoom and this is unfortunately unavoidable as undefined behavior is by
     // definition not reproducible under anything but the exact same hardware, execution conditions and compiler etc.
     //
-    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+    #if PSYDOOM_MODS && PSYDOOM_FIX_UB
         fixed_t nextHighestFloor = INT32_MAX;
 
         for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
@@ -1026,8 +1026,8 @@ bool EV_DoDonut(line_t& line) noexcept {
         // Get the next sector beyond the first line in this sector, that will be the outer ring of the 'donut', or the part that is raised:
         sector_t* const pNextSector = getNextSector(*sector.lines[0], sector);
 
-        #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
-            // PC-PSX: safety in case the level is setup wrong - if this line is not two sided then just ignore the command
+        #if PSYDOOM_MODS && PSYDOOM_FIX_UB
+            // PsyDoom: safety in case the level is setup wrong - if this line is not two sided then just ignore the command
             if (!pNextSector)
                 continue;
         #else
@@ -1039,8 +1039,8 @@ bool EV_DoDonut(line_t& line) noexcept {
         for (int32_t lineIdx = 0; lineIdx < pNextSector->linecount; ++lineIdx) {
             line_t& nextSecLine = *pNextSector->lines[lineIdx];
 
-            #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
-                // PC-PSX: safety - allow non two sided lines here, just skip over them
+            #if PSYDOOM_MODS && PSYDOOM_FIX_UB
+                // PsyDoom: safety - allow non two sided lines here, just skip over them
                 if (!nextSecLine.backsector)
                     continue;
             #else

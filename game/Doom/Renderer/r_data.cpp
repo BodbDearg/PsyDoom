@@ -247,7 +247,7 @@ int32_t R_TextureNumForName(const char* const name) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Given a lump name (case insensitive) for a flat texture, returns the texture index among flat texture lumps.
-// PC-PSX: Returns '-1' if the name was not found. Originally returned '0'.
+// PsyDoom: Returns '-1' if the name was not found. Originally returned '0'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t R_FlatNumForName(const char* const name) noexcept {
     // Chunk up the name for faster comparisons and also make case insensitive (uppercase).
@@ -276,9 +276,9 @@ int32_t R_FlatNumForName(const char* const name) noexcept {
         }
     }
 
-    // PC-PSX: Returning '0' means we return a valid index even if not found.
+    // PsyDoom: Returning '0' means we return a valid index even if not found.
     // Fix this and change the return to '-1' if not found.
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         return -1;
     #else
         return 0;
@@ -308,8 +308,8 @@ void R_InitPalette() noexcept {
         I_Error("R_InitPalettes: palette foulup\n");
     }
 
-    // PC-PSX: zero init the palettes list so nothing is undefined if we don't load some (have less palettes for Doom)
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: zero init the palettes list so nothing is undefined if we don't load some (have less palettes for Doom)
+    #if PSYDOOM_MODS
         std::memset(gPaletteClutIds, 0, sizeof(gPaletteClutIds));
     #endif
 
@@ -352,7 +352,7 @@ void R_InitPalette() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX addition: helper that consolidates some commonly used graphics logic in one function.
+// PsyDoom addition: helper that consolidates some commonly used graphics logic in one function.
 //
 // Given the specified texture object which is assumed to be 8-bits per pixel (i.e color indexed), returns the 'RECT' in VRAM where the
 // texture would be placed. Useful for getting the texture's VRAM position prior to uploading to the GPU.

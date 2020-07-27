@@ -89,7 +89,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     // Basic setup of the drawing primitive
     SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         // Set these primitive properties prior to drawing rather than allowing them to be undefined as in the original code.
         // I think this drawing code just happened to work because of the types of operations which occurred just before it.
         // They must have produced primitive state changes that we actually desired for this function...
@@ -354,8 +354,8 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
-        // PC-PSX: define the texture window while we are at, rather than relying on the one set externally
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: define the texture window while we are at, rather than relying on the one set externally
+        #if PSYDOOM_MODS
             const RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else

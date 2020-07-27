@@ -7,7 +7,7 @@
 #include <string>
 
 // The start sector index and size of each file on the game's CD-ROM.
-// PC-PSX: if a file is not present on the disc then the start sector is now assigned a '0' as an indicator.
+// PsyDoom: if a file is not present on the disc then the start sector is now assigned a '0' as an indicator.
 //
 // These values were originally harcoded but are now populated from the disc's actual ISO 9960 filesystem,
 // which allows flexibility for modding and different game versions. For the original harcoded values,
@@ -21,7 +21,7 @@
 //
 PsxCd_MapTblEntry gCdMapTbl[(uint32_t) CdFileId::END] = {};
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
 
 extern const char* const gCdMapTblFileNames[] = {
     "SYSTEM.CNF",
@@ -733,4 +733,4 @@ void CdMapTbl_Init() noexcept {
     }
 }
 
-#endif  // #if PC_PSX_DOOM_MODS
+#endif  // #if PSYDOOM_MODS

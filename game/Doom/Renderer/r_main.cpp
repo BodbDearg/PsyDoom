@@ -52,8 +52,8 @@ int32_t         gNumDrawSubsectors;
 // What sector is currently being drawn
 sector_t* gpCurDrawSector;
 
-// PC-PSX: used for interpolation for uncapped framerates 
-#if PC_PSX_DOOM_MODS
+// PsyDoom: used for interpolation for uncapped framerates 
+#if PSYDOOM_MODS
     typedef std::chrono::high_resolution_clock::time_point timepoint_t;
 
     static timepoint_t  gPrevFrameTime;
@@ -105,8 +105,8 @@ void R_RenderPlayerView() noexcept {
     player_t& player = gPlayers[gCurPlayerIndex];
     gpViewPlayer = &player;
     
-    // PC-PSX: use interpolation to update the actual view if doing an uncapped framerate
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: use interpolation to update the actual view if doing an uncapped framerate
+    #if PSYDOOM_MODS
         const bool bInterpolateFrame = Config::gbUncapFramerate;
     #else
         const bool bInterpolateFrame = false;
@@ -115,7 +115,7 @@ void R_RenderPlayerView() noexcept {
     mobj_t& playerMobj = *player.mo;
 
     if (bInterpolateFrame) {
-        // PC-PSX: this is new logic. Note that I am still truncating coords to integers (in spite of interpolation) because renderer
+        // PsyDoom: this is new logic. Note that I am still truncating coords to integers (in spite of interpolation) because renderer
         // artifacts will occur if we don't. The original renderer appears to be built with the assumption that coords are truncated.
         const fixed_t newViewX = playerMobj.x;
         const fixed_t newViewY = playerMobj.y;
@@ -345,10 +345,10 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
     return &gpSubsectors[actualNodeNum];
 }
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX addition: update the 'previous' values used in interpolation to their current (actual) values.
+// PsyDoom addition: update the 'previous' values used in interpolation to their current (actual) values.
 // Used before simulating an actual game tick, or when we want to snap immediately to the actual values - like when teleporting.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_NextInterpolation() noexcept {
@@ -371,7 +371,7 @@ void R_SnapViewZInterpolation() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX: compute the interpolation factor (0-1) by how much we are in between frames.
+// PsyDoom: compute the interpolation factor (0-1) by how much we are in between frames.
 // When the value is '0' it means use the old frame values, when '1' use the new frame values.
 //------------------------------------------------------------------------------------------------------------------------------------------
 fixed_t R_CalcLerpFactor() noexcept {
@@ -389,14 +389,14 @@ fixed_t R_CalcLerpFactor() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX: interpolate between the given old and new value by the given amount
+// PsyDoom: interpolate between the given old and new value by the given amount
 //------------------------------------------------------------------------------------------------------------------------------------------
 fixed_t R_LerpCoord(const fixed_t oldCoord, const fixed_t newCoord, const fixed_t mix) noexcept {
     return FixedMul(oldCoord, FRACUNIT - mix) + FixedMul(newCoord, mix);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PC-PSX: interpolate between the given old and new angle by the given amount
+// PsyDoom: interpolate between the given old and new angle by the given amount
 //------------------------------------------------------------------------------------------------------------------------------------------
 angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_t mix) noexcept {
     const int32_t diff = (int32_t)(newAngle - oldAngle);
@@ -404,4 +404,4 @@ angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_
     return oldAngle + (angle_t) adjust;
 }
 
-#endif  // PC_PSX_DOOM_MODS
+#endif  // PSYDOOM_MODS

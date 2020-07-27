@@ -203,8 +203,8 @@ void P_UseLines(player_t& player) noexcept {
     gValidCount++;
 
     // Compute the blockmap extents to check for use lines.
-    // PC-PSX: ensure these are always within a valid range to prevent undefined behavior at map edges.
-    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+    // PsyDoom: ensure these are always within a valid range to prevent undefined behavior at map edges.
+    #if PSYDOOM_MODS && PSYDOOM_FIX_UB
         const int32_t bmapTy = std::min((gUseBBox[BOXTOP] - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
         const int32_t bmapBy = std::max((gUseBBox[BOXBOTTOM] - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
         const int32_t bmapLx = std::max((gUseBBox[BOXLEFT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
@@ -285,8 +285,8 @@ void P_RadiusAttack(mobj_t& bombSpot, mobj_t* const pSource, const int32_t damag
     // Splash damage falls off linearly, so the damage amount is also pretty much the distance range:
     const fixed_t blastDist = damage << FRACBITS;
 
-    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
-        // PC-PSX: clamp these coords to the valid range of the blockmap to avoid potential undefined behavior near map edges
+    #if PSYDOOM_MODS && PSYDOOM_FIX_UB
+        // PsyDoom: clamp these coords to the valid range of the blockmap to avoid potential undefined behavior near map edges
         const int32_t bmapLx = std::max((bombSpot.x - blastDist - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
         const int32_t bmapRx = std::min((bombSpot.x + blastDist - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
         const int32_t bmapBy = std::max((bombSpot.y - blastDist - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);

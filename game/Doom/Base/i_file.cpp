@@ -12,8 +12,8 @@ static PsxCd_File gOpenPsxCdFiles[MAX_OPEN_FILES];
 //------------------------------------------------------------------------------------------------------------------------------------------
 void InitOpenFileSlots() noexcept {
     for (int32_t i = 0; i < MAX_OPEN_FILES; ++i) {
-        // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: the 'PsxCd_File' struct has changed layout & contents
+        #if PSYDOOM_MODS
             gOpenPsxCdFiles[i] = {};
         #else
             gOpenPsxCdFiles[i].file.size = 0;
@@ -38,8 +38,8 @@ int32_t OpenFile(const CdFileId discFile) noexcept {
     int32_t fileSlotIdx = 0;
 
     for (; fileSlotIdx < MAX_OPEN_FILES; ++fileSlotIdx) {
-        // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
-        #if PC_PSX_DOOM_MODS
+        // PsyDoom: the 'PsxCd_File' struct has changed layout & contents
+        #if PSYDOOM_MODS
             if (gOpenPsxCdFiles[fileSlotIdx].size == 0)
                 break;
         #else
@@ -64,8 +64,8 @@ void CloseFile(const int32_t fileSlotIdx) noexcept {
     PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
     psxcd_close(file);
 
-    // PC-PSX: the 'PsxCd_File' struct has changed layout & contents
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: the 'PsxCd_File' struct has changed layout & contents
+    #if PSYDOOM_MODS
         file = {};
     #else
         file.file.size = 0;
@@ -89,8 +89,8 @@ int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const P
 void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t size) noexcept {
     PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
 
-    // PC-PSX: this is no longer neccessary
-    #if !PC_PSX_DOOM_MODS
+    // PsyDoom: this is no longer neccessary
+    #if !PSYDOOM_MODS
     {
         // This is really strange... PSX DOOM appears to do some sort of dummy read of 8192 bytes at the start of the file
         // before reading the actual data that has been requested. I don't know why this was done, maybe perhaps to flush

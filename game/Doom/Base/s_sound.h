@@ -10,8 +10,8 @@ struct SampleBlock;
 const int32_t S_MAX_VOL = 100;
 
 // Default levels for music and sound.
-// PC-PSX: incorporate an improvement from Final Doom and change the default mixing levels so that music is heard better.
-#if PC_PSX_DOOM_MODS
+// PsyDoom: incorporate an improvement from Final Doom and change the default mixing levels so that music is heard better.
+#if PSYDOOM_MODS
     const int32_t S_SND_DEFAULT_VOL = 85;
 #else
     const int32_t S_SND_DEFAULT_VOL = 100;

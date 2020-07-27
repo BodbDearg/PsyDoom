@@ -26,7 +26,7 @@ enum spclface_e : int32_t {
 };
 
 // Container for most status bar related state.
-// PC-PSX: all 'bool' fields here were originally 'uint32_t', changed them to express meaning better.
+// PsyDoom: all 'bool' fields here were originally 'uint32_t', changed them to express meaning better.
 struct stbar_t {
     uint32_t        face;                   // Index of the face sprite to currently use
     spclface_e      specialFace;            // What special face to do next

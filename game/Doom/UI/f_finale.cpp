@@ -217,8 +217,8 @@ void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the Ultimate DOOM style finale (text only, no cast sequence) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t F1_Ticker() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
@@ -226,7 +226,7 @@ gameaction_t F1_Ticker() noexcept {
     // Grab inputs and set global game action
     gGameAction = ga_nothing;
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
         const TickInputs& oldInputs = gOldTickInputs[gCurPlayerIndex];
         const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
@@ -309,8 +309,8 @@ void F2_Start() noexcept {
     // Load the background and sprites needed.
     I_LoadAndCacheTexLump(gTex_DEMON, "DEMON", 0);
 
-    #if !PC_PSX_DOOM_MODS
-        // PC_PSX: don't bother loading the sprites yet, let the code grab them from the main IWAD as required.
+    #if !PSYDOOM_MODS
+        // PsyDoom: don't bother loading the sprites yet, let the code grab them from the main IWAD as required.
         // This means we don't need to worry about loading the correct blocks file for various different game types.
         P_LoadBlocks(CdFileId::MAPSPR60_IMG);
     #endif
@@ -371,8 +371,8 @@ void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the DOOM II style finale (text, followed by cast) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t F2_Ticker() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
@@ -380,7 +380,7 @@ gameaction_t F2_Ticker() noexcept {
     // Grab inputs and set global game action
     gGameAction = ga_nothing;
 
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
         const TickInputs& oldInputs = gOldTickInputs[gCurPlayerIndex];
         const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));

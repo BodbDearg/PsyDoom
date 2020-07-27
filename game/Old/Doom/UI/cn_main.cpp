@@ -1,5 +1,5 @@
-// PC-PSX: no longer using the controller configuration screen
-#if !PC_PSX_DOOM_MODS
+// PsyDoom: no longer using the controller configuration screen
+#if !PSYDOOM_MODS
 
 #include "cn_main.h"
 
@@ -68,8 +68,8 @@ void STOP_ControlsScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 // Update logic for the control configuration screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_ControlsScreen() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
@@ -80,7 +80,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
     }
     
     // Do menu up/down movements
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         const TickInputs& tickInputs = gTickInputs[0];
         const TickInputs& oldTickInputs = gOldTickInputs[0];
 
@@ -140,18 +140,18 @@ gameaction_t TIC_ControlsScreen() noexcept {
     if (bMenuStart || bMenuBack)
         return ga_exit;
 
-    // PC-PSX: moved this check to where we are actually trying to bind a PSX button
-    #if !PC_PSX_DOOM_MODS
+    // PsyDoom: moved this check to where we are actually trying to bind a PSX button
+    #if !PSYDOOM_MODS
         // Check for inputs to change control bindings if no new buttons are pressed just finish up now
         if (ticButtons == gOldTicButtons[0])
             return ga_nothing;
     #endif
     
     if (gCursorPos[0] < 8) {
-        // PC-PSX: only getting the PSX buttons at this point and only do a PSX binding if there is a change.
+        // PsyDoom: only getting the PSX buttons at this point and only do a PSX binding if there is a change.
         // This controls menu is purely concerned with the original PSX controller inputs, not anything the PC might be using.
         // To bind PC inputs to game actions, the configuration .ini file must be used.
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             const uint32_t ticButtons = gTicButtons;
             const uint32_t oldTicButtons = gOldTicButtons;
 
@@ -280,4 +280,4 @@ void DRAW_ControlsScreen() noexcept {
     I_DrawPresent();
 }
 
-#endif  // #if !PC_PSX_DOOM_MODS
+#endif  // #if !PSYDOOM_MODS

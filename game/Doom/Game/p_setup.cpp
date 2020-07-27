@@ -260,8 +260,8 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                 if (ceilingPic >= firstSkyTexPic) {
                     pDstSec->ceilingpic = -1;
 
-                    // PC-PSX: add support for more than 9 sky variants (up to 99)
-                    #if PC_PSX_DOOM_MODS
+                    // PsyDoom: add support for more than 9 sky variants (up to 99)
+                    #if PSYDOOM_MODS
                         skyLumpName[3] = '0' + (char)((ceilingPic - firstSkyTexPic) / 10);
                         skyLumpName[4] = '1' + (char)((ceilingPic - firstSkyTexPic) % 10);
                     #else
@@ -572,9 +572,9 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
 
     // Endian correction for the entire blockmap lump.
     //
-    // PC-PSX: skip doing this on little endian architectures to save a few cycles.
+    // PsyDoom: skip doing this on little endian architectures to save a few cycles.
     // The original code did this transform from little endian to little endian even though it had no effect...
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         constexpr bool bEndianCorrect = (!Endian::isLittle());
     #else
         constexpr bool bEndianCorrect = true;
@@ -786,7 +786,7 @@ static void P_GroupLines() noexcept {
             soundorg.x = (bbox[BOXLEFT] + bbox[BOXRIGHT]) >> 1;
             soundorg.y = (bbox[BOXTOP] + bbox[BOXBOTTOM]) >> 1;
 
-            #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+            #if PSYDOOM_MODS && PSYDOOM_FIX_UB
                 // The original code did not appear to initialize the 'z' field!
                 // I'm not sure it's used for sound code but give it a defined value of midway up in the air for good measure.
                 soundorg.z = (pSec->floorheight + pSec->ceilingheight) >> 1;
@@ -1103,7 +1103,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Loads a list of memory blocks containing WAD lumps from the given file.
 //
-// PC-PSX: this function had to be completely rewritten since 'sizeof(memblock_t)' is no longer equal to 'sizeof(fileblock_t)'.
+// PsyDoom: this function had to be completely rewritten since 'sizeof(memblock_t)' is no longer equal to 'sizeof(fileblock_t)'.
 // This is due to pointers being larger in 64-bit mode. See the 'Old' folder for the original version of this function.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_LoadBlocks(const CdFileId file) noexcept {

@@ -94,5 +94,5 @@ int32_t R_TextureNumForName(const char* const name) noexcept;
 int32_t R_FlatNumForName(const char* const name) noexcept;
 void R_InitPalette() noexcept;
 
-// PC-PSX: helper to reduce some redundancy
+// PsyDoom: helper to reduce some redundancy
 RECT getTextureVramRect(const texture_t& tex) noexcept;

@@ -1,4 +1,4 @@
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 #include "Doom/Game/p_setup.h"
 
@@ -161,4 +161,4 @@ void P_LoadBlocks(const CdFileId file) noexcept {
     Z_CheckHeap(*gpMainMemZone);
 }
 
-#endif  // #if !PC_PSX_DOOM_MODS
+#endif  // #if !PSYDOOM_MODS

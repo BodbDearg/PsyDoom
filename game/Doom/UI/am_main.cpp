@@ -50,7 +50,7 @@ void AM_Control(player_t& player) noexcept {
         return;
     
     // Toggle the automap on and off if select has just been pressed
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         TickInputs& inputs = gTickInputs[gPlayerNum];
         const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
 
@@ -109,8 +109,8 @@ void AM_Control(player_t& player) noexcept {
     const fixed_t moveStep = (bPanFast) ? MOVESTEP * 2 : MOVESTEP;
 
     // Not sure why this check was done, it can never be true due to the logic above.
-    // PC-PSX: remove this block as it is useless...
-    #if !PC_PSX_DOOM_MODS
+    // PsyDoom: remove this block as it is useless...
+    #if !PSYDOOM_MODS
         if ((player.automapflags & AF_FOLLOW) == 0)
             return;
     #endif
@@ -164,7 +164,7 @@ void AM_Control(player_t& player) noexcept {
     }
 
     // When not in follow mode, consume these inputs so that we don't move the player in the level
-    #if PC_PSX_DOOM_MODS
+    #if PSYDOOM_MODS
         inputs.bMoveForward = false;
         inputs.bMoveBackward = false;
         inputs.bAttack = false;
@@ -211,8 +211,8 @@ void AM_Drawer() noexcept {
             const bool bHiddenLine = (pLine->flags & ML_DONTDRAW);
             const bool bLineSeen = ((pLine->flags & ML_MAPPED) && (!bHiddenLine));
 
-            #if PC_PSX_DOOM_MODS
-                // PC-PSX: bug fix: if the line is marked as invisible then the allmap powerup shouldn't reveal it.
+            #if PSYDOOM_MODS
+                // PsyDoom: bug fix: if the line is marked as invisible then the allmap powerup shouldn't reveal it.
                 // This change makes the behavior consistent with Linux Doom.
                 const bool bLineMapped = ((curPlayer.powers[pw_allmap]) && (!bHiddenLine));
             #else

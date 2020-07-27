@@ -291,11 +291,11 @@ void ST_Ticker() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ST_Drawer() noexcept {
     // Setup the current texture page and texture window.
-    // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that.
+    // PsyDoom: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that.
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
@@ -322,8 +322,8 @@ void ST_Drawer() noexcept {
             constexpr const char* const MAP_TITLE_FMT = "LEVEL %d:%s";
             char mapTitle[64];
 
-            // PC-PSX: use 'snprintf' just to be safe here
-            #if PC_PSX_DOOM_MODS
+            // PsyDoom: use 'snprintf' just to be safe here
+            #if PSYDOOM_MODS
                 std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, gGameMap, Game::getMapName(gGameMap));
             #else
                 std::sprintf(mapTitle, MAP_TITLE_FMT, gGameMap, gMapNames[gGameMap - 1]);

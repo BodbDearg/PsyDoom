@@ -854,8 +854,8 @@ void A_FatRaise(mobj_t& actor) noexcept {
 // Fires the 1st round of projectiles in the Mancubus's attack sequence
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack1(mobj_t& actor) noexcept {
-    // PC-PSX: avoid undefined behavior if for some reason there is no target
-    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+    // PsyDoom: avoid undefined behavior if for some reason there is no target
+    #if PSYDOOM_MODS && PSYDOOM_FIX_UB
         if (!actor.target)
             return;
     #else
@@ -881,8 +881,8 @@ void A_FatAttack1(mobj_t& actor) noexcept {
 // Fires the 2nd round of projectiles in the Mancubus's attack sequence
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack2(mobj_t& actor) noexcept {
-    // PC-PSX: avoid undefined behavior if for some reason there is no target
-    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+    // PsyDoom: avoid undefined behavior if for some reason there is no target
+    #if PSYDOOM_MODS && PSYDOOM_FIX_UB
         if (!actor.target)
             return;
     #else
@@ -908,8 +908,8 @@ void A_FatAttack2(mobj_t& actor) noexcept {
 // Fires the 3rd round of projectiles in the Mancubus's attack sequence
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack3(mobj_t& actor) noexcept {
-    // PC-PSX: avoid undefined behavior if for some reason there is no target
-    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+    // PsyDoom: avoid undefined behavior if for some reason there is no target
+    #if PSYDOOM_MODS && PSYDOOM_FIX_UB
         if (!actor.target)
             return;
     #else
@@ -972,7 +972,7 @@ void A_SkullAttack(mobj_t& actor) noexcept {
 // If the skull is spawned in a wall, then it is immediately killed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
-    // PC-PSX: disabling this logic as it was broken in the original PSX DOOM and NEVER limits the amount of skulls in a map.
+    // PsyDoom: disabling this logic as it was broken in the original PSX DOOM and NEVER limits the amount of skulls in a map.
     // It effectively did nothing except consuming CPU cycles. Note also that Final Doom fixes this issue and limits the skull
     // count to '16', instead of the original limit of '24' on PC.
     //
@@ -989,7 +989,7 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     // skulls found in that list. We can't fix the issue however for PSX Doom without breaking demo compatibility, so I'm
     // just going to disable the code instead since it is somewhat ill formed (with strange casts), and does nothing.
     //
-    #if !PC_PSX_DOOM_MODS
+    #if !PSYDOOM_MODS
         // Count the number of skulls active in the level: if there are 21 or more then don't spawn any additional ones
         int32_t numActiveSkulls = 0;
 
@@ -1178,8 +1178,8 @@ void A_BossDeath(mobj_t& actor) noexcept {
     // If we've gotten to here then we've killed all of this boss type and should trigger the appropriate special.
     // Use a dummy line structure (only want the 'tag' field really) to trigger some specials.
     //
-    // PC-PSX: default init this structure for good measure, as a precaution against undefined behavior.
-    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
+    // PsyDoom: default init this structure for good measure, as a precaution against undefined behavior.
+    #if PSYDOOM_MODS && PSYDOOM_FIX_UB
         line_t dummyLine = {};
     #else
         line_t dummyLine;

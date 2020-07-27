@@ -1,6 +1,6 @@
 #include "Old_psxcd.h"
 
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 // PSXCD module commands within PsxCd_Command
 enum PsxCd_CmdOp : int32_t {
@@ -878,4 +878,4 @@ void psxcd_pause() noexcept {
     LIBCD_CdControlF(CdlPause, nullptr);
 }
 
-#endif  // #if !PC_PSX_DOOM_MODS
+#endif  // #if !PSYDOOM_MODS

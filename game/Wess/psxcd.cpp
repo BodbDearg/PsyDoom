@@ -11,7 +11,7 @@
 #include "PcPsx/Utils.h"
 #include "psxspu.h"
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     // Maximum number of open files
     static constexpr int32_t MAX_OPEN_FILES = 4;
 #endif
@@ -72,7 +72,7 @@ static uint8_t  gPSXCD_cdl_err_stat;            // The first result byte (status
 static CdlCB gPSXCD_cbsyncsave;
 static CdlCB gPSXCD_cbreadysave;
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
     static DiscReader   gDiscReaders[MAX_OPEN_FILES] = { PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo };
 #endif
 
@@ -120,7 +120,7 @@ void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Callback invoked by the PsyQ SDK (and ultimately by the hardware) for when we are finished reading a cd sector.
-// PC-PSX: this function has been cut down somewhat, for the original version see the 'Old' folder.
+// PsyDoom: this function has been cut down somewhat, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept {
     // Are callbacks disabled currently? If so then ignore...
@@ -202,7 +202,7 @@ void psxcd_enable_callbacks() noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the WESS (Williams Entertainment Sound System) CD handling module.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_init() noexcept {
     // If we've already done this then just no-op
@@ -248,7 +248,7 @@ void psxcd_exit() noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Switches the cdrom drive into data reading mode.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_set_data_mode() noexcept {
     if (gPSXCD_psxcd_mode != 1) {
@@ -276,7 +276,7 @@ void psxcd_set_data_mode() noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Open a specified CD file for reading.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
     // Zero init the temporary file structure and sanity check the file is valid!
@@ -324,19 +324,19 @@ PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the cdrom is currently seeking to a location for audio playback.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool psxcd_seeking_for_play() noexcept { return gbPSXCD_seeking_for_play; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the cdrom is currently in the process of pausing.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool psxcd_waiting_for_pause() noexcept { return gbPSXCD_waiting_for_pause; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read the specified number of bytes synchronously from the given CD file and returns the number of bytes read.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept {
     // Modding mechanism: allow files to be overriden with user files in a specified directory
@@ -364,7 +364,7 @@ int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexce
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Seek to a specified position in a file, relatively or absolutely.
 // Returns '0' on success, any other value on failure.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept {
     // Modding mechanism: allow files to be overriden with user files in a specified directory
@@ -409,7 +409,7 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the current IO offset within the given file.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_tell(const PsxCd_File& file) noexcept {
     // Modding mechanism: allow files to be overriden with user files in a specified directory
@@ -427,7 +427,7 @@ int32_t psxcd_tell(const PsxCd_File& file) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Close a CD file and free up the file slot.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_close([[maybe_unused]] PsxCd_File& file) noexcept {
     // Modding mechanism: allow files to be overriden with user files in a specified directory
@@ -446,7 +446,7 @@ void psxcd_close([[maybe_unused]] PsxCd_File& file) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Switches the cdrom into audio playback mode if in data mode.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_set_audio_mode() noexcept {
     if (gPSXCD_psxcd_mode != 0) {
@@ -491,8 +491,8 @@ void psxcd_play_at_andloop(
     const int32_t loopSectorOffest,
     const int32_t loopFadeUpTime
 ) noexcept {
-    // PC-PSX: ignore command in headless mode
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ignore command in headless mode
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif
@@ -542,8 +542,8 @@ void psxcd_play_at_andloop(
 // A sector offset can also be specified to begin from a certain location in the track.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorOffset) noexcept {
-    // PC-PSX: ignore command in headless mode
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ignore command in headless mode
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif
@@ -595,8 +595,8 @@ void psxcd_play(const int32_t track, const int32_t vol) noexcept {
 // Seek to the specified offset within a cd audio track in preparation for playback
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noexcept {
-    // PC-PSX: ignore command in headless mode
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: ignore command in headless mode
+    #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif
@@ -673,7 +673,7 @@ bool psxcd_play_status() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Stop playback of cd audio.
 // Unlike 'psxcd_pause' playback CANNOT be resumed by calling 'psxcd_restart' afterwards.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_stop() noexcept {
     // No longer playing anything
@@ -700,7 +700,7 @@ void psxcd_stop() noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Pause cd audio playback and make a note of where we paused at.
-// PC-PSX: this function has been rewritten, for the original version see the 'Old' folder.
+// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_pause() noexcept {
     // No longer playing anything
@@ -784,7 +784,7 @@ void psxcd_set_stereo(const bool bStereo) noexcept {
     LIBCD_CdMix(gPSXCD_cdatv);
 }
 
-#if PC_PSX_DOOM_MODS
+#if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the size of a file
@@ -797,4 +797,4 @@ int32_t psxcd_get_file_size(const CdFileId discFile) noexcept {
     return gCdMapTbl[(int32_t) discFile].size;
 }
 
-#endif  // #if PC_PSX_DOOM_MODS
+#endif  // #if PSYDOOM_MODS

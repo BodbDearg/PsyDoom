@@ -69,15 +69,15 @@ void STOP_Credits([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Credits() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
 
     // If any controller buttons are pressed then exit the credits.
-    // PC-PSX: just accept certain menu inputs for this.
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: just accept certain menu inputs for this.
+    #if PSYDOOM_MODS
         if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
             return ga_exit;
     #else

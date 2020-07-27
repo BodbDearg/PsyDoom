@@ -220,8 +220,8 @@ void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Adavnces the counters and checks for user input to skip to the next intermission stage.
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t IN_Ticker() noexcept {
-    // PC-PSX: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
-    #if PC_PSX_DOOM_MODS
+    // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    #if PSYDOOM_MODS
         if (gPlayersElapsedVBlanks[0] <= 0)
             return ga_nothing;
     #endif
@@ -232,7 +232,7 @@ gameaction_t IN_Ticker() noexcept {
 
     // Checking for inputs from all players to speed up the intermission
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
-        #if PC_PSX_DOOM_MODS
+        #if PSYDOOM_MODS
             const TickInputs& inputs = gTickInputs[playerIdx];
             const TickInputs& oldInputs = gOldTickInputs[playerIdx];
             const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
@@ -508,8 +508,8 @@ void IN_DeathmatchDrawer() noexcept {
             pFaceSpriteP2 = &gFaceSprites[DEADFACE];
         }
     }
-// PC-PSX: This check will always evaluate to 'true' so help compilers which might warn we are using unitialized vars...
-#if PC_PSX_DOOM_MODS
+// PsyDoom: This check will always evaluate to 'true' so help compilers which might warn we are using unitialized vars...
+#if PSYDOOM_MODS
     else {
 #else
     else if (gFragValue[0] == gFragValue[1]) {

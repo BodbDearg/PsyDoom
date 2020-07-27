@@ -1,6 +1,6 @@
 #pragma once
 
-#if !PC_PSX_DOOM_MODS
+#if !PSYDOOM_MODS
 
 #include "PsyQ/LIBCD.h"
 
@@ -18,4 +18,4 @@ bool psxcd_critical_sync() noexcept;
 bool psxcd_async_on() noexcept;
 void psxcd_init_pos() noexcept;
 
-#endif  // #if !PC_PSX_DOOM_MODS
+#endif  // #if !PSYDOOM_MODS

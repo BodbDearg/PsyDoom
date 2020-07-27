@@ -75,7 +75,7 @@ void PsxVm::generateTimerEvents() noexcept {
 // Close the specified hardware event object
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBAPI_CloseEvent(const int32_t event) noexcept {
-    // PC-PSX: only supporting the root counter 2 event here for Doom - that's all we need
+    // PsyDoom: only supporting the root counter 2 event here for Doom - that's all we need
     if (event == RCNT2_EVENT_ID) {
         if (gRootCnt2.bIsEventOpened) {
             gRootCnt2 = {};
@@ -99,7 +99,7 @@ void LIBAPI_EnterCriticalSection() noexcept {}
 // Note: timers require an additional step (calling 'StartRCnt') in order to actually start generating event interrupts.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBAPI_EnableEvent(const int32_t event) noexcept {
-    // PC-PSX: only supporting the root counter 2 event here for Doom - that's all we need.
+    // PsyDoom: only supporting the root counter 2 event here for Doom - that's all we need.
     // Originally this was called to enable SIO (Serial I/O) read/write done events but we don't need that functionality anymore.
     if (event == RCNT2_EVENT_ID) {
         if (gRootCnt2.bIsEventOpened) {
@@ -169,7 +169,7 @@ bool LIBAPI_StartRCnt(const int32_t cntType) noexcept {
 // Note: timers require an additional step (calling 'StartRCnt') in order to actually start generating event interrupts.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBAPI_DisableEvent(const int32_t event) noexcept {
-    // PC-PSX: only supporting the root counter 2 event here for Doom - that's all we need.
+    // PsyDoom: only supporting the root counter 2 event here for Doom - that's all we need.
     if (event == RCNT2_EVENT_ID) {
         if (gRootCnt2.bIsEventOpened) {
             gRootCnt2.bIsEventEnabled = false;
