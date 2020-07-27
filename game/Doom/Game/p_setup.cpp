@@ -786,7 +786,7 @@ static void P_GroupLines() noexcept {
             soundorg.x = (bbox[BOXLEFT] + bbox[BOXRIGHT]) >> 1;
             soundorg.y = (bbox[BOXTOP] + bbox[BOXBOTTOM]) >> 1;
 
-            #if PC_PSX_DOOM_MODS
+            #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
                 // The original code did not appear to initialize the 'z' field!
                 // I'm not sure it's used for sound code but give it a defined value of midway up in the air for good measure.
                 soundorg.z = (pSec->floorheight + pSec->ceilingheight) >> 1;

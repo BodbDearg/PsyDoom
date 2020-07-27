@@ -20,6 +20,7 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
+#include "PcPsx/Assert.h"
 #include "PcPsx/Game.h"
 
 #include <algorithm>
@@ -854,9 +855,11 @@ void A_FatRaise(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack1(mobj_t& actor) noexcept {
     // PC-PSX: avoid undefined behavior if for some reason there is no target
-    #if PC_PSX_DOOM_MODS
+    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
         if (!actor.target)
             return;
+    #else
+        ASSERT(actor.target);
     #endif
 
     A_FaceTarget(actor);
@@ -879,9 +882,11 @@ void A_FatAttack1(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack2(mobj_t& actor) noexcept {
     // PC-PSX: avoid undefined behavior if for some reason there is no target
-    #if PC_PSX_DOOM_MODS
+    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
         if (!actor.target)
             return;
+    #else
+        ASSERT(actor.target);
     #endif
 
     A_FaceTarget(actor);
@@ -904,9 +909,11 @@ void A_FatAttack2(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack3(mobj_t& actor) noexcept {
     // PC-PSX: avoid undefined behavior if for some reason there is no target
-    #if PC_PSX_DOOM_MODS
+    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
         if (!actor.target)
             return;
+    #else
+        ASSERT(actor.target);
     #endif
 
     A_FaceTarget(actor);
@@ -1172,7 +1179,7 @@ void A_BossDeath(mobj_t& actor) noexcept {
     // Use a dummy line structure (only want the 'tag' field really) to trigger some specials.
     //
     // PC-PSX: default init this structure for good measure, as a precaution against undefined behavior.
-    #if PC_PSX_DOOM_MODS
+    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
         line_t dummyLine = {};
     #else
         line_t dummyLine;

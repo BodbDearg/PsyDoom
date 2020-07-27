@@ -7,6 +7,17 @@ Most of these functions etc. have either been completely rewritten or so drastic
 mechanism no longer makes sense or is too unwieldly to use."
 )
 
+# This setting switches on/off fixes to undefined behavior from the original code
+set(PSYDOOM_FIX_UB TRUE CACHE BOOL
+"If TRUE (default) then fix certain cases of undefined behavior in the original PSX Doom code.\n\
+Examples of fixes to undefined behavior include added bounds checks on certain blockmap operations, which in the original\n\
+game could result in memory corruption if out of bounds conditions were triggered - the so called 'linedef deletion' bug.\n\
+If undefined behavior fixes are NOT enabled then asserts (in debug builds) will be triggered when certain types of UB is encountered.\n\
+These asserts can be useful to identify cases of demo de-sync for demos recorded against the original games which trigger UB.\n
+Such gameplay which triggers UB in the original game is not possible to play back correctly in PsyDoom, because UB behavior requires the\n
+exact same hardware, compiler and execution environment to replicate."
+)
+
 # Platform agnostic sources
 set(SOURCE_FILES
     "Doom/Base/d_vsprintf.cpp"
@@ -267,6 +278,12 @@ target_compile_definitions(${GAME_TGT_NAME} PRIVATE
     -DGAME_VERSION_STR="${GAME_VERSION_STR}"    # Game version string - set in main CMakeLists.txt
     -DPC_PSX_DOOM_MODS=1                        # Defined to mark areas where we changed the code from the PSX version
 )
+
+if (PSYDOOM_FIX_UB)
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=1)
+else()
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=0)
+endif()
 
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})

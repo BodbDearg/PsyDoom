@@ -5,6 +5,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "p_local.h"
 #include "p_setup.h"
+#include "PcPsx/Assert.h"
 
 #include <algorithm>
 
@@ -161,14 +162,17 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
 
             // PC-PSX: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
-            #if PC_PSX_DOOM_MODS
+            #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
                 if (blockx >= 0 && blockx < gBlockmapWidth) {
                     if (blocky >= 0 && blocky < gBlockmapHeight) {
                         gppBlockLinks[blocky * gBlockmapWidth + blockx] = thing.bnext;
                     }
                 }
             #else
-                gppBlockLinks[blockY * gBlockmapWidth + blockX] = mobj.bnext;
+                ASSERT((blockx >= 0) && (blockx < gBlockmapWidth));
+                ASSERT((blocky >= 0) && (blocky < gBlockmapHeight));
+
+                gppBlockLinks[blocky * gBlockmapWidth + blockx] = thing.bnext;
             #endif
         }
     }

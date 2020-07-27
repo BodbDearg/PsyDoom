@@ -7,6 +7,7 @@
 #include "doomdata.h"
 #include "p_map.h"
 #include "p_setup.h"
+#include "PcPsx/Assert.h"
 
 #include <algorithm>
 
@@ -130,9 +131,11 @@ bool PA_DoIntercept(void* const pObj, const bool bIsLine, const fixed_t hitFrac)
 
     // PC-PSX: added safety - just in case.
     // I don't think it's ever possible to get into a scenario where the test object is null here, but I'm going to guarantee it anyhow...
-    #if PC_PSX_DOOM_MODS
+    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
         if (!test_pObj)
             return true;
+    #else
+        ASSERT(test_pObj);
     #endif
     
     // Otherwise do the test against the line or thing

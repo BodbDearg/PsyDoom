@@ -23,6 +23,7 @@
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
+#include "PcPsx/Assert.h"
 
 // Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
 typedef void (*delayed_actionfn_t)() noexcept;
@@ -241,7 +242,7 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
     // I recorded did de-synchronize when played back in PsyDoom and this is unfortunately unavoidable as undefined behavior is by
     // definition not reproducible under anything but the exact same hardware, execution conditions and compiler etc.
     //
-    #if PC_PSX_DOOM_MODS
+    #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
         fixed_t nextHighestFloor = INT32_MAX;
 
         for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
@@ -270,12 +271,14 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
             sector_t* const pNextSector = getNextSector(line, sector);
 
             if (pNextSector && (pNextSector->floorheight > baseHeight)) {
+                ASSERT(numHigherHeights < 20);
                 higherHeights[numHigherHeights] = pNextSector->floorheight;
                 numHigherHeights++;
             }
         }
 
         // Return the minimum of those sector heights that are higher
+        ASSERT(numHigherHeights > 0);
         fixed_t minHigherHeight = higherHeights[0];
 
         for (int32_t i = 1; i < numHigherHeights; ++i) {
@@ -1023,10 +1026,12 @@ bool EV_DoDonut(line_t& line) noexcept {
         // Get the next sector beyond the first line in this sector, that will be the outer ring of the 'donut', or the part that is raised:
         sector_t* const pNextSector = getNextSector(*sector.lines[0], sector);
 
-        #if PC_PSX_DOOM_MODS
+        #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
             // PC-PSX: safety in case the level is setup wrong - if this line is not two sided then just ignore the command
             if (!pNextSector)
                 continue;
+        #else
+            ASSERT(pNextSector);
         #endif
 
         // Run through all the lines of the next sector and try to find the first that has a back sector that isn't the inner part of the donut.
@@ -1034,10 +1039,12 @@ bool EV_DoDonut(line_t& line) noexcept {
         for (int32_t lineIdx = 0; lineIdx < pNextSector->linecount; ++lineIdx) {
             line_t& nextSecLine = *pNextSector->lines[lineIdx];
 
-            #if PC_PSX_DOOM_MODS
+            #if PC_PSX_DOOM_MODS && PSYDOOM_FIX_UB
                 // PC-PSX: safety - allow non two sided lines here, just skip over them
                 if (!nextSecLine.backsector)
                     continue;
+            #else
+                ASSERT(nextSecLine.backsector);
             #endif
 
             // Ignore this line if the back sector is the same as the inner part of the donut
