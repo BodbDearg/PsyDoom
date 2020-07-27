@@ -178,7 +178,7 @@ endif()
 add_library(${AVOCADO_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 target_include_directories(${AVOCADO_TGT_NAME} PUBLIC ${INCLUDE_PATHS})
-target_compile_definitions(${AVOCADO_TGT_NAME} PUBLIC DOOM_AVOCADO_MODS=1)
+target_compile_definitions(${AVOCADO_TGT_NAME} PUBLIC PSYDOOM_AVOCADO_MODS=1)
 
 target_link_libraries(${AVOCADO_TGT_NAME}
     ${EVENT_BUS_TGT_NAME}

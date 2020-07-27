@@ -22,7 +22,7 @@ const int LINES_TOTAL_NTSC = 263;
 
 class GPU {
 // PsyDoom: allowing some lower level access to the GPU for speed
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
 public:
 #endif
 
@@ -110,7 +110,7 @@ public:
     ColorDepth clutCacheColorDepth = ColorDepth::NONE;
 
 // PsyDoom: allowing some lower level access to the GPU for speed
-#if !DOOM_AVOCADO_MODS
+#if !PSYDOOM_AVOCADO_MODS
    private:
 #endif
     // Hardware rendering

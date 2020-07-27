@@ -52,7 +52,7 @@ struct System {
     static const int BIOS_SIZE = 512 * 1024;
 
     // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
-    #if DOOM_AVOCADO_MODS
+    #if PSYDOOM_AVOCADO_MODS
         static const int RAM_SIZE = 4 * 1024 * 1024;
     #else
         static const int RAM_SIZE = 2 * 1024 * 1024;

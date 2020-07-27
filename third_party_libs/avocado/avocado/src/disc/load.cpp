@@ -1,7 +1,7 @@
 #include "load.h"
 
 // DC: removing support for CHD - not needed for this project
-#if (!DOOM_AVOCADO_MODS)
+#if (!PSYDOOM_AVOCADO_MODS)
     #include "disc/format/chd_format.h"
 #endif
 
@@ -16,7 +16,7 @@ std::unique_ptr<disc::Disc> load(const std::string& path) {
     std::unique_ptr<disc::Disc> disc;
 
 // DC: removing support for CHD - not needed for this project
-#if (!DOOM_AVOCADO_MODS)
+#if (!PSYDOOM_AVOCADO_MODS)
     if (ext == "chd") {
         disc = disc::format::Chd::open(path);
     } else if (ext == "cue") {

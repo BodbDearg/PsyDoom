@@ -13,7 +13,7 @@ bool CueParser::parseFile(std::string& line) {
         if (matches.size() != 3) return false;
     }
 
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
     lastFile = matches[1].str();
 #else
     lastFile = cuePath + "/" + matches[1].str();

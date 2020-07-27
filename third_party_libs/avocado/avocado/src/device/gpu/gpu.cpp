@@ -9,7 +9,7 @@
 #include "utils/macros.h"
 
 // DC: disabling for this project to simplify dependencies
-#if (!DOOM_AVOCADO_MODS)
+#if (!PSYDOOM_AVOCADO_MODS)
     // For vram dump
     #include <stb_image_write.h>
 #endif
@@ -837,7 +837,7 @@ bool GPU::isNtsc() { return forceNtsc || gp1_08.videoMode == GP1_08::VideoMode::
 
 void GPU::dumpVram() {
     // DC: disabling for this project to simplify dependencies
-    #if (DOOM_AVOCADO_MODS)        
+    #if (PSYDOOM_AVOCADO_MODS)
         std::abort();   // Not implemented!
     #else
         const char* dumpName = "vram.png";

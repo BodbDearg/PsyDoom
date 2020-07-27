@@ -28,7 +28,7 @@ void CDROM::step() {
     int MAGIC_NUMBER = 1150;  // FIXME: yey, magic numbers
     if (!mode.speed) MAGIC_NUMBER *= 2;
 
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
     if (bForceSectorRead || ((stat.read || stat.play) && readcnt++ == MAGIC_NUMBER)) {
         bForceSectorRead = false;
 #else

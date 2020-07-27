@@ -31,7 +31,7 @@ void loadFile(std::unique_ptr<System>& sys, const std::string& path) {
 
 // DC: Don't need this for this project.
 // Carries with it lots and lots of messy dependencies...
-#if (!DOOM_AVOCADO_MODS)
+#if (!PSYDOOM_AVOCADO_MODS)
     if (ext == "psf" || ext == "minipsf") {
         bootstrap(sys);
         if (loadPsf(sys.get(), path)) {

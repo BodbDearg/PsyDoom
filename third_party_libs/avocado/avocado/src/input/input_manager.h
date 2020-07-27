@@ -25,7 +25,7 @@ class InputManager {
     bool getDigital(const std::string& key);
     AnalogValue getAnalog(const std::string& key);
 
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
     void setState(const std::string& key, const AnalogValue& value) noexcept {
         state[key] = value;
     }

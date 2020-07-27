@@ -29,7 +29,7 @@ std::vector<int16_t> decode(uint8_t buffer[16], int32_t prevSample[2]) {
     // 
     // I'm not sure what is wrong with that particular level in the game, and why it is triggering this assert.
     // Perhaps it has some junk sound data or something like that?
-    #if !DOOM_AVOCADO_MODS
+    #if !PSYDOOM_AVOCADO_MODS
         assert(filter <= 4);
     #endif
 

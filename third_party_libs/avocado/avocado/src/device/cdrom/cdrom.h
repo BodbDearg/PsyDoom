@@ -12,7 +12,7 @@ namespace cdrom {
 
 class CDROM {
 // DOOM: allow public access
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
 public:
 #endif
     union StatusCode {
@@ -132,7 +132,7 @@ public:
     int scexCounter = 0;
 
 // DOOM: flag to allow forcing a sector read on the next call to step()
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
     bool bForceSectorRead = false;
 #endif
 

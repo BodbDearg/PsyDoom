@@ -23,7 +23,7 @@ Position Cue::getTrackStart(int track) const {
 // physical disc minutes and seconds and that amount which includes the disc header already...
 //
 // This issue was most noticable when entering the main menu and also on the finale screens.
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
     if ((track == 0) && tracks.at(0).type == disc::TrackType::DATA) {
         total += 75 * 2;
     }
@@ -36,7 +36,7 @@ Position Cue::getTrackStart(int track) const {
 // DOOM: fix the track start being incorrectly determined. The calculation here should include the size of the track before
 // the one we want... The previous code was causing issues with the looping cd audio in the 'CLUB DOOM' secret level because
 // the track boundaries (and track end) were being computed incorrectly, causing the looping audio track to end prematurely...
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
     for (int i = 0; i < track; i++) {
 #else
     for (int i = 0; i < track - 1; i++) {

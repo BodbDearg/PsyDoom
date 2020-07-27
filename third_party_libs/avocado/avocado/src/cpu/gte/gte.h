@@ -13,7 +13,7 @@ class GTE;
 
 class GTE {
 // DOOM: allow access to GTE state
-#if DOOM_AVOCADO_MODS
+#if PSYDOOM_AVOCADO_MODS
 public:
 #endif
 
