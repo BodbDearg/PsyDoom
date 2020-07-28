@@ -28,7 +28,7 @@ demosets = {
     "doom_pal" : {
         "cue_file" : "Doom_PAL.cue",
         "tests" :  [
-            # TODO: Record demos
+            [ "DOOM_PAL_MAP{0:02}.LMP".format(i), "DOOM_PAL_MAP{0:02}.result.json".format(i) ] for i in range(1, 18)
         ] + [
             # Original game demos - make sure these work too
             [ "DOOM_PAL_DEMO1.LMP", "DOOM_PAL_DEMO1.result.json" ],

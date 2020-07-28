@@ -15,6 +15,7 @@
 - Incorporate network protocol version into multiplayer game setup packet.
 - Fix the small gaps at the side of the screen during screen fades.
 - Final Doom: Investigate demon sound not playing on MAP10. LCD file related?
+- Doom: investigate rendering bug on MAP15, spawning vats.
 
 Future:
 - Allow playing the game in PAL mode.
