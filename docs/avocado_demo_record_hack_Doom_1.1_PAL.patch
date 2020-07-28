@@ -1,10 +1,10 @@
-This is a hack which patches the Avocado PSX emulator at commit 356191e81f165c52122b165db3efc19c84cc5762 to make the NTSC-U 'Greatest Hits'
+This is a hack which patches the Avocado PSX emulator at commit 356191e81f165c52122b165db3efc19c84cc5762 to make the PAL 'Platinum'
 version of Doom (1.1) start recording a demo upon starting a level. When the level is done, the recorded demo is saved to 'DEMO1.LMP' in
 the current working directory. About 31 minutes of gameplay can be recorded in total.
 
 This patch also includes the 'Avocado hack' which loads PSXDOOM.EXE directly upon opening 'Doom.cue'.
 That hack is required here because it preserves the original addresses and offsets as specified in PSXDOOM.EXE.
-When PSXDOOM.EXE is launched as a child process via 'SLUS_000.77' the addresses shift somewhat.
+When PSXDOOM.EXE is launched as a child process via 'SLES_001.32' the addresses shift somewhat.
 
 Note: you may need to modify the path to the extracted PSXDOOM.EXE and PSX bios below in order for the patch to work.
 The version of PSXDOOM.EXE extracted also must be for the exact game version mentioned.
@@ -19,22 +19,22 @@ index 1e1ae8f..e6cb867 100644
          if (maskedPc == 0xa0 || maskedPc == 0xb0 || maskedPc == 0xc0) sys->handleBiosFunction();
  
 +        // DOOM: hacks for demo recording
-+        if ((maskedPc | 0x80000000) == 0x80013564) {    // G_RunGame(): jal -> MiniLoop
++        if ((maskedPc | 0x80000000) == 0x80035CC0) {    // G_RunGame(): jal -> MiniLoop
 +            // Prep for demo recording.
 +            // Use the expansion area (starting 0x1F000000, 8 MiB) to record.
-+            sys->writeMemory32(0x800781AC, 1);                                  // gbDemoRecording = true
-+            sys->writeMemory32(0x1F000000, sys->readMemory32(0x80078258));      // ((uint32_t*) EXPANSION)[0] = gGameSkill
-+            sys->writeMemory32(0x1F000004, sys->readMemory32(0x80078048));      // ((uint32_t*) EXPANSION)[1] = gGameMap
-+            sys->writeMemory32(0x1F000008, sys->readMemory32(0x80073E0C));      // ((uint32_t*) EXPANSION)[2] = gCtrlBindings[0]
-+            sys->writeMemory32(0x1F00000C, sys->readMemory32(0x80073E10));      // ((uint32_t*) EXPANSION)[3] = gCtrlBindings[1]
-+            sys->writeMemory32(0x1F000010, sys->readMemory32(0x80073E14));      // ((uint32_t*) EXPANSION)[4] = gCtrlBindings[2]
-+            sys->writeMemory32(0x1F000014, sys->readMemory32(0x80073E18));      // ((uint32_t*) EXPANSION)[5] = gCtrlBindings[3]
-+            sys->writeMemory32(0x1F000018, sys->readMemory32(0x80073E1C));      // ((uint32_t*) EXPANSION)[6] = gCtrlBindings[4]
-+            sys->writeMemory32(0x1F00001C, sys->readMemory32(0x80073E20));      // ((uint32_t*) EXPANSION)[7] = gCtrlBindings[5]
-+            sys->writeMemory32(0x1F000020, sys->readMemory32(0x80073E24));      // ((uint32_t*) EXPANSION)[8] = gCtrlBindings[6]
-+            sys->writeMemory32(0x1F000024, sys->readMemory32(0x80073E28));      // ((uint32_t*) EXPANSION)[9] = gCtrlBindings[7]
-+            sys->writeMemory32(0x800775E8, 0x1F000000);                         // gpDemoBuffer = &((uint32_t*) EXPANSION)[0]
-+            sys->writeMemory32(0x800775EC, 0x1F000028);                         // gpDemo_p     = &((uint32_t*) EXPANSION)[10]
++            sys->writeMemory32(0x80078218, 1);                                  // gbDemoRecording = true
++            sys->writeMemory32(0x1F000000, sys->readMemory32(0x800782C4));      // ((uint32_t*) EXPANSION)[0] = gGameSkill
++            sys->writeMemory32(0x1F000004, sys->readMemory32(0x800780B4));      // ((uint32_t*) EXPANSION)[1] = gGameMap
++            sys->writeMemory32(0x1F000008, sys->readMemory32(0x80073E78));      // ((uint32_t*) EXPANSION)[2] = gCtrlBindings[0]
++            sys->writeMemory32(0x1F00000C, sys->readMemory32(0x80073E7C));      // ((uint32_t*) EXPANSION)[3] = gCtrlBindings[1]
++            sys->writeMemory32(0x1F000010, sys->readMemory32(0x80073E80));      // ((uint32_t*) EXPANSION)[4] = gCtrlBindings[2]
++            sys->writeMemory32(0x1F000014, sys->readMemory32(0x80073E84));      // ((uint32_t*) EXPANSION)[5] = gCtrlBindings[3]
++            sys->writeMemory32(0x1F000018, sys->readMemory32(0x80073E88));      // ((uint32_t*) EXPANSION)[6] = gCtrlBindings[4]
++            sys->writeMemory32(0x1F00001C, sys->readMemory32(0x80073E8C));      // ((uint32_t*) EXPANSION)[7] = gCtrlBindings[5]
++            sys->writeMemory32(0x1F000020, sys->readMemory32(0x80073E90));      // ((uint32_t*) EXPANSION)[8] = gCtrlBindings[6]
++            sys->writeMemory32(0x1F000024, sys->readMemory32(0x80073E94));      // ((uint32_t*) EXPANSION)[9] = gCtrlBindings[7]
++            sys->writeMemory32(0x80077654, 0x1F000000);                         // gpDemoBuffer = &((uint32_t*) EXPANSION)[0]
++            sys->writeMemory32(0x80077658, 0x1F000028);                         // gpDemo_p     = &((uint32_t*) EXPANSION)[10]
 +
 +            // Patch the comparison instruction at 80012D28 to allow for slightly bigger demos (in case it's required)
 +            //
@@ -48,9 +48,9 @@ index 1e1ae8f..e6cb867 100644
 +            //
 +            sys->writeMemory32(0x80012D28, 0x28427000);
 +        }
-+        else if ((maskedPc | 0x80000000) == 0x80013574) {   // G_RunGame(): sw $zero, [$gp + A14]         ; Store to: gbIsLevelBeingRestarted (80077FF4)
++        else if ((maskedPc | 0x80000000) == 0x80013560) {   // G_RunGame(): sw $zero, [$gp + A14]         ; Store to: gbIsLevelBeingRestarted (80078060)
 +            // End demo recording and save the demo file
-+            const uint32_t endDemoP = sys->readMemory32(0x800775EC);
++            const uint32_t endDemoP = sys->readMemory32(0x80077658);
 +            const int32_t demoSize = (int32_t)(endDemoP - 0x1F000000u);
 +            std::FILE* const pFile = std::fopen("DEMO1.LMP", "wb");
 +
@@ -74,7 +74,7 @@ index 688cdae..52bbf11 100644
          sys->cdrom->disc = std::move(disc);
          sys->cdrom->setShell(false);
 +
-+        sys->loadBios("C:\\Bin\\avocado_psx_emulator\\data\\bios\\SCPH1001.bin");
++        sys->loadBios("C:\\Bin\\avocado_psx_emulator\\data\\bios\\SCPH1002.bin");
 +        sys->cpu->breakpoints.emplace(0x80030000, mips::CPU::Breakpoint(true));
 +        while (sys->state == System::State::run) sys->emulateFrame();
 +        sys->loadExeFile(getFileContents("C:\\Bin\\avocado_psx_emulator\\data\\iso\\PSXDOOM.EXE"));

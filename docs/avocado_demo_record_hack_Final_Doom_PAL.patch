@@ -5,6 +5,9 @@ the current working directory. About 31 minutes of gameplay can be recorded in t
 This patch also includes the 'Avocado hack' which loads PSXDOOM.EXE directly upon opening 'Doom.cue'.
 That hack is required here because it preserves the original addresses and offsets as specified in PSXDOOM.EXE.
 When PSXDOOM.EXE is launched as a child process via 'SLES_004.87' the addresses shift somewhat.
+
+Note: you may need to modify the path to the extracted PSXDOOM.EXE and PSX bios below in order for the patch to work.
+The version of PSXDOOM.EXE extracted also must be for the exact game version mentioned.
 ============================================================================================================================================
 
 diff --git a/src/cpu/cpu.cpp b/src/cpu/cpu.cpp

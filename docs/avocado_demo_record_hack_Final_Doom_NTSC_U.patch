@@ -1,10 +1,13 @@
-This is a hack which patches the Avocado PSX emulator at commit 356191e81f165c52122b165db3efc19c84cc5762 to make the PAL version
+This is a hack which patches the Avocado PSX emulator at commit 356191e81f165c52122b165db3efc19c84cc5762 to make the NTSC-U version
 of Final Doom start recording a demo upon starting a level. When the level is done, the recorded demo is saved to 'DEMO1.LMP' in
 the current working directory. About 31 minutes of gameplay can be recorded in total.
 
 This patch also includes the 'Avocado hack' which loads PSXDOOM.EXE directly upon opening 'Doom.cue'.
 That hack is required here because it preserves the original addresses and offsets as specified in PSXDOOM.EXE.
-When PSXDOOM.EXE is launched as a child process via 'SLES_004.87' the addresses shift somewhat.
+When PSXDOOM.EXE is launched as a child process via 'SLUS_003.31' the addresses shift somewhat.
+
+Note: you may need to modify the path to the extracted PSXDOOM.EXE and PSX bios below in order for the patch to work.
+The version of PSXDOOM.EXE extracted also must be for the exact game version mentioned.
 ============================================================================================================================================
 
 diff --git a/src/cpu/cpu.cpp b/src/cpu/cpu.cpp
