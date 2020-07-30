@@ -6,7 +6,7 @@
     - Record a full playthrough and verify OK
     - Verify with mouse and controller
     - Verify PAL and NTSC
-- Fix Redemption Denied animated floor bug
+- Fix Redemption Denied (and Tricks + Traps) animated floor bug
     - Only enable the animation for Final Doom
     - Check other animations added in case they conflict too
 - Double sound buffer size (or more?)
