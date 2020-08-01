@@ -238,8 +238,9 @@ bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
     thingTopSlope = std::min(thingTopSlope, gAimTopSlope);
     thingBottomSlope = std::max(thingBottomSlope, gAimBottomSlope);
 
-    // Shoot the thing midway along the visible parts of it and remember what is being shot
-    gShootSlope = (thingTopSlope + thingBottomSlope) >> 1;
+    // Shoot the thing midway along the visible parts of it and remember what is being shot.
+    // N.B: division by '2' must be used here versus the original 'sra' (shift right arithmetic) instruction for demo compatible behavior.
+    gShootSlope = (thingTopSlope + thingBottomSlope) / 2;
     gpShootMObj = &thing;
 
     // Adjust the hit point so it is a little closer - move away from thing center by 10.0 units.
