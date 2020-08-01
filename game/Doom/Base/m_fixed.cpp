@@ -56,7 +56,7 @@ fixed_t FixedDiv(const fixed_t a, const fixed_t b) noexcept {
         // Stop iteration once theres nothing left to divide or when we have processed all bits.
         dividend <<= 1;
         resultBit >>= 1;
-    } while (resultBit != 0 && dividend != 0);
+    } while ((resultBit != 0) && (dividend != 0));
 
     // Last step, correct the sign of the result
     return (bNegativeResult) ? -result : result;

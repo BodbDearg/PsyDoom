@@ -396,7 +396,7 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
             if (shootZ > sector.ceilingheight)
                 return;     // Not allowed to shoot the sky ceiling!
 
-            if (pShootLine->backsector && pShootLine->backsector->ceilingpic == -1)
+            if (pShootLine->backsector && (pShootLine->backsector->ceilingpic == -1))
                 return;     // Shooting a sky upper/lower wall!
         }
 
