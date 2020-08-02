@@ -1,11 +1,5 @@
 0.5.0:
 - Make PAL mode tick at 50 Hz
-- Verify demo compatibility with PAL Doom
-    - Record a full playthrough and verify OK
-- Verify demo compatibility with Final Doom
-    - Record a full playthrough and verify OK
-    - Verify with mouse and controller
-    - Verify PAL and NTSC
 - Fix Redemption Denied (and Tricks + Traps) animated floor bug
     - Only enable the animation for Final Doom
     - Check other animations added in case they conflict too
