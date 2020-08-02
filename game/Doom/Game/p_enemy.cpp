@@ -518,7 +518,7 @@ void A_FaceTarget(mobj_t& actor) noexcept {
 
     // If the target has partial invisbility then vary the angle randomly a bit (by almost 45 degrees)
     if (target.flags & MF_ALL_BLEND_FLAGS) {
-        actor.angle += (P_Random() - P_Random()) * (ANG45 / 256);
+        actor.angle += P_SubRandom() * (ANG45 / 256);
     }
 }
 
@@ -532,8 +532,8 @@ void A_PosAttack(mobj_t& actor) noexcept {
     A_FaceTarget(actor);
     S_StartSound(&actor, sfx_pistol);
 
-    const angle_t shootAngle = actor.angle + (P_Random() - P_Random()) * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
-    const int32_t damage = ((P_Random() & 7) + 1) * 3;                                      // 3-24 damage
+    const angle_t shootAngle = actor.angle + P_SubRandom() * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
+    const int32_t damage = ((P_Random() & 7) + 1) * 3;                          // 3-24 damage
 
     P_LineAttack(actor, shootAngle, MISSILERANGE, INT32_MAX, damage);
 }
@@ -550,8 +550,8 @@ void A_SPosAttack(mobj_t& actor) noexcept {
 
     // The shotgun fires 3 pellets
     for (int32_t i = 0; i < 3; ++i) {
-        const angle_t shootAngle =  actor.angle + (P_Random() - P_Random()) * (ANG45 / 512);    // Vary by up to 22.5 degrees (approximately)
-        const int32_t damage = (P_Random() % 5 + 1) * 3;                                        // 3-15 damage
+        const angle_t shootAngle =  actor.angle + P_SubRandom() * (ANG45 / 512);    // Vary by up to 22.5 degrees (approximately)
+        const int32_t damage = (P_Random() % 5 + 1) * 3;                            // 3-15 damage
 
         P_LineAttack(actor, shootAngle, MISSILERANGE, INT32_MAX, damage);
     }
@@ -568,8 +568,8 @@ void A_CPosAttack(mobj_t& actor) noexcept {
     A_FaceTarget(actor);
 
     const fixed_t aimZSlope = P_AimLineAttack(actor, actor.angle, MISSILERANGE);
-    const angle_t shootAngle = actor.angle + (P_Random() - P_Random()) * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
-    const int32_t damage = (P_Random() % 5 + 1) * 3;                                        // 3-15 damage
+    const angle_t shootAngle = actor.angle + P_SubRandom() * (ANG45 / 512);         // Vary by up to 22.5 degrees (approximately)
+    const int32_t damage = (P_Random() % 5 + 1) * 3;                                // 3-15 damage
 
     P_LineAttack(actor, shootAngle, MISSILERANGE, aimZSlope, damage);
 }
@@ -610,8 +610,8 @@ void A_SpidAttack(mobj_t& actor) noexcept {
     
     // The Spider Mastermind fires 3 pellets per shot
     for (int32_t i = 0; i < 3; ++i) {
-        const angle_t shootAngle = actor.angle + (P_Random() - P_Random()) * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
-        const int32_t damage = (P_Random() % 5 + 1) * 3;                                        // 3-15 damage
+        const angle_t shootAngle = actor.angle + P_SubRandom() * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
+        const int32_t damage = (P_Random() % 5 + 1) * 3;                            // 3-15 damage
         
         P_LineAttack(actor, shootAngle, MISSILERANGE, INT32_MAX, damage);
     }

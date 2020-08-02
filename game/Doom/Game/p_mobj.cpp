@@ -414,7 +414,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
     // Spawn the puff and randomly adjust its height
-    const fixed_t spawnZ = z + ((P_Random() - P_Random()) << 10);
+    const fixed_t spawnZ = z + (P_SubRandom() << 10);
     mobj_t& mobj = *P_SpawnMobj(x, y, spawnZ, MT_PUFF);
 
     // Give some upward momentum and randomly adjust tics left
@@ -436,7 +436,7 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32_t damage) noexcept {
     // Spawn the puff and randomly adjust its height
-    const fixed_t spawnZ = z + ((P_Random() - P_Random()) << 10);
+    const fixed_t spawnZ = z + (P_SubRandom() << 10);
     mobj_t& mobj = *P_SpawnMobj(x, y, spawnZ, MT_BLOOD);
 
     // Give some upward momentum and randomly adjust tics left
@@ -519,7 +519,7 @@ mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noex
     angle_t angle = R_PointToAngle2(source.x, source.y, dest.x, dest.y);
     
     if (dest.flags & MF_ALL_BLEND_FLAGS) {
-        angle += (P_Random() - P_Random()) << 20;
+        angle += P_SubRandom() << 20;
     }
     
     missile.angle = angle;

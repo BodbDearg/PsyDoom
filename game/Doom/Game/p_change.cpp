@@ -96,8 +96,8 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
 
         // Spawn some blood and randomly send it off in different directions
         mobj_t& blood = *P_SpawnMobj(mobj.x, mobj.y, mobj.height / 2 + mobj.z, MT_BLOOD);
-        blood.momx = (P_Random() - P_Random()) * (FRACUNIT / 16);
-        blood.momy = (P_Random() - P_Random()) * (FRACUNIT / 16);
+        blood.momx = P_SubRandom() * (FRACUNIT / 16);
+        blood.momy = P_SubRandom() * (FRACUNIT / 16);
     }
 
     return true;    // Continue iterating through things in the blockmap

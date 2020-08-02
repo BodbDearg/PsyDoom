@@ -450,7 +450,7 @@ void A_Punch(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
     // Left shift of signed numbers when there is overflow is undefined behavior in C/C++, and produces an implementation defined result.
     // I've found if I omit ths cast then demos will break, due to different behavior:
-    const angle_t angleVariance = (angle_t)(P_Random() - P_Random()) << 18;
+    const angle_t angleVariance = ((angle_t) P_SubRandom()) << 18;
     
     mobj_t& playerMobj = *player.mo;
     const angle_t attackAngle = playerMobj.angle + angleVariance;
@@ -477,7 +477,7 @@ void A_Saw(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
     // Left shift of signed numbers when there is overflow is undefined behavior in C/C++, and produces an implementation defined result.
     // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
-    const angle_t angleVariance = (angle_t)(P_Random() - P_Random()) << 18;
+    const angle_t angleVariance = ((angle_t) P_SubRandom()) << 18;
 
     mobj_t& playerMobj = *player.mo;
     const angle_t attackAngle = playerMobj.angle + angleVariance;
@@ -579,7 +579,7 @@ static void P_GunShot(mobj_t& mobj, const bool bAccurate) noexcept {
     if (!bAccurate) {
         // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
         // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
-        angle += (angle_t)(P_Random() - P_Random()) << 18;
+        angle += ((angle_t) P_SubRandom()) << 18;
     }
 
     P_LineAttack(mobj, angle, MISSILERANGE, INT32_MAX, damage);
@@ -622,7 +622,7 @@ void A_FireShotgun(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept
         // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
         // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
         const int32_t damage = ((P_Random() & 3) + 1) * 4;
-        const angle_t angleVariance = (angle_t)(P_Random() - P_Random()) << 18;
+        const angle_t angleVariance = ((angle_t) P_SubRandom()) << 18;
         const angle_t angle = playerMobj.angle + angleVariance;
 
         P_LineAttack(playerMobj, angle, MISSILERANGE, aimZSlope, damage);
@@ -652,9 +652,9 @@ void A_FireShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcep
         // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
         // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
         const int32_t damage = (P_Random() % 3 + 1) * 5;
-        const angle_t angleVariance = (angle_t)(P_Random() - P_Random()) << 19;
+        const angle_t angleVariance = ((angle_t) P_SubRandom()) << 19;
         const angle_t angle = playerMobj.angle + angleVariance;
-        const fixed_t aimSlope = gBulletSlope + (P_Random() - P_Random()) * 32;
+        const fixed_t aimSlope = gBulletSlope + P_SubRandom() * 32;
 
         P_LineAttack(playerMobj, angle, MISSILERANGE, aimSlope, damage);
     }
