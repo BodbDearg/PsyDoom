@@ -499,8 +499,8 @@ void A_Saw(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     const angle_t angleToTarget = R_PointToAngle2(playerMobj.x, playerMobj.y, pHitThing->x, pHitThing->y);
     const angle_t angleDelta = angleToTarget - playerMobj.angle;
 
-    const angle_t ANGLE_WIGGLE_1 = ANG90 / 20;
-    const angle_t ANGLE_WIGGLE_2 = ANG90 / 21;
+    constexpr angle_t ANGLE_WIGGLE_1 = ANG90 / 20;
+    constexpr angle_t ANGLE_WIGGLE_2 = ANG90 / 21;
 
     if (angleDelta > ANG180) {
         if (angleDelta >= -ANGLE_WIGGLE_1) {

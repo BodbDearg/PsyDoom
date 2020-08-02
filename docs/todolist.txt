@@ -16,6 +16,7 @@
 - Fix the small gaps at the side of the screen during screen fades.
 - Final Doom: Investigate demon sound not playing on MAP10. LCD file related?
 - Doom: investigate rendering bug on MAP15, spawning vats.
+- Make the expression 'P_Random() - P_Random()' etc. a helper function: implementation dependent behavior otherwise!
 
 Future:
 - Allow playing the game in PAL mode.
