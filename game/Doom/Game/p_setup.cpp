@@ -783,13 +783,13 @@ static void P_GroupLines() noexcept {
         // Use the bounding box center for this.
         {
             degenmobj_t& soundorg = pSec->soundorg;
-            soundorg.x = (bbox[BOXLEFT] + bbox[BOXRIGHT]) >> 1;
-            soundorg.y = (bbox[BOXTOP] + bbox[BOXBOTTOM]) >> 1;
+            soundorg.x = (bbox[BOXLEFT] + bbox[BOXRIGHT]) / 2;
+            soundorg.y = (bbox[BOXTOP] + bbox[BOXBOTTOM]) / 2;
 
             #if PSYDOOM_MODS && PSYDOOM_FIX_UB
                 // The original code did not appear to initialize the 'z' field!
                 // I'm not sure it's used for sound code but give it a defined value of midway up in the air for good measure.
-                soundorg.z = (pSec->floorheight + pSec->ceilingheight) >> 1;
+                soundorg.z = (pSec->floorheight + pSec->ceilingheight) / 2;
             #endif
 
             pSec->soundorg.subsector = R_PointInSubsector(soundorg.x, soundorg.y);
