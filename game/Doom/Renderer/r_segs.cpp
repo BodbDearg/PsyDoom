@@ -116,8 +116,22 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     // Final Doom: force the mid wall to be 128 units in height if this flag is specified.
     // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
     if (line.flags & ML_MIDHEIGHT_128) {
-        // Note again, since texture space coords are opposite to view space coords, we do a -128 instead of +128 as you would expect:
-        mid_ty = mid_by - 128;
+        // PsyDoom: restricting this flag to two sided linedefs only.
+        //
+        // For some strange reason one of the maps in the original PSX Doom (MAP15, Spawning Vats) has this flag set on some of the one
+        // sided wall linedefs, which causes them to be clipped without this modification. Perhaps the flag meant something else temporarily
+        // during the development of the original PSX Doom? I don't think it makes sense for this flag to be used on anything other than 2
+        // sided lines anyway so this change should be OK to apply without condition to both Doom and Final Doom:
+        #if PSYDOOM_MODS
+            const bool bApplyFixedWallHeightFlag = (line.flags & ML_TWOSIDED);
+        #else 
+            const bool bApplyFixedWallHeightFlag = true;
+        #endif
+
+        if (bApplyFixedWallHeightFlag) {
+            // Note again, since texture space coords are opposite to view space coords, we do a -128 instead of +128 you might expect
+            mid_ty = mid_by - 128;
+        }
     }
 
     // Drawing the mid wall
