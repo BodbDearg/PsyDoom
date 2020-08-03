@@ -4,7 +4,6 @@
     - Only enable the animation for Final Doom
     - Check other animations added in case they conflict too
 - Double sound buffer size (or more?)
-- Is there a bug with the game not switching to the chaingun (if you have it) when out of shotgun ammo?    
 - Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
 - Incorporate network protocol version into multiplayer game setup packet.
 - Final Doom: Investigate demon sound not playing on MAP10. LCD file related?
