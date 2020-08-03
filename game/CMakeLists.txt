@@ -236,12 +236,14 @@ set(SOURCE_FILES
 
 if (PSYDOOM_INCLUDE_OLD_CODE)
     list(APPEND SOURCE_FILES
+        "Old/Doom/Base/Old_i_crossfade.cpp"
         "Old/Doom/Base/Old_i_main.cpp"
         "Old/Doom/Base/Old_i_main.h"
         "Old/Doom/Base/Old_z_zone.cpp"
         "Old/Doom/Game/Old_p_setup.cpp"
-        "Old/Doom/UI/cn_main.cpp"
-        "Old/Doom/UI/cn_main.h"
+        "Old/Doom/UI/Old_cn_main.cpp"
+        "Old/Doom/UI/Old_cn_main.h"
+        "Old/Doom/UI/Old_ti_main.cpp"
         "Old/Old_cdmaptbl.cpp"
         "Old/PsyQ/Old_LIBAPI.cpp"
         "Old/PsyQ/Old_LIBAPI.h"

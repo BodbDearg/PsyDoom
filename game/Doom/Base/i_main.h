@@ -105,6 +105,23 @@ void I_DrawSprite(
     const uint16_t texH
 ) noexcept;
 
+#if PSYDOOM_MODS
+    void I_DrawColoredSprite(
+        const uint16_t texPageId,
+        const int16_t clutId,
+        const int16_t xpos,
+        const int16_t ypos,
+        const uint8_t texU,
+        const uint8_t texV,
+        const uint16_t texW,
+        const uint16_t texH,
+        const uint8_t r,
+        const uint8_t g,
+        const uint8_t b,
+        const bool bSemiTransparent
+    ) noexcept;
+#endif
+
 void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
 void I_IncDrawnFrameCount() noexcept;
 void I_DrawPresent() noexcept;

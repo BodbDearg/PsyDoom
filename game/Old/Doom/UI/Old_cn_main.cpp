@@ -1,7 +1,7 @@
 // PsyDoom: no longer using the controller configuration screen
 #if !PSYDOOM_MODS
 
-#include "cn_main.h"
+#include "Old_cn_main.h"
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"

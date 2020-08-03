@@ -432,6 +432,48 @@ void I_DrawSprite(
     I_AddPrim(LIBETC_getScratchAddr(128));
 }
 
+#if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom extension/helper: same as 'I_DrawSprite' but with the ability to change the sprite's color and semi-transparency option
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_DrawColoredSprite(
+    const uint16_t texPageId,
+    const int16_t clutId,
+    const int16_t xpos,
+    const int16_t ypos,
+    const uint8_t texU,
+    const uint8_t texV,
+    const uint16_t texW,
+    const uint16_t texH,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const bool bSemiTransparent
+) noexcept {
+    // Set the drawing mode
+    {
+        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
+        LIBGPU_SetDrawMode(drawModePrim, false, false, texPageId, nullptr);
+        I_AddPrim(&drawModePrim);
+    }
+
+    // Setup the sprite primitive and submit
+    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+
+    LIBGPU_SetSprt(spritePrim);
+    LIBGPU_setRGB0(spritePrim, r, g, b);
+    LIBGPU_setXY0(spritePrim, xpos, ypos);
+    LIBGPU_setUV0(spritePrim, texU, texV);
+    LIBGPU_setWH(spritePrim, texW, texH);
+    LIBGPU_SetSemiTrans(&spritePrim, bSemiTransparent);
+    spritePrim.clut = clutId;
+
+    I_AddPrim(LIBETC_getScratchAddr(128));
+}
+
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Copies the front buffer to the back buffer, draws a loading plaque over it and presents it to the screen.
 // Useful for drawing a loading message before doing a long running load or connect operation.

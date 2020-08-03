@@ -1,19 +1,11 @@
-#include "i_crossfade.h"
+#include "Doom/Base/i_crossfade.h"
 
-#include "i_drawcmds.h"
-#include "i_main.h"
-#include "PcPsx/Utils.h"
-#include "PcPsx/Video.h"
-#include "PsyQ/LIBETC.h"
-#include "PsyQ/LIBGPU.h"
-
-#if PSYDOOM_MODS
+#if !PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cross fades the currently displaying framebuffer with the currently drawn (but not yet displaying) framebuffer (back buffer).
 // These original framebuffers are left untouched for the duration of the fade, and some of the texture cache VRAM must be overwritten for
 // 2 fade framebuffers in order to do drawing and display for the cross fade effect.
-// PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_CrossFadeFrameBuffers() noexcept {
     // Clear out what we can from the texture cache
@@ -46,21 +38,63 @@ void I_CrossFadeFrameBuffers() noexcept {
     LIBGPU_PutDrawEnv(drawEnvs[0]);
     LIBGPU_PutDispEnv(dispEnvs[0]);
 
-    // Get the texture page id for the two framebuffers we will be rendering during the crossfade
+    // Setup the quads used for rendering the cross fade.
+    // Each one is sourcing its texture from a different framebuffer.
     const uint16_t tpage1 = LIBGPU_GetTPage(2, 0, (gCurDispBufferIdx == 0) ? 256 : 0, 0);
     const uint16_t tpage2 = LIBGPU_GetTPage(2, 0, (gCurDispBufferIdx == 0) ? 0 : 256, 0);
 
+    POLY_FT4 polyPrim1;
+    POLY_FT4 polyPrim2;
+
+    LIBGPU_SetPolyFT4(polyPrim1);
+    
+    LIBGPU_setXY4(polyPrim1,
+        0,              0,
+        SCREEN_W - 1,   0,
+        0,              SCREEN_H - 1,
+        SCREEN_W - 1,   SCREEN_H - 1
+    );
+
+    LIBGPU_setUV4(polyPrim1,
+        0,              0,
+        SCREEN_W - 1,   0,
+        0,              SCREEN_H - 1,
+        SCREEN_W - 1,   SCREEN_H - 1
+    );
+    
+    polyPrim1.clut = 0;
+    polyPrim1.tpage = tpage1;
+  
+    LIBGPU_SetPolyFT4(polyPrim2);
+    LIBGPU_SetSemiTrans(&polyPrim2, true);
+
+    LIBGPU_setXY4(polyPrim2,
+        0,              0,
+        SCREEN_W - 1,   0,
+        0,              SCREEN_H - 1,
+        SCREEN_W - 1,   SCREEN_H - 1
+    );
+
+    LIBGPU_setUV4(polyPrim2,
+        0,              0,
+        SCREEN_W - 1,   0,
+        0,              SCREEN_H - 1,
+        SCREEN_W - 1,   SCREEN_H - 1
+    );
+
+    polyPrim2.clut = 0;
+    polyPrim2.tpage = tpage2;
+
     // Run the cross fade until completion
     uint32_t framebufferIdx = 0;
-    int32_t lastTotalVBlanks = I_GetTotalVBlanks();
     
     for (int32_t fade = 255; fade >= 0; fade -= 5) {
-        // PsyDoom: now drawing using sprites rather than polygons (as per the original code) to avoid the last row and column being clipped.
-        // According to the NO$PSX specs: "Polygons are displayed up to <excluding> their lower-right coordinates."
-        const uint8_t fade1 = (uint8_t)  fade;
-        const uint8_t fade2 = (uint8_t) ~fade;
-        I_DrawColoredSprite(tpage1, 0, 0, 0, 0, 0, SCREEN_W, SCREEN_H, fade1, fade1, fade1, false);
-        I_DrawColoredSprite(tpage2, 0, 0, 0, 0, 0, SCREEN_W, SCREEN_H, fade2, fade2, fade2, true);
+        // Set the color for the 2 polygon primitves and submit
+        LIBGPU_setRGB0(polyPrim1, (uint8_t)  fade, (uint8_t)  fade, (uint8_t)  fade);
+        LIBGPU_setRGB0(polyPrim2, (uint8_t) ~fade, (uint8_t) ~fade, (uint8_t) ~fade);
+
+        I_AddPrim(&polyPrim1);
+        I_AddPrim(&polyPrim2);
 
         // Finish up drawing and swap the framebuffers
         framebufferIdx = framebufferIdx ^ 1;
@@ -71,22 +105,10 @@ void I_CrossFadeFrameBuffers() noexcept {
         LIBETC_VSync(0);
         LIBGPU_PutDrawEnv(drawEnvs[framebufferIdx]);
         LIBGPU_PutDispEnv(dispEnvs[framebufferIdx]);
-
-        // PsyDoom: copy the PSX framebuffer to the display
-        Video::displayFramebuffer();
-
-        // PsyDoom: delay 1 vblank to limit fade speed
-        int32_t curTotalVBlanks = I_GetTotalVBlanks();
-
-        while (curTotalVBlanks <= lastTotalVBlanks) {
-            Utils::doPlatformUpdates();
-            Utils::threadYield();
-            curTotalVBlanks = I_GetTotalVBlanks();
-        }
     }
     
     I_SubmitGpuCmds();
     I_DrawPresent();
 }
 
-#endif  // #if PSYDOOM_MODS
+#endif

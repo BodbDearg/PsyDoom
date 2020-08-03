@@ -201,39 +201,23 @@ gameaction_t TIC_Title() noexcept {
     return ga_nothing;
 }
 
+#if PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Renders the main title screen: the scrolling DOOM logo and fire sky
+// Renders the main title screen: the scrolling DOOM logo and fire sky.
+//
+// PsyDoom: this funtion has been rewritten to eliminate issues with gaps at the edge of the screen caused by using polygons rather than
+// sprites to render. According to the NO$PSX docs "Polygons are displayed up to <excluding> their lower-right coordinates.".
+// I also fixed issues with gaps at the side of the screen due to bad spacing of the firesky tiles.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_Title() noexcept {
     I_IncDrawnFrameCount();
 
     // Draw the title logo.
-    // Final Doom: this is drawn on top of everything instead.
+    // Final Doom: this is drawn on top of everything (at the end) instead.
     if (!Game::isFinalDoom()) {
-        POLY_FT4 polyPrim;
-        LIBGPU_SetPolyFT4(polyPrim);
-        LIBGPU_setRGB0(polyPrim, 128, 128, 128);
-
-        LIBGPU_setUV4(polyPrim,
-            0,      0,
-            255,    0,
-            0,      239,
-            255,    239
-        );
-
         const int16_t titleY = (int16_t) gTitleScreenSpriteY;
-
-        LIBGPU_setXY4(polyPrim,
-            0,      titleY,
-            255,    titleY,
-            0,      titleY + 239,
-            255,    titleY + 239
-        );
-
-        polyPrim.tpage = gTex_TITLE.texPageId;
-        polyPrim.clut = gPaletteClutIds[TITLEPAL];
-
-        I_AddPrim(&polyPrim);
+        I_DrawSprite(gTex_TITLE.texPageId, gPaletteClutIds[TITLEPAL], 0, titleY, 0, 0, SCREEN_W, SCREEN_H);
     }
 
     // Upload the firesky texture if VRAM if required.
@@ -250,86 +234,32 @@ void DRAW_Title() noexcept {
         skytex.uploadFrameNum = gNumFramesDrawn;
     }
 
-    // Setup a polygon primitive for drawing fire sky pieces
-    POLY_FT4 polyPrim;
+    // Draw the fire sky pieces.
+    // Note: slightly tweaked positions for Doom vs Final Doom.
+    {
+        constexpr uint8_t SKY_W = 64;       // PsyDoom: fix a 4 pixel gap at the right side of the screen with the fire ('64' rather than than the original '63')
+        constexpr uint8_t SKY_H = 128;
 
-    LIBGPU_SetPolyFT4(polyPrim);
-    LIBGPU_setRGB0(polyPrim, 128, 128, 128);
-    
-    const uint8_t texU = skytex.texPageCoordX;
-    const uint8_t texV = skytex.texPageCoordY;
+        const uint8_t texU = skytex.texPageCoordX;
+        const uint8_t texV = skytex.texPageCoordY;
 
-    #if PSYDOOM_MODS
-        constexpr uint8_t SKY_W = 64;   // PsyDoom: fix a 4 pixel gap at the right side of the screen with the fire
-    #else
-        constexpr uint8_t SKY_W = 63;
-    #endif
+        int16_t x = 0;
+        const int16_t y = (Game::isFinalDoom()) ? 112 : 116;
 
-    LIBGPU_setUV4(polyPrim,
-        texU,           texV,
-        texU + SKY_W,   texV,
-        texU,           texV + 127,
-        texU + SKY_W,   texV + 127
-    );
-
-    if (Game::isFinalDoom()) {
-        // Slightly tweaked positions for Final Doom
-        LIBGPU_setXY4(polyPrim,
-            0,      112,
-            SKY_W,  112,
-            0,      239,
-            SKY_W,  239
-        );
-    } else {
-        LIBGPU_setXY4(polyPrim,
-            0,      116,
-            SKY_W,  116,
-            0,      243,
-            SKY_W,  243
-        );
-    }
-
-    polyPrim.tpage = skytex.texPageId;
-    polyPrim.clut = gPaletteClutId_CurMapSky;
-
-    // Draw the fire sky pieces
-    for (int32_t i = 0; i < 4; ++i) {
-        I_AddPrim(&polyPrim);
-
-        polyPrim.x0 += SKY_W;
-        polyPrim.x1 += SKY_W;
-        polyPrim.x2 += SKY_W;
-        polyPrim.x3 += SKY_W;
+        for (int32_t i = 0; i < 4; ++i) {
+            I_DrawSprite(skytex.texPageId, gPaletteClutId_CurMapSky, x, y, texU, texV, SKY_W, SKY_H);
+            x += SKY_W;
+        }
     }
 
     // Draw the title logo for Final Doom (on top of everything):
-    if (Game::isFinalDoom()) {;
-        LIBGPU_SetPolyFT4(polyPrim);
-        LIBGPU_setUV4(polyPrim,
-            0,      0,
-            255,    0,
-            0,      239,
-            255,    239
-        );
-
-        const int16_t titleY = (int16_t) gTitleScreenSpriteY;
-
-        LIBGPU_setXY4(polyPrim,
-            0,      0,
-            255,    0,
-            0,      239,
-            255,    239
-        );
-
-        const uint8_t rgbMul = (uint8_t) gTitleScreenSpriteY;
-        LIBGPU_setRGB0(polyPrim, rgbMul, rgbMul, rgbMul);
-
-        polyPrim.tpage = gTex_TITLE.texPageId;
-        polyPrim.clut = gPaletteClutIds[TITLEPAL];
-
-        I_AddPrim(&polyPrim);
+    if (Game::isFinalDoom()) {
+        const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
+        I_DrawColoredSprite(gTex_TITLE.texPageId, gPaletteClutIds[TITLEPAL], 0, 0, 0, 0, SCREEN_W, SCREEN_H, rgb, rgb, rgb, false);
     }
 
     I_SubmitGpuCmds();
     I_DrawPresent();
 }
+
+#endif  // #if PSYDOOM_MODS

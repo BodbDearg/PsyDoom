@@ -7,7 +7,6 @@
 - Is there a bug with the game not switching to the chaingun (if you have it) when out of shotgun ammo?    
 - Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
 - Incorporate network protocol version into multiplayer game setup packet.
-- Fix the small gaps at the side of the screen during screen fades.
 - Final Doom: Investigate demon sound not playing on MAP10. LCD file related?
 
 Future:
@@ -36,6 +35,7 @@ Future:
 - Investigate interpolation for sprites and sectors in addition to player view.
 - Make GPU primitives go more directly to the rasterizer rather than through a buffer.
 - Implement fully bindable/configurable controls.
+- Automap: fix lines being clipped 1 pixel short
 - Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
 - Break the link between the SPU and Avocado 'system' (entire PSX)
 - Break the link between the GPU and Avocado 'system' (entire PSX)
