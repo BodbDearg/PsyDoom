@@ -382,8 +382,6 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
             // PsyDoom: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
             // Store the coords where the last span should end, and use those for the right side of the last span instead of
             // the somewhat truncated/imprecise stepped coords.
-            // 
-            // TODO: make this tweak configurable according to user prefs.
             #if PSYDOOM_MODS
                 const int32_t origSpanR = spanR;
                 const int32_t origSpanUR = spanUR;
@@ -397,8 +395,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 spanUR = spanUL + uStep;
                 spanVR = spanVL + vStep;
 
-                // PsyDoom: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
-                // TODO: make this tweak configurable according to user prefs.
+                // PsyDoom: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'
                 #if PSYDOOM_MODS
                     if (bFixFloorGaps) {
                         if (pieceIdx + 1 >= numSpanPieces) {

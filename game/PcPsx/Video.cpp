@@ -38,8 +38,7 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
         FatalErrors::raise("Failed to determine current screen video mode!");
     }
 
-    // If in fullscreen then use the current screen resolution.
-    // TODO: allow the user to specify a fullscreen resolution in the config file, if required.
+    // If in fullscreen then use the current screen resolution
     if (Config::gbFullscreen) {
         w = displayMode.w;
         h = displayMode.h;
