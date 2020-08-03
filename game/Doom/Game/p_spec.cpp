@@ -24,6 +24,7 @@
 #include "p_telept.h"
 #include "p_tick.h"
 #include "PcPsx/Assert.h"
+#include "PcPsx/Game.h"
 
 // Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
 typedef void (*delayed_actionfn_t)() noexcept;
@@ -43,11 +44,12 @@ struct delayaction_t {
     delayed_actionfn_t  actionfunc;     // The action to perform after the delay
 };
 
-// The number of animated floor/texture types in the game
-static constexpr int32_t MAXANIMS = 18;
+// The number of animated floor/texture types in the game for Doom and Final Doom
+static constexpr int32_t MAXANIMS_DOOM = 16;
+static constexpr int32_t MAXANIMS_FDOOM = 18;
 
 // Definitions for all flat and texture animations in the game
-static const animdef_t gAnimDefs[MAXANIMS] = {
+static const animdef_t gAnimDefs[MAXANIMS_FDOOM] = {
     { 0, "BLOOD1",   "BLOOD3",   3 },
     { 0, "BSLIME01", "BSLIME04", 3 },
     { 0, "CSLIME01", "CSLIME04", 3 },
@@ -55,7 +57,6 @@ static const animdef_t gAnimDefs[MAXANIMS] = {
     { 0, "LAVA01",   "LAVA04",   3 },
     { 0, "WATER01",  "WATER04",  3 },
     { 0, "SLIME01",  "SLIME03",  3 },
-    { 0, "GLOW01",   "GLOW04",   3 },   // Final Doom only
     { 1, "BFALL1",   "BFALL4",   3 },
     { 1, "ENERGY01", "ENERGY04", 3 },
     { 1, "FIRE01",   "FIRE02",   3 },
@@ -65,7 +66,11 @@ static const animdef_t gAnimDefs[MAXANIMS] = {
     { 1, "SLIM01",   "SLIM04",   3 },
     { 1, "TVSNOW01", "TVSNOW03", 1 },
     { 1, "WARN01",   "WARN02",   3 },
-	{ 1, "WFALL1",   "WFALL4",   3 }    // New Final Doom
+    // Final Doom only animations: note that the 'GLOW01' texture is found in the original DOOM but it is not animated, even
+    // though all the frames for it exist. Also note that these entries are NOT found at the end of the array in the Final Doom
+    // code; I added them here for convenience so they can be ignored more easily in the case of the original Doom game.
+    { 0, "GLOW01",   "GLOW04",   3 },
+    { 1, "WFALL1",   "WFALL4",   3 },
 };
 
 static constexpr int32_t MAXLINEANIMS   = 32;           // Maximum number of line animations allowed
@@ -76,7 +81,7 @@ card_t      gMapRedKeyType;         // What type of red key the map uses (if map
 card_t      gMapYellowKeyType;      // What type of yellow key the map uses (if map has a yellow key)
 int32_t     gMapBossSpecialFlags;   // PSX addition: What types of boss specials (triggers) are active on the current map
 
-static anim_t       gAnims[MAXANIMS];                   // The list of animated textures
+static anim_t       gAnims[MAXANIMS_FDOOM];             // The list of animated textures
 static anim_t*      gpLastAnim;                         // Points to the end of the list of animated textures
 static line_t*      gpLineSpecialList[MAXLINEANIMS];    // A list of scrolling lines for the level
 static int32_t      gNumLinespecials;                   // The number of scrolling lines in the level
@@ -87,10 +92,11 @@ static void T_DelayedAction(delayaction_t& action) noexcept;
 // Caches into RAM the textures for all animated flats and textures.
 // Also sets up the spot in VRAM where these animations will go - they occupy the same spot as the base animation frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_InitPicAnims() noexcept {
+void P_InitPicAnims() noexcept {    
+    const int32_t maxAnims = (Game::isFinalDoom()) ? MAXANIMS_FDOOM : MAXANIMS_DOOM;
     gpLastAnim = &gAnims[0];
 
-    for (int32_t animIdx = 0; animIdx < MAXANIMS; ++animIdx) {
+    for (int32_t animIdx = 0; animIdx < maxAnims; ++animIdx) {
         const animdef_t& animdef = gAnimDefs[animIdx];
         anim_t& lastanim = *gpLastAnim;
 
