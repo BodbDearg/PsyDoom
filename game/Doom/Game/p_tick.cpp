@@ -596,7 +596,7 @@ void P_Drawer() noexcept {
     // Keep the framerate at 15-Hz for consistent demo playback (4 60Hz vblanks).
     #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode) {
-            const int32_t demoTickVBlanks = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
+            const int32_t demoTickVBlanks = (Game::gSettings.bUsePalTimings) ? 3 : VBLANKS_PER_TIC;
 
             gTotalVBlanks += demoTickVBlanks;
             gLastTotalVBlanks = gTotalVBlanks;

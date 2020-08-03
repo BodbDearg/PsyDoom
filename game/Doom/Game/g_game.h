@@ -19,10 +19,6 @@ extern bool             gbDemoPlayback;
 extern bool             gbDemoRecording;
 extern bool             gbIsLevelBeingRestarted;
 
-#if PSYDOOM_MODS
-    extern bool gbPlayingPalDemo;
-#endif
-
 void G_DoLoadLevel() noexcept;
 void G_PlayerFinishLevel(int32_t playerIdx) noexcept;
 void G_PlayerReborn(const int32_t playerIdx) noexcept;

@@ -19,6 +19,10 @@ static constexpr uint32_t NUM_MAPS_FINAL_DOOM = 30;
 static constexpr uint32_t NUM_REGULAR_MAPS_DOOM = 54;
 static constexpr uint32_t NUM_REGULAR_MAPS_FINAL_DOOM = 30;
 
+// The Lost Soul spawn limit for Doom and Final Doom (-1 means no limit)
+static constexpr uint32_t SOUL_LIMIT_DOOM = -1;
+static constexpr uint32_t SOUL_LIMIT_FINAL_DOOM = 16;
+
 // Episode names for Doom and Final Doom
 static const char* const gEpisodeNames_Doom[] = {
     "Ultimate Doom",
@@ -33,6 +37,7 @@ static const char* const gEpisodeNames_FinalDoom[] = {
 
 GameType        gGameType;
 GameVariant     gGameVariant;
+GameSettings    gSettings;
 bool            gbIsPsxDoomForever;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,6 +82,30 @@ void determineGameTypeAndVariant() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool isFinalDoom() noexcept {
     return (gGameType == GameType::FinalDoom);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the game settings as specified by the users configuration files
+//------------------------------------------------------------------------------------------------------------------------------------------
+void getConfigGameSettings(GameSettings& settings) noexcept {
+    settings = {};
+    settings.bUsePalTimings             = false;    // TODO: make PAL configurable
+    settings.bUseDemoTimings            = false;    // TODO: make demo timings configurable
+    settings.bUsePlayerRocketBlastFix   = false;    // TODO: make rocket blast fix configurable
+    settings.bUseMoveInputLatencyTweak  = true;     // TODO: make move input latency tweak configurable
+    settings.lostSoulSpawnLimit         = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // TODO: make lost soul limit configurable
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the settings to use to play back a classic (original game) demo for the current game
+//------------------------------------------------------------------------------------------------------------------------------------------
+void getClassicDemoGameSettings(GameSettings& settings) noexcept {
+    settings = {};
+    settings.bUsePalTimings             = (gGameVariant == GameVariant::PAL);
+    settings.bUseDemoTimings            = true;
+    settings.bUsePlayerRocketBlastFix   = false;
+    settings.bUseMoveInputLatencyTweak  = false;
+    settings.lostSoulSpawnLimit         = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

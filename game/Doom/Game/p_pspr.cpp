@@ -16,6 +16,7 @@
 #include "p_mobj.h"
 #include "p_tick.h"
 #include "PcPsx/Assert.h"
+#include "PcPsx/Game.h"
 
 const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
     {   // Fist
@@ -792,7 +793,7 @@ void P_SetupPsprites(const int32_t playerIdx) noexcept {
 void P_MovePsprites(player_t& player) noexcept {
     // This is the length of a player sprite tick (in vblanks)
     #if PSYDOOM_MODS
-        const int32_t tickVblLength = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
+        const int32_t tickVblLength = (Game::gSettings.bUsePalTimings) ? 3 : VBLANKS_PER_TIC;
     #else
         const int32_t tickVblLength = VBLANKS_PER_TIC;
     #endif

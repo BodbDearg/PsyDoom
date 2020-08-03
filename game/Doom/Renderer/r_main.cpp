@@ -381,6 +381,8 @@ fixed_t R_CalcLerpFactor() noexcept {
 
     // How many tics per second can the game do maximum?
     // For demo playback/recording the game is capped at 15 Hz for consistency, and the cap is 30 Hz for normal games.
+    //
+    // TODO: adjust this value for PAL mode.
     const double ticsPerSec = (gbDemoPlayback || gbDemoRecording) ? 15.0 : 30.0;
 
     // Compute the lerp factor in 16.16 format

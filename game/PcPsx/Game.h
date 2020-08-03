@@ -17,14 +17,27 @@ enum class GameVariant : int32_t {
     PAL         // European version (PAL)
 };
 
+// Settings for the game.
+// These must be synchronized in multiplayer games, and set appropriately for correct demo playback.
+struct GameSettings {
+    uint8_t     bUsePalTimings;                 // Use 50 Hz vblanks and other various timing adjustments for the PAL version of the game?
+    uint8_t     bUseDemoTimings;                // Force player logic to run at a consistent, but slower rate used by demos? (15 Hz for NTSC)
+    uint8_t     bUsePlayerRocketBlastFix;       // Apply the fix for the player sometimes not receiving splash damage from rocket blasts?
+    uint8_t     bUseMoveInputLatencyTweak;      // Use a tweak to player movement which tries to reduce input latency? This affects movement slightly.
+    int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
+};
+
 BEGIN_NAMESPACE(Game)
 
-extern GameType     gGameType;
-extern GameVariant  gGameVariant;
-extern bool         gbIsPsxDoomForever;
+extern GameType         gGameType;
+extern GameVariant      gGameVariant;
+extern GameSettings     gSettings;
+extern bool             gbIsPsxDoomForever;
 
 void determineGameTypeAndVariant() noexcept;
 bool isFinalDoom() noexcept;
+void getConfigGameSettings(GameSettings& settings) noexcept;
+void getClassicDemoGameSettings(GameSettings& settings) noexcept;
 int32_t getNumMaps() noexcept;
 int32_t getNumRegularMaps() noexcept;
 const char* getMapName(const int32_t mapNum) noexcept;

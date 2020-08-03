@@ -506,7 +506,7 @@ static void P_CalcHeight(player_t& player) noexcept {
         player.bob = (speedX * speedX) + (speedY * speedY);
 
         // For some reason the PAL version divides this amount by 3 rather than 8...
-        if (gbPlayingPalDemo) {
+        if (Game::gSettings.bUsePalTimings) {
             player.bob /= 3;
         } else {
             player.bob >>= 4;
@@ -779,7 +779,7 @@ void P_PlayerThink(player_t& player) noexcept {
         // Do physical movements due to velocity and state transitions for the player.
         // PsyDoom: do this AFTER gathering inputs to reduce input lag, except in the case of demos (for compatibility).
         #if PSYDOOM_MODS
-            const bool bUseOrigMovement = (gbDemoPlayback || gbDemoRecording);
+            const bool bUseOrigMovement = (!Game::gSettings.bUseMoveInputLatencyTweak);
         #else
             const bool bUseOrigMovement = false;
         #endif

@@ -173,7 +173,11 @@ texture_t gTex_CONNECT;
 
 #if PSYDOOM_MODS
     // Max tolerated packet delay in milliseconds: after which we start adjusting clocks
-    static int32_t MAX_PACKET_DELAY_MS = 15;
+    static constexpr int32_t MAX_PACKET_DELAY_MS = 15;
+
+    // The current network protocol version.
+    // Should be incremented whenever the data format being transmitted changes.
+    static constexpr int32_t NET_PROTOCOL_VERSION = 1;
 
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
@@ -533,7 +537,7 @@ void I_DrawPresent() noexcept {
 
     // How many vblanks there are in a demo tick
     #if PSYDOOM_MODS
-        const int32_t demoTickVBlanks = (!gbPlayingPalDemo) ? VBLANKS_PER_TIC : 3;
+        const int32_t demoTickVBlanks = (Game::gSettings.bUsePalTimings) ? 3 : VBLANKS_PER_TIC;
     #else
         const int32_t demoTickVBlanks = VBLANKS_PER_TIC;
     #endif
@@ -554,7 +558,7 @@ void I_DrawPresent() noexcept {
         // This prevents the game from ticking if it hasn't met the time requirements.
         #if PSYDOOM_MODS
             if (Config::gbUncapFramerate) {
-                const int32_t minTickVBlanks = (gbDemoPlayback || gbDemoRecording) ? demoTickVBlanks : 2;
+                const int32_t minTickVBlanks = (Game::gSettings.bUseDemoTimings) ? demoTickVBlanks : 2;
 
                 if (elapsedVBlanks < minTickVBlanks) {
                     gElapsedVBlanks = 0;
@@ -580,7 +584,7 @@ void I_DrawPresent() noexcept {
     // Further framerate limiting for demos:
     // Demo playback or recording is forced to run at 15 Hz all of the time (the game simulation rate).
     // Probably done so the simulation remains consistent!
-    if (gbDemoPlayback || gbDemoRecording) {
+    if (Game::gSettings.bUseDemoTimings) {
         while (gElapsedVBlanks < (uint32_t) demoTickVBlanks) {
             // PsyDoom: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
             #if PSYDOOM_MODS
@@ -998,9 +1002,11 @@ void I_NetSetup() noexcept {
     gLastInputPacketDelayMs = 0;
 
     // Fill in the connect output packet; note that player 1 decides the game params, so theese are zeroed for player 2:
-    // TODO: set a different game id here depending on DOOM vs FINAL DOOM.
+    const uint32_t netGameId = (Game::isFinalDoom()) ? NET_GAMEID_FINAL_DOOM : NET_GAMEID_DOOM;
+
     NetPacket_Connect outPkt = {};
-    outPkt.gameId = NET_GAMEID_DOOM;
+    outPkt.protocolVersion = NET_PROTOCOL_VERSION;
+    outPkt.gameId = netGameId;
 
     if (gCurPlayerIndex == 0) {
         outPkt.startGameType = gStartGameType;
@@ -1013,6 +1019,7 @@ void I_NetSetup() noexcept {
     }
 
     // Endian correct the output packet and send
+    outPkt.protocolVersion = Endian::hostToLittle(outPkt.protocolVersion);
     outPkt.gameId = Endian::hostToLittle(outPkt.gameId);
     outPkt.startGameType = Endian::hostToLittle(outPkt.startGameType);
     outPkt.startGameSkill = Endian::hostToLittle(outPkt.startGameSkill);
@@ -1020,27 +1027,53 @@ void I_NetSetup() noexcept {
 
     Network::sendBytes(&outPkt, sizeof(outPkt));
 
+    // If the player is the server then determine the game settings, endian correct and send to the client
+    if (gCurPlayerIndex == 0) {
+        // Determine the game settings to use
+        Game::getConfigGameSettings(Game::gSettings);
+
+        // Copy and endian correct the settings before sending to the client player
+        GameSettings settings = Game::gSettings;
+        settings.lostSoulSpawnLimit = Endian::hostToLittle(settings.lostSoulSpawnLimit);
+
+        Network::sendBytes(&settings, sizeof(settings));
+    }
+
     // Read the input connect packet from the other player and endian correct
-    NetPacket_Connect inPkt;
+    NetPacket_Connect inPkt = {};
     Network::recvBytes(&inPkt, sizeof(inPkt));
 
+    inPkt.protocolVersion = Endian::littleToHost(inPkt.protocolVersion);
     inPkt.gameId = Endian::littleToHost(inPkt.gameId);
     inPkt.startGameType = Endian::littleToHost(inPkt.startGameType);
     inPkt.startGameSkill = Endian::littleToHost(inPkt.startGameSkill);
     inPkt.startMap = Endian::littleToHost(inPkt.startMap);
 
-    // Verify the game id is OK (abort if not).
-    // TODO: use a different game id here depending on DOOM vs FINAL DOOM.
-    if (inPkt.gameId != NET_GAMEID_DOOM) {
+    // Verify the network protocol version and game ids are OK - abort if not
+    if ((inPkt.protocolVersion != NET_PROTOCOL_VERSION) || (inPkt.gameId != netGameId)) {
         gbDidAbortGame = true;
         return;
     }
 
-    // Player 2 gets the details of the game from player 1 and must setup the game accordingly
+    // Player 2 gets the details of the game from player 1 and must setup the game accordingly.
+    // This includes the game settings packet sent from the server.
     if (gCurPlayerIndex != 0) {
         gStartGameType = inPkt.startGameType;
         gStartSkill = inPkt.startGameSkill;
         gStartMapOrEpisode = inPkt.startMap;
+
+        // Read the game settings from the server and endian correct
+        GameSettings settings = {};
+
+        if (!Network::recvBytes(&settings, sizeof(settings))) {
+            gbDidAbortGame = true;
+            return;
+        }
+
+        settings.lostSoulSpawnLimit = Endian::littleToHost(settings.lostSoulSpawnLimit);
+
+        // Save the game settings to use
+        Game::gSettings = settings;
     }
 
     // One last check to see if the network connection was killed.
@@ -1085,7 +1118,6 @@ bool I_NetUpdate() noexcept {
     if (gbNetIsFirstNetUpdate) {
         // Populate and send the output packet
         NetPacket_Tick outPkt = {};
-        outPkt.gameId = Endian::hostToLittle(NET_GAMEID_DOOM);
         outPkt.errorCheck = Endian::hostToLittle(errorCheck);
 
         Network::sendTickPacket(outPkt);
@@ -1117,17 +1149,14 @@ bool I_NetUpdate() noexcept {
     std::swap(gTickInputs[gCurPlayerIndex], gNextTickInputs);
     std::swap(gPlayersElapsedVBlanks[gCurPlayerIndex], gNextPlayerElapsedVBlanks);
 
-    // Makeup the output packet including error detection bits.
-    // TODO: use a different game id here depending on DOOM vs FINAL DOOM.
+    // Makeup the output packet including error detection bits
     NetPacket_Tick outPkt = {};
-    outPkt.gameId = NET_GAMEID_DOOM;
     outPkt.errorCheck = errorCheck;
     outPkt.elapsedVBlanks = gNextPlayerElapsedVBlanks;
     outPkt.inputs = gNextTickInputs;
     outPkt.lastPacketDelayMs = gLastInputPacketDelayMs;
 
     // Endian correct the output packet and send it
-    outPkt.gameId = Endian::hostToLittle(outPkt.gameId);
     outPkt.errorCheck = Endian::hostToLittle(outPkt.errorCheck);
     outPkt.elapsedVBlanks = Endian::hostToLittle(outPkt.elapsedVBlanks);
     outPkt.inputs.analogForwardMove = Endian::hostToLittle(outPkt.inputs.analogForwardMove);
@@ -1151,7 +1180,6 @@ bool I_NetUpdate() noexcept {
     gLastInputPacketDelayMs = std::max(MAX_PACKET_DELAY_MS - (int32_t) packetAgeMs, 0);
 
     // Endian correct the input packet before we use it
-    inPkt.gameId = Endian::littleToHost(inPkt.gameId);
     inPkt.errorCheck = Endian::littleToHost(inPkt.errorCheck);
     inPkt.elapsedVBlanks = Endian::littleToHost(inPkt.elapsedVBlanks);
     inPkt.inputs.analogForwardMove = Endian::littleToHost(inPkt.inputs.analogForwardMove);
@@ -1163,7 +1191,6 @@ bool I_NetUpdate() noexcept {
     // Note: we only check the 'errorCheck' field while in game.
     const bool bNetworkError = (
         (!Network::isConnected()) ||
-        (outPkt.gameId != inPkt.gameId) ||
         (gbIsLevelDataCached && (gNetPrevErrorCheck != inPkt.errorCheck))
     );
 

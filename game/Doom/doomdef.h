@@ -454,8 +454,10 @@ struct player_t {
         int8_t psxMouseDy;
     };
 
-    // Packet sent/received by all players when connecting to a game
+    // Packet sent/received by all players when connecting to a game.
+    // Note: a packet containing the settings ('GameSettings') for the game is sent immediately after this by the server.
     struct NetPacket_Connect {
+        int32_t     protocolVersion;    // Must match for both players (otherwise incompatible PsyDoom versions)
         uint32_t    gameId;             // Must match the expected game id
         gametype_t  startGameType;      // Only sent by the server for the game: what type of game will be played
         skill_t     startGameSkill;     // Only sent by the server for the game: what skill level will be used
@@ -464,7 +466,6 @@ struct player_t {
 
     // Packet sent/received by all players to share per-tick updates for a network game
     struct NetPacket_Tick {
-        uint32_t    gameId;             // Must match the expected game id
         uint32_t    errorCheck;         // Error checking bits for detecting if all players are in sync: populated using the current position and angle for all players
         int32_t     elapsedVBlanks;     // How many vblanks have elapsed for the player sending the update
         int32_t     lastPacketDelayMs;  // Message from this peer: how long the last packet received was delayed from when we expected it (MS). Used to adjust time.

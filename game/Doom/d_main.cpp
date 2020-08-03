@@ -622,9 +622,9 @@ gameaction_t MiniLoop(
             gTicCon += gPlayersElapsedVBlanks[0];
 
             // Advance to the next game tick if it is time; video refreshes at 60 Hz but the game ticks at 15 Hz.
-            // PsyDoom: some tweaks to get PAL format demos working, if playing those.
+            // PsyDoom: some tweaks to make PAL format demos and gameplay behave correctly.
             #if PSYDOOM_MODS
-                const int32_t tgtGameTicCount = (!gbPlayingPalDemo) ? gTicCon >> VBLANK_TO_TIC_SHIFT : gTicCon / 3;
+                const int32_t tgtGameTicCount = (Game::gSettings.bUsePalTimings) ? gTicCon / 3 : gTicCon >> VBLANK_TO_TIC_SHIFT;
             #else
                 const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
             #endif

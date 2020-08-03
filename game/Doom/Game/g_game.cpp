@@ -56,12 +56,6 @@ bool gbDemoRecording;
 // Is the level being restarted?
 bool gbIsLevelBeingRestarted;
 
-#if PSYDOOM_MODS
-    // PsyDoom: are we playing an original PAL format demo?
-    // Some game timing adjustments need to be made for that case.
-    bool gbPlayingPalDemo;
-#endif
-
 // An empty map object initially assigned to players during network game setup, for net consistency checks.
 // This is all zeroed out initially.
 static mobj_t gEmptyMObj;
@@ -279,6 +273,15 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     gGameSkill = skill;
     gNetGame = gameType;
 
+    // PsyDoom: determine the game settings for single player games.
+    // Note: in a multiplayer game these will have already been determined before this point, hence no determination here.
+    // These settings may also be overwritten by demo playback, if a demo will be played.
+    #if PSYDOOM_MODS
+        if (gNetGame == gt_single) {
+            Game::getConfigGameSettings(Game::gSettings);
+        }
+    #endif
+
     // Mark all players as reborn
     {
         player_t* pPlayer = &gPlayers[MAXPLAYERS - 1];
@@ -420,11 +423,6 @@ void G_RunGame() noexcept {
 // Plays back the current demo in the demo buffer
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t G_PlayDemoPtr() noexcept {
-    // Playing a PAL format demo?
-    #if PSYDOOM_MODS
-        gbPlayingPalDemo = (Game::gGameVariant == GameVariant::PAL);
-    #endif
-
     // Read the demo skill and map number
     gpDemo_p = gpDemoBuffer;
 
@@ -478,6 +476,13 @@ gameaction_t G_PlayDemoPtr() noexcept {
     G_InitNew(skill, mapNum, gt_single);
     G_DoLoadLevel();
 
+    // PsyDoom: determine the game settings to play back this classic demo correctly, depending on what game is being used.
+    // Save the previous game settings also, so they can be restored later.
+    #if PSYDOOM_MODS
+        const GameSettings prevGameSettings = Game::gSettings;
+        Game::getClassicDemoGameSettings(Game::gSettings);
+    #endif
+
     // Run the demo
     gbDemoPlayback = true;
     const gameaction_t exitAction = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
@@ -490,10 +495,10 @@ gameaction_t G_PlayDemoPtr() noexcept {
     gLockedTexPagesMask &= 1;
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 
-    // PsyDoom: cleanup the demo pointer when we're done and mark us as no longer playing a PAL demo (if playing one)
+    // PsyDoom: cleanup the demo pointer when we're done and restore the previous game settings
     #if PSYDOOM_MODS
         gpDemo_p = nullptr;
-        gbPlayingPalDemo = false;
+        Game::gSettings = prevGameSettings;
     #endif
 
     return exitAction;
