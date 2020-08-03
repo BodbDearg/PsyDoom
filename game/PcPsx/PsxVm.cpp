@@ -173,7 +173,7 @@ void emulateSoundIfRequired() noexcept {
         }
 
         // TODO: (FIXME) temp hack - fill the sound buffers up a decent amount to prevent skipping
-        if (soundBufferSize >= 1024 * 2)
+        if (soundBufferSize >= 1024 * 4)
             return;
         
         spu::SPU& spu = *gpSpu;

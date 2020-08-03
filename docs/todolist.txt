@@ -1,6 +1,5 @@
 0.5.0:
 - Make PAL mode tick at 50 Hz
-- Double sound buffer size (or more?)
 - Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
 - Incorporate network protocol version into multiplayer game setup packet.
 - Final Doom: Investigate demon sound not playing on MAP10. LCD file related?
