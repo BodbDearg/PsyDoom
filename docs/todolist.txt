@@ -2,7 +2,6 @@
 - Make PAL mode tick at 50 Hz
 - Incorporate game type into network packet ids (Doom vs Final Doom, NTSC-U, NTSC-J, PAL)
 - Incorporate network protocol version into multiplayer game setup packet.
-- Final Doom: Investigate demon sound not playing on MAP10. LCD file related?
 
 Future:
 - Allow playing the game in PAL mode.

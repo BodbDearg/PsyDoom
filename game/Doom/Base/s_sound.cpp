@@ -215,9 +215,9 @@ static mapaudiodef_t gMapAudioDefs_FinalDoom[33] = {
     { CdFileId::MAP05_LCD,  5   },
     { CdFileId::MAP06_LCD,  6   },
     { CdFileId::MAP07_LCD,  7   },
-    { CdFileId::MAP10_LCD,  8   },  // Note: LCD file is out of order - bug or last minute map shuffling?
-    { CdFileId::MAP08_LCD,  9   },  // Note: LCD file is out of order - bug or last minute map shuffling?
-    { CdFileId::MAP09_LCD,  10  },  // Note: LCD file is out of order - bug or last minute map shuffling?
+    { CdFileId::MAP08_LCD,  8   },
+    { CdFileId::MAP09_LCD,  9   },
+    { CdFileId::MAP10_LCD,  10  },
     { CdFileId::MAP11_LCD,  11  },
     { CdFileId::MAP12_LCD,  12  },
     { CdFileId::MAP13_LCD,  13  },
