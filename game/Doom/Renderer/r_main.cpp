@@ -385,7 +385,7 @@ fixed_t R_CalcLerpFactor() noexcept {
     // These values are adjusted slightly for PAL mode also.
     const double normalTicsPerSec = (Game::gSettings.bUsePalTimings) ? 25.0 : 30.0;
     const double demoTicsPerSec = (Game::gSettings.bUsePalTimings) ? 12.5 : 15.0;
-    const double ticsPerSec = (gbDemoPlayback || gbDemoRecording) ? demoTicsPerSec : normalTicsPerSec;
+    const double ticsPerSec = (Game::gSettings.bUseDemoTimings) ? demoTicsPerSec : normalTicsPerSec;
 
     // Compute the lerp factor in 16.16 format
     const double elapsedGameTics = std::clamp(elapsedSeconds * ticsPerSec, 0.0, 1.0);

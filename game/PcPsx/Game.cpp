@@ -97,7 +97,7 @@ void getConfigGameSettings(GameSettings& settings) noexcept {
         settings.bUsePalTimings = (Config::gUsePalTimings != 0);
     }
 
-    settings.bUseDemoTimings            = false;    // TODO: make demo timings configurable
+    settings.bUseDemoTimings            = Config::gbUseDemoTimings;
     settings.bUsePlayerRocketBlastFix   = false;    // TODO: make rocket blast fix configurable
     settings.bUseMoveInputLatencyTweak  = true;     // TODO: make move input latency tweak configurable
     settings.lostSoulSpawnLimit         = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // TODO: make lost soul limit configurable

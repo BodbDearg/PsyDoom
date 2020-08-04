@@ -73,6 +73,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
 static std::string      gCueFilePath;
 bool                    gbUncapFramerate;
 int32_t                 gUsePalTimings;
+bool                    gbUseDemoTimings;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
 
@@ -118,6 +119,23 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "UsePalTimings = 0\n",
         [](const IniUtils::Entry& iniEntry) { gUsePalTimings = iniEntry.getIntValue(0); },
         []() { gUsePalTimings = 0; }
+    },
+    {
+        "UseDemoTimings",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Whether to restrict player update logic to a consistent tick-rate that advances at the same speed\n"
+        "# as enemies and the game world; this forced tick-rate will be '15 Hz' when using NTSC timings.\n"
+        "# Normally player logic updates at 30 Hz when using NTSC timings, framerate permitting.\n"
+        "#\n"
+        "# If this mode is enabled ('1') then input lag will be increased, and player physics will feel more\n"
+        "# 'floaty' due to a bug in the original game which causes weaker gravity under lower framerates.\n"
+        "# Generally this setting should be left disabled, unless you are really curious...\n"
+        "# Its main use is to ensure consistent demo recording & playback, where it will be force enabled.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "UseDemoTimings = 0\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseDemoTimings = iniEntry.getBoolValue(false); },
+        []() { gbUseDemoTimings = false; }
     },
 };
 
