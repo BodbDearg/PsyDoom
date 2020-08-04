@@ -1,10 +1,13 @@
 #include "Macros.h"
 
+#include <cstdint>
+
 BEGIN_NAMESPACE(Config)
 
 // Game settings
 const char*     getCueFilePath() noexcept;
 extern bool     gbUncapFramerate;
+extern int32_t  gUsePalTimings;
 
 // Video settings
 extern bool     gbFullscreen;

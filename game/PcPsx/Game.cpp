@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game.h"
 
+#include "Config.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/UI/in_main.h"
 #include "FatalErrors.h"
@@ -89,7 +90,13 @@ bool isFinalDoom() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void getConfigGameSettings(GameSettings& settings) noexcept {
     settings = {};
-    settings.bUsePalTimings             = false;    // TODO: make PAL configurable
+
+    if (Config::gUsePalTimings < 0) {
+        settings.bUsePalTimings = (gGameVariant == GameVariant::PAL) ? true : false;    // Auto set timings based on the game disc
+    } else {
+        settings.bUsePalTimings = (Config::gUsePalTimings != 0);
+    }
+
     settings.bUseDemoTimings            = false;    // TODO: make demo timings configurable
     settings.bUsePlayerRocketBlastFix   = false;    // TODO: make rocket blast fix configurable
     settings.bUseMoveInputLatencyTweak  = true;     // TODO: make move input latency tweak configurable

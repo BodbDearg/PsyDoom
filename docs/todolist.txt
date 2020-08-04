@@ -1,4 +1,3 @@
-- Allow playing the game in PAL mode.
 - Make all changes affecting demo compatibility configurable.
 - Do an error message on failure to connect in multiplayer games explaining the issue.
 - Fix up view bobbing inconsistency (15 vs 30 Hz)

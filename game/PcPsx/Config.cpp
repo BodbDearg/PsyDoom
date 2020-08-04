@@ -72,6 +72,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::string      gCueFilePath;
 bool                    gbUncapFramerate;
+int32_t                 gUsePalTimings;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
 
@@ -99,6 +100,24 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "UncapFramerate = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },
         []() { gbUncapFramerate = true; }
+    },
+    {
+        "UsePalTimings",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Whether or not to use movement & timing code from the PAL version of the game.\n"
+        "# This does not alter the refresh rate of the game, just how the game logic is processed & advanced.\n"
+        "# The PAL version simulates the world and enemies slightly faster but the player moves at a slower\n"
+        "# rate, making the game more difficult. View bobbing is also much stronger in the PAL version.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#\n"
+        "# Allowed values:\n"
+        "#   0 = Use NTSC timings\n"
+        "#   1 = Use PAL timings\n"
+        "#  -1 = Auto-decide based on the game disc region\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "UsePalTimings = 0\n",
+        [](const IniUtils::Entry& iniEntry) { gUsePalTimings = iniEntry.getIntValue(0); },
+        []() { gUsePalTimings = 0; }
     },
 };
 
