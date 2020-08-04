@@ -8,6 +8,7 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_user.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/Game.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -377,13 +378,14 @@ void R_SnapViewZInterpolation() noexcept {
 fixed_t R_CalcLerpFactor() noexcept {
     // Get the elapsed time since the last frame we saved data for
     const timepoint_t now = std::chrono::high_resolution_clock::now();
-    const double elapsedSeconds = std::chrono::duration<double>(now - gPrevFrameTime).count();
+    const double elapsedSeconds = std::chrono::duration<float>(now - gPrevFrameTime).count();
 
     // How many tics per second can the game do maximum?
     // For demo playback/recording the game is capped at 15 Hz for consistency, and the cap is 30 Hz for normal games.
-    //
-    // TODO: adjust this value for PAL mode.
-    const double ticsPerSec = (gbDemoPlayback || gbDemoRecording) ? 15.0 : 30.0;
+    // These values are adjusted slightly for PAL mode also.
+    const double normalTicsPerSec = (Game::gSettings.bUsePalTimings) ? 25.0 : 30.0;
+    const double demoTicsPerSec = (Game::gSettings.bUsePalTimings) ? 12.5 : 15.0;
+    const double ticsPerSec = (gbDemoPlayback || gbDemoRecording) ? demoTicsPerSec : normalTicsPerSec;
 
     // Compute the lerp factor in 16.16 format
     const double elapsedGameTics = std::clamp(elapsedSeconds * ticsPerSec, 0.0, 1.0);

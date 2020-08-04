@@ -953,7 +953,9 @@ void P_PlayerDoTurning() noexcept {
     );
 
     if (bCanTurn) {
-        // Get how much time has elapsed in terms of 60 Hz ticks (vblanks)
+        // Get how much time has elapsed in terms of 60 Hz ticks (NTSC vblanks).
+        // Note that I'm deliberately NOT adjusting turn speed for PAL mode here, since turning is now independent of framerate anyway.
+        // The 60 Hz reference point was just to scale the turn amount and treating PAL/NTSC the same keeps the turn speed consistent in both modes.
         const float timeDeltaF = std::chrono::duration<float>(now - gLastPlayerTurnTime).count();
         const float ticks60F = timeDeltaF * 60.0f;
         const fixed_t ticks60 = (fixed_t)(ticks60F * FRACUNIT);
@@ -999,7 +1001,8 @@ void P_PlayerDoTurning() noexcept {
             // TODO: don't hardcode the controller axis used for turning - make it configurable. 
             const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_RIGHT_X, Config::gGamepadDeadZone);
 
-            // Figure out how much of the high and low turn speeds to use; use the higher turn speed as the stick is pressed more:
+            // Figure out how much of the high and low turn speeds to use; use the higher turn speed as the stick is pressed more.
+            // Note: again I'm not adjusting for PAL mode since turning is independent of framerate, maintain the same turn speed in both PAL and NSTC mode.
             const float turnSpeedLow = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
             const float turnSpeedHigh = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
             const float turnSpeedMix = std::abs(axis);

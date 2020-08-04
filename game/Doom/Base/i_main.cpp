@@ -1298,13 +1298,19 @@ void I_SubmitGpuCmds() noexcept {
 int32_t I_GetTotalVBlanks() noexcept {
     typedef std::chrono::system_clock::time_point               time_point_t;
     typedef std::chrono::system_clock::duration                 duration_t;
+    typedef std::chrono::duration<int64_t, std::ratio<1, 50>>   tick_50hz_t;
     typedef std::chrono::duration<int64_t, std::ratio<1, 60>>   tick_60hz_t;
     
     const time_point_t now = std::chrono::system_clock::now();
     const duration_t timeSinceEpoch = now.time_since_epoch();
     const duration_t timeAdjustMs = std::chrono::milliseconds((gNetGame != gt_single) ? gNetTimeAdjustMs : 0);
+    const duration_t adjustedDuration = timeSinceEpoch + timeAdjustMs;
 
-    return (int32_t) std::chrono::duration_cast<tick_60hz_t>(timeSinceEpoch + timeAdjustMs).count();
+    if (Game::gSettings.bUsePalTimings) {
+        return (int32_t) std::chrono::duration_cast<tick_50hz_t>(adjustedDuration).count();
+    } else {
+        return (int32_t) std::chrono::duration_cast<tick_60hz_t>(adjustedDuration).count();
+    }
 }
 
 #endif

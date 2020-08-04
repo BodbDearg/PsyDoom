@@ -102,7 +102,7 @@ static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // Y offset for weap
 
 static mobj_t*  gpSoundTarget;                  // The current thing making noise
 static fixed_t  gBulletSlope;                   // Vertical aiming slope for shooting: computed by 'P_BulletSlope'
-static int32_t  gTicRemainder[MAXPLAYERS];      // How many unsimulated player sprite 60 Hz vblanks there are
+static int32_t  gTicRemainder[MAXPLAYERS];      // How many unsimulated player sprite vblanks there are
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Recursively flood fill sound starting from the given sector to other neighboring sectors considered valid for sound transfer.

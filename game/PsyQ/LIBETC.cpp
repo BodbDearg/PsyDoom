@@ -3,8 +3,6 @@
 #include "PcPsx/Assert.h"
 #include "PcPsx/PsxVm.h"
 
-#include <ctime>
-
 // An imitation of the 1 KiB scratchpad memory/cache that the PlayStation had; now just a simple c-array
 static uint8_t gScratchpad[1024];
 
@@ -37,25 +35,11 @@ void LIBETC_ResetCallback() noexcept {}
 //    > 1   Wait for 'mode - 1' vblanks since the function was last invoked in this mode.
 //          Return the number of horizontal blanking units elapsed (16-bit wrapping).
 //    < 0   Return the total number of vertical blank units elapsed since program start.
+//
+// PsyDoom: this call is now just a stub kept for historical reference.
+// The function doesn't actually do anything anymore, and never returns a valid vertical/horizontal blank count.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t LIBETC_VSync(const int32_t mode) noexcept {
-    // PsyDoom: Wait for VBLANK not supported anymore! Just ignore the call.
-    if (mode == 0)
-        return 0;
-
-    if (mode < 0) {
-        // For the VBLANK count emulation use the time since the program started to get the count.
-        // TODO: changes here to support the PAL version?
-        const clock_t now = clock();
-        double vblanks = ((double) now * 60.0) / (double) CLOCKS_PER_SEC;
-        return (int32_t) vblanks;
-    }
-    else {
-        // Horizontal blanking units not supported in PsyDoom, always return '0'.
-        // Doom doesn't require this mode anyway, so it's OK:
-        return 0;
-    }
-}
+int32_t LIBETC_VSync([[maybe_unused]] const int32_t mode) noexcept { return 0; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return the pressed buttons for pad 1 and pad 2 (digital controllers).

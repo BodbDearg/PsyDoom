@@ -30,10 +30,10 @@
 #include <cstdio>
 #include <memory>
 
-// The current number of 60Hz ticks
+// The current number of 1 vblank ticks
 int32_t gTicCon;
 
-// The number of elapsed vblanks (60Hz) for all players
+// The number of elapsed vblanks for all players
 int32_t gPlayersElapsedVBlanks[MAXPLAYERS];
 
 // PsyDoom: networking - what amount of elapsed vblanks we told the other player we will simulate next
@@ -617,12 +617,12 @@ gameaction_t MiniLoop(
                 #endif
             }
 
-            // Advance the number of 60 Hz ticks passed.
+            // Advance the number of 1 vblank ticks passed.
             // N.B: the tick count used here is ALWAYS for player 1, this is how time is kept in sync for a network game.
             gTicCon += gPlayersElapsedVBlanks[0];
 
-            // Advance to the next game tick if it is time; video refreshes at 60 Hz but the game ticks at 15 Hz.
-            // PsyDoom: some tweaks to make PAL format demos and gameplay behave correctly.
+            // Advance to the next game tick if it is time; video refreshes at 60 Hz (NTSC) but the game ticks at 15 Hz (NTSC).
+            // PsyDoom: some tweaks here also to make PAL mode gameplay behave the same as the original game.
             #if PSYDOOM_MODS
                 const int32_t tgtGameTicCount = (Game::gSettings.bUsePalTimings) ? gTicCon / 3 : gTicCon >> VBLANK_TO_TIC_SHIFT;
             #else

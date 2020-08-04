@@ -4,7 +4,7 @@
 
 typedef uint32_t padbuttons_t;
 
-// How many 60Hz ticks between menu movements - allow roughly 4 a second. This figure can be reset however
+// How many 1 vblank ticks between menu movements - allow roughly 4 a second. This figure can be reset however
 // if there is no input, so that rapidly pressing/releasing buttons can move things faster if required.
 static constexpr int32_t MENU_MOVE_VBLANK_DELAY = 15;
 

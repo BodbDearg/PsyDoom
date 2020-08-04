@@ -60,7 +60,7 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
 
 static_assert(NUM_CHEAT_SEQ == C_ARRAY_SIZE(CHEAT_SEQUENCES));
 
-int32_t     gVBlanksUntilMenuMove[MAXPLAYERS];      // How many 60 Hz ticks until we can move the cursor on the menu (one slot for each player)
+int32_t     gVBlanksUntilMenuMove[MAXPLAYERS];      // How many 1 vblank ticks until we can move the cursor on the menu (one slot for each player)
 bool        gbGamePaused;                           // Whether the game is currently paused by either player
 int32_t     gPlayerNum;                             // Current player number being updated/processed
 int32_t     gMapNumToCheatWarpTo;                   // What map the player currently has selected for cheat warp
@@ -83,7 +83,7 @@ mobj_t      gMObjHead;                              // Dummy map object which se
 
 static int32_t      gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
 static uint16_t     gCheatSequenceBtns[CHEAT_SEQ_LEN];      // Cheat sequence buttons inputted by the player
-static int32_t      gTicConOnPause;                         // What 60Hz tick we paused on, used to discount paused time on unpause
+static int32_t      gTicConOnPause;                         // What 1 vblank tick we paused on, used to discount paused time on unpause
 static int32_t      gNumActiveThinkers;                     // Stat tracking count, no use other than that
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -593,7 +593,7 @@ gameaction_t P_Ticker() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_Drawer() noexcept {
     // PsyDoom: no drawing in headless mode, but do advance the elapsed time.
-    // Keep the framerate at 15-Hz for consistent demo playback (4 60Hz vblanks).
+    // Keep the framerate at the appropriate amount (for PAL or NTSC mode) for consistent demo playback.
     #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode) {
             const int32_t demoTickVBlanks = (Game::gSettings.bUsePalTimings) ? 3 : VBLANKS_PER_TIC;
