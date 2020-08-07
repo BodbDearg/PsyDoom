@@ -644,5 +644,4 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PsxSoundExit() noexcept {
     // Did nothing - not required for a PS1 game...
-    // TODO: PsyDoom: should cleanup logic be considered here?
 }

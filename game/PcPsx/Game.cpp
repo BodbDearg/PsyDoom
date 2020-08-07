@@ -98,9 +98,14 @@ void getConfigGameSettings(GameSettings& settings) noexcept {
     }
 
     settings.bUseDemoTimings            = Config::gbUseDemoTimings;
-    settings.bUsePlayerRocketBlastFix   = false;    // TODO: make rocket blast fix configurable
+    settings.bUsePlayerRocketBlastFix   = Config::gbUsePlayerRocketBlastFix;
     settings.bUseMoveInputLatencyTweak  = Config::gbUseMoveInputLatencyTweak;
-    settings.lostSoulSpawnLimit         = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // TODO: make lost soul limit configurable
+
+    if (Config::gLostSoulSpawnLimit == 0) {
+        settings.lostSoulSpawnLimit = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // Auto set the spawn limit based on the game
+    } else {
+        settings.lostSoulSpawnLimit = Config::gLostSoulSpawnLimit;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

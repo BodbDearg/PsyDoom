@@ -1,15 +1,12 @@
-- Make all changes affecting demo compatibility configurable.
+- Implement fully bindable/configurable controls.
+- Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
+- Automap: fix lines being clipped 1 pixel short
 - Do an error message on failure to connect in multiplayer games explaining the issue.
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.
     - This behavior might have to be otherwise preserved though for demo compatibility.
-- Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
-- Incorporate the player missile damage fix and make it an optional setting (off by default)
-- Allow the Lost Soul limit to be configurable (default off for PSX Doom, 16 for Final Doom)
-- Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
-    - Still support old format for playback, add signature to demo start to identify.
 - Make CD audio use the new disc reader and not the emulator CD-ROM.
     - Thread safe and should also work with multi bin .cue.
 - Investigate moving sound processing onto another thread and triggered in demand to output buffer requirements.
@@ -18,8 +15,6 @@
     - Need to run at capped framerate to see properly.
 - Investigate interpolation for sprites and sectors in addition to player view.
 - Make GPU primitives go more directly to the rasterizer rather than through a buffer.
-- Implement fully bindable/configurable controls.
-- Automap: fix lines being clipped 1 pixel short
 - Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
 - Break the link between the SPU and Avocado 'system' (entire PSX)
 - Break the link between the GPU and Avocado 'system' (entire PSX)
@@ -44,12 +39,13 @@
 - Linux support.
 - Verify NTSC stretched resolution is fully correct.
 - Allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
-- Automap zoom/pan with mouse.
 - Make file overrides (basic mod system) work on MacOS
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Support a clean exit from the game everywhere (except I_Error)
 - Replace I_Error with an error dialog?
     - More friendly in modern environments.
+- Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
+    - Still support old format for playback, add signature to demo start to identify.    
 - Investigate shutdown code and properly cleanup everything
 - Move reversing tools into their own folder and only include optionally in the cmake project.
     - Shouldn't be needed to compile the game.
@@ -60,4 +56,3 @@
 - Do a final pass to revert any Avocado mods which are no longer needed.
 - Do a final review/diff against PSXDOOM-RE to double check for any inconsistencies.
 - Writeup final readmes and docs.
-- Do a final pass to optimize #includes.

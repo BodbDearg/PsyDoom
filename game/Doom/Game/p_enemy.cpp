@@ -1007,8 +1007,8 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     #endif
 
     // Corrected logic from Final Doom for limiting the skull count.
-    // TODO: make the skull limit configurable.
-    const int32_t skullLimit = (Game::isFinalDoom()) ? 16 : -1;
+    // Note: I've made the skull limit configurable also, to support the original behavior of both games.
+    const int32_t skullLimit = Game::gSettings.lostSoulSpawnLimit;
 
     if (skullLimit > 0) {
         int32_t numSkulls = 0;

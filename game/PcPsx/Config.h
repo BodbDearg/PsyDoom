@@ -10,6 +10,8 @@ extern bool     gbUncapFramerate;
 extern int32_t  gUsePalTimings;
 extern bool     gbUseDemoTimings;
 extern bool     gbUseMoveInputLatencyTweak;
+extern bool     gbUsePlayerRocketBlastFix;
+extern int32_t  gLostSoulSpawnLimit;
 
 // Video settings
 extern bool     gbFullscreen;

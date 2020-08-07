@@ -75,6 +75,8 @@ bool                    gbUncapFramerate;
 int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
+bool                    gbUsePlayerRocketBlastFix;
+int32_t                 gLostSoulSpawnLimit;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
 
@@ -148,6 +150,35 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "UseMoveInputLatencyTweak = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbUseMoveInputLatencyTweak = iniEntry.getBoolValue(true); },
         []() { gbUseMoveInputLatencyTweak = true; }
+    },
+    {
+        "UsePlayerRocketBlastFix",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Whether to apply a fix for a bug in the original games where sometimes the player would not take\n"
+        "# splash damage from rockets launched very close to walls.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "UsePlayerRocketBlastFix = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbUsePlayerRocketBlastFix = iniEntry.getBoolValue(true); },
+        []() { gbUsePlayerRocketBlastFix = true; }
+    },
+    {
+        "LostSoulSpawnLimit",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# How many Lost Souls can be in a level before Pain Elementals stop spawning more?\n"
+        "# The original PSX Doom intended to have a limit of 24 (like the PC version) but due to a bug there\n"
+        "# was actually no cap on the number of Lost Souls that could be spawned. PSX Final Doom fixed this\n"
+        "# bug however and introduced a limit of 16 Lost Souls, which in turn caused problems on some maps.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#\n"
+        "# Allowed values:\n"
+        "#    0 = Auto decide the limit based on the game (Doom vs Final Doom), in a faithful manner\n"
+        "#   >0 = Limit the number of Lost Souls to this much\n"
+        "#   <0 = Apply no limit\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "LostSoulSpawnLimit = 0\n",
+        [](const IniUtils::Entry& iniEntry) { gLostSoulSpawnLimit = iniEntry.getIntValue(0); },
+        []() { gLostSoulSpawnLimit = 0; }
     },
 };
 
