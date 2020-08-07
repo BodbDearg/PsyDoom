@@ -1,21 +1,21 @@
 # This setting includes old stuff in the project
 set(PSYDOOM_INCLUDE_OLD_CODE FALSE CACHE BOOL 
-"If TRUE include source files from the 'Old' directory of the PsyDoom project.\n\
-These files contain original or older versions of various functions, variables and data structures.\n\
-These pieces of code are archived for future reference in case we need to refer back to the way things originally worked.\n\
-Most of these functions etc. have either been completely rewritten or so drastically altered that the '#if PSYDOOM_MODS'\n\
+"If TRUE include source files from the 'Old' directory of the PsyDoom project.
+These files contain original or older versions of various functions, variables and data structures.
+These pieces of code are archived for future reference in case we need to refer back to the way things originally worked.
+Most of these functions etc. have either been completely rewritten or so drastically altered that the '#if PSYDOOM_MODS'
 mechanism no longer makes sense or is too unwieldly to use."
 )
 
 # This setting switches on/off fixes to undefined behavior from the original code
 set(PSYDOOM_FIX_UB TRUE CACHE BOOL
-"If TRUE (default) then fix certain cases of undefined behavior in the original PSX Doom code.\n\
-Examples of fixes to undefined behavior include added bounds checks on certain blockmap operations, which in the original\n\
-game could result in memory corruption if out of bounds conditions were triggered - the so called 'linedef deletion' bug.\n\
-If undefined behavior fixes are NOT enabled then asserts (in debug builds) will be triggered when certain types of UB is encountered.\n\
-These asserts can be useful to identify cases of demo de-sync for demos recorded against the original games which trigger UB.\n
-Such gameplay which triggers UB in the original game is not possible to play back correctly in PsyDoom, because UB behavior requires the\n
-exact same hardware, compiler and execution environment to replicate."
+"If TRUE (default) then fix certain cases of undefined behavior in the original PSX Doom code.
+Examples of fixes to undefined behavior include added bounds checks on certain blockmap operations, which in the original
+game could result in memory corruption if out of bounds conditions were triggered - the so called 'linedef deletion' bug.
+If undefined behavior fixes are NOT enabled then asserts (in debug builds) will be triggered when certain types of UB is encountered.
+These asserts can be useful to identify cases of demo de-sync for demos recorded against the original games which trigger UB.
+Such gameplay which triggers UB in the original game is not possible to play back correctly in PsyDoom, because UB behavior
+requires the exact same hardware, compiler and execution environment to replicate."
 )
 
 # Platform agnostic sources
