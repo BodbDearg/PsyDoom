@@ -74,6 +74,7 @@ static std::string      gCueFilePath;
 bool                    gbUncapFramerate;
 int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
+bool                    gbUseMoveInputLatencyTweak;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
 
@@ -136,6 +137,17 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "UseDemoTimings = 0\n",
         [](const IniUtils::Entry& iniEntry) { gbUseDemoTimings = iniEntry.getBoolValue(false); },
         []() { gbUseDemoTimings = false; }
+    },
+    {
+        "UseMoveInputLatencyTweak",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Whether to use a tweak to the original player movement code which attempts to reduce input latency\n"
+        "# for sideways and forward movement. The effect of this will be subtle but should improve gameplay.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "UseMoveInputLatencyTweak = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseMoveInputLatencyTweak = iniEntry.getBoolValue(true); },
+        []() { gbUseMoveInputLatencyTweak = true; }
     },
 };
 

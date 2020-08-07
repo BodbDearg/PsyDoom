@@ -9,6 +9,7 @@ const char*     getCueFilePath() noexcept;
 extern bool     gbUncapFramerate;
 extern int32_t  gUsePalTimings;
 extern bool     gbUseDemoTimings;
+extern bool     gbUseMoveInputLatencyTweak;
 
 // Video settings
 extern bool     gbFullscreen;
