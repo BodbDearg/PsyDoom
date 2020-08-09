@@ -232,13 +232,13 @@ void P_CheckCheats() noexcept {
         player.cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
         I_DrawPresent();
 
-        // Run the options menu and possibly do one final draw, depending on the exit code.
-        // TODO: what is the final draw for - screen fade?
+        // Run the options menu
         const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
         
         if (optionsAction != ga_exit) {
             gGameAction = optionsAction;
 
+            // Do one final draw in some situations for screen fading
             if (optionsAction == ga_restart || optionsAction == ga_exitdemo) {
                 O_Drawer();
             }
@@ -709,8 +709,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs = {};
     inputs.directSwitchToWeapon = wp_nochange;
 
-    // TODO: don't hardcode the analog to digital threshold
-    const float DIGITAL_THRESHOLD = 0.5f;
+    const float analogToDigitalThreshold = Config::gAnalogToDigitalThreshold;
 
     // TODO: don't hardcode these bindings like this.
     // TODO: translate inputs bound to original PSX 'buttons' based on the control bindings.
@@ -794,7 +793,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LSHIFT) ||
         Input::isKeyboardKeyPressed(SDL_SCANCODE_RSHIFT) ||
         Input::isControllerInputPressed(ControllerInput::BTN_X) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= DIGITAL_THRESHOLD)
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= analogToDigitalThreshold)
     ) {
         inputs.bRun = true;
     }
@@ -804,7 +803,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         Input::isKeyboardKeyPressed(SDL_SCANCODE_F) ||
         Input::isControllerInputPressed(ControllerInput::BTN_Y) ||
         Input::isMouseButtonPressed(MouseButton::LEFT) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= DIGITAL_THRESHOLD)
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= analogToDigitalThreshold)
     ) {
         inputs.bAttack = true;
         inputs.bRespawn = true;
@@ -832,7 +831,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         Input::isKeyboardKeyPressed(SDL_SCANCODE_F) ||
         Input::isMouseButtonPressed(MouseButton::LEFT) ||
         Input::isControllerInputPressed(ControllerInput::BTN_A) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= DIGITAL_THRESHOLD)
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= analogToDigitalThreshold)
     ) {
         inputs.bMenuOk = true;
     }
@@ -857,27 +856,27 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         inputs.bMenuStart = true;
     }
 
-    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) <= -DIGITAL_THRESHOLD) {
+    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) <= -analogToDigitalThreshold) {
         inputs.bMenuUp = true;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) >= DIGITAL_THRESHOLD) { 
+    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) >= analogToDigitalThreshold) {
         inputs.bMenuDown = true;
     }
 
-    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) <= -DIGITAL_THRESHOLD) {
+    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) <= -analogToDigitalThreshold) {
         inputs.bMenuUp = true;
-    }  else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) >= DIGITAL_THRESHOLD) { 
+    }  else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) >= analogToDigitalThreshold) {
         inputs.bMenuDown = true;
     }
 
-    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) >= DIGITAL_THRESHOLD) {
+    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) >= analogToDigitalThreshold) {
         inputs.bMenuRight = true;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) <= -DIGITAL_THRESHOLD) { 
+    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) <= -analogToDigitalThreshold) {
         inputs.bMenuLeft = true;
     }
 
-    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) >= DIGITAL_THRESHOLD) {
+    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) >= analogToDigitalThreshold) {
         inputs.bMenuRight = true;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) <= -DIGITAL_THRESHOLD) { 
+    } else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) <= -analogToDigitalThreshold) {
         inputs.bMenuLeft = true;
     }
 
@@ -887,7 +886,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         Input::isKeyboardKeyPressed(SDL_SCANCODE_RCTRL) ||
         Input::isMouseButtonPressed(MouseButton::LEFT) ||
         Input::isControllerInputPressed(ControllerInput::BTN_A) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= DIGITAL_THRESHOLD)
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= analogToDigitalThreshold)
     ) {
         inputs.bEnterPasswordChar = true;
     }
@@ -896,7 +895,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
         Input::isKeyboardKeyPressed(SDL_SCANCODE_BACKSPACE) ||
         Input::isMouseButtonPressed(MouseButton::RIGHT) ||
         Input::isControllerInputPressed(ControllerInput::BTN_X) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= DIGITAL_THRESHOLD)
+        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= analogToDigitalThreshold)
     ) {
         inputs.bDeletePasswordChar = true;
     }

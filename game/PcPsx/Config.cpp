@@ -191,6 +191,7 @@ float   gGamepadFastTurnSpeed_High;
 float   gGamepadFastTurnSpeed_Low;
 float   gGamepadTurnSpeed_High;
 float   gGamepadTurnSpeed_Low;
+float   gAnalogToDigitalThreshold;
 
 static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
     {
@@ -247,6 +248,17 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         [](const IniUtils::Entry& iniEntry) { gGamepadTurnSpeed_Low = iniEntry.getFloatValue(600.0f); },
         []() { gGamepadTurnSpeed_Low = 600.0f; }
     },
+    {
+        "AnalogToDigitalThreshold",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# 0-1 range: controls the point at which an analogue axis like a trigger, stick etc. is regarded\n"
+        "# as 'pressed' when treated as a digital input (e.g trigger used for 'shoot' action).\n"
+        "# The default of '0.5' (halfway depressed) is probably reasonable for most users.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "AnalogToDigitalThreshold = 0.5\n",
+        [](const IniUtils::Entry& iniEntry) { gAnalogToDigitalThreshold = iniEntry.getFloatValue(0.5f); },
+        []() { gAnalogToDigitalThreshold = 0.5f; }
+    }
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

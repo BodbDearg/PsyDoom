@@ -92,8 +92,6 @@ static void closeCurrentGameController() noexcept {
 // Rescans for the SDL game controllers to use: just uses the first available game controller.
 // This may choose wrong in a multi-gamepad situation but the user can always disconnect one to clarify what is wanted.
 // Most computer users would probably only want one gamepad at a time anyway?
-//
-// TODO: allow a preferred controller to be specified in config for side by side multiplayer on the same machine.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void rescanGameControllers() noexcept {
     // If we already have a gamepad then just re-check that it is still connected
@@ -233,7 +231,7 @@ static void handleSdlEvents() noexcept {
                     const ControllerInput input = ControllerInputUtils::sdlAxisToInput(sdlEvent.caxis.axis);
 
                     if (input != ControllerInput::INVALID) {
-                        const float pressedThreshold = 0.5f;    // TODO - don't hardcode: Config::gInputAnalogToDigitalThreshold;
+                        const float pressedThreshold = Config::gAnalogToDigitalThreshold;
                         const uint8_t inputIdx = (uint8_t) input;
 
                         // See if there is a change in the 'pressed' status

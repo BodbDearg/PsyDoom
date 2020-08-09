@@ -24,6 +24,7 @@ extern float    gGamepadFastTurnSpeed_High;
 extern float    gGamepadFastTurnSpeed_Low;
 extern float    gGamepadTurnSpeed_High;
 extern float    gGamepadTurnSpeed_Low;
+extern float    gAnalogToDigitalThreshold;
 
 void init() noexcept;
 void shutdown() noexcept;
