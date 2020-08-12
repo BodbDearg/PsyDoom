@@ -28,7 +28,6 @@ extern device::cdrom::CDROM*    gpCdrom;
 
 bool init(const char* const doomCdCuePath) noexcept;
 void shutdown() noexcept;
-uint16_t getControllerButtonBits() noexcept;
 void submitGpuPrimitive(const void* const pPrim) noexcept;
 void emulateSoundIfRequired() noexcept;
 

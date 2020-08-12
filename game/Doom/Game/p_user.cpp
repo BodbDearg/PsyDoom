@@ -25,6 +25,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/Controls.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
@@ -997,9 +998,8 @@ void P_PlayerDoTurning() noexcept {
 
         // Do analog controller turning from the gamepad
         {
-            // Get the deadzone adjusted axis value.
-            // TODO: don't hardcode the controller axis used for turning - make it configurable. 
-            const float axis = Input::getAdjustedControllerInputValue(ControllerInput::AXIS_RIGHT_X, Config::gGamepadDeadZone);
+            // Note: this axis value will be properly deadzone adjusted so that '0' starts at the end of the deadzone region
+            const float axis = Controls::getFloat(Controls::Binding::Analog_Turn);
 
             // Figure out how much of the high and low turn speeds to use; use the higher turn speed as the stick is pressed more.
             // Note: again I'm not adjusting for PAL mode since turning is independent of framerate, maintain the same turn speed in both PAL and NSTC mode.

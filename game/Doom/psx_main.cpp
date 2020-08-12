@@ -3,6 +3,7 @@
 #include "Base/i_main.h"
 #include "cdmaptbl.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/Controls.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/ModMgr.h"
@@ -37,6 +38,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
     #if PSYDOOM_MODS
         // Parse command line arguments and configuration and initialize input systems
         ProgArgs::init(argc, argv);
+        Controls::init();
         Config::init();
         Input::init();
 
@@ -64,6 +66,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
         ModMgr::shutdown();
         Input::shutdown();
         Config::shutdown();
+        Controls::shutdown();
         ProgArgs::shutdown();
     #endif
 

@@ -20,9 +20,9 @@
 #include "p_user.h"
 #include "PcPsx/Assert.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/Controls.h"
 #include "PcPsx/DemoResult.h"
 #include "PcPsx/Game.h"
-#include "PcPsx/Input.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
@@ -33,7 +33,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <SDL.h>
 
 // The number of buttons in a cheat sequence and a list of all the cheat sequences and their indices
 static constexpr uint32_t CHEAT_SEQ_LEN = 8;
@@ -75,7 +74,7 @@ mobj_t      gMObjHead;                              // Dummy map object which se
     TickInputs  gOldTickInputs[MAXPLAYERS];     // Previous tick inputs for the last 30 Hz tick
     TickInputs  gNextTickInputs;                // Network games only: what inputs we told the other player we will use next; sent ahead of time to reduce lag
     uint32_t    gTicButtons;                    // Currently PSX pad buttons for this player
-    uint32_t    gOldTicButtons;                 // Previously pressed PSX buttons for this player    
+    uint32_t    gOldTicButtons;                 // Previously pressed PSX buttons for this player
 #else
     uint32_t    gTicButtons[MAXPLAYERS];        // Currently pressed buttons by all players
     uint32_t    gOldTicButtons[MAXPLAYERS];     // Previously pressed buttons by all players
@@ -137,6 +136,37 @@ void P_RunMobjLate() noexcept {
         }
     }
 }
+
+#if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: returns the number of cheat buttons matched for the classic cheat key sequence currently being entered
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t P_GetNumMatchingCheatSeqBtns() noexcept {
+    // Scan through all the cheats and see if the current input so far partially matches any of them.
+    // Find the maximum number of cheat buttons matched from the available sequences.
+    int32_t longestMatchingSeq = 0;
+
+    for (int32_t cheatSeqIdx = 0; cheatSeqIdx < NUM_CHEAT_SEQ; ++cheatSeqIdx) {
+        const CheatSequence& cheatSeq = CHEAT_SEQUENCES[cheatSeqIdx];
+        int32_t matchLen = 0;
+
+        while (matchLen < gCurCheatBtnSequenceIdx) {
+            if (gCheatSequenceBtns[matchLen] != cheatSeq.btns[matchLen]) {
+                matchLen = 0;
+                break;
+            }
+
+            ++matchLen;
+        }
+
+        longestMatchingSeq = std::max(longestMatchingSeq, matchLen);
+    }
+
+    return longestMatchingSeq;
+}
+
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Handles the following:
@@ -219,7 +249,13 @@ void P_CheckCheats() noexcept {
         // Showing the options menu if the game is paused and the options button has just been pressed.
         // Otherwise do not do any of the logic below...
         #if PSYDOOM_MODS
-            const bool bMenuBackJustPressed = (inputs.bMenuBack && (!oldInputs.bMenuBack));
+            const bool bMenuBackJustPressed = (
+                (inputs.bMenuBack && (!oldInputs.bMenuBack)) &&
+                // PsyDoom: hack: ignore the 'back' operation if a cheat sequence is halfway entered and cheat buttons are being pressed.
+                // This fixes an input conflict where the normal menu back button is mapped to a PSX button for cheat inputting.
+                // This assumes the conflict will occur in the later part of the cheat sequence.
+                ((Controls::getPSXCheatButtonBits() == 0) || (P_GetNumMatchingCheatSeqBtns() < 4))
+            );
         #else
             const bool bMenuBackJustPressed = Utils::padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns);
         #endif
@@ -377,7 +413,7 @@ void P_CheckCheats() noexcept {
     // PsyDoom: also check for cheats if any dev cheats are input.
     if ((!padBtns) || (padBtns == oldPadBtns)) {
         #if PSYDOOM_MODS
-            if (devCheatSeq >= NUM_CHEAT_SEQ)
+            if ((devCheatSeq < 0) || (devCheatSeq >= NUM_CHEAT_SEQ))
                 return;
         #else
             return;
@@ -703,226 +739,68 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the inputs to use for the next tick
+// PsyDoom addition: get the inputs to use for the next tick in the new 'TickInputs' format
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_GatherTickInputs(TickInputs& inputs) noexcept {
+    // Zero the inputs initially and assume no direct weapon change
     inputs = {};
     inputs.directSwitchToWeapon = wp_nochange;
 
-    const float analogToDigitalThreshold = Config::gAnalogToDigitalThreshold;
+    // Gather basic inputs
+    inputs.analogForwardMove = (fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveForwardBack) * (float) FRACUNIT);
+    inputs.analogSideMove = (fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveLeftRight) * (float) FRACUNIT);
+    inputs.bTurnLeft = Controls::getBool(Controls::Binding::Digital_TurnLeft);
+    inputs.bTurnRight = Controls::getBool(Controls::Binding::Digital_TurnRight);
+    inputs.bMoveForward = Controls::getBool(Controls::Binding::Digital_MoveForward);
+    inputs.bMoveBackward = Controls::getBool(Controls::Binding::Digital_MoveBackward);
+    inputs.bStrafeLeft = Controls::getBool(Controls::Binding::Digital_StrafeLeft);
+    inputs.bStrafeRight = Controls::getBool(Controls::Binding::Digital_StrafeRight);
+    inputs.bUse = Controls::getBool(Controls::Binding::Action_Use);
+    inputs.bAttack = Controls::getBool(Controls::Binding::Action_Attack);
+    inputs.bRun = Controls::getBool(Controls::Binding::Modifier_Run);
+    inputs.bStrafe = Controls::getBool(Controls::Binding::Modifier_Strafe);
+    inputs.bPrevWeapon = Controls::getBool(Controls::Binding::Weapon_Previous);
+    inputs.bNextWeapon = Controls::getBool(Controls::Binding::Weapon_Next);
+    inputs.bTogglePause = Controls::getBool(Controls::Binding::Toggle_Pause);
+    inputs.bToggleMap = Controls::getBool(Controls::Binding::Toggle_Map);
+    inputs.bAutomapZoomIn = Controls::getBool(Controls::Binding::Automap_ZoomIn);
+    inputs.bAutomapZoomOut = Controls::getBool(Controls::Binding::Automap_ZoomOut);
+    inputs.bAutomapMoveLeft = Controls::getBool(Controls::Binding::Automap_MoveLeft);
+    inputs.bAutomapMoveRight = Controls::getBool(Controls::Binding::Automap_MoveRight);
+    inputs.bAutomapMoveUp = Controls::getBool(Controls::Binding::Automap_MoveUp);
+    inputs.bAutomapMoveDown = Controls::getBool(Controls::Binding::Automap_MoveDown);
+    inputs.bAutomapPan = Controls::getBool(Controls::Binding::Automap_Pan);
+    inputs.bRespawn = Controls::getBool(Controls::Binding::Action_Respawn);
+    inputs.bMenuUp = Controls::getBool(Controls::Binding::Menu_Up);
+    inputs.bMenuDown = Controls::getBool(Controls::Binding::Menu_Down);
+    inputs.bMenuLeft = Controls::getBool(Controls::Binding::Menu_Left);
+    inputs.bMenuRight = Controls::getBool(Controls::Binding::Menu_Right);
+    inputs.bMenuOk = Controls::getBool(Controls::Binding::Menu_Ok);
+    inputs.bMenuStart = Controls::getBool(Controls::Binding::Menu_Start);
+    inputs.bMenuBack = Controls::getBool(Controls::Binding::Menu_Back);
+    inputs.bEnterPasswordChar = Controls::getBool(Controls::Binding::Menu_EnterPasswordChar);
+    inputs.bDeletePasswordChar = Controls::getBool(Controls::Binding::Menu_DeletePasswordChar);
 
-    // TODO: don't hardcode these bindings like this.
-    // TODO: translate inputs bound to original PSX 'buttons' based on the control bindings.
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_UP) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_W) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_DPAD_UP)
-    ) {
-        inputs.bMenuUp = true;
-        inputs.bMoveForward = true;
-        inputs.bAutomapMoveUp = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_DOWN) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_S) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_DPAD_DOWN)
-    ) {
-        inputs.bMenuDown = true;
-        inputs.bMoveBackward = true;
-        inputs.bAutomapMoveDown = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LEFT) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_DPAD_LEFT)
-    ) {
-        inputs.bMenuLeft = true;
-        inputs.bTurnLeft = true;
-        inputs.bAutomapMoveLeft = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_RIGHT) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_DPAD_RIGHT)
-    ) {
-        inputs.bMenuRight = true;
-        inputs.bTurnRight = true;
-        inputs.bAutomapMoveRight = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_A)) {
-        inputs.bStrafeLeft = true;
-        inputs.bAutomapZoomIn = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_D)) {
-        inputs.bStrafeRight = true;
-        inputs.bAutomapZoomOut = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_MINUS) ||
-        Input::isControllerInputPressed(ControllerInput::AXIS_TRIG_LEFT)
-    ) {
-        inputs.bAutomapZoomOut = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_EQUALS) ||
-        Input::isControllerInputPressed(ControllerInput::AXIS_TRIG_RIGHT)
-    ) {
-        inputs.bAutomapZoomIn = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAGEDOWN) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_Q) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_LEFT_SHOULDER)
-    ) {
-        inputs.bPrevWeapon = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAGEUP) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_E) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_RIGHT_SHOULDER)
-    ) {
-        inputs.bNextWeapon = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_SPACE) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_B) ||
-        Input::isMouseButtonPressed(MouseButton::RIGHT)
-    ) {
-        inputs.bUse = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LSHIFT) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_RSHIFT) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_X) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= analogToDigitalThreshold)
-    ) {
-        inputs.bRun = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LCTRL) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_RCTRL) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_F) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_Y) ||
-        Input::isMouseButtonPressed(MouseButton::LEFT) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= analogToDigitalThreshold)
-    ) {
-        inputs.bAttack = true;
-        inputs.bRespawn = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_LALT) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_RALT) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_A)
-    ) {
-        inputs.bAutomapPan = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_PAUSE) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_P) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_RETURN) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_START)
-    ) {
-        inputs.bTogglePause = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_RETURN) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_LCTRL) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_RCTRL) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_SPACE) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_F) ||
-        Input::isMouseButtonPressed(MouseButton::LEFT) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_A) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= analogToDigitalThreshold)
-    ) {
-        inputs.bMenuOk = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_ESCAPE) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_TAB) ||
-        Input::isMouseButtonPressed(MouseButton::RIGHT) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_B) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_BACK)
-    ) {
-        inputs.bMenuBack = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_TAB) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_M) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_BACK)
-    ) {
-        inputs.bToggleMap = true;
-    }
-
-    if (Input::isControllerInputPressed(ControllerInput::BTN_START)) {
-        inputs.bMenuStart = true;
-    }
-
-    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) <= -analogToDigitalThreshold) {
-        inputs.bMenuUp = true;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_Y) >= analogToDigitalThreshold) {
-        inputs.bMenuDown = true;
-    }
-
-    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) <= -analogToDigitalThreshold) {
-        inputs.bMenuUp = true;
-    }  else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_Y) >= analogToDigitalThreshold) {
-        inputs.bMenuDown = true;
-    }
-
-    if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) >= analogToDigitalThreshold) {
-        inputs.bMenuRight = true;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_LEFT_X) <= -analogToDigitalThreshold) {
-        inputs.bMenuLeft = true;
-    }
-
-    if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) >= analogToDigitalThreshold) {
-        inputs.bMenuRight = true;
-    } else if (Input::getControllerInputValue(ControllerInput::AXIS_RIGHT_X) <= -analogToDigitalThreshold) {
-        inputs.bMenuLeft = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_RETURN) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_SPACE) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_LCTRL) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_RCTRL) ||
-        Input::isMouseButtonPressed(MouseButton::LEFT) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_A) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_RIGHT) >= analogToDigitalThreshold)
-    ) {
-        inputs.bEnterPasswordChar = true;
-    }
-
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_DELETE) ||
-        Input::isKeyboardKeyPressed(SDL_SCANCODE_BACKSPACE) ||
-        Input::isMouseButtonPressed(MouseButton::RIGHT) ||
-        Input::isControllerInputPressed(ControllerInput::BTN_X) ||
-        (Input::getControllerInputValue(ControllerInput::AXIS_TRIG_LEFT) >= analogToDigitalThreshold)
-    ) {
-        inputs.bDeletePasswordChar = true;
-    }
-
-    inputs.analogForwardMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_Y, Config::gGamepadDeadZone) * FRACUNIT);
-    inputs.analogSideMove = (fixed_t)(Input::getAdjustedControllerInputValue(ControllerInput::AXIS_LEFT_X, Config::gGamepadDeadZone) * FRACUNIT);
-
-    // Direct weapon switching with the keyboard
+    // Direct weapon switching
     player_t& player = gPlayers[gCurPlayerIndex];
 
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_1)) {
+    if (Controls::getBool(Controls::Binding::Weapon_FistChainsaw)) {
         const weapontype_t nextWeapon = ((player.readyweapon == wp_chainsaw) || (!player.weaponowned[wp_chainsaw])) ? wp_fist : wp_chainsaw;
         inputs.directSwitchToWeapon = (uint8_t) nextWeapon;
     }
 
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_2)) { inputs.directSwitchToWeapon = wp_pistol;         }
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_3)) { inputs.directSwitchToWeapon = wp_shotgun;        }
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_4)) { inputs.directSwitchToWeapon = wp_supershotgun;   }
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_5)) { inputs.directSwitchToWeapon = wp_chaingun;       }
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_6)) { inputs.directSwitchToWeapon = wp_missile;        }
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_7)) { inputs.directSwitchToWeapon = wp_plasma;         }
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_8)) { inputs.directSwitchToWeapon = wp_bfg;            }
+    if (Controls::getBool(Controls::Binding::Weapon_Pistol))            { inputs.directSwitchToWeapon = wp_pistol;         }
+    if (Controls::getBool(Controls::Binding::Weapon_Shotgun))           { inputs.directSwitchToWeapon = wp_shotgun;        }
+    if (Controls::getBool(Controls::Binding::Weapon_SuperShotgun))      { inputs.directSwitchToWeapon = wp_supershotgun;   }
+    if (Controls::getBool(Controls::Binding::Weapon_Chaingun))          { inputs.directSwitchToWeapon = wp_chaingun;       }
+    if (Controls::getBool(Controls::Binding::Weapon_RocketLauncher))    { inputs.directSwitchToWeapon = wp_missile;        }
+    if (Controls::getBool(Controls::Binding::Weapon_PlasmaRifle))       { inputs.directSwitchToWeapon = wp_plasma;         }
+    if (Controls::getBool(Controls::Binding::Weapon_BFG))               { inputs.directSwitchToWeapon = wp_bfg;            }
 
-    // Direct weapon switching with the mouse wheel
-    const int32_t mouseWheelMovement = (int32_t) Input::getMouseWheelAxisMovement(1);
+    // Direct weapon switching via weapon scrolling - normally done with a mouse wheel
+    const int32_t weaponScroll = (int32_t) Controls::getFloat(Controls::Binding::Weapon_Scroll);
 
-    if (mouseWheelMovement != 0) {
+    if (weaponScroll != 0) {
         // Get all of the owned weapons in a flat list in order of switching priority: this makes scrolling logic easier
         weapontype_t ownedWeapons[NUMWEAPONS] = { wp_nochange };
         int32_t numOwnedWeapons = 0;
@@ -950,7 +828,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 
         // Get the index of the next weapon to select and schedule it to be selected
         if (numOwnedWeapons > 0) {
-            const int32_t nextWeaponIdx = std::clamp(selectedWeaponIdx + mouseWheelMovement, 0, numOwnedWeapons - 1);
+            const int32_t nextWeaponIdx = std::clamp(selectedWeaponIdx + weaponScroll, 0, numOwnedWeapons - 1);
             inputs.directSwitchToWeapon = (uint8_t) ownedWeapons[nextWeaponIdx];
         }
     }

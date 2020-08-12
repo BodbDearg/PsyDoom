@@ -154,6 +154,8 @@ set(SOURCE_FILES
     "PcPsx/Config.h"
     "PcPsx/ControllerInput.cpp"
     "PcPsx/ControllerInput.h"
+    "PcPsx/Controls.cpp"
+    "PcPsx/Controls.h"
     "PcPsx/DemoResult.cpp"
     "PcPsx/DemoResult.h"
     "PcPsx/DiscInfo.cpp"

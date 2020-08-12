@@ -10,7 +10,6 @@
 #include "Input.h"
 #include "IsoFileSys.h"
 #include "ProgArgs.h"
-#include "PsxPadButtons.h"
 
 #include <SDL.h>
 
@@ -100,38 +99,6 @@ void shutdown() noexcept {
     gpGpu = nullptr;
     gpSystem = nullptr;
     gSystem.reset();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Gets the state of an emulated PlayStation digital controller, telling which buttons are pressed in the returned bit-mask.
-// TODO: move getting PSX controller buttons to a controls module and make the PSX button bindings configurable.
-//------------------------------------------------------------------------------------------------------------------------------------------
-uint16_t getControllerButtonBits() noexcept {
-    uint16_t pressedButtonBits = 0;
-
-    // TODO: don't hardcode these bindings to PSX controller buttons
-    auto bindControllerInput = [&](const ControllerInput input, const uint16_t toButtonBits) noexcept {
-        if (Input::isControllerInputPressed(input)) {
-            pressedButtonBits |= toButtonBits;
-        }
-    };
-
-    bindControllerInput(ControllerInput::BTN_DPAD_UP, PAD_UP);
-    bindControllerInput(ControllerInput::BTN_DPAD_DOWN, PAD_DOWN);
-    bindControllerInput(ControllerInput::BTN_DPAD_LEFT, PAD_LEFT);
-    bindControllerInput(ControllerInput::BTN_DPAD_RIGHT, PAD_RIGHT);
-    bindControllerInput(ControllerInput::BTN_Y, PAD_TRIANGLE);
-    bindControllerInput(ControllerInput::BTN_X, PAD_SQUARE);
-    bindControllerInput(ControllerInput::BTN_B, PAD_CIRCLE);
-    bindControllerInput(ControllerInput::BTN_A, PAD_CROSS);
-    bindControllerInput(ControllerInput::BTN_LEFT_SHOULDER, PAD_L1);
-    bindControllerInput(ControllerInput::BTN_RIGHT_SHOULDER, PAD_R1);
-    bindControllerInput(ControllerInput::AXIS_TRIG_LEFT, PAD_L2);
-    bindControllerInput(ControllerInput::AXIS_TRIG_RIGHT, PAD_R2);
-    bindControllerInput(ControllerInput::BTN_START, PAD_START);
-    bindControllerInput(ControllerInput::BTN_BACK, PAD_SELECT);
-
-    return pressedButtonBits;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

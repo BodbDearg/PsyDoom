@@ -1,4 +1,3 @@
-- Implement fully bindable/configurable controls.
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
 - Automap: fix lines being clipped 1 pixel short
 - Do an error message on failure to connect in multiplayer games explaining the issue.

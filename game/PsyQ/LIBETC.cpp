@@ -1,7 +1,7 @@
 #include "LIBETC.h"
 
 #include "PcPsx/Assert.h"
-#include "PcPsx/PsxVm.h"
+#include "PcPsx/Controls.h"
 
 // An imitation of the 1 KiB scratchpad memory/cache that the PlayStation had; now just a simple c-array
 static uint8_t gScratchpad[1024];
@@ -47,5 +47,7 @@ int32_t LIBETC_VSync([[maybe_unused]] const int32_t mode) noexcept { return 0; }
 // The input parameter is not used, and should be set to '0'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t LIBETC_PadRead([[maybe_unused]] const uint32_t unusedControllerId) noexcept {
-    return PsxVm::getControllerButtonBits();
+    // PsyDoom: original PSX button bitmasks are now just used for entering original cheat code sequences.
+    // The controls module will handle mapping whatever inputs are bound to represent original PSX buttons for this purpose.
+    return Controls::getPSXCheatButtonBits();
 }

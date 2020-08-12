@@ -1,5 +1,6 @@
 #include "Config.h"
 
+#include "Controls.h"
 #include "FileUtils.h"
 #include "Finally.h"
 #include "IniUtils.h"
@@ -251,7 +252,7 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
     {
         "AnalogToDigitalThreshold",
         "#---------------------------------------------------------------------------------------------------\n"
-        "# 0-1 range: controls the point at which an analogue axis like a trigger, stick etc. is regarded\n"
+        "# 0-1 range: controls the point at which an analog axis like a trigger, stick etc. is regarded\n"
         "# as 'pressed' when treated as a digital input (e.g trigger used for 'shoot' action).\n"
         "# The default of '0.5' (halfway depressed) is probably reasonable for most users.\n"
         "#---------------------------------------------------------------------------------------------------\n"
@@ -260,6 +261,219 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         []() { gAnalogToDigitalThreshold = 0.5f; }
     }
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Control bindings
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const char* const CONTROL_BINDINGS_INI_HEADER = 
+R"(#---------------------------------------------------------------------------------------------------
+# Control bindings: available input source names/identifiers.
+#
+# Assign these inputs to actions listed below to setup control bindings.
+# Separate multiple input sources for one action using commas (,).
+#
+# Notes:
+#   (1) All input source names are case insensitive.
+#   (2) The following keyboard keys names must be escaped/prefixed with backslash (\) when used:
+#         = [ ] # ; ,
+#   (3) Similar keyboard keys are collapsed into a range for brevity (e.g A-Z).
+#   (4) For a full list of available keyboard key names, including very uncommon ones, see:
+#         https://wiki.libsdl.org/SDL_Scancode
+#
+# Mouse Buttons:
+#       Mouse Left              Mouse X1
+#       Mouse Right             Mouse X2
+#       Mouse Middle
+#
+# Mouse Wheel axis, normal and inverted (-N to +N range):
+#       Mouse Wheel
+#       Inv Mouse Wheel
+#
+# Mouse Wheel axis, positive or negative sub-axis only (0 to +N range):
+#       Mouse Wheel+
+#       Mouse Wheel-
+#
+# Gampad axes with a -1.0 to +1.0 range: normal & inverted
+#       Gamepad LeftX           Gamepad RightX          Inv Gamepad LeftX       Inv Gamepad RightX
+#       Gamepad LeftY           Gamepad RightY          Inv Gamepad LeftY       Inv Gamepad RightY
+#
+# Gamepad trigger axes and positive or negative axis subsets with a 0.0 to 1.0 range:
+#       Gamepad LeftTrigger     Gamepad RightTrigger
+#       Gamepad LeftX-          Gamepad LeftX+          Gamepad LeftY-          Gamepad LeftY+
+#       Gamepad RightX-         Gamepad RightX+         Gamepad RightY-         Gamepad RightY+
+#
+# Gamepad buttons:
+#       Gamepad A               Gamepad DpUp            Gamepad LeftStick
+#       Gamepad B               Gamepad DpDown          Gamepad RightStick
+#       Gamepad X               Gamepad DpLeft          Gamepad LeftShoulder
+#       Gamepad Y               Gamepad DpRight         Gamepad RightShoulder
+#       Gamepad Back            Gamepad Start           Gamepad Guide
+#
+# Keyboard keys (commonly used, see link above for full list):
+#       A-Z                     Return                  Backspace               Home
+#       0-9                     Escape                  Pause                   End
+#       Keypad 0-9              Space                   PageUp                  Insert
+#       F1-F12                  Tab                     PageDown                Delete
+#       Left                    Right                   PrintScreen             CapsLock
+#       Up                      Down                    ScrollLock              Numlock
+#       Left Ctrl               Left Shift              Left Alt                Application
+#       Right Ctrl              Right Shift             Right Alt               Menu
+#       Left GUI                Right GUI               VolumeUp                VolumeDown
+#       -                       \=                      \[                      \]
+#       \                       \#                      \;                      '
+#       \,                      `                       .                       /
+#       Keypad /                Keypad *                Keypad -                Keypad +
+#       Keypad Enter            Keypad .
+#---------------------------------------------------------------------------------------------------
+
+)";
+
+// Helper macros
+#define CONTROL_BIND_GROUP_HEADER(GROUP_HEADER, BINDING_NAME, BINDING_VALUE)\
+    {\
+        #BINDING_NAME,\
+        GROUP_HEADER\
+        #BINDING_NAME ## " = " ## BINDING_VALUE,\
+        [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
+        []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
+    }
+
+#define CONTROL_BIND_GROUP_MIDDLE(BINDING_NAME, BINDING_VALUE)\
+    {\
+        #BINDING_NAME,\
+        #BINDING_NAME ## " = " ## BINDING_VALUE,\
+        [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
+        []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
+    }
+
+#define CONTROL_BIND_GROUP_FOOTER(BINDING_NAME, BINDING_VALUE)\
+    {\
+        #BINDING_NAME,\
+        #BINDING_NAME ## " = " ## BINDING_VALUE ## "\n",\
+        [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
+        []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
+    }
+
+static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
+    CONTROL_BIND_GROUP_HEADER(
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Analog movement and turning actions: these must a gamepad axis with a -1.0 to +1.0 range.\n"
+        "# Note: analog turn sensitivity is specified by the gamepad sensitivity values in input_cfg.ini.\n"
+        "#---------------------------------------------------------------------------------------------------\n",
+        Analog_MoveForwardBack, "Gamepad LeftY"
+    ),
+    CONTROL_BIND_GROUP_MIDDLE(Analog_MoveLeftRight, "Gamepad LeftX"),
+    CONTROL_BIND_GROUP_FOOTER(Analog_Turn, "Gamepad RightX"),
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    CONTROL_BIND_GROUP_HEADER(
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Digital movement and turning actions. Turn sensitivity and acceleration are based on the original\n"
+        "# PSX values, though greater precision can be achieved if using uncapped framerates.\n"
+        "#---------------------------------------------------------------------------------------------------\n",
+        Digital_MoveForward, "W, Up, Gamepad DpUp"
+    ),
+    CONTROL_BIND_GROUP_MIDDLE(Digital_MoveBackward, "S, Down, Gamepad DpDown"),
+    CONTROL_BIND_GROUP_MIDDLE(Digital_StrafeLeft, "A"),
+    CONTROL_BIND_GROUP_MIDDLE(Digital_StrafeRight, "D"),
+    CONTROL_BIND_GROUP_MIDDLE(Digital_TurnLeft, "Left, \\,, Gamepad DpLeft"),
+    CONTROL_BIND_GROUP_FOOTER(Digital_TurnRight, "Right, ., Gamepad DpRight"),
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    CONTROL_BIND_GROUP_HEADER(
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# In-game actions & modifiers\n"
+        "#---------------------------------------------------------------------------------------------------\n",
+        Action_Use, "Space, Mouse Right, Gamepad B"
+    ),
+    CONTROL_BIND_GROUP_MIDDLE(Action_Attack, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, F, Gamepad Y"),
+    CONTROL_BIND_GROUP_MIDDLE(Action_Respawn, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, F, Gamepad Y"),
+    CONTROL_BIND_GROUP_MIDDLE(Modifier_Run, "Left Shift, Right Shift, Gamepad X, Gamepad LeftTrigger"),
+    CONTROL_BIND_GROUP_FOOTER(Modifier_Strafe, "Left Alt, Right Alt, Gamepad A"),
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    CONTROL_BIND_GROUP_HEADER(
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Pause & Automap toggle\n"
+        "#---------------------------------------------------------------------------------------------------\n",
+        Toggle_Pause, "P, Pause, Return, Gamepad Start"
+    ),
+    CONTROL_BIND_GROUP_FOOTER(Toggle_Map, "Tab, M, Gamepad Back"),
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    CONTROL_BIND_GROUP_HEADER(
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Weapon switching: relative and absolute\n"
+        "#---------------------------------------------------------------------------------------------------\n",
+        Weapon_Scroll, "Mouse Wheel"
+    ),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_Previous, "PageDown, Q, Gamepad LeftShoulder"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_Next, "PageUp, E, Gamepad RightShoulder"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_FistChainsaw, "1"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_Pistol, "2"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_Shotgun, "3"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_SuperShotgun, "4"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_Chaingun, "5"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_RocketLauncher, "6"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_PlasmaRifle, "7"),
+    CONTROL_BIND_GROUP_FOOTER(Weapon_BFG, "8"),
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    CONTROL_BIND_GROUP_HEADER(
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Menu & UI controls\n"
+        "#---------------------------------------------------------------------------------------------------\n",
+        Menu_Up, "Up, W, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"
+    ),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Down, "Down, S, Gamepad DpDown, Gamepad LeftY+, Gamepad RightY+"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Left, "Left, A, Gamepad DpLeft, Gamepad LeftX-, Gamepad RightX-"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Right, "Right, D, Gamepad DpRight, Gamepad LeftX+, Gamepad RightX+"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Ok, "Return, Space, Mouse Left, F, Left Ctrl, Right Ctrl, Gamepad A, Gamepad RightTrigger"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Back, "Escape, Tab, Mouse Right, Gamepad B, Gamepad Back"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Start, "Gamepad Start"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_EnterPasswordChar, "Return, Space, Mouse Left, Left Ctrl, Right Ctrl, Gamepad A, Gamepad RightTrigger"),
+    CONTROL_BIND_GROUP_FOOTER(Menu_DeletePasswordChar, "Delete, Backspace, Mouse Right, Gamepad X, Gamepad LeftTrigger"),
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    CONTROL_BIND_GROUP_HEADER(
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Automap controls\n"
+        "#---------------------------------------------------------------------------------------------------\n",
+        Automap_ZoomIn, "E, \\=, Gamepad RightTrigger"
+    ),
+    CONTROL_BIND_GROUP_MIDDLE(Automap_ZoomOut, "Q, -, Gamepad LeftTrigger"),
+    CONTROL_BIND_GROUP_MIDDLE(Automap_MoveUp, "Up, W, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"),
+    CONTROL_BIND_GROUP_MIDDLE(Automap_MoveDown, "Down, S, Gamepad DpDown, Gamepad LeftY+, Gamepad RightY+"),
+    CONTROL_BIND_GROUP_MIDDLE(Automap_MoveLeft, "Left, A, Gamepad DpLeft, Gamepad LeftX-, Gamepad RightX-"),
+    CONTROL_BIND_GROUP_MIDDLE(Automap_MoveRight, "Right, D, Gamepad DpRight, Gamepad LeftX+, Gamepad RightX+"),
+    CONTROL_BIND_GROUP_FOOTER(Automap_Pan, "F, Left Alt, Right Alt, Gamepad A"),
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    CONTROL_BIND_GROUP_HEADER(
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Mappings to the original PlayStation controller buttons for the sole purpose of entering cheat\n"
+        "# code sequences on the pause menu, the original way. For example inputs mapped to the PSX 'Cross'\n"
+        "# button will be interpreted as that while attempting to enter an original cheat code sequence.\n"
+        "#---------------------------------------------------------------------------------------------------\n",
+        PSXCheatCode_Up, "Up, W, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"
+    ),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Down, "Down, S, Gamepad DpDown, Gamepad LeftY+, Gamepad RightY+"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Left, "Left, Gamepad DpLeft, Gamepad LeftX-, Gamepad RightX-"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Right, "Right, Gamepad DpRight, Gamepad LeftX+, Gamepad RightX+"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Triangle, "Mouse Left, Left Ctrl, Right Ctrl, Gamepad Y"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Circle, "Space, Mouse Right, Gamepad B"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Cross, "F, Left Alt, Right Alt, Gamepad A"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Square, "Left Shift, Right Shift, Gamepad X"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_L1, "A, Gamepad LeftShoulder"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_R1, "D, Gamepad RightShoulder"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_L2, "PageDown, Q, Gamepad LeftTrigger"),
+    CONTROL_BIND_GROUP_FOOTER(PSXCheatCode_R2, "PageUp, E, Gamepad RightTrigger"),
+};
+
+// Done with these helper macros
+#undef CONTROL_BIND_GROUP_HEADER
+#undef CONTROL_BIND_GROUP_MIDDLE
+#undef CONTROL_BIND_GROUP_FOOTER
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Other config parser related state
@@ -275,7 +489,8 @@ static void parseConfigFile(
     const std::string& configFolder,
     const char* fileName,
     const ConfigFieldHandler* configFieldHandlers,
-    const size_t numConfigFieldHandlers
+    const size_t numConfigFieldHandlers,
+    const char* const newlyGeneratedFileHeader
 ) noexcept {
     // Set all values to their initial defaults (until we parse otherwise)
     for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
@@ -340,9 +555,12 @@ static void parseConfigFile(
         std::FILE* pFile = std::fopen(configFilePath.c_str(), FOPEN_WRITE_APPEND_TEXT);
 
         if (pFile) {
-            // Only append a starting newline if it's an existing file...
+            // Only append a starting newline if it's an existing file.
+            // Otherwise append the header for this newly generated config file (if there is one).
             if (bCfgFileExists) {
                 std::fwrite("\n", 1, 1, pFile);
+            } else if (newlyGeneratedFileHeader && newlyGeneratedFileHeader[0]) {
+                std::fprintf(pFile, "%s\n", newlyGeneratedFileHeader);
             }
 
             for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
@@ -368,9 +586,17 @@ static void parseConfigFile(
 // Parse all config files
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void parseAllConfigFiles(const std::string& configFolder) noexcept {
-    parseConfigFile(configFolder, "graphics_cfg.ini",   GRAPHICS_CFG_INI_HANDLERS,  C_ARRAY_SIZE(GRAPHICS_CFG_INI_HANDLERS));
-    parseConfigFile(configFolder, "game_cfg.ini",       GAME_CFG_INI_HANDLERS,      C_ARRAY_SIZE(GAME_CFG_INI_HANDLERS));
-    parseConfigFile(configFolder, "input_cfg.ini",      INPUT_CFG_INI_HANDLERS,     C_ARRAY_SIZE(INPUT_CFG_INI_HANDLERS));
+    parseConfigFile(configFolder, "graphics_cfg.ini",   GRAPHICS_CFG_INI_HANDLERS,  C_ARRAY_SIZE(GRAPHICS_CFG_INI_HANDLERS), nullptr);
+    parseConfigFile(configFolder, "game_cfg.ini",       GAME_CFG_INI_HANDLERS,      C_ARRAY_SIZE(GAME_CFG_INI_HANDLERS), nullptr);
+    parseConfigFile(configFolder, "input_cfg.ini",      INPUT_CFG_INI_HANDLERS,     C_ARRAY_SIZE(INPUT_CFG_INI_HANDLERS), nullptr);
+
+    parseConfigFile(
+        configFolder,
+        "control_bindings.ini",
+        CONTROL_BINDINGS_INI_HANDLERS,
+        C_ARRAY_SIZE(CONTROL_BINDINGS_INI_HANDLERS),
+        CONTROL_BINDINGS_INI_HEADER
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -378,6 +604,8 @@ static void parseAllConfigFiles(const std::string& configFolder) noexcept {
 // If new config keys are missing then they will be appended to the existing config files.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
+    Controls::clearAllBindings();
+
     const std::string configFolder = Utils::getOrCreateUserDataFolder();
     parseAllConfigFiles(configFolder);
 
