@@ -6,7 +6,7 @@
 #include <vector>
 #include <ostream>
 
-struct TextIStream; 
+struct TextIStream;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Describes a function signature read from a signature file

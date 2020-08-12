@@ -260,7 +260,7 @@ static void printNonBranchOrJumpInstruction(
         return;
     
     // Log where we are in the stream (so we can tell how long the instruction was when printed)
-    const int64_t instructionStartStreamPos = out.tellp();   
+    const int64_t instructionStartStreamPos = out.tellp();
 
     // Indent the instruction
     indentByNumChars(indent, out);

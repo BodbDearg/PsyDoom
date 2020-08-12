@@ -94,7 +94,7 @@ static bool gbOnGround;
 // Also crosses special lines in the process, and interacts with special things touched.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_PlayerMove(mobj_t& mobj) noexcept {
-    // This is the amount to be moved    
+    // This is the amount to be moved
     fixed_t moveDx;
     fixed_t moveDy;
 

@@ -230,7 +230,7 @@ static void parseKeyValuePair(ParserState& state) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Parse an INI from a string in memory.
-// Does its best to try and recover from errors on each line
+// Does its best to try and recover from errors on each line.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void parseIniFromString(const char* const pStr, const size_t len, const EntryHandler entryHandler) noexcept {
     ASSERT(entryHandler);

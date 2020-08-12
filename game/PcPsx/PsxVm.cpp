@@ -80,8 +80,7 @@ bool init(const char* const doomCdCuePath) noexcept {
         FatalErrors::raiseF("Couldn't open or failed to parse the game disc .cue file '%s'!\n", doomCdCuePath);
     }
 
-    // Setup sound.
-    // TODO: move sound stuff elsewhere.
+    // Setup sound and init game controller support
     SDL_InitSubSystem(SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
     Sound::init();
     Sound::play();

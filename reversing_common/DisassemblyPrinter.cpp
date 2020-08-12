@@ -198,7 +198,7 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
     }
 
     // Get the number of array elements
-    const uint32_t numArrayElems = (progElem.endAddr - progElem.startAddr) / arrayElemTypeSize; 
+    const uint32_t numArrayElems = (progElem.endAddr - progElem.startAddr) / arrayElemTypeSize;
 
     // Print the address of this array variable and spacing after it
     printAddressForLine(progElem.startAddr, out);

@@ -92,7 +92,7 @@ static void T_DelayedAction(delayaction_t& action) noexcept;
 // Caches into RAM the textures for all animated flats and textures.
 // Also sets up the spot in VRAM where these animations will go - they occupy the same spot as the base animation frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_InitPicAnims() noexcept {    
+void P_InitPicAnims() noexcept {
     const int32_t maxAnims = (Game::isFinalDoom()) ? MAXANIMS_FDOOM : MAXANIMS_DOOM;
     gpLastAnim = &gAnims[0];
 

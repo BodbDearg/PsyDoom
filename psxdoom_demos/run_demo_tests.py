@@ -79,7 +79,7 @@ demosets = {
 def run_demo(psydoom_path, cue_file_path, demos_dir, demo_and_result):
     # Show what demo we are about to run
     demo_path = os.path.join(demos_dir, demo_and_result[0])
-    result_path = os.path.join(demos_dir, demo_and_result[1])    
+    result_path = os.path.join(demos_dir, demo_and_result[1])
 
     # Execute the demo using PsyDoom in headless mode and verify the result.
     # PsyDoom will return '0' if the demo was successful.

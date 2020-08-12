@@ -308,7 +308,7 @@ void init() noexcept {
         FatalErrors::raise("Failed to initialize the SDL joystick input subsystem!");
     }
 
-    SDL_GameControllerEventState(SDL_ENABLE);       // Want game controller events    
+    SDL_GameControllerEventState(SDL_ENABLE);       // Want game controller events
 
     gbIsQuitRequested = false;
     gpKeyboardState = SDL_GetKeyboardState(&gNumKeyboardStateKeys);
