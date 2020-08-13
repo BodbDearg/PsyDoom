@@ -1,5 +1,4 @@
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
-- Make file overrides (basic mod system) work on MacOS
 - Automap: fix lines being clipped 1 pixel short
 - Do an error message on failure to connect in multiplayer games explaining the issue.
 - Implement prefs saving/loading

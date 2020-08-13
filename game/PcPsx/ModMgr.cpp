@@ -11,6 +11,11 @@
 #include <map>
 #include <vector>
 
+// MacOS: some POSIX stuff needed due to <filesystem> workaround
+#if __APPLE__
+    #include <dirent.h>
+#endif
+
 BEGIN_NAMESPACE(ModMgr)
 
 // Maximum number of files that can be open at once by the mod manager
@@ -28,8 +33,6 @@ static std::FILE* gOpenFileSlots[MAX_OPEN_FILES] = {};
 // Determines what files in the game are overriden with files in a user supplied 'data directory', if any.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void determineFileOverridesInUserDataDir() noexcept {
-// TODO: determineFileOverridesInUserDataDir: FIXME: get working with MacOS 10.14
-#ifdef WIN32
     // If there is no data dir then there is no overrides
     gbFileHasOverrides.clear();
     gbFileHasOverrides.resize((uint32_t) CdFileId::END);
@@ -44,31 +47,62 @@ static void determineFileOverridesInUserDataDir() noexcept {
         nameToFileIndex[gCdMapTblFileNames[i]] = i;
     }
 
-    // Next search the data dir for overrides.
-    // Iterate through all files and try to match them with game files:
-    try {
-        typedef std::filesystem::directory_iterator DirIter;
-
-        DirIter dirIter(ProgArgs::gDataDirPath);
-        const DirIter dirEndIter;
-
-        while (dirIter != dirEndIter) {
-            // Try to match this file against game files and flag as an override if matching
-            std::string filename = dirIter->path().filename().string();
-            auto nameToFileIndexIter = nameToFileIndex.find(filename);
-
-            if (nameToFileIndexIter != nameToFileIndex.end()) {
-                const uint32_t fileIdx = nameToFileIndexIter->second;
-                gbFileHasOverrides[fileIdx] = true;
+    // MacOS: the C++ 17 '<filesystem>' header requires MacOS Catalina as a minimum target.
+    // That's a bit too much for now, so use standard POSIX stuff instead as a workaround.
+    // Eventually however this code path can be removed...
+    #if __APPLE__
+        do {
+            DIR* const pDir = opendir(ProgArgs::gDataDirPath);
+            
+            if (!pDir) {
+                FatalErrors::raiseF("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
+                break;
             }
+            
+            errno = 0;
+            
+            while (dirent* const pDirEnt = readdir(pDir)) {
+                // Try to match this file against game files and flag as an override if matching
+                auto nameToFileIndexIter = nameToFileIndex.find(pDirEnt->d_name);
+                
+                if (nameToFileIndexIter != nameToFileIndex.end()) {
+                    const uint32_t fileIdx = nameToFileIndexIter->second;
+                    gbFileHasOverrides[fileIdx] = true;
+                }
+            }
+            
+            closedir(pDir);
+            
+            if (errno) {
+                FatalErrors::raiseF("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
+            }
+        } while (false);
+    #else
+        // Next search the data dir for overrides.
+        // Iterate through all files and try to match them with game files:
+        try {
+            typedef std::filesystem::directory_iterator DirIter;
 
-            ++dirIter;
+            DirIter dirIter(ProgArgs::gDataDirPath);
+            const DirIter dirEndIter;
+
+            while (dirIter != dirEndIter) {
+                // Try to match this file against game files and flag as an override if matching
+                std::string filename = dirIter->path().filename().string();
+                auto nameToFileIndexIter = nameToFileIndex.find(filename);
+
+                if (nameToFileIndexIter != nameToFileIndex.end()) {
+                    const uint32_t fileIdx = nameToFileIndexIter->second;
+                    gbFileHasOverrides[fileIdx] = true;
+                }
+
+                ++dirIter;
+            }
         }
-    }
-    catch (...) {
-        FatalErrors::raiseF("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
-    }
-#endif
+        catch (...) {
+            FatalErrors::raiseF("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -85,7 +119,6 @@ static uint8_t findFreeOpenFileSlotIndex() noexcept {
 }
 
 #if ASSERTS_ENABLED
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tell if the given file is validly open through the user file overrides system
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -96,7 +129,6 @@ static bool isValidOverridenFile(const PsxCd_File& file) noexcept {
         (gOpenFileSlots[file.overrideFileHandle - 1] != nullptr)
     );
 }
-
 #endif  // #if ASSERTS_ENABLED
 
 //------------------------------------------------------------------------------------------------------------------------------------------
