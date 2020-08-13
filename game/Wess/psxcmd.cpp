@@ -34,6 +34,9 @@ const WessDriverFunc gWess_drv_cmds[19] = {
     PSX_NoteOff             // 18
 };
 
+static constexpr int32_t MAX_RELEASE_TIME_MS        = 0x10000000;   // Maximum time something can release for (milliseconds)
+static constexpr int32_t MAX_FAST_RELEASE_TIME_MS   = 0x05DC0000;   // A scaled version of the maximum release time that faster, used by some voices.
+
 static master_status_structure*     gpWess_drv_mstat;               // Pointer to the master status structure being used by the sequencer
 static sequence_status*             gpWess_drv_sequenceStats;       // Saved reference to the list of sequence statuses (in the master status struct)
 static track_status*                gpWess_drv_trackStats;          // Saved reference to the list of track statuses (in the master status struct)
@@ -107,14 +110,14 @@ void add_music_mute_note(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the release rate or how fast fade out occurs when muting voices
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_set_mute_release(const int32_t newReleaseRate) noexcept {
-    // TODO: make a constant for the scale value
-    int32_t maxRate = 0x10000000;
+void wess_set_mute_release(const int32_t newReleaseTimeMs) noexcept {
+    // Figure out the SPU release rate value to use, it's a power of 2 shift/scale.
+    // Note that the max release rate is '31' and minimum is '2' with this code.
+    int32_t approxReleaseTimeMs = MAX_RELEASE_TIME_MS;
     gWess_drv_muteReleaseRate = 31;
 
-    // Note that the max release rate is '31' and minimum is '2' with this scheme
-    while ((maxRate > newReleaseRate) && (gWess_drv_muteReleaseRate != 0)) {
-        maxRate >>= 1;
+    while ((approxReleaseTimeMs > newReleaseTimeMs) && (gWess_drv_muteReleaseRate != 0)) {
+        approxReleaseTimeMs >>= 1;
         gWess_drv_muteReleaseRate -= 1;
     }
 }
@@ -463,9 +466,7 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
 
         // Begin releasing the voice and figure out how long it will take to fade based on the release rate.
         // The release rate is exponential, hence the shifts here:
-        //
-        // TODO: make a constant for the scale value.
-        voiceStat.release_time_ms = 0x10000000 >> (31 - (gWess_drv_muteReleaseRate % 32));
+        voiceStat.release_time_ms = MAX_RELEASE_TIME_MS >> (31 - (gWess_drv_muteReleaseRate % 32));
         PSX_voicerelease(voiceStat);
         gWess_drv_voicesToMute |= 1 << (voiceStat.ref_idx % 32);
 
@@ -778,12 +779,10 @@ void PSX_voiceon(
     
     // Figure out how long it takes for the voice to fade out.
     // The low 5 bits affect the exponential falloff, the 6th bit controls how that falloff is scaled.
-    //
-    // TODO: make constants for the flag and these two scale values.
-    const int32_t adsr = (patchVoice.adsr2 & 0x20) ? 0x10000000 : 0x05DC0000;
+    const int32_t adsr = (patchVoice.adsr2 & 0x20) ? MAX_RELEASE_TIME_MS : MAX_FAST_RELEASE_TIME_MS;
     const uint32_t adsrShift = 31 - (patchVoice.adsr2 % 32);
     voiceStat.release_time_ms = adsr >> adsrShift;
-
+    
     // Inc voice count stats
     trackStat.num_active_voices++;
     mstat.num_active_voices++;

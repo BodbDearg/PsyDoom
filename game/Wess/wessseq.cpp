@@ -5,6 +5,7 @@
 #include "wessseq.h"
 
 #include "PcPsx/Macros.h"
+#include "wessapi.h"
 
 const WessDriverFunc gWess_DrvFunctions[36] = {
     // Manually called commands
@@ -90,11 +91,10 @@ static constexpr uint8_t gWess_seq_CmdLength[36] = {
 
 static_assert(C_ARRAY_SIZE(gWess_seq_CmdLength) == C_ARRAY_SIZE(gWess_DrvFunctions));
 
-// TODO: use constants here for max values
-uint8_t             gWess_master_sfx_volume     = 127;          // Master volume level for all sfx voices
-uint8_t             gWess_master_mus_volume     = 127;          // Master volume level for all music voices
-PanMode             gWess_pan_status            = PAN_ON;       // Current pan mode
-SavedVoiceList*     gpWess_savedVoices          = nullptr;      // Used to save and restore voice state when pausing or resuming sound playback
+uint8_t             gWess_master_sfx_volume     = WESS_MAX_MASTER_VOL;      // Master volume level for all sfx voices
+uint8_t             gWess_master_mus_volume     = WESS_MAX_MASTER_VOL;      // Master volume level for all music voices
+PanMode             gWess_pan_status            = PAN_ON;                   // Current pan mode
+SavedVoiceList*     gpWess_savedVoices          = nullptr;                  // Used to save and restore voice state when pausing or resuming sound playback
 
 static master_status_structure*     gpWess_eng_mstat;               // Saved reference to the master status structure
 static sequence_status*             gpWess_eng_sequenceStats;       // Saved reference to the list of sequence statuses
@@ -102,9 +102,10 @@ static track_status*                gpWess_eng_trackStats;          // Saved ref
 static uint8_t                      gWess_eng_maxActiveTracks;      // The maximum number of active tracks in the sequencer
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Reads from track data a variable length delta time (relative to the previous sequencer command) for when the next sequencer command
-// is to be executed. Returns the pointer after reading the time amount, which may be incremented an variable/arbitrary amount.
+// Reads a variable length quantity from track data, similar to how certain data is encoded in the MIDI standard.
+// Returns the pointer after reading the quantity, which may be incremented an arbitrary byte amount of up to 5 bytes.
 //
+// For PSX Doom this function is used to read the delta/relative time to the next sequencer command.
 // The delta time amount returned is in terms of quarter note 'parts'.
 // How many parts/divisions per quarter note there are depends on the timing setup of track, but a value of '120' is typical.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,7 +133,7 @@ uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // The opposite function to 'Read_Vlq': not used by the game but probably used by music generation tools.
-// Write a variable length delta time value for a track to the given byte stream, using up to 5 bytes to encode it.
+// Write a variable length quantity for a track to the given byte stream, using up to 5 bytes to encode it.
 // Returns the pointer after the written value.
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t* Write_Vlq(uint8_t* const pTrackBytes, const uint32_t deltaTime) noexcept {

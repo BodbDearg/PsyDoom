@@ -1,6 +1,11 @@
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
+- Make file overrides (basic mod system) work on MacOS
 - Automap: fix lines being clipped 1 pixel short
 - Do an error message on failure to connect in multiplayer games explaining the issue.
+- Implement prefs saving/loading
+    - Save passwords for the current map and restore on launch.
+    - Save sound/music prefs
+    - Provide an in-game menu to adjust turn sensitivity
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.
@@ -38,7 +43,6 @@
 - Linux support.
 - Verify NTSC stretched resolution is fully correct.
 - Allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
-- Make file overrides (basic mod system) work on MacOS
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Support a clean exit from the game everywhere (except I_Error)
 - Replace I_Error with an error dialog?
