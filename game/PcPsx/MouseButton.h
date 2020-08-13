@@ -16,4 +16,4 @@ enum class MouseButton : uint8_t {
     INVALID
 };
 
-static constexpr uint8_t NUM_MOUSE_BUTTONS = (uint32_t) MouseButton::INVALID;
+static constexpr uint8_t NUM_MOUSE_BUTTONS = (uint8_t) MouseButton::INVALID;

@@ -50,7 +50,7 @@ static inline bool vectorContainsValue(const std::vector<T>& vec, const T val) n
 template <class T>
 static inline void removeValueFromVector(const T val, std::vector<T>& vec) noexcept {
     auto endIter = vec.end();
-    auto iter = std::find(vec.begin(), vec.end(), val);
+    auto iter = std::find(vec.begin(), endIter, val);
 
     while (iter != endIter) {
         iter = vec.erase(iter);
@@ -149,7 +149,7 @@ static void handleSdlEvents() noexcept {
                         break;
                 }
             }   break;
-
+            
             case SDL_KEYDOWN: {
                 const uint16_t scancode = (uint16_t) sdlEvent.key.keysym.scancode;
 
