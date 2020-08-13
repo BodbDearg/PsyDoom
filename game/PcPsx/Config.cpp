@@ -333,7 +333,7 @@ R"(#----------------------------------------------------------------------------
     {\
         #BINDING_NAME,\
         GROUP_HEADER\
-        #BINDING_NAME ## " = " ## BINDING_VALUE,\
+        #BINDING_NAME " = " BINDING_VALUE,\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
         []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
     }
@@ -341,7 +341,7 @@ R"(#----------------------------------------------------------------------------
 #define CONTROL_BIND_GROUP_MIDDLE(BINDING_NAME, BINDING_VALUE)\
     {\
         #BINDING_NAME,\
-        #BINDING_NAME ## " = " ## BINDING_VALUE,\
+        #BINDING_NAME " = " BINDING_VALUE,\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
         []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
     }
@@ -349,7 +349,7 @@ R"(#----------------------------------------------------------------------------
 #define CONTROL_BIND_GROUP_FOOTER(BINDING_NAME, BINDING_VALUE)\
     {\
         #BINDING_NAME,\
-        #BINDING_NAME ## " = " ## BINDING_VALUE ## "\n",\
+        #BINDING_NAME " = " BINDING_VALUE "\n",\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
         []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
     }

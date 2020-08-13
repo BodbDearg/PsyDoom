@@ -30,7 +30,10 @@ static bool gbPSXCD_playflag;               // If true then we are playing cd au
 static bool gbPSXCD_loopflag;               // If true then the currently played cd audio track will be looped
 static bool gbPSXCD_seeking_for_play;       // If true then we are currently seeking to the location where the cd audio track being played will start
 static bool gbPSXCD_waiting_for_pause;      // If true then we are waiting for a cd 'pause' operation to complete
-static bool gbPSXCD_critical_error;         // True if a critical error occurred
+
+#if !PSYDOOM_MODS
+    static bool gbPSXCD_critical_error;     // True if a critical error occurred (no longer used by PsyDoom)
+#endif
 
 // Whether the cdrom is currently in data or audio mode.
 // 0 = audio mode, 1 = data mode, -1 = undefined.

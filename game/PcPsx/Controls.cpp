@@ -5,6 +5,7 @@
 #include "PsxPadButtons.h"
 
 #include <algorithm>
+#include <cmath>
 #include <SDL.h>
 #include <string>
 #include <vector>
@@ -376,7 +377,7 @@ float getFloat(const Binding binding) noexcept {
 // Get a control binding value in boolean format
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool getBool(const Binding binding) noexcept {
-    return (std::abs(getInputForBinding(binding)) > Config::gAnalogToDigitalThreshold);
+    return (std::fabs(getInputForBinding(binding)) > Config::gAnalogToDigitalThreshold);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

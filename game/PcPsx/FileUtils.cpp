@@ -13,6 +13,7 @@
 // MacOS: working around missing support for <filesystem> in everything except the latest bleeding edge OS and Xcode.
 // Use standard Unix file functions instead for now, but some day this can be removed.
 #ifdef __APPLE__
+    #include <sys/stat.h>
     #include <unistd.h>
 #else
     #include <filesystem>
@@ -135,7 +136,7 @@ int64_t getFileSize(const char* filePath) noexcept {
         // Use standard Unix file functions instead for now, but some day this can be removed.
         #ifdef __APPLE__
             struct stat fileInfo;
-
+            
             if (stat(filePath, &fileInfo) < 0)
                 return -1;
 
