@@ -266,9 +266,10 @@ static uint32_t gCurMusicSeqIdx;
 // What map we have sound and music currently loaded for
 static int32_t gLoadedSoundAndMusMapNum;
 
-// The next address in SPU RAM to upload sounds to.
-// TODO: rename - this is really where to upload map stuff to.
-static uint32_t gSound_CurSpuAddr = SPU_RAM_APP_BASE;
+// The start address in SPU RAM where map sound effects (i.e enemies) and music instrument samples can be loaded to.
+// Addresses before this are for SPU reserved RAM (roughly 4 KiB) and for the common/base sfx LCD file, 'DOOMSFX.LCD'.
+// That LCD contains UI and player sounds and is almost always kept in SPU memory and not unloaded, except during the finale.
+static uint32_t gSound_MapLcdSpuStartAddr = SPU_RAM_APP_BASE;
 
 // Sample blocks for general DOOM sounds and map specific music and sfx sounds
 static SampleBlock gDoomSndBlock;
@@ -401,14 +402,14 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     const int32_t finaleMapNum = Game::getNumMaps() + 1;
 
     if (mapIdx == finaleMapNum) {
-        // For the finale unload the LCD to free up RAM
+        // For the finale unload this LCD to free up SPU RAM, since a lot will be needed to hold all monster sounds
         S_UnloadSampleBlock(gDoomSndBlock);
         gbDidLoadDoomSfxLcd = false;
-        gSound_CurSpuAddr = SPU_RAM_APP_BASE;
+        gSound_MapLcdSpuStartAddr = SPU_RAM_APP_BASE;
     } else {
         // In all other cases ensure it is loaded
         if (!gbDidLoadDoomSfxLcd) {
-            gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdFileId::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
+            gSound_MapLcdSpuStartAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdFileId::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
             gbDidLoadDoomSfxLcd = true;
         }
     }
@@ -417,7 +418,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     // Also initialize the reverb mode depending on the music.
     const mapaudiodef_t& mapAudioDef = (Game::isFinalDoom()) ? gMapAudioDefs_FinalDoom[mapIdx] : gMapAudioDefs_Doom[mapIdx];
     gCurMusicSeqIdx = mapAudioDef.musicSeqIdx;
-    uint32_t destSpuAddr = gSound_CurSpuAddr;
+    uint32_t destSpuAddr = gSound_MapLcdSpuStartAddr;
 
     if (gCurMusicSeqIdx == 0) {
         // No music sequences for this map - turn off reverb
@@ -633,9 +634,9 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     S_SetMusicVolume(musVol);
 
     // Load the main SFX LCD: this is required for the main menu.
-    // Also set the next location to upload to SPU RAM at after the load finishes.
+    // Also set the location where map sounds will be uploaded to in SPU RAM, after the memory occupied by this LCD.
     gbDidLoadDoomSfxLcd = false;
-    gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdFileId::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
+    gSound_MapLcdSpuStartAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdFileId::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
     gbDidLoadDoomSfxLcd = true;
 }
 
