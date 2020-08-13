@@ -102,7 +102,7 @@ void shutdown() noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Submit a drawing primitive to the GPU
-// TODO: replace with a more readable solution; don't write to GP0 and setup the GPU and submit primitives directly
+// TODO: submitGpuPrimitive: replace with a more readable solution; don't write to GP0 and setup the GPU and submit primitives directly
 //------------------------------------------------------------------------------------------------------------------------------------------
 void submitGpuPrimitive(const void* const pPrim) noexcept {
     ASSERT(pPrim);
@@ -138,7 +138,7 @@ void emulateSoundIfRequired() noexcept {
             soundBufferSize = Sound::buffer.size();
         }
 
-        // TODO: (FIXME) temp hack - fill the sound buffers up a decent amount to prevent skipping
+        // TODO: emulateSoundIfRequired: FIXME, temp hack: fill the sound buffers up a decent amount to prevent skipping
         if (soundBufferSize >= 1024 * 4)
             return;
         

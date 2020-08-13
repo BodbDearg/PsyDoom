@@ -131,7 +131,7 @@ void threadYield() noexcept {
 // These save the pain of inputting button sequences and make it easy to cheat.
 //------------------------------------------------------------------------------------------------------------------------------------------
 cheatseq_t getDevCheatSequenceToExec() noexcept {
-    // TODO: disable this in non developer builds, or at least provide a toggle (defaulted to off)
+    // TODO: getDevCheatSequenceToExec: disable this in non developer builds, or at least provide a toggle (defaulted to off)
     const uint8_t* const pKbState = SDL_GetKeyboardState(nullptr);
 
     if (pKbState[SDL_SCANCODE_F1] != 0) {

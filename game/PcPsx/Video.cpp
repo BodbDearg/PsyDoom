@@ -23,7 +23,7 @@ static SDL_Texture*     gFramebufferTexture;
 static SDL_Rect         gOutputRect;
 static uint32_t*        gpFrameBuffer;
 
-// TODO: this is a temporary thing.
+// TODO: stretched resolution: this is a temporary thing.
 // Note that I am using the stretched NTSC resolution here for game resolution width, not the physical framebuffer width (256 pixels wide).
 // See: https://doomwiki.org/wiki/Sony_PlayStation
 constexpr int32_t GAME_RES_X = 293;

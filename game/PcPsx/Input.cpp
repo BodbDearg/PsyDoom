@@ -131,10 +131,10 @@ static void handleSdlEvents() noexcept {
         switch (sdlEvent.type) {
             case SDL_QUIT:
                 // The application is requesting to quit.
-                // TODO: Use this throughout the app to quit cleanly.
+                // TODO: handleSdlEvents: Use this throughout the app to quit cleanly.
                 gbIsQuitRequested = true;
             
-                // TODO: dirty hack to allow quitting temporarily
+                // TODO: handleSdlEvents: dirty hack to allow quitting temporarily
                 PsxVm::shutdown();
                 std::exit(0);
                 break;

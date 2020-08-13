@@ -28,7 +28,7 @@ static std::FILE* gOpenFileSlots[MAX_OPEN_FILES] = {};
 // Determines what files in the game are overriden with files in a user supplied 'data directory', if any.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void determineFileOverridesInUserDataDir() noexcept {
-// TODO: (FIXME) get working with MacOS 10.14
+// TODO: determineFileOverridesInUserDataDir: FIXME: get working with MacOS 10.14
 #ifdef WIN32
     // If there is no data dir then there is no overrides
     gbFileHasOverrides.clear();
