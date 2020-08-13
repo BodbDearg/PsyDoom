@@ -19,6 +19,7 @@
 #include "p_tick.h"
 #include "PcPsx/Endian.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/Utils.h"
 #include "Wess/wessapi.h"
 
@@ -349,9 +350,17 @@ void G_RunGame() noexcept {
         // Load the level and run the game
         G_DoLoadLevel();
         MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
-    
+
+        // PsyDoom: if app quit was requested then exit immediately
+        #if PSYDOOM_MODS
+            if (Input::isQuitRequested())
+                break;
+        #endif
+
+        // Assume we are not restarting the current level at first
         gbIsLevelBeingRestarted = false;
         
+        // End demo recording actions
         if (gGameAction == ga_recorddemo) {
             G_EndDemoRecording();
         }
@@ -359,6 +368,7 @@ void G_RunGame() noexcept {
         if (gGameAction == ga_warped)
             continue;
         
+        // Can restart the level if died or explicitly restarting
         if ((gGameAction == ga_died) || (gGameAction == ga_restart)) {
             gbIsLevelBeingRestarted = true;
             continue;
@@ -374,6 +384,12 @@ void G_RunGame() noexcept {
         // Do the intermission
         MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
+        // PsyDoom: if app quit was requested then exit immediately
+        #if PSYDOOM_MODS
+            if (Input::isQuitRequested())
+                break;
+        #endif
+
         // Should we do the Ultimate DOOM style (text only, no cast sequence) finale?
         // Note that for Final Doom this will show when finishing the first 2 out of 3 episodes.
         //
@@ -386,6 +402,12 @@ void G_RunGame() noexcept {
         if ((gNetGame == gt_single) && (curEpisodeNum != nextEpisodeNum)) {
             if (bDoFinales) {
                 MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+
+                // PsyDoom: if app quit was requested then exit immediately
+                #if PSYDOOM_MODS
+                    if (Input::isQuitRequested())
+                        break;
+                #endif
             } else {
                 gGameAction = ga_nothing;
                 break;
@@ -409,6 +431,12 @@ void G_RunGame() noexcept {
 
         if (bDoFinales) {
             MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
+
+            // PsyDoom: if app quit was requested then exit immediately
+            #if PSYDOOM_MODS
+                if (Input::isQuitRequested())
+                    break;
+            #endif
         } else {
             gGameAction = ga_nothing;
             break;

@@ -138,7 +138,6 @@ void P_RunMobjLate() noexcept {
 }
 
 #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: returns the number of cheat buttons matched for the classic cheat key sequence currently being entered
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -165,8 +164,7 @@ static int32_t P_GetNumMatchingCheatSeqBtns() noexcept {
 
     return longestMatchingSeq;
 }
-
-#endif
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Handles the following:
@@ -737,9 +735,8 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 }
 
 #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom addition: get the inputs to use for the next tick in the new 'TickInputs' format
+// PsyDoom: get the inputs to use for the next tick in the new 'TickInputs' format
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // Zero the inputs initially and assume no direct weapon change
@@ -846,7 +843,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Convert PlayStation gamepad buttons to tick inputs.
+// PsyDoom: Convert PlayStation gamepad buttons to tick inputs.
 // Used to convert the original demo format inputs to the new 'TickInputs' format.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* const pControlBindings, TickInputs& inputs) noexcept {
@@ -980,5 +977,4 @@ void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* co
         inputs.bAutomapMoveDown = true;
     }
 }
-
-#endif
+#endif  // #if PSYDOOM_MODS

@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/p_tick.h"
+#include "Input.h"
 #include "NetPacketReader.h"
 #include "NetPacketWriter.h"
 #include "ProgArgs.h"
@@ -47,6 +48,10 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
         return true;
 
     while (true) {
+        // If app quit is requested then abort now with failure
+        if (Input::isQuitRequested())
+            return false;
+
         // Update the platform, and handle network related events: this might cause the operation to complete.
         doUpdates();
         Utils::doPlatformUpdates();

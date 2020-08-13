@@ -11,6 +11,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
@@ -114,6 +115,12 @@ gameaction_t RunMenu() noexcept {
         I_DrawLoadingPlaque(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());
         I_NetSetup();
 
+        // PsyDoom: abort if app quit was requested
+        #if PSYDOOM_MODS
+            if (Input::isQuitRequested())
+                break;
+        #endif
+
         // Once the net connection has been established, re-draw the background in prep for a loading or error plaque
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
@@ -127,8 +134,19 @@ gameaction_t RunMenu() noexcept {
     } while (gbDidAbortGame);
 
     // Startup the game!
-    G_InitNew(gStartSkill, gStartMapOrEpisode, gStartGameType);
-    G_RunGame();
+    // PsyDoom: don't do this if app quit was requested.
+    {
+        #if PSYDOOM_MODS
+            const bool bStartGame = (!Input::isQuitRequested());
+        #else 
+            const bool bStartGame = true;
+        #endif
+
+        if (bStartGame) {
+            G_InitNew(gStartSkill, gStartMapOrEpisode, gStartGameType);
+            G_RunGame();
+        }
+    }
 
     // PsyDoom: cleanup any network connections if we were doing a net game
     #if PSYDOOM_MODS
@@ -226,6 +244,12 @@ void M_Start() noexcept {
 // Teardown/cleanup logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Stop(const gameaction_t exitAction) noexcept {
+    // PsyDoom: if quitting the app then exit immediately, don't play any sounds and fade cd audio etc.
+    #if PSYDOOM_MODS
+        if (Input::isQuitRequested() || (exitAction == ga_quitapp))
+            return;
+    #endif
+
     // Play the pistol sound and stop the current cd music track
     S_StartSound(nullptr, sfx_pistol);
     psxcd_stop();

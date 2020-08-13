@@ -115,7 +115,7 @@ static void rescanGameControllers() noexcept {
                 gpJoystick = SDL_GameControllerGetJoystick(gpGameController);
                 gJoystickId = SDL_JoystickInstanceID(gpJoystick);
                 break;
-            }       
+            }
         }
     }
 }
@@ -130,13 +130,8 @@ static void handleSdlEvents() noexcept {
     while (SDL_PollEvent(&sdlEvent) != 0) {
         switch (sdlEvent.type) {
             case SDL_QUIT:
-                // The application is requesting to quit.
-                // TODO: handleSdlEvents: Use this throughout the app to quit cleanly.
+                // The application is requesting to quit
                 gbIsQuitRequested = true;
-            
-                // TODO: handleSdlEvents: dirty hack to allow quitting temporarily
-                PsxVm::shutdown();
-                std::exit(0);
                 break;
             
             case SDL_WINDOWEVENT: {

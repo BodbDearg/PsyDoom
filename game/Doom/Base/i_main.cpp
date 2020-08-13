@@ -10,10 +10,13 @@
 #include "i_drawcmds.h"
 #include "PcPsx/Assert.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/FatalErrors.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
+#include "PcPsx/PsxVm.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
 #include "PsyQ/LIBAPI.h"
@@ -304,37 +307,50 @@ void I_PSXInit() noexcept {
         va_end(args);
     }
 
-    // Finish up any current drawing
-    I_DrawPresent();
-
-    // Load the debug font to VRAM
-    LIBGPU_FntLoad(960, 256);
-    
-    // Open a print stream for debug printing and make it current
-    const int32_t printStreamId = LIBGPU_FntOpen(0, 0, 256, 200, false, 256);
-    LIBGPU_SetDumpFnt(printStreamId);
-
-    // Print the required string, then flush to display
-    LIBGPU_FntPrint(printStreamId, "\n\n\n %s", msgBuffer);
-    LIBGPU_FntFlush(printStreamId, gGpuCmdsBuffer);
-
-    // Present the resulting message
-    I_DrawPresent();
-
     // PsyDoom: if running in headless mode then terminate at this point rather than spinning forever
     #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode) {
+            std::printf("I_Error: %s", msgBuffer);
             std::exit(1);
         }
     #endif
 
-    // Deliberate infinite loop...
-    // The user can kill the app however by closing the window.
-    while (true) {
-        #if PSYDOOM_MODS
-            Utils::doPlatformUpdates();
-        #endif
-    }
+    // PsyDoom: I_Error now uses a simple system error dialog by default, which is more user friendly and easier to exit from.
+    // The old way of hanging the app with an error message can still be built-in however, if required.
+    #if PSYDOOM_USE_NEW_I_ERROR
+        FatalErrors::raise(msgBuffer);
+    #else
+        // Finish up any current drawing
+        I_DrawPresent();
+
+        // Load the debug font to VRAM
+        LIBGPU_FntLoad(960, 256);
+    
+        // Open a print stream for debug printing and make it current
+        const int32_t printStreamId = LIBGPU_FntOpen(0, 0, 256, 200, false, 256);
+        LIBGPU_SetDumpFnt(printStreamId);
+
+        // Print the required string, then flush to display
+        LIBGPU_FntPrint(printStreamId, "\n\n\n %s", msgBuffer);
+        LIBGPU_FntFlush(printStreamId, gGpuCmdsBuffer);
+
+        // Present the resulting message
+        I_DrawPresent();
+
+        // Deliberate infinite loop...
+        // The user can kill the app however by closing the window.
+        while (true) {
+            #if PSYDOOM_MODS
+                Utils::doPlatformUpdates();
+
+                if (Input::isQuitRequested()) {
+                    // Note: shutting down PsxVm kills the app window immediately
+                    PsxVm::shutdown();
+                    std::exit(0);
+                }
+            #endif
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

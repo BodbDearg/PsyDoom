@@ -11,6 +11,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "pw_main.h"
@@ -211,6 +212,12 @@ void IN_Start() noexcept {
 // Shutdown logic for the intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // PsyDoom: if quitting the app then exit immediately
+    #if PSYDOOM_MODS
+        if (Input::isQuitRequested())
+            return;
+    #endif
+
     IN_Drawer();
     psxcd_stop();
 }

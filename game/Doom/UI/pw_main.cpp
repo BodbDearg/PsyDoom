@@ -16,6 +16,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -61,6 +62,12 @@ void START_PasswordScreen() noexcept {
 // Shuts down the password screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // PsyDoom: if quitting the app then exit immediately, don't play any sounds etc.
+    #if PSYDOOM_MODS
+        if (Input::isQuitRequested())
+            return;
+    #endif
+
     S_StartSound(nullptr, sfx_pistol);
 
     // Draw the screen one more time before we transition

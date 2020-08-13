@@ -12,6 +12,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "PcPsx/Input.h"
 #include "ti_main.h"
 
 // Texture for the legals screen text
@@ -32,6 +33,12 @@ void START_Legals() noexcept {
 // Shutdown logic for the 'legals' screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // PsyDoom: if quitting the app then exit immediately, don't play any sounds etc.
+    #if PSYDOOM_MODS
+        if (Input::isQuitRequested())
+            return;
+    #endif
+
     S_StartSound(nullptr, sfx_barexp);
     I_CrossFadeFrameBuffers();
 }

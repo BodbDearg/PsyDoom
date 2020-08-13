@@ -44,9 +44,6 @@
 - Verify NTSC stretched resolution is fully correct.
 - Allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
-- Support a clean exit from the game everywhere (except I_Error)
-- Replace I_Error with an error dialog?
-    - More friendly in modern environments.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.    
 - Investigate shutdown code and properly cleanup everything

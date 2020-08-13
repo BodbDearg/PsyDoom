@@ -1,11 +1,8 @@
-# This setting includes old stuff in the project
-set(PSYDOOM_INCLUDE_OLD_CODE FALSE CACHE BOOL 
-"If TRUE include source files from the 'Old' directory of the PsyDoom project.
-These files contain original or older versions of various functions, variables and data structures.
-These pieces of code are archived for future reference in case we need to refer back to the way things originally worked.
-Most of these functions etc. have either been completely rewritten or so drastically altered that the '#if PSYDOOM_MODS'
-mechanism no longer makes sense or is too unwieldly to use."
-)
+# Use the old "I_Error" implementation which hangs the game with a message on the screen?
+set(PSYDOOM_USE_NEW_I_ERROR TRUE CACHE BOOL
+"If TRUE (default) then use the new implementation of 'I_Error' for showing original game errors such as 'Texture Cache Overflow'.
+PsyDoom by default now uses a system error dialog instead of just hanging the app on an error message because it is more user
+friendly and easier to quit out of on modern platforms.")
 
 # This setting switches on/off fixes to undefined behavior from the original code
 set(PSYDOOM_FIX_UB TRUE CACHE BOOL
@@ -16,6 +13,15 @@ If undefined behavior fixes are NOT enabled then asserts (in debug builds) will 
 These asserts can be useful to identify cases of demo de-sync for demos recorded against the original games which trigger UB.
 Such gameplay which triggers UB in the original game is not possible to play back correctly in PsyDoom, because UB behavior
 requires the exact same hardware, compiler and execution environment to replicate."
+)
+
+# This setting includes old stuff in the project
+set(PSYDOOM_INCLUDE_OLD_CODE FALSE CACHE BOOL 
+"If TRUE include source files from the 'Old' directory of the PsyDoom project.
+These files contain original or older versions of various functions, variables and data structures.
+These pieces of code are archived for future reference in case we need to refer back to the way things originally worked.
+Most of these functions etc. have either been completely rewritten or so drastically altered that the '#if PSYDOOM_MODS'
+mechanism no longer makes sense or is too unwieldly to use."
 )
 
 # Platform agnostic sources
@@ -283,15 +289,22 @@ target_compile_definitions(${GAME_TGT_NAME} PRIVATE
     -DPSYDOOM_MODS=1                            # Defined to mark areas where we changed the code from the PSX version
 )
 
+# Various tweaks that can be applied
 if (PSYDOOM_FIX_UB)
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=1)
 else()
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=0)
 endif()
 
+if (PSYDOOM_USE_NEW_I_ERROR)
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_USE_NEW_I_ERROR=1)
+else()
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_USE_NEW_I_ERROR=0)
+endif()
+
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})
-    
+
 # Required libraries
 target_link_libraries(${GAME_TGT_NAME}
     ${AVOCADO_TGT_NAME}

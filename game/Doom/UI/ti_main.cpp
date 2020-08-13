@@ -15,6 +15,7 @@
 #include "m_main.h"
 #include "o_main.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -92,7 +93,13 @@ void START_Title() noexcept {
 // Shutdown/cleanup logic for the main title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_Title([[maybe_unused]] const gameaction_t exitAction) noexcept {
-    // Play a barrel explode noise and stop the current cd audio track
+    // Play a barrel explode noise and fade out the current cd audio track.
+    // PsyDoom: only do this if not quitting the app, otherwise exit immediately.
+    #if PSYDOOM_MODS
+        if (Input::isQuitRequested())
+            return;
+    #endif
+
     S_StartSound(nullptr, sfx_barexp);
     psxcd_stop();
 }

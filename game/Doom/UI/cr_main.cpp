@@ -6,6 +6,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/Utils.h"
 #include "ti_main.h"
 #include "Wess/psxcd.h"
@@ -62,6 +63,12 @@ void START_Credits() noexcept {
 // Shutdown logic for the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_Credits([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // PsyDoom: if quitting the app then exit immediately
+    #if PSYDOOM_MODS
+        if (Input::isQuitRequested())
+            return;
+    #endif
+
     psxcd_stop();
 }
 

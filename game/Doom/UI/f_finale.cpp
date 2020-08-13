@@ -17,6 +17,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "m_main.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "PsyQ/LIBETC.h"
@@ -209,6 +210,12 @@ void F1_Start() noexcept {
 // Called to shut down the Ultimate DOOM style finale (text only, no cast sequence) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // PsyDoom: if quitting the app then exit immediately
+    #if PSYDOOM_MODS
+        if (Input::isQuitRequested())
+            return;
+    #endif
+
     gbGamePaused = false;
     psxcd_stop();
 }
@@ -363,6 +370,12 @@ void F2_Start() noexcept {
 // Called to shut down the DOOM II style finale (text, followed by cast) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // PsyDoom: if quitting the app then exit immediately
+    #if PSYDOOM_MODS
+        if (Input::isQuitRequested())
+            return;
+    #endif
+
     gbGamePaused = false;
     psxcd_stop();
 }

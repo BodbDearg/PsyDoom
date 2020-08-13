@@ -127,17 +127,36 @@ void D_DoomMain() noexcept {
 
     // The main intro and demo scenes flow.
     // Continue looping until there is input and then execute the main menu until it times out.
-    while (true) {
-        if (RunTitle() != ga_exit) {
-            if (RunDemo(CdFileId::DEMO1_LMP) != ga_exit) {
-                if (RunCredits() != ga_exit) {
-                    if (RunDemo(CdFileId::DEMO2_LMP) != ga_exit)
+    constexpr auto continueRunning = []() noexcept {
+        // PsyDoom: the previously never-ending game loop can now be broken if the application is requesting to quit
+        #if PSYDOOM_MODS
+            return (!Input::isQuitRequested());
+        #else
+            return true;
+        #endif
+    };
+
+    while (continueRunning()) {
+        // PsyDoom: treat 'ga_quitapp' the same as 'ga_exit' here.
+        // This makes us skip over the demo sequences and credits etc. if the app is quitting.
+        constexpr auto didExit = [](const gameaction_t action) noexcept {
+            #if PSYDOOM_MODS
+                return ((action == ga_exit) || (action == ga_quitapp));
+            #else
+                return (action == ga_exit);
+            #endif
+        };
+
+        if (!didExit(RunTitle())) {
+            if (!didExit(RunDemo(CdFileId::DEMO1_LMP))) {
+                if (!didExit(RunCredits())) {
+                    if (!didExit(RunDemo(CdFileId::DEMO2_LMP)))
                         continue;
                 }
             }
         }
-        
-        while (true) {
+
+        while (continueRunning()) {
             // Go back to the title screen if timing out
             const gameaction_t result = RunMenu();
 
@@ -645,11 +664,17 @@ gameaction_t MiniLoop(
 
         // PsyDoom: done with input events after the ticker has been called.
         // Unless the ticker has requested that we hold onto them.
+        // Also check if the app wants to quit, because the window was closed.
         #if PSYDOOM_MODS
             if (!gbKeepInputEvents) {
                 Input::consumeEvents();
             } else {
                 gbKeepInputEvents = false;  // Temporary request only!
+            }
+
+            if (Input::isQuitRequested()) {
+                exitAction = ga_quitapp;
+                break;
             }
         #endif
 
