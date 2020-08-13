@@ -13,7 +13,7 @@ extern const char*  gSaveDemoResultFilePath;
 extern const char*  gCheckDemoResultFilePath;
 extern bool         gbIsNetServer;
 extern bool         gbIsNetClient;
-extern int16_t      gServerPort;
+extern uint16_t     gServerPort;
 
 void init(const int argc, const char** const argv) noexcept;
 void shutdown() noexcept;

@@ -9,7 +9,7 @@
 BEGIN_NAMESPACE(ProgArgs)
 
 // The default client and server port
-static constexpr int16_t DEFAULT_NET_PORT = 666;
+static constexpr uint16_t DEFAULT_NET_PORT = 666;
 
 // Override path for the game's .cue file; this takes precedence over the setting in the game's config .ini files
 const char* gCueFileOverride;
@@ -28,7 +28,7 @@ const char* gCheckDemoResultFilePath = "";      // Path to a json file to read t
 
 bool    gbIsNetServer   = false;                // True if this peer is a server in a networked game (player 1, waits for client connection)
 bool    gbIsNetClient   = false;                // True if this peer is a client in a networked game (player 2, connects to waiting server)
-int16_t gServerPort     = DEFAULT_NET_PORT;     // Port that the server listens on or that the client connects to
+uint16_t gServerPort    = DEFAULT_NET_PORT;     // Port that the server listens on or that the client connects to
 
 // Host that the client connects to: private so we don't expose std::string everywhere
 static std::string gServerHost;
@@ -98,10 +98,20 @@ static int parseArg_server([[maybe_unused]] const int argc, const char** const a
 
         // Is there a port number following?
         if ((argc >= 2) && (argv[1][0] != '-')) {
+            bool bValidPort = false;
+
             try {
-                // TODO: validate port is in range
-                gServerPort = (int16_t) std::stoi(argv[1]);
+                const int port = std::stoi(argv[1]);
+
+                if ((port >= 0) && (port <= UINT16_MAX)) {
+                    gServerPort = (uint16_t) port;
+                    bValidPort = true;
+                }
             } catch (...) {
+                // Ignore..
+            }
+
+            if (!bValidPort) {
                 std::printf("Bad server port number '%s'! Arg will be ignored...\n", argv[1]);
             }
 
@@ -125,11 +135,21 @@ static int parseArg_client([[maybe_unused]] const int argc, const char** const a
             gServerHost = argv[1];
         } else {
             gServerHost = std::string(argv[1], pFirstColon - argv[1]);
+            bool bValidPort = false;
 
             try {
-                // TODO: validate port is in range
-                gServerPort = (int16_t) std::stoi(pFirstColon + 1);
+                const int port = std::stoi(pFirstColon + 1);
+
+                // Note: the '0' wildcard port is not valid for a client: only valid for servers
+                if ((port >= 1) && (port <= UINT16_MAX)) {
+                    gServerPort = (uint16_t) port;
+                    bValidPort = true;
+                }
             } catch (...) {
+                // Ignore..
+            }
+
+            if (!bValidPort) {
                 std::printf("Bad server port number '%s'! Arg will be ignored...\n", pFirstColon + 1);
             }
         }
