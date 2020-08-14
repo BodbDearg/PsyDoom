@@ -144,14 +144,19 @@ void initVideo() noexcept {
     #endif
 
     // Determine the window creation flags
-    Uint32 windowCreateFlags = 0;
+    Uint32 windowCreateFlags = (
+        SDL_WINDOW_MOUSE_FOCUS |
+        SDL_WINDOW_INPUT_FOCUS |
+        SDL_WINDOW_INPUT_GRABBED |
+        SDL_WINDOW_MOUSE_CAPTURE
+    );
+    
+    windowCreateFlags |= (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
     
     #if !__APPLE__
         windowCreateFlags |= SDL_WINDOW_OPENGL;
     #endif
     
-    windowCreateFlags |= (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
-
     // Decide what window size to use
     int32_t winSizeX = 0;
     int32_t winSizeY = 0;
@@ -197,11 +202,8 @@ void initVideo() noexcept {
     // Immediately lock the framebuffer texture for updating
     lockFramebufferTexture();
 
-    // Grab input, focus the window and hide the cursor.
-    // Also request the mouse to be always centered in the window and mouse input to be relative.
-    SDL_SetWindowGrab(gWindow, SDL_TRUE);
+    // Hide the cursor and switch to relative input mode
     SDL_ShowCursor(SDL_DISABLE);
-    SDL_SetWindowInputFocus(gWindow);
     SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 

@@ -283,16 +283,10 @@ if (PLATFORM_MAC)
         "${SRC_DIR}/video/cocoa/SDL_cocoamouse.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoamousetap.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoamousetap.m"
-        "${SRC_DIR}/video/cocoa/SDL_cocoaopengl.h"
-        "${SRC_DIR}/video/cocoa/SDL_cocoaopengl.m"
-        "${SRC_DIR}/video/cocoa/SDL_cocoaopengles.h"
-        "${SRC_DIR}/video/cocoa/SDL_cocoaopengles.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoashape.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoashape.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoavideo.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoavideo.m"
-        "${SRC_DIR}/video/cocoa/SDL_cocoavulkan.h"
-        "${SRC_DIR}/video/cocoa/SDL_cocoavulkan.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoawindow.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoawindow.m"
     )
@@ -421,6 +415,8 @@ if (PLATFORM_MAC)
         ${IO_KIT_FRAMEWORK}
         ${METAL_FRAMEWORK}
     )
+
+    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_VIDEO_METAL=1)
 endif()
 
 if (PLATFORM_LINUX)
