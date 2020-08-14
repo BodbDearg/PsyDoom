@@ -202,8 +202,14 @@ void initVideo() noexcept {
     // Immediately lock the framebuffer texture for updating
     lockFramebufferTexture();
 
-    // Hide the cursor and switch to relative input mode
+    // Hide the cursor and switch to relative input mode.
+    //
+    // Note: added the set focus and warp mouse calls for MacOS to prevent a strange freezing issue on pressing the
+    // left mouse button after launch. I believe that issue was due to the mouse cursor being at the edge of the window.
+    // Pressing the left mouse in this situation freezes the app since the OS belives it is resizing.
     SDL_ShowCursor(SDL_DISABLE);
+    SDL_SetWindowInputFocus(gWindow);
+    SDL_WarpMouseInWindow(gWindow, winSizeX / 2, winSizeY / 2);
     SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
