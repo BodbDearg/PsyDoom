@@ -118,53 +118,12 @@ set(SOURCE_FILES
     "${SRC_DIR}/joystick/SDL_sysjoystick.h"
     "${SRC_DIR}/joystick/steam/SDL_steamcontroller.c"
     "${SRC_DIR}/joystick/steam/SDL_steamcontroller.h"
-    "${SRC_DIR}/libm/e_atan2.c"
-    "${SRC_DIR}/libm/e_exp.c"
-    "${SRC_DIR}/libm/e_fmod.c"
-    "${SRC_DIR}/libm/e_log.c"
-    "${SRC_DIR}/libm/e_log10.c"
-    "${SRC_DIR}/libm/e_pow.c"
-    "${SRC_DIR}/libm/e_rem_pio2.c"
-    "${SRC_DIR}/libm/e_sqrt.c"
-    "${SRC_DIR}/libm/k_cos.c"
-    "${SRC_DIR}/libm/k_rem_pio2.c"
-    "${SRC_DIR}/libm/k_sin.c"
-    "${SRC_DIR}/libm/k_tan.c"
-    "${SRC_DIR}/libm/math_libm.h"
-    "${SRC_DIR}/libm/math_private.h"
-    "${SRC_DIR}/libm/s_atan.c"
-    "${SRC_DIR}/libm/s_copysign.c"
-    "${SRC_DIR}/libm/s_cos.c"
-    "${SRC_DIR}/libm/s_fabs.c"
-    "${SRC_DIR}/libm/s_floor.c"
-    "${SRC_DIR}/libm/s_scalbn.c"
-    "${SRC_DIR}/libm/s_sin.c"
-    "${SRC_DIR}/libm/s_tan.c"
     "${SRC_DIR}/render/opengl/SDL_glfuncs.h"
     "${SRC_DIR}/render/opengl/SDL_render_gl.c"
     "${SRC_DIR}/render/opengl/SDL_shaders_gl.c"
     "${SRC_DIR}/render/opengl/SDL_shaders_gl.h"
-    "${SRC_DIR}/render/SDL_d3dmath.c"
-    "${SRC_DIR}/render/SDL_d3dmath.h"
     "${SRC_DIR}/render/SDL_render.c"
     "${SRC_DIR}/render/SDL_sysrender.h"
-    "${SRC_DIR}/render/SDL_yuv_sw.c"
-    "${SRC_DIR}/render/SDL_yuv_sw_c.h"
-    "${SRC_DIR}/render/software/SDL_blendfillrect.c"
-    "${SRC_DIR}/render/software/SDL_blendfillrect.h"
-    "${SRC_DIR}/render/software/SDL_blendline.c"
-    "${SRC_DIR}/render/software/SDL_blendline.h"
-    "${SRC_DIR}/render/software/SDL_blendpoint.c"
-    "${SRC_DIR}/render/software/SDL_blendpoint.h"
-    "${SRC_DIR}/render/software/SDL_draw.h"
-    "${SRC_DIR}/render/software/SDL_drawline.c"
-    "${SRC_DIR}/render/software/SDL_drawline.h"
-    "${SRC_DIR}/render/software/SDL_drawpoint.c"
-    "${SRC_DIR}/render/software/SDL_drawpoint.h"
-    "${SRC_DIR}/render/software/SDL_render_sw.c"
-    "${SRC_DIR}/render/software/SDL_render_sw_c.h"
-    "${SRC_DIR}/render/software/SDL_rotate.c"
-    "${SRC_DIR}/render/software/SDL_rotate.h"
     "${SRC_DIR}/SDL.c"
     "${SRC_DIR}/SDL_assert.c"
     "${SRC_DIR}/SDL_assert_c.h"
@@ -193,14 +152,8 @@ set(SOURCE_FILES
     "${SRC_DIR}/timer/SDL_timer_c.h"
     "${SRC_DIR}/video/SDL_blit.c"
     "${SRC_DIR}/video/SDL_blit.h"
-    "${SRC_DIR}/video/SDL_blit_0.c"
-    "${SRC_DIR}/video/SDL_blit_1.c"
-    "${SRC_DIR}/video/SDL_blit_A.c"
-    "${SRC_DIR}/video/SDL_blit_auto.c"
-    "${SRC_DIR}/video/SDL_blit_auto.h"
     "${SRC_DIR}/video/SDL_blit_copy.c"
     "${SRC_DIR}/video/SDL_blit_copy.h"
-    "${SRC_DIR}/video/SDL_blit_N.c"
     "${SRC_DIR}/video/SDL_blit_slow.c"
     "${SRC_DIR}/video/SDL_blit_slow.h"
     "${SRC_DIR}/video/SDL_bmp.c"
@@ -220,10 +173,6 @@ set(SOURCE_FILES
     "${SRC_DIR}/video/SDL_video.c"
     "${SRC_DIR}/video/SDL_yuv.c"
     "${SRC_DIR}/video/SDL_yuv_c.h"
-    "${SRC_DIR}/video/yuv2rgb/yuv_rgb.c"
-    "${SRC_DIR}/video/yuv2rgb/yuv_rgb.h"
-    "${SRC_DIR}/video/yuv2rgb/yuv_rgb_sse_func.h"
-    "${SRC_DIR}/video/yuv2rgb/yuv_rgb_std_func.h"
 )
 
 set(OTHER_FILES
@@ -434,10 +383,12 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
 include_directories(${INCLUDE_PATHS})
 target_include_directories(${LIBSDL_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
+target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_LEAN_AND_MEAN=1)
 
 if (PLATFORM_WINDOWS)
     target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC SDL_DISABLE_WINDOWS_IME)
-    
+    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC HAVE_LIBC)     # Use standard C math libraries etc.
+
     target_link_libraries(${LIBSDL_TGT_NAME}
         Imm32.lib
         User32.lib
