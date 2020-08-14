@@ -104,6 +104,10 @@ extern "C"
         return -1;
     }
 
+    static void HAIKU_JoystickGetDevicePlayerIndex(int device_index, int player_index)
+    {
+    }
+
 /* Function to perform the mapping from device index to the instance id for this index */
     static SDL_JoystickID HAIKU_JoystickGetDeviceInstanceID(int device_index)
     {
@@ -250,7 +254,7 @@ extern "C"
         return guid;
     }
 
-    static int HAIKU_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
+    static int HAIKU_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
     {
         return SDL_Unsupported();
     }
@@ -262,6 +266,7 @@ extern "C"
         HAIKU_JoystickDetect,
         HAIKU_JoystickGetDeviceName,
         HAIKU_JoystickGetDevicePlayerIndex,
+        HAIKU_JoystickSetDevicePlayerIndex,
         HAIKU_JoystickGetDeviceGUID,
         HAIKU_JoystickGetDeviceInstanceID,
         HAIKU_JoystickOpen,

@@ -84,7 +84,6 @@ typedef unsigned int uintptr_t;
 #define HAVE_XINPUT_H 1
 #define HAVE_MMDEVICEAPI_H 1
 #define HAVE_AUDIOCLIENT_H 1
-#define HAVE_ENDPOINTVOLUME_H 1
 
 /* This is disabled by default to avoid C runtime dependencies and manifest requirements */
 #ifdef HAVE_LIBC
@@ -118,6 +117,10 @@ typedef unsigned int uintptr_t;
 #define HAVE_STRCHR 1
 #define HAVE_STRRCHR 1
 #define HAVE_STRSTR 1
+/* #undef HAVE_STRTOK_R */
+#if defined(_MSC_VER)
+#define HAVE_STRTOK_S 1
+#endif
 /* These functions have security warnings, so we won't use them */
 /* #undef HAVE__LTOA */
 /* #undef HAVE__ULTOA */
@@ -139,7 +142,7 @@ typedef unsigned int uintptr_t;
 #define HAVE_ATAN2  1
 #define HAVE_ATAN2F 1
 #define HAVE_CEILF  1
-#define HAVE__COPYSIGN  1
+#define HAVE__COPYSIGN 1
 #define HAVE_COS    1
 #define HAVE_COSF   1
 #define HAVE_EXP    1
@@ -168,7 +171,7 @@ typedef unsigned int uintptr_t;
 #define HAVE_STRTOLL 1
 #define HAVE_VSSCANF 1
 #define HAVE_SCALBN 1
-#define HAVE_SCALBNF    1
+#define HAVE_SCALBNF 1
 #endif
 /* This function is available with at least the VC++ 2008 C runtime library */
 #if _MSC_VER >= 1400
@@ -191,60 +194,55 @@ typedef unsigned int uintptr_t;
 #define SDL_AUDIO_DRIVER_DUMMY  1
 
 /* Enable various input drivers */
-#define SDL_JOYSTICK_DINPUT 0
+#define SDL_JOYSTICK_DINPUT 1
 #define SDL_JOYSTICK_XINPUT 1
-// -- #define SDL_JOYSTICK_HIDAPI 0
-#define SDL_HAPTIC_DINPUT  0
-#define SDL_HAPTIC_XINPUT 1
+/* DC: Not enough to define this to '0', must be undefined completely.
+#define SDL_JOYSTICK_HIDAPI 0
+*/
+#define SDL_HAPTIC_DINPUT   1
+#define SDL_HAPTIC_XINPUT   1
 
 /* Enable the dummy sensor driver */
-#define SDL_SENSOR_DUMMY 1
+#define SDL_SENSOR_DUMMY  1
 
 /* Enable various shared object loading systems */
-#define SDL_LOADSO_WINDOWS 1
+#define SDL_LOADSO_WINDOWS  1
 
 /* Enable various threading systems */
 #define SDL_THREAD_WINDOWS  1
 
 /* Enable various timer systems */
-#define SDL_TIMER_WINDOWS 0
-#define SDL_TIMER_DUMMY 1
+#define SDL_TIMER_WINDOWS   0
 
 /* Enable various video drivers */
-#define SDL_VIDEO_DRIVER_DUMMY 0
-#define SDL_VIDEO_DRIVER_WINDOWS 1
+#define SDL_VIDEO_DRIVER_DUMMY  0
+#define SDL_VIDEO_DRIVER_WINDOWS    1
 
 #ifndef SDL_VIDEO_RENDER_D3D
-#define SDL_VIDEO_RENDER_D3D 0
+#define SDL_VIDEO_RENDER_D3D    0
 #endif
-
 #ifndef SDL_VIDEO_RENDER_D3D11
-#define SDL_VIDEO_RENDER_D3D11 0
+#define SDL_VIDEO_RENDER_D3D11  0
 #endif
 
 /* Enable OpenGL support */
 #ifndef SDL_VIDEO_OPENGL
-#define SDL_VIDEO_OPENGL 1
+#define SDL_VIDEO_OPENGL    1
 #endif
-
 #ifndef SDL_VIDEO_OPENGL_WGL
-#define SDL_VIDEO_OPENGL_WGL 1
+#define SDL_VIDEO_OPENGL_WGL    1
 #endif
-
 #ifndef SDL_VIDEO_RENDER_OGL
-#define SDL_VIDEO_RENDER_OGL 1
+#define SDL_VIDEO_RENDER_OGL    1
 #endif
-
 #ifndef SDL_VIDEO_RENDER_OGL_ES2
-#define SDL_VIDEO_RENDER_OGL_ES2 0
+#define SDL_VIDEO_RENDER_OGL_ES2    0
 #endif
-
 #ifndef SDL_VIDEO_OPENGL_ES2
-#define SDL_VIDEO_OPENGL_ES2 0
+#define SDL_VIDEO_OPENGL_ES2    0
 #endif
-
 #ifndef SDL_VIDEO_OPENGL_EGL
-#define SDL_VIDEO_OPENGL_EGL 0
+#define SDL_VIDEO_OPENGL_EGL    0
 #endif
 
 /* Enable Vulkan support */
@@ -254,11 +252,11 @@ typedef unsigned int uintptr_t;
 #define SDL_POWER_WINDOWS 0
 
 /* Enable filesystem support */
-#define SDL_FILESYSTEM_WINDOWS 0
+#define SDL_FILESYSTEM_WINDOWS  0
 
 /* Enable assembly routines (Win64 doesn't have inline asm) */
 #ifndef _WIN64
-#define SDL_ASSEMBLY_ROUTINES 0
+#define SDL_ASSEMBLY_ROUTINES   0
 #endif
 
 #endif /* SDL_config_windows_h_ */

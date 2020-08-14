@@ -31,6 +31,9 @@ extern int SDL_InitBeApp(void);
 /* Quit the Be Application, if there's nothing left to do */
 extern void SDL_QuitBeApp(void);
 
+/* Be Application Signature*/
+extern const char *signature;
+
 /* vi: set ts=4 sw=4 expandtab: */
 
 #ifdef __cplusplus

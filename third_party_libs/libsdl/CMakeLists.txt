@@ -10,7 +10,7 @@ set(EXPORTED_INCLUDE_PATHS
     ${INCLUDE_DIR}
 )
 
-set(SOURCE_FILES    
+set(SOURCE_FILES
     "${INCLUDE_DIR}/begin_code.h"
     "${INCLUDE_DIR}/close_code.h"
     "${INCLUDE_DIR}/SDL.h"
@@ -21,9 +21,6 @@ set(SOURCE_FILES
     "${INCLUDE_DIR}/SDL_blendmode.h"
     "${INCLUDE_DIR}/SDL_clipboard.h"
     "${INCLUDE_DIR}/SDL_config.h"
-    "${INCLUDE_DIR}/SDL_config.h.cmake"
-    "${INCLUDE_DIR}/SDL_config.h.in"
-    "${INCLUDE_DIR}/SDL_config_minimal.h"
     "${INCLUDE_DIR}/SDL_config_wiz.h"
     "${INCLUDE_DIR}/SDL_copying.h"
     "${INCLUDE_DIR}/SDL_cpuinfo.h"
@@ -84,10 +81,6 @@ set(SOURCE_FILES
     "${SRC_DIR}/audio/SDL_wave.c"
     "${SRC_DIR}/audio/SDL_wave.h"
     "${SRC_DIR}/cpuinfo/SDL_cpuinfo.c"
-    "${SRC_DIR}/dynapi/SDL_dynapi.c"
-    "${SRC_DIR}/dynapi/SDL_dynapi.h"
-    "${SRC_DIR}/dynapi/SDL_dynapi_overrides.h"
-    "${SRC_DIR}/dynapi/SDL_dynapi_procs.h"
     "${SRC_DIR}/events/blank_cursor.h"
     "${SRC_DIR}/events/default_cursor.h"
     "${SRC_DIR}/events/SDL_clipboardevents.c"
@@ -147,9 +140,6 @@ set(SOURCE_FILES
     "${SRC_DIR}/libm/s_scalbn.c"
     "${SRC_DIR}/libm/s_sin.c"
     "${SRC_DIR}/libm/s_tan.c"
-    "${SRC_DIR}/loadso/dlopen/SDL_sysloadso.c"
-    "${SRC_DIR}/loadso/dummy/SDL_sysloadso.c"
-    "${SRC_DIR}/main/dummy/SDL_dummy_main.c"
     "${SRC_DIR}/render/opengl/SDL_glfuncs.h"
     "${SRC_DIR}/render/opengl/SDL_render_gl.c"
     "${SRC_DIR}/render/opengl/SDL_shaders_gl.c"
@@ -233,7 +223,7 @@ set(SOURCE_FILES
     "${SRC_DIR}/video/yuv2rgb/yuv_rgb.c"
     "${SRC_DIR}/video/yuv2rgb/yuv_rgb.h"
     "${SRC_DIR}/video/yuv2rgb/yuv_rgb_sse_func.h"
-    "${SRC_DIR}/video/yuv2rgb/yuv_rgb_std_func.h"    
+    "${SRC_DIR}/video/yuv2rgb/yuv_rgb_std_func.h"
 )
 
 set(OTHER_FILES
@@ -264,7 +254,6 @@ if (PLATFORM_WINDOWS)
         "${SRC_DIR}/haptic/windows/SDL_xinputhaptic_c.h"
         "${SRC_DIR}/joystick/windows/SDL_dinputjoystick.c"
         "${SRC_DIR}/joystick/windows/SDL_dinputjoystick_c.h"
-        "${SRC_DIR}/joystick/windows/SDL_mmjoystick.c"
         "${SRC_DIR}/joystick/windows/SDL_windowsjoystick.c"
         "${SRC_DIR}/joystick/windows/SDL_windowsjoystick_c.h"
         "${SRC_DIR}/joystick/windows/SDL_xinputjoystick.c"

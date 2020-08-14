@@ -53,14 +53,16 @@
 #define SDL_DYNAMIC_API 0
 #elif defined(__PSP__) && __PSP__
 #define SDL_DYNAMIC_API 0
+#elif defined(__riscos__) && __riscos__ /* probably not useful on RISC OS, since dlopen() can't be used when using static linking. */
+#define SDL_DYNAMIC_API 0
 #elif defined(__clang_analyzer__)
 #define SDL_DYNAMIC_API 0  /* Turn off for static analysis, so reports are more clear. */
 #endif
 
 /* everyone else. This is where we turn on the API if nothing forced it off. */
 #ifndef SDL_DYNAMIC_API
-    // DC: Disabling the dynamic API! Was '#define SDL_DYNAMIC_API 1'
-    #define SDL_DYNAMIC_API 0
+// DC: Disabling the dynamic API! Was '#define SDL_DYNAMIC_API 1'
+#define SDL_DYNAMIC_API 0
 #endif
 
 #endif
