@@ -103,7 +103,9 @@ static float getRawInput(const InputSrc src) noexcept {
         return (Input::isMouseButtonPressed((MouseButton) src.input)) ? 1.0f : 0.0f;
     }
     else if (src.device == InputSrc::MOUSE_WHEEL) {
-        return Input::getMouseWheelAxisMovement(1);     // Y-axis motion only
+        // Note: treat X-axis wheel movement as if it was the Y-axis to accomodate MacOS and 'shift scrolling'.
+        // The shift key on MacOS can turn vertical scrolling into horizontal scrolling.
+        return -Input::getMouseWheelAxisMovement(0) + Input::getMouseWheelAxisMovement(1);
     }
     else if (src.device == InputSrc::GAMEPAD_AXIS) {
         // N.B: do deadzone adjustments so that the axis value range starts outside of the deadzone
