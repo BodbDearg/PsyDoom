@@ -23,10 +23,17 @@ static SDL_Texture*     gFramebufferTexture;
 static SDL_Rect         gOutputRect;
 static uint32_t*        gpFrameBuffer;
 
-// The original render/draw and output/display resolution of the game: the game rendered to a 256x240 framebuffer but stretched this to 320x240
+// The original render/draw and output/display resolution of the game: the game rendered to a 256x240 framebuffer but stretched this image to
+// approximately 292.57x240 in square pixel terms - even though the game asks for a 320x200 'pixel' display (CRTs did not have pixels).
+//
+// For more info on PS1, NES and PSX Doom pixel aspect ratios, see:
+//  https://github.com/libretro/beetle-psx-libretro/issues/510
+//  http://forums.nesdev.com/viewtopic.php?t=8983
+//  https://doomwiki.org/wiki/Sony_PlayStation
+//
 constexpr int32_t ORIG_DRAW_RES_X = 256;
 constexpr int32_t ORIG_DRAW_RES_Y = 240;
-constexpr int32_t ORIG_DISP_RES_X = 320;
+constexpr int32_t ORIG_DISP_RES_X = 292;
 constexpr int32_t ORIG_DISP_RES_Y = 240;
 
 static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
@@ -45,13 +52,16 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
         return;
     }
 
-    // Make the windows multiple of the original resolution.
-    // Allow some room for window edges and decoration.
-    int32_t xMultiplier = std::max((displayMode.w - 20) / ORIG_DISP_RES_X, 1);
+    // In windowed mode make the window a multiple of the logical display resolution.
+    // Also allow some room for window edges and other OS decoration...
+    // If a free aspect ratio is being used (width <= 0) then just use the original display resolution width for this calculation.
+    const int32_t logicalDispW = (Config::gLogicalDisplayW <= 0) ? ORIG_DISP_RES_X : Config::gLogicalDisplayW;
+
+    int32_t xMultiplier = std::max((displayMode.w - 20) / logicalDispW, 1);
     int32_t yMultiplier = std::max((displayMode.h - 40) / ORIG_DISP_RES_Y, 1);
     int32_t multiplier = std::min(xMultiplier, yMultiplier);
 
-    w = ORIG_DISP_RES_X * multiplier;
+    w = logicalDispW * multiplier;
     h = ORIG_DISP_RES_Y * multiplier;
 }
 
@@ -80,16 +90,28 @@ static void presentSdlFramebuffer() noexcept {
     // Grab the framebuffer texture for writing to
     unlockFramebufferTexture();
 
-    // Determine the scale to output at preserving the original game aspect ratio
-    const float xScale = (float) winSizeX / (float) ORIG_DISP_RES_X;
-    const float yScale = (float) winSizeY / (float) ORIG_DISP_RES_Y;
-    const float scale = std::min(xScale, yScale);
+    // Are we using a free aspect ratio mode, specified by using a logical display width of <= 0?
+    // If so then just stretch the output image in any way to fill the window.
+    if (Config::gLogicalDisplayW <= 0) {
+        gOutputRect.x = 0;
+        gOutputRect.y = 0;
+        gOutputRect.w = winSizeX;
+        gOutputRect.h = winSizeY;
+    }
+    else {
+        // If not using a free aspect ratio then determine the scale to output at, while preserving the chosen aspect ratio.
+        // The chosen aspect ratio is determined by the user's logical display resolution width.
+        const float xScale = (float) winSizeX / (float) Config::gLogicalDisplayW;
+        const float yScale = (float) winSizeY / (float) ORIG_DISP_RES_Y;
+        const float scale = std::min(xScale, yScale);
 
-    // Determine output width and height and center the framebuffer image in the window
-    gOutputRect.w = (int32_t)(ORIG_DISP_RES_X * scale);
-    gOutputRect.h = (int32_t)(ORIG_DISP_RES_Y * scale);
-    gOutputRect.x = winSizeX / 2 - gOutputRect.w / 2;
-    gOutputRect.y = winSizeY / 2 - gOutputRect.h / 2;
+        // Determine output width and height and center the framebuffer image in the window
+        gOutputRect.w = (int32_t)((float) Config::gLogicalDisplayW * scale);
+        gOutputRect.h = (int32_t)((float) ORIG_DISP_RES_Y * scale);
+        gOutputRect.x = winSizeX / 2 - gOutputRect.w / 2;
+        gOutputRect.y = winSizeY / 2 - gOutputRect.h / 2;
+    }
+
     SDL_RenderCopy(gRenderer, gFramebufferTexture, nullptr, &gOutputRect);
 
     // Present the rendered frame and re-lock the framebuffer texture
@@ -101,11 +123,11 @@ static void copyPsxToSdlFramebuffer() noexcept {
     gpu::GPU& gpu = *PsxVm::gpGpu;
     const uint16_t* const vramPixels = gpu.vram.data();
     uint32_t* pDstPixel = gpFrameBuffer;
-
-    for (uint32_t y = 0; y < 240; ++y) {
-        const uint16_t* const rowPixels = vramPixels + ((intptr_t) y + gpu.displayAreaStartY) * 1024;
+    
+    for (uint32_t y = 0; y < ORIG_DRAW_RES_Y; ++y) {
+        const uint16_t* const rowPixels = vramPixels + ((intptr_t) y + gpu.displayAreaStartY) * 1024;   // Note: VRAM size is '1024x512 @ 16 bpp'
         const uint32_t xStart = (uint32_t) gpu.displayAreaStartX;
-        const uint32_t xEnd = xStart + 256;
+        const uint32_t xEnd = xStart + ORIG_DRAW_RES_X;
         ASSERT(xEnd <= 1024);
 
         for (uint32_t x = xStart; x < xEnd; ++x) {

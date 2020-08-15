@@ -16,6 +16,7 @@ extern int32_t  gLostSoulSpawnLimit;
 // Video settings
 extern bool     gbFullscreen;
 extern bool     gbFloorRenderGapFix;
+extern int32_t  gLogicalDisplayW;
 
 // Input settings
 extern float    gMouseTurnSpeed;

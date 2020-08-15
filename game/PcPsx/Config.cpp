@@ -41,8 +41,9 @@ struct ConfigFieldHandler {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Graphics config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool    gbFullscreen;
-bool    gbFloorRenderGapFix;
+bool        gbFullscreen;
+bool        gbFloorRenderGapFix;
+int32_t     gLogicalDisplayW;
 
 static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     {
@@ -65,6 +66,33 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "FloorRenderGapFix = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
         []() { gbFloorRenderGapFix = true; }
+    },
+    {
+        "LogicalDisplayWidth",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Determines how the game can scale its rendered frames to fill the host display.\n"
+        "#\n"
+        "# Given an imagined logical resolution of 240 pixels tall, this is display width to use.\n"
+        "# If set to '292' for example, then the logical resolution will be 292x240 and this area would be\n"
+        "# scaled to fit the host's physical resolution as much as possible, while preserving aspect ratio.\n"
+        "# If set to the special value of '-1' then the game is free to scale the framebuffer to any aspect\n"
+        "# ratio and fill the entire display.\n"
+        "#\n"
+        "# Some background information:\n"
+        "# PSX Doom (NTSC) originally rendered to a 256x240 framebuffer but stretched that image to roughly\n"
+        "# a 292x240 area (in square pixel terms, or 320x240 in CRT non-square pixels) on output; this made\n"
+        "# the game feel much flatter and more compressed than the PC original. The PAL version also did the\n"
+        "# exact same stretching and simply added additional letterboxing to fill the extra scanlines on the\n"
+        "# top and bottom of the screen.\n"
+        "#\n"
+        "# Typical values:\n"
+        "#  292 = Use (approximately) the original PSX Doom aspect ratio and stretch mode.\n"
+        "#  256 = Preserve the render aspect ratio of 16:15 (256x240) - this makes for a more PC-like view.\n"
+        "#  -1  = Allow PsyDoom to stretch the framebuffer freely fill any window size or resolution.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "LogicalDisplayWidth = 292\n",
+        [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
+        []() { gLogicalDisplayW = 292; }
     },
 };
 
