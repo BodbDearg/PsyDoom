@@ -1,10 +1,13 @@
 - Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
-- Automap: fix lines being clipped 1 pixel short
+- Make paths in the .cue file relative to the .cue
+
+- Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
 - Do an error message on failure to connect in multiplayer games explaining the issue.
 - Implement prefs saving/loading
     - Save passwords for the current map and restore on launch.
     - Save sound/music prefs
     - Provide an in-game menu to adjust turn sensitivity
+- Automap: fix lines being clipped 1 pixel short
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Fix separate movement directions (left/right) not cancelling each other out.
@@ -18,7 +21,6 @@
     - Need to run at capped framerate to see properly.
 - Investigate interpolation for sprites and sectors in addition to player view.
 - Make GPU primitives go more directly to the rasterizer rather than through a buffer.
-- Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
 - Break the link between the SPU and Avocado 'system' (entire PSX)
 - Break the link between the GPU and Avocado 'system' (entire PSX)
 - Implement playing the intro movies and legal text
@@ -40,7 +42,6 @@
     - Could also be used for a rewind feature??!
     - Could also be used for a save feature.
 - Linux support.
-- Verify NTSC stretched resolution is fully correct.
 - Allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.

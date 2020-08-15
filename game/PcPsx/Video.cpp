@@ -23,11 +23,11 @@ static SDL_Texture*     gFramebufferTexture;
 static SDL_Rect         gOutputRect;
 static uint32_t*        gpFrameBuffer;
 
-// TODO: stretched resolution: this is a temporary thing.
-// Note that I am using the stretched NTSC resolution here for game resolution width, not the physical framebuffer width (256 pixels wide).
-// See: https://doomwiki.org/wiki/Sony_PlayStation
-constexpr int32_t GAME_RES_X = 293;
-constexpr int32_t GAME_RES_Y = 240;
+// The original render/draw and output/display resolution of the game: the game rendered to a 256x240 framebuffer but stretched this to 320x240
+constexpr int32_t ORIG_DRAW_RES_X = 256;
+constexpr int32_t ORIG_DRAW_RES_Y = 240;
+constexpr int32_t ORIG_DISP_RES_X = 320;
+constexpr int32_t ORIG_DISP_RES_Y = 240;
 
 static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
     // Get the screen resolution.
@@ -47,12 +47,12 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
 
     // Make the windows multiple of the original resolution.
     // Allow some room for window edges and decoration.
-    int32_t xMultiplier = std::max((displayMode.w - 20) / GAME_RES_X, 1);
-    int32_t yMultiplier = std::max((displayMode.h - 40) / GAME_RES_Y, 1);
+    int32_t xMultiplier = std::max((displayMode.w - 20) / ORIG_DISP_RES_X, 1);
+    int32_t yMultiplier = std::max((displayMode.h - 40) / ORIG_DISP_RES_Y, 1);
     int32_t multiplier = std::min(xMultiplier, yMultiplier);
 
-    w = GAME_RES_X * multiplier;
-    h = GAME_RES_Y * multiplier;
+    w = ORIG_DISP_RES_X * multiplier;
+    h = ORIG_DISP_RES_Y * multiplier;
 }
 
 static void lockFramebufferTexture() noexcept {
@@ -81,13 +81,13 @@ static void presentSdlFramebuffer() noexcept {
     unlockFramebufferTexture();
 
     // Determine the scale to output at preserving the original game aspect ratio
-    const float xScale = (float) winSizeX / (float) GAME_RES_X;
-    const float yScale = (float) winSizeY / (float) GAME_RES_Y;
+    const float xScale = (float) winSizeX / (float) ORIG_DISP_RES_X;
+    const float yScale = (float) winSizeY / (float) ORIG_DISP_RES_Y;
     const float scale = std::min(xScale, yScale);
 
     // Determine output width and height and center the framebuffer image in the window
-    gOutputRect.w = (int32_t)(GAME_RES_X * scale);
-    gOutputRect.h = (int32_t)(GAME_RES_Y * scale);
+    gOutputRect.w = (int32_t)(ORIG_DISP_RES_X * scale);
+    gOutputRect.h = (int32_t)(ORIG_DISP_RES_Y * scale);
     gOutputRect.x = winSizeX / 2 - gOutputRect.w / 2;
     gOutputRect.y = winSizeY / 2 - gOutputRect.h / 2;
     SDL_RenderCopy(gRenderer, gFramebufferTexture, nullptr, &gOutputRect);
@@ -187,8 +187,8 @@ void initVideo() noexcept {
         gRenderer,
         SDL_PIXELFORMAT_ABGR8888,
         SDL_TEXTUREACCESS_STREAMING,
-        (int32_t) 256,
-        (int32_t) 240
+        (int32_t) ORIG_DRAW_RES_X,
+        (int32_t) ORIG_DRAW_RES_Y
     );
 
     if (!gFramebufferTexture) {
