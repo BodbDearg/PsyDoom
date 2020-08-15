@@ -61,6 +61,6 @@ struct DiscInfo {
     DiscTrack* getTrack(int32_t trackNum) noexcept;
     const DiscTrack* getTrack(int32_t trackNum) const noexcept;
 
-    bool parseFromCueStr(const char* const str, std::string& errorMsg) noexcept;
+    bool parseFromCueStr(const char* const str, const char* const cueBasePath, std::string& errorMsg) noexcept;
     bool parseFromCueFile(const char* const filePath, std::string& errorMsg) noexcept;
 };

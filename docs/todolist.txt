@@ -1,6 +1,3 @@
-- Add output scaling options (1:1, NTSC stretch, integer multiples, stretch to fit etc.)
-- Make paths in the .cue file relative to the .cue
-
 - Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
 - Do an error message on failure to connect in multiplayer games explaining the issue.
 - Implement prefs saving/loading

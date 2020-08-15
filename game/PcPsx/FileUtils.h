@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 
 // Holds a reference to the data and size of a file
 struct FileData {
@@ -32,5 +33,6 @@ bool writeDataToFile(
 
 bool fileExists(const char* filePath) noexcept;
 int64_t getFileSize(const char* filePath) noexcept;
+void getParentPath(const char* path, std::string& parentPath) noexcept;
 
 END_NAMESPACE(FileUtils)

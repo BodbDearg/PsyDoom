@@ -149,4 +149,23 @@ int64_t getFileSize(const char* filePath) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Given a file or folder path, return the parent folder path or an empty string if there is no parent.
+// Accepts POSIX or Windows style separators (forward or backward slash) in the path only.
+// Leaves a trailing path separator in the returned path if there is a parent folder, so a file name can be easily appended later.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void getParentPath(const char* const path, std::string& parentPath) noexcept {
+    ASSERT(path);
+    parentPath = path;
+
+    while (!parentPath.empty()) {
+        const char c = parentPath.back();
+
+        if (c == '\\' || c == '/')
+            break;
+
+        parentPath.pop_back();
+    }
+}
+
 END_NAMESPACE(FileUtils)

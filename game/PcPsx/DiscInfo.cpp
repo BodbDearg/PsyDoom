@@ -20,11 +20,12 @@ static const std::regex gRegexCmd_Index = std::regex(R"(INDEX\s+(\d+)\s+(\d+)\s*
 
 // Current parsing context for the .cue file parser
 struct CueParseCtx {
-    DiscInfo&       disc;       // The disc to save the results to
-    std::string     file;       // File to read the current track data from
-    int32_t         fileSize;   // Total size in bytes of the file pointed to by 'file'
-    std::string     line;       // The current .cue line
-    std::string     errorMsg;   // Error message if something went wrong
+    DiscInfo&       disc;           // The disc to save the results to
+    const char*     cueBasePath;    // Path to which paths in the .cue file are relative: should include a trailing path separator if specified
+    std::string     file;           // File to read the current track data from
+    int32_t         fileSize;       // Total size in bytes of the file pointed to by 'file'
+    std::string     line;           // The current .cue line
+    std::string     errorMsg;       // Error message if something went wrong
 };
 
 static bool isNewline(const char c) noexcept {
@@ -71,7 +72,8 @@ static bool parseCueCmd_File(CueParseCtx& ctx) noexcept {
         return false;
     }
 
-    ctx.file = matches[1].str();
+    ctx.file = ctx.cueBasePath;     // Note: should already include a trailing path separator if not empty (i.e base path is specified)
+    ctx.file += matches[1].str();
     ctx.fileSize = (int32_t) FileUtils::getFileSize(ctx.file.c_str());
 
     if (ctx.fileSize < 0) {
@@ -260,9 +262,10 @@ static bool parseCueLine(CueParseCtx& ctx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Parses all of the entries in the .cue file and does nothing else (no information inferrence)
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool parseCue(DiscInfo& disc, const char* const str, std::string& errorMsg) noexcept {
+static bool parseCue(DiscInfo& disc, const char* const str, const char* const cueBasePath, std::string& errorMsg) noexcept {
     // Parse the .cue line by line
     CueParseCtx ctx = { disc };
+    ctx.cueBasePath = cueBasePath;
     ctx.line.reserve(256);
 
     const char* const strEnd = str + std::strlen(str);
@@ -396,11 +399,11 @@ const DiscTrack* DiscInfo::getTrack(int32_t trackNum) const noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Parse the .cue from the given string
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool DiscInfo::parseFromCueStr(const char* const str, std::string& errorMsg) noexcept {
+bool DiscInfo::parseFromCueStr(const char* const str, const char* const cueBasePath, std::string& errorMsg) noexcept {
     // Clear the current track list and parse the .cue firstly
     tracks.clear();
 
-    if (!parseCue(*this, str, errorMsg))
+    if (!parseCue(*this, str, cueBasePath, errorMsg))
         return false;
 
     // Ensure the tracks are in sorted track number order for the .cue
@@ -425,10 +428,16 @@ bool DiscInfo::parseFromCueStr(const char* const str, std::string& errorMsg) noe
 // Parse the .cue from the given file; if there is an error 'false' is returned and an error message potentially set
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool DiscInfo::parseFromCueFile(const char* const filePath, std::string& errorMsg) noexcept {
+    // Note: all paths specified in the .cue file will be relative to the .cue file itself.
+    // Determine that base folder to which all paths are relative to here:
+    std::string cueBasePath;
+    FileUtils::getParentPath(filePath, cueBasePath);
+
+    // Read the entire .cue file into ram and parse its contents
     FileData cueFile = FileUtils::getContentsOfFile(filePath, 8, std::byte(0));
 
     if (cueFile.bytes.get()) {
-        return parseFromCueStr((char*) cueFile.bytes.get(), errorMsg);
+        return parseFromCueStr((char*) cueFile.bytes.get(), cueBasePath.c_str(), errorMsg);
     } else {
         errorMsg = "Failed to open/read the .cue file '";
         errorMsg += filePath;
