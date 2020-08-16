@@ -16,7 +16,10 @@ The original goal of this project was to have a complete replacement for the ori
   - **DOOM.CUE**: A .cue file pointing to all of the tracks and binary data for the game disc. 
     - Any original edition of the game is acceptable: NTSC-U, NTSC-J, PAL, NTSC-U 'Greatest Hits' etc.
     - Both Doom and Final Doom can be used.
-- Keyboard controls are currently default to the following, but can be:
+- The settings for the game can be changed by editing the .ini files found in the following folders:
+  - Windows: %APPDATA%\com.codelobster\PsyDoom
+  - MacOS: ~/Library/Application Support/com.codelobster/PsyDoom
+- Keyboard controls currently default to the following:
   - Up/W and Down/S : Move Forward and Move Backward
   - A and D : Strafe Left and Right
   - Left and Right : Turn Left and Right
@@ -39,7 +42,7 @@ The original goal of this project was to have a complete replacement for the ori
   - Left Trigger : Run
   - Right Trigger / Y : Fire
   - B : Use
-  - A : Automap Manual Move
+  - A : Automap Pan
   - Shoulder Buttons : Next or Previous Weapon
   - Start : Pause
   - Back : Toggle Automap
