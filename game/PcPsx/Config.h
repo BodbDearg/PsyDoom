@@ -12,6 +12,8 @@ extern bool     gbUseDemoTimings;
 extern bool     gbUseMoveInputLatencyTweak;
 extern bool     gbUsePlayerRocketBlastFix;
 extern int32_t  gUseFinalDoomPlayerMovement;
+extern int32_t  gAllowMovementCancellation;
+extern bool     gbAllowTurningCancellation;
 extern int32_t  gLostSoulSpawnLimit;
 
 // Video settings

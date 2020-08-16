@@ -106,6 +106,8 @@ bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
 bool                    gbUsePlayerRocketBlastFix;
 int32_t                 gUseFinalDoomPlayerMovement;
+int32_t                 gAllowMovementCancellation;
+bool                    gbAllowTurningCancellation;
 int32_t                 gLostSoulSpawnLimit;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -209,6 +211,37 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "UseFinalDoomPlayerMovement = -1\n",
         [](const IniUtils::Entry& iniEntry) { gUseFinalDoomPlayerMovement = iniEntry.getIntValue(-1); },
         []() { gUseFinalDoomPlayerMovement = -1; }
+    },
+    {
+        "AllowMovementCancellation",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# For digital movement only: whether doing opposite movements (at the same time) such as forward and\n"
+        "# back causes them to cancel each other out. In Final Doom this was the case, but not so for the\n"
+        "# original PSX Doom which instead just picked one of the directions to move in.\n"
+        "# This setting does not affect analog movement from game controllers which can always cancel.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#\n"
+        "# Allowed values:\n"
+        "#   0 = Opposite movements never cancel each other out\n"
+        "#   1 = Opposite movements always cancel each other out\n"
+        "#  -1 = Auto-decide based on the game being played\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "AllowMovementCancellation = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gAllowMovementCancellation = iniEntry.getIntValue(1); },
+        []() { gAllowMovementCancellation = 1; }
+    },
+    {
+        "AllowTurningCancellation",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# For digital turning only: whether doing opposite left/right turns at the same time causes the\n"
+        "# actions to cancel each other out. Both Doom and Final Doom did NOT do any form of cancellation\n"
+        "# for conflicting digital turn movements, therefore if you want the original behavior set to '0'.\n"
+        "# This setting does not affect any turning other than digital, all other turning can always cancel.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "AllowTurningCancellation = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbAllowTurningCancellation = iniEntry.getBoolValue(true); },
+        []() { gbAllowTurningCancellation = true; }
     },
     {
         "LostSoulSpawnLimit",

@@ -102,10 +102,18 @@ void getConfigGameSettings(GameSettings& settings) noexcept {
     settings.bUseMoveInputLatencyTweak  = Config::gbUseMoveInputLatencyTweak;
 
     if (Config::gUseFinalDoomPlayerMovement < 0) {
-        settings.bUseFinalDoomPlayerMovement = (isFinalDoom()) ? true : false;
+        settings.bUseFinalDoomPlayerMovement = (isFinalDoom()) ? true : false;  // Auto decide based on the game
     } else {
         settings.bUseFinalDoomPlayerMovement = (Config::gUseFinalDoomPlayerMovement != 0);
     }
+
+    if (Config::gAllowMovementCancellation < 0) {
+        settings.bAllowMovementCancellation = (isFinalDoom()) ? true : false;   // Auto decide based on the game
+    } else {
+        settings.bAllowMovementCancellation = (Config::gAllowMovementCancellation != 0);
+    }
+
+    settings.bAllowTurningCancellation = Config::gbAllowTurningCancellation;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // Auto set the spawn limit based on the game
@@ -124,6 +132,8 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUsePlayerRocketBlastFix       = false;
     settings.bUseMoveInputLatencyTweak      = false;
     settings.bUseFinalDoomPlayerMovement    = isFinalDoom();
+    settings.bAllowMovementCancellation     = isFinalDoom();
+    settings.bAllowTurningCancellation      = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
 }
 

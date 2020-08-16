@@ -301,26 +301,30 @@ static void P_BuildMove(player_t& player) noexcept {
     const uint32_t speedMode = (bRun) ? 1 : 0;
     
     // Do strafe left/right controls
+    const bool bAllowMoveCancel = Game::gSettings.bAllowMovementCancellation;
+
     if (bFinalDoomMovementMode) {
-        // N.B: for Final Doom the movements CAN cancel here
         if (bStrafeLeft) {
             player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
         }
         
-        if (bStrafeRight) {
+        if (bStrafeRight && (bAllowMoveCancel || (!bStrafeLeft))) {
             player.sidemove += SIDE_MOVE_FDOOM[speedMode];
         }
     } else {
         // N.B: Applying the direction sign here before dividing is *VERY* important for demo compatibility
         if (bStrafeLeft) {
             player.sidemove += (-SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-        } else if (bStrafeRight) {
+        }
+        
+        if (bStrafeRight && (bAllowMoveCancel || (!bStrafeLeft))) {
             player.sidemove += (+SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
     }
 
     // Do turning or strafing controls (if strafe button held)
     const bool bDoFastTurn = ((speedMode != 0) && (!bMoveForward) && (!bMoveBackward));
+    const bool bAllowTurnCancel = Game::gSettings.bAllowTurningCancellation;
 
     const int32_t psxMouseSensitivityX = (gPsxMouseSensitivity * 100 * FRACUNIT) / 92;
     const int32_t psxMouseSensitivityY = 3000;
@@ -333,7 +337,9 @@ static void P_BuildMove(player_t& player) noexcept {
         if (bFinalDoomMovementMode) {
             if (bTurnLeft) {
                 player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
-            } else if (bTurnRight) {
+            }
+            
+            if (bTurnRight && (bAllowTurnCancel || (!bTurnLeft))) {
                 player.sidemove += SIDE_MOVE_FDOOM[speedMode];
             }
         } else {
@@ -341,7 +347,9 @@ static void P_BuildMove(player_t& player) noexcept {
             // N.B: Applying the direction sign here before dividing is *VERY* important for demo compatibility.
             if (bTurnLeft) {
                 player.sidemove = (-SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-            } else if (bTurnRight) {
+            }
+            
+            if (bTurnRight && (bAllowTurnCancel || (!bTurnLeft))) {
                 player.sidemove = (+SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
             }
         }
@@ -367,7 +375,9 @@ static void P_BuildMove(player_t& player) noexcept {
 
                 if (bTurnLeft) {
                     turnAmt += turnSpeed;
-                } else if (bTurnRight) {
+                }
+                
+                if (bTurnRight && (bAllowTurnCancel || (!bTurnLeft))) {
                     turnAmt -= turnSpeed;
                 }
             } else {
@@ -376,7 +386,9 @@ static void P_BuildMove(player_t& player) noexcept {
 
                 if (bTurnLeft) {
                     turnAmt += turnSpeed;
-                } else if (bTurnRight) {
+                }
+                
+                if (bTurnRight && (bAllowTurnCancel || (!bTurnLeft))) {
                     turnAmt -= turnSpeed;
                 }
             }
@@ -419,19 +431,20 @@ static void P_BuildMove(player_t& player) noexcept {
 
     // Do forward/backward movement controls
     if (bFinalDoomMovementMode) {
-        // N.B: for Final Doom the movements CAN cancel here
         if (bMoveForward) {
             player.forwardmove += FORWARD_MOVE_FDOOM[speedMode];
         }
 
-        if (bMoveBackward) {
+        if (bMoveBackward && (bAllowMoveCancel || (!bMoveForward))) {
             player.forwardmove -= FORWARD_MOVE_FDOOM[speedMode];
         }
     } else {
         // N.B: Applying the direction sign here before dividing is *VERY* important for demo compatibility
         if (bMoveForward) {
             player.forwardmove += (+FORWARD_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
-        } else if (bMoveBackward) {
+        }
+        
+        if (bMoveBackward && (bAllowMoveCancel || (!bMoveForward))) {
             player.forwardmove += (-FORWARD_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
     }
@@ -965,6 +978,7 @@ void P_PlayerDoTurning() noexcept {
         const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
 
         if (!inputs.bStrafe) {
+            const bool bAllowTurnCancel = Game::gSettings.bAllowTurningCancellation;
             fixed_t turnAmt = 0;
 
             if (inputs.bRun && (!inputs.bMoveForward) && (!inputs.bMoveBackward)) {
@@ -973,7 +987,9 @@ void P_PlayerDoTurning() noexcept {
 
                 if (inputs.bTurnLeft) {
                     turnAmt += turnSpeed;
-                } else if (inputs.bTurnRight) {
+                }
+                
+                if (inputs.bTurnRight && (bAllowTurnCancel || (!inputs.bTurnLeft))) {
                     turnAmt -= turnSpeed;
                 }
             } else {
@@ -982,7 +998,9 @@ void P_PlayerDoTurning() noexcept {
 
                 if (inputs.bTurnLeft) {
                     turnAmt += turnSpeed;
-                } else if (inputs.bTurnRight) {
+                }
+                
+                if (inputs.bTurnRight && (bAllowTurnCancel || (!inputs.bTurnLeft))) {
                     turnAmt -= turnSpeed;
                 }
             }
