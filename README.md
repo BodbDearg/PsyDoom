@@ -3,7 +3,7 @@ This project backports PlayStation Doom and Final Doom to PC via reverse enginee
 
 A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE), by [Erick Vásquez García (Erick194)](https://github.com/Erick194) also completely recreates the Doom source code for the actual PlayStation hardware and 'PsyQ' SDK. The reverse engineering work for that project was used to help accelerate the transition to native C++ code for this project and to cross verify the reverse engineering work in both projects.
 
-As of right now the game mostly runs correctly, with a few minor issues. Here is a brief video demonstration showing the project in action:
+As of right now the game mostly runs correctly, with a few very minor issues. Here is a brief video demonstration showing the project in action:
 [![Alt text](https://img.youtube.com/vi/o7t7w1YjjSw/0.jpg)](https://www.youtube.com/watch?v=o7t7w1YjjSw)
 
 The original goal of this project was to have a complete replacement for the original PlayStation Doom .EXE for modern systems. Now that this objective has been achieved, the focus turns to adding quality of life improvements, some modding features and additional polish.
@@ -17,8 +17,8 @@ The original goal of this project was to have a complete replacement for the ori
     - Any original edition of the game is acceptable: NTSC-U, NTSC-J, PAL, NTSC-U 'Greatest Hits' etc.
     - Both Doom and Final Doom can be used.
 - The settings for the game can be changed by editing the .ini files found in the following folders:
-  - Windows: %APPDATA%\com.codelobster\PsyDoom
-  - MacOS: ~/Library/Application Support/com.codelobster/PsyDoom
+  - Windows: `%APPDATA%\com.codelobster\PsyDoom`
+  - MacOS: `~/Library/Application Support/com.codelobster/PsyDoom`
 - Keyboard controls currently default to the following:
   - Up/W and Down/S : Move Forward and Move Backward
   - A and D : Strafe Left and Right
@@ -71,7 +71,8 @@ The original goal of this project was to have a complete replacement for the ori
     - Put files in this folder (note: not in any child folders!) that you wish to override, e.g 'MAP01.WAD'.
     - If the game goes to load a file such as 'MAP01.WAD' and it is present in the overrides dir, then the on-disk version will be used instead.
 ## Current limitations/bugs
-- Some occasional sound issues, sound is mostly OK at this point though.
+- CD music does not work unless a single .bin & .cue file is used - multiple .bin files for individual CD tracks will not work. This bug will be fixed eventually.
+- Some very occasional sound stuttering issues, sound is mostly OK at this point though.
 - The intro movie does not play yet.
 
 ## How to build
