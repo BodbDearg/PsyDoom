@@ -101,6 +101,12 @@ void getConfigGameSettings(GameSettings& settings) noexcept {
     settings.bUsePlayerRocketBlastFix   = Config::gbUsePlayerRocketBlastFix;
     settings.bUseMoveInputLatencyTweak  = Config::gbUseMoveInputLatencyTweak;
 
+    if (Config::gUseFinalDoomPlayerMovement < 0) {
+        settings.bUseFinalDoomPlayerMovement = (isFinalDoom()) ? true : false;
+    } else {
+        settings.bUseFinalDoomPlayerMovement = (Config::gUseFinalDoomPlayerMovement != 0);
+    }
+
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // Auto set the spawn limit based on the game
     } else {
@@ -113,11 +119,12 @@ void getConfigGameSettings(GameSettings& settings) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings = {};
-    settings.bUsePalTimings             = (gGameVariant == GameVariant::PAL);
-    settings.bUseDemoTimings            = true;
-    settings.bUsePlayerRocketBlastFix   = false;
-    settings.bUseMoveInputLatencyTweak  = false;
-    settings.lostSoulSpawnLimit         = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
+    settings.bUsePalTimings                 = (gGameVariant == GameVariant::PAL);
+    settings.bUseDemoTimings                = true;
+    settings.bUsePlayerRocketBlastFix       = false;
+    settings.bUseMoveInputLatencyTweak      = false;
+    settings.bUseFinalDoomPlayerMovement    = isFinalDoom();
+    settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

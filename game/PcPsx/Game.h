@@ -24,6 +24,7 @@ struct GameSettings {
     uint8_t     bUseDemoTimings;                // Force player logic to run at a consistent, but slower rate used by demos? (15 Hz for NTSC)
     uint8_t     bUsePlayerRocketBlastFix;       // Apply the fix for the player sometimes not receiving splash damage from rocket blasts?
     uint8_t     bUseMoveInputLatencyTweak;      // Use a tweak to player movement which tries to reduce input latency? This affects movement slightly.
+    uint8_t     bUseFinalDoomPlayerMovement;    // Whether to use the Final Doom way of doing player movement & turning
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
 };
 

@@ -57,17 +57,6 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         []() { gbFullscreen = true; }
     },
     {
-        "FloorRenderGapFix",
-        "#---------------------------------------------------------------------------------------------------\n"
-        "# Enable/disable a precision fix for the floor renderer to prevent gaps in the floor on some maps.\n"
-        "# This fix helps prevent some noticeable glitches on larger outdoor maps like 'Tower Of Babel'.\n"
-        "# Set to '1' to enable the fix, and '0' to disable.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "FloorRenderGapFix = 1\n",
-        [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
-        []() { gbFloorRenderGapFix = true; }
-    },
-    {
         "LogicalDisplayWidth",
         "#---------------------------------------------------------------------------------------------------\n"
         "# Determines how the game can scale its rendered frames to fill the host display.\n"
@@ -94,6 +83,17 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
         []() { gLogicalDisplayW = 292; }
     },
+    {
+        "FloorRenderGapFix",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Enable/disable a precision fix for the floor renderer to prevent gaps in the floor on some maps.\n"
+        "# This fix helps prevent some noticeable glitches on larger outdoor maps like 'Tower Of Babel'.\n"
+        "# Set to '1' to enable the fix, and '0' to disable.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "FloorRenderGapFix = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
+        []() { gbFloorRenderGapFix = true; }
+    },
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -105,6 +105,7 @@ int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
 bool                    gbUsePlayerRocketBlastFix;
+int32_t                 gUseFinalDoomPlayerMovement;
 int32_t                 gLostSoulSpawnLimit;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -190,6 +191,24 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "UsePlayerRocketBlastFix = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbUsePlayerRocketBlastFix = iniEntry.getBoolValue(true); },
         []() { gbUsePlayerRocketBlastFix = true; }
+    },
+    {
+        "UseFinalDoomPlayerMovement",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Whether to use player movement & turning logic from Final Doom rather than the original PSX Doom.\n"
+        "# In the original PSX Doom, player forward move speed is slightly greater than side move speed.\n"
+        "# The way player logic is handled also produces slightly different results for the same inputs.\n"
+        "# In Final Doom, player forward move speed is changed to be the same as side move speed.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#\n"
+        "# Allowed values:\n"
+        "#   0 = Always use the original PSX Doom player movement & turning logic\n"
+        "#   1 = Always use the PSX Final Doom player movement & turning logic\n"
+        "#  -1 = Auto-decide based on the game being played\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "UseFinalDoomPlayerMovement = -1\n",
+        [](const IniUtils::Entry& iniEntry) { gUseFinalDoomPlayerMovement = iniEntry.getIntValue(-1); },
+        []() { gUseFinalDoomPlayerMovement = -1; }
     },
     {
         "LostSoulSpawnLimit",

@@ -98,7 +98,7 @@ static void P_PlayerMove(mobj_t& mobj) noexcept {
     fixed_t moveDx;
     fixed_t moveDy;
 
-    if (Game::isFinalDoom()) {
+    if (Game::gSettings.bUseFinalDoomPlayerMovement) {
         moveDx = mobj.momx;
         moveDy = mobj.momy;
     } else {
@@ -249,8 +249,8 @@ static void P_PlayerMobjThink(mobj_t& mobj) noexcept {
 static void P_BuildMove(player_t& player) noexcept {
     // Grab some useful stuff: elapsed vblanks, current and old inputs etc.
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
-    const bool bIsFinalDoom = Game::isFinalDoom();
-
+    const bool bFinalDoomMovementMode = Game::gSettings.bUseFinalDoomPlayerMovement;
+    
     #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gPlayerNum];
         const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
@@ -301,7 +301,7 @@ static void P_BuildMove(player_t& player) noexcept {
     const uint32_t speedMode = (bRun) ? 1 : 0;
     
     // Do strafe left/right controls
-    if (bIsFinalDoom) {
+    if (bFinalDoomMovementMode) {
         // N.B: for Final Doom the movements CAN cancel here
         if (bStrafeLeft) {
             player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
@@ -324,13 +324,13 @@ static void P_BuildMove(player_t& player) noexcept {
 
     const int32_t psxMouseSensitivityX = (gPsxMouseSensitivity * 100 * FRACUNIT) / 92;
     const int32_t psxMouseSensitivityY = 3000;
-    const int32_t psxMouseTimeScale = (bIsFinalDoom) ? 1 : elapsedVBlanks;
+    const int32_t psxMouseTimeScale = (Game::gSettings.bUseFinalDoomPlayerMovement) ? 1 : elapsedVBlanks;
     const int32_t psxMouseMoveX = inputs.psxMouseDx * psxMouseSensitivityX * psxMouseTimeScale;
     const int32_t psxMouseMoveY = inputs.psxMouseDy * psxMouseSensitivityY * psxMouseTimeScale;
 
     if (bStrafe) {
         // Strafe button held: turn buttons and x psx mouse movements translate to strafing.
-        if (bIsFinalDoom) {
+        if (bFinalDoomMovementMode) {
             if (bTurnLeft) {
                 player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
             } else if (bTurnRight) {
@@ -363,7 +363,7 @@ static void P_BuildMove(player_t& player) noexcept {
 
             if (bDoFastTurn) {
                 // Do fast turning when run is pressed and we are not moving forward/back
-                const fixed_t turnSpeed = (bIsFinalDoom) ? FAST_ANGLE_TURN_FDOOM[player.turnheld] : FAST_ANGLE_TURN_DOOM[player.turnheld];
+                const fixed_t turnSpeed = (bFinalDoomMovementMode) ? FAST_ANGLE_TURN_FDOOM[player.turnheld] : FAST_ANGLE_TURN_DOOM[player.turnheld];
 
                 if (bTurnLeft) {
                     turnAmt += turnSpeed;
@@ -372,7 +372,7 @@ static void P_BuildMove(player_t& player) noexcept {
                 }
             } else {
                 // Otherwise do the slow turning speed
-                const fixed_t turnSpeed = (bIsFinalDoom) ? ANGLE_TURN_FDOOM[player.turnheld] : ANGLE_TURN_DOOM[player.turnheld];
+                const fixed_t turnSpeed = (bFinalDoomMovementMode) ? ANGLE_TURN_FDOOM[player.turnheld] : ANGLE_TURN_DOOM[player.turnheld];
 
                 if (bTurnLeft) {
                     turnAmt += turnSpeed;
@@ -382,7 +382,7 @@ static void P_BuildMove(player_t& player) noexcept {
             }
 
             // Apply the turn amount and also adjust for framerate (original Doom only)
-            if (!bIsFinalDoom) {
+            if (!bFinalDoomMovementMode) {
                 turnAmt *= elapsedVBlanks;
                 turnAmt /= VBLANKS_PER_TIC;
             }
@@ -418,7 +418,7 @@ static void P_BuildMove(player_t& player) noexcept {
     #endif
 
     // Do forward/backward movement controls
-    if (bIsFinalDoom) {
+    if (bFinalDoomMovementMode) {
         // N.B: for Final Doom the movements CAN cancel here
         if (bMoveForward) {
             player.forwardmove += FORWARD_MOVE_FDOOM[speedMode];
@@ -441,7 +441,7 @@ static void P_BuildMove(player_t& player) noexcept {
     
     // PsyDoom: do analog movements
     #if PSYDOOM_MODS
-        if (bIsFinalDoom) {
+        if (bFinalDoomMovementMode) {
             player.forwardmove -= FixedMul(inputs.analogForwardMove, FORWARD_MOVE_FDOOM[speedMode]);
             player.sidemove += FixedMul(inputs.analogSideMove, SIDE_MOVE_FDOOM[speedMode]);
         } else {
@@ -454,8 +454,8 @@ static void P_BuildMove(player_t& player) noexcept {
     #endif
 
     // Clamp movement amounts: this was added in Final Doom
-    const fixed_t maxForwardMove = (bIsFinalDoom) ? FORWARD_MOVE_FDOOM[1] : FORWARD_MOVE_DOOM[1];
-    const fixed_t maxSideMove = (bIsFinalDoom) ? SIDE_MOVE_FDOOM[1] : SIDE_MOVE_DOOM[1];
+    const fixed_t maxForwardMove = (bFinalDoomMovementMode) ? FORWARD_MOVE_FDOOM[1] : FORWARD_MOVE_DOOM[1];
+    const fixed_t maxSideMove = (bFinalDoomMovementMode) ? SIDE_MOVE_FDOOM[1] : SIDE_MOVE_DOOM[1];
 
     player.forwardmove = std::clamp(player.forwardmove, -maxForwardMove, +maxForwardMove);
     player.sidemove = std::clamp(player.sidemove, -maxSideMove, +maxSideMove);
@@ -485,7 +485,7 @@ static void P_BuildMove(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_Thrust(player_t& player, const angle_t angle, const fixed_t amount) noexcept {
     mobj_t& mobj = *player.mo;
-    const fixed_t timeScale = (Game::isFinalDoom()) ? gPlayersElapsedVBlanks[gPlayerNum] : 1;
+    const fixed_t timeScale = (Game::gSettings.bUseFinalDoomPlayerMovement) ? gPlayersElapsedVBlanks[gPlayerNum] : 1;
     const fixed_t scaledAmount = amount * timeScale;
 
     mobj.momx += (scaledAmount >> 8) * (gFineCosine[angle >> ANGLETOFINESHIFT] >> 8);
@@ -575,7 +575,7 @@ static void P_MovePlayer(player_t& player) noexcept {
     // Apply angle turning
     mobj_t& mobj = *player.mo;
 
-    if (Game::isFinalDoom()) {
+    if (Game::gSettings.bUseFinalDoomPlayerMovement) {
         // PsyDoom: we only need to apply the vblank scale if playing a demo.
         // If not playing a demo then it has already been applied.
         #if PSYDOOM_MODS
@@ -938,7 +938,7 @@ void P_PlayerInitTurning() noexcept {
 void P_PlayerDoTurning() noexcept {
     const time_point_t now = std::chrono::high_resolution_clock::now();
     const player_t& player = gPlayers[gCurPlayerIndex];
-    const bool bIsFinalDoom = Game::isFinalDoom();
+    const bool bFinalDoomMovementMode = Game::gSettings.bUseFinalDoomPlayerMovement;
 
     // Only do these turning updates if the player is not dead, the game is active, and if we're not doing a demo.
     //
@@ -969,7 +969,7 @@ void P_PlayerDoTurning() noexcept {
 
             if (inputs.bRun && (!inputs.bMoveForward) && (!inputs.bMoveBackward)) {
                 // Do fast turning when run is pressed and we are not moving forward/back
-                const fixed_t turnSpeed = (bIsFinalDoom) ? FAST_ANGLE_TURN_FDOOM[player.turnheld] : FAST_ANGLE_TURN_DOOM[player.turnheld];
+                const fixed_t turnSpeed = (bFinalDoomMovementMode) ? FAST_ANGLE_TURN_FDOOM[player.turnheld] : FAST_ANGLE_TURN_DOOM[player.turnheld];
 
                 if (inputs.bTurnLeft) {
                     turnAmt += turnSpeed;
@@ -978,7 +978,7 @@ void P_PlayerDoTurning() noexcept {
                 }
             } else {
                 // Otherwise do the slow turning speed
-                const fixed_t turnSpeed = (bIsFinalDoom) ? ANGLE_TURN_FDOOM[player.turnheld] : ANGLE_TURN_DOOM[player.turnheld];
+                const fixed_t turnSpeed = (bFinalDoomMovementMode) ? ANGLE_TURN_FDOOM[player.turnheld] : ANGLE_TURN_DOOM[player.turnheld];
 
                 if (inputs.bTurnLeft) {
                     turnAmt += turnSpeed;
@@ -989,7 +989,7 @@ void P_PlayerDoTurning() noexcept {
 
             turnAmt = FixedMul(turnAmt, ticks60);
 
-            if (!bIsFinalDoom) {
+            if (!bFinalDoomMovementMode) {
                 turnAmt /= VBLANKS_PER_TIC;
             }
 
