@@ -92,7 +92,7 @@ struct mapsector_t {
     uint8_t     colorid;            // Which of the sector light colors to use for the sector
     int16_t     special;            // Special action for the sector: damage, secret, light flicker etc.
     int16_t     tag;                // Tag for the sector for use in targetted actions (triggered by switches, line crossings etc.)
-    uint16_t    flags;              // Affects sound fx (TODO: figure out what this means)
+    uint16_t    flags;              // New for PSX - sector flags: just 'SF_NO_REVERB' (0x1) is the only flag possible.
 };
 
 static_assert(sizeof(mapsector_t) == 28);
@@ -108,7 +108,7 @@ struct mapsector_final_t {
     uint8_t     colorid;            // Which of the sector light colors to use for the sector
     int16_t     special;            // Special action for the sector: damage, secret, light flicker etc.
     int16_t     tag;                // Tag for the sector for use in targetted actions (triggered by switches, line crossings etc.)
-    uint16_t    flags;              // Affects sound fx (TODO: figure out what this means)
+    uint16_t    flags;              // New for PSX - sector flags: just 'SF_NO_REVERB' (0x1) is the only flag possible.
 };
 
 static_assert(sizeof(mapsector_final_t) == 16);
