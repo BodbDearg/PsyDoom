@@ -392,15 +392,21 @@ void G_RunGame() noexcept {
         #endif
 
         // Should we do the Ultimate DOOM style (text only, no cast sequence) finale?
-        // Note that for Final Doom this will show when finishing the first 2 out of 3 episodes.
         //
-        // PsyDoom: I'm also restricting endings to the Doom and Final Doom games specifically.
-        // If some other game type is playing then we simply won't do them.
+        // Notes:
+        //  (1) For Final Doom this finale type will show when finishing the first 2 out of 3 episodes.
+        //  (2) Showing finales is restricted to the case where we are not warping to a secret level, since the
+        //      Ultimate Doom secret levels will not be within the map number range for the Ultimate Doom episode.
+        //      Any warp to a level other than the next one is considered a secret level warp.
+        //  (3) PsyDoom: I'm restricting endings to the Doom and Final Doom games specifically.
+        //      If some other game type is playing then we simply won't do them.
+        //
         const bool bDoFinales = ((Game::gGameType == GameType::Doom) || (Game::gGameType == GameType::FinalDoom));
+        const bool bGoingToSecretLevel = (gNextMap != gGameMap + 1);
         const int32_t curEpisodeNum = Game::getMapEpisode(gGameMap);
         const int32_t nextEpisodeNum = Game::getMapEpisode(gNextMap);
 
-        if ((gNetGame == gt_single) && (curEpisodeNum != nextEpisodeNum)) {
+        if ((gNetGame == gt_single) && (!bGoingToSecretLevel) && (curEpisodeNum != nextEpisodeNum)) {
             if (bDoFinales) {
                 MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
