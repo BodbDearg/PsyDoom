@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
+#include "Doom/Base/z_zone.h"
 #include "Doom/Game/doomdata.h"
 #include "PsyQ/LIBGPU.h"
 

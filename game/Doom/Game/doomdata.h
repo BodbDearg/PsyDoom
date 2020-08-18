@@ -4,7 +4,6 @@
 // Game data structures which are read from WAD files
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-#include "Doom/Base/z_zone.h"
 #include "Doom/doomdef.h"
 
 // Map lump offsets, relative to the 'MAPXX' marker

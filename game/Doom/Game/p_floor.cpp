@@ -2,6 +2,7 @@
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
+#include "Doom/Base/z_zone.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "doomdata.h"
