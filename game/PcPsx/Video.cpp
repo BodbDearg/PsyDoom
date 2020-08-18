@@ -112,6 +112,13 @@ static void presentSdlFramebuffer() noexcept {
         gOutputRect.y = winSizeY / 2 - gOutputRect.h / 2;
     }
 
+    // Need to clear the window if we are not filling the whole screen.
+    // Some stuff like NVIDIA video recording notifications can leave marks in the unused regions otherwise...
+    if ((gOutputRect.w != winSizeX) || (gOutputRect.h != winSizeY)) {
+        SDL_RenderClear(gRenderer);
+    }
+    
+    // Blit the framebuffer to the display
     SDL_RenderCopy(gRenderer, gFramebufferTexture, nullptr, &gOutputRect);
 
     // Present the rendered frame and re-lock the framebuffer texture
