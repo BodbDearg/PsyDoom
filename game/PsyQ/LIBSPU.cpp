@@ -302,12 +302,12 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
             // Be more selective about what changes we make to SPU registers if we can
             if (!bSetReverbMode) {
                 reverbDef.fieldBits = (
-                    SPU_SAME_SIDE_REFRACT_ADDR_1_LEFT |
-                    SPU_SAME_SIDE_REFRACT_ADDR_1_RIGHT |
-                    SPU_COMB_ADDR_1_LEFT |
-                    SPU_SAME_SIDE_REFRACT_ADDR_2_LEFT |
-                    SPU_APF_ADDR_1_LEFT |
-                    SPU_APF_ADDR_1_RIGHT
+                    SPU_REVF_SAME_SIDE_REFRACT_ADDR_1_LEFT |
+                    SPU_REVF_SAME_SIDE_REFRACT_ADDR_1_RIGHT |
+                    SPU_REVF_COMB_ADDR_1_LEFT |
+                    SPU_REVF_SAME_SIDE_REFRACT_ADDR_2_LEFT |
+                    SPU_REVF_APF_ADDR_1_LEFT |
+                    SPU_REVF_APF_ADDR_1_RIGHT
                 );
             }
 
