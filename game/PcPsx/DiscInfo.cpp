@@ -6,17 +6,29 @@
 #include <cstring>
 #include <regex>
 
+// Use case insensitive matching for all regexes and use ECMAScript
+static constexpr auto REGEX_OPTIONS = std::regex_constants::ECMAScript | std::regex_constants::icase;
+
 // Regexes for matching the beginning of a command
-static const std::regex gRegexCmdBeg_File = std::regex(R"(^FILE\b)", std::regex_constants::icase);
-static const std::regex gRegexCmdBeg_Track = std::regex(R"(^TRACK\b)", std::regex_constants::icase);
-static const std::regex gRegexCmdBeg_Index = std::regex(R"(^INDEX\b)", std::regex_constants::icase);
-static const std::regex gRegexCmdBeg_Pregap = std::regex(R"(^PREGAP\b)", std::regex_constants::icase);
-static const std::regex gRegexCmdBeg_Postgap = std::regex(R"(^POSTGAP\b)", std::regex_constants::icase);
+static const std::regex gRegexCmdBeg_File = std::regex(R"(^FILE\b)", REGEX_OPTIONS);
+static const std::regex gRegexCmdBeg_Track = std::regex(R"(^TRACK\b)", REGEX_OPTIONS);
+static const std::regex gRegexCmdBeg_Index = std::regex(R"(^INDEX\b)", REGEX_OPTIONS);
+static const std::regex gRegexCmdBeg_Pregap = std::regex(R"(^PREGAP\b)", REGEX_OPTIONS);
+static const std::regex gRegexCmdBeg_Postgap = std::regex(R"(^POSTGAP\b)", REGEX_OPTIONS);
 
 // Regexes for parsing the individual bits of each command
-static const std::regex gRegexCmd_File = std::regex(R"(FILE\s+\"(.*?)\"\s+BINARY\s*$)");
-static const std::regex gRegexCmd_Track = std::regex(R"(TRACK\s+(\d+)\s+(.*?)\s*$)");
-static const std::regex gRegexCmd_Index = std::regex(R"(INDEX\s+(\d+)\s+(\d+)\s*:\s*(\d+)\s*:\s*(\d+)\s*$)");
+static const std::regex gRegexCmd_File = std::regex(R"(FILE\s+\"(.*?)\"\s+BINARY\s*$)", REGEX_OPTIONS);
+static const std::regex gRegexCmd_Track = std::regex(R"(TRACK\s+(\d+)\s+(.*?)\s*$)", REGEX_OPTIONS);
+static const std::regex gRegexCmd_Index = std::regex(R"(INDEX\s+(\d+)\s+(\d+)\s*:\s*(\d+)\s*:\s*(\d+)\s*$)", REGEX_OPTIONS);
+
+// Regexes for track modes
+static const std::regex gRegex_TrackMode_1_2048 = std::regex(R"(\s*MODE\s*1\s*/\s*2048\s*)", REGEX_OPTIONS);
+static const std::regex gRegex_TrackMode_2_2048 = std::regex(R"(\s*MODE\s*2\s*/\s*2048\s*)", REGEX_OPTIONS);
+static const std::regex gRegex_TrackMode_1_2352 = std::regex(R"(\s*MODE\s*1\s*/\s*2352\s*)", REGEX_OPTIONS);
+static const std::regex gRegex_TrackMode_2_2352 = std::regex(R"(\s*MODE\s*2\s*/\s*2352\s*)", REGEX_OPTIONS);
+static const std::regex gRegex_TrackMode_2_2336 = std::regex(R"(\s*MODE\s*2\s*/\s*2336\s*)", REGEX_OPTIONS);
+static const std::regex gRegex_TrackMode_2_2324 = std::regex(R"(\s*MODE\s*2\s*/\s*2324\s*)", REGEX_OPTIONS);
+static const std::regex gRegex_TrackMode_Audio = std::regex(R"(\s*AUDIO\s*)", REGEX_OPTIONS);
 
 // Current parsing context for the .cue file parser
 struct CueParseCtx {
@@ -138,37 +150,37 @@ static bool parseCueCmd_Track(CueParseCtx& ctx) noexcept {
 
     // Set these block/track parameters based on the mode.
     // See 'Bin2ISO : https://gist.github.com/ceritium/139577' for more details on some of these.
-    if ((mode == "MODE1/2048") || (mode == "MODE2/2048")) {
+    if (std::regex_search(mode, gRegex_TrackMode_1_2048) || std::regex_search(mode, gRegex_TrackMode_2_2048)) {
         track.bIsData = true;
         track.blockSize = 2048;
         track.blockPayloadOffset = 0;
         track.blockPayloadSize = 2048;
     }
-    else if (mode == "MODE1/2352") {
+    else if (std::regex_search(mode, gRegex_TrackMode_1_2352)) {
         track.bIsData = true;
         track.blockSize = 2352;
         track.blockPayloadOffset = 16;
         track.blockPayloadSize = 2048;
     }
-    else if (mode == "MODE2/2352") {
+    else if (std::regex_search(mode, gRegex_TrackMode_2_2352)) {
         track.bIsData = true;
         track.blockSize = 2352;
         track.blockPayloadOffset = 24;
         track.blockPayloadSize = 2048;
     }
-    else if (mode == "MODE2/2336") {
+    else if (std::regex_search(mode, gRegex_TrackMode_2_2336)) {
         track.bIsData = true;
         track.blockSize = 2352;
         track.blockPayloadOffset = 8;
         track.blockPayloadSize = 2048;
     }
-    else if (mode == "MODE2/2324") {
+    else if (std::regex_search(mode, gRegex_TrackMode_2_2324)) {
         track.bIsData = true;
         track.blockSize = 2352;
         track.blockPayloadOffset = 24;
         track.blockPayloadSize = 2324;
     }
-    else if (mode == "AUDIO") {
+    else if (std::regex_search(mode, gRegex_TrackMode_Audio)) {
         track.bIsData = false;
         track.blockSize = 2352;
         track.blockPayloadOffset = 0;
@@ -248,12 +260,14 @@ static bool parseCueLine(CueParseCtx& ctx) noexcept {
         return parseCueCmd_Index(ctx);
     }
     else if (std::regex_search(ctx.line, gRegexCmdBeg_Pregap)) {
-        ctx.errorMsg = "PREGAP commands are not supported in .cue files! Please rip without those.";
-        return false;
+        // Ignore pregap commands... From what I've read online the data for these gaps is never ripped anyway, because it's all 0s.
+        // PsyDoom also doesn't need this gap.
+        return true;
     }
     else if (std::regex_search(ctx.line, gRegexCmdBeg_Postgap)) {
-        ctx.errorMsg = "POSTGAP commands are not supported in .cue files! Please rip without those.";
-        return false;
+        // Ignore postgap commands... From what I've read online the data for these gaps is never ripped anyway, because it's all 0s.
+        // PsyDoom also doesn't need this gap.
+        return true;
     }
 
     return true;
@@ -321,7 +335,7 @@ static bool determineTrackOffsetsAndSizes(DiscInfo& disc, std::string& errorMsg)
         if (track.index1 < 0) {
             errorMsg = "Track number ";
             errorMsg += std::to_string(track.trackNum);
-            errorMsg = " does NOT defined INDEX 1! Can't tell where the track data starts as a result.";
+            errorMsg += " does NOT define INDEX 1! Can't tell where the track data starts as a result.";
             return false;
         }
     }
@@ -330,17 +344,25 @@ static bool determineTrackOffsetsAndSizes(DiscInfo& disc, std::string& errorMsg)
     for (DiscTrack& track : disc.tracks) {
         const int64_t fileSizeInBlocks = track.sourceFileTotalSize / track.blockSize;
 
-        if ((track.index0 < 0) || (track.index0 > fileSizeInBlocks)) {
-            errorMsg = "Track number ";
-            errorMsg += std::to_string(track.trackNum);
-            errorMsg = " has an invalid INDEX 0 which is out of range for the track's data file!";
-            return false;
-        }
-
+        // Show INDEX 1 errors first because oftentimes INDEX 0 is inferred from INDEX 1.
+        // Error messages might be more relevant if we do this.
         if ((track.index1 < 0) || (track.index1 > fileSizeInBlocks)) {
             errorMsg = "Track number ";
             errorMsg += std::to_string(track.trackNum);
-            errorMsg = " has an invalid INDEX 1 which is out of range for the track's data file!";
+            errorMsg += " has an invalid INDEX 1 which falls outside of the track's data file!\nINDEX 1 sector index = ";
+            errorMsg += std::to_string(track.index1);
+            errorMsg += "; Track data file size (in sectors) = ";
+            errorMsg += std::to_string(fileSizeInBlocks);
+            return false;
+        }
+
+        if ((track.index0 < 0) || (track.index0 > fileSizeInBlocks)) {
+            errorMsg = "Track number ";
+            errorMsg += std::to_string(track.trackNum);
+            errorMsg += " has an invalid INDEX 0 which falls outside of the track's data file!\nINDEX 0 sector index = ";
+            errorMsg += std::to_string(track.index0);
+            errorMsg += "; Track data file size (in sectors) = ";
+            errorMsg += std::to_string(fileSizeInBlocks);
             return false;
         }
     }
