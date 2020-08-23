@@ -321,7 +321,7 @@ static bool determineTrackOffsetsAndSizes(DiscInfo& disc, std::string& errorMsg)
         if (track.index1 < 0) {
             errorMsg = "Track number ";
             errorMsg += std::to_string(track.trackNum);
-            errorMsg = " does NOT defined INDEX 1! Can't tell where the track data starts as a result.";
+            errorMsg += " does NOT define INDEX 1! Can't tell where the track data starts as a result.";
             return false;
         }
     }
@@ -330,17 +330,25 @@ static bool determineTrackOffsetsAndSizes(DiscInfo& disc, std::string& errorMsg)
     for (DiscTrack& track : disc.tracks) {
         const int64_t fileSizeInBlocks = track.sourceFileTotalSize / track.blockSize;
 
-        if ((track.index0 < 0) || (track.index0 > fileSizeInBlocks)) {
-            errorMsg = "Track number ";
-            errorMsg += std::to_string(track.trackNum);
-            errorMsg = " has an invalid INDEX 0 which is out of range for the track's data file!";
-            return false;
-        }
-
+        // Show INDEX 1 errors first because oftentimes INDEX 0 is inferred from INDEX 1.
+        // Error messages might be more relevant if we do this.
         if ((track.index1 < 0) || (track.index1 > fileSizeInBlocks)) {
             errorMsg = "Track number ";
             errorMsg += std::to_string(track.trackNum);
-            errorMsg = " has an invalid INDEX 1 which is out of range for the track's data file!";
+            errorMsg += " has an invalid INDEX 1 which falls outside of the track's data file!\nINDEX 1 sector index = ";
+            errorMsg += std::to_string(track.index1);
+            errorMsg += "; Track data file size (in sectors) = ";
+            errorMsg += std::to_string(fileSizeInBlocks);
+            return false;
+        }
+
+        if ((track.index0 < 0) || (track.index0 > fileSizeInBlocks)) {
+            errorMsg = "Track number ";
+            errorMsg += std::to_string(track.trackNum);
+            errorMsg += " has an invalid INDEX 0 which falls outside of the track's data file!\nINDEX 0 sector index = ";
+            errorMsg += std::to_string(track.index0);
+            errorMsg += "; Track data file size (in sectors) = ";
+            errorMsg += std::to_string(fileSizeInBlocks);
             return false;
         }
     }
