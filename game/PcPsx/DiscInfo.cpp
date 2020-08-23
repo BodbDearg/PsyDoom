@@ -248,12 +248,14 @@ static bool parseCueLine(CueParseCtx& ctx) noexcept {
         return parseCueCmd_Index(ctx);
     }
     else if (std::regex_search(ctx.line, gRegexCmdBeg_Pregap)) {
-        ctx.errorMsg = "PREGAP commands are not supported in .cue files! Please rip without those.";
-        return false;
+        // Ignore pregap commands... From what I've read online the data for these gaps is never ripped anyway, because it's all 0s.
+        // PsyDoom also doesn't need this gap.
+        return true;
     }
     else if (std::regex_search(ctx.line, gRegexCmdBeg_Postgap)) {
-        ctx.errorMsg = "POSTGAP commands are not supported in .cue files! Please rip without those.";
-        return false;
+        // Ignore postgap commands... From what I've read online the data for these gaps is never ripped anyway, because it's all 0s.
+        // PsyDoom also doesn't need this gap.
+        return true;
     }
 
     return true;
