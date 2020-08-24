@@ -361,43 +361,11 @@ static void stepVoice(
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Start playing the given voice
-//------------------------------------------------------------------------------------------------------------------------------------------
-void Spu::keyOn(Voice& voice) noexcept {
-    // Jump to the sample start address and flag that we need to load samples
-    voice.bSamplesLoaded = false;
-    voice.adpcmBlockPos = {};
-    voice.adpcmCurAddr8 = voice.adpcmStartAddr8;
-
-    // Initialize the envelope
-    voice.envPhase = EnvPhase::Attack;
-    voice.envLevel = 0;
-    voice.envWaitCycles = 0;
-
-    // Initialize flags
-    voice.bReachedLoopEnd = false;
-    voice.bRepeat = false;
-
-    // Zero the previously decoded samples
-    static_assert(Voice::NUM_PREV_SAMPLES == 3);
-    voice.samples[0] = 0;
-    voice.samples[1] = 0;
-    voice.samples[2] = 0;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Puts the given voice into release mode
-//------------------------------------------------------------------------------------------------------------------------------------------
-void Spu::keyOff(Voice& voice) noexcept {
-    voice.envPhase = EnvPhase::Release;
-    voice.envWaitCycles = 0;
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Process/update all voices and get 1 sample of output from them
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Spu::stepVoices(
+static void stepVoices(
     Voice* const pVoices,
     const int32_t numVoices,
     const std::byte* pRam,
@@ -415,7 +383,7 @@ void Spu::stepVoices(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Mixes sound from an external input; does nothing if there is no current external input
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Spu::mixExternalInput(
+static void mixExternalInput(
     const ExtInputCallback pExtCallback,
     void* const pExtCallbackUserData,
     const Volume extVolume,
@@ -438,7 +406,7 @@ void Spu::mixExternalInput(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add the given sample to reverb input and return a sample of reverb output
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Spu::doReverb(
+static void doReverb(
     std::byte* pRam,
     const uint32_t ramSize,
     const uint32_t reverbBaseAddr,
@@ -473,10 +441,12 @@ void Spu::doReverb(
     };
 
     const auto revW = [=](uint32_t addrRelative, const int16_t sample) noexcept {
-        const uint16_t data = (uint16_t) sample;
-        const uint32_t addr = wrapRevAddr16(reverbBaseAddr + reverbCurAddr + addrRelative);
-        pRam[addr] = (std::byte)(data & 0x00FFu);
-        pRam[addr] = (std::byte)((data & 0xFF00u) >> 8);
+        if (bReverbWriteEnable) {
+            const uint16_t data = (uint16_t) sample;
+            const uint32_t addr = wrapRevAddr16(reverbBaseAddr + reverbCurAddr + addrRelative);
+            pRam[addr] = (std::byte)(data & 0x00FFu);
+            pRam[addr] = (std::byte)((data & 0xFF00u) >> 8);
+        }
     };
 
     // This is based almost exactly on: https://problemkaputt.de/psx-spx.htm#spureverbformula.
@@ -570,7 +540,7 @@ void Spu::doReverb(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does the final mix and attenuation of dry sound and reverb sound, and scales according to the master volume
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Spu::doMasterMix(
+void doMasterMix(
     const StereoSample dryOutput,
     const StereoSample reverbOutput,
     const Volume masterVol,
@@ -585,4 +555,125 @@ void Spu::doMasterMix(
     };
 
     output = wetOutput * scaledMasterVol;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Core initialization and teardown
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Spu::initCore(Core& core, const uint32_t ramSize, const uint32_t voiceCount) noexcept {
+    // Zero init everything by default
+    core = {};
+
+    // Zero voices is a valid use-case, if for example you wanted to use this as a PS1 reverb DSP
+    if (voiceCount > 0) {
+        core.pVoices = new Voice[voiceCount];
+        core.numVoices = voiceCount;
+        
+        for (uint32_t i = 0; i < voiceCount; ++i) {
+            core.pVoices[i] = {};
+        }
+    }
+
+    // Note: pad RAM size to the nearest 16-bytes to ensure the 8-byte addressing mode of the SPU always works.
+    // Some SPU RAM must always be provided also, in order for the SPU to be used.
+    assert(ramSize > 0);
+    const uint32_t roundedRamSize = ((ramSize + 15) / 16) * 16;
+
+    core.pRam = new std::byte[roundedRamSize];
+    core.ramSize = roundedRamSize;
+    std::memset(core.pRam, 0, roundedRamSize);
+}
+
+void Spu::initPS1Core(Core& core) noexcept {
+    Spu::initCore(core, 512 * 1024, 24);
+}
+
+void Spu::initPS2Core(Core& core) noexcept {
+    Spu::initCore(core, 2048 * 1024, 48);
+}
+
+void Spu::destroyCore(Core& core) noexcept {
+    delete[] core.pVoices;
+    delete[] core.pRam;
+    core = {};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Start playing the given voice
+//------------------------------------------------------------------------------------------------------------------------------------------
+StereoSample Spu::stepCore(Core& core) noexcept {
+    // Process all voices firstly and silence the output if we are not unmuted
+    StereoSample output = {};
+    StereoSample outputToReverb = {};
+    stepVoices(core.pVoices, core.numVoices, core.pRam, core.ramSize, output, outputToReverb);
+
+    if (!core.bUnmute) {
+        output = {};
+        outputToReverb = {};
+    }
+
+    // Mix any external input
+    if (core.bExtEnabled) {
+        mixExternalInput(
+            core.pExtInputCallback,
+            core.pExtInputUserData,
+            core.extInputVol,
+            core.bExtReverbEnable,
+            output,
+            outputToReverb
+        );
+    }
+
+    // Do reverb every 2 cycles: PSX reverb operates at 22,050 Hz and the SPU operates at 44,100 Hz
+    if (core.cycleCount & 1) {
+        doReverb(
+            core.pRam,
+            core.ramSize,
+            core.reverbBaseAddr,
+            core.reverbCurAddr,
+            core.reverbVol,
+            core.bReverbWriteEnable,
+            core.reverbRegs,
+            outputToReverb,
+            core.processedReverb
+        );
+    }
+
+    // Do the final mixing and finish up
+    doMasterMix(output, core.processedReverb, core.masterVol, output);
+    core.cycleCount++;
+    return output;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Start playing the given voice
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Spu::keyOn(Voice& voice) noexcept {
+    // Jump to the sample start address and flag that we need to load samples
+    voice.bSamplesLoaded = false;
+    voice.adpcmBlockPos = {};
+    voice.adpcmCurAddr8 = voice.adpcmStartAddr8;
+
+    // Initialize the envelope
+    voice.envPhase = EnvPhase::Attack;
+    voice.envLevel = 0;
+    voice.envWaitCycles = 0;
+
+    // Initialize flags
+    voice.bReachedLoopEnd = false;
+    voice.bRepeat = false;
+
+    // Zero the previously decoded samples
+    static_assert(Voice::NUM_PREV_SAMPLES == 3);
+    voice.samples[0] = 0;
+    voice.samples[1] = 0;
+    voice.samples[2] = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Puts the given voice into release mode
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Spu::keyOff(Voice& voice) noexcept {
+    voice.envPhase = EnvPhase::Release;
+    voice.envWaitCycles = 0;
 }

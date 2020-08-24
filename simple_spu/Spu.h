@@ -10,7 +10,7 @@
 //  A stripped down emulation of a PlayStation 1 SPU, and potentially most of the PS2 SPU if the voice and RAM limits are increased.
 //  Implements the most commonly used functionality of the SPU, and specifically all the functionality required by PlayStation Doom.
 //  It is completely self isolated (apart from supplied external inputs) and can safely run in a separate thread.
-//  Largely inspired by the SPU implementation of the Avocado PlayStation emulator, and follows it's approach in various places.
+//  Largely based on the SPU implementation of the Avocado PlayStation emulator, and follows it's approach in various places.
 //
 //  What was removed from this SPU emulation:
 //      - All links to a host system, interrupts, system bus reading/writing, DMA etc.
@@ -327,17 +327,13 @@ namespace Spu {
     typedef StereoSample (*ExtInputCallback)(void* pUserData) noexcept;
 
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // The SPU core/device itself.
-    // Templated so the static limits of the SPU can be raised and so it can function more like a PS2 SPU (or beyond), with increased limits.
+    // The SPU core/device itself
     //--------------------------------------------------------------------------------------------------------------------------------------
-    template <int32_t NumVoices, uint32_t RamSize>
     struct Core {
-        // Note: SRAM size must be multiples of 8 because voices address ram in multiples of 8
-        static_assert(NumVoices > 0);
-        static_assert(RamSize > 0);
-        static_assert(RamSize % 8 == 0);
-
-        Voice               voices[NumVoices];      // All of the hardware voices of the SPU
+        std::byte*          pRam;                   // Sound RAM used by the SPU core
+        uint32_t            ramSize;                // How big the RAM size for the SPU core
+        Voice*              pVoices;                // Each of the hardware voices for the SPU
+        uint32_t            numVoices;              // How many voices the core provides
         Volume              masterVol;              // Master volume. Note: expected to be from -0x3FFF to +0x3FFF.
         Volume              reverbVol;              // Reverb volume level
         Volume              extInputVol;            // External input volume (I'm using this for CD audio mixing)
@@ -347,93 +343,27 @@ namespace Spu {
         bool                bExtReverbEnable;       // Whether to apply reverb on the input from the external source
         ExtInputCallback    pExtInputCallback;      // Callback used to source external input: if null no external input is mixed with SPU voices
         void*               pExtInputUserData;      // User data passed to the external input callback
-        uint32_t            cycleCount;             // How many cycles has the SPU done (44,100 == 1 second of audio): each cycle is generating a 16-bit left/right audio sample
+        uint32_t            cycleCount;             // How many cycles has the SPU done (44,100 == 1 second of audio): each cycle is generating a 16-bit left & right audio sample
         uint32_t            reverbBaseAddr;         // Start address of the reverb work area; anything past this address in SPU RAM is for reverb
         uint32_t            reverbCurAddr;          // Used for relative reads and writes to the reverb work area; continously incremented and wrapped as reverb is processed
         StereoSample        processedReverb;        // The processed reverb that is to be added into the final mix: only updated at 22,050 Hz instead of 44,100 Hz (every 2 SPU steps)
         ReverbRegs          reverbRegs;             // Registers with settings determining how reverb is processed: determines the type of reverb
-        std::byte           ram[RamSize];           // The SPU's sound RAM
-
-        // Steps the SPU and returns the resulting stero 16-bit samples
-        StereoSample step() noexcept {
-            // Process all voices firstly and silence the output if we are not unmuted
-            StereoSample output = {};
-            StereoSample outputToReverb = {};
-            stepVoices(voices, NumVoices, ram, RamSize, output, outputToReverb);
-
-            if (!bUnmute) {
-                output = {};
-                outputToReverb = {};
-            }
-
-            // Mix any external input
-            if (bExtEnabled) {
-                mixExternalInput(pExtInputCallback, pExtInputUserData, bExtReverbEnable, output, outputToReverb);
-            }
-
-            // Do reverb every 2 cycles: PSX reverb operates at 22,050 Hz and the SPU operates at 44,100 Hz
-            if (cycleCount & 1) {
-                doReverb(ram, RamSize, reverbBaseAddr, reverbCurAddr, reverbVol, bReverbWriteEnable, reverbRegs, outputToReverb, processedReverb);
-            }
-
-            // Do the final mixing and finish up
-            doMasterMix(output, processedReverb, masterVol, output);
-            cycleCount++;
-            return output;
-        }
     };
 
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // Spu update and utility functions
+    // SPU and voice manipulation
     //--------------------------------------------------------------------------------------------------------------------------------------
+
+    // Initialize and destroy an SPU core
+    void initCore(Core& core, const uint32_t ramSize, const uint32_t voiceCount) noexcept;
+    void initPS1Core(Core& core) noexcept;
+    void initPS2Core(Core& core) noexcept;
+    void destroyCore(Core& core) noexcept;
     
+    // Step the given SPU core
+    StereoSample stepCore(Core& core) noexcept;
+
     // Key on or off the given SPU voice
     void keyOn(Voice& voice) noexcept;
     void keyOff(Voice& voice) noexcept;
-
-    //--------------------------------------------------------------------------------------------------------------------------------------
-    // High level internal SPU functions
-    //--------------------------------------------------------------------------------------------------------------------------------------
-    void stepVoices(
-        Voice* const pVoices,
-        const int32_t numVoices,
-        const std::byte* pRam,
-        const uint32_t ramSize,
-        StereoSample& output,
-        StereoSample& outputToReverb
-    ) noexcept;
-
-    void mixExternalInput(
-        const ExtInputCallback pExtCallback,
-        void* const pExtCallbackUserData,
-        const Volume extVolume,
-        const bool bExtReverbEnabled,
-        StereoSample& output,
-        StereoSample& outputToReverb
-    ) noexcept;
-
-    void doReverb(
-        std::byte* pRam,
-        const uint32_t ramSize,
-        const uint32_t reverbBaseAddr,
-        uint32_t& reverbCurAddr,
-        const Volume reverbVol,
-        const bool bReverbWriteEnable,
-        const ReverbRegs& reverbRegs,
-        const StereoSample reverbInput,
-        StereoSample& reverbOutput
-    ) noexcept;
-
-    void doMasterMix(
-        const StereoSample dryOutput,
-        const StereoSample reverbOutput,
-        const Volume masterVol,
-        StereoSample& output
-    ) noexcept;
-
-    //--------------------------------------------------------------------------------------------------------------------------------------
-    // Typedef for PS1 and PS2 style SPU cores
-    //--------------------------------------------------------------------------------------------------------------------------------------
-    typedef Core<24, 512  * 1024> PS1Core;
-    typedef Core<48, 2048 * 1024> PS2Core;
 }
