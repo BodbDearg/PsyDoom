@@ -16,19 +16,16 @@
 #include <mutex>
 
 BEGIN_DISABLE_HEADER_WARNINGS
-    #include <disc/format/cue.h>
-    #include <disc/load.h>
     #include <system.h>
 END_DISABLE_HEADER_WARNINGS
 
 BEGIN_NAMESPACE(PsxVm)
 
-DiscInfo                gDiscInfo;
-IsoFileSys              gIsoFileSys;
-System*                 gpSystem;
-gpu::GPU*               gpGpu;
-Spu::Core               gSpu;
-device::cdrom::CDROM*   gpCdrom;
+DiscInfo    gDiscInfo;
+IsoFileSys  gIsoFileSys;
+System*     gpSystem;
+gpu::GPU*   gpGpu;
+Spu::Core   gSpu;
 
 static std::unique_ptr<System>  gSystem;
 static SDL_AudioDeviceID        gSdlAudioDeviceId;
@@ -57,14 +54,13 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
 // Initialize emulated PlayStation system components and use the given .cue file for the game disc
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool init(const char* const doomCdCuePath) noexcept {
-    // Create a new system and setup vm pointers
+    // Create a new Avocado system and set the GPU pointer
     gSystem.reset(new System());
-
-    System& system = *gSystem;
     gpSystem = gSystem.get();
     gpGpu = gpSystem->gpu.get();
+
+    // Init the SPU core
     Spu::initPS1Core(gSpu);
-    gpCdrom = gpSystem->cdrom.get();
 
     // GPU: disable logging - this eats up TONS of memory!
     gpGpu->gpuLogEnabled = false;
@@ -92,14 +88,6 @@ bool init(const char* const doomCdCuePath) noexcept {
                 "Is the disc in a strange format, or is the image corrupt?"
             );
         }
-    }
-    
-    // Open the DOOM cdrom with Avocado
-    system.cdrom->disc = disc::load(doomCdCuePath);
-    system.cdrom->setShell(false);
-
-    if (!system.cdrom->disc) {
-        FatalErrors::raiseF("Couldn't open or failed to parse the game disc .cue file '%s'!\n", doomCdCuePath);
     }
 
     // Setup sound
@@ -138,7 +126,6 @@ void shutdown() noexcept {
         gSdlAudioDeviceId = 0;
     }
 
-    gpCdrom = nullptr;
     Spu::destroyCore(gSpu);     // Note: no locking of the SPU here because all threads should be done with it at this point
     gpGpu = nullptr;
     gpSystem = nullptr;

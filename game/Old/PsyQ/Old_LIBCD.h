@@ -1,5 +1,7 @@
 #pragma once
 
+#if !PSYDOOM_MODS
+
 #include <cstdint>
 
 // Maximum number of tracks on a CD
@@ -121,3 +123,5 @@ bool LIBCD_CdGetSector(void* const pDst, const int32_t sizeInWords) noexcept;
 CdlLOC& LIBCD_CdIntToPos(const int32_t sectorNum, CdlLOC& pos) noexcept;
 int32_t LIBCD_CdPosToInt(const CdlLOC& pos) noexcept;
 int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept;
+
+#endif

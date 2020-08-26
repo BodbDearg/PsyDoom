@@ -341,8 +341,8 @@ struct master_status_structure {
 extern uint32_t     gWess_Millicount;
 extern uint32_t     gWess_Millicount_Frac;
 extern bool         gbWess_WessTimerActive;
-extern uint8_t      gWess_sectorBuffer1[CD_SECTOR_SIZE];
-extern uint8_t      gWess_sectorBuffer2[CD_SECTOR_SIZE];
+extern uint8_t      gWess_sectorBuffer1[CDROM_SECTOR_SIZE];
+extern uint8_t      gWess_sectorBuffer2[CDROM_SECTOR_SIZE];
 extern bool         gbWess_SeqOn;
 
 // Type for a driver or sequencer command function.

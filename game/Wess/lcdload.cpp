@@ -103,7 +103,7 @@ int32_t wess_dig_lcd_data_read(
     const uint16_t* pPatchSampleIndices = (const uint16_t*) gpWess_lcd_load_headerBuf;
 
     // Loop vars: number of bytes left to read from the input sector buffer, number of bytes written to the SPU and offset in the sector data
-    uint32_t sectorBytesLeft = CD_SECTOR_SIZE;
+    uint32_t sectorBytesLeft = CDROM_SECTOR_SIZE;
     int32_t bytesWritten = 0;
     uint32_t sndDataOffset = 0;
     
@@ -241,23 +241,23 @@ int32_t wess_dig_lcd_load(
     gWess_lcd_load_soundBytesLeft = 0;
 
     // Seek to the first sound data sector in the file and continue reading sound data until we are done
-    if (psxcd_seek(*pLcdFile, CD_SECTOR_SIZE, PsxCd_SeekMode::SET) != 0)
+    if (psxcd_seek(*pLcdFile, CDROM_SECTOR_SIZE, PsxCd_SeekMode::SET) != 0)
         return 0;
 
     // Read all of the sound data and upload to the SPU using sector buffer 2 as a temporary.
     // Note: we've already consumed 1 sector from the file, so the byte count left is adjusted accordingly.
-    int32_t lcdBytesLeft = pLcdFile->size - CD_SECTOR_SIZE;
+    int32_t lcdBytesLeft = pLcdFile->size - CDROM_SECTOR_SIZE;
     int32_t numSpuBytesWritten = 0;
 
     while (lcdBytesLeft > 0) {
         // Read this sector from the LCD file and the number of bytes left is smaller then read that amount instead
         uint8_t* const sectorBuffer = gWess_sectorBuffer2;
-        const int32_t readSize = (lcdBytesLeft < CD_SECTOR_SIZE) ? lcdBytesLeft : CD_SECTOR_SIZE;
+        const int32_t readSize = (lcdBytesLeft < CDROM_SECTOR_SIZE) ? lcdBytesLeft : CDROM_SECTOR_SIZE;
         psxcd_read(sectorBuffer, readSize, *pLcdFile);
 
-        if (readSize < CD_SECTOR_SIZE) {
+        if (readSize < CDROM_SECTOR_SIZE) {
             // When we are not filling part of the buffer then zero it out just for consistency
-            std::memset(sectorBuffer + readSize, 0, (size_t) CD_SECTOR_SIZE - readSize);
+            std::memset(sectorBuffer + readSize, 0, (size_t) CDROM_SECTOR_SIZE - readSize);
         }
 
         numSpuBytesWritten += wess_dig_lcd_data_read(sectorBuffer, destSpuAddr + numSpuBytesWritten, pSampleBlock, bOverride);

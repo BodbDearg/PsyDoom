@@ -1,11 +1,20 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): PlayStation CD-ROM handling utilities
+//
+// Note: this module has been almost completely rewritten for PsyDoom due to massive differences in how file I/O and CD audio playback work
+// for this port. A lot of the old PsyQ 'LIBCD' code simply did not make sense anymore, hence this is all marked as 'PsyDoom modifications'.
+// For the original code consult the version of this file in the 'Old' folder.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include "PsyQ/LIBCD.h"
+#if PSYDOOM_MODS
+
+#include <cstdint>
 
 enum class CdFileId : int32_t;
 
-// Number of bytes in a CD-ROM sector
-static constexpr int32_t CD_SECTOR_SIZE = 2048;
+// Number of bytes in a CD-ROM data sector, assuming MODE1 is used (includes error detection payload)
+static constexpr int32_t CDROM_SECTOR_SIZE = 2048;
 
 // Tracks an open file on the CD-ROM.
 // Contains info about the file as well as the current IO location and status.
@@ -32,25 +41,14 @@ struct PsxCd_MapTblEntry {
     int32_t     size;
 };
 
-// Sector buffer for when we are reading data
-extern uint8_t gPSXCD_sectorbuf[CD_SECTOR_SIZE];
-
-void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept;
-void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept;
-void psxcd_disable_callbacks() noexcept;
-void psxcd_enable_callbacks() noexcept;
 void psxcd_init() noexcept;
 void psxcd_exit() noexcept;
-void psxcd_set_data_mode() noexcept;
 PsxCd_File* psxcd_open(const CdFileId discFile) noexcept;
 bool psxcd_seeking_for_play() noexcept;
-bool psxcd_waiting_for_pause() noexcept;
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;
 int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept;
 int32_t psxcd_tell(const PsxCd_File& file) noexcept;
 void psxcd_close(PsxCd_File& file) noexcept;
-void psxcd_set_audio_mode() noexcept;
-void psxcd_set_loop_volume(const int32_t vol) noexcept;
 
 void psxcd_play_at_andloop(
     const int32_t track,
@@ -59,21 +57,16 @@ void psxcd_play_at_andloop(
     const int32_t fadeUpTime,
     const int32_t loopTrack,
     const int32_t loopVol,
-    const int32_t loopSectorOffest,
+    const int32_t loopSectorOffset,
     const int32_t loopFadeUpTime
 ) noexcept;
 
 void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorOffset) noexcept;
 void psxcd_play(const int32_t track, const int32_t vol) noexcept;
-void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noexcept;
-void psxcd_seek_for_play(const int32_t track) noexcept;
-bool psxcd_play_status() noexcept;
 void psxcd_stop() noexcept;
 void psxcd_pause() noexcept;
 void psxcd_restart(const int32_t vol) noexcept;
 int32_t psxcd_elapsed_sectors() noexcept;
-void psxcd_set_stereo(const bool bStereo) noexcept;
+int32_t psxcd_get_file_size(const CdFileId discFile) noexcept;
 
-#if PSYDOOM_MODS
-    int32_t psxcd_get_file_size(const CdFileId discFile) noexcept;
-#endif
+#endif  // #if PSYDOOM_MODS

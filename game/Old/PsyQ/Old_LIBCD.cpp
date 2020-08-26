@@ -2,7 +2,9 @@
 // Module containing a partial reimplementation of the PSY-Q 'LIBCD' library.
 // These functions are not neccesarily faithful to the original code, and are reworked to make the game run in it's new environment.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "LIBCD.h"
+#include "OLD_LIBCD.h"
+
+#if !PSYDOOM_MODS
 
 #include "PcPsx/Assert.h"
 #include "PcPsx/Finally.h"
@@ -553,3 +555,5 @@ int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept {
 
     return numTracks;
 }
+
+#endif

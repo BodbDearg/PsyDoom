@@ -31,8 +31,8 @@ uint32_t gWess_Millicount_Frac;
 bool gbWess_WessTimerActive;
  
 // Temporary buffers used for holding a sector worth of data
-uint8_t gWess_sectorBuffer1[CD_SECTOR_SIZE];
-uint8_t gWess_sectorBuffer2[CD_SECTOR_SIZE];
+uint8_t gWess_sectorBuffer1[CDROM_SECTOR_SIZE];
+uint8_t gWess_sectorBuffer2[CDROM_SECTOR_SIZE];
 
 // True when the sequencer is enabled and can tick
 bool gbWess_SeqOn;
@@ -263,10 +263,10 @@ int32_t data_read(PsxCd_File& file, const int32_t destSpuAddr, const int32_t num
     uint32_t numBytesLeft = numBytes;
     uint32_t curDestSpuAddr = destSpuAddr;
 
-    while (numBytesLeft >= CD_SECTOR_SIZE) {
-        data_read_chunk(file, CD_SECTOR_SIZE, curDestSpuAddr);
-        numBytesLeft -= CD_SECTOR_SIZE;
-        curDestSpuAddr += CD_SECTOR_SIZE;
+    while (numBytesLeft >= CDROM_SECTOR_SIZE) {
+        data_read_chunk(file, CDROM_SECTOR_SIZE, curDestSpuAddr);
+        numBytesLeft -= CDROM_SECTOR_SIZE;
+        curDestSpuAddr += CDROM_SECTOR_SIZE;
     }
 
     // Read what remains, if anything
