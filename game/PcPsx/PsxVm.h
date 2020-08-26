@@ -42,4 +42,14 @@ void generateTimerEvents() noexcept;
 // This steps the cdrom drive and invokes any data callbacks that would be invoked by new sectors being available.
 void stepCdromWithCallbacks() noexcept;
 
+// Lock and unlock the SPU and a helper to do it via the RAII pattern.
+// The SPU should be locked before reading from or writing to any of it's properties.
+void lockSpu() noexcept;
+void unlockSpu() noexcept;
+
+struct LockSpu {
+    LockSpu() noexcept { lockSpu(); }
+    ~LockSpu() noexcept { unlockSpu(); }
+};
+
 END_NAMESPACE(PsxVm)

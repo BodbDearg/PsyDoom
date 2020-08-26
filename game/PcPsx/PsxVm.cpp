@@ -13,6 +13,7 @@
 #include "Spu.h"
 
 #include <SDL.h>
+#include <mutex>
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <disc/format/cue.h>
@@ -31,20 +32,20 @@ device::cdrom::CDROM*   gpCdrom;
 
 static std::unique_ptr<System>  gSystem;
 static SDL_AudioDeviceID        gSdlAudioDeviceId;
+static std::recursive_mutex     gSpuMutex;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // A callback invoked by SDL to ask for audio from PsyDoom
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, int outputSize) noexcept {
-    // TODO: Audio: add locking
-
     // Ignore invalid requests
     if (outputSize <= 0)
         return;
 
-    // Generate the requested number of samples
+    // Lock the SPU and generate the requested number of samples
+    PsxVm::LockSpu spuLock;
     const uint32_t numSamples = (uint32_t) outputSize / sizeof(Spu::StereoSample);
-
+    
     for (uint32_t sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
         const Spu::StereoSample sample = Spu::stepCore(gSpu);
         std::memcpy(pOutput, &sample, sizeof(sample));
@@ -130,7 +131,7 @@ bool init(const char* const doomCdCuePath) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tear down emulated PlayStation components
 //------------------------------------------------------------------------------------------------------------------------------------------
-void shutdown() noexcept {
+void shutdown() noexcept {    
     if (gSdlAudioDeviceId != 0) {
         SDL_PauseAudioDevice(gSdlAudioDeviceId, true);
         SDL_CloseAudioDevice(gSdlAudioDeviceId);
@@ -138,7 +139,7 @@ void shutdown() noexcept {
     }
 
     gpCdrom = nullptr;
-    Spu::destroyCore(gSpu);
+    Spu::destroyCore(gSpu);     // Note: no locking of the SPU here because all threads should be done with it at this point
     gpGpu = nullptr;
     gpSystem = nullptr;
     gSystem.reset();
@@ -167,6 +168,14 @@ void submitGpuPrimitive(const void* const pPrim) noexcept {
         --dataWordsLeft;
         gpGpu->writeGP0(dataWord);
     }
+}
+
+void lockSpu() noexcept {
+    gSpuMutex.lock();
+}
+
+void unlockSpu() noexcept {
+    gSpuMutex.unlock();
 }
 
 END_NAMESPACE(PsxVm)
