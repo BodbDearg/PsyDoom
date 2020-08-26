@@ -10,13 +10,13 @@
 #include "Input.h"
 #include "IsoFileSys.h"
 #include "ProgArgs.h"
+#include "Spu.h"
 
 #include <SDL.h>
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <disc/format/cue.h>
     #include <disc/load.h>
-    #include <sound/sound.h>
     #include <system.h>
 END_DISABLE_HEADER_WARNINGS
 
@@ -26,10 +26,31 @@ DiscInfo                gDiscInfo;
 IsoFileSys              gIsoFileSys;
 System*                 gpSystem;
 gpu::GPU*               gpGpu;
-spu::SPU*               gpSpu;
+Spu::Core               gSpu;
 device::cdrom::CDROM*   gpCdrom;
 
-static std::unique_ptr<System> gSystem;
+static std::unique_ptr<System>  gSystem;
+static SDL_AudioDeviceID        gSdlAudioDeviceId;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A callback invoked by SDL to ask for audio from PsyDoom
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, int outputSize) noexcept {
+    // TODO: Audio: add locking
+
+    // Ignore invalid requests
+    if (outputSize <= 0)
+        return;
+
+    // Generate the requested number of samples
+    const uint32_t numSamples = (uint32_t) outputSize / sizeof(Spu::StereoSample);
+
+    for (uint32_t sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
+        const Spu::StereoSample sample = Spu::stepCore(gSpu);
+        std::memcpy(pOutput, &sample, sizeof(sample));
+        pOutput += sizeof(sample);
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize emulated PlayStation system components and use the given .cue file for the game disc
@@ -41,7 +62,7 @@ bool init(const char* const doomCdCuePath) noexcept {
     System& system = *gSystem;
     gpSystem = gSystem.get();
     gpGpu = gpSystem->gpu.get();
-    gpSpu = gpSystem->spu.get();
+    Spu::initPS1Core(gSpu);
     gpCdrom = gpSystem->cdrom.get();
 
     // GPU: disable logging - this eats up TONS of memory!
@@ -80,10 +101,29 @@ bool init(const char* const doomCdCuePath) noexcept {
         FatalErrors::raiseF("Couldn't open or failed to parse the game disc .cue file '%s'!\n", doomCdCuePath);
     }
 
-    // Setup sound and init game controller support
-    SDL_InitSubSystem(SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
-    Sound::init();
-    Sound::play();
+    // Setup sound
+    SDL_InitSubSystem(SDL_INIT_AUDIO);
+
+    {
+        // Firstly try to open an audio device sampling at 44,100 Hz, stereo in signed 16-bit mode.
+        // Note that if initialization succeeds then we've got our requested format, since we ask SDL not to allow any deviation.
+        SDL_AudioSpec wantFmt = {};
+        wantFmt.freq = 44100;
+        wantFmt.format = AUDIO_S16SYS;
+        wantFmt.channels = 2;
+        wantFmt.samples = 512;  // Update approximately every 12 MS or at 83 Hz - this should be pretty responsive
+        wantFmt.callback = SdlAudioCallback;
+
+        SDL_AudioSpec gotFmt = {};
+        gSdlAudioDeviceId = SDL_OpenAudioDevice(nullptr, false, &wantFmt, &gotFmt, false);
+
+        if (gSdlAudioDeviceId != 0) {
+            SDL_PauseAudioDevice(gSdlAudioDeviceId, false);
+        }
+    }
+
+    // Initialize game controller support
+    SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER);
     return true;
 }
 
@@ -91,10 +131,14 @@ bool init(const char* const doomCdCuePath) noexcept {
 // Tear down emulated PlayStation components
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
-    Sound::close();
-    
+    if (gSdlAudioDeviceId != 0) {
+        SDL_PauseAudioDevice(gSdlAudioDeviceId, true);
+        SDL_CloseAudioDevice(gSdlAudioDeviceId);
+        gSdlAudioDeviceId = 0;
+    }
+
     gpCdrom = nullptr;
-    gpSpu = nullptr;
+    Spu::destroyCore(gSpu);
     gpGpu = nullptr;
     gpSystem = nullptr;
     gSystem.reset();
@@ -122,44 +166,6 @@ void submitGpuPrimitive(const void* const pPrim) noexcept {
         ++pCurWord;
         --dataWordsLeft;
         gpGpu->writeGP0(dataWord);
-    }
-}
-
-void emulateSoundIfRequired() noexcept {
-    // Do no sound emulation in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
-
-    while (true) {
-        size_t soundBufferSize;
-
-        {
-            std::unique_lock<std::mutex> lock(Sound::audioMutex);
-            soundBufferSize = Sound::buffer.size();
-        }
-
-        // TODO: emulateSoundIfRequired: FIXME, temp hack: fill the sound buffers up a decent amount to prevent skipping
-        if (soundBufferSize >= 1024 * 4)
-            return;
-        
-        spu::SPU& spu = *gpSpu;
-        device::cdrom::CDROM& cdrom = *gpCdrom;
-
-        while (!spu.bufferReady) {
-            // Read more CD data if we are playing music
-            if (cdrom.stat.play && cdrom.audio.empty()) {
-                cdrom.bForceSectorRead = true;  // Force an immediate read on the next step
-                stepCdromWithCallbacks();
-            }
-
-            // Step the spu to emulate it's functionality
-            spu.step(&cdrom);
-        }
-
-        if (spu.bufferReady) {
-            spu.bufferReady = false;
-            Sound::appendBuffer(spu.audioBuffer.begin(), spu.audioBuffer.end());
-        }
     }
 }
 

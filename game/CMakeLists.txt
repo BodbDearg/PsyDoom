@@ -307,9 +307,10 @@ include_directories(${INCLUDE_PATHS})
 
 # Required libraries
 target_link_libraries(${GAME_TGT_NAME}
+    ${ASIO_TGT_NAME}
     ${AVOCADO_TGT_NAME}
     ${RAPID_JSON_TGT_NAME}
-    ${ASIO_TGT_NAME}
+    ${SIMPLE_SPU_TGT_NAME}
 )
 
 # MSVC use a lower warning level for this project temporarily

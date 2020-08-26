@@ -44,7 +44,7 @@ namespace Spu {
             uint32_t gaussIdxFrac   : 4;    // Lower fractional bits of the gauss index
             uint32_t gaussIdx       : 8;    // Gauss index: this is an index into an interpolation table for interpolating the 4 most recent samples
             uint32_t sampleIdx      : 20;   // Index of the current sample in the ADPCM block. Once this exceeds '28' we need to read more ADPCM blocks
-        };
+        } fields;
 
         // This is simply incremented by the pitch of the voice.
         // If incremented by '0x1000' then it means we are playing the sample @ 44.1 KHz since the SPU samples at that rate and
@@ -298,8 +298,11 @@ namespace Spu {
         // Current envelope phase
         EnvPhase envPhase;
 
-        // The ADSR envelope to use
-        AdsrEnvelope env;
+        // The ADSR envelope to use: can be accessed as individual bit fields or as a single uint32_t
+        union {
+            AdsrEnvelope    env;
+            uint32_t        envBits;
+        };
 
         // How many cycles to wait before processing the envelope.
         // This is generally always '1' but can be larger for really slow envelopes.
@@ -344,7 +347,7 @@ namespace Spu {
         ExtInputCallback    pExtInputCallback;      // Callback used to source external input: if null no external input is mixed with SPU voices
         void*               pExtInputUserData;      // User data passed to the external input callback
         uint32_t            cycleCount;             // How many cycles has the SPU done (44,100 == 1 second of audio): each cycle is generating a 16-bit left & right audio sample
-        uint32_t            reverbBaseAddr;         // Start address of the reverb work area; anything past this address in SPU RAM is for reverb
+        uint32_t            reverbBaseAddr8;        // Start address of the reverb work area in 8 byte units; anything past this address in SPU RAM is for reverb
         uint32_t            reverbCurAddr;          // Used for relative reads and writes to the reverb work area; continously incremented and wrapped as reverb is processed
         StereoSample        processedReverb;        // The processed reverb that is to be added into the final mix: only updated at 22,050 Hz instead of 44,100 Hz (every 2 SPU steps)
         ReverbRegs          reverbRegs;             // Registers with settings determining how reverb is processed: determines the type of reverb

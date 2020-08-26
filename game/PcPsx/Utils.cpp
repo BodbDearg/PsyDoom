@@ -61,7 +61,6 @@ void doPlatformUpdates() noexcept {
     gLastPlatformUpdateTime = now;
 
     PsxVm::generateTimerEvents();
-    PsxVm::emulateSoundIfRequired();
     Network::doUpdates();
     Input::update();
 }
@@ -90,6 +89,8 @@ void waitForSeconds(float seconds) noexcept {
 // This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void waitForCdAudioPlaybackStart() noexcept {
+    // TODO: Sound: fix waitForCdAudioPlaybackStart
+    #if false
     // Wait until some cd audio has been read...
     // This is all the original PSX Doom code did, nothing else:
     while (psxcd_elapsed_sectors() == 0) {
@@ -98,6 +99,7 @@ void waitForCdAudioPlaybackStart() noexcept {
         Utils::doPlatformUpdates();
         Utils::threadYield();
     }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

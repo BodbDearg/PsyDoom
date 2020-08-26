@@ -7,11 +7,14 @@
 struct DiscInfo;
 struct IsoFileSys;
 
+namespace Spu {
+    struct Core;
+}
+
 // Forward declaring avocado types
 struct System;
 
 namespace gpu               { class GPU;    }
-namespace spu               { struct SPU;   }
 namespace device::cdrom     { class CDROM;  }
 
 BEGIN_NAMESPACE(PsxVm)
@@ -23,13 +26,12 @@ extern IsoFileSys   gIsoFileSys;
 // Access to emulated Avocado devices
 extern System*                  gpSystem;
 extern gpu::GPU*                gpGpu;
-extern spu::SPU*                gpSpu;
+extern Spu::Core                gSpu;
 extern device::cdrom::CDROM*    gpCdrom;
 
 bool init(const char* const doomCdCuePath) noexcept;
 void shutdown() noexcept;
 void submitGpuPrimitive(const void* const pPrim) noexcept;
-void emulateSoundIfRequired() noexcept;
 
 // Fire timer (root counter) related events if appropriate.
 // Note: this is implemented in LIBAPI, where timers are handled.
