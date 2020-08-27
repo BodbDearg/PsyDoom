@@ -13,6 +13,7 @@
 - Investigate interpolation for sprites and sectors in addition to player view.
 - Make GPU primitives go more directly to the rasterizer rather than through a buffer.
 - Break the link between the GPU and Avocado 'system' (entire PSX)
+- Move the sequencer onto another thread to ensure 120 Hz heartbeat at all times?
 - Implement playing the intro movies and legal text
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
