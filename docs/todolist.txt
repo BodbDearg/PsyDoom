@@ -7,8 +7,6 @@
 - Automap: fix lines being clipped 1 pixel short
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
-- Fix separate movement directions (left/right) not cancelling each other out.
-    - This behavior might have to be otherwise preserved though for demo compatibility.
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
     - Need to run at capped framerate to see properly.

@@ -399,9 +399,9 @@ void psxcd_play_at_andloop(
     const int32_t sectorOffset,
     const int32_t fadeUpTime,
     const int32_t loopTrack,
-    const int32_t loopVol,
+    [[maybe_unused]] const int32_t loopVol,
     const int32_t loopSectorOffset,
-    const int32_t loopFadeUpTime
+    [[maybe_unused]] const int32_t loopFadeUpTime
 ) noexcept {
     // PsyDoom: to simplify threading and very messy synchronization in the CD audio callback these fields are no longer supported.
     // Setting them to values other than this will no longer work! That's OK because Doom always followed these usage patterns:
