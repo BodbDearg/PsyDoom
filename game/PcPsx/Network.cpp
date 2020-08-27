@@ -60,10 +60,12 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
             break;
 
         // Not yet complete: check for abortion requests from the user - if that is allowed.
-        // If we find none then yield some CPU since we will be waiting a while longer.
         if (bIsAbortable && isCancelNetworkConnectionRequested())
             return false;
         
+        // While we are waiting update the display to help prevent stutter after long pauses (if we are waiting a long time).
+        // See the 'Utils.cpp' file for more comments on this issue.
+        Video::displayFramebuffer();
         Utils::threadYield();
     }
 

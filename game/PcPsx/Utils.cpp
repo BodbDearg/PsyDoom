@@ -88,8 +88,9 @@ static bool waitForCond(const T& condLamba) noexcept {
 
         // Ok have to wait for a bit, do platform updates and a refresh of the display.
         // Refreshing the display helps prevent a brief (temporary) stutter issue after long pauses - I'm not sure why, maybe an SDL bug?
-        // Doing a vsync'd present also reduces idle CPU usage a lot more than a spinning loop with thread yield.                
+        // Doing a vsync'd present also reduces idle CPU usage a lot more than a spinning loop with thread yield.
         Video::displayFramebuffer();
+        Utils::threadYield();
         doPlatformUpdates();
     }
 
