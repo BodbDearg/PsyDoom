@@ -1175,7 +1175,6 @@ void psxcd_pause() noexcept {
 
         while (psxspu_get_cd_fade_status()) {
             // Wait for the fade to complete...
-            // TODO: PC-PSX: yield CPU cycles here and handle window events if pausing.
         }
     }
     

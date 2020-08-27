@@ -485,9 +485,6 @@ void LIBCD_CD_init() noexcept {
 // Internal initialization function: sound stuff related to CD audio
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBCD_CD_initvol() noexcept {
-    // TODO: Sound: LIBCD_CD_initvol
-    #if false
-
     // Set volume levels
     spu::SPU& spu = *PsxVm::gpSpu;
 
@@ -510,8 +507,6 @@ void LIBCD_CD_initvol() noexcept {
     cdAudioVol.l_to_l = 128;
     cdAudioVol.r_to_r = 128;
     LIBCD_CdMix(cdAudioVol);
-
-    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
