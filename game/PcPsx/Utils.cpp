@@ -9,6 +9,7 @@
 #include "Video.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
+#include "Wess/wessapi.h"
 
 #include <chrono>
 #include <SDL.h>
@@ -61,7 +62,6 @@ void doPlatformUpdates() noexcept {
     gLastPlatformUpdateTime = now;
 
     PsxVm::generateTimerEvents();
-    PsxVm::emulateSoundIfRequired();
     Network::doUpdates();
     Input::update();
 }
@@ -85,35 +85,69 @@ void waitForSeconds(float seconds) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utility that implements a commonly used loop from the original PSX Doom, with some PC friendly modifications.
+// Utility that implements a wait loop from the original PSX Doom, with some PC friendly modifications.
 // Waits until at least 1 CD audio sector has been read before continuing.
 // This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void waitForCdAudioPlaybackStart() noexcept {
-    // Wait until some cd audio has been read...
+    // Never wait in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
+    // Wait until some cd audio has been read, or until quit is requested...
     // This is all the original PSX Doom code did, nothing else:
-    while (psxcd_elapsed_sectors() == 0) {
-        // Also update everything (sound etc.) so we can eventually escape this loop and the user can close the window if required.
-        // Since we are waiting a bit we can also yield some CPU time.
-        Utils::doPlatformUpdates();
-        Utils::threadYield();
+    while ((psxcd_elapsed_sectors() == 0) && (!Input::isQuitRequested())) {
+        doPlatformUpdates();
+        threadYield();
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utility that implements a commonly used loop from the original PSX Doom, with some PC friendly modifications.
+// Utility that implements a wait loop from the original PSX Doom, with some PC friendly modifications.
+// Waits until a specified music or sound sequence has exited the specified status or the application is quitting.
+// This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void waitUntilSeqEnteredStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept {
+    // Never wait in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
+    // Wait until the sequence has entered the status or the user has requested an app quit
+    while ((wess_seq_status(sequenceIdx) != status) && (!Input::isQuitRequested())) {
+        doPlatformUpdates();
+        threadYield();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility that implements a wait loop from the original PSX Doom, with some PC friendly modifications.
+// Waits until a specified music or sound sequence has exited the specified status or the application is quitting.
+// This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void waitUntilSeqExitedStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept {
+    // Never wait in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
+    // Wait until the sequence has exited the status or the user has requested an app quit
+    while ((wess_seq_status(sequenceIdx) == status) && (!Input::isQuitRequested())) {
+        doPlatformUpdates();
+        threadYield();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility that implements a wait loop from the original PSX Doom, with some PC friendly modifications.
 // Waits until at CD audio has finished fading out.
 // This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void waitForCdAudioFadeOut() noexcept {
-    // Never wait for fades in headless mode
+    // Never wait in headless mode
     if (ProgArgs::gbHeadlessMode)
         return;
 
-    // Wait for the fade to complete...
-    while (psxspu_get_cd_fade_status()) {
-        // Also update everything (sound etc.) so we can eventually escape this loop and the user can close the window if required.
-        // Since we are waiting a bit we can also yield some CPU time.
+    // Wait for the fade to complete or quit to be requested...
+    while (psxspu_get_cd_fade_status() && (!Input::isQuitRequested())) {
         Utils::doPlatformUpdates();
         Utils::threadYield();
     }

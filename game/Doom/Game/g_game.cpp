@@ -70,14 +70,9 @@ void G_DoLoadLevel() noexcept {
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
 
     // Wait for the pistol and barrel explode menu sounds to stop playing
-    while ((wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING) || (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING)) {
-        // PsyDoom: need to update sound to escape this loop, also ensure the window stays responsive etc.
-        #if PSYDOOM_MODS
-            Utils::doPlatformUpdates();
-            Utils::threadYield();
-        #endif
-    }
-
+    Utils::waitUntilSeqExitedStatus(sfx_barexp, SequenceStatus::SEQUENCE_PLAYING);
+    Utils::waitUntilSeqExitedStatus(sfx_pistol, SequenceStatus::SEQUENCE_PLAYING);
+    
     // Loading sound and music
     S_LoadMapSoundAndMusic(gGameMap);
 

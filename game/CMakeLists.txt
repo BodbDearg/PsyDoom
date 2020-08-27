@@ -202,8 +202,6 @@ set(SOURCE_FILES
     "PcPsx/Video.h"
     "PsyQ/LIBAPI.cpp"
     "PsyQ/LIBAPI.h"
-    "PsyQ/LIBCD.cpp"
-    "PsyQ/LIBCD.h"
     "PsyQ/LIBETC.cpp"
     "PsyQ/LIBETC.h"
     "PsyQ/LIBGPU.cpp"
@@ -255,6 +253,8 @@ if (PSYDOOM_INCLUDE_OLD_CODE)
         "Old/Old_cdmaptbl.cpp"
         "Old/PsyQ/Old_LIBAPI.cpp"
         "Old/PsyQ/Old_LIBAPI.h"
+        "Old/PsyQ/Old_LIBCD.cpp"
+        "Old/PsyQ/Old_LIBCD.h"
         "Old/PsyQ/Old_LIBCOMB.cpp"
         "Old/PsyQ/Old_LIBCOMB.h"
         "Old/Wess/Old_lcdload.cpp"
@@ -307,9 +307,10 @@ include_directories(${INCLUDE_PATHS})
 
 # Required libraries
 target_link_libraries(${GAME_TGT_NAME}
+    ${ASIO_TGT_NAME}
     ${AVOCADO_TGT_NAME}
     ${RAPID_JSON_TGT_NAME}
-    ${ASIO_TGT_NAME}
+    ${SIMPLE_SPU_TGT_NAME}
 )
 
 # MSVC use a lower warning level for this project temporarily

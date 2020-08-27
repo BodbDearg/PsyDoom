@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstdint>
-
 #if !PSYDOOM_MODS
+
+#include <cstdint>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Flags for 'LIBAPI_open' to specify how the stream behaves

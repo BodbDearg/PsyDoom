@@ -10,39 +10,57 @@
 #include "Input.h"
 #include "IsoFileSys.h"
 #include "ProgArgs.h"
+#include "Spu.h"
 
 #include <SDL.h>
+#include <mutex>
 
 BEGIN_DISABLE_HEADER_WARNINGS
-    #include <disc/format/cue.h>
-    #include <disc/load.h>
-    #include <sound/sound.h>
     #include <system.h>
 END_DISABLE_HEADER_WARNINGS
 
 BEGIN_NAMESPACE(PsxVm)
 
-DiscInfo                gDiscInfo;
-IsoFileSys              gIsoFileSys;
-System*                 gpSystem;
-gpu::GPU*               gpGpu;
-spu::SPU*               gpSpu;
-device::cdrom::CDROM*   gpCdrom;
+DiscInfo    gDiscInfo;
+IsoFileSys  gIsoFileSys;
+System*     gpSystem;
+gpu::GPU*   gpGpu;
+Spu::Core   gSpu;
 
-static std::unique_ptr<System> gSystem;
+static std::unique_ptr<System>  gSystem;
+static SDL_AudioDeviceID        gSdlAudioDeviceId;
+static std::recursive_mutex     gSpuMutex;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A callback invoked by SDL to ask for audio from PsyDoom
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, int outputSize) noexcept {
+    // Ignore invalid requests
+    if (outputSize <= 0)
+        return;
+
+    // Lock the SPU and generate the requested number of samples
+    PsxVm::LockSpu spuLock;
+    const uint32_t numSamples = (uint32_t) outputSize / sizeof(Spu::StereoSample);
+    
+    for (uint32_t sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
+        const Spu::StereoSample sample = Spu::stepCore(gSpu);
+        std::memcpy(pOutput, &sample, sizeof(sample));
+        pOutput += sizeof(sample);
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize emulated PlayStation system components and use the given .cue file for the game disc
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool init(const char* const doomCdCuePath) noexcept {
-    // Create a new system and setup vm pointers
+    // Create a new Avocado system and set the GPU pointer
     gSystem.reset(new System());
-
-    System& system = *gSystem;
     gpSystem = gSystem.get();
     gpGpu = gpSystem->gpu.get();
-    gpSpu = gpSystem->spu.get();
-    gpCdrom = gpSystem->cdrom.get();
+
+    // Init the SPU core
+    Spu::initPS1Core(gSpu);
 
     // GPU: disable logging - this eats up TONS of memory!
     gpGpu->gpuLogEnabled = false;
@@ -71,30 +89,44 @@ bool init(const char* const doomCdCuePath) noexcept {
             );
         }
     }
-    
-    // Open the DOOM cdrom with Avocado
-    system.cdrom->disc = disc::load(doomCdCuePath);
-    system.cdrom->setShell(false);
 
-    if (!system.cdrom->disc) {
-        FatalErrors::raiseF("Couldn't open or failed to parse the game disc .cue file '%s'!\n", doomCdCuePath);
+    // Setup sound
+    SDL_InitSubSystem(SDL_INIT_AUDIO);
+
+    {
+        // Firstly try to open an audio device sampling at 44,100 Hz, stereo in signed 16-bit mode.
+        // Note that if initialization succeeds then we've got our requested format, since we ask SDL not to allow any deviation.
+        SDL_AudioSpec wantFmt = {};
+        wantFmt.freq = 44100;
+        wantFmt.format = AUDIO_S16SYS;
+        wantFmt.channels = 2;
+        wantFmt.samples = 512;  // Update approximately every 12 MS or at 83 Hz - this should be pretty responsive
+        wantFmt.callback = SdlAudioCallback;
+
+        SDL_AudioSpec gotFmt = {};
+        gSdlAudioDeviceId = SDL_OpenAudioDevice(nullptr, false, &wantFmt, &gotFmt, false);
+
+        if (gSdlAudioDeviceId != 0) {
+            SDL_PauseAudioDevice(gSdlAudioDeviceId, false);
+        }
     }
 
-    // Setup sound and init game controller support
-    SDL_InitSubSystem(SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
-    Sound::init();
-    Sound::play();
+    // Initialize game controller support
+    SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER);
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tear down emulated PlayStation components
 //------------------------------------------------------------------------------------------------------------------------------------------
-void shutdown() noexcept {
-    Sound::close();
-    
-    gpCdrom = nullptr;
-    gpSpu = nullptr;
+void shutdown() noexcept {    
+    if (gSdlAudioDeviceId != 0) {
+        SDL_PauseAudioDevice(gSdlAudioDeviceId, true);
+        SDL_CloseAudioDevice(gSdlAudioDeviceId);
+        gSdlAudioDeviceId = 0;
+    }
+
+    Spu::destroyCore(gSpu);     // Note: no locking of the SPU here because all threads should be done with it at this point
     gpGpu = nullptr;
     gpSystem = nullptr;
     gSystem.reset();
@@ -125,42 +157,12 @@ void submitGpuPrimitive(const void* const pPrim) noexcept {
     }
 }
 
-void emulateSoundIfRequired() noexcept {
-    // Do no sound emulation in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
+void lockSpu() noexcept {
+    gSpuMutex.lock();
+}
 
-    while (true) {
-        size_t soundBufferSize;
-
-        {
-            std::unique_lock<std::mutex> lock(Sound::audioMutex);
-            soundBufferSize = Sound::buffer.size();
-        }
-
-        // TODO: emulateSoundIfRequired: FIXME, temp hack: fill the sound buffers up a decent amount to prevent skipping
-        if (soundBufferSize >= 1024 * 4)
-            return;
-        
-        spu::SPU& spu = *gpSpu;
-        device::cdrom::CDROM& cdrom = *gpCdrom;
-
-        while (!spu.bufferReady) {
-            // Read more CD data if we are playing music
-            if (cdrom.stat.play && cdrom.audio.empty()) {
-                cdrom.bForceSectorRead = true;  // Force an immediate read on the next step
-                stepCdromWithCallbacks();
-            }
-
-            // Step the spu to emulate it's functionality
-            spu.step(&cdrom);
-        }
-
-        if (spu.bufferReady) {
-            spu.bufferReady = false;
-            Sound::appendBuffer(spu.audioBuffer.begin(), spu.audioBuffer.end());
-        }
-    }
+void unlockSpu() noexcept {
+    gSpuMutex.unlock();
 }
 
 END_NAMESPACE(PsxVm)

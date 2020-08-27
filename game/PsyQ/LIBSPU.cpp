@@ -5,16 +5,15 @@
 #include "LIBSPU.h"
 
 #include "PcPsx/PsxVm.h"
+#include "Spu.h"
 
-BEGIN_DISABLE_HEADER_WARNINGS
-    #include <system.h>
-END_DISABLE_HEADER_WARNINGS
-
-// How big the sound RAM is available to the SPU
-static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;
+#include <cmath>
 
 // The current reverb mode in use
 static SpuReverbMode gReverbMode = SPU_REV_MODE_OFF;
+
+// Where to write to next in SPU ram
+static uint32_t gTransferStartAddr;
 
 // The 'base' note for each voice: this is the musical note at which the sample rate is considered to be 44,100 Hz.
 // The actual semitone is encoded in the top 8-bits, the 1/128 semitone fraction is encoded in the low 8-bits.
@@ -36,8 +35,6 @@ uint16_t LIBSPU__spu_note2pitch(
 // Set one or more (or all) properties on a voice or voices using the information in the given struct
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
-
     // Figure out what attributes to set for the specified voices
     const uint32_t attribMask = attribs.attr_mask;
     
@@ -63,18 +60,21 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
     const bool bSetVolModeR     = (bSetAllAttribs || (attribMask & SPU_VOICE_VOLMODER));
 
     // Set the required attributes for all specified voices
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
+
     const uint32_t voiceBits = attribs.voice_bits;
 
-    for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+    for (uint32_t voiceIdx = 0; voiceIdx < spu.numVoices; ++voiceIdx) {
         // Skip this voice if we're not setting its attributes
         if ((voiceBits & (1 << voiceIdx)) == 0)
             continue;
 
         // Set: voice 'pitch' or sample rate. Note that '4,096' = '44,100 Hz'.
-        spu::Voice& voice = spu.voices[voiceIdx];
+        Spu::Voice& voice = spu.pVoices[voiceIdx];
 
         if (bSetPitch) {
-            voice.sampleRate._reg = attribs.pitch;
+            voice.sampleRate = attribs.pitch;
         }
 
         // Set: voice 'base' note at which the sample rate is regarded to be '44,100 Hz'
@@ -88,46 +88,46 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
             const uint16_t baseNote = gVoiceBaseNotes[voiceIdx];
             const uint16_t note = attribs.note;
             const uint16_t sampleRate = LIBSPU__spu_note2pitch(baseNote >> 8, baseNote & 0xFF, note >> 8, note & 0xFF);
-            voice.sampleRate._reg = sampleRate;
+            voice.sampleRate = sampleRate;
         }
 
         // Set: the start address (64-bit word index) for the voice wave data.
         // If the given address is not 64-bit aligned then it is aligned up to the next 64-bit boundary.
         if (bSetWaveAddr) {
             const uint32_t addr = (attribs.addr + 7) / 8;
-            voice.startAddress._reg = (uint16_t) addr;
+            voice.adpcmStartAddr8 = addr;
         }
 
         // Set: attack rate
         if (bSetAttackRate) {
             const uint32_t attackRate = (attribs.ar < 0x7F) ? attribs.ar : 0x7F;
-            voice.adsr.attackStep = (attackRate & 0b0000'0011);
-            voice.adsr.releaseShift = (attackRate & 0b0111'1100) >> 2;
+            voice.env.attackStep = (attackRate & 0b0000'0011);
+            voice.env.releaseShift = (attackRate & 0b0111'1100) >> 2;
 
             // Set: attack rate mode (exponential or not).
             // If not specified then default to 'linear' increase mode.
             if (bSetAttackMode) {
-                voice.adsr.attackMode = (attribs.a_mode == SPU_VOICE_EXPIncN) ? 1 : 0;
+                voice.env.bAttackExp = (attribs.a_mode == SPU_VOICE_EXPIncN) ? 1 : 0;
             } else {
-                voice.adsr.attackMode = 0;
+                voice.env.bAttackExp = 0;
             }
         }
 
         // Set: decay rate
         if (bSetDecayRate) {
-            voice.adsr.decayShift = (attribs.dr < 0xF) ? attribs.dr : 0xF;
+            voice.env.decayShift = (attribs.dr < 0xF) ? attribs.dr : 0xF;
         }
 
         // Set: sustain level
         if (bSetSustainLevel) {
-            voice.adsr.sustainLevel = (attribs.sl < 0xF) ? attribs.sl : 0xF;
+            voice.env.sustainLevel = (attribs.sl < 0xF) ? attribs.sl : 0xF;
         }
 
         // Set: sustain rate
         if (bSetSustainRate) {
             const uint32_t sustainRate = (attribs.sr < 0x7F) ? attribs.sr : 0x7F;
-            voice.adsr.sustainStep = (sustainRate & 0b0000'0011);
-            voice.adsr.sustainShift = (sustainRate & 0b0111'1100) >> 2;
+            voice.env.sustainStep = (sustainRate & 0b0000'0011);
+            voice.env.sustainShift = (sustainRate & 0b0111'1100) >> 2;
 
             // Set: sustain rate mode (increase and exponential or not).
             // If not specified then default to 'increase' and NOT 'exponential' mode.
@@ -149,46 +149,46 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
                     default: break;
                 }
 
-                voice.adsr.sustainDirection = dir;
-                voice.adsr.sustainMode = mode;
+                voice.env.bSustainDec = dir;
+                voice.env.bSustainExp = mode;
             } else {
-                voice.adsr.sustainDirection = 0;
-                voice.adsr.sustainMode = 0;
+                voice.env.bSustainDec = 0;
+                voice.env.bSustainExp = 0;
             }
         }
 
         // Set: release rate
         if (bSetReleaseRate) {
             const uint32_t releaseRate = (attribs.rr < 0x1F) ? attribs.rr : 0x1F;
-            voice.adsr.releaseShift = releaseRate;
+            voice.env.releaseShift = releaseRate;
 
             // Set: release rate mode (exponential or not).
             // If not specified then default to 'linear' mode.
-            voice.adsr.releaseMode = 0;
+            voice.env.bReleaseExp = 0;
 
             if (bSetReleaseMode) {
                 if (attribs.r_mode == SPU_VOICE_EXPDec) {
-                    voice.adsr.releaseMode = 1;
+                    voice.env.bReleaseExp = 1;
                 }
             }
         }
 
         // Set: envelope ADSR directly (1st and 2nd 16-bits)
         if (bSetAdsrPart1) {
-            voice.adsr._reg &= 0xFFFF0000;
-            voice.adsr._reg |= (uint32_t) attribs.adsr1;
+            voice.envBits &= 0xFFFF0000;
+            voice.envBits |= (uint32_t) attribs.adsr1;
         }
 
         if (bSetAdsrPart2) {
-            voice.adsr._reg &= 0x0000FFFF;
-            voice.adsr._reg |= ((uint32_t) attribs.adsr2) << 16;
+            voice.envBits &= 0x0000FFFF;
+            voice.envBits |= ((uint32_t) attribs.adsr2) << 16;
         }
 
         // Set: wave loop address (64-bit word index).
         // If the given address is not 64-bit aligned then it is aligned up to the next 64-bit boundary.
         if (bSetWaveLoopAddr) {
             const uint32_t addr = (attribs.loop_addr + 7) / 8;
-            voice.repeatAddress._reg = (uint16_t) addr;
+            voice.adpcmRepeatAddr8 = addr;
         }
 
         // Set: left volume and mode
@@ -264,8 +264,6 @@ uint16_t LIBSPU__spu_note2pitch(
 // Returns 'SPU_ERROR' on failure, otherwise 'SPU_SUCCESS'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
-
     // If no attributes are set in the mask then the behavior is that ALL attributes are being updated
     const uint32_t attribMask = reverbAttr.mask;
     const bool bSetAllAttribs = (attribMask == 0);
@@ -279,12 +277,15 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
     const bool bClearReverbWorkingArea  = (reverbAttr.mode & SPU_REV_MODE_CLEAR_WA);
 
     // Set the new reverb mode (if changing) and grab the default reverb settings for whatever mode is now current
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
+
     if (bSetReverbMode) {
         const SpuReverbMode reverbMode = (SpuReverbMode)(reverbAttr.mode & (~SPU_REV_MODE_CLEAR_WA));   // Must remove the 'CLEAR_WA' (clear working area flag)
 
         if (reverbMode < SPU_REV_MODE_MAX) {
             gReverbMode = reverbMode;
-            spu.reverbBase._reg = gReverbWorkAreaBaseAddrs[gReverbMode];    // Update the reverb working area base address when changing mode
+            spu.reverbBaseAddr8 = gReverbWorkAreaBaseAddrs[gReverbMode];    // Update the reverb working area base address when changing mode
         } else {
             // Bad reverb mode - this causes the call to fail!
             return SPU_ERROR;
@@ -302,12 +303,12 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
             // Be more selective about what changes we make to SPU registers if we can
             if (!bSetReverbMode) {
                 reverbDef.fieldBits = (
-                    SPU_SAME_SIDE_REFRACT_ADDR_1_LEFT |
-                    SPU_SAME_SIDE_REFRACT_ADDR_1_RIGHT |
-                    SPU_COMB_ADDR_1_LEFT |
-                    SPU_SAME_SIDE_REFRACT_ADDR_2_LEFT |
-                    SPU_APF_ADDR_1_LEFT |
-                    SPU_APF_ADDR_1_RIGHT
+                    SPU_REVF_SAME_SIDE_REFRACT_ADDR_1_LEFT |
+                    SPU_REVF_SAME_SIDE_REFRACT_ADDR_1_RIGHT |
+                    SPU_REVF_COMB_ADDR_1_LEFT |
+                    SPU_REVF_SAME_SIDE_REFRACT_ADDR_2_LEFT |
+                    SPU_REVF_APF_ADDR_1_LEFT |
+                    SPU_REVF_APF_ADDR_1_RIGHT
                 );
             }
 
@@ -337,22 +338,22 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
     }
 
     // If the reverb mode is being set then we must disable master temporarily
-    const bool bPrevMasterReverbEnabled = spu.control.masterReverb;
-    spu.control.masterReverb = false;
+    const bool bPrevReverbEnabled = spu.bReverbWriteEnable;
+    spu.bReverbWriteEnable = false;
 
     // Update the reverb depth.
     // Note that if the reverb mode is being set then LIBSPU must also set reverb depth temporarily to '0', as per the docs.
     // It's up to callers in that situation to call 'LIBSPU_SpuSetReverbDepth' to set the depth again after that...
     if (bSetReverbMode) {
-        spu.reverbVolume.left = 0;
-        spu.reverbVolume.right = 0;
+        spu.reverbVol.left = 0;
+        spu.reverbVol.right = 0;
     } else {
         if (bSetReverbLeftDepth) {
-            spu.reverbVolume.left = reverbAttr.depth.left;
+            spu.reverbVol.left = reverbAttr.depth.left;
         }
 
         if (bSetReverbRightDepth) {
-            spu.reverbVolume.right = reverbAttr.depth.right;
+            spu.reverbVol.right = reverbAttr.depth.right;
         }
     }
     
@@ -362,44 +363,44 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
         const uint32_t regBits = reverbDef.fieldBits;
         const bool bSetAllRegs = (regBits == 0);
         
-        const auto updateReg = [&](const uint32_t idx, const uint16_t value) noexcept {
+        const auto updateReg = [=](const uint32_t idx, auto& reg, const uint16_t value) noexcept {
             if (bSetAllRegs || (regBits & (1 << idx))) {
-                spu.reverbRegisters[idx]._reg = value;
+                reg = value;
             }
         };
 
-        updateReg(0,  reverbDef.apfOffset1);
-        updateReg(1,  reverbDef.apfOffset2);
-        updateReg(2,  reverbDef.reflectionVolume1);
-        updateReg(3,  reverbDef.combVolume1);
-        updateReg(4,  reverbDef.combVolume2);
-        updateReg(5,  reverbDef.combVolume3);
-        updateReg(6,  reverbDef.combVolume4);
-        updateReg(7,  reverbDef.reflectionVolume2);
-        updateReg(8,  reverbDef.apfVolume1);
-        updateReg(9,  reverbDef.apfVolume2);
-        updateReg(10, reverbDef.sameSideRefractAddr1Left);
-        updateReg(11, reverbDef.sameSideRefractAddr1Right);
-        updateReg(12, reverbDef.combAddr1Left);
-        updateReg(13, reverbDef.combAddr1Right);
-        updateReg(14, reverbDef.combAddr2Left);
-        updateReg(15, reverbDef.combAddr2Right);
-        updateReg(16, reverbDef.sameSideRefractAddr2Left);
-        updateReg(17, reverbDef.sameSideRefractAddr2Right);
-        updateReg(18, reverbDef.diffSideReflectAddr1Left);
-        updateReg(19, reverbDef.diffSideReflectAddr1Right);
-        updateReg(20, reverbDef.combAddr3Left);
-        updateReg(21, reverbDef.combAddr3Right);
-        updateReg(22, reverbDef.combAddr4Left);
-        updateReg(23, reverbDef.combAddr4Right);
-        updateReg(24, reverbDef.diffSideReflectAddr2Left);
-        updateReg(25, reverbDef.diffSideReflectAddr2Right);
-        updateReg(26, reverbDef.apfAddr1Left);
-        updateReg(27, reverbDef.apfAddr1Right);
-        updateReg(28, reverbDef.apfAddr2Left);
-        updateReg(29, reverbDef.apfAddr2Right);
-        updateReg(30, reverbDef.inputVolLeft);
-        updateReg(31, reverbDef.inputVolRight);
+        updateReg(0, spu.reverbRegs.dispAPF1, reverbDef.apfOffset1);
+        updateReg(1, spu.reverbRegs.dispAPF2, reverbDef.apfOffset2);
+        updateReg(2, spu.reverbRegs.volIIR, reverbDef.reflectionVolume1);
+        updateReg(3, spu.reverbRegs.volComb1, reverbDef.combVolume1);
+        updateReg(4, spu.reverbRegs.volComb2, reverbDef.combVolume2);
+        updateReg(5, spu.reverbRegs.volComb3, reverbDef.combVolume3);
+        updateReg(6, spu.reverbRegs.volComb4, reverbDef.combVolume4);
+        updateReg(7, spu.reverbRegs.volWall, reverbDef.reflectionVolume2);
+        updateReg(8, spu.reverbRegs.volAPF1, reverbDef.apfVolume1);
+        updateReg(9, spu.reverbRegs.volAPF2, reverbDef.apfVolume2);
+        updateReg(10, spu.reverbRegs.addrLSame1, reverbDef.sameSideRefractAddr1Left);
+        updateReg(11, spu.reverbRegs.addrRSame1, reverbDef.sameSideRefractAddr1Right);
+        updateReg(12, spu.reverbRegs.addrLComb1, reverbDef.combAddr1Left);
+        updateReg(13, spu.reverbRegs.addrRComb1, reverbDef.combAddr1Right);
+        updateReg(14, spu.reverbRegs.addrLComb2, reverbDef.combAddr2Left);
+        updateReg(15, spu.reverbRegs.addrRComb2, reverbDef.combAddr2Right);
+        updateReg(16, spu.reverbRegs.addrLSame2, reverbDef.sameSideRefractAddr2Left);
+        updateReg(17, spu.reverbRegs.addrRSame2, reverbDef.sameSideRefractAddr2Right);
+        updateReg(18, spu.reverbRegs.addrLDiff1, reverbDef.diffSideReflectAddr1Left);
+        updateReg(19, spu.reverbRegs.addrRDiff1, reverbDef.diffSideReflectAddr1Right);
+        updateReg(20, spu.reverbRegs.addrLComb3, reverbDef.combAddr3Left);
+        updateReg(21, spu.reverbRegs.addrRComb3, reverbDef.combAddr3Right);
+        updateReg(22, spu.reverbRegs.addrLComb4, reverbDef.combAddr4Left);
+        updateReg(23, spu.reverbRegs.addrRComb4, reverbDef.combAddr4Right);
+        updateReg(24, spu.reverbRegs.addrLDiff2, reverbDef.diffSideReflectAddr2Left);
+        updateReg(25, spu.reverbRegs.addrRDiff2, reverbDef.diffSideReflectAddr2Right);
+        updateReg(26, spu.reverbRegs.addrLAPF1, reverbDef.apfAddr1Left);
+        updateReg(27, spu.reverbRegs.addrRAPF1, reverbDef.apfAddr1Right);
+        updateReg(28, spu.reverbRegs.addrLAPF2, reverbDef.apfAddr2Left);
+        updateReg(29, spu.reverbRegs.addrRAPF2, reverbDef.apfAddr2Right);
+        updateReg(30, spu.reverbRegs.volLIn, reverbDef.inputVolLeft);
+        updateReg(31, spu.reverbRegs.volRIn, reverbDef.inputVolRight);
     }
     
     // Clear the reverb working area if that was specified
@@ -408,7 +409,7 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
     }
 
     // Restore master reverb if we disabled it and return success
-    spu.control.masterReverb = bPrevMasterReverbEnabled;
+    spu.bReverbWriteEnable = bPrevReverbEnabled;
     return SPU_SUCCESS;
 }
 
@@ -416,8 +417,6 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
 // Set the specified common/master sound settings using the given stuct
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
-
     // Figure out what attributes we are setting
     const uint32_t attribMask = attribs.mask;
     
@@ -430,21 +429,28 @@ void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept {
     const bool bSetCdVolR       = (bSetAllAttribs || (attribMask & SPU_COMMON_CDVOLR));
     const bool bSetCdReverb     = (bSetAllAttribs || (attribMask & SPU_COMMON_CDREV));
     const bool bSetCdMix        = (bSetAllAttribs || (attribMask & SPU_COMMON_CDMIX));
-    const bool bSetExtVolL      = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTVOLL));
-    const bool bSetExtVolR      = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTVOLR));
-    const bool bSetExtReverb    = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTREV));
-    const bool bSetExtMix       = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTMIX));
+
+    // Attributes relating to PlayStation external inputs are ignored for PsyDoom (see comments below)
+    #if false
+        const bool bSetExtVolL      = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTVOLL));
+        const bool bSetExtVolR      = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTVOLR));
+        const bool bSetExtReverb    = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTREV));
+        const bool bSetExtMix       = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTMIX));
+    #endif
 
     // Set: master volume and mode (left)
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
+
     if (bSetMVolL) {
         const uint16_t mode = (bSetMVolModeL) ? attribs.mvolmode.left : 0;
 
         if (mode == 0) {
-            spu.mainVolume.left = attribs.mvol.left & 0x7FFF;
+            spu.masterVol.left = attribs.mvol.left & 0x7FFF;
         } else {
             const uint16_t volBits = std::max(std::min(attribs.mvol.left, (int16_t) 0x7F), (int16_t) 0);
             const uint16_t modeBits = 0x8000 | ((mode - 1) << 12);
-            spu.mainVolume.left = modeBits | volBits;
+            spu.masterVol.left = modeBits | volBits;
         }
     }
 
@@ -453,49 +459,55 @@ void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept {
         const uint16_t mode = (bSetMVolModeR) ? attribs.mvolmode.right : 0;
 
         if (mode == 0) {
-            spu.mainVolume.right = attribs.mvol.right & 0x7FFF;
+            spu.masterVol.right = attribs.mvol.right & 0x7FFF;
         } else {
             const uint16_t volBits = std::max(std::min(attribs.mvol.right, (int16_t) 0x7F), (int16_t) 0);
             const uint16_t modeBits = 0x8000 | ((mode - 1) << 12);
-            spu.mainVolume.right = modeBits | volBits;
+            spu.masterVol.right = modeBits | volBits;
         }
     }
 
+    // Note: PsyDoom's new SPU implemention only supports a single external input, which is used to supply CD audio.
+    // Because of this, parameters relating to CD volume and reverb are set for the 'external input' on the SPU and not on dedicated
+    // fields relating to CD audio specifically. Because there is only one external input also, I'm ignoring anything requested here
+    // related to the PlayStation's original external input. Doom didn't use this input so that's okay to do...
+    
     // Set: cd volume left and right
     if (bSetCdVolL) {
-        spu.cdVolume.left = attribs.cd.volume.left;
+        spu.extInputVol.left = attribs.cd.volume.left;
     }
 
     if (bSetCdVolR) {
-        spu.cdVolume.right = attribs.cd.volume.right;
+        spu.extInputVol.right = attribs.cd.volume.right;
     }
 
     // Set: cd reverb and mix enabled
     if (bSetCdReverb) {
-        spu.control.cdReverb = (attribs.cd.reverb != 0);
+        spu.bExtReverbEnable = (attribs.cd.reverb != 0);
     }
 
     if (bSetCdMix) {
-        spu.control.cdEnable = (attribs.cd.mix != 0);
+        spu.bExtEnabled = (attribs.cd.mix != 0);
     }
 
-    // Set: extern volume left and right
-    if (bSetExtVolL) {
-        spu.extVolume.left = attribs.ext.volume.left;
-    }
+    // Attributes relating to PlayStation external inputs are ignored for PsyDoom (see comments above)
+    #if false
+        if (bSetExtVolL) {
+            spu.extInputVol.left = attribs.ext.volume.left;
+        }
 
-    if (bSetExtVolR) {
-        spu.extVolume.right = attribs.ext.volume.right;
-    }
+        if (bSetExtVolR) {
+            spu.extInputVol.right = attribs.ext.volume.right;
+        }
     
-    // Set: external reverb and mix enabled
-    if (bSetExtReverb) {
-        spu.control.externalReverb = (attribs.ext.reverb != 0);
-    }
+        if (bSetExtReverb) {
+            spu.bExtReverbEnable = (attribs.ext.reverb != 0);
+        }
 
-    if (bSetExtMix) {
-        spu.control.externalEnable = (attribs.ext.mix != 0);
-    }
+        if (bSetExtMix) {
+            spu.bExtEnabled = (attribs.ext.mix != 0);
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -503,8 +515,8 @@ void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept {
 // Any bytes past this address are used for reverb.
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
-    return (uint32_t) spu.reverbBase._reg * 8;
+    PsxVm::LockSpu spuLock;
+    return PsxVm::gSpu.reverbBaseAddr8 * 8;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -512,20 +524,21 @@ uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept {
 // Will return 'SPU_ERROR' if that area is currently in use, otherwise 'SPU_SUCCESS'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBSPU_SpuClearReverbWorkArea() noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
-
     // Can't clear the reverb area if reverb is active!
     // Also can't clear if no reverb address is set:
-    const uint32_t reverbBaseAddr = (uint32_t) spu.reverbBase._reg * 8;
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
 
-    if (spu.control.masterReverb || (reverbBaseAddr == 0)) {
+    const uint32_t reverbBaseAddr = (uint32_t) spu.reverbBaseAddr8 * 8;
+
+    if (spu.bReverbWriteEnable || (reverbBaseAddr == 0)) {
         return SPU_ERROR;
     }
 
     // Zero the reverb area
-    if (reverbBaseAddr < SPU_RAM_SIZE) {
-        const uint32_t reverbAreaSize = SPU_RAM_SIZE - reverbBaseAddr;
-        std::memset(spu.ram.data() + reverbBaseAddr, 0, reverbAreaSize);
+    if (reverbBaseAddr < spu.ramSize) {
+        const uint32_t reverbAreaSize = spu.ramSize - reverbBaseAddr;
+        std::memset(spu.pRam + reverbBaseAddr, 0, reverbAreaSize);
     }
 
     return SPU_SUCCESS;
@@ -544,14 +557,15 @@ void LIBSPU_SpuStart() noexcept {
 // By default both left and right channels are set, but you can set independently using 'SPU_REV_DEPTHL' and 'SPU_REV_DEPTHR' mask flags.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuSetReverbDepth(const SpuReverbAttr& reverb) noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
 
     if ((reverb.mask == 0) || (reverb.mask & SPU_REV_DEPTHL)) {
-        spu.reverbVolume.left = reverb.depth.left;
+        spu.reverbVol.left = reverb.depth.left;
     }
 
     if ((reverb.mask == 0) || (reverb.mask & SPU_REV_DEPTHR)) {
-        spu.reverbVolume.right = reverb.depth.right;
+        spu.reverbVol.right = reverb.depth.right;
     }
 }
 
@@ -566,13 +580,14 @@ void LIBSPU_SpuSetReverbDepth(const SpuReverbAttr& reverb) noexcept {
 //            If the bit is set then reverb is enabled.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
-    
     // Enabling/disabling reverb for every single voice with the bit mask?
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
+
     if (onOff == SPU_BIT) {
         for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
-            spu::Voice& voice = spu.voices[voiceIdx];
-            voice.reverb = ((voiceBits & (1 << voiceIdx)) != 0);
+            Spu::Voice& voice = spu.pVoices[voiceIdx];
+            voice.bDoReverb = ((voiceBits & (1 << voiceIdx)) != 0);
         }
 
         return voiceBits;
@@ -583,13 +598,13 @@ int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) n
     int32_t enabledVoiceBits = 0;
 
     for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
-        spu::Voice& voice = spu.voices[voiceIdx];
+        Spu::Voice& voice = spu.pVoices[voiceIdx];
 
         if (voiceBits & (1 << voiceIdx)) {
-            voice.reverb = bEnableReverb;
+            voice.bDoReverb = bEnableReverb;
         }
 
-        enabledVoiceBits |= (voice.reverb) ? (1 << voiceIdx) : 0;
+        enabledVoiceBits |= (voice.bDoReverb) ? (1 << voiceIdx) : 0;
     }
 
     return enabledVoiceBits;
@@ -599,42 +614,39 @@ int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) n
 // Initializes the SPU to a default state
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuInit() noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
 
-    spu.control._reg = {};
-    spu.dataTransferControl._reg = {};
-    spu.mainVolume._reg = {};
-    spu.reverbVolume._reg = {};
-    spu.cdVolume._reg = {};
-    spu.extVolume._reg = {};
+    spu.bExtEnabled = false;
+    spu.bExtReverbEnable = false;
+    spu.bUnmute = false;
+    spu.bReverbWriteEnable = false;
 
-    for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
-        spu::Voice& voice = spu.voices[voiceIdx];
+    spu.masterVol = {};
+    spu.reverbVol = {};
+    spu.extInputVol = {};
 
-        voice.keyOff();
-        voice.pitchModulation = false;
-        voice.mode = spu::Voice::Mode::ADSR;
+    for (uint32_t voiceIdx = 0; voiceIdx < spu.numVoices; ++voiceIdx) {
+        Spu::Voice& voice = spu.pVoices[voiceIdx];
+
+        Spu::keyOff(voice);
         voice.volume = {};
-        voice.sampleRate._reg = 0x00FF;
-        voice.startAddress = {};
-        voice.adsr = {};
-
-        // Not sure why LIBSPU did this rapid key on/off when initializing
-        voice.keyOn();
-        voice.keyOff();
+        voice.sampleRate = 0x00FF;
+        voice.adpcmStartAddr8 = 0;
+        voice.env = {};
     }
 
-    spu.control.spuEnable = true;
-    spu.control.unmute = true;
-    
+    spu.bUnmute = true;
     LIBSPU_SpuStart();
 
     // Ensure the reverb work area address is correct
     if (gReverbMode < SPU_REV_MODE_MAX) {
-        spu.reverbBase._reg = gReverbWorkAreaBaseAddrs[gReverbMode];
+        spu.reverbBaseAddr8 = gReverbWorkAreaBaseAddrs[gReverbMode];
     } else {
-        spu.reverbBase._reg = gReverbWorkAreaBaseAddrs[0];
+        spu.reverbBaseAddr8 = gReverbWorkAreaBaseAddrs[0];
     }
+
+    gTransferStartAddr = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -644,8 +656,10 @@ void LIBSPU_SpuInit() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBSPU_SpuSetReverb(const int32_t onOff) noexcept {
     const bool bEnable = (onOff != SPU_OFF);
-    spu::SPU& spu = *PsxVm::gpSpu;
-    spu.control.masterReverb = bEnable;
+
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
+    spu.bReverbWriteEnable = bEnable;
     return (bEnable) ? SPU_ON : SPU_OFF;
 }
 
@@ -686,15 +700,15 @@ void LIBSPU_SpuSetTransferMode([[maybe_unused]] const SpuTransferMode mode) noex
 // The given address must be in range and is rounded up to the next 8 byte boundary.
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
-
     // Per PsyQ docs the address given is rounded up to the next 8-byte boundary.
     // It also must be in range or the instruction is ignored and '0' returned.
     const uint32_t alignedAddr = (addr + 7) & (~7u);
+    
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
 
-    if (alignedAddr < SPU_RAM_SIZE) {
-        spu.dataAddress._reg = (uint16_t)(alignedAddr / 8);
-        spu.currentDataAddress = alignedAddr;
+    if (alignedAddr < spu.ramSize) {
+        gTransferStartAddr = alignedAddr;
         return alignedAddr;
     } else {
         return 0;
@@ -710,11 +724,13 @@ uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t LIBSPU_SpuWrite(const void* const pData, const uint32_t size) noexcept {
     // Figure out how much data we can copy to SPU RAM, do the write and then return what we did
-    spu::SPU& spu = *PsxVm::gpSpu;
-    const uint32_t maxWriteSize = (spu.currentDataAddress < SPU_RAM_SIZE) ? SPU_RAM_SIZE - spu.currentDataAddress : 0;
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
+
+    const uint32_t maxWriteSize = (gTransferStartAddr < spu.ramSize) ? spu.ramSize - gTransferStartAddr : 0;
     const uint32_t thisWriteSize = (size <= maxWriteSize) ? size : maxWriteSize;
 
-    std::memcpy(spu.ram.data() + spu.currentDataAddress, pData, thisWriteSize);
+    std::memcpy(spu.pRam + gTransferStartAddr, pData, thisWriteSize);
     return thisWriteSize;
 }
 
@@ -733,22 +749,24 @@ void LIBSPU_SpuSetKeyOnWithAttr(const SpuVoiceAttr& attribs) noexcept {
 // The on/off action to perform must be either 'SPU_OFF' or 'SPU_ON'
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
-    static_assert(SPU_NUM_VOICES == spu::SPU::VOICE_COUNT);
-    spu::SPU& spu = *PsxVm::gpSpu;
+    Spu::Core& spu = PsxVm::gSpu;
+    PsxVm::LockSpu spuLock;
+
+    const uint32_t numVoicesToSet = std::min(SPU_NUM_VOICES, spu.numVoices);
     
     if (onOff == SPU_OFF) {
-        for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+        for (uint32_t voiceIdx = 0; voiceIdx < numVoicesToSet; ++voiceIdx) {
             if (voiceBits & (1 << voiceIdx)) {
-                spu::Voice& voice = spu.voices[voiceIdx];
-                voice.keyOff();
+                Spu::Voice& voice = spu.pVoices[voiceIdx];
+                Spu::keyOff(voice);
             }
         }
     }
     else if (onOff == SPU_ON) {
-        for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+        for (uint32_t voiceIdx = 0; voiceIdx < numVoicesToSet; ++voiceIdx) {
             if (voiceBits & (1 << voiceIdx)) {
-                spu::Voice& voice = spu.voices[voiceIdx];
-                voice.keyOn();
+                Spu::Voice& voice = spu.pVoices[voiceIdx];
+                Spu::keyOn(voice);
             }
         }
     }
@@ -763,29 +781,36 @@ void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
 //  SPU_ON_ENV_OFF  : Key on status,    Envelope is '0'         (sustain)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuGetAllKeysStatus(uint8_t statuses[SPU_NUM_VOICES]) noexcept {
-    spu::SPU& spu = *PsxVm::gpSpu;
+    // Get the statuses
+    Spu::Core& spu = PsxVm::gSpu;
+    const uint32_t numVoicesToGet = std::min(SPU_NUM_VOICES, spu.numVoices);
 
-    for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
-        const spu::Voice::State voiceState = spu.voices[voiceIdx].state;
+    for (uint32_t voiceIdx = 0; voiceIdx < numVoicesToGet; ++voiceIdx) {
+        const Spu::EnvPhase envPhase = spu.pVoices[voiceIdx].envPhase;
 
-        switch (voiceState) {
-            case spu::Voice::State::Attack:
-            case spu::Voice::State::Decay:
+        switch (envPhase) {
+            case Spu::EnvPhase::Attack:
+            case Spu::EnvPhase::Decay:
                 statuses[voiceIdx] = SPU_ON;
                 break;
 
-            case spu::Voice::State::Sustain:
+            case Spu::EnvPhase::Sustain:
                 statuses[voiceIdx] = SPU_ON_ENV_OFF;
                 break;
 
-            case spu::Voice::State::Release:
+            case Spu::EnvPhase::Release:
                 statuses[voiceIdx] = SPU_OFF_ENV_ON;
                 break;
 
-            case spu::Voice::State::Off:
+            case Spu::EnvPhase::Off:
             default:
                 statuses[voiceIdx] = SPU_OFF;
                 break;
         }
+    }
+
+    // Just in case the SPU has less voices than we expect
+    for (uint32_t voiceIdx = numVoicesToGet; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+        statuses[voiceIdx] = SPU_OFF;
     }
 }
