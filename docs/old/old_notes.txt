@@ -1,3 +1,9 @@
+---------------------------------------------------------------------------------------------------
+About this:
+    This was an old file used early on during reverse engineering, which is no longer maintained.
+    All of this address information pertains to the "Greatest Hits" edition of NTSC-U Doom.
+---------------------------------------------------------------------------------------------------
+
 The $gp register appears to be set to the following in main() and kept at that value:
     800775E0
 
