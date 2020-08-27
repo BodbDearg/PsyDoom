@@ -383,15 +383,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     if (gLoadedSoundAndMusMapNum != 0) {
         if (gCurMusicSeqIdx != 0) {
             S_StopMusic();
-            
-            while (wess_seq_status(pMusicSeqDefs[gCurMusicSeqIdx].seqIdx) != SequenceStatus::SEQUENCE_INACTIVE) {
-                // PsyDoom: need to update sound to escape this loop, also ensure the window stays responsive etc.
-                #if PSYDOOM_MODS
-                    Utils::doPlatformUpdates();
-                    Utils::threadYield();
-                #endif
-            }
-
+            Utils::waitUntilSeqEnteredStatus(pMusicSeqDefs[gCurMusicSeqIdx].seqIdx, SequenceStatus::SEQUENCE_INACTIVE);
             wess_seq_range_free(0 + NUMSFX, (Game::isFinalDoom()) ? NUM_MUSIC_SEQS_FINAL_DOOM : NUM_MUSIC_SEQS_DOOM);
         }
 

@@ -717,8 +717,13 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
         }
     #endif
     
-    // Stop all sounds and music
-    S_StopAll();
+    // Stop all sounds and music.
+    // PsyDoom: don't stop all sounds, let them fade out naturally - otherwise the pistol sound on closing the main menu gets cut off.
+    // We stop all sounds anyway when pausing, which is the only route out of the game.
+    #if !PSYDOOM_MODS
+        S_StopAll();
+    #endif
+
     psxcd_stop();
     S_StopMusic();
 

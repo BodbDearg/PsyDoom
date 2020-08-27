@@ -6,6 +6,7 @@
 #include <string>
 
 enum cheatseq_t : int32_t;
+enum SequenceStatus : uint8_t;
 
 BEGIN_NAMESPACE(Utils)
 
@@ -13,6 +14,8 @@ std::string getOrCreateUserDataFolder() noexcept;
 void doPlatformUpdates() noexcept;
 void waitForSeconds(float seconds) noexcept;
 void waitForCdAudioPlaybackStart() noexcept;
+void waitUntilSeqEnteredStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept;
+void waitUntilSeqExitedStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept;
 void waitForCdAudioFadeOut() noexcept;
 void threadYield() noexcept;
 cheatseq_t getDevCheatSequenceToExec() noexcept;
