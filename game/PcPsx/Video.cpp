@@ -270,8 +270,7 @@ void displayFramebuffer() noexcept {
     if (ProgArgs::gbHeadlessMode)
         return;
 
-    // Otherwise handle and ensure sound etc. is up to date before and after the buffer swap
-    Utils::doPlatformUpdates();
+    // Otherwise handle and ensure the window is updated after we do the swap
     copyPsxToSdlFramebuffer();
     presentSdlFramebuffer();
     Utils::doPlatformUpdates();

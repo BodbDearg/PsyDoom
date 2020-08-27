@@ -12,11 +12,11 @@ BEGIN_NAMESPACE(Utils)
 
 std::string getOrCreateUserDataFolder() noexcept;
 void doPlatformUpdates() noexcept;
-void waitForSeconds(float seconds) noexcept;
-void waitForCdAudioPlaybackStart() noexcept;
-void waitUntilSeqEnteredStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept;
-void waitUntilSeqExitedStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept;
-void waitForCdAudioFadeOut() noexcept;
+bool waitForSeconds(const float seconds) noexcept;
+bool waitForCdAudioPlaybackStart() noexcept;
+bool waitUntilSeqEnteredStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept;
+bool waitUntilSeqExitedStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept;
+bool waitForCdAudioFadeOut() noexcept;
 void threadYield() noexcept;
 cheatseq_t getDevCheatSequenceToExec() noexcept;
 

@@ -67,90 +67,87 @@ void doPlatformUpdates() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Wait for a number of seconds while still doing platform updates
+// Wait for a condition to be true and only abort if the condition is met or if the user has requested an app quit.
+// Returns 'true' if the condition was met, or 'false' if aborted due to a user quit or because the game is in headless mode.
+// While we are waiting video and the window are updated, so the application does not freeze and can be quit.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void waitForSeconds(float seconds) noexcept {
-    const clock_t startTime = clock();
+template <class T>
+static bool waitForCond(const T& condLamba) noexcept {
+    // We never wait in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return false;
 
     while (true) {
+        // Is the condition now true?
+        if (condLamba())
+            return true;
+
+        // Abort because the user asked for an app quit?
+        if (Input::isQuitRequested())
+            return false;
+
+        // Ok have to wait for a bit, do platform updates and a refresh of the display.
+        // Refreshing the display helps prevent a brief (temporary) stutter issue after long pauses - I'm not sure why, maybe an SDL bug?
+        // Doing a vsync'd present also reduces idle CPU usage a lot more than a spinning loop with thread yield.                
+        Video::displayFramebuffer();
+        doPlatformUpdates();
+    }
+
+    // Should never get here!
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Wait for a number of seconds while still doing platform updates; returns 'false' if wait was aborted
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool waitForSeconds(const float seconds) noexcept {
+    const clock_t startTime = clock();
+
+    return waitForCond([&]() noexcept {
         const clock_t now = clock();
         const double elapsed = (double)(now - startTime) / (double) CLOCKS_PER_SEC;
-
-        if (elapsed > seconds)
-            break;
-        
-        doPlatformUpdates();
-        threadYield();
-    }
+        return (elapsed >= seconds);
+    });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utility that implements a wait loop from the original PSX Doom, with some PC friendly modifications.
+// Implements an original PSX Doom wait loop with tweaks for PC to keep the app responsive; returns 'false' if the wait was aborted.
 // Waits until at least 1 CD audio sector has been read before continuing.
-// This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void waitForCdAudioPlaybackStart() noexcept {
-    // Never wait in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
-
-    // Wait until some cd audio has been read, or until quit is requested...
-    // This is all the original PSX Doom code did, nothing else:
-    while ((psxcd_elapsed_sectors() == 0) && (!Input::isQuitRequested())) {
-        doPlatformUpdates();
-        threadYield();
-    }
+bool waitForCdAudioPlaybackStart() noexcept {
+    return waitForCond([]() noexcept {
+        return (psxcd_elapsed_sectors() != 0);
+    });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utility that implements a wait loop from the original PSX Doom, with some PC friendly modifications.
+// Implements an original PSX Doom wait loop with tweaks for PC to keep the app responsive; returns 'false' if the wait was aborted.
 // Waits until a specified music or sound sequence has exited the specified status or the application is quitting.
-// This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void waitUntilSeqEnteredStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept {
-    // Never wait in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
-
-    // Wait until the sequence has entered the status or the user has requested an app quit
-    while ((wess_seq_status(sequenceIdx) != status) && (!Input::isQuitRequested())) {
-        doPlatformUpdates();
-        threadYield();
-    }
+bool waitUntilSeqEnteredStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept {
+    return waitForCond([=]() noexcept {
+        return (wess_seq_status(sequenceIdx) == status);
+    });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utility that implements a wait loop from the original PSX Doom, with some PC friendly modifications.
+// Implements an original PSX Doom wait loop with tweaks for PC to keep the app responsive; returns 'false' if the wait was aborted.
 // Waits until a specified music or sound sequence has exited the specified status or the application is quitting.
-// This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void waitUntilSeqExitedStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept {
-    // Never wait in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
-
-    // Wait until the sequence has exited the status or the user has requested an app quit
-    while ((wess_seq_status(sequenceIdx) == status) && (!Input::isQuitRequested())) {
-        doPlatformUpdates();
-        threadYield();
-    }
+bool waitUntilSeqExitedStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept {
+    return waitForCond([=]() noexcept {
+        return (wess_seq_status(sequenceIdx) != status);
+    });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utility that implements a wait loop from the original PSX Doom, with some PC friendly modifications.
+// Implements an original PSX Doom wait loop with tweaks for PC to keep the app responsive; returns 'false' if the wait was aborted.
 // Waits until at CD audio has finished fading out.
-// This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void waitForCdAudioFadeOut() noexcept {
-    // Never wait in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
-
-    // Wait for the fade to complete or quit to be requested...
-    while (psxspu_get_cd_fade_status() && (!Input::isQuitRequested())) {
-        Utils::doPlatformUpdates();
-        Utils::threadYield();
-    }
+bool waitForCdAudioFadeOut() noexcept {
+    return waitForCond([=]() noexcept {
+        return (!psxspu_get_cd_fade_status());
+    });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
