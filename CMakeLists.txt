@@ -31,12 +31,15 @@ set(RAPID_JSON_TGT_NAME         RapidJson)
 set(REVERSING_COMMON_TGT_NAME   ReversingCommon)
 set(SIMPLE_SPU_TGT_NAME         SimpleSpu)
 
+
+# Settings to include or exclude optional portions of the project tree
+set(PSYDOOM_INCLUDE_REVERSING_TOOLS FALSE CACHE BOOL 
+"If TRUE include reverse engineering tools in the project tree.
+These were tools which were used during the earlier stages of development."
+)
+
 # Adding individual projects and libraries
-add_subdirectory("${PROJECT_SOURCE_DIR}/doom_disassemble")
 add_subdirectory("${PROJECT_SOURCE_DIR}/game")
-add_subdirectory("${PROJECT_SOURCE_DIR}/psxexe_sigmatcher")
-add_subdirectory("${PROJECT_SOURCE_DIR}/psxobj_siggen")
-add_subdirectory("${PROJECT_SOURCE_DIR}/reversing_common")
 add_subdirectory("${PROJECT_SOURCE_DIR}/simple_spu")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/asio")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/avocado")
@@ -45,3 +48,10 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/fmt")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/libsdl")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/magic_enum")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/rapidjson")
+
+if (PSYDOOM_INCLUDE_REVERSING_TOOLS)
+    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/reversing/doom_disassemble")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/reversing/psxexe_sigmatcher")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/reversing/psxobj_siggen")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/reversing/reversing_common")
+endif()

@@ -14,7 +14,6 @@
     - Need to run at capped framerate to see properly.
 - Investigate interpolation for sprites and sectors in addition to player view.
 - Make GPU primitives go more directly to the rasterizer rather than through a buffer.
-- Break the link between the SPU and Avocado 'system' (entire PSX)
 - Break the link between the GPU and Avocado 'system' (entire PSX)
 - Implement playing the intro movies and legal text
 - Investigate being able to add override/new lumps via map wads.
@@ -39,9 +38,6 @@
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.    
-- Investigate shutdown code and properly cleanup everything
-- Move reversing tools into their own folder and only include optionally in the cmake project.
-    - Shouldn't be needed to compile the game.
 - Fix bug in cmd queue stuff - occasional geometry weirdness.
     - Not triggered in practice? Might be just a theoretical bug.
 - Investigate rendering glitch when above a sprite sometimes (appears enlargened on screen)
