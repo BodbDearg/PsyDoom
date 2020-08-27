@@ -37,6 +37,7 @@ static struct {
     bool        bPlay               = false;                    // If 'false' then playback is either paused or stopped (stopped if the disc reader doesn't have a track)
     bool        bLoop               = false;                    // If 'true' then playback is looped upon reaching the end
     int32_t     bufferOffset        = 0;                        // Where we are in the audio buffer
+    int32_t     loopTrack           = 0;                        // The track to play when looping
     int32_t     loopSectorOffset    = 0;                        // Offset (in sectors) to start at in the track when looping
 
     // The CD audio buffer: we read CD audio in chunks
@@ -57,11 +58,12 @@ struct LockCdPlayer {
 static DiscReader gFileDiscReaders[MAX_OPEN_FILES] = { PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// A callback invoked by the SPU when it wants audio from the CD player.
-// Returns a single sample.
+// A callback invoked by the SPU when it wants audio from the CD player - returns a single sample.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Spu::StereoSample SpuAudioCallback([[maybe_unused]] void* pUserData) noexcept {
-    // Lock the CD player while we are doing this
+    // Lock the CD player while we are doing this.
+    // Note that this thread also has the SPU lock at this point too.
+    // Therefore the main thread must NOT lock both the CD player and the SPU at the same time, or otherwise a deadlock might occur.
     LockCdPlayer cdPlayerLock;
 
     // If the CD player is not currently active then return silence
@@ -85,7 +87,12 @@ static Spu::StereoSample SpuAudioCallback([[maybe_unused]] void* pUserData) noex
         if (trackOffset >= trackSize) {
             // We reached the end, do we loop back around again?
             if (gCdPlayer.bLoop) {
-                // Looping: rewind back to the start plus any additional offset
+                // Looping: rewind back to the start plus any additional offset.
+                // Change tracks also if we need to.
+                if (disc.getTrackNum() != gCdPlayer.loopTrack) {
+                    disc.setTrackNum(gCdPlayer.loopTrack);
+                }
+
                 if (gCdPlayer.loopSectorOffset > 0) {
                     disc.trackSeekAbs(CDDA_SECTOR_SIZE * gCdPlayer.loopSectorOffset);
                 } else {
@@ -320,7 +327,9 @@ static void psxcd_play_internal(
     const int32_t vol,
     const int32_t sectorOffset,
     const int32_t fadeUpTime,
-    const bool bLoop
+    const bool bLoop,
+    const int32_t loopTrack,
+    const int32_t loopSectorOffset
 ) noexcept {
     // Ignore the command in headless mode
     if (ProgArgs::gbHeadlessMode)
@@ -365,7 +374,8 @@ static void psxcd_play_internal(
         gCdPlayer.bPlay = true;
         gCdPlayer.bufferOffset = CDDA_SECTOR_SIZE / sizeof(int16_t);    // Need to read a sector
         gCdPlayer.bLoop = bLoop;
-        gCdPlayer.loopSectorOffset = sectorOffset;
+        gCdPlayer.loopTrack = loopTrack;
+        gCdPlayer.loopSectorOffset = loopSectorOffset;
     }
 }
 
@@ -375,14 +385,13 @@ static void psxcd_play_internal(
 //  track:              The track to play
 //  vol:                Track volume
 //  sectorOffset:       To start past the normal track start
-//  fadeUpTime:         Milliseconds to fade in the track, or '0' if instant play
+//  fadeUpTime:         Milliseconds to fade in the track, or '0' if instant play.
 //  loopTrack:          What track to play in loop after this track ends
-//                      This is IGNORED by PsyDoom and was always the same as the original volume in PSX DOOM.
 //  loopVol:            What volume to play that looped track at.
-//                      This is IGNORED by PsyDoom and was always the same as the original volume in PSX DOOM.
+//                          NOTE: This is IGNORED by PsyDoom and was always the same as the original volume in PSX DOOM.
 //  loopSectorOffset:   What sector offset to use for the looped track
 //  loopFadeUpTime:     Fade up time for the looped track.
-//                      This is IGNORED by PsyDoom and was always '0' in PSX Doom.
+//                          NOTE: This is IGNORED by PsyDoom and was always '0' in PSX Doom.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_play_at_andloop(
     const int32_t track,
@@ -396,12 +405,10 @@ void psxcd_play_at_andloop(
 ) noexcept {
     // PsyDoom: to simplify threading and very messy synchronization in the CD audio callback these fields are no longer supported.
     // Setting them to values other than this will no longer work! That's OK because Doom always followed these usage patterns:
-    ASSERT(loopTrack == track);
     ASSERT(loopVol == vol);
-    ASSERT(loopSectorOffset == sectorOffset);
     ASSERT(loopFadeUpTime == 0);
-
-    psxcd_play_internal(track, vol, sectorOffset, fadeUpTime, true);
+    
+    psxcd_play_internal(track, vol, sectorOffset, fadeUpTime, true, loopTrack, loopSectorOffset);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -409,7 +416,7 @@ void psxcd_play_at_andloop(
 // A sector offset can also be specified to begin from a certain location in the track.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorOffset) noexcept {
-    psxcd_play_internal(track, vol, sectorOffset, 0, false);
+    psxcd_play_internal(track, vol, sectorOffset, 0, false, 0, 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
