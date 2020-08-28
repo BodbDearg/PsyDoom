@@ -143,7 +143,7 @@ static EnvPhase getNextEnvPhase(const EnvPhase phase) noexcept {
 static EnvPhaseParams getEnvPhaseParams(const AdsrEnvelope env, const EnvPhase phase, const int16_t envLevel) noexcept {
     const int32_t absEnvLevel = std::abs((int32_t) envLevel);
     
-    // Gather basic info for the phase
+    // Gather basic info for the envelope phase
     int32_t     targetLevel;
     int32_t     stepUnscaled;
     uint32_t    stepScale;
@@ -192,6 +192,18 @@ static EnvPhaseParams getEnvPhaseParams(const AdsrEnvelope env, const EnvPhase p
     params.targetLevel = targetLevel;
     params.stepCycles = 1 << std::max<int32_t>(0, stepScale - 11);
     params.step = stepUnscaled * stepScaleMultiplier;
+    
+    if (bExponential) {
+        // Adjustments based on the current envelope level when the envelope mode is 'exponential'.
+        // Slower fade-outs as the envelope level decreases & 4x slower fade-ins when envelope level surpasses '0x6000'.
+        if ((stepUnscaled > 0) && (absEnvLevel > 0x6000)) {
+            params.stepCycles *= 4;
+        }
+        else if (stepUnscaled < 0) {
+            params.step = (int32_t)(((int64_t) params.step * absEnvLevel) >> 15);
+        }
+    }
+
     return params;
 }
 
