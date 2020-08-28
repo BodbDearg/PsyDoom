@@ -141,6 +141,7 @@ static EnvPhase getNextEnvPhase(const EnvPhase phase) noexcept {
 // Get the phase parameters for the given envelope, phase and current envelope level
 //------------------------------------------------------------------------------------------------------------------------------------------
 static EnvPhaseParams getEnvPhaseParams(const AdsrEnvelope env, const EnvPhase phase, const int16_t envLevel) noexcept {
+    // Envelope level shouldn't be negative, but just in case...
     const int32_t absEnvLevel = std::abs((int32_t) envLevel);
     
     // Gather basic info for the envelope phase
@@ -152,7 +153,7 @@ static EnvPhaseParams getEnvPhaseParams(const AdsrEnvelope env, const EnvPhase p
     switch (phase) {
         // Attack phase: ramps up to the maximum volume always
         case EnvPhase::Attack: {
-            targetLevel = 0x7FFF;
+            targetLevel = MAX_ENV_LEVEL;
             stepScale = env.attackShift;
             stepUnscaled = 7 - (int32_t) env.attackStep;
             bExponential = env.bAttackExp;
@@ -160,7 +161,7 @@ static EnvPhaseParams getEnvPhaseParams(const AdsrEnvelope env, const EnvPhase p
 
         // Decay phase: ramps down to the sustain level and always exponentially
         case EnvPhase::Decay: {
-            targetLevel = std::min<int32_t>(((int32_t) env.sustainLevel + 1) * 2048, 0x7FFF);
+            targetLevel = std::min<int32_t>(((int32_t) env.sustainLevel + 1) * 2048, MAX_ENV_LEVEL);
             stepScale = env.decayShift;
             stepUnscaled = -8;
             bExponential = true;
@@ -178,7 +179,7 @@ static EnvPhaseParams getEnvPhaseParams(const AdsrEnvelope env, const EnvPhase p
         case EnvPhase::Release:
         case EnvPhase::Off:
         default: {
-            targetLevel = 0;
+            targetLevel = MIN_ENV_LEVEL;
             stepScale = env.releaseShift;
             stepUnscaled = -8;
             bExponential = env.bReleaseExp;
@@ -221,7 +222,7 @@ static void stepVoiceEnvelope(Voice& voice) noexcept {
 
     // Step the envelope in it's current phase and compute the new envelope level
     const EnvPhaseParams envParams = getEnvPhaseParams(voice.env, voice.envPhase, voice.envLevel);
-    int32_t newEnvLevel = std::clamp((int32_t) voice.envLevel + envParams.step, 0, 0x7FFF);
+    int32_t newEnvLevel = std::clamp<int32_t>(voice.envLevel + envParams.step, MIN_ENV_LEVEL, MAX_ENV_LEVEL);
 
     // Do state transitions when ramping up or down, unless we're in the 'sustain' phase (targetLevel < 0)
     bool bReachedTargetLevel = false;
@@ -336,7 +337,7 @@ static void stepVoice(
     // Advance the position of the voice within the current sample block.
     // Note that the original PSX SPU wouldn't allow frequencies of more than 176,400 Hz (0x4000), hence we clamp the frequency here.
     // Certain pieces of music in Doom need this clamping to be done in order to sound correct.
-    voice.adpcmBlockPos.counter += std::min<uint16_t>(voice.sampleRate, 0x4000);
+    voice.adpcmBlockPos.counter += std::min<uint16_t>(voice.sampleRate, MAX_SAMPLE_RATE);
 
     // Is it time to read another ADPCM block because we have consumed the current one?
     if (voice.adpcmBlockPos.fields.sampleIdx >= ADPCM_BLOCK_NUM_SAMPLES) {
@@ -583,8 +584,8 @@ void doMasterMix(
     // Need to clamp if exceeding this and also scale by 2.
     const StereoSample wetOutput = dryOutput + reverbOutput;
     const Volume scaledMasterVol = {
-        std::clamp(masterVol.left, (int16_t) -0x3FFF, (int16_t) +0x3FFF) * 2,
-        std::clamp(masterVol.right, (int16_t) -0x3FFF, (int16_t) +0x3FFF) * 2,
+        std::clamp(masterVol.left, MIN_MASTER_VOLUME, MAX_MASTER_VOLUME) * 2,
+        std::clamp(masterVol.right, MIN_MASTER_VOLUME, MAX_MASTER_VOLUME) * 2,
     };
 
     output = wetOutput * scaledMasterVol;

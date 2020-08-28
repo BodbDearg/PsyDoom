@@ -19,8 +19,13 @@
 //      - Sweep volume mode for SPU voices
 //------------------------------------------------------------------------------------------------------------------------------------------
 namespace Spu {
-    static constexpr int32_t ADPCM_BLOCK_SIZE           = 16;   // The size in bytes of a PSX format ADPCM block
-    static constexpr int32_t ADPCM_BLOCK_NUM_SAMPLES    = 28;   // The number of samples in a PSX format ADPCM block
+    static constexpr int32_t    ADPCM_BLOCK_SIZE        = 16;           // The size in bytes of a PSX format ADPCM block
+    static constexpr int32_t    ADPCM_BLOCK_NUM_SAMPLES = 28;           // The number of samples in a PSX format ADPCM block
+    static constexpr uint16_t   MAX_SAMPLE_RATE         = 0x4000;       // The PSX cannot do sample rates over 176,400 Hz
+    static constexpr int16_t    MIN_MASTER_VOLUME       = -0x3FFF;      // Minimum master volume level (divided by 2)
+    static constexpr int16_t    MAX_MASTER_VOLUME       = +0x3FFF;      // Maximum master volume level (divided by 2)
+    static constexpr int16_t    MIN_ENV_LEVEL           = 0;            // Minimum allowed envelope level
+    static constexpr int16_t    MAX_ENV_LEVEL           = 0x7FFF;       // Maximum allowed envelope level
     
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Flags read from the 2nd byte of a PSX ADPCM block.
