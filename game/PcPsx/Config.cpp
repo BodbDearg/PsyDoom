@@ -97,6 +97,32 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Audio config settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t gAudioBufferSize;
+
+static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
+    {
+        "AudioBufferSize",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Audio buffer size, in 44.1 KHz sound samples.\n"
+        "# Higher values increase sound latency but may improve audio stability and lower CPU usage.\n"
+        "# Lower values reduce sound latency but may increase the CPU usage and the chance of audio stutter.\n"
+        "# If set to '0' (auto) then PsyDoom will use a default value, which is '512' samples currently.\n"
+        "# Mostly this setting can be left alone but if you are experiencing sound issues, try adjusting.\n"
+        "#\n"
+        "# Some example values and their corresponding added sound latency (MS):\n"
+        "#  256  = ~5.8 MS\n"
+        "#  512  = ~11.6 MS\n"
+        "#  1024 = ~23.2 MS\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "AudioBufferSize = 0\n",
+        [](const IniUtils::Entry& iniEntry) { gAudioBufferSize = iniEntry.getIntValue(0); },
+        []() { gAudioBufferSize = 0; }
+    },
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Game config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::string      gCueFilePath;
@@ -667,6 +693,7 @@ static void parseConfigFile(
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void parseAllConfigFiles(const std::string& configFolder) noexcept {
     parseConfigFile(configFolder, "graphics_cfg.ini",   GRAPHICS_CFG_INI_HANDLERS,  C_ARRAY_SIZE(GRAPHICS_CFG_INI_HANDLERS), nullptr);
+    parseConfigFile(configFolder, "audio_cfg.ini",      AUDIO_CFG_INI_HANDLERS,     C_ARRAY_SIZE(AUDIO_CFG_INI_HANDLERS), nullptr);
     parseConfigFile(configFolder, "game_cfg.ini",       GAME_CFG_INI_HANDLERS,      C_ARRAY_SIZE(GAME_CFG_INI_HANDLERS), nullptr);
     parseConfigFile(configFolder, "input_cfg.ini",      INPUT_CFG_INI_HANDLERS,     C_ARRAY_SIZE(INPUT_CFG_INI_HANDLERS), nullptr);
 

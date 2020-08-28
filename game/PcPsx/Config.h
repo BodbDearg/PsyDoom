@@ -21,6 +21,9 @@ extern bool     gbFullscreen;
 extern bool     gbFloorRenderGapFix;
 extern int32_t  gLogicalDisplayW;
 
+// Audio settings
+extern int32_t  gAudioBufferSize;
+
 // Input settings
 extern float    gMouseTurnSpeed;
 extern float    gGamepadDeadZone;

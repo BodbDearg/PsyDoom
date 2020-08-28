@@ -5,6 +5,7 @@
 #include "PsxVm.h"
 
 #include "Assert.h"
+#include "Config.h"
 #include "DiscInfo.h"
 #include "DiscReader.h"
 #include "Input.h"
@@ -100,7 +101,13 @@ bool init(const char* const doomCdCuePath) noexcept {
         wantFmt.freq = 44100;
         wantFmt.format = AUDIO_S16SYS;
         wantFmt.channels = 2;
-        wantFmt.samples = 512;  // Update approximately every 12 MS or at 83 Hz - this should be pretty responsive
+
+        if (Config::gAudioBufferSize > 0) {
+            wantFmt.samples = (uint16_t) std::min<int32_t>(Config::gAudioBufferSize, UINT16_MAX);
+        } else {
+            wantFmt.samples = 512;  // Use a default of '512' samples (~13 MS latency) when using 'auto' configure mode
+        }
+
         wantFmt.callback = SdlAudioCallback;
 
         SDL_AudioSpec gotFmt = {};
