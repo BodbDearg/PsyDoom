@@ -124,7 +124,7 @@ public:
     template <class UpdateCancelCB>
     bool popRequestedPacket(PacketT& packet, TimePointT& receiveTime, const UpdateCancelCB& callback) noexcept {
         // If the stream is in error, no packets were requested or waiting for a packet fails then issue an error
-        if (mbError || (numPacketsRequested() <= 0) || (!waitForFreePacketSlot(callback))) {
+        if (mbError || (numPacketsRequested() <= 0) || (!waitForPacketReady(callback))) {
             packet = {};
             receiveTime = {};
             return false;
@@ -207,7 +207,7 @@ private:
     // The given update/cancel callback can be invoked periodically to do logic and cancel the operation by returning 'false'.
     //--------------------------------------------------------------------------------------------------------------------------------------
     template <class UpdateCancelCB>
-    bool waitForFreePacketSlot(const UpdateCancelCB& callback) noexcept {
+    bool waitForPacketReady(const UpdateCancelCB& callback) noexcept {
         // If there is a packet already ready then we are done
         if (hasPacketReady())
             return true;

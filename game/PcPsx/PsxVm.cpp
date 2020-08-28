@@ -126,7 +126,7 @@ bool init(const char* const doomCdCuePath) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tear down emulated PlayStation components
 //------------------------------------------------------------------------------------------------------------------------------------------
-void shutdown() noexcept {    
+void shutdown() noexcept {
     if (gSdlAudioDeviceId != 0) {
         SDL_PauseAudioDevice(gSdlAudioDeviceId, true);
         SDL_CloseAudioDevice(gSdlAudioDeviceId);
