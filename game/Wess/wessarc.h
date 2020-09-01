@@ -29,42 +29,45 @@ enum SeqPlayMode : uint8_t {
 // See the actual sequencer and driver implementations for these for more details on what each does.
 // Note that some are not implemented by the driver and some are not implemented by the sequencer.
 enum DriverCmd : uint8_t {
-    DriverInit          = 0,
-    DriverExit          = 1,
-    DriverEntry1        = 2,
-    DriverEntry2        = 3,
-    DriverEntry3        = 4,
-    TrkOff              = 5,
-    TrkMute             = 6,
-    PatchChg            = 7,
-    PatchMod            = 8,
-    PitchMod            = 9,
-    ZeroMod             = 10,
-    ModuMod             = 11,
-    VolumeMod           = 12,
-    PanMod              = 13,
-    PedalMod            = 14,
-    ReverbMod           = 15,
-    ChorusMod           = 16,
-    NoteOn              = 17,
-    NoteOff             = 18,
-    StatusMark          = 19,
-    GateJump            = 20,
-    IterJump            = 21,
-    ResetGates          = 22,
-    ResetIters          = 23,
-    WriteIterBox        = 24,
-    SeqTempo            = 25,
-    SeqGosub            = 26,
-    SeqJump             = 27,
-    SeqRet              = 28,
-    SeqEnd              = 29,
-    TrkTempo            = 30,
-    TrkGosub            = 31,
-    TrkJump             = 32,
-    TrkRet              = 33,
-    TrkEnd              = 34,
-    NullEvent           = 35
+    // Manually called commands
+    DriverInit      = 0,
+    DriverExit      = 1,
+    DriverEntry1    = 2,
+    DriverEntry2    = 3,
+    DriverEntry3    = 4,
+    TrkOff          = 5,
+    TrkMute         = 6,
+    // Sound driver commands
+    PatchChg        = 7,
+    PatchMod        = 8,
+    PitchMod        = 9,
+    ZeroMod         = 10,
+    ModuMod         = 11,
+    VolumeMod       = 12,
+    PanMod          = 13,
+    PedalMod        = 14,
+    ReverbMod       = 15,
+    ChorusMod       = 16,
+    NoteOn          = 17,
+    NoteOff         = 18,
+    // Sequencer commands
+    StatusMark      = 19,
+    GateJump        = 20,
+    IterJump        = 21,
+    ResetGates      = 22,
+    ResetIters      = 23,
+    WriteIterBox    = 24,
+    SeqTempo        = 25,
+    SeqGosub        = 26,
+    SeqJump         = 27,
+    SeqRet          = 28,
+    SeqEnd          = 29,
+    TrkTempo        = 30,
+    TrkGosub        = 31,
+    TrkJump         = 32,
+    TrkRet          = 33,
+    TrkEnd          = 34,
+    NullEvent       = 35
 };
 
 // Describes a patch/instrument: this is a collection of voices triggered in unison
@@ -107,14 +110,14 @@ struct drum_patch {
 // Main header for a module (.WMD) file.
 // Defines general/global info and settings for the module.
 struct module_header {
-    int32_t     module_id;              // Should be the string 'SPSX'
+    uint32_t    module_id;              // Should be the string 'SPSX'
     uint32_t    module_version;         // Should be '1'
     uint16_t    num_sequences;          // How many sequences are in the module.
     uint8_t     num_patch_groups;       // How many driver specific patch groups are defined in the module
     uint8_t     max_active_sequences;   // The number of sequence work areas to allocate, or the maximum number of active sequences
     uint8_t     max_active_tracks;      // The number of track work areas to allocate, or the maximum number of active tracks
     uint8_t     max_gates_per_seq;      // Maximum number of 'gates' or on/off conditional jump switches per sequence
-    uint8_t     max_iters_per_seq;      // Maximum number of iteration counts (iters) per sequence. These are used to do jumps a certain number of times.
+    uint8_t     max_iters_per_seq;      // Maximum number of iteration counts (iters) per sequence; these are used to do jumps a certain number of times
     uint8_t     max_callbacks;          // Maximum number of user sequencer callbacks that can be used
 };
 
@@ -201,7 +204,7 @@ enum patch_group_load_flags : int32_t {
 // Definition for a 'patch group'.
 // A patch group is a group of patches/instruments for a specific sound driver, like the PSX sound driver.
 struct patch_group_header {
-    patch_group_load_flags  load_flags;             // Determines what elements this driver is interested in loading
+    patch_group_load_flags  load_flags;             // What things this patch group contains: should be consulted when loading the patch group data
     SoundDriverId           driver_id;              // Driver id
     uint8_t                 hw_voice_limit;         // How many voices does this driver support
     uint16_t                _pad;                   // Unused

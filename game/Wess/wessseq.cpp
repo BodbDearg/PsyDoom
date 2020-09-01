@@ -16,7 +16,7 @@ const WessDriverFunc gWess_DrvFunctions[36] = {
     Eng_DriverEntry3,               // 04
     Eng_TrkOff,                     // 05
     Eng_TrkMute,                    // 06
-    // Hardware driver commands
+    // Sound driver commands
     Eng_PatchChg,                   // 07
     Eng_PatchMod,                   // 08
     Eng_PitchMod,                   // 09
@@ -109,25 +109,25 @@ static uint8_t                      gWess_eng_maxActiveTracks;      // The maxim
 // The delta time amount returned is in terms of quarter note 'parts'.
 // How many parts/divisions per quarter note there are depends on the timing setup of track, but a value of '120' is typical.
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept {
+uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& valueOut) noexcept {
     uint8_t* pCurTrackByte = pTrackBytes;
-    uint32_t decodedTimeVal = *pCurTrackByte;
+    uint32_t decodedVal = *pCurTrackByte;
     ++pCurTrackByte;
 
     // The top bit set on each byte means there is another byte to follow.
     // Each byte can therefore only encode 7 bits, so we need 5 of them to encode 32-bits:
     if (pTrackBytes[0] & 0x80) {
-        decodedTimeVal &= 0x7F;   // Top bit is not data
+        decodedVal &= 0x7F;     // Top bit is not data
         uint8_t curByte;
 
         do {
             curByte = *pCurTrackByte;
-            decodedTimeVal = (decodedTimeVal << 7) + (curByte & 0x7F);  // Incorporate another 7 bits to the output time value
+            decodedVal = (decodedVal << 7) + (curByte & 0x7F);  // Incorporate another 7 bits to the output time value
             ++pCurTrackByte;
         } while (curByte & 0x80);   // Is there another byte to follow?
     }
 
-    deltaTimeOut = decodedTimeVal;
+    valueOut = decodedVal;
     return pCurTrackByte;
 }
 
@@ -136,15 +136,15 @@ uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept {
 // Write a variable length quantity for a track to the given byte stream, using up to 5 bytes to encode it.
 // Returns the pointer after the written value.
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t* Write_Vlq(uint8_t* const pTrackBytes, const uint32_t deltaTime) noexcept {
+uint8_t* Write_Vlq(uint8_t* const pTrackBytes, const uint32_t value) noexcept {
     // Encode the given value into a stack buffer, writing a '0x80' bit flag whenever more bytes follow
     uint8_t encodedBytes[8];
     uint8_t* pEncodedByte = encodedBytes;
 
     {
-        *pEncodedByte = (uint8_t)(deltaTime & 0x7F);
+        *pEncodedByte = (uint8_t)(value & 0x7F);
         pEncodedByte++;
-        uint32_t bitsToEncode = deltaTime >> 7;
+        uint32_t bitsToEncode = value >> 7;
 
         while (bitsToEncode != 0) {
             *pEncodedByte = (uint8_t)(bitsToEncode | 0x80);
@@ -698,7 +698,7 @@ void Eng_SeqEnd(track_status& trackStat) noexcept {
 // Sets the tempo or beats per minute for a track
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_TrkTempo(track_status& trackStat) noexcept {
-    // Set the new quarter notes per second (BPM) amount
+    // Set the new quarter notes per minute (BPM) amount
     const uint16_t tempo_qpm = ((uint16_t) trackStat.pcur_cmd[1]) | ((uint16_t) trackStat.pcur_cmd[2] << 8);
     trackStat.tempo_qpm = tempo_qpm;
 
