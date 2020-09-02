@@ -483,7 +483,7 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_PatchChg(track_status& trackStat) noexcept {
     // Read the new patch number from the sequencer command and save on the track
-    trackStat.patch_idx = trackStat.pcur_cmd[1];
+    trackStat.patch_idx = ((uint16_t) trackStat.pcur_cmd[1]) | ((uint16_t) trackStat.pcur_cmd[2] << 8);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
