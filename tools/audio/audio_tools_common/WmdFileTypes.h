@@ -109,7 +109,7 @@ namespace AudioTools {
 
     // Track command types: some of these are handled by the sequencer generically, others are handled by the sound driver
     enum class WmdTrackCmdType : uint8_t {
-        // Manually called commands (should never be in a track's command set)
+        // Manually called commands - should never be in a track's command set!
         DriverInit      = 0,
         DriverExit      = 1,
         DriverEntry1    = 2,
@@ -117,35 +117,37 @@ namespace AudioTools {
         DriverEntry3    = 4,
         TrkOff          = 5,
         TrkMute         = 6,
-        // Sound driver specific commands
+
+        // Driver commands
         PatchChg        = 7,
-        PatchMod        = 8,
+        PatchMod        = 8,        // Unused by PSX Doom
         PitchMod        = 9,
-        ZeroMod         = 10,
-        ModuMod         = 11,
+        ZeroMod         = 10,       // Unused by PSX Doom
+        ModuMod         = 11,       // Used by PSX Doom but driver doesn't implement
         VolumeMod       = 12,
         PanMod          = 13,
-        PedalMod        = 14,
-        ReverbMod       = 15,
-        ChorusMod       = 16,
+        PedalMod        = 14,       // Used by PSX Doom but driver doesn't implement
+        ReverbMod       = 15,       // Unused by PSX Doom
+        ChorusMod       = 16,       // Unused by PSX Doom
         NoteOn          = 17,
         NoteOff         = 18,
-        // Sequencer generic commands
-        StatusMark      = 19,
-        GateJump        = 20,
-        IterJump        = 21,
-        ResetGates      = 22,
-        ResetIters      = 23,
-        WriteIterBox    = 24,
-        SeqTempo        = 25,
-        SeqGosub        = 26,
-        SeqJump         = 27,
-        SeqRet          = 28,
-        SeqEnd          = 29,
-        TrkTempo        = 30,
-        TrkGosub        = 31,
+
+        // Sequencer commands
+        StatusMark      = 19,       // Unused by PSX Doom
+        GateJump        = 20,       // Unused by PSX Doom
+        IterJump        = 21,       // Unused by PSX Doom
+        ResetGates      = 22,       // Unused by PSX Doom
+        ResetIters      = 23,       // Unused by PSX Doom
+        WriteIterBox    = 24,       // Unused by PSX Doom
+        SeqTempo        = 25,       // Unused by PSX Doom
+        SeqGosub        = 26,       // Unused by PSX Doom
+        SeqJump         = 27,       // Unused by PSX Doom
+        SeqRet          = 28,       // Unused by PSX Doom
+        SeqEnd          = 29,       // Unused by PSX Doom
+        TrkTempo        = 30,       // Unused by PSX Doom
+        TrkGosub        = 31,       // Unused by PSX Doom
         TrkJump         = 32,
-        TrkRet          = 33,
+        TrkRet          = 33,       // Unused by PSX Doom
         TrkEnd          = 34,
         NullEvent       = 35
     };
