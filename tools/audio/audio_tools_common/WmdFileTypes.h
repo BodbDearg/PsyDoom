@@ -107,6 +107,49 @@ namespace AudioTools {
         void endianCorrect() noexcept;
     };
 
+    // Track command types: some of these are handled by the sequencer generically, others are handled by the sound driver
+    enum class WmdTrackCmdType : uint8_t {
+        // Manually called commands (should never be in a track's command set)
+        DriverInit      = 0,
+        DriverExit      = 1,
+        DriverEntry1    = 2,
+        DriverEntry2    = 3,
+        DriverEntry3    = 4,
+        TrkOff          = 5,
+        TrkMute         = 6,
+        // Sound driver specific commands
+        PatchChg        = 7,
+        PatchMod        = 8,
+        PitchMod        = 9,
+        ZeroMod         = 10,
+        ModuMod         = 11,
+        VolumeMod       = 12,
+        PanMod          = 13,
+        PedalMod        = 14,
+        ReverbMod       = 15,
+        ChorusMod       = 16,
+        NoteOn          = 17,
+        NoteOff         = 18,
+        // Sequencer generic commands
+        StatusMark      = 19,
+        GateJump        = 20,
+        IterJump        = 21,
+        ResetGates      = 22,
+        ResetIters      = 23,
+        WriteIterBox    = 24,
+        SeqTempo        = 25,
+        SeqGosub        = 26,
+        SeqJump         = 27,
+        SeqRet          = 28,
+        SeqEnd          = 29,
+        TrkTempo        = 30,
+        TrkGosub        = 31,
+        TrkJump         = 32,
+        TrkRet          = 33,
+        TrkEnd          = 34,
+        NullEvent       = 35
+    };
+
     //--------------------------------------------------------------------------------------------------------------------------------------
     // PlayStation sound driver specific binary data structures found in the Williams module file (.WMD file).
     // These are copied more or less verbatim from the 'wessarc.h' header of the main PsyDoom project.
@@ -147,4 +190,7 @@ namespace AudioTools {
 
         void endianCorrect() noexcept;
     };
+
+    // Utility functions
+    uint32_t getWmdTrackCmdSize(const WmdTrackCmdType type) noexcept;
 }

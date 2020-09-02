@@ -25,6 +25,10 @@ int main(int argc, const char* const argv[]) noexcept {
     }
 
     const StreamReadFunc wmdReader = [=](void* const pDst, const size_t size) noexcept(false) {
+        // Zero sized operations always succeed
+        if (size == 0)
+            return;
+
         // Are we reading or seeking?
         if (pDst) {
             if (std::fread(pDst, size, 1, pWmdFile) != 1)

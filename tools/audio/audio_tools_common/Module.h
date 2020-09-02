@@ -6,6 +6,8 @@
 #include <vector>
 
 namespace AudioTools {
+    struct WmdPatchGroupHdr;
+
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Format of functions to read from or write to a stream; these throw if there are any errors.
     // Note that for the stream read function a destination of 'nullptr' may be passed to skip over bytes.
@@ -86,17 +88,23 @@ namespace AudioTools {
             PsxAdsrEnvelope     adsr;
             uint32_t            adsrBits;
         };
+
+        void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
     };
 
     // Holds details for a sound sample used by a patch voice; just holds the size in bytes of the sound sample
     struct PsxPatchSample {
         uint32_t    size;
+
+        void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
     };
 
     // Describes a patch/instrument: this is a collection of voices triggered in unison
     struct PsxPatch {
         uint16_t    firstVoiceIdx;      // Index of the first patch voice for the patch. Other patch voices follow contiguously in the voices list.
-        uint16_t    numVoices;          // How many voices to use for the patch        
+        uint16_t    numVoices;          // How many voices to use for the patch
+
+        void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
     };
 
     // Patches, patch voices and patch samples etc.
@@ -105,6 +113,8 @@ namespace AudioTools {
         std::vector<PsxPatchSample>     patchSamples;       // Samples used by patch voices
         std::vector<PsxPatchVoice>      patchVoices;        // Individual voices in a patch
         std::vector<PsxPatch>           patches;            // Patches/instruments
+
+        void readFromWmd(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& hdr) noexcept(false);
     };
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -115,54 +125,13 @@ namespace AudioTools {
     // Represents a sequencer command in a track.
     // Depending on the command type, none or all of the arguments may be used and also the range allowed might be capped.
     struct TrackCmd {
-        // Track command types: some of these are handled by the sequencer generically, others are handled by the sound driver.
-        // These are the exact same command ids found in the .WMD file.
-        enum Type : uint8_t {
-            // Manually called commands
-            DriverInit      = 0,
-            DriverExit      = 1,
-            DriverEntry1    = 2,
-            DriverEntry2    = 3,
-            DriverEntry3    = 4,
-            TrkOff          = 5,
-            TrkMute         = 6,
-            // Sound driver commands
-            PatchChg        = 7,
-            PatchMod        = 8,
-            PitchMod        = 9,
-            ZeroMod         = 10,
-            ModuMod         = 11,
-            VolumeMod       = 12,
-            PanMod          = 13,
-            PedalMod        = 14,
-            ReverbMod       = 15,
-            ChorusMod       = 16,
-            NoteOn          = 17,
-            NoteOff         = 18,
-            // Sequencer commands
-            StatusMark      = 19,
-            GateJump        = 20,
-            IterJump        = 21,
-            ResetGates      = 22,
-            ResetIters      = 23,
-            WriteIterBox    = 24,
-            SeqTempo        = 25,
-            SeqGosub        = 26,
-            SeqJump         = 27,
-            SeqRet          = 28,
-            SeqEnd          = 29,
-            TrkTempo        = 30,
-            TrkGosub        = 31,
-            TrkJump         = 32,
-            TrkRet          = 33,
-            TrkEnd          = 34,
-            NullEvent       = 35
-        };
+        WmdTrackCmdType     type;           // What type of command this is?
+        uint32_t            delayQnp;       // Time until the command executes in quarter note parts (QNP). The actual delay in seconds depends on quarter note parts per minute count and parts per quarter note.
+        int32_t             arg1;           // Command argument 1: meaning (if any) depends on the command
+        int32_t             arg2;           // Command argument 2: meaning (if any) depends on the command
+        int32_t             arg3;           // Command argument 3: meaning (if any) depends on the command
 
-        Type        type;
-        int32_t     arg1;
-        int32_t     arg2;
-        int32_t     arg3;
+        uint32_t readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
     };
 
     // Represents an individual track in a sequence
@@ -182,11 +151,15 @@ namespace AudioTools {
         uint8_t                 priority;               // Used for prioritizing voices when we are out of hardware voices
         std::vector<uint32_t>   labels;                 // Locations to jump to in the track as a command index
         std::vector<TrackCmd>   cmds;                   // The commands for the track
+
+        void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
     };
 
-    // Represents an entire sequence (music or sfx) to be played by the sequencer
+    // Represents an entire sequence (music or a sound) to be played by the sequencer
     struct Sequence {
         std::vector<Track>  tracks;
+
+        void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
     };
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -202,6 +175,10 @@ namespace AudioTools {
         PsxPatchGroup           psxPatchGroup;          // PSX sound driver: patches
         std::vector<Sequence>   sequences;              // All of the sequences in the module file
 
-        void readFromWmd(const StreamReadFunc& reader) noexcept(false);
+        void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
+
+        // WMD file reading utilities
+        static void skipReadingWmdPatchGroup(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& patchGroupHdr) noexcept(false);
+        static uint32_t readVarLenQuant(const StreamReadFunc& reader, uint32_t& valueOut) noexcept(false);
     };
 }
