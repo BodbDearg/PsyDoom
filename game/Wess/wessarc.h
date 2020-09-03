@@ -78,6 +78,8 @@ struct patch {
     uint16_t    first_voice_idx;    // Index of the first patch voice for the patch. Other patch voices follow contiguously in the voices list.
 };
 
+static_assert(sizeof(patch) == 4);
+
 // Settings for one individual voice/sound in a patch/instrument
 struct patch_voice {
     uint8_t     priority;           // Voice priority: used to determine what to kill when we're out of voices
@@ -95,6 +97,8 @@ struct patch_voice {
     uint16_t    adsr2;              // The second (high) 16-bits of the SPU voice envelope (see comments for 'SpuVoiceAttr' for more details)
 };
 
+static_assert(sizeof(patch_voice) == 16);
+
 // Holds details for a sound sample used by a patch voice which can be loaded or is already loaded
 struct patch_sample {
     uint32_t    offset;         // Unused & unclear what the purpose of this is for. Increases with each patch sample in the module.
@@ -102,12 +106,16 @@ struct patch_sample {
     uint32_t    spu_addr;       // Where in SPU RAM the patch is currently uploaded to. Set to '0' if not uploaded to the SPU.
 };
 
+static_assert(sizeof(patch_sample) == 12);
+
 // Special patch type used for drum tracks.
 // Consists of a patch that is always played back using the same note.
 struct drum_patch {
     uint16_t    patch_idx;      // Watch patch to use for this drum
     uint16_t    note;           // What note/pitch to play the drum patch at
 };
+
+static_assert(sizeof(drum_patch) == 4);
 
 // Main header for a module (.WMD) file.
 // Defines general/global info and settings for the module.
@@ -153,6 +161,8 @@ struct track_header {
     uint32_t        cmd_stream_size;        // The size of the stream containing sequencer commands and command timings for the track
 };
 
+static_assert(sizeof(track_header) == 24);
+
 // Holds all of the read-only data for a track in a music sequence
 struct track_data {
     track_header    hdr;            // Header for the track
@@ -165,6 +175,8 @@ struct sequence_header {
     uint16_t    num_tracks;     // How many tracks are in the sequence
     uint16_t    _unused;        // Field appears to be unused - it's purpose cannot be determined because of that
 };
+
+static_assert(sizeof(sequence_header) == 4);
 
 // Holds all of the read-only data for a music sequence
 struct sequence_data {
@@ -220,6 +232,8 @@ struct patch_group_header {
     uint16_t                drum_patch_size;        // Should be 'sizeof(drum_patch)'
     uint32_t                extra_data_size;        // The size of extra driver specific data in the module file
 };
+
+static_assert(sizeof(patch_group_header) == 28);
 
 // Determines what types of tracks a sound driver is interested in loading it
 struct hardware_table_list {

@@ -15,6 +15,7 @@ void PsxPatchVoice::readFromWmd(const StreamReadFunc& streamRead) noexcept(false
     this->sampleIdx = wmdVoice.sampleIdx;
     this->volume = wmdVoice.volume;
     this->pan = wmdVoice.pan;
+    this->reverb = wmdVoice.reverb;
     this->baseNote = wmdVoice.baseNote;
     this->baseNoteFrac = wmdVoice.baseNoteFrac;
     this->noteMin = wmdVoice.noteMin;
@@ -83,6 +84,109 @@ void PsxPatchGroup::readFromWmd(const StreamReadFunc& streamRead, const WmdPatch
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Write a PlayStation sound driver format patch group (and child data structures) to a .WMD file
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PsxPatchVoice::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+    WmdPsxPatchVoice psxVoice = {};
+    psxVoice.priority = priority;
+    psxVoice.reverb = reverb;
+    psxVoice.volume = volume;
+    psxVoice.pan = pan;
+    psxVoice.baseNote = baseNote;
+    psxVoice.baseNoteFrac = baseNoteFrac;
+    psxVoice.noteMin = noteMin;
+    psxVoice.noteMax = noteMax;
+    psxVoice.pitchstepDown = pitchstepDown;
+    psxVoice.pitchstepUp = pitchstepUp;
+    psxVoice.sampleIdx = sampleIdx;
+    psxVoice.adsr1 = (uint16_t)(adsrBits);
+    psxVoice.adsr2 = (uint16_t)(adsrBits >> 16);
+
+    psxVoice.endianCorrect();
+    streamWrite(&psxVoice, sizeof(WmdPsxPatchVoice));
+}
+
+void PsxPatchSample::writeToWmd(const StreamWriteFunc& streamWrite, const uint32_t wmdOffsetField) const noexcept(false) {
+    WmdPsxPatchSample psxSample = {};
+    psxSample.offset = wmdOffsetField;
+    psxSample.size = size;
+    psxSample.spuAddr = 0;
+
+    psxSample.endianCorrect();
+    streamWrite(&psxSample, sizeof(WmdPsxPatchSample));
+}
+
+void PsxPatch::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+    WmdPsxPatch psxPatch = {};
+    psxPatch.numVoices = numVoices;
+    psxPatch.firstVoiceIdx = firstVoiceIdx;
+    
+    psxPatch.endianCorrect();
+    streamWrite(&psxPatch, sizeof(WmdPsxPatch));
+}
+
+void PsxPatchGroup::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+    // Firstly makeup the header, endian correct and write
+    {
+        WmdPatchGroupHdr groupHdr = {};
+        groupHdr.loadFlags = (WmdPatchGroupLoadFlags)(LOAD_PATCHES | LOAD_PATCH_VOICES | LOAD_PATCH_SAMPLES | LOAD_DRUM_PATCHES);   // Note: add the drum flag so our diff with original game .WMDs is the same
+        groupHdr.driverId = WmdSoundDriverId::PSX;
+        groupHdr.hwVoiceLimit = hwVoiceLimit;
+        
+        if (patches.size() > UINT16_MAX)
+            throw std::exception("Too many patches in the PSX patch group for a .WMD file!");
+
+        groupHdr.numPatches = (uint16_t) patches.size();
+        groupHdr.patchSize = sizeof(WmdPsxPatch);
+
+        if (patchVoices.size() > UINT16_MAX)
+            throw std::exception("Too many patche voices in the PSX patch group for a .WMD file!");
+
+        groupHdr.numPatchVoices = (uint16_t) patchVoices.size();
+        groupHdr.patchVoiceSize = sizeof(WmdPsxPatchVoice);
+
+        if (patchSamples.size() > UINT16_MAX)
+            throw std::exception("Too many patch samples in the PSX patch group for a .WMD file!");
+
+        groupHdr.numPatchSamples = (uint16_t) patchSamples.size();
+        groupHdr.patchSampleSize = sizeof(WmdPsxPatchSample);
+
+        // Note: drum patches are not supported but in the original .WMD file the size was set to '512'?
+        groupHdr.numDrumPatches = 0;
+        groupHdr.drumPatchSize = 512;
+        groupHdr.extraDataSize = 0;
+
+        groupHdr.endianCorrect();
+        streamWrite(&groupHdr, sizeof(WmdPatchGroupHdr));
+    }
+
+    // Write all patches, patch voices and patch samples.
+    // Note that for patch samples I'm writing the value of the unused 'offset' field so that it is populated the same as original .WMD files.
+    // This offset appears to be increased by the size of each sample in the module, and 2048 byte aligned.
+    for (const PsxPatch& patch : patches) {
+        patch.writeToWmd(streamWrite);
+    }
+
+    for (const PsxPatchVoice& patchVoice : patchVoices) {
+        patchVoice.writeToWmd(streamWrite);
+    }
+
+    uint32_t sampleWmdOffsetField = 0;
+
+    for (const PsxPatchSample& patchSample : patchSamples) {
+        patchSample.writeToWmd(streamWrite, sampleWmdOffsetField);
+
+        // Incrementing and 2048 byte aligning the value of this unused .WMD file field.
+        // I only care about it because I want to generate .WMD files that match the originals exactly.
+        // I suspect this may have been an offset into some sort of master .LCD or samples file used during development...
+        sampleWmdOffsetField += patchSample.size;
+        sampleWmdOffsetField += 2047;
+        sampleWmdOffsetField /= 2048;
+        sampleWmdOffsetField *= 2048;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Read a single track command from a .WMD file and return how many bytes were read
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
@@ -142,7 +246,7 @@ uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) noexcept(false)
         case WmdTrackCmdType::TrkGosub:
         case WmdTrackCmdType::SeqJump:
         case WmdTrackCmdType::TrkJump:
-            arg1 = ((int16_t) cmdData[0]) | ((int16_t) cmdData[1] << 8);
+            arg1 = (int16_t)((uint16_t) cmdData[0] | ((uint16_t) cmdData[1] << 8));
             break;
 
         case WmdTrackCmdType::NoteOn:
@@ -153,14 +257,14 @@ uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) noexcept(false)
 
         case WmdTrackCmdType::StatusMark:
             arg1 = (uint8_t) cmdData[0];
-            arg2 = ((int16_t) cmdData[1]) | ((int16_t) cmdData[2] << 8);
+            arg2 = (int16_t)((uint16_t) cmdData[1] | ((uint16_t) cmdData[2] << 8));
             break;
 
         case WmdTrackCmdType::GateJump:
         case WmdTrackCmdType::IterJump:
             arg1 = (uint8_t) cmdData[0];
             arg2 = (uint8_t) cmdData[1];
-            arg3 = ((int16_t) cmdData[2]) | ((int16_t) cmdData[3] << 8);
+            arg3 = (int16_t)((uint16_t) cmdData[2] | ((uint16_t) cmdData[3] << 8));
             break;
 
         // These commands (or unknown commands) should never be in the command stream!
@@ -176,6 +280,137 @@ uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) noexcept(false)
     }
 
     return numBytesRead;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write a single track command to a .WMD file and return how many bytes were written
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+    // First write the delay (in quarter note parts) until the command
+    uint32_t numBytesWritten = Module::writeVarLenQuant(streamWrite, delayQnp);
+
+    // Next Write the command id
+    streamWrite(&type, sizeof(WmdTrackCmdType));
+    numBytesWritten += sizeof(WmdTrackCmdType);
+
+    // Put the data for the command into this stack buffer, which is more than big enough.
+    // First verify however that it is a command that we can write to the .WMD:
+    std::byte cmdData[8] = {};
+    const uint32_t cmdSize = getWmdTrackCmdSize(type);
+
+    if (cmdSize <= 0)
+        throw std::exception("Unexpected command in the track's command stream which cannot be serialized to a .WMD file!");
+
+    const uint32_t cmdDataSize = cmdSize - 1;
+
+    if (cmdDataSize > 8)
+        throw std::exception("Bad track command payload size!");
+
+    // Convert the command data to bytes
+    switch (type) {
+        case WmdTrackCmdType::SeqRet:
+        case WmdTrackCmdType::SeqEnd:
+        case WmdTrackCmdType::TrkRet:
+        case WmdTrackCmdType::TrkEnd:
+        case WmdTrackCmdType::NullEvent:
+            break;
+
+        case WmdTrackCmdType::PatchMod:
+        case WmdTrackCmdType::ZeroMod:
+        case WmdTrackCmdType::ModuMod:
+        case WmdTrackCmdType::VolumeMod:
+        case WmdTrackCmdType::PanMod:
+        case WmdTrackCmdType::PedalMod:
+        case WmdTrackCmdType::ReverbMod:
+        case WmdTrackCmdType::ChorusMod:
+        case WmdTrackCmdType::NoteOff:
+        case WmdTrackCmdType::ResetGates:
+        case WmdTrackCmdType::ResetIters: {
+            if ((arg1 < 0) || (arg1 > UINT8_MAX))
+                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+
+            cmdData[0] = (std::byte) arg1;
+        }   break;
+
+        case WmdTrackCmdType::PatchChg:
+        case WmdTrackCmdType::SeqTempo:
+        case WmdTrackCmdType::TrkTempo: {
+            if ((arg1 < 0) || (arg1 > UINT16_MAX))
+                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+
+            cmdData[0] = (std::byte)(arg1);
+            cmdData[1] = (std::byte)(arg1 >> 8);
+        }   break;
+
+        case WmdTrackCmdType::PitchMod:
+        case WmdTrackCmdType::SeqGosub:
+        case WmdTrackCmdType::TrkGosub:
+        case WmdTrackCmdType::SeqJump:
+        case WmdTrackCmdType::TrkJump: {
+            if ((arg1 < INT16_MIN) || (arg1 > INT16_MAX))
+                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+
+            cmdData[0] = (std::byte)((uint32_t) arg1);
+            cmdData[1] = (std::byte)((uint32_t) arg1 >> 8);
+        }   break;
+
+        case WmdTrackCmdType::NoteOn:
+        case WmdTrackCmdType::WriteIterBox: {
+            if ((arg1 < 0) || (arg1 > UINT8_MAX))
+                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+
+            if ((arg2 < 0) || (arg2 > UINT8_MAX))
+                throw std::exception("Track cmd has arg2 which is out of range for a .WMD file!");
+
+            cmdData[0] = (std::byte) arg1;
+            cmdData[1] = (std::byte) arg2;
+        }   break;
+
+        case WmdTrackCmdType::StatusMark: {
+            if ((arg1 < 0) || (arg1 > UINT8_MAX))
+                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+
+            if ((arg2 < INT16_MIN) || (arg2 > INT16_MAX))
+                throw std::exception("Track cmd has arg2 which is out of range for a .WMD file!");
+
+            cmdData[0] = (std::byte)(arg1);
+            cmdData[1] = (std::byte)((uint32_t) arg2);
+            cmdData[2] = (std::byte)((uint32_t) arg2 >> 8);
+        }   break;
+
+        case WmdTrackCmdType::GateJump:
+        case WmdTrackCmdType::IterJump: {
+            if ((arg1 < 0) || (arg1 > UINT8_MAX))
+                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+
+            if ((arg2 < 0) || (arg2 > UINT8_MAX))
+                throw std::exception("Track cmd has arg2 which is out of range for a .WMD file!");
+
+            if ((arg3 < INT16_MIN) || (arg3 > INT16_MAX))
+                throw std::exception("Track cmd has arg3 which is out of range for a .WMD file!");
+
+            cmdData[0] = (std::byte)(arg1);
+            cmdData[1] = (std::byte)(arg2);
+            cmdData[2] = (std::byte)((uint32_t) arg3);
+            cmdData[3] = (std::byte)((uint32_t) arg3 >> 8);
+        }   break;
+
+        // These commands (or unknown commands) should never be in the command stream!
+        case WmdTrackCmdType::DriverInit:
+        case WmdTrackCmdType::DriverExit:
+        case WmdTrackCmdType::DriverEntry1:
+        case WmdTrackCmdType::DriverEntry2:
+        case WmdTrackCmdType::DriverEntry3:
+        case WmdTrackCmdType::TrkOff:
+        case WmdTrackCmdType::TrkMute:
+        default:
+            throw std::exception("Unexpected command in the track's command stream which cannot be serialized to a .WMD file!");
+    }
+
+    // Serialize the bytes for the command data
+    streamWrite(cmdData, cmdDataSize);
+    numBytesWritten += cmdDataSize;
+    return numBytesWritten;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -241,6 +476,72 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Write an entire track to a .WMD file
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Track::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+    // Makeup a buffer and byte stream to write all the track data to
+    std::vector<std::byte> trackDataBytes;
+    trackDataBytes.reserve(cmds.size() * 8);
+
+    const StreamWriteFunc trackDataWrite = [&](const void* const pSrc, const size_t size) noexcept(false) {
+        for (size_t i = 0; i < size; ++i) {
+            trackDataBytes.push_back(((const std::byte*) pSrc)[i]);
+        }
+    };
+
+    // Write all of the track commands to the stream and save the byte offset of each command
+    std::vector<uint32_t> cmdOffsets;
+    cmdOffsets.reserve(cmds.size());
+
+    for (const TrackCmd& cmd : cmds) {
+        cmdOffsets.push_back((uint32_t) trackDataBytes.size());
+        cmd.writeToWmd(trackDataWrite);
+    }
+
+    // Makeup the header for the track, endian correct and write to the file
+    {
+        WmdTrackHdr hdr = {};
+        hdr.driverId = WmdSoundDriverId::PSX;
+        hdr.maxVoices = maxVoices;
+        hdr.priority = priority;
+        hdr.lockChannel = 0;
+        hdr.soundClass = soundClass;
+        hdr.initReverb = initReverb;
+        hdr.initPatchIdx = initPatchIdx;
+        hdr.initPitchCntrl = initPitchCntrl;
+        hdr.initVolumeCntrl = initVolumeCntrl;
+        hdr.initPanCntrl = initPanCntrl;
+        hdr.locStackSize = locStackSize;
+        hdr.initMutegroupsMask = initMutegroupsMask;
+        hdr.initPpq = initPpq;
+        hdr.initQpm = initQpm;
+
+        if (labels.size() > UINT16_MAX)
+            throw std::exception("Too many labels in a track for a .WMD file!");
+
+        hdr.numLabels = (uint16_t) labels.size();
+        hdr.cmdStreamSize = (uint32_t) trackDataBytes.size();
+
+        hdr.endianCorrect();
+        streamWrite(&hdr, sizeof(WmdTrackHdr));
+    }
+
+    // Write the track labels to the file
+    for (uint32_t cmdIdx : labels) {
+        // Make sure the label is in range
+        if (cmdIdx >= cmds.size())
+            throw std::exception("Bad track label which cannot be serialized! References a track command that does not exist (out of range).");
+
+        // Get the byte offset of the command and write
+        const uint32_t cmdByteOffset = cmdOffsets[cmdIdx];
+        streamWrite(&cmdByteOffset, sizeof(uint32_t));
+    }
+
+    // Write the track data to the file
+    streamWrite(trackDataBytes.data(), trackDataBytes.size());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Read an entire sequence from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Sequence::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
@@ -252,6 +553,28 @@ void Sequence::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
     // Read all the tracks in the sequence
     for (uint32_t trackIdx = 0; trackIdx < seqHdr.numTracks; ++trackIdx) {
         tracks.emplace_back().readFromWmd(streamRead);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write an entire sequence from a .WMD file
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Sequence::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+    // Write the header first
+    {
+        WmdSequenceHdr hdr = {};
+
+        if (tracks.size() > UINT16_MAX)
+            throw std::exception("Too many tracks in a sequence for a .WMD file!");
+        
+        hdr.numTracks = (uint16_t) tracks.size();
+        hdr.endianCorrect();
+        streamWrite(&hdr, sizeof(WmdSequenceHdr));
+    }
+
+    // Then write all the tracks
+    for (const Track& track : tracks) {
+        track.writeToWmd(streamWrite);
     }
 }
 
@@ -300,6 +623,40 @@ void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Write the entire module to the specified .WMD file
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Module::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+    // Make up the module header, endian correct and serialize it
+    {
+        WmdModuleHdr hdr = {};
+        hdr.moduleId = WMD_MODULE_ID;
+        hdr.moduleVersion = WMD_VERSION;
+
+        if (sequences.size() > UINT16_MAX)
+            throw new std::exception("Too many sequences for a .WMD file!");
+
+        hdr.numSequences = (uint16_t) sequences.size();
+        hdr.numPatchGroups = 1; // Just the PSX patch group to be written
+        hdr.maxActiveSequences = maxActiveSequences;
+        hdr.maxActiveTracks = maxActiveTracks;
+        hdr.maxGatesPerSeq = maxGatesPerSeq;
+        hdr.maxItersPerSeq = maxItersPerSeq;
+        hdr.maxCallbacks = maxCallbacks;
+
+        hdr.endianCorrect();
+        streamWrite(&hdr, sizeof(WmdModuleHdr));
+    }
+
+    // Write the PSX driver patch group
+    psxPatchGroup.writeToWmd(streamWrite);
+
+    // Write all the sequences
+    for (const Sequence& sequence : sequences) {
+        sequence.writeToWmd(streamWrite);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Skip the data in a .WMD file for a patch group of an unknown type
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Module::skipReadingWmdPatchGroup(const StreamReadFunc& reader, const WmdPatchGroupHdr& patchGroupHdr) noexcept(false) {
@@ -328,10 +685,10 @@ void Module::skipReadingWmdPatchGroup(const StreamReadFunc& reader, const WmdPat
 // Reads a variable length quantity from track data, similar to how certain data is encoded in the MIDI standard.
 // Returns number of bytes read and the output value, which may be up to 5 bytes.
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t Module::readVarLenQuant(const StreamReadFunc& reader, uint32_t& valueOut) noexcept(false) {
+uint32_t Module::readVarLenQuant(const StreamReadFunc& streamRead, uint32_t& valueOut) noexcept(false) {
     // Grab the first byte in the quantity
     uint8_t curByte = {};
-    reader(&curByte, 1);
+    streamRead(&curByte, 1);
     uint32_t numBytesRead = 1;
 
     // The top bit set on each byte means there is another byte to follow.
@@ -343,7 +700,7 @@ uint32_t Module::readVarLenQuant(const StreamReadFunc& reader, uint32_t& valueOu
         decodedVal <<= 7;
 
         // Read the next byte and incorporate into the value
-        reader(&curByte, 1);
+        streamRead(&curByte, 1);
         numBytesRead++;
         decodedVal |= (uint32_t) curByte & 0x7Fu;
 
@@ -354,4 +711,38 @@ uint32_t Module::readVarLenQuant(const StreamReadFunc& reader, uint32_t& valueOu
 
     valueOut = decodedVal;
     return numBytesRead;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write a variable length quantity to track data, similar to how certain data is encoded in the MIDI standard.
+// Returns number of bytes written, which may be up to 5 bytes.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t Module::writeVarLenQuant(const StreamWriteFunc& streamWrite, const uint32_t valueIn) noexcept(false) {
+    // Encode the given value into a stack buffer, writing a '0x80' bit flag whenever more bytes follow
+    uint8_t encodedBytes[8];
+    uint8_t* pEncodedByte = encodedBytes;
+
+    {
+        *pEncodedByte = (uint8_t)(valueIn & 0x7F);
+        pEncodedByte++;
+        uint32_t bitsToEncode = valueIn >> 7;
+
+        while (bitsToEncode != 0) {
+            *pEncodedByte = (uint8_t)(bitsToEncode | 0x80);
+            bitsToEncode >>= 7;
+            pEncodedByte++;
+        }
+    }
+    
+    // Write the encoded value to the given output stream.
+    // Note that the ordering here gets reversed, so it winds up being read in the correct order.
+    uint32_t numBytesWritten = 0;
+
+    do {
+        pEncodedByte--;
+        streamWrite(pEncodedByte, 1);
+        numBytesWritten++;
+    } while (*pEncodedByte & 0x80);
+
+    return numBytesWritten;
 }

@@ -75,6 +75,7 @@ namespace AudioTools {
         uint16_t    sampleIdx;          // The index of the patch sample to use for this voice
         uint8_t     volume;             // Volume to play the voice at
         uint8_t     pan;                // Voice pan 64 to 191 - 128 is the voice center. Values outside this range are clamped by the PSX driver.
+        uint8_t     reverb;             // How much reverb to apply to the voice. Note: the PSX sound driver ignores this.
         uint8_t     baseNote;           // The 'base' note/semitone at which the sound sample is regarded to play back at 44,100 Hz (used to compute sample frequency for triggered notes)
         uint8_t     baseNoteFrac;       // The .8 fractional part of the base note
         uint8_t     noteMin;            // Minimum semitone at which the voice can be played - does not sound below this
@@ -90,6 +91,7 @@ namespace AudioTools {
         };
 
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
+        void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
 
     // Holds details for a sound sample used by a patch voice; just holds the size in bytes of the sound sample
@@ -97,6 +99,7 @@ namespace AudioTools {
         uint32_t    size;
 
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
+        void writeToWmd(const StreamWriteFunc& streamWrite, const uint32_t wmdOffsetField = 0) const noexcept(false);
     };
 
     // Describes a patch/instrument: this is a collection of voices triggered in unison
@@ -105,6 +108,7 @@ namespace AudioTools {
         uint16_t    numVoices;          // How many voices to use for the patch
 
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
+        void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
 
     // Patches, patch voices and patch samples etc.
@@ -115,6 +119,7 @@ namespace AudioTools {
         std::vector<PsxPatch>           patches;            // Patches/instruments
 
         void readFromWmd(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& hdr) noexcept(false);
+        void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -132,6 +137,7 @@ namespace AudioTools {
         int32_t             arg3;           // Command argument 3: meaning (if any) depends on the command
 
         uint32_t readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
+        uint32_t writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
 
     // Represents an individual track in a sequence
@@ -153,6 +159,7 @@ namespace AudioTools {
         std::vector<TrackCmd>   cmds;                   // The commands for the track
 
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
+        void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
 
     // Represents an entire sequence (music or a sound) to be played by the sequencer
@@ -160,6 +167,7 @@ namespace AudioTools {
         std::vector<Track>  tracks;
 
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
+        void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -176,9 +184,11 @@ namespace AudioTools {
         std::vector<Sequence>   sequences;              // All of the sequences in the module file
 
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
+        void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
 
         // WMD file reading utilities
         static void skipReadingWmdPatchGroup(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& patchGroupHdr) noexcept(false);
-        static uint32_t readVarLenQuant(const StreamReadFunc& reader, uint32_t& valueOut) noexcept(false);
+        static uint32_t readVarLenQuant(const StreamReadFunc& streamRead, uint32_t& valueOut) noexcept(false);
+        static uint32_t writeVarLenQuant(const StreamWriteFunc& streamWrite, const uint32_t valueIn) noexcept(false);
     };
 }

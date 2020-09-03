@@ -1,6 +1,6 @@
-//--------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 // This file contains a collection of binary data structures and values found in a Williams Module File (.WMD)
-//--------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
 
 #include <cstdint>
@@ -32,6 +32,8 @@ namespace AudioTools {
 
         void endianCorrect() noexcept;
     };
+
+    static_assert(sizeof(WmdModuleHdr) == 16);
 
     // Flags specifying what types of patch group data gets loaded
     enum WmdPatchGroupLoadFlags : int32_t {
@@ -77,6 +79,8 @@ namespace AudioTools {
         void endianCorrect() noexcept;
     };
 
+    static_assert(sizeof(WmdPatchGroupHdr) == 28);
+
     // Header for a sequence
     struct WmdSequenceHdr {
         uint16_t    numTracks;      // How many tracks are in the sequence
@@ -84,6 +88,8 @@ namespace AudioTools {
 
         void endianCorrect() noexcept;
     };
+
+    static_assert(sizeof(WmdSequenceHdr) == 4);
 
     // Header for an individual track in a sequence
     struct WmdTrackHdr {
@@ -106,6 +112,8 @@ namespace AudioTools {
 
         void endianCorrect() noexcept;
     };
+
+    static_assert(sizeof(WmdTrackHdr) == 24);
 
     // Track command types: some of these are handled by the sequencer generically, others are handled by the sound driver
     enum class WmdTrackCmdType : uint8_t {
@@ -165,6 +173,8 @@ namespace AudioTools {
         void endianCorrect() noexcept;
     };
 
+    static_assert(sizeof(WmdPsxPatch) == 4);
+
     // Settings for one individual voice/sound in a patch/instrument
     struct WmdPsxPatchVoice {
         uint8_t     priority;           // Voice priority: used to determine what to kill when we're out of voices
@@ -184,6 +194,8 @@ namespace AudioTools {
         void endianCorrect() noexcept;
     };
 
+    static_assert(sizeof(WmdPsxPatchVoice) == 16);
+
     // Holds details for a sound sample used by a patch voice which can be loaded or is already loaded
     struct WmdPsxPatchSample {
         uint32_t    offset;         // Unused & unclear what the purpose of this is for. Increases with each patch sample in the module.
@@ -192,6 +204,8 @@ namespace AudioTools {
 
         void endianCorrect() noexcept;
     };
+
+    static_assert(sizeof(WmdPsxPatchSample) == 12);
 
     // Utility functions
     uint32_t getWmdTrackCmdSize(const WmdTrackCmdType type) noexcept;

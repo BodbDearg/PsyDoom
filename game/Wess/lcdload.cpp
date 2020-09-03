@@ -113,7 +113,7 @@ int32_t wess_dig_lcd_data_read(
         // If we've uploaded all the bytes from the current sound then do that:
         if (gWess_lcd_load_soundBytesLeft == 0) {
             // Commit the details for the sound we just finished uploading, unless we haven't yet started on uploading a sound.
-            // Sound number '0' is invalid and the LCD file header at this location contains the number of sounds, not the patch index for a sound.
+            // Sound number '0' is invalid and the LCD file header at this location contains the number of sounds, not the patch sample index for a sound.
             if (gWess_lcd_load_soundNum > 0) {
                 const uint16_t patchSampleIdx = pPatchSampleIndices[gWess_lcd_load_soundNum];
                 patch_sample& patchSample = pPatchSamples[patchSampleIdx];
