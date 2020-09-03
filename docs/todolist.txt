@@ -9,6 +9,7 @@ Music Tooling
 0.6 - Sound, timing & QOL improvements?
 - Fix 'Invalid password' overlap on password screen.
 - Make the 'noclip' cheat carry across levels.
+- Autorun toggle button.
 - Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
 - Do an error message on failure to connect in multiplayer games explaining the issue.
 - Implement prefs saving/loading

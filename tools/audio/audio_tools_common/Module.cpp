@@ -1,5 +1,7 @@
 #include "Module.h"
 
+#include <algorithm>
+
 using namespace AudioTools;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,7 +201,8 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
     this->locStackSize = trackHdr.locStackSize;
     this->priority = trackHdr.priority;
 
-    // Read raw track labels: in the .WMD these will be in terms of raw byte offsets but we want to convert to command indexes
+    // Read raw track labels: in the .WMD these will be in terms of raw byte offsets.
+    // We will convert these to command indexes below so the command stream can be edited easier.
     std::unique_ptr<uint32_t[]> labelByteOffsets(new uint32_t[trackHdr.numLabels]);
     streamRead(labelByteOffsets.get(), sizeof(uint32_t) * trackHdr.numLabels);
 
@@ -218,6 +221,22 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
         // Are we past the end of the stream, if so that is an error and indicates a corrupted sequence:
         if (curCmdByteOffset > trackHdr.cmdStreamSize)
             throw std::exception("Unexpected end of track command stream! Track data may be corrupt!");
+    }
+
+    // Populate the labels list with the index of the command to jump to.
+    // Need to convert from byte offsets to command indexes:
+    labels.reserve(trackHdr.numLabels);
+
+    for (uint32_t i = 0; i < trackHdr.numLabels; ++i) {
+        const uint32_t labelByteOffset = labelByteOffsets[i];
+        const auto cmdIter = std::lower_bound(cmdByteOffsets.begin(), cmdByteOffsets.end(), labelByteOffset);
+
+        if (cmdIter != cmdByteOffsets.end()) {
+            const uint32_t labelCmdIdx = (uint32_t)(cmdIter - cmdByteOffsets.begin());
+            labels.push_back(labelCmdIdx);
+        } else {
+            throw std::exception("Invalid byte offset for track label! Track data may be corrupt!");
+        }
     }
 }
 
