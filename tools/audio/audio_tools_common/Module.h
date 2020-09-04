@@ -165,6 +165,7 @@ namespace AudioTools {
     // Represents an entire sequence (music or a sound) to be played by the sequencer
     struct Sequence {
         std::vector<Track>  tracks;
+        uint16_t            unknownWmdField;    // Unknown field read from the .WMD: its purpose is unknown because it is never used. Preserving for diff purposes against original .WMD files!
 
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
         void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
@@ -190,5 +191,6 @@ namespace AudioTools {
         static void skipReadingWmdPatchGroup(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& patchGroupHdr) noexcept(false);
         static uint32_t readVarLenQuant(const StreamReadFunc& streamRead, uint32_t& valueOut) noexcept(false);
         static uint32_t writeVarLenQuant(const StreamWriteFunc& streamWrite, const uint32_t valueIn) noexcept(false);
+        static uint32_t getVarLenQuantLen(const uint32_t valueIn) noexcept;
     };
 }

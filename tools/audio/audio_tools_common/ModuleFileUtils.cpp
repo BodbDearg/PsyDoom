@@ -101,6 +101,26 @@ bool ModuleFileUtils::writeWmdFile(const char* const wmdFilePath, const Module& 
         errorMsgOut += "'!";
     }
 
+    // Pad the file out to 2,048 byte multiples.
+    // This is the way the .WMD files are stored on the PSX Doom CD.
+    {
+        std::byte zeroBytes[2048];
+        const long fileLoc = std::ftell(pWmdFile);
+        const long paddedFileSize = ((fileLoc + 2047) / 2048) * 2048;
+        const long numPadBytes = paddedFileSize - fileLoc;
+
+        if (numPadBytes > 0) {
+            std::memset(zeroBytes, 0, numPadBytes);
+
+            if (std::fwrite(zeroBytes, numPadBytes, 1, pWmdFile) != 1) {
+                errorMsgOut = "An error occurred while writing to the .WMD file '";
+                errorMsgOut += wmdFilePath;
+                errorMsgOut += "'! Error reason: Error writing to file!";
+                bModuleWrittenOk = false;
+            }
+        }
+    }
+
     // Flush the output to make sure it was successfully written
     if (bModuleWrittenOk && (std::fflush(pWmdFile) != 0)) {
         errorMsgOut = "An error occurred while finishing up writing to the .WMD file '";

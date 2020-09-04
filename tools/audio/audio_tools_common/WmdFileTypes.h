@@ -84,7 +84,7 @@ namespace AudioTools {
     // Header for a sequence
     struct WmdSequenceHdr {
         uint16_t    numTracks;      // How many tracks are in the sequence
-        uint16_t    _unused;        // Field appears to be unused - it's purpose cannot be determined because of that
+        uint16_t    unknownField;   // Field is unused in PSX Doom - it's purpose cannot be determined because of that
 
         void endianCorrect() noexcept;
     };

@@ -450,7 +450,7 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 
     while (curCmdByteOffset < trackHdr.cmdStreamSize) {
         TrackCmd& cmd = cmds.emplace_back();
-        cmdByteOffsets.push_back(curCmdByteOffset);
+        cmdByteOffsets.push_back(curCmdByteOffset + Module::getVarLenQuantLen(cmd.delayQnp));   // Note: labels skip the command delay time bytes
         curCmdByteOffset += cmd.readFromWmd(streamRead);
 
         // Are we past the end of the stream, if so that is an error and indicates a corrupted sequence:
@@ -494,7 +494,7 @@ void Track::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false)
     cmdOffsets.reserve(cmds.size());
 
     for (const TrackCmd& cmd : cmds) {
-        cmdOffsets.push_back((uint32_t) trackDataBytes.size());
+        cmdOffsets.push_back((uint32_t) trackDataBytes.size() + Module::getVarLenQuantLen(cmd.delayQnp));   // Note: labels skip the command delay time bytes
         cmd.writeToWmd(trackDataWrite);
     }
 
@@ -550,6 +550,9 @@ void Sequence::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
     streamRead(&seqHdr, sizeof(WmdSequenceHdr));
     seqHdr.endianCorrect();
 
+    // Preserve this field for diff purposes against original .WMD files
+    unknownWmdField = seqHdr.unknownField;
+
     // Read all the tracks in the sequence
     for (uint32_t trackIdx = 0; trackIdx < seqHdr.numTracks; ++trackIdx) {
         tracks.emplace_back().readFromWmd(streamRead);
@@ -568,6 +571,8 @@ void Sequence::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(fal
             throw std::exception("Too many tracks in a sequence for a .WMD file!");
         
         hdr.numTracks = (uint16_t) tracks.size();
+        hdr.unknownField = unknownWmdField;
+
         hdr.endianCorrect();
         streamWrite(&hdr, sizeof(WmdSequenceHdr));
     }
@@ -623,7 +628,8 @@ void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Write the entire module to the specified .WMD file
+// Write the entire module to the specified .WMD file.
+// Just writes the actual .WMD data, does not pad out to 2,048 byte multiples like the .WMD files on the PSX Doom disc.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Module::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
     // Make up the module header, endian correct and serialize it
@@ -725,11 +731,11 @@ uint32_t Module::writeVarLenQuant(const StreamWriteFunc& streamWrite, const uint
     {
         *pEncodedByte = (uint8_t)(valueIn & 0x7F);
         pEncodedByte++;
-        uint32_t bitsToEncode = valueIn >> 7;
+        uint32_t bitsLeftToEncode = valueIn >> 7;
 
-        while (bitsToEncode != 0) {
-            *pEncodedByte = (uint8_t)(bitsToEncode | 0x80);
-            bitsToEncode >>= 7;
+        while (bitsLeftToEncode != 0) {
+            *pEncodedByte = (uint8_t)(bitsLeftToEncode | 0x80);
+            bitsLeftToEncode >>= 7;
             pEncodedByte++;
         }
     }
@@ -745,4 +751,20 @@ uint32_t Module::writeVarLenQuant(const StreamWriteFunc& streamWrite, const uint
     } while (*pEncodedByte & 0x80);
 
     return numBytesWritten;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells how many bytes would be used to encode a 32-bit value using variable length (MIDI style) encoding.
+// The returned answer will be between 1-5 bytes.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t Module::getVarLenQuantLen(const uint32_t valueIn) noexcept {
+    uint32_t numEncodedBytes = 1;
+    uint32_t bitsLeftToEncode = valueIn >> 7;
+
+    while (bitsLeftToEncode != 0) {
+        numEncodedBytes++;
+        bitsLeftToEncode >>= 7;
+    }
+
+    return numEncodedBytes;
 }

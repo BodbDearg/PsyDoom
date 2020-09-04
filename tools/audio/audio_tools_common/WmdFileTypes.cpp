@@ -36,6 +36,7 @@ void WmdPatchGroupHdr::endianCorrect() noexcept {
 
 void WmdSequenceHdr::endianCorrect() noexcept {
     ::endianCorrect(numTracks);
+    ::endianCorrect(unknownField);
 }
 
 void WmdTrackHdr::endianCorrect() noexcept {
