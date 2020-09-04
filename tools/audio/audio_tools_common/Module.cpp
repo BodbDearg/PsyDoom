@@ -5,6 +5,13 @@
 using namespace AudioTools;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Write a PlayStation sound driver format patch group to a .json file
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PsxPatchGroup::writeToJson(rapidjson::Value& jsonRoot) const noexcept {
+    // TODO...
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Read a PlayStation sound driver format patch group (and child data structures) from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PsxPatchVoice::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
@@ -584,6 +591,28 @@ void Sequence::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(fal
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Write the entire module to a json document
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Module::writeToJson(rapidjson::Document& doc) const noexcept {
+    // Add basic module properties
+    assert(doc.IsObject());
+    rapidjson::Document::AllocatorType& docAlloc = doc.GetAllocator();
+
+    doc.AddMember("maxActiveSequences", maxActiveSequences, docAlloc);
+    doc.AddMember("maxActiveTracks", maxActiveTracks, docAlloc);
+    doc.AddMember("maxGatesPerSeq", maxGatesPerSeq, docAlloc);
+    doc.AddMember("maxItersPerSeq", maxItersPerSeq, docAlloc);
+    doc.AddMember("maxCallbacks", maxCallbacks, docAlloc);
+
+    // Write the PSX driver patch group
+    {
+        rapidjson::Value psxPatchGroupJson(rapidjson::kObjectType);
+        psxPatchGroup.writeToJson(psxPatchGroupJson);
+        doc.AddMember("psxPatchGroupJson", psxPatchGroupJson, docAlloc);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Read the entire module from the specified .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
@@ -629,7 +658,11 @@ void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write the entire module to the specified .WMD file.
-// Just writes the actual .WMD data, does not pad out to 2,048 byte multiples like the .WMD files on the PSX Doom disc.
+//
+//  Notes:
+//      (1) Just writes the actual .WMD data, does not pad out to 2,048 byte multiples like the .WMD files on the PSX Doom disc.
+//      (2) If some parts of the module are invalidly configured, writing may fail.
+//          The output from this process should always be a valid .WMD file.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Module::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
     // Make up the module header, endian correct and serialize it

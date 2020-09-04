@@ -3,8 +3,54 @@
 #include "Module.h"
 
 #include <cstdio>
+#include <rapidjson/filewritestream.h>
+#include <rapidjson/prettywriter.h>
 
 using namespace AudioTools;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write a 'Module' data structure to the .json file at the given path.
+// If writing fails return 'false' and give an error reason in the output string.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool ModuleFileUtils::writeJsonFile(const char* const jsonFilePath, const Module& moduleIn, std::string& errorMsgOut) noexcept {
+    // Write the module to a JSON document with an object at the root
+    rapidjson::Document document;
+    document.SetObject();
+    moduleIn.writeToJson(document);
+
+    // Write the json to the given file
+    std::FILE* const pJsonFile = std::fopen(jsonFilePath, "w");
+
+    if (!pJsonFile)
+        return false;
+
+    bool bFileWrittenOk = false;
+
+    try {
+        char writeBuffer[4096];
+        rapidjson::FileWriteStream writeStream(pJsonFile, writeBuffer, sizeof(writeBuffer));
+        rapidjson::PrettyWriter<rapidjson::FileWriteStream> fileWriter(writeStream);
+        document.Accept(fileWriter);
+        bFileWrittenOk = true;
+    } catch (...) {
+        // Ignore...
+    }
+
+    if (std::fflush(pJsonFile) != 0) {
+        bFileWrittenOk = false;
+    }
+
+    // Cleanup and set an error message if something went wrong
+    std::fclose(pJsonFile);
+
+    if (!bFileWrittenOk) {
+        errorMsgOut = "Error writing to the .json file '";
+        errorMsgOut += jsonFilePath;
+        errorMsgOut += "'!";
+    }
+
+    return bFileWrittenOk;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read a .WMD (Williams Module File) from the given path and store in the given 'Module' data structure.

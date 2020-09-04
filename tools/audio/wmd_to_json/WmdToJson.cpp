@@ -27,12 +27,10 @@ int main(int argc, const char* const argv[]) noexcept {
         return 1;
     }
 
-    // TODO: REMOVE - TEMP FOR TESTING
-    if (!ModuleFileUtils::writeWmdFile(jsonFileOut, module, errorMsg)) {
+    if (!ModuleFileUtils::writeJsonFile(jsonFileOut, module, errorMsg)) {
         std::printf("%s\n", errorMsg.c_str());
         return 1;
     }
 
-    // TODO...
     return 0;
 }

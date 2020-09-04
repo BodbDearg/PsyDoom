@@ -3,6 +3,7 @@
 #include "WmdFileTypes.h"
 
 #include <functional>
+#include <rapidjson/document.h>
 #include <vector>
 
 namespace AudioTools {
@@ -118,6 +119,7 @@ namespace AudioTools {
         std::vector<PsxPatchVoice>      patchVoices;        // Individual voices in a patch
         std::vector<PsxPatch>           patches;            // Patches/instruments
 
+        void writeToJson(rapidjson::Value& jsonRoot) const noexcept;
         void readFromWmd(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& hdr) noexcept(false);
         void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
@@ -184,6 +186,7 @@ namespace AudioTools {
         PsxPatchGroup           psxPatchGroup;          // PSX sound driver: patches
         std::vector<Sequence>   sequences;              // All of the sequences in the module file
 
+        void writeToJson(rapidjson::Document& doc) const noexcept;
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
         void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
 

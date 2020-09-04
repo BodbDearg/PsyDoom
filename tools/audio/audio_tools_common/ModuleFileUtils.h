@@ -9,6 +9,7 @@ namespace AudioTools {
     struct Module;
 
     namespace ModuleFileUtils {
+        bool writeJsonFile(const char* const jsonFilePath, const Module& moduleIn, std::string& errorMsgOut) noexcept;
         bool readWmdFile(const char* const wmdFilePath, Module& moduleOut, std::string& errorMsgOut) noexcept;
         bool writeWmdFile(const char* const wmdFilePath, const Module& moduleIn, std::string& errorMsgOut) noexcept;
     }
