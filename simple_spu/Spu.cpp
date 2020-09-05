@@ -584,8 +584,8 @@ void doMasterMix(
     // Need to clamp if exceeding this and also scale by 2.
     const StereoSample wetOutput = dryOutput + reverbOutput;
     const Volume scaledMasterVol = {
-        std::clamp(masterVol.left, MIN_MASTER_VOLUME, MAX_MASTER_VOLUME) * 2,
-        std::clamp(masterVol.right, MIN_MASTER_VOLUME, MAX_MASTER_VOLUME) * 2,
+        (int16_t)(std::clamp(masterVol.left, MIN_MASTER_VOLUME, MAX_MASTER_VOLUME) * 2),
+        (int16_t)(std::clamp(masterVol.right, MIN_MASTER_VOLUME, MAX_MASTER_VOLUME) * 2),
     };
 
     output = wetOutput * scaledMasterVol;
