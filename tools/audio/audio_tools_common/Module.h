@@ -90,7 +90,8 @@ namespace AudioTools {
             PsxAdsrEnvelope     adsr;
             uint32_t            adsrBits;
         };
-
+        
+        void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
         void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
@@ -99,6 +100,7 @@ namespace AudioTools {
     struct PsxPatchSample {
         uint32_t    size;
 
+        void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
         void writeToWmd(const StreamWriteFunc& streamWrite, const uint32_t wmdOffsetField = 0) const noexcept(false);
     };
@@ -108,6 +110,7 @@ namespace AudioTools {
         uint16_t    firstVoiceIdx;      // Index of the first patch voice for the patch. Other patch voices follow contiguously in the voices list.
         uint16_t    numVoices;          // How many voices to use for the patch
 
+        void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
         void readFromWmd(const StreamReadFunc& streamRead) noexcept(false);
         void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };
@@ -119,7 +122,7 @@ namespace AudioTools {
         std::vector<PsxPatchVoice>      patchVoices;        // Individual voices in a patch
         std::vector<PsxPatch>           patches;            // Patches/instruments
 
-        void writeToJson(rapidjson::Value& jsonRoot) const noexcept;
+        void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
         void readFromWmd(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& hdr) noexcept(false);
         void writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false);
     };

@@ -8,8 +8,82 @@ using namespace AudioTools;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write a PlayStation sound driver format patch group to a .json file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchGroup::writeToJson(rapidjson::Value& jsonRoot) const noexcept {
-    // TODO...
+void PsxPatchVoice::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
+    jsonRoot.AddMember("sampleIdx", sampleIdx, jsonAlloc);
+    jsonRoot.AddMember("volume", volume, jsonAlloc);
+    jsonRoot.AddMember("pan", pan, jsonAlloc);
+    jsonRoot.AddMember("reverb", reverb, jsonAlloc);
+    jsonRoot.AddMember("baseNote", baseNote, jsonAlloc);
+    jsonRoot.AddMember("baseNoteFrac", baseNoteFrac, jsonAlloc);
+    jsonRoot.AddMember("noteMin", noteMin, jsonAlloc);
+    jsonRoot.AddMember("noteMax", noteMax, jsonAlloc);
+    jsonRoot.AddMember("pitchstepDown", pitchstepDown, jsonAlloc);
+    jsonRoot.AddMember("pitchstepUp", pitchstepUp, jsonAlloc);
+    jsonRoot.AddMember("priority", priority, jsonAlloc);
+    jsonRoot.AddMember("adsr_sustainLevel", adsr.sustainLevel, jsonAlloc);
+    jsonRoot.AddMember("adsr_decayShift", adsr.decayShift, jsonAlloc);
+    jsonRoot.AddMember("adsr_attackStep", adsr.attackStep, jsonAlloc);
+    jsonRoot.AddMember("adsr_attackShift", adsr.attackShift, jsonAlloc);
+    jsonRoot.AddMember("adsr_attackExponential", (bool) adsr.bAttackExp, jsonAlloc);
+    jsonRoot.AddMember("adsr_releaseShift", adsr.releaseShift, jsonAlloc);
+    jsonRoot.AddMember("adsr_releaseExponential", (bool) adsr.bReleaseExp, jsonAlloc);
+    jsonRoot.AddMember("adsr_sustainStep", adsr.sustainStep, jsonAlloc);
+    jsonRoot.AddMember("adsr_sustainShift", adsr.sustainShift, jsonAlloc);
+    jsonRoot.AddMember("adsr_sustainDecrease", (bool) adsr.bSustainDec, jsonAlloc);
+    jsonRoot.AddMember("adsr_sustainExponential", (bool) adsr.bSustainExp, jsonAlloc);
+}
+
+void PsxPatchSample::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
+    jsonRoot.AddMember("size", size, jsonAlloc);
+}
+
+void PsxPatch::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
+    jsonRoot.AddMember("firstVoiceIdx", firstVoiceIdx, jsonAlloc);
+    jsonRoot.AddMember("numVoices", numVoices, jsonAlloc);
+}
+
+void PsxPatchGroup::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
+    // Group global properties
+    jsonRoot.AddMember("hwVoiceLimit", hwVoiceLimit, jsonAlloc);
+    
+    // Save patches
+    {
+        rapidjson::Value patchesArray(rapidjson::kArrayType);
+        
+        for (const PsxPatch& patch : patches) {
+            rapidjson::Value patchObj(rapidjson::kObjectType);
+            patch.writeToJson(patchObj, jsonAlloc);
+            patchesArray.PushBack(patchObj, jsonAlloc);
+        }
+        
+        jsonRoot.AddMember("patches", patchesArray, jsonAlloc);
+    }
+    
+    // Save patch voices
+    {
+        rapidjson::Value patchVoicesArray(rapidjson::kArrayType);
+        
+        for (const PsxPatchVoice& patchVoice : patchVoices) {
+            rapidjson::Value patchVoiceObj(rapidjson::kObjectType);
+            patchVoice.writeToJson(patchVoiceObj, jsonAlloc);
+            patchVoicesArray.PushBack(patchVoiceObj, jsonAlloc);
+        }
+        
+        jsonRoot.AddMember("patchVoices", patchVoicesArray, jsonAlloc);
+    }
+    
+    // Save patch samples
+    {
+        rapidjson::Value patchSamplesArray(rapidjson::kArrayType);
+        
+        for (const PsxPatchSample& patchSample : patchSamples) {
+            rapidjson::Value patchSampleObj(rapidjson::kObjectType);
+            patchSample.writeToJson(patchSampleObj, jsonAlloc);
+            patchSamplesArray.PushBack(patchSampleObj, jsonAlloc);
+        }
+        
+        jsonRoot.AddMember("patchSamples", patchSamplesArray, jsonAlloc);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -597,19 +671,19 @@ void Sequence::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(fal
 void Module::writeToJson(rapidjson::Document& doc) const noexcept {
     // Add basic module properties
     assert(doc.IsObject());
-    rapidjson::Document::AllocatorType& docAlloc = doc.GetAllocator();
+    rapidjson::Document::AllocatorType& jsonAlloc = doc.GetAllocator();
 
-    doc.AddMember("maxActiveSequences", maxActiveSequences, docAlloc);
-    doc.AddMember("maxActiveTracks", maxActiveTracks, docAlloc);
-    doc.AddMember("maxGatesPerSeq", maxGatesPerSeq, docAlloc);
-    doc.AddMember("maxItersPerSeq", maxItersPerSeq, docAlloc);
-    doc.AddMember("maxCallbacks", maxCallbacks, docAlloc);
+    doc.AddMember("maxActiveSequences", maxActiveSequences, jsonAlloc);
+    doc.AddMember("maxActiveTracks", maxActiveTracks, jsonAlloc);
+    doc.AddMember("maxGatesPerSeq", maxGatesPerSeq, jsonAlloc);
+    doc.AddMember("maxItersPerSeq", maxItersPerSeq, jsonAlloc);
+    doc.AddMember("maxCallbacks", maxCallbacks, jsonAlloc);
 
     // Write the PSX driver patch group
     {
-        rapidjson::Value psxPatchGroupJson(rapidjson::kObjectType);
-        psxPatchGroup.writeToJson(psxPatchGroupJson);
-        doc.AddMember("psxPatchGroupJson", psxPatchGroupJson, docAlloc);
+        rapidjson::Value patchGroupObj(rapidjson::kObjectType);
+        psxPatchGroup.writeToJson(patchGroupObj, jsonAlloc);
+        doc.AddMember("psxPatchGroup", patchGroupObj, jsonAlloc);        
     }
 }
 
