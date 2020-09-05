@@ -1,6 +1,7 @@
 #include "Module.h"
 
 #include <algorithm>
+#include <cstdio>
 
 using namespace AudioTools;
 
@@ -141,19 +142,19 @@ void PsxPatchGroup::writeToWmd(const StreamWriteFunc& streamWrite) const noexcep
         groupHdr.hwVoiceLimit = hwVoiceLimit;
         
         if (patches.size() > UINT16_MAX)
-            throw std::exception("Too many patches in the PSX patch group for a .WMD file!");
+            throw "Too many patches in the PSX patch group for a .WMD file!";
 
         groupHdr.numPatches = (uint16_t) patches.size();
         groupHdr.patchSize = sizeof(WmdPsxPatch);
 
         if (patchVoices.size() > UINT16_MAX)
-            throw std::exception("Too many patche voices in the PSX patch group for a .WMD file!");
+            throw "Too many patche voices in the PSX patch group for a .WMD file!";
 
         groupHdr.numPatchVoices = (uint16_t) patchVoices.size();
         groupHdr.patchVoiceSize = sizeof(WmdPsxPatchVoice);
 
         if (patchSamples.size() > UINT16_MAX)
-            throw std::exception("Too many patch samples in the PSX patch group for a .WMD file!");
+            throw "Too many patch samples in the PSX patch group for a .WMD file!";
 
         groupHdr.numPatchSamples = (uint16_t) patchSamples.size();
         groupHdr.patchSampleSize = sizeof(WmdPsxPatchSample);
@@ -209,12 +210,12 @@ uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) noexcept(false)
     const uint32_t cmdSize = getWmdTrackCmdSize(type);
 
     if (cmdSize <= 0)
-        throw std::exception("Unexpected command in the track's command stream!");
+        throw "Unexpected command in the track's command stream!";
 
     const uint32_t cmdDataSize = cmdSize - 1;
 
     if (cmdDataSize > 8)
-        throw std::exception("Bad track command payload size!");
+        throw "Bad track command payload size!";
 
     streamRead(cmdData, cmdDataSize);
     numBytesRead += cmdDataSize;
@@ -283,7 +284,7 @@ uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) noexcept(false)
         case WmdTrackCmdType::TrkOff:
         case WmdTrackCmdType::TrkMute:
         default:
-            throw std::exception("Unexpected command type in the track's command stream!");
+            throw "Unexpected command type in the track's command stream!";
     }
 
     return numBytesRead;
@@ -306,12 +307,12 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
     const uint32_t cmdSize = getWmdTrackCmdSize(type);
 
     if (cmdSize <= 0)
-        throw std::exception("Unexpected command in the track's command stream which cannot be serialized to a .WMD file!");
+        throw "Unexpected command in the track's command stream which cannot be serialized to a .WMD file!";
 
     const uint32_t cmdDataSize = cmdSize - 1;
 
     if (cmdDataSize > 8)
-        throw std::exception("Bad track command payload size!");
+        throw "Bad track command payload size!";
 
     // Convert the command data to bytes
     switch (type) {
@@ -334,7 +335,7 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
         case WmdTrackCmdType::ResetGates:
         case WmdTrackCmdType::ResetIters: {
             if ((arg1 < 0) || (arg1 > UINT8_MAX))
-                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+                throw "Track cmd has arg1 which is out of range for a .WMD file!";
 
             cmdData[0] = (std::byte) arg1;
         }   break;
@@ -343,7 +344,7 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
         case WmdTrackCmdType::SeqTempo:
         case WmdTrackCmdType::TrkTempo: {
             if ((arg1 < 0) || (arg1 > UINT16_MAX))
-                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+                throw "Track cmd has arg1 which is out of range for a .WMD file!";
 
             cmdData[0] = (std::byte)(arg1);
             cmdData[1] = (std::byte)(arg1 >> 8);
@@ -355,7 +356,7 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
         case WmdTrackCmdType::SeqJump:
         case WmdTrackCmdType::TrkJump: {
             if ((arg1 < INT16_MIN) || (arg1 > INT16_MAX))
-                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+                throw "Track cmd has arg1 which is out of range for a .WMD file!";
 
             cmdData[0] = (std::byte)((uint32_t) arg1);
             cmdData[1] = (std::byte)((uint32_t) arg1 >> 8);
@@ -364,10 +365,10 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
         case WmdTrackCmdType::NoteOn:
         case WmdTrackCmdType::WriteIterBox: {
             if ((arg1 < 0) || (arg1 > UINT8_MAX))
-                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+                throw "Track cmd has arg1 which is out of range for a .WMD file!";
 
             if ((arg2 < 0) || (arg2 > UINT8_MAX))
-                throw std::exception("Track cmd has arg2 which is out of range for a .WMD file!");
+                throw "Track cmd has arg2 which is out of range for a .WMD file!";
 
             cmdData[0] = (std::byte) arg1;
             cmdData[1] = (std::byte) arg2;
@@ -375,10 +376,10 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
 
         case WmdTrackCmdType::StatusMark: {
             if ((arg1 < 0) || (arg1 > UINT8_MAX))
-                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+                throw "Track cmd has arg1 which is out of range for a .WMD file!";
 
             if ((arg2 < INT16_MIN) || (arg2 > INT16_MAX))
-                throw std::exception("Track cmd has arg2 which is out of range for a .WMD file!");
+                throw "Track cmd has arg2 which is out of range for a .WMD file!";
 
             cmdData[0] = (std::byte)(arg1);
             cmdData[1] = (std::byte)((uint32_t) arg2);
@@ -388,13 +389,13 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
         case WmdTrackCmdType::GateJump:
         case WmdTrackCmdType::IterJump: {
             if ((arg1 < 0) || (arg1 > UINT8_MAX))
-                throw std::exception("Track cmd has arg1 which is out of range for a .WMD file!");
+                throw "Track cmd has arg1 which is out of range for a .WMD file!";
 
             if ((arg2 < 0) || (arg2 > UINT8_MAX))
-                throw std::exception("Track cmd has arg2 which is out of range for a .WMD file!");
+                throw "Track cmd has arg2 which is out of range for a .WMD file!";
 
             if ((arg3 < INT16_MIN) || (arg3 > INT16_MAX))
-                throw std::exception("Track cmd has arg3 which is out of range for a .WMD file!");
+                throw "Track cmd has arg3 which is out of range for a .WMD file!";
 
             cmdData[0] = (std::byte)(arg1);
             cmdData[1] = (std::byte)(arg2);
@@ -411,7 +412,7 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
         case WmdTrackCmdType::TrkOff:
         case WmdTrackCmdType::TrkMute:
         default:
-            throw std::exception("Unexpected command in the track's command stream which cannot be serialized to a .WMD file!");
+            throw "Unexpected command in the track's command stream which cannot be serialized to a .WMD file!";
     }
 
     // Serialize the bytes for the command data
@@ -462,7 +463,7 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 
         // Are we past the end of the stream, if so that is an error and indicates a corrupted sequence:
         if (curCmdByteOffset > trackHdr.cmdStreamSize)
-            throw std::exception("Unexpected end of track command stream! Track data may be corrupt!");
+            throw "Unexpected end of track command stream! Track data may be corrupt!";
     }
 
     // Populate the labels list with the index of the command to jump to.
@@ -477,7 +478,7 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
             const uint32_t labelCmdIdx = (uint32_t)(cmdIter - cmdByteOffsets.begin());
             labels.push_back(labelCmdIdx);
         } else {
-            throw std::exception("Invalid byte offset for track label! Track data may be corrupt!");
+            throw "Invalid byte offset for track label! Track data may be corrupt!";
         }
     }
 }
@@ -524,7 +525,7 @@ void Track::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false)
         hdr.initQpm = initQpm;
 
         if (labels.size() > UINT16_MAX)
-            throw std::exception("Too many labels in a track for a .WMD file!");
+            throw "Too many labels in a track for a .WMD file!";
 
         hdr.numLabels = (uint16_t) labels.size();
         hdr.cmdStreamSize = (uint32_t) trackDataBytes.size();
@@ -537,7 +538,7 @@ void Track::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false)
     for (uint32_t cmdIdx : labels) {
         // Make sure the label is in range
         if (cmdIdx >= cmds.size())
-            throw std::exception("Bad track label which cannot be serialized! References a track command that does not exist (out of range).");
+            throw "Bad track label which cannot be serialized! References a track command that does not exist (out of range).";
 
         // Get the byte offset of the command and write
         const uint32_t cmdByteOffset = cmdOffsets[cmdIdx];
@@ -575,7 +576,7 @@ void Sequence::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(fal
         WmdSequenceHdr hdr = {};
 
         if (tracks.size() > UINT16_MAX)
-            throw std::exception("Too many tracks in a sequence for a .WMD file!");
+            throw "Too many tracks in a sequence for a .WMD file!";
         
         hdr.numTracks = (uint16_t) tracks.size();
         hdr.unknownField = unknownWmdField;
@@ -622,11 +623,11 @@ void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
     moduleHdr.endianCorrect();
 
     if (moduleHdr.moduleId != WMD_MODULE_ID)
-        throw std::exception("Bad .WMD file ID!");
+        throw "Bad .WMD file ID!";
 
     if (moduleHdr.moduleVersion != WMD_VERSION)
-        throw std::exception("Bad .WMD file version!");
-
+        throw "Bad .WMD file version!";
+    
     this->maxActiveSequences = moduleHdr.maxActiveSequences;
     this->maxActiveTracks = moduleHdr.maxActiveTracks;
     this->maxGatesPerSeq = moduleHdr.maxGatesPerSeq;
@@ -645,7 +646,7 @@ void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
             psxPatchGroup = {};
             psxPatchGroup.readFromWmd(streamRead, patchGroupHdr);
         } else {
-            std::printf("Warning: skipping unsupported format patch group with driver id '%u'!\n", patchGroupHdr.driverId);
+            std::printf("Warning: skipping unsupported format patch group with driver id '%u'!\n", (unsigned) patchGroupHdr.driverId);
             skipReadingWmdPatchGroup(streamRead, patchGroupHdr);
         }
     }
@@ -672,7 +673,7 @@ void Module::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false
         hdr.moduleVersion = WMD_VERSION;
 
         if (sequences.size() > UINT16_MAX)
-            throw new std::exception("Too many sequences for a .WMD file!");
+            throw "Too many sequences for a .WMD file!";
 
         hdr.numSequences = (uint16_t) sequences.size();
         hdr.numPatchGroups = 1; // Just the PSX patch group to be written
@@ -745,7 +746,7 @@ uint32_t Module::readVarLenQuant(const StreamReadFunc& streamRead, uint32_t& val
 
         // Sanity check, there should only be at most 5 bytes!
         if (numBytesRead > 5)
-            throw std::exception("Read VLQ: too many bytes! Quantity encoding is not valid!");
+            throw "Read VLQ: too many bytes! Quantity encoding is not valid!";
     }
 
     valueOut = decodedVal;

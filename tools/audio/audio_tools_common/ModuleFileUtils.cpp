@@ -76,10 +76,10 @@ bool ModuleFileUtils::readWmdFile(const char* const wmdFilePath, Module& moduleO
         // Are we reading or seeking past bytes? (No destination means skipping bytes)
         if (pDst) {
             if (std::fread(pDst, size, 1, pWmdFile) != 1)
-                throw std::exception("Error reading from file!");
+                throw "Error reading from file!";
         } else {
             if (std::fseek(pWmdFile, (long) size, SEEK_CUR) != 0)
-                throw std::exception("Error seeking within file!");
+                throw "Error seeking within file!";
         }
     };
 
@@ -89,11 +89,11 @@ bool ModuleFileUtils::readWmdFile(const char* const wmdFilePath, Module& moduleO
     try {
         moduleOut.readFromWmd(fileReader);
         bReadModuleOk = true;
-    } catch (std::exception e) {
+    } catch (const char* const exceptionMsg) {
         errorMsgOut = "An error occurred while reading the .WMD file '";
         errorMsgOut += wmdFilePath;
         errorMsgOut += "'! It may be corrupt. Error reason: ";
-        errorMsgOut += e.what();
+        errorMsgOut += exceptionMsg;
     } catch (...) {
         errorMsgOut = "An unknown error occurred while reading the .WMD file '";
         errorMsgOut += wmdFilePath;
@@ -127,20 +127,20 @@ bool ModuleFileUtils::writeWmdFile(const char* const wmdFilePath, const Module& 
             return;
         
         if (std::fwrite(pDst, size, 1, pWmdFile) != 1)
-            throw std::exception("Error writing to file!");
+            throw "Error writing to file!";
     };
-
+    
     // Attempt to write the 'Module' data structure to the .WMD file
     bool bModuleWrittenOk = false;
 
     try {
         moduleIn.writeToWmd(fileWriter);
         bModuleWrittenOk = true;
-    } catch (std::exception e) {
+    } catch (const char* const exceptionMsg) {
         errorMsgOut = "An error occurred while writing to the .WMD file '";
         errorMsgOut += wmdFilePath;
         errorMsgOut += "'! Error reason: ";
-        errorMsgOut += e.what();
+        errorMsgOut += exceptionMsg;
     } catch (...) {
         errorMsgOut = "An unknown error occurred while writing to the .WMD file '";
         errorMsgOut += wmdFilePath;
