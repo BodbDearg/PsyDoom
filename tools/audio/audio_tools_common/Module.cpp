@@ -2,11 +2,12 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <string>
 
 using namespace AudioTools;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Write a PlayStation sound driver format patch group to a .json file
+// Write a PlayStation sound driver format patch group to json
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PsxPatchVoice::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
     jsonRoot.AddMember("sampleIdx", sampleIdx, jsonAlloc);
@@ -46,17 +47,17 @@ void PsxPatchGroup::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document:
     // Group global properties
     jsonRoot.AddMember("hwVoiceLimit", hwVoiceLimit, jsonAlloc);
     
-    // Save patches
+    // Save patch samples
     {
-        rapidjson::Value patchesArray(rapidjson::kArrayType);
+        rapidjson::Value patchSamplesArray(rapidjson::kArrayType);
         
-        for (const PsxPatch& patch : patches) {
-            rapidjson::Value patchObj(rapidjson::kObjectType);
-            patch.writeToJson(patchObj, jsonAlloc);
-            patchesArray.PushBack(patchObj, jsonAlloc);
+        for (const PsxPatchSample& patchSample : patchSamples) {
+            rapidjson::Value patchSampleObj(rapidjson::kObjectType);
+            patchSample.writeToJson(patchSampleObj, jsonAlloc);
+            patchSamplesArray.PushBack(patchSampleObj, jsonAlloc);
         }
         
-        jsonRoot.AddMember("patches", patchesArray, jsonAlloc);
+        jsonRoot.AddMember("patchSamples", patchSamplesArray, jsonAlloc);
     }
     
     // Save patch voices
@@ -72,17 +73,17 @@ void PsxPatchGroup::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document:
         jsonRoot.AddMember("patchVoices", patchVoicesArray, jsonAlloc);
     }
     
-    // Save patch samples
+    // Save patches
     {
-        rapidjson::Value patchSamplesArray(rapidjson::kArrayType);
+        rapidjson::Value patchesArray(rapidjson::kArrayType);
         
-        for (const PsxPatchSample& patchSample : patchSamples) {
-            rapidjson::Value patchSampleObj(rapidjson::kObjectType);
-            patchSample.writeToJson(patchSampleObj, jsonAlloc);
-            patchSamplesArray.PushBack(patchSampleObj, jsonAlloc);
+        for (const PsxPatch& patch : patches) {
+            rapidjson::Value patchObj(rapidjson::kObjectType);
+            patch.writeToJson(patchObj, jsonAlloc);
+            patchesArray.PushBack(patchObj, jsonAlloc);
         }
         
-        jsonRoot.AddMember("patchSamples", patchSamplesArray, jsonAlloc);
+        jsonRoot.AddMember("patches", patchesArray, jsonAlloc);
     }
 }
 
@@ -265,6 +266,28 @@ void PsxPatchGroup::writeToWmd(const StreamWriteFunc& streamWrite) const noexcep
         sampleWmdOffsetField += 2047;
         sampleWmdOffsetField /= 2048;
         sampleWmdOffsetField *= 2048;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read a single track command to json
+//------------------------------------------------------------------------------------------------------------------------------------------
+void TrackCmd::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
+    jsonRoot.AddMember("type", rapidjson::StringRef(toString(type)), jsonAlloc);
+    jsonRoot.AddMember("delayQnp", delayQnp, jsonAlloc);
+    
+    const int32_t numCmdArgs = getNumWmdTrackCmdArgs(type);
+    
+    if (numCmdArgs >= 1) {
+        jsonRoot.AddMember("arg1", arg1, jsonAlloc);
+    }
+    
+    if (numCmdArgs >= 2) {
+        jsonRoot.AddMember("arg2", arg2, jsonAlloc);
+    }
+    
+    if (numCmdArgs >= 3) {
+        jsonRoot.AddMember("arg3", arg3, jsonAlloc);
     }
 }
 
@@ -496,6 +519,50 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Write an entire track to json
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Track::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
+    // Write global track properties
+    jsonRoot.AddMember("driverId", rapidjson::StringRef(toString(driverId)), jsonAlloc);
+    jsonRoot.AddMember("soundClass", rapidjson::StringRef(toString(soundClass)), jsonAlloc);
+    jsonRoot.AddMember("initPpq", initPpq, jsonAlloc);
+    jsonRoot.AddMember("initQpm", initQpm, jsonAlloc);
+    jsonRoot.AddMember("initPatchIdx", initPatchIdx, jsonAlloc);
+    jsonRoot.AddMember("initPitchCntrl", initPitchCntrl, jsonAlloc);
+    jsonRoot.AddMember("initVolumeCntrl", initVolumeCntrl, jsonAlloc);
+    jsonRoot.AddMember("initPanCntrl", initPanCntrl, jsonAlloc);
+    jsonRoot.AddMember("initReverb", initReverb, jsonAlloc);
+    jsonRoot.AddMember("initMutegroupsMask", initMutegroupsMask, jsonAlloc);
+    jsonRoot.AddMember("maxVoices", maxVoices, jsonAlloc);
+    jsonRoot.AddMember("locStackSize", locStackSize, jsonAlloc);
+    jsonRoot.AddMember("priority", priority, jsonAlloc);
+    
+    // Write track labels
+    {
+        rapidjson::Value labelsArray(rapidjson::kArrayType);
+        
+        for (uint32_t cmdIdx : labels) {
+            labelsArray.PushBack(cmdIdx, jsonAlloc);
+        }
+        
+        jsonRoot.AddMember("labels", labelsArray, jsonAlloc);
+    }
+    
+    // Write track commands
+    {
+        rapidjson::Value cmdsArray(rapidjson::kArrayType);
+        
+        for (const TrackCmd& cmd : cmds) {
+            rapidjson::Value cmdObj(rapidjson::kObjectType);
+            cmd.writeToJson(cmdObj, jsonAlloc);
+            cmdsArray.PushBack(cmdObj, jsonAlloc);
+        }
+        
+        jsonRoot.AddMember("cmds", cmdsArray, jsonAlloc);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Read an entire track from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
@@ -583,7 +650,7 @@ void Track::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false)
     // Makeup the header for the track, endian correct and write to the file
     {
         WmdTrackHdr hdr = {};
-        hdr.driverId = WmdSoundDriverId::PSX;
+        hdr.driverId = driverId;
         hdr.maxVoices = maxVoices;
         hdr.priority = priority;
         hdr.lockChannel = 0;
@@ -597,7 +664,7 @@ void Track::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false)
         hdr.initMutegroupsMask = initMutegroupsMask;
         hdr.initPpq = initPpq;
         hdr.initQpm = initQpm;
-
+        
         if (labels.size() > UINT16_MAX)
             throw "Too many labels in a track for a .WMD file!";
 
@@ -621,6 +688,27 @@ void Track::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false)
 
     // Write the track data to the file
     streamWrite(trackDataBytes.data(), trackDataBytes.size());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write an entire sequence to json
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Sequence::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
+    // Sequence properties
+    jsonRoot.AddMember("unknownWmdField", unknownWmdField, jsonAlloc);
+    
+    // Write all tracks
+    {
+        rapidjson::Value tracksArray(rapidjson::kArrayType);
+        
+        for (const Track& track : tracks) {
+            rapidjson::Value trackObj(rapidjson::kObjectType);
+            track.writeToJson(trackObj, jsonAlloc);
+            tracksArray.PushBack(trackObj, jsonAlloc);
+        }
+        
+        jsonRoot.AddMember("tracks", tracksArray, jsonAlloc);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -684,6 +772,19 @@ void Module::writeToJson(rapidjson::Document& doc) const noexcept {
         rapidjson::Value patchGroupObj(rapidjson::kObjectType);
         psxPatchGroup.writeToJson(patchGroupObj, jsonAlloc);
         doc.AddMember("psxPatchGroup", patchGroupObj, jsonAlloc);        
+    }
+    
+    // Write all the sequences
+    {
+        rapidjson::Value sequencesArray(rapidjson::kArrayType);
+        
+        for (const Sequence& sequence : sequences) {
+            rapidjson::Value sequenceObj(rapidjson::kObjectType);
+            sequence.writeToJson(sequenceObj, jsonAlloc);
+            sequencesArray.PushBack(sequenceObj, jsonAlloc);
+        }
+        
+        doc.AddMember("sequences", sequencesArray, jsonAlloc);
     }
 }
 

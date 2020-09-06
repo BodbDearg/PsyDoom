@@ -209,4 +209,11 @@ namespace AudioTools {
 
     // Utility functions
     uint32_t getWmdTrackCmdSize(const WmdTrackCmdType type) noexcept;
+    uint32_t getNumWmdTrackCmdArgs(const WmdTrackCmdType type) noexcept;
+    const char* toString(const WmdSoundDriverId value) noexcept;
+    const char* toString(const WmdSoundClass value) noexcept;
+    const char* toString(const WmdTrackCmdType value) noexcept;
+    WmdSoundDriverId stringToSoundDriverId(const char* const value) noexcept;
+    WmdSoundClass stringToSoundClass(const char* const value) noexcept;
+    WmdTrackCmdType stringToTrackCmdType(const char* const value) noexcept;
 }
