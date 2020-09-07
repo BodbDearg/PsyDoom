@@ -1,5 +1,6 @@
 #include "p_move.h"
 
+#include "Asserts.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
@@ -8,7 +9,6 @@
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "PcPsx/Assert.h"
 
 #include <algorithm>
 

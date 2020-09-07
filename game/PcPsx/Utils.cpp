@@ -27,6 +27,26 @@ typedef std::chrono::high_resolution_clock::time_point timepoint_t;
 static timepoint_t gLastPlatformUpdateTime = {};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// A custom handler for fatal errors and installing and uninstalling it
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void fatalErrorHandler(const char* const msg) noexcept {
+    // Kill the current window and show a GUI error box, except if in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+    
+    Video::shutdownVideo();
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "A fatal error has occurred!", msg, nullptr);
+}
+
+void installFatalErrorHandler() noexcept {
+    FatalErrors::gFatalErrorHandler = fatalErrorHandler;
+}
+
+void uninstallFatalErrorHandler() noexcept {
+    FatalErrors::gFatalErrorHandler = nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Get the folder that PsyDoom uses for user config and save data.
 // If the folder does not exist then it is created, and if that fails a fatal error is issued.
 // The Path is returned with a trailing path separator, so can be combined with a file name without any other modifications.

@@ -1,5 +1,6 @@
 #include "p_shoot.h"
 
+#include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Renderer/r_local.h"
@@ -7,7 +8,6 @@
 #include "doomdata.h"
 #include "p_map.h"
 #include "p_setup.h"
-#include "PcPsx/Assert.h"
 
 #include <algorithm>
 

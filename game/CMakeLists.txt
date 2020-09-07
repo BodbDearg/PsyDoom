@@ -155,7 +155,6 @@ set(SOURCE_FILES
     "Doom/UI/ti_main.cpp"
     "Doom/UI/ti_main.h"
     "EngineLimits.h"
-    "PcPsx/Assert.h"
     "PcPsx/Config.cpp"
     "PcPsx/Config.h"
     "PcPsx/ControllerInput.cpp"
@@ -168,21 +167,12 @@ set(SOURCE_FILES
     "PcPsx/DiscInfo.h"
     "PcPsx/DiscReader.cpp"
     "PcPsx/DiscReader.h"
-    "PcPsx/Endian.h"
-    "PcPsx/FatalErrors.cpp"
-    "PcPsx/FatalErrors.h"
-    "PcPsx/FileUtils.cpp"
-    "PcPsx/FileUtils.h"
-    "PcPsx/Finally.h"
     "PcPsx/Game.cpp"
     "PcPsx/Game.h"
-    "PcPsx/IniUtils.cpp"
-    "PcPsx/IniUtils.h"
     "PcPsx/Input.cpp"
     "PcPsx/Input.h"
     "PcPsx/IsoFileSys.cpp"
     "PcPsx/IsoFileSys.h"
-    "PcPsx/Macros.h"
     "PcPsx/ModMgr.cpp"
     "PcPsx/ModMgr.h"
     "PcPsx/MouseButton.h"
@@ -309,6 +299,7 @@ include_directories(${INCLUDE_PATHS})
 target_link_libraries(${GAME_TGT_NAME}
     ${ASIO_TGT_NAME}
     ${AVOCADO_TGT_NAME}
+    ${BASELIB_TGT_NAME}
     ${RAPID_JSON_TGT_NAME}
     ${SIMPLE_SPU_TGT_NAME}
 )

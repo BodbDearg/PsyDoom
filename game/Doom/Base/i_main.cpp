@@ -1,5 +1,6 @@
 #include "i_main.h"
 
+#include "Asserts.h"
 #include "d_vsprintf.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/doomdata.h"
@@ -7,10 +8,9 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Game/p_user.h"
 #include "Doom/Renderer/r_data.h"
+#include "FatalErrors.h"
 #include "i_drawcmds.h"
-#include "PcPsx/Assert.h"
 #include "PcPsx/Config.h"
-#include "PcPsx/FatalErrors.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/Network.h"

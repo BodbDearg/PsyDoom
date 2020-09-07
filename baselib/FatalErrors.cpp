@@ -4,14 +4,14 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "FatalErrors.h"
 
-#include "ProgArgs.h"
-#include "Video.h"
-
 #include <cstdio>
-#include <SDL.h>
 #include <vector>
 
 BEGIN_NAMESPACE(FatalErrors)
+
+// A handler which can be invoked if the application requires it upon a fatal error occuring.
+// Can do some additional logic like showing a message box for example in a GUI application.
+void (*gFatalErrorHandler)(const char* const msg) noexcept;
 
 // Fallback string to use if null pointers are given for some reason.
 // Normally most code does not tolerate nulls, but error reporting should be more robust.
@@ -27,18 +27,12 @@ static constexpr const char* const UNSPECIFIED_ERROR_STR = "An unspecified/unkno
     } else {
         std::printf("[FATAL ERROR] %s\n", UNSPECIFIED_ERROR_STR);
     }
-
-    // Show a GUI error box (except if in headless mode)
-    if (!ProgArgs::gbHeadlessMode) {
-        SDL_ShowSimpleMessageBox(
-            SDL_MESSAGEBOX_ERROR,
-            "A fatal error has occurred!",
-            (errorMsg != nullptr) ? errorMsg : UNSPECIFIED_ERROR_STR,
-            Video::getWindow()
-        );
+    
+    // Call the user error handler and finish up
+    if (gFatalErrorHandler) {
+        gFatalErrorHandler((errorMsg != nullptr) ? errorMsg : UNSPECIFIED_ERROR_STR);
     }
     
-    // Finish up!
     std::terminate();
 }
 

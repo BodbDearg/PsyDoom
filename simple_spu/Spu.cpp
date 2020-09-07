@@ -1,6 +1,6 @@
 #include "Spu.h"
 
-#include <cassert>
+#include "Asserts.h"
 
 using namespace Spu;
 
@@ -52,7 +52,7 @@ static void sramRead(
     const uint32_t numBytes,
     std::byte* const pDst
 ) noexcept {
-    assert(pDst);
+    ASSERT(pDst);
     const uint32_t endOffset = offset + numBytes;
     const uint32_t bytesToZero = (endOffset > ramSize) ? endOffset - ramSize : 0;
     const uint32_t bytesToRead = numBytes - bytesToZero;
@@ -388,7 +388,7 @@ static void stepVoices(
     StereoSample& output,
     StereoSample& outputToReverb
 ) noexcept {
-    assert(pVoices || (numVoices == 0));
+    ASSERT(pVoices || (numVoices == 0));
 
     for (int32_t voiceIdx = 0; voiceIdx < numVoices; ++voiceIdx) {
         stepVoice(pVoices[voiceIdx], pRam, ramSize, output, outputToReverb);
@@ -610,7 +610,7 @@ void Spu::initCore(Core& core, const uint32_t ramSize, const uint32_t voiceCount
 
     // Note: pad RAM size to the nearest 16-bytes to ensure the 8-byte addressing mode of the SPU always works.
     // Some SPU RAM must always be provided also, in order for the SPU to be used.
-    assert(ramSize > 0);
+    ASSERT(ramSize > 0);
     const uint32_t roundedRamSize = ((ramSize + 15) / 16) * 16;
 
     core.pRam = new std::byte[roundedRamSize];

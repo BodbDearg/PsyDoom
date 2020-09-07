@@ -4,8 +4,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBGPU.h"
 
+#include "Asserts.h"
 #include "LIBETC.h"
-#include "PcPsx/Assert.h"
 #include "PcPsx/PsxVm.h"
 
 #include <cstdarg>

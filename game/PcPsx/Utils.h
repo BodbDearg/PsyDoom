@@ -10,6 +10,8 @@ enum SequenceStatus : uint8_t;
 
 BEGIN_NAMESPACE(Utils)
 
+void installFatalErrorHandler() noexcept;
+void uninstallFatalErrorHandler() noexcept;
 std::string getOrCreateUserDataFolder() noexcept;
 void doPlatformUpdates() noexcept;
 bool waitForSeconds(const float seconds) noexcept;

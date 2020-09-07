@@ -1,10 +1,10 @@
 #include "p_firesky.h"
 
+#include "Asserts.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Renderer/r_data.h"
 #include "doomdata.h"
-#include "PcPsx/Assert.h"
 
 // This wraps x coordinates to 64 px bounds
 static const uint8_t FIRESKY_X_WRAP_MASK = FIRESKY_W - 1;

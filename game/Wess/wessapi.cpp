@@ -3,8 +3,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessapi.h"
 
-#include "PcPsx/Assert.h"
-#include "PcPsx/Endian.h"
+#include "Asserts.h"
+#include "Endian.h"
 #include "wessapi_t.h"
 #include "wessseq.h"
 

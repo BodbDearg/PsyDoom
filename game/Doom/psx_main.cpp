@@ -9,6 +9,7 @@
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxVm.h"
+#include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -37,6 +38,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
     // PsyDoom: setup logic for the new game host environment
     #if PSYDOOM_MODS
         // Parse command line arguments and configuration and initialize input systems
+        Utils::installFatalErrorHandler();
         ProgArgs::init(argc, argv);
         Controls::init();
         Config::init();
@@ -68,6 +70,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
         Config::shutdown();
         Controls::shutdown();
         ProgArgs::shutdown();
+        Utils::uninstallFatalErrorHandler();
     #endif
 
     return 0;

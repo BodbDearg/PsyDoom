@@ -7,10 +7,10 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxcd.h"
 
-#include "PcPsx/Assert.h"
+#include "Asserts.h"
+#include "FatalErrors.h"
 #include "PcPsx/DiscInfo.h"
 #include "PcPsx/DiscReader.h"
-#include "PcPsx/FatalErrors.h"
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxVm.h"

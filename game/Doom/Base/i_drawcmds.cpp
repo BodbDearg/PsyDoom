@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "i_drawcmds.h"
 
-#include "PcPsx/Assert.h"
+#include "Asserts.h"
 #include "PcPsx/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 

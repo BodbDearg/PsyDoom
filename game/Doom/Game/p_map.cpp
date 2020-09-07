@@ -1,5 +1,6 @@
 #include "p_map.h"
 
+#include "Asserts.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
@@ -15,7 +16,6 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_switch.h"
-#include "PcPsx/Assert.h"
 
 #include <algorithm>
 

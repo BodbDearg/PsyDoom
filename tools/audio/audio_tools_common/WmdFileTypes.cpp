@@ -1,5 +1,7 @@
 #include "WmdFileTypes.h"
 
+#include "Endian.h"
+
 #include <map>
 #include <string>
 
@@ -59,13 +61,14 @@ static std::map<std::string, WmdTrackCmdType> gStrToTrackCmdType = {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Endian correction stubs: swap bytes if in big endian mode. This way we can go from little to big, and big to little endian.
-// Right now I'm not bothering to implement but if we want to swap bytes for big endian mode, just write the code here.
+// Endian correction stubs: swap bytes if in big endian mode.
+// This way we can go from little to big, and big to little endian.
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
 static void endianCorrect([[maybe_unused]] T& value) noexcept {
-    // Don't bother implementing this for now...
-    // Once C++ 20 is widely available this function could just use the endian stuff available as part of the standard.
+    if constexpr (!Endian::isLittle()) {
+        Endian::byteSwap(value);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

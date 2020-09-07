@@ -1,6 +1,6 @@
 #include "DiscReader.h"
 
-#include "Assert.h"
+#include "Asserts.h"
 #include "DiscInfo.h"
 
 #include <algorithm>

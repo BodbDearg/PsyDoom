@@ -1,5 +1,6 @@
 #include "p_pspr.h"
 
+#include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
@@ -15,7 +16,6 @@
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_tick.h"
-#include "PcPsx/Assert.h"
 #include "PcPsx/Game.h"
 
 const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {

@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "lcdload.h"
 
-#include "PcPsx/Finally.h"
+#include "Finally.h"
 #include "PcPsx/ProgArgs.h"
 #include "psxspu.h"
 #include "PsyQ/LIBSPU.h"

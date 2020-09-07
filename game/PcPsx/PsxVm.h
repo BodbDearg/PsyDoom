@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PcPsx/Macros.h"
+#include "Macros.h"
 
 #include <cstdint>
 

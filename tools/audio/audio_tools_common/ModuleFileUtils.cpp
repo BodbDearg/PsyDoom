@@ -1,5 +1,6 @@
 #include "ModuleFileUtils.h"
 
+#include "FileUtils.h"
 #include "Module.h"
 
 #include <cstdio>
@@ -9,20 +10,69 @@
 using namespace AudioTools;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Read a 'Module' data structure from the .json file at the given path.
+// If reading fails return 'false' and give an error reason in the output string.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool ModuleFileUtils::readJsonFile(const char* const jsonFilePath, Module& moduleOut, std::string& errorMsgOut) noexcept {
+    // Read the input json file
+    const FileData fileData = FileUtils::getContentsOfFile(jsonFilePath, 8, std::byte(0));
+    
+    if (!fileData.bytes) {
+        errorMsgOut = "Could not read the .json file '";
+        errorMsgOut += jsonFilePath;
+        errorMsgOut += "'! Is the path valid or readable?";
+        return false;
+    }
+
+    // Parse the json
+    rapidjson::Document jsonDoc;
+
+    if (jsonDoc.ParseInsitu((char*) fileData.bytes.get()).HasParseError()) {
+        errorMsgOut = "Failed to parse the .json file '";
+        errorMsgOut += jsonFilePath;
+        errorMsgOut += "'! File may not be valid JSON.";
+        return false;
+    }
+    
+    // Try to read the module from the json
+    bool bReadModuleOk = false;
+
+    try {
+        moduleOut.readFromJson(jsonDoc);
+        bReadModuleOk = true;
+    } catch (const char* const exceptionMsg) {
+        errorMsgOut = "An error occurred while reading a module from the .json file '";
+        errorMsgOut += jsonFilePath;
+        errorMsgOut += "'! It may not be a valid module definition. Error reason: ";
+        errorMsgOut += exceptionMsg;
+    } catch (...) {
+        errorMsgOut = "An unknown error occurred while reading a module from the .json file '";
+        errorMsgOut += jsonFilePath;
+        errorMsgOut += "'! It may not be a valid module definition.";
+    }
+
+    return bReadModuleOk;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Write a 'Module' data structure to the .json file at the given path.
 // If writing fails return 'false' and give an error reason in the output string.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool ModuleFileUtils::writeJsonFile(const char* const jsonFilePath, const Module& moduleIn, std::string& errorMsgOut) noexcept {
     // Write the module to a JSON document with an object at the root
-    rapidjson::Document document;
-    document.SetObject();
-    moduleIn.writeToJson(document);
+    rapidjson::Document jsonDoc;
+    jsonDoc.SetObject();
+    moduleIn.writeToJson(jsonDoc);
 
     // Write the json to the given file
     std::FILE* const pJsonFile = std::fopen(jsonFilePath, "w");
-
-    if (!pJsonFile)
+    
+    if (!pJsonFile) {
+        errorMsgOut = "Could not open the .json file '";
+        errorMsgOut += jsonFilePath;
+        errorMsgOut += "' for writing! Is the path valid or writable?";
         return false;
+    }
 
     bool bFileWrittenOk = false;
 
@@ -30,7 +80,7 @@ bool ModuleFileUtils::writeJsonFile(const char* const jsonFilePath, const Module
         char writeBuffer[4096];
         rapidjson::FileWriteStream writeStream(pJsonFile, writeBuffer, sizeof(writeBuffer));
         rapidjson::PrettyWriter<rapidjson::FileWriteStream> fileWriter(writeStream);
-        document.Accept(fileWriter);
+        jsonDoc.Accept(fileWriter);
         bFileWrittenOk = true;
     } catch (...) {
         // Ignore...
@@ -63,12 +113,12 @@ bool ModuleFileUtils::readWmdFile(const char* const wmdFilePath, Module& moduleO
     if (!pWmdFile) {
         errorMsgOut = "Could not open the .WMD file '";
         errorMsgOut += wmdFilePath;
-        errorMsgOut += "'! Is the path valid?";
+        errorMsgOut += "'! Is the path valid or readable?";
         return false;
     }
 
     // This lambda will read from the WMD file
-    const StreamReadFunc fileReader = [=](void* const pDst, const size_t size) noexcept(false) {
+    const StreamReadFunc fileReader = [=](void* const pDst, const size_t size) THROWS {
         // Zero sized read operations always succeed
         if (size == 0)
             return;
@@ -116,12 +166,12 @@ bool ModuleFileUtils::writeWmdFile(const char* const wmdFilePath, const Module& 
     if (!pWmdFile) {
         errorMsgOut = "Could not open the .WMD file '";
         errorMsgOut += wmdFilePath;
-        errorMsgOut += "'! Is the path valid?";
+        errorMsgOut += "' for writing! Is the path valid or writable?";
         return false;
     }
 
     // This lambda will write to the WMD file
-    const StreamWriteFunc fileWriter = [=](const void* const pDst, const size_t size) noexcept(false) {
+    const StreamWriteFunc fileWriter = [=](const void* const pDst, const size_t size) THROWS {
         // Zero sized write operations always succeed
         if (size == 0)
             return;

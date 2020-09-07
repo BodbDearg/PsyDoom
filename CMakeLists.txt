@@ -20,10 +20,12 @@ build_setup()
 set(ASIO_TGT_NAME                   Asio)
 set(AUDIO_TOOLS_COMMON_TGT_NAME     AudioToolsCommon)
 set(AVOCADO_TGT_NAME                Avocado)
+set(BASELIB_TGT_NAME                BaseLib)
 set(DOOM_DISASM_TGT_NAME            DoomDisassemble)
 set(EVENT_BUS_TGT_NAME              EventBus)
 set(FMT_TGT_NAME                    Fmt)
 set(GAME_TGT_NAME                   PsyDoom)
+set(JSON_TO_WMD_TGT_NAME            JsonToWmd)
 set(LIBSDL_TGT_NAME                 SDL)
 set(MAGIC_ENUM_TGT_NAME             MagicEnum)
 set(PSXEXE_SIGMATCH_TGT_NAME        PSXExeSigMatcher)
@@ -44,6 +46,7 @@ set(PSYDOOM_INCLUDE_AUDIO_TOOLS FALSE CACHE BOOL
 )
 
 # Adding individual projects and libraries
+add_subdirectory("${PROJECT_SOURCE_DIR}/baselib")
 add_subdirectory("${PROJECT_SOURCE_DIR}/game")
 add_subdirectory("${PROJECT_SOURCE_DIR}/simple_spu")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/asio")
@@ -56,6 +59,7 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/rapidjson")
 
 if (PSYDOOM_INCLUDE_AUDIO_TOOLS)
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/audio_tools_common")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/json_to_wmd")
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/wmd_to_json")
 endif()
 

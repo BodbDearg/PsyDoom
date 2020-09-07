@@ -1,11 +1,11 @@
 #include "p_maputl.h"
 
+#include "Asserts.h"
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "p_local.h"
 #include "p_setup.h"
-#include "PcPsx/Assert.h"
 
 #include <algorithm>
 

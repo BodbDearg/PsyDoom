@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "Video.h"
 
-#include "Assert.h"
+#include "Asserts.h"
 #include "Config.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
@@ -246,7 +246,7 @@ void shutdownVideo() noexcept {
     // Ignore call in headless mode
     if (ProgArgs::gbHeadlessMode)
         return;
-
+    
     // Do the cleanup
     gpFrameBuffer = nullptr;
     
@@ -260,7 +260,7 @@ void shutdownVideo() noexcept {
         SDL_DestroyWindow(gWindow);
         gWindow = nullptr;
     }
-
+    
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     gOutputRect = {};
 }

@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "ModMgr.h"
 
-#include "Assert.h"
+#include "Asserts.h"
 #include "FileUtils.h"
 #include "ProgArgs.h"
 

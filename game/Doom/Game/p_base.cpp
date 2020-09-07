@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "p_base.h"
 
+#include "Asserts.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
@@ -15,7 +16,6 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_tick.h"
-#include "PcPsx/Assert.h"
 
 #include <algorithm>
 

@@ -1,5 +1,6 @@
 #include "p_enemy.h"
 
+#include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Base/m_random.h"
@@ -20,7 +21,6 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
-#include "PcPsx/Assert.h"
 #include "PcPsx/Game.h"
 
 #include <algorithm>

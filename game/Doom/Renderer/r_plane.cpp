@@ -1,10 +1,10 @@
 #include "r_plane.h"
 
+#include "Asserts.h"
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
-#include "PcPsx/Assert.h"
 #include "PcPsx/Config.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"

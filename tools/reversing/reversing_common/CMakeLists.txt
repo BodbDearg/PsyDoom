@@ -1,4 +1,3 @@
-# Platform agnostic sources
 set(SOURCE_FILES
     "ConstEvalRegState.h"
     "ConstInstructionEvaluator.cpp"
@@ -34,10 +33,12 @@ set(SOURCE_FILES
 set(OTHER_FILES
 )
 
-# Build the executable and setup IDE folders
+set(INCLUDE_PATHS
+    "."
+)
+
 add_library(${REVERSING_COMMON_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
-# Setup target compile options and exported include dirs
 add_common_target_compile_options(${REVERSING_COMMON_TGT_NAME})
-target_include_directories(${REVERSING_COMMON_TGT_NAME} PUBLIC INTERFACE "${CMAKE_CURRENT_LIST_DIR}")
+target_include_directories(${REVERSING_COMMON_TGT_NAME} PUBLIC INTERFACE ${INCLUDE_PATHS})

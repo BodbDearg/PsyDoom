@@ -3,8 +3,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "FileUtils.h"
 
+#include "Asserts.h"
 #include "Finally.h"
-#include "PcPsx/Assert.h"
 
 #include <cstdint>
 #include <cstdio>

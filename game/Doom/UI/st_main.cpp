@@ -1,5 +1,6 @@
 #include "st_main.h"
 
+#include "Macros.h"
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
@@ -12,7 +13,6 @@
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"
 #include "PcPsx/Game.h"
-#include "PcPsx/Macros.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 

@@ -6,6 +6,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "doomdata.h"
+#include "Macros.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
 #include "p_floor.h"
@@ -13,7 +14,6 @@
 #include "p_plats.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "PcPsx/Macros.h"
 
 // Defines the two textures used by a switch
 struct switchlist_t {

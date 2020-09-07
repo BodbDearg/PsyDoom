@@ -1,5 +1,7 @@
 #include "Module.h"
 
+#include "Asserts.h"
+
 #include <algorithm>
 #include <cstdio>
 #include <string>
@@ -7,7 +9,130 @@
 using namespace AudioTools;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Write a PlayStation sound driver format patch group to json
+// Utility: get or default a json field's value
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static T jsonGetOrDefault(const rapidjson::Value& jsonObj, const char* const fieldName, const T& defaultVal) noexcept {
+    if (!jsonObj.IsObject())
+        return defaultVal;
+        
+    auto iter = jsonObj.FindMember(fieldName);
+    
+    if (iter == jsonObj.MemberEnd())
+        return defaultVal;
+    
+    const rapidjson::Value& fieldVal = iter->value;
+    return (fieldVal.Is<T>()) ? fieldVal.Get<T>() : defaultVal;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility: get integers of various types from a json object and clamp if out of range
+//------------------------------------------------------------------------------------------------------------------------------------------
+static uint8_t jsonGetOrDefaultClampedUint8(const rapidjson::Value& jsonObj, const char* const fieldName, const uint8_t defaultVal) noexcept {
+    const int64_t val64 = jsonGetOrDefault<int64_t>(jsonObj, fieldName, defaultVal);
+    return (uint8_t) std::clamp<int64_t>(val64, 0, UINT8_MAX);
+}
+
+static uint16_t jsonGetOrDefaultClampedUint16(const rapidjson::Value& jsonObj, const char* const fieldName, const uint16_t defaultVal) noexcept {
+    const int64_t val64 = jsonGetOrDefault<int64_t>(jsonObj, fieldName, defaultVal);
+    return (uint16_t) std::clamp<int64_t>(val64, 0, UINT16_MAX);
+}
+
+static uint32_t jsonGetOrDefaultClampedUint32(const rapidjson::Value& jsonObj, const char* const fieldName, const uint32_t defaultVal) noexcept {
+    const int64_t val64 = jsonGetOrDefault<int64_t>(jsonObj, fieldName, defaultVal);
+    return (uint32_t) std::clamp<int64_t>(val64, 0, UINT32_MAX);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility: get a child json array by name (readonly) or null
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const rapidjson::Value* jsonGetArrayOrNull(const rapidjson::Value& jsonObj, const char* const fieldName) noexcept {
+    if (jsonObj.IsObject()) {
+        if (auto iter = jsonObj.FindMember(fieldName); iter != jsonObj.MemberEnd()) {
+            const rapidjson::Value& fieldVal = iter->value;
+            return (fieldVal.IsArray()) ? &fieldVal : nullptr;
+        }
+    }
+    
+    return nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read a PlayStation sound driver format patch group (and child data structures) from json
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PsxPatchVoice::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
+    sampleIdx = jsonGetOrDefaultClampedUint16(jsonRoot, "sampleIdx", 0);
+    volume = jsonGetOrDefaultClampedUint8(jsonRoot, "volume", 0);
+    pan = jsonGetOrDefaultClampedUint8(jsonRoot, "pan", 0);
+    reverb = jsonGetOrDefaultClampedUint8(jsonRoot, "reverb", 0);
+    baseNote = jsonGetOrDefaultClampedUint8(jsonRoot, "baseNote", 0);
+    baseNoteFrac = jsonGetOrDefaultClampedUint8(jsonRoot, "baseNoteFrac", 0);
+    noteMin = jsonGetOrDefaultClampedUint8(jsonRoot, "noteMin", 0);
+    noteMax = jsonGetOrDefaultClampedUint8(jsonRoot, "noteMax", 0);
+    pitchstepDown = jsonGetOrDefaultClampedUint8(jsonRoot, "pitchstepDown", 0);
+    pitchstepUp = jsonGetOrDefaultClampedUint8(jsonRoot, "pitchstepUp", 0);
+    priority = jsonGetOrDefaultClampedUint8(jsonRoot, "priority", 0);
+    adsr.sustainLevel = (uint32_t) std::clamp<int64_t>(jsonGetOrDefault<int64_t>(jsonRoot, "adsr_sustainLevel", 0), 0, 15);
+    adsr.decayShift = (uint32_t) std::clamp<int64_t>(jsonGetOrDefault<int64_t>(jsonRoot, "adsr_decayShift", 0), 0, 15);
+    adsr.attackStep = (uint32_t) std::clamp<int64_t>(jsonGetOrDefault<int64_t>(jsonRoot, "adsr_attackStep", 0), 0, 3);
+    adsr.attackShift = (uint32_t) std::clamp<int64_t>(jsonGetOrDefault<int64_t>(jsonRoot, "adsr_attackShift", 0), 0, 31);
+    adsr.bAttackExp = jsonGetOrDefault<bool>(jsonRoot, "adsr_attackExponential", false);
+    adsr.releaseShift = (uint32_t) std::clamp<int64_t>(jsonGetOrDefault<int64_t>(jsonRoot, "adsr_releaseShift", 0), 0, 31);
+    adsr.bReleaseExp = jsonGetOrDefault<bool>(jsonRoot, "adsr_releaseExponential", false);
+    adsr.sustainStep = (uint32_t) std::clamp<int64_t>(jsonGetOrDefault<int64_t>(jsonRoot, "adsr_sustainStep", 0), 0, 3);
+    adsr.sustainShift = (uint32_t) std::clamp<int64_t>(jsonGetOrDefault<int64_t>(jsonRoot, "adsr_sustainShift", 0), 0, 31);
+    adsr.bSustainDec = jsonGetOrDefault<bool>(jsonRoot, "adsr_sustainDecrease", false);
+    adsr.bSustainExp = jsonGetOrDefault<bool>(jsonRoot, "adsr_sustainExponential", false);
+}
+
+void PsxPatchSample::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
+    size = jsonGetOrDefaultClampedUint32(jsonRoot, "size", 0);
+}
+
+void PsxPatch::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
+    firstVoiceIdx = jsonGetOrDefaultClampedUint16(jsonRoot, "firstVoiceIdx", 0);
+    numVoices = jsonGetOrDefaultClampedUint16(jsonRoot, "numVoices", 0);
+}
+
+void PsxPatchGroup::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
+    if (!jsonRoot.IsObject())
+        throw "PSX Patch Group root must be a json object!";
+
+    // Save basic patch group properties
+    hwVoiceLimit = jsonGetOrDefaultClampedUint8(jsonRoot, "hwVoiceLimit", 1);
+    
+    // Load all patches, patch voices, and patch samples
+    patches.clear();
+    patchVoices.clear();
+    patchSamples.clear();
+    
+    if (const rapidjson::Value* const pPatchesArray = jsonGetArrayOrNull(jsonRoot, "patches")) {
+        for (size_t i = 0; i < pPatchesArray->Size(); ++i) {
+            const rapidjson::Value& patchObj = (*pPatchesArray)[i];
+            PsxPatch& patch = patches.emplace_back();
+            patch.readFromJson(patchObj);
+        }
+    }
+    
+    if (const rapidjson::Value* const pPatchVoicesArray = jsonGetArrayOrNull(jsonRoot, "patchVoices")) {
+        for (size_t i = 0; i < pPatchVoicesArray->Size(); ++i) {
+            const rapidjson::Value& patchVoiceObj = (*pPatchVoicesArray)[i];
+            PsxPatchVoice& patchVoice = patchVoices.emplace_back();
+            patchVoice.readFromJson(patchVoiceObj);
+        }
+    }
+    
+    if (const rapidjson::Value* const pPatchSamplesArray = jsonGetArrayOrNull(jsonRoot, "patchSamples")) {
+        for (size_t i = 0; i < pPatchSamplesArray->Size(); ++i) {
+            const rapidjson::Value& patchSampleObj = (*pPatchSamplesArray)[i];
+            PsxPatchSample& patchSample = patchSamples.emplace_back();
+            patchSample.readFromJson(patchSampleObj);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write a PlayStation sound driver format patch group (and child data structures) to json
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PsxPatchVoice::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
     jsonRoot.AddMember("sampleIdx", sampleIdx, jsonAlloc);
@@ -90,7 +215,7 @@ void PsxPatchGroup::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read a PlayStation sound driver format patch group (and child data structures) from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchVoice::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
+void PsxPatchVoice::readFromWmd(const StreamReadFunc& streamRead) THROWS {
     WmdPsxPatchVoice wmdVoice = {};
     streamRead(&wmdVoice, sizeof(WmdPsxPatchVoice));
     wmdVoice.endianCorrect();
@@ -109,7 +234,7 @@ void PsxPatchVoice::readFromWmd(const StreamReadFunc& streamRead) noexcept(false
     this->adsrBits = (uint32_t) wmdVoice.adsr1 | ((uint32_t) wmdVoice.adsr2 << 16);
 }
 
-void PsxPatchSample::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
+void PsxPatchSample::readFromWmd(const StreamReadFunc& streamRead) THROWS {
     WmdPsxPatchSample wmdSample = {};
     streamRead(&wmdSample, sizeof(WmdPsxPatchSample));
     wmdSample.endianCorrect();
@@ -117,7 +242,7 @@ void PsxPatchSample::readFromWmd(const StreamReadFunc& streamRead) noexcept(fals
     this->size = wmdSample.size;
 }
 
-void PsxPatch::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
+void PsxPatch::readFromWmd(const StreamReadFunc& streamRead) THROWS {
     WmdPsxPatch wmdPatch = {};
     streamRead(&wmdPatch, sizeof(WmdPsxPatch));
     wmdPatch.endianCorrect();
@@ -126,11 +251,15 @@ void PsxPatch::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
     this->numVoices = wmdPatch.numVoices;
 }
 
-void PsxPatchGroup::readFromWmd(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& hdr) noexcept(false) {
+void PsxPatchGroup::readFromWmd(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& hdr) THROWS {
     // Save basic patch group properties
     hwVoiceLimit = hdr.hwVoiceLimit;
 
     // Load all patches, patch voices, and patch samples
+    patches.clear();
+    patchVoices.clear();
+    patchSamples.clear();
+    
     if (hdr.loadFlags & LOAD_PATCHES) {
         for (uint32_t i = 0; i < hdr.numPatches; ++i) {
             patches.emplace_back().readFromWmd(streamRead);
@@ -169,7 +298,7 @@ void PsxPatchGroup::readFromWmd(const StreamReadFunc& streamRead, const WmdPatch
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write a PlayStation sound driver format patch group (and child data structures) to a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchVoice::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+void PsxPatchVoice::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
     WmdPsxPatchVoice psxVoice = {};
     psxVoice.priority = priority;
     psxVoice.reverb = reverb;
@@ -189,7 +318,7 @@ void PsxPatchVoice::writeToWmd(const StreamWriteFunc& streamWrite) const noexcep
     streamWrite(&psxVoice, sizeof(WmdPsxPatchVoice));
 }
 
-void PsxPatchSample::writeToWmd(const StreamWriteFunc& streamWrite, const uint32_t wmdOffsetField) const noexcept(false) {
+void PsxPatchSample::writeToWmd(const StreamWriteFunc& streamWrite, const uint32_t wmdOffsetField) const THROWS {
     WmdPsxPatchSample psxSample = {};
     psxSample.offset = wmdOffsetField;
     psxSample.size = size;
@@ -199,7 +328,7 @@ void PsxPatchSample::writeToWmd(const StreamWriteFunc& streamWrite, const uint32
     streamWrite(&psxSample, sizeof(WmdPsxPatchSample));
 }
 
-void PsxPatch::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+void PsxPatch::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
     WmdPsxPatch psxPatch = {};
     psxPatch.numVoices = numVoices;
     psxPatch.firstVoiceIdx = firstVoiceIdx;
@@ -208,7 +337,7 @@ void PsxPatch::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(fal
     streamWrite(&psxPatch, sizeof(WmdPsxPatch));
 }
 
-void PsxPatchGroup::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+void PsxPatchGroup::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
     // Firstly makeup the header, endian correct and write
     {
         WmdPatchGroupHdr groupHdr = {};
@@ -294,7 +423,7 @@ void TrackCmd::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::Allo
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read a single track command from a .WMD file and return how many bytes were read
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
+uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) THROWS {
     // First read the delay (in quarter note parts) until the command
     uint32_t numBytesRead = Module::readVarLenQuant(streamRead, delayQnp);
 
@@ -390,7 +519,7 @@ uint32_t TrackCmd::readFromWmd(const StreamReadFunc& streamRead) noexcept(false)
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write a single track command to a .WMD file and return how many bytes were written
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
     // First write the delay (in quarter note parts) until the command
     uint32_t numBytesWritten = Module::writeVarLenQuant(streamWrite, delayQnp);
 
@@ -565,7 +694,7 @@ void Track::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::Allocat
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read an entire track from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
+void Track::readFromWmd(const StreamReadFunc& streamRead) THROWS {
     // First get the header and save basic track properties
     WmdTrackHdr trackHdr = {};
     streamRead(&trackHdr, sizeof(WmdTrackHdr));
@@ -595,6 +724,9 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
     cmdByteOffsets.reserve(trackHdr.cmdStreamSize);
 
     // Read each track command
+    cmds.clear();
+    cmds.reserve(trackHdr.cmdStreamSize);
+    
     uint32_t curCmdByteOffset = 0;
 
     while (curCmdByteOffset < trackHdr.cmdStreamSize) {
@@ -609,6 +741,7 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 
     // Populate the labels list with the index of the command to jump to.
     // Need to convert from byte offsets to command indexes:
+    labels.clear();
     labels.reserve(trackHdr.numLabels);
 
     for (uint32_t i = 0; i < trackHdr.numLabels; ++i) {
@@ -627,12 +760,12 @@ void Track::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write an entire track to a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Track::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+void Track::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
     // Makeup a buffer and byte stream to write all the track data to
     std::vector<std::byte> trackDataBytes;
     trackDataBytes.reserve(cmds.size() * 8);
 
-    const StreamWriteFunc trackDataWrite = [&](const void* const pSrc, const size_t size) noexcept(false) {
+    const StreamWriteFunc trackDataWrite = [&](const void* const pSrc, const size_t size) THROWS {
         for (size_t i = 0; i < size; ++i) {
             trackDataBytes.push_back(((const std::byte*) pSrc)[i]);
         }
@@ -714,7 +847,7 @@ void Sequence::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::Allo
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read an entire sequence from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Sequence::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
+void Sequence::readFromWmd(const StreamReadFunc& streamRead) THROWS {
     // Read the sequence header which tells us how many tracks there are
     WmdSequenceHdr seqHdr = {};
     streamRead(&seqHdr, sizeof(WmdSequenceHdr));
@@ -724,6 +857,8 @@ void Sequence::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
     unknownWmdField = seqHdr.unknownField;
 
     // Read all the tracks in the sequence
+    tracks.clear();
+    
     for (uint32_t trackIdx = 0; trackIdx < seqHdr.numTracks; ++trackIdx) {
         tracks.emplace_back().readFromWmd(streamRead);
     }
@@ -732,7 +867,7 @@ void Sequence::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write an entire sequence from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Sequence::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+void Sequence::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
     // Write the header first
     {
         WmdSequenceHdr hdr = {};
@@ -754,11 +889,35 @@ void Sequence::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(fal
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Read the module from a json document
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Module::readFromJson(const rapidjson::Document& doc) THROWS {
+    // Read basic module properties
+    if (!doc.IsObject())
+        throw "Module root must be a json object!";
+    
+    maxActiveSequences = jsonGetOrDefaultClampedUint8(doc, "maxActiveSequences", 1);
+    maxActiveTracks = jsonGetOrDefaultClampedUint8(doc, "maxActiveTracks", 1);
+    maxGatesPerSeq = jsonGetOrDefaultClampedUint8(doc, "maxGatesPerSeq", 1);
+    maxItersPerSeq = jsonGetOrDefaultClampedUint8(doc, "maxItersPerSeq", 1);
+    maxCallbacks = jsonGetOrDefaultClampedUint8(doc, "maxCallbacks", 1);
+    
+    // Read the PSX sound driver patch group
+    if (const auto patchGroupIter = doc.FindMember("psxPatchGroup"); patchGroupIter != doc.MemberEnd()) {
+        const rapidjson::Value& patchGroupObj = patchGroupIter->value;
+        psxPatchGroup.readFromJson(patchGroupObj);
+    }
+    
+    // TODO: read all sequences
+    sequences.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Write the entire module to a json document
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Module::writeToJson(rapidjson::Document& doc) const noexcept {
     // Add basic module properties
-    assert(doc.IsObject());
+    ASSERT(doc.IsObject());
     rapidjson::Document::AllocatorType& jsonAlloc = doc.GetAllocator();
 
     doc.AddMember("maxActiveSequences", maxActiveSequences, jsonAlloc);
@@ -791,7 +950,7 @@ void Module::writeToJson(rapidjson::Document& doc) const noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read the entire module from the specified .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
+void Module::readFromWmd(const StreamReadFunc& streamRead) THROWS {
     // Read the header for the module file, verify correct and save it's basic info
     WmdModuleHdr moduleHdr = {};
     streamRead(&moduleHdr, sizeof(WmdModuleHdr));
@@ -827,6 +986,8 @@ void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
     }
 
     // Read all sequences
+    sequences.clear();
+    
     for (uint32_t seqIdx = 0; seqIdx < moduleHdr.numSequences; ++seqIdx) {
         sequences.emplace_back().readFromWmd(streamRead);
     }
@@ -840,7 +1001,7 @@ void Module::readFromWmd(const StreamReadFunc& streamRead) noexcept(false) {
 //      (2) If some parts of the module are invalidly configured, writing may fail.
 //          The output from this process should always be a valid .WMD file.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Module::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false) {
+void Module::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
     // Make up the module header, endian correct and serialize it
     {
         WmdModuleHdr hdr = {};
@@ -874,7 +1035,7 @@ void Module::writeToWmd(const StreamWriteFunc& streamWrite) const noexcept(false
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Skip the data in a .WMD file for a patch group of an unknown type
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Module::skipReadingWmdPatchGroup(const StreamReadFunc& reader, const WmdPatchGroupHdr& patchGroupHdr) noexcept(false) {
+void Module::skipReadingWmdPatchGroup(const StreamReadFunc& reader, const WmdPatchGroupHdr& patchGroupHdr) THROWS {
     if (patchGroupHdr.loadFlags & LOAD_PATCHES) {
         reader(nullptr, (size_t) patchGroupHdr.numPatches * patchGroupHdr.patchSize);
     }
@@ -900,7 +1061,7 @@ void Module::skipReadingWmdPatchGroup(const StreamReadFunc& reader, const WmdPat
 // Reads a variable length quantity from track data, similar to how certain data is encoded in the MIDI standard.
 // Returns number of bytes read and the output value, which may be up to 5 bytes.
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t Module::readVarLenQuant(const StreamReadFunc& streamRead, uint32_t& valueOut) noexcept(false) {
+uint32_t Module::readVarLenQuant(const StreamReadFunc& streamRead, uint32_t& valueOut) THROWS {
     // Grab the first byte in the quantity
     uint8_t curByte = {};
     streamRead(&curByte, 1);
@@ -932,7 +1093,7 @@ uint32_t Module::readVarLenQuant(const StreamReadFunc& streamRead, uint32_t& val
 // Write a variable length quantity to track data, similar to how certain data is encoded in the MIDI standard.
 // Returns number of bytes written, which may be up to 5 bytes.
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t Module::writeVarLenQuant(const StreamWriteFunc& streamWrite, const uint32_t valueIn) noexcept(false) {
+uint32_t Module::writeVarLenQuant(const StreamWriteFunc& streamWrite, const uint32_t valueIn) THROWS {
     // Encode the given value into a stack buffer, writing a '0x80' bit flag whenever more bytes follow
     uint8_t encodedBytes[8];
     uint8_t* pEncodedByte = encodedBytes;

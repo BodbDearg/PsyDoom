@@ -1,5 +1,6 @@
 #include "p_inter.h"
 
+#include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
@@ -8,11 +9,10 @@
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
 #include "info.h"
+#include "Macros.h"
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
-#include "PcPsx/Assert.h"
-#include "PcPsx/Macros.h"
 
 #include <algorithm>
 

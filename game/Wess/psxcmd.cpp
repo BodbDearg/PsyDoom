@@ -4,8 +4,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxcmd.h"
 
-#include "PcPsx/Assert.h"
-#include "PcPsx/Macros.h"
+#include "Asserts.h"
+#include "Macros.h"
 #include "psxspu.h"
 #include "wessapi.h"
 #include "wessseq.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PcPsx/Endian.h"
+#include "Endian.h"
 
 enum class CdFileId : int32_t;
 

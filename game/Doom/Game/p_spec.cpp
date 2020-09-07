@@ -1,5 +1,6 @@
 #include "p_spec.h"
 
+#include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
@@ -23,7 +24,6 @@
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
-#include "PcPsx/Assert.h"
 #include "PcPsx/Game.h"
 
 // Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'

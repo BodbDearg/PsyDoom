@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "PsxVm.h"
 
-#include "Assert.h"
+#include "Asserts.h"
 #include "Config.h"
 #include "DiscInfo.h"
 #include "DiscReader.h"

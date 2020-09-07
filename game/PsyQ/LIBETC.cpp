@@ -1,6 +1,6 @@
 #include "LIBETC.h"
 
-#include "PcPsx/Assert.h"
+#include "Asserts.h"
 #include "PcPsx/Controls.h"
 
 // An imitation of the 1 KiB scratchpad memory/cache that the PlayStation had; now just a simple c-array

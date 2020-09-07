@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessseq.h"
 
-#include "PcPsx/Macros.h"
+#include "Macros.h"
 #include "wessapi.h"
 
 const WessDriverFunc gWess_DrvFunctions[36] = {
