@@ -1,10 +1,10 @@
 Music Tooling
 - SPU Reverb VST DSP
 - SPU based VST for in-game instruments
-- WMD import/export
 - LCD import/export
 - WMD editor
-- MIDI converstion to WMD sequence?
+- MIDI conversion to WMD sequence?
+- WMD sequence to MIDI?
 
 0.6 - Sound, timing & QOL improvements?
 - Fix 'Invalid password' overlap on password screen.

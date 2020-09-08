@@ -3,6 +3,8 @@ set(SOURCE_FILES
     "Module.h"
     "ModuleFileUtils.cpp"
     "ModuleFileUtils.h"
+    "VagUtils.cpp"
+    "VagUtils.h"
     "WmdFileTypes.cpp"
     "WmdFileTypes.h"
 )
