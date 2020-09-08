@@ -231,7 +231,15 @@ void closeOverridenFile(PsxCd_File& file) noexcept {
 int32_t readFromOverridenFile(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
     std::FILE* const pFile = gOpenFileSlots[file.overrideFileHandle - 1];
-    return (std::fread(pDest, (size_t) numBytes, 1, pFile) == 1) ? numBytes : -1;
+
+    // Note: a read size of '0' always succeeds and negative sizes always result in an error
+    if (numBytes > 0) {
+        return (std::fread(pDest, (size_t) numBytes, 1, pFile) == 1) ? numBytes : -1;
+    } else if (numBytes == 0) {
+        return 0;
+    } else {
+        return -1;
+    }
 }
 
 int32_t seekForOverridenFile(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept {
