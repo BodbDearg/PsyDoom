@@ -147,6 +147,7 @@ struct TrackCmd {
     int32_t             arg2;           // Command argument 2: meaning (if any) depends on the command
     int32_t             arg3;           // Command argument 3: meaning (if any) depends on the command
 
+    void readFromJson(const rapidjson::Value& jsonRoot) noexcept;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
     uint32_t readFromWmd(const StreamReadFunc& streamRead) THROWS;
     uint32_t writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
@@ -170,6 +171,7 @@ struct Track {
     std::vector<uint32_t>   labels;                 // Locations to jump to in the track as a command index
     std::vector<TrackCmd>   cmds;                   // The commands for the track
 
+    void readFromJson(const rapidjson::Value& jsonRoot) noexcept;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
     void readFromWmd(const StreamReadFunc& streamRead) THROWS;
     void writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
@@ -180,6 +182,7 @@ struct Sequence {
     uint16_t            unknownWmdField;    // Unknown field read from the .WMD: its purpose is unknown because it is never used. Preserving for diff purposes against original .WMD files!
     std::vector<Track>  tracks;
 
+    void readFromJson(const rapidjson::Value& jsonRoot) noexcept;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
     void readFromWmd(const StreamReadFunc& streamRead) THROWS;
     void writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;

@@ -2,26 +2,28 @@
 
 #include "Endian.h"
 
+#include <algorithm>
 #include <map>
 #include <string>
 
 using namespace AudioTools;
 
-// Note: must be uppercase for case insensitive comparison purposes
-static std::map<std::string, WmdSoundDriverId> gStrToSoundDriverId = {
+// Note: must be uppercase for case insensitive comparison purposes.
+// Also using 'std::less<>' for heterogeneous comparison, to avoid 'std::string' temporaries.
+static std::map<std::string, WmdSoundDriverId, std::less<>> gStrToSoundDriverId = {
     { "NOSOUND",    WmdSoundDriverId::NoSound },
     { "PSX",        WmdSoundDriverId::PSX },
     { "GENERIC",    WmdSoundDriverId::GENERIC },
 };
 
-static std::map<std::string, WmdSoundClass> gStrToSoundClass = {
+static std::map<std::string, WmdSoundClass, std::less<>> gStrToSoundClass = {
     { "SNDFX",      WmdSoundClass::SNDFX },
     { "MUSIC",      WmdSoundClass::MUSIC },
     { "DRUMS",      WmdSoundClass::DRUMS },
     { "SFXDRUMS",   WmdSoundClass::SFXDRUMS },
 };
 
-static std::map<std::string, WmdTrackCmdType> gStrToTrackCmdType = {
+static std::map<std::string, WmdTrackCmdType, std::less<>> gStrToTrackCmdType = {
     { "DRIVERINIT",     WmdTrackCmdType::DriverInit },
     { "DRIVEREXIT",     WmdTrackCmdType::DriverExit },
     { "DRIVERENTRY1",   WmdTrackCmdType::DriverEntry1 },
@@ -309,13 +311,20 @@ const char* AudioTools::toString(const WmdTrackCmdType value) noexcept {
 // Helper for string to enum conversion: returns the enum value '-1' if not found
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
-static T stringToEnum(const char* const str, const std::map<std::string, T>& nameToEnumMap) noexcept {
+static T stringToEnum(const char* const str, const std::map<std::string, T, std::less<>>& nameToEnumMap) noexcept {
     // Get an uppercase version of the string for case insensitive comparison
     const size_t strLength = std::strlen(str);
     char strUpper[33];
     std::strncpy(strUpper, str, 32);
     strUpper[32] = 0;
-    std::transform(strUpper, strUpper + strLength, strUpper, ::toupper);
+    std::transform(
+        strUpper,
+        strUpper + strLength,
+        strUpper,
+        [](const char c) noexcept {
+            return (char) ::toupper(c);
+        }
+    );
     
     // Find in the name map and return the enum
     const auto iter = nameToEnumMap.find(strUpper);

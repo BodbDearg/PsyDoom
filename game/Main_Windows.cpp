@@ -1,6 +1,6 @@
 ﻿#include "Doom/psx_main.h"
 
-#include "PcPsx/Macros.h"
+#include "Macros.h"
 
 #include <memory>
 #include <string>

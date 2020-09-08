@@ -43,6 +43,11 @@ static uint32_t jsonGetOrDefaultClampedUint32(const rapidjson::Value& jsonObj, c
     return (uint32_t) std::clamp<int64_t>(val64, 0, UINT32_MAX);
 }
 
+static int32_t jsonGetOrDefaultClampedInt32(const rapidjson::Value& jsonObj, const char* const fieldName, const uint32_t defaultVal) noexcept {
+    const int64_t val64 = jsonGetOrDefault<int64_t>(jsonObj, fieldName, defaultVal);
+    return (int32_t) std::clamp<int64_t>(val64, INT32_MIN, INT32_MAX);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Utility: get a child json array by name (readonly) or null
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -107,7 +112,7 @@ void PsxPatchGroup::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
     patchSamples.clear();
     
     if (const rapidjson::Value* const pPatchesArray = jsonGetArrayOrNull(jsonRoot, "patches")) {
-        for (size_t i = 0; i < pPatchesArray->Size(); ++i) {
+        for (rapidjson::SizeType i = 0; i < pPatchesArray->Size(); ++i) {
             const rapidjson::Value& patchObj = (*pPatchesArray)[i];
             PsxPatch& patch = patches.emplace_back();
             patch.readFromJson(patchObj);
@@ -115,7 +120,7 @@ void PsxPatchGroup::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
     }
     
     if (const rapidjson::Value* const pPatchVoicesArray = jsonGetArrayOrNull(jsonRoot, "patchVoices")) {
-        for (size_t i = 0; i < pPatchVoicesArray->Size(); ++i) {
+        for (rapidjson::SizeType i = 0; i < pPatchVoicesArray->Size(); ++i) {
             const rapidjson::Value& patchVoiceObj = (*pPatchVoicesArray)[i];
             PsxPatchVoice& patchVoice = patchVoices.emplace_back();
             patchVoice.readFromJson(patchVoiceObj);
@@ -123,7 +128,7 @@ void PsxPatchGroup::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
     }
     
     if (const rapidjson::Value* const pPatchSamplesArray = jsonGetArrayOrNull(jsonRoot, "patchSamples")) {
-        for (size_t i = 0; i < pPatchSamplesArray->Size(); ++i) {
+        for (rapidjson::SizeType i = 0; i < pPatchSamplesArray->Size(); ++i) {
             const rapidjson::Value& patchSampleObj = (*pPatchSamplesArray)[i];
             PsxPatchSample& patchSample = patchSamples.emplace_back();
             patchSample.readFromJson(patchSampleObj);
@@ -399,7 +404,18 @@ void PsxPatchGroup::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Read a single track command to json
+// Read a single track command from json
+//------------------------------------------------------------------------------------------------------------------------------------------
+void TrackCmd::readFromJson(const rapidjson::Value& jsonRoot) noexcept {
+    type = stringToTrackCmdType(jsonGetOrDefault<const char*>(jsonRoot, "type", ""));
+    delayQnp = jsonGetOrDefaultClampedUint32(jsonRoot, "delayQnp", 0);
+    arg1 = jsonGetOrDefaultClampedInt32(jsonRoot, "arg1", 0);
+    arg2 = jsonGetOrDefaultClampedInt32(jsonRoot, "arg2", 0);
+    arg3 = jsonGetOrDefaultClampedInt32(jsonRoot, "arg3", 0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write a single track command to json
 //------------------------------------------------------------------------------------------------------------------------------------------
 void TrackCmd::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
     jsonRoot.AddMember("type", rapidjson::StringRef(toString(type)), jsonAlloc);
@@ -648,10 +664,55 @@ uint32_t TrackCmd::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Read an entire track from json
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Track::readFromJson(const rapidjson::Value& jsonRoot) noexcept {
+    // Read track global properties
+    driverId = stringToSoundDriverId(jsonGetOrDefault<const char*>(jsonRoot, "driverId", ""));
+    soundClass = stringToSoundClass(jsonGetOrDefault<const char*>(jsonRoot, "soundClass", ""));
+    initPpq = jsonGetOrDefaultClampedUint16(jsonRoot, "initPpq", 120);
+    initQpm = jsonGetOrDefaultClampedUint16(jsonRoot, "initQpm", 120);
+    initPatchIdx = jsonGetOrDefaultClampedUint16(jsonRoot, "initPatchIdx", 0);
+    initPitchCntrl = jsonGetOrDefaultClampedUint16(jsonRoot, "initPitchCntrl", 0);
+    initVolumeCntrl = jsonGetOrDefaultClampedUint8(jsonRoot, "initVolumeCntrl", 0x7Fu);
+    initPanCntrl = jsonGetOrDefaultClampedUint8(jsonRoot, "initPanCntrl", 0x40u);
+    initReverb = jsonGetOrDefaultClampedUint8(jsonRoot, "initReverb", 0);
+    initMutegroupsMask = jsonGetOrDefaultClampedUint8(jsonRoot, "initMutegroupsMask", 0);
+    maxVoices = jsonGetOrDefaultClampedUint8(jsonRoot, "maxVoices", 1);
+    locStackSize = jsonGetOrDefaultClampedUint8(jsonRoot, "locStackSize", 1);
+    priority = jsonGetOrDefaultClampedUint8(jsonRoot, "priority", 0);
+
+    // Read track labels
+    labels.clear();
+
+    if (const rapidjson::Value* const pLabelsArray = jsonGetArrayOrNull(jsonRoot, "labels")) {
+        for (rapidjson::SizeType i = 0; i < pLabelsArray->Size(); ++i) {
+            const rapidjson::Value& labelVal = (*pLabelsArray)[i];
+            
+            if (labelVal.IsNumber()) {
+                const uint32_t labelCmdIdx = (uint32_t) std::clamp<double>(labelVal.Get<double>(), 0, UINT32_MAX);
+                labels.push_back(labelCmdIdx);
+            }
+        }
+    }
+
+    // Read track commands
+    cmds.clear();
+
+    if (const rapidjson::Value* const pCmdsArray = jsonGetArrayOrNull(jsonRoot, "cmds")) {
+        for (rapidjson::SizeType i = 0; i < pCmdsArray->Size(); ++i) {
+            const rapidjson::Value& trackCmdObj = (*pCmdsArray)[i];
+            TrackCmd& trackCmd = cmds.emplace_back();
+            trackCmd.readFromJson(trackCmdObj);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Write an entire track to json
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Track::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
-    // Write global track properties
+    // Write track global properties
     jsonRoot.AddMember("driverId", rapidjson::StringRef(toString(driverId)), jsonAlloc);
     jsonRoot.AddMember("soundClass", rapidjson::StringRef(toString(soundClass)), jsonAlloc);
     jsonRoot.AddMember("initPpq", initPpq, jsonAlloc);
@@ -824,6 +885,25 @@ void Track::writeToWmd(const StreamWriteFunc& streamWrite) const THROWS {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Read an entire sequence from json
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Sequence::readFromJson(const rapidjson::Value& jsonRoot) noexcept {
+    // Sequence properties
+    unknownWmdField = jsonGetOrDefaultClampedUint16(jsonRoot, "unknownWmdField", 0);
+
+    // Read all tracks
+    tracks.clear();
+
+    if (const rapidjson::Value* const pTracksArray = jsonGetArrayOrNull(jsonRoot, "tracks")) {
+        for (rapidjson::SizeType i = 0; i < pTracksArray->Size(); ++i) {
+            const rapidjson::Value& trackObj = (*pTracksArray)[i];
+            Track& track = tracks.emplace_back();
+            track.readFromJson(trackObj);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Write an entire sequence to json
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Sequence::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
@@ -908,8 +988,16 @@ void Module::readFromJson(const rapidjson::Document& doc) THROWS {
         psxPatchGroup.readFromJson(patchGroupObj);
     }
     
-    // TODO: read all sequences
+    // Read all sequences
     sequences.clear();
+
+    if (const rapidjson::Value* const pSequencesArray = jsonGetArrayOrNull(doc, "sequences")) {
+        for (rapidjson::SizeType i = 0; i < pSequencesArray->Size(); ++i) {
+            const rapidjson::Value& sequenceObj = (*pSequencesArray)[i];
+            Sequence& sequence = sequences.emplace_back();
+            sequence.readFromJson(sequenceObj);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -930,7 +1018,7 @@ void Module::writeToJson(rapidjson::Document& doc) const noexcept {
     {
         rapidjson::Value patchGroupObj(rapidjson::kObjectType);
         psxPatchGroup.writeToJson(patchGroupObj, jsonAlloc);
-        doc.AddMember("psxPatchGroup", patchGroupObj, jsonAlloc);        
+        doc.AddMember("psxPatchGroup", patchGroupObj, jsonAlloc);
     }
     
     // Write all the sequences
