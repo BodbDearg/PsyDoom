@@ -1,4 +1,6 @@
 set(SOURCE_FILES
+    "AudioUtils.cpp"
+    "AudioUtils.h"
     "Module.cpp"
     "Module.h"
     "ModuleFileUtils.cpp"
