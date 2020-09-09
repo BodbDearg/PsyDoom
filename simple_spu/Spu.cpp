@@ -78,7 +78,7 @@ static void decodeAdpcmBlock(Voice& voice, std::byte adpcmBlock[ADPCM_BLOCK_SIZE
     voice.samples[1] = voice.samples[Voice::SAMPLE_BUFFER_SIZE - 2];
     voice.samples[2] = voice.samples[Voice::SAMPLE_BUFFER_SIZE - 1];
 
-    // Get the shift and filter to use from the first header byte.
+    // Get the shift and filter to use from the first ADPCM header byte.
     // Note that the filter must be from 0-4 so if it goes beyond that then use filter mode '0' (no filter).
     // Also according to NO$PSX: "For both 4bit and 8bit ADPCM, reserved shift values 13..15 will act same as shift = 9"
     uint32_t sampleShift = (uint32_t) adpcmBlock[0] & 0x0F;
