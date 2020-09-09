@@ -146,8 +146,7 @@ int main(int argc, const char* const argv[]) noexcept {
 
         vagFilePath += ".VAG";
 
-        // Makeup the .VAG file header.
-        // There's no way of telling what the sample rate, so guess it is 11,025 Hz...
+        // Makeup the .VAG file header
         const uint32_t vagTotalSize = sizeof(VagUtils::VagFileHdr) + soundBytesToRead;
 
         VagUtils::VagFileHdr vagHdr = {};
