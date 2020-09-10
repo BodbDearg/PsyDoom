@@ -62,5 +62,12 @@ void decodeAdpcmSamples(
     uint32_t& loopEndSampleIdx
 ) noexcept;
 
+bool writeAdpcmSoundToVagFile(
+    const std::byte* const pAdpcmData,
+    const uint32_t adpcmDataSize,
+    const uint32_t sampleRate,
+    const char* const filePath
+) noexcept;
+
 END_NAMESPACE(VagUtils)
 END_NAMESPACE(AudioTools)

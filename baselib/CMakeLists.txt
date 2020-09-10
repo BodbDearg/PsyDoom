@@ -1,5 +1,7 @@
 set(SOURCE_FILES
     "Asserts.h"
+    "ByteInputStream.h"
+    "ByteVecUtils.h"
     "Endian.h"
     "FatalErrors.cpp"
     "FatalErrors.h"

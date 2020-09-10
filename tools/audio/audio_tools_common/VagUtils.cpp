@@ -2,8 +2,10 @@
 
 #include "Asserts.h"
 #include "Endian.h"
+#include "Finally.h"
 
 #include <algorithm>
+#include <cstdio>
 
 BEGIN_NAMESPACE(AudioTools)
 BEGIN_NAMESPACE(VagUtils)
@@ -143,6 +145,50 @@ void decodeAdpcmSamples(
     if (!bFoundLoopEnd) {
         loopStartSampleIdx = 0;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write a sound encoded in the PlayStation's ADPCM format to the given VAG file on disk.
+// Returns 'true' if the write was successful.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool writeAdpcmSoundToVagFile(
+    const std::byte* const pAdpcmData,
+    const uint32_t adpcmDataSize,
+    const uint32_t sampleRate,
+    const char* const filePath
+) noexcept {
+    // The data size must be a multiple of 16 or the PSX ADPCM block size
+    if ((adpcmDataSize % ADPCM_BLOCK_SIZE) != 0)
+        return false;
+
+    // Open the specified file for writing
+    FILE* const pFile = std::fopen(filePath, "wb");
+
+    if (!pFile)
+        return false;
+
+    Finally closeFileOnExit = finally([=]() noexcept {
+        std::fclose(pFile);
+    });
+
+    // Makeup the .VAG file header and write to the file
+    const uint32_t vagTotalSize = sizeof(VagUtils::VagFileHdr) + adpcmDataSize;
+
+    VagFileHdr vagHdr = {};
+    vagHdr.fileId = VagUtils::VAG_FILE_ID;
+    vagHdr.version = VagUtils::VAG_FILE_VERSION;
+    vagHdr.size = vagTotalSize;
+    vagHdr.sampleRate = sampleRate;
+    vagHdr.endianCorrect();
+
+    if (std::fwrite(&vagHdr, sizeof(VagFileHdr), 1, pFile) != 1)
+        return false;
+
+    // Write the ADPCM and flush to finish up
+    if (std::fwrite(pAdpcmData, adpcmDataSize, 1, pFile) != 1)
+        return false;
+
+    return (std::fflush(pFile) == 0);
 }
 
 END_NAMESPACE(VagUtils)

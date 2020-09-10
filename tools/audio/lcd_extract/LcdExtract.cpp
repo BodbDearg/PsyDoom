@@ -58,42 +58,6 @@ static uint32_t getPatchSampleRate(const uint32_t patchSampleIdx, const PsxPatch
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Write the given LCD ADPCM data to a .VAG file
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void writeSoundToVag(
-    const std::string& filePathNoExt,
-    const std::byte* const pAdpcmData,
-    const uint32_t adpcmDataSize,
-    const uint32_t sampleRate
-) noexcept {
-    // Makeup the .VAG file header
-    const uint32_t vagTotalSize = sizeof(VagUtils::VagFileHdr) + adpcmDataSize;
-
-    VagUtils::VagFileHdr vagHdr = {};
-    vagHdr.fileId = VagUtils::VAG_FILE_ID;
-    vagHdr.version = VagUtils::VAG_FILE_VERSION;
-    vagHdr.size = vagTotalSize;
-    vagHdr.sampleRate = sampleRate;
-    vagHdr.name[0] = 'S';
-    vagHdr.name[1] = 'A';
-    vagHdr.name[2] = 'M';
-    vagHdr.name[3] = 'P';
-    vagHdr.endianCorrect();
-
-    // Makeup a buffer with all of the data to be written to the .VAG file
-    std::unique_ptr<std::byte[]> vagData(new std::byte[vagTotalSize]);
-    std::memcpy(vagData.get(), &vagHdr, sizeof(VagUtils::VagFileHdr));
-    std::memcpy(vagData.get() + sizeof(VagUtils::VagFileHdr), pAdpcmData, adpcmDataSize);
-
-    // Write the .VAG file
-    const std::string vagFilePath = filePathNoExt + ".VAG";
-
-    if (!FileUtils::writeDataToFile(vagFilePath.c_str(), vagData.get(), vagTotalSize, false)) {
-        std::printf("Error writing to the .VAG file '%s'!\n", vagFilePath.c_str());
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Write the given LCD ADPCM data to a standard .WAV file in uncompressed mode.
 // For more information, see: https://sites.google.com/site/musicgapi/technical-documents/wav-file-format
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -310,7 +274,12 @@ int main(int argc, const char* const argv[]) noexcept {
         }
 
         // Output to a .VAG file and a .WAV file
-        writeSoundToVag(outFilePathNoExt, pCurLcdData, soundBytesToRead, sampleRate);
+        std::string vagFilePath = outFilePathNoExt + ".VAG";
+
+        if (!VagUtils::writeAdpcmSoundToVagFile(pCurLcdData, soundBytesToRead, sampleRate, vagFilePath.c_str())) {
+            std::printf("Failed to create output .VAG file '%s'!\n", vagFilePath.c_str());
+        }
+
         writeSoundToWav(outFilePathNoExt, pCurLcdData, soundBytesToRead, sampleRate);
 
         // Move onto the next sound
