@@ -50,7 +50,7 @@ bool VagFileHdr::validate() noexcept {
 // If the sample is NOT looped then these will both be set to zero.
 // This code is more or less copied from the Spu implementation that PsyDoom uses.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void decodeAdpcmSamples(
+void decodePsxAdpcmSamples(
     const std::byte* const pData,
     const uint32_t dataSize,
     std::vector<int16_t>& samplesOut,
@@ -151,7 +151,7 @@ void decodeAdpcmSamples(
 // Write a sound encoded in the PlayStation's ADPCM format to the given VAG file on disk.
 // Returns 'true' if the write was successful.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool writeAdpcmSoundToVagFile(
+bool writePsxAdpcmSoundToVagFile(
     const std::byte* const pAdpcmData,
     const uint32_t adpcmDataSize,
     const uint32_t sampleRate,

@@ -54,7 +54,7 @@ struct VagFileHdr {
 
 static_assert(sizeof(VagFileHdr) == 64);
 
-void decodeAdpcmSamples(
+void decodePsxAdpcmSamples(
     const std::byte* const pData,
     const uint32_t dataSize,
     std::vector<int16_t>& samplesOut,
@@ -62,7 +62,7 @@ void decodeAdpcmSamples(
     uint32_t& loopEndSampleIdx
 ) noexcept;
 
-bool writeAdpcmSoundToVagFile(
+bool writePsxAdpcmSoundToVagFile(
     const std::byte* const pAdpcmData,
     const uint32_t adpcmDataSize,
     const uint32_t sampleRate,

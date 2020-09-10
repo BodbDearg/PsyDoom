@@ -9,6 +9,7 @@
 #include "Module.h"
 #include "ModuleFileUtils.h"
 #include "VagUtils.h"
+#include "WavUtils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -55,128 +56,6 @@ static uint32_t getPatchSampleRate(const uint32_t patchSampleIdx, const PsxPatch
     // If we don't find a patch voice using the sample, then fallback to assuming it's at 11,050 Hz.
     // This is the sample rate used by a lot of PSX Doom sounds:
     return 11050;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Write the given LCD ADPCM data to a standard .WAV file in uncompressed mode.
-// For more information, see: https://sites.google.com/site/musicgapi/technical-documents/wav-file-format
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void writeSoundToWav(
-    const std::string& filePathNoExt,
-    const std::byte* const pAdpcmData,
-    const uint32_t adpcmDataSize,
-    const uint32_t sampleRate
-) noexcept {
-    // This code needs to be fixed up for big endian mode...
-    static_assert(Endian::isLittle(), "writeSoundToWav only works for little endian currently!");
-
-    // First decode the audio to regular uncompressed 16-bit samples
-    std::vector<int16_t> samples;
-    uint32_t loopStartSampleIdx = {};
-    uint32_t loopEndSampleIdx = {};
-    VagUtils::decodeAdpcmSamples(pAdpcmData, adpcmDataSize, samples, loopStartSampleIdx, loopEndSampleIdx);
-
-    // Format for a sampler loop
-    struct SamplerLoop {
-        uint32_t cuePointId;    // Unique id for this loop cue point, so things like labels can be associated with it
-        uint32_t type;          // 0 = normal loop forward
-        uint32_t startSamp;     // Start of loop (in samples)
-        uint32_t endSamp;       // End of loop (in samples)
-        uint32_t fraction;      // Fraction of a sample at which to loop - 0x80000000 = 0.5 of a sample
-        uint32_t playCount;     // 0 = play forever
-    };
-
-    static_assert(sizeof(SamplerLoop) == 24);
-
-    // Format for the sampler chunk header + 1 baked in loop
-    struct SamplerChunk {
-        uint32_t chunkId;           // Should be 'smpl' in ASCII
-        uint32_t dataSize;          // 36 + (Num Sample Loops * 24) + Sampler Data
-        uint32_t manufacturer;      // MIDI registered manufacturer for sampler
-        uint32_t product;           // MIDI registered product for sampler
-        uint32_t samplePeriod;      // Duration of time that passes during 1 sample in nanoseconds
-        uint32_t baseNote;          // MIDI note at which the sample is played back at its original sample rate
-        uint32_t baseNoteFrac;      // Fraction of a note for base note: 0x80000000 = 0.5 of a semitone
-        uint32_t smpteFormat;       // Timing related stuff...
-        uint32_t smpteOffset;       // Timing related stuff...
-        uint32_t numSampleLoops;    // Number of sample loops
-        uint32_t samplerDataSize;   // Extra sampler data
-
-        // The baked in sampler loop
-        SamplerLoop samplerLoops[1];
-    };
-
-    static_assert(sizeof(SamplerChunk) == 68);
-
-    // Header for the format chunk in uncompressed mode
-    struct FmtChunkHdr {
-        uint32_t chunkId;           // Should be 'fmt ' in ASCII
-        uint32_t dataSize;          // 16 + extra format bytes
-        uint16_t compressionCode;   // 1 = Uncompressed PCM
-        uint16_t numChannels;       // 2 = Stereo,  1 = Mono
-        uint32_t sampleRate;        // In Hz
-        uint32_t avgBytesPerSec;    // Estimated bytes per second for streaming
-        uint16_t blockAlign;        // Bytes per sample slice: (bits per sample / 8) * numChannels
-        uint16_t bitsPerSample;     // 16, 8 etc.
-    };
-
-    static_assert(sizeof(FmtChunkHdr) == 24);
-
-    // Open up an output stream for the .WAV file
-    const std::string wavFilePath = filePathNoExt + ".WAV";
-    FILE* const pFile = std::fopen(wavFilePath.c_str(), "wb");
-
-    if (!pFile) {
-        std::printf("Error writing to the .WAV file '%s'!\n", wavFilePath.c_str());
-        return;
-    }
-    
-    // Figure out the sizes for everything
-    constexpr uint32_t fmtChunkPayloadSize = sizeof(FmtChunkHdr) - 8;
-    constexpr uint32_t samplerChunkPlayloadSize = sizeof(SamplerChunk) - 8;
-    const uint32_t dataChunkPayloadSize = (uint32_t)(samples.size() * sizeof(int16_t));
-    const uint32_t riffChunkPayloadSize = fmtChunkPayloadSize + samplerChunkPlayloadSize + dataChunkPayloadSize + (3 * 8) + 4;  // 3x8 byte chunk headers + 4 byte 'WAVE' id
-
-    // Write the RIFF chunk header and the WAVE chunk header
-    std::fwrite("RIFF", 4, 1, pFile);
-    std::fwrite(&riffChunkPayloadSize, sizeof(uint32_t), 1, pFile);
-    std::fwrite("WAVE", 4, 1, pFile);
-
-    // Write the format chunk
-    FmtChunkHdr fmtHdr = {};
-    fmtHdr.chunkId = 0x20746D66;            // fmt 
-    fmtHdr.dataSize = fmtChunkPayloadSize;
-    fmtHdr.compressionCode = 1;             // Uncompressed PCM
-    fmtHdr.numChannels = 1;
-    fmtHdr.sampleRate = sampleRate;
-    fmtHdr.avgBytesPerSec = sampleRate * sizeof(int16_t);
-    fmtHdr.blockAlign = sizeof(int16_t);
-    fmtHdr.bitsPerSample = 16;
-    std::fwrite(&fmtHdr, sizeof(fmtHdr), 1, pFile);
-
-    // Write the sampler chunk header
-    SamplerChunk sampChunk = {};
-    sampChunk.chunkId = 0x6C706D73u;        // smpl
-    sampChunk.dataSize = samplerChunkPlayloadSize;
-    sampChunk.samplePeriod = 1000000000 / sampleRate;
-    sampChunk.baseNote = 60;                // Play back at current sample rate at C5
-
-    if (loopStartSampleIdx != loopEndSampleIdx) {
-        sampChunk.numSampleLoops = 1;
-        sampChunk.samplerLoops[0].cuePointId = 100;
-        sampChunk.samplerLoops[0].startSamp = loopStartSampleIdx;
-        sampChunk.samplerLoops[0].endSamp = (loopEndSampleIdx - 1);     // According to what I've read, the last sample is played so we need to '-1' here
-    }
-
-    std::fwrite(&sampChunk, sizeof(sampChunk), 1, pFile);
-
-    // Write the header for the data chunk and the sample data itself
-    std::fwrite("data", 4, 1, pFile);
-    std::fwrite(&dataChunkPayloadSize, sizeof(uint32_t), 1, pFile);
-    std::fwrite(samples.data(), sizeof(int16_t) * samples.size(), 1, pFile);
-
-    // Close up the file to finish up
-    std::fclose(pFile);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -275,12 +154,15 @@ int main(int argc, const char* const argv[]) noexcept {
 
         // Output to a .VAG file and a .WAV file
         std::string vagFilePath = outFilePathNoExt + ".VAG";
+        std::string wavFilePath = outFilePathNoExt + ".wav";
 
-        if (!VagUtils::writeAdpcmSoundToVagFile(pCurLcdData, soundBytesToRead, sampleRate, vagFilePath.c_str())) {
+        if (!VagUtils::writePsxAdpcmSoundToVagFile(pCurLcdData, soundBytesToRead, sampleRate, vagFilePath.c_str())) {
             std::printf("Failed to create output .VAG file '%s'!\n", vagFilePath.c_str());
         }
 
-        writeSoundToWav(outFilePathNoExt, pCurLcdData, soundBytesToRead, sampleRate);
+        if (!WavUtils::writePsxAdpcmSoundToWavFile(pCurLcdData, soundBytesToRead, sampleRate, wavFilePath.c_str())) {
+            std::printf("Failed to create output .wav file '%s'!\n", vagFilePath.c_str());
+        }
 
         // Move onto the next sound
         lcdBytesLeft -= soundBytesToRead;

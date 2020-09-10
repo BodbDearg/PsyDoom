@@ -7,6 +7,8 @@ set(SOURCE_FILES
     "ModuleFileUtils.h"
     "VagUtils.cpp"
     "VagUtils.h"
+    "WavUtils.cpp"
+    "WavUtils.h"
     "WmdFileTypes.cpp"
     "WmdFileTypes.h"
 )
