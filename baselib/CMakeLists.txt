@@ -1,15 +1,19 @@
 set(SOURCE_FILES
     "Asserts.h"
     "ByteInputStream.h"
-    "ByteVecUtils.h"
+    "ByteVecOutputStream.h"
     "Endian.h"
     "FatalErrors.cpp"
     "FatalErrors.h"
+    "FileInputStream.h"
+    "FileOutputStream.h"
     "FileUtils.cpp"
     "FileUtils.h"
     "IniUtils.cpp"
     "IniUtils.h"
+    "InputStream.h"
     "Macros.h"
+    "OutputStream.h"
 )
 
 set(OTHER_FILES

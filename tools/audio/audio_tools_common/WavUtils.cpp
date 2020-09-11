@@ -1,6 +1,6 @@
 #include "WavUtils.h"
 
-#include "ByteVecUtils.h"
+#include "ByteVecOutputStream.h"
 #include "Endian.h"
 #include "Finally.h"
 #include "VagUtils.h"
@@ -120,8 +120,8 @@ bool writePcmSoundToWavFile(
     });
 
     // Makeup a buffer that we will write all of the child chunks to
-    std::vector<std::byte> rootChunkData;
-    rootChunkData.reserve(numSamples * sizeof(int16_t) + 1024 * 64);
+    ByteVecOutputStream rootChunkData;
+    rootChunkData.getBytes().reserve(numSamples * sizeof(int16_t) + 1024 * 64);
 
     // Write the 'fmt' chunk first
     {
@@ -139,9 +139,9 @@ bool writePcmSoundToWavFile(
         fmtHdr.bitsPerSample = 16;
         fmtHdr.endianCorrect();
 
-        ByteVecUtils::write(rootChunkData, chunkHdr);
-        ByteVecUtils::write(rootChunkData, fmtHdr);
-        ByteVecUtils::pad(rootChunkData, 2);
+        rootChunkData.write(chunkHdr);
+        rootChunkData.write(fmtHdr);
+        rootChunkData.padAlign(2);
     }
 
     // Only write the sampler chunk if the file is looped
@@ -163,10 +163,10 @@ bool writePcmSoundToWavFile(
         smpLoop.endSamp = loopEndSample - 1;    // According to what I've read, the last sample is played so we need to '-1' here
         smpLoop.endianCorrect();
 
-        ByteVecUtils::write(rootChunkData, chunkHdr);
-        ByteVecUtils::write(rootChunkData, smpHdr);
-        ByteVecUtils::write(rootChunkData, smpLoop);
-        ByteVecUtils::pad(rootChunkData, 2);
+        rootChunkData.write(chunkHdr);
+        rootChunkData.write(smpHdr);
+        rootChunkData.write(smpLoop);
+        rootChunkData.padAlign(2);
     }
 
     // Write the wave data itself
@@ -176,9 +176,9 @@ bool writePcmSoundToWavFile(
         chunkHdr.chunkSize = numSamples * (uint32_t) sizeof(int16_t);
         chunkHdr.endianCorrect();
 
-        ByteVecUtils::write(rootChunkData, chunkHdr);
-        ByteVecUtils::writeBytes(rootChunkData, pEndianCorrectSamples, chunkHdr.chunkSize);
-        ByteVecUtils::pad(rootChunkData, 2);
+        rootChunkData.write(chunkHdr);
+        rootChunkData.writeBytes(pEndianCorrectSamples, chunkHdr.chunkSize);
+        rootChunkData.padAlign(2);
     }
 
     // Make up the root wave file header and write
@@ -186,7 +186,7 @@ bool writePcmSoundToWavFile(
         WavRootChunkHdr hdr = {};
         hdr.fileId = WavFileId::RIFF;
         hdr.riffTypeId = WavFileId::WAVE;
-        hdr.chunkSize = (uint32_t) rootChunkData.size();
+        hdr.chunkSize = (uint32_t) rootChunkData.tell();
         hdr.endianCorrect();
 
         if (std::fwrite(&hdr, sizeof(WavRootChunkHdr), 1, pFile) != 1)
@@ -194,7 +194,7 @@ bool writePcmSoundToWavFile(
     }
 
     // Write all of the data for the root chunk and flush to finish up
-    if (std::fwrite(rootChunkData.data(), rootChunkData.size(), 1, pFile) != 1)
+    if (std::fwrite(rootChunkData.getBytes().data(), rootChunkData.tell(), 1, pFile) != 1)
         return false;
 
     return (std::fflush(pFile) == 0);

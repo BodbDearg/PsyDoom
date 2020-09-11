@@ -1,5 +1,7 @@
 #include "ModuleFileUtils.h"
 
+#include "FileInputStream.h"
+#include "FileOutputStream.h"
 #include "FileUtils.h"
 #include "Module.h"
 
@@ -107,37 +109,11 @@ bool ModuleFileUtils::writeJsonFile(const char* const jsonFilePath, const Module
 // If reading fails return 'false' and give an error reason in the output string.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool ModuleFileUtils::readWmdFile(const char* const wmdFilePath, Module& moduleOut, std::string& errorMsgOut) noexcept {
-    // Open the WMD file
-    FILE* const pWmdFile = std::fopen(wmdFilePath, "rb");
-
-    if (!pWmdFile) {
-        errorMsgOut = "Could not open the .WMD file '";
-        errorMsgOut += wmdFilePath;
-        errorMsgOut += "'! Is the path valid or readable?";
-        return false;
-    }
-
-    // This lambda will read from the WMD file
-    const StreamReadFunc fileReader = [=](void* const pDst, const size_t size) THROWS {
-        // Zero sized read operations always succeed
-        if (size == 0)
-            return;
-
-        // Are we reading or seeking past bytes? (No destination means skipping bytes)
-        if (pDst) {
-            if (std::fread(pDst, size, 1, pWmdFile) != 1)
-                throw "Error reading from file!";
-        } else {
-            if (std::fseek(pWmdFile, (long) size, SEEK_CUR) != 0)
-                throw "Error seeking within file!";
-        }
-    };
-
-    // Attempt to read the .WMD file into the 'Module' data structure
     bool bReadModuleOk = false;
 
     try {
-        moduleOut.readFromWmd(fileReader);
+        FileInputStream fileIn(wmdFilePath);
+        moduleOut.readFromWmd(fileIn);
         bReadModuleOk = true;
     } catch (const char* const exceptionMsg) {
         errorMsgOut = "An error occurred while reading the .WMD file '";
@@ -145,13 +121,11 @@ bool ModuleFileUtils::readWmdFile(const char* const wmdFilePath, Module& moduleO
         errorMsgOut += "'! It may be corrupt. Error reason: ";
         errorMsgOut += exceptionMsg;
     } catch (...) {
-        errorMsgOut = "An unknown error occurred while reading the .WMD file '";
+        errorMsgOut = "Failed to read .WMD file '";
         errorMsgOut += wmdFilePath;
-        errorMsgOut += "'! It may be corrupt.";
+        errorMsgOut += "'! It may be corrupt or may not exist.";
     }
 
-    // Close up the input .WMD file and return the result
-    std::fclose(pWmdFile);
     return bReadModuleOk;
 }
 
@@ -160,31 +134,20 @@ bool ModuleFileUtils::readWmdFile(const char* const wmdFilePath, Module& moduleO
 // If writing fails return 'false' and give an error reason in the output string.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool ModuleFileUtils::writeWmdFile(const char* const wmdFilePath, const Module& moduleIn, std::string& errorMsgOut) noexcept {
-    // Open the WMD file
-    FILE* const pWmdFile = std::fopen(wmdFilePath, "wb");
-
-    if (!pWmdFile) {
-        errorMsgOut = "Could not open the .WMD file '";
-        errorMsgOut += wmdFilePath;
-        errorMsgOut += "' for writing! Is the path valid or writable?";
-        return false;
-    }
-
-    // This lambda will write to the WMD file
-    const StreamWriteFunc fileWriter = [=](const void* const pDst, const size_t size) THROWS {
-        // Zero sized write operations always succeed
-        if (size == 0)
-            return;
-        
-        if (std::fwrite(pDst, size, 1, pWmdFile) != 1)
-            throw "Error writing to file!";
-    };
-    
     // Attempt to write the 'Module' data structure to the .WMD file
     bool bModuleWrittenOk = false;
 
     try {
-        moduleIn.writeToWmd(fileWriter);
+        // Write the entire module file
+        FileOutputStream fileOut(wmdFilePath, false);
+        moduleIn.writeToWmd(fileOut);
+
+        // Pad the file out to 2,048 byte multiples.
+        // This is the way the .WMD files are stored on the PSX Doom CD.
+        fileOut.padAlign(2048, std::byte(0));
+
+        // Flush to make sure all bytes are written to finish up
+        fileOut.flush();
         bModuleWrittenOk = true;
     } catch (const char* const exceptionMsg) {
         errorMsgOut = "An error occurred while writing to the .WMD file '";
@@ -192,40 +155,10 @@ bool ModuleFileUtils::writeWmdFile(const char* const wmdFilePath, const Module& 
         errorMsgOut += "'! Error reason: ";
         errorMsgOut += exceptionMsg;
     } catch (...) {
-        errorMsgOut = "An unknown error occurred while writing to the .WMD file '";
+        errorMsgOut = "An error occurred while writing to the .WMD file '";
         errorMsgOut += wmdFilePath;
         errorMsgOut += "'!";
     }
 
-    // Pad the file out to 2,048 byte multiples.
-    // This is the way the .WMD files are stored on the PSX Doom CD.
-    {
-        std::byte zeroBytes[2048];
-        const long fileLoc = std::ftell(pWmdFile);
-        const long paddedFileSize = ((fileLoc + 2047) / 2048) * 2048;
-        const long numPadBytes = paddedFileSize - fileLoc;
-
-        if (numPadBytes > 0) {
-            std::memset(zeroBytes, 0, numPadBytes);
-
-            if (std::fwrite(zeroBytes, numPadBytes, 1, pWmdFile) != 1) {
-                errorMsgOut = "An error occurred while writing to the .WMD file '";
-                errorMsgOut += wmdFilePath;
-                errorMsgOut += "'! Error reason: Error writing to file!";
-                bModuleWrittenOk = false;
-            }
-        }
-    }
-
-    // Flush the output to make sure it was successfully written
-    if (bModuleWrittenOk && (std::fflush(pWmdFile) != 0)) {
-        errorMsgOut = "An error occurred while finishing up writing to the .WMD file '";
-        errorMsgOut += wmdFilePath;
-        errorMsgOut += "'!";
-        bModuleWrittenOk = false;
-    }
-
-    // Close up the input .WMD file and return the result
-    std::fclose(pWmdFile);
     return bModuleWrittenOk;
 }

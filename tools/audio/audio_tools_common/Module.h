@@ -7,16 +7,12 @@
 #include <rapidjson/document.h>
 #include <vector>
 
+class InputStream;
+class OutputStream;
+
 BEGIN_NAMESPACE(AudioTools)
 
 struct WmdPatchGroupHdr;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Format of functions to read from or write to a stream; these throw if there are any errors.
-// Note that for the stream read function a destination of 'nullptr' may be passed to skip over bytes.
-//------------------------------------------------------------------------------------------------------------------------------------------
-typedef std::function<void (void* const pDst, const size_t size) THROWS> StreamReadFunc;
-typedef std::function<void (const void* const pSrc, const size_t size) THROWS> StreamWriteFunc;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PSX sound driver specific data, after deserializing from a binary .WMD file or json.
@@ -95,8 +91,8 @@ struct PsxPatchVoice {
     
     void readFromJson(const rapidjson::Value& jsonRoot) THROWS;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(const StreamReadFunc& streamRead) THROWS;
-    void writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
+    void readFromWmd(InputStream& in) THROWS;
+    void writeToWmd(OutputStream& out) const THROWS;
 };
 
 // Holds details for a sound sample used by a patch voice; just holds the size in bytes of the sound sample
@@ -105,8 +101,8 @@ struct PsxPatchSample {
 
     void readFromJson(const rapidjson::Value& jsonRoot) THROWS;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(const StreamReadFunc& streamRead) THROWS;
-    void writeToWmd(const StreamWriteFunc& streamWrite, const uint32_t wmdOffsetField = 0) const THROWS;
+    void readFromWmd(InputStream& in) THROWS;
+    void writeToWmd(OutputStream& out, const uint32_t wmdOffsetField = 0) const THROWS;
 };
 
 // Describes a patch/instrument: this is a collection of voices triggered in unison
@@ -116,8 +112,8 @@ struct PsxPatch {
 
     void readFromJson(const rapidjson::Value& jsonRoot) THROWS;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(const StreamReadFunc& streamRead) THROWS;
-    void writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
+    void readFromWmd(InputStream& in) THROWS;
+    void writeToWmd(OutputStream& out) const THROWS;
 };
 
 // Patches, patch voices and patch samples etc.
@@ -129,8 +125,8 @@ struct PsxPatchGroup {
 
     void readFromJson(const rapidjson::Value& jsonRoot) THROWS;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& hdr) THROWS;
-    void writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
+    void readFromWmd(InputStream& in, const WmdPatchGroupHdr& hdr) THROWS;
+    void writeToWmd(OutputStream& out) const THROWS;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -149,8 +145,8 @@ struct TrackCmd {
 
     void readFromJson(const rapidjson::Value& jsonRoot) noexcept;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    uint32_t readFromWmd(const StreamReadFunc& streamRead) THROWS;
-    uint32_t writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
+    uint32_t readFromWmd(InputStream& in) THROWS;
+    uint32_t writeToWmd(OutputStream& out) const THROWS;
 };
 
 // Represents an individual track in a sequence
@@ -173,8 +169,8 @@ struct Track {
 
     void readFromJson(const rapidjson::Value& jsonRoot) noexcept;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(const StreamReadFunc& streamRead) THROWS;
-    void writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
+    void readFromWmd(InputStream& in) THROWS;
+    void writeToWmd(OutputStream& out) const THROWS;
 };
 
 // Represents an entire sequence (music or a sound) to be played by the sequencer
@@ -184,8 +180,8 @@ struct Sequence {
 
     void readFromJson(const rapidjson::Value& jsonRoot) noexcept;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(const StreamReadFunc& streamRead) THROWS;
-    void writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
+    void readFromWmd(InputStream& in) THROWS;
+    void writeToWmd(OutputStream& out) const THROWS;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -203,13 +199,13 @@ struct Module {
 
     void readFromJson(const rapidjson::Document& doc) THROWS;
     void writeToJson(rapidjson::Document& doc) const noexcept;
-    void readFromWmd(const StreamReadFunc& streamRead) THROWS;
-    void writeToWmd(const StreamWriteFunc& streamWrite) const THROWS;
+    void readFromWmd(InputStream& in) THROWS;
+    void writeToWmd(OutputStream& out) const THROWS;
 
     // WMD file reading utilities
-    static void skipReadingWmdPatchGroup(const StreamReadFunc& streamRead, const WmdPatchGroupHdr& patchGroupHdr) THROWS;
-    static uint32_t readVarLenQuant(const StreamReadFunc& streamRead, uint32_t& valueOut) THROWS;
-    static uint32_t writeVarLenQuant(const StreamWriteFunc& streamWrite, const uint32_t valueIn) THROWS;
+    static void skipReadingWmdPatchGroup(InputStream& in, const WmdPatchGroupHdr& patchGroupHdr) THROWS;
+    static uint32_t readVarLenQuant(InputStream& in, uint32_t& valueOut) THROWS;
+    static uint32_t writeVarLenQuant(OutputStream& out, const uint32_t valueIn) THROWS;
     static uint32_t getVarLenQuantLen(const uint32_t valueIn) noexcept;
 };
 
