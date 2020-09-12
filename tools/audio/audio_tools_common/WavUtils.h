@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <vector>
 
+class OutputStream;
+
 BEGIN_NAMESPACE(AudioTools)
 BEGIN_NAMESPACE(WavUtils)
 
@@ -126,14 +128,14 @@ bool writePcmSoundToWavFile(
     const uint32_t sampleRate,
     const uint32_t loopStartSample,
     const uint32_t loopEndSample,
-    const char* const filePath
+    OutputStream& out
 ) noexcept;
 
 bool writePsxAdpcmSoundToWavFile(
     const std::byte* const pAdpcmData,
     const uint32_t adpcmDataSize,
     const uint32_t sampleRate,
-    const char* const filePath
+    OutputStream& out
 ) noexcept;
 
 END_NAMESPACE(WavUtils)

@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <vector>
 
+class OutputStream;
+
 BEGIN_NAMESPACE(AudioTools)
 BEGIN_NAMESPACE(VagUtils)
 
@@ -66,7 +68,7 @@ bool writePsxAdpcmSoundToVagFile(
     const std::byte* const pAdpcmData,
     const uint32_t adpcmDataSize,
     const uint32_t sampleRate,
-    const char* const filePath
+    OutputStream& out
 ) noexcept;
 
 END_NAMESPACE(VagUtils)

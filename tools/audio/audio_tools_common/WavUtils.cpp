@@ -2,7 +2,7 @@
 
 #include "ByteVecOutputStream.h"
 #include "Endian.h"
-#include "Finally.h"
+#include "OutputStream.h"
 #include "VagUtils.h"
 
 BEGIN_NAMESPACE(AudioTools)
@@ -82,7 +82,7 @@ bool writePcmSoundToWavFile(
     const uint32_t sampleRate,
     const uint32_t loopStartSample,
     const uint32_t loopEndSample,
-    const char* const filePath
+    OutputStream& out
 ) noexcept {
     // Validate input
     const bool bInvalidRequest = (
@@ -108,16 +108,6 @@ bool writePcmSoundToWavFile(
     }
 
     const int16_t* const pEndianCorrectSamples = (Endian::isLittle()) ? pSamples : byteSwappedSamples.data();
-
-    // Open up the output file for writing
-    FILE* const pFile = std::fopen(filePath, "wb");
-
-    if (!pFile)
-        return false;
-
-    Finally closeFileOnExit = finally([=]() noexcept {
-        std::fclose(pFile);
-    });
 
     // Makeup a buffer that we will write all of the child chunks to
     ByteVecOutputStream rootChunkData;
@@ -181,23 +171,28 @@ bool writePcmSoundToWavFile(
         rootChunkData.padAlign(2);
     }
 
-    // Make up the root wave file header and write
-    {
+    // Actually creating the .wav file
+    bool bWroteWavOk = false;
+
+    try {
+        // Make up the root wave file header and write
         WavRootChunkHdr hdr = {};
         hdr.fileId = WavFileId::RIFF;
         hdr.riffTypeId = WavFileId::WAVE;
         hdr.chunkSize = (uint32_t) rootChunkData.tell();
         hdr.endianCorrect();
 
-        if (std::fwrite(&hdr, sizeof(WavRootChunkHdr), 1, pFile) != 1)
-            return false;
+        out.write(hdr);
+
+        // Write all of the data for the root chunk and flush to finish up
+        out.writeBytes(rootChunkData.getBytes().data(), rootChunkData.tell());
+        out.flush();
+        bWroteWavOk = true;
+    } catch (...) {
+        // Ignore...
     }
 
-    // Write all of the data for the root chunk and flush to finish up
-    if (std::fwrite(rootChunkData.getBytes().data(), rootChunkData.tell(), 1, pFile) != 1)
-        return false;
-
-    return (std::fflush(pFile) == 0);
+    return bWroteWavOk;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -207,7 +202,7 @@ bool writePsxAdpcmSoundToWavFile(
     const std::byte* const pAdpcmData,
     const uint32_t adpcmDataSize,
     const uint32_t sampleRate,
-    const char* const filePath
+    OutputStream& out
 ) noexcept {
     // First decode the audio to regular uncompressed 16-bit samples
     std::vector<int16_t> samples;
@@ -216,7 +211,7 @@ bool writePsxAdpcmSoundToWavFile(
     VagUtils::decodePsxAdpcmSamples(pAdpcmData, adpcmDataSize, samples, loopStartSample, loopEndSample);
 
     // Write to the specified output file
-    return writePcmSoundToWavFile(samples.data(), (uint32_t) samples.size(), 1, sampleRate, loopStartSample, loopEndSample, filePath);
+    return writePcmSoundToWavFile(samples.data(), (uint32_t) samples.size(), 1, sampleRate, loopStartSample, loopEndSample, out);
 }
 
 END_NAMESPACE(WavUtils)

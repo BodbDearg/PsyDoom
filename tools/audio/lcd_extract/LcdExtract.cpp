@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "AudioUtils.h"
 #include "Endian.h"
+#include "FileOutputStream.h"
 #include "FileUtils.h"
 #include "Module.h"
 #include "ModuleFileUtils.h"
@@ -115,16 +116,38 @@ int main(int argc, const char* const argv[]) noexcept {
             outFilePathNoExt += sampleIdxZeroPadded;
         }
 
-        // Output to a .VAG file and a .WAV file
-        std::string vagFilePath = outFilePathNoExt + ".VAG";
-        std::string wavFilePath = outFilePathNoExt + ".wav";
+        // Output to a .VAG file
+        {
+            std::string vagFilePath = outFilePathNoExt + ".VAG";
+            bool bWroteVagFileOk = false;
+            
+            try {
+                FileOutputStream out(vagFilePath.c_str(), false);
+                bWroteVagFileOk = VagUtils::writePsxAdpcmSoundToVagFile(pCurLcdData, soundBytesToRead, sampleRate, out);
+            } catch (...) {
+                // Ignore...
+            }
 
-        if (!VagUtils::writePsxAdpcmSoundToVagFile(pCurLcdData, soundBytesToRead, sampleRate, vagFilePath.c_str())) {
-            std::printf("Failed to create output .VAG file '%s'!\n", vagFilePath.c_str());
+            if (!bWroteVagFileOk) {
+                std::printf("Failed to create output .VAG file '%s'!\n", vagFilePath.c_str());
+            }
         }
 
-        if (!WavUtils::writePsxAdpcmSoundToWavFile(pCurLcdData, soundBytesToRead, sampleRate, wavFilePath.c_str())) {
-            std::printf("Failed to create output .wav file '%s'!\n", vagFilePath.c_str());
+        // Output to a .WAV file
+        {
+            std::string wavFilePath = outFilePathNoExt + ".wav";
+            bool bWroteWavFileOk = false;
+
+            try {
+                FileOutputStream out(wavFilePath.c_str(), false);
+                bWroteWavFileOk = WavUtils::writePsxAdpcmSoundToWavFile(pCurLcdData, soundBytesToRead, sampleRate, out);
+            } catch (...) {
+                // Ignore...
+            }
+
+            if (!bWroteWavFileOk) {
+                std::printf("Failed to create output .wav file '%s'!\n", wavFilePath.c_str());
+            }
         }
 
         // Move onto the next sound
