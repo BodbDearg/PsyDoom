@@ -22,43 +22,6 @@ using namespace AudioTools;
 static uint16_t gLcdHeader[1024];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tries to determine the sample rate that a given patch sample is encoded in.
-// There's no actual information for this in either the .LCD file or the .WMD file, however the .WMD does define a 'base note'.
-//
-// The 'base note' is the note at which the sample plays back at 44,100 Hz, and in the case of SFX I'm using the distance between that and
-// the note that PSX Doom uses to play back all SFX at (A#3/Bb3, or note '58') in order to figure out the sample rate. For music it appears
-// that the note '48.0' might be a close approximation for what a base note might be, so I'm using that in the music case.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static uint32_t getPatchSampleRate(const uint32_t patchSampleIdx, const PsxPatchGroup& patchGroup) noexcept {
-    // Look for a voice using this sample to get the 'base note' info and hence determine the 
-    for (const PsxPatchVoice& voice : patchGroup.patchVoices) {
-        // Ignore if this voice doesn't use this sample
-        if (voice.sampleIdx != patchSampleIdx)
-            continue;
-
-        // Is this note SFX or a music note?
-        // In the PSX Doom .WMD all SFX have a priority of '100' whereas music instruments have a priority of '128'.
-        const bool bIsSfxSample = (voice.priority < 128);
-
-        // Use the distance to the game's base note to figure out the sample rate
-        constexpr double PSX_DOOM_SFX_BASE_NOTE = 58.0;
-        constexpr double PSX_DOOM_MUS_BASE_NOTE = 48.0;
-        constexpr double PSX_MAX_SAMPLE_RATE = 176400.0;
-
-        const double gameBaseNote = (bIsSfxSample) ? PSX_DOOM_SFX_BASE_NOTE : PSX_DOOM_MUS_BASE_NOTE;
-        const double voiceBaseNote = (double) voice.baseNote + (double) voice.baseNoteFrac / 128.0;
-        const double sampleRate = AudioUtils::getNoteSampleRate(voiceBaseNote, 44100.0, gameBaseNote);
-        const double sampleRateRounded = std::clamp(std::round(sampleRate), 1.0,  PSX_MAX_SAMPLE_RATE);
-
-        return (uint32_t) sampleRateRounded;
-    }
-    
-    // If we don't find a patch voice using the sample, then fallback to assuming it's at 11,050 Hz.
-    // This is the sample rate used by a lot of PSX Doom sounds:
-    return 11050;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Core LCD extraction logic
 //------------------------------------------------------------------------------------------------------------------------------------------
 int main(int argc, const char* const argv[]) noexcept {
@@ -121,7 +84,7 @@ int main(int argc, const char* const argv[]) noexcept {
         }
 
         // Try to guess what sample rate it is at
-        const uint32_t sampleRate = getPatchSampleRate(patchSampleIdx, patchGroup);
+        const uint32_t sampleRate = patchGroup.guessSampleRateForPatchSample(patchSampleIdx);
 
         // Get how many sound bytes to read
         const uint32_t patchSampleSize = patchGroup.patchSamples[patchSampleIdx].size;
