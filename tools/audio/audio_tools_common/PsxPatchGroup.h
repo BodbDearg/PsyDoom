@@ -27,8 +27,8 @@ struct PsxPatchGroup {
 
     void readFromJson(const rapidjson::Value& jsonRoot) THROWS;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(InputStream& in, const WmdPatchGroupHdr& hdr) THROWS;
-    void writeToWmd(OutputStream& out) const THROWS;
+    void readFromWmdFile(InputStream& in, const WmdPatchGroupHdr& hdr) THROWS;
+    void writeToWmdFile(OutputStream& out) const THROWS;
     uint32_t guessSampleRateForPatchSample(const uint32_t patchSampleIdx) const noexcept;
 };
 

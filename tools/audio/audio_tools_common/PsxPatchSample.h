@@ -18,8 +18,8 @@ struct PsxPatchSample {
 
     void readFromJson(const rapidjson::Value& jsonRoot) THROWS;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(InputStream& in) THROWS;
-    void writeToWmd(OutputStream& out, const uint32_t wmdOffsetField = 0) const THROWS;
+    void readFromWmdFile(InputStream& in) THROWS;
+    void writeToWmdFile(OutputStream& out, const uint32_t wmdOffsetField = 0) const THROWS;
 };
 
 END_NAMESPACE(AudioTools)

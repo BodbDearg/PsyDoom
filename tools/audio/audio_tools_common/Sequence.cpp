@@ -51,7 +51,7 @@ void Sequence::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::Allo
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read an entire sequence from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Sequence::readFromWmd(InputStream& in) THROWS {
+void Sequence::readFromWmdFile(InputStream& in) THROWS {
     // Read the sequence header which tells us how many tracks there are
     WmdSequenceHdr seqHdr = {};
     in.read(seqHdr);
@@ -64,14 +64,14 @@ void Sequence::readFromWmd(InputStream& in) THROWS {
     tracks.clear();
     
     for (uint32_t trackIdx = 0; trackIdx < seqHdr.numTracks; ++trackIdx) {
-        tracks.emplace_back().readFromWmd(in);
+        tracks.emplace_back().readFromWmdFile(in);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write an entire sequence from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Sequence::writeToWmd(OutputStream& out) const THROWS {
+void Sequence::writeToWmdFile(OutputStream& out) const THROWS {
     // Write the header first
     {
         WmdSequenceHdr hdr = {};
@@ -88,7 +88,7 @@ void Sequence::writeToWmd(OutputStream& out) const THROWS {
 
     // Then write all the tracks
     for (const Track& track : tracks) {
-        track.writeToWmd(out);
+        track.writeToWmdFile(out);
     }
 }
 

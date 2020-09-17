@@ -25,8 +25,8 @@ struct TrackCmd {
 
     void readFromJson(const rapidjson::Value& jsonRoot) noexcept;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    uint32_t readFromWmd(InputStream& in) THROWS;
-    uint32_t writeToWmd(OutputStream& out) const THROWS;
+    uint32_t readFromWmdFile(InputStream& in) THROWS;
+    uint32_t writeToWmdFile(OutputStream& out) const THROWS;
 };
 
 END_NAMESPACE(AudioTools)

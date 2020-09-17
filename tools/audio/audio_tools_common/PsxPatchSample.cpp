@@ -24,7 +24,7 @@ void PsxPatchSample::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read a PlayStation sound driver patch sample from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchSample::readFromWmd(InputStream& in) THROWS {
+void PsxPatchSample::readFromWmdFile(InputStream& in) THROWS {
     WmdPsxPatchSample wmdSample = {};
     in.read(wmdSample);
     wmdSample.endianCorrect();
@@ -35,7 +35,7 @@ void PsxPatchSample::readFromWmd(InputStream& in) THROWS {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write a PlayStation sound driver patch sample to a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchSample::writeToWmd(OutputStream& out, const uint32_t wmdOffsetField) const THROWS {
+void PsxPatchSample::writeToWmdFile(OutputStream& out, const uint32_t wmdOffsetField) const THROWS {
     WmdPsxPatchSample psxSample = {};
     psxSample.offset = wmdOffsetField;
     psxSample.size = size;

@@ -4,8 +4,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <vector>
 
+class InputStream;
 class OutputStream;
 
 BEGIN_NAMESPACE(AudioTools)
@@ -56,6 +58,20 @@ struct VagFileHdr {
 
 static_assert(sizeof(VagFileHdr) == 64);
 
+bool readVagFile(
+    InputStream& in,
+    std::vector<std::byte>& adpcmDataOut,
+    uint32_t& sampleRate,
+    std::string& errorMsgOut
+) noexcept;
+
+bool readVagFile(
+    const char* const filePath,
+    std::vector<std::byte>& adpcmDataOut,
+    uint32_t& sampleRate,
+    std::string& errorMsgOut
+) noexcept;
+
 void decodePsxAdpcmSamples(
     const std::byte* const pData,
     const uint32_t dataSize,
@@ -65,10 +81,55 @@ void decodePsxAdpcmSamples(
 ) noexcept;
 
 bool writePsxAdpcmSoundToVagFile(
+    OutputStream& out,
     const std::byte* const pAdpcmData,
     const uint32_t adpcmDataSize,
+    const uint32_t sampleRate
+) noexcept;
+
+bool writePsxAdpcmSoundToVagFile(
+    const char* const filePath,
+    const std::byte* const pAdpcmData,
+    const uint32_t adpcmDataSize,
+    const uint32_t sampleRate
+) noexcept;
+
+bool writePcmSoundToVagFile(
+    OutputStream& out,
+    const int16_t* const pSamples,
+    const uint32_t numSamples,
     const uint32_t sampleRate,
-    OutputStream& out
+    const uint32_t loopStartSampleIdx,
+    const uint32_t loopEndSampleIdx
+) noexcept;
+
+bool writePcmSoundToVagFile(
+    const char* const filePath,
+    const int16_t* const pSamples,
+    const uint32_t numSamples,
+    const uint32_t sampleRate,
+    const uint32_t loopStartSampleIdx,
+    const uint32_t loopEndSampleIdx
+) noexcept;
+
+void encodePcmSoundToPsxAdpcm(
+    const int16_t* const pSamples,
+    const uint32_t numSamples,
+    const uint32_t loopStartSampleIdx,
+    const uint32_t loopEndSampleIdx,
+    std::vector<std::byte>& adpcmDataOut
+) noexcept;
+
+void encodePcmToPsxAdpcmBlock(
+    const int16_t samples[ADPCM_BLOCK_NUM_SAMPLES],
+    const int16_t prevSample1,
+    const int16_t prevSample2,
+    const bool bLoopStartFlag,
+    const bool bLoopEndFlag,
+    const bool bRepeatFlag,
+    std::byte adpcmDataOut[ADPCM_BLOCK_SIZE],
+    int16_t& prevEncSampleOut1,
+    int16_t& prevEncSampleOut2
 ) noexcept;
 
 END_NAMESPACE(VagUtils)

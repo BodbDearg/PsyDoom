@@ -113,7 +113,7 @@ bool ModuleFileUtils::readWmdFile(const char* const wmdFilePath, Module& moduleO
 
     try {
         FileInputStream fileIn(wmdFilePath);
-        moduleOut.readFromWmd(fileIn);
+        moduleOut.readFromWmdFile(fileIn);
         bReadModuleOk = true;
     } catch (const char* const exceptionMsg) {
         errorMsgOut = "An error occurred while reading the .WMD file '";
@@ -140,7 +140,7 @@ bool ModuleFileUtils::writeWmdFile(const char* const wmdFilePath, const Module& 
     try {
         // Write the entire module file
         FileOutputStream fileOut(wmdFilePath, false);
-        moduleIn.writeToWmd(fileOut);
+        moduleIn.writeToWmdFile(fileOut);
 
         // Pad the file out to 2,048 byte multiples.
         // This is the way the .WMD files are stored on the PSX Doom CD.

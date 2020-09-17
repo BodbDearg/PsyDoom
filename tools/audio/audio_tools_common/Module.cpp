@@ -79,7 +79,7 @@ void Module::writeToJson(rapidjson::Document& doc) const noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read the entire module from the specified .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Module::readFromWmd(InputStream& in) THROWS {
+void Module::readFromWmdFile(InputStream& in) THROWS {
     // Read the header for the module file, verify correct and save it's basic info
     WmdModuleHdr moduleHdr = {};
     in.read(moduleHdr);
@@ -107,7 +107,7 @@ void Module::readFromWmd(InputStream& in) THROWS {
         // If it's a PlayStation format patch group read it, otherwise skip
         if (patchGroupHdr.driverId == WmdSoundDriverId::PSX) {
             psxPatchGroup = {};
-            psxPatchGroup.readFromWmd(in, patchGroupHdr);
+            psxPatchGroup.readFromWmdFile(in, patchGroupHdr);
         } else {
             std::printf("Warning: skipping unsupported format patch group with driver id '%u'!\n", (unsigned) patchGroupHdr.driverId);
             skipReadingWmdPatchGroup(in, patchGroupHdr);
@@ -118,7 +118,7 @@ void Module::readFromWmd(InputStream& in) THROWS {
     sequences.clear();
     
     for (uint32_t seqIdx = 0; seqIdx < moduleHdr.numSequences; ++seqIdx) {
-        sequences.emplace_back().readFromWmd(in);
+        sequences.emplace_back().readFromWmdFile(in);
     }
 }
 
@@ -130,7 +130,7 @@ void Module::readFromWmd(InputStream& in) THROWS {
 //      (2) If some parts of the module are invalidly configured, writing may fail.
 //          The output from this process should always be a valid .WMD file.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Module::writeToWmd(OutputStream& out) const THROWS {
+void Module::writeToWmdFile(OutputStream& out) const THROWS {
     // Make up the module header, endian correct and serialize it
     {
         WmdModuleHdr hdr = {};
@@ -153,11 +153,11 @@ void Module::writeToWmd(OutputStream& out) const THROWS {
     }
 
     // Write the PSX driver patch group
-    psxPatchGroup.writeToWmd(out);
+    psxPatchGroup.writeToWmdFile(out);
 
     // Write all the sequences
     for (const Sequence& sequence : sequences) {
-        sequence.writeToWmd(out);
+        sequence.writeToWmdFile(out);
     }
 }
 

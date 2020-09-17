@@ -36,7 +36,7 @@ public:
 
 private:
     inline void ensureBytesLeft(const size_t numBytes) THROWS {
-        if ((numBytes > mSize) || (mSize + numBytes > mSize)) {
+        if ((numBytes > mSize) || (mCurByteIdx + numBytes > mSize)) {
             throw StreamException();
         }
     }

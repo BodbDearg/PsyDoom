@@ -33,8 +33,8 @@ struct PsxPatchVoice {
     
     void readFromJson(const rapidjson::Value& jsonRoot) THROWS;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
-    void readFromWmd(InputStream& in) THROWS;
-    void writeToWmd(OutputStream& out) const THROWS;
+    void readFromWmdFile(InputStream& in) THROWS;
+    void writeToWmdFile(OutputStream& out) const THROWS;
 };
 
 END_NAMESPACE(AudioTools)

@@ -101,7 +101,7 @@ void PsxPatchGroup::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read a PlayStation sound driver patch group from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchGroup::readFromWmd(InputStream& in, const WmdPatchGroupHdr& hdr) THROWS {
+void PsxPatchGroup::readFromWmdFile(InputStream& in, const WmdPatchGroupHdr& hdr) THROWS {
     // Save basic patch group properties
     hwVoiceLimit = hdr.hwVoiceLimit;
 
@@ -112,19 +112,19 @@ void PsxPatchGroup::readFromWmd(InputStream& in, const WmdPatchGroupHdr& hdr) TH
     
     if (hdr.loadFlags & LOAD_PATCHES) {
         for (uint32_t i = 0; i < hdr.numPatches; ++i) {
-            patches.emplace_back().readFromWmd(in);
+            patches.emplace_back().readFromWmdFile(in);
         }
     }
 
     if (hdr.loadFlags & LOAD_PATCH_VOICES) {
         for (uint32_t i = 0; i < hdr.numPatchVoices; ++i) {
-            patchVoices.emplace_back().readFromWmd(in);
+            patchVoices.emplace_back().readFromWmdFile(in);
         }
     }
 
     if (hdr.loadFlags & LOAD_PATCH_SAMPLES) {
         for (uint32_t i = 0; i < hdr.numPatchSamples; ++i) {
-            patchSamples.emplace_back().readFromWmd(in);
+            patchSamples.emplace_back().readFromWmdFile(in);
         }
     }
 
@@ -148,7 +148,7 @@ void PsxPatchGroup::readFromWmd(InputStream& in, const WmdPatchGroupHdr& hdr) TH
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write a PlayStation sound driver patch group to a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchGroup::writeToWmd(OutputStream& out) const THROWS {
+void PsxPatchGroup::writeToWmdFile(OutputStream& out) const THROWS {
     // Firstly makeup the header, endian correct and write
     {
         WmdPatchGroupHdr groupHdr = {};
@@ -187,17 +187,17 @@ void PsxPatchGroup::writeToWmd(OutputStream& out) const THROWS {
     // Note that for patch samples I'm writing the value of the unused 'offset' field so that it is populated the same as original .WMD files.
     // This offset appears to be increased by the size of each sample in the module, and 2048 byte aligned.
     for (const PsxPatch& patch : patches) {
-        patch.writeToWmd(out);
+        patch.writeToWmdFile(out);
     }
 
     for (const PsxPatchVoice& patchVoice : patchVoices) {
-        patchVoice.writeToWmd(out);
+        patchVoice.writeToWmdFile(out);
     }
 
     uint32_t sampleWmdOffsetField = 0;
 
     for (const PsxPatchSample& patchSample : patchSamples) {
-        patchSample.writeToWmd(out, sampleWmdOffsetField);
+        patchSample.writeToWmdFile(out, sampleWmdOffsetField);
 
         // Incrementing and 2048 byte aligning the value of this unused .WMD file field.
         // I only care about it because I want to generate .WMD files that match the originals exactly.

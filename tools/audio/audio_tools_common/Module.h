@@ -25,8 +25,8 @@ struct Module {
 
     void readFromJson(const rapidjson::Document& doc) THROWS;
     void writeToJson(rapidjson::Document& doc) const noexcept;
-    void readFromWmd(InputStream& in) THROWS;
-    void writeToWmd(OutputStream& out) const THROWS;
+    void readFromWmdFile(InputStream& in) THROWS;
+    void writeToWmdFile(OutputStream& out) const THROWS;
 
     // WMD file reading utilities
     static void skipReadingWmdPatchGroup(InputStream& in, const WmdPatchGroupHdr& patchGroupHdr) THROWS;

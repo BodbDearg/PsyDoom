@@ -44,7 +44,7 @@ void TrackCmd::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::Allo
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read a single track command from a .WMD file and return how many bytes were read
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t TrackCmd::readFromWmd(InputStream& in) THROWS {
+uint32_t TrackCmd::readFromWmdFile(InputStream& in) THROWS {
     // First read the delay (in quarter note parts) until the command
     uint32_t numBytesRead = Module::readVarLenQuant(in, delayQnp);
 
@@ -140,7 +140,7 @@ uint32_t TrackCmd::readFromWmd(InputStream& in) THROWS {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write a single track command to a .WMD file and return how many bytes were written
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t TrackCmd::writeToWmd(OutputStream& out) const THROWS {
+uint32_t TrackCmd::writeToWmdFile(OutputStream& out) const THROWS {
     // First write the delay (in quarter note parts) until the command
     uint32_t numBytesWritten = Module::writeVarLenQuant(out, delayQnp);
 

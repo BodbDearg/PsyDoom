@@ -4,8 +4,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <vector>
 
+class InputStream;
 class OutputStream;
 
 BEGIN_NAMESPACE(AudioTools)
@@ -121,21 +123,58 @@ struct SamplerLoop {
 
 static_assert(sizeof(SamplerLoop) == 24);
 
+bool readWavFile(
+    InputStream& in,
+    std::vector<int16_t>& samplesOut,
+    uint32_t& numChannelsOut,
+    uint32_t& sampleRateOut,
+    uint32_t& loopStartSample,
+    uint32_t& loopEndSample,
+    std::string& errorMsgOut
+) noexcept;
+
+bool readWavFile(
+    const char* const filePath,
+    std::vector<int16_t>& samplesOut,
+    uint32_t& numChannelsOut,
+    uint32_t& sampleRateOut,
+    uint32_t& loopStartSample,
+    uint32_t& loopEndSample,
+    std::string& errorMsgOut
+) noexcept;
+
 bool writePcmSoundToWavFile(
+    OutputStream& out,
     const int16_t* const pSamples,
     const uint32_t numSamples,
     const uint16_t numChannels,
     const uint32_t sampleRate,
     const uint32_t loopStartSample,
-    const uint32_t loopEndSample,
-    OutputStream& out
+    const uint32_t loopEndSample
+) noexcept;
+
+bool writePcmSoundToWavFile(
+    const char* const filePath,
+    const int16_t* const pSamples,
+    const uint32_t numSamples,
+    const uint16_t numChannels,
+    const uint32_t sampleRate,
+    const uint32_t loopStartSample,
+    const uint32_t loopEndSample
 ) noexcept;
 
 bool writePsxAdpcmSoundToWavFile(
+    OutputStream& out,
     const std::byte* const pAdpcmData,
     const uint32_t adpcmDataSize,
-    const uint32_t sampleRate,
-    OutputStream& out
+    const uint32_t sampleRate
+) noexcept;
+
+bool writePsxAdpcmSoundToWavFile(
+    const char* const filePath,
+    const std::byte* const pAdpcmData,
+    const uint32_t adpcmDataSize,
+    const uint32_t sampleRate
 ) noexcept;
 
 END_NAMESPACE(WavUtils)

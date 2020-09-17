@@ -67,7 +67,7 @@ void PsxPatchVoice::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read a PlayStation sound driver patch voice from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchVoice::readFromWmd(InputStream& in) THROWS {
+void PsxPatchVoice::readFromWmdFile(InputStream& in) THROWS {
     WmdPsxPatchVoice wmdVoice = {};
     in.read(wmdVoice);
     wmdVoice.endianCorrect();
@@ -89,7 +89,7 @@ void PsxPatchVoice::readFromWmd(InputStream& in) THROWS {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write a PlayStation sound driver patch voice to a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxPatchVoice::writeToWmd(OutputStream& out) const THROWS {
+void PsxPatchVoice::writeToWmdFile(OutputStream& out) const THROWS {
     WmdPsxPatchVoice psxVoice = {};
     psxVoice.priority = priority;
     psxVoice.reverb = reverb;

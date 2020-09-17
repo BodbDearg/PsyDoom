@@ -104,7 +104,7 @@ void Track::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::Allocat
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read an entire track from a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Track::readFromWmd(InputStream& in) THROWS {
+void Track::readFromWmdFile(InputStream& in) THROWS {
     // First get the header and save basic track properties
     WmdTrackHdr trackHdr = {};
     in.read(trackHdr);
@@ -142,7 +142,7 @@ void Track::readFromWmd(InputStream& in) THROWS {
     while (curCmdByteOffset < trackHdr.cmdStreamSize) {
         TrackCmd& cmd = cmds.emplace_back();
         cmdByteOffsets.push_back(curCmdByteOffset + Module::getVarLenQuantLen(cmd.delayQnp));   // Note: labels skip the command delay time bytes
-        curCmdByteOffset += cmd.readFromWmd(in);
+        curCmdByteOffset += cmd.readFromWmdFile(in);
 
         // Are we past the end of the stream, if so that is an error and indicates a corrupted sequence:
         if (curCmdByteOffset > trackHdr.cmdStreamSize)
@@ -170,7 +170,7 @@ void Track::readFromWmd(InputStream& in) THROWS {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write an entire track to a .WMD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Track::writeToWmd(OutputStream& out) const THROWS {
+void Track::writeToWmdFile(OutputStream& out) const THROWS {
     // Makeup a buffer and byte stream to write all the track data to
     ByteVecOutputStream trackData;
     trackData.getBytes().reserve(cmds.size() * 8);
@@ -181,7 +181,7 @@ void Track::writeToWmd(OutputStream& out) const THROWS {
 
     for (const TrackCmd& cmd : cmds) {
         cmdOffsets.push_back((uint32_t) trackData.tell() + Module::getVarLenQuantLen(cmd.delayQnp));   // Note: labels skip the command delay time bytes
-        cmd.writeToWmd(trackData);
+        cmd.writeToWmdFile(trackData);
     }
 
     // Makeup the header for the track, endian correct and write to the file
