@@ -40,6 +40,11 @@ public:
         return mBytes;
     }
 
+    // Clear the output and start writing again from byte 0
+    inline void reset() noexcept {
+        mBytes.clear();
+    }
+
 private:
     std::vector<std::byte>  mBytes;
 };

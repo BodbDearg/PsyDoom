@@ -26,6 +26,9 @@ public:
     // Returns the current offset in the stream
     virtual size_t tell() THROWS = 0;
 
+    // Tells if the end of the stream has been reached
+    virtual bool isAtEnd() THROWS = 0;
+
     // Read and return directly the specified generic type from the input stream
     template <class T>
     inline T read() THROWS {

@@ -3,7 +3,7 @@
 #include "ByteVecOutputStream.h"
 #include "InputStream.h"
 #include "JsonUtils.h"
-#include "Module.h"
+#include "MidiUtils.h"
 #include "OutputStream.h"
 #include "TrackCmd.h"
 #include "WmdFileTypes.h"
@@ -141,7 +141,7 @@ void Track::readFromWmdFile(InputStream& in) THROWS {
 
     while (curCmdByteOffset < trackHdr.cmdStreamSize) {
         TrackCmd& cmd = cmds.emplace_back();
-        cmdByteOffsets.push_back(curCmdByteOffset + Module::getVarLenQuantLen(cmd.delayQnp));   // Note: labels skip the command delay time bytes
+        cmdByteOffsets.push_back(curCmdByteOffset + MidiUtils::getVarLenQuantLen(cmd.delayQnp));    // Note: labels skip the command delay time bytes
         curCmdByteOffset += cmd.readFromWmdFile(in);
 
         // Are we past the end of the stream, if so that is an error and indicates a corrupted sequence:
@@ -180,7 +180,7 @@ void Track::writeToWmdFile(OutputStream& out) const THROWS {
     cmdOffsets.reserve(cmds.size());
 
     for (const TrackCmd& cmd : cmds) {
-        cmdOffsets.push_back((uint32_t) trackData.tell() + Module::getVarLenQuantLen(cmd.delayQnp));   // Note: labels skip the command delay time bytes
+        cmdOffsets.push_back((uint32_t) trackData.tell() + MidiUtils::getVarLenQuantLen(cmd.delayQnp));     // Note: labels skip the command delay time bytes
         cmd.writeToWmdFile(trackData);
     }
 

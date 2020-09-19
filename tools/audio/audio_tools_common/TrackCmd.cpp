@@ -2,7 +2,7 @@
 
 #include "InputStream.h"
 #include "JsonUtils.h"
-#include "Module.h"
+#include "MidiUtils.h"
 #include "OutputStream.h"
 #include "WmdFileTypes.h"
 
@@ -46,7 +46,7 @@ void TrackCmd::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::Allo
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t TrackCmd::readFromWmdFile(InputStream& in) THROWS {
     // First read the delay (in quarter note parts) until the command
-    uint32_t numBytesRead = Module::readVarLenQuant(in, delayQnp);
+    uint32_t numBytesRead = MidiUtils::readVarLenQuant(in, delayQnp);
 
     // Next grab the command id
     in.read(type);
@@ -142,7 +142,7 @@ uint32_t TrackCmd::readFromWmdFile(InputStream& in) THROWS {
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t TrackCmd::writeToWmdFile(OutputStream& out) const THROWS {
     // First write the delay (in quarter note parts) until the command
-    uint32_t numBytesWritten = Module::writeVarLenQuant(out, delayQnp);
+    uint32_t numBytesWritten = MidiUtils::writeVarLenQuant(out, delayQnp);
 
     // Next Write the command id
     out.write(type);

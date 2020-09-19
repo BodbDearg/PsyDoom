@@ -34,6 +34,10 @@ public:
         return mCurByteIdx;
     }
 
+    virtual bool isAtEnd() noexcept override {
+        return (mCurByteIdx >= mSize);
+    }
+
 private:
     inline void ensureBytesLeft(const size_t numBytes) THROWS {
         if ((numBytes > mSize) || (mCurByteIdx + numBytes > mSize)) {

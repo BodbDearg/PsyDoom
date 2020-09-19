@@ -16,12 +16,6 @@ public:
             throw StreamException();
     }
 
-    inline FileInputStream(FileInputStream&& other) noexcept
-        : mpFile(other.mpFile)
-    {
-        other.mpFile = nullptr;
-    }
-
     virtual ~FileInputStream() noexcept override {
         if (mpFile) {
             std::fclose(mpFile);
@@ -52,8 +46,13 @@ public:
         return (size_t) offset;
     }
 
+    virtual bool isAtEnd() noexcept override {
+        return (std::feof(mpFile) != 0);
+    }
+
 private:
     inline FileInputStream(const FileInputStream& other) = delete;
+    inline FileInputStream(FileInputStream&& other) = delete;
     inline FileInputStream& operator = (const FileInputStream& other) = delete;
     inline FileInputStream& operator = (FileInputStream&& other) = delete;
 

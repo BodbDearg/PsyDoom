@@ -30,9 +30,6 @@ struct Module {
 
     // WMD file reading utilities
     static void skipReadingWmdPatchGroup(InputStream& in, const WmdPatchGroupHdr& patchGroupHdr) THROWS;
-    static uint32_t readVarLenQuant(InputStream& in, uint32_t& valueOut) THROWS;
-    static uint32_t writeVarLenQuant(OutputStream& out, const uint32_t valueIn) THROWS;
-    static uint32_t getVarLenQuantLen(const uint32_t valueIn) noexcept;
 };
 
 END_NAMESPACE(AudioTools)
