@@ -3,6 +3,8 @@ set(SOURCE_FILES
     "AudioUtils.h"
     "Lcd.cpp"
     "Lcd.h"
+    "MidiConvert.cpp"
+    "MidiConvert.h"
     "MidiTypes.cpp"
     "MidiTypes.h"
     "MidiUtils.cpp"
