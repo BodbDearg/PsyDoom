@@ -103,7 +103,7 @@ struct WmdTrackHdr {
     WmdSoundClass       soundClass;             // What rough class of sounds the track contains
     uint8_t             initReverb;             // The reverb level to initialize the track with
     uint16_t            initPatchIdx;           // Which patch index to initially use for the track unless manually overridden
-    uint16_t            initPitchCntrl;         // What pitch shift value to initially use for the track unless manually overridden
+    int16_t             initPitchCntrl;         // What pitch shift value to initially use for the track unless manually overridden
     uint8_t             initVolumeCntrl;        // What volume to initially use for the track unless manually overridden
     uint8_t             initPanCntrl;           // What pan setting to initially use for the track unless manually overridden
     uint8_t             locStackSize;           // The maximum number of track data locations that can be remembered in the track's location stack (for save + return control flow)

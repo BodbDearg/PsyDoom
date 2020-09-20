@@ -150,7 +150,7 @@ struct track_header {
     SoundClass      sound_class;            // What rough class of sounds the track contains
     uint8_t         init_reverb;            // The reverb level to initialize the track status with
     uint16_t        init_patch_idx;         // Which patch index to initially use for the track status unless manually overridden
-    uint16_t        init_pitch_cntrl;       // What pitch shift value to initially use for the track status unless manually overridden
+    int16_t         init_pitch_cntrl;       // What pitch shift value to initially use for the track status unless manually overridden
     uint8_t         init_volume_cntrl;      // What volume to initially use for the track status unless manually overridden
     uint8_t         init_pan_cntrl;         // What pan setting to initially use for the track status unless manually overridden
     uint8_t         loc_stack_size;         // The maximum number of track data locations that can be remembered in the track's location stack (for save + return control flow)

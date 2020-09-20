@@ -22,7 +22,7 @@ struct Track {
     uint16_t                initPpq;                // Parts per quarter note: how many parts to subdivide each quarter note into for timing purposes. Affects timing precision.
     uint16_t                initQpm;                // The quarter notes per minute (beats per minute) value to initialize the track status with, unless manually overridden.
     uint16_t                initPatchIdx;           // Which patch index to initially use for the track unless manually overridden
-    uint16_t                initPitchCntrl;         // What pitch shift value to initially use for the track unless manually overridden
+    int16_t                 initPitchCntrl;         // What pitch shift value to initially use for the track unless manually overridden
     uint8_t                 initVolumeCntrl;        // What volume to initially use for the track unless manually overridden
     uint8_t                 initPanCntrl;           // What pan setting to initially use for the track unless manually overridden
     uint8_t                 initReverb;             // The reverb level to initialize the track with

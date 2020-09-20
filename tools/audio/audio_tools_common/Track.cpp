@@ -22,7 +22,7 @@ void Track::readFromJson(const rapidjson::Value& jsonRoot) noexcept {
     initPpq = JsonUtils::clampedGetOrDefault<uint16_t>(jsonRoot, "initPpq", 120);
     initQpm = JsonUtils::clampedGetOrDefault<uint16_t>(jsonRoot, "initQpm", 120);
     initPatchIdx = JsonUtils::clampedGetOrDefault<uint16_t>(jsonRoot, "initPatchIdx", 0);
-    initPitchCntrl = JsonUtils::clampedGetOrDefault<uint16_t>(jsonRoot, "initPitchCntrl", 0);
+    initPitchCntrl = JsonUtils::clampedGetOrDefault<int16_t>(jsonRoot, "initPitchCntrl", 0);
     initVolumeCntrl = JsonUtils::clampedGetOrDefault<uint8_t>(jsonRoot, "initVolumeCntrl", 0x7Fu);
     initPanCntrl = JsonUtils::clampedGetOrDefault<uint8_t>(jsonRoot, "initPanCntrl", 0x40u);
     initReverb = JsonUtils::clampedGetOrDefault<uint8_t>(jsonRoot, "initReverb", 0);

@@ -113,5 +113,147 @@ void sequenceToMidi(const Sequence& sequence, MidiFile& midiFile) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convert a MidiFile structure to a sequence.
+//
+// Limitations:
+//  (1) Set tempo commands are ignored, only the tempo on the 'MidiFile' object is used and it stays constant for the sequence.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void midiToSequence(const MidiFile& midiFile, Sequence& sequence, const bool bIsMusic) noexcept {
+    // How many actual music tracks are there in the MIDI file and how long is it? (in quarter note parts)
+    const uint32_t endMidiMetaTrack = midiFile.getEndMetaTrackIdx();
+    const uint32_t numActualTracks = (uint32_t)(midiFile.tracks.size() - endMidiMetaTrack);
+    const uint64_t sequenceQnpLength = midiFile.getQnpDuration();
+
+    // Do basic track initialization.
+    // Note: I'm using resize here so existing tracks settings will be preserved.
+    sequence.unknownWmdField = {};
+    const size_t oldNumTracks = sequence.tracks.size();
+    sequence.tracks.resize(numActualTracks);
+
+    for (uint32_t i = 0; i < sequence.tracks.size(); ++i) {
+        const bool bIsNewTrack = (i >= oldNumTracks);
+
+        // Set basic track properties
+        Track& track = sequence.tracks[i];
+        track.driverId = WmdSoundDriverId::PSX;
+        track.soundClass = (bIsMusic) ? WmdSoundClass::MUSIC : WmdSoundClass::SNDFX;
+        track.initQpm = (uint16_t) std::min<uint32_t>(midiFile.bpm, UINT16_MAX);
+        track.initPpq = (uint16_t) std::min<uint32_t>(midiFile.ppq, UINT16_MAX);
+        track.priority = (bIsMusic) ? 128 : 100;
+
+        // Initialize these settings if we've just newly created the track
+        if (bIsNewTrack) {
+            track.initPatchIdx = 0;
+            track.initPitchCntrl = 0;
+            track.initVolumeCntrl = 100;
+            track.initPanCntrl = 64;            // Center pan
+            track.initReverb = 0;
+            track.initMutegroupsMask = 0;
+            track.maxVoices = 24;               // PSX hardware voice limit
+            track.locStackSize = 1;             // Not using this at all, just assign a token value
+        }
+
+        // Clear track data
+        track.labels.clear();
+        track.cmds.clear();
+        
+        // If it's music then we will be looping, make a location pointing to the start command in the track
+        if (bIsMusic) {
+            track.labels.push_back(0);
+        }
+    }
+
+    // Convert each track
+    for (size_t i = 0; i < sequence.tracks.size(); ++i) {
+        // Get the source and destination track
+        const MidiTrack& srcTrack = midiFile.tracks[i + endMidiMetaTrack];
+        Track& dstTrack = sequence.tracks[i];
+
+        // This is how many quarter note parts till the end of the sequence
+        uint64_t qnpTillSeqEnd = sequenceQnpLength;
+
+        // In case we are skipping a command from the source stream, add the delay to the next command we actually handle
+        uint32_t skippedCmdsQnpDelay = 0;
+
+        // Convert the commands
+        const auto addDstCmd = [&](const MidiCmd& srcCmd, const WmdTrackCmdType type) -> TrackCmd& {
+            TrackCmd& dstCmd = dstTrack.cmds.emplace_back();
+            dstCmd.type = type;
+            dstCmd.delayQnp = srcCmd.delayQnp + skippedCmdsQnpDelay;
+            skippedCmdsQnpDelay = 0;
+
+            if (dstCmd.delayQnp > qnpTillSeqEnd) {
+                qnpTillSeqEnd = 0;
+            } else {
+                qnpTillSeqEnd -= dstCmd.delayQnp;
+            }
+
+            return dstCmd;
+        };
+
+        for (const MidiCmd& srcCmd : srcTrack.cmds) {
+            switch (srcCmd.type) {
+                // Ignore the end of track message and stick in our own.
+                // Might not end at the same time as the entire sequence, which is what we want...
+                case MidiCmd::Type::EndOfTrack: {
+                    skippedCmdsQnpDelay += srcCmd.delayQnp;
+                }   break;
+
+                case MidiCmd::Type::NoteOn: {
+                    TrackCmd& dstCmd = addDstCmd(srcCmd, WmdTrackCmdType::NoteOn);
+                    dstCmd.arg1 = srcCmd.arg1;  // Note
+                    dstCmd.arg2 = srcCmd.arg2;  // Velocity
+                }   break;
+
+                case MidiCmd::Type::NoteOff: {
+                    TrackCmd& dstCmd = addDstCmd(srcCmd, WmdTrackCmdType::NoteOff);
+                    dstCmd.arg1 = srcCmd.arg1;  // Note
+                }   break;
+
+                case MidiCmd::Type::SetVolume: {
+                    TrackCmd& dstCmd = addDstCmd(srcCmd, WmdTrackCmdType::VolumeMod);
+                    dstCmd.arg1 = srcCmd.arg1;  // Volume
+                }   break;
+
+                case MidiCmd::Type::SetPan: {
+                    TrackCmd& dstCmd = addDstCmd(srcCmd, WmdTrackCmdType::PanMod);
+                    dstCmd.arg1 = srcCmd.arg1;  // Pan
+                }   break;
+
+                case MidiCmd::Type::SetPitchBend: {
+                    TrackCmd& dstCmd = addDstCmd(srcCmd, WmdTrackCmdType::PitchMod);
+                    dstCmd.arg1 = (int32_t) srcCmd.arg1 - 8192;     // Pitch
+                }   break;
+
+                // Not supporting 'Set Tempo' commands and also skip unhandled meta commands or unknown command types
+                case MidiCmd::Type::SetTempo:
+                case MidiCmd::Type::UnhandledMetaCmd:
+                default: {
+                    skippedCmdsQnpDelay += srcCmd.delayQnp;
+                }   break;
+            }
+        }
+
+        // If music add in a loop command
+        if (bIsMusic) {
+            TrackCmd& dstCmd = dstTrack.cmds.emplace_back();
+            dstCmd.type = WmdTrackCmdType::TrkJump;
+            dstCmd.delayQnp = (uint32_t) qnpTillSeqEnd;
+            dstCmd.arg1 = 0;    // Destination label index: track start
+
+            qnpTillSeqEnd = 0;
+            skippedCmdsQnpDelay = 0;
+        }
+
+        // Add in the track end command
+        {
+            TrackCmd& dstCmd = dstTrack.cmds.emplace_back();
+            dstCmd.type = WmdTrackCmdType::TrkEnd;
+            dstCmd.delayQnp = (uint32_t) qnpTillSeqEnd;
+        }
+    }
+}
+
 END_NAMESPACE(MidiConvert)
 END_NAMESPACE(AudioTools)
