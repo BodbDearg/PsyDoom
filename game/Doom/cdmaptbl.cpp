@@ -225,7 +225,7 @@ extern const char* const gCdMapTblFileNames[] = {
     "MAPTEX63.PAD",
     "MAPTEX64.PAD",
     "DOOMSFX.LCD",
-    "DOOMSFX.WMD",
+    "DOOMSND.WMD",
     "MUSLEV1.LCD",
     "MUSLEV10.LCD",
     "MUSLEV11.LCD",
