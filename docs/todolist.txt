@@ -20,6 +20,7 @@ Music Tooling
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
+- Add 'nomonsters' command line switch for dev
 - Move the sequencer onto another thread to ensure 120 Hz heartbeat at all times?
 
 0.7 - GPU & Rendering?
