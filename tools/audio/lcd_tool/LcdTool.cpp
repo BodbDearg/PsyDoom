@@ -214,8 +214,11 @@ static bool ListLcd(const char* const lcdFilePath, const char* const wmdFilePath
     if ((!readInputWmdFile(wmdFilePath)) || (!readInputLcdFile(lcdFilePath)))
         return false;
 
-    // Do the listing
+    // List all contained samples
     std::printf("Patch Sample Index,    Size (In bytes),    Size (Samples),     Guessed Sample Rate,    Guessed Length (Seconds),\n");
+
+    uint32_t totalSizeInSamples = 0;
+    uint32_t totalSizeInBytes = 0;
 
     for (const LcdSample& sample : gLcd.samples) {
         const uint32_t numBlocks = (uint32_t) sample.adpcmData.size() / VagUtils::ADPCM_BLOCK_SIZE;
@@ -223,12 +226,22 @@ static bool ListLcd(const char* const lcdFilePath, const char* const wmdFilePath
         const uint32_t sampleRate = gModule.psxPatchGroup.guessSampleRateForPatchSample(sample.patchSampleIdx);
         const float duration = (float) numSamples / (float) sampleRate;
 
+        // Print the stats for this sample
         std::printf("%-18u,    ", (unsigned) sample.patchSampleIdx);
         std::printf("%-15u,    ", (unsigned) sample.adpcmData.size());
         std::printf("%-14u,     ", (unsigned) numSamples);
         std::printf("%-19u,    ", (unsigned) sampleRate);
         std::printf("%-24f,\n", duration);
+
+        // Add to the totals
+        totalSizeInSamples += numSamples;
+        totalSizeInBytes += (uint32_t) sample.adpcmData.size();
     }
+ 
+    // Print the totals for all samples
+    std::printf("\n");
+    std::printf("Total size (samples):  %u\n", (unsigned) totalSizeInSamples);
+    std::printf("Total size (bytes):    %u\n", (unsigned) totalSizeInBytes);
 
     return true;
 }
