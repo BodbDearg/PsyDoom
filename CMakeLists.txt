@@ -25,7 +25,6 @@ set(DOOM_DISASM_TGT_NAME            DoomDisassemble)
 set(EVENT_BUS_TGT_NAME              EventBus)
 set(FMT_TGT_NAME                    Fmt)
 set(GAME_TGT_NAME                   PsyDoom)
-set(JSON_TO_WMD_TGT_NAME            JsonToWmd)
 set(LCD_TOOL_TGT_NAME               LcdTool)
 set(LIBSDL_TGT_NAME                 SDL)
 set(MAGIC_ENUM_TGT_NAME             MagicEnum)
@@ -35,7 +34,7 @@ set(RAPID_JSON_TGT_NAME             RapidJson)
 set(REVERSING_COMMON_TGT_NAME       ReversingCommon)
 set(SIMPLE_SPU_TGT_NAME             SimpleSpu)
 set(VAG_TOOL_TGT_NAME               VagTool)
-set(WMD_TO_JSON_TGT_NAME            WmdToJson)
+set(WMD_TOOL_TGT_NAME               WmdTool)
 
 # Settings to include or exclude optional portions of the project tree
 set(PSYDOOM_INCLUDE_REVERSING_TOOLS FALSE CACHE BOOL 
@@ -61,10 +60,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/rapidjson")
 
 if (PSYDOOM_INCLUDE_AUDIO_TOOLS)
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/audio_tools_common")
-    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/json_to_wmd")
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/lcd_tool")
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/vag_tool")
-    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/wmd_to_json")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/wmd_tool")
 endif()
 
 if (PSYDOOM_INCLUDE_REVERSING_TOOLS)
