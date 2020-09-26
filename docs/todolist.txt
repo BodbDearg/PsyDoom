@@ -1,8 +1,6 @@
 Music Tooling
 - SPU Reverb VST DSP
 - SPU based VST for in-game instruments
-- LCD import/export
-- WMD editor
 - MIDI conversion to WMD sequence?
 - WMD sequence to MIDI?
 
@@ -22,6 +20,7 @@ Music Tooling
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
 - Add 'nomonsters' command line switch for dev
 - Move the sequencer onto another thread to ensure 120 Hz heartbeat at all times?
+- Support the weird unused hanging lamp thing (doomednum 90)
 
 0.7 - GPU & Rendering?
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.

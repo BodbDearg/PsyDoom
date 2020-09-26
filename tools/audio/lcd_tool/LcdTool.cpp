@@ -2,8 +2,6 @@
 // LcdTool:
 //      Dump, list, create or append to a .LCD samples file
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "FileInputStream.h"
-#include "FileOutputStream.h"
 #include "Lcd.h"
 #include "Module.h"
 #include "ModuleFileUtils.h"
@@ -11,8 +9,6 @@
 #include "WavUtils.h"
 
 #include <algorithm>
-#include <cmath>
-#include <string>
 
 using namespace AudioTools;
 
@@ -33,41 +29,45 @@ struct PatchSampleFile {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Help/usage printing
 //------------------------------------------------------------------------------------------------------------------------------------------
-static const char* const HELP_STR =
-"Usage: LcdTool <LCD_FILE_PATH> <WMD_FILE_PATH> <COMMAND-SWITCH> [COMMAND ARGS]\n"
-"\n"
-"Command switches and arguments:\n\n"
-"   -list\n"
-"       List the current contents of the .LCD file in the order that it is stored.\n"
-"       Example:\n"
-"           LcdTool BLAH.LCD DOOMSND.WMD -list\n\n"
-"   -dump [OUTPUT_DIR]\n"
-"       Dump all the sounds in the .LCD file to both .WAV and PlayStation .VAG format.\n"
-"       Notes:\n"
-"           (1) .WAV files will be output with loop point info via the 'smpl' chunk.\n"
-"           (2) The output directory is optional: the current working directory will be used if not specified.\n"
-"       Example:\n"
-"           LcdTool BLAH.LCD DOOMSND.WMD -dump MyDestDir\n\n"
-"   -create [<PATCH SAMPLE INDEX><SOUND FILE PATH>]...\n"
-"       Create a completely new .LCD file with the given list of patch sample indexes and corresponding sound files.\n"
-"       Notes:\n"
-"           (1) The sound files can be in .WAV or .VAG format. Any .WAV files must be 16-bit, uncompressed PCM and mono.\n"
-"           (2) Loop point info from .WAV files is extracted from the 'smpl' chunk. Only the 1st loop point is used.\n"
-"           (3) Sounds are padded to multiples of 28 samples. Ideally supply audio already in this format.\n"
-"           (4) Loop points are rounded to the nearest 28 samples as required by the hardware. Ideally do this yourself.\n"
-"       Example:\n"
-"           LcdTool BLAH.LCD DOOMSND.WMD -create 1 SOUND1.WAV 2 SOUND2.VAG\n\n"
-"   -append [<PATCH SAMPLE INDEX><SOUND FILE PATH>]...\n"
-"       Same as the '-create' command except an existing LCD file is appended to.\n"
-"       Notes:\n"
-"           (1) If a specified patch sample already exists in the .LCD file, then it will be replaced.\n"
-"           (2) The sound files can be in .WAV or .VAG format. Any .WAV files must be 16-bit, uncompressed PCM and mono.\n"
-"           (3) Loop point info from .WAV files is extracted from the 'smpl' chunk. Only the 1st loop point is used.\n"
-"           (4) Sounds are padded to multiples of 28 samples. Ideally supply audio already in this format.\n"
-"           (5) Loop points are rounded to the nearest 28 samples as required by the hardware. Ideally do this yourself.\n"
-"       Example:\n"
-"           LcdTool BLAH.LCD DOOMSND.WMD -append 101 SOUND101.WAV 102 SOUND102.VAG\n"
-;
+static const char* const HELP_STR = 
+R"(Usage: LcdTool <LCD FILE PATH> <WMD FILE PATH> <COMMAND-SWITCH> [COMMAND ARGS]
+
+Command switches and arguments:
+
+    -list
+        List the current contents of the .LCD file in the order that it is stored.
+        Example:
+        LcdTool BLAH.LCD DOOMSND.WMD -list
+
+    -dump [OUTPUT DIR PATH]
+        Dump all the sounds in the .LCD file to both .WAV and PlayStation .VAG format.
+        Notes:
+            (1) .WAV files will be output with loop point info via the 'smpl' chunk.
+            (2) The output directory is optional: the current working directory will be used if not specified.
+        Example:
+            LcdTool BLAH.LCD DOOMSND.WMD -dump MyDestDir
+
+    -create [<PATCH SAMPLE INDEX><SOUND FILE PATH>]...
+        Create a completely new .LCD file with the given list of patch sample indexes and corresponding sound files.
+        Notes:
+            (1) The sound files can be in .WAV or .VAG format. Any .WAV files must be 16-bit, uncompressed PCM and mono.
+            (2) Loop point info from .WAV files is extracted from the 'smpl' chunk. Only the 1st loop point is used.
+            (3) Sounds are padded to multiples of 28 samples. Ideally supply audio already in this format.
+            (4) Loop points are rounded to the nearest 28 samples as required by the hardware. Ideally do this yourself.
+        Example:
+            LcdTool BLAH.LCD DOOMSND.WMD -create 1 SOUND1.WAV 2 SOUND2.VAG
+
+    -append [<PATCH SAMPLE INDEX><SOUND FILE PATH>]...
+        Same as the '-create' command except an existing LCD file is appended to.
+        Notes:
+            (1) If a specified patch sample already exists in the .LCD file, then it will be replaced.
+            (2) The sound files can be in .WAV or .VAG format. Any .WAV files must be 16-bit, uncompressed PCM and mono.
+            (3) Loop point info from .WAV files is extracted from the 'smpl' chunk. Only the 1st loop point is used.
+            (4) Sounds are padded to multiples of 28 samples. Ideally supply audio already in this format.
+            (5) Loop points are rounded to the nearest 28 samples as required by the hardware. Ideally do this yourself.
+        Example:
+            LcdTool BLAH.LCD DOOMSND.WMD -append 101 SOUND101.WAV 102 SOUND102.VAG
+)";
 
 static void printHelp() noexcept {
     std::printf("%s\n", HELP_STR);
@@ -209,7 +209,7 @@ static bool dumpLcd(const char* const lcdFilePath, const char* const wmdFilePath
 //------------------------------------------------------------------------------------------------------------------------------------------
 // List the contents of the LCD file
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool ListLcd(const char* const lcdFilePath, const char* const wmdFilePath) noexcept {
+static bool listLcd(const char* const lcdFilePath, const char* const wmdFilePath) noexcept {
     // Read the input files
     if ((!readInputWmdFile(wmdFilePath)) || (!readInputLcdFile(lcdFilePath)))
         return false;
@@ -320,7 +320,7 @@ int main(int argc, const char* const argv[]) noexcept {
     if (std::strcmp(cmdSwitch, "-list") == 0) {
         // No args for this one
         if (argc == 4) {
-            return (ListLcd(lcdFilePath, wmdFilePath)) ? 0 : 1;
+            return (listLcd(lcdFilePath, wmdFilePath)) ? 0 : 1;
         }
     }
     else if (std::strcmp(cmdSwitch, "-dump") == 0) {

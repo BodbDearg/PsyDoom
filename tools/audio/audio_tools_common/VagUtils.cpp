@@ -50,7 +50,7 @@ void VagFileHdr::endianCorrect() noexcept {
         fileId = Endian::byteSwap(fileId);
         version = Endian::byteSwap(version);
         _reserved1 = Endian::byteSwap(_reserved1);
-        size = Endian::byteSwap(size);
+        adpcmDataSize = Endian::byteSwap(adpcmDataSize);
         sampleRate = Endian::byteSwap(sampleRate);
 
         for (uint32_t& value : _reserved2) {
@@ -70,7 +70,7 @@ bool VagFileHdr::validate() noexcept {
     return (
         (fileId == VAG_FILE_ID) &&
         (version == VAG_FILE_VERSION) &&
-        (size > sizeof(VagFileHdr)) &&
+        (adpcmDataSize >= VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE) &&
         (sampleRate > 0)
     );
 }
@@ -95,28 +95,35 @@ bool readVagFile(
         in.read(hdr);
         hdr.endianCorrect();
 
-        if (hdr.fileId != VAG_FILE_ID)
-            throw "File is not a .vag file! Invalid file id!";
+        // These checks SHOULD be done, but some of the PlayStation SDK tools don't seem to populate these fields always correctly.
+        // Therefore skip the file id and version checks for the sake of compatibility...
+        #if false
+            if (hdr.fileId != VAG_FILE_ID)
+                throw "File is not a .vag file! Invalid file id!";
 
-        if (hdr.version != VAG_FILE_VERSION)
-            throw "The .vag file version is not recognized! The only supported version is '3'.";
+            if (hdr.version != VAG_FILE_VERSION)
+                throw "The .vag file version is not recognized! The only supported version is '3'.";
+        #endif
         
-        if (hdr.size <= sizeof(VagFileHdr))
+        // Verify the size in the header file: it must include the required number of implicit blocks and be block size aligned
+        if (hdr.adpcmDataSize < VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE)
+            throw "Invalid size specified in the .vag file header!";
+        
+        if (hdr.adpcmDataSize % ADPCM_BLOCK_SIZE != 0)
             throw "Invalid size specified in the .vag file header!";
 
+        // Make sure a sample rate is specified
         if (hdr.sampleRate <= 0)
             throw "Invalid sample rate specified in the .vag file header!";
 
-        const uint32_t adpcmDataSize = hdr.size - (uint32_t) sizeof(VagFileHdr);
-
-        if (adpcmDataSize % ADPCM_BLOCK_SIZE != 0)
-            throw "Invalid size specified in the .vag file header!";
-
         sampleRate = hdr.sampleRate;
 
-        // Read the adpcm data to finish up
-        adpcmDataOut.resize(adpcmDataSize);
-        in.readBytes(adpcmDataOut.data(), adpcmDataSize);
+        // Read the adpcm data for the VAG file
+        const uint32_t adpcmDataSizeInFile = hdr.adpcmDataSize - VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE;
+        adpcmDataOut.resize(adpcmDataSizeInFile);
+        in.readBytes(adpcmDataOut.data(), adpcmDataSizeInFile);
+
+        // All good if we get to here
         bReadOk = true;
     }
     catch (const char* const exceptionMsg) {
@@ -279,12 +286,10 @@ bool writePsxAdpcmSoundToVagFile(
 
     try {
         // Makeup the .VAG file header and write to the file
-        const uint32_t vagTotalSize = sizeof(VagUtils::VagFileHdr) + adpcmDataSize;
-
         VagFileHdr vagHdr = {};
         vagHdr.fileId = VagUtils::VAG_FILE_ID;
         vagHdr.version = VagUtils::VAG_FILE_VERSION;
-        vagHdr.size = vagTotalSize;
+        vagHdr.adpcmDataSize = adpcmDataSize + VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE;
         vagHdr.sampleRate = sampleRate;
         vagHdr.endianCorrect();
 

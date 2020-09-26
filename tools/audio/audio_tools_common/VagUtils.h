@@ -16,8 +16,13 @@ BEGIN_NAMESPACE(VagUtils)
 //------------------------------------------------------------------------------------------------------------------------------------------
 // VAG file constants
 //------------------------------------------------------------------------------------------------------------------------------------------
-static constexpr uint32_t VAG_FILE_ID       = 0x70474156;
-static constexpr uint32_t VAG_FILE_VERSION  = 0x03;
+static constexpr uint32_t VAG_FILE_ID       = 0x70474156;   // VAG file id
+static constexpr uint32_t VAG_FILE_VERSION  = 0x03;         // VAG file version field
+
+// How many implicit ADPCM blocks are included in the count for the 'adpcmDataSize' field of a VAG file.
+// These blocks are not actually stored in the .VAG file itself, and I guess it's expected that the application define & initialize them
+// with silence and make them loop indefinitely or something, since PlayStation SPU voices never actually stop playing...
+static constexpr uint32_t VAG_NUM_IMPLICIT_ADPCM_BLOCKS = 2;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PlayStation ADPCM format constants
@@ -46,7 +51,7 @@ struct VagFileHdr {
     uint32_t    fileId;             // Should say 'VAGp'
     uint32_t    version;            // Should be '0x03'
     uint32_t    _reserved1;         // Unused...
-    uint32_t    size;               // Size of the header + sound data
+    uint32_t    adpcmDataSize;      // Size of the ADPCM data plus implicit ADPCM blocks which are NOT in the file
     uint32_t    sampleRate;         // Sound data sample rate
     uint32_t    _reserved2[3];      // Unused...
     char        name[16];           // Name for the VAG

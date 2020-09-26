@@ -34,6 +34,7 @@ set(PSXOBJ_SIGGEN_TGT_NAME          PSXObjSigGen)
 set(RAPID_JSON_TGT_NAME             RapidJson)
 set(REVERSING_COMMON_TGT_NAME       ReversingCommon)
 set(SIMPLE_SPU_TGT_NAME             SimpleSpu)
+set(VAG_TOOL_TGT_NAME               VagTool)
 set(WMD_TO_JSON_TGT_NAME            WmdToJson)
 
 # Settings to include or exclude optional portions of the project tree
@@ -62,6 +63,7 @@ if (PSYDOOM_INCLUDE_AUDIO_TOOLS)
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/audio_tools_common")
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/json_to_wmd")
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/lcd_tool")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/vag_tool")
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/wmd_to_json")
 endif()
 

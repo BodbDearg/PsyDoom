@@ -47,7 +47,9 @@ public:
     }
 
     virtual bool isAtEnd() noexcept override {
-        return (std::feof(mpFile) != 0);
+        const int charValue = std::getc(mpFile);
+        std::ungetc(charValue, mpFile);
+        return (charValue == EOF);
     }
 
 private:
