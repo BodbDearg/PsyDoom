@@ -57,6 +57,7 @@ static constexpr uint32_t SPU_COMMON_EXTVOLR    = 0x00000800;   // External inpu
 static constexpr uint32_t SPU_COMMON_EXTREV     = 0x00001000;   // Whether reverb is enabled for external input
 static constexpr uint32_t SPU_COMMON_EXTMIX     = 0x00002000;   // Whether external input can be heard (is mixed with all other sounds)
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Structure used for specifying voice attributes.
 //
 // ADSR envelope bit meanings (32-bits):
@@ -70,7 +71,7 @@ static constexpr uint32_t SPU_COMMON_EXTMIX     = 0x00002000;   // Whether exter
 //  29      Unused
 //  30      Sustain rate sign (0 = positive, 1 = negative)
 //  31      Sustain rate mode (0 = linear, 1 = exponential)
-//
+//------------------------------------------------------------------------------------------------------------------------------------------
 struct SpuVoiceAttr {
     uint32_t    voice_bits;     // Which voices to set the attributes for. 1-bit per voice, starting with the lowest bit.
     uint32_t    attr_mask;      // Which attributes to modify? 1-bit per attribute, starting with the lowest bit.
@@ -143,11 +144,14 @@ struct SpuReverbAttr {
     int32_t         feedback;       // Reverb echo feedback
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // An internal LIBSPU struct used to hold a definition for a reverb type, before sending the settings to the SPU.
 // All of these fields (except the 'paramBits' field) will map directly to SPU registers controlling reverb.
 // For more details on what the reverb fields mean, see the NO$PSX specs:
 //  https://problemkaputt.de/psx-spx.htm#spureverbregisters
 //
+// Note: All volume fields are actually 'int16_t' but are defined as 'uint16_t' for convenience with hex notation.
+//------------------------------------------------------------------------------------------------------------------------------------------
 struct SpuReverbDef {
     uint32_t    fieldBits;      // Not a reverb setting: defines which of the reverb registers should be set (1 bit flag for each of the 32 registers)
     uint16_t    apfOffset1;
