@@ -73,7 +73,7 @@ struct AdsrEnvelope {
     // Lower values mean a faster decay.
     uint32_t decayShift : 4;
 
-    // 0-3: Affects how long the attack portion of the envelope lasts; higher values mean a faster attack.
+    // 0-3: Affects how long the attack portion of the envelope lasts; lower values mean a faster attack.
     // The actual step is computed as follows: 7 - step.
     uint32_t attackStep : 2;
 
@@ -97,8 +97,7 @@ struct AdsrEnvelope {
     //  Decrease: step = -8 + sustainStep
     uint32_t sustainStep : 2;
 
-    // 0-31: Affects how long the sustain portion of the envelope lasts.
-    // Lower values mean a faster sustain.
+    // 0-31: Affects the scaling of the sustain envelope phase step. Lower values mean a bigger step amount.
     uint32_t sustainShift : 5;
 
     // An unused bit of the envelope

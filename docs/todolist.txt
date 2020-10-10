@@ -1,7 +1,3 @@
-Music Tooling
-- SPU Reverb VST DSP
-- SPU based VST for in-game instruments
-
 0.6 - Sound, timing & QOL improvements?
 - Fix 'Invalid password' overlap on password screen.
 - Make the 'noclip' cheat carry across levels.

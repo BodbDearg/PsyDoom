@@ -84,14 +84,14 @@ static_assert(sizeof(patch) == 4);
 struct patch_voice {
     uint8_t     priority;           // Voice priority: used to determine what to kill when we're out of voices
     uint8_t     reverb;             // Appears to be unused: reverb for the voice
-    uint8_t     volume;             // Volume to play the voice at
-    uint8_t     pan;                // Voice pan 64 to 191 - 128 is the voice center. Values outside this range are clamped by the PSX driver.
+    uint8_t     volume;             // Volume to play the voice at, normally 0-127
+    uint8_t     pan;                // Voice pan, 0-127. 64 is the voice center. Values outside this range are clamped by the PSX driver.
     uint8_t     base_note;          // The 'base' note/semitone at which the sound sample is regarded to play back at 44,100 Hz (used to compute sample frequency for triggered notes)
     uint8_t     base_note_frac;     // The .8 fractional part of the base note
     uint8_t     note_min;           // Minimum semitone at which the voice can be played - does not sound below this
     uint8_t     note_max;           // Maximum semitone at which the voice can be played - does not sound above this
-    uint8_t     pitchstep_down;     // How big each unit of pitch shift is when pitch shifting down (in 1/8192 units)
-    uint8_t     pitchstep_up;       // How big each unit of pitch shift is when pitch shifting up (in 1/8192 units)
+    uint8_t     pitchstep_down;     // How many semitones of range the pitch bend wheel has when bending pitch down
+    uint8_t     pitchstep_up;       // How many semitones of range the pitch bend wheel has when bending pitch up
     uint16_t    sample_idx;         // The index of the patch sample to use for this voice
     uint16_t    adsr1;              // The first (low) 16-bits of the SPU voice envelope (see comments for 'SpuVoiceAttr' for more details)
     uint16_t    adsr2;              // The second (high) 16-bits of the SPU voice envelope (see comments for 'SpuVoiceAttr' for more details)
