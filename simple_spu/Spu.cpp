@@ -6,7 +6,7 @@ using namespace Spu;
 
 // A series of co-efficients used by the SPU's gaussian sample interpolation.
 // For more details on this see: https://problemkaputt.de/psx-spx.htm#cdromxaaudioadpcmcompression
-static const int32_t INTERP_GAUSS_TABLE[512] = {
+static constexpr int32_t INTERP_GAUSS_TABLE[512] = {
     -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001, -0x001,
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 0x0001, 0x0001, 0x0001, 0x0002, 0x0002, 0x0002, 0x0003, 0x0003,
     0x0003, 0x0004, 0x0004, 0x0005, 0x0005, 0x0006, 0x0007, 0x0007, 0x0008, 0x0009, 0x0009, 0x000A, 0x000B, 0x000C, 0x000D, 0x000E,
@@ -265,22 +265,37 @@ static Sample getVoiceSample(const Voice& voice, const uint32_t index) noexcept 
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Sample getInterpolatedVoiceSample(const Voice& voice) noexcept {
     // What sample and interpolation index should we use?
-    const uint32_t curSampleIdx = voice.adpcmBlockPos.fields.sampleIdx;
-    const uint8_t gaussTableIdx = (uint8_t) voice.adpcmBlockPos.fields.gaussIdx;
+    const int32_t curSampleIdx  = (int32_t) voice.adpcmBlockPos.fields.sampleIdx;
+    const int32_t gaussTableIdx = (int32_t)(uint8_t) voice.adpcmBlockPos.fields.gaussIdx;
 
     // Get the most recent sample and previous 3 samples
     const int32_t samp1 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 3);
     const int32_t samp2 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 2);
     const int32_t samp3 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 1);
-    const int32_t samp4 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx);
+    const int32_t samp4 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx    );
+
+    // Sanity check...
+    static_assert(-1 >> 1 == -1, "Right shift on signed types must be an arithmetic shift!");
+
+    // Note: MSVC: for some reason bad code is sometimes generated in release builds for the gauss factors - prevent this by use of 'volatile'.
+    // I'm not sure why this is occuring, it doesn't seem like there is any UB here...
+    const int32_t gaussIdx1 = (255 - gaussTableIdx) & 0x1FF;
+    const int32_t gaussIdx2 = (511 - gaussTableIdx) & 0x1FF;
+    const int32_t gaussIdx3 = (256 + gaussTableIdx) & 0x1FF;
+    const int32_t gaussIdx4 = (      gaussTableIdx) & 0x1FF;
+    const volatile int32_t gaussFactor1 = INTERP_GAUSS_TABLE[gaussIdx1];
+    const volatile int32_t gaussFactor2 = INTERP_GAUSS_TABLE[gaussIdx2];
+    const volatile int32_t gaussFactor3 = INTERP_GAUSS_TABLE[gaussIdx3];
+    const volatile int32_t gaussFactor4 = INTERP_GAUSS_TABLE[gaussIdx4];
 
     // According to No$PSX it shouldn't be possible for this table to cause an overflow past 16-bits.
     // Hence I'm not bothering to clamp here...
-    int32_t sampleOut = (INTERP_GAUSS_TABLE[255 - gaussTableIdx] * samp1) >> 15;
-    sampleOut += (INTERP_GAUSS_TABLE[511 - gaussTableIdx] * samp2) >> 15;
-    sampleOut += (INTERP_GAUSS_TABLE[256 + gaussTableIdx] * samp3) >> 15;
-    sampleOut += (INTERP_GAUSS_TABLE[gaussTableIdx] * samp4) >> 15;
-    return (int16_t) sampleOut;
+    const int32_t sampMix1 = (gaussFactor1 * samp1) >> 15;
+    const int32_t sampMix2 = (gaussFactor2 * samp2) >> 15;
+    const int32_t sampMix3 = (gaussFactor3 * samp3) >> 15;
+    const int32_t sampMix4 = (gaussFactor4 * samp4) >> 15;
+
+    return (int16_t)(sampMix1 + sampMix2 + sampMix3 + sampMix4);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
