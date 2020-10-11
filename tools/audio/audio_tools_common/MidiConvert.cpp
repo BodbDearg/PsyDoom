@@ -62,9 +62,12 @@ void sequenceToMidi(const Sequence& sequence, MidiFile& midiFile) noexcept {
         midiTrack.name = std::string("Track ") + std::to_string(midiFile.tracks.size() - 1);
 
         // Do command conversion
+        uint32_t skippedCmdsDelayQnp = 0;
+
         for (const TrackCmd& trackCmd : track.cmds) {
             MidiCmd& midiCmd = midiTrack.cmds.emplace_back();
-            midiCmd.delayQnp = trackCmd.delayQnp;
+            midiCmd.delayQnp = trackCmd.delayQnp + skippedCmdsDelayQnp;
+            skippedCmdsDelayQnp = 0;
             
             switch (trackCmd.type) {
                 case WmdTrackCmdType::PitchMod:
@@ -98,8 +101,9 @@ void sequenceToMidi(const Sequence& sequence, MidiFile& midiFile) noexcept {
                     midiCmd.type = MidiCmd::Type::EndOfTrack;
                     break;
 
-                // Unsupported command type, just remove it from the MIDI track
+                // Unsupported command type, just remove it from the MIDI track and skip over
                 default:
+                    skippedCmdsDelayQnp += midiCmd.delayQnp;
                     midiTrack.cmds.pop_back();
                     break;
             }
@@ -109,6 +113,8 @@ void sequenceToMidi(const Sequence& sequence, MidiFile& midiFile) noexcept {
         if (midiTrack.cmds.empty() || (midiTrack.cmds.back().type != MidiCmd::Type::EndOfTrack)) {
             MidiCmd& cmd = midiTrack.cmds.emplace_back();
             cmd.type = MidiCmd::Type::EndOfTrack;
+            cmd.delayQnp = skippedCmdsDelayQnp;
+            skippedCmdsDelayQnp = 0;
         }
     }
 }
