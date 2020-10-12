@@ -234,7 +234,7 @@ uint32_t PsxPatchGroup::guessSampleRateForPatchSample(const uint32_t patchSample
         constexpr double PSX_MAX_SAMPLE_RATE = 176400.0;
 
         const double gameBaseNote = (bIsSfxSample) ? PSX_DOOM_SFX_BASE_NOTE : PSX_DOOM_MUS_BASE_NOTE;
-        const double voiceBaseNote = (double) voice.baseNote + (double) voice.baseNoteFrac / 128.0;
+        const double voiceBaseNote = (double) voice.baseNote + (double) voice.baseNoteFrac / 256.0;
         const double sampleRate = AudioUtils::getNoteSampleRate(voiceBaseNote, 44100.0, gameBaseNote);
         const double sampleRateRounded = std::clamp(std::round(sampleRate), 1.0,  PSX_MAX_SAMPLE_RATE);
 

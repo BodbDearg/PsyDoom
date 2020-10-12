@@ -612,7 +612,7 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
         uint32_t updatedVol = (uint32_t) voiceStat.volume;
         updatedVol *= voiceStat.ppatch_voice->volume;
         updatedVol *= trackStat.volume_cntrl;
-            
+        
         if (trackStat.sound_class == SNDFX_CLASS) {
             updatedVol *= gWess_master_sfx_volume;
         } else {
