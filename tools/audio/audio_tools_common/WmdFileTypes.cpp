@@ -223,7 +223,7 @@ uint32_t AudioTools::getNumWmdTrackCmdArgs(const WmdTrackCmdType type) noexcept 
             return 1;
             
         case WmdTrackCmdType::NoteOn:
-        case WmdTrackCmdType::StatusMark:        
+        case WmdTrackCmdType::StatusMark:
         case WmdTrackCmdType::WriteIterBox:
             return 2;
 

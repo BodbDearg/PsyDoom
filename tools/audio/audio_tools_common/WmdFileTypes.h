@@ -188,8 +188,8 @@ struct WmdPsxPatchVoice {
     uint8_t     baseNoteFrac;       // The .8 fractional part of the base note
     uint8_t     noteMin;            // Minimum semitone at which the voice can be played - does not sound below this
     uint8_t     noteMax;            // Maximum semitone at which the voice can be played - does not sound above this
-    uint8_t     pitchstepDown;      // How big each unit of pitch shift is when pitch shifting down (in 1/8192 units)
-    uint8_t     pitchstepUp;        // How big each unit of pitch shift is when pitch shifting up (in 1/8192 units)
+    uint8_t     pitchstepDown;      // How many semitones of range the pitch bend wheel has when bending pitch down
+    uint8_t     pitchstepUp;        // How many semitones of range the pitch bend wheel has when bending pitch up
     uint16_t    sampleIdx;          // The index of the patch sample to use for this voice
     uint16_t    adsr1;              // The first (low) 16-bits of the SPU voice envelope (see comments for 'SpuVoiceAttr' for more details)
     uint16_t    adsr2;              // The second (high) 16-bits of the SPU voice envelope (see comments for 'SpuVoiceAttr' for more details)

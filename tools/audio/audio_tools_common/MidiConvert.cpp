@@ -61,6 +61,26 @@ void sequenceToMidi(const Sequence& sequence, MidiFile& midiFile) noexcept {
         MidiTrack& midiTrack = midiFile.tracks.emplace_back();
         midiTrack.name = std::string("Track ") + std::to_string(midiFile.tracks.size() - 1);
 
+        // Add a command to initialize the pitch bend to '0' or 'center' for the track.
+        // Only do this however if there isn't already a pitch bend command at delay 0.
+        bool bHasInitPitchBendCmd = false;
+
+        for (const TrackCmd& trackCmd : track.cmds) {
+            if (trackCmd.delayQnp != 0)
+                break;
+
+            if (trackCmd.type == WmdTrackCmdType::PitchMod) {
+                bHasInitPitchBendCmd = true;
+                break;
+            }
+        }
+
+        if (!bHasInitPitchBendCmd) {
+            MidiCmd& midiCmd = midiTrack.cmds.emplace_back();
+            midiCmd.type = MidiCmd::Type::SetPitchBend;
+            midiCmd.arg1 = 8192;
+        }
+
         // Do command conversion
         uint32_t skippedCmdsDelayQnp = 0;
 
