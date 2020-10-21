@@ -225,7 +225,7 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
 //
 // Params:
 //  baseNote:       Note at which the frequency is considered 44,100 Hz.
-//                  For example '60' would be A5 (12 semitones per octave, 1st note of 5th octave).
+//                  For example '60' would be C5 (12 semitones per octave, 1st note of 5th octave).
 //  baseNoteFrac:   Fractional offset to 'baseNote' in 1/128 units.
 //  note:           The note to get the frequency for.
 //  noteFrac:       Fractional offset to 'note' in 1/128 units.
