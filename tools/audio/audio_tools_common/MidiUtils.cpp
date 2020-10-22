@@ -152,8 +152,10 @@ static void optimizeTrackCmds(MidiTrack& track) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Read the commands for a track
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void readTrackCmds(InputStream& in, MidiTrack& track) THROWS {
+static void readTrackCmds(ByteInputStream& in, MidiTrack& track) THROWS {
     // Continue reading until we reach the end of the stream
+    uint8_t lastStatusByte = {};
+
     while (!in.isAtEnd()) {
         // Create the command and read the delay in ticks (normally quarter note parts) to the command
         MidiCmd& cmd = track.cmds.emplace_back();
@@ -161,9 +163,15 @@ static void readTrackCmds(InputStream& in, MidiTrack& track) THROWS {
 
         // Get the MIDI command status byte and high/low nibbles.
         // The high nibble is the high level command type, low nibble is usually the MIDI channel affected.
-        const uint8_t statusByte = in.read<uint8_t>();
+        //
+        // Note: peek ahead to see if the status byte has been omitted - i.e if 'running status' is in use.
+        // If this is the case then we re-use the last status byte.
+        // We can tell if it's a status byte ahead by checking if the high bit is set.
+        const uint8_t statusByte = (in.peek<uint8_t>() & 0x80) ? in.read<uint8_t>() : lastStatusByte;
         const uint8_t statusByteHiNib = statusByte >> 4;
         const uint8_t statusByteLoNib = statusByte & 0xF;
+
+        lastStatusByte = statusByte;
 
         // See what we are dealing with a high level
         if (statusByteHiNib == 0x8) {

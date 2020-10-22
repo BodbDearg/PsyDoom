@@ -38,6 +38,16 @@ public:
         return (mCurByteIdx >= mSize);
     }
 
+    // Return the next value ahead (of the given type) but do not consume the input.
+    // This is possible for this stream type because we have all of the bytes available to us at all times.
+    template <class T>
+    T peek() {
+        ensureBytesLeft(sizeof(T));
+        T output;
+        std::memcpy(&output, mpData + mCurByteIdx, sizeof(T));
+        return output;
+    }
+
 private:
     inline void ensureBytesLeft(const size_t numBytes) THROWS {
         if ((numBytes > mSize) || (mCurByteIdx + numBytes > mSize)) {
