@@ -1,3 +1,7 @@
+- Investigate music sequence timing bug for custom tracks.
+- Audio tools: LcdTool should be able to read JSON format WMD files.
+- Audio tools: Add functionality to WmdTool to split up a WMD file and merge WMD files.
+
 0.6 - Sound, timing & QOL improvements?
 - Fix 'Invalid password' overlap on password screen.
 - Make the 'noclip' cheat carry across levels.
