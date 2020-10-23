@@ -71,7 +71,10 @@ void doPlatformUpdates() noexcept {
     if (ProgArgs::gbHeadlessMode)
         return;
 
-    // Only do updates if enough time has elapsed.
+    // Always generate timer events to keep the music timing as stable as possible
+    PsxVm::generateTimerEvents();
+
+    // Only do these updates if enough time has elapsed.
     // Do this to prevent excessive CPU usage in loops that are periodically trying to update sound etc. while waiting for some event.
     const timepoint_t now = std::chrono::high_resolution_clock::now();
     
@@ -80,8 +83,6 @@ void doPlatformUpdates() noexcept {
     
     // Actually do the platform updates
     gLastPlatformUpdateTime = now;
-
-    PsxVm::generateTimerEvents();
     Network::doUpdates();
     Input::update();
 }
