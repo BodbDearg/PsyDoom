@@ -117,7 +117,14 @@ void init_WessTimer() noexcept {
     // Set the timer to fire at roughly 121.9284 Hz intervals.
     // Each unit for root counter 2 is 8 CPU cycles and the PlayStation's CPU runs at approximately 33,868,800 Hz - hence the 121.9284 Hz figure.
     // I guess approximately 120 Hz intervals was actually intended though?
-    LIBAPI_SetRCnt(RCntCNT2, 34722, RCntMdINTR);
+    //
+    // PsyDoom: I'm correcting this interval to exactly 120Hz (35280) for greater accuracy.
+    // The intention was for it to trigger at 120 Hz intervals.
+    #if PSYDOOM_MODS
+        LIBAPI_SetRCnt(RCntCNT2, 35280, RCntMdINTR);
+    #else
+        LIBAPI_SetRCnt(RCntCNT2, 34722, RCntMdINTR);
+    #endif
 
     // Start the timer generating interrupt events
     LIBAPI_StartRCnt(RCntCNT2);
