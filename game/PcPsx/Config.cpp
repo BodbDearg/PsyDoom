@@ -106,15 +106,16 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
         "AudioBufferSize",
         "#---------------------------------------------------------------------------------------------------\n"
         "# Audio buffer size, in 44.1 KHz sound samples.\n"
-        "# Higher values increase sound latency but may improve audio stability and lower CPU usage.\n"
-        "# Lower values reduce sound latency but may increase the CPU usage and the chance of audio stutter.\n"
-        "# If set to '0' (auto) then PsyDoom will use a default value, which is '512' samples currently.\n"
+        "# Lower values reduce sound latency and improve music timing precision.\n"
+        "# Setting the buffer size too low however may cause audio instability or stutter on some systems.\n"
+        "# If set to '0' (auto) then PsyDoom will use a default value, which is '128' samples currently.\n"
         "# Mostly this setting can be left alone but if you are experiencing sound issues, try adjusting.\n"
         "#\n"
         "# Some example values and their corresponding added sound latency (MS):\n"
+        "#  64   = ~1.45 MS\n"
+        "#  128  = ~2.9 MS\n"
         "#  256  = ~5.8 MS\n"
         "#  512  = ~11.6 MS\n"
-        "#  1024 = ~23.2 MS\n"
         "#---------------------------------------------------------------------------------------------------\n"
         "AudioBufferSize = 0\n",
         [](const IniUtils::Entry& iniEntry) { gAudioBufferSize = iniEntry.getIntValue(0); },
