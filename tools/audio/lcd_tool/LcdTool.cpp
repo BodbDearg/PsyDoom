@@ -30,7 +30,7 @@ struct PatchSampleFile {
 // Help/usage printing
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const char* const HELP_STR = 
-R"(Usage: LcdTool <LCD FILE PATH> <WMD FILE PATH> <COMMAND-SWITCH> [COMMAND ARGS]
+R"(Usage: LcdTool <LCD FILE PATH> <BINARY|JSON WMD FILE PATH> <COMMAND-SWITCH> [COMMAND ARGS]
 
 Command switches and arguments:
 
@@ -74,13 +74,53 @@ static void printHelp() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Read the input .wmd file
+// Read a module file in .json or binary .wmd format
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool readModuleFile(const char* const filePath, Module& module, std::string& errorMsg) noexcept {
+    // Uppercase the filename for case insensitivity
+    std::string filePathUpper = filePath;
+    std::transform(
+        filePathUpper.begin(),
+        filePathUpper.end(),
+        filePathUpper.begin(),
+        [](const char c) noexcept { return (char) ::toupper(c); }
+    );
+
+    // Is it probably a JSON file?
+    const bool bGuessIsJsonFile = ((filePathUpper.length() >= 5) && (filePathUpper.rfind(".JSON") == filePathUpper.length() - 5));
+    
+    // Do the reading of the module file, starting with the guessed format
+    const auto readAsWmd = [&]() noexcept {
+        errorMsg.clear();
+        return ModuleFileUtils::readWmdFile(filePath, module, errorMsg);
+    };
+
+    const auto readAsJson = [&]() noexcept {
+        errorMsg.clear();
+        return ModuleFileUtils::readJsonFile(filePath, module, errorMsg);
+    };
+
+    if (bGuessIsJsonFile) {
+        if (!readAsJson()) {
+            return readAsWmd();
+        }
+    } else {
+        if (!readAsWmd()) {
+            return readAsJson();
+        }
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read the input module file in .json or .wmd (binary) format
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool readInputWmdFile(const char* wmdFilePath) noexcept {
     gModule = {};
     std::string errorMsg;
 
-    if (!ModuleFileUtils::readWmdFile(wmdFilePath, gModule, errorMsg)) {
+    if (!readModuleFile(wmdFilePath, gModule, errorMsg)) {
         std::printf("%s\n", errorMsg.c_str());
         return false;
     }

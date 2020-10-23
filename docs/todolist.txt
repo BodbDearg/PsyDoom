@@ -1,5 +1,3 @@
-- Investigate music sequence timing bug for custom tracks.
-- Audio tools: LcdTool should be able to read JSON format WMD files.
 - Audio tools: Add functionality to WmdTool to split up a WMD file and merge WMD files.
 
 0.6 - Sound, timing & QOL improvements?
@@ -17,7 +15,6 @@
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
 - Add 'nomonsters' command line switch for dev
-- Move the sequencer onto another thread to ensure 120 Hz heartbeat at all times?
 - Support the weird unused hanging lamp thing (doomednum 90)
 
 0.7 - GPU & Rendering?
