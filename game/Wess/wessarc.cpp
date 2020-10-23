@@ -92,10 +92,15 @@ int32_t WessInterruptHandler() noexcept {
     // Update SPU volume fades
     psxspu_fadeengine();
 
-    // Execute the sequencer engine if it is enabled
-    if (gbWess_SeqOn) {
-        SeqEngine();
-    }
+    // Execute the sequencer engine if it is enabled.
+    //
+    // PsyDoom: this is now invoked by 'Utils::doPlatformUpdates' as frequently as possible and with a variable delta time.
+    // This helps keep the music timing as stable as possible.
+    #if !PSYDOOM_MODS
+        if (gbWess_SeqOn) {
+            SeqEngine();
+        }
+    #endif
 
     // Not sure what the return value is used for, I couldn't find any documentation on it anywhere.
     // It may have been unused and certainly IS unused in this port...

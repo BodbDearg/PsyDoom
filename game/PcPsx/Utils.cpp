@@ -10,6 +10,7 @@
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
 #include "Wess/wessapi.h"
+#include "Wess/wessseq.h"
 
 #include <chrono>
 #include <SDL.h>
@@ -71,8 +72,13 @@ void doPlatformUpdates() noexcept {
     if (ProgArgs::gbHeadlessMode)
         return;
 
-    // Always generate timer events to keep the music timing as stable as possible
+    // Always generate timer events and update the music sequencer.
+    // Note that for PsyDoom the sequencer is now manually updated here and it now uses a delta time rather than a fixed increment
     PsxVm::generateTimerEvents();
+
+    if (gbWess_SeqOn) {
+        SeqEngine();
+    }
 
     // Only do these updates if enough time has elapsed.
     // Do this to prevent excessive CPU usage in loops that are periodically trying to update sound etc. while waiting for some event.

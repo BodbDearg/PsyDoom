@@ -7,6 +7,9 @@
 #include "Macros.h"
 #include "wessapi.h"
 
+#include <algorithm>
+#include <chrono>
+
 const WessDriverFunc gWess_DrvFunctions[36] = {
     // Manually called commands
     Eng_DriverInit,                 // 00
@@ -100,6 +103,11 @@ static master_status_structure*     gpWess_eng_mstat;               // Saved ref
 static sequence_status*             gpWess_eng_sequenceStats;       // Saved reference to the list of sequence statuses
 static track_status*                gpWess_eng_trackStats;          // Saved reference to the list of track statuses
 static uint8_t                      gWess_eng_maxActiveTracks;      // The maximum number of active tracks in the sequencer
+
+#if PSYDOOM_MODS    
+    typedef std::chrono::high_resolution_clock::time_point timepoint_t;     // Because typing this is a pain...
+    static timepoint_t gLastSequencerUpdateTime = {};                       // When we last updated the sequencer
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads a variable length quantity from track data, similar to how certain data is encoded in the MIDI standard.
@@ -794,11 +802,20 @@ void Eng_NullEvent([[maybe_unused]] track_status& trackStat) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// The main sequencer tick/update update function which is called approximately 120 times a second.
+// The main sequencer tick/update update function which was originally called approximately 120 times a second.
 // This is what drives sequencer timing and executes sequencer commands.
 // Originally this was driven via interrupts coming from the PlayStation's hardware timers.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SeqEngine() noexcept {
+    // PsyDoom: this can now be invoked at any time rather than at fixed 120 Hz intervals, so the delta time which can pass is variable.
+    // Compute the fractional number of 120Hz ticks/interrupts elapsed here:
+    #if PSYDOOM_MODS
+        const timepoint_t now = std::chrono::high_resolution_clock::now();
+        const double deltaTime = std::max(std::chrono::duration<double>(now - gLastSequencerUpdateTime).count(), 0.0);
+        const double deltaTime120HzTicks = std::min(deltaTime * 120.0, 8.0);
+        gLastSequencerUpdateTime = now;
+    #endif
+
     // Some helper variables for the loop
     master_status_structure& mstat = *gpWess_eng_mstat;
     track_status* const pTrackStats = gpWess_eng_trackStats;
@@ -817,8 +834,18 @@ void SeqEngine() noexcept {
 
             // Only run sequencer commands for the track if it isn't paused
             if (!trackStat.stopped) {
-                // Advance the track's time markers
-                trackStat.deltatime_qnp_frac += trackStat.tempo_ppi_frac;           // Advance elapsed fractional quarter note 'parts' (16.16 fixed point format)
+                // Advance the track's time markers.
+                // PsyDoom: this is now based on delta time rather than a fixed 120Hz interval.
+                // This allows us to update the sequencer at arbitrary times and still maintain most precision.
+                #if PSYDOOM_MODS
+                    const double elapsedQpnFracF = deltaTime120HzTicks * (double) trackStat.tempo_ppi_frac;
+                    const uint32_t elapsedQnpFrac = (uint32_t) elapsedQpnFracF;
+
+                    trackStat.deltatime_qnp_frac += elapsedQnpFrac;             // Advance elapsed fractional quarter note 'parts' (16.16 fixed point format)
+                #else
+                    trackStat.deltatime_qnp_frac += trackStat.tempo_ppi_frac;   // Advance elapsed fractional quarter note 'parts' (16.16 fixed point format)
+                #endif
+
                 trackStat.abstime_qnp += trackStat.deltatime_qnp_frac >> 16;        // Advance track total time in whole quarter note parts
                 trackStat.deltatime_qnp += trackStat.deltatime_qnp_frac >> 16;      // Advance track delta time till the next command in whole quarter note parts
                 trackStat.deltatime_qnp_frac &= 0xFFFF;                             // We've advanced time by the whole part of this number: discount that part
