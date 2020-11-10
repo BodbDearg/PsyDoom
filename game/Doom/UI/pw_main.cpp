@@ -328,8 +328,12 @@ void DRAW_PasswordScreen() noexcept {
     // Draw the screen title
     I_DrawString(-1, 20, "Password");
 
-    // Draw password characters that were input
-    {
+    if (gInvalidPasswordFlashTicsLeft & 4) {
+        // Flash the invalid password message if a password was entered wrong
+        I_DrawString(-1, 160, "Invalid Password");
+    }
+    else {
+        // Draw password characters that were input
         constexpr int32_t CHARS_START_X = 58;
         constexpr int32_t CHARS_SPACING = 14;
 
@@ -355,11 +359,6 @@ void DRAW_PasswordScreen() noexcept {
                 I_DrawString(xpos, 160, ".");
                 xpos += CHARS_SPACING;
             }
-        }
-        
-        // Flash the invalid password message if a password was entered wrong
-        if (gInvalidPasswordFlashTicsLeft & 4) {
-            I_DrawString(-1, 160, "Invalid Password");
         }
     }
 
