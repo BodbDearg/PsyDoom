@@ -3,6 +3,9 @@
 #include "PsxPatchGroup.h"
 #include "Sequence.h"
 
+#include <map>
+#include <set>
+
 class InputStream;
 class OutputStream;
 
@@ -27,6 +30,37 @@ struct Module {
     void writeToJson(rapidjson::Document& doc) const noexcept;
     void readFromWmdFile(InputStream& in) THROWS;
     void writeToWmdFile(OutputStream& out) const THROWS;
+    void resetToDefault() noexcept;
+
+    void copyPatchSamples(
+        const std::set<uint16_t>& srcPatchSampleIndexes,
+        Module& intoModule,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchSampleIndexes
+    ) const noexcept;
+
+    void copyPatchVoices(
+        const std::set<uint16_t>& srcPatchVoiceIndexes,
+        Module& intoModule,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchVoiceIndexes,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchSampleIndexes
+    ) const noexcept;
+
+    void copyPatches(
+        const std::set<uint16_t>& srcPatchIndexes,
+        Module& intoModule,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchIndexes,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchVoiceIndexes,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchSampleIndexes
+    ) const noexcept;
+
+    void copySequences(
+        const std::set<uint16_t>& srcSequenceIndexes,
+        Module& intoModule,
+        std::map<uint16_t, uint16_t>& oldAndNewSequenceIndexes,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchIndexes,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchVoiceIndexes,
+        std::map<uint16_t, uint16_t>& oldAndNewPatchSampleIndexes
+    ) const noexcept;
 
     // WMD file reading utilities
     static void skipReadingWmdPatchGroup(InputStream& in, const WmdPatchGroupHdr& patchGroupHdr) THROWS;

@@ -92,4 +92,22 @@ void Sequence::writeToWmdFile(OutputStream& out) const THROWS {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the indexes for all the patches used in the sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Sequence::getPatchesUsed(std::set<uint16_t>& patchIndexes) const noexcept {
+    for (const Track& track : tracks) {
+        track.getPatchesUsed(patchIndexes);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Remap the patch indexes used in this sequence; the key/value pairs given specify the old and new patch indexes
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Sequence::remapPatches(const std::map<uint16_t, uint16_t>& oldAndNewPatchIndexes) noexcept {
+    for (Track& track : tracks) {
+        track.remapPatches(oldAndNewPatchIndexes);
+    }
+}
+
 END_NAMESPACE(AudioTools)

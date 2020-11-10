@@ -210,6 +210,16 @@ void PsxPatchGroup::writeToWmdFile(OutputStream& out) const THROWS {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Clears all data in the PlayStation patch group to the default values
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PsxPatchGroup::resetToDefault() noexcept {
+    hwVoiceLimit = 24;
+    patchSamples.clear();
+    patchVoices.clear();
+    patches.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Tries to determine the sample rate that a specified patch sample index is encoded in.
 // There's no actual information for this in either the .LCD file or the .WMD file, however the .WMD does define a 'base note'.
 //

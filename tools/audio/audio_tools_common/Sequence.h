@@ -2,6 +2,9 @@
 
 #include "Track.h"
 
+#include <map>
+#include <set>
+
 class InputStream;
 class OutputStream;
 
@@ -25,6 +28,8 @@ struct Sequence {
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
     void readFromWmdFile(InputStream& in) THROWS;
     void writeToWmdFile(OutputStream& out) const THROWS;
+    void getPatchesUsed(std::set<uint16_t>& patchIndexes) const noexcept;
+    void remapPatches(const std::map<uint16_t, uint16_t>& oldAndNewPatchIndexes) noexcept;
 };
 
 END_NAMESPACE(AudioTools)

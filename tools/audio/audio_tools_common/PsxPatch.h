@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <rapidjson/document.h>
+#include <set>
 
 class InputStream;
 class OutputStream;
@@ -21,6 +22,7 @@ struct PsxPatch {
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
     void readFromWmdFile(InputStream& in) THROWS;
     void writeToWmdFile(OutputStream& out) const THROWS;
+    void getPatchVoicesUsed(std::set<uint16_t>& patchVoiceIndexes) const noexcept;
 };
 
 END_NAMESPACE(AudioTools)

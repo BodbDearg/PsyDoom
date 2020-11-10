@@ -10,6 +10,7 @@
 #include "ModuleFileUtils.h"
 
 #include <algorithm>
+#include <filesystem>
 
 using namespace AudioTools;
 
@@ -65,10 +66,63 @@ Command switches and arguments:
         Example:
             WmdTool -midi-to-sequence MY_MIDI.MID DOOMSND.WMD 90
             WmdTool -midi-to-sequence MY_MIDI.MID DOOMSND.JSON 1 -is-sfx
+
+    -copy-sequences <INPUT JSON OR WMD FILE PATH> <OUTPUT JSON OR WMD FILE PATH> [SEQUENCE INDEX...]
+        Copy the specified sequences from one module file to another.
+        All referenced patches, patch voices and patch samples are also copied into the destination module with remapped indexes.
+        Notes:
+            (1) Sequences are specified by their indexes in the array of sequences in the module.
+            (2) The input and output module files can be in either JSON or binary .WMD format.
+            (3) If the output file does not exist then it will be created.
+            (4) Each sequence can only be copied once, requests to copy the same sequence multiple times will be ignored.
+            (5) Sequences are copied in ASCENDING order of sequence index to the destination module, regardless of command order.
+            (6) The remapped sequence, patch, patch voice and patch sample numbers will be printed on successful output.
+        Example:
+            WmdTool -copy-sequences DOOMSND.WMD DOOMSND.json 90 91 92
+            WmdTool -copy-sequences DOOMSND.json DOOMSND.WMD 92
+
+    -copy-patches <INPUT JSON OR WMD FILE PATH> <OUTPUT JSON OR WMD FILE PATH> [PATCH INDEX...]
+        Copy the specified patches from one module file to another.
+        All referenced patch voices and patch samples are also copied into the destination module with remapped indexes.
+        Notes:
+            (1) Patches are specified by their indexes in the array of patches in the module.
+            (2) The input and output module files can be in either JSON or binary .WMD format.
+            (3) If the output file does not exist then it will be created.
+            (4) Each patch can only be copied once, requests to copy the same patch multiple times will be ignored.
+            (5) Patches are copied in ASCENDING order of patch index to the destination module, regardless of command order.
+            (6) The remapped patch, patch voice and patch sample numbers will be printed on successful output.
+        Example:
+            WmdTool -copy-patches DOOMSND.WMD DOOMSND.json 0 1 2
+            WmdTool -copy-patches DOOMSND.json DOOMSND.WMD 5
 )";
 
 static void printHelp() noexcept {
     std::printf("%s\n", HELP_STR);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the specified file exist? Returns 'false' also if an error determining occurred
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool fileExists(const char* const filePath) noexcept {
+    try {
+        return std::filesystem::exists(filePath);
+    } catch (...) {
+        return false;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tell if the given file path has the .WMD extension
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool filePathHasWmdExtension(const char* const filePath) noexcept {
+    const size_t fpathLen = std::strlen(filePath);
+    return (
+        (fpathLen >= 4) &&
+        (std::toupper(filePath[fpathLen - 4] == '.')) &&
+        (std::toupper(filePath[fpathLen - 3] == 'W')) &&
+        (std::toupper(filePath[fpathLen - 2] == 'M')) &&
+        (std::toupper(filePath[fpathLen - 1] == 'D'))
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -249,6 +303,102 @@ static bool convertMidiToSequence(const char* const midiFileIn, const char* cons
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Copy sequences or patches to a destination WMD file in binary or json format
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool copyPatchesOrSequences(
+    const char* const srcModuleFilePath,
+    const char* const dstModuleFilePath,
+    const bool bCopySequences,
+    const std::set<uint16_t>& elemIndexesToCopy
+) noexcept {
+    // First read the source module file
+    Module srcModule = {};
+    bool bIsSrcModuleJson = {};
+
+    if (!readModuleFile(srcModuleFilePath, bIsSrcModuleJson, srcModule))
+        return false;
+
+    // Read the destination module if it exists, otherwise default initialize
+    Module dstModule = {};
+    bool bIsDstModuleJson = {};
+
+    if (fileExists(dstModuleFilePath)) {
+        if (!readModuleFile(dstModuleFilePath, bIsDstModuleJson, dstModule))
+            return false;
+    } else {
+        dstModule.resetToDefault();
+        bIsDstModuleJson = (!filePathHasWmdExtension(dstModuleFilePath));
+    }
+
+    // Copy the sequences or patches into the destination module (2 different modes)
+    std::map<uint16_t, uint16_t> oldAndNewSequenceIndexes;
+    std::map<uint16_t, uint16_t> oldAndNewPatchIndexes;
+    std::map<uint16_t, uint16_t> oldAndNewPatchVoiceIndexes;
+    std::map<uint16_t, uint16_t> oldAndNewPatchSampleIndexes;
+
+    if (bCopySequences) {
+        srcModule.copySequences(
+            elemIndexesToCopy,
+            dstModule,
+            oldAndNewSequenceIndexes,
+            oldAndNewPatchIndexes,
+            oldAndNewPatchVoiceIndexes,
+            oldAndNewPatchSampleIndexes
+        );
+    } else {
+        srcModule.copyPatches(
+            elemIndexesToCopy,
+            dstModule,
+            oldAndNewPatchIndexes,
+            oldAndNewPatchVoiceIndexes,
+            oldAndNewPatchSampleIndexes
+        );
+    }
+
+    // Try to save the output module
+    {
+        std::string errorMsg;
+        bool bWriteSuccesful = {};
+
+        if (bIsDstModuleJson) {
+            bWriteSuccesful = ModuleFileUtils::writeJsonFile(dstModuleFilePath, dstModule, errorMsg);
+        } else {
+            bWriteSuccesful = ModuleFileUtils::writeWmdFile(dstModuleFilePath, dstModule, errorMsg);
+        }
+
+        if (!bWriteSuccesful) {
+            std::printf("%s\n", errorMsg.c_str());
+            return false;
+        }
+    }
+    
+    // All good if we got to here, print the details for the stuff copied
+    std::printf("Changes saved successfully to '%s'!\n", dstModuleFilePath);
+
+    const auto printOldAndNewIndexes = [](const std::map<uint16_t, uint16_t>& oldAndNewIndexMap) noexcept {
+        for (std::pair<uint16_t, uint16_t> oldAndNew : oldAndNewIndexMap) {
+            std::printf("    %-4u -> %u\n", oldAndNew.first, oldAndNew.second);
+        }
+    };
+
+    if (bCopySequences) {
+        std::printf("\nCopied sequences:\n");
+        printOldAndNewIndexes(oldAndNewSequenceIndexes);
+    }
+
+    std::printf("\nCopied patches:\n");
+    printOldAndNewIndexes(oldAndNewPatchIndexes);
+
+    std::printf("\nCopied patch voices:\n");
+    printOldAndNewIndexes(oldAndNewPatchVoiceIndexes);
+
+    std::printf("\nCopied patch samples:\n");
+    printOldAndNewIndexes(oldAndNewPatchSampleIndexes);
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Program entrypoint
 //------------------------------------------------------------------------------------------------------------------------------------------
 int main(int argc, const char* const argv[]) noexcept {
@@ -320,6 +470,33 @@ int main(int argc, const char* const argv[]) noexcept {
             }
 
             return (convertMidiToSequence(midiFilePath, moduleFilePath, sequenceIdx, bIsSfx)) ? 0 : 1;
+        }
+    }
+    else if ((std::strcmp(cmdSwitch, "-copy-sequences") == 0) || (std::strcmp(cmdSwitch, "-copy-patches") == 0)) {
+        const bool bCopySequences = (std::strcmp(cmdSwitch, "-copy-sequences") == 0);
+
+        if (argc >= 4) {
+            // Get the indexes of the elements to copy
+            std::set<uint16_t> elemIndexesToCopy;
+            
+            for (int i = 4; i < argc; ++i) {
+                try {
+                    const int elemIdx = std::stoi(argv[i]);
+
+                    if ((elemIdx < 0) || (elemIdx > UINT16_MAX))
+                        throw;
+
+                    elemIndexesToCopy.insert((uint16_t) elemIdx);
+                } catch (...) {
+                    printHelp();
+                    return 1;
+                }
+            }
+
+            // Do the copy
+            const char* const srcModuleFilePath = argv[2];
+            const char* const dstModuleFilePath = argv[3];
+            return (copyPatchesOrSequences(srcModuleFilePath, dstModuleFilePath, bCopySequences, elemIndexesToCopy)) ? 0 : 1;
         }
     }
 

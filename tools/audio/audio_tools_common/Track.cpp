@@ -227,4 +227,42 @@ void Track::writeToWmdFile(OutputStream& out) const THROWS {
     out.writeBytes(trackData.getBytes().data(), trackData.tell());
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the indexes for all the patches used in the track
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Track::getPatchesUsed(std::set<uint16_t>& patchIndexes) const noexcept {
+    patchIndexes.insert(initPatchIdx);
+
+    for (const TrackCmd& cmd : cmds) {
+        // Note: 'PatchMod' is both unused and unimplemented by PSX Doom, hence not checking for those command types here.
+        // We don't know what the arguments for that command actually mean since it is completely unused and unimplemented in Doom (cannot infer usage).
+        if (cmd.type == WmdTrackCmdType::PatchChg) {
+            patchIndexes.insert((uint16_t) cmd.arg1);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Remap the patch indexes used in this track; the key/value pairs given specify the old and new patch indexes
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Track::remapPatches(const std::map<uint16_t, uint16_t>& oldAndNewPatchIndexes) noexcept {
+    // Remap the init patch
+    if (const auto remapIter = oldAndNewPatchIndexes.find(initPatchIdx); remapIter != oldAndNewPatchIndexes.end()) {
+        initPatchIdx = remapIter->second;
+    }
+
+    // Remap patches referenced in track commands
+    for (TrackCmd& cmd : cmds) {
+        // Note: 'PatchMod' is both unused and unimplemented by PSX Doom, hence not checking for those command types here.
+        // We don't know what the arguments for that command actually mean since it is completely unused and unimplemented in Doom (cannot infer usage).
+        if (cmd.type == WmdTrackCmdType::PatchChg) {
+            const uint16_t oldPatchIdx = (uint16_t) cmd.arg1;
+
+            if (const auto remapIter = oldAndNewPatchIndexes.find(oldPatchIdx); remapIter != oldAndNewPatchIndexes.end()) {
+                cmd.arg1 = (uint16_t) remapIter->second;
+            }
+        }
+    }
+}
+
 END_NAMESPACE(AudioTools)

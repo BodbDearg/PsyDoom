@@ -47,4 +47,13 @@ void PsxPatch::writeToWmdFile(OutputStream& out) const THROWS {
     out.write(psxPatch);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the indexes for all the patch voices used in the patch
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PsxPatch::getPatchVoicesUsed(std::set<uint16_t>& patchVoiceIndexes) const noexcept {
+    for (uint16_t i = 0; i < numVoices; ++i) {
+        patchVoiceIndexes.insert(firstVoiceIdx + i);
+    }
+}
+
 END_NAMESPACE(AudioTools)
