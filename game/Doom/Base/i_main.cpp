@@ -298,7 +298,11 @@ void I_PSXInit() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 [[noreturn]] void I_Error(const char* const fmtMsg, ...) noexcept {
     // Compose the message
-    char msgBuffer[256];
+    #if PSYDOOM_MODS
+        char msgBuffer[2048];
+    #else
+        char msgBuffer[256];
+    #endif
 
     {
         va_list args;

@@ -22,6 +22,8 @@
 #include "p_switch.h"
 #include "p_tick.h"
 
+#include <cstring>
+
 // How much heap space is required after loading the map in order to run the game (48 KiB in Doom, 32 KiB in Final Doom).
 // If we don't have this much then the game dies with an error; I'm adopting the Final Doom requirement here since it is the lowest.
 // Need to be able to support various small allocs throughout gameplay for particles and so forth.
@@ -1161,9 +1163,23 @@ void P_LoadBlocks(const CdFileId file) noexcept {
             // Get the decompressed size of the data following the file block header and make sure it is what we expect
             const uint32_t inflatedSize = getDecodedSize(pBlockData);
             const lumpinfo_t& lump = gpLumpInfo[blockHeader.lumpNum];
-            
+
             if (inflatedSize != lump.size) {
-                I_Error("P_LoadBlocks: bad inflated size!");
+                // Uh-oh, the data in the lumps file is not what we expect! Get the null terminated lump name and print out the problem:
+                char lumpName[MAXLUMPNAME + 1];
+                std::memcpy(lumpName, lump.name.chars, MAXLUMPNAME);
+                lumpName[MAXLUMPNAME] = 0;
+
+                I_Error(
+                    "P_LoadBlocks: bad decompressed size for lump %d (%s)!\n"
+                    "The master WAD says it should be %d bytes.\n"
+                    "In lump file '%s' it decompresses to %d bytes.",
+                    (int) blockHeader.lumpNum,
+                    lumpName,
+                    (int) lump.size,
+                    gCdMapTblFileNames[(size_t) file],
+                    (int) inflatedSize
+                );
             }
         }
 
