@@ -4318,4 +4318,35 @@ mobjinfo_t gMObjInfo[NUMMOBJTYPES] = {
             MF_NOBLOCKMAP
         )
     },
+// PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition
+#if PSYDOOM_MODS
+    // MT_MISC87
+    {
+        90,                         // doomednum
+        S_HANGLAMP,                 // spawnstate
+        1000,                       // spawnhealth
+        S_NULL,                     // seestate
+        sfx_None,                   // seesound
+        8,                          // reactiontime
+        sfx_None,                   // attacksound
+        S_NULL,                     // painstate
+        0,                          // painchance
+        sfx_None,                   // painsound
+        S_NULL,                     // meleestate
+        S_NULL,                     // missilestate
+        S_NULL,                     // deathstate
+        S_NULL,                     // xdeathstate
+        sfx_None,                   // deathsound
+        0,                          // speed
+        32 * FRACUNIT,              // radius
+        71 * FRACUNIT,              // height
+        100,                        // mass
+        0,                          // damage
+        sfx_None,                   // activesound
+        (                           // flags
+            MF_SPAWNCEILING |
+            MF_NOGRAVITY
+        )
+    },
+#endif
 };

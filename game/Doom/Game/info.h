@@ -1052,6 +1052,10 @@ enum mobjtype_t : int32_t {
     MT_MISC84,
     MT_MISC85,
     MT_MISC86,
+// PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition
+#if PSYDOOM_MODS
+    MT_MISC87,
+#endif
     NUMMOBJTYPES
 };
 

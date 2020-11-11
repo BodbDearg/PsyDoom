@@ -12,7 +12,6 @@
 - Fix up gravity inconsistency (15 vs 30 Hz)
 - Add 'dev mode' setting and gate the pause convenience cheats behind that.
 - Add 'nomonsters' command line switch for dev
-- Support the weird unused hanging lamp thing (doomednum 90)
 
 0.7 - GPU & Rendering?
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
