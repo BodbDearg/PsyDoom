@@ -21,6 +21,7 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/ProgArgs.h"
 
 #include <algorithm>
 
@@ -370,6 +371,12 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 
     if ((gNetGame == gt_deathmatch) && info.flags & (MF_NOTDMATCH|MF_COUNTKILL))
         return;
+
+    // PsyDoom: if the '-nomonsters' command line argument is specified then do not spawn if a monster...
+    #if PSYDOOM_MODS
+        if (ProgArgs::gbNoMonsters && (info.flags & MF_COUNTKILL))
+            return;
+    #endif
 
     // Decide whether the thing spawns on the ceiling or floor and spawn it
     const fixed_t z = (info.flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;

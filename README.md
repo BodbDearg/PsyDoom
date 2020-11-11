@@ -71,9 +71,15 @@ The original goal of this project was to have a complete replacement for the ori
     - Specify the directory using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
     - Put files in this folder (note: not in any child folders!) that you wish to override, e.g 'MAP01.WAD'.
     - If the game goes to load a file such as 'MAP01.WAD' and it is present in the overrides dir, then the on-disk version will be used instead.
+- Other miscellaneous command line arguments
+    - The .cue file used can be manually specified on launch via `-cue <CUE_FILE_PATH>`.
+    - For a 'no monsters' cheat similar to PC Doom use the `-nomonsters` switch.
+    - To play a demo lump file and exit use `-playdemo <DEMO_LUMP_FILE_PATH>`.
+    - To save the results of demo playback to a .json file use `-saveresult <RESULT_FILE_PATH>`.
+    - To verify that the result of demo playback matches a result .json file use `-checkresult <RESULT_FILE_PATH>`. If the result matches the expected result, the return code from the executable will be '0'. On an unexpected result, a non-zero return code is returned.
+    - To run the game in headless mode (for demo playback) use `-headless`
+
 ## Current limitations/bugs
-- CD music does not work unless a single .bin & .cue file is used - multiple .bin files for individual CD tracks will not work. This bug will be fixed eventually.
-- Some very occasional sound stuttering issues, sound is mostly OK at this point though.
 - The intro movie does not play yet.
 
 ## How to build
