@@ -542,12 +542,14 @@ void P_CheckCheats() noexcept {
 
                 // No-clip cheat
                 case CHT_SEQ_NOCLIP: {
-                    player.mo->flags ^= MF_NOCLIP;
+                    player.cheats ^= CF_NOCLIP;
                     gStatusBar.messageTicsLeft = 1;
 
-                    if (player.mo->flags & MF_NOCLIP) {
+                    if (player.cheats & CF_NOCLIP) {
+                        player.mo->flags |= MF_NOCLIP;
                         gStatusBar.message = "Incorporeal Mode ON.";
                     } else {
+                        player.mo->flags &= ~MF_NOCLIP;
                         gStatusBar.message = "Incorporeal Mode OFF.";
                     }
                 }   break;

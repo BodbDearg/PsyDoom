@@ -131,6 +131,10 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
     const uint32_t itemcount = player.itemcount;
     const uint32_t secretcount = player.secretcount;
 
+    #if PSYDOOM_MODS
+        const uint32_t cheatFlags = player.cheats;      // PsyDoom: preserve cheats on level warping
+    #endif
+
     D_memset(&player, std::byte(0), sizeof(player_t));
 
     // Initialize player state and restore the previously saved stats
@@ -151,6 +155,10 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
     for (int32_t ammoIdx = 0; ammoIdx < NUMAMMO; ++ammoIdx) {
         player.maxammo[ammoIdx] = gMaxAmmo[ammoIdx];
     }
+
+    #if PSYDOOM_MODS
+        player.cheats = cheatFlags;     // PsyDoom: preserve cheats on level warping
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -289,6 +297,13 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
             --pPlayer;
         }
     }
+
+    // PsyDoom: clear all player cheat flags here on starting a new game because we now preserve cheat flags between levels in 'G_PlayerReborn'
+    #if PSYDOOM_MODS
+        for (player_t& player : gPlayers) {
+            player.cheats = 0;
+        }
+    #endif
 
     // Clear the empty map object and assign to both players initially.
     // This is used for network consistency checks:

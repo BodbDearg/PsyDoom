@@ -258,6 +258,13 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     mobj.health = player.health;
     mobj.angle = ((fixed_t) mapThing.angle / 45) * ANG45;
 
+    #if PSYDOOM_MODS
+        // PsyDoom: map thing is noclipped if the player has that cheat activated
+        if (player.cheats & CF_NOCLIP) {
+            mobj.flags |= MF_NOCLIP;
+        }
+    #endif
+
     // Initialize the player object and the player weapon sprites
     player.mo = &mobj;
     player.playerstate = PST_LIVE;

@@ -333,6 +333,10 @@ static constexpr uint32_t CF_WARPMENU       = 0x20;     // Showing the warp to m
 static constexpr uint32_t CF_XRAYVISION     = 0x80;     // Do 'xray vision' or transparent walls
 static constexpr uint32_t CF_NOPAUSEMSG     = 0x100;    // Don't draw the 'paused' plaque when paused: never set anywhere?
 
+#if PSYDOOM_MODS
+    static constexpr uint32_t CF_NOCLIP = 0x200;        // PsyDoom: flag for noclip, so the cheat can carry across levels
+#endif
+
 // Player automap flags
 static constexpr uint32_t AF_ACTIVE = 0x1;      // Automap is displaying
 static constexpr uint32_t AF_FOLLOW = 0x2;      // If set then do not follow the player in the automap (manual automap movement)
