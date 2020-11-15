@@ -1,0 +1,280 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// This is an entirely new menu added for PsyDoom.
+// It provides options for turn sensitivity and autorun and is not available in multiplayer, similar to other control menus.
+//------------------------------------------------------------------------------------------------------------------------------------------
+#if PSYDOOM_MODS
+
+#include "controls_main.h"
+
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_misc.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
+#include "Doom/d_main.h"
+#include "Doom/Game/g_game.h"
+#include "Doom/Game/p_tick.h"
+#include "Doom/Renderer/r_data.h"
+#include "m_main.h"
+#include "o_main.h"
+#include "PcPsx/Game.h"
+#include "PcPsx/PlayerPrefs.h"
+
+#include <cstdio>
+
+// The available menu items
+enum MenuItem : uint32_t {
+    menu_turn_speed,
+    menu_always_run,
+    menu_exit,
+    num_menu_items
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw the cursor at the specified position
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void DrawCursor(const int16_t cursorX, const int16_t cursorY) noexcept {
+    I_DrawSprite(
+        gTex_STATUS.texPageId,
+        gPaletteClutIds[UIPAL],
+        (int16_t) cursorX - 24,
+        (int16_t) cursorY - 2,
+        M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
+        M_SKULL_TEX_V,
+        M_SKULL_W,
+        M_SKULL_H
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the controls menu
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Controls_Init() noexcept {
+    S_StartSound(nullptr, sfx_pistol);
+
+    // Initialize cursor position and vblanks until move
+    gCursorFrame = 0;
+    gCursorPos[gCurPlayerIndex] = 0;
+    gVBlanksUntilMenuMove[gCurPlayerIndex] = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shuts down the controls menu
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Controls_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    gCursorPos[gCurPlayerIndex] = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Runs update logic for the controls menu: does menu controls
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t Controls_Update() noexcept {
+    // PsyDoom: in all UIs tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
+    const uint32_t playerIdx = gCurPlayerIndex;
+
+    if (gPlayersElapsedVBlanks[playerIdx] <= 0)
+        return ga_nothing;
+
+    // Animate the skull cursor
+    if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {
+        gCursorFrame ^= 1;
+    }
+
+    // Gather menu inputs and exit if the back button has just been pressed
+    const TickInputs& inputs = gTickInputs[playerIdx];
+    const TickInputs& oldInputs = gOldTickInputs[playerIdx];
+
+    const bool bMenuBack = (inputs.bMenuBack && (!oldInputs.bMenuBack));
+    const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
+    const bool bMenuUp = inputs.bMenuUp;
+    const bool bMenuDown = inputs.bMenuDown;
+    const bool bMenuLeft = inputs.bMenuLeft;
+    const bool bMenuRight = inputs.bMenuRight;
+    const bool bMenuMove = (bMenuUp || bMenuDown || bMenuLeft || bMenuRight);
+
+    if (bMenuBack) {
+        S_StartSound(nullptr, sfx_pistol);
+        return ga_exit;
+    }
+       
+    // Check for up/down movement
+    if (!bMenuMove) {
+        // If there are no direction buttons pressed then the next move is allowed instantly
+        gVBlanksUntilMenuMove[playerIdx] = 0;
+    } else {
+        // Direction buttons pressed or held down, check to see if we can an up/down move now
+        gVBlanksUntilMenuMove[playerIdx] -= gPlayersElapsedVBlanks[playerIdx];
+
+        if (gVBlanksUntilMenuMove[playerIdx] <= 0) {
+            gVBlanksUntilMenuMove[playerIdx] = 15;
+            
+            if (bMenuDown) {
+                gCursorPos[playerIdx]++;
+
+                if (gCursorPos[playerIdx] >= num_menu_items) {
+                    gCursorPos[playerIdx] = 0;
+                }
+
+                S_StartSound(nullptr, sfx_pstop);
+            }
+            else if (bMenuUp) {
+                gCursorPos[playerIdx]--;
+
+                if (gCursorPos[playerIdx] < 0) {
+                    gCursorPos[playerIdx] = num_menu_items - 1;
+                }
+
+                S_StartSound(nullptr, sfx_pstop);
+            }
+        }
+    }
+
+    // Handle option actions and adjustment
+    switch ((MenuItem) gCursorPos[playerIdx]) {
+        // Adjust turn speed
+        case menu_turn_speed: {
+            // Only process audio updates for this player
+            if (bMenuRight) {
+                PlayerPrefs::gTurnSpeedMult100++;
+                
+                if (PlayerPrefs::gTurnSpeedMult100 > PlayerPrefs::TURN_SPEED_MULT_MAX) {
+                    PlayerPrefs::gTurnSpeedMult100 = PlayerPrefs::TURN_SPEED_MULT_MAX;
+                } else {
+                    if ((PlayerPrefs::gTurnSpeedMult100 / 4) & 1) {
+                        S_StartSound(nullptr, sfx_stnmov);
+                    }
+                }
+            }
+            else if (bMenuLeft) {
+                if (PlayerPrefs::gTurnSpeedMult100 > PlayerPrefs::TURN_SPEED_MULT_MIN) {
+                    PlayerPrefs::gTurnSpeedMult100--;;
+                    
+                    if ((PlayerPrefs::gTurnSpeedMult100 / 4) & 1) {
+                        S_StartSound(nullptr, sfx_stnmov);
+                    }
+                } else {
+                    PlayerPrefs::gTurnSpeedMult100 = PlayerPrefs::TURN_SPEED_MULT_MIN;
+                }
+            }
+        }   break;
+
+        // Turn on/off always run
+        case menu_always_run: {
+            if (bMenuLeft && PlayerPrefs::gbAlwaysRun) {
+                PlayerPrefs::gbAlwaysRun = false;
+                S_StartSound(nullptr, sfx_swtchx);
+            }
+            else if (bMenuRight && (!PlayerPrefs::gbAlwaysRun)) {
+                PlayerPrefs::gbAlwaysRun = true;
+                S_StartSound(nullptr, sfx_swtchx);
+            }
+        }   break;
+
+        // Exit to the options menu
+        case menu_exit: {
+            if (bMenuOk) {
+                S_StartSound(nullptr, sfx_pistol);
+                return ga_exit;
+            }
+        } break;
+
+        default:
+            break;
+    }
+
+    return ga_nothing;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the options menu
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Controls_Draw() noexcept {
+    // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
+    I_IncDrawnFrameCount();
+
+    {
+        const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();
+
+        for (int16_t y = 0; y < 4; ++y) {
+            for (int16_t x = 0; x < 4; ++x) {
+                I_CacheAndDrawSprite(gTex_OptionsBg, x * 64, y * 64, bgPaletteClutId);
+            }
+        }
+    }
+
+    // Don't do any rendering if we are about to exit the menu
+    if (gGameAction == ga_nothing) {
+        // Menu title
+        I_DrawString(-1, 20, "Controls");
+
+        // Draw the turn speed slider
+        int16_t cursorX = 62;
+        int16_t cursorY = 65;
+
+        {
+            // Draw the label for the slider
+            const int16_t menuItemX = 62;
+            const int16_t menuItemY = 65;
+
+            int32_t turnSpeed = PlayerPrefs::gTurnSpeedMult100;
+            char turnSpeedLabel[32];
+
+            std::snprintf(
+                turnSpeedLabel,
+                sizeof(turnSpeedLabel),
+                "Turn Speed %d.%02d",
+                turnSpeed / 100,
+                turnSpeed % 100
+            );
+
+            I_DrawString(menuItemX, menuItemY, turnSpeedLabel);
+
+            // Draw the slider background
+            I_DrawSprite(
+                gTex_STATUS.texPageId,
+                gPaletteClutIds[UIPAL],
+                (int16_t)(menuItemX + 13),
+                (int16_t)(menuItemY + 20),
+                0,
+                184,
+                108,
+                11
+            );
+
+            const int16_t sliderVal = (int16_t)(PlayerPrefs::gTurnSpeedMult100 / 5);
+
+            I_DrawSprite(
+                gTex_STATUS.texPageId,
+                gPaletteClutIds[UIPAL],
+                (int16_t)(menuItemX + 14 + sliderVal),
+                (int16_t)(menuItemY + 20),
+                108,
+                184,
+                6,
+                11
+            );
+        }
+
+        // Draw the always run option
+        I_DrawString(62, 105, (PlayerPrefs::gbAlwaysRun) ? "Always Run On" : "Always Run Off");
+
+        if (gCursorPos[gCurPlayerIndex] == menu_always_run) {
+            cursorY = 105;
+        }
+
+        // Draw the exit option
+        I_DrawString(62, 200, "Exit");
+
+        if (gCursorPos[gCurPlayerIndex] == menu_exit) {
+            cursorY = 200;
+        }
+
+        // Draw the skull cursor
+        DrawCursor(cursorX, cursorY);
+    }
+
+    // Finish up the frame
+    I_SubmitGpuCmds();
+    I_DrawPresent();
+}
+
+#endif  // // #if PSYDOOM_MODS

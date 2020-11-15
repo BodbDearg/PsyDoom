@@ -17,6 +17,7 @@
 #include "o_main.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
+#include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -217,6 +218,11 @@ gameaction_t TIC_PasswordScreen() noexcept {
             gStartMapOrEpisode = mapNum;
             gGameSkill = skill;
             gStartSkill = skill;
+
+            // PsyDoom: remember this password in player prefs, so it's restored on relaunch
+            #if PSYDOOM_MODS
+                PlayerPrefs::pullLastPassword();
+            #endif
 
             return ga_warped;
         }

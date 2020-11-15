@@ -7,6 +7,7 @@
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/ModMgr.h"
+#include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxVm.h"
 #include "PcPsx/Utils.h"
@@ -43,6 +44,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
         Controls::init();
         Config::init();
         Input::init();
+        PlayerPrefs::load();
 
         // Initialize the emulated PSX components using the PSX Doom disc (supplied as a .cue file)
         const char* const cueFilePath = (ProgArgs::gCueFileOverride) ? ProgArgs::gCueFileOverride : Config::getCueFilePath();
@@ -62,8 +64,9 @@ int psx_main(const int argc, const char** const argv) noexcept {
     // Call the original PSX Doom 'main()' function
     I_Main();
 
-    // PsyDoom: cleanup logic after Doom itself is done
+    // PsyDoom: cleanup logic after Doom itself is done and save player prefs
     #if PSYDOOM_MODS
+        PlayerPrefs::save();
         PsxVm::shutdown();
         ModMgr::shutdown();
         Input::shutdown();

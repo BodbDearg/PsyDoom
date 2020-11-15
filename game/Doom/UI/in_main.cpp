@@ -12,6 +12,7 @@
 #include "m_main.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
+#include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "pw_main.h"
@@ -190,6 +191,11 @@ void IN_Start() noexcept {
     if (gNextMap <= Game::getNumMaps()) {
         P_ComputePassword(gPasswordCharBuffer);
         gNumPasswordCharsEntered = 10;
+
+        // PsyDoom: remember this password in player prefs, so it's restored on relaunch
+        #if PSYDOOM_MODS
+            PlayerPrefs::pullLastPassword();
+        #endif
     }
     
     // Play the intermission cd track

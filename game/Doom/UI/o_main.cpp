@@ -1,5 +1,6 @@
 #include "o_main.h"
 
+#include "controls_main.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
@@ -10,6 +11,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "pw_main.h"
 #include "Wess/psxspu.h"
@@ -19,8 +21,10 @@ enum option_t : int32_t {
     opt_music,
     opt_sound,
     opt_password,
-// PsyDoom: Removing the psx controller configuration menu
-#if !PSYDOOM_MODS
+// PsyDoom: Removing the psx controller configuration menu and replacing with 'controls'
+#if PSYDOOM_MODS
+    opt_controls,
+#else
     opt_config,
 #endif
     opt_main_menu,
@@ -31,8 +35,10 @@ const char gOptionNames[][16] = {
     { "Music Volume"    },
     { "Sound Volume"    },
     { "Password"        },
-// PsyDoom: Removing the psx controller configuration menu
-#if !PSYDOOM_MODS
+// PsyDoom: Removing the psx controller configuration menu and replacing with 'controls'
+#if PSYDOOM_MODS
+    { "Controls"   },
+#else
     { "Configuration"   },
 #endif
     { "Main Menu"       },
@@ -50,13 +56,14 @@ static const menuitem_t gOptMenuItems_MainMenu[] = {
     { opt_music,        62, 65  },
     { opt_sound,        62, 105 },
     { opt_password,     62, 145 },
-// PsyDoom: Removing the psx controller configuration menu
+// PsyDoom: Removing the psx controller configuration menu and replacing with 'controls'
 #if PSYDOOM_MODS
-    { opt_main_menu,    62, 170 },
+    { opt_controls,     62, 170 },
 #else
     { opt_config,       62, 170 },
-    { opt_main_menu,    62, 195 },
 #endif
+    { opt_main_menu,    62, 195 },
+
 };
 
 static const menuitem_t gOptMenuItems_Single[] = {
@@ -65,13 +72,12 @@ static const menuitem_t gOptMenuItems_Single[] = {
     { opt_password,     62, 130 },
 // PsyDoom: Removing the psx controller configuration menu
 #if PSYDOOM_MODS
-    { opt_main_menu,    62, 155 },
-    { opt_restart,      62, 180 },
+    { opt_controls,     62, 155 },
 #else
     { opt_config,       62, 155 },
+#endif
     { opt_main_menu,    62, 180 },
     { opt_restart,      62, 205 },
-#endif
 };
 
 static const menuitem_t gOptMenuItems_NetGame[] = {
@@ -264,6 +270,12 @@ gameaction_t O_Control() noexcept {
                         gCdMusicVol = (gOptionsMusVol * PSXSPU_MAX_CD_VOL) / S_MAX_VOL;
                     }
                 }
+
+                // PsyDoom: update the volume levels in the preferences module also, whenever they are edited in the options menu.
+                // Want to save the correct values upon exiting the game.
+                #if PSYDOOM_MODS
+                    PlayerPrefs::pullSoundAndMusicPrefs();
+                #endif
             }   break;
 
             // Change sound volume
@@ -297,6 +309,12 @@ gameaction_t O_Control() noexcept {
                         }
                     }
                 }
+
+                // PsyDoom: update the volume levels in the preferences module also, whenever they are edited in the options menu.
+                // Want to save the correct values upon exiting the game.
+                #if PSYDOOM_MODS
+                    PlayerPrefs::pullSoundAndMusicPrefs();
+                #endif
             }   break;
 
             // Password entry
@@ -304,6 +322,13 @@ gameaction_t O_Control() noexcept {
                 if (bMenuOk) {
                     if (MiniLoop(START_PasswordScreen, STOP_PasswordScreen, TIC_PasswordScreen, DRAW_PasswordScreen) == ga_warped)
                         return ga_warped;
+                }
+            }   break;
+
+            // PsyDoom: Adding a new 'controls' menu
+            case opt_controls: {
+                if (bMenuOk) {
+                    MiniLoop(Controls_Init, Controls_Shutdown, Controls_Update, Controls_Draw);
                 }
             }   break;
 

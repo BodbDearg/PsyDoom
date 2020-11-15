@@ -28,6 +28,7 @@
 #include "PcPsx/Controls.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
+#include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 
@@ -1005,12 +1006,12 @@ void P_PlayerDoTurning() noexcept {
                 }
             }
 
-            turnAmt = FixedMul(turnAmt, ticks60);
+            turnAmt = FixedMul((fixed_t)((float) turnAmt * PlayerPrefs::getTurnSpeedMultiplier()), ticks60);
 
             if (!bFinalDoomMovementMode) {
                 turnAmt /= VBLANKS_PER_TIC;
             }
-
+            
             gPlayerUncommittedAxisTurning += (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
         }
 
@@ -1024,7 +1025,7 @@ void P_PlayerDoTurning() noexcept {
             const float turnSpeedLow = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
             const float turnSpeedHigh = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
             const float turnSpeedMix = std::abs(axis);
-            const float turnSpeed = turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix;
+            const float turnSpeed = (turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix) * PlayerPrefs::getTurnSpeedMultiplier();
 
             fixed_t turnAmt = FixedMul((fixed_t)(turnSpeed * axis), ticks60);
             turnAmt /= VBLANKS_PER_TIC;
@@ -1034,7 +1035,7 @@ void P_PlayerDoTurning() noexcept {
         // Do turning from the mouse and consume the movements after we have counted them
         {
             const float axis = -Input::getMouseXMovement();
-            const float turnSpeed = Config::gMouseTurnSpeed;
+            const float turnSpeed = Config::gMouseTurnSpeed * PlayerPrefs::getTurnSpeedMultiplier();
             const fixed_t turnAmt = (fixed_t)(turnSpeed * axis);
 
             gPlayerUncommittedMouseTurning += (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);

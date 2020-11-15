@@ -23,6 +23,7 @@
 #include "PcPsx/Controls.h"
 #include "PcPsx/DemoResult.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
@@ -784,6 +785,11 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.bMenuBack = Controls::getBool(Controls::Binding::Menu_Back);
     inputs.bEnterPasswordChar = Controls::getBool(Controls::Binding::Menu_EnterPasswordChar);
     inputs.bDeletePasswordChar = Controls::getBool(Controls::Binding::Menu_DeletePasswordChar);
+
+    // If we're always running then this gets inverted
+    if (PlayerPrefs::gbAlwaysRun) {
+        inputs.bRun = (!inputs.bRun);
+    }
 
     // Direct weapon switching
     player_t& player = gPlayers[gCurPlayerIndex];
