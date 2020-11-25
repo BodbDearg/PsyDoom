@@ -497,6 +497,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_MIDDLE(Action_Respawn, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, F, Gamepad Y"),
     CONTROL_BIND_GROUP_MIDDLE(Modifier_Run, "Left Shift, Right Shift, Gamepad X, Gamepad LeftTrigger"),
     CONTROL_BIND_GROUP_FOOTER(Modifier_Strafe, "Left Alt, Right Alt, Gamepad A"),
+    CONTROL_BIND_GROUP_FOOTER(Toggle_Autorun, "CapsLock"),
     //--------------------------------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------------------------------
     CONTROL_BIND_GROUP_HEADER(

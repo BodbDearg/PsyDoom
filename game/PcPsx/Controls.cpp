@@ -138,6 +138,29 @@ static float getInputWithModifiers(const InputSrc src) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the given input has just been pressed.
+// Note: doesn't need to consider modifiers for this particular query - we can just use the raw inputs.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool isInputJustPressed(const InputSrc src) noexcept {
+    if (src.device == InputSrc::KEYBOARD_KEY) {
+        return Input::isKeyboardKeyJustPressed(src.input);
+    }
+    else if (src.device == InputSrc::MOUSE_BUTTON) {
+        return Input::isMouseButtonJustPressed((MouseButton) src.input);
+    }
+    else if (src.device == InputSrc::MOUSE_WHEEL) {
+        // This would be an odd binding but count any mouse wheel movement as the button being just pressed.
+        // It's wiped the frame after it is used...
+        return ((Input::getMouseWheelAxisMovement(0) != 0) || (Input::getMouseWheelAxisMovement(1) != 0));
+    }
+    else if ((src.device == InputSrc::GAMEPAD_AXIS) || (src.device == InputSrc::GAMEPAD_BUTTON)) {
+        return Input::isControllerInputJustPressed((ControllerInput) src.input);
+    }
+
+    return false;   // Null or unsupported input source
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Get the current input for a particular control binding in floating point format.
 // If there are multiple sources then their inputs are combined additively.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -380,6 +403,26 @@ float getFloat(const Binding binding) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool getBool(const Binding binding) noexcept {
     return (std::fabs(getInputForBinding(binding)) > Config::gAnalogToDigitalThreshold);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the given input binding has just been pressed - useful for toggle type actions
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isJustPressed(const Binding binding) noexcept {
+    uint16_t bindingIdx = (uint16_t) binding;
+
+    if (bindingIdx < NUM_BINDINGS) {
+        const InputSrcRange inputRange = gBindings[bindingIdx];
+
+        for (uint16_t i = 0; i < inputRange.size; ++i) {
+            const InputSrc inputSrc = gInputSources[inputRange.startIndex + i];
+
+            if (isInputJustPressed(inputSrc))
+                return true;
+        }
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

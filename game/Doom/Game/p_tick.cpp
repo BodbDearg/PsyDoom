@@ -786,6 +786,11 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.bEnterPasswordChar = Controls::getBool(Controls::Binding::Menu_EnterPasswordChar);
     inputs.bDeletePasswordChar = Controls::getBool(Controls::Binding::Menu_DeletePasswordChar);
 
+    // Allow toggle of autorun if the right button is pressed
+    if (Controls::isJustPressed(Controls::Binding::Toggle_Autorun)) {
+        PlayerPrefs::gbAlwaysRun = (!PlayerPrefs::gbAlwaysRun);
+    }
+
     // If we're always running then this gets inverted
     if (PlayerPrefs::gbAlwaysRun) {
         inputs.bRun = (!inputs.bRun);
