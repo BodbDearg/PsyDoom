@@ -16,18 +16,29 @@
 
 BEGIN_NAMESPACE(PlayerPrefs)
 
+// Name of the user prefs file: it can reside in either the writable user data folder (default) or in the current working directory.
+// We save to the current working directory if the file is found existing there on launch.
+static constexpr char* const PREFS_FILE_NAME = "saved_prefs.ini";
+
 int32_t     gSoundVol;                      // Option for sound volume
 int32_t     gMusicVol;                      // Option for music volume
 char        gLastPassword[PASSWORD_LEN];    // Password for the current level the player is on
 int32_t     gTurnSpeedMult100;              // In-game tweakable turn speed multiplier expressed in integer percentage points (0-500)
 bool        gbAlwaysRun;                    // If set then the player runs by default and the run action causes slower walking
 
+// If true then we save the prefs file to the current working directory rather than to the user data folder
+static bool gbUseWorkingDirPrefsFile = false;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the path to the ini file used to hold player prefs
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::string getPrefsFilePath() noexcept {
-    const std::string userDataFolder = Utils::getOrCreateUserDataFolder();
-    return userDataFolder + "saved_prefs.ini";
+    if (gbUseWorkingDirPrefsFile) {
+        return PREFS_FILE_NAME;
+    } else {
+        const std::string userDataFolder = Utils::getOrCreateUserDataFolder();
+        return userDataFolder + PREFS_FILE_NAME;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,15 +130,17 @@ void setToDefaults() noexcept {
 // If the file does not exist then the preferences are defaulted.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void load() noexcept {
-    // Firstly set everything to the defaults
+    // Firstly set everything to the defaults and determine whether we use a prefs file found in the current working directory.
+    // We only do that if the .ini file is found there on launch!
     setToDefaults();
+    gbUseWorkingDirPrefsFile = FileUtils::fileExists(PREFS_FILE_NAME);
     
     // Read the .ini file if it exists, otherwise stop here
     const std::string prefsFilePath = getPrefsFilePath();
 
     if (!FileUtils::fileExists(prefsFilePath.c_str()))
         return;
-
+    
     const FileData prefsFileData = FileUtils::getContentsOfFile(prefsFilePath.c_str(), 1, std::byte(0));
     IniUtils::parseIniFromString((const char*) prefsFileData.bytes.get(), prefsFileData.size - 1, loadPrefsFileIniEntry);
 }
