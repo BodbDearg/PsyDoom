@@ -15,9 +15,6 @@ constexpr int32_t VOLUME_MAX = 100;
 constexpr int32_t TURN_SPEED_MULT_MIN = 1;
 constexpr int32_t TURN_SPEED_MULT_MAX = 500;
 
-extern int32_t  gSoundVol;
-extern int32_t  gMusicVol;
-extern char     gLastPassword[PASSWORD_LEN];
 extern int32_t  gTurnSpeedMult100;
 extern bool     gbAlwaysRun;
 
