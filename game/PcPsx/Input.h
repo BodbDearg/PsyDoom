@@ -6,7 +6,8 @@
 #include <vector>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper functions that manage user events and inputs received from the SDL library
+// Helper functions that manage user events and inputs received from the SDL library.
+// Note that gamepad inputs can come from both the 'Game Controller' or more generic 'Joystick' APIs of SDL.
 //------------------------------------------------------------------------------------------------------------------------------------------
 BEGIN_NAMESPACE(Input)
 
@@ -18,6 +19,41 @@ inline static constexpr uint16_t NUM_KEYBOARD_KEYS = 512;
 // 0 = x-axis and 1 = y-axis.
 // There may be a y-axis on some laptop touch pads:
 inline static constexpr uint8_t NUM_MOUSE_WHEEL_AXES = 2;
+
+// Direction for a joystick hat (d-pad)
+enum JoyHatDir : uint16_t {
+    Up      = 0,
+    Down    = 1,
+    Left    = 2,
+    Right   = 3
+};
+
+// Holds a joystick hat (d-pad) direction and hat number
+struct JoyHat {
+    union {
+        struct {
+            JoyHatDir   hatDir : 2;
+            uint16_t    hatNum : 14;
+        } fields;
+
+        uint16_t bits;
+    };
+
+    inline JoyHat() noexcept : bits() {}
+    inline JoyHat(const uint16_t bits) noexcept : bits(bits) {}
+
+    inline JoyHat(const JoyHatDir dir, const uint16_t hatNum) noexcept : bits() {
+        fields.hatDir = dir;
+        fields.hatNum = hatNum & 0x3FFF;
+    }
+
+    inline operator uint16_t() const noexcept { return bits; }
+
+    inline bool operator == (const JoyHat& other) const noexcept { return (bits == other.bits); }
+    inline bool operator != (const JoyHat& other) const noexcept { return (bits != other.bits); }
+};
+
+static_assert(sizeof(JoyHat) == 2);
 
 void init() noexcept;
 void shutdown() noexcept;
@@ -41,22 +77,51 @@ const std::vector<ControllerInput>& getControllerInputsPressed() noexcept;
 const std::vector<ControllerInput>& getControllerInputsJustPressed() noexcept;
 const std::vector<ControllerInput>& getControllerInputsJustReleased() noexcept;
 
+const std::vector<uint32_t>& getJoystickAxesPressed() noexcept;
+const std::vector<uint32_t>& getJoystickAxesJustPressed() noexcept;
+const std::vector<uint32_t>& getJoystickAxesJustReleased() noexcept;
+
+const std::vector<uint32_t>& getJoystickButtonsPressed() noexcept;
+const std::vector<uint32_t>& getJoystickButtonsJustPressed() noexcept;
+const std::vector<uint32_t>& getJoystickButtonsJustReleased() noexcept;
+
+const std::vector<JoyHat>& getJoystickHatsPressed() noexcept;
+const std::vector<JoyHat>& getJoystickHatsJustPressed() noexcept;
+const std::vector<JoyHat>& getJoystickHatsJustReleased() noexcept;
+
 // Query input state and whether something is just pressed or released
 bool isKeyboardKeyPressed(const uint16_t key) noexcept;
 bool isKeyboardKeyJustPressed(const uint16_t key) noexcept;
 bool isKeyboardKeyReleased(const uint16_t key) noexcept;
 bool isKeyboardKeyJustReleased(const uint16_t key) noexcept;
+
 bool isMouseButtonPressed(const MouseButton button) noexcept;
 bool isMouseButtonJustPressed(const MouseButton button) noexcept;
 bool isMouseButtonReleased(const MouseButton button) noexcept;
 bool isMouseButtonJustReleased(const MouseButton button) noexcept;
+
 bool isControllerInputPressed(const ControllerInput input) noexcept;
 bool isControllerInputJustPressed(const ControllerInput input) noexcept;
 bool isControllerInputJustReleased(const ControllerInput input) noexcept;
 
-// Controller inputs
+bool isJoystickAxisPressed(const uint32_t axis) noexcept;
+bool isJoystickAxisJustPressed(const uint32_t axis) noexcept;
+bool isJoystickAxisJustReleased(const uint32_t axis) noexcept;
+
+bool isJoystickButtonPressed(const uint32_t button) noexcept;
+bool isJoystickButtonJustPressed(const uint32_t button) noexcept;
+bool isJoystickButtonJustReleased(const uint32_t button) noexcept;
+
+bool isJoystickHatPressed(const JoyHat hat) noexcept;
+bool isJoystickHatJustPressed(const JoyHat hat) noexcept;
+bool isJoystickHatJustReleased(const JoyHat hat) noexcept;
+
+// Controller & joystick axis inputs
 float getControllerInputValue(const ControllerInput input) noexcept;
+float getJoystickAxisValue(const uint32_t axis) noexcept;
+
 float getAdjustedControllerInputValue(const ControllerInput input, float deadZone) noexcept;
+float getAdjustedJoystickAxisValue(const uint32_t axis, const float deadZone) noexcept;
 
 // Mouse inputs
 float getMouseXMovement() noexcept;

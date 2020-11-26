@@ -416,6 +416,13 @@ R"(#----------------------------------------------------------------------------
 #       Gamepad Y               Gamepad DpRight         Gamepad RightShoulder
 #       Gamepad Back            Gamepad Start           Gamepad Guide
 #
+# Gamepad axes, axis subsets/inversions, buttons and hat/d-pad directions (generic, by number 1-99):
+#       Gamepad Button1-99      Gamepad Hat1-99 Up
+#       Gamepad Axis1-99        Gamepad Hat1-99 Down
+#       Gamepad Axis1-99+       Gamepad Hat1-99 Left
+#       Gamepad Axis1-99-       Gamepad Hat1-99 Right
+#       Inv Gamepad Axis1-99
+#
 # Keyboard keys (commonly used, see link above for full list):
 #       A-Z                     Return                  Backspace               Home
 #       0-9                     Escape                  Pause                   End
@@ -496,7 +503,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_MIDDLE(Action_Attack, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, F, Gamepad Y"),
     CONTROL_BIND_GROUP_MIDDLE(Action_Respawn, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, F, Gamepad Y"),
     CONTROL_BIND_GROUP_MIDDLE(Modifier_Run, "Left Shift, Right Shift, Gamepad X, Gamepad LeftTrigger"),
-    CONTROL_BIND_GROUP_FOOTER(Modifier_Strafe, "Left Alt, Right Alt, Gamepad A"),
+    CONTROL_BIND_GROUP_MIDDLE(Modifier_Strafe, "Left Alt, Right Alt, Gamepad A"),
     CONTROL_BIND_GROUP_FOOTER(Toggle_Autorun, "CapsLock"),
     //--------------------------------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------------------------------

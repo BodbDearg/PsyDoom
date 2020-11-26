@@ -14,6 +14,12 @@
 
 BEGIN_NAMESPACE(Input)
 
+// Holds the current state of a generic joystick axis
+struct JoystickAxis {
+    uint32_t    axis;
+    float       value;
+};
+
 static bool                             gbIsQuitRequested;
 static const Uint8*                     gpKeyboardState;
 static int                              gNumKeyboardStateKeys;
@@ -27,6 +33,16 @@ static float                            gControllerInputs[NUM_CONTROLLER_INPUTS]
 static std::vector<ControllerInput>     gControllerInputsPressed;
 static std::vector<ControllerInput>     gControllerInputsJustPressed;
 static std::vector<ControllerInput>     gControllerInputsJustReleased;
+static std::vector<JoystickAxis>        gJoystickAxes;
+static std::vector<uint32_t>            gJoystickAxesPressed;
+static std::vector<uint32_t>            gJoystickAxesJustPressed;
+static std::vector<uint32_t>            gJoystickAxesJustReleased;
+static std::vector<uint32_t>            gJoystickButtonsPressed;
+static std::vector<uint32_t>            gJoystickButtonsJustPressed;
+static std::vector<uint32_t>            gJoystickButtonsJustReleased;
+static std::vector<JoyHat>              gJoystickHatsPressed;
+static std::vector<JoyHat>              gJoystickHatsJustPressed;
+static std::vector<JoyHat>              gJoystickHatsJustReleased;
 
 static SDL_GameController*  gpGameController;
 static SDL_Joystick*        gpJoystick;             // Note: this is managed by game controller, not freed by this code!
@@ -38,7 +54,7 @@ static float gMouseMovementY;
 static float gMouseWheelAxisMovements[NUM_MOUSE_WHEEL_AXES];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utility functions for querying if a value is in a vector and removing it
+// Vector utility functions
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
 static inline bool vectorContainsValue(const std::vector<T>& vec, const T val) noexcept {
@@ -59,6 +75,33 @@ static inline void removeValueFromVector(const T val, std::vector<T>& vec) noexc
     }
 }
 
+template <class T>
+static inline void emptyAndShrinkVector(std::vector<T>& vec) noexcept {
+    vec.clear();
+    vec.shrink_to_fit();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update the value of a joystick axis in the vector of values: removes the value if it has reached '0'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void updateJoystickAxisValue(const uint32_t axis, const float value) noexcept {
+    // Search for the existing value of this axis: will need to remove or update it if found
+    auto iter = std::find_if(gJoystickAxes.begin(), gJoystickAxes.end(), [=](const JoystickAxis& axisValue) noexcept { return (axisValue.axis == axis); });
+
+    if (value == 0.0f) {
+        if (iter != gJoystickAxes.end()) {
+            gJoystickAxes.erase(iter);
+        }
+    }
+    else {
+        if (iter != gJoystickAxes.end()) {
+            iter->value = value;
+        } else {
+            gJoystickAxes.emplace_back(JoystickAxis{ axis, value});
+        }
+    }
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Convert an SDL axis value to a -1 to + 1 range float.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -76,8 +119,22 @@ static float sdlAxisValueToFloat(const int16_t axis) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void closeCurrentGameController() noexcept {
     std::memset(gControllerInputs, 0, sizeof(gControllerInputs));
+    gControllerInputsPressed.clear();
     gControllerInputsJustPressed.clear();
     gControllerInputsJustReleased.clear();
+
+    gJoystickAxes.clear();
+    gJoystickAxesPressed.clear();
+    gJoystickAxesJustPressed.clear();
+    gJoystickAxesJustReleased.clear();
+
+    gJoystickButtonsPressed.clear();
+    gJoystickButtonsJustPressed.clear();
+    gJoystickButtonsJustReleased.clear();
+
+    gJoystickHatsPressed.clear();
+    gJoystickHatsJustPressed.clear();
+    gJoystickHatsJustReleased.clear();
 
     if (gpGameController) {
         SDL_GameControllerClose(gpGameController);
@@ -116,6 +173,28 @@ static void rescanGameControllers() noexcept {
                 gJoystickId = SDL_JoystickInstanceID(gpJoystick);
                 break;
             }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update the status for the specified joystick hat and generate events if required
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void updateJoystickHat(const JoyHat hat, const bool bPressed) noexcept {
+    if (bPressed) {
+        // Just pressed?
+        if (!vectorContainsValue(gJoystickHatsPressed, hat)) {
+            removeValueFromVector(hat, gJoystickHatsJustReleased);
+            gJoystickHatsPressed.push_back(hat);
+            gJoystickHatsJustPressed.push_back(hat);
+        }
+    }
+    else {
+        // Just released?
+        if (vectorContainsValue(gJoystickHatsPressed, hat)) {
+            gJoystickHatsJustReleased.push_back(hat);
+            removeValueFromVector(hat, gJoystickHatsPressed);
+            removeValueFromVector(hat, gJoystickHatsJustPressed);
         }
     }
 }
@@ -254,6 +333,35 @@ static void handleSdlEvents() noexcept {
                 }
             }   break;
 
+            case SDL_JOYAXISMOTION: {
+                if (sdlEvent.jaxis.which == gJoystickId) {
+                    // See if there is a change in the 'pressed' status
+                    const float pressedThreshold = Config::gAnalogToDigitalThreshold;
+                    const uint32_t axis = sdlEvent.jaxis.axis;
+
+                    const bool bPrevPressed = (std::abs(Input::getJoystickAxisValue(axis)) >= pressedThreshold);
+                    const float inputF = sdlAxisValueToFloat(sdlEvent.jaxis.value);
+                    const float inputFAbs = std::abs(inputF);
+                    const bool bNowPressed = (inputFAbs >= pressedThreshold);
+
+                    // Update input value
+                    updateJoystickAxisValue(axis, inputF);
+
+                    // Generate events for the analog input
+                    if (bPrevPressed != bNowPressed) {
+                        if (bNowPressed) {
+                            removeValueFromVector(axis, gJoystickAxesJustReleased);
+                            gJoystickAxesPressed.push_back(axis);
+                            gJoystickAxesJustPressed.push_back(axis);
+                        } else {
+                            removeValueFromVector(axis, gJoystickAxesPressed);
+                            removeValueFromVector(axis, gJoystickAxesJustPressed);
+                            gJoystickAxesJustReleased.push_back(axis);
+                        }
+                    }
+                }
+            }   break;
+
             case SDL_CONTROLLERBUTTONDOWN: {
                 if (sdlEvent.cbutton.which == gJoystickId) {
                     const ControllerInput input = ControllerInputUtils::sdlButtonToInput(sdlEvent.cbutton.button);
@@ -267,6 +375,15 @@ static void handleSdlEvents() noexcept {
                 }
             }   break;
 
+            case SDL_JOYBUTTONDOWN: {
+                if (sdlEvent.jbutton.which == gJoystickId) {
+                    const uint32_t button = sdlEvent.jbutton.button;
+                    removeValueFromVector(button, gJoystickButtonsJustReleased);
+                    gJoystickButtonsPressed.push_back(button);
+                    gJoystickButtonsJustPressed.push_back(button);
+                }
+            }   break;
+
             case SDL_CONTROLLERBUTTONUP: {
                 if (sdlEvent.cbutton.which == gJoystickId) {
                     const ControllerInput input = ControllerInputUtils::sdlButtonToInput(sdlEvent.cbutton.button);
@@ -277,6 +394,25 @@ static void handleSdlEvents() noexcept {
                         removeValueFromVector(input, gControllerInputsJustPressed);
                         gControllerInputs[(uint8_t) input] = 0.0f;
                     }
+                }
+            }   break;
+
+            case SDL_JOYBUTTONUP: {
+                if (sdlEvent.jbutton.which == gJoystickId) {
+                    const uint32_t button = sdlEvent.jbutton.button;
+                    gJoystickButtonsJustReleased.push_back(button);
+                    removeValueFromVector(button, gJoystickButtonsPressed);
+                    removeValueFromVector(button, gJoystickButtonsJustPressed);
+                }
+            }   break;
+
+            case SDL_JOYHATMOTION: {
+                if (sdlEvent.jhat.which == gJoystickId) {
+                    const uint16_t hatNum = sdlEvent.jhat.hat;
+                    updateJoystickHat(JoyHat(JoyHatDir::Up, hatNum), (sdlEvent.jhat.value & SDL_HAT_UP));
+                    updateJoystickHat(JoyHat(JoyHatDir::Down, hatNum), (sdlEvent.jhat.value & SDL_HAT_DOWN));
+                    updateJoystickHat(JoyHat(JoyHatDir::Left, hatNum), (sdlEvent.jhat.value & SDL_HAT_LEFT));
+                    updateJoystickHat(JoyHat(JoyHatDir::Right, hatNum), (sdlEvent.jhat.value & SDL_HAT_RIGHT));
                 }
             }   break;
 
@@ -306,14 +442,31 @@ void init() noexcept {
     SDL_GameControllerEventState(SDL_ENABLE);       // Want game controller events
 
     gbIsQuitRequested = false;
+    
     gpKeyboardState = SDL_GetKeyboardState(&gNumKeyboardStateKeys);
     gKeyboardKeysJustPressed.reserve(16);
     gKeyboardKeysJustReleased.reserve(16);
+
     gMouseButtonsPressed.reserve(NUM_MOUSE_BUTTONS);
     gMouseButtonsJustPressed.reserve(NUM_MOUSE_BUTTONS);
     gMouseButtonsJustReleased.reserve(NUM_MOUSE_BUTTONS);
+
+    gControllerInputsPressed.reserve(NUM_CONTROLLER_INPUTS);
     gControllerInputsJustPressed.reserve(NUM_CONTROLLER_INPUTS);
     gControllerInputsJustReleased.reserve(NUM_CONTROLLER_INPUTS);
+
+    gJoystickAxes.reserve(16);
+    gJoystickAxesPressed.reserve(16);
+    gJoystickAxesJustPressed.reserve(16);
+    gJoystickAxesJustReleased.reserve(16);
+
+    gJoystickButtonsPressed.reserve(32);
+    gJoystickButtonsJustPressed.reserve(32);
+    gJoystickButtonsJustReleased.reserve(32);
+
+    gJoystickHatsPressed.reserve(32);
+    gJoystickHatsJustPressed.reserve(32);
+    gJoystickHatsJustReleased.reserve(32);
 
     gMouseMovementX = 0.0f;
     gMouseMovementY = 0.0f;
@@ -331,24 +484,30 @@ void shutdown() noexcept {
     gMouseMovementX = 0.0f;
     gMouseMovementY = 0.0f;
 
-    gControllerInputsJustReleased.clear();
-    gControllerInputsJustReleased.shrink_to_fit();
-    gControllerInputsJustPressed.clear();
-    gControllerInputsJustPressed.shrink_to_fit();
+    emptyAndShrinkVector(gJoystickHatsJustReleased);
+    emptyAndShrinkVector(gJoystickHatsJustPressed);
+    emptyAndShrinkVector(gJoystickHatsPressed);
 
-    gMouseButtonsJustReleased.clear();
-    gMouseButtonsJustReleased.shrink_to_fit();
-    gMouseButtonsJustPressed.clear();
-    gMouseButtonsJustPressed.shrink_to_fit();
-    gMouseButtonsPressed.clear();
-    gMouseButtonsPressed.shrink_to_fit();
+    emptyAndShrinkVector(gJoystickButtonsJustReleased);
+    emptyAndShrinkVector(gJoystickButtonsJustPressed);
+    emptyAndShrinkVector(gJoystickButtonsPressed);
+    
+    emptyAndShrinkVector(gJoystickAxesJustReleased);
+    emptyAndShrinkVector(gJoystickAxesJustPressed);
+    emptyAndShrinkVector(gJoystickAxesPressed);
+    emptyAndShrinkVector(gJoystickAxes);
 
-    gKeyboardKeysJustReleased.clear();
-    gKeyboardKeysJustReleased.shrink_to_fit();
-    gKeyboardKeysJustPressed.clear();
-    gKeyboardKeysJustPressed.shrink_to_fit();
-    gKeyboardKeysPressed.clear();
-    gKeyboardKeysPressed.shrink_to_fit();
+    emptyAndShrinkVector(gControllerInputsJustReleased);
+    emptyAndShrinkVector(gControllerInputsJustPressed);
+    emptyAndShrinkVector(gControllerInputsPressed);
+
+    emptyAndShrinkVector(gMouseButtonsJustReleased);
+    emptyAndShrinkVector(gMouseButtonsJustPressed);
+    emptyAndShrinkVector(gMouseButtonsPressed);
+
+    emptyAndShrinkVector(gKeyboardKeysJustReleased);
+    emptyAndShrinkVector(gKeyboardKeysJustPressed);
+    emptyAndShrinkVector(gKeyboardKeysPressed);
 
     gpKeyboardState = nullptr;
     gbIsQuitRequested = false;
@@ -377,6 +536,12 @@ void consumeEvents() noexcept {
     gMouseButtonsJustReleased.clear();
     gControllerInputsJustPressed.clear();
     gControllerInputsJustReleased.clear();
+    gJoystickAxesJustPressed.clear();
+    gJoystickAxesJustReleased.clear();
+    gJoystickButtonsJustPressed.clear();
+    gJoystickButtonsJustReleased.clear();
+    gJoystickHatsJustPressed.clear();
+    gJoystickHatsJustReleased.clear();
 
     // Clear all movement deltas
     static_assert(NUM_MOUSE_WHEEL_AXES == 2);
@@ -419,9 +584,18 @@ bool areAnyKeysOrButtonsPressed() noexcept {
     if (!gMouseButtonsPressed.empty())
         return true;
     
-    // Check game controller for any digital (or converted to digital) input
+    // Check game controller or generic joypad for any digital (or converted to digital) input
     if (gpGameController) {
         if (!gControllerInputsPressed.empty())
+            return true;
+
+        if (!gJoystickAxesPressed.empty())
+            return true;
+
+        if (!gJoystickButtonsPressed.empty())
+            return true;
+
+        if (!gJoystickHatsPressed.empty())
             return true;
     }
 
@@ -462,6 +636,42 @@ const std::vector<ControllerInput>& getControllerInputsJustPressed() noexcept {
 
 const std::vector<ControllerInput>& getControllerInputsJustReleased() noexcept {
     return gControllerInputsJustReleased;
+}
+
+const std::vector<uint32_t>& getJoystickAxesPressed() noexcept {
+    return gJoystickAxesPressed;
+}
+
+const std::vector<uint32_t>& getJoystickAxesJustPressed() noexcept {
+    return gJoystickAxesJustPressed;
+}
+
+const std::vector<uint32_t>& getJoystickAxesJustReleased() noexcept {
+    return gJoystickAxesJustReleased;
+}
+
+const std::vector<uint32_t>& getJoystickButtonsPressed() noexcept {
+    return gJoystickButtonsPressed;
+}
+
+const std::vector<uint32_t>& getJoystickButtonsJustPressed() noexcept {
+    return gJoystickButtonsJustPressed;
+}
+
+const std::vector<uint32_t>& getJoystickButtonsJustReleased() noexcept {
+    return gJoystickButtonsJustReleased;
+}
+
+const std::vector<JoyHat>& getJoystickHatsPressed() noexcept {
+    return gJoystickHatsPressed;
+}
+
+const std::vector<JoyHat>& getJoystickHatsJustPressed() noexcept {
+    return gJoystickHatsJustPressed;
+}
+
+const std::vector<JoyHat>& getJoystickHatsJustReleased() noexcept {
+    return gJoystickHatsJustReleased;
 }
 
 bool isKeyboardKeyPressed(const uint16_t key) noexcept {
@@ -508,9 +718,54 @@ bool isControllerInputJustReleased(const ControllerInput input) noexcept {
     return vectorContainsValue(gControllerInputsJustReleased, input);
 }
 
+bool isJoystickAxisPressed(const uint32_t axis) noexcept {
+    return vectorContainsValue(gJoystickAxesPressed, axis);
+}
+
+bool isJoystickAxisJustPressed(const uint32_t axis) noexcept {
+    return vectorContainsValue(gJoystickAxesJustPressed, axis);
+}
+
+bool isJoystickAxisJustReleased(const uint32_t axis) noexcept {
+    return vectorContainsValue(gJoystickAxesJustReleased, axis);
+}
+
+bool isJoystickButtonPressed(const uint32_t button) noexcept {
+    return vectorContainsValue(gJoystickButtonsPressed, button);
+}
+
+bool isJoystickButtonJustPressed(const uint32_t button) noexcept {
+    return vectorContainsValue(gJoystickButtonsJustPressed, button);
+}
+
+bool isJoystickButtonJustReleased(const uint32_t button) noexcept {
+    return vectorContainsValue(gJoystickButtonsJustReleased, button);
+}
+
+bool isJoystickHatPressed(const JoyHat hat) noexcept {
+    return vectorContainsValue(gJoystickHatsPressed, hat);
+}
+
+bool isJoystickHatJustPressed(const JoyHat hat) noexcept {
+    return vectorContainsValue(gJoystickHatsJustPressed, hat);
+}
+
+bool isJoystickHatJustReleased(const JoyHat hat) noexcept {
+    return vectorContainsValue(gJoystickHatsJustReleased, hat);
+}
+
 float getControllerInputValue(const ControllerInput input) noexcept {
     const uint8_t inputIdx = (uint8_t) input;
     return (inputIdx < NUM_CONTROLLER_INPUTS) ? gControllerInputs[inputIdx] : 0.0f;
+}
+
+float getJoystickAxisValue(const uint32_t axis) noexcept {
+    for (const JoystickAxis& axisAndValue : gJoystickAxes) {
+        if (axisAndValue.axis == axis)
+            return axisAndValue.value;
+    }
+
+    return 0.0f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -546,11 +801,26 @@ float getAdjustedControllerInputValue(const ControllerInput input, const float d
         if (rawAxis >= 0) {
             return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f, 1.0f);
         } else {
-            return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), -1.0f, 0.0f);
+            return std::clamp((rawAxis + clampedDeadZone) / (1.0f - clampedDeadZone), -1.0f, 0.0f);
         }
     }
 
     return rawAxis;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Same as 'getAdjustedControllerInputValue' except for a generic joystick axis.
+// Because we don't know much about the axis or neighboring axes, the behavior of this might not be as good.
+//------------------------------------------------------------------------------------------------------------------------------------------
+float getAdjustedJoystickAxisValue(const uint32_t axis, const float deadZone) noexcept {
+    const float rawAxis = getJoystickAxisValue(axis);
+    const float clampedDeadZone = std::clamp(deadZone, 0.0f, 0.9999f);
+    
+    if (rawAxis >= 0) {
+        return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f, 1.0f);
+    } else {
+        return std::clamp((rawAxis + clampedDeadZone) / (1.0f - clampedDeadZone), -1.0f, 0.0f);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

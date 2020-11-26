@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <regex>
 #include <SDL.h>
 #include <string>
 #include <vector>
@@ -21,7 +22,10 @@ struct InputSrc {
         MOUSE_BUTTON,
         MOUSE_WHEEL,
         GAMEPAD_AXIS,
-        GAMEPAD_BUTTON
+        GAMEPAD_BUTTON,
+        JOYSTICK_AXIS,
+        JOYSTICK_BUTTON,
+        JOYSTICK_HAT
     } device;
 
     // Modifiers to apply to the input
@@ -45,6 +49,20 @@ struct InputSrcRange {
 static std::vector<InputSrc>    gInputSources;              // The global list of input sources for all control bindings
 static InputSrcRange            gBindings[NUM_BINDINGS];    // The inputs that each control binding uses
 static std::string              gCurInputName;              // Temporary string used to hold the current input name
+
+// Use case insensitive matching for all regexes and use ECMAScript
+static constexpr auto REGEX_OPTIONS = std::regex_constants::ECMAScript | std::regex_constants::icase;
+
+// Regexes for parsing generic gamepad/joystick control bindings
+static const std::regex gRegex_GamepadAxis_Norm     = std::regex(R"(^GAMEPAD\s+AXIS(\d+)$)", REGEX_OPTIONS);
+static const std::regex gRegex_GamepadAxis_PosOnly  = std::regex(R"(^GAMEPAD\s+AXIS(\d+)\+$)", REGEX_OPTIONS);
+static const std::regex gRegex_GamepadAxis_NegOnly  = std::regex(R"(^GAMEPAD\s+AXIS(\d+)-$)", REGEX_OPTIONS);
+static const std::regex gRegex_GamepadAxis_Inv      = std::regex(R"(^INV\s+GAMEPAD\s+AXIS(\d+)$)", REGEX_OPTIONS);
+static const std::regex gRegex_GamepadButton        = std::regex(R"(^GAMEPAD\s+BUTTON(\d+)$)", REGEX_OPTIONS);
+static const std::regex gRegex_GamepadHat_Up        = std::regex(R"(^GAMEPAD\s+HAT(\d+)\s+UP$)", REGEX_OPTIONS);
+static const std::regex gRegex_GamepadHat_Down      = std::regex(R"(^GAMEPAD\s+HAT(\d+)\s+DOWN$)", REGEX_OPTIONS);
+static const std::regex gRegex_GamepadHat_Left      = std::regex(R"(^GAMEPAD\s+HAT(\d+)\s+LEFT$)", REGEX_OPTIONS);
+static const std::regex gRegex_GamepadHat_Right     = std::regex(R"(^GAMEPAD\s+HAT(\d+)\s+RIGHT$)", REGEX_OPTIONS);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Is the character ASCII whitespace?
@@ -114,6 +132,15 @@ static float getRawInput(const InputSrc src) noexcept {
     else if (src.device == InputSrc::GAMEPAD_BUTTON) {
         return Input::getControllerInputValue((ControllerInput) src.input);
     }
+    else if (src.device == InputSrc::JOYSTICK_AXIS) {
+        return Input::getJoystickAxisValue(src.input);
+    }
+    else if (src.device == InputSrc::JOYSTICK_BUTTON) {
+        return (Input::isJoystickButtonPressed(src.input)) ? 1.0f : 0.0f;
+    }
+    else if (src.device == InputSrc::JOYSTICK_HAT) {
+        return (Input::isJoystickHatPressed(src.input)) ? 1.0f : 0.0f;
+    }
 
     return 0.0f;   // Null or unsupported input source
 }
@@ -155,6 +182,15 @@ static bool isInputJustPressed(const InputSrc src) noexcept {
     }
     else if ((src.device == InputSrc::GAMEPAD_AXIS) || (src.device == InputSrc::GAMEPAD_BUTTON)) {
         return Input::isControllerInputJustPressed((ControllerInput) src.input);
+    }
+    else if (src.device == InputSrc::JOYSTICK_AXIS) {
+        return Input::isJoystickAxisJustPressed(src.input);
+    }
+    else if (src.device == InputSrc::JOYSTICK_BUTTON) {
+        return Input::isJoystickButtonJustPressed(src.input);
+    }
+    else if (src.device == InputSrc::JOYSTICK_HAT) {
+        return Input::isJoystickHatJustPressed(src.input);
     }
 
     return false;   // Null or unsupported input source
@@ -286,6 +322,46 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
             inputSrc.input = (uint16_t) ControllerInput::AXIS_RIGHT_Y;
             inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
         }
+        else {
+            // Try one of the regexes for generic joystick inputs.
+            // Note: for axis, button etc. numbers they are '1' based to the user but '0' based in code - hence we subtract '1' everywhere here...
+            std::smatch regexMatches;
+
+            if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadAxis_Norm)) {
+                inputSrc.device = InputSrc::JOYSTICK_AXIS;
+                inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
+            }
+            else if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadAxis_PosOnly)) {
+                inputSrc.device = InputSrc::JOYSTICK_AXIS;
+                inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
+                inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
+            }
+            else if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadAxis_NegOnly)) {
+                inputSrc.device = InputSrc::JOYSTICK_AXIS;
+                inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
+                inputSrc.modifier = InputSrc::MOD_NEG_SUBAXIS;
+            }
+            else if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadButton)) {
+                inputSrc.device = InputSrc::JOYSTICK_BUTTON;
+                inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
+            }
+            else if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadHat_Up)) {
+                inputSrc.device = InputSrc::JOYSTICK_HAT;
+                inputSrc.input = Input::JoyHat(Input::JoyHatDir::Up, (uint16_t)(std::stoi(regexMatches[1]) - 1));
+            }
+            else if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadHat_Down)) {
+                inputSrc.device = InputSrc::JOYSTICK_HAT;
+                inputSrc.input = Input::JoyHat(Input::JoyHatDir::Down, (uint16_t)(std::stoi(regexMatches[1]) - 1));
+            }
+            else if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadHat_Left)) {
+                inputSrc.device = InputSrc::JOYSTICK_HAT;
+                inputSrc.input = Input::JoyHat(Input::JoyHatDir::Left, (uint16_t)(std::stoi(regexMatches[1]) - 1));
+            }
+            else if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadHat_Right)) {
+                inputSrc.device = InputSrc::JOYSTICK_HAT;
+                inputSrc.input = Input::JoyHat(Input::JoyHatDir::Right, (uint16_t)(std::stoi(regexMatches[1]) - 1));
+            }
+        }
     }
     else if (nameUpper.find("INV GAMEPAD ") == 0) {
         // Probably an inverted gamepad axis
@@ -308,6 +384,16 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) ControllerInput::AXIS_RIGHT_Y;
             inputSrc.modifier = InputSrc::MOD_INVERT;
+        }
+        else {
+            // Try match an inverted generic joypad axis
+            std::smatch regexMatches;
+
+            if (std::regex_search(nameUpper, regexMatches, gRegex_GamepadAxis_Inv)) {
+                inputSrc.device = InputSrc::JOYSTICK_AXIS;
+                inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
+                inputSrc.modifier = InputSrc::MOD_INVERT;
+            }
         }
     }
     else {
