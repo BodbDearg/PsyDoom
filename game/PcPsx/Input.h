@@ -29,16 +29,14 @@ enum JoyHatDir : uint16_t {
 };
 
 // Holds a joystick hat (d-pad) direction and hat number
-struct JoyHat {
-    union {
-        struct {
-            JoyHatDir   hatDir : 2;
-            uint16_t    hatNum : 14;
-        } fields;
+union JoyHat {
+    struct {
+        JoyHatDir   hatDir : 2;
+        uint16_t    hatNum : 14;
+    } fields;
 
-        uint16_t bits;
-    };
-
+    uint16_t bits;
+    
     inline JoyHat() noexcept : bits() {}
     inline JoyHat(const uint16_t bits) noexcept : bits(bits) {}
 

@@ -7,6 +7,8 @@
 #include "Sequence.h"
 #include "WmdFileTypes.h"
 
+#include <cstdio>
+
 BEGIN_NAMESPACE(AudioTools)
 
 //------------------------------------------------------------------------------------------------------------------------------------------

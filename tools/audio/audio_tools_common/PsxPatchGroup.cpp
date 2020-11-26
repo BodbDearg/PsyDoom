@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 
 BEGIN_NAMESPACE(AudioTools)
 

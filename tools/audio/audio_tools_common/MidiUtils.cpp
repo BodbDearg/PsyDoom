@@ -76,9 +76,6 @@ static void determineStartTempo(MidiFile& midiFile) noexcept {
     // Run through all tracks and find set tempo commands that have a delay of '0'.
     // These are the initial tempo values:
     for (MidiTrack& track : midiFile.tracks) {
-        auto cmdIter = track.cmds.begin();
-        auto cmdEndIter = track.cmds.end();
-
         for (const MidiCmd& cmd : track.cmds) {
             // Stop if the command is delayed
             if (cmd.delayQnp != 0)

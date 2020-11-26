@@ -20,7 +20,7 @@ BEGIN_NAMESPACE(PlayerPrefs)
 
 // Name of the user prefs file: it can reside in either the writable user data folder (default) or in the current working directory.
 // We save to the current working directory if the file is found existing there on launch.
-static constexpr char* const PREFS_FILE_NAME = "saved_prefs.ini";
+static const char* const PREFS_FILE_NAME = "saved_prefs.ini";
 
 // Holds the ASCII readable characters for a game password
 struct Password {
