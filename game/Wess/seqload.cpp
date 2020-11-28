@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "seqload.h"
 
+#include "wessapi.h"
 #include "wessarc.h"
 
 bool gbWess_seq_loader_enable;      // Has the sequence loader been initialized?
@@ -97,7 +98,8 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
     sequence_data& sequence = module.psequences[seqIdx];
     
     uint8_t* pCurSeqMem = (uint8_t*) pSeqMem;
-    sequence.ptracks = (track_data*) pSeqMem;
+    wess_align_byte_ptr(pCurSeqMem, alignof(track_data));
+    sequence.ptracks = (track_data*) pCurSeqMem;
 
     if (sequence.num_tracks == 0) {
         pCurSeqMem += sizeof(track_data);
@@ -214,6 +216,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
         const uint16_t numLabels = track.hdr.num_labels;
         const int32_t labelListSize = numLabels * sizeof(uint32_t);
 
+        wess_align_byte_ptr(pCurSeqMem, alignof(uint32_t));
         track.plabels = (uint32_t*) pCurSeqMem;
         pCurSeqMem += labelListSize;
 

@@ -28,8 +28,7 @@ static PsxCd_File*      gpWess_fp_wmd_file;         // File object for the modul
 static const uint8_t*   gpWess_wmdFileBytesBeg;     // Pointer to the start of a buffer containing the serialized .WMD file, as it was read from the disc
 static const uint8_t*   gpWess_curWmdFileBytes;     // Location in the buffer containing the serialized .WMD file to read from next
 
-// Unused error handling stuff.
-// May have only been used in debug builds.
+// Unused error handling stuff: may have only been used in debug builds originally
 static int32_t (*gpWess_Error_func)(int32_t, int32_t) = nullptr;
 static int32_t gWess_Error_module = 0;
 
@@ -311,9 +310,13 @@ int32_t wess_load_module(
 
     // Destination pointer to allocate from in the loaded WMD memory block.
     // The code below allocates from this chunk linearly.
+    //
+    // PsyDoom: added alignment code to align the destination pointer to prevent undefined behavior for various types.
+    // This may increase memory usage in the WMD.
     uint8_t* pCurDestBytes = (uint8_t*) pDestMem;
-
+    
     // Alloc the root master status structure
+    wess_align_byte_ptr(pCurDestBytes, alignof(master_status_structure));
     master_status_structure& mstat = *(master_status_structure*) pCurDestBytes;
     pCurDestBytes += sizeof(master_status_structure);
     gpWess_pm_stat = &mstat;
@@ -324,6 +327,7 @@ int32_t wess_load_module(
     mstat.num_patch_groups = (uint8_t) numPatchGroups;
 
     // Alloc the module info struct and link to the master status struct
+    wess_align_byte_ptr(pCurDestBytes, alignof(module_data));
     module_data& module = *(module_data*) pCurDestBytes;
     pCurDestBytes += sizeof(module_data);
     mstat.pmodule = &module;
@@ -340,11 +344,13 @@ int32_t wess_load_module(
     }
     
     // Alloc the sequence status structs and link to the master status struct
+    wess_align_byte_ptr(pCurDestBytes, alignof(sequence_status));
     sequence_status* const pSeqStat = (sequence_status*) pCurDestBytes;
     mstat.psequence_stats = pSeqStat;
     pCurDestBytes += sizeof(sequence_status) * moduleHdr.max_active_sequences;
 
     // Alloc the array of track status structs and link to the master status struct
+    wess_align_byte_ptr(pCurDestBytes, alignof(track_status));
     track_status* const pTrackStat = (track_status*) pCurDestBytes;
     mstat.ptrack_stats = pTrackStat;
     pCurDestBytes += sizeof(track_status) * moduleHdr.max_active_tracks;
@@ -363,6 +369,7 @@ int32_t wess_load_module(
     }
 
     // Alloc the list of patch group info structs for each sound driver and link to the master status struct
+    wess_align_byte_ptr(pCurDestBytes, alignof(patch_group_data));
     patch_group_data* const pPatchGroups = (patch_group_data*) pCurDestBytes;
     pCurDestBytes += sizeof(patch_group_data) * numPatchGroups;
     mstat.ppatch_groups = pPatchGroups;
@@ -406,13 +413,16 @@ int32_t wess_load_module(
 
         // Try to match against one of the sound drivers loaded
         for (int32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
-            // This this patch group play with this sound hardware? If it doesn't then skip over it:
+            // Does this patch group play with this sound hardware? If it doesn't then skip over it:
             patch_group_data& patchGroup = pPatchGroups[patchGroupIdx];
 
             if (patchGroupHdr.driver_id != patchGroup.hw_table_list.driver_id)
                 continue;
             
-            // Save the header, pointer to patch data and offset, and increment the total voice count
+            // Save the header, pointer to patch data and offset, and increment the total voice count.
+            // PsyDoom: also ensure the destination bytes pointer is properly aligned.
+            wess_align_byte_ptr(pCurDestBytes, alignof(patch));
+            
             patchGroup.hdr = patchGroupHdr;
             patchGroup.pdata = pCurDestBytes;
             patchGroup.modfile_offset = (int32_t)(gpWess_curWmdFileBytes - gpWess_wmdFileBytesBeg);
@@ -432,6 +442,8 @@ int32_t wess_load_module(
             }
 
             {
+                wess_align_byte_ptr(pCurDestBytes, alignof(patch_voice));
+                
                 const bool bReadSuccess = conditional_read(
                     patchGroupHdr.load_flags & LOAD_PATCH_VOICES,
                     pCurDestBytes,
@@ -443,6 +455,8 @@ int32_t wess_load_module(
             }
             
             {
+                wess_align_byte_ptr(pCurDestBytes, alignof(patch_sample));
+            
                 const bool bReadSuccess = conditional_read(
                     patchGroupHdr.load_flags & LOAD_PATCH_SAMPLES,
                     pCurDestBytes,
@@ -454,6 +468,8 @@ int32_t wess_load_module(
             }
             
             {
+                wess_align_byte_ptr(pCurDestBytes, alignof(drum_patch));
+            
                 const bool bReadSuccess = conditional_read(
                     patchGroupHdr.load_flags & LOAD_DRUM_PATCHES,
                     pCurDestBytes,
@@ -465,6 +481,8 @@ int32_t wess_load_module(
             }
 
             {
+                wess_align_byte_ptr(pCurDestBytes, alignof(void*));
+            
                 const bool bReadSuccess = conditional_read(
                     patchGroupHdr.load_flags & LOAD_EXTRA_DATA,
                     pCurDestBytes,
@@ -481,6 +499,7 @@ int32_t wess_load_module(
     }
 
     // Alloc the list of voice status structs and link to the master status struct
+    wess_align_byte_ptr(pCurDestBytes, alignof(voice_status));
     voice_status* const pVoiceStat = (voice_status*) pCurDestBytes;
     mstat.pvoice_stats = pVoiceStat;
     pCurDestBytes += sizeof(voice_status) * mstat.max_voices;
@@ -533,6 +552,7 @@ int32_t wess_load_module(
     }
 
     // Alloc the list of sequence info structs and link to the master status struct
+    wess_align_byte_ptr(pCurDestBytes, alignof(sequence_data));
     sequence_data* const pSequence = (sequence_data*) pCurDestBytes;
     pCurDestBytes += sizeof(sequence_data) * module.hdr.num_sequences;
     module.psequences = pSequence;
@@ -652,6 +672,7 @@ int32_t wess_load_module(
     mstat.max_track_loc_stack_size = maxLocStackSizePerTrack;
 
     // Alloc the list of callback status structs and link to the master status struct
+    wess_align_byte_ptr(pCurDestBytes, alignof(callback_status));
     callback_status* const pCallbackStats = (callback_status*) pCurDestBytes;
     pCurDestBytes += sizeof(callback_status) * module.hdr.max_callbacks;
     mstat.pcallback_stats = pCallbackStats;
@@ -689,6 +710,8 @@ int32_t wess_load_module(
 
     // Allocate the sub-stacks for each track work area.
     // These are used to hold a stack track locations that can be pushed and popped to by sequencer commands for save/return behavior.
+    wess_align_byte_ptr(pCurDestBytes, alignof(void*));
+    
     for (uint8_t trackIdx = 0; trackIdx < module.hdr.max_active_tracks; ++trackIdx) {
         track_status& trackStat = pTrackStat[trackIdx];
 
@@ -1120,4 +1143,14 @@ void wess_seq_stopall() noexcept {
 
     // Re-enable the sequencer
     gbWess_SeqOn = true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition that aligns a byte pointer forward until it matches the given alignment
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_align_byte_ptr(uint8_t*& ptr, const size_t alignment) noexcept {
+    #if PSYDOOM_MODS
+        ASSERT(alignment > 0);
+        ptr = (uint8_t*)((((uintptr_t) ptr + alignment - 1u) / alignment) * alignment);
+    #endif
 }

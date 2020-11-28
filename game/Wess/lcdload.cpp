@@ -10,6 +10,7 @@
 #include "PcPsx/ProgArgs.h"
 #include "psxspu.h"
 #include "PsyQ/LIBSPU.h"
+#include "wessapi.h"
 #include "wessarc.h"
 
 #include <cstring>
@@ -58,16 +59,18 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
     // Save pointers to the various data structures for the patch group
     {
         uint8_t* pPatchesData = pPatchGroup->pdata;
-
         gpWess_lcd_load_patches = (patch*) pPatchesData;
         pPatchesData += sizeof(patch) * pPatchGroup->hdr.num_patches;
         
+        wess_align_byte_ptr(pPatchesData, alignof(patch_voice));
         gpWess_lcd_load_patchVoices = (patch_voice*) pPatchesData;
         pPatchesData += sizeof (patch_voice) * pPatchGroup->hdr.num_patch_voices;
 
+        wess_align_byte_ptr(pPatchesData, alignof(patch_sample));
         gpWess_lcd_load_patchSamples = (patch_sample*) pPatchesData;
         pPatchesData += sizeof(patch_sample) * pPatchGroup->hdr.num_patch_samples;
 
+        wess_align_byte_ptr(pPatchesData, alignof(drum_patch));
         gpWess_lcd_load_drumPatches = (drum_patch*) pPatchesData;
     }
 

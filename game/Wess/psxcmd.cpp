@@ -282,16 +282,18 @@ void PSX_DriverInit(master_status_structure& mstat) noexcept {
 
     {
         uint8_t* pPatchData = patchGroup.pdata;
-
         gpWess_drv_patches = (patch*) pPatchData;
         pPatchData += sizeof(patch) * patchGroup.hdr.num_patches;
 
+        wess_align_byte_ptr(pPatchData, alignof(patch_voice));
         gpWess_drv_patchVoices = (patch_voice*) pPatchData;
         pPatchData += sizeof(patch_voice) * patchGroup.hdr.num_patch_voices;
 
+        wess_align_byte_ptr(pPatchData, alignof(patch_sample));
         gpWess_drv_patchSamples = (patch_sample*) pPatchData;
         pPatchData += sizeof(patch_sample) * patchGroup.hdr.num_patch_samples;
 
+        wess_align_byte_ptr(pPatchData, alignof(drum_patch));
         gpWess_drv_drumPatches = (drum_patch*) pPatchData;
     }
     

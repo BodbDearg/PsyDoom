@@ -3,6 +3,8 @@
 #include "PcPsx/Types.h"
 #include "PsyQ/LIBSPU.h"
 
+#include <cstddef>
+
 struct master_status_structure;
 struct patch_sample;
 struct patch_voice;
@@ -114,3 +116,6 @@ void wess_seq_trigger_special(const int32_t seqIdx, const TriggerPlayAttr* const
 SequenceStatus wess_seq_status(const int32_t seqIdx) noexcept;
 void wess_seq_stop(const int32_t seqIdx) noexcept;
 void wess_seq_stopall() noexcept;
+
+// Note: this is a new addition for PsyDoom to help prevent undefined behavior
+void wess_align_byte_ptr(uint8_t*& ptr, const size_t alignment) noexcept;
