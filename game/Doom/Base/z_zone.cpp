@@ -60,8 +60,13 @@ memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {
 // Optionally, a referencing pointer field can also be supplied which is updated when the block is allocated or freed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, void** const ppUser) noexcept {
-    // This is the real size to allocate: have to add room for a memblock and also 4-byte align
-    const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
+    // This is the real size to allocate: have to add room for a memblock and also 4-byte align.
+    // PsyDoom: bumping this up to 8-byte alignment for 64-bit environments!
+    #if PSYDOOM_MODS
+        const int32_t allocSize = (size + sizeof(memblock_t) + sizeof(void*) - 1) & (int32_t)(0xFFFFFFFF - (sizeof(void*) - 1));
+    #else
+        const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
+    #endif
 
     // Scan through the block list looking for the first free block of sufficient size.
     // Also throw out any purgable blocks along the way.
@@ -164,8 +169,13 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, void** co
 // Ignores the rover used by the memory zone also and always starts from the very end.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, void** const ppUser) noexcept {
-    // This is the real size to allocate: have to add room for a memblock and also 4-byte align
-    const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
+    // This is the real size to allocate: have to add room for a memblock and also 4-byte align.
+    // PsyDoom: bumping this up to 8-byte alignment for 64-bit environments!
+    #if PSYDOOM_MODS
+        const int32_t allocSize = (size + sizeof(memblock_t) + sizeof(void*) - 1) & (int32_t)(0xFFFFFFFF - (sizeof(void*) - 1));
+    #else
+        const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
+    #endif
     
     // Start at the very last block in the list, since we want to alloc at the end of the heap
     memblock_t* pBase = &zone.blocklist;
