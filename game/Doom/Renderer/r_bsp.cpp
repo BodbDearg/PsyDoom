@@ -1,5 +1,6 @@
 #include "r_bsp.h"
 
+#include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/doomdata.h"
@@ -295,6 +296,12 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
         endX = SCREEN_W;
     }
     
+    // PsyDoom: sometimes 'begX' here ends up offscreen - added an extra safety check to avoid overstepping array bounds:
+    #if PSYDOOM_MODS
+        if (begX >= SCREEN_W)
+            return false;
+    #endif
+    
     // As a final check, scan through all of the columns for the node's bounding box.
     // At least one bounding box column must NOT be occluded by an already drawn fully solid 1 sided or opaque column.
     // If we don't find any unobscured columns then the BSP node is obscured by blocking geometry, and thus can be ignored:
@@ -488,9 +495,15 @@ void R_AddLine(seg_t& seg) noexcept {
     begX += HALF_SCREEN_W;
     endX += HALF_SCREEN_W;
     
-    // If the seg is zero sized then ignore
-    if (begX == endX)
-        return;
+    // If the seg is zero sized then ignore.
+    // PsyDoom: change this to discard a malformed line also (end before beg)
+    #if PSYDOOM_MODS
+        if (begX >= endX)
+            return;
+    #else
+        if (begX == endX)
+            return;
+    #endif
 
     // If there is no ceiling texture at this seg then the sky is visible and needs to be drawn
     if (gpCurDrawSector->ceilingpic == -1) {
@@ -505,6 +518,13 @@ void R_AddLine(seg_t& seg) noexcept {
     if (endX > SCREEN_W) {
         endX = SCREEN_W;
     }
+    
+    // PsyDoom: sometimes 'begX' here ends up offscreen - added extra safety checks to avoid overstepping array bounds.
+    // Also discard the line if the clamping above has reduced it to size zero (or negative!).
+    #if PSYDOOM_MODS
+        if ((begX >= SCREEN_W) || (endX <= begX))
+            return;
+    #endif
     
     // Determine the first visible (not fully occluded) column of the seg
     int32_t visibleBegX = SCREEN_W;
@@ -524,11 +544,9 @@ void R_AddLine(seg_t& seg) noexcept {
     int32_t visibleEndX = 0;
     
     {
-        const bool* pbIsSolidCol = &gbSolidCols[endX];
+        const bool* pbIsSolidCol = &gbSolidCols[endX - 1];
         
-        for (int32_t x = endX - 1; x >= begX; --x) {
-            --pbIsSolidCol;
-            
+        for (int32_t x = endX - 1; x >= begX; --x, --pbIsSolidCol) {
             if (!(*pbIsSolidCol)) {
                 visibleEndX = x;
                 break;
