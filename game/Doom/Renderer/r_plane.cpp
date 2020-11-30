@@ -159,12 +159,23 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 const int32_t screenH = topScreenY - botScreenY;
                 const fixed_t xStep = screenW / screenH;
 
-                // Clamp the edge y bounds to the screen
-                fixed_t x = botScreenX;
+                // Clamp the edge y bounds to the screen.
+                // PsyDoom: use 64-bit arithmetic here to avoid overflows.
+                #if PSYDOOM_MODS
+                    int64_t x = botScreenX;
+                #else
+                    fixed_t x = botScreenX;
+                #endif
+                    
                 int32_t y = botScreenY;
 
                 if (botScreenY < 0) {
-                    x -= botScreenY * xStep;
+                    #if PSYDOOM_MODS
+                        x -= (int64_t) botScreenY * (int64_t) xStep;
+                    #else
+                        x -= botScreenY * xStep;
+                    #endif
+                    
                     y = 0;
                 }
 
@@ -185,7 +196,13 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 // For each row in this edge, set the appropriate bound in the flat spans that the edge intersects
                 while (y < yEnd) {
                     span_t& span = gFlatSpans[y];
-                    span.bounds[spanBound] = d_fixed_to_int(x);
+                    
+                    #if PSYDOOM_MODS
+                        span.bounds[spanBound] = (int32_t) d_rshift<FRACBITS>(x);
+                    #else
+                        span.bounds[spanBound] = d_fixed_to_int(x);
+                    #endif
+                    
                     x += xStep;
                     ++y;
                 }

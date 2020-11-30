@@ -264,9 +264,15 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
                 newVert.y = dy * intersectT + srcVert1.y;
             }
 
-            // Re-do perspective projection to compute screen x and scale for the vertex
+            // Re-do perspective projection to compute screen x and scale for the vertex.
+            // PsyDoom: fix an occasional overflow here by using 64-bit arithmetic.
             newVert.scale = (HALF_SCREEN_W * FRACUNIT) / newVert.viewy;
-            newVert.screenx = d_fixed_to_int(newVert.viewx * newVert.scale) + HALF_SCREEN_W;
+            
+            #if PSYDOOM_MODS
+                newVert.screenx = (int32_t) d_rshift<FRACBITS>((int64_t) newVert.viewx * newVert.scale) + HALF_SCREEN_W;
+            #else
+                newVert.screenx = d_fixed_to_int(newVert.viewx * newVert.scale) + HALF_SCREEN_W;
+            #endif
 
             // Mark the new vertex as having up-to-date transforms and populate the new edge created.
             // Note that the new edge will only have a seg it doesn't run along the clip plane.
