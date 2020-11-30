@@ -183,13 +183,11 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 }
 
                 // For each row in this edge, set the appropriate bound in the flat spans that the edge intersects
-                span_t* pSpan = &gFlatSpans[y];
-                
                 while (y < yEnd) {
-                    pSpan->bounds[spanBound] = d_fixed_to_int(x);
+                    span_t& span = gFlatSpans[y];
+                    span.bounds[spanBound] = d_fixed_to_int(x);
                     x += xStep;
                     ++y;
-                    ++pSpan;
                 }
             }
         }
