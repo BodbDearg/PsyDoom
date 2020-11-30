@@ -405,7 +405,15 @@ static int32_t SL_PointOnSide2(
     const fixed_t ry = py - ly1;
     const fixed_t nx = ly2 - ly1;
     const fixed_t ny = lx1 - lx2;
-    const fixed_t signedDist = FixedMul(rx, nx) + FixedMul(ry, ny);
+
+    // PsyDoom: this add sometimes overflows and I can't fix the overflow without breaking demo compatibility.
+    // For demo compatibility also, the overflow MUST behave like an unsigned overflow.
+    // Encode that overflow behavior here, to avoid undefined behavior...
+    #if PSYDOOM_MODS
+        const int32_t signedDist = (int32_t)((uint32_t) FixedMul(rx, nx) + (uint32_t) FixedMul(ry, ny));
+    #else
+        const fixed_t signedDist = FixedMul(rx, nx) + FixedMul(ry, ny);
+    #endif
 
     return (signedDist >= 0) ? SIDE_FRONT : SIDE_BACK;
 }
