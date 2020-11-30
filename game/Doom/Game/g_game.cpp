@@ -189,7 +189,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
             
             // If we found a good position we can stop.
             // Make sure the map object type is correct for this player index also.
-            if (P_CheckPosition(playerMobj, (fixed_t) spawnPt.x << FRACBITS, (fixed_t) spawnPt.y << FRACBITS)) {
+            if (P_CheckPosition(playerMobj, d_int_to_fixed(spawnPt.x), d_int_to_fixed(spawnPt.y))) {
                 pChosenSpawnPt = &spawnPt;
                 pChosenSpawnPt->type = 1 + (int16_t) playerIdx;
                 break;
@@ -201,13 +201,13 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
         mapthing_t& prefSpawnPt = gPlayerStarts[playerIdx];
 
         // If that didn't work out try another player's spawn point
-        if (!P_CheckPosition(playerMobj, (fixed_t) prefSpawnPt.x << FRACBITS, (fixed_t) prefSpawnPt.y << FRACBITS)) {
+        if (!P_CheckPosition(playerMobj, d_int_to_fixed(prefSpawnPt.x), d_int_to_fixed(prefSpawnPt.y))) {
             for (int32_t spawnPtIdx = 0; spawnPtIdx < MAXPLAYERS; ++spawnPtIdx) {
                 mapthing_t& otherSpawnPt = gPlayerStarts[spawnPtIdx];
 
                 // If we found a good position we can stop.
                 // Make sure the map object type is correct for this player index also.
-                if (P_CheckPosition(playerMobj, (fixed_t) otherSpawnPt.x << FRACBITS, (fixed_t) otherSpawnPt.y << FRACBITS)) {
+                if (P_CheckPosition(playerMobj, d_int_to_fixed(otherSpawnPt.x), d_int_to_fixed(otherSpawnPt.y))) {
                     pChosenSpawnPt = &otherSpawnPt;
                     pChosenSpawnPt->type = 1 + (int16_t) playerIdx;
                     break;
@@ -231,8 +231,8 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     }
     
     // Figure out what subsector the player will spawn in
-    const fixed_t spawnX = (fixed_t) pChosenSpawnPt->x << FRACBITS;
-    const fixed_t spawnY = (fixed_t) pChosenSpawnPt->y << FRACBITS;
+    const fixed_t spawnX = d_int_to_fixed(pChosenSpawnPt->x);
+    const fixed_t spawnY = d_int_to_fixed(pChosenSpawnPt->y);
     subsector_t* const pSubsec = R_PointInSubsector(spawnX, spawnY);
 
     // This mask wraps the fine angle for the map thing and restricts it to the 8 diagonal directions

@@ -4,6 +4,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBGTE.h"
 
+#include "PcPsx/BitShift.h"
+
 static int16_t gGteRotMatrix[3][3];     // Emulated Geometry Transform Engine (GTE): current rotation matrix
 static int32_t gGteTransVec[3];         // Emulated Geometry Transform Engine (GTE): current translation vector
 
@@ -60,14 +62,14 @@ void LIBGTE_RotTrans(const SVECTOR& vecIn, VECTOR& vecOut, int32_t& flagsOut) no
     result[0] = (int64_t) gGteRotMatrix[0][0] * vecIn.vx + (int64_t) gGteRotMatrix[0][1] * vecIn.vy + (int64_t) gGteRotMatrix[0][2] * vecIn.vz;
     result[1] = (int64_t) gGteRotMatrix[1][0] * vecIn.vx + (int64_t) gGteRotMatrix[1][1] * vecIn.vy + (int64_t) gGteRotMatrix[1][2] * vecIn.vz;
     result[2] = (int64_t) gGteRotMatrix[2][0] * vecIn.vx + (int64_t) gGteRotMatrix[2][1] * vecIn.vy + (int64_t) gGteRotMatrix[2][2] * vecIn.vz;
-    result[0] += (int64_t) gGteTransVec[0] << 12;
-    result[1] += (int64_t) gGteTransVec[1] << 12;
-    result[2] += (int64_t) gGteTransVec[2] << 12;
+    result[0] += d_lshift<12>((int64_t) gGteTransVec[0]);
+    result[1] += d_lshift<12>((int64_t) gGteTransVec[1]);
+    result[2] += d_lshift<12>((int64_t) gGteTransVec[2]);
 
     // Save the result output and convert from 32.12 format back to a simple 32-bit integer
-    vecOut.vx = (int32_t)(result[0] >> 12);
-    vecOut.vy = (int32_t)(result[1] >> 12);
-    vecOut.vz = (int32_t)(result[2] >> 12);
+    vecOut.vx = (int32_t) d_rshift<12>(result[0]);
+    vecOut.vy = (int32_t) d_rshift<12>(result[1]);
+    vecOut.vz = (int32_t) d_rshift<12>(result[2]);
 
     // Don't care about the value of this - it's never used anywhere...
     flagsOut = 0;

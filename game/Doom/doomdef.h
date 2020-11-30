@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include "PcPsx/BitShift.h"
 
 struct mobj_t;
 struct mobjinfo_t;
@@ -14,7 +14,9 @@ enum dirtype_t : int32_t;
 enum mobjtype_t : int32_t;
 enum statenum_t : int32_t;
 
-// Screen resolution (NTSC)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Game internal resolution (NTSC & PAL)
+//------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr int32_t SCREEN_W = 256;
 static constexpr int32_t SCREEN_H = 240;
 static constexpr int32_t HALF_SCREEN_W = SCREEN_W / 2;
@@ -30,6 +32,21 @@ typedef int32_t fixed_t;
 static constexpr uint32_t   FRACBITS = 16;              // Number of bits in most fixed point numbers in DOOM
 static constexpr fixed_t    FRACUNIT = 0x10000;         // 1.0 in 16.16 fixed point format
 static constexpr fixed_t    FRACMASK = FRACUNIT - 1;    // Mask for the fractional part of a 16.16 fixed point number
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: added these helpers to convert to and from fixed point format for Doom WITHOUT invoking undefined shift behavior.
+// Left and right shifts of negative numbers are undefined in the C++ standard and could behave differently depending on architecture.
+// By default these convert to and from the standard Doom 16.16 format but they can handle other formats too.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <uint32_t FracBits = FRACBITS>
+static inline constexpr fixed_t d_int_to_fixed(const int32_t val) noexcept {
+    return d_lshift<FracBits>(val);
+}
+
+template <uint32_t FracBits = FRACBITS>
+static inline constexpr int32_t d_fixed_to_int(const fixed_t val) noexcept {
+    return d_rshift<FracBits>(val);
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Alias for a 32-bit BAM (Binary angular measurement) angle in DOOM and some commonly used angles.

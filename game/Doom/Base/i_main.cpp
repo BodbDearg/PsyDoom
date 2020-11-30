@@ -969,14 +969,14 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
         // Figure out the y position and height for the texture cache entry.
         // Have to rescale in using a 24.8 fixed point format because the screen is 240 pixels high, and the texture cache is 256 pixels high.
         // I'm not sure why there is negative checks here however, texcoords are never negative?
-        int16_t y = (int16_t)(((int32_t) pTex->texPageCoordY << 8) * SCREEN_H / TCACHE_PAGE_SIZE);
-        int16_t h = (int16_t)(((int32_t) pTex->height        << 8) * SCREEN_H / TCACHE_PAGE_SIZE);
+        int16_t y = (int16_t)(((int32_t) d_lshift<8>(pTex->texPageCoordY)) * SCREEN_H / TCACHE_PAGE_SIZE);
+        int16_t h = (int16_t)(((int32_t) d_lshift<8>(pTex->height))        * SCREEN_H / TCACHE_PAGE_SIZE);
 
         if (y < 0) { y += 255; }
         if (h < 0) { h += 255; }
 
-        y >>= 8;
-        h >>= 8;
+        y = d_rshift<8>(y);
+        h = d_rshift<8>(h);
 
         const int16_t x = pTex->texPageCoordX;
         const int16_t w = pTex->width;

@@ -77,8 +77,8 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
     fixed_t yuse = yleft;
 
     while ((std::abs(xuse) > MAXMOVE) || (std::abs(yuse) > MAXMOVE)) {
-        xuse >>= 1;
-        yuse >>= 1;
+        xuse = d_rshift<1>(xuse);
+        yuse = d_rshift<1>(yuse);
     }
 
     // Continue moving until we are done
@@ -139,8 +139,8 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
         mobj.momx = 0;
         mobj.momy = 0;
     } else {
-        mobj.momx = (mobj.momx >> 8) * (FRICTION >> 8);
-        mobj.momy = (mobj.momy >> 8) * (FRICTION >> 8);
+        mobj.momx = d_rshift<8>(mobj.momx) * d_rshift<8>(FRICTION);
+        mobj.momy = d_rshift<8>(mobj.momy) * d_rshift<8>(FRICTION);
     }
 }
 
@@ -155,7 +155,7 @@ static void P_FloatChange(mobj_t& mobj) noexcept {
 
     // Get the height difference to the target and multiply by 3 for an apparent fudge factor. Not sure why the fudge was added in...
     // I'm wondering also should this have been getting the (vertical) center to center height difference instead?
-    const fixed_t dz = ((mobj.height >> 1) + target.z - mobj.z) * 3;
+    const fixed_t dz = (d_rshift<1>(mobj.height) + target.z - mobj.z) * 3;
     
     if (dz < 0) {
         if (approxDist < -dz) {     // N.B: 'dz' is signed difference and negative here, need to adjust
@@ -345,8 +345,8 @@ static void PB_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.bprev) {
             thing.bprev->bnext = thing.bnext;
         } else {
-            const int32_t blockx = (thing.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-            const int32_t blocky = (thing.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
+            const int32_t blockx = d_rshift<MAPBLOCKSHIFT>(thing.x - gBlockmapOriginX);
+            const int32_t blocky = d_rshift<MAPBLOCKSHIFT>(thing.y - gBlockmapOriginY);
 
             // PsyDoom: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
@@ -388,8 +388,8 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
     // Add the thing into the blockmap unless the thing flags specify otherwise (inert things)
     if ((gTestFlags & MF_NOBLOCKMAP) == 0) {
         // Compute the blockmap cell and see if it's in range for the blockmap
-        const int32_t bmapX = (mobj.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t bmapY = (mobj.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t bmapX = d_rshift<MAPBLOCKSHIFT>(mobj.x - gBlockmapOriginX);
+        const int32_t bmapY = d_rshift<MAPBLOCKSHIFT>(mobj.y - gBlockmapOriginY);
         
         if ((bmapX >= 0) && (bmapY >= 0) && (bmapX < gBlockmapWidth) && (bmapY < gBlockmapHeight)) {
             // In range: link the thing into the blockmap list for this blockmap cell
@@ -457,10 +457,10 @@ static bool PB_CheckPosition() noexcept {
     gTestCeilingz = testSec.ceilingheight;
 
     // Determine the blockmap extents (left/right, top/bottom) to be tested against for collision and clamp to a valid range
-    const int32_t bmapLx = std::max((gTestBBox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapRx = std::min((gTestBBox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
-    const int32_t bmapTy = std::min((gTestBBox[BOXTOP] - gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
-    const int32_t bmapBy = std::max((gTestBBox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gTestBBox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS), 0);
+    const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gTestBBox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS), gBlockmapWidth - 1);
+    const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(gTestBBox[BOXTOP] - gBlockmapOriginY + MAXRADIUS), gBlockmapHeight - 1);
+    const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(gTestBBox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS), 0);
 
     // This is a new collision test so increment this stamp
     gValidCount++;
@@ -515,13 +515,13 @@ static bool PB_BoxCrossLine(line_t& line) noexcept {
     // both points of the test bounding box diagonal lie on.
     const fixed_t lx = line.vertex1->x;
     const fixed_t ly = line.vertex1->y;
-    const int32_t ldx = line.dx >> FRACBITS;
-    const int32_t ldy = line.dy >> FRACBITS;
+    const int32_t ldx = d_fixed_to_int(line.dx);
+    const int32_t ldy = d_fixed_to_int(line.dy);
 
-    const int32_t dx1 = (x1 - lx) >> FRACBITS;
-    const int32_t dy1 = (gTestBBox[BOXTOP] - ly) >> FRACBITS;
-    const int32_t dx2 = (x2 - lx) >> FRACBITS;
-    const int32_t dy2 = (gTestBBox[BOXBOTTOM] - ly) >> FRACBITS;
+    const int32_t dx1 = d_fixed_to_int(x1 - lx);
+    const int32_t dy1 = d_fixed_to_int(gTestBBox[BOXTOP] - ly);
+    const int32_t dx2 = d_fixed_to_int(x2 - lx);
+    const int32_t dy2 = d_fixed_to_int(gTestBBox[BOXBOTTOM] - ly);
 
     const uint32_t side1 = (ldy * dx1 < dy1 * ldx);
     const uint32_t side2 = (ldy * dx2 < dy2 * ldx);

@@ -37,8 +37,8 @@ static fixed_t  gAutomapYMax;
 void AM_Start() noexcept {
     gAutomapXMin = gBlockmapOriginX;
     gAutomapYMin = gBlockmapOriginY;
-    gAutomapXMax = (gBlockmapWidth << MAPBLOCKSHIFT) + gBlockmapOriginX;
-    gAutomapYMax = (gBlockmapHeight << MAPBLOCKSHIFT) + gBlockmapOriginY;
+    gAutomapXMax = d_lshift<MAPBLOCKSHIFT>(gBlockmapWidth) + gBlockmapOriginX;
+    gAutomapYMax = d_lshift<MAPBLOCKSHIFT>(gBlockmapHeight) + gBlockmapOriginY;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -226,10 +226,10 @@ void AM_Drawer() noexcept {
                 continue;
 
             // Compute the line points in viewspace
-            const int32_t x1 = (((pLine->vertex1->x - ox) / SCREEN_W) * scale) >> FRACBITS;
-            const int32_t y1 = (((pLine->vertex1->y - oy) / SCREEN_W) * scale) >> FRACBITS;
-            const int32_t x2 = (((pLine->vertex2->x - ox) / SCREEN_W) * scale) >> FRACBITS;
-            const int32_t y2 = (((pLine->vertex2->y - oy) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t x1 = d_fixed_to_int(((pLine->vertex1->x - ox) / SCREEN_W) * scale);
+            const int32_t y1 = d_fixed_to_int(((pLine->vertex1->y - oy) / SCREEN_W) * scale);
+            const int32_t x2 = d_fixed_to_int(((pLine->vertex2->x - ox) / SCREEN_W) * scale);
+            const int32_t y2 = d_fixed_to_int(((pLine->vertex2->y - oy) / SCREEN_W) * scale);
 
             // Decide on line color
             uint32_t color = COLOR_BROWN;   // Normal two sided line
@@ -277,12 +277,12 @@ void AM_Drawer() noexcept {
             const fixed_t vx = pMObj->x - ox;
             const fixed_t vy = pMObj->y - oy;
 
-            const int32_t x1 = (((vx + cos1 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-            const int32_t y1 = (((vy + sin1 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-            const int32_t x2 = (((vx + cos2 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-            const int32_t y2 = (((vy + sin2 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-            const int32_t x3 = (((vx + cos3 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-            const int32_t y3 = (((vy + sin3 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t x1 = d_fixed_to_int(((vx + cos1 * THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y1 = d_fixed_to_int(((vy + sin1 * THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t x2 = d_fixed_to_int(((vx + cos2 * THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y2 = d_fixed_to_int(((vy + sin2 * THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t x3 = d_fixed_to_int(((vx + cos3 * THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y3 = d_fixed_to_int(((vy + sin3 * THING_TRI_SIZE) / SCREEN_W) * scale);
 
             // Draw the triangle
             DrawLine(COLOR_AQUA, x1, y1, x2, y2);
@@ -329,12 +329,12 @@ void AM_Drawer() noexcept {
         const fixed_t vx = player.mo->x - ox;
         const fixed_t vy = player.mo->y - oy;
 
-        const int32_t x1 = (((vx + cos1 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-        const int32_t y1 = (((vy + sin1 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-        const int32_t x2 = (((vx + cos2 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-        const int32_t y2 = (((vy + sin2 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-        const int32_t x3 = (((vx + cos3 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
-        const int32_t y3 = (((vy + sin3 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+        const int32_t x1 = d_fixed_to_int(((vx + cos1 * THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t y1 = d_fixed_to_int(((vy + sin1 * THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t x2 = d_fixed_to_int(((vx + cos2 * THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t y2 = d_fixed_to_int(((vy + sin2 * THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t x3 = d_fixed_to_int(((vx + cos3 * THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t y3 = d_fixed_to_int(((vy + sin3 * THING_TRI_SIZE) / SCREEN_W) * scale);
 
         // Draw the triangle
         DrawLine(color, x1, y1, x2, y2);

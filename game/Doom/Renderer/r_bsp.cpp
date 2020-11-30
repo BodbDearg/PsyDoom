@@ -69,8 +69,8 @@ void R_RenderBSPNode(const int32_t bspnum) noexcept {
         // This is pretty much the same code found in 'R_PointOnSide':
         const int32_t dx = gViewX - node.line.x;
         const int32_t dy = gViewY - node.line.y;
-        const int32_t lprod = (node.line.dx >> FRACBITS) * (dy >> FRACBITS);
-        const int32_t rprod = (node.line.dy >> FRACBITS) * (dx >> FRACBITS);
+        const int32_t lprod = d_fixed_to_int(node.line.dx) * d_fixed_to_int(dy);
+        const int32_t rprod = d_fixed_to_int(node.line.dy) * d_fixed_to_int(dx);
 
         // Depending on which side of the halfspace we are on, reverse the traversal order:
         if (lprod < rprod) {
@@ -122,7 +122,7 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
 
     // Build a lookup table code from our position relative to the two box dimensions.
     // The LUT determines which points to compare against.
-    const int32_t boxpos = boxx + (boxy << 2);
+    const int32_t boxpos = boxx + d_lshift<2>(boxy);
     
     // If we are fully inside the BSP node bounding box then regard it as always visible
     if (boxpos == 5)
@@ -173,9 +173,9 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
 
     {
         const SVECTOR vecIn = {
-            (int16_t)((x1 - gViewX) >> 16),
+            (int16_t) d_fixed_to_int(x1 - gViewX),
             0,
-            (int16_t)((y1 - gViewY) >> 16)
+            (int16_t) d_fixed_to_int(y1 - gViewY)
         };
         int32_t flagsOut;
         VECTOR vecOut;
@@ -186,9 +186,9 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     }
     {
         const SVECTOR vecIn = {
-            (int16_t)((x2 - gViewX) >> 16),
+            (int16_t) d_fixed_to_int(x2 - gViewX),
             0,
-            (int16_t)((y2 - gViewY) >> 16)
+            (int16_t) d_fixed_to_int(y2 - gViewY)
         };
         int32_t flagsOut;
         VECTOR vecOut;
@@ -235,12 +235,12 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     if ((-vx1 > vy1) && (-vx2 < vy2)) {
         const int32_t a = vx1 + vy1;
         const int32_t b = -vx2 - vy2;
-        const fixed_t t = (a << FRACBITS) / (a + b);
+        const fixed_t t = d_int_to_fixed(a) / (a + b);
 
         // Compute the 'y' value adjustment for the point and convert back to integer coords.
         // Also since the FOV is 90, the new 'x' value will simply be either +/- 'y' depending on the frustrum side:
         const fixed_t yAdjust = (vy2 - vy1) * t;
-        vy1 += yAdjust >> FRACBITS;
+        vy1 += d_fixed_to_int(yAdjust);
         vx1 = -vy1;
     }
 
@@ -249,12 +249,12 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     if ((vx1 < vy1) && (vx2 > vy2)) {
         const int32_t a = vx1 - vy1;
         const int32_t b = -vx2 + vy2;
-        const fixed_t t = (a << FRACBITS) / (a + b);
+        const fixed_t t = d_int_to_fixed(a) / (a + b);
 
         // Compute the 'y' value adjustment for the point and convert back to integer coords.
         // Also since the FOV is 90, the new 'x' value will simply be either +/- 'y' depending on the frustrum side:
         const fixed_t yAdjust = (vy2 - vy1) * t;
-        vy2 = vy1 + (yAdjust >> FRACBITS);
+        vy2 = vy1 + d_fixed_to_int(yAdjust);
         vx2 = vy2;
     }
 
@@ -353,9 +353,9 @@ void R_AddLine(seg_t& seg) noexcept {
     
     if (segv1.frameUpdated != gNumFramesDrawn) {
         const SVECTOR viewToPt = {
-            (int16_t)((segv1.x - gViewX) >> 16),
+            (int16_t) d_fixed_to_int(segv1.x - gViewX),
             0,
-            (int16_t)((segv1.y - gViewY) >> 16)
+            (int16_t) d_fixed_to_int(segv1.y - gViewY)
         };
         
         VECTOR viewVec;
@@ -369,7 +369,7 @@ void R_AddLine(seg_t& seg) noexcept {
         // This check seems slightly incorrect, should be maybe be '>= NEAR_CLIP_DIST' instead?
         if (viewVec.vz > NEAR_CLIP_DIST + 1) {
             segv1.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
-            segv1.screenx = ((viewVec.vx * segv1.scale) >> FRACBITS) + HALF_SCREEN_W;
+            segv1.screenx = d_fixed_to_int(viewVec.vx * segv1.scale) + HALF_SCREEN_W;
         }
         
         segv1.frameUpdated = gNumFramesDrawn;
@@ -379,9 +379,9 @@ void R_AddLine(seg_t& seg) noexcept {
     
     if (segv2.frameUpdated != gNumFramesDrawn) {
         const SVECTOR viewToPt = {
-            (int16_t)((segv2.x - gViewX) >> 16),
+            (int16_t) d_fixed_to_int(segv2.x - gViewX),
             0,
-            (int16_t)((segv2.y - gViewY) >> 16)
+            (int16_t) d_fixed_to_int(segv2.y - gViewY)
         };
         
         VECTOR viewVec;
@@ -395,7 +395,7 @@ void R_AddLine(seg_t& seg) noexcept {
         // This check seems slightly incorrect, should be maybe be '>= NEAR_CLIP_DIST' instead?
         if (viewVec.vz > NEAR_CLIP_DIST + 1) {
             segv2.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
-            segv2.screenx = ((viewVec.vx * segv2.scale) >> FRACBITS) + HALF_SCREEN_W;
+            segv2.screenx = d_fixed_to_int(viewVec.vx * segv2.scale) + HALF_SCREEN_W;
         }
         
         segv2.frameUpdated = gNumFramesDrawn;
@@ -434,10 +434,10 @@ void R_AddLine(seg_t& seg) noexcept {
     if ((-v1x > v1y) && (-v2x < v2y)) {
         const int32_t a = v1x + v1y;
         const int32_t b = -v2x - v2y;
-        const fixed_t t = (a << FRACBITS) / (a + b);
+        const fixed_t t = d_int_to_fixed(a) / (a + b);
         
         const fixed_t yAdjust = (v2y - v1y) * t;
-        v1y += yAdjust >> FRACBITS;
+        v1y += d_fixed_to_int(yAdjust);
         v1x = -v1y;
     }
     
@@ -446,10 +446,10 @@ void R_AddLine(seg_t& seg) noexcept {
     if ((v1x < v1y) && (v2x > v2y)) {
         const int32_t a = v1x - v1y;
         const int32_t b = -v2x + v2y;
-        const fixed_t t = (a << FRACBITS) / (a + b);
+        const fixed_t t = d_int_to_fixed(a) / (a + b);
         
         const fixed_t yAdjust = (v2y - v1y) * t;
-        v2y = v1y + (yAdjust >> FRACBITS);
+        v2y = v1y + d_fixed_to_int(yAdjust);
         v2x = v2y;
     }
     
@@ -463,19 +463,19 @@ void R_AddLine(seg_t& seg) noexcept {
     if ((v1y < NEAR_CLIP_DIST) && (v2y >= NEAR_CLIP_DIST + 1)) {
         const int32_t a = NEAR_CLIP_DIST - v1y;
         const int32_t b = v2y - NEAR_CLIP_DIST;
-        const fixed_t t = (a << FRACBITS) / (a + b);
+        const fixed_t t = d_int_to_fixed(a) / (a + b);
     
         const fixed_t xAdjust = (v2x - v1x) * t;
-        v1x += xAdjust >> FRACBITS;
+        v1x += d_fixed_to_int(xAdjust);
         v1y = NEAR_CLIP_DIST;
     }
     else if ((v2y < NEAR_CLIP_DIST) && (v1y >= NEAR_CLIP_DIST + 1)) {
         const int32_t a = NEAR_CLIP_DIST - v2y;
         const int32_t b = v1y - NEAR_CLIP_DIST;
-        const fixed_t t = (a << FRACBITS) / (a + b);
+        const fixed_t t = d_int_to_fixed(a) / (a + b);
         
         const fixed_t xAdjust = (v1x - v2x) * t;
-        v2x += xAdjust >> FRACBITS;
+        v2x += d_fixed_to_int(xAdjust);
         v2y = NEAR_CLIP_DIST;
     }
     

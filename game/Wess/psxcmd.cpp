@@ -34,8 +34,8 @@ const WessDriverFunc gWess_drv_cmds[19] = {
     PSX_NoteOff             // 18
 };
 
-static constexpr int32_t MAX_RELEASE_TIME_MS        = 0x10000000;   // Maximum time something can release for (milliseconds)
-static constexpr int32_t MAX_FAST_RELEASE_TIME_MS   = 0x05DC0000;   // A scaled version of the maximum release time that faster, used by some voices.
+static constexpr uint32_t MAX_RELEASE_TIME_MS       = 0x10000000;   // Maximum time something can release for (milliseconds)
+static constexpr uint32_t MAX_FAST_RELEASE_TIME_MS  = 0x05DC0000;   // A scaled version of the maximum release time that faster, used by some voices.
 
 static master_status_structure*     gpWess_drv_mstat;               // Pointer to the master status structure being used by the sequencer
 static sequence_status*             gpWess_drv_sequenceStats;       // Saved reference to the list of sequence statuses (in the master status struct)
@@ -110,10 +110,10 @@ void add_music_mute_note(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the release rate or how fast fade out occurs when muting voices
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_set_mute_release(const int32_t newReleaseTimeMs) noexcept {
+void wess_set_mute_release(const uint32_t newReleaseTimeMs) noexcept {
     // Figure out the SPU release rate value to use, it's a power of 2 shift/scale.
     // Note that the max release rate is '31' and minimum is '2' with this code.
-    int32_t approxReleaseTimeMs = MAX_RELEASE_TIME_MS;
+    uint32_t approxReleaseTimeMs = MAX_RELEASE_TIME_MS;
     gWess_drv_muteReleaseRate = 31;
 
     while ((approxReleaseTimeMs > newReleaseTimeMs) && (gWess_drv_muteReleaseRate != 0)) {
@@ -781,7 +781,7 @@ void PSX_voiceon(
     
     // Figure out how long it takes for the voice to fade out.
     // The low 5 bits affect the exponential falloff, the 6th bit controls how that falloff is scaled.
-    const int32_t adsr = (patchVoice.adsr2 & 0x20) ? MAX_RELEASE_TIME_MS : MAX_FAST_RELEASE_TIME_MS;
+    const uint32_t adsr = (patchVoice.adsr2 & 0x20) ? MAX_RELEASE_TIME_MS : MAX_FAST_RELEASE_TIME_MS;
     const uint32_t adsrShift = 31 - (patchVoice.adsr2 % 32);
     voiceStat.release_time_ms = adsr >> adsrShift;
     

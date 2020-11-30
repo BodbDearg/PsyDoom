@@ -105,19 +105,19 @@ static fixed_t P_InterceptVector(divline_t& line1, divline_t& line2) noexcept {
     // This is pretty much the standard line/line intersection equation.
     // See: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection 
     // Specifically the case "Given two points on each line".
-    const int32_t ldx1 = line1.dx >> FRACBITS;
-    const int32_t ldy1 = line1.dy >> FRACBITS;
-    const int32_t ldx2 = line2.dx >> FRACBITS;
-    const int32_t ldy2 = line2.dy >> FRACBITS;
+    const int32_t ldx1 = d_fixed_to_int(line1.dx);
+    const int32_t ldy1 = d_fixed_to_int(line1.dy);
+    const int32_t ldx2 = d_fixed_to_int(line2.dx);
+    const int32_t ldy2 = d_fixed_to_int(line2.dy);
 
-    const int32_t dx = (line2.x - line1.x) >> FRACBITS;
-    const int32_t dy = (line1.y - line2.y) >> FRACBITS;
+    const int32_t dx = d_fixed_to_int(line2.x - line1.x);
+    const int32_t dy = d_fixed_to_int(line1.y - line2.y);
 
     const int32_t num = (ldy2 * dx  ) + (dy   * ldx2);
     const int32_t den = (ldy2 * ldx1) - (ldx2 * ldy1);
 
     // Note: if the denominator is '0' then there is no intersect - parallel lines
-    return (den != 0) ? (num << FRACBITS) / den : -1;
+    return (den != 0) ? d_int_to_fixed(num) / den : -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -175,8 +175,8 @@ void P_UseLines(player_t& player) noexcept {
     useline.y = mobj.y;
 
     const uint32_t fineAngle = mobj.angle >> ANGLETOFINESHIFT;
-    useline.dx = gFineCosine[fineAngle] * (USERANGE >> FRACBITS);
-    useline.dy = gFineSine[fineAngle] * (USERANGE >> FRACBITS);
+    useline.dx = gFineCosine[fineAngle] * d_fixed_to_int(USERANGE);
+    useline.dy = gFineSine[fineAngle] * d_fixed_to_int(USERANGE);
 
     // Figure out the bounding box for the use line
     if (useline.dx > 0) {
@@ -205,15 +205,15 @@ void P_UseLines(player_t& player) noexcept {
     // Compute the blockmap extents to check for use lines.
     // PsyDoom: ensure these are always within a valid range to prevent undefined behavior at map edges.
     #if PSYDOOM_MODS && PSYDOOM_FIX_UB
-        const int32_t bmapTy = std::min((gUseBBox[BOXTOP] - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
-        const int32_t bmapBy = std::max((gUseBBox[BOXBOTTOM] - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
-        const int32_t bmapLx = std::max((gUseBBox[BOXLEFT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
-        const int32_t bmapRx = std::min((gUseBBox[BOXRIGHT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
+        const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(gUseBBox[BOXTOP] - gBlockmapOriginY), gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(gUseBBox[BOXBOTTOM] - gBlockmapOriginY), 0);
+        const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gUseBBox[BOXLEFT] - gBlockmapOriginX), 0);
+        const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gUseBBox[BOXRIGHT] - gBlockmapOriginX), gBlockmapWidth - 1);
     #else
-        const int32_t bmapTy = (gUseBBox[BOXTOP] - gBlockmapOriginY) >> MAPBLOCKSHIFT;
-        const int32_t bmapBy = (gUseBBox[BOXBOTTOM] - gBlockmapOriginY) >> MAPBLOCKSHIFT;
-        const int32_t bmapLx = (gUseBBox[BOXLEFT] - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t bmapRx = (gUseBBox[BOXRIGHT] - gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t bmapTy = d_rshift<MAPBLOCKSHIFT>(gUseBBox[BOXTOP] - gBlockmapOriginY);
+        const int32_t bmapBy = d_rshift<MAPBLOCKSHIFT>(gUseBBox[BOXBOTTOM] - gBlockmapOriginY);
+        const int32_t bmapLx = d_rshift<MAPBLOCKSHIFT>(gUseBBox[BOXLEFT] - gBlockmapOriginX);
+        const int32_t bmapRx = d_rshift<MAPBLOCKSHIFT>(gUseBBox[BOXRIGHT] - gBlockmapOriginX);
 
         ASSERT(bmapLx >= 0);
         ASSERT(bmapBy >= 0);
@@ -263,7 +263,7 @@ static bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
     const int32_t approxDist = std::max(dx, dy);
 
     // Compute how much to fade out damage based on the approx distance
-    const int32_t damageFade = std::max((approxDist - mobj.radius) >> FRACBITS, 0);
+    const int32_t damageFade = std::max(d_fixed_to_int(approxDist - mobj.radius), 0);
 
     // Apply the actual damage if > 0 and if the thing has a line of sight to the explosion
     const int32_t bombBaseDamage = gBombDamage;
@@ -283,19 +283,19 @@ static bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
 void P_RadiusAttack(mobj_t& bombSpot, mobj_t* const pSource, const int32_t damage) noexcept {
     // Compute the range of the blockmap to search based on the damage amount.
     // Splash damage falls off linearly, so the damage amount is also pretty much the distance range:
-    const fixed_t blastDist = damage << FRACBITS;
+    const fixed_t blastDist = d_int_to_fixed(damage);
 
     #if PSYDOOM_MODS && PSYDOOM_FIX_UB
         // PsyDoom: clamp these coords to the valid range of the blockmap to avoid potential undefined behavior near map edges
-        const int32_t bmapLx = std::max((bombSpot.x - blastDist - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
-        const int32_t bmapRx = std::min((bombSpot.x + blastDist - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
-        const int32_t bmapBy = std::max((bombSpot.y - blastDist - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
-        const int32_t bmapTy = std::min((bombSpot.y + blastDist - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
+        const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(bombSpot.x - blastDist - gBlockmapOriginX), 0);
+        const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(bombSpot.x + blastDist - gBlockmapOriginX), gBlockmapWidth - 1);
+        const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(bombSpot.y - blastDist - gBlockmapOriginY), 0);
+        const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(bombSpot.y + blastDist - gBlockmapOriginY), gBlockmapHeight - 1);
     #else
-        const int32_t bmapLx = (bombSpot.x - blastDist - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t bmapRx = (bombSpot.x + blastDist - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t bmapBy = (bombSpot.y - blastDist - gBlockmapOriginY) >> MAPBLOCKSHIFT;
-        const int32_t bmapTy = (bombSpot.y + blastDist - gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t bmapLx = d_rshift<MAPBLOCKSHIFT>(bombSpot.x - blastDist - gBlockmapOriginX);
+        const int32_t bmapRx = d_rshift<MAPBLOCKSHIFT>(bombSpot.x + blastDist - gBlockmapOriginX);
+        const int32_t bmapBy = d_rshift<MAPBLOCKSHIFT>(bombSpot.y - blastDist - gBlockmapOriginY);
+        const int32_t bmapTy = d_rshift<MAPBLOCKSHIFT>(bombSpot.y + blastDist - gBlockmapOriginY);
 
         ASSERT(bmapLx >= 0);
         ASSERT(bmapBy >= 0);

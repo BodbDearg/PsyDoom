@@ -104,8 +104,8 @@ static void P_PlayerMove(mobj_t& mobj) noexcept {
         moveDy = mobj.momy;
     } else {
         const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
-        moveDx = (mobj.momx >> 2) * elapsedVBlanks;
-        moveDy = (mobj.momy >> 2) * elapsedVBlanks;
+        moveDx = d_rshift<2>(mobj.momx) * elapsedVBlanks;
+        moveDy = d_rshift<2>(mobj.momy) * elapsedVBlanks;
     }
 
     // Do the sliding movement
@@ -165,8 +165,8 @@ static void P_PlayerXYMovement(mobj_t& mobj) noexcept {
         mobj.momx = 0;
         mobj.momy = 0;
     } else {
-        mobj.momx = (mobj.momx >> 8) * (FRICTION >> 8);
-        mobj.momy = (mobj.momy >> 8) * (FRICTION >> 8);
+        mobj.momx = d_rshift<8>(mobj.momx) * d_rshift<8>(FRICTION);
+        mobj.momy = d_rshift<8>(mobj.momy) * d_rshift<8>(FRICTION);
     }
 }
 
@@ -179,8 +179,8 @@ static void P_PlayerZMovement(mobj_t& mobj) noexcept {
 
     // Do smooth stepping up a step
     if (mobj.z < mobj.floorz) {
-        player.viewheight -= mobj.floorz - mobj.z;                          // Adjust the view height by the difference
-        player.deltaviewheight = (VIEWHEIGHT - player.viewheight) >> 2;     // This does a nice curved motion up (fast at first, then slowing down)
+        player.viewheight -= mobj.floorz - mobj.z;                              // Adjust the view height by the difference
+        player.deltaviewheight = d_rshift<2>(VIEWHEIGHT - player.viewheight);   // This does a nice curved motion up (fast at first, then slowing down)
     }
     
     // Advance z position by the velocity
@@ -192,7 +192,7 @@ static void P_PlayerZMovement(mobj_t& mobj) noexcept {
         if (mobj.momz < 0) {
             if (mobj.momz < -GRAVITY * 2) {
                 // If we hit the floor hard then play the 'oof' sound
-                player.deltaviewheight = mobj.momz >> 3;
+                player.deltaviewheight = d_rshift<3>(mobj.momz);
                 S_StartSound(&mobj, sfx_oof);
             }
 
@@ -400,7 +400,7 @@ static void P_BuildMove(player_t& player) noexcept {
                 turnAmt /= VBLANKS_PER_TIC;
             }
 
-            player.angleturn = turnAmt << TURN_TO_ANGLE_SHIFT;
+            player.angleturn = (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
 
             // Apply Final Doom mouse turning also
             player.angleturn += psxMouseMoveX;
@@ -502,8 +502,8 @@ static void P_Thrust(player_t& player, const angle_t angle, const fixed_t amount
     const fixed_t timeScale = (Game::gSettings.bUseFinalDoomPlayerMovement) ? gPlayersElapsedVBlanks[gPlayerNum] : 1;
     const fixed_t scaledAmount = amount * timeScale;
 
-    mobj.momx += (scaledAmount >> 8) * (gFineCosine[angle >> ANGLETOFINESHIFT] >> 8);
-    mobj.momy += (scaledAmount >> 8) * (gFineSine[angle >> ANGLETOFINESHIFT] >> 8);
+    mobj.momx += d_rshift<8>(scaledAmount) * d_rshift<8>(gFineCosine[angle >> ANGLETOFINESHIFT]);
+    mobj.momy += d_rshift<8>(scaledAmount) * d_rshift<8>(gFineSine[angle >> ANGLETOFINESHIFT]);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -515,8 +515,8 @@ static void P_CalcHeight(player_t& player) noexcept {
     mobj_t& mobj = *player.mo;
 
     {
-        const int32_t speedX = mobj.momx >> 8;
-        const int32_t speedY = mobj.momy >> 8;
+        const int32_t speedX = d_rshift<8>(mobj.momx);
+        const int32_t speedY = d_rshift<8>(mobj.momy);
 
         player.bob = (speedX * speedX) + (speedY * speedY);
 
@@ -524,7 +524,7 @@ static void P_CalcHeight(player_t& player) noexcept {
         if (Game::gSettings.bUsePalTimings) {
             player.bob /= 3;
         } else {
-            player.bob >>= 4;
+            player.bob = d_rshift<4>(player.bob);
         }
 
         player.bob = std::min(player.bob, MAXBOB);
@@ -575,7 +575,7 @@ static void P_CalcHeight(player_t& player) noexcept {
     const fixed_t bobAmplitude = gFineSine[bobPhase];
 
     // Compute the final view z based on map object z, view height and bob amount
-    player.viewz = mobj.z + player.viewheight + (player.bob >> 17) * bobAmplitude;
+    player.viewz = mobj.z + player.viewheight + d_rshift<17>(player.bob) * bobAmplitude;
 
     // Clamp the view z so it's not to close to the ceiling (if need be)
     player.viewz = std::min(player.viewz, maxViewZ);
@@ -972,7 +972,7 @@ void P_PlayerDoTurning() noexcept {
         // Note that I'm deliberately NOT adjusting turn speed for PAL mode here, since turning is now independent of framerate anyway.
         // The 60 Hz reference point was just to scale the turn amount and treating PAL/NTSC the same keeps the turn speed consistent in both modes.
         const float timeDeltaF = std::chrono::duration<float>(now - gLastPlayerTurnTime).count();
-        const float ticks60F = timeDeltaF * 60.0f;
+        const float ticks60F = std::min(timeDeltaF * 60.0f, 60.0f);
         const fixed_t ticks60 = (fixed_t)(ticks60F * FRACUNIT);
 
         // Do keyboard turning if the 'strafe' button is not pressed (that makes turn keys act as strafe instead)
@@ -1012,7 +1012,7 @@ void P_PlayerDoTurning() noexcept {
                 turnAmt /= VBLANKS_PER_TIC;
             }
             
-            gPlayerUncommittedAxisTurning += (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
+            gPlayerUncommittedAxisTurning += (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
         }
 
         // Do analog controller turning from the gamepad
@@ -1029,7 +1029,7 @@ void P_PlayerDoTurning() noexcept {
 
             fixed_t turnAmt = FixedMul((fixed_t)(turnSpeed * axis), ticks60);
             turnAmt /= VBLANKS_PER_TIC;
-            gPlayerUncommittedAxisTurning -= (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
+            gPlayerUncommittedAxisTurning -= (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
         }
 
         // Do turning from the mouse and consume the movements after we have counted them
@@ -1038,7 +1038,7 @@ void P_PlayerDoTurning() noexcept {
             const float turnSpeed = Config::gMouseTurnSpeed * PlayerPrefs::getTurnSpeedMultiplier();
             const fixed_t turnAmt = (fixed_t)(turnSpeed * axis);
 
-            gPlayerUncommittedMouseTurning += (angle_t)(turnAmt << TURN_TO_ANGLE_SHIFT);
+            gPlayerUncommittedMouseTurning += (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
             Input::consumeMouseMovements();
         }
     } 

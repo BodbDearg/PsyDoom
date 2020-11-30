@@ -247,7 +247,7 @@ static constexpr fixed_t S_CLOSE_DIST       = 100 * FRACUNIT;       // When soun
 static constexpr fixed_t S_STEREO_SWING     = 96 * FRACUNIT;        // Stereo separation amount
 
 // Divider for figuring out how fast sound fades
-static constexpr int32_t S_ATTENUATOR = ((S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS);
+static constexpr int32_t S_ATTENUATOR = d_fixed_to_int(S_CLIPPING_DIST - S_CLOSE_DIST);
 
 // Current volume cd music is played back at
 int32_t gCdMusicVol = PSXSPU_MAX_CD_VOL;
@@ -501,7 +501,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
         // Figure out the approximate distance to the sound source and don't play if too far away
         const fixed_t dx = std::abs(pListener->x - pOrigin->x);
         const fixed_t dy = std::abs(pListener->y - pOrigin->y);
-        const fixed_t approxDist = dx + dy - (std::min(dx, dy) >> 1);
+        const fixed_t approxDist = dx + dy - d_rshift<1>(std::min(dx, dy));
 
         if (approxDist > S_CLIPPING_DIST)
             return;
@@ -519,14 +519,14 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
         // Figure out pan amount based on the angle
         {
             const fixed_t sina = gFineSine[angle >> ANGLETOFINESHIFT];
-            pan = WESS_PAN_CENTER - ((FixedMul(sina, S_STEREO_SWING) >> FRACBITS) >> 1);
+            pan = WESS_PAN_CENTER - d_rshift<1>(d_fixed_to_int(FixedMul(sina, S_STEREO_SWING)));
         }
         
         // Figure out volume level
         if (approxDist < S_CLOSE_DIST) {
             vol = WESS_MAX_MASTER_VOL;
         } else {
-            vol = (((S_CLIPPING_DIST - approxDist) >> FRACBITS) * WESS_MAX_MASTER_VOL) / S_ATTENUATOR;
+            vol = (d_fixed_to_int(S_CLIPPING_DIST - approxDist) * WESS_MAX_MASTER_VOL) / S_ATTENUATOR;
         }
 
         // If the origin is exactly where the player is then do no pan

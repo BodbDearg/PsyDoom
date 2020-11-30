@@ -94,8 +94,8 @@ void P_RespawnSpecials() noexcept {
 
     // Get the spawn location and sector
     const mapthing_t& mapthing = gItemRespawnQueue[slotIdx];
-    const fixed_t x = (fixed_t) mapthing.x << FRACBITS;
-    const fixed_t y = (fixed_t) mapthing.y << FRACBITS;
+    const fixed_t x = d_int_to_fixed(mapthing.x);
+    const fixed_t y = d_int_to_fixed(mapthing.y);
 
     subsector_t& subsec = *R_PointInSubsector(x, y);
     sector_t& sec = *subsec.sector;
@@ -251,8 +251,8 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     }
     
     // Spawn the player map object and initialize it's fields
-    const fixed_t spawnX = (fixed_t) mapThing.x << FRACBITS;
-    const fixed_t spawnY = (fixed_t) mapThing.y << FRACBITS;
+    const fixed_t spawnX = d_int_to_fixed(mapThing.x);
+    const fixed_t spawnY = d_int_to_fixed(mapThing.y);
 
     mobj_t& mobj = *P_SpawnMobj(spawnX, spawnY, ONFLOORZ, MT_PLAYER);
     mobj.player = &player;
@@ -382,8 +382,8 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     const fixed_t z = (info.flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
 
     mobj_t& mobj = *P_SpawnMobj(
-        (fixed_t) mapthing.x << FRACBITS,
-        (fixed_t) mapthing.y << FRACBITS,
+        d_int_to_fixed(mapthing.x),
+        d_int_to_fixed(mapthing.y),
         z,
         thingType
     );
@@ -430,7 +430,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
     // Spawn the puff and randomly adjust its height
-    const fixed_t spawnZ = z + (P_SubRandom() << 10);
+    const fixed_t spawnZ = z + d_lshift<10>(P_SubRandom());
     mobj_t& mobj = *P_SpawnMobj(x, y, spawnZ, MT_PUFF);
 
     // Give some upward momentum and randomly adjust tics left
@@ -452,7 +452,7 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32_t damage) noexcept {
     // Spawn the puff and randomly adjust its height
-    const fixed_t spawnZ = z + (P_SubRandom() << 10);
+    const fixed_t spawnZ = z + d_lshift<10>(P_SubRandom());
     mobj_t& mobj = *P_SpawnMobj(x, y, spawnZ, MT_BLOOD);
 
     // Give some upward momentum and randomly adjust tics left
@@ -495,7 +495,7 @@ void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
             // If the missile has spawned in a position where it would be blocked then explode it immediately.
             gbCheckPosOnly = true;
 
-            if (!P_TryMove(mobj, mobj.x + (mobj.momx >> 1), mobj.y + (mobj.momy >> 1))) {
+            if (!P_TryMove(mobj, mobj.x + d_rshift<1>(mobj.momx), mobj.y + d_rshift<1>(mobj.momy))) {
                 P_ExplodeMissile(mobj);
                 return;
             }
@@ -504,9 +504,9 @@ void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
     
     // Note: using division by '2' here yields a slightly different result in some cases, such as with the number '0x80000001'.
     // Shifts are required for demo accurate behavior!
-    mobj.x += mobj.momx >> 1;
-    mobj.y += mobj.momy >> 1;
-    mobj.z += mobj.momz >> 1;
+    mobj.x += d_rshift<1>(mobj.momx);
+    mobj.y += d_rshift<1>(mobj.momy);
+    mobj.z += d_rshift<1>(mobj.momz);
     
     if (!P_TryMove(mobj, mobj.x, mobj.y)) {
         P_ExplodeMissile(mobj);
@@ -535,14 +535,14 @@ mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noex
     angle_t angle = R_PointToAngle2(source.x, source.y, dest.x, dest.y);
     
     if (dest.flags & MF_ALL_BLEND_FLAGS) {
-        angle += P_SubRandom() << 20;
+        angle += d_lshift<20>(P_SubRandom());
     }
     
     missile.angle = angle;
 
     // Set the missile velocity based on the direction it's going in
     const uint32_t fineAngle = angle >> ANGLETOFINESHIFT;
-    const int32_t speedInt = missileInfo.speed >> FRACBITS;
+    const int32_t speedInt = d_fixed_to_int(missileInfo.speed);
 
     missile.momx = gFineCosine[fineAngle] * speedInt;
     missile.momy = gFineSine[fineAngle] * speedInt;
@@ -594,7 +594,7 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
     }
 
     // Set the missile velocity and angle and save the firer (for damage blame) 
-    const int32_t missileSpeed = missile.info->speed >> FRACBITS;
+    const int32_t missileSpeed = d_fixed_to_int(missile.info->speed);
     
     missile.target = &source;
     missile.angle = aimAngle;

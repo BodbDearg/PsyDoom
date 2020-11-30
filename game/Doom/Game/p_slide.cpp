@@ -147,10 +147,10 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     }
 
     // Compute the blockmap extents for the move
-    const int32_t bmapTy = std::min((gEndBox[BOXTOP] - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
-    const int32_t bmapBy = std::max((gEndBox[BOXBOTTOM] - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapLx = std::max((gEndBox[BOXLEFT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapRx = std::min((gEndBox[BOXRIGHT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
+    const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(gEndBox[BOXTOP] - gBlockmapOriginY), gBlockmapHeight - 1);
+    const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(gEndBox[BOXBOTTOM] - gBlockmapOriginY), 0);
+    const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gEndBox[BOXLEFT] - gBlockmapOriginX), 0);
+    const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gEndBox[BOXRIGHT] - gBlockmapOriginX), gBlockmapWidth - 1);
     
     // Increment this counter for the line checks that follow: doing new checks
     gValidCount++;
@@ -421,10 +421,10 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
     const fixed_t minMoveY = std::min(moveY1, moveY2);
     const fixed_t maxMoveY = std::max(moveY1, moveY2);
 
-    const int32_t bmapLx = std::max((minMoveX - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapRx = std::min((maxMoveX - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
-    const int32_t bmapBy = std::max((minMoveY - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapTy = std::min((maxMoveY - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
+    const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(minMoveX - gBlockmapOriginX), 0);
+    const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(maxMoveX - gBlockmapOriginX), gBlockmapWidth - 1);
+    const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(minMoveY - gBlockmapOriginY), 0);
+    const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(maxMoveY - gBlockmapOriginY), gBlockmapHeight - 1);
     
     // Hit no special line yet and increment the valid count for a fresh check
     gpSpecialLine = nullptr;

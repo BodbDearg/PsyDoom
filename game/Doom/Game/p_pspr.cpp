@@ -351,9 +351,9 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
     constexpr uint32_t COSA_MASK = FINEANGLES - 1;
     constexpr uint32_t SINA_MASK = FINEANGLES / 2 - 1;
 
-    const int32_t bobAngle = gTicCon << 6;
-    sprite.sx = WEAPONX + (player.bob >> 16) * gFineCosine[bobAngle & COSA_MASK];
-    sprite.sy = WEAPONTOP + (player.bob >> 16) * gFineSine[bobAngle & SINA_MASK];
+    const int32_t bobAngle = d_lshift<6>(gTicCon);
+    sprite.sx = WEAPONX + d_fixed_to_int(player.bob) * gFineCosine[bobAngle & COSA_MASK];
+    sprite.sy = WEAPONTOP + d_fixed_to_int(player.bob) * gFineSine[bobAngle & SINA_MASK];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -726,7 +726,7 @@ void A_BFGSpray(mobj_t& mobj) noexcept {
             continue;
 
         // Spawn the BFG explosion on the monster
-        P_SpawnMobj(pLineTarget->x, pLineTarget->y, pLineTarget->z + (pLineTarget->height >> 2), MT_EXTRABFG);
+        P_SpawnMobj(pLineTarget->x, pLineTarget->y, pLineTarget->z + d_rshift<2>(pLineTarget->height), MT_EXTRABFG);
 
         // Figure out the damage amount (15-120) in a series of damage 'rounds' and deal the damage
         int32_t damageAmt = 0;

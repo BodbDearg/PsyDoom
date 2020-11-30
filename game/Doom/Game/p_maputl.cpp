@@ -20,7 +20,7 @@ fixed_t gLowFloor;      // Line opening (floor/ceiling gap) info: the lowest (fr
 fixed_t P_AproxDistance(const fixed_t dx, const fixed_t dy) noexcept {
     const fixed_t udx = std::abs(dx);
     const fixed_t udy = std::abs(dy);
-    return udx + udy - (std::min(udx, udy) >> 1);
+    return udx + udy - d_rshift<1>(std::min(udx, udy));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,10 +49,10 @@ int32_t P_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t& line) 
     }
 
     // Harder case: use the same cross product trick found in places like 'R_PointOnSide' to tell what side of the line we are on
-    const int32_t vdx = (x - line.vertex1->x) >> FRACBITS;
-    const int32_t vdy = (y - line.vertex1->y) >> FRACBITS;
-    const int32_t ldx = line.dx >> FRACBITS;
-    const int32_t ldy = line.dy >> FRACBITS;
+    const int32_t vdx = d_fixed_to_int(x - line.vertex1->x);
+    const int32_t vdy = d_fixed_to_int(y - line.vertex1->y);
+    const int32_t ldx = d_fixed_to_int(line.dx);
+    const int32_t ldy = d_fixed_to_int(line.dy);
 
     return (vdx * ldy <= vdy * ldx);
 }
@@ -93,8 +93,8 @@ int32_t P_PointOnDivlineSide(const fixed_t x, const fixed_t y, const divline_t& 
     }
 
     // Finally fallback to using the 2d vector cross product to decide what side we are on
-    const fixed_t lprod = FixedMul(vdx >> 8, divline.dy >> 8);
-    const fixed_t rprod = FixedMul(vdy >> 8, divline.dx >> 8);
+    const fixed_t lprod = FixedMul(d_rshift<8>(vdx), d_rshift<8>(divline.dy));
+    const fixed_t rprod = FixedMul(d_rshift<8>(vdy), d_rshift<8>(divline.dx));
     return (lprod <= rprod);
 }
 
@@ -157,8 +157,8 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.bprev) {
             thing.bprev->bnext = thing.bnext;
         } else {
-            const int32_t blockx = (thing.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-            const int32_t blocky = (thing.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
+            const int32_t blockx = d_rshift<MAPBLOCKSHIFT>(thing.x - gBlockmapOriginX);
+            const int32_t blocky = d_rshift<MAPBLOCKSHIFT>(thing.y - gBlockmapOriginY);
 
             // PsyDoom: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
@@ -202,8 +202,8 @@ void P_SetThingPosition(mobj_t& mobj) noexcept {
 
     // Add the thing to blockmap thing lists, if the thing flags allow it
     if ((mobj.flags & MF_NOBLOCKMAP) == 0) {
-        const int32_t blockX = (mobj.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t blockY = (mobj.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t blockX = d_rshift<MAPBLOCKSHIFT>(mobj.x - gBlockmapOriginX);
+        const int32_t blockY = d_rshift<MAPBLOCKSHIFT>(mobj.y - gBlockmapOriginY);
 
         // Make sure the thing is bounds for the blockmap: if not then just don't add it to the blockmap
         if ((blockX >= 0) && (blockY >= 0) && (blockX < gBlockmapWidth) && (blockY < gBlockmapHeight)) {

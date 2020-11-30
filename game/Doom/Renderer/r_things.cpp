@@ -57,9 +57,9 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 
             {
                 SVECTOR worldpos = {
-                    (int16_t)((pThing->x - gViewX) >> FRACBITS),
+                    (int16_t) d_fixed_to_int(pThing->x - gViewX),
                     0,
-                    (int16_t)((pThing->y - gViewY) >> FRACBITS)
+                    (int16_t) d_fixed_to_int(pThing->y - gViewY)
                 };
 
                 int32_t flagsOut;
@@ -164,7 +164,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         I_CacheTex(tex);
 
         // Get the 3 blending flags and set whether the sprite is semi transparent
-        const int32_t blendFlags = (thing.flags & MF_ALL_BLEND_FLAGS) >> 28;
+        const uint32_t blendFlags = (thing.flags & MF_ALL_BLEND_FLAGS) >> 28;
         
         if (blendFlags != 0) {  // Minor logic bug? Should be testing against 'MF_BLEND_ON' instead?
             LIBGPU_SetSemiTrans(&polyPrim, true);
@@ -196,15 +196,15 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         constexpr fixed_t ASPECT_CORRECT = (FRACUNIT * 4) / 5;
         
         const fixed_t scale = pSpr->scale;
-        int32_t drawY = (thing.z - gViewZ) >> FRACBITS;
+        int32_t drawY = d_fixed_to_int(thing.z - gViewZ);
         drawY += tex.offsetY;
-        drawY = (drawY * -scale) >> FRACBITS;   // Scale due to perspective
+        drawY = d_fixed_to_int(drawY * -scale);     // Scale due to perspective
         drawY += HALF_VIEW_3D_H;
 
-        int32_t drawW = (tex.width * ASPECT_CORRECT) >> FRACBITS;
-        drawW = (drawW * scale) >> FRACBITS;
+        int32_t drawW = d_fixed_to_int(tex.width * ASPECT_CORRECT);
+        drawW = d_fixed_to_int(drawW * scale);
 
-        const int32_t drawH = (tex.height * scale) >> FRACBITS;
+        const int32_t drawH = d_fixed_to_int(tex.height * scale);
 
         // Sprite UV coordinates for left, right, top and bottom
         const uint8_t tex_ul = tex.texPageCoordX;
@@ -213,7 +213,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         const uint8_t tex_vb = tex.texPageCoordY + (uint8_t) tex.height - 1;
 
         // Set sprite UV coordinates and decide on draw x position
-        const int32_t texOffsetX = (tex.offsetX * ASPECT_CORRECT) >> FRACBITS;
+        const int32_t texOffsetX = d_fixed_to_int(tex.offsetX * ASPECT_CORRECT);
         int32_t drawX;
 
         if (!bFlipSpr) {
@@ -224,7 +224,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
                 tex_ur, tex_vb
             );
 
-            drawX = ((pSpr->viewx - texOffsetX) * scale) >> FRACBITS;
+            drawX = d_fixed_to_int((pSpr->viewx - texOffsetX) * scale);
             drawX += HALF_SCREEN_W;
         } else {
             LIBGPU_setUV4(polyPrim,
@@ -234,7 +234,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
                 tex_ul, tex_vb
             );
 
-            drawX = ((pSpr->viewx + texOffsetX) * scale) >> FRACBITS;
+            drawX = d_fixed_to_int((pSpr->viewx + texOffsetX) * scale);
             drawX += HALF_SCREEN_W - drawW;
         }
 
@@ -302,8 +302,8 @@ void R_DrawWeapon() noexcept {
         }
 
         LIBGPU_setXY0(spr,
-            (int16_t)((pSprite->sx >> FRACBITS) + HALF_SCREEN_W - tex.offsetX),
-            (int16_t)((pSprite->sy >> FRACBITS) + VIEW_3D_H - 1 - tex.offsetY)
+            (int16_t)(d_fixed_to_int(pSprite->sx) + HALF_SCREEN_W - tex.offsetX),
+            (int16_t)(d_fixed_to_int(pSprite->sy) + VIEW_3D_H - 1 - tex.offsetY)
         );
 
         LIBGPU_setWH(spr, tex.width, tex.height);

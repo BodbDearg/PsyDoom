@@ -91,8 +91,8 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
         
         uint8_t cmdBytes[8];
         cmdBytes[0] = PitchMod;
-        cmdBytes[1] = (uint8_t)(trackStat.pitch_cntrl >> 0);
-        cmdBytes[2] = (uint8_t)(trackStat.pitch_cntrl >> 8);
+        cmdBytes[1] = (uint8_t)((uint16_t) trackStat.pitch_cntrl >> 0);
+        cmdBytes[2] = (uint8_t)((uint16_t) trackStat.pitch_cntrl >> 8);
 
         trackStat.pcur_cmd = cmdBytes;
         gWess_CmdFuncArr[trackStat.driver_id][PitchMod](trackStat);

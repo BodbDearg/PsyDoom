@@ -150,8 +150,8 @@ void P_TryMove2() noexcept {
 static int32_t PM_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept {
     const int32_t dx = x - line.vertex1->x;
     const int32_t dy = y - line.vertex1->y;
-    const int32_t lprod = (dx >> FRACBITS) * (line.dy >> FRACBITS);
-    const int32_t rprod = (dy >> FRACBITS) * (line.dx >> FRACBITS);
+    const int32_t lprod = d_fixed_to_int(dx) * d_fixed_to_int(line.dy);
+    const int32_t rprod = d_fixed_to_int(dy) * d_fixed_to_int(line.dx);
     return (rprod >= lprod);
 }
 
@@ -183,8 +183,8 @@ static void PM_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.bprev) {
             thing.bprev->bnext = thing.bnext;
         } else {
-            const int32_t blockx = (thing.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-            const int32_t blocky = (thing.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
+            const int32_t blockx = d_rshift<MAPBLOCKSHIFT>(thing.x - gBlockmapOriginX);
+            const int32_t blocky = d_rshift<MAPBLOCKSHIFT>(thing.y - gBlockmapOriginY);
 
             // PsyDoom: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
@@ -228,8 +228,8 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
 
     // Add the thing to blockmap thing lists, if the thing flags allow it
     if ((mobj.flags & MF_NOBLOCKMAP) == 0) {
-        const int32_t blockX = (mobj.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t blockY = (mobj.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t blockX = d_rshift<MAPBLOCKSHIFT>(mobj.x - gBlockmapOriginX);
+        const int32_t blockY = d_rshift<MAPBLOCKSHIFT>(mobj.y - gBlockmapOriginY);
 
         // Make sure the thing is bounds for the blockmap: if not then just don't add it to the blockmap
         if ((blockX >= 0) && (blockY >= 0) && (blockX < gBlockmapWidth) && (blockY < gBlockmapHeight)) {
@@ -304,10 +304,10 @@ static void PM_CheckPosition() noexcept {
     // Do collisions against things
     {
         // Compute the blockmap extents to check for collisions against other things and clamp to a valid range
-        const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
-        const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
-        const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
-        const int32_t bmapBy = std::max((gTestTmBBox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS), 0);
+        const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS), gBlockmapWidth - 1);
+        const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXTOP] - gBlockmapOriginY + MAXRADIUS), gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS), 0);
     
         // Test against everything in this blockmap range; stop and set the result 'false' if a definite collision happens
         for (int32_t x = bmapLx; x <= bmapRx; ++x) {
@@ -322,10 +322,10 @@ static void PM_CheckPosition() noexcept {
     
     // Do collision against lines
     {
-        const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
-        const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
-        const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
-        const int32_t bmapBy = std::max((gTestTmBBox[BOXBOTTOM] - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXLEFT] - gBlockmapOriginX), 0);
+        const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXRIGHT] - gBlockmapOriginX), gBlockmapWidth - 1);
+        const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXTOP] - gBlockmapOriginY), gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXBOTTOM] - gBlockmapOriginY), 0);
 
         // Test against everything in this blockmap range; stop and set the result 'false' if a definite collision happens
         for (int32_t x = bmapLx; x <= bmapRx; ++x) {
@@ -375,13 +375,13 @@ static bool PM_BoxCrossLine(line_t& line) noexcept {
     // both points of the test bounding box diagonal lie on.
     const fixed_t lx = line.vertex1->x;
     const fixed_t ly = line.vertex1->y;
-    const int32_t ldx = line.dx >> FRACBITS;
-    const int32_t ldy = line.dy >> FRACBITS;
+    const int32_t ldx = d_fixed_to_int(line.dx);
+    const int32_t ldy = d_fixed_to_int(line.dy);
 
-    const int32_t dx1 = (x1 - lx) >> FRACBITS;
-    const int32_t dy1 = (gTestTmBBox[BOXTOP] - ly) >> FRACBITS;
-    const int32_t dx2 = (x2 - lx) >> FRACBITS;
-    const int32_t dy2 = (gTestTmBBox[BOXBOTTOM] - ly) >> FRACBITS;
+    const int32_t dx1 = d_fixed_to_int(x1 - lx);
+    const int32_t dy1 = d_fixed_to_int(gTestTmBBox[BOXTOP] - ly);
+    const int32_t dx2 = d_fixed_to_int(x2 - lx);
+    const int32_t dy2 = d_fixed_to_int(gTestTmBBox[BOXBOTTOM] - ly);
 
     const uint32_t side1 = (ldy * dx1 < dy1 * ldx);
     const uint32_t side2 = (ldy * dx2 < dy2 * ldx);

@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxspu.h"
 
+#include "PcPsx/BitShift.h"
 #include "PcPsx/ProgArgs.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
@@ -219,7 +220,7 @@ void psxspu_fadeengine() noexcept {
             gPsxSpu_cd_vol_fixed = gPsxSpu_cd_destvol_fixed;
         }
 
-        gPsxSpu_cd_vol = gPsxSpu_cd_vol_fixed >> 16;
+        gPsxSpu_cd_vol = d_rshift<16>(gPsxSpu_cd_vol_fixed);
         psxspu_set_cd_volume(gPsxSpu_cd_vol);
     }
 
@@ -233,7 +234,7 @@ void psxspu_fadeengine() noexcept {
             gPsxSpu_master_vol_fixed = gPsxSpu_master_destvol_fixed;
         }
 
-        gPsxSpu_master_vol = gPsxSpu_master_vol_fixed >> 16;
+        gPsxSpu_master_vol = d_rshift<16>(gPsxSpu_master_vol_fixed);
         psxspu_set_master_volume(gPsxSpu_master_vol);
     }
 }
@@ -245,7 +246,7 @@ void psxspu_set_cd_vol(const int32_t vol) noexcept {
     gbPsxSpu_timer_callback_enabled = false;
 
     gPsxSpu_cd_vol = vol;
-    gPsxSpu_cd_vol_fixed = vol << 16;
+    gPsxSpu_cd_vol_fixed = d_lshift<16>(vol);
     gPsxSpu_cd_fade_ticks_left = 0;
     psxspu_set_cd_volume(vol);
 
@@ -307,7 +308,7 @@ void psxspu_set_master_vol(const int32_t vol) noexcept {
     gbPsxSpu_timer_callback_enabled = 0;
     
     gPsxSpu_master_vol = vol;
-    gPsxSpu_master_vol_fixed = vol << 16;
+    gPsxSpu_master_vol_fixed = d_lshift<16>(vol);
     gPsxSpu_master_fade_ticks_left = 0;
     psxspu_set_master_volume(gPsxSpu_master_vol);
 
@@ -330,7 +331,7 @@ void psxspu_start_master_fade(const int32_t fadeTimeMs, const int32_t destVol) n
     if (gbWess_WessTimerActive) {
         // Note: the timer callback fires at approximately 120 Hz, hence convert from MS to a 120 Hz tick count here
         gPsxSpu_master_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
-        gPsxSpu_master_destvol_fixed = destVol << 16;
+        gPsxSpu_master_destvol_fixed = d_lshift<16>(destVol);
         gPsxSpu_master_fadestep_fixed = (gPsxSpu_master_destvol_fixed - gPsxSpu_master_vol_fixed) / gPsxSpu_master_fade_ticks_left;
     } else {
         // If the timer callback is not active then skip doing any fade since there is no means of doing it

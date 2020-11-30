@@ -27,8 +27,8 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     // Compute the top and bottom y values for the front sector in texture space, relative to the viewpoint.
     // Note: texture space y coords run in the opposite direction to viewspace z, hence this calculation is
     // inverted from what it would normally be in viewspace.
-    const int32_t fsec_ty = (gViewZ - frontSec.ceilingheight) >> FRACBITS;
-    const int32_t fsec_by = (gViewZ - frontSec.floorheight) >> FRACBITS;
+    const int32_t fsec_ty = d_fixed_to_int(gViewZ - frontSec.ceilingheight);
+    const int32_t fsec_by = d_fixed_to_int(gViewZ - frontSec.floorheight);
 
     // Initially the mid wall texture space y coords are that of the sector.
     // Adjust as we go along if we are drawing a two sided line:
@@ -40,8 +40,8 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
     if (pBackSec) {
         // Get the top and bottom y values for the back sector in texture space
-        const int32_t bsec_ty = (gViewZ - pBackSec->ceilingheight) >> FRACBITS;
-        const int32_t bsec_by = (gViewZ - pBackSec->floorheight) >> FRACBITS;
+        const int32_t bsec_ty = d_fixed_to_int(gViewZ - pBackSec->ceilingheight);
+        const int32_t bsec_by = d_fixed_to_int(gViewZ - pBackSec->floorheight);
 
         // Do we need to render the upper wall?
         // Do so if the ceiling lowers, and if the following texture is not sky:
@@ -61,11 +61,11 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
             if (line.flags & ML_DONTPEGTOP) {
                 // Top of texture is at top of upper wall
-                vt = side.rowoffset >> FRACBITS;
+                vt = d_fixed_to_int(side.rowoffset);
                 vb = vt + tex_h;
             } else {
                 // Bottom of texture is at bottom of upper wall
-                vb = (side.rowoffset >> FRACBITS) + TEXCOORD_MAX;
+                vb = d_fixed_to_int(side.rowoffset) + TEXCOORD_MAX;
                 vt = vb - tex_h;
             }
             
@@ -95,10 +95,10 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
                 // This seems to do a weird wrapping as well every 128 units - not sure why that is...
                 // This could maybe cause some weirdness in some cases with lower walls!
                 const int32_t wall_h = bsec_by - fsec_ty;
-                vt = ((side.rowoffset >> FRACBITS) + wall_h) & (~128);
+                vt = (d_fixed_to_int(side.rowoffset) + wall_h) & (~128);
             } else {
                 // Top of texture is at top of lower wall
-                vt = side.rowoffset >> FRACBITS;
+                vt = d_fixed_to_int(side.rowoffset);
             }
 
             vb = vt + tex_h;
@@ -148,11 +148,11 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
         if (line.flags & ML_DONTPEGBOTTOM) {
             // Bottom of texture is at bottom of mid wall
-            vb = (side.rowoffset >> FRACBITS) + TEXCOORD_MAX;
+            vb = d_fixed_to_int(side.rowoffset) + TEXCOORD_MAX;
             vt = vb - tex_h;
         } else {
             // Top of texture is at top of mid wall
-            vt = side.rowoffset >> FRACBITS;
+            vt = d_fixed_to_int(side.rowoffset);
             vb = vt + tex_h;
         }
 
@@ -252,16 +252,16 @@ void R_DrawWallPiece(
     const uint32_t segFineAngle = seg.angle >> ANGLETOFINESHIFT;
     const uint32_t segViewFineAngle = (seg.angle - gViewAngle + ANG90) >> ANGLETOFINESHIFT;
 
-    const fixed_t segSin = gFineSine[segFineAngle] >> 8;
-    const fixed_t segCos = gFineCosine[segFineAngle] >> 8;
-    const fixed_t segViewSin = gFineSine[segViewFineAngle] >> 8;
-    const fixed_t segViewCos = gFineCosine[segViewFineAngle] >> 8;
-    const fixed_t segP1ViewX = (segv1.x - gViewX) >> 8;
-    const fixed_t segP1ViewY = (segv1.y - gViewY) >> 8;
+    const fixed_t segSin = d_rshift<8>(gFineSine[segFineAngle]);
+    const fixed_t segCos = d_rshift<8>(gFineCosine[segFineAngle]);
+    const fixed_t segViewSin = d_rshift<8>(gFineSine[segViewFineAngle]);
+    const fixed_t segViewCos = d_rshift<8>(gFineCosine[segViewFineAngle]);
+    const fixed_t segP1ViewX = d_rshift<8>(segv1.x - gViewX);
+    const fixed_t segP1ViewY = d_rshift<8>(segv1.y - gViewY);
 
     // Compute perpendicular distance to the line segment.
     // Should be negative if we are on the inside of the line segment:
-    const fixed_t segViewDot = (segP1ViewX * segSin - segP1ViewY * segCos) >> 8;
+    const fixed_t segViewDot = d_rshift<8>(segP1ViewX * segSin - segP1ViewY * segCos);
 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // 'U' texture coordinate calculation stuff:
@@ -304,18 +304,18 @@ void R_DrawWallPiece(
     //--------------------------------------------------------------------------------------------------------------------------------------
     
     // Compute the stepping values used in the loop to compute u coords and also the initial components of the interesection equation
-    const fixed_t isectNumStep = (segViewDot * segViewCos) >> 4;
-    const fixed_t isectDivStep = segViewSin >> 4;
+    const fixed_t isectNumStep = d_rshift<4>(segViewDot * segViewCos);
+    const fixed_t isectDivStep = d_rshift<4>(segViewSin);
 
     fixed_t isectNum = (x1 - HALF_SCREEN_W) * isectNumStep + (segViewSin * 8 * segViewDot);
     fixed_t isectDiv = (x1 - HALF_SCREEN_W) * isectDivStep - (segViewCos * 8);
 
     // Compute the constant 'u' texture offset for the seg, in pixels.
     // This offset is based on the texture offset, as well as the viewpoint's distance along the seg.
-    const int32_t segStartU = (
+    const int32_t segStartU = d_rshift<8>(
         (seg.offset + FRACUNIT + seg.sidedef->textureoffset) -
         (segP1ViewX * segCos + segP1ViewY * segSin)
-    ) >> 8;
+    );
 
     // Compute the start top and bottom y values and bring into screenspace
     fixed_t ybCur_frac = yb * vert1.scale + HALF_VIEW_3D_H * FRACUNIT;
@@ -346,13 +346,13 @@ void R_DrawWallPiece(
 
     while (xCur < xEnd) {
         // Get column pixel/integer y bounds
-        int16_t ytCur = ytCur_frac >> 16;
-        int16_t ybCur = ybCur_frac >> 16;
+        int16_t ytCur = (int16_t) d_fixed_to_int(ytCur_frac);
+        int16_t ybCur = (int16_t) d_fixed_to_int(ybCur_frac);
 
         // Ignore the column if it is completely offscreen
         if ((ytCur <= VIEW_3D_H) && (ybCur >= 0)) {
             // Compute the 'U' texture coordinate for the column
-            const uint8_t uCur = (isectDiv != 0) ? (uint8_t)((isectNum / isectDiv + segStartU) >> 8) : 0;
+            const uint8_t uCur = (isectDiv != 0) ? (uint8_t) d_rshift<8>(isectNum / isectDiv + segStartU) : 0;
 
             // Some hacky-ish code to clamp the column height to the screen bounds if it gets too big, and to adjust the 'v' texture coords.
             // For the most part the engine relies on the hardware to do it's clipping for vertical columns, but if the offscreen distance
@@ -371,12 +371,12 @@ void R_DrawWallPiece(
             if (colHeight >= 510) {
                 // Compute the amount of 'v' coordinate from the top of the column to the center of the screen
                 const int32_t vHeight = vbCur - vtCur;
-                const fixed_t vTopToCenterFrac = ((HALF_VIEW_3D_H - ytCur) << FRACBITS) / colHeight;
-                const int32_t vTopToCenter = (vTopToCenterFrac * vHeight) >> FRACBITS;
+                const fixed_t vTopToCenterFrac = d_int_to_fixed(HALF_VIEW_3D_H - ytCur) / colHeight;
+                const int32_t vTopToCenter = d_fixed_to_int(vTopToCenterFrac * vHeight);
 
                 // Compute the amount of 'v' coordinate for half of the screen
-                const fixed_t vHalfScreenFrac = (HALF_VIEW_3D_H << FRACBITS) / colHeight;
-                const int32_t vHalfScreen = (vHalfScreenFrac * vHeight) >> FRACBITS;
+                const fixed_t vHalfScreenFrac = d_int_to_fixed(HALF_VIEW_3D_H) / colHeight;
+                const int32_t vHalfScreen = d_fixed_to_int(vHalfScreenFrac * vHeight);
                 
                 // Clamp the render coordinates to the top and bottom of the screen if required
                 const int32_t vtOrig = vtCur;
@@ -398,7 +398,7 @@ void R_DrawWallPiece(
             int32_t r, g, b;
 
             if (gbDoViewLighting) {
-                int32_t lightIntensity = scaleCur >> 8;
+                int32_t lightIntensity = d_rshift<8>(scaleCur);
 
                 if (lightIntensity < LIGHT_INTENSTIY_MIN) {
                     lightIntensity = LIGHT_INTENSTIY_MIN;
@@ -407,9 +407,9 @@ void R_DrawWallPiece(
                     lightIntensity = LIGHT_INTENSTIY_MAX;
                 }
 
-                r = (lightIntensity * gCurLightValR) >> 7;
-                g = (lightIntensity * gCurLightValG) >> 7;
-                b = (lightIntensity * gCurLightValB) >> 7;
+                r = ((uint32_t) lightIntensity * gCurLightValR) >> 7;
+                g = ((uint32_t) lightIntensity * gCurLightValG) >> 7;
+                b = ((uint32_t) lightIntensity * gCurLightValB) >> 7;
                 if (r > 255) { r = 255; }
                 if (g > 255) { g = 255; }
                 if (b > 255) { b = 255; }

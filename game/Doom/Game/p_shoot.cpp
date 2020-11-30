@@ -56,7 +56,7 @@ void P_Shoot2() noexcept {
     gShootDiv.x = shooter.x;
     gShootDiv.y = shooter.y;
     
-    const int32_t attackRangeInt = gAttackRange >> FRACBITS;
+    const int32_t attackRangeInt = d_fixed_to_int(gAttackRange);
     const uint32_t attackFineAngle = gAttackAngle >> ANGLETOFINESHIFT;
 
     gShootX2 = shooter.x + attackRangeInt * gFineCosine[attackFineAngle];
@@ -68,14 +68,14 @@ void P_Shoot2() noexcept {
     gbShootDivPositive = ((gShootDiv.dx ^ gShootDiv.dy) > 0);
 
     // Figure out the shot height and shot center line slope
-    gShootZ = shooter.z + (shooter.height >> 1) + (8 * FRACUNIT);
-    gAimMidSlope = (gAimTopSlope + gAimBottomSlope) >> 1;
+    gShootZ = shooter.z + d_rshift<1>(shooter.height) + (8 * FRACUNIT);
+    gAimMidSlope = d_rshift<1>(gAimTopSlope + gAimBottomSlope);
     
     // Precompute the start and end points for the shot line (integer/whole coords)
-    gSsx1 = gShootDiv.x >> FRACBITS;
-    gSsy1 = gShootDiv.y >> FRACBITS;
-    gSsx2 = gShootX2 >> FRACBITS;
-    gSsy2 = gShootY2 >> FRACBITS;
+    gSsx1 = d_fixed_to_int(gShootDiv.x);
+    gSsy1 = d_fixed_to_int(gShootDiv.y);
+    gSsx2 = d_fixed_to_int(gShootX2);
+    gSsy2 = d_fixed_to_int(gShootY2);
 
     // Initially nothing is hit
     gpShootLine = nullptr;
@@ -263,10 +263,10 @@ bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static fixed_t PA_SightCrossLine(const line_t& line) noexcept {
     // Get the integer coordinates of the line and the sight line
-    const int32_t lineX1 = line.vertex1->x >> FRACBITS;
-    const int32_t lineY1 = line.vertex1->y >> FRACBITS;
-    const int32_t lineX2 = line.vertex2->x >> FRACBITS;
-    const int32_t lineY2 = line.vertex2->y >> FRACBITS;
+    const int32_t lineX1 = d_fixed_to_int(line.vertex1->x);
+    const int32_t lineY1 = d_fixed_to_int(line.vertex1->y);
+    const int32_t lineX2 = d_fixed_to_int(line.vertex2->x);
+    const int32_t lineY2 = d_fixed_to_int(line.vertex2->y);
     const int32_t sightX1 = gSsx1;
     const int32_t sightY1 = gSsy1;
     const int32_t sightX2 = gSsx2;
@@ -372,10 +372,10 @@ static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t PA_DivlineSide(const fixed_t x, const fixed_t y, const divline_t& line) noexcept {
     // This is pretty much the same cross product method as found in 'R_PointOnSide', without the special cases
-    const int32_t dx1 = (x - line.x) >> FRACBITS;
-    const int32_t dy1 = (y - line.y) >> FRACBITS;
-    const int32_t dx2 = line.dx >> FRACBITS;
-    const int32_t dy2 = line.dy >> FRACBITS;
+    const int32_t dx1 = d_fixed_to_int(x - line.x);
+    const int32_t dy1 = d_fixed_to_int(y - line.y);
+    const int32_t dx2 = d_fixed_to_int(line.dx);
+    const int32_t dy2 = d_fixed_to_int(line.dy);
     const int32_t sideNum = (dx1 * dy2 <= dy1 * dx2);
     return sideNum;
 }

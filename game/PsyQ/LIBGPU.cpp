@@ -6,6 +6,7 @@
 
 #include "Asserts.h"
 #include "LIBETC.h"
+#include "PcPsx/BitShift.h"
 #include "PcPsx/PsxVm.h"
 
 #include <cstdarg>
@@ -65,18 +66,18 @@ static void setGpuTPage(const uint16_t tpageId) noexcept {
     gpu.gp0_e1.texturePageBaseY = (tpageId & 0x10) >> 4;    // This is multiples of 256
     
     switch ((tpageId >> 7) & 0x3) {
-        case 0: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit4;
-        case 1: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit8;
-        case 2: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit15;
+        case 0: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit4;    break;
+        case 1: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit8;    break;
+        case 2: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit15;   break;
         default: break;
     }
 
     // Set transparency mode
     switch ((tpageId >> 5) & 0x3) {
-        case 0: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::Bby2plusFby2;
-        case 1: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusF;
-        case 2: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BminusF;
-        case 3: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusFby4;
+        case 0: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::Bby2plusFby2;  break;
+        case 1: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusF;        break;
+        case 2: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BminusF;       break;
+        case 3: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusFby4;     break;
         default: break;
     }
 }
@@ -468,7 +469,7 @@ uint16_t LIBGPU_GetTPage(
 // Note: the x address is limited to being in multiples of 16.
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept {
-    return (uint16_t)((y << 6) | ((x >> 4) & 0x3F));
+    return (uint16_t)(d_lshift<6>(y) | (d_rshift<4>(x) & 0x3F));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

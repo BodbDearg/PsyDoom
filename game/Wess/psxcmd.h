@@ -19,7 +19,7 @@ void add_music_mute_note(
     const patch_sample& patchSample
 ) noexcept;
 
-void wess_set_mute_release(const int32_t newReleaseTimeMs) noexcept;
+void wess_set_mute_release(const uint32_t newReleaseTimeMs) noexcept;
 void TriggerPSXVoice(const voice_status& voiceStat, const uint8_t voiceNote, const uint8_t voiceVol) noexcept;
 void PSX_DriverInit(master_status_structure& mstat) noexcept;
 void PSX_DriverExit(master_status_structure& mstat) noexcept;

@@ -286,14 +286,14 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
 
                     if (side1.bottomtexture >= 0) {
                         texture_t& tex = gpTextures[side1.bottomtexture];
-                        minLowerTexH = std::min(minLowerTexH, (fixed_t) tex.height << FRACBITS);
+                        minLowerTexH = std::min(minLowerTexH, d_int_to_fixed(tex.height));
                     }
 
                     side_t& side2 = *getSide(sectorIdx, lineIdx, 1);
 
                     if (side2.bottomtexture >= 0) {
                         texture_t& tex = gpTextures[side2.bottomtexture];
-                        minLowerTexH = std::min(minLowerTexH, (fixed_t) tex.height << FRACBITS);
+                        minLowerTexH = std::min(minLowerTexH, d_int_to_fixed(tex.height));
                     }
                 }
 

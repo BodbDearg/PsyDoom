@@ -157,6 +157,7 @@ set(SOURCE_FILES
     "Doom/UI/ti_main.cpp"
     "Doom/UI/ti_main.h"
     "EngineLimits.h"
+    "PcPsx/BitShift.h"
     "PcPsx/Config.cpp"
     "PcPsx/Config.h"
     "PcPsx/ControllerInput.cpp"

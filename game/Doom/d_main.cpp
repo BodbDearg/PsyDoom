@@ -652,9 +652,9 @@ gameaction_t MiniLoop(
             // Advance to the next game tick if it is time; video refreshes at 60 Hz (NTSC) but the game ticks at 15 Hz (NTSC).
             // PsyDoom: some tweaks here also to make PAL mode gameplay behave the same as the original game.
             #if PSYDOOM_MODS
-                const int32_t tgtGameTicCount = (Game::gSettings.bUsePalTimings) ? gTicCon / 3 : gTicCon >> VBLANK_TO_TIC_SHIFT;
+                const int32_t tgtGameTicCount = (Game::gSettings.bUsePalTimings) ? gTicCon / 3 : d_rshift<VBLANK_TO_TIC_SHIFT>(gTicCon);
             #else
-                const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
+                const int32_t tgtGameTicCount = d_rshift<VBLANK_TO_TIC_SHIFT>(gTicCon);
             #endif
 
             if (gLastTgtGameTicCount < tgtGameTicCount) {

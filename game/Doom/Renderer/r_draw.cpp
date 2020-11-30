@@ -60,9 +60,9 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
             // Transform this leaf edge's vertexes if they need to be transformed
             if (vert.frameUpdated != gNumFramesDrawn) {
                 const SVECTOR viewToPt = {
-                    (int16_t)((vert.x - gViewX) >> 16),
+                    (int16_t) d_fixed_to_int(vert.x - gViewX),
                     0,
-                    (int16_t)((vert.y - gViewY) >> 16)
+                    (int16_t) d_fixed_to_int(vert.y - gViewY)
                 };
                 
                 VECTOR viewVec;
@@ -74,7 +74,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
                 
                 if (viewVec.vz > 3) {
                     vert.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
-                    vert.screenx = ((vert.scale * vert.viewx) >> FRACBITS) + HALF_SCREEN_W;
+                    vert.screenx = d_fixed_to_int(vert.scale * vert.viewx) + HALF_SCREEN_W;
                 }
                 
                 vert.frameUpdated = gNumFramesDrawn;
@@ -246,27 +246,27 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
             {
                 const int32_t a = planeDist1;
                 const int32_t b = -planeDist2;
-                intersectT = (a << FRACBITS) / (a + b);
+                intersectT = d_int_to_fixed(a) / (a + b);
             }
 
             // Compute & set the view x/y values for the clipped edge vertex
             {
                 const int32_t dviewx = srcVert2.viewx - srcVert1.viewx;
-                newVert.viewx = ((dviewx * intersectT) >> FRACBITS) + srcVert1.viewx;
+                newVert.viewx = d_fixed_to_int(dviewx * intersectT) + srcVert1.viewx;
                 newVert.viewy = CLIP_DIST;
             }
 
             // Compute the world x/y values for the clipped edge vertex
             {
-                const int32_t dx = (srcVert2.x - srcVert1.x) >> FRACBITS;
-                const int32_t dy = (srcVert2.y - srcVert1.y) >> FRACBITS;
+                const int32_t dx = d_fixed_to_int(srcVert2.x - srcVert1.x);
+                const int32_t dy = d_fixed_to_int(srcVert2.y - srcVert1.y);
                 newVert.x = dx * intersectT + srcVert1.x;
                 newVert.y = dy * intersectT + srcVert1.y;
             }
 
             // Re-do perspective projection to compute screen x and scale for the vertex
             newVert.scale = (HALF_SCREEN_W * FRACUNIT) / newVert.viewy;
-            newVert.screenx = ((newVert.viewx * newVert.scale) >> FRACBITS) + HALF_SCREEN_W;
+            newVert.screenx = d_fixed_to_int(newVert.viewx * newVert.scale) + HALF_SCREEN_W;
 
             // Mark the new vertex as having up-to-date transforms and populate the new edge created.
             // Note that the new edge will only have a seg it doesn't run along the clip plane.
@@ -434,27 +434,27 @@ int32_t R_LeftEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         {
             const int32_t a = srcVert1.viewx + srcVert1.viewy;
             const int32_t b = -srcVert2.viewx - srcVert2.viewy;
-            intersectT = (a << FRACBITS) / (a + b);
+            intersectT = d_int_to_fixed(a) / (a + b);
         }
 
         // Compute & set the view x/y values for the clipped edge vertex
         {
             const int32_t dviewy = (srcVert2.viewy - srcVert1.viewy);
-            newVert.viewy = ((dviewy * intersectT) >> 16) + srcVert1.viewy;
+            newVert.viewy = d_fixed_to_int(dviewy * intersectT) + srcVert1.viewy;
             newVert.viewx = -newVert.viewy;
         }
 
         // Compute the world x/y values for the clipped edge vertex
         {
-            const int32_t dx = (srcVert2.x - srcVert1.x) >> FRACBITS;
-            const int32_t dy = (srcVert2.y - srcVert1.y) >> FRACBITS;
+            const int32_t dx = d_fixed_to_int(srcVert2.x - srcVert1.x);
+            const int32_t dy = d_fixed_to_int(srcVert2.y - srcVert1.y);
             newVert.x = dx * intersectT + srcVert1.x;
             newVert.y = dy * intersectT + srcVert1.y;
         }
 
         // Re-do perspective projection to compute screen x and scale for the vertex
         newVert.scale = (HALF_SCREEN_W * FRACUNIT) / newVert.viewy;
-        newVert.screenx = ((newVert.viewx * newVert.scale) >> FRACBITS) + HALF_SCREEN_W;
+        newVert.screenx = d_fixed_to_int(newVert.viewx * newVert.scale) + HALF_SCREEN_W;
 
         // Mark the new vertex as having up-to-date transforms
         newVert.frameUpdated = gNumFramesDrawn;
@@ -543,20 +543,20 @@ int32_t R_RightEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         {
             const int32_t a = srcVert1.viewx - srcVert1.viewy;
             const int32_t b = -srcVert2.viewx + srcVert2.viewy;
-            intersectT = (a << FRACBITS) / (a + b);
+            intersectT = d_int_to_fixed(a) / (a + b);
         }
 
         // Compute & set the view x/y values for the clipped edge vertex
         {
             const int32_t dviewy = (srcVert2.viewy - srcVert1.viewy);
-            newVert.viewy = ((dviewy * intersectT) >> 16) + srcVert1.viewy;
+            newVert.viewy = d_fixed_to_int(dviewy * intersectT) + srcVert1.viewy;
             newVert.viewx = newVert.viewy;
         }
 
         // Compute the world x/y values for the clipped edge vertex
         {
-            const int32_t dx = (srcVert2.x - srcVert1.x) >> FRACBITS;
-            const int32_t dy = (srcVert2.y - srcVert1.y) >> FRACBITS;
+            const int32_t dx = d_fixed_to_int(srcVert2.x - srcVert1.x);
+            const int32_t dy = d_fixed_to_int(srcVert2.y - srcVert1.y);
             newVert.x = dx * intersectT + srcVert1.x;
             newVert.y = dy * intersectT + srcVert1.y;
         }
@@ -566,7 +566,7 @@ int32_t R_RightEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         // The +1 here appears to be a hack to nudge the clipped seg over by 1 pixel unit.
         // If I remove this adjustment then sometimes gaps appear for walls at the right side of the view.
         newVert.scale = ((HALF_SCREEN_W * FRACUNIT) / newVert.viewy) + 1;
-        newVert.screenx = ((newVert.viewx * newVert.scale) >> FRACBITS) + HALF_SCREEN_W;
+        newVert.screenx = d_fixed_to_int(newVert.viewx * newVert.scale) + HALF_SCREEN_W;
 
         // Mark the new vertex as having up-to-date transforms
         newVert.frameUpdated = gNumFramesDrawn;

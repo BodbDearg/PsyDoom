@@ -75,13 +75,13 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     gSTrace.dy = gT2y - gSTrace.y;
     
     // Precalculate the truncated start and end points for the sight line for later use
-    gT1xs = gSTrace.x >> FRACBITS;
-    gT1ys = gSTrace.y >> FRACBITS;
-    gT2xs = gT2x >> FRACBITS;
-    gT2ys = gT2y >> FRACBITS;
+    gT1xs = d_fixed_to_int(gSTrace.x);
+    gT1ys = d_fixed_to_int(gSTrace.y);
+    gT2xs = d_fixed_to_int(gT2x);
+    gT2ys = d_fixed_to_int(gT2y);
 
     // This is how high the sight point is at (eyeball level -1/4 height down from the top)
-    const fixed_t sightZStart = mobj1.z + mobj1.height - (mobj1.height >> 2);
+    const fixed_t sightZStart = mobj1.z + mobj1.height - d_rshift<2>(mobj1.height);
     gSightZStart = sightZStart;
     
     // Figure out the initial top and bottom slopes for the the vertical sight range
@@ -103,10 +103,10 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static fixed_t PS_SightCrossLine(line_t& line) noexcept {
     // Get the integer coordinates of the line and the sight line
-    const int32_t lineX1 = line.vertex1->x >> FRACBITS;
-    const int32_t lineY1 = line.vertex1->y >> FRACBITS;
-    const int32_t lineX2 = line.vertex2->x >> FRACBITS;
-    const int32_t lineY2 = line.vertex2->y >> FRACBITS;
+    const int32_t lineX1 = d_fixed_to_int(line.vertex1->x);
+    const int32_t lineY1 = d_fixed_to_int(line.vertex1->y);
+    const int32_t lineX2 = d_fixed_to_int(line.vertex2->x);
+    const int32_t lineY2 = d_fixed_to_int(line.vertex2->y);
     const int32_t sightX1 = gT1xs;
     const int32_t sightY1 = gT1ys;
     const int32_t sightX2 = gT2xs;
@@ -193,7 +193,7 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         // Narrow the allowed vertical sight range: against bottom wall
         if (fsec.floorheight != bsec.floorheight) {
             const fixed_t dz = highestFloor - gSightZStart;
-            const int32_t slope = ((dz << 6) / (intersectFrac >> 2)) << 8;      // Note: chops off the low 8 bits of computed intersect slope
+            const int32_t slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));   // Note: chops off the low 8 bits of computed intersect slope
 
             if (slope > gBottomSlope) {
                 gBottomSlope = slope;
@@ -203,7 +203,7 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         // Narrow the allowed vertical sight range: against top wall
         if (fsec.ceilingheight != bsec.ceilingheight) {
             const fixed_t dz = lowestCeil - gSightZStart;
-            const int32_t slope = ((dz << 6) / (intersectFrac >> 2)) << 8;      // Note: chops off the low 8 bits of computed intersect slope
+            const int32_t slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));   // Note: chops off the low 8 bits of computed intersect slope
 
             if (slope < gTopSlope) {
                 gTopSlope = slope;

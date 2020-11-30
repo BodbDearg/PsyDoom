@@ -101,10 +101,10 @@ bool P_CheckMissileRange(mobj_t& attacker) noexcept {
     }
     
     // Convert to integer distance and if you are a skull reduce the missile distance even more
-    int32_t dist = distFrac >> FRACBITS;
+    int32_t dist = d_fixed_to_int(distFrac);
     
     if (attacker.type == MT_SKULL) {
-        dist >>= 1;
+        dist = d_rshift<1>(dist);
     }
     
     // Cap the distance so there is always at least some chance of firing and decide randomly whether to fire.
@@ -962,7 +962,7 @@ void A_SkullAttack(mobj_t& actor) noexcept {
 
     const fixed_t distToTgt = P_AproxDistance(target.x - actor.x, target.y - actor.y);
     const int32_t travelTime = std::max(distToTgt / SKULLSPEED, 1);
-    const fixed_t zDelta = target.z + (target.height >> 1) - actor.z;
+    const fixed_t zDelta = target.z + d_rshift<1>(target.height) - actor.z;
 
     actor.momz = zDelta / travelTime;
 }

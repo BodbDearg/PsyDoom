@@ -131,8 +131,8 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
         // Store basic seg properties
         pDstSeg->vertex1 = &gpVertexes[Endian::littleToHost(pSrcSeg->vertex1)];
         pDstSeg->vertex2 = &gpVertexes[Endian::littleToHost(pSrcSeg->vertex2)];
-        pDstSeg->angle = (fixed_t) Endian::littleToHost(pSrcSeg->angle) << FRACBITS;
-        pDstSeg->offset = (fixed_t) Endian::littleToHost(pSrcSeg->offset) << FRACBITS;
+        pDstSeg->angle = (angle_t) d_int_to_fixed(pSrcSeg->angle);                  // Weird, but it is what it is...
+        pDstSeg->offset = d_int_to_fixed(Endian::littleToHost(pSrcSeg->offset));
 
         // Figure out seg line and side
         line_t& linedef = gpLines[Endian::littleToHost(pSrcSeg->linedef)];
@@ -243,8 +243,8 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 
         for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
             // Save basic properties
-            pDstSec->floorheight = (fixed_t) Endian::littleToHost(pSrcSec->floorheight) << FRACBITS;
-            pDstSec->ceilingheight = (fixed_t) Endian::littleToHost(pSrcSec->ceilingheight) << FRACBITS;
+            pDstSec->floorheight = d_int_to_fixed(Endian::littleToHost(pSrcSec->floorheight));
+            pDstSec->ceilingheight = d_int_to_fixed(Endian::littleToHost(pSrcSec->ceilingheight));
             pDstSec->colorid = Endian::littleToHost(pSrcSec->colorid);
             pDstSec->lightlevel = Endian::littleToHost(pSrcSec->lightlevel);
             pDstSec->special = Endian::littleToHost(pSrcSec->special);
@@ -337,16 +337,16 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
     node_t* pDstNode = gpBspNodes;
 
     for (int32_t nodeIdx = 0; nodeIdx < gNumBspNodes; ++nodeIdx) {
-        pDstNode->line.x = (fixed_t) Endian::littleToHost(pSrcNode->x) << FRACBITS;
-        pDstNode->line.y = (fixed_t) Endian::littleToHost(pSrcNode->y) << FRACBITS;
-        pDstNode->line.dx = (fixed_t) Endian::littleToHost(pSrcNode->dx) << FRACBITS;
-        pDstNode->line.dy = (fixed_t) Endian::littleToHost(pSrcNode->dy) << FRACBITS;
+        pDstNode->line.x = d_int_to_fixed(Endian::littleToHost(pSrcNode->x));
+        pDstNode->line.y = d_int_to_fixed(Endian::littleToHost(pSrcNode->y));
+        pDstNode->line.dx = d_int_to_fixed(Endian::littleToHost(pSrcNode->dx));
+        pDstNode->line.dy = d_int_to_fixed(Endian::littleToHost(pSrcNode->dy));
 
         for (int32_t childIdx = 0; childIdx < 2; ++childIdx) {
             pDstNode->children[childIdx] = Endian::littleToHost(pSrcNode->children[childIdx]);
 
             for (int32_t coordIdx = 0; coordIdx < 4; ++coordIdx) {
-                const fixed_t coord = (fixed_t) Endian::littleToHost(pSrcNode->bbox[childIdx][coordIdx]) << FRACBITS;
+                const fixed_t coord = d_int_to_fixed(Endian::littleToHost(pSrcNode->bbox[childIdx][coordIdx]));
                 pDstNode->bbox[childIdx][coordIdx] = coord;
             }
         }
@@ -521,8 +521,8 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
         side_t* pDstSide = gpSides;
 
         for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx) {
-            pDstSide->textureoffset = (fixed_t) Endian::littleToHost(pSrcSide->textureoffset) << FRACBITS;
-            pDstSide->rowoffset = (fixed_t) Endian::littleToHost(pSrcSide->rowoffset) << FRACBITS;
+            pDstSide->textureoffset = d_int_to_fixed(Endian::littleToHost(pSrcSide->textureoffset));
+            pDstSide->rowoffset = d_int_to_fixed(Endian::littleToHost(pSrcSide->rowoffset));
             pDstSide->sector = &gpSectors[Endian::littleToHost(pSrcSide->sector)];
 
             // For Final Doom we don't need to do any lookup, we have the numbers already...
@@ -595,8 +595,8 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     // Save blockmap dimensions
     gBlockmapWidth = blockmapHeader.width;
     gBlockmapHeight = blockmapHeader.height;
-    gBlockmapOriginX = (fixed_t) blockmapHeader.originx << FRACBITS;
-    gBlockmapOriginY = (fixed_t) blockmapHeader.originy << FRACBITS;
+    gBlockmapOriginX = d_int_to_fixed(blockmapHeader.originx);
+    gBlockmapOriginY = d_int_to_fixed(blockmapHeader.originy);
     
     // Alloc and null initialize the list of map objects for each block
     const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(gppBlockLinks[0]);
@@ -801,22 +801,22 @@ static void P_GroupLines() noexcept {
         // Compute the bounding box for the sector in blockmap units.
         // Note that if the sector extends the beyond the blockmap then we constrain it's coordinate.
         {
-            int32_t bmcoord = (bbox[BOXTOP] - gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT;
+            int32_t bmcoord = d_rshift<MAPBLOCKSHIFT>(bbox[BOXTOP] - gBlockmapOriginY + MAXRADIUS);
             bmcoord = (bmcoord >= gBlockmapHeight) ? gBlockmapHeight - 1 : bmcoord;
             pSec->blockbox[BOXTOP] = bmcoord;
         }
         {
-            int32_t bmcoord = (bbox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT;
+            int32_t bmcoord = d_rshift<MAPBLOCKSHIFT>(bbox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS);
             bmcoord = (bmcoord < 0) ? 0 : bmcoord;
             pSec->blockbox[BOXBOTTOM] = bmcoord;
         }
         {
-            int32_t bmcoord = (bbox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT;
+            int32_t bmcoord = d_rshift<MAPBLOCKSHIFT>(bbox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS);
             bmcoord = (bmcoord >= gBlockmapWidth) ? gBlockmapWidth - 1 : bmcoord;
             pSec->blockbox[BOXRIGHT] = bmcoord;
         }
         {
-            int32_t bmcoord = (bbox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT;
+            int32_t bmcoord = d_rshift<MAPBLOCKSHIFT>(bbox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS);
             bmcoord = (bmcoord < 0) ? 0 : bmcoord;
             pSec->blockbox[BOXLEFT] = bmcoord;
         }
@@ -1087,8 +1087,8 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         // We spawn all players in the same location but immediately respawn and remove the old 'mobj_t' to get the random starts.
         for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
             mobj_t* const pPlayerThing = P_SpawnMobj(
-                (int32_t) gPlayerStarts[0].x << FRACBITS,
-                (int32_t) gPlayerStarts[0].y << FRACBITS,
+                d_int_to_fixed(gPlayerStarts[0].x),
+                d_int_to_fixed(gPlayerStarts[0].y),
                 0,
                 MT_PLAYER
             );

@@ -158,10 +158,10 @@ void R_RenderPlayerView() noexcept {
     gViewSin = gFineSine[gViewAngle >> ANGLETOFINESHIFT];
     
     // Set the draw matrix and upload to the GTE
-    gDrawMatrix.m[0][0] = (int16_t)( gViewSin >> GTE_ROTFRAC_SHIFT);
-    gDrawMatrix.m[0][2] = (int16_t)(-gViewCos >> GTE_ROTFRAC_SHIFT);
-    gDrawMatrix.m[2][0] = (int16_t)( gViewCos >> GTE_ROTFRAC_SHIFT);
-    gDrawMatrix.m[2][2] = (int16_t)( gViewSin >> GTE_ROTFRAC_SHIFT);
+    gDrawMatrix.m[0][0] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>( gViewSin);
+    gDrawMatrix.m[0][2] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>(-gViewCos);
+    gDrawMatrix.m[2][0] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>( gViewCos);
+    gDrawMatrix.m[2][2] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>( gViewSin);
     LIBGTE_SetRotMatrix(gDrawMatrix);
 
     // Traverse the BSP tree to determine what needs to be drawn and in what order.
@@ -316,8 +316,8 @@ int32_t R_PointOnSide(const fixed_t x, const fixed_t y, const node_t& node) noex
     // Compute which side of the line the point is on using the cross product
     const fixed_t dx = x - node.line.x;
     const fixed_t dy = y - node.line.y;
-    const int32_t lprod = (dx >> FRACBITS) * (node.line.dy >> FRACBITS);
-    const int32_t rprod = (dy >> FRACBITS) * (node.line.dx >> FRACBITS);
+    const int32_t lprod = d_fixed_to_int(dx) * d_fixed_to_int(node.line.dy);
+    const int32_t rprod = d_fixed_to_int(dy) * d_fixed_to_int(node.line.dx);
     return (rprod >= lprod);
 }
 
@@ -404,7 +404,7 @@ fixed_t R_LerpCoord(const fixed_t oldCoord, const fixed_t newCoord, const fixed_
 //------------------------------------------------------------------------------------------------------------------------------------------
 angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_t mix) noexcept {
     const int32_t diff = (int32_t)(newAngle - oldAngle);
-    const int32_t adjust = (diff >> 16) * mix;
+    const int32_t adjust = d_rshift<16>(diff) * mix;
     return oldAngle + (angle_t) adjust;
 }
 

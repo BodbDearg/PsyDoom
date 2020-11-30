@@ -84,7 +84,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     }
 
     // Draw the horizontal spans of the leaf
-    R_DrawFlatSpans(leaf, planeZ >> FRACBITS, tex);
+    R_DrawFlatSpans(leaf, d_fixed_to_int(planeZ), tex);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
 
         for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pEdge, ++pVertScreenX, ++pVertScreenY) {
             const vertex_t& vert = *pEdge->vertex;
-            const int32_t screenY = (HALF_VIEW_3D_H - 1) - ((planeViewZ * vert.scale) >> FRACBITS);
+            const int32_t screenY = (HALF_VIEW_3D_H - 1) - d_fixed_to_int(planeViewZ * vert.scale);
 
             *pVertScreenX = vert.screenx;
             *pVertScreenY = screenY;
@@ -148,8 +148,8 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                     spanBound = SPAN_LEFT;
                 }
 
-                const fixed_t topScreenX = pVerticesScreenX[topEdgeIdx] << FRACBITS;
-                const fixed_t botScreenX = pVerticesScreenX[botEdgeIdx] << FRACBITS;
+                const fixed_t topScreenX = d_int_to_fixed((int32_t) pVerticesScreenX[topEdgeIdx]);
+                const fixed_t botScreenX = d_int_to_fixed((int32_t) pVerticesScreenX[botEdgeIdx]);
 
                 const int32_t topScreenY = pVerticesScreenY[topEdgeIdx];
                 const int32_t botScreenY = pVerticesScreenY[botEdgeIdx];
@@ -186,7 +186,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 span_t* pSpan = &gFlatSpans[y];
                 
                 while (y < yEnd) {
-                    pSpan->bounds[spanBound] = x >> FRACBITS;
+                    pSpan->bounds[spanBound] = d_fixed_to_int(x);
                     x += xStep;
                     ++y;
                     ++pSpan;
@@ -235,7 +235,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         spanR += 2;
 
         // Figure out the distance away that the flat span is at
-        const int32_t dist = (gYSlope[spanY] * planeViewZ) >> FRACBITS;
+        const int32_t dist = d_fixed_to_int(gYSlope[spanY] * planeViewZ);
 
         // Compute the base texture uv offset for the span based on solely on global position and view angle
         const fixed_t viewCos = gViewCos;
@@ -265,11 +265,11 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         const int32_t spanViewL = spanL - HALF_SCREEN_W;
         const int32_t spanViewR = spanR - HALF_SCREEN_W;
 
-        int32_t spanUL = (spanViewL * uStepPerX + spanUOffset) >> FRACBITS;
-        int32_t spanUR = (spanViewR * uStepPerX + spanUOffset) >> FRACBITS;
+        int32_t spanUL = d_fixed_to_int(spanViewL * uStepPerX + spanUOffset);
+        int32_t spanUR = d_fixed_to_int(spanViewR * uStepPerX + spanUOffset);
 
-        int32_t spanVL = (spanViewL * vStepPerX + spanVOffset) >> FRACBITS;
-        int32_t spanVR = (spanViewR * vStepPerX + spanVOffset) >> FRACBITS;
+        int32_t spanVL = d_fixed_to_int(spanViewL * vStepPerX + spanVOffset);
+        int32_t spanVR = d_fixed_to_int(spanViewR * vStepPerX + spanVOffset);
 
         // Wrap the uv coordinates to 64x64 using the smallest u or v coordinate as the basis for wrapping.
         // Note: if we wanted to support textures > 64x64 then this code would need to change!
@@ -300,7 +300,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
             int32_t r, g, b;
 
             if (gbDoViewLighting) {
-                int32_t lightIntensity = LIGHT_INTENSTIY_MAX - (dist >> 1);
+                int32_t lightIntensity = LIGHT_INTENSTIY_MAX - d_rshift<1>(dist);
                 
                 if (lightIntensity < LIGHT_INTENSTIY_MIN) {
                     lightIntensity = LIGHT_INTENSTIY_MIN;
@@ -309,9 +309,9 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                     lightIntensity = LIGHT_INTENSTIY_MAX;
                 }
 
-                r = (lightIntensity * gCurLightValR) >> 7;
-                g = (lightIntensity * gCurLightValG) >> 7;
-                b = (lightIntensity * gCurLightValB) >> 7;
+                r = ((uint32_t) lightIntensity * gCurLightValR) >> 7;
+                g = ((uint32_t) lightIntensity * gCurLightValG) >> 7;
+                b = ((uint32_t) lightIntensity * gCurLightValB) >> 7;
                 if (r > 255) { r = 255; }
                 if (g > 255) { g = 255; }
                 if (b > 255) { b = 255; }
@@ -343,8 +343,8 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
 
             // Determine the number of span pieces we would need based on the u and v range pick the largest figure.
             // The code here appears to be conservative and limits the max u & v range of each span piece to 128 units, well below the maximum of 256.
-            const int32_t numUPieces = spanUSize >> 7;
-            const int32_t numVPieces = spanVSize >> 7;
+            const uint32_t numUPieces = (uint32_t) spanUSize >> 7;
+            const uint32_t numVPieces = (uint32_t) spanVSize >> 7;
 
             if (numUPieces > numVPieces) {
                 numSpanPieces = numUPieces;
