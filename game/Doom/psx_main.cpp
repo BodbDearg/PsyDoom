@@ -64,9 +64,12 @@ int psx_main(const int argc, const char** const argv) noexcept {
     // Call the original PSX Doom 'main()' function
     I_Main();
 
-    // PsyDoom: cleanup logic after Doom itself is done and save player prefs
+    // PsyDoom: cleanup logic after Doom itself is done and save player prefs (unless headless mode)
     #if PSYDOOM_MODS
-        PlayerPrefs::save();
+        if (!ProgArgs::gbHeadlessMode) {
+            PlayerPrefs::save();
+        }
+
         PsxVm::shutdown();
         ModMgr::shutdown();
         Input::shutdown();
