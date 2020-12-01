@@ -21,7 +21,6 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PcPsx/Game.h"
-#include "PcPsx/ProgArgs.h"
 
 #include <algorithm>
 
@@ -374,7 +373,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 
     // PsyDoom: if the '-nomonsters' command line argument is specified then do not spawn if a monster...
     #if PSYDOOM_MODS
-        if (ProgArgs::gbNoMonsters && (info.flags & MF_COUNTKILL))
+        if (Game::gSettings.bNoMonsters && (info.flags & MF_COUNTKILL))
             return;
     #endif
 

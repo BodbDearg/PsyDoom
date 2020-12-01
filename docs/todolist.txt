@@ -1,5 +1,4 @@
 0.6 - Sound, timing & QOL improvements?
-- Ignore '-nomonsters' for demos
 - Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
 - Do an error message on failure to connect in multiplayer games explaining the issue.
 - Fix up view bobbing inconsistency (15 vs 30 Hz)

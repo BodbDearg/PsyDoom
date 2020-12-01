@@ -283,7 +283,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     // These settings may also be overwritten by demo playback, if a demo will be played.
     #if PSYDOOM_MODS
         if (gNetGame == gt_single) {
-            Game::getConfigGameSettings(Game::gSettings);
+            Game::getUserGameSettings(Game::gSettings);
         }
     #endif
 
@@ -517,16 +517,19 @@ gameaction_t G_PlayDemoPtr() noexcept {
         gpDemo_p++;
     }
     
-    // Initialize the demo pointer, game and load the level
+    // Do basic game initialization
     G_InitNew(skill, mapNum, gt_single);
-    G_DoLoadLevel();
 
     // PsyDoom: determine the game settings to play back this classic demo correctly, depending on what game is being used.
     // Save the previous game settings also, so they can be restored later.
+    // N.B: this *MUST* be done before loading the level, as some of the settings (e.g nomonsters) affect level loading.
     #if PSYDOOM_MODS
         const GameSettings prevGameSettings = Game::gSettings;
         Game::getClassicDemoGameSettings(Game::gSettings);
     #endif
+
+    // Load the map used by the demo
+    G_DoLoadLevel();
 
     // Run the demo
     gbDemoPlayback = true;

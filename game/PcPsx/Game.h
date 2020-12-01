@@ -27,6 +27,7 @@ struct GameSettings {
     uint8_t     bUseFinalDoomPlayerMovement;    // Whether to use the Final Doom way of doing player movement & turning
     uint8_t     bAllowMovementCancellation;     // Digital movement only: whether opposite move inputs can cancel each other out
     uint8_t     bAllowTurningCancellation;      // Digital turning only: whether opposite turn inputs can cancel each other out
+    uint8_t     bNoMonsters;                    // Is the '-nomonsters' command line cheat activated?
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
 };
 
@@ -39,7 +40,7 @@ extern bool             gbIsPsxDoomForever;
 
 void determineGameTypeAndVariant() noexcept;
 bool isFinalDoom() noexcept;
-void getConfigGameSettings(GameSettings& settings) noexcept;
+void getUserGameSettings(GameSettings& settings) noexcept;
 void getClassicDemoGameSettings(GameSettings& settings) noexcept;
 int32_t getNumMaps() noexcept;
 int32_t getNumRegularMaps() noexcept;

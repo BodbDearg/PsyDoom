@@ -8,6 +8,7 @@
 #include "Doom/UI/in_main.h"
 #include "FatalErrors.h"
 #include "IsoFileSys.h"
+#include "ProgArgs.h"
 #include "PsxVm.h"
 
 BEGIN_NAMESPACE(Game)
@@ -86,9 +87,9 @@ bool isFinalDoom() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the game settings as specified by the users configuration files
+// Get the game settings as specified by the user's configuration files and command line arguments
 //------------------------------------------------------------------------------------------------------------------------------------------
-void getConfigGameSettings(GameSettings& settings) noexcept {
+void getUserGameSettings(GameSettings& settings) noexcept {
     settings = {};
 
     if (Config::gUsePalTimings < 0) {
@@ -114,6 +115,7 @@ void getConfigGameSettings(GameSettings& settings) noexcept {
     }
 
     settings.bAllowTurningCancellation = Config::gbAllowTurningCancellation;
+    settings.bNoMonsters = ProgArgs::gbNoMonsters;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // Auto set the spawn limit based on the game
@@ -134,6 +136,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUseFinalDoomPlayerMovement    = isFinalDoom();
     settings.bAllowMovementCancellation     = isFinalDoom();
     settings.bAllowTurningCancellation      = false;
+    settings.bNoMonsters                    = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
 }
 

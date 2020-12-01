@@ -180,7 +180,7 @@ texture_t gTex_CONNECT;
 
     // The current network protocol version.
     // Should be incremented whenever the data format being transmitted changes.
-    static constexpr int32_t NET_PROTOCOL_VERSION = 1;
+    static constexpr int32_t NET_PROTOCOL_VERSION = 2;
 
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
@@ -1049,8 +1049,8 @@ void I_NetSetup() noexcept {
 
     // If the player is the server then determine the game settings, endian correct and send to the client
     if (gCurPlayerIndex == 0) {
-        // Determine the game settings to use
-        Game::getConfigGameSettings(Game::gSettings);
+        // Determine the game settings to use based on config and command line arguments
+        Game::getUserGameSettings(Game::gSettings);
 
         // Copy and endian correct the settings before sending to the client player
         GameSettings settings = Game::gSettings;
