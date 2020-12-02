@@ -1,9 +1,7 @@
 0.6 - Sound, timing & QOL improvements?
-- Implement PC style cheat codes for convenience (IDDQD, IDFKA etc.).
 - Do an error message on failure to connect in multiplayer games explaining the issue.
 - Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
-- Add 'dev mode' setting and gate the pause convenience cheats behind that.
 
 0.7 - GPU & Rendering?
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.

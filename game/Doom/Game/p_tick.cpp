@@ -19,6 +19,7 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_user.h"
+#include "PcPsx/Cheats.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Controls.h"
 #include "PcPsx/DemoResult.h"
@@ -67,6 +68,8 @@ int32_t     gMapNumToCheatWarpTo;                   // What map the player curre
 int32_t     gVramViewerTexPage;                     // What page of texture memory to display in the VRAM viewer
 thinker_t   gThinkerCap;                            // Dummy thinker which serves as both the head and tail of the thinkers list.
 mobj_t      gMObjHead;                              // Dummy map object which serves as both the head and tail of the map objects linked list.
+int32_t     gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
+int32_t     gTicConOnPause;                         // What 1 vblank tick we paused on, used to discount paused time on unpause
 
 // PsyDoom: PSX gamepad button presses are now confined to just this player, and are just used for entering the original cheat sequences.
 // For a networked game we use the tick inputs sent across with each packet.
@@ -81,9 +84,8 @@ mobj_t      gMObjHead;                              // Dummy map object which se
     uint32_t    gOldTicButtons[MAXPLAYERS];     // Previously pressed buttons by all players
 #endif
 
-static int32_t      gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
+
 static uint16_t     gCheatSequenceBtns[CHEAT_SEQ_LEN];      // Cheat sequence buttons inputted by the player
-static int32_t      gTicConOnPause;                         // What 1 vblank tick we paused on, used to discount paused time on unpause
 static int32_t      gNumActiveThinkers;                     // Stat tracking count, no use other than that
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -394,30 +396,9 @@ void P_CheckCheats() noexcept {
     if (!gbGamePaused)
         return;
 
-    // PsyDoom: allow cheats to be easily input using keyboard keys in dev builds
-    #if PSYDOOM_MODS
-        static cheatseq_t prevDevCheatSeq = (cheatseq_t) UINT32_MAX;
-        cheatseq_t devCheatSeq = Utils::getDevCheatSequenceToExec();
-
-        // Cheat key must be released in order to be used again.
-        // This prevents us from rapidly cycling between on/off states for some cheats.
-        if (devCheatSeq == prevDevCheatSeq) {
-            devCheatSeq = (cheatseq_t) UINT32_MAX;
-        } else {
-            prevDevCheatSeq = devCheatSeq;
-        }
-    #endif
-
-    // Only check for cheat sequences if some new buttons were pressed.
-    // PsyDoom: also check for cheats if any dev cheats are input.
-    if ((!padBtns) || (padBtns == oldPadBtns)) {
-        #if PSYDOOM_MODS
-            if ((devCheatSeq < 0) || (devCheatSeq >= NUM_CHEAT_SEQ))
-                return;
-        #else
-            return;
-        #endif
-    }
+    // Only check for cheat sequences if some new buttons were pressed
+    if ((!padBtns) || (padBtns == oldPadBtns))
+        return;
 
     // Add the currently pressed buttons to the input
     gCheatSequenceBtns[gCurCheatBtnSequenceIdx] = (uint16_t) padBtns;
@@ -435,14 +416,6 @@ void P_CheckCheats() noexcept {
 
             ++numMatchingBtns;
         }
-
-        // PsyDoom: allow cheats to be easily input using keyboard keys in dev builds
-        #if PSYDOOM_MODS
-            if (devCheatSeq < NUM_CHEAT_SEQ && cheatSeqIdx == devCheatSeq) {
-                // Force a match if dev cheat keys specify this cheat must be used!
-                numMatchingBtns = CHEAT_SEQ_LEN;
-            }
-        #endif
 
         // Did all of the buttons match an entire cheat sequence?
         if (numMatchingBtns >= CHEAT_SEQ_LEN) {
@@ -497,7 +470,7 @@ void P_CheckCheats() noexcept {
                             case MT_MISC7: player.cards[it_yellowskull] = true; break;
                             case MT_MISC8: player.cards[it_redskull]    = true; break;
                             case MT_MISC9: player.cards[it_blueskull]   = true; break;
-                            
+
                             default: break;
                         }
                     }
@@ -591,6 +564,10 @@ gameaction_t P_Ticker() noexcept {
     #endif
 
     // Check for pause and cheats
+    #if PSYDOOM_MODS
+        Cheats::update();
+    #endif
+
     P_CheckCheats();
 
     // Run map entities and do status bar logic, if it's time
@@ -766,8 +743,8 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.bStrafe = Controls::getBool(Controls::Binding::Modifier_Strafe);
     inputs.bPrevWeapon = Controls::getBool(Controls::Binding::Weapon_Previous);
     inputs.bNextWeapon = Controls::getBool(Controls::Binding::Weapon_Next);
-    inputs.bTogglePause = Controls::getBool(Controls::Binding::Toggle_Pause);
-    inputs.bToggleMap = Controls::getBool(Controls::Binding::Toggle_Map);
+    inputs.bTogglePause = Controls::isJustPressed(Controls::Binding::Toggle_Pause);
+    inputs.bToggleMap = Controls::isJustPressed(Controls::Binding::Toggle_Map);
     inputs.bAutomapZoomIn = Controls::getBool(Controls::Binding::Automap_ZoomIn);
     inputs.bAutomapZoomOut = Controls::getBool(Controls::Binding::Automap_ZoomOut);
     inputs.bAutomapMoveLeft = Controls::getBool(Controls::Binding::Automap_MoveLeft);

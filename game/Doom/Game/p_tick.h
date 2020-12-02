@@ -43,6 +43,8 @@ extern int32_t      gMapNumToCheatWarpTo;
 extern int32_t      gVramViewerTexPage;
 extern thinker_t    gThinkerCap;
 extern mobj_t       gMObjHead;
+extern int32_t      gCurCheatBtnSequenceIdx;
+extern int32_t      gTicConOnPause;
 
 #if PSYDOOM_MODS
     extern TickInputs   gTickInputs[MAXPLAYERS];

@@ -4,7 +4,9 @@
 
 BEGIN_NAMESPACE(Config)
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Game settings
+//------------------------------------------------------------------------------------------------------------------------------------------
 const char*     getCueFilePath() noexcept;
 extern bool     gbUncapFramerate;
 extern int32_t  gUsePalTimings;
@@ -16,15 +18,21 @@ extern int32_t  gAllowMovementCancellation;
 extern bool     gbAllowTurningCancellation;
 extern int32_t  gLostSoulSpawnLimit;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Video settings
+//------------------------------------------------------------------------------------------------------------------------------------------
 extern bool     gbFullscreen;
 extern bool     gbFloorRenderGapFix;
 extern int32_t  gLogicalDisplayW;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Audio settings
+//------------------------------------------------------------------------------------------------------------------------------------------
 extern int32_t  gAudioBufferSize;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Input settings
+//------------------------------------------------------------------------------------------------------------------------------------------
 extern float    gMouseTurnSpeed;
 extern float    gGamepadDeadZone;
 extern float    gGamepadFastTurnSpeed_High;
@@ -32,6 +40,29 @@ extern float    gGamepadFastTurnSpeed_Low;
 extern float    gGamepadTurnSpeed_High;
 extern float    gGamepadTurnSpeed_Low;
 extern float    gAnalogToDigitalThreshold;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Cheat settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+// If true then enable the convenience developer single cheat keys on the pause menu (keys F1-F8)
+extern bool gbEnableDevCheatShortcuts;
+
+// Cheat key sequences for various cheats: an array of up to 16 SDL scan codes.
+// Unused key slots in the sequence will be set to '0'.
+struct CheatKeySequence {
+    uint8_t keys[16];
+    static constexpr uint32_t MAX_KEYS = (uint32_t) C_ARRAY_SIZE(keys);
+};
+
+extern CheatKeySequence gCheatKeys_GodMode;
+extern CheatKeySequence gCheatKeys_NoClip;
+extern CheatKeySequence gCheatKeys_LevelWarp;
+extern CheatKeySequence gCheatKeys_WeaponsKeysAndArmor;
+extern CheatKeySequence gCheatKeys_AllMapLinesOn;
+extern CheatKeySequence gCheatKeys_AllMapThingsOn;
+extern CheatKeySequence gCheatKeys_XRayVision;
+extern CheatKeySequence gCheatKeys_VramViewer;
 
 void init() noexcept;
 void shutdown() noexcept;

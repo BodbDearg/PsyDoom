@@ -1,5 +1,6 @@
 #include "Config.h"
 
+#include "Asserts.h"
 #include "Controls.h"
 #include "FileUtils.h"
 #include "Finally.h"
@@ -591,6 +592,149 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
 #undef CONTROL_BIND_GROUP_FOOTER
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Cheat settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool gbEnableDevCheatShortcuts;
+CheatKeySequence gCheatKeys_GodMode;
+CheatKeySequence gCheatKeys_NoClip;
+CheatKeySequence gCheatKeys_LevelWarp;
+CheatKeySequence gCheatKeys_WeaponsKeysAndArmor;
+CheatKeySequence gCheatKeys_AllMapLinesOn;
+CheatKeySequence gCheatKeys_AllMapThingsOn;
+CheatKeySequence gCheatKeys_XRayVision;
+CheatKeySequence gCheatKeys_VramViewer;
+
+static void setCheatKeySequence(CheatKeySequence& sequence, const char* const pKeysStr) noexcept {
+    // Assign a cheat key sequence a value from a string.
+    // Only alpha and numeric characters are allowed and the maximum sequence length is 16.
+    ASSERT(pKeysStr);
+    uint32_t keyIdx = 0;
+    const char* pCurChar = pKeysStr;
+
+    do {
+        const char c = (char) std::toupper(pCurChar[0]);
+        ++pCurChar;
+
+        if (c == 0)
+            break;
+
+        if (c >= 'A' && c <= 'Z') {
+            const uint8_t key = (uint8_t) SDL_SCANCODE_A + (uint8_t) c - 'A';
+            sequence.keys[keyIdx] = key;
+            ++keyIdx;
+        }
+        else if (c >= '0' && c <= '9') {
+            const uint8_t key = (uint8_t) SDL_SCANCODE_0 + (uint8_t) c - '0';
+            sequence.keys[keyIdx] = key;
+            ++keyIdx;
+        }
+    } while (keyIdx < CheatKeySequence::MAX_KEYS);
+
+    // If we did not complete the sequence then null the rest of the chars
+    while (keyIdx < CheatKeySequence::MAX_KEYS) {
+        sequence.keys[keyIdx] = 0;
+        ++keyIdx;
+    }
+}
+
+static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
+    {
+        "EnableDevCheatShortcuts",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Set to '1' to enable convenience single key cheats (keys F1-F8) on the pause menu.\n"
+        "# If you frequently use cheats for development purposes then these shortcuts might be useful.\n"
+        "# They are disabled by default since they can be accidentally invoked very easily.\n"
+        "#\n"
+        "# The cheat keys when this setting is enabled are as follows:\n"
+        "#\n"
+        "#      F1: God mode\n"
+        "#      F2: Noclip (new cheat for PC port!)\n"
+        "#      F3: All weapons keys and ammo\n"
+        "#      F4: Level warp (note: secret maps can now be warped to also)\n"
+        "#      F5: X-ray vision\n"
+        "#      F6: Show all map things\n"
+        "#      F7: Show all map lines\n"
+        "#      F8: VRAM Viewer (functionality hidden in retail)\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "EnableDevCheatShortcuts = 0\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableDevCheatShortcuts = iniEntry.getBoolValue(); },
+        []() { gbEnableDevCheatShortcuts = false; }
+    },
+    {
+        "CheatKeySequence_GodMode",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Keyboard key sequences which can be input to activate various cheats in the game.\n"
+        "# By default these are mapped to mimick PC DOOM II cheats as much as possible.\n"
+        "#\n"
+        "# Limitations:\n"
+        "#  (1) Only the A-Z and 0-9 keys are acceptable in a key sequence, other characters are ignored.\n"
+        "#  (2) The maximum sequence length is 16 keys.\n"
+        "#\n"
+        "# If you need to input these via a game controller you can do so by inputting the original PSX\n"
+        "# buttons on the pause menu. You can see which inputs map to original PSX buttons (for cheat entry)\n"
+        "# in the controls configuration .ini file. For reference, the original PSX cheat sequences were:\n"
+        "#\n"
+        "#      God Mode:               Down, L2, Square, R1, Right, L1, Left, Circle\n"
+        "#      Level Warp:             Right, Left, R2, R1, Triangle, L1, Circle, X\n"
+        "#      Weapons, armor & keys:  X, Triangle, L1, Up, Down, R2, Left, Left\n"
+        "#      Show all map lines:     Triangle, Triangle, L2, R2, L2, R2, R1, Square\n"
+        "#      Show all map things:    Triangle, Triangle, L2, R2, L2, R2, R1, Circle\n"
+        "#      X-Ray vision:           L1, R2, L2, R1, Right, Triangle, X, Right\n"
+        "#\n"
+        "# The new cheats added to PsyDoom are assigned the following original PSX buttons:\n"
+        "#\n"
+        "#      No-clip:                Up, Up, Up, Up, Up, Up, Up, R1\n"
+        "#      VRAM viewer:            Triangle, Square, Up, Left, Down, Right, X, Circle\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "CheatKeySequence_GodMode = iddqd",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_GodMode, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_GodMode, "iddqd"); }
+    },
+    {
+        "CheatKeySequence_NoClip",
+        "CheatKeySequence_NoClip = idclip",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_NoClip, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_NoClip, "idclip"); }
+    },
+    {
+        "CheatKeySequence_LevelWarp",
+        "CheatKeySequence_LevelWarp = idclev",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_LevelWarp, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_LevelWarp, "idclev"); }
+    },
+    {
+        "CheatKeySequence_WeaponsKeysAndArmor",
+        "CheatKeySequence_WeaponsKeysAndArmor = idkfa",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_WeaponsKeysAndArmor, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_WeaponsKeysAndArmor, "idkfa"); }
+    },
+    {
+        "CheatKeySequence_AllMapLinesOn",
+        "CheatKeySequence_AllMapLinesOn = iddt",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_AllMapLinesOn, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_AllMapLinesOn, "iddt"); }
+    },
+    {
+        "CheatKeySequence_AllMapThingsOn",
+        "CheatKeySequence_AllMapThingsOn = idmt",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_AllMapThingsOn, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_AllMapThingsOn, "idmt"); }
+    },
+    {
+        "CheatKeySequence_XRayVision",
+        "CheatKeySequence_XRayVision = idray",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_XRayVision, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_XRayVision, "idray"); }
+    },
+    {
+        "CheatKeySequence_VramViewer",
+        "CheatKeySequence_VramViewer = idram\n",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_VramViewer, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_VramViewer, "idram"); }
+    },
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Other config parser related state
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -705,6 +849,7 @@ static void parseAllConfigFiles(const std::string& configFolder) noexcept {
     parseConfigFile(configFolder, "audio_cfg.ini",      AUDIO_CFG_INI_HANDLERS,     C_ARRAY_SIZE(AUDIO_CFG_INI_HANDLERS), nullptr);
     parseConfigFile(configFolder, "game_cfg.ini",       GAME_CFG_INI_HANDLERS,      C_ARRAY_SIZE(GAME_CFG_INI_HANDLERS), nullptr);
     parseConfigFile(configFolder, "input_cfg.ini",      INPUT_CFG_INI_HANDLERS,     C_ARRAY_SIZE(INPUT_CFG_INI_HANDLERS), nullptr);
+    parseConfigFile(configFolder, "cheats_cfg.ini",     CHEATS_CFG_INI_HANDLERS,    C_ARRAY_SIZE(CHEATS_CFG_INI_HANDLERS), nullptr);
 
     parseConfigFile(
         configFolder,

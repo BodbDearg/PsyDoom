@@ -2,6 +2,7 @@
 
 #include "Base/i_main.h"
 #include "cdmaptbl.h"
+#include "PcPsx/Cheats.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Controls.h"
 #include "PcPsx/Game.h"
@@ -56,9 +57,10 @@ int psx_main(const int argc, const char** const argv) noexcept {
         Game::determineGameTypeAndVariant();
         CdMapTbl_Init();
         
-        // Initialize the display and the modding manager
+        // Initialize the display, modding manager and cheats
         Video::initVideo();
         ModMgr::init();
+        Cheats::init();
     #endif
 
     // Call the original PSX Doom 'main()' function
@@ -71,6 +73,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
         }
 
         PsxVm::shutdown();
+        Cheats::shutdown();
         ModMgr::shutdown();
         Input::shutdown();
         Config::shutdown();
