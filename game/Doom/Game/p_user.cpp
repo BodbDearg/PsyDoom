@@ -515,9 +515,20 @@ static void P_CalcHeight(player_t& player) noexcept {
     mobj_t& mobj = *player.mo;
 
     {
-        const int32_t speedX = d_rshift<8>(mobj.momx);
-        const int32_t speedY = d_rshift<8>(mobj.momy);
+        int32_t speedX = mobj.momx;
+        int32_t speedY = mobj.momy;
 
+        #if PSYDOOM_MODS
+            // PsyDoom: fix the view bob strength if the game is running at 30 FPS.
+            // Needs to be doubled due to the way the calculations work out at this higher framerate.
+            if (Game::gSettings.bFixViewBobStrength && (gPlayersElapsedVBlanks[gPlayerNum] <= 2)) {
+                speedX *= 2;
+                speedY *= 2;
+            }
+        #endif
+
+        speedX = d_rshift<8>(speedX);
+        speedY = d_rshift<8>(speedY);
         player.bob = (speedX * speedX) + (speedY * speedY);
 
         // For some reason the PAL version divides this amount by 3 rather than 8...

@@ -136,6 +136,7 @@ bool                    gbUsePlayerRocketBlastFix;
 int32_t                 gUseFinalDoomPlayerMovement;
 int32_t                 gAllowMovementCancellation;
 bool                    gbAllowTurningCancellation;
+bool                    gbFixViewBobStrength;
 int32_t                 gLostSoulSpawnLimit;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -270,6 +271,17 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "AllowTurningCancellation = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbAllowTurningCancellation = iniEntry.getBoolValue(true); },
         []() { gbAllowTurningCancellation = true; }
+    },
+    {
+        "FixViewBobStrength",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Fix a bug from the original PSX Doom where view bobbing is not as strong when the game is running\n"
+        "# at 30 FPS versus 15 FPS. Enabling this setting will make view bobbing stronger, and much more\n"
+        "# like the original PC version.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "FixViewBobStrength = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbFixViewBobStrength = iniEntry.getBoolValue(true); },
+        []() { gbFixViewBobStrength = true; }
     },
     {
         "LostSoulSpawnLimit",

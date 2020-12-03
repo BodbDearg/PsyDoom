@@ -1,6 +1,5 @@
 0.6 - Sound, timing & QOL improvements?
 - Do an error message on failure to connect in multiplayer games explaining the issue.
-- Fix up view bobbing inconsistency (15 vs 30 Hz)
 - Fix up gravity inconsistency (15 vs 30 Hz)
 
 0.7 - GPU & Rendering?

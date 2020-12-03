@@ -16,6 +16,7 @@ extern bool     gbUsePlayerRocketBlastFix;
 extern int32_t  gUseFinalDoomPlayerMovement;
 extern int32_t  gAllowMovementCancellation;
 extern bool     gbAllowTurningCancellation;
+extern bool     gbFixViewBobStrength;
 extern int32_t  gLostSoulSpawnLimit;
 
 //------------------------------------------------------------------------------------------------------------------------------------------

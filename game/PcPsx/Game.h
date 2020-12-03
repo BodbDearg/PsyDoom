@@ -27,6 +27,7 @@ struct GameSettings {
     uint8_t     bUseFinalDoomPlayerMovement;    // Whether to use the Final Doom way of doing player movement & turning
     uint8_t     bAllowMovementCancellation;     // Digital movement only: whether opposite move inputs can cancel each other out
     uint8_t     bAllowTurningCancellation;      // Digital turning only: whether opposite turn inputs can cancel each other out
+    uint8_t     bFixViewBobStrength;            // Fix the strength of the view bobbing when running at 30 FPS so it's as intense as 15 FPS
     uint8_t     bNoMonsters;                    // Is the '-nomonsters' command line cheat activated?
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
 };
