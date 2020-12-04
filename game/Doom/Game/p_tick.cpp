@@ -15,6 +15,7 @@
 #include "g_game.h"
 #include "info.h"
 #include "p_base.h"
+#include "p_local.h"
 #include "p_mobj.h"
 #include "p_sight.h"
 #include "p_spec.h"
@@ -717,6 +718,33 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
             G_PlayerFinishLevel(playerIdx);
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper added for PsyDoom: returns the current gravity strength, adjusted for the game's current framerate (if that fix is enabled)
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_GetGravity() noexcept {
+    fixed_t gravity = GRAVITY;
+
+    #if PSYDOOM_MODS
+        // Fix gravity to be consistent irrespective of framerate if this setting is enabled.
+        // Makes 30 FPS gravity behave the same as 15 FPS gravity:
+        if (Game::gSettings.bFixGravityStrength) {
+            // Player 1's vblank count is what determines the game speed, even in a networked game
+            const int32_t elapsedVblanks = gPlayersElapsedVBlanks[0];
+
+            // Adjust gravity for frame-rate:
+            if (elapsedVblanks == 2) {
+                gravity /= 2;                       // 2 vblanks is 0.50x of 4 vblanks (15 FPS)
+            } else if (elapsedVblanks == 3) {
+                gravity = (gravity * 3) / 4;        // 3 vblanks is 0.75x of 4 vblanks (15 FPS)
+            } else if (elapsedVblanks == 1) {
+                gravity /= 4;                       // 1 vblanks is 0.25x of 4 vblanks (15 FPS)
+            }
+        }
+    #endif
+
+    return gravity;
 }
 
 #if PSYDOOM_MODS

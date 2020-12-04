@@ -116,6 +116,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 
     settings.bAllowTurningCancellation = Config::gbAllowTurningCancellation;
     settings.bFixViewBobStrength = Config::gbFixViewBobStrength;
+    settings.bFixGravityStrength = Config::gbFixGravityStrength;
     settings.bNoMonsters = ProgArgs::gbNoMonsters;
 
     if (Config::gLostSoulSpawnLimit == 0) {
@@ -138,6 +139,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bAllowMovementCancellation     = isFinalDoom();
     settings.bAllowTurningCancellation      = false;
     settings.bFixViewBobStrength            = false;
+    settings.bFixGravityStrength            = false;
     settings.bNoMonsters                    = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
 }

@@ -137,6 +137,7 @@ int32_t                 gUseFinalDoomPlayerMovement;
 int32_t                 gAllowMovementCancellation;
 bool                    gbAllowTurningCancellation;
 bool                    gbFixViewBobStrength;
+bool                    gbFixGravityStrength;
 int32_t                 gLostSoulSpawnLimit;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -278,10 +279,31 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Fix a bug from the original PSX Doom where view bobbing is not as strong when the game is running\n"
         "# at 30 FPS versus 15 FPS. Enabling this setting will make view bobbing stronger, and much more\n"
         "# like the original PC version.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------\n"
         "FixViewBobStrength = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbFixViewBobStrength = iniEntry.getBoolValue(true); },
         []() { gbFixViewBobStrength = true; }
+    },
+    {
+        "FixGravityStrength",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Fix a bug from the original PSX Doom where gravity applies at inconsistent strengths depending on\n"
+        "# the current framerate. The fix makes the gravity strength behave consistently at all framerates.\n"
+        "#\n"
+        "# Originally gravity was 2x as strong when the game was running at 30 FPS versus when the game was\n"
+        "# running at 15 FPS. Since the performance of the game was often closer to 15 FPS in most cases,\n"
+        "# this fix makes gravity behave at its 15 FPS strength consistently for greater authenticity.\n"
+        "#\n"
+        "# IMPORTANT: disabling this fix may certain jumps like in 'The Mansion' and 'The Gauntlet'\n"
+        "# impossible to perform but will make gravity feel less floaty. Most maps can be played at the\n"
+        "# stronger gravity level however without issue.\n"
+        "#\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "FixGravityStrength = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbFixGravityStrength = iniEntry.getBoolValue(true); },
+        []() { gbFixGravityStrength = true; }
     },
     {
         "LostSoulSpawnLimit",

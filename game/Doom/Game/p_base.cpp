@@ -199,9 +199,9 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
     else if ((mobj.flags & MF_NOGRAVITY) == 0) {
         // Not hitting the floor and gravity is enabled, so apply it:
         if (mobj.momz == 0) {
-            mobj.momz = -GRAVITY;
+            mobj.momz = -P_GetGravity();
         } else {
-            mobj.momz -= GRAVITY / 2;
+            mobj.momz -= P_GetGravity() / 2;
         }
     }
     

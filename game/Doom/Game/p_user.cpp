@@ -186,11 +186,13 @@ static void P_PlayerZMovement(mobj_t& mobj) noexcept {
     // Advance z position by the velocity
     mobj.z += mobj.momz;
 
-    // Clip z position against the floor
+    // Clip z position against the floor and apply gravity
+    const fixed_t gravity = P_GetGravity();
+
     if (mobj.z <= mobj.floorz) {
         // Hitting the floor: kill any downward velocity and clamp z position to the floor
         if (mobj.momz < 0) {
-            if (mobj.momz < -GRAVITY * 2) {
+            if (mobj.momz < -gravity * 2) {
                 // If we hit the floor hard then play the 'oof' sound
                 player.deltaviewheight = d_rshift<3>(mobj.momz);
                 S_StartSound(&mobj, sfx_oof);
@@ -204,7 +206,7 @@ static void P_PlayerZMovement(mobj_t& mobj) noexcept {
     else {
         // Not hitting the floor: do acceleration due to gravity.
         // Gravity is doubled on the first falling tic to account for the fact that it was always being applied, even on the floor:
-        mobj.momz -= (mobj.momz == 0) ? GRAVITY : GRAVITY / 2;
+        mobj.momz -= (mobj.momz == 0) ? gravity : gravity / 2;
     }
 
     // Clip height against the ceiling and kill upwards velocity if we're hitting it
