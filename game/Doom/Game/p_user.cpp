@@ -521,9 +521,22 @@ static void P_CalcHeight(player_t& player) noexcept {
         #if PSYDOOM_MODS
             // PsyDoom: fix the view bob strength if the game is running at 30 FPS.
             // Needs to be doubled due to the way the calculations work out at this higher framerate.
-            if (Game::gSettings.bFixViewBobStrength && (gPlayersElapsedVBlanks[gPlayerNum] <= 2)) {
-                speedX *= 2;
-                speedY *= 2;
+            const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
+
+            if (Game::gSettings.bFixViewBobStrength && (elapsedVBlanks < 4)) {
+                if (elapsedVBlanks == 2) {
+                    // Normal fixup case: at 30 FPS we need to double bob strength
+                    speedX *= 2;
+                    speedY *= 2;
+                } else if (elapsedVBlanks == 3) {
+                    // If running using PAL demo timings then we have 3 VBL per game tick and need to multiply strength by 1.5
+                    speedX = (speedX * 3) / 2;
+                    speedY = (speedY * 3) / 2;
+                } else if (elapsedVBlanks == 1) {
+                    // The game should never run at 60 Hz - but just in case we 4x the strength...
+                    speedX *= 4;
+                    speedY *= 4;
+                }
             }
         #endif
 
