@@ -794,6 +794,8 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // Allow toggle of autorun if the right button is pressed
     if (Controls::isJustPressed(Controls::Binding::Toggle_Autorun)) {
         PlayerPrefs::gbAlwaysRun = (!PlayerPrefs::gbAlwaysRun);
+        gStatusBar.messageTicsLeft = 15;
+        gStatusBar.message = (PlayerPrefs::gbAlwaysRun) ? "Autorun On" : "Autorun Off";
     }
 
     // If we're always running then this gets inverted
