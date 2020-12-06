@@ -732,15 +732,7 @@ fixed_t P_GetGravity() noexcept {
         if (Game::gSettings.bFixGravityStrength) {
             // Player 1's vblank count is what determines the game speed, even in a networked game
             const int32_t elapsedVblanks = gPlayersElapsedVBlanks[0];
-
-            // Adjust gravity for frame-rate:
-            if (elapsedVblanks == 2) {
-                gravity /= 2;                       // 2 vblanks is 0.50x of 4 vblanks (15 FPS)
-            } else if (elapsedVblanks == 3) {
-                gravity = (gravity * 3) / 4;        // 3 vblanks is 0.75x of 4 vblanks (15 FPS)
-            } else if (elapsedVblanks == 1) {
-                gravity /= 4;                       // 1 vblanks is 0.25x of 4 vblanks (15 FPS)
-            }
+            gravity = (gravity * elapsedVblanks) / 4;
         }
     #endif
 
