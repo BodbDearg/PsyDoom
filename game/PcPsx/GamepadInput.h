@@ -5,9 +5,9 @@
 #include <cstdint>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Enum representing an input source on a controller (axis or button)
+// Enum representing an input source on a non-generic game controller recognized by SDL (axis or button)
 //------------------------------------------------------------------------------------------------------------------------------------------
-enum class ControllerInput : uint8_t {
+enum class GamepadInput : uint8_t {
     BTN_A,
     BTN_B,
     BTN_X,
@@ -30,17 +30,17 @@ enum class ControllerInput : uint8_t {
     AXIS_TRIG_LEFT,
     AXIS_TRIG_RIGHT,
 
-    // N.B: must keep last for 'NUM_CONTROLLER_INPUTS' constant!
+    // N.B: must keep last for 'NUM_GAMEPAD_INPUTS' constant!
     INVALID
 };
 
-static constexpr uint8_t NUM_CONTROLLER_INPUTS = (uint32_t) ControllerInput::INVALID;
+static constexpr uint8_t NUM_GAMEPAD_INPUTS = (uint32_t) GamepadInput::INVALID;
 
-BEGIN_NAMESPACE(ControllerInputUtils)
+BEGIN_NAMESPACE(GamepadInputUtils)
 
-bool isAxis(const ControllerInput input) noexcept;
-ControllerInput getOppositeAxis(const ControllerInput input) noexcept;
-ControllerInput sdlButtonToInput(const uint8_t button) noexcept;
-ControllerInput sdlAxisToInput(const uint8_t axis) noexcept;
+bool isAxis(const GamepadInput input) noexcept;
+GamepadInput getOppositeAxis(const GamepadInput input) noexcept;
+GamepadInput sdlButtonToInput(const uint8_t button) noexcept;
+GamepadInput sdlAxisToInput(const uint8_t axis) noexcept;
 
-END_NAMESPACE(ControllerInputUtils)
+END_NAMESPACE(GamepadInputUtils)

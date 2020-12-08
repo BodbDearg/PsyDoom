@@ -1,13 +1,15 @@
 #pragma once
 
-#include "ControllerInput.h"
-#include "MouseButton.h"
+#include "GamepadInput.h"
 #include "Macros.h"
+#include "MouseButton.h"
 #include <vector>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper functions that manage user events and inputs received from the SDL library.
+//
 // Note that gamepad inputs can come from both the 'Game Controller' or more generic 'Joystick' APIs of SDL.
+// Some controllers will only be supported through the generic 'Joystick' API however, and not be recognized by SDL as a game controller.
 //------------------------------------------------------------------------------------------------------------------------------------------
 BEGIN_NAMESPACE(Input)
 
@@ -71,9 +73,9 @@ const std::vector<MouseButton>& getMouseButtonsPressed() noexcept;
 const std::vector<MouseButton>& getMouseButtonsJustPressed() noexcept;
 const std::vector<MouseButton>& getMouseButtonsJustReleased() noexcept;
 
-const std::vector<ControllerInput>& getControllerInputsPressed() noexcept;
-const std::vector<ControllerInput>& getControllerInputsJustPressed() noexcept;
-const std::vector<ControllerInput>& getControllerInputsJustReleased() noexcept;
+const std::vector<GamepadInput>& getGamepadInputsPressed() noexcept;
+const std::vector<GamepadInput>& getGamepadInputsJustPressed() noexcept;
+const std::vector<GamepadInput>& getGamepadInputsJustReleased() noexcept;
 
 const std::vector<uint32_t>& getJoystickAxesPressed() noexcept;
 const std::vector<uint32_t>& getJoystickAxesJustPressed() noexcept;
@@ -98,9 +100,9 @@ bool isMouseButtonJustPressed(const MouseButton button) noexcept;
 bool isMouseButtonReleased(const MouseButton button) noexcept;
 bool isMouseButtonJustReleased(const MouseButton button) noexcept;
 
-bool isControllerInputPressed(const ControllerInput input) noexcept;
-bool isControllerInputJustPressed(const ControllerInput input) noexcept;
-bool isControllerInputJustReleased(const ControllerInput input) noexcept;
+bool isGamepadInputPressed(const GamepadInput input) noexcept;
+bool isGamepadInputJustPressed(const GamepadInput input) noexcept;
+bool isGamepadInputJustReleased(const GamepadInput input) noexcept;
 
 bool isJoystickAxisPressed(const uint32_t axis) noexcept;
 bool isJoystickAxisJustPressed(const uint32_t axis) noexcept;
@@ -114,11 +116,11 @@ bool isJoystickHatPressed(const JoyHat hat) noexcept;
 bool isJoystickHatJustPressed(const JoyHat hat) noexcept;
 bool isJoystickHatJustReleased(const JoyHat hat) noexcept;
 
-// Controller & joystick axis inputs
-float getControllerInputValue(const ControllerInput input) noexcept;
+// Gamepad & generic joystick axis inputs
+float getGamepadInputValue(const GamepadInput input) noexcept;
 float getJoystickAxisValue(const uint32_t axis) noexcept;
 
-float getAdjustedControllerInputValue(const ControllerInput input, float deadZone) noexcept;
+float getAdjustedGamepadInputValue(const GamepadInput input, float deadZone) noexcept;
 float getAdjustedJoystickAxisValue(const uint32_t axis, const float deadZone) noexcept;
 
 // Mouse inputs

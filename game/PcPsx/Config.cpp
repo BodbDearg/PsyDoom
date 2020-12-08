@@ -415,11 +415,14 @@ R"(#----------------------------------------------------------------------------
 # Separate multiple input sources for one action using commas (,).
 #
 # Notes:
-#   (1) All input source names are case insensitive.
-#   (2) The following keyboard keys names must be escaped/prefixed with backslash (\) when used:
+#   (1) Gamepad inputs (i.e. Xbox controller style inputs) can only be used for certain types of
+#       game controllers which are supported and recognized by the SDL library that PsyDoom uses.
+#       If you find your controller is not supported, use generic/numbered joystick inputs instead.
+#   (2) All input source names are case insensitive.
+#   (3) The following keyboard keys names must be escaped/prefixed with backslash (\) when used:
 #         = [ ] # ; ,
-#   (3) Similar keyboard keys are collapsed into a range for brevity (e.g A-Z).
-#   (4) For a full list of available keyboard key names, including very uncommon ones, see:
+#   (4) Similar keyboard keys are collapsed into a range for brevity (e.g A-Z).
+#   (5) For a full list of available keyboard key names, including very uncommon ones, see:
 #         https://wiki.libsdl.org/SDL_Scancode
 #
 # Mouse Buttons:
@@ -435,28 +438,29 @@ R"(#----------------------------------------------------------------------------
 #       Mouse Wheel+
 #       Mouse Wheel-
 #
-# Gampad axes with a -1.0 to +1.0 range: normal & inverted
+# SDL recognized gamepad: axes with a -1.0 to +1.0 range: normal & inverted
 #       Gamepad LeftX           Gamepad RightX          Inv Gamepad LeftX       Inv Gamepad RightX
 #       Gamepad LeftY           Gamepad RightY          Inv Gamepad LeftY       Inv Gamepad RightY
 #
-# Gamepad trigger axes and positive or negative axis subsets with a 0.0 to 1.0 range:
+# SDL recognized gamepad: trigger axes and positive or negative axis subsets with a 0.0 to 1.0 range:
 #       Gamepad LeftTrigger     Gamepad RightTrigger
 #       Gamepad LeftX-          Gamepad LeftX+          Gamepad LeftY-          Gamepad LeftY+
 #       Gamepad RightX-         Gamepad RightX+         Gamepad RightY-         Gamepad RightY+
 #
-# Gamepad buttons:
+# SDL recognized gamepad: buttons:
 #       Gamepad A               Gamepad DpUp            Gamepad LeftStick
 #       Gamepad B               Gamepad DpDown          Gamepad RightStick
 #       Gamepad X               Gamepad DpLeft          Gamepad LeftShoulder
 #       Gamepad Y               Gamepad DpRight         Gamepad RightShoulder
 #       Gamepad Back            Gamepad Start           Gamepad Guide
 #
-# Gamepad axes, axis subsets/inversions, buttons and hat/d-pad directions (generic, by number 1-99):
-#       Gamepad Button1-99      Gamepad Hat1-99 Up
-#       Gamepad Axis1-99        Gamepad Hat1-99 Down
-#       Gamepad Axis1-99+       Gamepad Hat1-99 Left
-#       Gamepad Axis1-99-       Gamepad Hat1-99 Right
-#       Inv Gamepad Axis1-99
+# Generic joystick inputs: axes, axis subsets or inversions, buttons and hat/d-pad directions.
+# Replace '1-99' with the desired button, hat or axis number:
+#       Joystick Button1-99     Joystick Axis1-99
+#       Joystick Hat1-99 Up     Joystick Axis1-99+
+#       Joystick Hat1-99 Down   Joystick Axis1-99-
+#       Joystick Hat1-99 Left   Inv Joystick Axis1-99
+#       Joystick Hat1-99 Right
 #
 # Keyboard keys (commonly used, see link above for full list):
 #       A-Z                     Return                  Backspace               Home

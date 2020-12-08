@@ -1,6 +1,6 @@
 #include "Input.h"
 
-#include "ControllerInput.h"
+#include "GamepadInput.h"
 #include "Config.h"
 #include "FatalErrors.h"
 #include "ProgArgs.h"
@@ -29,10 +29,10 @@ static std::vector<uint16_t>            gKeyboardKeysJustReleased;
 static std::vector<MouseButton>         gMouseButtonsPressed;
 static std::vector<MouseButton>         gMouseButtonsJustPressed;
 static std::vector<MouseButton>         gMouseButtonsJustReleased;
-static float                            gControllerInputs[NUM_CONTROLLER_INPUTS];
-static std::vector<ControllerInput>     gControllerInputsPressed;
-static std::vector<ControllerInput>     gControllerInputsJustPressed;
-static std::vector<ControllerInput>     gControllerInputsJustReleased;
+static float                            gGamepadInputs[NUM_GAMEPAD_INPUTS];
+static std::vector<GamepadInput>        gGamepadInputsPressed;
+static std::vector<GamepadInput>        gGamepadInputsJustPressed;
+static std::vector<GamepadInput>        gGamepadInputsJustReleased;
 static std::vector<JoystickAxis>        gJoystickAxes;
 static std::vector<uint32_t>            gJoystickAxesPressed;
 static std::vector<uint32_t>            gJoystickAxesJustPressed;
@@ -45,7 +45,7 @@ static std::vector<JoyHat>              gJoystickHatsJustPressed;
 static std::vector<JoyHat>              gJoystickHatsJustReleased;
 
 static SDL_GameController*  gpGameController;
-static SDL_Joystick*        gpJoystick;             // Note: this is managed by game controller, not freed by this code!
+static SDL_Joystick*        gpJoystick;         // Note: if there is a game controller then this joystick will be managed by that and not closed manually by this module!
 static SDL_JoystickID       gJoystickId;
 
 // Mouse movements this frame
@@ -114,14 +114,14 @@ static float sdlAxisValueToFloat(const int16_t axis) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Close the currently open game controller (if any).
+// Close the currently open game controller or generic joystick (if any).
 // Also clears up any related inputs.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void closeCurrentGameController() noexcept {
-    std::memset(gControllerInputs, 0, sizeof(gControllerInputs));
-    gControllerInputsPressed.clear();
-    gControllerInputsJustPressed.clear();
-    gControllerInputsJustReleased.clear();
+    std::memset(gGamepadInputs, 0, sizeof(gGamepadInputs));
+    gGamepadInputsPressed.clear();
+    gGamepadInputsJustPressed.clear();
+    gGamepadInputsJustReleased.clear();
 
     gJoystickAxes.clear();
     gJoystickAxesPressed.clear();
@@ -136,24 +136,33 @@ static void closeCurrentGameController() noexcept {
     gJoystickHatsJustPressed.clear();
     gJoystickHatsJustReleased.clear();
 
+    // Close the current game controller, if there is any.
+    // Note that closing a game controller closes the associated joystick automatically also.
     if (gpGameController) {
         SDL_GameControllerClose(gpGameController);
         gpGameController = nullptr;
+        gpJoystick = nullptr;       // Managed by the game controller object, already closed!
+    }
+    
+    // Close the current generic joystick, if that's all we have and not the 'game controller' interface
+    if (gpJoystick) {
+        SDL_JoystickClose(gpJoystick);
+        gpJoystick = nullptr;
     }
 
-    gpJoystick = nullptr;
     gJoystickId = {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Rescans for the SDL game controllers to use: just uses the first available game controller.
-// This may choose wrong in a multi-gamepad situation but the user can always disconnect one to clarify what is wanted.
-// Most computer users would probably only want one gamepad at a time anyway?
+// Rescans for SDL game controllers and generic joysticks to use: just uses the first available controller or joystick.
+// This may choose wrong in a multi-gamepad/joystick situation but the user can always disconnect one to clarify which one is wanted.
+// Most computer users would probably only want one gamepad or joystick connected at a time anyway?
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void rescanGameControllers() noexcept {
-    // If we already have a gamepad then just re-check that it is still connected
-    if (gpGameController) {
-        if (!SDL_GameControllerGetAttached(gpGameController)) {
+    // If we already have a gamepad or generic joystick then just re-check that it is still connected.
+    // Note that we can check if a gamepad is connected by checking if the associated joystick is connected.
+    if (gpJoystick) {
+        if (!SDL_JoystickGetAttached(gpJoystick)) {
             closeCurrentGameController();
         }
     }
@@ -163,9 +172,10 @@ static void rescanGameControllers() noexcept {
     const int numJoysticks = SDL_NumJoysticks();
 
     for (int joyIdx = 0; joyIdx < numJoysticks; ++joyIdx) {
-        // If we find a valid game controller then try to open it.
+        // If we find a valid game controller or generic joystick then try to open it.
         // If we succeed then our work is done!
         if (SDL_IsGameController(joyIdx)) {
+            // This is a game controller - try opening that way
             gpGameController = SDL_GameControllerOpen(joyIdx);
 
             if (gpGameController) {
@@ -173,6 +183,14 @@ static void rescanGameControllers() noexcept {
                 gJoystickId = SDL_JoystickInstanceID(gpJoystick);
                 break;
             }
+        }
+
+        // Fallback to opening the controller as a generic joystick if it's not supported through the game controller interface
+        gpJoystick = SDL_JoystickOpen(joyIdx);
+
+        if (gpJoystick) {
+            gJoystickId = SDL_JoystickInstanceID(gpJoystick);
+            break;
         }
     }
 }
@@ -302,31 +320,31 @@ static void handleSdlEvents() noexcept {
 
             case SDL_CONTROLLERAXISMOTION: {
                 if (sdlEvent.cbutton.which == gJoystickId) {
-                    const ControllerInput input = ControllerInputUtils::sdlAxisToInput(sdlEvent.caxis.axis);
+                    const GamepadInput input = GamepadInputUtils::sdlAxisToInput(sdlEvent.caxis.axis);
 
-                    if (input != ControllerInput::INVALID) {
+                    if (input != GamepadInput::INVALID) {
                         const float pressedThreshold = Config::gAnalogToDigitalThreshold;
                         const uint8_t inputIdx = (uint8_t) input;
 
                         // See if there is a change in the 'pressed' status
-                        const bool bPrevPressed = (std::abs(gControllerInputs[inputIdx]) >= pressedThreshold);
+                        const bool bPrevPressed = (std::abs(gGamepadInputs[inputIdx]) >= pressedThreshold);
                         const float inputF = sdlAxisValueToFloat(sdlEvent.caxis.value);
                         const float inputFAbs = std::abs(inputF);
                         const bool bNowPressed = (inputFAbs >= pressedThreshold);
 
                         // Update input value
-                        gControllerInputs[inputIdx] = inputF;
+                        gGamepadInputs[inputIdx] = inputF;
 
                         // Generate events for the analog input
                         if (bPrevPressed != bNowPressed) {
                             if (bNowPressed) {
-                                removeValueFromVector(input, gControllerInputsJustReleased);
-                                gControllerInputsPressed.push_back(input);
-                                gControllerInputsJustPressed.push_back(input);
+                                removeValueFromVector(input, gGamepadInputsJustReleased);
+                                gGamepadInputsPressed.push_back(input);
+                                gGamepadInputsJustPressed.push_back(input);
                             } else {
-                                removeValueFromVector(input, gControllerInputsPressed);
-                                removeValueFromVector(input, gControllerInputsJustPressed);
-                                gControllerInputsJustReleased.push_back(input);
+                                removeValueFromVector(input, gGamepadInputsPressed);
+                                removeValueFromVector(input, gGamepadInputsJustPressed);
+                                gGamepadInputsJustReleased.push_back(input);
                             }
                         }
                     }
@@ -364,13 +382,13 @@ static void handleSdlEvents() noexcept {
 
             case SDL_CONTROLLERBUTTONDOWN: {
                 if (sdlEvent.cbutton.which == gJoystickId) {
-                    const ControllerInput input = ControllerInputUtils::sdlButtonToInput(sdlEvent.cbutton.button);
+                    const GamepadInput input = GamepadInputUtils::sdlButtonToInput(sdlEvent.cbutton.button);
 
-                    if (input != ControllerInput::INVALID) {
-                        removeValueFromVector(input, gControllerInputsJustReleased);
-                        gControllerInputsPressed.push_back(input);
-                        gControllerInputsJustPressed.push_back(input);
-                        gControllerInputs[(uint8_t) input] = 1.0f;
+                    if (input != GamepadInput::INVALID) {
+                        removeValueFromVector(input, gGamepadInputsJustReleased);
+                        gGamepadInputsPressed.push_back(input);
+                        gGamepadInputsJustPressed.push_back(input);
+                        gGamepadInputs[(uint8_t) input] = 1.0f;
                     }
                 }
             }   break;
@@ -386,13 +404,13 @@ static void handleSdlEvents() noexcept {
 
             case SDL_CONTROLLERBUTTONUP: {
                 if (sdlEvent.cbutton.which == gJoystickId) {
-                    const ControllerInput input = ControllerInputUtils::sdlButtonToInput(sdlEvent.cbutton.button);
+                    const GamepadInput input = GamepadInputUtils::sdlButtonToInput(sdlEvent.cbutton.button);
 
-                    if (input != ControllerInput::INVALID) {
-                        gControllerInputsJustReleased.push_back(input);
-                        removeValueFromVector(input, gControllerInputsPressed);
-                        removeValueFromVector(input, gControllerInputsJustPressed);
-                        gControllerInputs[(uint8_t) input] = 0.0f;
+                    if (input != GamepadInput::INVALID) {
+                        gGamepadInputsJustReleased.push_back(input);
+                        removeValueFromVector(input, gGamepadInputsPressed);
+                        removeValueFromVector(input, gGamepadInputsJustPressed);
+                        gGamepadInputs[(uint8_t) input] = 0.0f;
                     }
                 }
             }   break;
@@ -451,9 +469,9 @@ void init() noexcept {
     gMouseButtonsJustPressed.reserve(NUM_MOUSE_BUTTONS);
     gMouseButtonsJustReleased.reserve(NUM_MOUSE_BUTTONS);
 
-    gControllerInputsPressed.reserve(NUM_CONTROLLER_INPUTS);
-    gControllerInputsJustPressed.reserve(NUM_CONTROLLER_INPUTS);
-    gControllerInputsJustReleased.reserve(NUM_CONTROLLER_INPUTS);
+    gGamepadInputsPressed.reserve(NUM_GAMEPAD_INPUTS);
+    gGamepadInputsJustPressed.reserve(NUM_GAMEPAD_INPUTS);
+    gGamepadInputsJustReleased.reserve(NUM_GAMEPAD_INPUTS);
 
     gJoystickAxes.reserve(16);
     gJoystickAxesPressed.reserve(16);
@@ -497,9 +515,9 @@ void shutdown() noexcept {
     emptyAndShrinkVector(gJoystickAxesPressed);
     emptyAndShrinkVector(gJoystickAxes);
 
-    emptyAndShrinkVector(gControllerInputsJustReleased);
-    emptyAndShrinkVector(gControllerInputsJustPressed);
-    emptyAndShrinkVector(gControllerInputsPressed);
+    emptyAndShrinkVector(gGamepadInputsJustReleased);
+    emptyAndShrinkVector(gGamepadInputsJustPressed);
+    emptyAndShrinkVector(gGamepadInputsPressed);
 
     emptyAndShrinkVector(gMouseButtonsJustReleased);
     emptyAndShrinkVector(gMouseButtonsJustPressed);
@@ -534,8 +552,8 @@ void consumeEvents() noexcept {
     gKeyboardKeysJustReleased.clear();
     gMouseButtonsJustPressed.clear();
     gMouseButtonsJustReleased.clear();
-    gControllerInputsJustPressed.clear();
-    gControllerInputsJustReleased.clear();
+    gGamepadInputsJustPressed.clear();
+    gGamepadInputsJustReleased.clear();
     gJoystickAxesJustPressed.clear();
     gJoystickAxesJustReleased.clear();
     gJoystickButtonsJustPressed.clear();
@@ -585,19 +603,17 @@ bool areAnyKeysOrButtonsPressed() noexcept {
         return true;
     
     // Check game controller or generic joypad for any digital (or converted to digital) input
-    if (gpGameController) {
-        if (!gControllerInputsPressed.empty())
-            return true;
+    if (!gGamepadInputsPressed.empty())
+        return true;
+    
+    if (!gJoystickAxesPressed.empty())
+        return true;
 
-        if (!gJoystickAxesPressed.empty())
-            return true;
+    if (!gJoystickButtonsPressed.empty())
+        return true;
 
-        if (!gJoystickButtonsPressed.empty())
-            return true;
-
-        if (!gJoystickHatsPressed.empty())
-            return true;
-    }
+    if (!gJoystickHatsPressed.empty())
+        return true;
 
     return false;
 }
@@ -626,16 +642,16 @@ const std::vector<MouseButton>& getMouseButtonsJustReleased() noexcept {
     return gMouseButtonsJustReleased;
 }
 
-const std::vector<ControllerInput>& getControllerInputsPressed() noexcept {
-    return gControllerInputsPressed;
+const std::vector<GamepadInput>& getGamepadInputsPressed() noexcept {
+    return gGamepadInputsPressed;
 }
 
-const std::vector<ControllerInput>& getControllerInputsJustPressed() noexcept {
-    return gControllerInputsJustPressed;
+const std::vector<GamepadInput>& getGamepadInputsJustPressed() noexcept {
+    return gGamepadInputsJustPressed;
 }
 
-const std::vector<ControllerInput>& getControllerInputsJustReleased() noexcept {
-    return gControllerInputsJustReleased;
+const std::vector<GamepadInput>& getGamepadInputsJustReleased() noexcept {
+    return gGamepadInputsJustReleased;
 }
 
 const std::vector<uint32_t>& getJoystickAxesPressed() noexcept {
@@ -706,16 +722,16 @@ bool isMouseButtonJustReleased(const MouseButton button) noexcept {
     return vectorContainsValue(gMouseButtonsJustReleased, button);
 }
 
-bool isControllerInputPressed(const ControllerInput input) noexcept {
-    return vectorContainsValue(gControllerInputsPressed, input);
+bool isGamepadInputPressed(const GamepadInput input) noexcept {
+    return vectorContainsValue(gGamepadInputsPressed, input);
 }
 
-bool isControllerInputJustPressed(const ControllerInput input) noexcept {
-    return vectorContainsValue(gControllerInputsJustPressed, input);
+bool isGamepadInputJustPressed(const GamepadInput input) noexcept {
+    return vectorContainsValue(gGamepadInputsJustPressed, input);
 }
 
-bool isControllerInputJustReleased(const ControllerInput input) noexcept {
-    return vectorContainsValue(gControllerInputsJustReleased, input);
+bool isGamepadInputJustReleased(const GamepadInput input) noexcept {
+    return vectorContainsValue(gGamepadInputsJustReleased, input);
 }
 
 bool isJoystickAxisPressed(const uint32_t axis) noexcept {
@@ -754,9 +770,9 @@ bool isJoystickHatJustReleased(const JoyHat hat) noexcept {
     return vectorContainsValue(gJoystickHatsJustReleased, hat);
 }
 
-float getControllerInputValue(const ControllerInput input) noexcept {
+float getGamepadInputValue(const GamepadInput input) noexcept {
     const uint8_t inputIdx = (uint8_t) input;
-    return (inputIdx < NUM_CONTROLLER_INPUTS) ? gControllerInputs[inputIdx] : 0.0f;
+    return (inputIdx < NUM_GAMEPAD_INPUTS) ? gGamepadInputs[inputIdx] : 0.0f;
 }
 
 float getJoystickAxisValue(const uint32_t axis) noexcept {
@@ -769,21 +785,21 @@ float getJoystickAxisValue(const uint32_t axis) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get an input which is adjusted for the given deadzone, such that the range of input values (0-1) starts just outside the deadzone.
+// Get a gamepad input which is adjusted for the given deadzone, such that the range of input values (0-1) starts just outside the deadzone.
 // If the input has an opposite axis (2d axis pair), then the deadzone is treated like a circle and the following adjustment method is used:
 //  https://www.gamasutra.com/blogs/JoshSutphin/20130416/190541/Doing_Thumbstick_Dead_Zones_Right.php
-// If the controller input is not analog then no deadzone adjustments are performed.
+// If the gamepad input is not analog then no deadzone adjustments are performed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-float getAdjustedControllerInputValue(const ControllerInput input, const float deadZone) noexcept {
-    const float rawAxis = getControllerInputValue(input);
+float getAdjustedGamepadInputValue(const GamepadInput input, const float deadZone) noexcept {
+    const float rawAxis = getGamepadInputValue(input);
     const float clampedDeadZone = std::clamp(deadZone, 0.0f, 0.9999f);
     
-    const ControllerInput oppositeInput = ControllerInputUtils::getOppositeAxis(input);
+    const GamepadInput oppositeInput = GamepadInputUtils::getOppositeAxis(input);
     const bool b2dAxisPair = (input != oppositeInput);
     
     if (b2dAxisPair) {
         // A 2d-axis pair
-        const float rawAxisOpp = getControllerInputValue(oppositeInput);
+        const float rawAxisOpp = getGamepadInputValue(oppositeInput);
         const float axisVecLen = std::sqrtf(rawAxis * rawAxis + rawAxisOpp * rawAxisOpp);
 
         const float axisNormalized = (axisVecLen > 0) ? rawAxis / axisVecLen : 0.0f;
@@ -796,7 +812,7 @@ float getAdjustedControllerInputValue(const ControllerInput input, const float d
         }
     }
 
-    if (ControllerInputUtils::isAxis(input)) {
+    if (GamepadInputUtils::isAxis(input)) {
         // Simple 1d axis: just rescale based on the deadzone
         if (rawAxis >= 0) {
             return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f, 1.0f);
