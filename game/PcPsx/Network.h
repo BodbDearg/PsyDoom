@@ -7,6 +7,8 @@ struct NetPacket_Tick;
 
 BEGIN_NAMESPACE(Network)
 
+extern bool gbWasInitAborted;
+
 bool initForServer() noexcept;
 bool initForClient() noexcept;
 void shutdown() noexcept;

@@ -20,6 +20,10 @@
 
 BEGIN_NAMESPACE(Network)
 
+// A flag set to true if network init was aborted by the user
+bool gbWasInitAborted = false;
+
+
 // Maximum number of input/output tick packets that can be buffered
 static constexpr int32_t MAX_TICK_PKTS = 2;
 
@@ -27,6 +31,7 @@ static std::unique_ptr<asio::io_context>                                    gpIo
 static std::unique_ptr<asio::ip::tcp::socket>                               gpSocket;
 static std::unique_ptr<NetPacketReader<NetPacket_Tick, MAX_TICK_PKTS>>      gTickPacketReader;
 static std::unique_ptr<NetPacketWriter<NetPacket_Tick, MAX_TICK_PKTS>>      gTickPacketWriter;
+static bool                                                                 gbWasWaitForAsyncNetOpAborted;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Checks for user input to cancel an abortable network operation like establishing a connection
@@ -44,6 +49,8 @@ static bool isCancelNetworkConnectionRequested() noexcept {
 // While the operation is being waited on, platform updates are performed. The operation can also be marked non abortable too.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) noexcept {
+    gbWasWaitForAsyncNetOpAborted = false;
+
     if (bFinishedFlag)
         return true;
 
@@ -60,8 +67,10 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
             break;
 
         // Not yet complete: check for abortion requests from the user - if that is allowed.
-        if (bIsAbortable && isCancelNetworkConnectionRequested())
+        if (bIsAbortable && isCancelNetworkConnectionRequested()) {
+            gbWasWaitForAsyncNetOpAborted = true;
             return false;
+        }
         
         // While we are waiting update the display to help prevent stutter after long pauses (if we are waiting a long time).
         // See the 'Utils.cpp' file for more comments on this issue.
@@ -137,6 +146,7 @@ bool initForServer() noexcept {
 
     // If the connection attempt failed then cleanup before exiting
     if (!bWasSuccessful) {
+        gbWasInitAborted = gbWasWaitForAsyncNetOpAborted;
         shutdown();
     }
 
@@ -205,6 +215,7 @@ bool initForClient() noexcept {
 
     // If the connection attempt failed then cleanup before exiting
     if (!bWasSuccessful) {
+        gbWasInitAborted = gbWasWaitForAsyncNetOpAborted;
         shutdown();
     }
 

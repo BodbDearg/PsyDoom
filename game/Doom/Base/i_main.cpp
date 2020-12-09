@@ -8,6 +8,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Game/p_user.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/UI/neterror_main.h"
 #include "FatalErrors.h"
 #include "i_drawcmds.h"
 #include "PcPsx/Config.h"
@@ -1008,6 +1009,10 @@ void I_NetSetup() noexcept {
     const bool bHaveNetConn = (ProgArgs::gbIsNetServer) ? Network::initForServer() : Network::initForClient();
 
     if (!bHaveNetConn) {
+        if (!Network::gbWasInitAborted) {
+            RunNetErrorMenu_FailedToConnect();
+        }
+
         gbDidAbortGame = true;
         return;
     }
@@ -1072,6 +1077,7 @@ void I_NetSetup() noexcept {
     // Verify the network protocol version and game ids are OK - abort if not
     if ((inPkt.protocolVersion != NET_PROTOCOL_VERSION) || (inPkt.gameId != netGameId)) {
         gbDidAbortGame = true;
+        RunNetErrorMenu_GameTypeOrVersionMismatch();
         return;
     }
 
@@ -1086,6 +1092,7 @@ void I_NetSetup() noexcept {
         GameSettings settings = {};
 
         if (!Network::recvBytes(&settings, sizeof(settings))) {
+            RunNetErrorMenu_FailedToConnect();
             gbDidAbortGame = true;
             return;
         }
@@ -1099,6 +1106,7 @@ void I_NetSetup() noexcept {
     // One last check to see if the network connection was killed.
     // This will happen if an error occurred, and if this is the case then we should abort the connection attempt:
     if (!Network::isConnected()) {
+        RunNetErrorMenu_FailedToConnect();
         gbDidAbortGame = true;
         return;
     }

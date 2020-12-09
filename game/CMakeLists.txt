@@ -148,6 +148,8 @@ set(SOURCE_FILES
     "Doom/UI/le_main.h"
     "Doom/UI/m_main.cpp"
     "Doom/UI/m_main.h"
+    "Doom/UI/neterror_main.cpp"
+    "Doom/UI/neterror_main.h"
     "Doom/UI/o_main.cpp"
     "Doom/UI/o_main.h"
     "Doom/UI/pw_main.cpp"

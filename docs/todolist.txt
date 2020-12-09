@@ -1,5 +1,5 @@
 0.6 - Sound, timing & QOL improvements?
-- Do an error message on failure to connect in multiplayer games explaining the issue.
+- Add view bobbing amount setting.
 
 0.7 - GPU & Rendering?
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
