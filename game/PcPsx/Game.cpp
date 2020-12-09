@@ -11,6 +11,8 @@
 #include "ProgArgs.h"
 #include "PsxVm.h"
 
+#include <algorithm>
+
 BEGIN_NAMESPACE(Game)
 
 // Total number of maps in the game for Doom and Final Doom
@@ -124,6 +126,8 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     } else {
         settings.lostSoulSpawnLimit = Config::gLostSoulSpawnLimit;
     }
+
+    settings.viewBobbingStrengthFixed = (int32_t)(std::clamp(Config::gViewBobbingStrength, 0.0f, 1.0f) * (float) FRACUNIT);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -142,6 +146,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bFixGravityStrength            = false;
     settings.bNoMonsters                    = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
+    settings.viewBobbingStrengthFixed       = FRACUNIT;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -139,6 +139,7 @@ bool                    gbAllowTurningCancellation;
 bool                    gbFixViewBobStrength;
 bool                    gbFixGravityStrength;
 int32_t                 gLostSoulSpawnLimit;
+float                   gViewBobbingStrength;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
 
@@ -322,6 +323,16 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "LostSoulSpawnLimit = 0\n",
         [](const IniUtils::Entry& iniEntry) { gLostSoulSpawnLimit = iniEntry.getIntValue(0); },
         []() { gLostSoulSpawnLimit = 0; }
+    },
+    {
+        "ViewBobbingStrength",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Multiplier for view bobbing strength, from 0.0 to 1.0.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "ViewBobbingStrength = 1.0\n",
+        [](const IniUtils::Entry& iniEntry) { gViewBobbingStrength = iniEntry.getFloatValue(1.0f); },
+        []() { gViewBobbingStrength = 1.0f; }
     },
 };
 

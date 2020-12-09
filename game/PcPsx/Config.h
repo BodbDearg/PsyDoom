@@ -19,6 +19,7 @@ extern bool     gbAllowTurningCancellation;
 extern bool     gbFixViewBobStrength;
 extern bool     gbFixGravityStrength;
 extern int32_t  gLostSoulSpawnLimit;
+extern float    gViewBobbingStrength;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Video settings

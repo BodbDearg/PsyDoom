@@ -552,6 +552,11 @@ static void P_CalcHeight(player_t& player) noexcept {
             player.bob = d_rshift<4>(player.bob);
         }
 
+        // PsyDoom: scale the strength of view bobbing by the user preferences
+        #if PSYDOOM_MODS
+            player.bob = FixedMul(player.bob, Game::gSettings.viewBobbingStrengthFixed);
+        #endif
+
         player.bob = std::min(player.bob, MAXBOB);
     }
     

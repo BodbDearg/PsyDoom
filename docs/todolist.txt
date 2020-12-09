@@ -1,6 +1,3 @@
-0.6 - Sound, timing & QOL improvements?
-- Add view bobbing amount setting.
-
 0.7 - GPU & Rendering?
 - Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
     - Need to run at capped framerate to see properly.
