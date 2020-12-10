@@ -27,6 +27,7 @@ The original goal of this project was to have a complete replacement for the ori
   - Space : Use
   - Ctrl/F : Fire
   - Shift : Run
+  - Capslock : Toggle autorun
   - PgUp/E PgDown/Q : Next Weapon and Previous Weapon
   - P/Pause/Return : Pause
   - Tab : Automap
