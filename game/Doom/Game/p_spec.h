@@ -21,6 +21,10 @@ extern card_t   gMapRedKeyType;
 extern card_t   gMapYellowKeyType;
 extern int32_t  gMapBossSpecialFlags;
 
+#if PSYDOOM_MODS
+    void P_SetAnimsToBasePic() noexcept;
+#endif
+
 void P_InitPicAnims() noexcept;
 side_t* getSide(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept;
 sector_t* getSector(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept;

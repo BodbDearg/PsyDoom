@@ -844,6 +844,11 @@ static void P_GroupLines() noexcept {
 // For animated textures the first frame will be put into VRAM and the rest of the animation cached in main RAM.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_Init() noexcept {
+    // PsyDoom: make sure all animated textures and flats use the base picture - the engine expects this:
+    #if PSYDOOM_MODS
+        P_SetAnimsToBasePic();
+    #endif
+
     // Load sector flats into VRAM if not already there
     {
         const sector_t* pSec = gpSectors;

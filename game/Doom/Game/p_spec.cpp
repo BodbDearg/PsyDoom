@@ -88,6 +88,59 @@ static int32_t      gNumLinespecials;                   // The number of scrolli
 
 static void T_DelayedAction(delayaction_t& action) noexcept;
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: sets animated textures and flats to use the first frame number.
+// Fixes cases where WAD authors might use the 2nd frame of an animation (e.g SLIME02) instead of the 1st.
+// The engine requires an animation to be referred to by it's first frame in order to work...
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SetAnimsToBasePic() noexcept {
+    const int32_t maxAnims = (Game::isFinalDoom()) ? MAXANIMS_FDOOM : MAXANIMS_DOOM;
+
+    // This trawls through the sector or side list for every animation.
+    // Not the most efficient method but it's only done once on startup for not too many animations, and this way avoids allocations...
+    for (int32_t animIdx = 0; animIdx < maxAnims; ++animIdx) {
+        const animdef_t& animdef = gAnimDefs[animIdx];
+
+        if (animdef.istexture) {
+            const int32_t startPic = R_TextureNumForName(animdef.startname);
+            const int32_t endPic = R_TextureNumForName(animdef.endname);
+            
+            for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx) {
+                side_t& side = gpSides[sideIdx];
+
+                if ((side.bottomtexture > startPic) && (side.bottomtexture <= endPic)) {
+                    side.bottomtexture = startPic;
+                }
+
+                if ((side.midtexture > startPic) && (side.midtexture <= endPic)) {
+                    side.midtexture = startPic;
+                }
+
+                if ((side.toptexture > startPic) && (side.toptexture <= endPic)) {
+                    side.toptexture = startPic;
+                }
+            }
+        } else {
+            const int32_t startPic = R_FlatNumForName(animdef.startname);
+            const int32_t endPic = R_FlatNumForName(animdef.endname);
+            
+            for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
+                sector_t& sector = gpSectors[secIdx];
+
+                if ((sector.floorpic > startPic) && (sector.floorpic <= endPic)) {
+                    sector.floorpic = startPic;
+                }
+
+                if ((sector.ceilingpic > startPic) && (sector.ceilingpic <= endPic)) {
+                    sector.ceilingpic = startPic;
+                }
+            }
+        }
+    }
+}
+#endif  // #if PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches into RAM the textures for all animated flats and textures.
 // Also sets up the spot in VRAM where these animations will go - they occupy the same spot as the base animation frame.
