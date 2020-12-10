@@ -314,6 +314,15 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
 // Spawns a thing using the information in the given 'mapthing_t' struct
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
+    // PsyDoom: ignore thing type '0' but issue a warning to the map author.
+    // This wouldn't be in any official maps but I've seen it in some new levels - not sure why because it's not a valid DoomEd number...
+    #if PSYDOOM_MODS
+        if (mapthing.type == 0) {
+            gLevelStartupWarning = "W:skipped things with type '0'!";
+            return;
+        }
+    #endif
+
     // Remember player starts for single player and co-op games
     if (mapthing.type <= MAXPLAYERS) {
         gPlayerStarts[mapthing.type - 1] = mapthing;

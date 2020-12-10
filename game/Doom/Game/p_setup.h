@@ -43,6 +43,10 @@ extern mapthing_t       gPlayerStarts[MAXPLAYERS];
 extern mapthing_t       gDeathmatchStarts[MAX_DEATHMATCH_STARTS];
 extern mapthing_t*      gpDeathmatchP;
 
+#if PSYDOOM_MODS
+    extern const char*  gLevelStartupWarning;
+#endif
+
 extern void (*gUpdateFireSkyFunc)(texture_t& skyTex);
 
 void P_SetupLevel(const int32_t mapNum, const skill_t skill) noexcept;

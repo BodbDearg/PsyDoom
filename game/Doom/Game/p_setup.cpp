@@ -66,6 +66,12 @@ mapthing_t      gPlayerStarts[MAXPLAYERS];
 mapthing_t      gDeathmatchStarts[MAX_DEATHMATCH_STARTS];
 mapthing_t*     gpDeathmatchP;                                  // Points past the end of the deathmatch starts list
 
+// PsyDoom: if not null then issue this warning after the level has started.
+// Can be used to issue non-fatal warnings about bad map conditions to WAD authors.
+#if PSYDOOM_MODS
+    const char* gLevelStartupWarning;
+#endif
+
 // Is the map being loaded a Final Doom format map?
 static bool gbLoadingFinalDoomMap;
 
@@ -970,6 +976,11 @@ static void P_Init() noexcept {
 // Note: while most of the loading and setup is done here for the level, sound and music are handled eleswhere.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
+    // PsyDoom: no startup warning initially
+    #if PSYDOOM_MODS
+        gLevelStartupWarning = nullptr;
+    #endif
+
     // Cleanup of memory and resetting the RNG before we start
     Z_FreeTags(*gpMainMemZone, PU_CACHE | PU_LEVSPEC| PU_LEVEL);
 

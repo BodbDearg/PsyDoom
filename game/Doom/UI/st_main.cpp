@@ -1,6 +1,5 @@
 #include "st_main.h"
 
-#include "Macros.h"
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
@@ -9,9 +8,11 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"
+#include "Macros.h"
 #include "PcPsx/Game.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -151,6 +152,14 @@ void ST_InitEveryLevel() noexcept {
         gStatusBar.tryopen[cardIdx] = false;
         gFlashCards[cardIdx].active = false;
     }
+
+    // PsyDoom: if there is a level startup warning then issue it now
+    #if PSYDOOM_MODS
+        if (gLevelStartupWarning) {
+            gStatusBar.message = gLevelStartupWarning;
+            gStatusBar.messageTicsLeft = 150;
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
