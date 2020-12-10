@@ -21,6 +21,7 @@
     - No texture cache overflow
     - Expanded VRAM
     - Expanded SRAM
+    - More audio voices.
     - Greatly enlargened heap
     - Remove temporary buffer limits
     - Remove geometry clipping limits where possible
