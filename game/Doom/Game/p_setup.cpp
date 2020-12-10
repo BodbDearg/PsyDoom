@@ -73,6 +73,14 @@ static bool gbLoadingFinalDoomMap;
 // Set when the map has a fire sky, otherwise null.
 void (*gUpdateFireSkyFunc)(texture_t& skyTex) = nullptr;
 
+// Functions iternal to this module:
+static void P_LoadBlocks(const CdFileId file) noexcept;
+static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept;
+
+#if !PSYDOOM_MODS
+    static void P_CacheSprite(const spritedef_t& sprdef) noexcept;  // PsyDoom: not used, so compiling out
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -829,7 +837,7 @@ static void P_GroupLines() noexcept {
 // Loads wall, floor and switch textures into VRAM.
 // For animated textures the first frame will be put into VRAM and the rest of the animation cached in main RAM.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_Init() noexcept {
+static void P_Init() noexcept {
     // Load sector flats into VRAM if not already there
     {
         const sector_t* pSec = gpSectors;
@@ -1109,7 +1117,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 // PsyDoom: this function had to be completely rewritten since 'sizeof(memblock_t)' is no longer equal to 'sizeof(fileblock_t)'.
 // This is due to pointers being larger in 64-bit mode. See the 'Old' folder for the original version of this function.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_LoadBlocks(const CdFileId file) noexcept {
+static void P_LoadBlocks(const CdFileId file) noexcept {
     // Open the blocks file and get it's size
     const int32_t openFileIdx = OpenFile(file);
     const int32_t fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
@@ -1192,11 +1200,13 @@ void P_LoadBlocks(const CdFileId file) noexcept {
     Z_CheckHeap(*gpMainMemZone);
 }
 
+#if !PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches into RAM all frames for a sprite.
 // This function appears to be unused in the retail version of the game.
+// PsyDoom: don't bother compiling this function in, since it is unused.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_CacheSprite(const spritedef_t& sprdef) noexcept {
+static void P_CacheSprite(const spritedef_t& sprdef) noexcept {
     // Cache all frames in the sprite
     for (int32_t frameIdx = 0; frameIdx < sprdef.numframes; ++frameIdx) {
         const spriteframe_t& spriteFrame = sprdef.spriteframes[frameIdx];
@@ -1217,12 +1227,13 @@ void P_CacheSprite(const spritedef_t& sprdef) noexcept {
         }
     }
 }
+#endif  // #if !PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cache map textures with the given width into VRAM.
 // Textures are cached in groups according to their width in order to try and make more efficient use of VRAM space.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
+static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
     // Round the current fill position in the texture cache up to the nearest multiple of the given texture width.
     // This ensures that for instance 64 pixel textures are on 64 pixel boundaries on the x dimension.
     {
