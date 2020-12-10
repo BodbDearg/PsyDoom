@@ -27,7 +27,7 @@ The original goal of this project was to have a complete replacement for the ori
   - Space : Use
   - Ctrl/F : Fire
   - Shift : Run
-  - Capslock : Toggle autorun
+  - Caps Lock : Toggle autorun
   - PgUp/E PgDown/Q : Next Weapon and Previous Weapon
   - P/Pause/Return : Pause
   - Tab : Automap
@@ -48,15 +48,15 @@ The original goal of this project was to have a complete replacement for the ori
   - Shoulder Buttons : Next or Previous Weapon
   - Start : Pause
   - Back : Toggle Automap
-- In current dev builds, cheats can be activated easily by pressing the following function keys on the 'pause' screen:
-    - F1: God mode
-    - F2: Noclip (new cheat for PC port!)
-    - F3: All weapons keys and ammo
-    - F4: Level warp (note: secret maps can now be warped to also)
-    - F5: XRay vision
-    - F6: Show all map things
-    - F7: Show all map lines
-    - F8: VRAM Viewer (functionality hidden in retail)
+- In addition to entering the original PSX cheat buttons with a controller, the following cheat key sequences are supported:
+  - iddqd : God mode
+  - idclip : No-clip mode
+  - idclev : Open level warp
+  - idkfa : Give weapons, keys, ammo and armor
+  - iddt : Show all map lines
+  - idmt : Show all map things
+  - idray : X-ray vision
+  - idram : Open the VRAM viewer
 - Multiplayer/link-cable emulation
     - PsyDoom now supports an emulation of the original 'Link Cable' multiplayer functionality, over regular TCP.
     - This requires a VERY low latency network connection to be playable as the game's network protocol is synchronous and not lag tolerant, Ethernet or very fast Wifi is HIGHLY recommended.
