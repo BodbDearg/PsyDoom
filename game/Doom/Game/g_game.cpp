@@ -72,6 +72,11 @@ void G_DoLoadLevel() noexcept {
     // Wait for the pistol and barrel explode menu sounds to stop playing
     Utils::waitUntilSeqExitedStatus(sfx_barexp, SequenceStatus::SEQUENCE_PLAYING);
     Utils::waitUntilSeqExitedStatus(sfx_pistol, SequenceStatus::SEQUENCE_PLAYING);
+
+    // PsyDoom: no startup warning initially
+    #if PSYDOOM_MODS
+        gLevelStartupWarning = nullptr;
+    #endif
     
     // Loading sound and music
     S_LoadMapSoundAndMusic(gGameMap);

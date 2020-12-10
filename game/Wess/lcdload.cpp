@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "lcdload.h"
 
+#include "Doom/Game/p_setup.h"
 #include "Finally.h"
 #include "PcPsx/ProgArgs.h"
 #include "psxspu.h"
@@ -157,6 +158,10 @@ int32_t wess_dig_lcd_data_read(
             #endif
 
             if (bInsufficientSpuRam) {
+                #if PSYDOOM_MODS
+                    gLevelStartupWarning = "W: not enough sound RAM!";
+                #endif
+
                 gWess_lcd_load_soundBytesLeft = 0;
                 return bytesWritten;
             }

@@ -981,11 +981,6 @@ static void P_Init() noexcept {
 // Note: while most of the loading and setup is done here for the level, sound and music are handled eleswhere.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
-    // PsyDoom: no startup warning initially
-    #if PSYDOOM_MODS
-        gLevelStartupWarning = nullptr;
-    #endif
-
     // Cleanup of memory and resetting the RNG before we start
     Z_FreeTags(*gpMainMemZone, PU_CACHE | PU_LEVSPEC| PU_LEVEL);
 
