@@ -32,6 +32,7 @@
 - Investigate rollback networking to combat latency.
     - Could also be used for a rewind feature??!
     - Could also be used for a save feature.
+- Interpolate player weapon sway
 - Investigate interpolation for sprites and sectors in addition to player view.
 
 1.0 - Final polish?
