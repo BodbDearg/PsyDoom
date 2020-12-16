@@ -228,10 +228,6 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
         if (nameUpper == "MOUSE WHEEL") {
             inputSrc.device = InputSrc::MOUSE_WHEEL;
         } 
-        else if (nameUpper == "INV MOUSE WHEEL") {
-            inputSrc.device = InputSrc::MOUSE_WHEEL;
-            inputSrc.modifier = InputSrc::MOD_INVERT;
-        }
         else if (nameUpper == "MOUSE WHEEL+") {
             inputSrc.device = InputSrc::MOUSE_WHEEL;
             inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
@@ -260,6 +256,10 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
             inputSrc.device = InputSrc::MOUSE_BUTTON;
             inputSrc.input = (uint16_t) MouseButton::X2;
         }
+    }
+    else if (nameUpper == "INV MOUSE WHEEL") {
+        inputSrc.device = InputSrc::MOUSE_WHEEL;
+        inputSrc.modifier = InputSrc::MOD_INVERT;
     }
     else if (nameUpper.find("GAMEPAD ") == 0) {
         // Probably some sort of gamepad button or axis (not inverted)
