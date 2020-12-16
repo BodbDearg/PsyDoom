@@ -45,19 +45,33 @@ PsyDoom contributors (sorted alphabetically)
         * Support for extended password map numbers (0-255, instead of 0-63):
             https://github.com/Erick194/PSXDOOM-RE/commit/2a5b73503db5479131702ee29dc946056bcf026a
 
+* **[fenderc01](https://github.com/fenderc01)**
+
+    * Spotted saved_prefs.ini handling inconsistency:
+        https://github.com/BodbDearg/PsyDoom/issues/1
+    * Separate Doom/Final-Doom password suggestion:
+        https://github.com/BodbDearg/PsyDoom/issues/1
+    * Found issues with the 'Inv Mouse Wheel' control binding:
+        https://github.com/BodbDearg/PsyDoom/issues/3
+
+* **[j0r9](https://github.com/j0r9)**
+
+    * Suggestion to interpolate weapon bobbing:
+        https://github.com/BodbDearg/PsyDoom/issues/2
+
 * **[Jakub Czekański (JaCzekanski)](https://github.com/JaCzekanski)**
 
     * Author of the excellent Avocado emulator, which PsyDoom uses to replicate PSX hardware such as the GPU and SPU:
-    https://github.com/JaCzekanski/Avocado
+        https://github.com/JaCzekanski/Avocado
 
 * **Martin Korth**
    
    * Author of the NO$PSX emulator and also of the NO$PSX specs, which have been extremely helpful during development:
-   https://problemkaputt.de/psx-spx.htm
+        https://problemkaputt.de/psx-spx.htm
 
 * **[Samuel Villarreal (svkaiser)](https://github.com/svkaiser)**
 
     * Console DOOM reverse engineering, specs & tools:
-    https://www.doomworld.com/forum/topic/38608-the-console-doom-hacking-project-console-specs
+        https://www.doomworld.com/forum/topic/38608-the-console-doom-hacking-project-console-specs
     * Doom64-EX source code (DOOM 64 was based on PSX DOOM, thus can serve as a reference point for it):
-    https://github.com/svkaiser/Doom64EX
+        https://github.com/svkaiser/Doom64EX
