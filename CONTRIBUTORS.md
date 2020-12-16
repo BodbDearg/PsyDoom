@@ -47,12 +47,22 @@ PsyDoom contributors (sorted alphabetically)
 
 * **[fenderc01](https://github.com/fenderc01)**
 
+    * Found and raised an issue with a 'ptrToVmAddr' error:
+         https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2121606
+    * Suggestion to make opposite movement directions cancel:
+         https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2144091
+    * Discovered weapon switching issues when switching really quickly:
+         https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2151142
+    * Raised a bug about the invalid password flash overlapping text:
+         https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2181219
+    * Discovered issues with using a PlayStation classic controller:
+         https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2224903
     * Spotted saved_prefs.ini handling inconsistency:
-        https://github.com/BodbDearg/PsyDoom/issues/1
-    * Separate Doom/Final-Doom password suggestion:
-        https://github.com/BodbDearg/PsyDoom/issues/1
+         https://github.com/BodbDearg/PsyDoom/issues/1
+    * Made separate Doom/Final-Doom password suggestion:
+         https://github.com/BodbDearg/PsyDoom/issues/1
     * Found issues with the 'Inv Mouse Wheel' control binding:
-        https://github.com/BodbDearg/PsyDoom/issues/3
+         https://github.com/BodbDearg/PsyDoom/issues/3
 
 * **[j0r9](https://github.com/j0r9)**
 
