@@ -10,7 +10,7 @@ As of right now the game mostly runs correctly, with a few very minor issues. He
 The original goal of this project was to have a complete replacement for the original PlayStation Doom .EXE for modern systems. Now that this objective has been achieved, the focus turns to adding quality of life improvements, some modding features and additional polish.
 
 ## Running
-- Presently only Windows 64-bit and MacOS (Intel 64-bit) are supported.
+- Presently only Windows 64-bit and MacOS (Intel 64-bit) are supported. Linux is not currently supported but is planned for a future release.
 - Download the latest release build from here: https://github.com/BodbDearg/PsyDoom/releases
 - On Windows, make sure to have the latest Visual C redistributable installed:
   - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
@@ -87,3 +87,4 @@ The original goal of this project was to have a complete replacement for the ori
 ## How to build
 - Requires a recent CMake to generate the project (3.15 or higher)
 - Builds with Visual Studio 2019 (Windows 64-bit) and also Xcode 11 on MacOS. Other IDEs and toolchains may work but are untested.
+- Note: Only Windows and MacOS are valid platforms to build on, Linux is not yet supported.
