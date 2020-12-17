@@ -73,8 +73,9 @@ void G_DoLoadLevel() noexcept {
     Utils::waitUntilSeqExitedStatus(sfx_barexp, SequenceStatus::SEQUENCE_PLAYING);
     Utils::waitUntilSeqExitedStatus(sfx_pistol, SequenceStatus::SEQUENCE_PLAYING);
 
-    // PsyDoom: no startup warning initially
+    // PsyDoom: no startup warning initially and ensure all playing stuff is stopped
     #if PSYDOOM_MODS
+        wess_seq_stopall();
         gLevelStartupWarning = nullptr;
     #endif
     
