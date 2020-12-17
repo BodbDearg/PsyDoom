@@ -8,6 +8,8 @@
 #include "wessapi_t.h"
 #include "wessseq.h"
 
+#include <algorithm>
+
 static constexpr uint32_t WESS_MODULE_ID = Endian::littleToHost(0x58535053);        // 4 byte identifier for WMD (Williams Module) files: says 'SPSX'
 static constexpr uint32_t WESS_MODULE_VER = 1;                                      // Expected WMD (module) file version
 static constexpr uint8_t MINIMUM_TRACK_INDXS_FOR_A_SEQUENCE = 4;                    // Minimum tracks in a sequence
@@ -337,6 +339,12 @@ int32_t wess_load_module(
     module_header& moduleHdr = module.hdr;
     wess_memcpy(&moduleHdr, gpWess_curWmdFileBytes, sizeof(module_header));
     gpWess_curWmdFileBytes += sizeof(module_header);
+
+    #if PSYDOOM_MODS
+        // PsyDoom: raising the track and sequence limit to help prevent issues with sounds not playing
+        moduleHdr.max_active_sequences = std::max(moduleHdr.max_active_sequences, 128ui8);
+        moduleHdr.max_active_tracks = std::max(moduleHdr.max_active_tracks, 128ui8);
+    #endif
 
     if ((moduleHdr.module_id != WESS_MODULE_ID) || (moduleHdr.module_version != WESS_MODULE_VER)) {
         free_mem_if_mine();
