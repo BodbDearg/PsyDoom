@@ -85,6 +85,6 @@ The original goal of this project was to have a complete replacement for the ori
 - The intro movie does not play yet. This functionality will be implemented in a future build.
 
 ## How to build
-- Requires a recent CMake to generate the project (3.15 or higher)
+- Requires a recent CMake to generate the IDE specific project files (3.15 or higher)
 - Builds with Visual Studio 2019 (Windows 64-bit) and also Xcode 11 on MacOS. Other IDEs and toolchains may work but are untested.
 - Note: Only Windows and MacOS are valid platforms to build on, Linux is not yet supported.
