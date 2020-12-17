@@ -342,8 +342,8 @@ int32_t wess_load_module(
 
     #if PSYDOOM_MODS
         // PsyDoom: raising the track and sequence limit to help prevent issues with sounds not playing
-        moduleHdr.max_active_sequences = std::max(moduleHdr.max_active_sequences, 128ui8);
-        moduleHdr.max_active_tracks = std::max(moduleHdr.max_active_tracks, 128ui8);
+        moduleHdr.max_active_sequences = std::max(moduleHdr.max_active_sequences, uint8_t(128));
+        moduleHdr.max_active_tracks = std::max(moduleHdr.max_active_tracks, uint8_t(128));
     #endif
 
     if ((moduleHdr.module_id != WESS_MODULE_ID) || (moduleHdr.module_version != WESS_MODULE_VER)) {
