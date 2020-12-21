@@ -311,8 +311,8 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
         LIBGPU_SetSprt(spritePrim);
-        LIBGPU_SetSemiTrans(&spritePrim, false);
-        LIBGPU_SetShadeTex(&spritePrim, false);
+        LIBGPU_SetSemiTrans(spritePrim, false);
+        LIBGPU_SetShadeTex(spritePrim, false);
         LIBGPU_setRGB0(spritePrim, 128, 128, 128);
         spritePrim.clut = Game::getTexPalette_DebugFontSmall();
     }

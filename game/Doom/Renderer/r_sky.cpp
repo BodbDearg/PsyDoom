@@ -45,17 +45,17 @@ void R_DrawSky() noexcept {
 
         DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
         LIBGPU_SetDrawMode(drawMode, false, false, skytex.texPageId, &textureWindow);
-        I_AddPrim(&drawMode);
+        I_AddPrim(drawMode);
     }
 
     // Setup and draw the sky sprite
     SPRT& spr = *(SPRT*) LIBETC_getScratchAddr(128);
     LIBGPU_SetSprt(spr);
-    LIBGPU_SetShadeTex(&spr, true);
+    LIBGPU_SetShadeTex(spr, true);
     LIBGPU_setXY0(spr, 0, 0);
     LIBGPU_setWH(spr, SCREEN_W, skytex.height);
     LIBGPU_setUV0(spr, (uint8_t)(skytex.texPageCoordX - (gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
     spr.clut = gPaletteClutId_CurMapSky;
     
-    I_AddPrim(&spr);
+    I_AddPrim(spr);
 }

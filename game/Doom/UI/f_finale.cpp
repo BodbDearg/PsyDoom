@@ -612,7 +612,7 @@ void F2_Drawer() noexcept {
         POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
 
         LIBGPU_SetPolyFT4(polyPrim);
-        LIBGPU_SetShadeTex(&polyPrim, true);
+        LIBGPU_SetShadeTex(polyPrim, true);
         polyPrim.clut = gPaletteClutIds[MAINPAL];
         polyPrim.tpage = spriteTex.texPageId;
 
@@ -647,7 +647,7 @@ void F2_Drawer() noexcept {
         polyPrim.tv2 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
         polyPrim.tv3 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
 
-        I_AddPrim(&polyPrim);
+        I_AddPrim(polyPrim);
 
         // Draw screen title and current character name
         I_DrawString(-1, 20, "Cast Of Characters");

@@ -99,11 +99,11 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
             DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
             const RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
-            I_AddPrim(&drawModePrim);
+            I_AddPrim(drawModePrim);
         }
 
         LIBGPU_SetSprt(spritePrim);
-        LIBGPU_SetShadeTex(&spritePrim, true);
+        LIBGPU_SetShadeTex(spritePrim, true);
         spritePrim.clut = gPaletteClutIds[UIPAL];
     #endif
 
@@ -147,7 +147,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
 
         spritePrim.x0 = (int16_t) curX;
         spritePrim.tu0 = gBigFontChars[BIG_FONT_DIGITS + digit].u;
-        I_AddPrim(&spritePrim);
+        I_AddPrim(spritePrim);
 
         curX -= 11;
     }
@@ -156,7 +156,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     if (bNegativeVal) {
         spritePrim.x0 = (int16_t) curX;
         spritePrim.tu0 = gBigFontChars[BIG_FONT_EXCLAMATION].u;
-        I_AddPrim(&spritePrim);
+        I_AddPrim(spritePrim);
     }
 }
 
@@ -198,7 +198,7 @@ void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) 
             LIBGPU_setUV0(spritePrim, (uint8_t) texU, (uint8_t) texV);
             spritePrim.x0 = (int16_t) curX;
 
-            I_AddPrim(&spritePrim);
+            I_AddPrim(spritePrim);
         }
 
         curX += 8;
@@ -236,7 +236,7 @@ void I_DrawPausedOverlay() noexcept {
                 SCREEN_W,   SCREEN_H
             );
 
-            I_AddPrim(LIBETC_getScratchAddr(128));
+            I_AddPrim(polyPrim);
         }
         
         I_VramViewerDraw(gVramViewerTexPage);
@@ -362,14 +362,14 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
-        I_AddPrim(&drawModePrim);
+        I_AddPrim(drawModePrim);
     }
 
     // Some basic setup of the sprite primitive for all characters
     SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
     LIBGPU_SetSprt(spritePrim);
-    LIBGPU_SetShadeTex(&spritePrim, true);
+    LIBGPU_SetShadeTex(spritePrim, true);
     spritePrim.clut = gPaletteClutIds[UIPAL];
 
     // Decide on starting x position: can either be so the string is centered in the screen, or just the value verbatim
@@ -417,7 +417,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
         LIBGPU_setUV0(spritePrim, fontchar.u, fontchar.v);
         LIBGPU_setWH(spritePrim, fontchar.w, fontchar.h);
     
-        I_AddPrim(&spritePrim);
+        I_AddPrim(spritePrim);
 
         // Move past the drawn character
         curX += fontchar.w;

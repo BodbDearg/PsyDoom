@@ -441,7 +441,7 @@ void I_DrawSprite(
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
         LIBGPU_SetDrawMode(drawModePrim, false, false, texPageId, nullptr);
-        I_AddPrim(&drawModePrim);
+        I_AddPrim(drawModePrim);
     }
 
     // Setup the sprite primitive and submit
@@ -454,7 +454,7 @@ void I_DrawSprite(
     LIBGPU_setWH(spritePrim, texW, texH);
     spritePrim.clut = clutId;
 
-    I_AddPrim(LIBETC_getScratchAddr(128));
+    I_AddPrim(spritePrim);
 }
 
 #if PSYDOOM_MODS
@@ -480,7 +480,7 @@ void I_DrawColoredSprite(
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
         LIBGPU_SetDrawMode(drawModePrim, false, false, texPageId, nullptr);
-        I_AddPrim(&drawModePrim);
+        I_AddPrim(drawModePrim);
     }
 
     // Setup the sprite primitive and submit
@@ -491,10 +491,10 @@ void I_DrawColoredSprite(
     LIBGPU_setXY0(spritePrim, xpos, ypos);
     LIBGPU_setUV0(spritePrim, texU, texV);
     LIBGPU_setWH(spritePrim, texW, texH);
-    LIBGPU_SetSemiTrans(&spritePrim, bSemiTransparent);
+    LIBGPU_SetSemiTrans(spritePrim, bSemiTransparent);
     spritePrim.clut = clutId;
 
-    I_AddPrim(LIBETC_getScratchAddr(128));
+    I_AddPrim(spritePrim);
 }
 
 #endif
@@ -948,7 +948,7 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
             TEX_PAGE_VRAM_TEXCOORDS[texPageNum][1]
         );
 
-        I_AddPrim(&polyPrim);
+        I_AddPrim(polyPrim);
     }
 
     // Draw red lines around all entries on this texture cache page
@@ -984,16 +984,16 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
 
         // Draw all the box lines for the cache entry
         LIBGPU_setXY2(linePrim, x, y, x + w, y);                // Top
-        I_AddPrim(&linePrim);
+        I_AddPrim(linePrim);
 
         LIBGPU_setXY2(linePrim, x + w, y, x + w, y + h);        // Right
-        I_AddPrim(LIBETC_getScratchAddr(128));
+        I_AddPrim(linePrim);
 
         LIBGPU_setXY2(linePrim, x + w, y + h, x, y + h);        // Bottom
-        I_AddPrim(LIBETC_getScratchAddr(128));
+        I_AddPrim(linePrim);
 
         LIBGPU_setXY2(linePrim, x, y + h, x, y);                // Left
-        I_AddPrim(LIBETC_getScratchAddr(128));
+        I_AddPrim(linePrim);
     }
 }
 
@@ -1299,26 +1299,12 @@ bool I_NetUpdate() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetHandshake() noexcept {}
 
-#endif  // #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Submits any pending draw primitives in the gpu commands buffer to the GPU
+// Submits any pending draw primitives in the gpu commands buffer to the GPU.
+// PsyDoom: this no longer needs to do anything, since we submit all primitves to the GPU directly and execute immediately.
+// For the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void I_SubmitGpuCmds() noexcept {
-    // Submit the primitives list to the GPU if it's not empty
-    if (gpGpuPrimsBeg != gpGpuPrimsEnd) {
-        // Note: this marks the end of the primitive list, by setting the 'tag' field of an invalid primitive to 0xFFFFFF.
-        // This is similar to LIBGPU_TermPrim, except we don't bother using a valid primitive struct.
-        ((uint32_t*) gpGpuPrimsEnd)[0] = 0x00FFFFFF;
-        LIBGPU_DrawOTag(gpGpuPrimsBeg, gGpuCmdsBuffer);
-    }
-
-    // Clear the primitives list
-    gpGpuPrimsBeg = gGpuCmdsBuffer;
-    gpGpuPrimsEnd = gGpuCmdsBuffer;
-}
-
-#if PSYDOOM_MODS
+void I_SubmitGpuCmds() noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom: get the total number of vblanks elapsed, and use the current time adjustment in networked games

@@ -5,15 +5,12 @@
 
 #include "Asserts.h"
 #include "Config.h"
+#include "Gpu.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
 #include "Utils.h"
 
 #include <SDL.h>
-
-BEGIN_DISABLE_HEADER_WARNINGS
-    #include <device/gpu/gpu.h>
-END_DISABLE_HEADER_WARNINGS
 
 BEGIN_NAMESPACE(Video)
 
@@ -127,15 +124,15 @@ static void presentSdlFramebuffer() noexcept {
 }
 
 static void copyPsxToSdlFramebuffer() noexcept {
-    gpu::GPU& gpu = *PsxVm::gpGpu;
-    const uint16_t* const vramPixels = gpu.vram.data();
+    Gpu::Core& gpu = PsxVm::gGpu;
+    const uint16_t* const vramPixels = gpu.pRam;
     uint32_t* pDstPixel = gpFrameBuffer;
     
     for (uint32_t y = 0; y < ORIG_DRAW_RES_Y; ++y) {
-        const uint16_t* const rowPixels = vramPixels + ((intptr_t) y + gpu.displayAreaStartY) * 1024;   // Note: VRAM size is '1024x512 @ 16 bpp'
-        const uint32_t xStart = (uint32_t) gpu.displayAreaStartX;
+        const uint16_t* const rowPixels = vramPixels + ((intptr_t) y + gpu.displayAreaY) * gpu.ramPixelW;
+        const uint32_t xStart = (uint32_t) gpu.displayAreaX;
         const uint32_t xEnd = xStart + ORIG_DRAW_RES_X;
-        ASSERT(xEnd <= 1024);
+        ASSERT(xEnd <= gpu.ramPixelW);
 
         for (uint32_t x = xStart; x < xEnd; ++x) {
             const uint16_t srcPixel = rowPixels[x];

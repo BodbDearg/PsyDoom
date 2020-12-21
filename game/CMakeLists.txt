@@ -30,7 +30,6 @@ set(SOURCE_FILES
     "Doom/Base/d_vsprintf.h"
     "Doom/Base/i_crossfade.cpp"
     "Doom/Base/i_crossfade.h"
-    "Doom/Base/i_drawcmds.cpp"
     "Doom/Base/i_drawcmds.h"
     "Doom/Base/i_file.cpp"
     "Doom/Base/i_file.h"
@@ -180,6 +179,8 @@ set(SOURCE_FILES
     "PcPsx/Input.h"
     "PcPsx/IsoFileSys.cpp"
     "PcPsx/IsoFileSys.h"
+    "PcPsx/LIBGPU_CmdDispatch.cpp"
+    "PcPsx/LIBGPU_CmdDispatch.h"
     "PcPsx/ModMgr.cpp"
     "PcPsx/ModMgr.h"
     "PcPsx/MouseButton.h"
@@ -242,6 +243,8 @@ set(SOURCE_FILES
 if (PSYDOOM_INCLUDE_OLD_CODE)
     list(APPEND SOURCE_FILES
         "Old/Doom/Base/Old_i_crossfade.cpp"
+        "Old/Doom/Base/Old_i_drawcmds.cpp"
+        "Old/Doom/Base/Old_i_drawcmds.h"
         "Old/Doom/Base/Old_i_main.cpp"
         "Old/Doom/Base/Old_i_main.h"
         "Old/Doom/Base/Old_z_zone.cpp"

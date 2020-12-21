@@ -311,14 +311,14 @@ void ST_Drawer() noexcept {
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
-        I_AddPrim(&drawModePrim);
+        I_AddPrim(drawModePrim);
     }
 
     // Setup some sprite primitive state that is used for all the draw calls that follow
     SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
     LIBGPU_SetSprt(spritePrim);
-    LIBGPU_SetShadeTex(&spritePrim, true);
+    LIBGPU_SetShadeTex(spritePrim, true);
     spritePrim.clut = gPaletteClutIds[UIPAL];
     
     // Draw the current status bar message, or the map name (if in the automap)
@@ -347,7 +347,7 @@ void ST_Drawer() noexcept {
     LIBGPU_setUV0(spritePrim, 0, 0);
     LIBGPU_setWH(spritePrim, 256, 40);
 
-    I_AddPrim(&spritePrim);
+    I_AddPrim(spritePrim);
 
     // Figure out what weapon to display ammo for and what to show for the ammo amount
     const weapontype_t weapon = (player.pendingweapon == wp_nochange) ?
@@ -379,7 +379,7 @@ void ST_Drawer() noexcept {
                 spritePrim.tu0 = texU;
                 spritePrim.y0 = gCardY[cardIdx];
 
-                I_AddPrim(&spritePrim);
+                I_AddPrim(spritePrim);
             }
 
             texU += 11;
@@ -393,7 +393,7 @@ void ST_Drawer() noexcept {
         LIBGPU_setUV0(spritePrim, 180, 184);
         LIBGPU_setWH(spritePrim, 51, 23);
 
-        I_AddPrim(&spritePrim);
+        I_AddPrim(spritePrim);
 
         // Draw the micro numbers for each weapon.
         // Note that numbers '1' and '2' are already baked into the status bar graphic, so we start at the shotgun.
@@ -408,7 +408,7 @@ void ST_Drawer() noexcept {
                     LIBGPU_setXY0(spritePrim, gMicronumsX[weaponIdx] + 5, gMicronumsY[weaponIdx] + 3);
                     spritePrim.tu0 = texU;
 
-                    I_AddPrim(&spritePrim);
+                    I_AddPrim(spritePrim);
                 }
 
                 texU += 4;
@@ -422,14 +422,14 @@ void ST_Drawer() noexcept {
         LIBGPU_setUV0(spritePrim, 164, 192);
         LIBGPU_setWH(spritePrim, 12, 12);
         
-        I_AddPrim(&spritePrim);
+        I_AddPrim(spritePrim);
     } else {
         // Draw the frags container box
         LIBGPU_setXY0(spritePrim, 209, 221);
         LIBGPU_setUV0(spritePrim, 208, 243);
         LIBGPU_setWH(spritePrim, 33, 8);
 
-        I_AddPrim(&spritePrim);
+        I_AddPrim(spritePrim);
 
         // Draw the number of frags
         I_DrawNumber(225, 204, player.frags);
@@ -443,7 +443,7 @@ void ST_Drawer() noexcept {
         LIBGPU_setUV0(spritePrim, sprite.texU, sprite.texV);
         LIBGPU_setWH(spritePrim, sprite.w, sprite.h);
 
-        I_AddPrim(&spritePrim);
+        I_AddPrim(spritePrim);
     }
 
     // Draw the paused overlay, level warp and vram viewer

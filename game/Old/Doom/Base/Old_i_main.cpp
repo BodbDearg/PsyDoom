@@ -21,6 +21,23 @@ static int32_t gNetInputFd;
 static int32_t gNetOutputFd;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Submits any pending draw primitives in the gpu commands buffer to the GPU
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_SubmitGpuCmds() noexcept {
+    // Submit the primitives list to the GPU if it's not empty
+    if (gpGpuPrimsBeg != gpGpuPrimsEnd) {
+        // Note: this marks the end of the primitive list, by setting the 'tag' field of an invalid primitive to 0xFFFFFF.
+        // This is similar to LIBGPU_TermPrim, except we don't bother using a valid primitive struct.
+        ((uint32_t*) gpGpuPrimsEnd)[0] = 0x00FFFFFF;
+        LIBGPU_DrawOTag(gpGpuPrimsBeg, gGpuCmdsBuffer);
+    }
+
+    // Clear the primitives list
+    gpGpuPrimsBeg = gGpuCmdsBuffer;
+    gpGpuPrimsEnd = gGpuCmdsBuffer;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Does the setup for a network game: synchronizes between players, then sends the game details and control bindings
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetSetup() noexcept {

@@ -32,7 +32,10 @@ void initCore(Core& core, const uint16_t ramPixelW, const uint16_t ramPixelH) no
     ASSERT(ramPixelH > 0);
 
     core = {};
-    core.pRam = new std::byte[(size_t) ramPixelW * ramPixelH * sizeof(uint16_t)];
+
+    core.pRam = new std::uint16_t[(size_t) ramPixelW * ramPixelH];
+    std::memset(core.pRam, 0, sizeof(uint16_t) * ramPixelW * ramPixelH);    // Zero init VRAM
+
     core.ramPixelW = nextPow2(ramPixelW);
     core.ramPixelH = nextPow2(ramPixelH);
     core.ramXMask = ramPixelW - 1;
@@ -73,8 +76,7 @@ void destroyCore(Core& core) noexcept {
 uint16_t vramReadU16(Core& core, const uint16_t x, const uint16_t y) noexcept {
     const uint16_t xt = x & core.ramXMask;
     const uint16_t yt = y & core.ramYMask;
-    const uint32_t index = xt + (yt * core.ramPixelW);
-    return reinterpret_cast<const uint16_t*>(core.pRam)[index];
+    return core.pRam[yt * core.ramPixelW + xt];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -83,8 +85,7 @@ uint16_t vramReadU16(Core& core, const uint16_t x, const uint16_t y) noexcept {
 void vramWriteU16(Core& core, const uint16_t x, const uint16_t y, const uint16_t value) noexcept {
     const uint16_t xt = x & core.ramXMask;
     const uint16_t yt = y & core.ramYMask;
-    const uint32_t index = xt + (yt * core.ramPixelW);
-    reinterpret_cast<uint16_t*>(core.pRam)[index] = value;
+    core.pRam[yt * core.ramPixelW + xt] = value;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,30 +93,18 @@ void vramWriteU16(Core& core, const uint16_t x, const uint16_t y, const uint16_t
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <TexFmt TexFmt>
 Color16 readTexel(Core& core, const uint16_t coordX, const uint16_t coordY) noexcept {
-    // Figure out the VRAM xy coordinates before wrapping and texture window/page transforms.
-    // These xy coordinates are in terms of 16-bit pixels.
-    uint16_t vramX;
-    uint16_t vramY;
-
-    if constexpr (TexFmt == TexFmt::Bpp4) {
-        vramX = coordX / 4;
-        vramY = coordY / 4;
-    }
-    else if constexpr (TexFmt == TexFmt::Bpp8) {
-        vramX = coordX / 2;
-        vramY = coordY / 2;
-    }
-    else {
-        static_assert(TexFmt == TexFmt::Bpp16);
-        vramX = coordX;
-        vramY = coordY;
-    }
-
-    // Compute the real texture coordinate after wrapping and texture window + page transforms
-    vramX &= core.texWinXMask;
-    vramY &= core.texWinYMask;
+    // First mask the coordinates by the texture window mask
+    uint16_t vramX = coordX & core.texWinXMask;
+    uint16_t vramY = coordY & core.texWinYMask;
     vramX += core.texWinX;
     vramY += core.texWinY;
+
+    if constexpr (TexFmt == TexFmt::Bpp4) {
+        vramX /= 4;
+    } else if constexpr (TexFmt == TexFmt::Bpp8) {
+        vramX /= 2;
+    }
+
     vramX &= core.texPageXMask;
     vramY &= core.texPageYMask;
     vramX += core.texPageX;
@@ -125,7 +114,7 @@ Color16 readTexel(Core& core, const uint16_t coordX, const uint16_t coordY) noex
     const uint16_t vramPixel = vramReadU16(core, vramX, vramY);
 
     if constexpr (TexFmt == TexFmt::Bpp4) {
-        const uint16_t clutIdx = (vramPixel >> ((coordX & 3) * 4)) & 0x0F;  // Each 16-bit pixel has 4 4-bit CLUT indexes
+        const uint16_t clutIdx = (vramPixel >> ((coordX & 3) * 4)) & 0xF;   // Each 16-bit pixel has 4 4-bit CLUT indexes
         return vramReadU16(core, core.clutX + clutIdx, core.clutY);         // Lookup the actual pixel value from the CLUT
     }
     else if constexpr (TexFmt == TexFmt::Bpp8) {
@@ -167,14 +156,30 @@ bool isPixelInDrawArea(Core& core, const uint16_t x, const uint16_t y) noexcept 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Clears a region of VRAM to the specified color
+//------------------------------------------------------------------------------------------------------------------------------------------
+void clearRect(Core& core, const Color16 color, const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) noexcept {
+    const uint16_t begX = std::min(x, core.ramPixelW);
+    const uint16_t begY = std::min(y, core.ramPixelH);
+    const uint16_t endX = std::min((uint16_t)(x + w), core.ramPixelW);
+    const uint16_t endY = std::min((uint16_t)(y + h), core.ramPixelH);
+
+    for (uint16_t y = begY; y < endY; ++y) {
+        for (uint16_t x = begX; x < endX; ++x) {
+            vramWriteU16(core, x, y, color);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Convert a 24-bit color to 16-bit.
 // Note that the blending/semi-transparency flag is set to '0' during this conversion and overbright colors are saturated.
 //------------------------------------------------------------------------------------------------------------------------------------------
 Color16 color24FTo16(const Color24F colorIn) noexcept {
     Color16 colorOut;
-    colorOut.comp.r = (uint8_t) std::min((uint32_t) colorIn.comp.r * 31u / 128u, 31u);
-    colorOut.comp.g = (uint8_t) std::min((uint32_t) colorIn.comp.g * 31u / 128u, 31u);
-    colorOut.comp.b = (uint8_t) std::min((uint32_t) colorIn.comp.b * 31u / 128u, 31u);
+    colorOut.comp.r = (uint16_t) std::min((uint32_t) colorIn.comp.r * 31u / 128u, 31u);
+    colorOut.comp.g = (uint16_t) std::min((uint32_t) colorIn.comp.g * 31u / 128u, 31u);
+    colorOut.comp.b = (uint16_t) std::min((uint32_t) colorIn.comp.b * 31u / 128u, 31u);
     return colorOut;
 }
 
@@ -184,8 +189,8 @@ Color16 color24FTo16(const Color24F colorIn) noexcept {
 Color16 colorMul(const Color16 color1, const Color24F color2) noexcept {
     Color16 out;
     out.comp.r = (uint16_t) std::min((color1.comp.r * color2.comp.r) >> 7, 31);
-    out.comp.r = (uint16_t) std::min((color1.comp.g * color2.comp.g) >> 7, 31);
-    out.comp.r = (uint16_t) std::min((color1.comp.b * color2.comp.b) >> 7, 31);
+    out.comp.g = (uint16_t) std::min((color1.comp.g * color2.comp.g) >> 7, 31);
+    out.comp.b = (uint16_t) std::min((color1.comp.b * color2.comp.b) >> 7, 31);
     out.comp.t = color1.comp.t;
     return out;
 }
@@ -234,24 +239,28 @@ void draw(Core& core, const DrawRect& rect) noexcept {
     if ((rect.w >= 1024) || (rect.h >= 512))
         return;
 
-    // Clip the rectangle bounds to the draw area and generate adjustments to the uv coords if that happens
-    uint16_t begX = rect.x;
-    uint16_t begY = rect.y;
-    uint16_t curU = rect.u;
-    uint16_t curV = rect.v;
+    // Clip the rectangle bounds to the draw area and generate adjustments to the uv coords if that happens.
+    // Note must translate the rectangle according to the draw offset too...
+    const uint16_t rectTx = rect.x + core.drawOffsetX;
+    const uint16_t rectTy = rect.y + core.drawOffsetY;
+
+    uint16_t begX = rectTx;
+    uint16_t begY = rectTy;
+    uint16_t topLeftU = rect.u;
+    uint16_t topLeftV = rect.v;
 
     if (begX < core.drawAreaLx) {
-        curU += core.drawAreaLx - begX;
+        topLeftU += core.drawAreaLx - begX;
         begX = core.drawAreaLx;
     }
 
     if (begY < core.drawAreaTy) {
-        curV += core.drawAreaTy - begY;
+        topLeftV += core.drawAreaTy - begY;
         begY = core.drawAreaTy;
     }
 
-    const uint16_t endX = std::min(rect.x + rect.w, core.drawAreaRx + 1);
-    const uint16_t endY = std::min(rect.y + rect.h, core.drawAreaBy + 1);
+    const uint16_t endX = std::min(rectTx + rect.w, core.drawAreaRx + 1);
+    const uint16_t endY = std::min(rectTy + rect.h, core.drawAreaBy + 1);
 
     // If we are in flat colored mode then decide the foreground color for every pixel in the rectangle
     const Color24F rectColor = rect.color;
@@ -262,7 +271,11 @@ void draw(Core& core, const DrawRect& rect) noexcept {
     }
 
     // Fill in the rectangle pixels
+    uint16_t curV = topLeftV;
+
     for (uint16_t y = begY; y < endY; ++y, ++curV) {
+        uint16_t curU = topLeftU;
+
         for (uint16_t x = begX; x < endX; ++x, ++curU) {
             // Get the foreground color for the rectangle pixel if the rectangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
@@ -298,9 +311,15 @@ template void draw<DrawMode::TexturedBlended>(Core& core, const DrawRect& rect) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <DrawMode DrawMode>
 void draw(Core& core, const DrawLine& line) noexcept {
+    // Translate the line by the drawing offset
+    const int32_t lineX1 = line.x1 + core.drawOffsetX;
+    const int32_t lineY1 = line.y1 + core.drawOffsetY;
+    const int32_t lineX2 = line.x2 + core.drawOffsetX;
+    const int32_t lineY2 = line.y2 + core.drawOffsetY;
+
     // Firstly get the component deltas
-    const int32_t dx = (int32_t) line.x2 - line.x1;
-    const int32_t dy = (int32_t) line.y2 - line.y1;
+    const int32_t dx = (int32_t) lineX2 - lineX1;
+    const int32_t dy = (int32_t) lineY2 - lineY1;
     const int32_t absDx = std::abs(dx);
     const int32_t absDy = std::abs(dy);
 
@@ -321,18 +340,18 @@ void draw(Core& core, const DrawLine& line) noexcept {
     int32_t b1;
     int32_t b2;
 
-    if (dy > dx) {
+    if (absDy > absDx) {
         bLineIsSteep = true;
-        a1 = line.y1;
-        a2 = line.y2;
-        b1 = line.x1;
-        b2 = line.x2;
+        a1 = lineY1;
+        a2 = lineY2;
+        b1 = lineX1;
+        b2 = lineX2;
     } else {
         bLineIsSteep = false;
-        a1 = line.x1;
-        a2 = line.x2;
-        b1 = line.y1;
-        b2 = line.y2;
+        a1 = lineX1;
+        a2 = lineX2;
+        b1 = lineY1;
+        b2 = lineY2;
     }
 
     if (a1 > a2) {
@@ -383,13 +402,23 @@ template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawLine& lin
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <DrawMode DrawMode>
 void draw(Core& core, const DrawTriangle& triangle) noexcept {
+    // Apply the draw offset to the triangle points
+    const int16_t drawOffsetX = core.drawOffsetX;
+    const int16_t drawOffsetY = core.drawOffsetY;
+    const int32_t p1x = triangle.x1 + drawOffsetX;
+    const int32_t p1y = triangle.y1 + drawOffsetY;
+    const int32_t p2x = triangle.x2 + drawOffsetX;
+    const int32_t p2y = triangle.y2 + drawOffsetY;
+    const int32_t p3x = triangle.x3 + drawOffsetX;
+    const int32_t p3y = triangle.y3 + drawOffsetY;
+
     // Compute the rectangular area of the triangle to be rasterized.
     // Note that according to the No$PSX specs the right and bottom coordinates in polygons are NOT included.
     // Also, the triangle is skipped if the distances between the vertices exceed 1023x511 in the x and y dimensions.
-    const int32_t minX = std::min(std::min(triangle.x1, triangle.x2), triangle.x3);
-    const int32_t minY = std::min(std::min(triangle.y1, triangle.y2), triangle.y3);
-    const int32_t maxX = std::max(std::max(triangle.x1, triangle.x2), triangle.x3);
-    const int32_t maxY = std::max(std::max(triangle.y1, triangle.y2), triangle.y3);
+    const int32_t minX = std::min(std::min(p1x, p2x), p3x);
+    const int32_t minY = std::min(std::min(p1y, p2y), p3y);
+    const int32_t maxX = std::max(std::max(p1x, p2x), p3x);
+    const int32_t maxY = std::max(std::max(p1y, p2y), p3y);
 
     if ((maxX - minX >= 1024) || (maxY - minY) >= 512)
         return;
@@ -400,16 +429,16 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
     const int32_t by = std::min((int32_t) core.drawAreaBy, maxY - 1);
 
     // Precompute the edge deltas used in the edge functions and preconvert the xy coords to float
-    const float p1x = triangle.x1;  const float p1y = triangle.y1;
-    const float p2x = triangle.x2;  const float p2y = triangle.y2;
-    const float p3x = triangle.x3;  const float p3y = triangle.y3;
+    const float p1xf = p1x;     const float p1yf = p1y;
+    const float p2xf = p2x;     const float p2yf = p2y;
+    const float p3xf = p3x;     const float p3yf = p3y;
 
-    const float e1dx = p2x - p1x;
-    const float e1dy = p2y - p1y;
-    const float e2dx = p3x - p2x;
-    const float e2dy = p3y - p2y;
-    const float e3dx = p1x - p3x;
-    const float e3dy = p1y - p3y;
+    const float e1dx = p2xf - p1xf;
+    const float e1dy = p2yf - p1yf;
+    const float e2dx = p3xf - p2xf;
+    const float e2dy = p3yf - p2yf;
+    const float e3dx = p1xf - p3xf;
+    const float e3dy = p1yf - p3yf;
 
     // If we are in flat colored mode then decide the foreground color for every pixel in the triangle
     const Color24F triangleColor = triangle.color;
@@ -432,15 +461,15 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
             const float xf = (float) x;
             const float yf = (float) y;
 
-            const float ef1 = 0.5f * ((xf - p1x) * e1dy - (yf - p1y) * e1dx);
-            const float ef2 = 0.5f * ((xf - p2x) * e2dy - (yf - p2y) * e2dx);
-            const float ef3 = 0.5f * ((xf - p3x) * e3dy - (yf - p3y) * e3dx);
+            const float ef1 = 0.5f * ((xf - p1xf) * e1dy - (yf - p1yf) * e1dx);
+            const float ef2 = 0.5f * ((xf - p2xf) * e2dy - (yf - p2yf) * e2dx);
+            const float ef3 = 0.5f * ((xf - p3xf) * e3dy - (yf - p3yf) * e3dx);
 
             // The point is inside the triangle if the sign of all edge functions matches.
             // This handles triangles that are wound the opposite way.
-            const bool bSign1 = (ef1 < 0);
-            const bool bSign2 = (ef2 < 0);
-            const bool bSign3 = (ef3 < 0);
+            const bool bSign1 = (ef1 <= 0);
+            const bool bSign2 = (ef2 <= 0);
+            const bool bSign3 = (ef3 <= 0);
 
             if ((bSign1 != bSign2) || (bSign2 != bSign3))
                 continue;

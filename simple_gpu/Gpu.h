@@ -148,7 +148,7 @@ struct DrawTriangle {
 // The GPU core/device itself
 //----------------------------------------------------------------------------------------------------------------------
 struct Core {
-    std::byte*      pRam;               // The VRAM for the GPU
+    uint16_t*       pRam;               // The VRAM for the GPU: declared as an array of 16-bit/2-byte pixels
     uint16_t        ramPixelW;          // The width of VRAM (in terms of 16-bit/2-byte pixels) - always a power of 2
     uint16_t        ramPixelH;          // The height of VRAM (in terms of 16-bit/2-byte pixels) - always a power of 2
     uint16_t        ramXMask;           // A mask which wraps coordinates to be inside of VRAM
@@ -191,6 +191,7 @@ Color16 readTexel(Core& core, const uint16_t coordX, const uint16_t coordY) noex
 
 // Miscellaneous
 bool isPixelInDrawArea(Core& core, const uint16_t x, const uint16_t y) noexcept;
+void clearRect(Core& core, const Color16 color, const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) noexcept;
 
 // Color manipulation
 Color16 color24FTo16(const Color24F colorIn) noexcept;

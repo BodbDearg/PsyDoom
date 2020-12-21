@@ -378,5 +378,5 @@ void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const in
     LIBGPU_setRGB0(line, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t) color);
     LIBGPU_setXY2(line, (int16_t)(x1 + 128), (int16_t)(100 - y1), (int16_t)(x2 + 128), (int16_t)(100 - y2));
     
-    I_AddPrim(&line);
+    I_AddPrim(line);
 }

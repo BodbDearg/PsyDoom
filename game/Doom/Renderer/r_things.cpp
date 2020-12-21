@@ -125,9 +125,9 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         RECT texWinRect;
         LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
 
-        DR_TWIN* const pTexWinPrim = (DR_TWIN*) LIBETC_getScratchAddr(128);
-        LIBGPU_SetTexWindow(*pTexWinPrim, texWinRect);
-        I_AddPrim(pTexWinPrim);
+        DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        LIBGPU_SetTexWindow(texWinPrim, texWinRect);
+        I_AddPrim(texWinPrim);
     }
     
     // Initialize the quad primitive used to draw sprites
@@ -167,9 +167,9 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         const uint32_t blendFlags = (thing.flags & MF_ALL_BLEND_FLAGS) >> 28;
         
         if (blendFlags != 0) {  // Minor logic bug? Should be testing against 'MF_BLEND_ON' instead?
-            LIBGPU_SetSemiTrans(&polyPrim, true);
+            LIBGPU_SetSemiTrans(polyPrim, true);
         } else {
-            LIBGPU_SetSemiTrans(&polyPrim, false);
+            LIBGPU_SetSemiTrans(polyPrim, false);
         }
 
         // Apply the desired semi transparency mode and discard the 'MF_BLEND_ON' bit since it is not defining a blend mode.
@@ -251,7 +251,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
             pos_rx, pos_by
         );
 
-        I_AddPrim(&polyPrim);
+        I_AddPrim(polyPrim);
     }
 }
 
@@ -289,7 +289,7 @@ void R_DrawWeapon() noexcept {
 
             DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
             LIBGPU_SetDrawMode(drawMode, false, false, texPageId, &texWin);
-            I_AddPrim(&drawMode);
+            I_AddPrim(drawMode);
         }
 
         // Setup the sprite to be drawn and submit the drawing primitive.
@@ -298,7 +298,7 @@ void R_DrawWeapon() noexcept {
         LIBGPU_SetSprt(spr);
 
         if (bIsTransparent) {
-            LIBGPU_SetSemiTrans(&spr, true);
+            LIBGPU_SetSemiTrans(spr, true);
         }
 
         LIBGPU_setXY0(spr,
@@ -328,6 +328,6 @@ void R_DrawWeapon() noexcept {
             );
         }
         
-        I_AddPrim(&spr);
+        I_AddPrim(spr);
     }
 }

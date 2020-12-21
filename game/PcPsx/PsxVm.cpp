@@ -8,6 +8,7 @@
 #include "Config.h"
 #include "DiscInfo.h"
 #include "DiscReader.h"
+#include "Gpu.h"
 #include "Input.h"
 #include "IsoFileSys.h"
 #include "ProgArgs.h"
@@ -16,19 +17,13 @@
 #include <SDL.h>
 #include <mutex>
 
-BEGIN_DISABLE_HEADER_WARNINGS
-    #include <system.h>
-END_DISABLE_HEADER_WARNINGS
-
 BEGIN_NAMESPACE(PsxVm)
 
 DiscInfo    gDiscInfo;
 IsoFileSys  gIsoFileSys;
-System*     gpSystem;
-gpu::GPU*   gpGpu;
+Gpu::Core   gGpu;
 Spu::Core   gSpu;
 
-static std::unique_ptr<System>  gSystem;
 static SDL_AudioDeviceID        gSdlAudioDeviceId;
 static std::recursive_mutex     gSpuMutex;
 
@@ -55,16 +50,9 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
 // Initialize emulated PlayStation system components and use the given .cue file for the game disc
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool init(const char* const doomCdCuePath) noexcept {
-    // Create a new Avocado system and set the GPU pointer
-    gSystem.reset(new System());
-    gpSystem = gSystem.get();
-    gpGpu = gpSystem->gpu.get();
-
-    // Init the SPU core
+    // Init the GPU & SPU core
+    Gpu::initCore(gGpu, Gpu::PS1_VRAM_W, Gpu::PS1_VRAM_H);
     Spu::initPS1Core(gSpu);
-
-    // GPU: disable logging - this eats up TONS of memory!
-    gpGpu->gpuLogEnabled = false;
 
     // Parse the .cue info for the game disc
     {
@@ -134,34 +122,7 @@ void shutdown() noexcept {
     }
 
     Spu::destroyCore(gSpu);     // Note: no locking of the SPU here because all threads should be done with it at this point
-    gpGpu = nullptr;
-    gpSystem = nullptr;
-    gSystem.reset();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Submit a drawing primitive to the GPU
-// TODO: submitGpuPrimitive: replace with a more readable solution; don't write to GP0 and setup the GPU and submit primitives directly
-//------------------------------------------------------------------------------------------------------------------------------------------
-void submitGpuPrimitive(const void* const pPrim) noexcept {
-    ASSERT(pPrim);
-    
-    // Get the primitive tag and consequently how many data words there are in the primitive
-    const uint32_t* pCurWord = (const uint32_t*) pPrim;
-    const uint32_t tag = pCurWord[0];
-    const uint32_t numDataWords = tag >> 24;
-
-    ++pCurWord;
-
-    // Submit the primitive's data words to the GPU
-    uint32_t dataWordsLeft = numDataWords;
-
-    while (dataWordsLeft > 0) {
-        const uint32_t dataWord = *pCurWord;
-        ++pCurWord;
-        --dataWordsLeft;
-        gpGpu->writeGP0(dataWord);
-    }
+    Gpu::destroyCore(gGpu);
 }
 
 void lockSpu() noexcept {

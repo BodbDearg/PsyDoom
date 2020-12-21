@@ -7,13 +7,13 @@
 struct DiscInfo;
 struct IsoFileSys;
 
-namespace Spu {
+namespace Gpu {
     struct Core;
 }
 
-// Forward declaring avocado types
-struct System;
-namespace gpu { class GPU; }
+namespace Spu {
+    struct Core;
+}
 
 BEGIN_NAMESPACE(PsxVm)
 
@@ -21,14 +21,12 @@ BEGIN_NAMESPACE(PsxVm)
 extern DiscInfo     gDiscInfo;
 extern IsoFileSys   gIsoFileSys;
 
-// Access to emulated Avocado devices
-extern System*      gpSystem;
-extern gpu::GPU*    gpGpu;
+// Access to the implementation of the PlayStation GPU and SPU
+extern Gpu::Core    gGpu;
 extern Spu::Core    gSpu;
 
 bool init(const char* const doomCdCuePath) noexcept;
 void shutdown() noexcept;
-void submitGpuPrimitive(const void* const pPrim) noexcept;
 
 // Fire timer (root counter) related events if appropriate.
 // Note: this is implemented in LIBAPI, where timers are handled.

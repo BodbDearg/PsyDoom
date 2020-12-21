@@ -1,3 +1,5 @@
+#if !PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Module dealing with low level drawing commands.
 // Holds the primitives buffer and contains functionality for submitting draw primitives.
@@ -19,11 +21,8 @@ const std::byte*    gGpuCmdsBufferEnd = gGpuCmdsBuffer + GPU_CMD_BUFFER_SIZE;
 // Note: the address given is restricted to 24-bits and is expected to be relative to the 0x80000000 memory segment.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static uint32_t makePrimTag(const uint32_t primSize, void* const pNextPrim) noexcept {
-    // Sanity check
-    #if PSYDOOM_MODS
-        ASSERT(primSize % 4 == 0 && primSize >= 4);
-    #endif
-
+    // PsyDoom: added sanity check
+    ASSERT(primSize % 4 == 0 && primSize >= 4);
     const uint32_t numPrimDataWords = (primSize / sizeof(uint32_t)) - 1;    // Note: the tag size is excluded!
     const uint32_t nextPrimOffset = (uint32_t)((std::byte*) pNextPrim - gGpuCmdsBuffer);
     return (numPrimDataWords << 24) | (nextPrimOffset & 0x00FFFFFF);
@@ -31,13 +30,11 @@ static uint32_t makePrimTag(const uint32_t primSize, void* const pNextPrim) noex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // GPU status check: tells if CPU to GPU dma enabled
-// PsyDoom: this is not needed anymore.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#if !PSYDOOM_MODS
 static bool isCpuToGpuDmaEnabled() noexcept {
+    // Get the GPU status word and check the appropriate flag
     return (getGpuStat() & 0x04000000);
 }
-#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Flushes the GPU command queue and sends all commands to the GPU.
@@ -47,14 +44,8 @@ static void flushGpuCmds() noexcept {
     while (gpGpuPrimsBeg != gpGpuPrimsEnd) {
         // Abort for now if CPU to GPU DMA is off; hope that it gets turned on later or the queue gets cleared somehow?
         // Not sure what situation is would occur in...
-        //
-        // PsyDoom: I'm disabling this check for good measure, just to be on the safe side.
-        // Drawing is pretty much native now so emulator DMA should not be getting in our way.
-        //
-        #if !PSYDOOM_MODS
-            if (!isCpuToGpuDmaEnabled())
-                break;
-        #endif
+        if (!isCpuToGpuDmaEnabled())
+            break;
         
         // Read the tag for this primitive and the next primitive's offset
         const uint32_t tag = ((uint32_t*) gpGpuPrimsBeg)[0];
@@ -83,8 +74,6 @@ void I_AddPrim(const void* const pPrim) noexcept {
     // Make enough room to insert the new primitive into the command buffer.
     // Continue looping until we've made the room!
     while (true) {
-        // TODO: I_AddPrim: FIXME - I think there is a bug with this stuff somewhere that causes (very seldom) non rendering of some geom: investigate
-
         // Is the command queue not wrapping around?
         if (gpGpuPrimsBeg <= gpGpuPrimsEnd) {
             // Command queue doesn't wrap around currently.
@@ -140,3 +129,5 @@ void I_AddPrim(const void* const pPrim) noexcept {
     // Seems somewhat counter intuitive to go to the trouble of doing a command queue when all drawing is forced to be immediate?!
     flushGpuCmds();
 }
+
+#endif

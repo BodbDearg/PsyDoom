@@ -69,9 +69,9 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
         RECT texWinRect;
         LIBGPU_setRECT(texWinRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
-        DR_TWIN* const pTexWinPrim = (DR_TWIN*) LIBETC_getScratchAddr(128);
-        LIBGPU_SetTexWindow(*pTexWinPrim, texWinRect);
-        I_AddPrim(pTexWinPrim);
+        DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        LIBGPU_SetTexWindow(texWinPrim, texWinRect);
+        I_AddPrim(texWinPrim);
     }
     
     // Get Z position of the plane (height) in viewspace
@@ -383,7 +383,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 (uint8_t) spanUR, (uint8_t) spanVR
             );
             
-            I_AddPrim(&polyPrim);
+            I_AddPrim(polyPrim);
         } else {
             // Harder case: we must split up the flat span and issue multiple primitives.
             // Note also, the piece count is minus 1 so increment here now to get the true amount:
@@ -464,7 +464,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                     (uint8_t) spanUR, (uint8_t) spanVR
                 );
                 
-                I_AddPrim(&polyPrim);
+                I_AddPrim(polyPrim);
                 
                 // Move coords onto the next span.
                 // Note that the previous wrapping operation (if any) is also undone here.

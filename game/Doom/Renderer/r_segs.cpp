@@ -217,8 +217,8 @@ void R_DrawWallPiece(
         RECT texRect;
         LIBGPU_setRECT(texRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
-        DR_TWIN* const texWinPrim = (DR_TWIN*) LIBETC_getScratchAddr(128);
-        LIBGPU_SetTexWindow(*texWinPrim, texRect);
+        DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        LIBGPU_SetTexWindow(texWinPrim, texRect);
         I_AddPrim(texWinPrim);
     }
 
@@ -227,7 +227,7 @@ void R_DrawWallPiece(
     LIBGPU_SetPolyFT3(polyPrim);
         
     if (bTransparent) {
-        LIBGPU_SetSemiTrans(&polyPrim, true);
+        LIBGPU_SetSemiTrans(polyPrim, true);
     }
 
     polyPrim.clut = g3dViewPaletteClutId;
@@ -434,7 +434,7 @@ void R_DrawWallPiece(
                 (int16_t) xCur,     (int16_t) ybCur + 1
             );
 
-            I_AddPrim(&polyPrim);
+            I_AddPrim(polyPrim);
         }
 
         ++xCur;

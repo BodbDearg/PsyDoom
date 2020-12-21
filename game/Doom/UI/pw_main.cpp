@@ -275,7 +275,7 @@ void DRAW_PasswordScreen() noexcept {
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
-        I_AddPrim(&drawModePrim);
+        I_AddPrim(drawModePrim);
     }
 
     // Common sprite setup for all the password chars
@@ -328,7 +328,7 @@ void DRAW_PasswordScreen() noexcept {
         LIBGPU_setUV0(spritePrim, fontChar.u, fontChar.v);
         LIBGPU_setWH(spritePrim, fontChar.w, fontChar.h);
         
-        I_AddPrim(&spritePrim);
+        I_AddPrim(spritePrim);
     }
 
     // Draw the screen title

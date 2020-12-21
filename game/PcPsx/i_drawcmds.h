@@ -9,32 +9,33 @@
 // In the current version of PsyDoom however primitives are submitted directly to the GPU for performance and simplicity.
 // Therefore there are no more command buffers and 'I_AddPrim' just acts as a simple wrapper rather than stuffing commands into a queue.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "PcPsx/LIBGPU_CmdDispatch.h"
+
+#include "PsyQ/LIBGPU.h"
 
 inline void I_AddPrim(const DR_MODE& drawMode) noexcept {
-    LIBGPU_CmdDispatch::submit(drawMode);
+
 }
 
 inline void I_AddPrim(const DR_TWIN& texWin) noexcept {
-    LIBGPU_CmdDispatch::submit(texWin);
+
 }
 
 inline void I_AddPrim(const SPRT& sprite) noexcept {
-    LIBGPU_CmdDispatch::submit(sprite);
+
 }
 
 inline void I_AddPrim(const LINE_F2& line) noexcept {
-    LIBGPU_CmdDispatch::submit(line);
+
 }
 
 inline void I_AddPrim(const POLY_FT3& poly) noexcept {
-    LIBGPU_CmdDispatch::submit(poly);
+
 }
 
 inline void I_AddPrim(const POLY_F4& poly) noexcept {
-    LIBGPU_CmdDispatch::submit(poly);
+
 }
 
 inline void I_AddPrim(const POLY_FT4& poly) noexcept {
-    LIBGPU_CmdDispatch::submit(poly);
+
 }

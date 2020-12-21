@@ -26,7 +26,7 @@ static_assert(sizeof(RECT) == 8);
 
 // Drawing primitive: unconnected flat shaded line
 struct LINE_F2 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint8_t     r0;         // Line color
     uint8_t     g0;
     uint8_t     b0;
@@ -41,7 +41,7 @@ static_assert(sizeof(LINE_F2) == 16);
 
 // Drawing primitive: flat shaded textured triangle (polygon 3)
 struct POLY_FT3 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint8_t     r0;         // Color to shade the primitive with
     uint8_t     g0;
     uint8_t     b0;
@@ -67,7 +67,7 @@ static_assert(sizeof(POLY_FT3) == 32);
 
 // Drawing primitive: flat shaded colored quad (polygon 4)
 struct POLY_F4 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint8_t     r0;         // Color to shade the primitive with
     uint8_t     g0;
     uint8_t     b0;
@@ -86,7 +86,7 @@ static_assert(sizeof(POLY_F4) == 24);
 
 // Drawing primitive: flat shaded textured quad (polygon 4)
 struct POLY_FT4 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint8_t     r0;         // Color to shade the primitive with
     uint8_t     g0;
     uint8_t     b0;
@@ -117,7 +117,7 @@ static_assert(sizeof(POLY_FT4) == 40);
 
 // Drawing primitive: arbitrarily sized sprite
 struct SPRT {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive (PsyDoom: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint8_t     r0;         // Color to apply to the sprite
     uint8_t     g0;
     uint8_t     b0;
@@ -135,7 +135,7 @@ static_assert(sizeof(SPRT) == 20);
 
 // Drawing primitive: 8x8 sprite
 struct SPRT_8 {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive (PsyDoom: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint8_t     r0;         // Color to apply to the sprite
     uint8_t     g0;
     uint8_t     b0;
@@ -151,7 +151,7 @@ static_assert(sizeof(SPRT_8) == 16);
 
 // Drawing primitive: modify the current draw mode
 struct DR_MODE {
-    uint32_t    tag;
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint32_t    code[2];    // The settings made via 'LIBGPU_SetDrawMode()'
 };
 
@@ -159,7 +159,7 @@ static_assert(sizeof(DR_MODE) == 12);
 
 // Drawing primitive: modify the current texture window as specified by 'LIBGPU_SetTexWindow()'
 struct DR_TWIN {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: now 24-bit cmd buffer offset)
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint32_t    code[2];    // The settings made via 'LIBGPU_SetTexWindow()'
 };
 
@@ -176,7 +176,7 @@ struct DISPENV {
 
 // Draw primitive for setting a new draw environment
 struct DR_ENV {
-    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint32_t    code[15];   // Data populated by 'SetDrawEnv'
 };
 
@@ -213,7 +213,7 @@ void LIBGPU_SetDrawMode(
     DR_MODE& modePrim,
     const bool bCanDrawInDisplayArea,
     const bool bDitheringOn,
-    const uint32_t texPageId,
+    const uint16_t texPageId,
     const RECT* const pNewTexWindow
 ) noexcept;
 
@@ -233,9 +233,6 @@ uint16_t LIBGPU_GetTPage(
 ) noexcept;
 
 uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept;
-
-void LIBGPU_SetSemiTrans(void* const pPrim, const bool bTransparent) noexcept;
-void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept;
 
 void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept;
 void LIBGPU_SetPolyF4(POLY_F4& poly) noexcept;
@@ -272,6 +269,34 @@ uint16_t LIBGPU_LoadClut(const uint16_t* pColors, const int32_t x, const int32_t
 
 DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, const int32_t w, const  int32_t h) noexcept;
 DISPENV& LIBGPU_SetDefDispEnv(DISPENV& disp, const int32_t x, const int32_t y, const int32_t w, const int32_t h) noexcept;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enable/disable semi-transparency on the specified drawing primitive.
+// Note: originally this was not a templated function and just modified the 7th byte (the 'code' field) on whatever you passed in.
+// This version is more type safe and clearer in its intent.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class PrimType>
+void LIBGPU_SetSemiTrans(PrimType& prim, const bool bTransparent) noexcept {
+    if (bTransparent) {
+        prim.code |= 0x2;
+    } else {
+        prim.code &= 0xFD;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enable or disable texture shading on a specified primitive; when shading is disabled, the texture is displayed as-is.
+// Note: originally this was not a templated function and just modified the 7th byte (the 'code' field) on whatever you passed in.
+// This version is more type safe and clearer in its intent.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class PrimType>
+void LIBGPU_SetShadeTex(PrimType& prim, const bool bDisableShading) noexcept {
+    if (bDisableShading) {
+        prim.code |= 1;
+    } else {
+        prim.code &= 0xFE;
+    }
+}
 
 // Set the color on a draw primitive
 template <class T>
