@@ -474,9 +474,9 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
             const int64_t w2 = (ef3 * 65536) / area;
             const int64_t w3 = (ef1 * 65536) / area;
 
-            // Compute the texture coordinate to use and round half values
-            const uint16_t u = (uint16_t)((u1 * w1 + u2 * w2 + u3 * w3 + 32768) / 65536);
-            const uint16_t v = (uint16_t)((v1 * w1 + v2 * w2 + v3 * w3 + 32768) / 65536);
+            // Compute the texture coordinate to use and do ceil() type round operation - this produces more pleasing results for floor/ceiling spans in Doom
+            const uint16_t u = (uint16_t)((u1 * w1 + u2 * w2 + u3 * w3 + 65535) / 65536);
+            const uint16_t v = (uint16_t)((v1 * w1 + v2 * w2 + v3 * w3 + 65535) / 65536);
 
             // Get the foreground color for the triangle pixel if the triangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
