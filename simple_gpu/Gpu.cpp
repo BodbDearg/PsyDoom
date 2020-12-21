@@ -428,17 +428,13 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
     const int32_t ty = std::max((int32_t) core.drawAreaTy, minY);
     const int32_t by = std::min((int32_t) core.drawAreaBy, maxY - 1);
 
-    // Precompute the edge deltas used in the edge functions and preconvert the xy coords to float
-    const float p1xf = p1x;     const float p1yf = p1y;
-    const float p2xf = p2x;     const float p2yf = p2y;
-    const float p3xf = p3x;     const float p3yf = p3y;
-
-    const float e1dx = p2xf - p1xf;
-    const float e1dy = p2yf - p1yf;
-    const float e2dx = p3xf - p2xf;
-    const float e2dy = p3yf - p2yf;
-    const float e3dx = p1xf - p3xf;
-    const float e3dy = p1yf - p3yf;
+    // Precompute the edge deltas used in the edge functions
+    const int32_t e1dx = p2x - p1x;
+    const int32_t e1dy = p2y - p1y;
+    const int32_t e2dx = p3x - p2x;
+    const int32_t e2dy = p3y - p2y;
+    const int32_t e3dx = p1x - p3x;
+    const int32_t e3dy = p1y - p3y;
 
     // If we are in flat colored mode then decide the foreground color for every pixel in the triangle
     const Color24F triangleColor = triangle.color;
@@ -448,22 +444,20 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
         fgColor = color24FTo16(triangleColor);
     }
 
-    // Preconvert the uv coords to floats
-    const float u1 = triangle.u1;   const float v1 = triangle.v1;
-    const float u2 = triangle.u2;   const float v2 = triangle.v2;
-    const float u3 = triangle.u3;   const float v3 = triangle.v3;
+    // Cache the uv coords
+    const uint16_t u1 = triangle.u1;    const uint16_t v1 = triangle.v1;
+    const uint16_t u2 = triangle.u2;    const uint16_t v2 = triangle.v2;
+    const uint16_t u3 = triangle.u3;    const uint16_t v3 = triangle.v3;
 
     // Process each pixel
     for (int32_t y = ty; y <= by; ++y) {
         for (int32_t x = lx; x <= rx; ++x) {
             // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector from this point.
             // This value for all 3 edges tells us whether the point is inside the triangle, and also lets us compute barycentric coordinates.
-            const float xf = (float) x;
-            const float yf = (float) y;
-
-            const float ef1 = 0.5f * ((xf - p1xf) * e1dy - (yf - p1yf) * e1dx);
-            const float ef2 = 0.5f * ((xf - p2xf) * e2dy - (yf - p2yf) * e2dx);
-            const float ef3 = 0.5f * ((xf - p3xf) * e3dy - (yf - p3yf) * e3dx);
+            // Compute the value in 48.16 fixed point format...
+            const int64_t ef1 = (((int64_t) x - p1x) * e1dy - ((int64_t) y - p1y) * e1dx) * 65536;
+            const int64_t ef2 = (((int64_t) x - p2x) * e2dy - ((int64_t) y - p2y) * e2dx) * 65536;
+            const int64_t ef3 = (((int64_t) x - p3x) * e3dy - ((int64_t) y - p3y) * e3dx) * 65536;
 
             // The point is inside the triangle if the sign of all edge functions matches.
             // This handles triangles that are wound the opposite way.
@@ -475,14 +469,14 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
                 continue;
 
             // Compute the total signed triangle area and from that the weights of each vertex
-            const float area = ef1 + ef2 + ef3;
-            const float w1 = ef2 / area;
-            const float w2 = ef3 / area;
-            const float w3 = ef1 / area;
+            const int64_t area = ef1 + ef2 + ef3;
+            const int64_t w1 = (ef2 * 65536) / area;
+            const int64_t w2 = (ef3 * 65536) / area;
+            const int64_t w3 = (ef1 * 65536) / area;
 
-            // Compute the texture coordinate to use
-            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3);
-            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3);
+            // Compute the texture coordinate to use and round half values
+            const uint16_t u = (uint16_t)((u1 * w1 + u2 * w2 + u3 * w3 + 32768) / 65536);
+            const uint16_t v = (uint16_t)((v1 * w1 + v2 * w2 + v3 * w3 + 32768) / 65536);
 
             // Get the foreground color for the triangle pixel if the triangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
