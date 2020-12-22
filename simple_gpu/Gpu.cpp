@@ -71,9 +71,18 @@ void destroyCore(Core& core) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Sanity checks GPU state in debug to make sure it is good for drawing
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void sanityCheckGpuDrawState([[maybe_unused]] const Core& core) noexcept {
+    // Drawing area cannot wrap around in RAM
+    ASSERT(core.drawAreaRx < core.ramPixelW);
+    ASSERT(core.drawAreaBy < core.ramPixelH);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Read a single unsigned 16-bit value from VRAM at the given absolute coordinate and wrap to VRAM boundaries
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint16_t vramReadU16(Core& core, const uint16_t x, const uint16_t y) noexcept {
+uint16_t vramReadU16(const Core& core, const uint16_t x, const uint16_t y) noexcept {
     const uint16_t xt = x & core.ramXMask;
     const uint16_t yt = y & core.ramYMask;
     return core.pRam[yt * core.ramPixelW + xt];
@@ -82,34 +91,22 @@ uint16_t vramReadU16(Core& core, const uint16_t x, const uint16_t y) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write a single unsigned 16-bit value to VRAM at the given absolute coordinate and wrap to VRAM boundaries
 //------------------------------------------------------------------------------------------------------------------------------------------
-void vramWriteU16(Core& core, const uint16_t x, const uint16_t y, const uint16_t value) noexcept {
+void vramWriteU16(const Core& core, const uint16_t x, const uint16_t y, const uint16_t value) noexcept {
     const uint16_t xt = x & core.ramXMask;
     const uint16_t yt = y & core.ramYMask;
     core.pRam[yt * core.ramPixelW + xt] = value;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// More optimized version of the above which avoids loads where possible
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void vramWriteU16(
-    uint16_t* const pRam,
-    const uint16_t ramPixelW,
-    const uint16_t ramXMask,
-    const uint16_t ramYMask,
-    const uint16_t x,
-    const uint16_t y,
-    const uint16_t value
-) noexcept {
-    const uint16_t xt = x & ramXMask;
-    const uint16_t yt = y & ramYMask;
-    pRam[yt * ramPixelW + xt] = value;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Read a texture using the given texture coordinate within the current texture page and window
+// Read a texture using the given texture coordinate within the current texture page and window.
+// This internal version is templated for higher performance.
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <TexFmt TexFmt>
-Color16 readTexel(Core& core, const uint16_t coordX, const uint16_t coordY) noexcept {
+static Color16 readTexel(
+    const Core& core,
+    const uint16_t coordX,
+    const uint16_t coordY
+) noexcept {
     // First mask the coordinates by the texture window mask
     uint16_t vramX = coordX & core.texWinXMask;
     uint16_t vramY = coordY & core.texWinYMask;
@@ -131,39 +128,40 @@ Color16 readTexel(Core& core, const uint16_t coordX, const uint16_t coordY) noex
     const uint16_t vramPixel = vramReadU16(core, vramX, vramY);
 
     if constexpr (TexFmt == TexFmt::Bpp4) {
-        const uint16_t clutIdx = (vramPixel >> ((coordX & 3) * 4)) & 0xF;   // Each 16-bit pixel has 4 4-bit CLUT indexes
-        return vramReadU16(core, core.clutX + clutIdx, core.clutY);         // Lookup the actual pixel value from the CLUT
+        // 4-bit color: each 16-bit pixel has 4 CLUT indexes. Get the CLUT index then lookup the color from the CLUT.
+        const uint16_t clutIdx = (vramPixel >> ((coordX & 3) * 4)) & 0xF;
+        return vramReadU16(core, core.clutX + clutIdx, core.clutY);
     }
     else if constexpr (TexFmt == TexFmt::Bpp8) {
-        const uint16_t clutIdx = (vramPixel >> ((coordX & 1) * 8)) & 0xFF;  // Each 16-bit pixel has 2 8-bit CLUT indexes
-        return vramReadU16(core, core.clutX + clutIdx, core.clutY);         // Lookup the actual pixel value from the CLUT
+        // 8-bit color: each 16-bit pixel has 2 CLUT indexes. Get the CLUT index then lookup the color from the CLUT.
+        const uint16_t clutIdx = (vramPixel >> ((coordX & 1) * 8)) & 0xFF;
+        return vramReadU16(core, core.clutX + clutIdx, core.clutY);
     }
     else {
+        // Direct 16-bit color, no CLUT
         static_assert(TexFmt == TexFmt::Bpp16);
-        return vramPixel;   // Direct 16-bit color, no CLUT
+        return vramPixel;
     }
 }
 
-// Instantiate the variants of this function
-template Color16 readTexel<TexFmt::Bpp4>(Core& core, const uint16_t coordX, const uint16_t coordY) noexcept;
-template Color16 readTexel<TexFmt::Bpp8>(Core& core, const uint16_t coordX, const uint16_t coordY) noexcept;
-template Color16 readTexel<TexFmt::Bpp16>(Core& core, const uint16_t coordX, const uint16_t coordY) noexcept;
-
-// For when dynamic dispatch is needed
-Color16 readTexel(Core& core, const uint16_t coordX, const uint16_t coordY) noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read a texel using dynamic dispatch and non-cached gpu state
+//------------------------------------------------------------------------------------------------------------------------------------------
+Color16 readTexel(const Core& core, const uint16_t coordX, const uint16_t coordY) noexcept {
     switch (core.texFmt) {
         case TexFmt::Bpp4:  return readTexel<TexFmt::Bpp4>(core, coordX, coordY);
         case TexFmt::Bpp8:  return readTexel<TexFmt::Bpp8>(core, coordX, coordY);
-        case TexFmt::Bpp16: return readTexel<TexFmt::Bpp16>(core, coordX, coordY);
-    }
 
-    return readTexel<TexFmt::Bpp16>(core, coordX, coordY);
+        default:
+            ASSERT(core.texFmt == TexFmt::Bpp16);
+            return readTexel<TexFmt::Bpp16>(core, coordX, coordY);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the given pixel is inside the drawing area
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool isPixelInDrawArea(Core& core, const uint16_t x, const uint16_t y) noexcept {
+bool isPixelInDrawArea(const Core& core, const uint16_t x, const uint16_t y) noexcept {
     return (
         (x >= core.drawAreaLx) &&
         (x <= core.drawAreaRx) &&
@@ -175,7 +173,7 @@ bool isPixelInDrawArea(Core& core, const uint16_t x, const uint16_t y) noexcept 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Clears a region of VRAM to the specified color
 //------------------------------------------------------------------------------------------------------------------------------------------
-void clearRect(Core& core, const Color16 color, const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) noexcept {
+void clearRect(const Core& core, const Color16 color, const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) noexcept {
     // Caching GPU state
     uint16_t* const pRam = core.pRam;
     const uint16_t ramPixelW = core.ramPixelW;
@@ -254,10 +252,12 @@ Color16 colorBlend(const Color16 bg, const Color16 fg, const BlendMode mode) noe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Drawing a rectangle
+// Drawing a rectangle - internal implementation tailored to each texture format
 //------------------------------------------------------------------------------------------------------------------------------------------
-template <DrawMode DrawMode>
-void draw(Core& core, const DrawRect& rect) noexcept {
+template <DrawMode DrawMode, TexFmt TexFmt>
+static void draw(const Core& core, const DrawRect& rect) noexcept {
+    sanityCheckGpuDrawState(core);
+
     // According to the NO$PSX specs rectangle sizes cannot exceed 1023 x 511
     if ((rect.w >= 1024) || (rect.h >= 512))
         return;
@@ -303,7 +303,7 @@ void draw(Core& core, const DrawRect& rect) noexcept {
             // Get the foreground color for the rectangle pixel if the rectangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
             if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
-                fgColor = readTexel(core, curU, curV);
+                fgColor = readTexel<TexFmt>(core, curU, curV);
 
                 if (fgColor.bits == 0)
                     continue;
@@ -323,17 +323,34 @@ void draw(Core& core, const DrawRect& rect) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Drawing a rectangle - external interface
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <DrawMode DrawMode>
+void draw(const Core& core, const DrawRect& rect) noexcept {
+    if (core.texFmt == TexFmt::Bpp4) {
+        draw<DrawMode, TexFmt::Bpp4>(core, rect);
+    } else if (core.texFmt == TexFmt::Bpp8) {
+        draw<DrawMode, TexFmt::Bpp8>(core, rect);
+    } else {
+        ASSERT(core.texFmt == TexFmt::Bpp16);
+        draw<DrawMode, TexFmt::Bpp16>(core, rect);
+    }
+}
+
 // Instantiate the variants of this function
-template void draw<DrawMode::FlatColored>(Core& core, const DrawRect& rect) noexcept;
-template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawRect& rect) noexcept;
-template void draw<DrawMode::Textured>(Core& core, const DrawRect& rect) noexcept;
-template void draw<DrawMode::TexturedBlended>(Core& core, const DrawRect& rect) noexcept;
+template void draw<DrawMode::FlatColored>(const Core& core, const DrawRect& rect) noexcept;
+template void draw<DrawMode::FlatColoredBlended>(const Core& core, const DrawRect& rect) noexcept;
+template void draw<DrawMode::Textured>(const Core& core, const DrawRect& rect) noexcept;
+template void draw<DrawMode::TexturedBlended>(const Core& core, const DrawRect& rect) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Drawing a line
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <DrawMode DrawMode>
-void draw(Core& core, const DrawLine& line) noexcept {
+void draw(const Core& core, const DrawLine& line) noexcept {
+    sanityCheckGpuDrawState(core);
+
     // Translate the line by the drawing offset
     const int32_t lineX1 = line.x1 + core.drawOffsetX;
     const int32_t lineY1 = line.y1 + core.drawOffsetY;
@@ -416,21 +433,16 @@ void draw(Core& core, const DrawLine& line) noexcept {
 }
 
 // Instantiate the variants of this function
-template void draw<DrawMode::FlatColored>(Core& core, const DrawLine& line) noexcept;
-template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawLine& line) noexcept;
+template void draw<DrawMode::FlatColored>(const Core& core, const DrawLine& line) noexcept;
+template void draw<DrawMode::FlatColoredBlended>(const Core& core, const DrawLine& line) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Drawing a triangle. Follows the rasterization steps outlined here:
+// Drawing a triangle - internal implementation tailored to each texture format. Follows the rasterization steps outlined here:
 //  https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
 //------------------------------------------------------------------------------------------------------------------------------------------
-template <DrawMode DrawMode>
-void draw(Core& core, const DrawTriangle& triangle) noexcept {
-    // Caching GPU state and sanity checks
-    ASSERT(core.drawAreaRx < core.ramPixelW);
-    ASSERT(core.drawAreaBy < core.ramPixelH);
-
-    uint16_t* const pRam = core.pRam;
-    const uint16_t ramPixelW = core.ramPixelW;
+template <DrawMode DrawMode, TexFmt TexFmt>
+static void draw(const Core& core, const DrawTriangle& triangle) noexcept {
+    sanityCheckGpuDrawState(core);
     
     // Apply the draw offset to the triangle points
     const int16_t drawOffsetX = core.drawOffsetX;
@@ -485,7 +497,7 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
 
     // Process each pixel
     for (int32_t y = ty; y <= by; ++y) {
-        uint16_t* const pRamRow = pRam + (y * ramPixelW);
+        uint16_t* const pRamRow = core.pRam + ((intptr_t) y * core.ramPixelW);
 
         for (int32_t x = lx; x <= rx; ++x) {
             // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector from this point.
@@ -519,7 +531,7 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
             // Get the foreground color for the triangle pixel if the triangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
             if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
-                fgColor = readTexel(core, u, v);
+                fgColor = readTexel<TexFmt>(core, u, v);
 
                 if (fgColor.bits == 0)
                     continue;
@@ -539,10 +551,25 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Drawing a triangle - external interface
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <DrawMode DrawMode>
+void draw(const Core& core, const DrawTriangle& triangle) noexcept {
+    if (core.texFmt == TexFmt::Bpp4) {
+        draw<DrawMode, TexFmt::Bpp4>(core, triangle);
+    } else if (core.texFmt == TexFmt::Bpp8) {
+        draw<DrawMode, TexFmt::Bpp8>(core, triangle);
+    } else {
+        ASSERT(core.texFmt == TexFmt::Bpp16);
+        draw<DrawMode, TexFmt::Bpp16>(core, triangle);
+    }
+}
+
 // Instantiate the variants of this function
-template void draw<DrawMode::FlatColored>(Core& core, const DrawTriangle& triangle) noexcept;
-template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawTriangle& triangle) noexcept;
-template void draw<DrawMode::Textured>(Core& core, const DrawTriangle& triangle) noexcept;
-template void draw<DrawMode::TexturedBlended>(Core& core, const DrawTriangle& triangle) noexcept;
+template void draw<DrawMode::FlatColored>(const Core& core, const DrawTriangle& triangle) noexcept;
+template void draw<DrawMode::FlatColoredBlended>(const Core& core, const DrawTriangle& triangle) noexcept;
+template void draw<DrawMode::Textured>(const Core& core, const DrawTriangle& triangle) noexcept;
+template void draw<DrawMode::TexturedBlended>(const Core& core, const DrawTriangle& triangle) noexcept;
 
 END_NAMESPACE(Gpu)
