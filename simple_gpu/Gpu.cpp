@@ -471,9 +471,9 @@ static void draw(const Core& core, const DrawTriangle& triangle) noexcept {
     const int32_t by = std::min((int32_t) core.drawAreaBy, maxY - 1);
 
     // Precompute the edge deltas used in the edge functions
-    const float p1xf = p1x;     const float p1yf = p1y;
-    const float p2xf = p2x;     const float p2yf = p2y;
-    const float p3xf = p3x;     const float p3yf = p3y;
+    const float p1xf = (float) p1x;     const float p1yf = (float) p1y;
+    const float p2xf = (float) p2x;     const float p2yf = (float) p2y;
+    const float p3xf = (float) p3x;     const float p3yf = (float) p3y;
 
     const float e1dx = p2xf - p1xf;
     const float e1dy = p2yf - p1yf;
@@ -497,17 +497,23 @@ static void draw(const Core& core, const DrawTriangle& triangle) noexcept {
 
     // Process each pixel
     for (int32_t y = ty; y <= by; ++y) {
+        // Cache the pointer to the destination row in VRAM
         uint16_t* const pRamRow = core.pRam + ((intptr_t) y * core.ramPixelW);
+
+        // Compute the portions of the edge function that are constant with respect to Y.
+        // See below comments for more details on the edge function:
+        const float yf = (float) y;
+        const float ef1_y = -(p1xf * e1dy + (yf - p1yf) * e1dx);
+        const float ef2_y = -(p2xf * e2dy + (yf - p2yf) * e2dx);
+        const float ef3_y = -(p3xf * e3dy + (yf - p3yf) * e3dx);
 
         for (int32_t x = lx; x <= rx; ++x) {
             // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector from this point.
             // This value for all 3 edges tells us whether the point is inside the triangle, and also lets us compute barycentric coordinates.
             const float xf = (float) x;
-            const float yf = (float) y;
-
-            const float ef1 = ((xf - p1xf) * e1dy - (yf - p1yf) * e1dx);
-            const float ef2 = ((xf - p2xf) * e2dy - (yf - p2yf) * e2dx);
-            const float ef3 = ((xf - p3xf) * e3dy - (yf - p3yf) * e3dx);
+            const float ef1 = xf * e1dy + ef1_y;
+            const float ef2 = xf * e2dy + ef2_y;
+            const float ef3 = xf * e3dy + ef3_y;
 
             // The point is inside the triangle if the sign of all edge functions matches.
             // This handles triangles that are wound the opposite way.
@@ -519,10 +525,12 @@ static void draw(const Core& core, const DrawTriangle& triangle) noexcept {
                 continue;
 
             // Compute the total signed triangle area and from that the weights of each vertex
-            const float area = ef1 + ef2 + ef3;
-            const float w1 = ef2 / area;
-            const float w2 = ef3 / area;
-            const float w3 = ef1 / area;
+            const float triArea = ef1 + ef2 + ef3;
+            const float invTriArea = 1.0f / triArea;
+
+            const float w1 = ef2 * invTriArea;
+            const float w2 = ef3 * invTriArea;
+            const float w3 = ef1 * invTriArea;
 
             // Compute the texture coordinate to use and do ceil() type round operation - this produces more pleasing results for floor/ceiling spans in Doom
             const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 0.999f);
