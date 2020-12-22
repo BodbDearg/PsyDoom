@@ -89,6 +89,23 @@ void vramWriteU16(Core& core, const uint16_t x, const uint16_t y, const uint16_t
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// More optimized version of the above which avoids loads where possible
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void vramWriteU16(
+    uint16_t* const pRam,
+    const uint16_t ramPixelW,
+    const uint16_t ramXMask,
+    const uint16_t ramYMask,
+    const uint16_t x,
+    const uint16_t y,
+    const uint16_t value
+) noexcept {
+    const uint16_t xt = x & ramXMask;
+    const uint16_t yt = y & ramYMask;
+    pRam[yt * ramPixelW + xt] = value;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Read a texture using the given texture coordinate within the current texture page and window
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <TexFmt TexFmt>
@@ -159,14 +176,20 @@ bool isPixelInDrawArea(Core& core, const uint16_t x, const uint16_t y) noexcept 
 // Clears a region of VRAM to the specified color
 //------------------------------------------------------------------------------------------------------------------------------------------
 void clearRect(Core& core, const Color16 color, const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) noexcept {
-    const uint16_t begX = std::min(x, core.ramPixelW);
-    const uint16_t begY = std::min(y, core.ramPixelH);
-    const uint16_t endX = std::min((uint16_t)(x + w), core.ramPixelW);
-    const uint16_t endY = std::min((uint16_t)(y + h), core.ramPixelH);
+    // Caching GPU state
+    uint16_t* const pRam = core.pRam;
+    const uint16_t ramPixelW = core.ramPixelW;
+    const uint16_t ramPixelH = core.ramPixelH;
+
+    // Clear the rectangle
+    const uint16_t begX = std::min(x, ramPixelW);
+    const uint16_t begY = std::min(y, ramPixelH);
+    const uint16_t endX = (uint16_t) std::min(x + w, (int32_t) ramPixelW);
+    const uint16_t endY = (uint16_t) std::min(y + h, (int32_t) ramPixelH);
 
     for (uint16_t y = begY; y < endY; ++y) {
         for (uint16_t x = begX; x < endX; ++x) {
-            vramWriteU16(core, x, y, color);
+            pRam[(uint32_t) y * ramPixelW + x] = color;
         }
     }
 }
@@ -402,6 +425,13 @@ template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawLine& lin
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <DrawMode DrawMode>
 void draw(Core& core, const DrawTriangle& triangle) noexcept {
+    // Caching GPU state and sanity checks
+    ASSERT(core.drawAreaRx < core.ramPixelW);
+    ASSERT(core.drawAreaBy < core.ramPixelH);
+
+    uint16_t* const pRam = core.pRam;
+    const uint16_t ramPixelW = core.ramPixelW;
+    
     // Apply the draw offset to the triangle points
     const int16_t drawOffsetX = core.drawOffsetX;
     const int16_t drawOffsetY = core.drawOffsetY;
@@ -429,12 +459,16 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
     const int32_t by = std::min((int32_t) core.drawAreaBy, maxY - 1);
 
     // Precompute the edge deltas used in the edge functions
-    const int32_t e1dx = p2x - p1x;
-    const int32_t e1dy = p2y - p1y;
-    const int32_t e2dx = p3x - p2x;
-    const int32_t e2dy = p3y - p2y;
-    const int32_t e3dx = p1x - p3x;
-    const int32_t e3dy = p1y - p3y;
+    const float p1xf = p1x;     const float p1yf = p1y;
+    const float p2xf = p2x;     const float p2yf = p2y;
+    const float p3xf = p3x;     const float p3yf = p3y;
+
+    const float e1dx = p2xf - p1xf;
+    const float e1dy = p2yf - p1yf;
+    const float e2dx = p3xf - p2xf;
+    const float e2dy = p3yf - p2yf;
+    const float e3dx = p1xf - p3xf;
+    const float e3dy = p1yf - p3yf;
 
     // If we are in flat colored mode then decide the foreground color for every pixel in the triangle
     const Color24F triangleColor = triangle.color;
@@ -445,19 +479,23 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
     }
 
     // Cache the uv coords
-    const uint16_t u1 = triangle.u1;    const uint16_t v1 = triangle.v1;
-    const uint16_t u2 = triangle.u2;    const uint16_t v2 = triangle.v2;
-    const uint16_t u3 = triangle.u3;    const uint16_t v3 = triangle.v3;
+    const float u1 = triangle.u1;    const float v1 = triangle.v1;
+    const float u2 = triangle.u2;    const float v2 = triangle.v2;
+    const float u3 = triangle.u3;    const float v3 = triangle.v3;
 
     // Process each pixel
     for (int32_t y = ty; y <= by; ++y) {
+        uint16_t* const pRamRow = pRam + (y * ramPixelW);
+
         for (int32_t x = lx; x <= rx; ++x) {
             // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector from this point.
             // This value for all 3 edges tells us whether the point is inside the triangle, and also lets us compute barycentric coordinates.
-            // Compute the value in 48.16 fixed point format...
-            const int64_t ef1 = (((int64_t) x - p1x) * e1dy - ((int64_t) y - p1y) * e1dx) * 65536;
-            const int64_t ef2 = (((int64_t) x - p2x) * e2dy - ((int64_t) y - p2y) * e2dx) * 65536;
-            const int64_t ef3 = (((int64_t) x - p3x) * e3dy - ((int64_t) y - p3y) * e3dx) * 65536;
+            const float xf = (float) x;
+            const float yf = (float) y;
+
+            const float ef1 = ((xf - p1xf) * e1dy - (yf - p1yf) * e1dx);
+            const float ef2 = ((xf - p2xf) * e2dy - (yf - p2yf) * e2dx);
+            const float ef3 = ((xf - p3xf) * e3dy - (yf - p3yf) * e3dx);
 
             // The point is inside the triangle if the sign of all edge functions matches.
             // This handles triangles that are wound the opposite way.
@@ -469,14 +507,14 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
                 continue;
 
             // Compute the total signed triangle area and from that the weights of each vertex
-            const int64_t area = ef1 + ef2 + ef3;
-            const int64_t w1 = (ef2 * 65536) / area;
-            const int64_t w2 = (ef3 * 65536) / area;
-            const int64_t w3 = (ef1 * 65536) / area;
+            const float area = ef1 + ef2 + ef3;
+            const float w1 = ef2 / area;
+            const float w2 = ef3 / area;
+            const float w3 = ef1 / area;
 
             // Compute the texture coordinate to use and do ceil() type round operation - this produces more pleasing results for floor/ceiling spans in Doom
-            const uint16_t u = (uint16_t)((u1 * w1 + u2 * w2 + u3 * w3 + 65535) / 65536);
-            const uint16_t v = (uint16_t)((v1 * w1 + v2 * w2 + v3 * w3 + 65535) / 65536);
+            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 0.999f);
+            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 + 0.999f);
 
             // Get the foreground color for the triangle pixel if the triangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
@@ -496,7 +534,7 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
             }
 
             // Save the output pixel
-            vramWriteU16(core, x, y, fgColor);
+            pRamRow[x] = fgColor;
         }
     }
 }
