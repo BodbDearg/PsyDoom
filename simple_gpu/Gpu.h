@@ -24,6 +24,7 @@
 //  (12) The full range of draw primitives exposed by the original LIBGPU is NOT provided, only the ones that Doom uses.
 //  (13) Various not that useful bits of GPU state have been removed, for example the 'display enable' flag (originally in the status reg)
 //  (14) The drawing and display areas must not wrap around in VRAM, it is assumed they do not.
+//  (15) CLUTs are not allowed to wrap around in VRAM, it is assumed they do not.
 //
 // There are some improvements over an original PS1 GPU also, which can allow extended capabilities:
 //  (1) The texture window and page can exceed 256x256 units.
@@ -176,6 +177,12 @@ struct Core {
     TexFmt          texFmt;             // Current texture format in use
     uint16_t        clutX;              // X position of the current CLUT/color-index table in 16-bit VRAM pixels (CLUT is arranged in a row at this location)
     uint16_t        clutY;              // Y position of the current CLUT/color-index table in 16-bit VRAM pixels (CLUT is arranged in a row at this location)
+
+    // CLUT cache to speed up texture mapping and the settings it was last saved with
+    uint16_t        clutCacheX;
+    uint16_t        clutCacheY;
+    TexFmt          clutCacheFmt;
+    Color16         clutCache[256];
 };
 
 // Initializing and shutting down a core
@@ -184,12 +191,13 @@ void destroyCore(Core& core) noexcept;
 
 // VRAM reading
 uint16_t vramReadU16(const Core& core, const uint16_t x, const uint16_t y) noexcept;
-void vramWriteU16(const Core& core, const uint16_t x, const uint16_t y, const uint16_t value) noexcept;
-Color16 readTexel(const Core& core, const uint16_t coordX, const uint16_t coordY) noexcept;
+void vramWriteU16(Core& core, const uint16_t x, const uint16_t y, const uint16_t value) noexcept;
+Color16 readTexel(Core& core, const uint16_t coordX, const uint16_t coordY) noexcept;
 
 // Miscellaneous
+void updateClutCache(Core& core) noexcept;
 bool isPixelInDrawArea(const Core& core, const uint16_t x, const uint16_t y) noexcept;
-void clearRect(const Core& core, const Color16 color, const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) noexcept;
+void clearRect(Core& core, const Color16 color, const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) noexcept;
 
 // Color manipulation
 Color16 color24FTo16(const Color24F colorIn) noexcept;
@@ -198,12 +206,12 @@ Color16 colorBlend(const Color16 bg, const Color16 fg, const BlendMode mode) noe
 
 // Drawing functions: note that lines CANNOT be textured!
 template <DrawMode DrawMode>
-void draw(const Core& core, const DrawRect& rect) noexcept;
+void draw(Core& core, const DrawRect& rect) noexcept;
 
 template <DrawMode DrawMode>
-void draw(const Core& core, const DrawLine& line) noexcept;
+void draw(Core& core, const DrawLine& line) noexcept;
 
 template <DrawMode DrawMode>
-void draw(const Core& core, const DrawTriangle& triangle) noexcept;
+void draw(Core& core, const DrawTriangle& triangle) noexcept;
 
 END_NAMESPACE(Gpu)
