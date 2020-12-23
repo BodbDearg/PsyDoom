@@ -461,8 +461,10 @@ static void draw(const Core& core, const DrawTriangle& triangle) noexcept {
     const int32_t minY = std::min(std::min(p1y, p2y), p3y);
     const int32_t maxX = std::max(std::max(p1x, p2x), p3x);
     const int32_t maxY = std::max(std::max(p1y, p2y), p3y);
+    const int32_t xrange = maxX - minX;
+    const int32_t yrange = maxY - minY;
 
-    if ((maxX - minX >= 1024) || (maxY - minY) >= 512)
+    if ((xrange >= 1024) || (yrange >= 512))
         return;
 
     const int32_t lx = std::max((int32_t) core.drawAreaLx, minX);
@@ -495,40 +497,42 @@ static void draw(const Core& core, const DrawTriangle& triangle) noexcept {
     const float u2 = triangle.u2;    const float v2 = triangle.v2;
     const float u3 = triangle.u3;    const float v3 = triangle.v3;
 
+    // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector from this point.
+    // This value for all 3 edges tells us whether the point is inside the triangle, and also lets us compute barycentric coordinates.
+    // This is the edge function for the first pixel in the top row; for every subsequent row and column we just add to this.
+    float row_ef1 = ((float) lx - p1xf) * e1dy - ((float) ty - p1yf) * e1dx;
+    float row_ef2 = ((float) lx - p2xf) * e2dy - ((float) ty - p2yf) * e2dx;
+    float row_ef3 = ((float) lx - p3xf) * e3dy - ((float) ty - p3yf) * e3dx;
+
     // Process each pixel
-    for (int32_t y = ty; y <= by; ++y) {
-        // Cache the pointer to the destination row in VRAM
-        uint16_t* const pRamRow = core.pRam + ((intptr_t) y * core.ramPixelW);
+    uint16_t* pDstPixelRow = core.pRam + ty * core.ramPixelW;
 
-        // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector from this point.
-        // This value for all 3 edges tells us whether the point is inside the triangle, and also lets us compute barycentric coordinates.
-        // This is the edge function for the first pixel in the row; for every subsequent pixel we just add to this.
-        const float yf = (float) y;
-
-        float ef1 = ((float) lx - p1xf) * e1dy - (yf - p1yf) * e1dx;
-        float ef2 = ((float) lx - p2xf) * e2dy - (yf - p2yf) * e2dx;
-        float ef3 = ((float) lx - p3xf) * e3dy - (yf - p3yf) * e3dx;
+    for (int32_t y = ty; y <= by; ++y, pDstPixelRow += core.ramPixelW) {
+        float col_ef1 = row_ef1;
+        float col_ef2 = row_ef2;
+        float col_ef3 = row_ef3;
 
         for (int32_t x = lx; x <= rx; ++x) {
             // Compute the total signed triangle area and from that the weights of each vertex
-            const float triArea = ef1 + ef2 + ef3;
+            const float triArea = col_ef1 + col_ef2 + col_ef3;
             const float invTriArea = 1.0f / triArea;
 
-            const float w1 = ef2 * invTriArea;
-            const float w2 = ef3 * invTriArea;
-            const float w3 = ef1 * invTriArea;
+            const float w1 = col_ef2 * invTriArea;
+            const float w2 = col_ef3 * invTriArea;
+            const float w3 = col_ef1 * invTriArea;
+
+            // Get the sign of edge edge function
+            const bool bSign1 = (col_ef1 <= 0);
+            const bool bSign2 = (col_ef2 <= 0);
+            const bool bSign3 = (col_ef3 <= 0);
+
+            // Step the edge function to the next column
+            col_ef1 += e1dy;
+            col_ef2 += e2dy;
+            col_ef3 += e3dy;
 
             // The point is inside the triangle if the sign of all edge functions matches.
             // This handles triangles that are wound the opposite way.
-            const bool bSign1 = (ef1 <= 0);
-            const bool bSign2 = (ef2 <= 0);
-            const bool bSign3 = (ef3 <= 0);
-
-            // Increment all parts of the edge function
-            ef1 += e1dy;
-            ef2 += e2dy;
-            ef3 += e3dy;
-
             if ((bSign1 != bSign2) || (bSign2 != bSign3))
                 continue;
 
@@ -549,13 +553,18 @@ static void draw(const Core& core, const DrawTriangle& triangle) noexcept {
 
             // Do blending with the background if that is enabled
             if constexpr ((DrawMode == DrawMode::FlatColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
-                const Color16 bgColor = vramReadU16(core, x, y);
+                const Color16 bgColor = pDstPixelRow[x];
                 fgColor = colorBlend(bgColor, fgColor, core.blendMode);
             }
 
             // Save the output pixel
-            pRamRow[x] = fgColor;
+            pDstPixelRow[x] = fgColor;
         }
+
+        // Step the edge function onto the next row
+        row_ef1 -= e1dx;
+        row_ef2 -= e2dx;
+        row_ef3 -= e3dx;
     }
 }
 
