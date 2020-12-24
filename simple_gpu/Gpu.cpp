@@ -497,8 +497,12 @@ template void draw<DrawMode::FlatColored>(Core& core, const DrawLine& line) noex
 template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawLine& line) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Drawing a triangle - internal implementation tailored to each texture format. Follows the rasterization steps outlined here:
+// Drawing a triangle - internal implementation tailored to each texture format.
+// Sources for the general technique and optimizations:
 //  https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
+//  https://fgiesen.wordpress.com/2013/02/06/the-barycentric-conspirac/
+//  https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
+//  https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <DrawMode DrawMode, TexFmt TexFmt>
 static void draw(Core& core, const DrawTriangle& triangle) noexcept {
@@ -563,34 +567,41 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
     const float u2 = triangle.u2;    const float v2 = triangle.v2;
     const float u3 = triangle.u3;    const float v3 = triangle.v3;
 
-    // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector from this point.
-    // This value for all 3 edges tells us whether the point is inside the triangle, and also lets us compute barycentric coordinates.
-    // This is the edge function for the first pixel in the top row; for every subsequent row and column we just add to this.
+    // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector.
+    // We start by computing the edge function for the top left point checked by the rasterizer and step from there.
+    // This function for all 3 edges tells us whether a point is inside the triangle, and also lets us compute barycentric coordinates.
     float row_ef1 = ((float) lx - p1xf) * e1dy - ((float) ty - p1yf) * e1dx;
     float row_ef2 = ((float) lx - p2xf) * e2dy - ((float) ty - p2yf) * e2dx;
     float row_ef3 = ((float) lx - p3xf) * e3dy - ((float) ty - p3yf) * e3dx;
 
-    // Process each pixel
+    // Compute the total signed triangle area (x6) and from that a multiplier to normalize the barycentric vertex weights
+    const float triArea = row_ef1 + row_ef2 + row_ef3;
+    const float weightNormalize = 1.0f / triArea;
+
+    // Bias the edge functions slightly half a pixel when texture mapping
+    const float ef1Bias = (e1dy - e1dx) * 0.5f;
+    const float ef2Bias = (e2dy - e2dx) * 0.5f;
+    const float ef3Bias = (e3dy - e3dx) * 0.5f;
+
+    // Process each pixel in the rectangular region being rasterized
     uint16_t* pDstPixelRow = core.pRam + ty * core.ramPixelW;
 
     for (int32_t y = ty; y <= by; ++y, pDstPixelRow += core.ramPixelW) {
+        // The edge function for the current column starts off as the edge function for the row
         float col_ef1 = row_ef1;
         float col_ef2 = row_ef2;
         float col_ef3 = row_ef3;
 
         for (int32_t x = lx; x <= rx; ++x) {
-            // Compute the total signed triangle area and from that the weights of each vertex
-            const float triArea = col_ef1 + col_ef2 + col_ef3;
-            const float invTriArea = 1.0f / triArea;
-
-            const float w1 = col_ef2 * invTriArea;
-            const float w2 = col_ef3 * invTriArea;
-            const float w3 = col_ef1 * invTriArea;
-
-            // Get the sign of edge edge function
+            // Get the sign of each edge function
             const bool bSign1 = (col_ef1 <= 0);
             const bool bSign2 = (col_ef2 <= 0);
             const bool bSign3 = (col_ef3 <= 0);
+
+            // Compute the vertex weights
+            const float w1 = (col_ef2 + ef2Bias) * weightNormalize;
+            const float w2 = (col_ef3 + ef3Bias) * weightNormalize;
+            const float w3 = (col_ef1 + ef1Bias) * weightNormalize;
 
             // Step the edge function to the next column
             col_ef1 += e1dy;
@@ -602,9 +613,9 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
             if ((bSign1 != bSign2) || (bSign2 != bSign3))
                 continue;
 
-            // Compute the texture coordinate to use and do ceil() type round operation - this produces more pleasing results for floor/ceiling spans in Doom
-            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 0.999f);
-            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 + 0.999f);
+            // Compute the texture coordinate to use and round up slightly if it's close to the next integer coord (to account for float inprecision and prevent 'fuzzyness')
+            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 1.0f / 128.0f);
+            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 + 1.0f / 128.0f);
 
             // Get the foreground color for the triangle pixel if the triangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
