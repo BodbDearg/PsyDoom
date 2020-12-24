@@ -33,7 +33,8 @@
     #define BEGIN_DISABLE_HEADER_WARNINGS\
         __pragma(warning(push))             /* Save so we can restore later */\
         __pragma(warning(disable:4201))     /* Non standard extension used */\
-        __pragma(warning(disable:4244))     /* Conversion: possible loss of data */
+        __pragma(warning(disable:4244))     /* Conversion: possible loss of data */\
+        __pragma(warning(disable:4459))     /* Variable hides a global declaration */
 
     #define END_DISABLE_HEADER_WARNINGS\
         __pragma(warning(pop))

@@ -16,13 +16,14 @@
     #include <sdkddkver.h>
 #endif
 
-#include <asio.hpp>
+BEGIN_DISABLE_HEADER_WARNINGS
+    #include <asio.hpp>
+END_DISABLE_HEADER_WARNINGS
 
 BEGIN_NAMESPACE(Network)
 
 // A flag set to true if network init was aborted by the user
 bool gbWasInitAborted = false;
-
 
 // Maximum number of input/output tick packets that can be buffered
 static constexpr int32_t MAX_TICK_PKTS = 2;
