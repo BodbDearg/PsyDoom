@@ -1,7 +1,0 @@
-Note: I have stripped out some stuff which is not needed to use this library.
-The full version is available at the link below.
-
-Commit:
-    https://github.com/fmtlib/fmt/tree/f94b7364b9409f05207c3af3fa4666730e11a854
-    https://github.com/fmtlib/fmt/releases/tag/6.1.2
-    (Dec 11, 2019)

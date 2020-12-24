@@ -71,7 +71,7 @@ PsyDoom contributors (sorted alphabetically)
 
 * **[Jakub Czekański (JaCzekanski)](https://github.com/JaCzekanski)**
 
-    * Author of the excellent Avocado emulator, which PsyDoom uses to replicate PSX hardware such as the GPU and SPU:
+    * Author of the excellent Avocado PlayStation 1 emulator, which PsyDoom used previously as a host and bootstrap environment in addition to emulating specific devices such as the SPU and GPU while the game was being transitioned to a fully native & standalone app:
         https://github.com/JaCzekanski/Avocado
 
 * **Martin Korth**

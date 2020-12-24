@@ -1,6 +1,0 @@
-Note: I have stripped out some stuff which is not needed to use this library.
-The full version is available at the link below.
-
-Commit:
-    https://github.com/gelldur/EventBus/tree/cb4438bee1caf0dd59e58f136d20ee92d3ce7195
-    (Jun 24, 2019, 12:57 PM PDT)

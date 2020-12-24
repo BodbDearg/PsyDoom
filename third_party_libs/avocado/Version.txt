@@ -1,3 +1,0 @@
-This is a modified version of Avocado based on the following commit:
-    https://github.com/JaCzekanski/Avocado/tree/a516535cc15bee70b8a032b788ca31e7386ff54f
-    (May 24th, 2020 11:46:40 PM)

@@ -310,8 +310,8 @@ include_directories(${INCLUDE_PATHS})
 # Required libraries
 target_link_libraries(${GAME_TGT_NAME}
     ${ASIO_TGT_NAME}
-    ${AVOCADO_TGT_NAME}
     ${BASELIB_TGT_NAME}
+    ${LIBSDL_TGT_NAME}
     ${SIMPLE_GPU_TGT_NAME}
     ${SIMPLE_SPU_TGT_NAME}
 )
