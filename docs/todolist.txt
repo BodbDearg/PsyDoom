@@ -1,18 +1,8 @@
 0.7 - GPU & Rendering?
-- Try to fix Avocado occasional flickering/twitching pixels with rasterizer.
-    - Need to run at capped framerate to see properly.
-- Make GPU primitives go more directly to the rasterizer rather than through a buffer.
-- Break the link between the GPU and Avocado 'system' (entire PSX)
-- Investigate a possible 'high res' or crispy mode.
-    - May need an extended framebuffer for this
-    - May be more feasible in a completely rewritten renderer
-- Investigate the possibility of dithering to improve rendering output.
+- Fix bug when pausing and turning with view snapping back slightly.
+- Implement new Vulkan based renderer.
+    - Allow for high resolution, widescreen, texture filtering (if desired)
 - Allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
-- Fix bug in cmd queue stuff - occasional geometry weirdness.
-    - Not triggered in practice? Might be just a theoretical bug.
-- Investigate rendering glitch when above a sprite sometimes (appears enlargened on screen)
-    - May need tools to help with this
-- Automap: fix lines being clipped 1 pixel short
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 
 0.8 - Limit extending and modding?

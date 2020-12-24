@@ -1,6 +1,5 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// VM controller functions.
-// Setup and control the Avocado emulator and our emulation layers.
+// Basic setup and management for some of the emulated elements of a PlayStation 1, including the CD-ROM, SPU and GPU.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "PsxVm.h"
 
