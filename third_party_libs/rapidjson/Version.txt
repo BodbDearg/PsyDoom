@@ -2,5 +2,5 @@ Note: I have stripped out some stuff which is not needed to use this library.
 The full version is available at the link below.
 
 Commit:
-    https://github.com/Tencent/rapidjson/tree/8f4c021fa2f1e001d2376095928fc0532adf2ae6
-    (Apr 10, 2020)
+    https://github.com/Tencent/rapidjson/tree/56f215e5c367f71a90af53984148e556ffe83541
+    (Dec 22nd, 2020)
