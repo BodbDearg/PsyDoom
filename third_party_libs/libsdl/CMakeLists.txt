@@ -268,6 +268,8 @@ if (PLATFORM_MAC)
         "${SRC_DIR}/haptic/darwin/SDL_syshaptic_c.h"
         "${SRC_DIR}/joystick/darwin/SDL_iokitjoystick.c"
         "${SRC_DIR}/joystick/darwin/SDL_iokitjoystick_c.h"
+        "${SRC_DIR}/joystick/iphoneos/SDL_mfijoystick.m"
+        "${SRC_DIR}/joystick/iphoneos/SDL_mfijoystick_c.h"
         "${SRC_DIR}/locale/macosx/SDL_syslocale.m"
         "${SRC_DIR}/misc/macosx/SDL_sysurl.m"
         "${SRC_DIR}/render/metal/SDL_render_metal.m"
@@ -417,8 +419,10 @@ if (PLATFORM_MAC)
     FIND_LIBRARY(CORE_FOUNDATION_FRAMEWORK      CoreFoundation)
     FIND_LIBRARY(CORE_VIDEO_FRAMEWORK           CoreVideo)
     FIND_LIBRARY(FORCE_FEEDBACK_FRAMEWORK       ForceFeedback)
+    FIND_LIBRARY(GAME_CONTROLLER_FRAMEWORK      GameController)
     FIND_LIBRARY(IO_KIT_FRAMEWORK               IOKit)
     FIND_LIBRARY(METAL_FRAMEWORK                Metal)
+
 
     target_link_libraries(${LIBSDL_TGT_NAME}
         ${APP_KIT_FRAMEWORK}
@@ -429,6 +433,7 @@ if (PLATFORM_MAC)
         ${CORE_FOUNDATION_FRAMEWORK}
         ${CORE_VIDEO_FRAMEWORK}
         ${FORCE_FEEDBACK_FRAMEWORK}
+        ${GAME_CONTROLLER_FRAMEWORK}
         ${IO_KIT_FRAMEWORK}
         ${METAL_FRAMEWORK}
     )

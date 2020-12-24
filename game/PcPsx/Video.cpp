@@ -179,7 +179,9 @@ void initVideo() noexcept {
     
     windowCreateFlags |= (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
     
-    #if !__APPLE__
+    #if __APPLE__
+        windowCreateFlags |= SDL_WINDOW_METAL;
+    #else
         windowCreateFlags |= SDL_WINDOW_OPENGL;
     #endif
     

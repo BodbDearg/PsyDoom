@@ -12,6 +12,7 @@
 #include "PcPsx/PsxVm.h"
 
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
 
 // The CLUT and texture page for the debug font
