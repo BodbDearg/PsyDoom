@@ -19,6 +19,7 @@ void setGpuTexWin(const uint32_t texWin) noexcept;
 void submit(const DR_MODE& drawMode) noexcept;
 void submit(const DR_TWIN& texWin) noexcept;
 void submit(const SPRT& sprite) noexcept;
+void submit(const SPRT_8& sprite) noexcept;
 void submit(const LINE_F2& line) noexcept;
 void submit(const POLY_FT3& poly) noexcept;
 void submit(const POLY_F4& poly) noexcept;

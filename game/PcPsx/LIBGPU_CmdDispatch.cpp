@@ -128,6 +128,37 @@ void submit(const SPRT& sprite) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Handle a command to draw an 8x8 pixel sprite
+//------------------------------------------------------------------------------------------------------------------------------------------
+void submit(const SPRT_8& sprite) noexcept {
+    Gpu::Core& gpu = PsxVm::gGpu;
+
+    // Set the CLUT to use
+    setGpuClutId(sprite.clut);
+
+    // Setup the rectangle to be drawn then submit to the GPU
+    const bool bColorSprite = ((sprite.code & 0x1) == 0);
+    const bool bBlendSprite = sprite.code & 0x2;
+
+    Gpu::DrawRect drawRect = {};
+    drawRect.x = sprite.x0;
+    drawRect.y = sprite.y0;
+    drawRect.w = 8;
+    drawRect.h = 8;
+    drawRect.u = sprite.tu0;
+    drawRect.v = sprite.tv0;
+    drawRect.color.comp.r = (bColorSprite) ? sprite.r0 : 128;   // Note: '128' is '1.0' or full strength color if we don't want to modulate
+    drawRect.color.comp.g = (bColorSprite) ? sprite.g0 : 128;
+    drawRect.color.comp.b = (bColorSprite) ? sprite.b0 : 128;
+
+    if (bBlendSprite) {
+        Gpu::draw<Gpu::DrawMode::TexturedBlended>(gpu, drawRect);
+    } else {
+        Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawRect);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Handle a command to draw a line
 //------------------------------------------------------------------------------------------------------------------------------------------
 void submit(const LINE_F2& line) noexcept {

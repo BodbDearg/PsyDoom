@@ -203,7 +203,6 @@ int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
 
 void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept;
 int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept;
-void LIBGPU_DrawOTag(const void* const pPrimList, std::byte* const pGpuCmdBuffer) noexcept;
 DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept;
 DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept;
 
@@ -252,7 +251,7 @@ int32_t LIBGPU_FntOpen(
     const int32_t maxChars
 ) noexcept;
 
-void LIBGPU_FntFlush(const int32_t printStreamId, std::byte* const pGpuCmdBuffer) noexcept;
+void LIBGPU_FntFlush(const int32_t printStreamId) noexcept;
 void LIBGPU_FntPrint(const int32_t printStreamId, const char* const fmtMsg, ...) noexcept;
 
 uint16_t LIBGPU_LoadTPage(

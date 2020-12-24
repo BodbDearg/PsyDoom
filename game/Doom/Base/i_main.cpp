@@ -337,7 +337,7 @@ void I_PSXInit() noexcept {
 
         // Print the required string, then flush to display
         LIBGPU_FntPrint(printStreamId, "\n\n\n %s", msgBuffer);
-        LIBGPU_FntFlush(printStreamId, gGpuCmdsBuffer);
+        LIBGPU_FntFlush(printStreamId);
 
         // Present the resulting message
         I_DrawPresent();

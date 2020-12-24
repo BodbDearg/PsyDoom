@@ -191,36 +191,6 @@ int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Submit a linked list of GPU drawing primitives.
-// These may include drawing primitves, or primitives that set GPU state.
-//
-// PsyDoom: had to add a pointer to the base of the GPU commands buffer.
-// This is because the 'next primitive pointer' is now a 24-bit offset within the command buffer.
-//------------------------------------------------------------------------------------------------------------------------------------------
-void LIBGPU_DrawOTag(const void* const pPrimList, std::byte* const pGpuCmdBuffer) noexcept {
-    // TODO: remove 'LIBGPU_DrawOTag'
-    #if false
-    ASSERT(pGpuCmdBuffer);
-    const uint32_t* pCurPrim = (const uint32_t*) pPrimList;
-
-    while (true) {
-        // Read the tag for this primitive and determine the next primitive address (24-bit relative, and absolute).
-        const uint32_t tag = pCurPrim[0];
-        const uint32_t nextPrimOffset24 = tag & 0x00FFFFFF;
-
-        // Submit the primitive to the GPU
-        PsxVm::submitGpuPrimitive(pCurPrim);
-
-        // Stop if we've reached the end of the primitive list, otherwise move onto the next one
-        if (nextPrimOffset24 == 0x00FFFFFF)
-            break;
-        
-        pCurPrim = (uint32_t*)(pGpuCmdBuffer + nextPrimOffset24);
-    }
-    #endif
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Sets up the drawing environment and potentially clears the screen also.
 // The draw environment includes the display area, texture page and texture window settings, blending settings and so on...
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -465,10 +435,12 @@ void LIBGPU_FntLoad(const int32_t dstX, const int32_t dstY) noexcept {
 // The id of the opened print stream is returned.
 //
 // Params:
-//  dispX, dispY:   top left position of the screen RECT to output the debug text to.
-//  dispW, dispH:   bounds of the area to output debug text to.
-//  bClearBg:       if true then the background is cleared to 0,0,0 when 'flushing' (displaying) debug text.
-//  maxChars:       maximum number of characters to print. This field is IGNORED for this re-implementation of LIBGPU.
+//  dispX, dispY:   Top left position of the screen RECT to output the debug text to.
+//  dispW, dispH:   Bounds of the area to output debug text to.
+//  bClearBg:       If true then the background is cleared to 0,0,0 when 'flushing' (displaying) debug text.
+//                  (This field is IGNORED for this re-implementation of LIBGPU)
+//  maxChars:       Maximum number of characters to print.
+//                  (This field is IGNORED for this re-implementation of LIBGPU)
 //
 // Note:
 //  (1) For this re-implementation of LIBGPU multiple debug print streams are NOT supported, this call always returns '0'.
@@ -496,7 +468,7 @@ int32_t LIBGPU_FntOpen(
 // After this call the buffer position is also reset.
 // Note: the given print stream id field is IGNORED because this reimplementation of LIBGPU does not support multiple debug print streams.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBGPU_FntFlush([[maybe_unused]] const int32_t printStreamId, std::byte* const pGpuCmdBuffer) noexcept {
+void LIBGPU_FntFlush([[maybe_unused]] const int32_t printStreamId) noexcept {
     // Clear the drawing area if specified
     if (gDFontClearBg) {
         clearDrawingArea(0, 0, 0);
@@ -504,10 +476,9 @@ void LIBGPU_FntFlush([[maybe_unused]] const int32_t printStreamId, std::byte* co
 
     // Set the current texture page id to use and clear the texture window
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
+        DR_MODE drawModePrim = {};
         LIBGPU_SetDrawMode(drawModePrim, false, false, gDFontTPageId, nullptr);
-        LIBGPU_TermPrim(drawModePrim);
-        LIBGPU_DrawOTag(&drawModePrim, pGpuCmdBuffer);
+        LIBGPU_CmdDispatch::submit(drawModePrim);
         LIBGPU_DrawSync(0);
     }
 
@@ -553,7 +524,7 @@ void LIBGPU_FntFlush([[maybe_unused]] const int32_t printStreamId, std::byte* co
             spritePrim.tu0 = glyphCol * 8;
             spritePrim.tv0 = glyphRow * 8;
 
-            LIBGPU_DrawOTag(&spritePrim, pGpuCmdBuffer);
+            LIBGPU_CmdDispatch::submit(spritePrim);
             LIBGPU_DrawSync(0);
 
             xpos += 8;
