@@ -578,11 +578,6 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
     const float triArea = row_ef1 + row_ef2 + row_ef3;
     const float weightNormalize = 1.0f / triArea;
 
-    // Bias the edge functions slightly half a pixel when texture mapping
-    const float ef1Bias = (e1dy - e1dx) * 0.5f;
-    const float ef2Bias = (e2dy - e2dx) * 0.5f;
-    const float ef3Bias = (e3dy - e3dx) * 0.5f;
-
     // Process each pixel in the rectangular region being rasterized
     uint16_t* pDstPixelRow = core.pRam + ty * core.ramPixelW;
 
@@ -599,9 +594,9 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
             const bool bSign3 = (col_ef3 <= 0);
 
             // Compute the vertex weights
-            const float w1 = (col_ef2 + ef2Bias) * weightNormalize;
-            const float w2 = (col_ef3 + ef3Bias) * weightNormalize;
-            const float w3 = (col_ef1 + ef1Bias) * weightNormalize;
+            const float w1 = col_ef2 * weightNormalize;
+            const float w2 = col_ef3 * weightNormalize;
+            const float w3 = col_ef1 * weightNormalize;
 
             // Step the edge function to the next column
             col_ef1 += e1dy;
