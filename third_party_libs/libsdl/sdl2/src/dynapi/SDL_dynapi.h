@@ -61,7 +61,7 @@
 
 /* everyone else. This is where we turn on the API if nothing forced it off. */
 #ifndef SDL_DYNAMIC_API
-// DC: Disabling the dynamic API! Was '#define SDL_DYNAMIC_API 1'
+/* PsyDoom: Disabling the dynamic API! Was '#define SDL_DYNAMIC_API 1' */
 #define SDL_DYNAMIC_API 0
 #endif
 

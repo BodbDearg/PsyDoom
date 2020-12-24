@@ -84,6 +84,7 @@ typedef unsigned int uintptr_t;
 #define HAVE_XINPUT_H 1
 #define HAVE_MMDEVICEAPI_H 1
 #define HAVE_AUDIOCLIENT_H 1
+#define HAVE_SENSORSAPI_H
 
 /* This is disabled by default to avoid C runtime dependencies and manifest requirements */
 #ifdef HAVE_LIBC
@@ -133,6 +134,8 @@ typedef unsigned int uintptr_t;
 #define HAVE_STRNCMP 1
 #define HAVE__STRICMP 1
 #define HAVE__STRNICMP 1
+#define HAVE__WCSICMP 1
+#define HAVE__WCSNICMP 1
 #define HAVE_ACOS   1
 #define HAVE_ACOSF  1
 #define HAVE_ASIN   1
@@ -172,6 +175,8 @@ typedef unsigned int uintptr_t;
 #define HAVE_VSSCANF 1
 #define HAVE_SCALBN 1
 #define HAVE_SCALBNF 1
+#define HAVE_TRUNC  1
+#define HAVE_TRUNCF 1
 #endif
 /* This function is available with at least the VC++ 2008 C runtime library */
 #if _MSC_VER >= 1400
@@ -186,6 +191,20 @@ typedef unsigned int uintptr_t;
 #define HAVE_STDDEF_H   1
 #endif
 
+/* Check to see if we have Windows 10 build environment */
+#if _MSC_VER >= 1911        /* Visual Studio 15.3 */
+#include <sdkddkver.h>
+#if _WIN32_WINNT >= 0x0601  /* Windows 7 */
+#define SDL_WINDOWS7_SDK
+#endif
+#if _WIN32_WINNT >= 0x0602  /* Windows 8 */
+#define SDL_WINDOWS8_SDK
+#endif
+#if _WIN32_WINNT >= 0x0A00  /* Windows 10 */
+#define SDL_WINDOWS10_SDK
+#endif
+#endif /* _MSC_VER >= 1911 */
+
 /* Enable various audio drivers */
 #define SDL_AUDIO_DRIVER_WASAPI 1
 #define SDL_AUDIO_DRIVER_DSOUND 0
@@ -195,15 +214,32 @@ typedef unsigned int uintptr_t;
 
 /* Enable various input drivers */
 #define SDL_JOYSTICK_DINPUT 1
+#if false
+    #define SDL_JOYSTICK_HIDAPI 1   /* PsyDoom: Not enough to define this to '0', must be undefined completely */
+#endif
+#ifndef __WINRT__
+    #if false
+	    #define SDL_JOYSTICK_RAWINPUT   1   /* PsyDoom: Not enough to define this to '0', must be undefined completely */
+    #endif
+#endif
+#if false
+    #define SDL_JOYSTICK_VIRTUAL    1   /* PsyDoom: Not enough to define this to '0', must be undefined completely */
+#endif
+#ifdef SDL_WINDOWS10_SDK
+    #if false
+        #define SDL_JOYSTICK_WGI    1   /* PsyDoom: Not enough to define this to '0', must be undefined completely */
+    #endif
+#endif
 #define SDL_JOYSTICK_XINPUT 1
-/* DC: Not enough to define this to '0', must be undefined completely.
-#define SDL_JOYSTICK_HIDAPI 0
-*/
 #define SDL_HAPTIC_DINPUT   1
 #define SDL_HAPTIC_XINPUT   1
 
-/* Enable the dummy sensor driver */
+/* PsyDoom: Enable the dummy sensor driver */
 #define SDL_SENSOR_DUMMY  1
+#if false
+    /* Enable the sensor driver */
+    #define SDL_SENSOR_WINDOWS  1   /* PsyDoom: Not enough to define this to '0', must be undefined completely */
+#endif
 
 /* Enable various shared object loading systems */
 #define SDL_LOADSO_WINDOWS  1
@@ -221,7 +257,7 @@ typedef unsigned int uintptr_t;
 #ifndef SDL_VIDEO_RENDER_D3D
 #define SDL_VIDEO_RENDER_D3D    0
 #endif
-#ifndef SDL_VIDEO_RENDER_D3D11
+#ifdef SDL_WINDOWS7_SDK
 #define SDL_VIDEO_RENDER_D3D11  0
 #endif
 
@@ -260,3 +296,5 @@ typedef unsigned int uintptr_t;
 #endif
 
 #endif /* SDL_config_windows_h_ */
+
+/* vi: set ts=4 sw=4 expandtab: */

@@ -44,7 +44,7 @@
 #elif defined(__OS2__)
 #include "SDL_config_os2.h"
 #elif defined(__linux__)
-/* DC: Adding a manual config for linux */
+/* PsyDoom: Adding a manual config for linux */
 #include "SDL_config_linux.h"
 #else
 /* This is a minimal configuration just to get SDL running on new platforms. */
