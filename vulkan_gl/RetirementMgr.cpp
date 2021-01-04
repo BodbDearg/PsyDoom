@@ -148,7 +148,7 @@ void RetirementMgr::freeRetiredResourcesForRingbufferIndex(const uint8_t ringbuf
     RetiredResourceSet& set = mRetiredResourceSets[ringbufferIndex];
     set.clear();
 
-    #if BT_ASSERT_ENABLED == 1
+    #if ASSERTS_ENABLED == 1
         mbDebugIsDestroyingResources = false;
     #endif
 }
