@@ -73,7 +73,7 @@ void I_CrossFadeFrameBuffers() noexcept {
         LIBGPU_PutDispEnv(dispEnvs[framebufferIdx]);
 
         // PsyDoom: copy the PSX framebuffer to the display
-        Video::displayFramebuffer();
+        Video::displayPsxFramebuffer();
 
         // PsyDoom: delay 1 vblank to limit fade speed
         int32_t curTotalVBlanks = I_GetTotalVBlanks();

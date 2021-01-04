@@ -282,7 +282,7 @@ typedef unsigned int uintptr_t;
 #endif
 
 /* Enable Vulkan support */
-#define SDL_VIDEO_VULKAN 0
+#define SDL_VIDEO_VULKAN PSYDOOM_VULKAN_RENDERER
 
 /* Enable system power support */
 #define SDL_POWER_WINDOWS 0

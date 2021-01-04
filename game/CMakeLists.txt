@@ -200,6 +200,8 @@ set(SOURCE_FILES
     "PcPsx/Utils.h"
     "PcPsx/Video.cpp"
     "PcPsx/Video.h"
+    "PcPsx/Vulkan.cpp"
+    "PcPsx/Vulkan.h"
     "PsyQ/LIBAPI.cpp"
     "PsyQ/LIBAPI.h"
     "PsyQ/LIBETC.cpp"
@@ -294,16 +296,22 @@ target_compile_definitions(${GAME_TGT_NAME} PRIVATE
 )
 
 # Various tweaks that can be applied
-if (PSYDOOM_FIX_UB)
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=1)
+if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_VULKAN_RENDERER=1)
 else()
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=0)
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_VULKAN_RENDERER=0)
 endif()
 
 if (PSYDOOM_USE_NEW_I_ERROR)
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_USE_NEW_I_ERROR=1)
 else()
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_USE_NEW_I_ERROR=0)
+endif()
+
+if (PSYDOOM_FIX_UB)
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=1)
+else()
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=0)
 endif()
 
 # Specify include dirs
@@ -317,6 +325,10 @@ target_link_libraries(${GAME_TGT_NAME}
     ${SIMPLE_GPU_TGT_NAME}
     ${SIMPLE_SPU_TGT_NAME}
 )
+
+if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+    target_link_libraries(${GAME_TGT_NAME} ${VULKAN_GL_TGT_NAME})
+endif()
 
 # MSVC use a lower warning level for this project temporarily
 if (COMPILER_MSVC)

@@ -57,7 +57,11 @@
 #define VK_USE_PLATFORM_XCB_KHR
 #endif
 
-#define VK_NO_PROTOTYPES
+// PsyDoom: I'm already defining this as part of the project compiler flags, to avoid issues with including the vulkan header directly and not via SDL.
+// Therefore I added a check to see if it's already defined here:
+#ifndef VK_NO_PROTOTYPES
+    #define VK_NO_PROTOTYPES
+#endif
 #include "./khronos/vulkan/vulkan.h"
 
 #include "SDL_vulkan.h"

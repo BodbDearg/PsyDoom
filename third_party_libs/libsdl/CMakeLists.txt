@@ -10,6 +10,12 @@ set(EXPORTED_INCLUDE_PATHS
     ${INCLUDE_DIR}
 )
 
+if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+    list(APPEND EXPORTED_INCLUDE_PATHS
+        "${SRC_DIR}/video/khronos"
+    )
+endif()
+
 set(SOURCE_FILES
     "${INCLUDE_DIR}/begin_code.h"
     "${INCLUDE_DIR}/close_code.h"
@@ -191,6 +197,13 @@ set(OTHER_FILES
     "${SRC_DIR}/video/yuv2rgb/README.md"
 )
 
+if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+    list(APPEND SOURCE_FILES
+        "${SRC_DIR}/video/SDL_vulkan_internal.h"
+        "${SRC_DIR}/video/SDL_vulkan_utils.c"
+    )
+endif()
+
 if (PLATFORM_WINDOWS)
     list(APPEND SOURCE_FILES
         "${INCLUDE_DIR}/SDL_config_windows.h"
@@ -253,6 +266,13 @@ if (PLATFORM_WINDOWS)
         "${SRC_DIR}/video/windows/SDL_windowswindow.h"
         "${SRC_DIR}/video/windows/wmmsg.h"
     )
+
+    if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+        list(APPEND SOURCE_FILES
+            "${SRC_DIR}/video/windows/SDL_windowsvulkan.c"
+            "${SRC_DIR}/video/windows/SDL_windowsvulkan.h"
+        )
+    endif()
 endif()
 
 if (PLATFORM_MAC)
@@ -397,6 +417,12 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 include_directories(${INCLUDE_PATHS})
 target_include_directories(${LIBSDL_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
 target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_LEAN_AND_MEAN=1)
+
+if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DPSYDOOM_VULKAN_RENDERER=1 -DVK_NO_PROTOTYPES)
+else()
+    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DPSYDOOM_VULKAN_RENDERER=0)
+endif()
 
 if (PLATFORM_WINDOWS)
     target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC SDL_DISABLE_WINDOWS_IME)

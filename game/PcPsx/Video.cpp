@@ -9,14 +9,15 @@
 #include "ProgArgs.h"
 #include "PsxVm.h"
 #include "Utils.h"
+#include "Vulkan.h"
 
 #include <SDL.h>
 
 BEGIN_NAMESPACE(Video)
 
-static SDL_Window*      gWindow;
-static SDL_Renderer*    gRenderer;
-static SDL_Texture*     gFramebufferTexture;
+static SDL_Window*      gpWindow;
+static SDL_Renderer*    gpRenderer;
+static SDL_Texture*     gpFramebufferTexture;
 static SDL_Rect         gOutputRect;
 static uint32_t*        gpFrameBuffer;
 
@@ -33,6 +34,12 @@ constexpr int32_t ORIG_DRAW_RES_Y = 240;
 constexpr int32_t ORIG_DISP_RES_X = 292;
 constexpr int32_t ORIG_DISP_RES_Y = 240;
 
+// Is the Vulkan API supported/possible on this machine?
+bool bIsVulkanSupported;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Pick which resolution to use for the game's window on startup
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
     // Get the screen resolution.
     // On high DPI screens like MacOS retina the resolution returned will be virtual not physical resolution.
@@ -62,24 +69,30 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
     h = ORIG_DISP_RES_Y * multiplier;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get write access to the framebuffer texture used to display the PSX GPU's framebuffer to the screen and relinquish write access
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void lockFramebufferTexture() noexcept {
     int pitch = 0;
 
-    if (SDL_LockTexture(gFramebufferTexture, nullptr, reinterpret_cast<void**>(&gpFrameBuffer), &pitch) != 0) {
+    if (SDL_LockTexture(gpFramebufferTexture, nullptr, reinterpret_cast<void**>(&gpFrameBuffer), &pitch) != 0) {
         FatalErrors::raise("Failed to lock the framebuffer texture for writing!");
     }
 }
 
 static void unlockFramebufferTexture() noexcept {
-    SDL_UnlockTexture(gFramebufferTexture);
+    SDL_UnlockTexture(gpFramebufferTexture);
 }
 
-static void presentSdlFramebuffer() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Presents the SDL texture which contains a rendered frame from the PSX GPU to the screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void presentSdlFramebufferTexture() noexcept {
     // Get the size of the window.
     // Don't bother outputting if the window has been made zero sized.
     int32_t winSizeX = {};
     int32_t winSizeY = {};
-    SDL_GetWindowSize(gWindow, &winSizeX, &winSizeY);
+    SDL_GetWindowSize(gpWindow, &winSizeX, &winSizeY);
 
     if (winSizeX <= 0 || winSizeY <= 0)
         return;
@@ -112,18 +125,21 @@ static void presentSdlFramebuffer() noexcept {
     // Need to clear the window if we are not filling the whole screen.
     // Some stuff like NVIDIA video recording notifications can leave marks in the unused regions otherwise...
     if ((gOutputRect.w != winSizeX) || (gOutputRect.h != winSizeY)) {
-        SDL_RenderClear(gRenderer);
+        SDL_RenderClear(gpRenderer);
     }
     
     // Blit the framebuffer to the display
-    SDL_RenderCopy(gRenderer, gFramebufferTexture, nullptr, &gOutputRect);
+    SDL_RenderCopy(gpRenderer, gpFramebufferTexture, nullptr, &gOutputRect);
 
     // Present the rendered frame and re-lock the framebuffer texture
-    SDL_RenderPresent(gRenderer);
+    SDL_RenderPresent(gpRenderer);
     lockFramebufferTexture();
 }
 
-static void copyPsxToSdlFramebuffer() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Copies the rendered PSX GPU framebuffer to an SDL texture, in preparation for blitting to the screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void copyPsxToSdlFramebufferTexture() noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
     const uint16_t* const vramPixels = gpu.pRam;
     uint32_t* pDstPixel = gpFrameBuffer;
@@ -152,6 +168,9 @@ static void copyPsxToSdlFramebuffer() noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets up the renderering API and creates the main game window
+//------------------------------------------------------------------------------------------------------------------------------------------
 void initVideo() noexcept {
     // Ignore call in headless mode
     if (ProgArgs::gbHeadlessMode)
@@ -170,62 +189,96 @@ void initVideo() noexcept {
     #endif
 
     // Determine the window creation flags
-    Uint32 windowCreateFlags = (
-        SDL_WINDOW_MOUSE_FOCUS |
-        SDL_WINDOW_INPUT_FOCUS |
-        SDL_WINDOW_INPUT_GRABBED |
-        SDL_WINDOW_MOUSE_CAPTURE
-    );
+    auto getWindowCreateFlags = [](const bool bUseVulkanRenderer) noexcept {
+        Uint32 windowCreateFlags = (
+            SDL_WINDOW_MOUSE_FOCUS |
+            SDL_WINDOW_INPUT_FOCUS |
+            SDL_WINDOW_INPUT_GRABBED |
+            SDL_WINDOW_MOUSE_CAPTURE
+        );
     
-    windowCreateFlags |= (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
-    
-    #if __APPLE__
-        windowCreateFlags |= SDL_WINDOW_METAL;
-    #else
-        windowCreateFlags |= SDL_WINDOW_OPENGL;
-    #endif
-    
+        windowCreateFlags |= (Config::gbFullscreen) ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE;
+        
+        // Are we using the Vulkan renderer?
+        // If so then attempt to create a Window of that type.
+        if (bUseVulkanRenderer) {
+            windowCreateFlags |= SDL_WINDOW_VULKAN;
+        } else {
+            // Only using the classic PlayStation 1 emulated renderer.
+            // Use whatever API is supported on the platform to blit rendered images to the screen.
+            #if __APPLE__
+                windowCreateFlags |= SDL_WINDOW_METAL;
+            #else
+                windowCreateFlags |= SDL_WINDOW_OPENGL;
+            #endif
+        }
+
+        return windowCreateFlags;
+    };
+
     // Decide what window size to use
     int32_t winSizeX = 0;
     int32_t winSizeY = 0;
     decideStartupResolution(winSizeX, winSizeY);
 
-    // Create the window
-    gWindow = SDL_CreateWindow(
+    // Create the window: try to make a Vulkan one first if that renderer is compiled in.
+    // If we fail to do that then fall back to using some other API and the original PlayStation 1 renderer only:
+    const int32_t windowX = SDL_WINDOWPOS_CENTERED;
+    const int32_t windowY = SDL_WINDOWPOS_CENTERED;
+
+    gpWindow = SDL_CreateWindow(
         gameVersionStr,
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
+        windowX,
+        windowY,
         winSizeX,
         winSizeY,
-        windowCreateFlags
+        #if PSYDOOM_VULKAN_RENDERER
+            getWindowCreateFlags(true)
+        #else
+            getWindowCreateFlags(false)
+        #endif
     );
 
-    if (!gWindow) {
+    #if PSYDOOM_VULKAN_RENDERER
+        if (gpWindow) {
+            // If Vulkan is supported then initialize PsyDoom's Vulkan handling module
+            bIsVulkanSupported = true;
+            Vulkan::init();
+        } else {
+            // Failed to make a Vulkan window, this machine must not have drivers or hardware which support it.
+            // Make a normal window using some API supported by the platform instead:
+            gpWindow = SDL_CreateWindow(gameVersionStr, windowX, windowY, winSizeX, winSizeY, getWindowCreateFlags(false));
+        }
+    #else
+        bIsVulkanSupported = false;
+    #endif
+
+    if (!gpWindow) {
         FatalErrors::raise("Unable to create a window!");
     }
 
     // Create the renderer and framebuffer texture
-    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    gpRenderer = SDL_CreateRenderer(gpWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-    if (!gRenderer) {
+    if (!gpRenderer) {
         FatalErrors::raise("Failed to create renderer!");
     }
 
-    gFramebufferTexture = SDL_CreateTexture(
-        gRenderer,
+    gpFramebufferTexture = SDL_CreateTexture(
+        gpRenderer,
         SDL_PIXELFORMAT_ABGR8888,
         SDL_TEXTUREACCESS_STREAMING,
         (int32_t) ORIG_DRAW_RES_X,
         (int32_t) ORIG_DRAW_RES_Y
     );
 
-    if (!gFramebufferTexture) {
+    if (!gpFramebufferTexture) {
         FatalErrors::raise("Failed to create a framebuffer texture!");
     }
 
     // Clear the renderer to black
-    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0);
-    SDL_RenderClear(gRenderer);
+    SDL_SetRenderDrawColor(gpRenderer, 0, 0, 0, 0);
+    SDL_RenderClear(gpRenderer);
 
     // Immediately lock the framebuffer texture for updating
     lockFramebufferTexture();
@@ -236,47 +289,63 @@ void initVideo() noexcept {
     // left mouse button after launch. I believe that issue was due to the mouse cursor being at the edge of the window.
     // Pressing the left mouse in this situation freezes the app since the OS belives it is resizing.
     SDL_ShowCursor(SDL_DISABLE);
-    SDL_SetWindowInputFocus(gWindow);
-    SDL_WarpMouseInWindow(gWindow, winSizeX / 2, winSizeY / 2);
+    SDL_SetWindowInputFocus(gpWindow);
+    SDL_WarpMouseInWindow(gpWindow, winSizeX / 2, winSizeY / 2);
     SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Destroys the main game window and tears down rendering APIs
+//------------------------------------------------------------------------------------------------------------------------------------------
 void shutdownVideo() noexcept {
     // Ignore call in headless mode
     if (ProgArgs::gbHeadlessMode)
         return;
-    
+
     // Do the cleanup
     gpFrameBuffer = nullptr;
-    
-    if (gRenderer) {
-        SDL_DestroyRenderer(gRenderer);
-        gRenderer = nullptr;
+
+    if (gpRenderer) {
+        SDL_DestroyRenderer(gpRenderer);
+        gpRenderer = nullptr;
     }
 
-    if (gWindow) {
-        SDL_SetWindowGrab(gWindow, SDL_FALSE);
-        SDL_DestroyWindow(gWindow);
-        gWindow = nullptr;
+    #if PSYDOOM_VULKAN_RENDERER
+        if (bIsVulkanSupported) {
+            bIsVulkanSupported = false;
+            Vulkan::destroy();
+        }
+    #endif
+
+    if (gpWindow) {
+        SDL_SetWindowGrab(gpWindow, SDL_FALSE);
+        SDL_DestroyWindow(gpWindow);
+        gpWindow = nullptr;
     }
-    
+
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     gOutputRect = {};
 }
 
-void displayFramebuffer() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Display the currently renderered PSX GPU frame to the screen; this is used by the classic renderer
+//------------------------------------------------------------------------------------------------------------------------------------------
+void displayPsxFramebuffer() noexcept {
     // Ignore call in headless mode
     if (ProgArgs::gbHeadlessMode)
         return;
 
     // Otherwise handle and ensure the window is updated after we do the swap
-    copyPsxToSdlFramebuffer();
-    presentSdlFramebuffer();
+    copyPsxToSdlFramebufferTexture();
+    presentSdlFramebufferTexture();
     Utils::doPlatformUpdates();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get access to the underlying SDL window
+//------------------------------------------------------------------------------------------------------------------------------------------
 SDL_Window* getWindow() noexcept {
-    return gWindow;
+    return gpWindow;
 }
 
 END_NAMESPACE(Video)

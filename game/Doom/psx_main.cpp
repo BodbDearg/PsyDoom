@@ -72,6 +72,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
             PlayerPrefs::save();
         }
 
+        Video::shutdownVideo();
         PsxVm::shutdown();
         Cheats::shutdown();
         ModMgr::shutdown();

@@ -31,9 +31,20 @@ set(REVERSING_COMMON_TGT_NAME       ReversingCommon)
 set(SIMPLE_GPU_TGT_NAME             SimpleGpu)
 set(SIMPLE_SPU_TGT_NAME             SimpleSpu)
 set(VAG_TOOL_TGT_NAME               VagTool)
+set(VULKAN_GL_TGT_NAME              VulkanGL)
 set(WMD_TOOL_TGT_NAME               WmdTool)
 
+# Compile in support for the Vulkan renderer?
+set(PSYDOOM_INCLUDE_VULKAN_RENDERER TRUE CACHE BOOL
+"If TRUE (default) then compile in support for the new Vulkan renderer.
+Disabling this setting may make it easier to port to platforms which don't support Vulkan.")
+
 # Settings to include or exclude optional portions of the project tree
+set(PSYDOOM_INCLUDE_GAME TRUE CACHE BOOL 
+"If TRUE include the game itself in the project tree.
+Optionally, you could remove the game if you just wanted to compile the audio tools for example."
+)
+
 set(PSYDOOM_INCLUDE_REVERSING_TOOLS FALSE CACHE BOOL 
 "If TRUE include reverse engineering tools in the project tree.
 These were tools which were used during the earlier stages of development."
@@ -45,12 +56,19 @@ set(PSYDOOM_INCLUDE_AUDIO_TOOLS FALSE CACHE BOOL
 
 # Adding individual projects and libraries
 add_subdirectory("${PROJECT_SOURCE_DIR}/baselib")
-add_subdirectory("${PROJECT_SOURCE_DIR}/game")
-add_subdirectory("${PROJECT_SOURCE_DIR}/simple_gpu")
-add_subdirectory("${PROJECT_SOURCE_DIR}/simple_spu")
-add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/asio")
-add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/libsdl")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/rapidjson")
+
+if (PSYDOOM_INCLUDE_GAME)
+    add_subdirectory("${PROJECT_SOURCE_DIR}/game")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/simple_gpu")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/simple_spu")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/asio")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/libsdl")
+
+    if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+        add_subdirectory("${PROJECT_SOURCE_DIR}/vulkan_gl")
+    endif()
+endif()
 
 if (PSYDOOM_INCLUDE_AUDIO_TOOLS)
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/audio_tools_common")
