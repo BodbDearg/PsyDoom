@@ -116,24 +116,23 @@ bool VulkanInstance::init(SDL_Window* const pSdlWindow) noexcept {
     mExtensions.init(mVkFuncs);
     
     #ifndef NDEBUG
-        const bool bEnableValidationLayers = (
+        const bool bTryEnableValidationLayers = (
             mExtensions.hasExtension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME) &&
             mExtensions.hasExtension(VK_EXT_DEBUG_REPORT_EXTENSION_NAME) &&
-            mApiLayers.hasLayer(KHRONOS_VALIDATION_LAYER_NAME) &&
-            mVkFuncs.vkCreateDebugReportCallbackEXT
+            mApiLayers.hasLayer(KHRONOS_VALIDATION_LAYER_NAME)
         );
     #else
-        const bool bEnableValidationLayers = false;
+        const bool bTryEnableValidationLayers = false;
     #endif
 
     // Create the instance, then load instance specific API functions
-    if (!createVkInstance(bEnableValidationLayers))
+    if (!createVkInstance(bTryEnableValidationLayers))
         return false;
 
     mVkFuncs.loadInstanceFuncs(mVkInstance);
     
     // Enable validation layer reporting if we can in debug builds so we can get messages about invalid API usage
-    if (bEnableValidationLayers) {
+    if (bTryEnableValidationLayers && mVkFuncs.vkCreateDebugReportCallbackEXT) {
         enableValidationLayerReporting();
     }
 
