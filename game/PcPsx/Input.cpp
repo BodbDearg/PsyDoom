@@ -241,7 +241,7 @@ static void handleSdlEvents() noexcept {
 
                     case SDL_WINDOWEVENT_FOCUS_LOST:
                         SDL_ShowCursor(SDL_ENABLE);
-                        SDL_SetWindowGrab(Video::getWindow(), SDL_FALSE);
+                        SDL_SetWindowGrab(Video::gpSdlWindow, SDL_FALSE);
                         SDL_SetRelativeMouseMode(SDL_FALSE);
                         break;
                 }
@@ -271,7 +271,7 @@ static void handleSdlEvents() noexcept {
                 // Capture the mouse on a click if we haven't captured it yet
                 if (!SDL_GetRelativeMouseMode()) {
                     SDL_ShowCursor(SDL_DISABLE);
-                    SDL_SetWindowGrab(Video::getWindow(), SDL_TRUE);
+                    SDL_SetWindowGrab(Video::gpSdlWindow, SDL_TRUE);
                     SDL_SetRelativeMouseMode(SDL_TRUE);
                     bConsumeEvents = true;
                 }

@@ -26,12 +26,12 @@ static vgl::LogicalDevice           gLogicalDevice(gVkFuncs);       // The logic
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
     // Initialize the Vulkan API, the window surface, and choose a device to use
-    if (!gVulkanInstance.init(Video::getWindow())) {
+    if (!gVulkanInstance.init(Video::gpSdlWindow)) {
         FatalErrors::raise("Failed to initialize a Vulkan API instance!");
         return;
     }
 
-    if (!gWindowSurface.init(Video::getWindow(), gVulkanInstance)) {
+    if (!gWindowSurface.init(Video::gpSdlWindow, gVulkanInstance)) {
         FatalErrors::raise("Failed to initialize a Vulkan window surface!");
         return;
     }

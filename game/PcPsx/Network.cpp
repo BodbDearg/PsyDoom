@@ -75,7 +75,7 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
         
         // While we are waiting update the display to help prevent stutter after long pauses (if we are waiting a long time).
         // See the 'Utils.cpp' file for more comments on this issue.
-        Video::displayPsxFramebuffer();
+        Video::displayFramebuffer();
         Utils::threadYield();
     }
 

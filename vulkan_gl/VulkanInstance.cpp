@@ -170,7 +170,6 @@ void VulkanInstance::destroy(const bool bForceIfInvalid) noexcept {
 bool VulkanInstance::createVkInstance(const bool bEnableValidationLayers) noexcept {
     // Sanity checks
     ASSERT(!mVkInstance);
-    ASSERT(mpSdlWindow);
 
     // Fill out this struct with details about our app:
     VkApplicationInfo appInfo = {};
@@ -188,6 +187,7 @@ bool VulkanInstance::createVkInstance(const bool bEnableValidationLayers) noexce
     std::vector<const char*> reqExtNames;
 
     {
+        // Note: the SDL window CAN be null here if we are making a headless Vulkan instance not associated with any SDL Window.
         unsigned int reqExtCount = {};
         SDL_Vulkan_GetInstanceExtensions(mpSdlWindow, &reqExtCount, nullptr);
         reqExtNames.resize(reqExtCount);

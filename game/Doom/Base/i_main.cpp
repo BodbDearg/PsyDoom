@@ -553,7 +553,7 @@ void I_DrawPresent() noexcept {
 
     // PsyDoom: copy the PSX framebuffer to the display
     #if PSYDOOM_MODS
-        Video::displayPsxFramebuffer();
+        Video::displayFramebuffer();
     #endif
 
     // How many vblanks there are in a demo tick
