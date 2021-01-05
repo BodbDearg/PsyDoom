@@ -99,7 +99,7 @@ def run_demo(psydoom_path, cue_file_path, demos_dir, demo_and_result):
         sys.exit(1)
 
 # High level script logic
-def main():    
+def main():
     # Verify program args
     if len(sys.argv) != 4:
         print("Usage: python run_demo_tests.py <demoset|all> <psydoom_path> <demos_dir>")
