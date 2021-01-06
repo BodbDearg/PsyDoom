@@ -126,8 +126,8 @@ TransferMgr::StagingBuffer TransferMgr::allocTempStagingBuffer(const uint32_t nu
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Executes the pre-frame transfer task by recording it into a command buffer for the current
-// ringbuffer index and submitting to the GPU. Returns true if the task successfully executed.
+// Executes the pre-frame transfer task by recording it into a command buffer for the current ringbuffer index and submitting to the GPU.
+// Returns true if the task successfully executed.
 //
 // Notes:
 //  (1) This should only be called ONCE per frame.

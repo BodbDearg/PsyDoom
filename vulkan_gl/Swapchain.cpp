@@ -383,7 +383,7 @@ bool Swapchain::createSwapchain() noexcept {
     createInfo.imageColorSpace = mSurfaceFormat.colorSpace;
     createInfo.imageExtent = { mSwapExtentW, mSwapExtentH };
     createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;      // Transfer destination so we can blit
     createInfo.preTransform =  vkSurfaceCaps.currentTransform;
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     createInfo.presentMode = mPresentMode;
@@ -393,14 +393,13 @@ bool Swapchain::createSwapchain() noexcept {
     // Specify how the images in the swap chain are shared across different queues.
     // If the present and work queue are the same then use the exclusive mode, which offers better performance.
     // Otherwise, Vulkan needs to synchronize access to the images...
+    const uint32_t queueIndices[] = { mpDevice->getPresentationQueueFamilyIdx(), mpDevice->getWorkQueueFamilyIdx() };
+
     if (mpDevice->getPresentationQueue() == mpDevice->getWorkQueue()) {
-        const uint32_t queueIndices[] = { mpDevice->getPresentationQueueFamilyIdx() };
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.queueFamilyIndexCount = 1;
         createInfo.pQueueFamilyIndices = queueIndices;
-    }
-    else {
-        const uint32_t queueIndices[] = { mpDevice->getPresentationQueueFamilyIdx(), mpDevice->getWorkQueueFamilyIdx() };
+    } else {   
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
         createInfo.pQueueFamilyIndices = queueIndices;

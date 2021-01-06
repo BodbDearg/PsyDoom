@@ -5,6 +5,7 @@
 #include "Asserts.h"
 #include "PhysicalDeviceSelection.h"
 #include "VkFuncs.h"
+#include "Vulkan.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
@@ -63,24 +64,29 @@ uint32_t VideoBackend_Vulkan::getSdlWindowCreateFlags() noexcept {
 // Initializes the SDL renderer used by this backend
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VideoBackend_Vulkan::initRenderers(SDL_Window* const pSdlWindow) noexcept {
+    // Save the SDL window for later use
     ASSERT(pSdlWindow);
     mpSdlWindow = pSdlWindow;
 
-    // TODO...
+    // Initialize the game's Vulkan module and begin a frame
+    Vulkan::init();
+    Vulkan::beginFrame();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cleans up and destroys the SDL renderer used by this video backend
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VideoBackend_Vulkan::destroyRenderers() noexcept {
+    Vulkan::destroy();
     mpSdlWindow = nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Copies the output from the classic renderer (PSX framebuffer) to an SDL texture and then blits that to the screen.
+// Displays the output from the Vulkan based renderer (classic, or new) to the screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VideoBackend_Vulkan::displayFramebuffer() noexcept {
-    // TODO...
+    Vulkan::endFrame();
+    Vulkan::beginFrame();
 }
 
 END_NAMESPACE(Video)

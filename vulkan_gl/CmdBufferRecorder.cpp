@@ -194,6 +194,63 @@ void CmdBufferRecorder::setScissors(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Recorded command: clear an image outside of a renderpass
+//------------------------------------------------------------------------------------------------------------------------------------------
+void CmdBufferRecorder::clearColorImage(
+    const VkImage image,
+    const VkImageLayout imageLayout,
+    const VkClearColorValue* const pColor,
+    const uint32_t rangeCount,
+    const VkImageSubresourceRange* const pRanges
+) noexcept {
+    ASSERT(isRecording());
+    mVkFuncs.vkCmdClearColorImage(mVkCommandBuffer, image, imageLayout, pColor, rangeCount, pRanges);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Recorded command: blit image to image outside of a renderpass
+//------------------------------------------------------------------------------------------------------------------------------------------
+void CmdBufferRecorder::blitImage(
+    const VkImage srcImage,
+    const VkImageLayout srcImageLayout,
+    const VkImage dstImage,
+    const VkImageLayout dstImageLayout,
+    const uint32_t regionCount,
+    const VkImageBlit* const pRegions,
+    const VkFilter filter
+) noexcept {
+    ASSERT(isRecording());
+    mVkFuncs.vkCmdBlitImage(mVkCommandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions, filter);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Recorded command: insert a pipeline barrier to define execution or memory dependencies (or both)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void CmdBufferRecorder::addPipelineBarrier(
+    const VkPipelineStageFlags srcStageMask,
+    const VkPipelineStageFlags dstStageMask,
+    const uint32_t memoryBarrierCount,
+    const VkMemoryBarrier* const pMemoryBarriers,
+    const uint32_t imageMemoryBarrierCount,
+    const VkImageMemoryBarrier* const pImageMemoryBarriers
+) noexcept {
+    ASSERT(isRecording());
+
+    mVkFuncs.vkCmdPipelineBarrier(
+        mVkCommandBuffer,
+        srcStageMask,
+        dstStageMask,
+        VkDependencyFlags{},    // Don't care about these: just do global barriers and don't make it local to a view or other such things...
+        memoryBarrierCount,
+        pMemoryBarriers,
+        0,                      // Buffer memory barriers: ignore, not very well supported from what I've read; just use global barriers instead.
+        nullptr,
+        imageMemoryBarrierCount,
+        pImageMemoryBarriers
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Recorded command: bind a pipeline
 //------------------------------------------------------------------------------------------------------------------------------------------
 void CmdBufferRecorder::bindPipeline(const Pipeline& pipeline) noexcept {

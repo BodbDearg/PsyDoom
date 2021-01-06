@@ -43,6 +43,24 @@ static void loadInstanceFunc(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Load a single Vulkan device level function
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class DstFuncT>
+static void loadDeviceFunc(
+    DstFuncT& dstFunc,
+    const char* const funcName,
+    const VkDevice vkDevice,
+    const PFN_vkGetDeviceProcAddr getDeviceProcAddr,
+    bool bOptional
+) noexcept {
+    dstFunc = (DstFuncT) getDeviceProcAddr(vkDevice, funcName);
+
+    if ((!dstFunc) && (!bOptional)) {
+        FatalErrors::raiseF("Failed to retrieve the required Vulkan function '%s'!\nRequired Vulkan functionality missing!", funcName);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Load functions not associated with any Vulkan API instance
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VkFuncs::loadGlobalFuncs() noexcept {
@@ -85,18 +103,14 @@ void VkFuncs::loadInstanceFuncs(const VkInstance vkInstance) noexcept {
             loadInstanceFunc(NAME, #NAME, vkInstance, vkGetInstanceProcAddr, true);\
         } while (0)
 
-    LOAD_INST_FUNC(vkAcquireNextImageKHR);
-    LOAD_INST_FUNC(vkAllocateCommandBuffers);
-    LOAD_INST_FUNC(vkAllocateDescriptorSets);
-    LOAD_INST_FUNC(vkAllocateMemory);
     LOAD_INST_FUNC(vkBeginCommandBuffer);
-    LOAD_INST_FUNC(vkBindBufferMemory);
-    LOAD_INST_FUNC(vkBindImageMemory);
     LOAD_INST_FUNC(vkCmdBeginRenderPass);
     LOAD_INST_FUNC(vkCmdBindDescriptorSets);
     LOAD_INST_FUNC(vkCmdBindIndexBuffer);
     LOAD_INST_FUNC(vkCmdBindPipeline);
     LOAD_INST_FUNC(vkCmdBindVertexBuffers);
+    LOAD_INST_FUNC(vkCmdBlitImage);
+    LOAD_INST_FUNC(vkCmdClearColorImage);
     LOAD_INST_FUNC(vkCmdCopyBuffer);
     LOAD_INST_FUNC(vkCmdCopyBufferToImage);
     LOAD_INST_FUNC(vkCmdCopyImage);
@@ -110,52 +124,14 @@ void VkFuncs::loadInstanceFuncs(const VkInstance vkInstance) noexcept {
     LOAD_INST_FUNC(vkCmdPushConstants);
     LOAD_INST_FUNC(vkCmdSetScissor);
     LOAD_INST_FUNC(vkCmdSetViewport);
-    LOAD_INST_FUNC(vkCreateBuffer);
-    LOAD_INST_FUNC(vkCreateCommandPool);
-    LOAD_INST_FUNC(vkCreateComputePipelines);
-    LOAD_INST_FUNC(vkCreateDescriptorPool);
-    LOAD_INST_FUNC(vkCreateDescriptorSetLayout);
     LOAD_INST_FUNC(vkCreateDevice);
-    LOAD_INST_FUNC(vkCreateFence);
-    LOAD_INST_FUNC(vkCreateFramebuffer);
-    LOAD_INST_FUNC(vkCreateGraphicsPipelines);
-    LOAD_INST_FUNC(vkCreateImage);
-    LOAD_INST_FUNC(vkCreateImageView);
-    LOAD_INST_FUNC(vkCreatePipelineLayout);
-    LOAD_INST_FUNC(vkCreateRenderPass);
-    LOAD_INST_FUNC(vkCreateSampler);
-    LOAD_INST_FUNC(vkCreateSemaphore);
-    LOAD_INST_FUNC(vkCreateShaderModule);
-    LOAD_INST_FUNC(vkCreateSwapchainKHR);
-    LOAD_INST_FUNC(vkDestroyBuffer);
-    LOAD_INST_FUNC(vkDestroyCommandPool);
-    LOAD_INST_FUNC(vkDestroyDescriptorPool);
-    LOAD_INST_FUNC(vkDestroyDescriptorSetLayout);
     LOAD_INST_FUNC(vkDestroyDevice);
-    LOAD_INST_FUNC(vkDestroyFence);
-    LOAD_INST_FUNC(vkDestroyFramebuffer);
-    LOAD_INST_FUNC(vkDestroyImage);
-    LOAD_INST_FUNC(vkDestroyImageView);
     LOAD_INST_FUNC(vkDestroyInstance);
-    LOAD_INST_FUNC(vkDestroyPipeline);
-    LOAD_INST_FUNC(vkDestroyPipelineLayout);
-    LOAD_INST_FUNC(vkDestroyRenderPass);
-    LOAD_INST_FUNC(vkDestroySampler);
-    LOAD_INST_FUNC(vkDestroySemaphore);
-    LOAD_INST_FUNC(vkDestroyShaderModule);
     LOAD_INST_FUNC(vkDestroySurfaceKHR);
-    LOAD_INST_FUNC(vkDestroySwapchainKHR);
-    LOAD_INST_FUNC(vkDeviceWaitIdle);
     LOAD_INST_FUNC(vkEndCommandBuffer);
     LOAD_INST_FUNC(vkEnumerateDeviceExtensionProperties);
     LOAD_INST_FUNC(vkEnumeratePhysicalDevices);
-    LOAD_INST_FUNC(vkFreeCommandBuffers);
-    LOAD_INST_FUNC(vkFreeDescriptorSets);
-    LOAD_INST_FUNC(vkFreeMemory);
-    LOAD_INST_FUNC(vkGetBufferMemoryRequirements);
-    LOAD_INST_FUNC(vkGetDeviceQueue);
-    LOAD_INST_FUNC(vkGetFenceStatus);
-    LOAD_INST_FUNC(vkGetImageMemoryRequirements);
+    LOAD_INST_FUNC(vkGetDeviceProcAddr);
     LOAD_INST_FUNC(vkGetPhysicalDeviceFeatures);
     LOAD_INST_FUNC(vkGetPhysicalDeviceFormatProperties);
     LOAD_INST_FUNC(vkGetPhysicalDeviceMemoryProperties);
@@ -165,17 +141,6 @@ void VkFuncs::loadInstanceFuncs(const VkInstance vkInstance) noexcept {
     LOAD_INST_FUNC(vkGetPhysicalDeviceSurfaceFormatsKHR);
     LOAD_INST_FUNC(vkGetPhysicalDeviceSurfacePresentModesKHR);
     LOAD_INST_FUNC(vkGetPhysicalDeviceSurfaceSupportKHR);
-    LOAD_INST_FUNC(vkGetSwapchainImagesKHR);
-    LOAD_INST_FUNC(vkMapMemory);
-    LOAD_INST_FUNC(vkQueuePresentKHR);
-    LOAD_INST_FUNC(vkQueueSubmit);
-    LOAD_INST_FUNC(vkQueueWaitIdle);
-    LOAD_INST_FUNC(vkResetCommandPool);
-    LOAD_INST_FUNC(vkResetFences);
-    LOAD_INST_FUNC(vkUnmapMemory);
-    LOAD_INST_FUNC(vkUpdateDescriptorSets);
-    LOAD_INST_FUNC(vkWaitForFences);
-    // TODO: use 'vkGetDeviceProcAddr' to load whichever of these we can
 
     LOAD_OPT_INST_FUNC(vkCreateDebugReportCallbackEXT);
     LOAD_OPT_INST_FUNC(vkCreateDebugUtilsMessengerEXT);
@@ -183,6 +148,79 @@ void VkFuncs::loadInstanceFuncs(const VkInstance vkInstance) noexcept {
     LOAD_OPT_INST_FUNC(vkDestroyDebugUtilsMessengerEXT);
 
     #undef LOAD_INST_FUNC
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load device level functions for the given Vulkan logical device.
+// Note: assumes global and instance level functions have already been loaded.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VkFuncs::loadDeviceFuncs(const VkDevice vkDevice) noexcept {
+    // Must have loaded this function by loading all instance functions first!
+    ASSERT(vkGetDeviceProcAddr);
+
+    // Load all of the functions
+    #define LOAD_DEV_FUNC(NAME)\
+        do {\
+            loadDeviceFunc(NAME, #NAME, vkDevice, vkGetDeviceProcAddr, false);\
+        } while (0)
+
+    LOAD_DEV_FUNC(vkAcquireNextImageKHR);
+    LOAD_DEV_FUNC(vkAllocateCommandBuffers);
+    LOAD_DEV_FUNC(vkAllocateDescriptorSets);
+    LOAD_DEV_FUNC(vkAllocateMemory);
+    LOAD_DEV_FUNC(vkBindBufferMemory);
+    LOAD_DEV_FUNC(vkBindImageMemory);
+    LOAD_DEV_FUNC(vkCreateBuffer);
+    LOAD_DEV_FUNC(vkCreateCommandPool);
+    LOAD_DEV_FUNC(vkCreateComputePipelines);
+    LOAD_DEV_FUNC(vkCreateDescriptorPool);
+    LOAD_DEV_FUNC(vkCreateDescriptorSetLayout);
+    LOAD_DEV_FUNC(vkCreateFence);
+    LOAD_DEV_FUNC(vkCreateFramebuffer);
+    LOAD_DEV_FUNC(vkCreateGraphicsPipelines);
+    LOAD_DEV_FUNC(vkCreateImage);
+    LOAD_DEV_FUNC(vkCreateImageView);
+    LOAD_DEV_FUNC(vkCreatePipelineLayout);
+    LOAD_DEV_FUNC(vkCreateRenderPass);
+    LOAD_DEV_FUNC(vkCreateSampler);
+    LOAD_DEV_FUNC(vkCreateSemaphore);
+    LOAD_DEV_FUNC(vkCreateShaderModule);
+    LOAD_DEV_FUNC(vkCreateSwapchainKHR);
+    LOAD_DEV_FUNC(vkDestroyBuffer);
+    LOAD_DEV_FUNC(vkDestroyCommandPool);
+    LOAD_DEV_FUNC(vkDestroyDescriptorPool);
+    LOAD_DEV_FUNC(vkDestroyDescriptorSetLayout);
+    LOAD_DEV_FUNC(vkDestroyFence);
+    LOAD_DEV_FUNC(vkDestroyFramebuffer);
+    LOAD_DEV_FUNC(vkDestroyImage);
+    LOAD_DEV_FUNC(vkDestroyImageView);
+    LOAD_DEV_FUNC(vkDestroyPipeline);
+    LOAD_DEV_FUNC(vkDestroyPipelineLayout);
+    LOAD_DEV_FUNC(vkDestroyRenderPass);
+    LOAD_DEV_FUNC(vkDestroySampler);
+    LOAD_DEV_FUNC(vkDestroySemaphore);
+    LOAD_DEV_FUNC(vkDestroyShaderModule);
+    LOAD_DEV_FUNC(vkDestroySwapchainKHR);
+    LOAD_DEV_FUNC(vkDeviceWaitIdle);
+    LOAD_DEV_FUNC(vkFreeCommandBuffers);
+    LOAD_DEV_FUNC(vkFreeDescriptorSets);
+    LOAD_DEV_FUNC(vkFreeMemory);
+    LOAD_DEV_FUNC(vkGetBufferMemoryRequirements);
+    LOAD_DEV_FUNC(vkGetDeviceQueue);
+    LOAD_DEV_FUNC(vkGetFenceStatus);
+    LOAD_DEV_FUNC(vkGetImageMemoryRequirements);
+    LOAD_DEV_FUNC(vkGetSwapchainImagesKHR);
+    LOAD_DEV_FUNC(vkMapMemory);
+    LOAD_DEV_FUNC(vkQueuePresentKHR);
+    LOAD_DEV_FUNC(vkQueueSubmit);
+    LOAD_DEV_FUNC(vkQueueWaitIdle);
+    LOAD_DEV_FUNC(vkResetCommandPool);
+    LOAD_DEV_FUNC(vkResetFences);
+    LOAD_DEV_FUNC(vkUnmapMemory);
+    LOAD_DEV_FUNC(vkUpdateDescriptorSets);
+    LOAD_DEV_FUNC(vkWaitForFences);
+
+    #undef LOAD_DEV_FUNC
 }
 
 END_NAMESPACE(vgl)

@@ -48,9 +48,6 @@ public:
     inline RetirementMgr& getRetirementMgr() noexcept { return mRetirementMgr; }
     inline ScreenFramebufferMgr& getScreenFramebufferMgr() noexcept { return mScreenFramebufferMgr; }
     inline TransferMgr& getTransferMgr() noexcept { return mTransferMgr; }
-
-    // TODO: This is probably something that should NOT live on the device since management of command pools is application side logic.
-    // A single command pool also prevents us from doing multi-threaded command buffer recording.
     inline CmdPool& getCmdPool() noexcept { return mCmdPool; }
     
     bool submitCmdBuffer(
@@ -79,29 +76,23 @@ private:
         const uint32_t numQueueCreateInfos
     ) noexcept;
     
-    VkFuncs&                    mVkFuncs;                       // Pointers to Vulkan API functions
-    bool                        mbIsValid;                      // True if the logical device was created & initialized successfully
-    bool                        mbIsHeadless;                   // If true we are not presenting to a window surface, the device is in 'headless' mode
-    VulkanInstance*             mpVulkanInstance;               // Vulkan API instance used by the device
-    const PhysicalDevice*       mpPhysicalDevice;               // The physical Vulkan device this logical device is based on
-    const WindowSurface*        mpWindowSurface;                // The window surface to use for the logical device
-    VkDevice                    mVkDevice;                      // The Vulkan handle for the logical device
-    uint32_t                    mWorkQueueFamilyIdx;            // The index of the queue family that supports graphics + compute + transfer operations
-    VkQueue                     mWorkQueue;                     // Handle to the queue that supports graphics + compute + transfer operations
-    uint32_t                    mPresentationQueueFamilyIdx;    // The index of the queue family the presentation queue belongs to
-    VkQueue                     mPresentationQueue;             // Handle to the presentation queue for the device
-
-    // Command pool used to create the command buffers for the work queue.
-    //
-    // TODO: This is probably something that should NOT live on the device since management of command pools is application side logic.
-    // A single command pool also prevents us from doing multi-threaded command buffer recording.
-    CmdPool mCmdPool;
-
-    DeviceMemMgr            mDeviceMemMgr;              // Used for allocating Vulkan device memory
-    RingbufferMgr           mRingbufferMgr;             // Keeps track of which ringbuffer we are on and holds sync primitives for ringbuffers
-    RetirementMgr           mRetirementMgr;             // Manages the retirement of resources that may be in used by currently processing frames
-    ScreenFramebufferMgr    mScreenFramebufferMgr;      // Manages the creation, presentation and tracking of screen framebuffers
-    TransferMgr             mTransferMgr;               // Used for managing transfers to GPU memory
+    VkFuncs&                mVkFuncs;                       // Pointers to Vulkan API functions
+    bool                    mbIsValid;                      // True if the logical device was created & initialized successfully
+    bool                    mbIsHeadless;                   // If true we are not presenting to a window surface, the device is in 'headless' mode
+    VulkanInstance*         mpVulkanInstance;               // Vulkan API instance used by the device
+    const PhysicalDevice*   mpPhysicalDevice;               // The physical Vulkan device this logical device is based on
+    const WindowSurface*    mpWindowSurface;                // The window surface to use for the logical device
+    VkDevice                mVkDevice;                      // The Vulkan handle for the logical device
+    uint32_t                mWorkQueueFamilyIdx;            // The index of the queue family that supports graphics + compute + transfer operations
+    VkQueue                 mWorkQueue;                     // Handle to the queue that supports graphics + compute + transfer operations
+    uint32_t                mPresentationQueueFamilyIdx;    // The index of the queue family the presentation queue belongs to
+    VkQueue                 mPresentationQueue;             // Handle to the presentation queue for the device
+    CmdPool                 mCmdPool;                       // A command pool used by the transfer manager and possibly application code too
+    DeviceMemMgr            mDeviceMemMgr;                  // Used for allocating Vulkan device memory
+    RingbufferMgr           mRingbufferMgr;                 // Keeps track of which ringbuffer we are on and holds sync primitives for ringbuffers
+    RetirementMgr           mRetirementMgr;                 // Manages the retirement of resources that may be in used by currently processing frames
+    ScreenFramebufferMgr    mScreenFramebufferMgr;          // Manages the creation, presentation and tracking of screen framebuffers
+    TransferMgr             mTransferMgr;                   // Used for managing transfers to GPU memory
 
     // Temporary buffers used during command buffer submit.
     // These are re-used for each submit.

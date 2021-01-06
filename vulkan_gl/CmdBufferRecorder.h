@@ -71,6 +71,33 @@ public:
         const uint32_t scissorsRectW,
         const uint32_t scissorsRectH
     ) noexcept;
+
+    void clearColorImage(
+        const VkImage image,
+        const VkImageLayout imageLayout,
+        const VkClearColorValue* const pColor,
+        const uint32_t rangeCount,
+        const VkImageSubresourceRange* const pRanges
+    ) noexcept;
+
+    void blitImage(
+        const VkImage srcImage,
+        const VkImageLayout srcImageLayout,
+        const VkImage dstImage,
+        const VkImageLayout dstImageLayout,
+        const uint32_t regionCount,
+        const VkImageBlit* const pRegions,
+        const VkFilter filter
+    ) noexcept;
+
+    void addPipelineBarrier(
+        const VkPipelineStageFlags srcStageMask,
+        const VkPipelineStageFlags dstStageMask,
+        const uint32_t memoryBarrierCount,
+        const VkMemoryBarrier* const pMemoryBarriers,
+        const uint32_t imageMemoryBarrierCount,
+        const VkImageMemoryBarrier* const pImageMemoryBarriers
+    ) noexcept;
     
     void bindPipeline(const Pipeline& pipeline) noexcept;
     void bindVertexBuffer(const Buffer& buffer, const uint32_t bindingIndex, const uint64_t offset) noexcept;

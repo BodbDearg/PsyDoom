@@ -20,6 +20,8 @@ Framebuffer::Framebuffer() noexcept
     , mHeight()
     , mpDevice(nullptr)
     , mVkFramebuffer(VK_NULL_HANDLE)
+    , mAttachmentImages()
+    , mAttachmentImageViews()
 {
 }
 
@@ -32,6 +34,8 @@ Framebuffer::Framebuffer(Framebuffer&& other) noexcept
     , mHeight(other.mHeight)
     , mpDevice(other.mpDevice)
     , mVkFramebuffer(other.mVkFramebuffer)
+    , mAttachmentImages(std::move(other.mAttachmentImages))
+    , mAttachmentImageViews(std::move(other.mAttachmentImageViews))
 {
     other.mbIsValid = false;
     other.mWidth = {};
@@ -65,22 +69,26 @@ bool Framebuffer::init(
     // Get the swap extent since this determines the framebuffer width and height.
     // Expect all attachments to match this size!
     const uint32_t fbWidth = swapchain.getSwapExtentWidth();
-    const uint32_t fbHeight = swapchain.getSwapExtentWidth();
+    const uint32_t fbHeight = swapchain.getSwapExtentHeight();
 
     // Initialize with all these attachment image views
-    std::vector<VkImageView> attachmentVkImageViews;
-    attachmentVkImageViews.reserve(1 + otherAttachments.size());
-    attachmentVkImageViews.push_back(swapchain.getVkImageViews()[swapchainImageIdx]);
+    const uint32_t numAttachments = 1 + (uint32_t) otherAttachments.size();
+
+    mAttachmentImages.reserve(numAttachments);
+    mAttachmentImageViews.reserve(numAttachments);
+    mAttachmentImages.push_back(swapchain.getVkImages()[swapchainImageIdx]);
+    mAttachmentImageViews.push_back(swapchain.getVkImageViews()[swapchainImageIdx]);
 
     for (const BaseTexture* attachment : otherAttachments) {
         ASSERT(attachment->isValid());
         ASSERT(attachment->getWidth() == fbWidth);
         ASSERT(attachment->getHeight() == fbHeight);
 
-        attachmentVkImageViews.push_back(attachment->getVkImageView());
+        mAttachmentImages.push_back(attachment->getVkImage());
+        mAttachmentImageViews.push_back(attachment->getVkImageView());
     }
 
-    return initInternal(renderPass, fbWidth, fbHeight, attachmentVkImageViews);
+    return initInternal(renderPass, fbWidth, fbHeight);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,18 +109,21 @@ bool Framebuffer::init(
     const uint32_t fbHeight = attachment0.getHeight();
 
     // Initialize with all these attachment image views
-    std::vector<VkImageView> attachmentVkImageViews;
-    attachmentVkImageViews.reserve(attachments.size());
+    const uint32_t numAttachments = (uint32_t) attachments.size();
+
+    mAttachmentImages.reserve(numAttachments);
+    mAttachmentImageViews.reserve(numAttachments);
 
     for (const BaseTexture* attachment : attachments) {
         ASSERT(attachment->isValid());
         ASSERT(attachment->getWidth() == fbWidth);
         ASSERT(attachment->getHeight() == fbHeight);
 
-        attachmentVkImageViews.push_back(attachment->getVkImageView());
+        mAttachmentImages.push_back(attachment->getVkImage());
+        mAttachmentImageViews.push_back(attachment->getVkImageView());
     }
 
-    return initInternal(renderPass, fbWidth, fbHeight, attachmentVkImageViews);
+    return initInternal(renderPass, fbWidth, fbHeight);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -134,6 +145,8 @@ void Framebuffer::destroy(const bool bImmediately, const bool bForceIfInvalid) n
 
     // Regular destruction logic:
     mbIsValid = false;
+    mAttachmentImages.clear();
+    mAttachmentImageViews.clear();
 
     if (mVkFramebuffer) {
         ASSERT(mpDevice);
@@ -153,8 +166,7 @@ void Framebuffer::destroy(const bool bImmediately, const bool bForceIfInvalid) n
 bool Framebuffer::initInternal(
     const BaseRenderPass& renderPass,
     const uint32_t fbWidth,
-    const uint32_t fbHeight,
-    const std::vector<VkImageView>& attachments
+    const uint32_t fbHeight
 ) noexcept {
     // Preconditions
     ASSERT_LOG((!mbIsValid), "Must call destroy() before re-initializing!");
@@ -162,7 +174,9 @@ bool Framebuffer::initInternal(
     ASSERT(renderPass.getDevice()->getVkDevice());
     ASSERT(fbWidth > 0);
     ASSERT(fbHeight > 0);
-    ASSERT(attachments.size() > 0);
+    ASSERT(mAttachmentImages.size() > 0);
+    ASSERT(mAttachmentImageViews.size() > 0);
+    ASSERT(mAttachmentImages.size() == mAttachmentImageViews.size());
 
     // If anything goes wrong, cleanup on exit - don't half initialize!
     auto cleanupOnError = finally([&]{
@@ -181,8 +195,8 @@ bool Framebuffer::initInternal(
     VkFramebufferCreateInfo fbCreateInfo = {};
     fbCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     fbCreateInfo.renderPass = renderPass.getVkRenderPass();
-    fbCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-    fbCreateInfo.pAttachments = attachments.data();
+    fbCreateInfo.attachmentCount = static_cast<uint32_t>(mAttachmentImages.size());
+    fbCreateInfo.pAttachments = mAttachmentImageViews.data();
     fbCreateInfo.width = fbWidth;
     fbCreateInfo.height = fbHeight;
     fbCreateInfo.layers = 1;

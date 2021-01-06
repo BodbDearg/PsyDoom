@@ -325,19 +325,27 @@ bool LogicalDevice::createDeviceAndQueues() noexcept {
 
     // Create the device itself using all of these settings
     {
+        // Note: need the swapchain extension for creating the swapchain
+        const char* const DEVICE_EXTENSIONS[] = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
+
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.pQueueCreateInfos = requiredQueueCreateInfos;
         createInfo.queueCreateInfoCount = numQueuesToCreate;
         createInfo.pEnabledFeatures = &deviceFeatures;
-        createInfo.ppEnabledExtensionNames = nullptr;
-        createInfo.enabledExtensionCount = 0;
+        createInfo.ppEnabledExtensionNames = DEVICE_EXTENSIONS;
+        createInfo.enabledExtensionCount = C_ARRAY_SIZE(DEVICE_EXTENSIONS);
 
         if (mVkFuncs.vkCreateDevice(mpPhysicalDevice->getVkPhysicalDevice(), &createInfo, nullptr, &mVkDevice) != VK_SUCCESS) {
             ASSERT_FAIL("Failed to create a logical device!");
             return false;
         }
     }
+
+    // Load device level functions
+    mVkFuncs.loadDeviceFuncs(mVkDevice);
 
     // Get the handle to all the queues created with the device
     if (!gatherCreatedQueueHandles(requiredQueueCreateInfos, numQueuesToCreate))

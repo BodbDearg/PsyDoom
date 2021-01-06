@@ -22,7 +22,7 @@ public:
     Framebuffer() noexcept;
     Framebuffer(Framebuffer&& other) noexcept;
     ~Framebuffer() noexcept;
-
+    
     bool init(
         const BaseRenderPass& renderPass,
         const Swapchain& swapchain,
@@ -42,6 +42,8 @@ public:
     inline uint32_t getHeight() const noexcept { return mHeight; }
     inline LogicalDevice* getDevice() const noexcept { return mpDevice; }
     inline VkFramebuffer getVkFramebuffer() const noexcept { return mVkFramebuffer; }
+    inline const std::vector<VkImage> getAttachmentImages() const noexcept { return mAttachmentImages; }
+    inline const std::vector<VkImageView> getAttachmentImageViews() const noexcept { return mAttachmentImageViews; }
     
 private:
     // Copy and move assign disallowed
@@ -52,15 +54,16 @@ private:
     bool initInternal(
         const BaseRenderPass& renderPass,
         const uint32_t fbWidth,
-        const uint32_t fbHeight,
-        const std::vector<VkImageView>& attachments
+        const uint32_t fbHeight
     ) noexcept;
 
-    bool            mbIsValid;
-    uint32_t        mWidth;
-    uint32_t        mHeight;
-    LogicalDevice*  mpDevice;
-    VkFramebuffer   mVkFramebuffer;
+    bool                        mbIsValid;
+    uint32_t                    mWidth;
+    uint32_t                    mHeight;
+    LogicalDevice*              mpDevice;
+    VkFramebuffer               mVkFramebuffer;
+    std::vector<VkImage>        mAttachmentImages;
+    std::vector<VkImageView>    mAttachmentImageViews;
 };
 
 END_NAMESPACE(vgl)

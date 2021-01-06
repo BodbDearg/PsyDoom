@@ -291,7 +291,7 @@ bool BaseTexture::createImageMemBuffer(const DeviceMemAllocMode deviceMemAllocMo
         return false;
 
     // Okay, now that we have the buffer bind it to the image
-    if (!vkFuncs.vkBindImageMemory(vkDevice, mVkImage, mDeviceMemAlloc.vkDeviceMemory, mDeviceMemAlloc.offset) != VK_SUCCESS) {
+    if (vkFuncs.vkBindImageMemory(vkDevice, mVkImage, mDeviceMemAlloc.vkDeviceMemory, mDeviceMemAlloc.offset) != VK_SUCCESS) {
         ASSERT_FAIL("Failed to associate the Vulkan image with it's allocated memory!");
         return false;
     }

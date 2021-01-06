@@ -219,10 +219,18 @@ void ScreenFramebufferMgr::destroyFramebuffers() noexcept {
         mpDevice->waitUntilDeviceIdle();
     }
 
-    // Destroy everything!
+    // Destroy everything and do it immediately
+    for (Framebuffer& framebuffer : mPresentFramebuffers) {
+        framebuffer.destroy(true);
+    }
+
+    for (Framebuffer& framebuffer : mDrawFramebuffers) {
+        framebuffer.destroy(true);
+    }
+
     mPresentFramebuffers.clear();
     mDrawFramebuffers.clear();
-    mDepthStencilBuffer.destroy();
+    mDepthStencilBuffer.destroy(true);
     mSwapchain.destroy();
 
     // Note that since we destroyed all framebuffers and finished all rendering ops we can
