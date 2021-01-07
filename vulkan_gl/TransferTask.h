@@ -51,7 +51,21 @@ private:
         const uint64_t numBytes
     ) noexcept;
 
-    void addTextureUpload(const VkBuffer srcVkBuffer, const Texture& dstTexture) noexcept;
+    void addTextureUpload(
+        const VkBuffer srcVkBuffer,
+        const Texture& dstTexture,
+        const VkImageLayout dstOldVkImageLayout,
+        const uint64_t srcBufferOffset,
+        const uint32_t dstOffsetX,
+        const uint32_t dstOffsetY,
+        const uint32_t dstOffsetZ,
+        const uint32_t dstStartLayer,
+        const uint32_t dstSizeX,
+        const uint32_t dstSizeY,
+        const uint32_t dstSizeZ,
+        const uint32_t dstNumLayers
+    ) noexcept;
+
     void addRenderTextureDownload(RenderTexture& src, MutableTexture& dst) noexcept;
 
     // The list of transfer commands to execute

@@ -61,7 +61,7 @@ static void beginFrame_Psx() noexcept {
 
     // Transition the swapchain framebuffer to transfer destination optimal in preparation for blitting
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    const VkImage framebufferImage = gDevice.getScreenFramebufferMgr().getCurrentDrawFramebuffer().getAttachmentImages()[0];
+    const VkImage fbImage = gDevice.getScreenFramebufferMgr().getCurrentDrawFramebuffer().getAttachmentImages()[0];
 
     {
         VkImageMemoryBarrier imgBarrier = {};
@@ -70,7 +70,7 @@ static void beginFrame_Psx() noexcept {
         imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
         imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        imgBarrier.image = framebufferImage;
+        imgBarrier.image = fbImage;
         imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         imgBarrier.subresourceRange.levelCount = 1;
         imgBarrier.subresourceRange.layerCount = 1;
@@ -87,13 +87,13 @@ static void beginFrame_Psx() noexcept {
 
     // Transition the PSX framebuffer to general in preparation for writing
     {
-        vgl::MutableTexture& fbTexture = gPsxFramebufferTextures[ringbufferIdx];
+        vgl::MutableTexture& psxFbTexture = gPsxFramebufferTextures[ringbufferIdx];
 
         VkImageMemoryBarrier imgBarrier = {};
         imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imgBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-        imgBarrier.image = fbTexture.getVkImage();
+        imgBarrier.image = psxFbTexture.getVkImage();
         imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         imgBarrier.subresourceRange.levelCount = 1;
         imgBarrier.subresourceRange.layerCount = 1;
@@ -108,7 +108,7 @@ static void beginFrame_Psx() noexcept {
         );
     }
 
-    // Clear the screen to opaque black
+    // Clear the swapchain framebuffer to opaque black
     {
         VkClearColorValue clearColor = {};
         clearColor.float32[3] = 1.0f;
@@ -118,7 +118,7 @@ static void beginFrame_Psx() noexcept {
         imageResRange.levelCount = 1;
         imageResRange.layerCount = 1;
 
-        gCmdBufferRec.clearColorImage(framebufferImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageResRange);
+        gCmdBufferRec.clearColorImage(fbImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageResRange);
     }
 }
 
@@ -129,16 +129,17 @@ static void beginFrame_Psx() noexcept {
 static void endFrame_Psx() noexcept {
     ASSERT(gpCurCmdBuffer);
 
-    // Copy the PlayStation 1 framebuffer to the current framebuffer texture, row by row
+    // Copy the PlayStation 1 framebuffer to the current framebuffer texture
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    vgl::MutableTexture& fbTexture = gPsxFramebufferTextures[ringbufferIdx];
+    vgl::MutableTexture& psxFbTexture = gPsxFramebufferTextures[ringbufferIdx];
 
     {
         Gpu::Core& gpu = PsxVm::gGpu;
         const uint16_t* pSrcRowPixels = gpu.pRam + (gpu.displayAreaX + (uintptr_t) gpu.displayAreaY * gpu.ramPixelW);
-        uint16_t* pDstRowPixels = (uint16_t*) fbTexture.getBytes();
+        uint16_t* pDstRowPixels = (uint16_t*) psxFbTexture.getBytes();
 
         for (uint32_t y = 0; y < Video::ORIG_DRAW_RES_Y; ++y) {
+            // Note: don't bother doing multiple pixels at a time - compiler is smart and already optimizes this to use SIMD
             for (uint32_t x = 0; x < Video::ORIG_DRAW_RES_X; ++x) {
                 const uint16_t srcPixel = pSrcRowPixels[x];
                 const uint16_t srcR = (srcPixel >>  0) & 0x1F;
@@ -166,7 +167,7 @@ static void endFrame_Psx() noexcept {
     Video::getClassicFramebufferWindowRect(fbWidth, fbHeight, blitDstX, blitDstY, blitDstW, blitDstH);
 
     // Blit the PSX framebuffer to the swapchain framebuffer
-    const VkImage framebufferImage = framebufferMgr.getCurrentDrawFramebuffer().getAttachmentImages()[0];
+    const VkImage fbImage = framebufferMgr.getCurrentDrawFramebuffer().getAttachmentImages()[0];
 
     {
         VkImageBlit blitRegion = {};
@@ -184,9 +185,9 @@ static void endFrame_Psx() noexcept {
         blitRegion.dstOffsets[1].z = 1;
 
         gCmdBufferRec.blitImage(
-            fbTexture.getVkImage(),
+            psxFbTexture.getVkImage(),
             VK_IMAGE_LAYOUT_GENERAL,
-            framebufferImage,
+            fbImage,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             1,
             &blitRegion,
@@ -194,7 +195,7 @@ static void endFrame_Psx() noexcept {
         );
     }
 
-    // Transition the framebuffer to presentation optimal
+    // Transition the swapchain framebuffer to presentation optimal
     {
         VkImageMemoryBarrier imgBarrier = {};
         imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -202,7 +203,7 @@ static void endFrame_Psx() noexcept {
         imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
         imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         imgBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        imgBarrier.image = framebufferImage;
+        imgBarrier.image = fbImage;
         imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         imgBarrier.subresourceRange.levelCount = 1;
         imgBarrier.subresourceRange.layerCount = 1;
@@ -264,7 +265,7 @@ void init() noexcept {
         return;
     }
 
-    // Initialize the render passes
+    // Initialize the render passes for the new renderer
     vgl::ScreenFramebufferMgr& framebufferMgr = gDevice.getScreenFramebufferMgr();
     const VkFormat colorFormat = framebufferMgr.getColorFormat();
     const VkFormat depthStencilFormat = framebufferMgr.getDepthStencilFormat();
@@ -281,9 +282,9 @@ void init() noexcept {
         cmdBuffer.init(gDevice.getCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     }
 
-    // Initialize the framebuffer textures used to old the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer
-    for (vgl::MutableTexture& fbTexture : gPsxFramebufferTextures) {
-        fbTexture.initAs2dTexture(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y);
+    // Initialize the PSX framebuffer textures used to hold the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer
+    for (vgl::MutableTexture& psxFbTex : gPsxFramebufferTextures) {
+        psxFbTex.initAs2dTexture(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y);
     }
 }
 
@@ -291,7 +292,7 @@ void init() noexcept {
 // Tears down Vulkan for PsyDoom
 //------------------------------------------------------------------------------------------------------------------------------------------
 void destroy() noexcept {
-    // Finish up the current frame if there is any
+    // Finish up the current frame if we begun it
     if (gbDidBeginFrame) {
         endFrame();
     }

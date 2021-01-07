@@ -153,6 +153,7 @@ void VideoBackend_SDL::copyPsxToSdlFramebufferTexture() noexcept {
         const uint32_t xEnd = xStart + ORIG_DRAW_RES_X;
         ASSERT(xEnd <= gpu.ramPixelW);
 
+        // Note: don't bother doing multiple pixels at a time - compiler is smart and already optimizes this to use SIMD
         for (uint32_t x = xStart; x < xEnd; ++x) {
             const uint16_t srcPixel = rowPixels[x];
             const uint32_t r = ((srcPixel >> 10) & 0x1F) << 3;

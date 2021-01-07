@@ -33,16 +33,21 @@ struct BufToBufTransCmd {
 
 // A buffer to texture transfer command
 struct BufToTexTransCmd {
-    VkBuffer    srcVkBuffer;
-    VkImage     dstVkImage;
-    uint64_t    srcOffset;
-    uint32_t    texWidth;
-    uint32_t    texHeight;
-    uint32_t    texDepth;
-    uint32_t    texNumLayers;
-    VkFormat    texFormat;
-    uint32_t    texNumMipLevels;
-    bool        bTexIsCubemap;
+    VkBuffer        srcVkBuffer;
+    VkImage         dstVkImage;
+    VkImageLayout   dstOldVkImageLayout;
+    VkFormat        texFormat;
+    uint64_t        srcBufferOffset;
+    uint32_t        dstOffsetX;
+    uint32_t        dstOffsetY;
+    uint32_t        dstOffsetZ;
+    uint32_t        dstStartLayer;
+    uint32_t        dstSizeX;
+    uint32_t        dstSizeY;
+    uint32_t        dstSizeZ;
+    uint32_t        dstNumLayers;
+    uint32_t        dstNumMipLevels;
+    bool            bTexIsCubemap;
 };
 
 // A render texture download command
@@ -91,7 +96,7 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToBufTransCmd& 
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& cmd) noexcept {
     // Buffer offset for command should be 32-bit aligned!
-    ASSERT(cmd.srcOffset % 4 == 0);
+    ASSERT(cmd.srcBufferOffset % Defines::MIN_IMAGE_ALIGNMENT == 0);
 
     // Get the queue that we use for submitting work in general to graphics device
     LogicalDevice& device = *cmdBuffer.getCmdPool()->getDevice();
@@ -100,7 +105,9 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
     // Need to insert an image barrier to get the image in a format that is optimal as a transfer destination:
     const VkCommandBuffer vkCmdBuffer = cmdBuffer.getVkCommandBuffer();
     const VkFuncs& vkFuncs = device.getVkFuncs();
-    const uint32_t numTexImages = TextureUtils::getNumTexImages(cmd.texNumLayers, cmd.bTexIsCubemap);
+
+    const uint32_t startTexImage = TextureUtils::getNumTexImages(cmd.dstStartLayer, cmd.bTexIsCubemap);
+    const uint32_t numTexImages = TextureUtils::getNumTexImages(cmd.dstNumLayers, cmd.bTexIsCubemap);
     
     {
         VkImageMemoryBarrier barrier = {};
@@ -114,10 +121,10 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
         barrier.dstQueueFamilyIndex = workQueueFamilyIdx;
         barrier.image = cmd.dstVkImage;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;    // Only dealing with color buffers and not depth
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = cmd.texNumMipLevels;          // Include all mip levels
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = numTexImages;                 // Include all layers
+        barrier.subresourceRange.baseMipLevel = 0;                          // Include all mip levels
+        barrier.subresourceRange.levelCount = cmd.dstNumMipLevels;          // Include all mip levels
+        barrier.subresourceRange.baseArrayLayer = startTexImage;
+        barrier.subresourceRange.layerCount = numTexImages;
 
         vkFuncs.vkCmdPipelineBarrier(
             vkCmdBuffer,
@@ -137,13 +144,13 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
     {
         // Use this buffer to submit the copy operations
         // TODO: preallocate this temporary buffer once and re-use
-        uint64_t bufferOffset = cmd.srcOffset;
+        uint64_t bufferOffset = cmd.srcBufferOffset;
         std::vector<VkBufferImageCopy> bufferImageCopyCmds;
         bufferImageCopyCmds.reserve(16);
 
         // Process the copy operations for every image and mipmap level in the texture
         for (uint32_t curImage = 0; curImage < numTexImages; ++curImage) {
-            for (uint32_t curMipLevel = 0; curMipLevel < cmd.texNumMipLevels; ++curMipLevel) {
+            for (uint32_t curMipLevel = 0; curMipLevel < cmd.dstNumMipLevels; ++curMipLevel) {
                 // Figure out the dimensions for this mip level.
                 // Note that we do NOT round to the nearest block size for the copy command!
                 uint32_t mipLevelWidth = 0;
@@ -151,9 +158,9 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
                 uint32_t mipLevelDepth = 0;
 
                 TextureUtils::getMipLevelDimensions(
-                    cmd.texWidth,
-                    cmd.texHeight,
-                    cmd.texDepth,
+                    cmd.dstSizeX,
+                    cmd.dstSizeY,
+                    cmd.dstSizeZ,
                     curMipLevel,
                     mipLevelWidth,
                     mipLevelHeight,
@@ -171,6 +178,11 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
                     mipLevelDepth
                 );
 
+                // Get the destination offset within this mipmap level
+                const uint32_t mipOffsetX = (cmd.dstOffsetX >> curMipLevel);
+                const uint32_t mipOffsetY = (cmd.dstOffsetY >> curMipLevel);
+                const uint32_t mipOffsetZ = (cmd.dstOffsetZ >> curMipLevel);
+
                 // Schedule the copy operation for this mip level
                 VkBufferImageCopy copyOp = {};
                 copyOp.bufferOffset = bufferOffset;
@@ -178,9 +190,9 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
                 copyOp.bufferImageHeight = 0;                                       // Tightly packed
                 copyOp.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;     // Just dealing with color buffer
                 copyOp.imageSubresource.mipLevel = curMipLevel;
-                copyOp.imageSubresource.baseArrayLayer = curImage;
+                copyOp.imageSubresource.baseArrayLayer = startTexImage + curImage;
                 copyOp.imageSubresource.layerCount = 1;
-                copyOp.imageOffset = { 0, 0, 0 };
+                copyOp.imageOffset = { (int32_t) mipOffsetX, (int32_t) mipOffsetY, (int32_t) mipOffsetZ };
                 copyOp.imageExtent = { mipLevelWidth, mipLevelHeight, mipLevelDepth };
 
                 bufferImageCopyCmds.push_back(copyOp);
@@ -215,12 +227,11 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
         barrier.srcQueueFamilyIndex = workQueueFamilyIdx;
         barrier.dstQueueFamilyIndex = workQueueFamilyIdx;
         barrier.image = cmd.dstVkImage;
-
         barrier.subresourceRange.aspectMask = VkFormatUtils::getVkImageAspectFlags(cmd.texFormat);
         barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = cmd.texNumMipLevels;  // Include all mip levels
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = numTexImages;         // Include all layers
+        barrier.subresourceRange.levelCount = cmd.dstNumMipLevels;              // Include all mip levels
+        barrier.subresourceRange.baseArrayLayer = startTexImage;
+        barrier.subresourceRange.layerCount = numTexImages;
 
         vkFuncs.vkCmdPipelineBarrier(
             vkCmdBuffer,
@@ -510,12 +521,26 @@ void TransferTask::addBufferCopy(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Schedules a texture data upload to occur from the given buffer to the given texture.
-// The entire texture data is transferred, including all the mipmap levels.
+// The specified region is uploaded, for all mipmap levels.
 //
-// The buffer is assumed to be sized large enough to accomodate all of the image data and valid as a transfer source.
-// The image is completely overwritten as part of the upload and in a shader read optimal state after completion.
+// Notes:
+//  (1) The buffer is assumed to be sized large enough to accomodate all of the image data and valid as a transfer source.
+//  (2) The image is put in a shader read optimal state after completion.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void TransferTask::addTextureUpload(const VkBuffer srcVkBuffer, const Texture& dstTexture) noexcept {
+void TransferTask::addTextureUpload(
+    const VkBuffer srcVkBuffer,
+    const Texture& dstTexture,
+    const VkImageLayout dstOldVkImageLayout,
+    const uint64_t srcBufferOffset,
+    const uint32_t dstOffsetX,
+    const uint32_t dstOffsetY,
+    const uint32_t dstOffsetZ,
+    const uint32_t dstStartLayer,
+    const uint32_t dstSizeX,
+    const uint32_t dstSizeY,
+    const uint32_t dstSizeZ,
+    const uint32_t dstNumLayers
+) noexcept {
     ASSERT(srcVkBuffer);
     ASSERT(dstTexture.isValid());
 
@@ -525,13 +550,18 @@ void TransferTask::addTextureUpload(const VkBuffer srcVkBuffer, const Texture& d
     BufToTexTransCmd& cmdDetails = cmd.bufToTexTransCmd;
     cmdDetails.srcVkBuffer = srcVkBuffer;
     cmdDetails.dstVkImage = dstTexture.getVkImage();
-    cmdDetails.srcOffset = 0;
-    cmdDetails.texWidth = dstTexture.getWidth();
-    cmdDetails.texHeight = dstTexture.getHeight();
-    cmdDetails.texDepth = dstTexture.getDepth();
-    cmdDetails.texNumLayers = dstTexture.getNumLayers();
+    cmdDetails.dstOldVkImageLayout = dstOldVkImageLayout;
     cmdDetails.texFormat = dstTexture.getFormat();
-    cmdDetails.texNumMipLevels = dstTexture.getNumMipLevels();
+    cmdDetails.srcBufferOffset = srcBufferOffset;
+    cmdDetails.dstOffsetX = dstOffsetX;
+    cmdDetails.dstOffsetY = dstOffsetY;
+    cmdDetails.dstOffsetZ = dstOffsetZ;
+    cmdDetails.dstStartLayer = dstStartLayer;
+    cmdDetails.dstSizeX = dstSizeX;
+    cmdDetails.dstSizeY = dstSizeY;
+    cmdDetails.dstSizeZ = dstSizeZ;
+    cmdDetails.dstNumLayers = dstNumLayers;
+    cmdDetails.dstNumMipLevels = dstTexture.getNumMipLevels();
     cmdDetails.bTexIsCubemap = dstTexture.isCubemap();
 }
 
