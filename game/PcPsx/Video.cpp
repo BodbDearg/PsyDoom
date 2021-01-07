@@ -13,6 +13,7 @@
 #include "VideoBackend_Vulkan.h"
 #include "VideoBackend_SDL.h"
 
+#include <algorithm>
 #include <SDL.h>
 
 BEGIN_NAMESPACE(Video)
@@ -180,6 +181,61 @@ void shutdownVideo() noexcept {
     }
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// This function determines where in the window the framebuffer for the classic PSX renderer should be output to.
+// Considers the current window size (specified in pixels) and user scaling settings.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void getClassicFramebufferWindowRect(
+    const uint32_t windowW,
+    const uint32_t windowH,
+    int32_t& rectX,
+    int32_t& rectY,
+    uint32_t& rectW,
+    uint32_t& rectH
+) noexcept {
+    //If the window size is zero then make the output rect zero also
+    if ((windowW <= 0) || (windowH <= 0)) {
+        rectX = 0;
+        rectY = 0;
+        rectW = 0;
+        rectH = 0;
+        return;
+    }
+
+    // Are we using a free aspect ratio mode, specified by using a logical display width of <= 0?
+    // If so then just stretch the output image in any way to fill the window.
+    if (Config::gLogicalDisplayW <= 0) {
+        rectX = 0;
+        rectY = 0;
+        rectW = (uint32_t) windowW;
+        rectH = (uint32_t) windowH;
+    } else {
+        // If not using a free aspect ratio then determine the scale to output at, while preserving the chosen aspect ratio.
+        // The chosen aspect ratio is determined by the user's logical display resolution width.
+        const float xScale = (float) windowW / (float) Config::gLogicalDisplayW;
+        const float yScale = (float) windowH / (float) ORIG_DISP_RES_Y;
+        const float scale = std::min(xScale, yScale);
+
+        // Determine output width and height and center the framebuffer image in the window
+        rectW = (uint32_t)((float) Config::gLogicalDisplayW * scale);
+        rectH = (uint32_t)((float) ORIG_DISP_RES_Y * scale);
+        rectX = windowW / 2 - rectW / 2;
+        rectY = windowH / 2 - rectH / 2;
+    }
+
+    // Ensure the coordinates are within screen bounds
+    rectX = std::clamp<int32_t>(rectX, 0, windowW - 1);
+    rectY = std::clamp<int32_t>(rectY, 0, windowH - 1);
+
+    if (rectX + rectW > windowW) {
+        rectW = windowW - rectX;
+    }
+
+    if (rectY + rectH > windowH) {
+        rectH = windowH - rectY;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

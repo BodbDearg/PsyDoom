@@ -154,8 +154,18 @@ static void endFrame_Psx() noexcept {
         }
     }
 
-    // Blit the PSX framebuffer to the swapchain framebuffer
+    // Get the area of the window to blit the PSX framebuffer to
     vgl::ScreenFramebufferMgr& framebufferMgr = gDevice.getScreenFramebufferMgr();
+    const uint32_t fbWidth = (int32_t) framebufferMgr.getFramebuffersWidth();
+    const uint32_t fbHeight = (int32_t) framebufferMgr.getFramebuffersHeight();
+
+    int32_t blitDstX = {};
+    int32_t blitDstY = {};
+    uint32_t blitDstW = {};
+    uint32_t blitDstH = {};
+    Video::getClassicFramebufferWindowRect(fbWidth, fbHeight, blitDstX, blitDstY, blitDstW, blitDstH);
+
+    // Blit the PSX framebuffer to the swapchain framebuffer
     const VkImage framebufferImage = framebufferMgr.getCurrentDrawFramebuffer().getAttachmentImages()[0];
 
     {
@@ -167,9 +177,10 @@ static void endFrame_Psx() noexcept {
         blitRegion.srcOffsets[1].x = Video::ORIG_DRAW_RES_X;
         blitRegion.srcOffsets[1].y = Video::ORIG_DRAW_RES_Y;
         blitRegion.srcOffsets[1].z = 1;
-        // TODO: scale and position the image appropriately
-        blitRegion.dstOffsets[1].x = framebufferMgr.getFramebuffersWidth();
-        blitRegion.dstOffsets[1].y = framebufferMgr.getFramebuffersHeight();
+        blitRegion.dstOffsets[0].x = std::clamp<int32_t>(blitDstX, 0, fbWidth);
+        blitRegion.dstOffsets[0].y = std::clamp<int32_t>(blitDstY, 0, fbHeight);
+        blitRegion.dstOffsets[1].x = std::clamp<int32_t>(blitDstX + blitDstW, 0, fbWidth);
+        blitRegion.dstOffsets[1].y = std::clamp<int32_t>(blitDstY + blitDstH, 0, fbHeight);
         blitRegion.dstOffsets[1].z = 1;
 
         gCmdBufferRec.blitImage(

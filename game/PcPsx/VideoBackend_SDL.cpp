@@ -180,45 +180,34 @@ void VideoBackend_SDL::presentSdlFramebufferTexture() noexcept {
     ASSERT(mpRenderer);
     ASSERT(mpFramebufferTexture);
 
-    // Get the size of the window.
-    // Don't bother outputting if the window has been made zero sized.
-    int32_t winSizeX = {};
-    int32_t winSizeY = {};
-    SDL_GetWindowSize(mpSdlWindow, &winSizeX, &winSizeY);
+    // Get the size of the window in pixels and don't bother outputting to it if zero sized
+    int32_t windowW = {};
+    int32_t windowH = {};
+    SDL_GetRendererOutputSize(mpRenderer, &windowW, &windowH);
 
-    if ((winSizeX <= 0) || (winSizeY <= 0))
+    if ((windowW <= 0) || (windowH <= 0))
+        return;
+
+    // Get the window area to output the PSX framebuffer to  and don't bother outputting if zero sized
+    SDL_Rect outputRect = {};
+    Video::getClassicFramebufferWindowRect(
+        windowW,
+        windowH,
+        outputRect.x,
+        outputRect.y,
+        (uint32_t&) outputRect.w,   // Note: alias with different signedness isn't UB
+        (uint32_t&) outputRect.h
+    );
+
+    if ((outputRect.w <= 0) || (outputRect.h <= 0))
         return;
 
     // Done writing to the locked framebuffer, update the texture with whatever writes we made
     unlockFramebufferTexture();
 
-    // Are we using a free aspect ratio mode, specified by using a logical display width of <= 0?
-    // If so then just stretch the output image in any way to fill the window.
-    SDL_Rect outputRect = {};
-
-    if (Config::gLogicalDisplayW <= 0) {
-        outputRect.x = 0;
-        outputRect.y = 0;
-        outputRect.w = winSizeX;
-        outputRect.h = winSizeY;
-    }
-    else {
-        // If not using a free aspect ratio then determine the scale to output at, while preserving the chosen aspect ratio.
-        // The chosen aspect ratio is determined by the user's logical display resolution width.
-        const float xScale = (float) winSizeX / (float) Config::gLogicalDisplayW;
-        const float yScale = (float) winSizeY / (float) ORIG_DISP_RES_Y;
-        const float scale = std::min(xScale, yScale);
-
-        // Determine output width and height and center the framebuffer image in the window
-        outputRect.w = (int32_t)((float) Config::gLogicalDisplayW * scale);
-        outputRect.h = (int32_t)((float) ORIG_DISP_RES_Y * scale);
-        outputRect.x = winSizeX / 2 - outputRect.w / 2;
-        outputRect.y = winSizeY / 2 - outputRect.h / 2;
-    }
-
     // Need to clear the window if we are not filling the whole screen.
     // Some stuff like NVIDIA video recording notifications can leave marks in the unused regions otherwise...
-    if ((outputRect.w != winSizeX) || (outputRect.h != winSizeY)) {
+    if ((outputRect.w != windowW) || (outputRect.h != windowH)) {
         SDL_RenderClear(mpRenderer);
     }
     
