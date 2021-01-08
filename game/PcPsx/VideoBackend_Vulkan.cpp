@@ -5,7 +5,7 @@
 #include "Asserts.h"
 #include "PhysicalDeviceSelection.h"
 #include "VkFuncs.h"
-#include "Vulkan.h"
+#include "Vulkan/VRenderer.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
@@ -68,16 +68,16 @@ void VideoBackend_Vulkan::initRenderers(SDL_Window* const pSdlWindow) noexcept {
     ASSERT(pSdlWindow);
     mpSdlWindow = pSdlWindow;
 
-    // Initialize the game's Vulkan module and begin a frame
-    Vulkan::init();
-    Vulkan::beginFrame();
+    // Initialize the game's core Vulkan renderer module and begin a frame
+    VRenderer::init();
+    VRenderer::beginFrame();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cleans up and destroys the SDL renderer used by this video backend
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VideoBackend_Vulkan::destroyRenderers() noexcept {
-    Vulkan::destroy();
+    VRenderer::destroy();
     mpSdlWindow = nullptr;
 }
 
@@ -85,8 +85,8 @@ void VideoBackend_Vulkan::destroyRenderers() noexcept {
 // Displays the output from the Vulkan based renderer (classic, or new) to the screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VideoBackend_Vulkan::displayFramebuffer() noexcept {
-    Vulkan::endFrame();
-    Vulkan::beginFrame();
+    VRenderer::endFrame();
+    VRenderer::beginFrame();
 }
 
 END_NAMESPACE(Video)

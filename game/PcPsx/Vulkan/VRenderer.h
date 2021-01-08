@@ -12,7 +12,7 @@ namespace vgl {
     struct VkFuncs;
 }
 
-BEGIN_NAMESPACE(Vulkan)
+BEGIN_NAMESPACE(VRenderer)
 
 extern vgl::VkFuncs                     gVkFuncs;
 extern vgl::VulkanInstance              gVulkanInstance;
@@ -25,6 +25,6 @@ void destroy() noexcept;
 void beginFrame() noexcept;
 void endFrame() noexcept;
 
-END_NAMESPACE(Vulkan)
+END_NAMESPACE(VRenderer)
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

@@ -1,8 +1,10 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Manages the low level details of interacting with Vulkan for the new Vulkan renderer, as well as the classic renderer output via Vulkan.
+// Vulkan renderer, core functionality.
+// Manages the low level details of interacting with Vulkan for the new native Vulkan render path.
+// Also handles blitting the PSX framebuffer to the screen if we are using the classic PSX renderer and outputting via Vulkan.
 // Sets up key Vulkan objects and provides various Vulkan utility code.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "Vulkan.h"
+#include "VRenderer.h"
 
 #if PSYDOOM_VULKAN_RENDERER
 
@@ -13,17 +15,17 @@
 #include "Gpu.h"
 #include "LogicalDevice.h"
 #include "MutableTexture.h"
+#include "PcPsx/PsxVm.h"
+#include "PcPsx/Video.h"
 #include "PhysicalDeviceSelection.h"
-#include "PsxVm.h"
 #include "Semaphore.h"
-#include "Video.h"
+#include "VDrawRenderPass.h"
 #include "VkFuncs.h"
-#include "Vulkan/VDrawRenderPass.h"
-#include "Vulkan/VPresentRenderPass.h"
+#include "VPresentRenderPass.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
-BEGIN_NAMESPACE(Vulkan)
+BEGIN_NAMESPACE(VRenderer)
 
 bool                            gbDidBeginFrame;                // Whether a frame was begun
 bool                            gbUsePsxRenderer = true;        // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
@@ -426,6 +428,6 @@ void endFrame() noexcept {
     gpCurCmdBuffer = nullptr;
 }
 
-END_NAMESPACE(Vulkan)
+END_NAMESPACE(VRenderer)
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER
