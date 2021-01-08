@@ -4,26 +4,15 @@
 
 #include "Macros.h"
 
-namespace vgl {
-    class LogicalDevice;
-    class PhysicalDevice;
-    class VulkanInstance;
-    class WindowSurface;
-    struct VkFuncs;
-}
+#include <cstdint>
 
 BEGIN_NAMESPACE(VRenderer)
-
-extern vgl::VkFuncs                     gVkFuncs;
-extern vgl::VulkanInstance              gVulkanInstance;
-extern vgl::WindowSurface               gWindowSurface;
-extern const vgl::PhysicalDevice*       gpPhysicalDevice;
-extern vgl::LogicalDevice               gDevice;
 
 void init() noexcept;
 void destroy() noexcept;
 void beginFrame() noexcept;
 void endFrame() noexcept;
+void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint16_t rectTy, const uint16_t rectBy) noexcept;
 
 END_NAMESPACE(VRenderer)
 

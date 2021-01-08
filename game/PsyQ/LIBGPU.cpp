@@ -10,6 +10,8 @@
 #include "PcPsx/BitShift.h"
 #include "PcPsx/LIBGPU_CmdDispatch.h"
 #include "PcPsx/PsxVm.h"
+#include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VRenderer.h"
 
 #include <cstdarg>
 #include <cstdio>
@@ -158,6 +160,13 @@ void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noe
             pSrcPixels += numWrappedPixels;
         }
     }
+
+    // Vulkan renderer: push this upload to the Vulkan texture mirroring PSX VRAM
+    #if PSYDOOM_VULKAN_RENDERER
+        if (Video::gBackendType == Video::BackendType::Vulkan) {
+            VRenderer::pushPsxVramUpdates(dstLx, dstRx, dstTy, dstBy);
+        }
+    #endif  // #if PSYDOOM_VULKAN_RENDERER
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -24,22 +24,22 @@
 #include "VPresentRenderPass.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
+#include "Texture.h"
 
 BEGIN_NAMESPACE(VRenderer)
 
-bool                            gbDidBeginFrame;                // Whether a frame was begun
-bool                            gbUsePsxRenderer = true;        // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
-vgl::VkFuncs                    gVkFuncs;                       // Cached pointers to all Vulkan API functions
-vgl::VulkanInstance             gVulkanInstance(gVkFuncs);      // Vulkan API instance object
-vgl::WindowSurface              gWindowSurface;                 // Window surface to draw on
-const vgl::PhysicalDevice*      gpPhysicalDevice;               // Physical device chosen for rendering
-vgl::LogicalDevice              gDevice(gVkFuncs);              // The logical device used for Vulkan
-
-static VDrawRenderPass          gDrawRenderPass;                // Render pass used for drawing
-static VPresentRenderPass       gPresentRenderPass;             // Render pass used for presentation
-static vgl::Semaphore           gFramebufferReadySignal;        // Semaphore signalled when the framebuffer is ready
-static vgl::Semaphore           gRenderDoneSignal;              // Semaphore signalled when rendering is done
-static vgl::CmdBufferRecorder   gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
+static bool                         gbDidBeginFrame;                // Whether a frame was begun
+static bool                         gbUsePsxRenderer = true;        // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
+static vgl::VkFuncs                 gVkFuncs;                       // Cached pointers to all Vulkan API functions
+static vgl::VulkanInstance          gVulkanInstance(gVkFuncs);      // Vulkan API instance object
+static vgl::WindowSurface           gWindowSurface;                 // Window surface to draw on
+static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical device chosen for rendering
+static vgl::LogicalDevice           gDevice(gVkFuncs);              // The logical device used for Vulkan
+static VDrawRenderPass              gDrawRenderPass;                // Render pass used for drawing
+static VPresentRenderPass           gPresentRenderPass;             // Render pass used for presentation
+static vgl::Semaphore               gFramebufferReadySignal;        // Semaphore signalled when the framebuffer is ready
+static vgl::Semaphore               gRenderDoneSignal;              // Semaphore signalled when rendering is done
+static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
 // Command buffers used for drawing operations in each frame.
 // One for each ringbuffer slot, so we can record a new buffer while a previous frame's buffer is still executing.
@@ -53,6 +53,10 @@ static vgl::CmdBuffer* gpCurCmdBuffer;
 // These are blitted onto the current framebuffer image.
 // One for each ringbuffer slot, so we can update while a previous frame's image is still blitting to the screen.
 static vgl::MutableTexture gPsxFramebufferTextures[vgl::Defines::RINGBUFFER_SIZE];
+
+// A mirrored copy of PSX VRAM (minus framebuffers) so we can access in the new Vulkan renderer.
+// Any texture uploads to PSX VRAM will get passed along from LIBGPU and eventually find their way in here.
+static vgl::Texture gPsxVramTexture;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Frame begin logic for the classic PSX renderer.
@@ -288,6 +292,17 @@ void init() noexcept {
     for (vgl::MutableTexture& psxFbTex : gPsxFramebufferTextures) {
         psxFbTex.initAs2dTexture(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y);
     }
+
+    // Initialize the texture representing PSX VRAM and clear it all to black.
+    // Note: use the R16 UINT format as we will have to unpack in the shader depending on the PSX texture format being used.
+    Gpu::Core& psxGpu = PsxVm::gGpu;
+    gPsxVramTexture.initAs2dTexture(gDevice, VK_FORMAT_R16_UINT, psxGpu.ramPixelW, psxGpu.ramPixelH);
+
+    {
+        std::byte* const pBytes = gPsxVramTexture.lock();
+        std::memset(pBytes, 0, gPsxVramTexture.getLockedSizeInBytes());
+        gPsxVramTexture.unlock();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -305,6 +320,8 @@ void destroy() noexcept {
     }
 
     // Tear everything down and make sure to destroy immediate where we have the option
+    gPsxVramTexture.destroy(true);
+
     for (vgl::MutableTexture& fbTexture : gPsxFramebufferTextures) {
         fbTexture.destroy(true);
     }
@@ -426,6 +443,58 @@ void endFrame() noexcept {
     // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame
     ringbufferMgr.acquireNextBuffer();
     gpCurCmdBuffer = nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Copies a rectangular area of pixels (of at least 1x1 pixels) from the PSX GPU's VRAM to the Vulkan texture that mirrors it.
+// This makes updates to PSX VRAM visible to the new native Vulkan renderer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint16_t rectTy, const uint16_t rectBy) noexcept {
+    // Sanity check the rectangle bounds.
+    // Note that the rect IS allowed to wraparound to the other side of VRAM, but the coordinates must remain within range.
+    // Wraparound is allowed because PSX VRAM writes wrap and LIBGPU supports that.
+    Gpu::Core& psxGpu = PsxVm::gGpu;
+    const uint32_t vramW = psxGpu.ramPixelW;
+    const uint32_t vramH = psxGpu.ramPixelH;
+
+    ASSERT(rectLx < vramW);
+    ASSERT(rectRx < vramW);
+    ASSERT(rectTy < vramH);
+    ASSERT(rectBy < vramH);
+
+    // Does the update rect wrap horizontally?
+    // If so then split up into two non-wrapping rectangles.
+    if (rectRx < rectLx) {
+        pushPsxVramUpdates(0, rectRx, rectTy, rectBy);
+        pushPsxVramUpdates(rectLx, (uint16_t)(vramW - 1), rectTy, rectBy);
+        return;
+    }
+
+    // Does the update rect wrap vertically?
+    // If so then split up into two non-wrapping rectangles.
+    if (rectBy < rectTy) {
+        pushPsxVramUpdates(rectLx, rectRx, 0, rectBy);
+        pushPsxVramUpdates(rectLx, rectRx, rectTy, (uint16_t)(vramH - 1));
+        return;
+    }
+
+    // This is the size of the area to be updated and the number of bytes in each row
+    const uint32_t copyRectW = (uint32_t) rectRx + 1 - rectLx;
+    const uint32_t copyRectH = (uint32_t) rectBy + 1 - rectTy;
+    const uint32_t copyRowSize = copyRectW * sizeof(uint16_t);
+
+    // Lock the required region of the texture and copy in the updates, row by row
+    uint16_t* pDstBytes = (uint16_t*) gPsxVramTexture.lock(rectLx, rectTy, 0, 0, copyRectW, copyRectH, 1, 1);
+    const uint16_t* pSrcBytes = psxGpu.pRam + rectLx + ((uintptr_t) rectTy * vramW);
+
+    for (uint32_t row = 0; row < copyRectH; ++row) {
+        std::memcpy(pDstBytes, pSrcBytes, copyRowSize);
+        pDstBytes += copyRectW;
+        pSrcBytes += vramW;
+    }
+
+    // Unlock the texture to begin uploading the updates
+    gPsxVramTexture.unlock();
 }
 
 END_NAMESPACE(VRenderer)

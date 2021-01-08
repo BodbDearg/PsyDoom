@@ -113,9 +113,9 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
         VkImageMemoryBarrier barrier = {};
 
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcAccessMask = 0;                                          // Waiting on top of pipe so no access mask
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;               // Write access during transfer write
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;                      // Don't care about old contents
+        barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;     // Wait for other access to finish
+        barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;     // Reads and writes are blocked on waiting for the other transfers to finish
+        barrier.oldLayout = cmd.dstOldVkImageLayout;
         barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;           // Make the image be optimal as a transfer destination
         barrier.srcQueueFamilyIndex = workQueueFamilyIdx;
         barrier.dstQueueFamilyIndex = workQueueFamilyIdx;
@@ -128,8 +128,8 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
 
         vkFuncs.vkCmdPipelineBarrier(
             vkCmdBuffer,
-            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,      // Src pipeline stage mask
-            VK_PIPELINE_STAGE_TRANSFER_BIT,         // Dst pipeline stage mask
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,     // Src pipeline stage mask: wait for other stages to finish accessing
+            VK_PIPELINE_STAGE_TRANSFER_BIT,         // Dst pipeline stage mask: transfers waiting on transfers
             0,                                      // Dependency flags
             0,                                      // Memory barrier count
             nullptr,                                // Memory barriers
@@ -220,10 +220,10 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
         VkImageMemoryBarrier barrier = {};
 
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;                   // Waiting on transfer writes to finish
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;                      // Block only on shader read
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;               // The old layout was transfer optimal
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;           // The new layout will be shader use optimal
+        barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;   // Waiting on transfer reads and writes to finish
+        barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;     // All types of reads and writes are blocked waiting for the writes
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;                           // The old layout was transfer optimal
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;                       // The new layout will be shader use optimal
         barrier.srcQueueFamilyIndex = workQueueFamilyIdx;
         barrier.dstQueueFamilyIndex = workQueueFamilyIdx;
         barrier.image = cmd.dstVkImage;
@@ -235,8 +235,8 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
 
         vkFuncs.vkCmdPipelineBarrier(
             vkCmdBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,         // Src pipeline stage mask that must finish
-            VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,    // Dst pipeline stage mask that depends on the data
+            VK_PIPELINE_STAGE_TRANSFER_BIT,         // Wait for the transfer stage to finish executing
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,     // All stages are blocked waiting for the transfer to finish
             0,                                      // Dependency flags
             0,                                      // Memory barrier count
             nullptr,                                // Memory barriers
