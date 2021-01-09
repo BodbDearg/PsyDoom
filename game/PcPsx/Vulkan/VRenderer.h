@@ -8,6 +8,8 @@
 
 BEGIN_NAMESPACE(VRenderer)
 
+extern bool gbUsePsxRenderer;
+
 void init() noexcept;
 void destroy() noexcept;
 void beginFrame() noexcept;

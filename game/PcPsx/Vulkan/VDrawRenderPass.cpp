@@ -44,7 +44,7 @@ bool VDrawRenderPass::init(vgl::LogicalDevice& device, const VkFormat colorForma
     colorAttach.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttach.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    colorAttach.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     // Define depth attachment
     VkAttachmentDescription& depthAttach = renderPassDef.attachments.emplace_back();
@@ -55,7 +55,7 @@ bool VDrawRenderPass::init(vgl::LogicalDevice& device, const VkFormat colorForma
     depthAttach.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;            // Not using stencil buffers
     depthAttach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;          // Not using stencil buffers
     depthAttach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttach.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    depthAttach.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     // Define the single subpass and its attachment references
     vgl::SubpassDef& subpassDef = renderPassDef.subpasses.emplace_back();

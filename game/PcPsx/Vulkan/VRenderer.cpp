@@ -19,17 +19,19 @@
 #include "PcPsx/Video.h"
 #include "PhysicalDeviceSelection.h"
 #include "Semaphore.h"
+#include "Texture.h"
 #include "VDrawRenderPass.h"
 #include "VkFuncs.h"
 #include "VPresentRenderPass.h"
+#include "VRPipelines.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
-#include "Texture.h"
 
 BEGIN_NAMESPACE(VRenderer)
 
+bool gbUsePsxRenderer = true;  // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
+
 static bool                         gbDidBeginFrame;                // Whether a frame was begun
-static bool                         gbUsePsxRenderer = true;        // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
 static vgl::VkFuncs                 gVkFuncs;                       // Cached pointers to all Vulkan API functions
 static vgl::VulkanInstance          gVulkanInstance(gVkFuncs);      // Vulkan API instance object
 static vgl::WindowSurface           gWindowSurface;                 // Window surface to draw on
@@ -231,7 +233,22 @@ static void endFrame_Psx() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void beginFrame_VkRenderer() noexcept {
     ASSERT(gpCurCmdBuffer);
-    // TODO...
+
+    // Begin the draw render pass
+    const vgl::Framebuffer& framebuffer = gDevice.getScreenFramebufferMgr().getCurrentDrawFramebuffer();
+    const VkClearValue framebufferClearValues[2] = {};
+
+    gCmdBufferRec.beginRenderPass(
+        gDrawRenderPass,
+        framebuffer,
+        VK_SUBPASS_CONTENTS_INLINE,
+        0,
+        0,
+        framebuffer.getWidth(),
+        framebuffer.getHeight(),
+        framebufferClearValues,
+        2
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -240,7 +257,9 @@ static void beginFrame_VkRenderer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void endFrame_VkRenderer() noexcept {
     ASSERT(gpCurCmdBuffer);
-    // TODO...
+    
+    // Finish up the draw render pass
+    gCmdBufferRec.endRenderPass();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -248,61 +267,66 @@ static void endFrame_VkRenderer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
     // Initialize the Vulkan API, the window surface, and choose a device to use
-    if (!gVulkanInstance.init(Video::gpSdlWindow)) {
+    if (!gVulkanInstance.init(Video::gpSdlWindow))
         FatalErrors::raise("Failed to initialize a Vulkan API instance!");
-        return;
-    }
 
-    if (!gWindowSurface.init(Video::gpSdlWindow, gVulkanInstance)) {
+    if (!gWindowSurface.init(Video::gpSdlWindow, gVulkanInstance))
         FatalErrors::raise("Failed to initialize a Vulkan window surface!");
-        return;
-    }
 
     gpPhysicalDevice = vgl::PhysicalDeviceSelection::selectBestDevice(gVulkanInstance.getPhysicalDevices(), gWindowSurface);
 
-    if (!gpPhysicalDevice) {
+    if (!gpPhysicalDevice)
         FatalErrors::raise("Failed to find a suitable rendering device for use with Vulkan!");
-        return;
-    }
 
     // Initialize the logical Vulkan device is used actual operations
-    if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface)) {
+    if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface))
         FatalErrors::raise("Failed to initialize a Vulkan logical device!");
-        return;
-    }
 
     // Initialize the render passes for the new renderer
     vgl::ScreenFramebufferMgr& framebufferMgr = gDevice.getScreenFramebufferMgr();
     const VkFormat colorFormat = framebufferMgr.getColorFormat();
     const VkFormat depthStencilFormat = framebufferMgr.getDepthStencilFormat();
 
-    gDrawRenderPass.init(gDevice, colorFormat, depthStencilFormat);
-    gPresentRenderPass.init(gDevice, colorFormat);
+    if (!gDrawRenderPass.init(gDevice, colorFormat, depthStencilFormat))
+        FatalErrors::raise("Failed to create the Vulkan 'draw' render pass!");
+
+    if (!gPresentRenderPass.init(gDevice, colorFormat))
+        FatalErrors::raise("Failed to create the Vulkan 'present' render pass!");
 
     // Initialize various semaphores
-    gFramebufferReadySignal.init(gDevice);
-    gRenderDoneSignal.init(gDevice);
+    if (!gFramebufferReadySignal.init(gDevice))
+        FatalErrors::raise("Failed to create the Vulkan 'framebuffer ready' semaphore!");
+
+    if (!gRenderDoneSignal.init(gDevice))
+        FatalErrors::raise("Failed to create the Vulkan 'render done' semaphore!");
 
     // Init the command buffers
     for (vgl::CmdBuffer& cmdBuffer : gCmdBuffers) {
-        cmdBuffer.init(gDevice.getCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        if (!cmdBuffer.init(gDevice.getCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY))
+            FatalErrors::raise("Failed to create a Vulkan command buffer required for rendering!");
     }
 
     // Initialize the PSX framebuffer textures used to hold the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer
     for (vgl::MutableTexture& psxFbTex : gPsxFramebufferTextures) {
-        psxFbTex.initAs2dTexture(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y);
+        if (!psxFbTex.initAs2dTexture(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y))
+            FatalErrors::raise("Failed to create a Vulkan texture for the classic PSX renderer's framebuffer!");
     }
 
     // Initialize the texture representing PSX VRAM and clear it all to black.
     // Note: use the R16 UINT format as we will have to unpack in the shader depending on the PSX texture format being used.
     Gpu::Core& psxGpu = PsxVm::gGpu;
-    gPsxVramTexture.initAs2dTexture(gDevice, VK_FORMAT_R16_UINT, psxGpu.ramPixelW, psxGpu.ramPixelH);
+
+    if (!gPsxVramTexture.initAs2dTexture(gDevice, VK_FORMAT_R16_UINT, psxGpu.ramPixelW, psxGpu.ramPixelH))
+        FatalErrors::raise("Failed to create a Vulkan texture for PSX VRAM!");
 
     {
         std::byte* const pBytes = gPsxVramTexture.lock();
         std::memset(pBytes, 0, gPsxVramTexture.getLockedSizeInBytes());
         gPsxVramTexture.unlock();
     }
+
+    // Initialize other Vulkan Renderer modules
+    VRPipelines::init(gDevice, gDrawRenderPass);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -320,6 +344,7 @@ void destroy() noexcept {
     }
 
     // Tear everything down and make sure to destroy immediate where we have the option
+    VRPipelines::shutdown();
     gPsxVramTexture.destroy(true);
 
     for (vgl::MutableTexture& fbTexture : gPsxFramebufferTextures) {

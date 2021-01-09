@@ -211,6 +211,9 @@ set(SOURCE_FILES
     "PcPsx/Vulkan/VPresentRenderPass.h"
     "PcPsx/Vulkan/VRenderer.cpp"
     "PcPsx/Vulkan/VRenderer.h"
+    "PcPsx/Vulkan/VRPipelines.cpp"
+    "PcPsx/Vulkan/VRPipelines.h"
+    "PcPsx/Vulkan/VRTypes.h"
     "PsyQ/LIBAPI.cpp"
     "PsyQ/LIBAPI.h"
     "PsyQ/LIBETC.cpp"
@@ -284,6 +287,7 @@ set(OTHER_FILES
 
 set(INCLUDE_PATHS
     "."
+    "../vulkan_shaders/compiled"
 )
 
 # Platform specific sources
