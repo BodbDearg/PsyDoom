@@ -20,6 +20,7 @@
 #include "PhysicalDeviceSelection.h"
 #include "Semaphore.h"
 #include "Texture.h"
+#include "VDrawing.h"
 #include "VDrawRenderPass.h"
 #include "VkFuncs.h"
 #include "VPipelines.h"
@@ -249,6 +250,9 @@ static void beginFrame_VkRenderer() noexcept {
         framebufferClearValues,
         2
     );
+
+    // Begin a frame for the drawing module
+    VDrawing::beginFrame(gDevice, gCmdBufferRec);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -258,7 +262,8 @@ static void beginFrame_VkRenderer() noexcept {
 static void endFrame_VkRenderer() noexcept {
     ASSERT(gpCurCmdBuffer);
     
-    // Finish up the draw render pass
+    // End the drawing module frame and finish up the draw render pass
+    VDrawing::endFrame();
     gCmdBufferRec.endRenderPass();
 }
 
@@ -327,6 +332,7 @@ void init() noexcept {
 
     // Initialize other Vulkan Renderer modules
     VPipelines::init(gDevice, gDrawRenderPass);
+    VDrawing::init(gDevice);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -344,6 +350,7 @@ void destroy() noexcept {
     }
 
     // Tear everything down and make sure to destroy immediate where we have the option
+    VDrawing::shutdown();
     VPipelines::shutdown();
     gPsxVramTexture.destroy(true);
 

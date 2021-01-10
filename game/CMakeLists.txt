@@ -205,6 +205,8 @@ set(SOURCE_FILES
     "PcPsx/VideoBackend_SDL.h"
     "PcPsx/VideoBackend_Vulkan.cpp"
     "PcPsx/VideoBackend_Vulkan.h"
+    "PcPsx/Vulkan/VDrawing.cpp"
+    "PcPsx/Vulkan/VDrawing.h"
     "PcPsx/Vulkan/VDrawRenderPass.cpp"
     "PcPsx/Vulkan/VDrawRenderPass.h"
     "PcPsx/Vulkan/VPipelines.cpp"

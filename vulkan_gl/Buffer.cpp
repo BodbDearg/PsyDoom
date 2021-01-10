@@ -251,6 +251,7 @@ std::byte* Buffer::lockBytes(const uint64_t offsetInBytes, const uint64_t sizeIn
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Unlocks the previously locked range of the buffer.
+// The caller must specify how many bytes it has written in the locked region and only this much data will be uploaded to the buffer.
 //
 // Optionally the upload can be scheduled to happen against the specified transfer task.
 // If not specified, then the global 'pre-frame' transfer task is used by default.
@@ -261,18 +262,19 @@ std::byte* Buffer::lockBytes(const uint64_t offsetInBytes, const uint64_t sizeIn
 //  (3) The written data may or may not immediately be uploaded to the GPU. The transfer manager may need to be
 //      invoked once per frame in order to ensure the data is actually uploaded onto a GPU side buffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Buffer::unlock(TransferTask* const pTransferTaskOverride) noexcept {
+void Buffer::unlockBytes(const uint64_t writtenSizeInBytes, TransferTask* const pTransferTaskOverride) noexcept {
     // Preconditions: must be valid and device must still be valid
     ASSERT(mbIsValid);
     LogicalDevice* const pDevice = getDevice();
     ASSERT(pDevice && pDevice->getVkDevice());
 
-    // Preconditions: can't unlock if not locked
+    // Preconditions: can't unlock if not locked and written size must be valid
     ASSERT_LOG(mbIsLocked, "Buffer must first be locked to unlock!");
+    ASSERT(writtenSizeInBytes <= mLockedSize);
 
     // Schedule the data transfer for the locked region and clear the lock.
-    // Note that we only need to do the transfer if we're actually using a staging buffer - if we're on
-    // a shared memory architecture then the 'unlock()' call might basically be a no-op...
+    // Note that we only need to do the transfer if we're actually using a staging buffer.
+    // If we're on a shared memory architecture then the 'unlock()' call might basically be a no-op...
     const VkBuffer lockedVkBuffer = mLockedVkBuffer;
 
     if (lockedVkBuffer) {
@@ -287,13 +289,15 @@ void Buffer::unlock(TransferTask* const pTransferTaskOverride) noexcept {
             pDstTask = pTransferTaskOverride;
         }
 
-        pDstTask->addBufferCopy(
-            lockedVkBuffer,
-            mBuffer.getVkBuffer(),
-            stagingBufferOffset,
-            mLockedOffset,
-            mLockedSize
-        );
+        if (writtenSizeInBytes > 0) {
+            pDstTask->addBufferCopy(
+                lockedVkBuffer,
+                mBuffer.getVkBuffer(),
+                stagingBufferOffset,
+                mLockedOffset,
+                writtenSizeInBytes
+            );
+        }
 
         mLockedVkBuffer = VK_NULL_HANDLE;
     }

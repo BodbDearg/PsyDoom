@@ -81,7 +81,7 @@ public:
         const uint64_t numElements,
         const bool bIsResizable = false
     ) noexcept {
-        return initWithByteCount(device, type, usageMode, numElements * sizeof(T), bIsResizable);
+        return initWithByteCount(device, baseUsageFlags, usageMode, numElements * sizeof(T), bIsResizable);
     }
 
     void destroy(const bool bImmediateCleanup = false, const bool bForceIfInvalid = false) noexcept;
@@ -117,6 +117,9 @@ public:
     inline uint64_t getLockedOffset() const noexcept { return mLockedOffset; }
     inline uint64_t getLockedSize() const noexcept { return mLockedSize; }
     inline std::byte* getLockedBytes() const noexcept { return mpLockedBytes; }
+
+    template <class T>
+    inline T* getLockedElements() const noexcept { return reinterpret_cast<T*>(mpLockedBytes); }
     
     // Get the underlying Vulkan buffer
     inline VkBuffer getVkBuffer() const noexcept { return mBuffer.getVkBuffer(); }
@@ -129,7 +132,14 @@ public:
         return reinterpret_cast<T*>(lockBytes(startElement * sizeof(T), numElements * sizeof(T)));
     }
 
-    void unlock(TransferTask* const pTransferTaskOverride = nullptr) noexcept;
+    void unlockBytes(const uint64_t writtenSizeInBytes, TransferTask* const pTransferTaskOverride = nullptr) noexcept;
+
+    // Convenience call: similar to 'lock' but unlocks a region and uploads the specified number of elements
+    template <class T>
+    inline void unlockElements(const uint64_t writtenSizeInElems, TransferTask* const pTransferTaskOverride = nullptr) noexcept {
+        unlockBytes(writtenSizeInElems * sizeof(T), pTransferTaskOverride);
+    }
+
     void abandonLock() noexcept;
 
     // Flags that control buffer resizing behavior
@@ -165,7 +175,7 @@ public:
 
     // Convenience call: resize the buffer to a specified number of elements
     template <class T>
-    inline T* resizeToElementCount(
+    inline bool resizeToElementCount(
         const uint64_t newSizeInElements,
         const ResizeFlags resizeFlags,
         const uint64_t newLockOffsetStartElement = 0,
