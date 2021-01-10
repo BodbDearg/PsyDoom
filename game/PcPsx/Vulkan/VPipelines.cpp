@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Logic for creating the various shaders and pipelines used by the new Vulkan renderer
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "VRPipelines.h"
+#include "VPipelines.h"
 
 #include "DescriptorSetLayout.h"
 #include "FatalErrors.h"
@@ -10,7 +10,7 @@
 #include "Sampler.h"
 #include "ShaderModule.h"
 
-BEGIN_NAMESPACE(VRPipelines)
+BEGIN_NAMESPACE(VPipelines)
 
 // The raw SPIRV binary code for the shaders
 #include "SPIRV_colored_frag.bin.h"
@@ -25,7 +25,7 @@ vgl::DescriptorSetLayout    gDescriptorSetLayout;   // The single descriptor set
 vgl::PipelineLayout         gPipelineLayout;        // The pipeline layout used by all pipelines
 
 // The pipelines themselves
-vgl::Pipeline gPipelines[(size_t) VRPipelineType::NUM_TYPES];
+vgl::Pipeline gPipelines[(size_t) VPipelineType::NUM_TYPES];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the pipelines module
@@ -75,7 +75,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
         VkPushConstantRange uniformPushConstants = {};
         uniformPushConstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;    // Needed in both shader types
         uniformPushConstants.offset = 0;
-        uniformPushConstants.size = sizeof(VRShaderUniforms);
+        uniformPushConstants.size = sizeof(VShaderUniforms);
 
         if (!gPipelineLayout.init(device, &vkDescSetLayout, 1, &uniformPushConstants, 1))
             FatalErrors::raise("Failed to init a Vulkan pipeline layout!");
@@ -84,17 +84,17 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     // Pipeline state: vertex bindings and attributes. Just using the same bindings and attributes for all pipelines.
     VkVertexInputBindingDescription vertexBindingDesc = {};
     vertexBindingDesc.binding = 0;
-    vertexBindingDesc.stride = sizeof(VRVertex);
+    vertexBindingDesc.stride = sizeof(VVertex);
     vertexBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     VkVertexInputAttributeDescription vertexAttribs[] = {
-        { 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT,  offsetof(VRVertex, x) },
-        { 1, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VRVertex, r) },
-        { 2, 0, VK_FORMAT_R16G16_USCALED,       offsetof(VRVertex, u) },
-        { 3, 0, VK_FORMAT_R16G16_UINT,          offsetof(VRVertex, texWinX) },
-        { 4, 0, VK_FORMAT_R16G16_UINT,          offsetof(VRVertex, texWinW) },
-        { 5, 0, VK_FORMAT_R16G16_UINT,          offsetof(VRVertex, clutX) },
-        { 6, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VRVertex, stmulR) },
+        { 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT,  offsetof(VVertex, x) },
+        { 1, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VVertex, r) },
+        { 2, 0, VK_FORMAT_R16G16_USCALED,       offsetof(VVertex, u) },
+        { 3, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, texWinX) },
+        { 4, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, texWinW) },
+        { 5, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, clutX) },
+        { 6, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VVertex, stmulR) },
     };
 
     // Pipeline state: sets of shader modules
@@ -163,7 +163,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
 
     // Create the pipelines
     auto createPipeline = [&](
-        const VRPipelineType pipelineType,
+        const VPipelineType pipelineType,
         const vgl::ShaderModule* const * const pShaderModules,
         const vgl::PipelineInputAssemblyState& inputAssemblyState,
         const vgl::PipelineRasterizationState& rasterizerState,
@@ -190,13 +190,13 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
             FatalErrors::raise("Failed to create a Vulkan graphics pipeline used for rendering!");
     };
 
-    createPipeline(VRPipelineType::Lines, shaderModules_colored, lineListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
-    createPipeline(VRPipelineType::UI_4bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);               // TODO: FIX SHADER
-    createPipeline(VRPipelineType::UI_8bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);               // TODO: FIX SHADER
-    createPipeline(VRPipelineType::UI_16bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);              // TODO: FIX SHADER
-    createPipeline(VRPipelineType::View_Alpha, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testEnabled);             // TODO: FIX SHADER
-    createPipeline(VRPipelineType::View_Additive, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_additive, depthState_testEnabled);       // TODO: FIX SHADER
-    createPipeline(VRPipelineType::View_Subtractive, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_subtractive, depthState_testEnabled); // TODO: FIX SHADER
+    createPipeline(VPipelineType::Lines, shaderModules_colored, lineListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
+    createPipeline(VPipelineType::UI_4bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);                // TODO: FIX SHADER
+    createPipeline(VPipelineType::UI_8bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);                // TODO: FIX SHADER
+    createPipeline(VPipelineType::UI_16bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);               // TODO: FIX SHADER
+    createPipeline(VPipelineType::View_Alpha, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testEnabled);              // TODO: FIX SHADER
+    createPipeline(VPipelineType::View_Additive, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_additive, depthState_testEnabled);        // TODO: FIX SHADER
+    createPipeline(VPipelineType::View_Subtractive, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_subtractive, depthState_testEnabled);  // TODO: FIX SHADER
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -22,8 +22,8 @@
 #include "Texture.h"
 #include "VDrawRenderPass.h"
 #include "VkFuncs.h"
+#include "VPipelines.h"
 #include "VPresentRenderPass.h"
-#include "VRPipelines.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
@@ -326,7 +326,7 @@ void init() noexcept {
     }
 
     // Initialize other Vulkan Renderer modules
-    VRPipelines::init(gDevice, gDrawRenderPass);
+    VPipelines::init(gDevice, gDrawRenderPass);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -344,7 +344,7 @@ void destroy() noexcept {
     }
 
     // Tear everything down and make sure to destroy immediate where we have the option
-    VRPipelines::shutdown();
+    VPipelines::shutdown();
     gPsxVramTexture.destroy(true);
 
     for (vgl::MutableTexture& fbTexture : gPsxFramebufferTextures) {

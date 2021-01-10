@@ -11,7 +11,7 @@
 // Graphics pipeline type the Vulkan Renderer.
 // Affects the primitive types expected, shaders used, blending mode and so on.
 //------------------------------------------------------------------------------------------------------------------------------------------
-enum class VRPipelineType : uint8_t {
+enum class VPipelineType : uint8_t {
     Lines,              // Solid colored lines
     UI_4bpp,            // Texture mapped @ 4bpp, alpha blended
     UI_8bpp,            // Texture mapped @ 8bpp, alpha blended
@@ -25,19 +25,19 @@ enum class VRPipelineType : uint8_t {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shader uniforms for the various shaders used by the Vulkan Renderer
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct VRShaderUniforms {
+struct VShaderUniforms {
     // Modelview projection matrix: used to transform vertices in the vertex shader
     float mvpMatrix[4][4];
 };
 
 // Make sure shader uniforms are not bigger than the minimum push constant range required by Vulkan, which is 128 bytes.
 // We pass these as push constants because the data is very small.
-static_assert(sizeof(VRShaderUniforms) <= 128);
+static_assert(sizeof(VShaderUniforms) <= 128);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Vertex type for the Vulkan renderer
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct VRVertex {
+struct VVertex {
     // XYZ Position and lastly a 'Scale' value packed into the 'w' component for light diminishing effects in-game (unused by UI shaders)
     float x, y, z, s;
     

@@ -1,5 +1,5 @@
 #include "Macros.h"
-#include "VRTypes.h"
+#include "VTypes.h"
 
 namespace vgl {
     class BaseRenderPass;
@@ -10,14 +10,14 @@ namespace vgl {
     class Sampler;
 }
 
-BEGIN_NAMESPACE(VRPipelines)
+BEGIN_NAMESPACE(VPipelines)
 
 extern vgl::Sampler                 gSampler;
 extern vgl::DescriptorSetLayout     gDescriptorSetLayout;
 extern vgl::PipelineLayout          gPipelineLayout;
-extern vgl::Pipeline                gPipelines[(size_t) VRPipelineType::NUM_TYPES];
+extern vgl::Pipeline                gPipelines[(size_t) VPipelineType::NUM_TYPES];
 
 void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept;
 void shutdown() noexcept;
 
-END_NAMESPACE(VRPipelines)
+END_NAMESPACE(VPipelines)
