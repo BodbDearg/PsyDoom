@@ -12,8 +12,9 @@
 
 BEGIN_NAMESPACE(VRPipelines)
 
-#include "SPIRV_colored_frag.h"
-#include "SPIRV_colored_vert.h"
+// The raw SPIRV binary code for the shaders
+#include "SPIRV_colored_frag.bin.h"
+#include "SPIRV_colored_vert.bin.h"
 
 // Shaders: see the associated source files for more comments/details
 static vgl::ShaderModule    gShader_colored_vert;
@@ -87,9 +88,13 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     vertexBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     VkVertexInputAttributeDescription vertexAttribs[] = {
-        { 0, 0, VK_FORMAT_R8G8B8A8_SSCALED, offsetof(VRVertex, x) },
-        { 1, 0, VK_FORMAT_R8G8B8A8_SSCALED, offsetof(VRVertex, r) },
-        { 2, 0, VK_FORMAT_R16G16_UINT,      offsetof(VRVertex, u) },
+        { 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT,  offsetof(VRVertex, x) },
+        { 1, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VRVertex, r) },
+        { 2, 0, VK_FORMAT_R16G16_USCALED,       offsetof(VRVertex, u) },
+        { 3, 0, VK_FORMAT_R16G16_UINT,          offsetof(VRVertex, texWinX) },
+        { 4, 0, VK_FORMAT_R16G16_UINT,          offsetof(VRVertex, texWinW) },
+        { 5, 0, VK_FORMAT_R16G16_UINT,          offsetof(VRVertex, clutX) },
+        { 6, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VRVertex, stmulR) },
     };
 
     // Pipeline state: sets of shader modules

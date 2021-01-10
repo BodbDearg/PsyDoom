@@ -26,17 +26,8 @@ enum class VRPipelineType : uint8_t {
 // Shader uniforms for the various shaders used by the Vulkan Renderer
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VRShaderUniforms {
-    float       mvpMatrix[4][4];    // Modelview projection matrix: used to transform vertices in the vertex shader
-    uint32_t    texWinX;            // Texture wrapping window: left x in pixels
-    uint32_t    texWinY;            // Texture wrapping window: top y in pixels
-    uint32_t    texWinW;            // Texture wrapping window: width in pixels
-    uint32_t    texWinH;            // Texture wrapping window: height in pixels
-    uint32_t    clutX;              // Texture coordinate of the CLUT in VRAM: x
-    uint32_t    clutY;              // Texture coordinate of the CLUT in VRAM: y
-
-    // When a pixel is flagged as 'semi-transparent', the RGBA color to multiply that pixel by.
-    // Used to control blending when semi-transparency is active.
-    float stMulR, stMulG, stMulB, stMulA;
+    // Modelview projection matrix: used to transform vertices in the vertex shader
+    float mvpMatrix[4][4];
 };
 
 // Make sure shader uniforms are not bigger than the minimum push constant range required by Vulkan, which is 128 bytes.
@@ -47,9 +38,27 @@ static_assert(sizeof(VRShaderUniforms) <= 128);
 // Vertex type for the Vulkan renderer
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VRVertex {
-    float       x, y, z, s;     // XYZ Position and 'Scale' for light diminishing effects in-game (unused by UI shaders)
-    float       r, g, b, a;     // Color for the vertex
-    uint16_t    u, v;           // 2D Texture coordinates for the vertex
+    // XYZ Position and lastly a 'Scale' value packed into the 'w' component for light diminishing effects in-game (unused by UI shaders)
+    float x, y, z, s;
+    
+    // Color for the vertex: rgba where '128' is regarded as 1.0
+    uint8_t r, g, b, a;
+
+    // 2D Texture coordinates for the vertex
+    uint16_t u, v;
+    
+    // Texture wrapping window: x and y position
+    uint16_t texWinX, texWinY;
+    
+    // Texture wrapping window: width and height
+    uint16_t texWinW, texWinH;
+    
+    // CLUT location for 4-bit and 8-bit color modes: x and y
+    uint16_t clutX, clutY;
+    
+    // When a pixel is flagged as 'semi-transparent', the RGBA color to multiply that pixel by.
+    // Used to control blending when semi-transparency is active; a value of '128' is regarded as 1.0.
+    uint8_t stmulR, stmulG, stmulB, stmulA;
 };
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER
