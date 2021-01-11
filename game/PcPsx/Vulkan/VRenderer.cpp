@@ -438,6 +438,16 @@ void endFrame() noexcept {
     ASSERT(gbDidBeginFrame);
     gbDidBeginFrame = false;
 
+    // Renderer specific finishing up, if we are drawing.
+    // May cause transfer tasks to be kicked off.
+    if (gpCurCmdBuffer) {
+        if (gbUsePsxRenderer) {
+            endFrame_Psx();
+        } else {
+            endFrame_VkRenderer();
+        }
+    }
+
     // Begin executing any pending transfers
     vgl::TransferMgr& transferMgr = gDevice.getTransferMgr();
     transferMgr.executePreFrameTransferTask();
@@ -446,13 +456,6 @@ void endFrame() noexcept {
     if (!gpCurCmdBuffer) {
         gDevice.waitUntilDeviceIdle();
         return;
-    }
-
-    // Renderer specific finishing up
-    if (gbUsePsxRenderer) {
-        endFrame_Psx();
-    } else {
-        endFrame_VkRenderer();
     }
 
     // End command recording and submit the command buffer to the device.

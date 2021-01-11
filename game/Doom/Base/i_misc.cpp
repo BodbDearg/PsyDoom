@@ -438,7 +438,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
-        // PsyDoom: define the texture window while we are at, rather than relying on the one set externally
+        // PsyDoom: define the texture window while we are at it, rather than relying on the one set externally
         #if PSYDOOM_MODS
             const RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);

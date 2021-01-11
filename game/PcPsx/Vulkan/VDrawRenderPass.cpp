@@ -68,7 +68,7 @@ bool VDrawRenderPass::init(vgl::LogicalDevice& device, const VkFormat colorForma
     depthAttachRef.attachment = 1;
     depthAttachRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    // Create the actual render pass 
+    // Create the actual render pass
     if (!BaseRenderPass::init(device, renderPassDef)) {
         destroy(true);
         return false;
