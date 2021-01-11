@@ -45,9 +45,15 @@ static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical 
 static vgl::LogicalDevice           gDevice(gVkFuncs);              // The logical device used for Vulkan
 static VDrawRenderPass              gDrawRenderPass;                // Render pass used for drawing
 static VPresentRenderPass           gPresentRenderPass;             // Render pass used for presentation
-static vgl::Semaphore               gFramebufferReadySignal;        // Semaphore signalled when the framebuffer is ready
-static vgl::Semaphore               gRenderDoneSignal;              // Semaphore signalled when rendering is done
 static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
+
+// Semaphores signalled when the framebuffer is ready.
+// One per ringbuffer slot, so we don't disturb a frame that is still being processed.
+static vgl::Semaphore gFramebufferReadySemaphores[vgl::Defines::RINGBUFFER_SIZE];
+
+// Semaphore signalled when rendering is done.
+// One per ringbuffer slot, so we don't disturb a frame that is still being processed.
+static vgl::Semaphore gRenderDoneSemaphores[vgl::Defines::RINGBUFFER_SIZE];
 
 // Command buffers used for drawing operations in each frame.
 // One for each ringbuffer slot, so we can record a new buffer while a previous frame's buffer is still executing.
@@ -304,11 +310,15 @@ void init() noexcept {
         FatalErrors::raise("Failed to create the Vulkan 'present' render pass!");
 
     // Initialize various semaphores
-    if (!gFramebufferReadySignal.init(gDevice))
-        FatalErrors::raise("Failed to create the Vulkan 'framebuffer ready' semaphore!");
+    for (vgl::Semaphore& semaphore : gFramebufferReadySemaphores) {
+        if (!semaphore.init(gDevice))
+            FatalErrors::raise("Failed to create a Vulkan 'framebuffer ready' semaphore!");
+    }
 
-    if (!gRenderDoneSignal.init(gDevice))
-        FatalErrors::raise("Failed to create the Vulkan 'render done' semaphore!");
+    for (vgl::Semaphore& semaphore : gRenderDoneSemaphores) {
+        if (!semaphore.init(gDevice))
+            FatalErrors::raise("Failed to create the Vulkan 'render done' semaphore!");
+    }
 
     // Init the command buffers
     for (vgl::CmdBuffer& cmdBuffer : gCmdBuffers) {
@@ -369,8 +379,14 @@ void destroy() noexcept {
         cmdBuffer.destroy(true);
     }
 
-    gRenderDoneSignal.destroy();
-    gFramebufferReadySignal.destroy();
+    for (vgl::Semaphore& semaphore : gRenderDoneSemaphores) {
+        semaphore.destroy();
+    }
+
+    for (vgl::Semaphore& semaphore : gFramebufferReadySemaphores) {
+        semaphore.destroy();
+    }
+
     gPresentRenderPass.destroy();
     gDrawRenderPass.destroy();
     gDevice.destroy();
@@ -397,11 +413,12 @@ void beginFrame() noexcept {
     }
 
     // Acquire a framebuffer and bail if that failed
-    if (!framebufferMgr.acquireFramebuffer(gFramebufferReadySignal))
+    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
+
+    if (!framebufferMgr.acquireFramebuffer(gFramebufferReadySemaphores[ringbufferIdx]))
         return;
 
     // Begin recording the command buffer for this frame
-    const uint8_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
     gpCurCmdBuffer = &gCmdBuffers[ringbufferIdx];
     gCmdBufferRec.beginPrimaryCmdBuffer(*gpCurCmdBuffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
@@ -462,22 +479,29 @@ void endFrame() noexcept {
     // Wait for the current framebuffer to be acquired before executing this command buffer.
     // Signal the current ringbuffer slot fence when drawing is done.
     gCmdBufferRec.endCmdBuffer();
+    
     vgl::RingbufferMgr& ringbufferMgr = gDevice.getRingbufferMgr();
+    const uint32_t ringbufferIdx = ringbufferMgr.getBufferIndex();
     
     {
         vgl::CmdBufferWaitCond cmdsWaitCond = {};
-        cmdsWaitCond.pSemaphore = &gFramebufferReadySignal;
+        cmdsWaitCond.pSemaphore = &gFramebufferReadySemaphores[ringbufferIdx];
         cmdsWaitCond.blockedStageFlags = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
 
         vgl::Fence& ringbufferSlotFence = ringbufferMgr.getCurrentBufferFence();
-        gDevice.submitCmdBuffer(*gpCurCmdBuffer, { cmdsWaitCond }, &gRenderDoneSignal, &ringbufferSlotFence);   // Note: signal render done semaphore and the ringbuffer slot fence when finished
+        gDevice.submitCmdBuffer(
+            *gpCurCmdBuffer,
+            { cmdsWaitCond },
+            &gRenderDoneSemaphores[ringbufferIdx],  // Note: signal render done semaphore and the ringbuffer slot fence when finished
+            &ringbufferSlotFence
+        );
     }
 
     // Present the current framebuffer if we have it and only do present when rendering is done
     vgl::ScreenFramebufferMgr& framebufferMgr = gDevice.getScreenFramebufferMgr();
 
     if (framebufferMgr.hasValidFramebuffers()) {
-        framebufferMgr.presentCurrentFramebuffer(gRenderDoneSignal);
+        framebufferMgr.presentCurrentFramebuffer(gRenderDoneSemaphores[ringbufferIdx]);
     }
 
     // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame
