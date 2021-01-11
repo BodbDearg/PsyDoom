@@ -90,31 +90,6 @@ static void endDrawBatch() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unpack a CLUT 'id' into an x, y coordinate for the CLUT
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void clutIdToClutXy(const uint16_t clutId, uint16_t& clutX, uint16_t& clutY) noexcept {
-    clutX = (clutId & 0x3Fu) << 4;      // Max coord: 1023, restricted to being on 16 pixel boundaries on the x-axis
-    clutY = (clutId >> 6) & 0x3FFu;     // Max coord: 1023
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Unpack various texturing parameters from the texture page id.
-// Extracts the texture format, texture page position, and blending mode.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void texPageIdToTexParams(
-    const uint16_t texPageId,
-    Gpu::TexFmt& texFmt,
-    uint16_t& texPageX,
-    uint16_t& texPageY,
-    Gpu::BlendMode& blendMode
-) noexcept {
-    texFmt = (Gpu::TexFmt)((texPageId >> 7) & 0x0003u);
-    texPageX = ((texPageId & 0x000Fu) >> 0) * 64u;
-    texPageY = ((texPageId & 0x0010u) >> 4) * 256u;
-    blendMode = (Gpu::BlendMode)((texPageId >> 5) & 0x0003u);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the drawing module and allocates draw vertex buffers etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
@@ -308,9 +283,55 @@ void setTransformMatrixForUI() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a UI sprite to be drawn
+// Add a 2D line to be drawn (alpha blended only)
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addUISprite(
+void addAlphaBlendedUILine(
+    const float x1,
+    const float y1,
+    const float x2,
+    const float y2,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const uint8_t a,
+    const bool bBlend
+) noexcept {
+    // Switch to the correct pipeline
+    setPipeline(VPipelineType::Lines);
+
+    // Decide on the semi-transparent multiply alpha, depending on if blending is enabled.
+    // A value of '128' is full alpha and '64' is 50% alpha.
+    const uint8_t stmulA = (bBlend) ? 64 : 128;
+
+    // Ensure we have enough vertices to proceed
+    ensureNumVtxBufferVerts(2);
+
+    // Fill in the vertices, starting first with common parameters
+    VVertex* const pVerts = gpCurVtxBufferVerts + gCurVtxBufferOffset;
+
+    for (uint32_t i = 0; i < 2; ++i) {
+        VVertex& vert = pVerts[i];
+        vert = {};
+        vert.r = r;
+        vert.g = g;
+        vert.b = b;
+        vert.a = a;
+    }
+
+    // Fill in verts xy positions
+    pVerts[0].x = x1;   pVerts[0].y = y1;
+    pVerts[1].x = x2;   pVerts[1].y = y2;
+
+    // Consumed 2 buffer vertices and add 2 vertices to the current draw batch
+    gCurVtxBufferOffset += 2;
+    gCurDrawBatchSize += 2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a UI style sprite to be drawn (alpha blended only).
+// UI style sprites have no scaling or rotation applied to them.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addAlphaBlendedUISprite(
     const float x,
     const float y,
     const float w,
@@ -321,25 +342,15 @@ void addUISprite(
     const uint8_t g,
     const uint8_t b,
     const uint8_t a,
-    const uint16_t clutId,
-    const uint16_t texPageId,
+    const uint16_t clutX,
+    const uint16_t clutY,
+    const uint16_t texPageX,
+    const uint16_t texPageY,
+    const Gpu::TexFmt texFmt,
     const bool bBlend
 ) noexcept {
-    // Get draw params for the sprite
-    uint16_t clutX;
-    uint16_t clutY;
-    clutIdToClutXy(clutId, clutX, clutY);
-
-    Gpu::TexFmt texFmt;
-    uint16_t texPageX;
-    uint16_t texPageY;
-    Gpu::BlendMode blendMode;
-    texPageIdToTexParams(texPageId, texFmt, texPageX, texPageY, blendMode);
-
     // Switch to the correct pipeline and figure out the scaling for the 'u' texture coordinate depending on the texture bit rate
     float uScale;
-
-    ASSERT_LOG(blendMode == Gpu::BlendMode::Alpha50, "Only alpha blending is supported for UI sprites!");
 
     if (texFmt == Gpu::TexFmt::Bpp8) {
         setPipeline(VPipelineType::UI_8bpp);

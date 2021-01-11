@@ -439,14 +439,6 @@ void I_DrawSprite(
     const uint16_t texW,
     const uint16_t texH
 ) noexcept {
-    // PsyDoom: draw using the Vulkan renderer if that is active
-    #if PSYDOOM_VULKAN_RENDERER
-        if (Video::usingVulkanRenderer()) {
-            VDrawing::addUISprite(xpos, ypos, texW, texH, texU, texV, 128, 128, 128, 128, clutId, texPageId, false);
-            return;
-        }
-    #endif
-
     // Set the drawing mode
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
@@ -486,14 +478,6 @@ void I_DrawColoredSprite(
     const uint8_t b,
     const bool bSemiTransparent
 ) noexcept {
-    // PsyDoom: draw using the Vulkan renderer if that is active
-    #if PSYDOOM_VULKAN_RENDERER
-        if (Video::usingVulkanRenderer()) {
-            VDrawing::addUISprite(xpos, ypos, texW, texH, texU, texV, r, g, b, 128, clutId, texPageId, bSemiTransparent);
-            return;
-        }
-    #endif
-
     // Set the drawing mode
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
