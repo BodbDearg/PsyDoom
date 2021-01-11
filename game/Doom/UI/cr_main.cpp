@@ -138,6 +138,10 @@ gameaction_t TIC_Credits() noexcept {
 void DRAW_Credits() noexcept {
     // Increment the frame count for the texture cache's management purposes
     I_IncDrawnFrameCount();
+
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
     
     // Draw the background and scrolling credits text for whatever credits page we are on
     if (Game::isFinalDoom()) {

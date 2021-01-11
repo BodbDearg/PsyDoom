@@ -7,6 +7,8 @@
 #include "ProgArgs.h"
 #include "PsxVm.h"
 #include "Video.h"
+#include "Vulkan/VDrawing.h"
+#include "Vulkan/VRenderer.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
 #include "Wess/wessapi.h"
@@ -183,6 +185,20 @@ bool waitForCdAudioFadeOut() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void threadYield() noexcept {
     std::this_thread::yield();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does some setup for UI drawing if using the new Vulkan based renderer
+//------------------------------------------------------------------------------------------------------------------------------------------
+void onBeginUIDrawing() noexcept {
+    #if PSYDOOM_VULKAN_RENDERER
+        // Setup the UI transform matrix if using the Vulkan renderer
+        if (Video::gBackendType == Video::BackendType::Vulkan) {
+            if (!VRenderer::gbUsePsxRenderer) {
+                VDrawing::setTransformMatrixForUI();
+            }
+        }
+    #endif
 }
 
 END_NAMESPACE(Utils)

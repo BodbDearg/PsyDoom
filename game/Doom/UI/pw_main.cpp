@@ -19,6 +19,7 @@
 #include "PcPsx/Input.h"
 #include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/PsxPadButtons.h"
+#include "PcPsx/Utils.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -252,6 +253,10 @@ gameaction_t TIC_PasswordScreen() noexcept {
 void DRAW_PasswordScreen() noexcept {
     // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
+
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
 
     {
         const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();

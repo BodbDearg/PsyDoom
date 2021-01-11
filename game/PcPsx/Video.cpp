@@ -9,9 +9,9 @@
 #include "ProgArgs.h"
 #include "PsxVm.h"
 #include "Utils.h"
-
-#include "VideoBackend_Vulkan.h"
 #include "VideoBackend_SDL.h"
+#include "VideoBackend_Vulkan.h"
+#include "Vulkan/VRenderer.h"
 
 #include <algorithm>
 #include <SDL.h>
@@ -248,6 +248,18 @@ void displayFramebuffer() noexcept {
 
     gpVideoBackend->displayFramebuffer();
     Utils::doPlatformUpdates();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: tells if the Vulkan renderer is being used
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool usingVulkanRenderer() noexcept {
+    #if PSYDOOM_VULKAN_RENDERER
+        if (gBackendType == BackendType::Vulkan)
+            return (!VRenderer::gbUsePsxRenderer);
+    #endif
+
+    return false;
 }
 
 END_NAMESPACE(Video)

@@ -30,7 +30,8 @@
 
 BEGIN_NAMESPACE(VRenderer)
 
-bool gbUsePsxRenderer = true;  // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
+// TODO: add ways to toggle this
+bool gbUsePsxRenderer = false;      // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
 
 static bool                         gbDidBeginFrame;                // Whether a frame was begun
 static vgl::VkFuncs                 gVkFuncs;                       // Cached pointers to all Vulkan API functions
@@ -332,7 +333,7 @@ void init() noexcept {
 
     // Initialize other Vulkan Renderer modules
     VPipelines::init(gDevice, gDrawRenderPass);
-    VDrawing::init(gDevice);
+    VDrawing::init(gDevice, gPsxVramTexture);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

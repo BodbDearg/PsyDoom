@@ -18,6 +18,7 @@
 #include "o_main.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/PlayerPrefs.h"
+#include "PcPsx/Utils.h"
 
 #include <cstdio>
 
@@ -190,6 +191,10 @@ gameaction_t Controls_Update() noexcept {
 void Controls_Draw() noexcept {
     // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
+
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
 
     {
         const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();

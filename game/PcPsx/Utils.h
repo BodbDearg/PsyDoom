@@ -19,6 +19,7 @@ bool waitUntilSeqEnteredStatus(const int32_t sequenceIdx, const SequenceStatus s
 bool waitUntilSeqExitedStatus(const int32_t sequenceIdx, const SequenceStatus status) noexcept;
 bool waitForCdAudioFadeOut() noexcept;
 void threadYield() noexcept;
+void onBeginUIDrawing() noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if a pad button has just been pressed by examining the currently pressed pad buttons versus the last pressed

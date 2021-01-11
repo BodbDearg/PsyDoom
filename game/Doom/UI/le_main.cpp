@@ -13,6 +13,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "PcPsx/Input.h"
+#include "PcPsx/Utils.h"
 #include "ti_main.h"
 
 // Texture for the legals screen text
@@ -87,6 +88,11 @@ gameaction_t TIC_Legals() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_Legals() noexcept {
     I_IncDrawnFrameCount();
+
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
+
     I_CacheAndDrawSprite(gTex_LEGALS, 0, (int16_t) gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
 
     I_SubmitGpuCmds();

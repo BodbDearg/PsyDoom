@@ -283,6 +283,11 @@ gameaction_t F1_Ticker() noexcept {
 void F1_Drawer() noexcept {
     // Increment the frame count (for the texture cache) and draw the background
     I_IncDrawnFrameCount();
+
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
+
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
 
     // Show both the incoming and fully displayed text lines
@@ -585,6 +590,11 @@ gameaction_t F2_Ticker() noexcept {
 void F2_Drawer() noexcept {
     // Draw the icon of sin background and increment frame count for the texture cache
     I_IncDrawnFrameCount();
+
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
+
     I_CacheAndDrawSprite(gTex_DEMON, 0, 0, gPaletteClutIds[MAINPAL]);
 
     // See whether we are drawing the text or the cast of characters

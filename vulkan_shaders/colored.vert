@@ -12,6 +12,6 @@ DECLARE_VERTEX_SHADER_INPUTS()
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    out_color = in_color / 128.0;
     gl_Position = constants.mvpMatrix * vec4(in_pos_scale.xyz, 1);
+    out_color = in_color / 128.0;
 }

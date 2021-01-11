@@ -15,10 +15,18 @@ BEGIN_NAMESPACE(VPipelines)
 // The raw SPIRV binary code for the shaders
 #include "SPIRV_colored_frag.bin.h"
 #include "SPIRV_colored_vert.bin.h"
+#include "SPIRV_ui_16bpp_frag.bin.h"
+#include "SPIRV_ui_4bpp_frag.bin.h"
+#include "SPIRV_ui_8bpp_frag.bin.h"
+#include "SPIRV_ui_vert.bin.h"
 
 // Shaders: see the associated source files for more comments/details
 static vgl::ShaderModule    gShader_colored_vert;
 static vgl::ShaderModule    gShader_colored_frag;
+static vgl::ShaderModule    gShader_ui_vert;
+static vgl::ShaderModule    gShader_ui_4bpp_frag;
+static vgl::ShaderModule    gShader_ui_8bpp_frag;
+static vgl::ShaderModule    gShader_ui_16bpp_frag;
 
 vgl::Sampler                gSampler;               // The single sampler used: uses nearest neighbor filtering
 vgl::DescriptorSetLayout    gDescriptorSetLayout;   // The single descriptor set layout used for the single pipeline
@@ -37,6 +45,18 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
 
     if (!gShader_colored_frag.init(device, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_colored_frag, sizeof(gSPIRV_colored_frag)))
         FatalErrors::raise("Failed to init Vulkan shader 'colored_frag'!");
+
+    if (!gShader_ui_vert.init(device, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_ui_vert, sizeof(gSPIRV_ui_vert)))
+        FatalErrors::raise("Failed to init Vulkan shader 'ui_vert'!");
+
+    if (!gShader_ui_4bpp_frag.init(device, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_4bpp_frag, sizeof(gSPIRV_ui_4bpp_frag)))
+        FatalErrors::raise("Failed to init Vulkan shader 'ui_4bpp_frag'!");
+
+    if (!gShader_ui_8bpp_frag.init(device, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_8bpp_frag, sizeof(gSPIRV_ui_8bpp_frag)))
+        FatalErrors::raise("Failed to init Vulkan shader 'ui_8bpp_frag'!");
+
+    if (!gShader_ui_16bpp_frag.init(device, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_16bpp_frag, sizeof(gSPIRV_ui_16bpp_frag)))
+        FatalErrors::raise("Failed to init Vulkan shader 'ui_16bpp_frag'!");
 
     // Create the Vulkan sampler
     {
@@ -73,7 +93,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
         VkDescriptorSetLayout vkDescSetLayout = gDescriptorSetLayout.getVkLayout();
 
         VkPushConstantRange uniformPushConstants = {};
-        uniformPushConstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;    // Needed in both shader types
+        uniformPushConstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;   // Just needed in the vertex shader
         uniformPushConstants.offset = 0;
         uniformPushConstants.size = sizeof(VShaderUniforms);
 
@@ -90,7 +110,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     VkVertexInputAttributeDescription vertexAttribs[] = {
         { 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT,  offsetof(VVertex, x) },
         { 1, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VVertex, r) },
-        { 2, 0, VK_FORMAT_R16G16_USCALED,       offsetof(VVertex, u) },
+        { 2, 0, VK_FORMAT_R32G32_SFLOAT,        offsetof(VVertex, u) },
         { 3, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, texWinX) },
         { 4, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, texWinW) },
         { 5, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, clutX) },
@@ -99,6 +119,9 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
 
     // Pipeline state: sets of shader modules
     vgl::ShaderModule* const shaderModules_colored[] = { &gShader_colored_vert, &gShader_colored_frag };
+    vgl::ShaderModule* const shaderModules_ui_4bpp[] = { &gShader_ui_vert, &gShader_ui_4bpp_frag };
+    vgl::ShaderModule* const shaderModules_ui_8bpp[] = { &gShader_ui_vert, &gShader_ui_8bpp_frag };
+    vgl::ShaderModule* const shaderModules_ui_16bpp[] = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
 
     // Pipeline state: input primitive types
     vgl::PipelineInputAssemblyState lineListInput = vgl::PipelineInputAssemblyState().setToDefault();
@@ -191,9 +214,9 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     };
 
     createPipeline(VPipelineType::Lines, shaderModules_colored, lineListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
-    createPipeline(VPipelineType::UI_4bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);                // TODO: FIX SHADER
-    createPipeline(VPipelineType::UI_8bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);                // TODO: FIX SHADER
-    createPipeline(VPipelineType::UI_16bpp, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);               // TODO: FIX SHADER
+    createPipeline(VPipelineType::UI_4bpp, shaderModules_ui_4bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
+    createPipeline(VPipelineType::UI_8bpp, shaderModules_ui_8bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
+    createPipeline(VPipelineType::UI_16bpp, shaderModules_ui_16bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
     createPipeline(VPipelineType::View_Alpha, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testEnabled);              // TODO: FIX SHADER
     createPipeline(VPipelineType::View_Additive, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_additive, depthState_testEnabled);        // TODO: FIX SHADER
     createPipeline(VPipelineType::View_Subtractive, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_subtractive, depthState_testEnabled);  // TODO: FIX SHADER
@@ -210,6 +233,10 @@ void shutdown() noexcept {
     gPipelineLayout.destroy(true);
     gDescriptorSetLayout.destroy(true);
     gSampler.destroy();
+    gShader_ui_16bpp_frag.destroy(true);
+    gShader_ui_8bpp_frag.destroy(true);
+    gShader_ui_4bpp_frag.destroy(true);
+    gShader_ui_vert.destroy(true);
     gShader_colored_frag.destroy(true);
     gShader_colored_vert.destroy(true);
 }

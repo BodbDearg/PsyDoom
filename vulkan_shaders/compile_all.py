@@ -16,8 +16,12 @@ import sys
 # Job-specs for all the files to compile.
 # Corresponds to the 3 arguments of 'compile_shader'
 files_to_compile = [
-    [ "colored.vert", "compiled/SPIRV_colored_vert.bin.h", "vert", "gSPIRV_colored_vert" ],
-    [ "colored.frag", "compiled/SPIRV_colored_frag.bin.h", "frag", "gSPIRV_colored_frag" ],
+    [ "colored.vert",   "compiled/SPIRV_colored_vert.bin.h",    "vert", "gSPIRV_colored_vert"   ],
+    [ "colored.frag",   "compiled/SPIRV_colored_frag.bin.h",    "frag", "gSPIRV_colored_frag"   ],
+    [ "ui.vert",        "compiled/SPIRV_ui_vert.bin.h",         "vert", "gSPIRV_ui_vert"        ],
+    [ "ui_4bpp.frag",   "compiled/SPIRV_ui_4bpp_frag.bin.h",    "frag", "gSPIRV_ui_4bpp_frag"   ],
+    [ "ui_8bpp.frag",   "compiled/SPIRV_ui_8bpp_frag.bin.h",    "frag", "gSPIRV_ui_8bpp_frag"   ],
+    [ "ui_16bpp.frag",  "compiled/SPIRV_ui_16bpp_frag.bin.h",   "frag", "gSPIRV_ui_16bpp_frag"  ],
 ]
 
 # Compiles the input GLSL file to an output file with the specified name.

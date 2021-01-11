@@ -370,6 +370,10 @@ gameaction_t IN_Ticker() noexcept {
 void IN_Drawer() noexcept {
     I_IncDrawnFrameCount();
 
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
+
     if (gNetGame == gt_coop) {
         IN_CoopDrawer();
     } else if (gNetGame == gt_deathmatch) {

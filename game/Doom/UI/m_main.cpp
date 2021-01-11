@@ -460,6 +460,11 @@ gameaction_t M_Ticker() noexcept {
 void M_Drawer() noexcept {
     // Draw the menu background and increment frame count for the texture cache.
     I_IncDrawnFrameCount();
+
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
+
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
 
     // Draw the DOOM logo

@@ -44,8 +44,9 @@ struct VVertex {
     // Color for the vertex: rgba where '128' is regarded as 1.0
     uint8_t r, g, b, a;
 
-    // 2D Texture coordinates for the vertex
-    uint16_t u, v;
+    // 2D Texture coordinates for the vertex.
+    // These coordinates are in terms of 16-bit pixels in VRAM.
+    float u, v;
     
     // Texture wrapping window: x and y position
     uint16_t texWinX, texWinY;

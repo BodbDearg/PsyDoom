@@ -220,6 +220,10 @@ gameaction_t TIC_Title() noexcept {
 void DRAW_Title() noexcept {
     I_IncDrawnFrameCount();
 
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    #endif
+
     // Draw the title logo.
     // Final Doom: this is drawn on top of everything (at the end) instead.
     if (!Game::isFinalDoom()) {
