@@ -4,6 +4,8 @@
 
 #include "BaseRenderPass.h"
 
+// TODO: This might not be needed, consider removing
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // A simple Vulkan render pass that has a single color attachment and which has a single subpass.
 // Intended for presenting a previously rendered attachment to the screen and transitioning image layouts.

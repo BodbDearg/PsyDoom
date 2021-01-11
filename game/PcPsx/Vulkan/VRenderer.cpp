@@ -28,6 +28,10 @@
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
+// TODO: REMOVE THIS TEMP CODE
+#include "PcPsx/Input.h"
+#include <SDL.h>
+
 BEGIN_NAMESPACE(VRenderer)
 
 // TODO: add ways to toggle this
@@ -476,6 +480,14 @@ void endFrame() noexcept {
     // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame
     ringbufferMgr.acquireNextBuffer();
     gpCurCmdBuffer = nullptr;
+
+    // TODO: REMOVE THIS TEMP CODE
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_F9)) {
+        gbUsePsxRenderer = false;
+    }
+    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_F10)) {
+        gbUsePsxRenderer = true;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

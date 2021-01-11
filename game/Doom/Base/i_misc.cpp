@@ -8,6 +8,8 @@
 #include "i_drawcmds.h"
 #include "i_main.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VDrawing.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -345,11 +347,93 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
     return (SCREEN_W - width) / 2;
 }
 
+#if PSYDOOM_VULKAN_RENDERER
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Re-implementation of 'I_DrawString' for the native Vulkan renderer
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void I_DrawString_Vulkan(const int32_t x, const int32_t y, const char* const str) noexcept {
+    // Cache the texture page and clut id to use
+    const uint16_t texPageId = gTex_STATUS.texPageId;
+    const uint16_t clutId = gPaletteClutIds[UIPAL];
+
+    // Decide on starting x position: can either be so the string is centered in the screen, or just the value verbatim
+    int32_t curX = (x != -1) ? x : I_GetStringXPosToCenter(str);
+
+    // Draw all the characters in the string
+    const char* pCurChar = str;
+
+    for (char c = *pCurChar; c != 0; ++pCurChar, c = *pCurChar) {
+        // Figure out which font character to use, and y positioning
+        int32_t curY = y;
+        int32_t charIdx = 0;
+
+        if ((c >= 'A') && (c <= 'Z')) {
+            charIdx = BIG_FONT_UCASE_ALPHA + (c - 'A');
+        }
+        else if ((c >= 'a') && (c <= 'z')) {
+            charIdx = BIG_FONT_LCASE_ALPHA + (c - 'a');
+            curY += 3;
+        }
+        else if ((c >= '0') && (c <= '9')) {
+            charIdx = BIG_FONT_DIGITS + (c - '0');
+        }
+        else if (c == '%') {
+            charIdx = BIG_FONT_PERCENT;
+        }
+        else if (c == '!') {
+            charIdx = BIG_FONT_EXCLAMATION;
+        }
+        else if (c == '.') {
+            charIdx = BIG_FONT_PERIOD;
+        }
+        else if (c == '-') {
+            charIdx = BIG_FONT_MINUS;
+        }
+        else {
+            curX += 6;      // Whitespace
+            continue;
+        }
+
+        // Populate and submit the sprite primitive
+        const fontchar_t& fontchar = gBigFontChars[charIdx];
+
+        VDrawing::addUISprite(
+            (float) curX,
+            (float) curY,
+            fontchar.w,
+            fontchar.h,
+            fontchar.u,
+            fontchar.v,
+            128,
+            128,
+            128,
+            128,
+            clutId,
+            texPageId,
+            false
+        );
+
+        // Move past the drawn character
+        curX += fontchar.w;
+    }
+}
+
+#endif  // #if PSYDOOM_VULKAN_RENDERER
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the given string using the big font at the given pixel location.
 // If '-1' is specified for the x coordinate, the string is drawn centered horizontally in the middle of the screen.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexcept {
+    // PsyDoom: Use the Vulkan implementation of this?
+    #if PSYDOOM_VULKAN_RENDERER
+        if (Video::usingVulkanRenderer()) {
+            I_DrawString_Vulkan(x, y, str);
+            return;
+        }
+    #endif
+
     // Set the draw mode to remove the current texture window and texture page to the STATUS graphic
     {
         DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
