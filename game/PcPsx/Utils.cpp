@@ -195,7 +195,7 @@ void onBeginUIDrawing() noexcept {
         // Setup the UI transform matrix if using the Vulkan renderer
         if (Video::gBackendType == Video::BackendType::Vulkan) {
             if (!VRenderer::gbUsePsxRenderer) {
-                VDrawing::setTransformMatrixForUI();
+                VDrawing::setTransformMatrix(VDrawing::computeTransformMatrixForUI());
             }
         }
     #endif

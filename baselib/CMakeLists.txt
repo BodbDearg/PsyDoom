@@ -15,6 +15,7 @@ set(SOURCE_FILES
     "JsonUtils.h"
     "Macros.h"
     "OutputStream.h"
+    "Matrix4.h"
 )
 
 set(OTHER_FILES

@@ -56,13 +56,13 @@ sector_t* gpCurDrawSector;
 // PsyDoom: used for interpolation for uncapped framerates 
 #if PSYDOOM_MODS
     typedef std::chrono::high_resolution_clock::time_point timepoint_t;
+    static timepoint_t gPrevFrameTime;
 
-    static timepoint_t  gPrevFrameTime;
-    static fixed_t      gOldViewX;
-    static fixed_t      gOldViewY;
-    static fixed_t      gOldViewZ;
-    static angle_t      gOldViewAngle;
-    static bool         gbSnapViewZInterpolation;
+    fixed_t     gOldViewX;
+    fixed_t     gOldViewY;
+    fixed_t     gOldViewZ;
+    angle_t     gOldViewAngle;
+    bool        gbSnapViewZInterpolation;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -170,8 +170,11 @@ void R_RenderPlayerView() noexcept {
     // Stat tracking: how many subsectors will we draw?
     gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
 
-    // Finish up the previous draw before we continue and draw the sky if currently visible
-    I_DrawPresent();
+    // Finish up the previous draw before we continue and draw the sky if currently visible.
+    // PsyDoom: moved this to the end of 'P_Drawer' instead - needed for the new Vulkan renderer integration.
+    #if !PSYDOOM_MODS
+        I_DrawPresent();
+    #endif
 
     if (gbIsSkyVisible) {
         R_DrawSky();
@@ -212,7 +215,7 @@ void R_RenderPlayerView() noexcept {
         R_DrawSubsector(subsec);
     }
 
-    // Draw any player sprites
+    // Draw any player sprites/weapons
     R_DrawWeapon();
 
     // Clearing the texture window: this is probably not required?

@@ -13,6 +13,7 @@
 #include "Defines.h"
 #include "DescriptorPool.h"
 #include "DescriptorSet.h"
+#include "Doom/doomdef.h"
 #include "FatalErrors.h"
 #include "Framebuffer.h"
 #include "Gpu.h"
@@ -242,44 +243,54 @@ void setPipeline(const VPipelineType type) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the model/view/projection transform matrix used
 //------------------------------------------------------------------------------------------------------------------------------------------
-void setTransformMatrix(const float mvpMatrix[4][4]) noexcept {
+void setTransformMatrix(const Matrix4f& matrix) noexcept {
     // Note: currently the transform matrix is the only uniform and it's only used by vertex shaders
     ASSERT(gpCurCmdBufRec);
-    gpCurCmdBufRec->pushConstants(VPipelines::gPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), mvpMatrix);
+    gpCurCmdBufRec->pushConstants(VPipelines::gPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), matrix.e);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Setup the transform matrix for UI
+// Compute the transform matrix for the UI/2D elements in Doom.
+// Scales and positions everything such that the original UI coordinates can be used for the same result.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void setTransformMatrixForUI() noexcept {
-    // Get the current draw framebuffer being used and its size
-    ASSERT(gpCurVtxBuffer);
+Matrix4f computeTransformMatrixForUI() noexcept {
+    // Projection parameters.
+    // TODO: support widescreen modes and don't stretch in widescreen.
+    const float viewLx = 0;
+    const float viewRx = SCREEN_W;
+    const float viewBy = 0;
+    const float viewTy = SCREEN_H;      // Note: need to reverse by/ty to get the view the right way round (normally y is up with projection matrices)
+    const float zNear = 0.0f;
+    const float zFar = 1.0f;
 
-    vgl::LogicalDevice& device = *gpCurVtxBuffer->getDevice();
-    const vgl::Framebuffer& framebuffer = device.getScreenFramebufferMgr().getCurrentDrawFramebuffer();
-    const uint32_t fbWidth = framebuffer.getWidth();
-    const uint32_t fbHeight = framebuffer.getHeight();
+    return Matrix4f::orthographicOffCenter(viewLx, viewRx, viewTy, viewBy, zNear, zFar);
+}
 
-    // Compute the left/right and top/bottom values for the view.
-    // 
-    // TODO: center the UI instead of stretching.
-    const float lx = 0;
-    const float rx = (float) 256;   // TODO: don't harcode
-    const float ty = 0;
-    const float by = (float) 240;   // TODO: don't hardcode
-    const float zn = 0.0f;
-    const float zf = 1.0f;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Compute the transform matrix used to setup the 3D view for PsyDoom
+//------------------------------------------------------------------------------------------------------------------------------------------
+Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const float viewZ, const float viewAngle) noexcept {
+    // Projection parameters.
+    // Project as if we still had the old 256x200 3D viewport and off center to account for the status bar at the bottom.
+    // This matches the projection that the original PSX Doom used:
+    constexpr float STATUS_BAR_H = SCREEN_H - VIEW_3D_H;
 
-    // Note: the calculations here are based on the DirectX 9 utility function 'D3DXMatrixOrthoOffCenterRH()'.
-    // I made some adjustments however so the y-axis runs DOWN the screen instead of up.
-    const float matrix[4][4] = {
-        2 / (rx - lx),          0,                      0,               0,
-        0,                      2 / (by - ty),          0,               0,
-        0,                      0,                      1  / (zn - zf),  0,
-        (lx + rx) / (lx - rx),  (ty + by) / (ty - by),  zn / (zn - zf),  1
-    };
-    
-    setTransformMatrix(matrix);
+    const float viewLx = -1.0f;      // TODO: support widescreen modes
+    const float viewRx = 1.0f;
+    const float viewTy =  HALF_VIEW_3D_H / float(HALF_SCREEN_W);
+    const float viewBy = (-HALF_VIEW_3D_H - STATUS_BAR_H) / float(HALF_SCREEN_W);
+    const float zNear = 1.0f;
+    const float zFar = 32768.0f;
+
+    // Compute the projection, rotation and translation matrices for the view.
+    // Rotation is about the Y axis (Doom's Z axis).
+    const Matrix4f projection = Matrix4f::perspectiveOffCenter(viewLx, viewRx, viewTy, viewBy, zNear, zFar);
+    const Matrix4f rotation = Matrix4f::rotateY(viewAngle);
+    const Matrix4f translation = Matrix4f::translate(-viewX, -viewY, -viewZ);
+
+    // Now combine all the matrices and return the result
+    const Matrix4f modelViewProj = translation * rotation * projection;
+    return modelViewProj;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -417,6 +428,86 @@ void addAlphaBlendedUISprite(
     // Consumed 6 buffer vertices and add 6 vertices to the current draw batch
     gCurVtxBufferOffset += 6;
     gCurDrawBatchSize += 6;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a triangle for the game's 3D view.
+// The texture format is assumed to be 8 bits per pixel always.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void add3dViewTriangle(
+    const float x1,
+    const float y1,
+    const float z1,
+    const float u1,
+    const float v1,
+    const float x2,
+    const float y2,
+    const float z2,
+    const float u2,
+    const float v2,
+    const float x3,
+    const float y3,
+    const float z3,
+    const float u3,
+    const float v3,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const uint8_t a,
+    const uint16_t clutX,
+    const uint16_t clutY,
+    const uint16_t texWinX,
+    const uint16_t texWinY,
+    const uint16_t texWinW,
+    const uint16_t texWinH,
+    const bool bBlend
+) noexcept {
+    // Switch to the correct pipeline
+    // TODO: this is not correct
+    setPipeline(VPipelineType::UI_8bpp);
+
+    // Decide on the semi-transparent multiply alpha, depending on if blending is enabled.
+    // A value of '128' is full alpha and '64' is 50% alpha.
+    const uint8_t stmulA = (bBlend) ? 64 : 128;
+
+    // Ensure we have enough vertices to proceed
+    ensureNumVtxBufferVerts(3);
+
+    // Fill in the vertices, starting first with common parameters
+    VVertex* const pVerts = gpCurVtxBufferVerts + gCurVtxBufferOffset;
+
+    for (uint32_t i = 0; i < 3; ++i) {
+        VVertex& vert = pVerts[i];
+        vert.s = 1.0f;              // TODO: scale member
+        vert.r = r;
+        vert.g = g;
+        vert.b = b;
+        vert.a = a;
+        vert.texWinX = texWinX;
+        vert.texWinY = texWinY;
+        vert.texWinW = texWinW / 2;     // Note: divide by 2 because 8bpp mode and coords are for 16bpp
+        vert.texWinH = texWinH;
+        vert.clutX = clutX;
+        vert.clutY = clutY;
+        vert.stmulR = 128;          // Fully white (128 = 100% strength)
+        vert.stmulG = 128;
+        vert.stmulB = 128;
+        vert.stmulA = stmulA;
+    }
+
+    // Fill in verts xy and uv positions.
+    // Note that the u coordinate must be scaled by 50% due to the 8 bits per pixel texture format, as VRAM coords are in terms of 16-bit pixels.
+    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
+    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
+    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
+
+    pVerts[0].u = u1 * 0.5f;    pVerts[0].v = v1;
+    pVerts[1].u = u2 * 0.5f;    pVerts[1].v = v2;
+    pVerts[2].u = u3 * 0.5f;    pVerts[2].v = v3;
+
+    // Consumed 3 buffer vertices and add 3 vertices to the current draw batch
+    gCurVtxBufferOffset += 3;
+    gCurDrawBatchSize += 3;
 }
 
 END_NAMESPACE(VDrawing)

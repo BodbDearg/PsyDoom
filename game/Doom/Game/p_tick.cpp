@@ -9,6 +9,7 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/RendererVk/rv_main.h"
 #include "Doom/UI/am_main.h"
 #include "Doom/UI/o_main.h"
 #include "Doom/UI/st_main.h"
@@ -29,6 +30,7 @@
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
+#include "PcPsx/Video.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
@@ -626,11 +628,26 @@ void P_Drawer() noexcept {
     if (gPlayers[gCurPlayerIndex].automapflags & AF_ACTIVE) {
         AM_Drawer();
     } else {
-        R_RenderPlayerView();
+        #if PSYDOOM_VULKAN_RENDERER
+            // PsyDoom: use the new Vulkan renderer if enabled and bypass the classic one
+            if (Video::usingVulkanRenderer()) {
+                RV_RenderPlayerView();
+            } else {
+                R_RenderPlayerView();
+            }
+        #else 
+            R_RenderPlayerView();
+        #endif
     }
 
     ST_Drawer();
     I_SubmitGpuCmds();
+
+    // PsyDoom: moved presentation of rendering here to work better with the new Vulkan renderer.
+    // Was previously done at the start of 'R_RenderPlayerView', before any world drawing was done.
+    #if PSYDOOM_MODS
+        I_DrawPresent();
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

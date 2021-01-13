@@ -36,6 +36,14 @@ extern subsector_t**    gppEndDrawSubsector;
 extern sector_t*        gpCurDrawSector;
 extern int32_t          gNumDrawSubsectors;
 
+#if PSYDOOM_MODS
+    extern fixed_t      gOldViewX;
+    extern fixed_t      gOldViewY;
+    extern fixed_t      gOldViewZ;
+    extern angle_t      gOldViewAngle;
+    extern bool         gbSnapViewZInterpolation;
+#endif
+
 void R_Init() noexcept;
 void R_RenderPlayerView() noexcept;
 int32_t R_SlopeDiv(const uint32_t num, const uint32_t den) noexcept;
