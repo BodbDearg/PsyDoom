@@ -62,6 +62,7 @@ void addAlphaBlendedUISprite(
     const bool bBlend
 ) noexcept;
 
+// TODO: add quad variant to submit two triangles at once
 void add3dViewTriangle(
     const float x1,
     const float y1,

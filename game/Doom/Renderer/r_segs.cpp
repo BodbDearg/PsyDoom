@@ -90,14 +90,13 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             int32_t vt, vb;
 
             if (line.flags & ML_DONTPEGBOTTOM) {
-                // Bottom of texture is at bottom of lower wall.
-                //
+                // Don't anchor lower wall texture to the floor.
                 // This seems to do a weird wrapping as well every 128 units - not sure why that is...
                 // This could maybe cause some weirdness in some cases with lower walls!
                 const int32_t wall_h = bsec_by - fsec_ty;
                 vt = (d_fixed_to_int(side.rowoffset) + wall_h) & (~128);
             } else {
-                // Top of texture is at top of lower wall
+                // Anchor lower wall texture to the floor
                 vt = d_fixed_to_int(side.rowoffset);
             }
 
@@ -158,9 +157,9 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
         // Draw the columns of wall piece.
         // PSX specific: draw translucent as well if the linedef has that special flag.
-        bool bDrawTransparent = (line.flags & ML_MIDTRANSLUCENT);
-
+        const bool bDrawTransparent = (line.flags & ML_MIDTRANSLUCENT);
         texture_t& tex = gpTextures[gpTextureTranslation[side.midtexture]];
+
         R_DrawWallPiece(edge, tex, mid_ty, mid_by, vt, vb, bDrawTransparent);
     }
 }

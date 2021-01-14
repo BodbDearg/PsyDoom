@@ -433,6 +433,7 @@ void addAlphaBlendedUISprite(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a triangle for the game's 3D view.
 // The texture format is assumed to be 8 bits per pixel always.
+// All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void add3dViewTriangle(
     const float x1,
@@ -485,7 +486,7 @@ void add3dViewTriangle(
         vert.a = a;
         vert.texWinX = texWinX;
         vert.texWinY = texWinY;
-        vert.texWinW = texWinW / 2;     // Note: divide by 2 because 8bpp mode and coords are for 16bpp
+        vert.texWinW = texWinW;
         vert.texWinH = texWinH;
         vert.clutX = clutX;
         vert.clutY = clutY;
@@ -501,9 +502,9 @@ void add3dViewTriangle(
     pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
     pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
 
-    pVerts[0].u = u1 * 0.5f;    pVerts[0].v = v1;
-    pVerts[1].u = u2 * 0.5f;    pVerts[1].v = v2;
-    pVerts[2].u = u3 * 0.5f;    pVerts[2].v = v3;
+    pVerts[0].u = u1;   pVerts[0].v = v1;
+    pVerts[1].u = u2;   pVerts[1].v = v2;
+    pVerts[2].u = u3;   pVerts[2].v = v3;
 
     // Consumed 3 buffer vertices and add 3 vertices to the current draw batch
     gCurVtxBufferOffset += 3;
