@@ -35,7 +35,8 @@
 // Transforms the given UV coordinate by the texture window and wraps it to the texture window
 //----------------------------------------------------------------------------------------------------------------------
 vec2 transformTexWinUV(vec2 uv, uvec2 texWinPos, uvec2 texWinSize) {
-    return mod(uv, texWinSize) + texWinPos;
+    vec2 wrappedUv = mod(fract(uv / texWinSize) + 1.0, 1.0) * texWinSize;
+    return wrappedUv + texWinPos;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

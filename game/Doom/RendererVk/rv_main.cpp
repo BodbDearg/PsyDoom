@@ -151,14 +151,14 @@ void RV_RenderPlayerView() noexcept {
     // Traverse the BSP tree to determine what needs to be drawn and in what order.
     // TODO: remove old BSP here eventually, won't work with expanded frustrum.
     R_BSP();
-    
+
     // Stat tracking: how many subsectors will we draw?
     gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
 
     if (gbIsSkyVisible) {
         R_DrawSky();
     }
-    
+
     // Set the projection matrix to use and then draw all subsectors emitted during BSP traversal in back to front order.
     // Note: be sure to end the current batch first, so the transform matrix is only applied to draw calls following this.
     VDrawing::endCurrentDrawBatch();

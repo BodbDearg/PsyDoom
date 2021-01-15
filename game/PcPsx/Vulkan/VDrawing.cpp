@@ -357,6 +357,8 @@ void addAlphaBlendedUISprite(
     const uint16_t clutY,
     const uint16_t texPageX,
     const uint16_t texPageY,
+    const uint16_t texWinW,
+    const uint16_t texWinH,
     const Gpu::TexFmt texFmt,
     const bool bBlend
 ) noexcept {
@@ -387,19 +389,19 @@ void addAlphaBlendedUISprite(
 
     for (uint32_t i = 0; i < 6; ++i) {
         VVertex& vert = pVerts[i];
-        vert.z = 0.0f;              // Unused for UI
-        vert.s = 0.0f;              // Unused for UI
+        vert.z = 0.0f;      // Unused for UI
+        vert.s = 0.0f;      // Unused for UI
         vert.r = r;
         vert.g = g;
         vert.b = b;
         vert.a = a;
         vert.texWinX = texPageX;
         vert.texWinY = texPageY;
-        vert.texWinW = 256;         // PSX texture pages were 256 px
-        vert.texWinH = 256;         // PSX texture pages were 256 px
+        vert.texWinW = texWinW;
+        vert.texWinH = texWinH;
         vert.clutX = clutX;
         vert.clutY = clutY;
-        vert.stmulR = 128;          // Fully white (128 = 100% strength)
+        vert.stmulR = 128;      // Fully white (128 = 100% strength)
         vert.stmulG = 128;
         vert.stmulB = 128;
         vert.stmulA = stmulA;

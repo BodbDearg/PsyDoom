@@ -59,6 +59,8 @@ void addAlphaBlendedUISprite(
     const uint16_t clutY,
     const uint16_t texPageX,
     const uint16_t texPageY,
+    const uint16_t texWinW,
+    const uint16_t texWinH,
     const Gpu::TexFmt texFmt,
     const bool bBlend
 ) noexcept;

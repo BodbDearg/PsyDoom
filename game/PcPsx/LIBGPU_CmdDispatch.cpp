@@ -124,10 +124,13 @@ void submit(const SPRT& sprite) noexcept {
     drawRect.color.comp.b = (bColorSprite) ? sprite.b0 : 128;
 
     // Are we using the Vulkan renderer? If so submit via that.
-    // This allows us to re-use a lot of the old PSX rendering code transparently.
+    // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::usingVulkanRenderer()) {
             ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Only alpha blending is supported for PSX renderer sprites forwarded to Vulkan!");
+
+            const uint16_t texWinW = gpu.texWinXMask + 1;   // This calculation should work because the mask should always be for POW2 texture wrapping
+            const uint16_t texWinH = gpu.texWinYMask + 1;
 
             VDrawing::addAlphaBlendedUISprite(
                 drawRect.x,
@@ -142,8 +145,10 @@ void submit(const SPRT& sprite) noexcept {
                 128,
                 gpu.clutX,
                 gpu.clutY,
-                gpu.texPageX,
-                gpu.texPageY,
+                gpu.texPageX + gpu.texWinX,
+                gpu.texPageY + gpu.texWinY,
+                texWinW / 2,    // Texture window is in terms of 8bpp pixels (format dependent) but HW renderer uses VRAM coords (16bpp pixels) - correct for this
+                texWinH,
                 gpu.texFmt,
                 bBlendSprite
             );
@@ -162,61 +167,23 @@ void submit(const SPRT& sprite) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Handle a command to draw an 8x8 pixel sprite
 //------------------------------------------------------------------------------------------------------------------------------------------
-void submit(const SPRT_8& sprite) noexcept {
-    Gpu::Core& gpu = PsxVm::gGpu;
+void submit(const SPRT_8& sprite8) noexcept {
+    // Convert to a general sized sprite and re-use that submission function.
+    // The 8x8 pixel case is only for rendering the old 'I_Error' message font so a small bit of extra overhead doesn't matter...
+    SPRT sprite = {};
+    sprite.r0 = sprite8.r0;
+    sprite.g0 = sprite8.g0;
+    sprite.b0 = sprite8.b0;
+    sprite.code = sprite8.code;
+    sprite.x0 = sprite8.x0;
+    sprite.y0 = sprite8.y0;
+    sprite.tu0 = sprite8.tu0;
+    sprite.tv0 = sprite8.tv0;
+    sprite.clut = sprite8.clut;
+    sprite.w = 8;
+    sprite.h = 8;
 
-    // Set the CLUT to use
-    setGpuClutId(sprite.clut);
-
-    // Setup the rectangle to be drawn then submit to the GPU
-    const bool bColorSprite = ((sprite.code & 0x1) == 0);
-    const bool bBlendSprite = sprite.code & 0x2;
-
-    Gpu::DrawRect drawRect = {};
-    drawRect.x = sprite.x0;
-    drawRect.y = sprite.y0;
-    drawRect.w = 8;
-    drawRect.h = 8;
-    drawRect.u = sprite.tu0;
-    drawRect.v = sprite.tv0;
-    drawRect.color.comp.r = (bColorSprite) ? sprite.r0 : 128;   // Note: '128' is '1.0' or full strength color if we don't want to modulate
-    drawRect.color.comp.g = (bColorSprite) ? sprite.g0 : 128;
-    drawRect.color.comp.b = (bColorSprite) ? sprite.b0 : 128;
-
-    // Are we using the Vulkan renderer? If so submit via that.
-    // This allows us to re-use a lot of the old PSX rendering code transparently.
-    #if PSYDOOM_VULKAN_RENDERER
-        if (Video::usingVulkanRenderer()) {
-            ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Only alpha blending is supported for PSX renderer sprites forwarded to Vulkan!");
-
-            VDrawing::addAlphaBlendedUISprite(
-                drawRect.x,
-                drawRect.y,
-                drawRect.w,
-                drawRect.h,
-                drawRect.u,
-                drawRect.v,
-                drawRect.color.comp.r,
-                drawRect.color.comp.g,
-                drawRect.color.comp.b,
-                128,
-                gpu.clutX,
-                gpu.clutY,
-                gpu.texPageX,
-                gpu.texPageY,
-                gpu.texFmt,
-                bBlendSprite
-            );
-
-            return;
-        }
-    #endif  // #if PSYDOOM_VULKAN_RENDERER
-
-    if (bBlendSprite) {
-        Gpu::draw<Gpu::DrawMode::TexturedBlended>(gpu, drawRect);
-    } else {
-        Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawRect);
-    }
+    submit(sprite);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,7 +206,7 @@ void submit(const LINE_F2& line) noexcept {
     drawLine.color.comp.b = (bColorLine) ? line.b0 : 128;
 
     // Are we using the Vulkan renderer? If so submit via that.
-    // This allows us to re-use a lot of the old PSX rendering code transparently.
+    // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::usingVulkanRenderer()) {
             ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Only alpha blending is supported for PSX renderer lines forwarded to Vulkan!");
