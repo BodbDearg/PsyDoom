@@ -248,7 +248,8 @@ static void beginFrame_VkRenderer() noexcept {
 
     // Begin the draw render pass
     const vgl::Framebuffer& framebuffer = gDevice.getScreenFramebufferMgr().getCurrentDrawFramebuffer();
-    const VkClearValue framebufferClearValues[2] = {};
+    VkClearValue framebufferClearValues[2] = {};
+    framebufferClearValues[1].depthStencil.depth = MAX_DEPTH;
 
     gCmdBufferRec.beginRenderPass(
         gDrawRenderPass,

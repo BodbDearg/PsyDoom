@@ -8,8 +8,8 @@
 
 layout(set = 0, binding = 0) uniform usampler2D vramTex;
 
-layout(location = 0) in vec2 in_uv;
-layout(location = 1) in vec4 in_color;
+layout(location = 0) in vec4 in_color;
+layout(location = 1) in vec2 in_uv;
 layout(location = 2) flat in uvec2 in_texWinPos;
 layout(location = 3) flat in uvec2 in_texWinSize;
 layout(location = 4) flat in uvec2 in_clutPos;

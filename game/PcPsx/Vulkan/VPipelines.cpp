@@ -19,14 +19,18 @@ BEGIN_NAMESPACE(VPipelines)
 #include "SPIRV_ui_4bpp_frag.bin.h"
 #include "SPIRV_ui_8bpp_frag.bin.h"
 #include "SPIRV_ui_vert.bin.h"
+#include "SPIRV_view_frag.bin.h"
+#include "SPIRV_view_vert.bin.h"
 
 // Shaders: see the associated source files for more comments/details
-static vgl::ShaderModule    gShader_colored_vert;
 static vgl::ShaderModule    gShader_colored_frag;
-static vgl::ShaderModule    gShader_ui_vert;
+static vgl::ShaderModule    gShader_colored_vert;
+static vgl::ShaderModule    gShader_ui_16bpp_frag;
 static vgl::ShaderModule    gShader_ui_4bpp_frag;
 static vgl::ShaderModule    gShader_ui_8bpp_frag;
-static vgl::ShaderModule    gShader_ui_16bpp_frag;
+static vgl::ShaderModule    gShader_ui_vert;
+static vgl::ShaderModule    gShader_view_frag;
+static vgl::ShaderModule    gShader_view_vert;
 
 vgl::Sampler                gSampler;               // The single sampler used: uses nearest neighbor filtering
 vgl::DescriptorSetLayout    gDescriptorSetLayout;   // The single descriptor set layout used for the single pipeline
@@ -57,6 +61,12 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
 
     if (!gShader_ui_16bpp_frag.init(device, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_16bpp_frag, sizeof(gSPIRV_ui_16bpp_frag)))
         FatalErrors::raise("Failed to init Vulkan shader 'ui_16bpp_frag'!");
+
+    if (!gShader_view_vert.init(device, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_view_vert, sizeof(gSPIRV_view_vert)))
+        FatalErrors::raise("Failed to init Vulkan shader 'view_vert'!");
+
+    if (!gShader_view_frag.init(device, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_view_frag, sizeof(gSPIRV_view_frag)))
+        FatalErrors::raise("Failed to init Vulkan shader 'view_frag'!");
 
     // Create the Vulkan sampler
     {
@@ -122,6 +132,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     vgl::ShaderModule* const shaderModules_ui_4bpp[] = { &gShader_ui_vert, &gShader_ui_4bpp_frag };
     vgl::ShaderModule* const shaderModules_ui_8bpp[] = { &gShader_ui_vert, &gShader_ui_8bpp_frag };
     vgl::ShaderModule* const shaderModules_ui_16bpp[] = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
+    vgl::ShaderModule* const shaderModules_view[] = { &gShader_view_vert, &gShader_view_frag };
 
     // Pipeline state: input primitive types
     vgl::PipelineInputAssemblyState lineListInput = vgl::PipelineInputAssemblyState().setToDefault();
@@ -130,9 +141,11 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     vgl::PipelineInputAssemblyState triangleListInput = vgl::PipelineInputAssemblyState().setToDefault();
     triangleListInput.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-    // Pipelines state: rasterization and depth stencil. This is the same for all pipelines.
-    // TODO: enable backface culling.
+    // Pipelines state: rasterization and depth stencil
     vgl::PipelineRasterizationState rasterizerState_noCull = vgl::PipelineRasterizationState().setToDefault();
+
+    vgl::PipelineRasterizationState rasterizerState_backFaceCull = vgl::PipelineRasterizationState().setToDefault();
+    rasterizerState_backFaceCull.cullMode = VK_CULL_MODE_BACK_BIT;
     
     // Pipeline states: color blending
     VkPipelineColorBlendAttachmentState attachBlend_common = {};
@@ -175,14 +188,14 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     blendState_subtractive.attachmentCount = 1;
 
     // Depth stencil pipeline states
-    vgl::PipelineDepthStencilState depthState_testDisabled = vgl::PipelineDepthStencilState().setToDefault();
-    depthState_testDisabled.bDepthTestEnable = false;
-    depthState_testDisabled.bDepthWriteEnable = false;
+    vgl::PipelineDepthStencilState depthState_noTestNoWrite = vgl::PipelineDepthStencilState().setToDefault();
+    depthState_noTestNoWrite.bDepthTestEnable = false;
+    depthState_noTestNoWrite.bDepthWriteEnable = false;
 
-    vgl::PipelineDepthStencilState depthState_testEnabled = vgl::PipelineDepthStencilState().setToDefault();
-    depthState_testEnabled.bDepthTestEnable = true;
-    depthState_testEnabled.bDepthWriteEnable = true;
-    depthState_testEnabled.depthCompareOp = VK_COMPARE_OP_LESS;
+    vgl::PipelineDepthStencilState depthState_testNoWrite = vgl::PipelineDepthStencilState().setToDefault();
+    depthState_testNoWrite.bDepthTestEnable = true;
+    depthState_testNoWrite.bDepthWriteEnable = false;
+    depthState_testNoWrite.depthCompareOp = VK_COMPARE_OP_LESS;
 
     // Create the pipelines
     auto createPipeline = [&](
@@ -213,13 +226,13 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
             FatalErrors::raise("Failed to create a Vulkan graphics pipeline used for rendering!");
     };
 
-    createPipeline(VPipelineType::Lines, shaderModules_colored, lineListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
-    createPipeline(VPipelineType::UI_4bpp, shaderModules_ui_4bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
-    createPipeline(VPipelineType::UI_8bpp, shaderModules_ui_8bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
-    createPipeline(VPipelineType::UI_16bpp, shaderModules_ui_16bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testDisabled);
-    createPipeline(VPipelineType::View_Alpha, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_testEnabled);              // TODO: FIX SHADER
-    createPipeline(VPipelineType::View_Additive, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_additive, depthState_testEnabled);        // TODO: FIX SHADER
-    createPipeline(VPipelineType::View_Subtractive, shaderModules_colored, triangleListInput, rasterizerState_noCull, blendState_subtractive, depthState_testEnabled);  // TODO: FIX SHADER
+    createPipeline(VPipelineType::Lines, shaderModules_colored, lineListInput, rasterizerState_noCull, blendState_alpha, depthState_noTestNoWrite);
+    createPipeline(VPipelineType::UI_4bpp, shaderModules_ui_4bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_noTestNoWrite);
+    createPipeline(VPipelineType::UI_8bpp, shaderModules_ui_8bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_noTestNoWrite);
+    createPipeline(VPipelineType::UI_16bpp, shaderModules_ui_16bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_noTestNoWrite);
+    createPipeline(VPipelineType::View_Alpha, shaderModules_view, triangleListInput, rasterizerState_backFaceCull, blendState_alpha, depthState_testNoWrite);
+    createPipeline(VPipelineType::View_Additive, shaderModules_view, triangleListInput, rasterizerState_backFaceCull, blendState_additive, depthState_testNoWrite);
+    createPipeline(VPipelineType::View_Subtractive, shaderModules_view, triangleListInput, rasterizerState_backFaceCull, blendState_subtractive, depthState_testNoWrite);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,6 +246,8 @@ void shutdown() noexcept {
     gPipelineLayout.destroy(true);
     gDescriptorSetLayout.destroy(true);
     gSampler.destroy();
+    gShader_view_frag.destroy(true);
+    gShader_view_vert.destroy(true);
     gShader_ui_16bpp_frag.destroy(true);
     gShader_ui_8bpp_frag.destroy(true);
     gShader_ui_4bpp_frag.destroy(true);

@@ -78,19 +78,6 @@ static void ensureNumVtxBufferVerts(const uint32_t numVerts) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Ends the current draw batch and issues the command to draw the primitives using the pipeline
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void endDrawBatch() noexcept {
-    ASSERT(gpCurCmdBufRec);
-    
-    if (gCurDrawBatchSize > 0) {
-        gpCurCmdBufRec->draw(gCurDrawBatchSize, gCurDrawBatchStart);
-        gCurDrawBatchStart = gCurVtxBufferOffset;
-        gCurDrawBatchSize = 0;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the drawing module and allocates draw vertex buffers etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
@@ -197,7 +184,7 @@ void endFrame() noexcept {
     ASSERT(gpCurCmdBufRec);
 
     // Finish the current draw batch and rewind for the next frame
-    endDrawBatch();
+    endCurrentDrawBatch();
     gCurDrawBatchStart = 0;
     gCurDrawBatchSize = 0;
 
@@ -228,7 +215,7 @@ void setPipeline(const VPipelineType type) noexcept {
     // Only switch pipelines if we need to
     if (gCurPipelineType != type) {
         // Must end the current draw batch before switching
-        endDrawBatch();
+        endCurrentDrawBatch();
 
         // Do the switch
         gCurPipelineType = type;
@@ -291,6 +278,19 @@ Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const
     // Now combine all the matrices and return the result
     const Matrix4f modelViewProj = translation * rotation * projection;
     return modelViewProj;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Ends the current draw batch and issues the command to draw the primitives using the pipeline
+//------------------------------------------------------------------------------------------------------------------------------------------
+void endCurrentDrawBatch() noexcept {
+    ASSERT(gpCurCmdBufRec);
+    
+    if (gCurDrawBatchSize > 0) {
+        gpCurCmdBufRec->draw(gCurDrawBatchSize, gCurDrawBatchStart);
+        gCurDrawBatchStart = gCurVtxBufferOffset;
+        gCurDrawBatchSize = 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -464,8 +464,8 @@ void add3dViewTriangle(
     const bool bBlend
 ) noexcept {
     // Switch to the correct pipeline
-    // TODO: this is not correct
-    setPipeline(VPipelineType::UI_8bpp);
+    // TODO: support changing blend mode
+    setPipeline(VPipelineType::View_Alpha);
 
     // Decide on the semi-transparent multiply alpha, depending on if blending is enabled.
     // A value of '128' is full alpha and '64' is 50% alpha.

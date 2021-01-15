@@ -30,6 +30,7 @@ void setPipeline(const VPipelineType type) noexcept;
 void setTransformMatrix(const Matrix4f& matrix) noexcept;
 Matrix4f computeTransformMatrixForUI() noexcept;
 Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const float viewZ, const float viewAngle) noexcept;
+void endCurrentDrawBatch() noexcept;
 
 void addAlphaBlendedUILine(
     const float x1,

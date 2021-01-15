@@ -158,12 +158,10 @@ void RV_RenderPlayerView() noexcept {
     if (gbIsSkyVisible) {
         R_DrawSky();
     }
-
-    // TODO: HACK workaround until we get a dedicated 3D shader. Need to end the batch.
-    VDrawing::setPipeline(VPipelineType::Lines);
-    VDrawing::setPipeline(VPipelineType::UI_8bpp);
     
-    // Set the projection matrix to use and then draw all subsectors emitted during BSP traversal in back to front order
+    // Set the projection matrix to use and then draw all subsectors emitted during BSP traversal in back to front order.
+    // Note: be sure to end the current batch first, so the transform matrix is only applied to draw calls following this.
+    VDrawing::endCurrentDrawBatch();
     VDrawing::setTransformMatrix(gViewProjMatrix);
 
     while (gppEndDrawSubsector > gpDrawSubsectors) {
@@ -172,12 +170,11 @@ void RV_RenderPlayerView() noexcept {
         RV_DrawSubsector(subsec);
     }
 
-    // TODO: HACK workaround until we get a dedicated 3D shader. Need to end the batch.
-    VDrawing::setPipeline(VPipelineType::Lines);
-    VDrawing::setPipeline(VPipelineType::UI_8bpp);
+    // Switch back to UI renderng and end the draw batch first so the transform matrix only applies to commands following this
+    VDrawing::endCurrentDrawBatch();
+    VDrawing::setTransformMatrix(VDrawing::computeTransformMatrixForUI());
 
     // Draw any player sprites/weapons
-    VDrawing::setTransformMatrix(VDrawing::computeTransformMatrixForUI());
     R_DrawWeapon();
 }
 

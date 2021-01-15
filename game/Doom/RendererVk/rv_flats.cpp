@@ -37,9 +37,10 @@ static void RV_CalcSubsecTriFanCenter(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw a floor plane for the given subsector
+// Draw a floor or ceiling plane for the given subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawFloorPlane(
+template <bool IsFloor>
+static void RV_DrawPlane(
     // Edges for the convex plane section
     const leafedge_t* const pLeafEdges,
     const uint16_t numLeafEdges,
@@ -73,16 +74,29 @@ static void RV_DrawFloorPlane(
         const float u2 = x2 * 0.5f;
         const float u3 = triFanCenterX * 0.5f;
 
-        // Draw the triangle: note that UV coords are just the vertex coords (scaled in the case of U) - no offsetting to worry about here
-        VDrawing::add3dViewTriangle(
-            x1, planeH, z1, u1, z1,
-            x2, planeH, z2, u2, z2,
-            triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
-            colR, colG, colB, 128,
-            gClutX, gClutY,
-            texWinX, texWinY, texWinW, texWinH,
-            false
-        );
+        // Draw the triangle: note that UV coords are just the vertex coords (scaled in the case of U) - no offsetting to worry about here.
+        // For ceilings as well reverse the winding order so backface culling works OK.
+        if constexpr (IsFloor) {
+            VDrawing::add3dViewTriangle(
+                x1, planeH, z1, u1, z1,
+                x2, planeH, z2, u2, z2,
+                triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
+                colR, colG, colB, 128,
+                gClutX, gClutY,
+                texWinX, texWinY, texWinW, texWinH,
+                false
+            );
+        } else {
+            VDrawing::add3dViewTriangle(
+                x1, planeH, z1, u1, z1,
+                triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
+                x2, planeH, z2, u2, z2,
+                colR, colG, colB, 128,
+                gClutX, gClutY,
+                texWinX, texWinY, texWinW, texWinH,
+                false
+            );
+        }
     }
 }
 
@@ -110,13 +124,13 @@ void RV_DrawFlats(const subsector_t& subsec, const uint8_t colR, const uint8_t c
     // Draw the floor plane if above it
     if (gViewZf > floorH) {
         texture_t& floorTex = gpFlatTextures[sector.floorpic];
-        RV_DrawFloorPlane(pLeafEdges, numLeafEdges, floorH, triFanCenterX, triFanCenterY, colR, colG, colB, floorTex);
+        RV_DrawPlane<true>(pLeafEdges, numLeafEdges, floorH, triFanCenterX, triFanCenterY, colR, colG, colB, floorTex);
     }
 
     // Draw the ceiling plane if below it and not a sky (invalid ceiling pic)
     if ((gViewZf < ceilH) && (sector.ceilingpic >= 0)) {
         texture_t& ceilingTex = gpFlatTextures[sector.ceilingpic];
-        RV_DrawFloorPlane(pLeafEdges, numLeafEdges, ceilH, triFanCenterX, triFanCenterY, colR, colG, colB, ceilingTex);
+        RV_DrawPlane<false>(pLeafEdges, numLeafEdges, ceilH, triFanCenterX, triFanCenterY, colR, colG, colB, ceilingTex);
     }
 }
 
