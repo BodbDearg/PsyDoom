@@ -133,6 +133,8 @@ set(SOURCE_FILES
     "Doom/Renderer/r_things.cpp"
     "Doom/Renderer/r_things.h"
     "Doom/Renderer/sprinfo.cpp"
+    "Doom/RendererVk/rv_flats.cpp"
+    "Doom/RendererVk/rv_flats.h"
     "Doom/RendererVk/rv_main.cpp"
     "Doom/RendererVk/rv_main.h"
     "Doom/RendererVk/rv_utils.cpp"

@@ -21,6 +21,7 @@
 #include "PcPsx/Config.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
+#include "rv_flats.h"
 #include "rv_utils.h"
 #include "rv_walls.h"
 
@@ -56,6 +57,9 @@ void RV_DrawSubsector(subsector_t& subsec) noexcept {
     for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
         RV_DrawSeg(*pSeg, secR, secG, secB);
     }
+
+    // Draw all flats in the subsector
+    RV_DrawFlats(subsec, secR, secG, secB);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
