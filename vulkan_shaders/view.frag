@@ -23,4 +23,5 @@ void main() {
     // TODO: light diminishing effects
     out_color = tex8bpp(vramTex, in_uv_scale.xy, in_texWinPos, in_texWinSize, in_clutPos, in_stmul);
     out_color *= in_color;
+    out_color = psxR5G5B5BitCrush(out_color);
 }

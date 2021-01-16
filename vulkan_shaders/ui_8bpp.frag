@@ -20,4 +20,5 @@ layout(location = 0) out vec4 out_color;
 void main() {
     out_color = tex8bpp(vramTex, in_uv, in_texWinPos, in_texWinSize, in_clutPos, in_stmul);
     out_color *= in_color;
+    out_color = psxR5G5B5BitCrush(out_color);
 }

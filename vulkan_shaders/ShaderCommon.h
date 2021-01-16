@@ -110,3 +110,13 @@ vec4 tex4bpp(usampler2D vram, vec2 uv, uvec2 texWinPos, uvec2 texWinSize, uvec2 
     // Lookup the texel from the CLUT and return it
     return getVramTexel(vram, vec2(clutPos.x + clutIdx, clutPos.y), stmul);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// Quantizes/truncates the given color to R5G5B5 in a way that mimics how the PS1 truncates color.
+// Used to help reproduce the shading of the PlayStation.
+//----------------------------------------------------------------------------------------------------------------------
+vec4 psxR5G5B5BitCrush(vec4 color) {
+    // Note: I added a slight amount here to prevent weird rounding issues on NV hardware.
+    // This small bias prevents artifacts where pixels rapidly cycle between one 5-bit color component and the next.
+    return trunc(color * 31 + 0.01) / 31;
+}
