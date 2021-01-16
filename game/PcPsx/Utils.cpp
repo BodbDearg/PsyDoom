@@ -192,11 +192,15 @@ void threadYield() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void onBeginUIDrawing() noexcept {
     #if PSYDOOM_VULKAN_RENDERER
-        // Setup the UI transform matrix if using the Vulkan renderer
-        if (Video::gBackendType == Video::BackendType::Vulkan) {
-            if (!VRenderer::gbUsePsxRenderer) {
-                VDrawing::setTransformMatrix(VDrawing::computeTransformMatrixForUI());
-            }
+        // Setup the UI transform matrix for drawing if using the Vulkan renderer
+        const bool bSetDrawMatrix = (
+            (Video::gBackendType == Video::BackendType::Vulkan) &&
+            (!VRenderer::gbUsePsxRenderer) &&
+            VRenderer::canSubmitDrawCmds()
+        );
+
+        if (bSetDrawMatrix) {
+            VDrawing::setTransformMatrix(VDrawing::computeTransformMatrixForUI());
         }
     #endif
 }

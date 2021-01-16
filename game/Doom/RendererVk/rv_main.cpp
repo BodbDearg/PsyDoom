@@ -20,6 +20,7 @@
 #include "Gpu.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VRenderer.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "rv_flats.h"
 #include "rv_utils.h"
@@ -145,6 +146,10 @@ static void RV_DetermineDrawParams() noexcept {
 // Some of the high level logic here is copied from the original renderer's 'R_RenderPlayerView'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_RenderPlayerView() noexcept {
+    // Do nothing if drawing is currently not allowed
+    if (!VRenderer::canSubmitDrawCmds())
+        return;
+
     // Determine various draw settings
     RV_DetermineDrawParams();
 

@@ -10,7 +10,6 @@
 #include "PhysicalDevice.h"
 #include "RetirementMgr.h"
 #include "RingbufferMgr.h"
-#include "ScreenFramebufferMgr.h"
 #include "Semaphore.h"
 #include "TransferMgr.h"
 #include "VkFuncs.h"
@@ -40,7 +39,6 @@ LogicalDevice::LogicalDevice(VkFuncs& vkFuncs) noexcept
     , mDeviceMemMgr(vkFuncs)
     , mRingbufferMgr()
     , mRetirementMgr()
-    , mScreenFramebufferMgr()
     , mTransferMgr()
     , mCmdBufferSubmitHelpers()
 {
@@ -76,18 +74,10 @@ bool LogicalDevice::init(const PhysicalDevice& physicalDevice, const WindowSurfa
     
     // Basic device setup steps:
     //
-    //  1 - Init the screen framebuffer manager (choses surface formats, which affects queue creation)
-    //      Note that this step does NOT create the actual framebuffers themselves, those come later.
-    //      This skip is skipped however if operating in headless mode.
-    //  2 - Create the Vulkan device and all of the queues associated with it
-    //  3 - Create the device memory manager
-    //  4 - Create the command pools used to create command buffers for the graphics and transfer queues
+    //  1 - Create the Vulkan device and all of the queues associated with it
+    //  2 - Create the device memory manager
+    //  3 - Create the command pools used to create command buffers for the graphics and transfer queues
     //
-    if (!mbIsHeadless) {
-        if (!mScreenFramebufferMgr.init(*this))
-            return false;
-    }
-
     if (!createDeviceAndQueues())
         return false;
 
@@ -128,7 +118,6 @@ void LogicalDevice::destroy(const bool bForceIfInvalid) noexcept {
     
     // Cleanup main objects
     mTransferMgr.destroy();
-    mScreenFramebufferMgr.destroy();
     mRetirementMgr.destroy();
     mRingbufferMgr.destroy();
     mDeviceMemMgr.destroy();
@@ -259,9 +248,11 @@ bool LogicalDevice::createDeviceAndQueues() noexcept {
     // Pick queue families to use; logic differs depending on whether we are in headless mode or not:
     if (!mbIsHeadless) {
         // Not in headless mode: there must be at least 1 valid presentation queue family in the device for the given surface!
-        ASSERT(mScreenFramebufferMgr.isValid());
-        const DeviceSurfaceCaps& deviceSurfaceCaps = mScreenFramebufferMgr.getDeviceSurfaceCaps();
-        const auto& validPresentationQueueFamilies = deviceSurfaceCaps.getPresentCapableQueueFamilies();
+        ASSERT(mpWindowSurface);
+
+        DeviceSurfaceCaps deviceSurfaceCaps;
+        deviceSurfaceCaps.query(*mpPhysicalDevice, *mpWindowSurface);
+        const std::vector<uint32_t>& validPresentationQueueFamilies = deviceSurfaceCaps.getPresentCapableQueueFamilies();
 
         if (validPresentationQueueFamilies.empty()) {
             ASSERT_FAIL("Device does not have any valid presentation queues for the surface!");

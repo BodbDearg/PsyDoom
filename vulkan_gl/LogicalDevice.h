@@ -4,11 +4,12 @@
 #include "DeviceMemMgr.h"
 #include "RetirementMgr.h"
 #include "RingbufferMgr.h"
-#include "ScreenFramebufferMgr.h"
 #include "TransferMgr.h"
 
 BEGIN_NAMESPACE(vgl)
 
+class CmdBuffer;
+class Semaphore;
 class PhysicalDevice;
 class VulkanInstance;
 class WindowSurface;
@@ -46,7 +47,6 @@ public:
     inline DeviceMemMgr& getDeviceMemMgr() noexcept { return mDeviceMemMgr; }
     inline RingbufferMgr& getRingbufferMgr() noexcept { return mRingbufferMgr; }
     inline RetirementMgr& getRetirementMgr() noexcept { return mRetirementMgr; }
-    inline ScreenFramebufferMgr& getScreenFramebufferMgr() noexcept { return mScreenFramebufferMgr; }
     inline TransferMgr& getTransferMgr() noexcept { return mTransferMgr; }
     inline CmdPool& getCmdPool() noexcept { return mCmdPool; }
     
@@ -91,7 +91,6 @@ private:
     DeviceMemMgr            mDeviceMemMgr;                  // Used for allocating Vulkan device memory
     RingbufferMgr           mRingbufferMgr;                 // Keeps track of which ringbuffer we are on and holds sync primitives for ringbuffers
     RetirementMgr           mRetirementMgr;                 // Manages the retirement of resources that may be in used by currently processing frames
-    ScreenFramebufferMgr    mScreenFramebufferMgr;          // Manages the creation, presentation and tracking of screen framebuffers
     TransferMgr             mTransferMgr;                   // Used for managing transfers to GPU memory
 
     // Temporary buffers used during command buffer submit.

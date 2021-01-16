@@ -5,6 +5,7 @@
 #include "PsxVm.h"
 #include "Video.h"
 #include "Vulkan/VDrawing.h"
+#include "Vulkan/VRenderer.h"
 
 BEGIN_NAMESPACE(LIBGPU_CmdDispatch)
 
@@ -132,26 +133,28 @@ void submit(const SPRT& sprite) noexcept {
             const uint16_t texWinW = gpu.texWinXMask + 1;   // This calculation should work because the mask should always be for POW2 texture wrapping
             const uint16_t texWinH = gpu.texWinYMask + 1;
 
-            VDrawing::addAlphaBlendedUISprite(
-                drawRect.x,
-                drawRect.y,
-                drawRect.w,
-                drawRect.h,
-                drawRect.u,
-                drawRect.v,
-                drawRect.color.comp.r,
-                drawRect.color.comp.g,
-                drawRect.color.comp.b,
-                128,
-                gpu.clutX,
-                gpu.clutY,
-                gpu.texPageX + gpu.texWinX,
-                gpu.texPageY + gpu.texWinY,
-                texWinW / 2,    // Texture window is in terms of 8bpp pixels (format dependent) but HW renderer uses VRAM coords (16bpp pixels) - correct for this
-                texWinH,
-                gpu.texFmt,
-                bBlendSprite
-            );
+            if (VRenderer::canSubmitDrawCmds()) {
+                VDrawing::addAlphaBlendedUISprite(
+                    drawRect.x,
+                    drawRect.y,
+                    drawRect.w,
+                    drawRect.h,
+                    drawRect.u,
+                    drawRect.v,
+                    drawRect.color.comp.r,
+                    drawRect.color.comp.g,
+                    drawRect.color.comp.b,
+                    128,
+                    gpu.clutX,
+                    gpu.clutY,
+                    gpu.texPageX + gpu.texWinX,
+                    gpu.texPageY + gpu.texWinY,
+                    texWinW / 2,    // Texture window is in terms of 8bpp pixels (format dependent) but HW renderer uses VRAM coords (16bpp pixels) - correct for this
+                    texWinH,
+                    gpu.texFmt,
+                    bBlendSprite
+                );
+            }
 
             return;
         }
@@ -211,17 +214,19 @@ void submit(const LINE_F2& line) noexcept {
         if (Video::usingVulkanRenderer()) {
             ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Only alpha blending is supported for PSX renderer lines forwarded to Vulkan!");
 
-            VDrawing::addAlphaBlendedUILine(
-                drawLine.x1,
-                drawLine.y1,
-                drawLine.x2,
-                drawLine.y2,
-                drawLine.color.comp.r,
-                drawLine.color.comp.g,
-                drawLine.color.comp.b,
-                128,
-                bBlendLine
-            );
+            if (VRenderer::canSubmitDrawCmds()) {
+                VDrawing::addAlphaBlendedUILine(
+                    drawLine.x1,
+                    drawLine.y1,
+                    drawLine.x2,
+                    drawLine.y2,
+                    drawLine.color.comp.r,
+                    drawLine.color.comp.g,
+                    drawLine.color.comp.b,
+                    128,
+                    bBlendLine
+                );
+            }
 
             return;
         }

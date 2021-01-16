@@ -16,9 +16,12 @@ extern bool gbUsePsxRenderer;
 
 void init() noexcept;
 void destroy() noexcept;
-void beginFrame() noexcept;
+bool beginFrame() noexcept;
+bool canSubmitDrawCmds() noexcept;
 void endFrame() noexcept;
 void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint16_t rectTy, const uint16_t rectBy) noexcept;
+uint32_t getVkRendererFbWidth() noexcept;
+uint32_t getVkRendererFbHeight() noexcept;
 
 END_NAMESPACE(VRenderer)
 

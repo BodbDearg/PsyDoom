@@ -18,13 +18,14 @@
 #include "PcPsx/PsxVm.h"
 #include "PcPsx/Video.h"
 #include "PhysicalDeviceSelection.h"
+#include "RenderTexture.h"
 #include "Semaphore.h"
+#include "Swapchain.h"
 #include "Texture.h"
 #include "VDrawing.h"
 #include "VDrawRenderPass.h"
 #include "VkFuncs.h"
 #include "VPipelines.h"
-#include "VPresentRenderPass.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
@@ -33,6 +34,16 @@
 #include <SDL.h>
 
 BEGIN_NAMESPACE(VRenderer)
+
+// What color surface formats are supported for presentation, with the most preferential being first.
+// B8G8R8A8 should be supported everwhere and apparently is the most performant, but just in case offer some alternatives...
+static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
+    VK_FORMAT_B8G8R8A8_UNORM,
+    VK_FORMAT_R8G8B8A8_UNORM,
+    VK_FORMAT_A8B8G8R8_UNORM_PACK32,
+    VK_FORMAT_A2R10G10B10_UNORM_PACK32,
+    VK_FORMAT_A2B10G10R10_UNORM_PACK32
+};
 
 // TODO: add ways to toggle this
 bool gbUsePsxRenderer = false;      // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
@@ -43,13 +54,19 @@ static vgl::VulkanInstance          gVulkanInstance(gVkFuncs);      // Vulkan AP
 static vgl::WindowSurface           gWindowSurface;                 // Window surface to draw on
 static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical device chosen for rendering
 static vgl::LogicalDevice           gDevice(gVkFuncs);              // The logical device used for Vulkan
-static VDrawRenderPass              gDrawRenderPass;                // Render pass used for drawing
-static VPresentRenderPass           gPresentRenderPass;             // Render pass used for presentation
+static vgl::Swapchain               gSwapchain;                     // The swapchain we present to
+static VDrawRenderPass              gRenderPass;                    // The render pass used for drawing for the new native Vulkan renderer
 static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
-// Semaphores signalled when the framebuffer is ready.
+// Color attachments, depth attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
+// The color attachment is blitted to the swapchain image in preparation for final presentation.
+static vgl::RenderTexture    gFbColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::RenderTexture    gFbDepthAttachments[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::Framebuffer      gFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
+
+// Semaphores signalled when the acquired swapchain image is ready.
 // One per ringbuffer slot, so we don't disturb a frame that is still being processed.
-static vgl::Semaphore gFramebufferReadySemaphores[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::Semaphore gSwapImageReadySemaphores[vgl::Defines::RINGBUFFER_SIZE];
 
 // Semaphore signalled when rendering is done.
 // One per ringbuffer slot, so we don't disturb a frame that is still being processed.
@@ -73,39 +90,84 @@ static vgl::MutableTexture gPsxFramebufferTextures[vgl::Defines::RINGBUFFER_SIZE
 static vgl::Texture gPsxVramTexture;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Destroys all framebuffers immediately
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void destroyFramebuffers() noexcept {
+    for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
+        gFramebuffers[i].destroy(true);
+        gFbColorAttachments[i].destroy(true);
+        gFbDepthAttachments[i].destroy(true);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Recreates the swapchain and new Vulkan renderer framebuffers if required and returns 'false' if that is not possible to do currently.
+// Recreation might fail if the window is currently zero sized for example.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool ensureValidSwapchainAndFramebuffers() noexcept {
+    // No swapchain or invalid swapchain?
+    bool bDidWaitForDeviceIdle = false;
+
+    if ((!gSwapchain.isValid()) || gSwapchain.needsRecreate()) {
+        gDevice.waitUntilDeviceIdle();
+        bDidWaitForDeviceIdle = true;
+        gSwapchain.destroy();
+
+        if (!gSwapchain.init(gDevice, ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS)))
+            return false;
+    }
+
+    // No framebuffers or framebuffer size incorrect?
+    const uint32_t wantedFbWidth = gSwapchain.getSwapExtentWidth();
+    const uint32_t wantedFbHeight = gSwapchain.getSwapExtentHeight();
+
+    const bool bNeedNewFramebuffers = (
+        (!gFramebuffers[0].isValid()) ||
+        (gFramebuffers[0].getWidth() != wantedFbWidth) ||
+        (gFramebuffers[0].getHeight() != wantedFbHeight)
+    );
+
+    if (bNeedNewFramebuffers) {
+        if (!bDidWaitForDeviceIdle) {
+            gDevice.waitUntilDeviceIdle();
+            bDidWaitForDeviceIdle = true;
+        }
+
+        destroyFramebuffers();
+
+        for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
+            if (!gFbColorAttachments[i].initAsRenderTexture(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, wantedFbWidth, wantedFbHeight)) {
+                destroyFramebuffers();
+                return false;
+            }
+
+            if (!gFbDepthAttachments[i].initAsDepthStencilBuffer(gDevice, VK_FORMAT_D32_SFLOAT, wantedFbWidth, wantedFbHeight)) {
+                destroyFramebuffers();
+                return false;
+            }
+
+            if (!gFramebuffers[i].init(gRenderPass, { &gFbColorAttachments[i], &gFbDepthAttachments[i] })) {
+                destroyFramebuffers();
+                return false;
+            }
+        }
+    }
+
+    // All good if we got to here!
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Frame begin logic for the classic PSX renderer.
 // Must be called only when there is a valid framebuffer and hence command buffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void beginFrame_Psx() noexcept {
     ASSERT(gpCurCmdBuffer);
-
-    // Transition the swapchain framebuffer to transfer destination optimal in preparation for blitting
-    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    const VkImage fbImage = gDevice.getScreenFramebufferMgr().getCurrentDrawFramebuffer().getAttachmentImages()[0];
-
-    {
-        VkImageMemoryBarrier imgBarrier = {};
-        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-        imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        imgBarrier.image = fbImage;
-        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imgBarrier.subresourceRange.levelCount = 1;
-        imgBarrier.subresourceRange.layerCount = 1;
-
-        gCmdBufferRec.addPipelineBarrier(
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            0,
-            nullptr,
-            1,
-            &imgBarrier
-        );
-    }
+    ASSERT(gSwapchain.getAcquiredImageIdx() < gSwapchain.getLength());
 
     // Transition the PSX framebuffer to general in preparation for writing
+    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
+
     {
         vgl::MutableTexture& psxFbTexture = gPsxFramebufferTextures[ringbufferIdx];
 
@@ -128,8 +190,12 @@ static void beginFrame_Psx() noexcept {
         );
     }
 
-    // Clear the swapchain framebuffer to opaque black
+    // Clear the swapchain image to opaque black.
+    // This is needed for the classic PSX renderer as not all parts of the image might be filled.
     {
+        const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
+        const VkImage swapchainImage = gSwapchain.getVkImages()[swapchainIdx];
+
         VkClearColorValue clearColor = {};
         clearColor.float32[3] = 1.0f;
 
@@ -138,7 +204,7 @@ static void beginFrame_Psx() noexcept {
         imageResRange.levelCount = 1;
         imageResRange.layerCount = 1;
 
-        gCmdBufferRec.clearColorImage(fbImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageResRange);
+        gCmdBufferRec.clearColorImage(swapchainImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageResRange);
     }
 }
 
@@ -176,18 +242,18 @@ static void endFrame_Psx() noexcept {
     }
 
     // Get the area of the window to blit the PSX framebuffer to
-    vgl::ScreenFramebufferMgr& framebufferMgr = gDevice.getScreenFramebufferMgr();
-    const uint32_t fbWidth = (int32_t) framebufferMgr.getFramebuffersWidth();
-    const uint32_t fbHeight = (int32_t) framebufferMgr.getFramebuffersHeight();
+    const uint32_t screenWidth = gSwapchain.getSwapExtentWidth();
+    const uint32_t screenHeight = gSwapchain.getSwapExtentHeight();
 
     int32_t blitDstX = {};
     int32_t blitDstY = {};
     uint32_t blitDstW = {};
     uint32_t blitDstH = {};
-    Video::getClassicFramebufferWindowRect(fbWidth, fbHeight, blitDstX, blitDstY, blitDstW, blitDstH);
+    Video::getClassicFramebufferWindowRect(screenWidth, screenHeight, blitDstX, blitDstY, blitDstW, blitDstH);
 
-    // Blit the PSX framebuffer to the swapchain framebuffer
-    const VkImage fbImage = framebufferMgr.getCurrentDrawFramebuffer().getAttachmentImages()[0];
+    // Blit the PSX framebuffer to the swapchain image
+    const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
+    const VkImage swapchainImage = gSwapchain.getVkImages()[swapchainIdx];
 
     {
         VkImageBlit blitRegion = {};
@@ -198,43 +264,20 @@ static void endFrame_Psx() noexcept {
         blitRegion.srcOffsets[1].x = Video::ORIG_DRAW_RES_X;
         blitRegion.srcOffsets[1].y = Video::ORIG_DRAW_RES_Y;
         blitRegion.srcOffsets[1].z = 1;
-        blitRegion.dstOffsets[0].x = std::clamp<int32_t>(blitDstX, 0, fbWidth);
-        blitRegion.dstOffsets[0].y = std::clamp<int32_t>(blitDstY, 0, fbHeight);
-        blitRegion.dstOffsets[1].x = std::clamp<int32_t>(blitDstX + blitDstW, 0, fbWidth);
-        blitRegion.dstOffsets[1].y = std::clamp<int32_t>(blitDstY + blitDstH, 0, fbHeight);
+        blitRegion.dstOffsets[0].x = std::clamp<int32_t>(blitDstX, 0, screenWidth);
+        blitRegion.dstOffsets[0].y = std::clamp<int32_t>(blitDstY, 0, screenHeight);
+        blitRegion.dstOffsets[1].x = std::clamp<int32_t>(blitDstX + blitDstW, 0, screenWidth);
+        blitRegion.dstOffsets[1].y = std::clamp<int32_t>(blitDstY + blitDstH, 0, screenHeight);
         blitRegion.dstOffsets[1].z = 1;
 
         gCmdBufferRec.blitImage(
             psxFbTexture.getVkImage(),
             VK_IMAGE_LAYOUT_GENERAL,
-            fbImage,
+            swapchainImage,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             1,
             &blitRegion,
             VK_FILTER_NEAREST
-        );
-    }
-
-    // Transition the swapchain framebuffer to presentation optimal
-    {
-        VkImageMemoryBarrier imgBarrier = {};
-        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-        imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        imgBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        imgBarrier.image = fbImage;
-        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imgBarrier.subresourceRange.levelCount = 1;
-        imgBarrier.subresourceRange.layerCount = 1;
-
-        gCmdBufferRec.addPipelineBarrier(
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            0,
-            nullptr,
-            1,
-            &imgBarrier
         );
     }
 }
@@ -246,13 +289,15 @@ static void endFrame_Psx() noexcept {
 static void beginFrame_VkRenderer() noexcept {
     ASSERT(gpCurCmdBuffer);
 
-    // Begin the draw render pass
-    const vgl::Framebuffer& framebuffer = gDevice.getScreenFramebufferMgr().getCurrentDrawFramebuffer();
+    // Begin the render pass
+    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
+    const vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
+
     VkClearValue framebufferClearValues[2] = {};
     framebufferClearValues[1].depthStencil.depth = MAX_DEPTH;
 
     gCmdBufferRec.beginRenderPass(
-        gDrawRenderPass,
+        gRenderPass,
         framebuffer,
         VK_SUBPASS_CONTENTS_INLINE,
         0,
@@ -277,6 +322,37 @@ static void endFrame_VkRenderer() noexcept {
     // End the drawing module frame and finish up the draw render pass
     VDrawing::endFrame();
     gCmdBufferRec.endRenderPass();
+
+    // Blit the framebuffer color attachment to the swapchain image
+    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
+    const vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
+
+    const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
+    const VkImage swapchainImage = gSwapchain.getVkImages()[swapchainIdx];
+
+    {
+        VkImageBlit blitRegion = {};
+        blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        blitRegion.srcSubresource.layerCount = 1;
+        blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        blitRegion.dstSubresource.layerCount = 1;
+        blitRegion.srcOffsets[1].x = framebuffer.getWidth();
+        blitRegion.srcOffsets[1].y = framebuffer.getHeight();
+        blitRegion.srcOffsets[1].z = 1;
+        blitRegion.dstOffsets[1].x = gSwapchain.getSwapExtentWidth();
+        blitRegion.dstOffsets[1].y = gSwapchain.getSwapExtentHeight();
+        blitRegion.dstOffsets[1].z = 1;
+
+        gCmdBufferRec.blitImage(
+            framebuffer.getAttachmentImages()[0],
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            swapchainImage,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &blitRegion,
+            VK_FILTER_NEAREST
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -299,21 +375,17 @@ void init() noexcept {
     if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface))
         FatalErrors::raise("Failed to initialize a Vulkan logical device!");
 
-    // Initialize the render passes for the new renderer
-    vgl::ScreenFramebufferMgr& framebufferMgr = gDevice.getScreenFramebufferMgr();
-    const VkFormat colorFormat = framebufferMgr.getColorFormat();
-    const VkFormat depthStencilFormat = framebufferMgr.getDepthStencilFormat();
+    // Initialize the draw render pass for the new renderer
+    if (!gRenderPass.init(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, VK_FORMAT_D32_SFLOAT))
+        FatalErrors::raise("Failed to create the Vulkan draw render pass!");
 
-    if (!gDrawRenderPass.init(gDevice, colorFormat, depthStencilFormat))
-        FatalErrors::raise("Failed to create the Vulkan 'draw' render pass!");
-
-    if (!gPresentRenderPass.init(gDevice, colorFormat))
-        FatalErrors::raise("Failed to create the Vulkan 'present' render pass!");
+    // Try to init the swapchain and framebuffers
+    ensureValidSwapchainAndFramebuffers();
 
     // Initialize various semaphores
-    for (vgl::Semaphore& semaphore : gFramebufferReadySemaphores) {
+    for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
         if (!semaphore.init(gDevice))
-            FatalErrors::raise("Failed to create a Vulkan 'framebuffer ready' semaphore!");
+            FatalErrors::raise("Failed to create a Vulkan 'swapchain image ready' semaphore!");
     }
 
     for (vgl::Semaphore& semaphore : gRenderDoneSemaphores) {
@@ -347,7 +419,7 @@ void init() noexcept {
     }
 
     // Initialize other Vulkan Renderer modules
-    VPipelines::init(gDevice, gDrawRenderPass);
+    VPipelines::init(gDevice, gRenderPass);
     VDrawing::init(gDevice, gPsxVramTexture);
 }
 
@@ -384,12 +456,13 @@ void destroy() noexcept {
         semaphore.destroy();
     }
 
-    for (vgl::Semaphore& semaphore : gFramebufferReadySemaphores) {
+    for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
         semaphore.destroy();
     }
 
-    gPresentRenderPass.destroy();
-    gDrawRenderPass.destroy();
+    destroyFramebuffers();
+    gRenderPass.destroy();
+    gSwapchain.destroy();
     gDevice.destroy();
     gpPhysicalDevice = nullptr;
     gWindowSurface.destroy();
@@ -398,26 +471,24 @@ void destroy() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Perform tasks that need to be done on frame startup
+// Perform tasks that need to be done on frame startup.
+// Returns 'true' if a frame was successfully started and a draw can proceed, 'false' if no drawing should take place (invalid framebuffer).
 //------------------------------------------------------------------------------------------------------------------------------------------
-void beginFrame() noexcept {
+bool beginFrame() noexcept {
     // Must have ended the frame or not started one previously
     ASSERT(!gbDidBeginFrame);
     gbDidBeginFrame = true;
 
-    // Recreate the framebuffer if required and bail if we do not have a valid framebuffer
-    vgl::ScreenFramebufferMgr& framebufferMgr = gDevice.getScreenFramebufferMgr();
+    // Recreate the swapchain and framebuffers if required and bail if that operation failed
+    if (!ensureValidSwapchainAndFramebuffers())
+        return false;
 
-    if (framebufferMgr.framebuffersNeedRecreate()) {
-        if (!framebufferMgr.recreateFramebuffers(gDrawRenderPass, gPresentRenderPass))
-            return;
-    }
-
-    // Acquire a framebuffer and bail if that failed
+    // Acquire a swapchain image and bail if that failed
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
+    const uint32_t swapchainIdx = gSwapchain.acquireImage(gSwapImageReadySemaphores[ringbufferIdx]);
 
-    if (!framebufferMgr.acquireFramebuffer(gFramebufferReadySemaphores[ringbufferIdx]))
-        return;
+    if (swapchainIdx == vgl::Swapchain::INVALID_IMAGE_IDX)
+        return false;
 
     // Begin recording the command buffer for this frame
     gpCurCmdBuffer = &gCmdBuffers[ringbufferIdx];
@@ -440,12 +511,46 @@ void beginFrame() noexcept {
         );
     }
 
+    // Transition the swapchain image to transfer destination optimal in preparation for blitting.
+    // This is needed by both the classic PSX renderer and the new Vulkan renderer.
+    {
+        VkImageMemoryBarrier imgBarrier = {};
+        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        imgBarrier.image = gSwapchain.getVkImages()[swapchainIdx];
+        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imgBarrier.subresourceRange.levelCount = 1;
+        imgBarrier.subresourceRange.layerCount = 1;
+
+        gCmdBufferRec.addPipelineBarrier(
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            0,
+            nullptr,
+            1,
+            &imgBarrier
+        );
+    }
+
     // Renderer specific initialization
     if (gbUsePsxRenderer) {
         beginFrame_Psx();
     } else {
         beginFrame_VkRenderer();
     }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if draw commands can currently be submitted.
+// This will be the case if we have valid framebuffers and successfully started a frame.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool canSubmitDrawCmds() noexcept {
+    return gpCurCmdBuffer;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -476,8 +581,33 @@ void endFrame() noexcept {
         return;
     }
 
+    // Transition the swapchain image back to presentation optimal in preparation for presentation
+    const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
+
+    {
+        VkImageMemoryBarrier imgBarrier = {};
+        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        imgBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        imgBarrier.image = gSwapchain.getVkImages()[swapchainIdx];
+        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imgBarrier.subresourceRange.levelCount = 1;
+        imgBarrier.subresourceRange.layerCount = 1;
+
+        gCmdBufferRec.addPipelineBarrier(
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            0,
+            nullptr,
+            1,
+            &imgBarrier
+        );
+    }
+
     // End command recording and submit the command buffer to the device.
-    // Wait for the current framebuffer to be acquired before executing this command buffer.
+    // Wait for the current swapchain image to be acquired before executing this command buffer.
     // Signal the current ringbuffer slot fence when drawing is done.
     gCmdBufferRec.endCmdBuffer();
     
@@ -486,7 +616,7 @@ void endFrame() noexcept {
     
     {
         vgl::CmdBufferWaitCond cmdsWaitCond = {};
-        cmdsWaitCond.pSemaphore = &gFramebufferReadySemaphores[ringbufferIdx];
+        cmdsWaitCond.pSemaphore = &gSwapImageReadySemaphores[ringbufferIdx];
         cmdsWaitCond.blockedStageFlags = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
 
         vgl::Fence& ringbufferSlotFence = ringbufferMgr.getCurrentBufferFence();
@@ -498,12 +628,8 @@ void endFrame() noexcept {
         );
     }
 
-    // Present the current framebuffer if we have it and only do present when rendering is done
-    vgl::ScreenFramebufferMgr& framebufferMgr = gDevice.getScreenFramebufferMgr();
-
-    if (framebufferMgr.hasValidFramebuffers()) {
-        framebufferMgr.presentCurrentFramebuffer(gRenderDoneSemaphores[ringbufferIdx]);
-    }
+    // Present the current swapchain image once all the commands have finished
+    gSwapchain.presentAcquiredImage(gRenderDoneSemaphores[ringbufferIdx]);
 
     // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame
     ringbufferMgr.acquireNextBuffer();
@@ -568,6 +694,17 @@ void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint
 
     // Unlock the texture to begin uploading the updates
     gPsxVramTexture.unlock();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the width and height of the framebuffer used for the native Vulkan renderer
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t getVkRendererFbWidth() noexcept {
+    return (gFramebuffers[0].isValid()) ? gFramebuffers[0].getWidth() : 0;
+}
+
+uint32_t getVkRendererFbHeight() noexcept {
+    return (gFramebuffers[0].isValid()) ? gFramebuffers[0].getHeight() : 0;
 }
 
 END_NAMESPACE(VRenderer)

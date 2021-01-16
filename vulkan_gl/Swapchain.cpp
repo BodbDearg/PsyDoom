@@ -3,7 +3,6 @@
 #include "DeviceSurfaceCaps.h"
 #include "Finally.h"
 #include "LogicalDevice.h"
-#include "ScreenFramebufferMgr.h"
 #include "Semaphore.h"
 #include "Utils.h"
 #include "VkFuncs.h"
@@ -20,6 +19,7 @@ BEGIN_NAMESPACE(vgl)
 Swapchain::Swapchain() noexcept
     : mbIsValid(false)
     , mbNeedsRecreate(false)
+    , mAcquiredImageIdx(INVALID_IMAGE_IDX)
     , mpDevice(nullptr)
     , mSurfaceFormat()
     , mPresentMode()
@@ -40,14 +40,13 @@ Swapchain::~Swapchain() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Attempts to initialize the swapchain using the specified surface format and returns 'true' if successful
+// Attempts to initialize the swapchain using one of the desired surface formats in priority order.
+// Returns 'true' if successful.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool Swapchain::init(LogicalDevice& device, const VkSurfaceFormatKHR& surfaceFormat) noexcept {
+bool Swapchain::init(LogicalDevice& device, const VkFormat* const pValidSurfaceFormats, const uint32_t numValidSurfaceFormats) noexcept {
     // Preconditions
     ASSERT_LOG((!mbIsValid), "Must call destroy() before re-initializing!");
     ASSERT(device.getVkDevice());
-    ASSERT(device.getScreenFramebufferMgr().isValid());
-    ASSERT(surfaceFormat.format != VK_FORMAT_UNDEFINED);
 
     // If anything goes wrong, cleanup on exit - don't half initialize!
     auto cleanupOnError = finally([&]{
@@ -56,9 +55,27 @@ bool Swapchain::init(LogicalDevice& device, const VkSurfaceFormatKHR& surfaceFor
         }
     });
 
-    // Save these fields for later use
+    // Firstly query the device surface capabilities
     mpDevice = &device;
-    mSurfaceFormat = surfaceFormat;
+
+    if (!mDeviceSurfaceCaps.query(*device.getPhysicalDevice(), *device.getWindowSurface())) {
+        ASSERT_FAIL("Failed to query device surface capabilities!");
+        return false;
+    }
+
+    // Swapchain creation can fail validly if the window is zero sized and cannot currently be presented to
+    if (mDeviceSurfaceCaps.isZeroSizedMaxImageExtent())
+        return false;
+
+    // Try to choose a valid surface format from what is available.
+    // Note we are hardcoding the colorspace to SRGB at the moment, will need to revisit later if HDR10 is required...
+    mSurfaceFormat.format = mDeviceSurfaceCaps.getSupportedSurfaceFormat(pValidSurfaceFormats, numValidSurfaceFormats);
+    mSurfaceFormat.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+
+    if (mSurfaceFormat.format == VK_FORMAT_UNDEFINED) {
+        ASSERT_FAIL("Failed to find a suitable window surface format to present with!");
+        return false;
+    }
 
     // Choosing present mode, swap extent and swapchain length
     choosePresentMode();
@@ -124,7 +141,9 @@ void Swapchain::destroy(const bool bForceIfInvalid) noexcept {
     mSwapExtentW = 0;
     mPresentMode = {};
     mSurfaceFormat = {};
+    mDeviceSurfaceCaps = {};
     mpDevice = nullptr;
+    mAcquiredImageIdx = INVALID_IMAGE_IDX;
     mbNeedsRecreate = false;
 }
 
@@ -136,22 +155,22 @@ void Swapchain::setNeedsRecreate() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Attempts to present the specified swap chain image.
+// Attempts to present the currently acquired swapchain image.
 // Presentation will wait for the given render finished semaphore to be signalled.
 //
 // Note: may fail due to the swap chain needing recreation.
 // If this is the case then the 'needs recreate' flag will be set to 'true'.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool Swapchain::presentImage(const uint8_t imageIndex, const Semaphore& renderFinishedSemaphore) noexcept {
+bool Swapchain::presentAcquiredImage(const Semaphore& renderFinishedSemaphore) noexcept {
     // Sanity checks
     ASSERT(mbIsValid);
-    ASSERT(imageIndex < mLength);
+    ASSERT(mAcquiredImageIdx < mLength);
     ASSERT(renderFinishedSemaphore.isValid());
 
     // Do the present!
     const VkSemaphore waitSemaphores[] = { renderFinishedSemaphore.getVkSemaphore() };
     const VkSwapchainKHR swapChains[] = { mVkSwapchain };
-    const uint32_t swapChainImageIndexes[] = { imageIndex };
+    const uint32_t swapChainImageIndexes[] = { mAcquiredImageIdx };
     
     VkPresentInfoKHR presentInfo = {};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -162,15 +181,16 @@ bool Swapchain::presentImage(const uint8_t imageIndex, const Semaphore& renderFi
     presentInfo.pImageIndices = swapChainImageIndexes;
     presentInfo.pResults = nullptr;                         // Don't need an array of results, just 1 swap chain being presented!
 
-    // Check the result - recreate the swap chain later if it fails or is suboptimal
+    // Check the result and clear the acquired image - recreate the swap chain later if it fails or is suboptimal
     const VkFuncs& vkFuncs = mpDevice->getVkFuncs();
     const VkResult queuePresentResult = vkFuncs.vkQueuePresentKHR(mpDevice->getPresentationQueue(), &presentInfo);
+    mAcquiredImageIdx = INVALID_IMAGE_IDX;
 
     if (queuePresentResult == VK_SUCCESS) {
         return true;
     }
     else {
-        if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR || queuePresentResult == VK_SUBOPTIMAL_KHR) {
+        if ((queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR) || (queuePresentResult == VK_SUBOPTIMAL_KHR)) {
             // Swapchain present failed due to need for recreation!
             mbNeedsRecreate = true;
         } else {
@@ -194,6 +214,7 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
     // Sanity checks
     ASSERT(mbIsValid);
     ASSERT(imageReadySemaphore.isValid());
+    ASSERT_LOG(mAcquiredImageIdx == INVALID_IMAGE_IDX, "Already acquired an image index, finish with the current one first!");
 
     // Wait for the previous presentation to finish first...
     //
@@ -217,7 +238,7 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
     // Try to accquire an image from the swap chain and wait for as long as required.
     // Note that upon acquiring it may still not be ready to use as it may be in the process of being presented.
     // Therefore the app should wait on the 'mImageReadySemaphore' synchronization primitive.
-    uint32_t swapImageIdx = UINT32_MAX;
+    mAcquiredImageIdx = UINT32_MAX;
 
     if (vkFuncs.vkAcquireNextImageKHR(
             mpDevice->getVkDevice(),
@@ -225,7 +246,7 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
             UINT64_MAX,
             imageReadySemaphore.getVkSemaphore(),
             nullptr,
-            &swapImageIdx
+            &mAcquiredImageIdx
         )
         != VK_SUCCESS
     )
@@ -234,22 +255,16 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
         return UINT32_MAX;
     }
 
-    ASSERT(swapImageIdx < mLength);
-    return swapImageIdx;
+    ASSERT(mAcquiredImageIdx < mLength);
+    return mAcquiredImageIdx;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Chooses a presentation mode for the swap chain
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Swapchain::choosePresentMode() noexcept {
-    // Sanity checks
-    ASSERT(mpDevice);
-    ASSERT(mpDevice->getScreenFramebufferMgr().isValid());
-
     // There should be a valid surface caps object and at least 1 valid present mode if we've reached here!
-    ScreenFramebufferMgr& framebufferMgr = mpDevice->getScreenFramebufferMgr();
-    const DeviceSurfaceCaps& surfaceCaps = framebufferMgr.getDeviceSurfaceCaps();
-    const std::vector<VkPresentModeKHR>& vkPresentModes = surfaceCaps.getVkPresentModes();
+    const std::vector<VkPresentModeKHR>& vkPresentModes = mDeviceSurfaceCaps.getVkPresentModes();
     ASSERT(!vkPresentModes.empty());
 
     // Prefer VK_PRESENT_MODE_MAILBOX_KHR if available since that allows us to implement tripple buffering.
@@ -291,13 +306,7 @@ void Swapchain::choosePresentMode() noexcept {
 bool Swapchain::chooseSwapExtent() noexcept {
     // Sanity checks
     ASSERT(mpDevice);
-    ASSERT(mpDevice->getScreenFramebufferMgr().isValid());
     ASSERT(mpDevice->getWindowSurface() && mpDevice->getWindowSurface()->isValid());
-
-    // Get the Vulkan surface capabilities
-    ScreenFramebufferMgr& framebufferMgr = mpDevice->getScreenFramebufferMgr();
-    const DeviceSurfaceCaps& deviceSurfaceCaps = framebufferMgr.getDeviceSurfaceCaps();
-    const VkSurfaceCapabilitiesKHR& vkSurfaceCaps = deviceSurfaceCaps.getVkSurfaceCapabilities();
 
     // Get the current size of the window
     SDL_Window* const pSdlWindow = mpDevice->getWindowSurface()->getSdlWindow();
@@ -313,9 +322,10 @@ bool Swapchain::chooseSwapExtent() noexcept {
     }
 
     // Get the max image size for the framebuffer
+    const VkSurfaceCapabilitiesKHR& vkSurfaceCaps = mDeviceSurfaceCaps.getVkSurfaceCapabilities();
     const uint32_t maxImageExtentW = vkSurfaceCaps.maxImageExtent.width;
     const uint32_t maxImageExtentH = vkSurfaceCaps.maxImageExtent.height;
-        
+
     // Note: If the width/height is set to UINT32_MAX then we may differ from the resolution of the window.
     // Handle the width case first...
     if (vkSurfaceCaps.currentExtent.width == UINT32_MAX) {
@@ -337,17 +347,9 @@ bool Swapchain::chooseSwapExtent() noexcept {
 // Choose how many images to use in the swap chain
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Swapchain::chooseSwapchainLength() noexcept {
-    // Sanity checks
-    ASSERT(mpDevice);
-    ASSERT(mpDevice->getScreenFramebufferMgr().isValid());
-
-    // Get the Vulkan surface capabilities
-    ScreenFramebufferMgr& framebufferMgr = mpDevice->getScreenFramebufferMgr();
-    const DeviceSurfaceCaps& deviceSurfaceCaps = framebufferMgr.getDeviceSurfaceCaps();
-    const VkSurfaceCapabilitiesKHR& vkSurfaceCaps = deviceSurfaceCaps.getVkSurfaceCapabilities();
-
     // Try to choose the max swap chain length allowed by the engine unless we are limited otherwise.
     // Note that '0' for max image count means no limit.
+    const VkSurfaceCapabilitiesKHR& vkSurfaceCaps = mDeviceSurfaceCaps.getVkSurfaceCapabilities();
     mLength = Defines::MAX_SWAP_CHAIN_LENGTH;
 
     if (vkSurfaceCaps.maxImageCount != 0) {
@@ -366,12 +368,9 @@ bool Swapchain::createSwapchain() noexcept {
     ASSERT(!mVkSwapchain);
     ASSERT(mpDevice);
     ASSERT(mpDevice->getWindowSurface());
-    ASSERT(mpDevice->getScreenFramebufferMgr().isValid());
 
     // Get the Vulkan surface capabilities
-    ScreenFramebufferMgr& framebufferMgr = mpDevice->getScreenFramebufferMgr();
-    const DeviceSurfaceCaps& deviceSurfaceCaps = framebufferMgr.getDeviceSurfaceCaps();
-    const VkSurfaceCapabilitiesKHR& vkSurfaceCaps = deviceSurfaceCaps.getVkSurfaceCapabilities();
+    const VkSurfaceCapabilitiesKHR& vkSurfaceCaps = mDeviceSurfaceCaps.getVkSurfaceCapabilities();
 
     // Start filling in the create info structure for making the swap chain
     VkSwapchainCreateInfoKHR createInfo = {};

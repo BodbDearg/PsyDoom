@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Macros.h"
+#include "DeviceSurfaceCaps.h"
 
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -16,14 +16,18 @@ class Semaphore;
 //------------------------------------------------------------------------------------------------------------------------------------------
 class Swapchain {
 public:
+    // Constant for an invalid/non-existant swapchain image index
+    static constexpr const uint32_t INVALID_IMAGE_IDX = UINT32_MAX;
+
     Swapchain() noexcept;
     ~Swapchain() noexcept;
 
-    bool init(LogicalDevice& device, const VkSurfaceFormatKHR& surfaceFormat) noexcept;
+    bool init(LogicalDevice& device, const VkFormat* const pValidSurfaceFormats, const uint32_t numValidSurfaceFormats) noexcept;
     void destroy(const bool bForceIfInvalid = false) noexcept;
 
     inline bool isValid() const noexcept { return mbIsValid; }
     inline bool needsRecreate() const noexcept { return mbNeedsRecreate; }
+    inline uint32_t getAcquiredImageIdx() const noexcept { return mAcquiredImageIdx; }
     inline LogicalDevice* getDevice() const noexcept { return mpDevice; }
     inline const VkSurfaceFormatKHR& getSurfaceFormat() const noexcept { return mSurfaceFormat; }
     inline const VkPresentModeKHR& getPresentMode() const noexcept { return mPresentMode; }
@@ -35,7 +39,7 @@ public:
     inline const std::vector<VkImageView>& getVkImageViews() const noexcept { return mVkImageViews; }
 
     void setNeedsRecreate() noexcept;
-    bool presentImage(const uint8_t imageIndex, const Semaphore& renderFinishedSemaphore) noexcept;
+    bool presentAcquiredImage(const Semaphore& renderFinishedSemaphore) noexcept;
     uint32_t acquireImage(Semaphore& imageReadySemaphore) noexcept;
 
 private:
@@ -53,7 +57,9 @@ private:
 
     bool                        mbIsValid;              // True if this object was created & initialized successfully
     bool                        mbNeedsRecreate;        // True if the swapchain needs recreation, due to window resizing for instance
+    uint32_t                    mAcquiredImageIdx;      // Currently acquired image index, or INVALID_IMAGE_IDX if not acquired.
     LogicalDevice*              mpDevice;               // The logical Vulkan device this swap chain is for
+    DeviceSurfaceCaps           mDeviceSurfaceCaps;     // Capabilities of the device with respect to the window surface
     VkSurfaceFormatKHR          mSurfaceFormat;         // Chosen surface format for the swap chain
     VkPresentModeKHR            mPresentMode;           // Chosen present mode for the swap chain
     uint32_t                    mSwapExtentW;           // Size of the swap area: width

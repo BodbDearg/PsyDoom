@@ -62,8 +62,6 @@ set(SOURCE_FILES
     "RingbufferMgr.h"
     "Sampler.cpp"
     "Sampler.h"
-    "ScreenFramebufferMgr.cpp"
-    "ScreenFramebufferMgr.h"
     "Semaphore.cpp"
     "Semaphore.h"
     "ShaderModule.cpp"

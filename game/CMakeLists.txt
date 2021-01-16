@@ -219,8 +219,6 @@ set(SOURCE_FILES
     "PcPsx/Vulkan/VDrawRenderPass.h"
     "PcPsx/Vulkan/VPipelines.cpp"
     "PcPsx/Vulkan/VPipelines.h"
-    "PcPsx/Vulkan/VPresentRenderPass.cpp"
-    "PcPsx/Vulkan/VPresentRenderPass.h"
     "PcPsx/Vulkan/VRenderer.cpp"
     "PcPsx/Vulkan/VRenderer.h"
     "PcPsx/Vulkan/VTypes.h"

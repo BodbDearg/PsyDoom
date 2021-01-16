@@ -20,6 +20,7 @@
 #include "LogicalDevice.h"
 #include "Pipeline.h"
 #include "VPipelines.h"
+#include "VRenderer.h"
 #include "VTypes.h"
 
 BEGIN_NAMESPACE(VDrawing)
@@ -166,9 +167,8 @@ void beginFrame(vgl::LogicalDevice& device, vgl::CmdBufferRecorder& cmdRec) noex
     ASSERT(gCurPipelineType == (VPipelineType) -1);
 
     // Get the size of the current draw framebuffer
-    const vgl::Framebuffer& framebuffer = device.getScreenFramebufferMgr().getCurrentDrawFramebuffer();
-    const uint32_t fbWidth = framebuffer.getWidth();
-    const uint32_t fbHeight = framebuffer.getHeight();
+    const uint32_t fbWidth = VRenderer::getVkRendererFbWidth();
+    const uint32_t fbHeight = VRenderer::getVkRendererFbHeight();
 
     // First draw commands: set viewport and scissors dimensions and bind the vertex buffer
     gpCurCmdBufRec->setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
