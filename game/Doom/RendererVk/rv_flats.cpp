@@ -53,8 +53,11 @@ static void RV_DrawPlane(
     const uint8_t colR,
     const uint8_t colG,
     const uint8_t colB,
-    const texture_t& tex
+    texture_t& tex
 ) noexcept {
+    // Upload the texture to VRAM if required
+    RV_UploadDirtyTex(tex);
+
     // Get the texture page location for this texture
     uint16_t texWinX, texWinY;
     uint16_t texWinW, texWinH;
@@ -124,13 +127,13 @@ void RV_DrawFlats(const subsector_t& subsec, const uint8_t colR, const uint8_t c
 
     // Draw the floor plane if above it
     if (gViewZf > floorH) {
-        texture_t& floorTex = gpFlatTextures[sector.floorpic];
+        texture_t& floorTex = gpFlatTextures[gpFlatTranslation[sector.floorpic]];
         RV_DrawPlane<true>(pLeafEdges, numLeafEdges, floorH, triFanCenterX, triFanCenterY, colR, colG, colB, floorTex);
     }
 
     // Draw the ceiling plane if below it and not a sky (invalid ceiling pic)
     if ((gViewZf < ceilH) && (sector.ceilingpic >= 0)) {
-        texture_t& ceilingTex = gpFlatTextures[sector.ceilingpic];
+        texture_t& ceilingTex = gpFlatTextures[gpFlatTranslation[sector.ceilingpic]];
         RV_DrawPlane<false>(pLeafEdges, numLeafEdges, ceilH, triFanCenterX, triFanCenterY, colR, colG, colB, ceilingTex);
     }
 }

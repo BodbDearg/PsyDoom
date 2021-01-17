@@ -36,9 +36,12 @@ static void RV_DrawWall(
     const uint8_t colR,
     const uint8_t colG,
     const uint8_t colB,
-    const texture_t& tex,
+    texture_t& tex,
     const bool bBlend
 ) noexcept {
+    // Upload the texture to VRAM if required
+    RV_UploadDirtyTex(tex);
+
     // Get the texture page location for this texture
     uint16_t texWinX, texWinY;
     uint16_t texWinW, texWinH;
@@ -95,9 +98,9 @@ void RV_DrawSeg(const seg_t& seg, const uint8_t colR, const uint8_t colG, const 
     // Get the upper/mid/lower textures for the seg.
     // Note that these array indexes are always guaranteed to be in range by the level setup code.
     const side_t& side = *seg.sidedef;
-    const texture_t& tex_u = gpTextures[side.toptexture];
-    const texture_t& tex_m = gpTextures[side.midtexture];
-    const texture_t& tex_l = gpTextures[side.bottomtexture];
+    texture_t& tex_u = gpTextures[gpTextureTranslation[side.toptexture]];
+    texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
+    texture_t& tex_l = gpTextures[gpTextureTranslation[side.bottomtexture]];
 
     // Get u and v offsets for the seg and compute the u1 and u2 coordinates.
     // Note that the 'u' coordinate must be divided by '2' as our texture format is always 8bpp and VRAM coordinates are in terms of 16bpp pixels.

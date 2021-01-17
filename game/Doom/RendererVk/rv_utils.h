@@ -33,5 +33,6 @@ void RV_TexPageIdToTexParams(
 ) noexcept;
 
 void RV_GetTexWinXyWh(const texture_t& tex, uint16_t& texWinX, uint16_t& texWinY, uint16_t& texWinW, uint16_t& texWinH) noexcept;
+void RV_UploadDirtyTex(texture_t& tex) noexcept;
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

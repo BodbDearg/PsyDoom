@@ -7,12 +7,15 @@
 
 #include "Asserts.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/w_wad.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_user.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Gpu.h"
+#include "PsyQ/LIBGPU.h"
 
 #include <algorithm>
 #include <cmath>
@@ -111,11 +114,12 @@ void RV_TexPageIdToTexParams(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the x/y and width/height of the given texture's texture window in VRAM coords (in terms of 16-bit pixels).
 // Assumes the texture format is 8-bits per pixel, which will be the case for all textures used in the 3D world.
+//
+// Note: I had an assert which checked the 8bpp texture assumption but there are some cases with levels where invalid textures sometimes
+// causes it the assertion to fail. Because of this I'm removing the assertion.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_GetTexWinXyWh(const texture_t& tex, uint16_t& texWinX, uint16_t& texWinY, uint16_t& texWinW, uint16_t& texWinH) noexcept {
     const uint16_t texPageId = tex.texPageId;
-    ASSERT_LOG((Gpu::TexFmt)(((texPageId >> 7) & 0x0003u)) == Gpu::TexFmt::Bpp8, "Texture format must be 8bpp!");
-
     const uint16_t texPageX = ((texPageId & 0x000Fu) >> 0) * 64u;
     const uint16_t texPageY = ((texPageId & 0x0010u) >> 4) * 256u;
 
@@ -123,6 +127,35 @@ void RV_GetTexWinXyWh(const texture_t& tex, uint16_t& texWinX, uint16_t& texWinY
     texWinY = texPageY + tex.texPageCoordY;
     texWinW = tex.width / 2;                        // Divide by 2 because the format is 8bpp and VRAM coords are 16bpp
     texWinH = tex.height;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Uploads the given texture to VRAM if it needs to be uploaded, otherwise does nothing.
+// Assumes the texture has already been added to the texture cache and has an area of VRAM assigned to itself.
+// Used for updating animated floor, wall and sky textures.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_UploadDirtyTex(texture_t& tex) noexcept {
+    // Is the texture already uploaded?
+    if (tex.uploadFrameNum != TEX_INVALID_UPLOAD_FRAME_NUM)
+        return;
+
+    // Decompress the lump data to the temporary buffer if required
+    const std::byte* pLumpData;
+    const bool bIsUncompressedLump = gpbIsUncompressedLump[tex.lumpNum];
+
+    if (bIsUncompressedLump) {
+        pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
+    } else {
+        const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
+        ASSERT(getDecodedSize(pCompressedLumpData) <= TMP_BUFFER_SIZE);
+        decode(pCompressedLumpData, gTmpBuffer);
+        pLumpData = gTmpBuffer;
+    }
+
+    // Load the decompressed texture to the required part of VRAM and mark as loaded
+    const RECT vramRect = getTextureVramRect(tex);
+    LIBGPU_LoadImage(vramRect, (uint16_t*)(pLumpData + sizeof(texlump_header_t)));
+    tex.uploadFrameNum = gNumFramesDrawn;
 }
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER
