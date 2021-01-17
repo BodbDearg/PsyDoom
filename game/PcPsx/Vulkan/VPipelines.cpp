@@ -118,13 +118,14 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     vertexBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     VkVertexInputAttributeDescription vertexAttribs[] = {
-        { 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT,  offsetof(VVertex, x) },
-        { 1, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VVertex, r) },
-        { 2, 0, VK_FORMAT_R32G32_SFLOAT,        offsetof(VVertex, u) },
-        { 3, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, texWinX) },
-        { 4, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, texWinW) },
-        { 5, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, clutX) },
-        { 6, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VVertex, stmulR) },
+        { 0, 0, VK_FORMAT_R32G32B32_SFLOAT,     offsetof(VVertex, x) },
+        { 1, 0, VK_FORMAT_R8G8B8_USCALED,       offsetof(VVertex, r) },
+        { 2, 0, VK_FORMAT_R8_UINT,              offsetof(VVertex, lightDimMode) },
+        { 3, 0, VK_FORMAT_R32G32_SFLOAT,        offsetof(VVertex, u) },
+        { 4, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, texWinX) },
+        { 5, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, texWinW) },
+        { 6, 0, VK_FORMAT_R16G16_UINT,          offsetof(VVertex, clutX) },
+        { 7, 0, VK_FORMAT_R8G8B8A8_USCALED,     offsetof(VVertex, stmulR) },
     };
 
     // Pipeline state: sets of shader modules

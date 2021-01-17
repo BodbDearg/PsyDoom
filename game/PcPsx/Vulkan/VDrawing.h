@@ -18,6 +18,7 @@ namespace Gpu {
     enum class TexFmt : uint8_t;
 }
 
+enum class VLightDimMode : uint8_t;
 enum class VPipelineType : uint8_t;
 
 BEGIN_NAMESPACE(VDrawing)
@@ -40,8 +41,7 @@ void addAlphaBlendedUILine(
     const uint8_t r,
     const uint8_t g,
     const uint8_t b,
-    const uint8_t a,
-    const bool bBlend
+    const uint8_t a
 ) noexcept;
 
 void addAlphaBlendedUISprite(
@@ -61,8 +61,7 @@ void addAlphaBlendedUISprite(
     const uint16_t texPageY,
     const uint16_t texWinW,
     const uint16_t texWinH,
-    const Gpu::TexFmt texFmt,
-    const bool bBlend
+    const Gpu::TexFmt texFmt
 ) noexcept;
 
 // TODO: add quad variant to submit two triangles at once
@@ -88,12 +87,12 @@ void add3dViewTriangle(
     const uint8_t a,
     const uint16_t clutX,
     const uint16_t clutY,
-    // TODO: add blend mode
     const uint16_t texWinX,
     const uint16_t texWinY,
     const uint16_t texWinW,
     const uint16_t texWinH,
-    const bool bBlend
+    const VLightDimMode lightDimMode
+    // TODO: add blend mode
 ) noexcept;
 
 END_NAMESPACE(VDrawing)

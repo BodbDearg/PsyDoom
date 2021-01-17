@@ -23,6 +23,15 @@ enum class VPipelineType : uint8_t {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Light diminishing mode for 3D view triangles
+//------------------------------------------------------------------------------------------------------------------------------------------
+enum class VLightDimMode : uint8_t {
+    None,       // No light diminishing (used for things/sprites)
+    Walls,      // Wall light diminishing mode: a bit brighter than the floor
+    Flats       // Floor diminishing mode: darkens quicker than walls
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Shader uniforms for the various shaders used by the Vulkan Renderer
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VShaderUniforms {
@@ -38,11 +47,14 @@ static_assert(sizeof(VShaderUniforms) <= 128);
 // Vertex type for the Vulkan renderer
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VVertex {
-    // XYZ Position and lastly a 'Scale' value packed into the 'w' component for light diminishing effects in-game (unused by UI shaders)
-    float x, y, z, s;
+    // XYZ Position of the vertex
+    float x, y, z;
     
-    // Color for the vertex: rgba where '128' is regarded as 1.0
-    uint8_t r, g, b, a;
+    // Color for the vertex: rgb where '128' is regarded as 1.0
+    uint8_t r, g, b;
+
+    // Light diminishing mode for the 3D view: unused by UI shaders
+    VLightDimMode lightDimMode;
 
     // 2D Texture coordinates for the vertex.
     // These coordinates are in terms of 16-bit pixels in VRAM.
@@ -59,6 +71,7 @@ struct VVertex {
     
     // When a pixel is flagged as 'semi-transparent', the RGBA color to multiply that pixel by.
     // Used to control blending when semi-transparency is active; a value of '128' is regarded as 1.0.
+    // The 'alpha' semi transparency multiply component effectively is the alpha for the vertex.
     uint8_t stmulR, stmulG, stmulB, stmulA;
 };
 

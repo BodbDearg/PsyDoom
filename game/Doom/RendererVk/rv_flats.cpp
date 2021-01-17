@@ -10,6 +10,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VTypes.h"
 #include "rv_main.h"
 #include "rv_utils.h"
 
@@ -84,7 +85,7 @@ static void RV_DrawPlane(
                 colR, colG, colB, 128,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
-                false
+                VLightDimMode::Flats
             );
         } else {
             VDrawing::add3dViewTriangle(
@@ -94,7 +95,7 @@ static void RV_DrawPlane(
                 colR, colG, colB, 128,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
-                false
+                VLightDimMode::Flats
             );
         }
     }

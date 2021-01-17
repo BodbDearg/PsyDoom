@@ -9,6 +9,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VTypes.h"
 #include "rv_main.h"
 #include "rv_utils.h"
 
@@ -44,24 +45,26 @@ static void RV_DrawWall(
     RV_GetTexWinXyWh(tex, texWinX, texWinY, texWinW, texWinH);
 
     // Draw the wall triangles
+    const uint8_t alpha = (bBlend) ? 64 : 128;
+
     VDrawing::add3dViewTriangle(
         x1, yb, z1, u1, vb,
         x1, yt, z1, u1, vt,
         x2, yt, z2, u2, vt,
-        colR, colG, colB, 128,
+        colR, colG, colB, alpha,
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
-        bBlend
+        VLightDimMode::Walls
     );
 
     VDrawing::add3dViewTriangle(
         x2, yt, z2, u2, vt,
         x2, yb, z2, u2, vb,
         x1, yb, z1, u1, vb,
-        colR, colG, colB, 128,
+        colR, colG, colB, alpha,
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
-        bBlend
+        VLightDimMode::Walls
     );
 }
 

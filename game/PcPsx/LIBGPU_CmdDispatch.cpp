@@ -144,15 +144,14 @@ void submit(const SPRT& sprite) noexcept {
                     drawRect.color.comp.r,
                     drawRect.color.comp.g,
                     drawRect.color.comp.b,
-                    128,
+                    (bBlendSprite) ? 64 : 128,
                     gpu.clutX,
                     gpu.clutY,
                     gpu.texPageX + gpu.texWinX,
                     gpu.texPageY + gpu.texWinY,
                     texWinW / 2,    // Texture window is in terms of 8bpp pixels (format dependent) but HW renderer uses VRAM coords (16bpp pixels) - correct for this
                     texWinH,
-                    gpu.texFmt,
-                    bBlendSprite
+                    gpu.texFmt
                 );
             }
 
@@ -223,8 +222,7 @@ void submit(const LINE_F2& line) noexcept {
                     drawLine.color.comp.r,
                     drawLine.color.comp.g,
                     drawLine.color.comp.b,
-                    128,
-                    bBlendLine
+                    (bBlendLine) ? 64 : 128
                 );
             }
 

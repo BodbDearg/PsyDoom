@@ -109,10 +109,10 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
             device,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             vgl::BufferUsageMode::DYNAMIC,
-            // Around 46K verts - should be absolutely PLENTY, even for very demanding user maps!
-            // This comes to about 2 MiB per buffer if the vertex size is '44' bytes.
+            // Around 50K verts - should be absolutely PLENTY, even for very demanding user maps!
+            // This comes to about 2 MiB per buffer if the vertex size is '40' bytes.
             // If we happen to exceed this limit then the buffer can always be resized later.
-            1024 * 46,
+            1024 * 50,
             true
         );
     }
@@ -304,15 +304,10 @@ void addAlphaBlendedUILine(
     const uint8_t r,
     const uint8_t g,
     const uint8_t b,
-    const uint8_t a,
-    const bool bBlend
+    const uint8_t a
 ) noexcept {
     // Switch to the correct pipeline
     setPipeline(VPipelineType::Lines);
-
-    // Decide on the semi-transparent multiply alpha, depending on if blending is enabled.
-    // A value of '128' is full alpha and '64' is 50% alpha.
-    const uint8_t stmulA = (bBlend) ? 64 : 128;
 
     // Ensure we have enough vertices to proceed
     ensureNumVtxBufferVerts(2);
@@ -326,7 +321,10 @@ void addAlphaBlendedUILine(
         vert.r = r;
         vert.g = g;
         vert.b = b;
-        vert.a = a;
+        vert.stmulR = 128;
+        vert.stmulG = 128;
+        vert.stmulB = 128;
+        vert.stmulA = a;
     }
 
     // Fill in verts xy positions
@@ -359,8 +357,7 @@ void addAlphaBlendedUISprite(
     const uint16_t texPageY,
     const uint16_t texWinW,
     const uint16_t texWinH,
-    const Gpu::TexFmt texFmt,
-    const bool bBlend
+    const Gpu::TexFmt texFmt
 ) noexcept {
     // Switch to the correct pipeline and figure out the scaling for the 'u' texture coordinate depending on the texture bit rate
     float uScale;
@@ -377,10 +374,6 @@ void addAlphaBlendedUISprite(
         uScale = 1.0f;
     }
 
-    // Decide on the semi-transparent multiply alpha, depending on if blending is enabled.
-    // A value of '128' is full alpha and '64' is 50% alpha.
-    const uint8_t stmulA = (bBlend) ? 64 : 128;
-
     // Ensure we have enough vertices to proceed
     ensureNumVtxBufferVerts(6);
 
@@ -389,22 +382,21 @@ void addAlphaBlendedUISprite(
 
     for (uint32_t i = 0; i < 6; ++i) {
         VVertex& vert = pVerts[i];
-        vert.z = 0.0f;      // Unused for UI
-        vert.s = 0.0f;      // Unused for UI
+        vert.z = {};                // Unused for UI
         vert.r = r;
         vert.g = g;
         vert.b = b;
-        vert.a = a;
+        vert.lightDimMode = {};     // Unused for UI
         vert.texWinX = texPageX;
         vert.texWinY = texPageY;
         vert.texWinW = texWinW;
         vert.texWinH = texWinH;
         vert.clutX = clutX;
         vert.clutY = clutY;
-        vert.stmulR = 128;      // Fully white (128 = 100% strength)
+        vert.stmulR = 128;          // Fully white (128 = 100% strength)
         vert.stmulG = 128;
         vert.stmulB = 128;
-        vert.stmulA = stmulA;
+        vert.stmulA = a;
     }
 
     // Fill in verts xy and uv positions
@@ -434,8 +426,11 @@ void addAlphaBlendedUISprite(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a triangle for the game's 3D view.
-// The texture format is assumed to be 8 bits per pixel always.
-// All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
+// 
+// Notes:
+//  (1) The texture format is assumed to be 8 bits per pixel always.
+//  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
+//  (3) The alpha component is only used if alpha blending is being used.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void add3dViewTriangle(
     const float x1,
@@ -463,15 +458,11 @@ void add3dViewTriangle(
     const uint16_t texWinY,
     const uint16_t texWinW,
     const uint16_t texWinH,
-    const bool bBlend
+    const VLightDimMode lightDimMode
 ) noexcept {
     // Switch to the correct pipeline
     // TODO: support changing blend mode
     setPipeline(VPipelineType::View_Alpha);
-
-    // Decide on the semi-transparent multiply alpha, depending on if blending is enabled.
-    // A value of '128' is full alpha and '64' is 50% alpha.
-    const uint8_t stmulA = (bBlend) ? 64 : 128;
 
     // Ensure we have enough vertices to proceed
     ensureNumVtxBufferVerts(3);
@@ -481,21 +472,20 @@ void add3dViewTriangle(
 
     for (uint32_t i = 0; i < 3; ++i) {
         VVertex& vert = pVerts[i];
-        vert.s = 1.0f;              // TODO: scale member
         vert.r = r;
         vert.g = g;
         vert.b = b;
-        vert.a = a;
         vert.texWinX = texWinX;
         vert.texWinY = texWinY;
         vert.texWinW = texWinW;
         vert.texWinH = texWinH;
         vert.clutX = clutX;
         vert.clutY = clutY;
-        vert.stmulR = 128;          // Fully white (128 = 100% strength)
+        vert.stmulR = 128;                      // Fully white (128 = 100% strength)
         vert.stmulG = 128;
         vert.stmulB = 128;
-        vert.stmulA = stmulA;
+        vert.stmulA = a;                        // Note: only matters if doing alpha blending
+        vert.lightDimMode = lightDimMode;
     }
 
     // Fill in verts xy and uv positions.
