@@ -100,7 +100,7 @@ void RV_DrawSeg(const seg_t& seg, const uint8_t colR, const uint8_t colG, const 
     const float segLen = std::sqrtf(dx * dx + dz * dz);
 
     // Figure out the bottom and top y values of the front sector
-    const sector_t frontSec = *seg.frontsector;
+    const sector_t& frontSec = *seg.frontsector;
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorheight);
 
@@ -125,7 +125,7 @@ void RV_DrawSeg(const seg_t& seg, const uint8_t colR, const uint8_t colG, const 
     if (seg.backsector) {
         // Figure out the bottom and top y values of the back sector and whether we are to draw the top and bottom walls.
         // We draw the top/bottom walls when there is a front face visible and if the ceiling is not a sky.
-        const sector_t backSec = *seg.backsector;
+        const sector_t& backSec = *seg.backsector;
         const float bty = RV_FixedToFloat(backSec.ceilingheight);
         const float bby = RV_FixedToFloat(backSec.floorheight);
 
