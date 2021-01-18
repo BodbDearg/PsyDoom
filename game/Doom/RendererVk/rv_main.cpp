@@ -52,7 +52,7 @@ void RV_DrawSubsector(subsector_t& subsec) noexcept {
     const seg_t* const pEndSeg = pBegSeg + subsec.numsegs;
 
     for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
-        RV_DrawSeg(*pSeg, secR, secG, secB);
+        RV_DrawSeg(*pSeg, subsec, secR, secG, secB);
     }
 
     // Draw all flats in the subsector

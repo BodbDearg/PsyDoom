@@ -81,7 +81,13 @@ static void RV_DrawWall(
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawSeg(const seg_t& seg, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
+void RV_DrawSeg(
+    const seg_t& seg,
+    const subsector_t& subsec,
+    const uint8_t colR,
+    const uint8_t colG,
+    const uint8_t colB
+) noexcept {
     // This line is now viewed by the player: show in the automap if the line is viewable there
     const side_t& side = *seg.sidedef;
     line_t& line = *seg.linedef;
@@ -99,8 +105,12 @@ void RV_DrawSeg(const seg_t& seg, const uint8_t colR, const uint8_t colG, const 
     const float dz = z2 - z1;
     const float segLen = std::sqrtf(dx * dx + dz * dz);
 
-    // Figure out the bottom and top y values of the front sector
-    const sector_t& frontSec = *seg.frontsector;
+    // Figure out the top and bottom y values of the front sector.
+    //
+    // Note: use the subsector passed into this function rather than the seg's reference to it - the subsector passed in is more reliable.
+    // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
+    // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
+    const sector_t& frontSec = *subsec.sector;
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorheight);
 
