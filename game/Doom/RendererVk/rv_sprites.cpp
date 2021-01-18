@@ -93,7 +93,7 @@ static texture_t& RV_CacheThingSpriteFrame(const mobj_t& thing, const spritefram
 // Some of this code is copied directly from 'R_DrawSubsectorSprites'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
-    // Grab the sprite frame to use and make sure it is resident in VRAM
+    // Grab the sprite frame to use
     const mobj_t& thing = *depthThing.pThing;
     const spritedef_t& spriteDef = gSprites[thing.sprite];
     const spriteframe_t& frame = spriteDef.spriteframes[thing.frame & FF_FRAMEMASK];
@@ -110,7 +110,7 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
     RV_GetTexWinXyWh(tex, texWinX, texWinY, texWinW, texWinH);
 
     // Determine sprite render alpha and the pipeline/blend-mode to use.
-    // Note that semi-transparency multiply of '128' means fully opaque.
+    // Note that a semi-transparency multiply of '128' means 100% strength (no change), or '1.0'.
     uint8_t stMulR = 128;
     uint8_t stMulG = 128;
     uint8_t stMulB = 128;
@@ -122,12 +122,12 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
             drawPipeline = VPipelineType::View_Additive;
 
             if (thing.flags & MF_BLEND_MODE_BIT2) {
-                // Additive with 25% opacity
+                // Additive blend with 25% opacity
                 stMulR = 32;
                 stMulG = 32;
                 stMulB = 32;
             } else {
-                // Additive with 100% opacity ...
+                // Additive blend with 100% opacity ...
             }
         } else {
             if (thing.flags & MF_BLEND_MODE_BIT2) {
@@ -141,23 +141,25 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         }
     }
 
-    // Aspect correction scaling copied from 'R_DrawSubsectorSprites'.
+    // Aspect correction scaling value copied from 'R_DrawSubsectorSprites'.
     // See the comments there for more about this...
     constexpr float ASPECT_CORRECT = 4.0f / 5.0f;
 
-    // Get the width and height to draw the sprite with and offsetting to use
+    // Get the width and height to draw the sprite with and the offsetting to use
     const float spriteW = (float) tex.width * ASPECT_CORRECT;
     const float spriteH = (float) tex.height;
-    const float offsetX = ((float) -tex.width + (float) tex.offsetX) * ASPECT_CORRECT;
     const float offsetY = - (float) tex.height + (float) tex.offsetY;
+    const float offsetX = bFlipSprite ? 
+        (-(float) tex.width + (float) tex.offsetX) * ASPECT_CORRECT :
+        (-(float) tex.offsetX) * ASPECT_CORRECT;
 
-    // Get the x/y axis vectors for the view rotation: these will be used to construct the sprite billboard
+    // Get the x/y axis vectors for the view rotation matrix: these will be used to construct the sprite billboard
     float axisX[4];
     float axisY[4];
     gSpriteBillboardMatrix.getRow(0, axisX);
     gSpriteBillboardMatrix.getRow(1, axisY);
 
-    // Compute the worldspace coords of the 4 vertices used
+    // Compute the world space offset and xy size of the sprite to billboard it
     const float worldOffset[3] = {
         axisX[0] * offsetX + axisY[0] * offsetY,
         axisX[1] * offsetX + axisY[1] * offsetY,
@@ -167,6 +169,7 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
     const float worldXSize[3] = { axisX[0] * spriteW, axisX[1] * spriteW, axisX[2] * spriteW };
     const float worldYSize[3] = { axisY[0] * spriteH, axisY[1] * spriteH, axisY[2] * spriteH };
 
+    // Compute the worldspace coords of the 4 vertices used
     float p1[3] = { depthThing.x + worldOffset[0], depthThing.y + worldOffset[1], depthThing.z + worldOffset[2] };
     float p2[3] = { p1[0], p1[1], p1[2] };
     float p3[3] = { p1[0], p1[1], p1[2] };
@@ -187,7 +190,7 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
 
     // Compute the UV coords for the sprite
     float ul = 0.0f;
-    float ur = (float) tex.width * 0.5f;    // Halved beause the texture format is 8bpp instead of 16bpp
+    float ur = (float) tex.width * 0.5f;    // Halved beause the texture format is 8bpp instead of 16bpp (VRAM coords are 16bpp)
     float vt = 0.0f;
     float vb = spriteH;
 
@@ -195,7 +198,7 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         std::swap(ul, ur);
     }
 
-    // Decide what color to shade the sprite with
+    // Decide what color to shade the sprite with: some sprites are shaded at 125% intensity (fireballs etc.)
     uint8_t sprColR, sprColG, sprColB;
 
     if (thing.frame & FF_FULLBRIGHT) {
