@@ -8,6 +8,7 @@
 #include "Doom/Game/doomdata.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/Renderer/r_main.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "rv_main.h"
@@ -47,6 +48,9 @@ static void RV_DrawWall(
     uint16_t texWinW, texWinH;
     RV_GetTexWinXyWh(tex, texWinX, texWinY, texWinW, texWinH);
 
+    // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
+    const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Walls : VLightDimMode::None;
+
     // Draw the wall triangles
     const uint8_t alpha = (bBlend) ? 64 : 128;
 
@@ -57,7 +61,7 @@ static void RV_DrawWall(
         colR, colG, colB,
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
-        VLightDimMode::Walls,
+        lightDimMode,
         VPipelineType::View_Alpha,
         128, 128, 128, alpha
     );
@@ -69,7 +73,7 @@ static void RV_DrawWall(
         colR, colG, colB,
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
-        VLightDimMode::Walls,
+        lightDimMode,
         VPipelineType::View_Alpha,
         128, 128, 128, alpha
     );

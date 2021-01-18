@@ -9,6 +9,7 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/Renderer/r_main.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "rv_main.h"
@@ -62,6 +63,9 @@ static void RV_DrawPlane(
     uint16_t texWinX, texWinY;
     uint16_t texWinW, texWinH;
     RV_GetTexWinXyWh(tex, texWinX, texWinY, texWinW, texWinH);
+    
+    // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
+    const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Flats : VLightDimMode::None;
 
     // Do all the triangles for the plane
     for (uint16_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx) {
@@ -88,7 +92,7 @@ static void RV_DrawPlane(
                 colR, colG, colB,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
-                VLightDimMode::Flats,
+                lightDimMode,
                 VPipelineType::View_Alpha,
                 128, 128, 128, 128
             );
@@ -100,7 +104,7 @@ static void RV_DrawPlane(
                 colR, colG, colB,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
-                VLightDimMode::Flats,
+                lightDimMode,
                 VPipelineType::View_Alpha,
                 128, 128, 128, 128
             );
