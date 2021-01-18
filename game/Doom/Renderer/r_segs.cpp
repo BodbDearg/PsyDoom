@@ -112,7 +112,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             return;
     }
     
-    // Final Doom: force the mid wall to be 128 units in height if this flag is specified.
+    // Final Doom: force the mid wall to be 128 units (127 for PsyDoom) in height if this flag is specified.
     // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
     if (line.flags & ML_MIDHEIGHT_128) {
         // PsyDoom: restricting this flag to two sided linedefs only.
@@ -129,7 +129,14 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
         if (bApplyFixedWallHeightFlag) {
             // Note again, since texture space coords are opposite to view space coords, we do a -128 instead of +128 you might expect
-            mid_ty = mid_by - 128;
+            //
+            // PsyDoom: tweak the height to be '127' rather than '128' to avoid stuff wrapping around and causing artifacts on some fences.
+            // I would make the adjustment smaller but we are just dealing with integer coordinates here.
+            #if PSYDOOM_MODS
+                mid_ty = mid_by - 127;
+            #else
+                mid_ty = mid_by - 128;
+            #endif
         }
     }
 
