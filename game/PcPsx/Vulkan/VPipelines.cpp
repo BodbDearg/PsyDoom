@@ -174,7 +174,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     VkPipelineColorBlendAttachmentState attachBlend_subtractive = attachBlend_common;
     attachBlend_subtractive.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
     attachBlend_subtractive.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
-    attachBlend_subtractive.colorBlendOp = VK_BLEND_OP_SUBTRACT;
+    attachBlend_subtractive.colorBlendOp = VK_BLEND_OP_REVERSE_SUBTRACT;
 
     vgl::PipelineColorBlendState blendState_alpha = vgl::PipelineColorBlendState().setToDefault();
     blendState_alpha.pAttachments = &attachBlend_alpha;
