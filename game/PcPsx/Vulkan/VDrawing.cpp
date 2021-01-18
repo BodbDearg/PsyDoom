@@ -338,7 +338,7 @@ void addAlphaBlendedUILine(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a UI style sprite to be drawn (alpha blended only).
-// UI style sprites have no scaling or rotation applied to them.
+// UI style sprites don't have depth testing or do culling.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void addAlphaBlendedUISprite(
     const float x,
@@ -409,6 +409,78 @@ void addAlphaBlendedUISprite(
 
     const float ul = u * uScale;
     const float ur = (u + w) * uScale;
+    const float vt = v;
+    const float vb = v + h;
+
+    pVerts[0].u = ul;   pVerts[0].v = vt;
+    pVerts[1].u = ur;   pVerts[1].v = vt;
+    pVerts[2].u = ur;   pVerts[2].v = vb;
+    pVerts[3].u = ur;   pVerts[3].v = vb;
+    pVerts[4].u = ul;   pVerts[4].v = vb;
+    pVerts[5].u = ul;   pVerts[5].v = vt;
+
+    // Consumed 6 buffer vertices and add 6 vertices to the current draw batch
+    gCurVtxBufferOffset += 6;
+    gCurDrawBatchSize += 6;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a UI style sprite to be drawn with additive blending (8bpp texture format only).
+// UI style sprites don't have depth testing or do culling.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addAdditiveBlended8bppUISprite(
+    const float x,
+    const float y,
+    const float w,
+    const float h,
+    const float u,
+    const float v,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const uint16_t clutX,
+    const uint16_t clutY,
+    const uint16_t texPageX,
+    const uint16_t texPageY,
+    const uint16_t texWinW,
+    const uint16_t texWinH
+) noexcept {
+    // Switch to the correct pipeline and ensure we have enough vertices to proceed
+    setPipeline(VPipelineType::UI_8bpp_Add);
+    ensureNumVtxBufferVerts(6);
+
+    // Fill in the vertices, starting first with common parameters
+    VVertex* const pVerts = gpCurVtxBufferVerts + gCurVtxBufferOffset;
+
+    for (uint32_t i = 0; i < 6; ++i) {
+        VVertex& vert = pVerts[i];
+        vert.z = {};                // Unused for UI
+        vert.r = r;
+        vert.g = g;
+        vert.b = b;
+        vert.lightDimMode = {};     // Unused for UI
+        vert.texWinX = texPageX;
+        vert.texWinY = texPageY;
+        vert.texWinW = texWinW;
+        vert.texWinH = texWinH;
+        vert.clutX = clutX;
+        vert.clutY = clutY;
+        vert.stmulR = 128;          // Fully white (128 = 100% strength)
+        vert.stmulG = 128;
+        vert.stmulB = 128;
+        vert.stmulA = 128;
+    }
+
+    // Fill in verts xy and uv positions
+    pVerts[0].x = x;                pVerts[0].y = y;
+    pVerts[1].x = (float)(x + w);   pVerts[1].y = y;
+    pVerts[2].x = (float)(x + w);   pVerts[2].y = (float)(y + h);
+    pVerts[3].x = (float)(x + w);   pVerts[3].y = (float)(y + h);
+    pVerts[4].x = x;                pVerts[4].y = (float)(y + h);
+    pVerts[5].x = x;                pVerts[5].y = y;
+
+    const float ul = u * 0.5f;              // 0.5x because the texture format is 8bpp and VRAM coords are 16bpp
+    const float ur = (u + w) * 0.5f;
     const float vt = v;
     const float vb = v + h;
 

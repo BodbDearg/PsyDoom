@@ -65,6 +65,24 @@ void addAlphaBlendedUISprite(
     const Gpu::TexFmt texFmt
 ) noexcept;
 
+void addAdditiveBlended8bppUISprite(
+    const float x,
+    const float y,
+    const float w,
+    const float h,
+    const float u,
+    const float v,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const uint16_t clutX,
+    const uint16_t clutY,
+    const uint16_t texPageX,
+    const uint16_t texPageY,
+    const uint16_t texWinW,
+    const uint16_t texWinH
+) noexcept;
+
 // TODO: add quad variant to submit two triangles at once
 void add3dViewTriangle(
     const float x1,

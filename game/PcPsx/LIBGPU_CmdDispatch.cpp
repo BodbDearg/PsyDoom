@@ -128,31 +128,55 @@ void submit(const SPRT& sprite) noexcept {
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::usingVulkanRenderer()) {
-            ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Only alpha blending is supported for PSX renderer sprites forwarded to Vulkan!");
-
             const uint16_t texWinW = gpu.texWinXMask + 1;   // This calculation should work because the mask should always be for POW2 texture wrapping
             const uint16_t texWinH = gpu.texWinYMask + 1;
 
             if (VRenderer::canSubmitDrawCmds()) {
-                VDrawing::addAlphaBlendedUISprite(
-                    drawRect.x,
-                    drawRect.y,
-                    drawRect.w,
-                    drawRect.h,
-                    drawRect.u,
-                    drawRect.v,
-                    drawRect.color.comp.r,
-                    drawRect.color.comp.g,
-                    drawRect.color.comp.b,
-                    (bBlendSprite) ? 64 : 128,
-                    gpu.clutX,
-                    gpu.clutY,
-                    gpu.texPageX + gpu.texWinX,
-                    gpu.texPageY + gpu.texWinY,
-                    texWinW / 2,    // Texture window is in terms of 8bpp pixels (format dependent) but HW renderer uses VRAM coords (16bpp pixels) - correct for this
-                    texWinH,
-                    gpu.texFmt
-                );
+                if (gpu.blendMode != Gpu::BlendMode::Add) {
+                    // Normal case: most UI sprites are alpha blended
+                    ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Unsupported blend mode and texture format combo!");
+
+                    VDrawing::addAlphaBlendedUISprite(
+                        drawRect.x,
+                        drawRect.y,
+                        drawRect.w,
+                        drawRect.h,
+                        drawRect.u,
+                        drawRect.v,
+                        drawRect.color.comp.r,
+                        drawRect.color.comp.g,
+                        drawRect.color.comp.b,
+                        (bBlendSprite) ? 64 : 128,
+                        gpu.clutX,
+                        gpu.clutY,
+                        gpu.texPageX + gpu.texWinX,
+                        gpu.texPageY + gpu.texWinY,
+                        texWinW / 2,    // Texture window is in terms of 8bpp pixels (format dependent) but HW renderer uses VRAM coords (16bpp pixels) - correct for this
+                        texWinH,
+                        gpu.texFmt
+                    );
+                } else {
+                    // Additive blending: used by the player weapon when the player is invisible
+                    ASSERT_LOG(gpu.texFmt == Gpu::TexFmt::Bpp8, "Unsupported blend mode and texture format combo!");
+
+                    VDrawing::addAdditiveBlended8bppUISprite(
+                        drawRect.x,
+                        drawRect.y,
+                        drawRect.w,
+                        drawRect.h,
+                        drawRect.u,
+                        drawRect.v,
+                        drawRect.color.comp.r,
+                        drawRect.color.comp.g,
+                        drawRect.color.comp.b,
+                        gpu.clutX,
+                        gpu.clutY,
+                        gpu.texPageX + gpu.texWinX,
+                        gpu.texPageY + gpu.texWinY,
+                        texWinW / 2,    // Texture window is in terms of 8bpp pixels (format dependent) but HW renderer uses VRAM coords (16bpp pixels) - correct for this
+                        texWinH
+                    );
+                }
             }
 
             return;

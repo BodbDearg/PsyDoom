@@ -230,6 +230,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass) noexcept 
     createPipeline(VPipelineType::Lines, shaderModules_colored, lineListInput, rasterizerState_noCull, blendState_alpha, depthState_noTestNoWrite);
     createPipeline(VPipelineType::UI_4bpp, shaderModules_ui_4bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_noTestNoWrite);
     createPipeline(VPipelineType::UI_8bpp, shaderModules_ui_8bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_noTestNoWrite);
+    createPipeline(VPipelineType::UI_8bpp_Add, shaderModules_ui_8bpp, triangleListInput, rasterizerState_noCull, blendState_additive, depthState_noTestNoWrite);
     createPipeline(VPipelineType::UI_16bpp, shaderModules_ui_16bpp, triangleListInput, rasterizerState_noCull, blendState_alpha, depthState_noTestNoWrite);
     createPipeline(VPipelineType::View_Alpha, shaderModules_view, triangleListInput, rasterizerState_backFaceCull, blendState_alpha, depthState_testNoWrite);
     createPipeline(VPipelineType::View_Additive, shaderModules_view, triangleListInput, rasterizerState_backFaceCull, blendState_additive, depthState_testNoWrite);

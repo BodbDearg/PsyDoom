@@ -15,6 +15,7 @@ enum class VPipelineType : uint8_t {
     Lines,              // Solid colored lines
     UI_4bpp,            // Texture mapped @ 4bpp, alpha blended
     UI_8bpp,            // Texture mapped @ 8bpp, alpha blended
+    UI_8bpp_Add,        // Texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
     UI_16bpp,           // Texture mapped @ 16bpp, alpha blended
     View_Alpha,         // 3D View: Texture mapped @ 8bpp, light diminishing, alpha blended
     View_Additive,      // 3D View: Texture mapped @ 8bpp, light diminishing, additive blended
