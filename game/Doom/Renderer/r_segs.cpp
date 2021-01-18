@@ -355,12 +355,11 @@ void R_DrawWallPiece(
 
             // Some hacky-ish code to clamp the column height to the screen bounds if it gets too big, and to adjust the 'v' texture coords.
             // For the most part the engine relies on the hardware to do it's clipping for vertical columns, but if the offscreen distance
-            // becomes too great then problems can start occurring and columns don't render. I'm not sure if this is a PSX limitation or
-            // some sort of numeric overflow, but this code attempts to fix it.
+            // becomes too great then problems can start occurring and columns don't render. This is a PSX hardware limitation, where the
+            // maximum bounds of primitives can't exceed around 1023x511.
             //
             // Note: the value '510' appears to be the maximum we can here use without encountering issues.
             // If you reduce this any more, then sometimes columns will not draw when you get close enough.
-            // I'm not sure specifically why this was value chosen, perhaps found through trial and error?
             //
             const int32_t colHeight = ybCur - ytCur;
 
