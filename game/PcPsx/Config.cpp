@@ -87,9 +87,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     {
         "FloorRenderGapFix",
         "#---------------------------------------------------------------------------------------------------\n"
-        "# Enable/disable a precision fix for the floor renderer to prevent gaps in the floor on some maps.\n"
-        "# This fix helps prevent some noticeable glitches on larger outdoor maps like 'Tower Of Babel'.\n"
-        "# Set to '1' to enable the fix, and '0' to disable.\n"
+        "# Classic renderer only: enable/disable a precision fix for the floor renderer to prevent gaps in\n"
+        "# the floor on some maps. This fix helps prevent some noticeable glitches on larger outdoor maps\n"
+        "# like 'Tower Of Babel'. Set to '1' to enable the fix, and '0' to disable (original PSX behavior).\n"
         "#---------------------------------------------------------------------------------------------------\n"
         "FloorRenderGapFix = 1\n",
         [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
