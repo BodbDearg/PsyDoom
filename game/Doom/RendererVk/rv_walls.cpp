@@ -82,6 +82,11 @@ static void RV_DrawWall(
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawSeg(const seg_t& seg, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
+    // This line is now viewed by the player: show in the automap if the line is viewable there
+    const side_t& side = *seg.sidedef;
+    line_t& line = *seg.linedef;
+    line.flags |= ML_MAPPED;
+
     // Get the xz positions of the seg endpoints in floating point format and compute the seg length.
     // TODO: consider precomputing, unclear if it's worth it though.
     vertex_t& v1 = *seg.vertex1;
@@ -101,7 +106,6 @@ void RV_DrawSeg(const seg_t& seg, const uint8_t colR, const uint8_t colG, const 
 
     // Get the upper/mid/lower textures for the seg.
     // Note that these array indexes are always guaranteed to be in range by the level setup code.
-    const side_t& side = *seg.sidedef;
     texture_t& tex_u = gpTextures[gpTextureTranslation[side.toptexture]];
     texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
     texture_t& tex_l = gpTextures[gpTextureTranslation[side.bottomtexture]];
@@ -118,8 +122,6 @@ void RV_DrawSeg(const seg_t& seg, const uint8_t colR, const uint8_t colG, const 
     float midBy = fby;
 
     // See if the seg's line is two sided or not
-    const line_t& line = *seg.linedef;
-
     if (seg.backsector) {
         // Figure out the bottom and top y values of the back sector and whether we are to draw the top and bottom walls.
         // We draw the top/bottom walls when there is a front face visible and if the ceiling is not a sky.
