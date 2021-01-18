@@ -28,6 +28,9 @@ void main() {
     // Add a little bias also to prevent switching back and forth between cases that are close, due to float inprecision...
     vec3 colorMul = trunc(in_color * getLightDiminishingMultiplier(in_uv_z.z, in_lightDimModeStrength) + 0.0001) / 128.0;
 
+    // The PSX renderer doesn't allow the color multiply to go larger than this:
+    colorMul = min(colorMul, 255.0 / 128.0);
+
     // Apply the color multiply and bit crush the color in a manner similar to the PSX
     out_color.rgb *= colorMul;
     out_color = psxR5G5B5BitCrush(out_color);
