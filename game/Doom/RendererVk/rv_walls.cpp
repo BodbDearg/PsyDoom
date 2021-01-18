@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Code to draw walls
+// Drawing code for the new native Vulkan renderer: walls
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_VULKAN_RENDERER
 
@@ -54,20 +54,24 @@ static void RV_DrawWall(
         x1, yb, z1, u1, vb,
         x1, yt, z1, u1, vt,
         x2, yt, z2, u2, vt,
-        colR, colG, colB, alpha,
+        colR, colG, colB,
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
-        VLightDimMode::Walls
+        VLightDimMode::Walls,
+        VPipelineType::View_Alpha,
+        128, 128, 128, alpha
     );
 
     VDrawing::add3dViewTriangle(
         x2, yt, z2, u2, vt,
         x2, yb, z2, u2, vb,
         x1, yb, z1, u1, vb,
-        colR, colG, colB, alpha,
+        colR, colG, colB,
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
-        VLightDimMode::Walls
+        VLightDimMode::Walls,
+        VPipelineType::View_Alpha,
+        128, 128, 128, alpha
     );
 }
 

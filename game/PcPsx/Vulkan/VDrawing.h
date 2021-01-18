@@ -20,6 +20,7 @@ namespace Gpu {
 
 enum class VLightDimMode : uint8_t;
 enum class VPipelineType : uint8_t;
+enum class VPipelineType : uint8_t;
 
 BEGIN_NAMESPACE(VDrawing)
 
@@ -84,15 +85,18 @@ void add3dViewTriangle(
     const uint8_t r,
     const uint8_t g,
     const uint8_t b,
-    const uint8_t a,
     const uint16_t clutX,
     const uint16_t clutY,
     const uint16_t texWinX,
     const uint16_t texWinY,
     const uint16_t texWinW,
     const uint16_t texWinH,
-    const VLightDimMode lightDimMode
-    // TODO: add blend mode
+    const VLightDimMode lightDimMode,
+    const VPipelineType drawPipeline,
+    const uint8_t stMulR,
+    const uint8_t stMulG,
+    const uint8_t stMulB,
+    const uint8_t stMulA
 ) noexcept;
 
 END_NAMESPACE(VDrawing)

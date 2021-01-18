@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Logic for drawing floors and ceilings
+// Drawing code for the new native Vulkan renderer: floors and ceilings
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_VULKAN_RENDERER
 
@@ -85,20 +85,24 @@ static void RV_DrawPlane(
                 x1, planeH, z1, u1, z1,
                 x2, planeH, z2, u2, z2,
                 triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
-                colR, colG, colB, 128,
+                colR, colG, colB,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
-                VLightDimMode::Flats
+                VLightDimMode::Flats,
+                VPipelineType::View_Alpha,
+                128, 128, 128, 128
             );
         } else {
             VDrawing::add3dViewTriangle(
                 x1, planeH, z1, u1, z1,
                 triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
                 x2, planeH, z2, u2, z2,
-                colR, colG, colB, 128,
+                colR, colG, colB,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
-                VLightDimMode::Flats
+                VLightDimMode::Flats,
+                VPipelineType::View_Alpha,
+                128, 128, 128, 128
             );
         }
     }

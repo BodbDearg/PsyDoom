@@ -23,23 +23,19 @@
 #include "PcPsx/Vulkan/VRenderer.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "rv_flats.h"
+#include "rv_sprites.h"
 #include "rv_utils.h"
 #include "rv_walls.h"
 
 // TODO: remove LIBGTE use here eventually
 #include "PsyQ/LIBGTE.h"
 
-// The current view projection matrix for the scene
-static Matrix4f gViewProjMatrix;
-
-float       gViewXf;
-float       gViewYf;
-float       gViewZf;
-float       gViewAnglef;
-float       gViewCosf;
-float       gViewSinf;
-uint16_t    gClutX;
-uint16_t    gClutY;
+float       gViewXf, gViewYf, gViewZf;      // View position in floating point format
+float       gViewAnglef;                    // View angle in radians (float)
+float       gViewCosf, gViewSinf;           // Sin and cosine for view angle
+uint16_t    gClutX, gClutY;                 // X and Y position in VRAM for the current CLUT (16-bit pixel coords)
+Matrix4f    gSpriteBillboardMatrix;         // A transform matrix containing the axis vectors used for sprite billboarding
+Matrix4f    gViewProjMatrix;                // The combined view and projection transform matrix for the scene
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws the given subsector and all of it's contained objects
@@ -61,6 +57,10 @@ void RV_DrawSubsector(subsector_t& subsec) noexcept {
 
     // Draw all flats in the subsector
     RV_DrawFlats(subsec, secR, secG, secB);
+
+    // Draw sprites in the subsector:
+    // TODO, do sprite and masked drawing AFTER all other solid geom.
+    RV_DrawSubsectorSprites(subsec, secR, secG, secB);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -125,6 +125,9 @@ static void RV_DetermineDrawParams() noexcept {
     gViewAnglef = RV_AngleToFloat(gViewAngle - ANG90);
     gViewCosf = std::cosf(gViewAnglef);
     gViewSinf = std::sinf(gViewAnglef);
+
+    // Determine the view rotation matrix used for sprite billboarding
+    gSpriteBillboardMatrix = Matrix4f::rotateY(-gViewAnglef);
     
     // Set the draw matrix and upload to the GTE.
     // TODO: remove LIBGTE use here eventually

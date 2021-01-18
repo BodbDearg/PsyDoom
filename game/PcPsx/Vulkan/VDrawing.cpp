@@ -451,18 +451,21 @@ void add3dViewTriangle(
     const uint8_t r,
     const uint8_t g,
     const uint8_t b,
-    const uint8_t a,
     const uint16_t clutX,
     const uint16_t clutY,
     const uint16_t texWinX,
     const uint16_t texWinY,
     const uint16_t texWinW,
     const uint16_t texWinH,
-    const VLightDimMode lightDimMode
+    const VLightDimMode lightDimMode,
+    const VPipelineType drawPipeline,
+    const uint8_t stMulR,
+    const uint8_t stMulG,
+    const uint8_t stMulB,
+    const uint8_t stMulA
 ) noexcept {
     // Switch to the correct pipeline
-    // TODO: support changing blend mode
-    setPipeline(VPipelineType::View_Alpha);
+    setPipeline(drawPipeline);
 
     // Ensure we have enough vertices to proceed
     ensureNumVtxBufferVerts(3);
@@ -481,10 +484,10 @@ void add3dViewTriangle(
         vert.texWinH = texWinH;
         vert.clutX = clutX;
         vert.clutY = clutY;
-        vert.stmulR = 128;                      // Fully white (128 = 100% strength)
-        vert.stmulG = 128;
-        vert.stmulB = 128;
-        vert.stmulA = a;                        // Note: only matters if doing alpha blending
+        vert.stmulR = stMulR;
+        vert.stmulG = stMulG;
+        vert.stmulB = stMulB;
+        vert.stmulA = stMulA;
         vert.lightDimMode = lightDimMode;
     }
 

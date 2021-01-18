@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Macros.h"
 #include "Doom/doomdef.h"
+#include "Macros.h"
+#include "Matrix4.h"
 
 #if PSYDOOM_VULKAN_RENDERER
 
@@ -13,6 +14,8 @@ extern float        gViewCosf;
 extern float        gViewSinf;
 extern uint16_t     gClutX;
 extern uint16_t     gClutY;
+extern Matrix4f     gSpriteBillboardMatrix;
+extern Matrix4f     gViewProjMatrix;
 
 void RV_RenderPlayerView() noexcept;
 
