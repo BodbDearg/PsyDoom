@@ -184,8 +184,11 @@ void AM_Control(player_t& player) noexcept {
 // Does drawing for the automap
 //------------------------------------------------------------------------------------------------------------------------------------------
 void AM_Drawer() noexcept {
-    // Finish up the previous frame
-    I_DrawPresent();
+    // Finish up the previous frame.
+    // PsyDoom: moved this to the end of 'P_Drawer' instead - needed for the new Vulkan renderer integration.
+    #if !PSYDOOM_MODS
+        I_DrawPresent();
+    #endif
 
     // Determine the scale to render the map at
     const player_t& curPlayer = gPlayers[gCurPlayerIndex];
