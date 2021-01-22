@@ -107,7 +107,7 @@ void DescriptorSet::bindBufferBytes(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Bind the specified binding number in the descriptor set to the given texture and sampler.
-// This corresponds to a 'combined image sampler' in Vulkan terms.
+// This corresponds to a 'combined image sampler' descriptor type in Vulkan terms.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DescriptorSet::bindTextureAndSampler(
     const uint32_t bindingNum,
@@ -131,6 +131,35 @@ void DescriptorSet::bindTextureAndSampler(
     writeInfo.dstSet = mVkDescriptorSet;
     writeInfo.dstBinding = bindingNum;
     writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeInfo.descriptorCount = 1;
+    writeInfo.pImageInfo = &imageInfo;
+
+    // Do the descriptor update
+    LogicalDevice& device = *mpParentPool->getDevice();
+    const VkFuncs& vkFuncs = device.getVkFuncs();
+    vkFuncs.vkUpdateDescriptorSets(device.getVkDevice(), 1, &writeInfo, 0, nullptr);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Bind the specified binding number in the descriptor set to the given input attachment, specified by it's texture.
+// This corresponds to a 'input attachment' descriptor type in Vulkan terms.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void DescriptorSet::bindInputAttachment(const uint32_t bindingNum, const BaseTexture& attachTex) noexcept {
+    // Preconditions
+    ASSERT(isValid());
+    ASSERT(attachTex.isValid());
+
+    // Fill in the image info struct
+    VkDescriptorImageInfo imageInfo = {};
+    imageInfo.imageView = attachTex.getVkImageView();
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;   // For now assume all textures will be in this layout before they are used
+
+    // Fill in a descriptor write struct
+    VkWriteDescriptorSet writeInfo = {};
+    writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeInfo.dstSet = mVkDescriptorSet;
+    writeInfo.dstBinding = bindingNum;
+    writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
     writeInfo.descriptorCount = 1;
     writeInfo.pImageInfo = &imageInfo;
 

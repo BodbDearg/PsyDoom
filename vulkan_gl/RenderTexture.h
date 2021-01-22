@@ -22,16 +22,20 @@ public:
     bool initAsRenderTexture(
         LogicalDevice& device,
         const VkFormat textureFormat,
+        const VkImageUsageFlags usageFlags,
         const uint32_t width,
         const uint32_t height,
+        const uint32_t sampleCount,
         const AlphaMode alphaMode = AlphaMode::PREMULTIPLIED
     ) noexcept;
 
     bool initAsDepthStencilBuffer(
         LogicalDevice& device,
         const VkFormat textureFormat,
+        const VkImageUsageFlags usageFlags,
         const uint32_t width,
-        const uint32_t height
+        const uint32_t height,
+        const uint32_t sampleCount
     ) noexcept;
 
     void destroy(const bool bImmediately = false, const bool bForceIfInvalid = false) noexcept;

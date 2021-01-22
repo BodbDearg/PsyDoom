@@ -9,6 +9,7 @@
 #include "Video.h"
 #include "Vulkan/VDrawing.h"
 #include "Vulkan/VRenderer.h"
+#include "Vulkan/VTypes.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
 #include "Wess/wessapi.h"
@@ -200,6 +201,10 @@ void onBeginUIDrawing() noexcept {
         );
 
         if (bSetDrawMatrix) {
+            // Note: before setting the transform matrix make sure we are on a compatible pipeline that can accept it as push constants.
+            // Also make sure to end the current drawing batch, in case draw commands before this are affected by the matrix change.
+            VDrawing::endCurrentDrawBatch();
+            VDrawing::setPipeline(VPipelineType::UI_8bpp);
             VDrawing::setTransformMatrix(VDrawing::computeTransformMatrixForUI());
         }
     #endif

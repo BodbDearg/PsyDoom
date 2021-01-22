@@ -25,8 +25,9 @@ extern float    gViewBobbingStrength;
 // Video settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 extern bool     gbFullscreen;
-extern bool     gbFloorRenderGapFix;
 extern int32_t  gLogicalDisplayW;
+extern int32_t  gAAMultisamples;
+extern bool     gbFloorRenderGapFix;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Audio settings

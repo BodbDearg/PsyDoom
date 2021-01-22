@@ -1,11 +1,11 @@
-#if PSYDOOM_VULKAN_RENDERER
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // A module that handles the submission of draw commands to the Vulkan renderer.
 // Allows various primitives to be submitted.
 // Records the vertex data into a buffer and the commands into the current command buffer used by the renderer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "VDrawing.h"
+
+#if PSYDOOM_VULKAN_RENDERER
 
 #include "Asserts.h"
 #include "Buffer.h"
@@ -94,13 +94,13 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
             FatalErrors::raise("VDrawing: Failed to create a Vulkan descriptor pool!");
 
         // Make the set
-        gpDescriptorSet = gDescriptorPool.allocDescriptorSet(VPipelines::gDescriptorSetLayout);
+        gpDescriptorSet = gDescriptorPool.allocDescriptorSet(VPipelines::gDescSetLayout_drawing);
 
         if (!gpDescriptorSet)
             FatalErrors::raise("VDrawing: Failed to allocate a required Vulkan descriptor set!");
 
         // Bind the PSX VRAM texture and the sampler to it
-        gpDescriptorSet->bindTextureAndSampler(0, vramTex, VPipelines::gSampler);
+        gpDescriptorSet->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_drawing);
     }
 
     // Create the vertex buffers
@@ -233,7 +233,7 @@ void setPipeline(const VPipelineType type) noexcept {
 void setTransformMatrix(const Matrix4f& matrix) noexcept {
     // Note: currently the transform matrix is the only uniform and it's only used by vertex shaders
     ASSERT(gpCurCmdBufRec);
-    gpCurCmdBufRec->pushConstants(VPipelines::gPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), matrix.e);
+    gpCurCmdBufRec->pushConstants(VPipelines::gPipelineLayout_drawing, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), matrix.e);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

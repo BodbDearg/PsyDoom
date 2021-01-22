@@ -56,12 +56,14 @@ bool Pipeline::initGraphicsPipeline(
     const uint32_t subpassIndex,
     const ShaderModule* const* const ppShaderModules,
     const uint32_t numShaderModules,
+    const VkSpecializationInfo* const pShaderSpecializationInfo,
     const VkVertexInputBindingDescription* pVertexInputBindingDescs,
     const uint32_t numVertexInputBindingDescs,
     const VkVertexInputAttributeDescription* pVertexInputAttribDescs,
     const uint32_t numVertexInputAttribDescs,
     const PipelineInputAssemblyState& inputAssemblyState,
     const PipelineRasterizationState& rasterizationState,
+    const PipelineMultisampleState& multisampleState,
     const PipelineColorBlendState& colorBlendState,
     const PipelineDepthStencilState& depthStencilState
 ) noexcept {
@@ -123,6 +125,7 @@ bool Pipeline::initGraphicsPipeline(
             pCurShaderStageCI->stage = pCurShaderModule->getVkShaderStageFlagBits();
             pCurShaderStageCI->module = pCurShaderModule->getVkShaderModule();
             pCurShaderStageCI->pName = "main";
+            pCurShaderStageCI->pSpecializationInfo = pShaderSpecializationInfo;     // Note: forcing the same specialization info to be used by all shader stages
 
             ++ppCurShaderModule;
             ++pCurShaderStageCI;
@@ -179,16 +182,14 @@ bool Pipeline::initGraphicsPipeline(
     //------------------------------------------------------------------------------------------------------------------
     // Pipeline settings: Multisampling
     //------------------------------------------------------------------------------------------------------------------
-
-    // Hardcoding for now: will need to have it configurable if supporting MSAA
     VkPipelineMultisampleStateCreateInfo multisampleStateCI = {};
     multisampleStateCI.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampleStateCI.sampleShadingEnable = VK_FALSE;
-    multisampleStateCI.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    multisampleStateCI.minSampleShading = 1.0f;
-    multisampleStateCI.pSampleMask = nullptr;
-    multisampleStateCI.alphaToCoverageEnable = VK_FALSE;
-    multisampleStateCI.alphaToOneEnable = VK_FALSE;
+    multisampleStateCI.rasterizationSamples = multisampleState.rasterizationSamples;
+    multisampleStateCI.sampleShadingEnable =  multisampleState.sampleShadingEnable;
+    multisampleStateCI.minSampleShading = multisampleState.minSampleShading;
+    multisampleStateCI.pSampleMask = multisampleState.pSampleMask;
+    multisampleStateCI.alphaToCoverageEnable = multisampleState.alphaToCoverageEnable;
+    multisampleStateCI.alphaToOneEnable = multisampleState.alphaToOneEnable;
 
     //------------------------------------------------------------------------------------------------------------------
     // Pipeline Settings: Color blend state
@@ -275,7 +276,8 @@ bool Pipeline::initGraphicsPipeline(
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Pipeline::initComputePipeline(
     const VkPipelineLayout& pipelineLayout,
-    const ShaderModule& shaderModule
+    const ShaderModule& shaderModule,
+    const VkSpecializationInfo* const pShaderSpecializationInfo
 ) noexcept {
     //------------------------------------------------------------------------------------------------------------------
     // The basics
@@ -311,6 +313,7 @@ bool Pipeline::initComputePipeline(
     pipelineCI.stage.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
     pipelineCI.stage.module = shaderModule.getVkShaderModule();
     pipelineCI.stage.pName = "main";
+    pipelineCI.stage.pSpecializationInfo = pShaderSpecializationInfo;
     pipelineCI.layout = pipelineLayout;
     pipelineCI.basePipelineHandle = VK_NULL_HANDLE;     // Used when creating derived pipelines
     pipelineCI.basePipelineIndex = -1;                  // Used when creating derived pipelines

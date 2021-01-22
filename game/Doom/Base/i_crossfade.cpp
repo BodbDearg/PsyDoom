@@ -19,6 +19,10 @@ void I_CrossFadeFrameBuffers() noexcept {
     // Clear out what we can from the texture cache
     I_PurgeTexCache();
 
+    // TODO: get this working with the new Vulkan renderer properly
+    if (Video::usingVulkanRenderer())
+        return;
+
     // Setup the draw and display environments that we will ping-pong between while doing the cross fade.
     // Note that these will occupy some of the VRAM space normally used by the texture cache.
     DRAWENV drawEnvs[2];

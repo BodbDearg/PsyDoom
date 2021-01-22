@@ -58,6 +58,29 @@ struct PipelineRasterizationState {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Pipeline state: multisampling.
+// A simplified and defaultable version of 'VkPipelineMultisampleStateCreateInfo'. See docs for that for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct PipelineMultisampleState {
+    VkSampleCountFlagBits   rasterizationSamples;
+    VkBool32                sampleShadingEnable;
+    float                   minSampleShading;
+    const VkSampleMask*     pSampleMask;
+    VkBool32                alphaToCoverageEnable;
+    VkBool32                alphaToOneEnable;
+
+    PipelineMultisampleState& setToDefault() noexcept {
+        rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        sampleShadingEnable = VK_FALSE;
+        minSampleShading = 1.0f;
+        pSampleMask = nullptr;
+        alphaToCoverageEnable = VK_FALSE;
+        alphaToOneEnable = VK_FALSE;
+        return *this;
+    }
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Pipeline state: color blend attachment state.
 // Just a defaultable version of 'VkPipelineColorBlendAttachmentState'. See docs for that for more details.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -147,19 +170,22 @@ public:
         const uint32_t subpassIndex,
         const ShaderModule* const* const ppShaderModules,
         const uint32_t numShaderModules,
+        const VkSpecializationInfo* const pShaderSpecializationInfo,
         const VkVertexInputBindingDescription* pVertexInputBindingDescs,
         const uint32_t numVertexInputBindingDescs,
         const VkVertexInputAttributeDescription* pVertexInputAttribDescs,
         const uint32_t numVertexInputAttribDescs,
         const PipelineInputAssemblyState& inputAssemblyState,
         const PipelineRasterizationState& rasterizationState,
+        const PipelineMultisampleState& multisampleState,
         const PipelineColorBlendState& colorBlendState,
         const PipelineDepthStencilState& depthStencilState
     ) noexcept;
 
     bool initComputePipeline(
         const VkPipelineLayout& pipelineLayout,
-        const ShaderModule& shaderModule
+        const ShaderModule& shaderModule,
+        const VkSpecializationInfo* const pShaderSpecializationInfo
     ) noexcept;
 
     void destroy(const bool bImmediately = false, const bool bForceIfInvalid = false) noexcept;

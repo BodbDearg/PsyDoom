@@ -19,6 +19,7 @@
 #include "Doom/Renderer/r_things.h"
 #include "Gpu.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/Utils.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VRenderer.h"
 #include "PcPsx/Vulkan/VTypes.h"
@@ -163,25 +164,29 @@ void RV_RenderPlayerView() noexcept {
     // Stat tracking: how many subsectors will we draw?
     gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
 
+    // Draw the sky if showing
     if (gbIsSkyVisible) {
+        // TODO: need a native Vulkan Sky Drawing routine, so we can do widescreen etc.
+        Utils::onBeginUIDrawing();
         R_DrawSky();
     }
 
-    // Set the projection matrix to use and then draw all subsectors emitted during BSP traversal in back to front order.
-    // Note: be sure to end the current batch first, so the transform matrix is only applied to draw calls following this.
+    // Set the projection matrix to use.
+    // Make sure we have ended the draw batch first so the previous drawing is unaffected.
+    // Also make sure we are on a compatible pipeline to accept the new transform matrix.
     VDrawing::endCurrentDrawBatch();
+    VDrawing::setPipeline(VPipelineType::View_Alpha);
     VDrawing::setTransformMatrix(gViewProjMatrix);
 
+    // Draw the sectors, back to front
     while (gppEndDrawSubsector > gpDrawSubsectors) {
         --gppEndDrawSubsector;
         subsector_t& subsec = **gppEndDrawSubsector;
         RV_DrawSubsector(subsec);
     }
 
-    // Switch back to UI renderng and end the draw batch first so the transform matrix only applies to commands following this
-    VDrawing::endCurrentDrawBatch();
-    VDrawing::setTransformMatrix(VDrawing::computeTransformMatrixForUI());
-
+    // Switch back to UI renderng
+    Utils::onBeginUIDrawing();
 
     // Set the global current light value.
     // In the old renderer this was written to constantly but here we'll just set it once for the player gun, based on the player's sector.

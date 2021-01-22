@@ -54,6 +54,8 @@ public:
         const Sampler& sampler
     ) noexcept;
 
+    void bindInputAttachment(const uint32_t bindingNum, const BaseTexture& attachTex) noexcept;
+
 private:
     // Copy and move assign are disallowed
     DescriptorSet(const DescriptorSet& other) = delete;

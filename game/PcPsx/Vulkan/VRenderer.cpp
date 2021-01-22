@@ -15,21 +15,24 @@
 #include "Gpu.h"
 #include "LogicalDevice.h"
 #include "MutableTexture.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/PsxVm.h"
 #include "PcPsx/Video.h"
+#include "PhysicalDevice.h"
 #include "PhysicalDeviceSelection.h"
 #include "RenderTexture.h"
 #include "Semaphore.h"
 #include "Swapchain.h"
 #include "Texture.h"
 #include "VDrawing.h"
-#include "VDrawRenderPass.h"
 #include "VkFuncs.h"
+#include "VMsaaResolver.h"
 #include "VPipelines.h"
+#include "VRenderPass.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
-// TODO: REMOVE THIS TEMP CODE
+// TODO: remove temp/hack renderer toggle and implement properly
 #include "PcPsx/Input.h"
 #include <SDL.h>
 
@@ -45,7 +48,13 @@ static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
     VK_FORMAT_A2B10G10R10_UNORM_PACK32
 };
 
-// TODO: add ways to toggle this
+// What formats we use for 16/32-bit color and depth buffers.
+// Note that 'VK_FORMAT_A1R5G5B5_UNORM_PACK16' is not required to be supported by Vulkan as a framebuffer attachment, but it's pretty ubiquitous.
+static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
+static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
+static constexpr VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
+
+// TODO: add ways to toggle PSX renderer
 bool gbUsePsxRenderer = false;      // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
 
 static bool                         gbDidBeginFrame;                // Whether a frame was begun
@@ -54,12 +63,13 @@ static vgl::VulkanInstance          gVulkanInstance(gVkFuncs);      // Vulkan AP
 static vgl::WindowSurface           gWindowSurface;                 // Window surface to draw on
 static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical device chosen for rendering
 static vgl::LogicalDevice           gDevice(gVkFuncs);              // The logical device used for Vulkan
+static uint32_t                     gDrawSampleCount;               // The number of samples to use when drawing (if > 1 then MSAA is active)
 static vgl::Swapchain               gSwapchain;                     // The swapchain we present to
-static VDrawRenderPass              gRenderPass;                    // The render pass used for drawing for the new native Vulkan renderer
+static VRenderPass                  gRenderPass;                    // The single render pass used for drawing for the new native Vulkan renderer
 static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
-// Color attachments, depth attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
-// The color attachment is blitted to the swapchain image in preparation for final presentation.
+// Draw color attachments, depth attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
+// Note that the framebuffer might contain an additional MSAA resolve attachment (owned by the MSAA resolver) if that feature is active.
 static vgl::RenderTexture    gFbColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::RenderTexture    gFbDepthAttachments[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::Framebuffer      gFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
@@ -90,6 +100,33 @@ static vgl::MutableTexture gPsxFramebufferTextures[vgl::Defines::RINGBUFFER_SIZE
 static vgl::Texture gPsxVramTexture;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Decides the multisample anti-aliasing sample count based on user preferences and hardware capabilities
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void decideDrawSampleCount() noexcept {
+    // Must do at least 1 sample
+    const int32_t wantedNumSamples = std::max(Config::gAAMultisamples, 1);
+
+    // Support up to 32x MSAA; note that both the depth and color render targets must support our MSAA mode.
+    // Therefore we only consider MSAA modes that are supported for both depth/stencil and color.
+    const VkPhysicalDeviceLimits& deviceLimits = gpPhysicalDevice->getProps().limits;
+    const VkSampleCountFlags deviceMsaaModes = deviceLimits.framebufferColorSampleCounts & deviceLimits.framebufferDepthSampleCounts;
+
+    if ((wantedNumSamples >= 32) && (deviceMsaaModes & VK_SAMPLE_COUNT_32_BIT)) {
+        gDrawSampleCount = 32;
+    } else if ((wantedNumSamples >= 16) && (deviceMsaaModes & VK_SAMPLE_COUNT_16_BIT)) {
+        gDrawSampleCount = 16;
+    } else if ((wantedNumSamples >= 8) && (deviceMsaaModes & VK_SAMPLE_COUNT_8_BIT)) {
+        gDrawSampleCount = 8;
+    } else if ((wantedNumSamples >= 4) && (deviceMsaaModes & VK_SAMPLE_COUNT_4_BIT)) {
+        gDrawSampleCount = 4;
+    } else if ((wantedNumSamples >= 2) && (deviceMsaaModes & VK_SAMPLE_COUNT_2_BIT)) {
+        gDrawSampleCount = 2;
+    } else {
+        gDrawSampleCount = 1;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Destroys all framebuffers immediately
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void destroyFramebuffers() noexcept {
@@ -98,6 +135,8 @@ static void destroyFramebuffers() noexcept {
         gFbColorAttachments[i].destroy(true);
         gFbDepthAttachments[i].destroy(true);
     }
+
+    VMsaaResolver::destroyResolveColorAttachments();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -127,30 +166,60 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
         (gFramebuffers[0].getHeight() != wantedFbHeight)
     );
 
-    if (bNeedNewFramebuffers) {
-        if (!bDidWaitForDeviceIdle) {
-            gDevice.waitUntilDeviceIdle();
-            bDidWaitForDeviceIdle = true;
+    if (!bNeedNewFramebuffers)
+        return true;
+
+    // Need new framebuffers: wait for the device to become idle firstly so that old framebuffers are unused
+    if (!bDidWaitForDeviceIdle) {
+        gDevice.waitUntilDeviceIdle();
+        bDidWaitForDeviceIdle = true;
+    }
+
+    // Destroy the old framebuffers and attachments, then create the new ones
+    destroyFramebuffers();
+    const bool bDoingMsaa = (gDrawSampleCount > 1);
+
+    if (bDoingMsaa) {
+        if (!VMsaaResolver::createResolveColorAttachments(gDevice, COLOR_32_FORMAT, wantedFbWidth, wantedFbHeight)) {
+            destroyFramebuffers();
+            return false;
+        }
+    }
+
+    for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
+        // Color attachment can either be used as a transfer source (for blits, no MSAA) or an input attachment for MSAA resolve
+        const VkImageUsageFlags colorAttachUsage = (
+            ((bDoingMsaa) ? VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT : VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
+        );
+
+        if (!gFbColorAttachments[i].initAsRenderTexture(gDevice, COLOR_16_FORMAT, colorAttachUsage, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
+            destroyFramebuffers();
+            return false;
         }
 
-        destroyFramebuffers();
-
-        for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
-            if (!gFbColorAttachments[i].initAsRenderTexture(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, wantedFbWidth, wantedFbHeight)) {
-                destroyFramebuffers();
-                return false;
-            }
-
-            if (!gFbDepthAttachments[i].initAsDepthStencilBuffer(gDevice, VK_FORMAT_D32_SFLOAT, wantedFbWidth, wantedFbHeight)) {
-                destroyFramebuffers();
-                return false;
-            }
-
-            if (!gFramebuffers[i].init(gRenderPass, { &gFbColorAttachments[i], &gFbDepthAttachments[i] })) {
-                destroyFramebuffers();
-                return false;
-            }
+        if (!gFbDepthAttachments[i].initAsDepthStencilBuffer(gDevice, DEPTH_FORMAT, 0, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
+            destroyFramebuffers();
+            return false;
         }
+
+        std::vector<const vgl::BaseTexture*> fbAttachments;
+        fbAttachments.reserve(3);
+        fbAttachments.push_back(&gFbColorAttachments[i]);
+        fbAttachments.push_back(&gFbDepthAttachments[i]);
+
+        if (bDoingMsaa) {
+            fbAttachments.push_back(&VMsaaResolver::gResolveColorAttachments[i]);
+        }
+
+        if (!gFramebuffers[i].init(gRenderPass, fbAttachments)) {
+            destroyFramebuffers();
+            return false;
+        }
+    }
+
+    // Need to set the input attachments for the MSAA resolver after creating the framebuffer attachments
+    if (bDoingMsaa) {
+        VMsaaResolver::setMsaaResolveInputAttachments(gFbColorAttachments);
     }
 
     // All good if we got to here!
@@ -319,16 +388,28 @@ static void beginFrame_VkRenderer() noexcept {
 static void endFrame_VkRenderer() noexcept {
     ASSERT(gpCurCmdBuffer);
     
-    // End the drawing module frame and finish up the draw render pass
+    // Finish up normal drawing
     VDrawing::endFrame();
-    gCmdBufferRec.endRenderPass();
 
-    // Blit the framebuffer color attachment to the swapchain image
+    // Do MSAA resolve if MSAA is enabled
+    if (gDrawSampleCount > 1) {
+        gCmdBufferRec.nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
+        VMsaaResolver::doMsaaResolve(gDevice, gCmdBufferRec);
+    }
+
+    // Done with the render pass now
+    gCmdBufferRec.endRenderPass();
+    
+    // Blit the drawing color attachment (or MSAA resolve target, if MSAA is active) to the swapchain image
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
     const vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
 
+    const VkImage blitSrcImage = (gDrawSampleCount > 1) ? 
+        VMsaaResolver::gResolveColorAttachments[ringbufferIdx].getVkImage() :   // Blit from the MSAA resolve color buffer
+        framebuffer.getAttachmentImages()[0];                                   // No MSAA: blit directly from the color buffer that was drawn to
+
     const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
-    const VkImage swapchainImage = gSwapchain.getVkImages()[swapchainIdx];
+    const VkImage blitDstImage = gSwapchain.getVkImages()[swapchainIdx];
 
     {
         VkImageBlit blitRegion = {};
@@ -344,9 +425,9 @@ static void endFrame_VkRenderer() noexcept {
         blitRegion.dstOffsets[1].z = 1;
 
         gCmdBufferRec.blitImage(
-            framebuffer.getAttachmentImages()[0],
+            blitSrcImage,
             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            swapchainImage,
+            blitDstImage,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             1,
             &blitRegion,
@@ -371,13 +452,23 @@ void init() noexcept {
     if (!gpPhysicalDevice)
         FatalErrors::raise("Failed to find a suitable rendering device for use with Vulkan!");
 
-    // Initialize the logical Vulkan device is used actual operations
+    // Initialize the logical Vulkan device used for commands and operations and then decide draw sample count
     if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface))
         FatalErrors::raise("Failed to initialize a Vulkan logical device!");
 
+    decideDrawSampleCount();
+
     // Initialize the draw render pass for the new renderer
-    if (!gRenderPass.init(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, VK_FORMAT_D32_SFLOAT))
+    if (!gRenderPass.init(gDevice, COLOR_16_FORMAT, DEPTH_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
         FatalErrors::raise("Failed to create the Vulkan draw render pass!");
+
+    // Create pipelines
+    VPipelines::init(gDevice, gRenderPass, gDrawSampleCount);
+
+    // Init the MSAA resolver (if using MSAA)
+    if (gDrawSampleCount > 1) {
+        VMsaaResolver::init(gDevice);
+    }
 
     // Try to init the swapchain and framebuffers
     ensureValidSwapchainAndFramebuffers();
@@ -401,7 +492,7 @@ void init() noexcept {
 
     // Initialize the PSX framebuffer textures used to hold the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer
     for (vgl::MutableTexture& psxFbTex : gPsxFramebufferTextures) {
-        if (!psxFbTex.initAs2dTexture(gDevice, VK_FORMAT_A1R5G5B5_UNORM_PACK16, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y))
+        if (!psxFbTex.initAs2dTexture(gDevice, COLOR_16_FORMAT, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y))
             FatalErrors::raise("Failed to create a Vulkan texture for the classic PSX renderer's framebuffer!");
     }
 
@@ -418,8 +509,7 @@ void init() noexcept {
         gPsxVramTexture.unlock();
     }
 
-    // Initialize other Vulkan Renderer modules
-    VPipelines::init(gDevice, gRenderPass);
+    // Initialize the main draw command submission module
     VDrawing::init(gDevice, gPsxVramTexture);
 }
 
@@ -439,7 +529,6 @@ void destroy() noexcept {
 
     // Tear everything down and make sure to destroy immediate where we have the option
     VDrawing::shutdown();
-    VPipelines::shutdown();
     gPsxVramTexture.destroy(true);
 
     for (vgl::MutableTexture& fbTexture : gPsxFramebufferTextures) {
@@ -461,6 +550,8 @@ void destroy() noexcept {
     }
 
     destroyFramebuffers();
+    VMsaaResolver::destroy();
+    VPipelines::shutdown();
     gRenderPass.destroy();
     gSwapchain.destroy();
     gDevice.destroy();
@@ -635,7 +726,7 @@ void endFrame() noexcept {
     ringbufferMgr.acquireNextBuffer();
     gpCurCmdBuffer = nullptr;
 
-    // TODO: REMOVE THIS TEMP CODE
+    // TODO: remove temp/hack renderer toggle and implement properly
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_F9)) {
         gbUsePsxRenderer = false;
     }

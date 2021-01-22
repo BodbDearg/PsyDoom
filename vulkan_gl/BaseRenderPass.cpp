@@ -56,13 +56,11 @@ static uint32_t determineSubpassDependencies(
         // The stage that is blocked and operations that are blocked:
         ComparableVkSubpassDependency dependency = {};
         dependency.dstSubpass = subpassIdx;
-
-        dependency.dstStageMask =
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-        dependency.dstAccessMask =
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = (
             VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+        );
         
         // Now find what other subpass it depends on and fill in the operations we must wait on
         uint32_t referencingSubpassIdx = {};
@@ -81,25 +79,19 @@ static uint32_t determineSubpassDependencies(
 
             if (referencingSubpassUsageFlags & AttachmentUsageFlagBits::WRITE) {
                 // Previous referencing subpass is writing - must wait for color output to finish
-                dependency.srcStageMask =
-                    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-                dependency.srcAccessMask =
+                dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                dependency.srcAccessMask = (
                     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-                    VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                    VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+                );
             }
             else {
                 // Previous referencing subpass is only reading - just wait for shader use to finish
-                dependency.srcStageMask =
-                    VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
-                    VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT |
-                    VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT |
-                    VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT |
-                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-                
-                dependency.srcAccessMask =
+                dependency.srcStageMask = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+                dependency.srcAccessMask = (
                     VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
-                    VK_ACCESS_SHADER_READ_BIT;
+                    VK_ACCESS_SHADER_READ_BIT
+                );
             }
 
             if (!Utils::containerContains(subpassDependencies, dependency)) {
@@ -119,14 +111,14 @@ static uint32_t determineSubpassDependencies(
         // The stage that is blocked and operations that are blocked:
         ComparableVkSubpassDependency dependency = {};
         dependency.dstSubpass = subpassIdx;
-
-        dependency.dstStageMask = 
+        dependency.dstStageMask = (
             VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-            VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        
-        dependency.dstAccessMask =
+            VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT
+        );
+        dependency.dstAccessMask = (
             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
-            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+        );
         
         // Now find what other subpass it depends on and fill in the operations we must wait on
         uint32_t referencingSubpassIdx = {};
@@ -145,26 +137,22 @@ static uint32_t determineSubpassDependencies(
 
             if (referencingSubpassUsageFlags & AttachmentUsageFlagBits::WRITE) {
                 // Previous referencing subpass is writing - must wait for depth stencil output and tests to finish
-                dependency.srcStageMask = 
+                dependency.srcStageMask = (
                     VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-                
-                dependency.srcAccessMask =
+                    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT
+                );
+                dependency.srcAccessMask = (
                     VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
-                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+                );
             }
             else {
                 // Previous referencing subpass is only reading - just wait for shader use to finish
-                dependency.srcStageMask =
-                    VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
-                    VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT |
-                    VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT |
-                    VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT |
-                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-                
-                dependency.srcAccessMask =
+                dependency.srcStageMask = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+                dependency.srcAccessMask = (
                     VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
-                    VK_ACCESS_SHADER_READ_BIT;
+                    VK_ACCESS_SHADER_READ_BIT
+                );
             }
 
             if (!Utils::containerContains(subpassDependencies, dependency)) {
@@ -184,17 +172,9 @@ static uint32_t determineSubpassDependencies(
         // The stage that is blocked and operations that are blocked:
         ComparableVkSubpassDependency dependency = {};
         dependency.dstSubpass = subpassIdx;
-        dependency.dstStageMask =
-            VK_PIPELINE_STAGE_VERTEX_SHADER_BIT |
-            VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT |
-            VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT |
-            VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT |
-            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        
-        dependency.dstAccessMask =
-            VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
-            VK_ACCESS_SHADER_READ_BIT;
-        
+        dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;    // Input attachments are only readable in the frag shader
+        dependency.dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
+
         // Now find what other subpass it depends on and fill in the operations we must wait on
         uint32_t referencingSubpassIdx = {};
         AttachmentUsageFlags referencingSubpassUsageFlags = 0;
@@ -213,22 +193,22 @@ static uint32_t determineSubpassDependencies(
             // Previous referencing subpass is writing - must wait for all color or depth-stencil access to finish
             if (renderPassDef.subpasses[referencingSubpassIdx].isAttachmentInUseForDepthStencil(attachmentIdx)) {
                 // In use as a depth stencil buffer, block until depth stencil read/writes are done
-                dependency.srcStageMask = 
+                dependency.srcStageMask = (
                     VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-
-                dependency.srcAccessMask =
+                    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT
+                );
+                dependency.srcAccessMask = (
                     VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
-                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+                );
             }
             else {
                 // Must be in use as a normal color attachment, block until color attachment read/writes are done
-                dependency.srcStageMask =
-                    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-                dependency.srcAccessMask =
+                dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                dependency.srcAccessMask = (
                     VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
-                    VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                    VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+                );
             }
 
             if (!Utils::containerContains(subpassDependencies, dependency)) {

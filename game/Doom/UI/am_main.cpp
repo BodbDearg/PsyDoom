@@ -9,6 +9,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
 #include "PcPsx/PsxPadButtons.h"
+#include "PcPsx/Utils.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -188,6 +189,10 @@ void AM_Drawer() noexcept {
     // PsyDoom: moved this to the end of 'P_Drawer' instead - needed for the new Vulkan renderer integration.
     #if !PSYDOOM_MODS
         I_DrawPresent();
+    #endif
+
+    #if PSYDOOM_MODS
+        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
     // Determine the scale to render the map at

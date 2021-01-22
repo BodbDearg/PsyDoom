@@ -515,6 +515,7 @@ void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos,
     // Make sure the GPU is idle and copy the front buffer to the back buffer, will draw over that
     LIBGPU_DrawSync(0);
 
+    // TODO: get draw loading plaque working for the new Vulkan renderer
     const DISPENV& frontBuffer = gDispEnvs[gCurDispBufferIdx];
     const DISPENV& backBuffer = gDispEnvs[gCurDispBufferIdx ^ 1];
     LIBGPU_MoveImage(frontBuffer.disp, backBuffer.disp.x, backBuffer.disp.y);

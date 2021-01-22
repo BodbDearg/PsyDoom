@@ -43,8 +43,9 @@ struct ConfigFieldHandler {
 // Graphics config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool        gbFullscreen;
-bool        gbFloorRenderGapFix;
 int32_t     gLogicalDisplayW;
+int32_t     gAAMultisamples;
+bool        gbFloorRenderGapFix;
 
 static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     {
@@ -83,6 +84,20 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "LogicalDisplayWidth = 292\n",
         [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
         []() { gLogicalDisplayW = 292; }
+    },
+    {
+        "AntiAliasingMultisamples",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Vulkan renderer only: the number of multisamples to use for anti-aliasing the view.\n"
+        "# Increasing the number of samples can help smooth edges and prevent texture shimmer, but can be\n"
+        "# costly to do at high resolutions or on weaker GPUs. 4x is probably reasonable for most GPUs and\n"
+        "# screen resolution combinations, given the low requirements of Doom.\n"
+        "# Note: if the hardware is unable to support the number of samples specified then the next available\n"
+        "# sample count downwards will be selected.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "AntiAliasingMultisamples = 4\n",
+        [](const IniUtils::Entry& iniEntry) { gAAMultisamples = iniEntry.getIntValue(4); },
+        []() { gAAMultisamples = 4; }
     },
     {
         "FloorRenderGapFix",

@@ -33,13 +33,16 @@ RenderTexture::~RenderTexture() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Create a renderable texture that is a normal 2d texture
+// Create a renderable texture that is a normal 2d texture.
+// By default the texture is given the 'VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT' usage flag.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool RenderTexture::initAsRenderTexture(
     LogicalDevice& device,
     const VkFormat textureFormat,
+    const VkImageUsageFlags usageFlags,
     const uint32_t width,
     const uint32_t height,
+    const uint32_t sampleCount,
     const AlphaMode alphaMode
 ) noexcept {
     return initInternal(
@@ -47,48 +50,49 @@ bool RenderTexture::initAsRenderTexture(
         VK_IMAGE_TYPE_2D,
         VK_IMAGE_VIEW_TYPE_2D,
         VK_IMAGE_TILING_OPTIMAL,
-        // Can be used as an attachment, for rendering or for copying from
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | usageFlags,
         VK_IMAGE_LAYOUT_UNDEFINED,
         DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
         textureFormat,
         width,
         height,
-        1,          // Depth
-        1,          // Num layers
-        1,          // Num mip levels
-        1,          // Num samples. Note: MSAA not currently supported!
-        false,      // Is cubemap?
+        1,              // Depth
+        1,              // Num layers
+        1,              // Num mip levels
+        sampleCount,
+        false,          // Is cubemap?
         alphaMode
     );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Create a renderable texture that is a depth stencil buffer
+// Create a renderable texture that is a depth stencil buffer.
+// By default the texture is given the 'VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT' usage flag.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool RenderTexture::initAsDepthStencilBuffer(
     LogicalDevice& device,
     const VkFormat textureFormat,
+    const VkImageUsageFlags usageFlags,
     const uint32_t width,
-    const uint32_t height
+    const uint32_t height,
+    const uint32_t sampleCount
 ) noexcept {
     return initInternal(
         device,
         VK_IMAGE_TYPE_2D,
         VK_IMAGE_VIEW_TYPE_2D,
         VK_IMAGE_TILING_OPTIMAL,
-        // Can be used as an attachment or for copying from
-        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | usageFlags,
         VK_IMAGE_LAYOUT_UNDEFINED,
         DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
         textureFormat,
         width,
         height,
-        1,                          // Depth
-        1,                          // Num layers
-        1,                          // Num mip levels
-        1,                          // Num samples. TODO: Support MSAA here?
-        false,                      // Is cubemap?
+        1,              // Depth
+        1,              // Num layers
+        1,              // Num mip levels
+        sampleCount,    
+        false,          // Is cubemap?
         AlphaMode::UNSPECIFIED
     );
 }

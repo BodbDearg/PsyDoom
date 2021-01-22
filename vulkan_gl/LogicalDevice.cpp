@@ -311,8 +311,11 @@ bool LogicalDevice::createDeviceAndQueues() noexcept {
         }
     }
 
-    // Device features required: don't need anything specific currently
-    VkPhysicalDeviceFeatures deviceFeatures = {};
+    // Supported device features and what we want to enable
+    const VkPhysicalDeviceFeatures& supportedFeatures = mpPhysicalDevice->getFeatures();
+
+    VkPhysicalDeviceFeatures enabledFeatures = {};
+    enabledFeatures.sampleRateShading = supportedFeatures.sampleRateShading;    // Optional, live without if not present
 
     // Create the device itself using all of these settings
     {
@@ -325,7 +328,7 @@ bool LogicalDevice::createDeviceAndQueues() noexcept {
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.pQueueCreateInfos = requiredQueueCreateInfos;
         createInfo.queueCreateInfoCount = numQueuesToCreate;
-        createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.pEnabledFeatures = &enabledFeatures;
         createInfo.ppEnabledExtensionNames = DEVICE_EXTENSIONS;
         createInfo.enabledExtensionCount = C_ARRAY_SIZE(DEVICE_EXTENSIONS);
 

@@ -20,6 +20,7 @@ enum class VPipelineType : uint8_t {
     View_Alpha,         // 3D View: Texture mapped @ 8bpp, light diminishing, alpha blended
     View_Additive,      // 3D View: Texture mapped @ 8bpp, light diminishing, additive blended
     View_Subtractive,   // 3D View: Texture mapped @ 8bpp, light diminishing, additive blended
+    Msaa_Resolve,       // Simple shader that resolves MSAA samples
     NUM_TYPES           // Convenience declaration...
 };
 
@@ -45,7 +46,7 @@ struct VShaderUniforms {
 static_assert(sizeof(VShaderUniforms) <= 128);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Vertex type for the Vulkan renderer
+// Vertex type for the Vulkan renderer for all drawing operations
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VVertex {
     // XYZ Position of the vertex
@@ -74,6 +75,13 @@ struct VVertex {
     // Used to control blending when semi-transparency is active; a value of '128' is regarded as 1.0.
     // The 'alpha' semi transparency multiply component effectively is the alpha for the vertex.
     uint8_t stmulR, stmulG, stmulB, stmulA;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Vertex type for the Vulkan renderer for MSAA resolve: just contains a 2D position in normalized device coords
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct VVertex_MsaaResolve {
+    float x, y;
 };
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER
