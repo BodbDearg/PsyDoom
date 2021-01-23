@@ -11,7 +11,6 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_user.h"
-#include "Doom/Renderer/r_bsp.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
@@ -23,13 +22,11 @@
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VRenderer.h"
 #include "PcPsx/Vulkan/VTypes.h"
+#include "rv_bsp.h"
 #include "rv_flats.h"
 #include "rv_sprites.h"
 #include "rv_utils.h"
 #include "rv_walls.h"
-
-// TODO: remove LIBGTE use here eventually
-#include "PsyQ/LIBGTE.h"
 
 float       gViewXf, gViewYf, gViewZf;      // View position in floating point format
 float       gViewAnglef;                    // View angle in radians (float)
@@ -129,14 +126,6 @@ static void RV_DetermineDrawParams() noexcept {
 
     // Determine the view rotation matrix used for sprite billboarding
     gSpriteBillboardMatrix = Matrix4f::rotateY(-gViewAnglef);
-    
-    // Set the draw matrix and upload to the GTE.
-    // TODO: remove LIBGTE use here eventually
-    gDrawMatrix.m[0][0] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>( gViewSin);
-    gDrawMatrix.m[0][2] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>(-gViewCos);
-    gDrawMatrix.m[2][0] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>( gViewCos);
-    gDrawMatrix.m[2][2] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>( gViewSin);
-    LIBGTE_SetRotMatrix(gDrawMatrix);
 
     // Compute the view projection matrix to use
     gViewProjMatrix = VDrawing::computeTransformMatrixFor3D(gViewXf, gViewZf, gViewYf, gViewAnglef);
@@ -154,12 +143,10 @@ void RV_RenderPlayerView() noexcept {
     if (!VRenderer::canSubmitDrawCmds())
         return;
 
-    // Determine various draw settings
+    // Determine various draw settings.
+    // Then traverse the BSP tree to determine what needs to be drawn and in what order
     RV_DetermineDrawParams();
-
-    // Traverse the BSP tree to determine what needs to be drawn and in what order.
-    // TODO: remove old BSP here eventually, won't work with expanded frustrum.
-    R_BSP();
+    RV_BuildDrawSubsecList();
 
     // Stat tracking: how many subsectors will we draw?
     gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
@@ -179,10 +166,10 @@ void RV_RenderPlayerView() noexcept {
     VDrawing::setTransformMatrix(gViewProjMatrix);
 
     // Draw the sectors, back to front
-    while (gppEndDrawSubsector > gpDrawSubsectors) {
-        --gppEndDrawSubsector;
-        subsector_t& subsec = **gppEndDrawSubsector;
-        RV_DrawSubsector(subsec);
+    const int32_t numDrawSubsecs = (int32_t) gRVDrawSubsecs.size();
+
+    for (int32_t i = numDrawSubsecs - 1; i >= 0; --i) {
+        RV_DrawSubsector(*gRVDrawSubsecs[i]);
     }
 
     // Switch back to UI renderng

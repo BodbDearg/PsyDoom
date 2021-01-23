@@ -6,8 +6,8 @@
 #include <cmath>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Represents a no-frills 4x4 float matrix stored in standard C/C++ row major order.
-// Provides some very basic matrix operations.
+// Represents a no-frills 4x4 float matrix; provides some very basic matrix operations.
+// For the purposes of transforms the matrix is assumed to be column major.
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
 struct Matrix4 {
@@ -348,7 +348,7 @@ struct Matrix4 {
         );
     }
     
-    // The actual elements of the matrix, in row major order
+    // The actual elements of the matrix
     T e[4][4];
 };
 

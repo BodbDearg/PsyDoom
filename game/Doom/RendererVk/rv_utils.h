@@ -7,6 +7,7 @@ namespace Gpu {
     enum class TexFmt : uint8_t;
 }
 
+struct seg_t;
 struct texture_t;
 
 // PI to 96 digits: define here because it's not available in standard C/C++ (sigh... it's 2021 and this is still a thing)
@@ -34,5 +35,14 @@ void RV_TexPageIdToTexParams(
 
 void RV_GetTexWinXyWh(const texture_t& tex, uint16_t& texWinX, uint16_t& texWinY, uint16_t& texWinW, uint16_t& texWinH) noexcept;
 void RV_UploadDirtyTex(texture_t& tex) noexcept;
+
+bool RV_GetLineNdcBounds(
+    const float p1x,
+    const float p1y,
+    const float p2x,
+    const float p2y,
+    float& lx,
+    float& rx
+) noexcept;
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER
