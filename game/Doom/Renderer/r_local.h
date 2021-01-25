@@ -124,7 +124,11 @@ struct node_t {
 };
 
 // Seg flags
-static constexpr uint16_t SGF_VISIBLE_COLS = 0x1;   // The seg has at least 1 visible (non fully occluded column)
+static constexpr uint16_t SGF_VISIBLE_COLS = 0x1;       // The seg has at least 1 visible (non fully occluded column)
+
+#if PSYDOOM_MODS
+    static constexpr uint16_t SGF_BACKFACING = 0x2;     // PsyDoom: a new flag used by the Vulkan renderer; tells whether the seg is backfacing or not.
+#endif
 
 // Describes a segment of a line
 struct seg_t {

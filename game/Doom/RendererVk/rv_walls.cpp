@@ -92,6 +92,13 @@ void RV_DrawSeg(
     const uint8_t colG,
     const uint8_t colB
 ) noexcept {
+    // Skip the line segment if it's backfacing or not visible
+    if (seg.flags & SGF_BACKFACING)
+        return;
+
+    if ((seg.flags & SGF_VISIBLE_COLS) == 0)
+        return;
+
     // This line is now viewed by the player: show in the automap if the line is viewable there
     const side_t& side = *seg.sidedef;
     line_t& line = *seg.linedef;

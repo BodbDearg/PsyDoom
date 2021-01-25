@@ -6,7 +6,7 @@
 // Notes:
 //  (1) All coordinates passed in are in terms of normalized device coordinates and range from -1 to +1.
 //  (2) Areas outside -1 to +1 (offscreen) are always considered occluded.
-//  (3) Zero sized ranges are always considered occluded.
+//  (3) Zero sized ranges are always considered not visible.
 //  (4) Occlusion ranges are merged when they touch or overlap to keep the list of ranges as small as possible.
 //      If there are two neighboring ranges in the list then there is guaranteed to be a gap between them.
 //------------------------------------------------------------------------------------------------------------------------------------------

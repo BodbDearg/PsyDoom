@@ -117,44 +117,58 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
     if (!RV_IsSubsecVisible(subsecIdx))
         return;
 
-    // Run through all of the segs for the subsector and mark out areas of the screen that they fully occlude
+    // Run through all of the segs for the subsector and mark out areas of the screen that they fully occlude.
+    // Also determine whether each seg is visible and backfacing while we are at it.
     subsector_t& subsec = gpSubsectors[subsecIdx];
     sector_t& frontSector = *subsec.sector;
 
-    const seg_t* const pSegs = gpSegs + subsec.firstseg;
+    seg_t* const pSegs = gpSegs + subsec.firstseg;
     const uint32_t numSegs = subsec.numsegs;
     
     for (uint32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
-        // Skip the seg if it's not something that fully occludes stuff behind it
-        const seg_t& seg = pSegs[segIdx];
+        // Firstly, clear the line segment flags
+        seg_t& seg = pSegs[segIdx];
+        seg.flags = 0;
 
-        if (!RV_IsOccludingSeg(seg, frontSector))
-            continue;
-
-        // Ignore the seg if it's backfacing, don't have it occlude in that situation.
-        // This enables the back-face of walls to be seen through when no-clipping.
+        // Determine whether the segment is backfacing so we can re-use the result later
         const vertex_t& p1 = *seg.vertex1;
         const vertex_t& p2 = *seg.vertex2;
         const float p1f[2] = { RV_FixedToFloat(p1.x), RV_FixedToFloat(p1.y) };
         const float p2f[2] = { RV_FixedToFloat(p2.x), RV_FixedToFloat(p2.y) };
-        const float viewDx = gViewXf - p1f[0];
-        const float viewDy = gViewYf - p1f[1];
-        const float edgeDx = p2f[0] - p1f[0];
-        const float edgeDy = p2f[1] - p1f[1];
 
-        if (edgeDx * viewDy > edgeDy * viewDx)
-            continue;
+        {
+            const float viewDx = gViewXf - p1f[0];
+            const float viewDy = gViewYf - p1f[1];
+            const float edgeDx = p2f[0] - p1f[0];
+            const float edgeDy = p2f[1] - p1f[1];
 
-        // Get the area of the screen that the seg occludes, in normalized device coords.
-        // If the seg is offscreen then skip it.
+            if (edgeDx * viewDy > edgeDy * viewDx) {
+                seg.flags |= SGF_BACKFACING;
+            }
+        }
+
+        // Determine if the seg is visible, ignoring whether it is backfacing or not.
+        // First get the area of the screen that the seg covers in normalized device coords, if it's onscreen.
+        // Then check if that range is actually visible if it is onscreen.
         float segLx = {};
         float segRx = {};
 
-        if (!RV_GetLineNdcBounds(p1f[0], p1f[1], p2f[0], p2f[1], segLx, segRx))
-            continue;
+        if (RV_GetLineNdcBounds(p1f[0], p1f[1], p2f[0], p2f[1], segLx, segRx)) {
+            if (RV_IsRangeVisible(segLx, segRx)) {
+                seg.flags |= SGF_VISIBLE_COLS;
+            }
+        }
 
-        // Mark this part of the screen as occluded
-        RV_OccludeRange(segLx, segRx);
+        // Make the seg occlude if it's the type of seg that occludes, it's not backfacing (so we can see via noclip) and if it's visible
+        const bool bMakeSegOcclude = (
+            ((seg.flags & SGF_BACKFACING) == 0) &&
+            (seg.flags & SGF_VISIBLE_COLS) &&
+            RV_IsOccludingSeg(seg, frontSector)
+        );
+
+        if (bMakeSegOcclude) {
+            RV_OccludeRange(segLx, segRx);
+        }
     }
 
     // Add the subsector to the draw list.
