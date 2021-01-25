@@ -12,6 +12,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "rv_main.h"
+#include "rv_occlusion.h"
 #include "rv_utils.h"
 
 // This is the list of subsectors to be drawn by the Vulkan renderer, in front to back order
@@ -26,14 +27,53 @@ static bool RV_IsOccludingSeg(const seg_t& seg, const sector_t& frontSector) noe
     if (!seg.backsector)
         return true;
 
-    sector_t& backSector = *seg.backsector;
-
     // If there is a zero sized gap between the sector in front of the line and behind it then count as occluding.
     // This will happen most typically for closed doors:
+    sector_t& backSector = *seg.backsector;
+
     return (
         (frontSector.floorheight >= backSector.ceilingheight) ||
         (frontSector.ceilingheight <= backSector.floorheight)
     );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check if the specified subsector is visible according to occlusion and view frustrum culling
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool RV_IsSubsecVisible(const int32_t subsecIdx) noexcept {
+    // This is the 'x' coordinate min/max range of the subsector, in normalized device coordinates.
+    float subsecXMin = +1.0f;
+    float subsecXMax = -1.0f;
+
+    // Run through all leaf edges for the subsector and see which ones are on-screen at least somewhat.
+    // Add these onscreen edges to the x coordinate range for the subsector.
+    subsector_t& subsec = gpSubsectors[subsecIdx];
+    const leafedge_t* const pLeafEdges = gpLeafEdges + subsec.firstLeafEdge;
+    const uint32_t numLeafEdges = subsec.numLeafEdges;
+    
+    for (uint32_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx) {
+        // Get the edge points in float format
+        const leafedge_t& edge1 = pLeafEdges[edgeIdx];
+        const leafedge_t& edge2 = pLeafEdges[(edgeIdx + 1) % numLeafEdges];
+        const vertex_t& p1 = *edge1.vertex;
+        const vertex_t& p2 = *edge2.vertex;
+        const float p1f[2] = { RV_FixedToFloat(p1.x), RV_FixedToFloat(p1.y) };
+        const float p2f[2] = { RV_FixedToFloat(p2.x), RV_FixedToFloat(p2.y) };
+
+        // Get the normalized device x bounds of the segment and skip if offscreen
+        float edgeLx = {};
+        float edgeRx = {};
+
+        if (!RV_GetLineNdcBounds(p1f[0], p1f[1], p2f[0], p2f[1], edgeLx, edgeRx))
+            continue;
+
+        // Edge is onscreen, add to the subsector NDC bounds
+        subsecXMin = std::min(subsecXMin, edgeLx);
+        subsecXMax = std::max(subsecXMax, edgeRx);
+    }
+
+    // Now that we have the bounds for the subsector, determine if it is visible
+    return RV_IsRangeVisible(subsecXMin, subsecXMax);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,55 +89,56 @@ static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
 // Adds it to the list of subsectors to be drawn, and marks the areas that its fully solid walls occlude.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
-    // This is the screen space 'X' coordinate range of the subsector, in normalized device coordinates
-    float subsecXMin = +1.0f;
-    float subsecXMax = -1.0f;
+    // Skip drawing the subsector if it is not visible
+    if (!RV_IsSubsecVisible(subsecIdx))
+        return;
 
-    // Run through all leaf edges for the subsector and see if any are visible; if no edges are visible then skip drawing the subsector entirely.
-    // While we are at it add occluding segs to the area of the screen occluded.
+    // Run through all of the segs for the subsector and mark out areas of the screen that they fully occlude
     subsector_t& subsec = gpSubsectors[subsecIdx];
     sector_t& frontSector = *subsec.sector;
 
-    const leafedge_t* const pLeafEdges = gpLeafEdges + subsec.firstLeafEdge;
-    const uint32_t numLeafEdges = subsec.numLeafEdges;
+    const seg_t* const pSegs = gpSegs + subsec.firstseg;
+    const uint32_t numSegs = subsec.numsegs;
     
-    for (uint32_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx) {
-        // Get the edge points in float format
-        const vertex_t& p1 = *pLeafEdges[edgeIdx].vertex;
-        const vertex_t& p2 = *pLeafEdges[(edgeIdx + 1) % numLeafEdges].vertex;
+    for (uint32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
+        // Skip the seg if it's not something that fully occludes stuff behind it
+        const seg_t& seg = pSegs[segIdx];
+
+        if (!RV_IsOccludingSeg(seg, frontSector))
+            continue;
+
+        // Ignore the seg if it's backfacing, don't have it occlude in that situation.
+        // This enables the back-face of walls to be seen through when no-clipping.
+        const vertex_t& p1 = *seg.vertex1;
+        const vertex_t& p2 = *seg.vertex2;
         const float p1f[2] = { RV_FixedToFloat(p1.x), RV_FixedToFloat(p1.y) };
         const float p2f[2] = { RV_FixedToFloat(p2.x), RV_FixedToFloat(p2.y) };
+        const float viewDx = gViewXf - p1f[0];
+        const float viewDy = gViewYf - p1f[1];
+        const float edgeDx = p2f[0] - p1f[0];
+        const float edgeDy = p2f[1] - p1f[1];
 
-        // Get the normalized device x bounds of the segment and skip if offscreen
+        if (edgeDx * viewDy > edgeDy * viewDx)
+            continue;
+
+        // Get the area of the screen that the seg occludes, in normalized device coords.
+        // If the seg is offscreen then skip it.
         float segLx = {};
         float segRx = {};
 
         if (!RV_GetLineNdcBounds(p1f[0], p1f[1], p2f[0], p2f[1], segLx, segRx))
             continue;
 
-        subsecXMin = std::min(subsecXMin, segLx);
-        subsecXMax = std::max(subsecXMax, segRx);
-
-        // TODO: check if seg occluding
-        // TODO: add seg to occluders if occluding
+        // Mark this part of the screen as occluded
+        RV_OccludeRange(segLx, segRx);
     }
 
-    // Ignore the subsector if completely offscreen or if occluded
-    bool bHasVisibleSegs = false;
-
-    if (subsecXMin < subsecXMax) {
-        // TODO: check if subsector range fully occluded
-        bHasVisibleSegs = true;
-    }
-
-    // Add the subsector to the draw list if any segs are visible.
+    // Add the subsector to the draw list.
     // If the sector has a sky then also mark the sky as visible.
-    if (bHasVisibleSegs) {
-        gRVDrawSubsecs.push_back(&subsec);
+    gRVDrawSubsecs.push_back(&subsec);
 
-        if (frontSector.ceilingpic < 0) {
-            gbIsSkyVisible = true;
-        }
+    if (frontSector.ceilingpic < 0) {
+        gbIsSkyVisible = true;
     }
 }
 

@@ -164,7 +164,8 @@ void RV_DrawSeg(
                 vt = vOffset - wallH;
             }
 
-            RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, colR, colG, colB, tex_u, false);
+            const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
+            RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
         // Draw the lower wall
@@ -185,7 +186,8 @@ void RV_DrawSeg(
                 vb = vOffset + wallH;
             }
 
-            RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, false);
+            const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
+            RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
         }
 
         // Adjust mid wall size so that it only occupies the gap between the upper and lower walls
@@ -238,7 +240,11 @@ void RV_DrawSeg(
         }
 
         // Decide whether to draw the wall transparent and then draw
-        const bool bDrawTransparent = (line.flags & ML_MIDTRANSLUCENT);
+        const bool bDrawTransparent = (
+            (line.flags & ML_MIDTRANSLUCENT) ||
+            (gpViewPlayer->cheats & CF_XRAYVISION)
+        );
+
         RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
     }
 }

@@ -24,6 +24,7 @@
 #include "PcPsx/Vulkan/VTypes.h"
 #include "rv_bsp.h"
 #include "rv_flats.h"
+#include "rv_occlusion.h"
 #include "rv_sprites.h"
 #include "rv_utils.h"
 #include "rv_walls.h"
@@ -143,9 +144,10 @@ void RV_RenderPlayerView() noexcept {
     if (!VRenderer::canSubmitDrawCmds())
         return;
 
-    // Determine various draw settings.
+    // Determine various draw settings and clear screen occlusion info to start with.
     // Then traverse the BSP tree to determine what needs to be drawn and in what order
     RV_DetermineDrawParams();
+    RV_ClearOcclussion();
     RV_BuildDrawSubsecList();
 
     // Stat tracking: how many subsectors will we draw?

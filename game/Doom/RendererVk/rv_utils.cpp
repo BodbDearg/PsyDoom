@@ -161,19 +161,17 @@ void RV_UploadDirtyTex(texture_t& tex) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the left x and right x coordinates of the given line in normalized device coords.
+// Get the left x and right x coordinates of the given line in normalized device coords and clips against the front plane.
 // Returns 'false' if the line was offscreen, in which case the bounds are UNDEFINED and not set.
 //
 // Notes:
 //  (1) I treat Doom's 'y' coordinate as 'z' for all calculations. In most literature and code on the subject 'z' is actually depth so
-//      interpreting 'y' as this keeps things more familiar and allows me to just plug the values into existing equations.
+//      interpreting 'y' as 'z' keeps things more familiar and allows me to just plug the values into existing equations.
 //  (2) For 'xc', 'yc', and 'zc' clipspace coordinates, the point will be inside the clip cube if the
 //      following comparisons against clipspace w ('wc') hold:
 //          -wc <= xc && xc <= wc
 //          -wc <= yc && yc <= wc
 //          -wc <= zc && zc <= wc
-//  (3) I don't bother clipping the line against any of the planes, it's not needed for what this function is used for.
-//      The returned coords may be outside the usual -1 to +1 range.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool RV_GetLineNdcBounds(
     const float p1x,
@@ -195,34 +193,61 @@ bool RV_GetLineNdcBounds(
     const float mR3C2 = gViewProjMatrix.e[3][2];
     const float mR3C3 = gViewProjMatrix.e[3][3];
 
-    const float p1_clip[3] = {
+    float p1_clip[3] = {
         p1x * mR0C0 + p1y * mR2C0 + mR3C0,  // x
         p1x * mR0C2 + p1y * mR2C2 + mR3C2,  // z (Doom y)
         p1x * mR0C3 + p1y * mR2C3 + mR3C3   // w
     };
 
-    const float p2_clip[3] = {
+    float p2_clip[3] = {
         p2x * mR0C0 + p2y * mR2C0 + mR3C0,  // x
         p2x * mR0C2 + p2y * mR2C2 + mR3C2,  // z (Doom y)
         p2x * mR0C3 + p2y * mR2C3 + mR3C3   // w
     };
 
     // Throw out the line if it's on the wrong side of the left, right or front viewing planes
-    const float wc1 = p1_clip[2];
-    const float wc2 = p2_clip[2];
+    const bool bP1BehindFrontPlane = (p1_clip[1] < -p1_clip[2]);
+    const bool bP2BehindFrontPlane = (p2_clip[1] < -p2_clip[2]);
 
     const bool bCullLine = (
-        ((p1_clip[0] < -wc1) && (p2_clip[0] < -wc2)) ||     // Line outside the left view frustrum plane?
-        ((p1_clip[0] > +wc1) && (p2_clip[0] > +wc2)) ||     // Line outside the right view frustrum plane?
-        ((p1_clip[1] < -wc1) && (p2_clip[1] < -wc2))        // Line outside the front view frustrum plane?
+        ((p1_clip[0] < -p1_clip[2]) && (p2_clip[0] < -p2_clip[2])) ||   // Line outside the left view frustrum plane?
+        ((p1_clip[0] > +p1_clip[2]) && (p2_clip[0] > +p2_clip[2])) ||   // Line outside the right view frustrum plane?
+        (bP1BehindFrontPlane && bP2BehindFrontPlane)                    // Line outside the front view frustrum plane?
     );
 
     if (bCullLine)
         return false;
 
+    // Clip the line against the front plane if required.
+    // Use the method described at: https://chaosinmotion.blog/2016/05/22/3d-clipping-in-homogeneous-coordinates/
+    if (bP1BehindFrontPlane != bP2BehindFrontPlane) {
+        // Get the distance of p1 and p2 to the front plane
+        const float p1FpDist = std::abs(p1_clip[1] + p1_clip[2]);
+        const float p2FpDist = std::abs(p2_clip[1] + p2_clip[2]);
+
+        // Compute the intersection time of this line against the front plane
+        const float t = p1FpDist / (p1FpDist + p2FpDist);
+
+        // Compute the new x and y coords for intersection point via linear interpolation
+        const float newX = p1_clip[0] * (1.0f - t) + p2_clip[0] * t;
+        const float newY = p1_clip[1] * (1.0f - t) + p2_clip[1] * t;
+
+        // Save the result of the point we want to move.
+        // Note that we set 'w' to '-y' to ensure that 'y' ends up as '-1' in NDC:
+        if (bP1BehindFrontPlane) {
+            p1_clip[0] = newX;
+            p1_clip[1] = newY;
+            p1_clip[2] = -newY;
+        } else {
+            p2_clip[0] = newX;
+            p2_clip[1] = newY;
+            p2_clip[2] = -newY;
+        }
+    }
+
     // Compute the normalized device coords for the two line endpoints and save
-    float x1 = p1_clip[0] / wc1;
-    float x2 = p2_clip[0] / wc2;
+    float x1 = p1_clip[0] / p1_clip[2];
+    float x2 = p2_clip[0] / p2_clip[2];
 
     if (x1 > x2) {
         std::swap(x1, x2);
