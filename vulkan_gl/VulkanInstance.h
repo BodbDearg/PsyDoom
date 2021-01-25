@@ -29,7 +29,7 @@ public:
     inline VkInstance getVkInstance() const noexcept { return mVkInstance; }
     inline const InstanceExtensions& getExtensions() const noexcept { return mExtensions; }
     inline const std::vector<PhysicalDevice>& getPhysicalDevices() const noexcept { return mPhysicalDevices; }
-    inline bool areValidationLayersEnabled() const noexcept { return (mValidationLayerCallback != nullptr); }
+    inline bool areValidationLayersEnabled() const noexcept { return (mValidationLayerCallback != VK_NULL_HANDLE); }
 
 private:
     // Disallow copy and move

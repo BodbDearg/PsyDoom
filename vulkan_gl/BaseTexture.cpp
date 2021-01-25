@@ -25,8 +25,8 @@ BaseTexture::BaseTexture() noexcept
     , mbIsCubemap(false)
     , mAlphaMode(AlphaMode::UNSPECIFIED)
     , mpDevice(nullptr)
-    , mVkImage(nullptr)
-    , mVkImageView(nullptr)
+    , mVkImage(VK_NULL_HANDLE)
+    , mVkImageView(VK_NULL_HANDLE)
     , mSizeInBytes(0)
     , mDeviceMemAlloc()
 {

@@ -259,7 +259,7 @@ bool Pipeline::initGraphicsPipeline(
 
     const VkFuncs& vkFuncs = device.getVkFuncs();
 
-    if (vkFuncs.vkCreateGraphicsPipelines(device.getVkDevice(), nullptr, 1, &pipelineCI, nullptr, &mVkPipeline) != VK_SUCCESS) {
+    if (vkFuncs.vkCreateGraphicsPipelines(device.getVkDevice(), VK_NULL_HANDLE, 1, &pipelineCI, nullptr, &mVkPipeline) != VK_SUCCESS) {
         ASSERT_FAIL("Failed to create a graphics pipeline!");
         return false;
     }
@@ -320,7 +320,7 @@ bool Pipeline::initComputePipeline(
 
     const VkFuncs& vkFuncs = device.getVkFuncs();
 
-    if (vkFuncs.vkCreateComputePipelines(device.getVkDevice(), nullptr, 1, &pipelineCI, nullptr, &mVkPipeline) != VK_SUCCESS) {
+    if (vkFuncs.vkCreateComputePipelines(device.getVkDevice(), VK_NULL_HANDLE, 1, &pipelineCI, nullptr, &mVkPipeline) != VK_SUCCESS) {
         ASSERT_FAIL("Failed to create a compute pipeline!");
         return false;
     }

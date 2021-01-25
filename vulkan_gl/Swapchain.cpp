@@ -245,7 +245,7 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
             mVkSwapchain,
             UINT64_MAX,
             imageReadySemaphore.getVkSemaphore(),
-            nullptr,
+            VK_NULL_HANDLE,
             &mAcquiredImageIdx
         )
         != VK_SUCCESS
@@ -446,7 +446,7 @@ bool Swapchain::createSwapchainImageViews() noexcept {
     }
 
     // Expect no null images in the swap chain
-    if (Utils::containerContains(mVkImages, nullptr)) {
+    if (Utils::containerContains(mVkImages, (VkImage) VK_NULL_HANDLE)) {
         ASSERT_FAIL("Expected no null images in the swap chain image list!");
         return false;
     }
