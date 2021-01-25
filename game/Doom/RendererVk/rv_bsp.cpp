@@ -80,8 +80,32 @@ static bool RV_IsSubsecVisible(const int32_t subsecIdx) noexcept {
 // Check if the bounding box for the specified node is visible
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
-    // TODO....
-    return true;
+    // Get the bounds of the box in normalized device coords to see what area of the screen it occupies
+    const float nodeTy = RV_FixedToFloat(boxCoords[BOXTOP]);
+    const float nodeBy = RV_FixedToFloat(boxCoords[BOXBOTTOM]);
+    const float nodeLx = RV_FixedToFloat(boxCoords[BOXLEFT]);
+    const float nodeRx = RV_FixedToFloat(boxCoords[BOXRIGHT]);
+
+    float nodeMinX = +1.0f;
+    float nodeMaxX = -1.0f;
+
+    const auto addNodeLineToBounds = [&](const float x1, const float y1, const float x2, const float y2) noexcept {
+        float lx = {};
+        float rx = {};
+
+        if (RV_GetLineNdcBounds(x1, y1, x2, y2, lx, rx)) {
+            nodeMinX = std::min(lx, nodeMinX);
+            nodeMaxX = std::max(rx, nodeMaxX);
+        }
+    };
+
+    addNodeLineToBounds(nodeLx, nodeTy, nodeRx, nodeTy);
+    addNodeLineToBounds(nodeRx, nodeTy, nodeRx, nodeBy);
+    addNodeLineToBounds(nodeRx, nodeBy, nodeLx, nodeBy);
+    addNodeLineToBounds(nodeLx, nodeBy, nodeLx, nodeTy);
+
+    // Regard the node as visible if any of that area is unobscured
+    return RV_IsRangeVisible(nodeMinX, nodeMaxX);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
