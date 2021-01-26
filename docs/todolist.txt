@@ -1,9 +1,34 @@
 0.7 - GPU & Rendering?
-- Fix bug when pausing and turning with view snapping back slightly.
-- Implement new Vulkan based renderer.
-    - Allow for high resolution, widescreen, texture filtering (if desired)
-- Allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
+- VK renderer: Add draw occluders renderpass
+    - Need new: shader, vertex type, vertex buffer, pipeline type etc.
+    - Need output 32-bit buffer with occluding plane information.
+        - 1 bit wall/floor
+        - 15 bit angle
+        - 16 bit plane offset
+    - One sided walls: always draw front, never draw back
+    - Two sided walls: draw front if eye level hits, otherwise draw back
+- VK renderer: add pipeline for opaque level geometry draw
+- VK renderer: opaque geometry pass
+- VK renderer: cut-out sky areas by extending walls infinitely and marking with alpha '0'.
+    - Draw sky sprite in areas marked as alpha '0'
+- VK renderer: sprite masking shader
+    - Read occluders info, decide if in front or behind of occluding plane
+- VK renderer: sprite/masked wall pass
+- VK renderer: remove light diminishing from view sprite shader
+- VK renderer: remove depth buffer eventually (won't need)
+- VK renderer: rework automap for high precision
+- Vk renderer: get screen fades working
+- Vk renderer: get loading plaque draw working
+- Vk renderer: implement proper scaling and widescreen support
+- Vk renderer: add option for 32-bit (smooth) shading
+- Vk renderer: device selection: add code to ensure all formats used are supported
+- Vk renderer: make add geom call not set pipeline
+    - External code should decide
+- Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
+- Investigate view bobbing run vs walk.
+- Fix bug when pausing and turning with view snapping back slightly.
+- Investigate TCache overflow mentioned on Doomworld.
 
 0.8 - Limit extending and modding?
 - Investigate a MAPINFO format for naming maps, choosing music etc.
