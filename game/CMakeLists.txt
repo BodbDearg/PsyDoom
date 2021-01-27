@@ -230,6 +230,7 @@ set(SOURCE_FILES
     "PcPsx/Vulkan/VRenderPass.cpp"
     "PcPsx/Vulkan/VRenderPass.h"
     "PcPsx/Vulkan/VTypes.h"
+    "PcPsx/Vulkan/VVertexBufferSet.h"
     "PsyQ/LIBAPI.cpp"
     "PsyQ/LIBAPI.h"
     "PsyQ/LIBETC.cpp"

@@ -12,14 +12,14 @@
 // Affects the primitive types expected, shaders used, blending mode and so on.
 //------------------------------------------------------------------------------------------------------------------------------------------
 enum class VPipelineType : uint8_t {
-    Lines,              // Solid colored lines
-    UI_4bpp,            // Texture mapped @ 4bpp, alpha blended
-    UI_8bpp,            // Texture mapped @ 8bpp, alpha blended
-    UI_8bpp_Add,        // Texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
-    UI_16bpp,           // Texture mapped @ 16bpp, alpha blended
-    View_Alpha,         // 3D View: Texture mapped @ 8bpp, light diminishing, alpha blended
-    View_Additive,      // 3D View: Texture mapped @ 8bpp, light diminishing, additive blended
-    View_Subtractive,   // 3D View: Texture mapped @ 8bpp, light diminishing, additive blended
+    Lines,              // Solid colored lines, alpha blended: can be in either 2D or 3D (for debug use for example)
+    UI_4bpp,            // 2D/UI: texture mapped @ 4bpp, alpha blended
+    UI_8bpp,            // 2D/UI: texture mapped @ 8bpp, alpha blended
+    UI_8bpp_Add,        // 2D/UI: texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
+    UI_16bpp,           // 2D/UI: texture mapped @ 16bpp, alpha blended
+    World_Alpha,        // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended
+    World_Additive,     // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended
+    World_Subtractive,  // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended
     Msaa_Resolve,       // Simple shader that resolves MSAA samples
     NUM_TYPES           // Convenience declaration...
 };
@@ -46,9 +46,9 @@ struct VShaderUniforms {
 static_assert(sizeof(VShaderUniforms) <= 128);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Vertex type for the Vulkan renderer for all drawing operations
+// Vulkan renderer vertex type: used for all direct drawing operations
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct VVertex {
+struct VVertex_Draw {
     // XYZ Position of the vertex
     float x, y, z;
     
@@ -78,7 +78,7 @@ struct VVertex {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Vertex type for the Vulkan renderer for MSAA resolve: just contains a 2D position in normalized device coords
+// Vulkan renderer vertex type: used for MSAA resolve and just contains a 2D position in normalized device coords
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VVertex_MsaaResolve {
     float x, y;

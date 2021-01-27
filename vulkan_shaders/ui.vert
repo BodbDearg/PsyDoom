@@ -7,7 +7,7 @@
 #include "ShaderCommon.h"
 
 DECLARE_UNIFORMS()
-DECLARE_VERTEX_SHADER_INPUTS()
+DECLARE_VS_INPUTS_VVERTEX_DRAW()
 
 layout(location = 0) out vec3 out_color;
 layout(location = 1) out vec2 out_uv;

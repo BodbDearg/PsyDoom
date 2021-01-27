@@ -51,10 +51,11 @@ static void RV_DrawWall(
     // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
     const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Walls : VLightDimMode::None;
 
-    // Draw the wall triangles
+    // Draw the wall triangles.
+    // Note: assuming the correct draw pipeline has been already set.
     const uint8_t alpha = (bBlend) ? 64 : 128;
 
-    VDrawing::add3dViewTriangle(
+    VDrawing::addWorldTriangle(
         x1, yb, z1, u1, vb,
         x1, yt, z1, u1, vt,
         x2, yt, z2, u2, vt,
@@ -62,11 +63,10 @@ static void RV_DrawWall(
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
         lightDimMode,
-        VPipelineType::View_Alpha,
         128, 128, 128, alpha
     );
 
-    VDrawing::add3dViewTriangle(
+    VDrawing::addWorldTriangle(
         x2, yt, z2, u2, vt,
         x2, yb, z2, u2, vb,
         x1, yb, z1, u1, vb,
@@ -74,7 +74,6 @@ static void RV_DrawWall(
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
         lightDimMode,
-        VPipelineType::View_Alpha,
         128, 128, 128, alpha
     );
 }

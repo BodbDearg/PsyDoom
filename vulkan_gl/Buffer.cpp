@@ -366,15 +366,15 @@ bool Buffer::resizeToByteCount(
     const uint64_t              oldLockedSize       = mLockedSize;
     std::byte* const            pOldLockedBytes     = mpLockedBytes;
 
-    mbIsValid       = false;
-    mUsageFlags     = {};
-    mUsageMode      = {};
-    mbIsResizable   = false;
-    mbIsLocked      = false;
-    mLockedOffset   = 0;
-    mLockedSize     = 0;
-    mLockedVkBuffer = VK_NULL_HANDLE;
-    mpLockedBytes   = nullptr;
+    mbIsValid           = false;
+    mUsageFlags         = {};
+    mUsageMode          = {};
+    mbIsResizable       = false;
+    mbIsLocked          = false;
+    mLockedOffset       = 0;
+    mLockedSize         = 0;
+    mLockedVkBuffer     = VK_NULL_HANDLE;
+    mpLockedBytes       = nullptr;
     
     RawBuffer oldBuffer(std::move(mBuffer));
     RawBuffer oldStagingBuffer(std::move(mStagingBuffer));
@@ -400,7 +400,7 @@ bool Buffer::resizeToByteCount(
     // Re-lock the buffer if a non zero lock size is specified
     const uint64_t actualNewSize = getSizeInBytes();
 
-    if (newLockSizeInBytes > 0 && newLockOffsetInBytes < actualNewSize) {
+    if ((newLockSizeInBytes) > 0 && (newLockOffsetInBytes < actualNewSize)) {
         const uint64_t maxLockSize = actualNewSize - newLockOffsetInBytes;
         const uint64_t actualNewLockSize = std::min(maxLockSize, newLockSizeInBytes);
         
@@ -441,7 +441,7 @@ bool Buffer::resizeToByteCount(
     //  (1) That this operation is always performed immediately
     //  (2) We can skip if we already copied the entire contents of the buffer (copy ram immediate)
     //
-    if (bKeepLockedData && bWasLocked && mbIsLocked && !bDidCopyRamImmediate) {
+    if (bKeepLockedData && bWasLocked && mbIsLocked && (!bDidCopyRamImmediate)) {
         const uint64_t overlapMin = std::max(oldLockedOffset, mLockedOffset);
         const uint64_t overlapMax = std::min(oldLockedOffset + oldLockedSize, mLockedOffset + mLockedSize);
 

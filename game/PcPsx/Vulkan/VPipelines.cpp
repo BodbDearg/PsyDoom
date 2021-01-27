@@ -25,23 +25,23 @@ BEGIN_NAMESPACE(VPipelines)
 #include "SPIRV_ui_4bpp_frag.bin.h"
 #include "SPIRV_ui_8bpp_frag.bin.h"
 #include "SPIRV_ui_vert.bin.h"
-#include "SPIRV_view_frag.bin.h"
-#include "SPIRV_view_vert.bin.h"
+#include "SPIRV_world_frag.bin.h"
+#include "SPIRV_world_vert.bin.h"
 
 // Vertex binding descriptions
-const VkVertexInputBindingDescription gVertexBindingDesc_drawing        = { 0, sizeof(VVertex), VK_VERTEX_INPUT_RATE_VERTEX };
+const VkVertexInputBindingDescription gVertexBindingDesc_drawing        = { 0, sizeof(VVertex_Draw), VK_VERTEX_INPUT_RATE_VERTEX };
 const VkVertexInputBindingDescription gVertexBindingDesc_msaaResolve    = { 0, sizeof(VVertex_MsaaResolve), VK_VERTEX_INPUT_RATE_VERTEX };
 
 // Vertex attribute descriptions
 const VkVertexInputAttributeDescription gVertexAttribs_drawing[] = {
-    { 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VVertex, x) },
-    { 1, 0, VK_FORMAT_R8G8B8_USCALED,   offsetof(VVertex, r) },
-    { 2, 0, VK_FORMAT_R8_UINT,          offsetof(VVertex, lightDimMode) },
-    { 3, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex, u) },
-    { 4, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex, texWinX) },
-    { 5, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex, texWinW) },
-    { 6, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex, clutX) },
-    { 7, 0, VK_FORMAT_R8G8B8A8_USCALED, offsetof(VVertex, stmulR) },
+    { 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VVertex_Draw, x) },
+    { 1, 0, VK_FORMAT_R8G8B8_USCALED,   offsetof(VVertex_Draw, r) },
+    { 2, 0, VK_FORMAT_R8_UINT,          offsetof(VVertex_Draw, lightDimMode) },
+    { 3, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_Draw, u) },
+    { 4, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, texWinX) },
+    { 5, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, texWinW) },
+    { 6, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, clutX) },
+    { 7, 0, VK_FORMAT_R8G8B8A8_USCALED, offsetof(VVertex_Draw, stmulR) },
 };
 
 const VkVertexInputAttributeDescription gVertexAttribs_msaaResolve[] = {
@@ -55,8 +55,8 @@ static vgl::ShaderModule    gShader_ui_16bpp_frag;
 static vgl::ShaderModule    gShader_ui_4bpp_frag;
 static vgl::ShaderModule    gShader_ui_8bpp_frag;
 static vgl::ShaderModule    gShader_ui_vert;
-static vgl::ShaderModule    gShader_view_frag;
-static vgl::ShaderModule    gShader_view_vert;
+static vgl::ShaderModule    gShader_world_frag;
+static vgl::ShaderModule    gShader_world_vert;
 static vgl::ShaderModule    gShader_msaa_resolve_frag;
 static vgl::ShaderModule    gShader_msaa_resolve_vert;
 
@@ -65,7 +65,7 @@ vgl::ShaderModule* const gShaders_colored[]       = { &gShader_colored_vert, &gS
 vgl::ShaderModule* const gShaders_ui_4bpp[]       = { &gShader_ui_vert, &gShader_ui_4bpp_frag };
 vgl::ShaderModule* const gShaders_ui_8bpp[]       = { &gShader_ui_vert, &gShader_ui_8bpp_frag };
 vgl::ShaderModule* const gShaders_ui_16bpp[]      = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
-vgl::ShaderModule* const gShaders_view[]          = { &gShader_view_vert, &gShader_view_frag };
+vgl::ShaderModule* const gShaders_world[]         = { &gShader_world_vert, &gShader_world_frag };
 vgl::ShaderModule* const gShaders_msaaResolve[]   = { &gShader_msaa_resolve_vert, &gShader_msaa_resolve_frag };
 
 // Pipeline samplers
@@ -136,8 +136,8 @@ static void initShaders(vgl::LogicalDevice& device) noexcept {
     initShader(device, gShader_ui_4bpp_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_4bpp_frag, sizeof(gSPIRV_ui_4bpp_frag), "ui_4bpp_frag");
     initShader(device, gShader_ui_8bpp_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_8bpp_frag, sizeof(gSPIRV_ui_8bpp_frag), "ui_8bpp_frag");
     initShader(device, gShader_ui_16bpp_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_16bpp_frag, sizeof(gSPIRV_ui_16bpp_frag), "ui_16bpp_frag");
-    initShader(device, gShader_view_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_view_vert, sizeof(gSPIRV_view_vert), "view_vert");
-    initShader(device, gShader_view_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_view_frag, sizeof(gSPIRV_view_frag), "view_frag");
+    initShader(device, gShader_world_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_world_vert, sizeof(gSPIRV_world_vert), "world_vert");
+    initShader(device, gShader_world_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_frag, sizeof(gSPIRV_world_frag), "world_frag");
     initShader(device, gShader_msaa_resolve_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_msaa_resolve_vert, sizeof(gSPIRV_msaa_resolve_vert), "msaa_resolve_vert");
     initShader(device, gShader_msaa_resolve_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_msaa_resolve_frag, sizeof(gSPIRV_msaa_resolve_frag), "msaa_resolve_frag");
 }
@@ -437,9 +437,9 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initDrawPipeline(VPipelineType::UI_8bpp, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_noTestNoWrite);
     initDrawPipeline(VPipelineType::UI_8bpp_Add, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_noTestNoWrite);
     initDrawPipeline(VPipelineType::UI_16bpp, renderPass, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_noTestNoWrite);
-    initDrawPipeline(VPipelineType::View_Alpha, renderPass, gShaders_view, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_testNoWrite);
-    initDrawPipeline(VPipelineType::View_Additive, renderPass, gShaders_view, gInputAS_triList, gRasterState_backFaceCull, gBlendState_additive, gDepthState_testNoWrite);
-    initDrawPipeline(VPipelineType::View_Subtractive, renderPass, gShaders_view, gInputAS_triList, gRasterState_backFaceCull, gBlendState_subtractive, gDepthState_testNoWrite);
+    initDrawPipeline(VPipelineType::World_Alpha, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_testNoWrite);
+    initDrawPipeline(VPipelineType::World_Additive, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_additive, gDepthState_testNoWrite);
+    initDrawPipeline(VPipelineType::World_Subtractive, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_subtractive, gDepthState_testNoWrite);
 
     // The pipeline to resolve MSAA: only bother creating this if we are doing MSAA.
     // Specialize the shader to the number of samples also, so that loops can be unrolled.
@@ -482,8 +482,8 @@ void shutdown() noexcept {
 
     gShader_msaa_resolve_frag.destroy(true);
     gShader_msaa_resolve_vert.destroy(true);
-    gShader_view_frag.destroy(true);
-    gShader_view_vert.destroy(true);
+    gShader_world_frag.destroy(true);
+    gShader_world_vert.destroy(true);
     gShader_ui_16bpp_frag.destroy(true);
     gShader_ui_8bpp_frag.destroy(true);
     gShader_ui_4bpp_frag.destroy(true);

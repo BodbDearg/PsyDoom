@@ -67,7 +67,8 @@ static void RV_DrawPlane(
     // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
     const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Flats : VLightDimMode::None;
 
-    // Do all the triangles for the plane
+    // Do all the triangles for the plane.
+    // Note that all draw calls assume that the correct pipeline has already been set beforehand.
     for (uint16_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx) {
         // Get the edge coords
         const vertex_t& v1 = *pLeafEdges[edgeIdx].vertex;
@@ -85,7 +86,7 @@ static void RV_DrawPlane(
         // Draw the triangle: note that UV coords are just the vertex coords (scaled in the case of U) - no offsetting to worry about here.
         // For ceilings as well reverse the winding order so backface culling works OK.
         if constexpr (IsFloor) {
-            VDrawing::add3dViewTriangle(
+            VDrawing::addWorldTriangle(
                 x1, planeH, z1, u1, z1,
                 x2, planeH, z2, u2, z2,
                 triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
@@ -93,11 +94,10 @@ static void RV_DrawPlane(
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
                 lightDimMode,
-                VPipelineType::View_Alpha,
                 128, 128, 128, 128
             );
         } else {
-            VDrawing::add3dViewTriangle(
+            VDrawing::addWorldTriangle(
                 x1, planeH, z1, u1, z1,
                 triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
                 x2, planeH, z2, u2, z2,
@@ -105,7 +105,6 @@ static void RV_DrawPlane(
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
                 lightDimMode,
-                VPipelineType::View_Alpha,
                 128, 128, 128, 128
             );
         }

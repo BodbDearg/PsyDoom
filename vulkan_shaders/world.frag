@@ -1,7 +1,7 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// View shader: fragment.
+// World shader: fragment.
 // The view shader is responsible for drawing stuff in the 3D/world view.
 // Very similar to the UI shaders except it includes a 'scale' value for light diminishing effects.
 // All view textures are also assumed to be 8 bits per pixel.

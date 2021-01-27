@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-// Push constants used by all the shaders, presently just a model/view/projection matrix
+// Push constants used by most shaders, presently just a model/view/projection matrix
 //----------------------------------------------------------------------------------------------------------------------
 #define DECLARE_UNIFORMS()\
     layout(push_constant) uniform Constants {   \
@@ -7,7 +7,7 @@
     } constants;
 
 //----------------------------------------------------------------------------------------------------------------------
-// Declare the vertex inputs fed into every vertex shader in PsyDoom.
+// Declare the vertex inputs for the vertex type 'VVertex_Draw'.
 // Depending on the shaders involved, some of these attributes may be ignored.
 //
 // Meaning:
@@ -22,7 +22,7 @@
 //  in_clutPos          XY position (in pixels) of the color lookup table for 4/8-bit textures that require it
 //  in_stmul            RGBA multiplier for when the pixel is marked semi-transparent (controls blending)
 //----------------------------------------------------------------------------------------------------------------------
-#define DECLARE_VERTEX_SHADER_INPUTS()\
+#define DECLARE_VS_INPUTS_VVERTEX_DRAW()\
     layout(location = 0) in vec3    in_pos;             \
     layout(location = 1) in vec3    in_color;           \
     layout(location = 2) in uint    in_lightDimMode;    \

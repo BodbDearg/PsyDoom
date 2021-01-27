@@ -115,11 +115,11 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
     uint8_t stMulG = 128;
     uint8_t stMulB = 128;
     uint8_t stMulA = 128;
-    VPipelineType drawPipeline = VPipelineType::View_Alpha;
+    VPipelineType drawPipeline = VPipelineType::World_Alpha;
 
     if (thing.flags & MF_BLEND_ON) {
         if (thing.flags & MF_BLEND_MODE_BIT1) {
-            drawPipeline = VPipelineType::View_Additive;
+            drawPipeline = VPipelineType::World_Additive;
 
             if (thing.flags & MF_BLEND_MODE_BIT2) {
                 // Additive blend with 25% opacity
@@ -132,10 +132,10 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         } else {
             if (thing.flags & MF_BLEND_MODE_BIT2) {
                 // Subtractive blend with 100% opacity
-                drawPipeline = VPipelineType::View_Subtractive;
+                drawPipeline = VPipelineType::World_Subtractive;
             } else {
                 // Alpha blend with 50% opacity
-                drawPipeline = VPipelineType::View_Alpha;
+                drawPipeline = VPipelineType::World_Alpha;
                 stMulA = 64;
             }
         }
@@ -211,8 +211,10 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         sprColB = colB;
     }
 
-    // Submit the triangles
-    VDrawing::add3dViewTriangle(
+    // Ensure we are on the correct draw pipeline and submit the triangles
+    VDrawing::setPipeline(drawPipeline);
+
+    VDrawing::addWorldTriangle(
         p1[0], p1[1], p1[2], ul, vb,
         p3[0], p3[1], p3[2], ur, vt,
         p2[0], p2[1], p2[2], ur, vb,
@@ -220,11 +222,10 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
         VLightDimMode::None,
-        drawPipeline,
         stMulR, stMulG, stMulB, stMulA
     );
 
-    VDrawing::add3dViewTriangle(
+    VDrawing::addWorldTriangle(
         p3[0], p3[1], p3[2], ur, vt,
         p1[0], p1[1], p1[2], ul, vb,
         p4[0], p4[1], p4[2], ul, vt,
@@ -232,7 +233,6 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
         VLightDimMode::None,
-        drawPipeline,
         stMulR, stMulG, stMulB, stMulA
     );
 }

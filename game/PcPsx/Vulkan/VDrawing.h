@@ -34,7 +34,7 @@ Matrix4f computeTransformMatrixForUI() noexcept;
 Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const float viewZ, const float viewAngle) noexcept;
 void endCurrentDrawBatch() noexcept;
 
-void addAlphaBlendedUILine(
+void addUILine(
     const float x1,
     const float y1,
     const float x2,
@@ -45,7 +45,7 @@ void addAlphaBlendedUILine(
     const uint8_t a
 ) noexcept;
 
-void addAlphaBlendedUISprite(
+void addUISprite(
     const float x,
     const float y,
     const float w,
@@ -61,30 +61,11 @@ void addAlphaBlendedUISprite(
     const uint16_t texPageX,
     const uint16_t texPageY,
     const uint16_t texWinW,
-    const uint16_t texWinH,
-    const Gpu::TexFmt texFmt
-) noexcept;
-
-void addAdditiveBlended8bppUISprite(
-    const float x,
-    const float y,
-    const float w,
-    const float h,
-    const float u,
-    const float v,
-    const uint8_t r,
-    const uint8_t g,
-    const uint8_t b,
-    const uint16_t clutX,
-    const uint16_t clutY,
-    const uint16_t texPageX,
-    const uint16_t texPageY,
-    const uint16_t texWinW,
     const uint16_t texWinH
 ) noexcept;
 
 // TODO: add quad variant to submit two triangles at once
-void add3dViewTriangle(
+void addWorldTriangle(
     const float x1,
     const float y1,
     const float z1,
@@ -110,7 +91,6 @@ void add3dViewTriangle(
     const uint16_t texWinW,
     const uint16_t texWinH,
     const VLightDimMode lightDimMode,
-    const VPipelineType drawPipeline,
     const uint8_t stMulR,
     const uint8_t stMulG,
     const uint8_t stMulB,

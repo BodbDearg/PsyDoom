@@ -21,13 +21,13 @@
 - Vk renderer: get loading plaque draw working
 - Vk renderer: implement proper scaling and widescreen support
 - Vk renderer: add option for 32-bit (smooth) shading
+- VK renderer: submit quads at once for certain geom to speed things up
 - Vk renderer: device selection: add code to ensure all formats used are supported
-- Vk renderer: make add geom call not set pipeline
-    - External code should decide
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
 - Fix bug when pausing and turning with view snapping back slightly.
+- Investigate Final Doom music pitch issue mentioned on Doomworld.
 - Investigate TCache overflow mentioned on Doomworld.
 
 0.8 - Limit extending and modding?

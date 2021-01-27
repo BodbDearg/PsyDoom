@@ -1,7 +1,7 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// View shader: vertex.
+// World shader: vertex.
 // The view shader is responsible for drawing stuff in the 3D/world view.
 // Very similar to the UI shaders except it includes a 'scale' value for light diminishing effects.
 // All view textures are also assumed to be 8 bits per pixel.
@@ -9,7 +9,7 @@
 #include "ShaderCommon.h"
 
 DECLARE_UNIFORMS()
-DECLARE_VERTEX_SHADER_INPUTS()
+DECLARE_VS_INPUTS_VVERTEX_DRAW()
 
 layout(location = 0) out vec3 out_color;
 layout(location = 1) out vec3 out_uv_z;

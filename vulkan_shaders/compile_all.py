@@ -24,8 +24,8 @@ files_to_compile = [
     [ "ui_16bpp.frag",      "compiled/SPIRV_ui_16bpp_frag.bin.h",       "frag", "gSPIRV_ui_16bpp_frag"      ],
     [ "ui_4bpp.frag",       "compiled/SPIRV_ui_4bpp_frag.bin.h",        "frag", "gSPIRV_ui_4bpp_frag"       ],
     [ "ui_8bpp.frag",       "compiled/SPIRV_ui_8bpp_frag.bin.h",        "frag", "gSPIRV_ui_8bpp_frag"       ],
-    [ "view.frag",          "compiled/SPIRV_view_frag.bin.h",           "frag", "gSPIRV_view_frag"          ],
-    [ "view.vert",          "compiled/SPIRV_view_vert.bin.h",           "vert", "gSPIRV_view_vert"          ],
+    [ "world.frag",         "compiled/SPIRV_world_frag.bin.h",          "frag", "gSPIRV_world_frag"         ],
+    [ "world.vert",         "compiled/SPIRV_world_vert.bin.h",          "vert", "gSPIRV_world_vert"         ],
 ]
 
 # Compiles the input GLSL file to an output file with the specified name.

@@ -22,6 +22,7 @@
 #include "VPipelines.h"
 #include "VRenderer.h"
 #include "VTypes.h"
+#include "VVertexBufferSet.h"
 
 BEGIN_NAMESPACE(VDrawing)
 
@@ -30,52 +31,37 @@ BEGIN_NAMESPACE(VDrawing)
 static vgl::DescriptorPool  gDescriptorPool;
 static vgl::DescriptorSet*  gpDescriptorSet;
 
-// Hardware vertex buffers used to host the vertex data
-static vgl::Buffer gVertexBuffers[vgl::Defines::RINGBUFFER_SIZE];
-
-static vgl::Buffer*     gpCurVtxBuffer;         // The current vertex buffer being used
-static VVertex*         gpCurVtxBufferVerts;    // Pointer to the locked vertices in the vertex buffer
-static uint32_t         gCurVtxBufferOffset;    // How many vertices have been written to the current vertex buffer
-static uint32_t         gCurVtxBufferSize;      // The current capacity of the vertex buffer
-static uint32_t         gCurDrawBatchStart;     // Which vertex the current draw batch starts on
-static uint32_t         gCurDrawBatchSize;      // How many vertices are in the current draw batch
-
-// The command buffer recorder being used for the current frame
-static vgl::CmdBufferRecorder* gpCurCmdBufRec;
-
-// The current pipeline being used: used to avoid pipeline switches where possible
-static VPipelineType gCurPipelineType;
+static VVertexBufferSet         gVertexBuffers_Draw;    // Vertex buffers: for 'VVertex_Draw' type vertices
+static vgl::CmdBufferRecorder*  gpCurCmdBufRec;         // The command buffer recorder being used for the current frame
+static VPipelineType            gCurPipelineType;       // The current pipeline being used: used to avoid pipeline switches where possible
+static VVertexBufferSet*        gpCurVertexBufferSet;   // The current vertex buffer set in use: determined via the pipeline type
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Ensures the specified number of vertices can be allocated, and if they can't resizes the current vertex buffer.
-// Note: must only be called after 'beginFrame'.
+// Returns the vertex buffer set required for the specified pipeline type
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void ensureNumVtxBufferVerts(const uint32_t numVerts) noexcept {
-    // What size would be good to hold this amount of vertices?
-    ASSERT(gpCurVtxBufferVerts);
-    uint32_t newVtxBufSize = gCurVtxBufferSize;
+static VVertexBufferSet* getVertexBufferSetForPipelineType(const VPipelineType pipelineType) noexcept {
+    switch (pipelineType) {
+        // Draw vertices
+        case VPipelineType::Lines:
+        case VPipelineType::UI_4bpp:
+        case VPipelineType::UI_8bpp:
+        case VPipelineType::UI_8bpp_Add:
+        case VPipelineType::UI_16bpp:
+        case VPipelineType::World_Alpha:
+        case VPipelineType::World_Additive:
+        case VPipelineType::World_Subtractive:
+            return &gVertexBuffers_Draw;
 
-    while (gCurVtxBufferOffset + numVerts > newVtxBufSize) {
-        newVtxBufSize *= 2;
+        // MSAA resolve is handled by the resolver module, and that has it's own vertex buffer
+        case VPipelineType::Msaa_Resolve:
+            return nullptr;
+
+        default:
+            break;
     }
 
-    // Do we need to do a resize?
-    if (newVtxBufSize != gCurVtxBufferSize) {
-        const bool bResizeOk = gpCurVtxBuffer->resizeToElementCount<VVertex>(
-            newVtxBufSize,
-            vgl::Buffer::ResizeFlagBits::KEEP_LOCKED_DATA,
-            0,
-            newVtxBufSize
-        );
-
-        if (!bResizeOk)
-            FatalErrors::raise("Failed to resize a Vulkan vertex buffer used for rendering! May be out of memory!");
-
-        // Need to update the locked pointer after resizing and the new vertex buffer size
-        gpCurVtxBufferVerts = gpCurVtxBuffer->getLockedElements<VVertex>();
-        ASSERT(gpCurVtxBufferVerts);
-        gCurVtxBufferSize = newVtxBufSize;
-    }
+    ASSERT_FAIL("Unhandled pipeline type!");
+    return nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,40 +89,23 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
         gpDescriptorSet->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_drawing);
     }
 
-    // Create the vertex buffers
-    for (vgl::Buffer& vertexBuffer : gVertexBuffers) {
-        vertexBuffer.initWithElementCount<VVertex>(
-            device,
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            vgl::BufferUsageMode::DYNAMIC,
-            // Around 50K verts - should be absolutely PLENTY, even for very demanding user maps!
-            // This comes to about 2 MiB per buffer if the vertex size is '40' bytes.
-            // If we happen to exceed this limit then the buffer can always be resized later.
-            1024 * 50,
-            true
-        );
-    }
+    // Create the vertex buffer sets
+    gVertexBuffers_Draw.init<VVertex_Draw>(device, 1024 * 25);      // Around 25K vertices should be PLENTY for most scenes (about 1 MiB per buffer, if vertex size is '40' bytes)
 
-    // Current pipeline is undefined initially
+    // Current pipeline and vertex buffer set in use is undefined initially
     gCurPipelineType = (VPipelineType) -1;
+    gpCurVertexBufferSet = nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shuts down the drawing module and frees up resources
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
+    gpCurVertexBufferSet = nullptr;
     gCurPipelineType = {};
     gpCurCmdBufRec = nullptr;
-    gCurDrawBatchSize = 0;
-    gCurDrawBatchStart = 0;
-    gCurVtxBufferSize = 0;
-    gCurVtxBufferOffset = 0;
-    gpCurVtxBufferVerts = nullptr;
-    gpCurVtxBuffer = nullptr;
-
-    for (vgl::Buffer& vertexBuffer : gVertexBuffers) {
-        vertexBuffer.destroy(true);
-    }
+    
+    gVertexBuffers_Draw.destroy();
 
     if (gpDescriptorSet) {
         gpDescriptorSet->free(true);
@@ -153,27 +122,21 @@ void beginFrame(vgl::LogicalDevice& device, vgl::CmdBufferRecorder& cmdRec) noex
     // Save the command buffer recorder used
     gpCurCmdBufRec = &cmdRec;
 
-    // Get what vertex buffer to use and lock its entire range for writing
+    // Setup vertex buffers
     const uint32_t ringbufferIdx = device.getRingbufferMgr().getBufferIndex();
+    gVertexBuffers_Draw.beginFrame(ringbufferIdx);
 
-    gpCurVtxBuffer = &gVertexBuffers[ringbufferIdx];
-    gCurVtxBufferOffset = 0;
-    gCurVtxBufferSize = (uint32_t) gpCurVtxBuffer->getSizeInElements<VVertex>();
-    gpCurVtxBufferVerts = gpCurVtxBuffer->lockElements<VVertex>(0, gCurVtxBufferSize);
-
-    // Expect all these to be already setup correctly
-    ASSERT(gCurDrawBatchStart == 0);
-    ASSERT(gCurDrawBatchSize == 0);
+    // Expect all these to already have the following state
     ASSERT(gCurPipelineType == (VPipelineType) -1);
+    ASSERT(!gpCurVertexBufferSet);
 
     // Get the size of the current draw framebuffer
     const uint32_t fbWidth = VRenderer::getVkRendererFbWidth();
     const uint32_t fbHeight = VRenderer::getVkRendererFbHeight();
 
-    // First draw commands: set viewport and scissors dimensions and bind the vertex buffer
+    // First draw commands: set viewport and scissors dimensions
     gpCurCmdBufRec->setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
     gpCurCmdBufRec->setScissors(0, 0, fbWidth, fbHeight);
-    gpCurCmdBufRec->bindVertexBuffer(*gpCurVtxBuffer, 0, 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -183,23 +146,13 @@ void endFrame() noexcept {
     // Must have started a frame
     ASSERT(gpCurCmdBufRec);
 
-    // Finish the current draw batch and rewind for the next frame
+    // Finish the current draw batch and upload any vertices generated (vertex buffer set 'end frame')
     endCurrentDrawBatch();
-    gCurDrawBatchStart = 0;
-    gCurDrawBatchSize = 0;
+    gVertexBuffers_Draw.endFrame();
 
-    // Unlock the vertex buffer used to schedule the transfer of vertex data to the GPU
-    ASSERT(gpCurVtxBuffer);
-    gpCurVtxBuffer->unlockElements<VVertex>(gCurVtxBufferOffset);
-
-    // Clear the details for the locked vertex buffer
-    gpCurVtxBuffer = nullptr;
-    gpCurVtxBufferVerts = nullptr;
-    gCurVtxBufferSize = 0;
-    gCurVtxBufferOffset = 0;
-
-    // Current pipeline is undefined on ending a frame
+    // Current pipeline and vertex buffer set are undefined on ending a frame
     gCurPipelineType = (VPipelineType) -1;
+    gpCurVertexBufferSet = nullptr;
 
     // Done with this recorder now
     gpCurCmdBufRec = nullptr;
@@ -213,18 +166,31 @@ void setPipeline(const VPipelineType type) noexcept {
     ASSERT((uint32_t) type < (uint32_t) VPipelineType::NUM_TYPES);
 
     // Only switch pipelines if we need to
-    if (gCurPipelineType != type) {
-        // Must end the current draw batch before switching
-        endCurrentDrawBatch();
+    if (gCurPipelineType == type)
+        return;
 
-        // Do the switch
-        gCurPipelineType = type;
-        vgl::Pipeline& pipeline = VPipelines::gPipelines[(uint32_t) type];
-        gpCurCmdBufRec->bindPipeline(pipeline);
+    // Must end the current draw batch before switching
+    endCurrentDrawBatch();
 
-        // Bind the descriptor set used for all rendering for this pipeline
-        gpCurCmdBufRec->bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
+    // Do the pipeline switch
+    gCurPipelineType = type;
+    vgl::Pipeline& pipeline = VPipelines::gPipelines[(uint32_t) type];
+    gpCurCmdBufRec->bindPipeline(pipeline);
+
+    // Switch to a new vertex buffer if we have to
+    VVertexBufferSet* pNewVertexBufferSet = getVertexBufferSetForPipelineType(type);
+
+    if (pNewVertexBufferSet != gpCurVertexBufferSet) {
+        gpCurVertexBufferSet = pNewVertexBufferSet;
+
+        if (pNewVertexBufferSet) {
+            ASSERT(pNewVertexBufferSet->pCurBuffer);
+            gpCurCmdBufRec->bindVertexBuffer(*pNewVertexBufferSet->pCurBuffer, 0, 0);
+        }
     }
+
+    // Bind the descriptor set used for all rendering for this pipeline
+    gpCurCmdBufRec->bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -286,17 +252,15 @@ Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const
 void endCurrentDrawBatch() noexcept {
     ASSERT(gpCurCmdBufRec);
     
-    if (gCurDrawBatchSize > 0) {
-        gpCurCmdBufRec->draw(gCurDrawBatchSize, gCurDrawBatchStart);
-        gCurDrawBatchStart = gCurVtxBufferOffset;
-        gCurDrawBatchSize = 0;
+    if (gpCurVertexBufferSet) {
+        gpCurVertexBufferSet->endCurrentDrawBatch(*gpCurCmdBufRec);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a 2D line to be drawn (alpha blended only)
+// Add a 2D/UI line to be drawn
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addAlphaBlendedUILine(
+void addUILine(
     const float x1,
     const float y1,
     const float x2,
@@ -306,17 +270,15 @@ void addAlphaBlendedUILine(
     const uint8_t b,
     const uint8_t a
 ) noexcept {
-    // Switch to the correct pipeline
-    setPipeline(VPipelineType::Lines);
-
-    // Ensure we have enough vertices to proceed
-    ensureNumVtxBufferVerts(2);
+    // Ensure we are on the right pipeline and vertex buffer set
+    ASSERT(gCurPipelineType == VPipelineType::Lines);
+    ASSERT(gpCurVertexBufferSet == &gVertexBuffers_Draw);
 
     // Fill in the vertices, starting first with common parameters
-    VVertex* const pVerts = gpCurVtxBufferVerts + gCurVtxBufferOffset;
+    VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(2);
 
     for (uint32_t i = 0; i < 2; ++i) {
-        VVertex& vert = pVerts[i];
+        VVertex_Draw& vert = pVerts[i];
         vert = {};
         vert.r = r;
         vert.g = g;
@@ -327,20 +289,15 @@ void addAlphaBlendedUILine(
         vert.stmulA = a;
     }
 
-    // Fill in verts xy positions
+    // Fill in xy positions
     pVerts[0].x = x1;   pVerts[0].y = y1;
     pVerts[1].x = x2;   pVerts[1].y = y2;
-
-    // Consumed 2 buffer vertices and add 2 vertices to the current draw batch
-    gCurVtxBufferOffset += 2;
-    gCurDrawBatchSize += 2;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a UI style sprite to be drawn (alpha blended only).
-// UI style sprites don't have depth testing or do culling.
+// Add a UI sprite to be drawn
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addAlphaBlendedUISprite(
+void addUISprite(
     const float x,
     const float y,
     const float w,
@@ -356,32 +313,47 @@ void addAlphaBlendedUISprite(
     const uint16_t texPageX,
     const uint16_t texPageY,
     const uint16_t texWinW,
-    const uint16_t texWinH,
-    const Gpu::TexFmt texFmt
+    const uint16_t texWinH
 ) noexcept {
-    // Switch to the correct pipeline and figure out the scaling for the 'u' texture coordinate depending on the texture bit rate
-    float uScale;
+    // Ensure we are on a compatible pipeline and have the correct vertex buffer set
+    const VPipelineType pipeline = gCurPipelineType;
 
-    if (texFmt == Gpu::TexFmt::Bpp8) {
-        setPipeline(VPipelineType::UI_8bpp);
-        uScale = 1.0f / 2.0f;
-    } else if (texFmt == Gpu::TexFmt::Bpp4) {
-        setPipeline(VPipelineType::UI_4bpp);
-        uScale = 1.0f / 4.0f;
-    } else {
-        ASSERT(texFmt == Gpu::TexFmt::Bpp16);
-        setPipeline(VPipelineType::UI_16bpp);
-        uScale = 1.0f;
+    ASSERT(
+        (pipeline == VPipelineType::UI_4bpp) ||
+        (pipeline == VPipelineType::UI_8bpp) ||
+        (pipeline == VPipelineType::UI_8bpp_Add) ||
+        (pipeline == VPipelineType::UI_16bpp)
+    );
+
+    ASSERT(gpCurVertexBufferSet == &gVertexBuffers_Draw);
+
+    // Figure out the scaling for the 'u' texture coordinate depending on the texture bit rate.
+    // Note: UI 8bpp is the most commonly used, so I'm assuming that by default.
+    float uScale = 1.0f / 2.0f;
+
+    switch (pipeline) {
+        case VPipelineType::UI_4bpp:
+            uScale = 1.0 / 4.0f;
+            break;
+
+        case VPipelineType::UI_8bpp:
+        case VPipelineType::UI_8bpp_Add:
+            break;
+
+        case VPipelineType::UI_16bpp:
+            uScale = 1.0f;
+            break;
+
+        default:
+            ASSERT_FAIL("Unhandled pipeline type!");
+            break;
     }
 
-    // Ensure we have enough vertices to proceed
-    ensureNumVtxBufferVerts(6);
-
     // Fill in the vertices, starting first with common parameters
-    VVertex* const pVerts = gpCurVtxBufferVerts + gCurVtxBufferOffset;
+    VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
 
     for (uint32_t i = 0; i < 6; ++i) {
-        VVertex& vert = pVerts[i];
+        VVertex_Draw& vert = pVerts[i];
         vert.z = {};                // Unused for UI
         vert.r = r;
         vert.g = g;
@@ -418,93 +390,17 @@ void addAlphaBlendedUISprite(
     pVerts[3].u = ur;   pVerts[3].v = vb;
     pVerts[4].u = ul;   pVerts[4].v = vb;
     pVerts[5].u = ul;   pVerts[5].v = vt;
-
-    // Consumed 6 buffer vertices and add 6 vertices to the current draw batch
-    gCurVtxBufferOffset += 6;
-    gCurDrawBatchSize += 6;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a UI style sprite to be drawn with additive blending (8bpp texture format only).
-// UI style sprites don't have depth testing or do culling.
-//------------------------------------------------------------------------------------------------------------------------------------------
-void addAdditiveBlended8bppUISprite(
-    const float x,
-    const float y,
-    const float w,
-    const float h,
-    const float u,
-    const float v,
-    const uint8_t r,
-    const uint8_t g,
-    const uint8_t b,
-    const uint16_t clutX,
-    const uint16_t clutY,
-    const uint16_t texPageX,
-    const uint16_t texPageY,
-    const uint16_t texWinW,
-    const uint16_t texWinH
-) noexcept {
-    // Switch to the correct pipeline and ensure we have enough vertices to proceed
-    setPipeline(VPipelineType::UI_8bpp_Add);
-    ensureNumVtxBufferVerts(6);
-
-    // Fill in the vertices, starting first with common parameters
-    VVertex* const pVerts = gpCurVtxBufferVerts + gCurVtxBufferOffset;
-
-    for (uint32_t i = 0; i < 6; ++i) {
-        VVertex& vert = pVerts[i];
-        vert.z = {};                // Unused for UI
-        vert.r = r;
-        vert.g = g;
-        vert.b = b;
-        vert.lightDimMode = {};     // Unused for UI
-        vert.texWinX = texPageX;
-        vert.texWinY = texPageY;
-        vert.texWinW = texWinW;
-        vert.texWinH = texWinH;
-        vert.clutX = clutX;
-        vert.clutY = clutY;
-        vert.stmulR = 128;          // Fully white (128 = 100% strength)
-        vert.stmulG = 128;
-        vert.stmulB = 128;
-        vert.stmulA = 128;
-    }
-
-    // Fill in verts xy and uv positions
-    pVerts[0].x = x;                pVerts[0].y = y;
-    pVerts[1].x = (float)(x + w);   pVerts[1].y = y;
-    pVerts[2].x = (float)(x + w);   pVerts[2].y = (float)(y + h);
-    pVerts[3].x = (float)(x + w);   pVerts[3].y = (float)(y + h);
-    pVerts[4].x = x;                pVerts[4].y = (float)(y + h);
-    pVerts[5].x = x;                pVerts[5].y = y;
-
-    const float ul = u * 0.5f;              // 0.5x because the texture format is 8bpp and VRAM coords are 16bpp
-    const float ur = (u + w) * 0.5f;
-    const float vt = v;
-    const float vb = v + h;
-
-    pVerts[0].u = ul;   pVerts[0].v = vt;
-    pVerts[1].u = ur;   pVerts[1].v = vt;
-    pVerts[2].u = ur;   pVerts[2].v = vb;
-    pVerts[3].u = ur;   pVerts[3].v = vb;
-    pVerts[4].u = ul;   pVerts[4].v = vb;
-    pVerts[5].u = ul;   pVerts[5].v = vt;
-
-    // Consumed 6 buffer vertices and add 6 vertices to the current draw batch
-    gCurVtxBufferOffset += 6;
-    gCurDrawBatchSize += 6;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Add a triangle for the game's 3D view.
+// Add a triangle for the game's 3D view/world.
 // 
 // Notes:
 //  (1) The texture format is assumed to be 8 bits per pixel always.
 //  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
 //  (3) The alpha component is only used if alpha blending is being used.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void add3dViewTriangle(
+void addWorldTriangle(
     const float x1,
     const float y1,
     const float z1,
@@ -530,23 +426,25 @@ void add3dViewTriangle(
     const uint16_t texWinW,
     const uint16_t texWinH,
     const VLightDimMode lightDimMode,
-    const VPipelineType drawPipeline,
     const uint8_t stMulR,
     const uint8_t stMulG,
     const uint8_t stMulB,
     const uint8_t stMulA
 ) noexcept {
-    // Switch to the correct pipeline
-    setPipeline(drawPipeline);
+    // Ensure we are on a compatible pipeline and have the correct vertex buffer set
+    ASSERT(
+        (gCurPipelineType == VPipelineType::World_Alpha) ||
+        (gCurPipelineType == VPipelineType::World_Additive) ||
+        (gCurPipelineType == VPipelineType::World_Subtractive)
+    );
 
-    // Ensure we have enough vertices to proceed
-    ensureNumVtxBufferVerts(3);
+    ASSERT(gpCurVertexBufferSet == &gVertexBuffers_Draw);
 
     // Fill in the vertices, starting first with common parameters
-    VVertex* const pVerts = gpCurVtxBufferVerts + gCurVtxBufferOffset;
+    VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(3);
 
     for (uint32_t i = 0; i < 3; ++i) {
-        VVertex& vert = pVerts[i];
+        VVertex_Draw& vert = pVerts[i];
         vert.r = r;
         vert.g = g;
         vert.b = b;
@@ -572,10 +470,6 @@ void add3dViewTriangle(
     pVerts[0].u = u1;   pVerts[0].v = v1;
     pVerts[1].u = u2;   pVerts[1].v = v2;
     pVerts[2].u = u3;   pVerts[2].v = v3;
-
-    // Consumed 3 buffer vertices and add 3 vertices to the current draw batch
-    gCurVtxBufferOffset += 3;
-    gCurDrawBatchSize += 3;
 }
 
 END_NAMESPACE(VDrawing)
