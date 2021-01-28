@@ -151,6 +151,13 @@ void setMsaaResolveInputAttachments(const vgl::BaseTexture inputAttachments[vgl:
 // Assumes we have already transitioned to the subpass for MSAA resolve.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void doMsaaResolve(vgl::LogicalDevice& device, vgl::CmdBufferRecorder& cmdRec) noexcept {
+    // Set the viewport and scissors rect dimensions
+    const uint32_t fbWidth = gResolveColorAttachments[0].getWidth();
+    const uint32_t fbHeight = gResolveColorAttachments[0].getHeight();
+
+    cmdRec.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
+    cmdRec.setScissors(0, 0, fbWidth, fbHeight);
+
     // Switch to the correct pipeline and bind the vertex buffer to use
     vgl::Pipeline& pipeline = VPipelines::gPipelines[(uint32_t) VPipelineType::Msaa_Resolve];
     cmdRec.bindPipeline(pipeline);

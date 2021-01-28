@@ -143,17 +143,17 @@ void submit(const SPRT& sprite) noexcept {
 
                     switch (gpu.texFmt) {
                         case Gpu::TexFmt::Bpp4:
-                            VDrawing::setPipeline(VPipelineType::UI_4bpp);
+                            VDrawing::setDrawPipeline(VPipelineType::UI_4bpp);
                             texWinW /= 4;
                             break;
 
                         case Gpu::TexFmt::Bpp8:
-                            VDrawing::setPipeline(VPipelineType::UI_8bpp);
+                            VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
                             texWinW /= 2;
                             break;
 
                         case Gpu::TexFmt::Bpp16:
-                            VDrawing::setPipeline(VPipelineType::UI_16bpp);
+                            VDrawing::setDrawPipeline(VPipelineType::UI_16bpp);
                             break;
 
                         default:
@@ -167,13 +167,13 @@ void submit(const SPRT& sprite) noexcept {
                     // Additive blending: used by the player weapon when the player is invisible
                     ASSERT_LOG(gpu.texFmt == Gpu::TexFmt::Bpp8, "Unsupported blend mode and texture format combo!");
 
-                    VDrawing::setPipeline(VPipelineType::UI_8bpp_Add);
+                    VDrawing::setDrawPipeline(VPipelineType::UI_8bpp_Add);
                     texWinW /= 2;
                     drawAlpha = 128;
                 }
 
                 // Actually add the sprite primitive to the draw list
-                VDrawing::addUISprite(
+                VDrawing::addDrawUISprite(
                     drawRect.x,
                     drawRect.y,
                     drawRect.w,
@@ -252,8 +252,8 @@ void submit(const LINE_F2& line) noexcept {
             ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Only alpha blending is supported for PSX renderer lines forwarded to Vulkan!");
 
             if (VRenderer::canSubmitDrawCmds()) {
-                VDrawing::setPipeline(VPipelineType::Lines);
-                VDrawing::addUILine(
+                VDrawing::setDrawPipeline(VPipelineType::Lines);
+                VDrawing::addDrawUILine(
                     drawLine.x1,
                     drawLine.y1,
                     drawLine.x2,

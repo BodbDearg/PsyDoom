@@ -20,6 +20,8 @@ files_to_compile = [
     [ "colored.vert",       "compiled/SPIRV_colored_vert.bin.h",        "vert", "gSPIRV_colored_vert"       ],
     [ "msaa_resolve.frag",  "compiled/SPIRV_msaa_resolve_frag.bin.h",   "frag", "gSPIRV_msaa_resolve_frag"  ],
     [ "msaa_resolve.vert",  "compiled/SPIRV_msaa_resolve_vert.bin.h",   "vert", "gSPIRV_msaa_resolve_vert"  ],
+    [ "occ_plane.frag",     "compiled/SPIRV_occ_plane_frag.bin.h",      "frag", "gSPIRV_occ_plane_frag"     ],
+    [ "occ_plane.vert",     "compiled/SPIRV_occ_plane_vert.bin.h",      "vert", "gSPIRV_occ_plane_vert"     ],
     [ "ui.vert",            "compiled/SPIRV_ui_vert.bin.h",             "vert", "gSPIRV_ui_vert"            ],
     [ "ui_16bpp.frag",      "compiled/SPIRV_ui_16bpp_frag.bin.h",       "frag", "gSPIRV_ui_16bpp_frag"      ],
     [ "ui_4bpp.frag",       "compiled/SPIRV_ui_4bpp_frag.bin.h",        "frag", "gSPIRV_ui_4bpp_frag"       ],

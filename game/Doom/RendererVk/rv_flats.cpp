@@ -86,7 +86,7 @@ static void RV_DrawPlane(
         // Draw the triangle: note that UV coords are just the vertex coords (scaled in the case of U) - no offsetting to worry about here.
         // For ceilings as well reverse the winding order so backface culling works OK.
         if constexpr (IsFloor) {
-            VDrawing::addWorldTriangle(
+            VDrawing::addDrawWorldTriangle(
                 x1, planeH, z1, u1, z1,
                 x2, planeH, z2, u2, z2,
                 triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
@@ -97,7 +97,7 @@ static void RV_DrawPlane(
                 128, 128, 128, 128
             );
         } else {
-            VDrawing::addWorldTriangle(
+            VDrawing::addDrawWorldTriangle(
                 x1, planeH, z1, u1, z1,
                 triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
                 x2, planeH, z2, u2, z2,

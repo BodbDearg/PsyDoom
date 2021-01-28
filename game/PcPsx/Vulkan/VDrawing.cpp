@@ -8,6 +8,7 @@
 #if PSYDOOM_VULKAN_RENDERER
 
 #include "Asserts.h"
+#include "BaseRenderPass.h"
 #include "Buffer.h"
 #include "CmdBufferRecorder.h"
 #include "Defines.h"
@@ -26,48 +27,42 @@
 
 BEGIN_NAMESPACE(VDrawing)
 
-// A descriptor set and descriptor pool used for all drawing operations.
+// A descriptor set and descriptor pool used for all 'draw' subpass operations.
 // Just binds the PSX VRAM texture to it's combined image sampler.
 static vgl::DescriptorPool  gDescriptorPool;
 static vgl::DescriptorSet*  gpDescriptorSet;
 
-static VVertexBufferSet         gVertexBuffers_Draw;    // Vertex buffers: for 'VVertex_Draw' type vertices
-static vgl::CmdBufferRecorder*  gpCurCmdBufRec;         // The command buffer recorder being used for the current frame
-static VPipelineType            gCurPipelineType;       // The current pipeline being used: used to avoid pipeline switches where possible
-static VVertexBufferSet*        gpCurVertexBufferSet;   // The current vertex buffer set in use: determined via the pipeline type
+// Command buffers for recording 'draw occlusion plane' subpass and regular 'draw' subpass commands.
+// One for each ringbuffer slot, so we don't disturb a frame still being processed.
+static vgl::CmdBuffer gCmdBuffers_OccPlanePass[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::CmdBuffer gCmdBuffers_DrawPass[vgl::Defines::RINGBUFFER_SIZE];
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Returns the vertex buffer set required for the specified pipeline type
-//------------------------------------------------------------------------------------------------------------------------------------------
-static VVertexBufferSet* getVertexBufferSetForPipelineType(const VPipelineType pipelineType) noexcept {
-    switch (pipelineType) {
-        // Draw vertices
-        case VPipelineType::Lines:
-        case VPipelineType::UI_4bpp:
-        case VPipelineType::UI_8bpp:
-        case VPipelineType::UI_8bpp_Add:
-        case VPipelineType::UI_16bpp:
-        case VPipelineType::World_Alpha:
-        case VPipelineType::World_Additive:
-        case VPipelineType::World_Subtractive:
-            return &gVertexBuffers_Draw;
+// Command buffer recorders for each subpass or command buffer set
+static vgl::CmdBufferRecorder gCmdBufRec_OccPlanePass(VRenderer::gVkFuncs);
+static vgl::CmdBufferRecorder gCmdBufRec_DrawPass(VRenderer::gVkFuncs);
 
-        // MSAA resolve is handled by the resolver module, and that has it's own vertex buffer
-        case VPipelineType::Msaa_Resolve:
-            return nullptr;
+// Vertex buffers: for the 'occlusion plane draw' subpass (VVertex_OccPlane) and regular 'draw' subpass (VVertex_Draw)
+static VVertexBufferSet gVertexBuffers_OccPlane;
+static VVertexBufferSet gVertexBuffers_Draw;
 
-        default:
-            break;
-    }
-
-    ASSERT_FAIL("Unhandled pipeline type!");
-    return nullptr;
-}
+// The current pipeline being used by the 'draw' subpass; used to help avoid unneccessary pipeline switches
+static VPipelineType gCurDrawPipelineType;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the drawing module and allocates draw vertex buffers etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
+    // Initialize the command buffers used
+    for (vgl::CmdBuffer& buffer : gCmdBuffers_OccPlanePass) {
+        if (!buffer.init(device.getCmdPool(), VK_COMMAND_BUFFER_LEVEL_SECONDARY))
+            FatalErrors::raise("VDrawing: initialize a secondary command buffer used for drawing!");
+    }
+
+    for (vgl::CmdBuffer& buffer : gCmdBuffers_DrawPass) {
+        if (!buffer.init(device.getCmdPool(), VK_COMMAND_BUFFER_LEVEL_SECONDARY))
+            FatalErrors::raise("VDrawing: initialize a secondary command buffer used for drawing!");
+    }
+
     // Create the descriptor pool and descriptor set used for rendering.
     // Only using a single descriptor set which is bound to the PSX VRAM texture.
     {
@@ -80,32 +75,31 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
             FatalErrors::raise("VDrawing: Failed to create a Vulkan descriptor pool!");
 
         // Make the set
-        gpDescriptorSet = gDescriptorPool.allocDescriptorSet(VPipelines::gDescSetLayout_drawing);
+        gpDescriptorSet = gDescriptorPool.allocDescriptorSet(VPipelines::gDescSetLayout_draw);
 
         if (!gpDescriptorSet)
             FatalErrors::raise("VDrawing: Failed to allocate a required Vulkan descriptor set!");
 
         // Bind the PSX VRAM texture and the sampler to it
-        gpDescriptorSet->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_drawing);
+        gpDescriptorSet->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_draw);
     }
 
     // Create the vertex buffer sets
-    gVertexBuffers_Draw.init<VVertex_Draw>(device, 1024 * 25);      // Around 25K vertices should be PLENTY for most scenes (about 1 MiB per buffer, if vertex size is '40' bytes)
+    gVertexBuffers_OccPlane.init<VVertex_OccPlane>(device, 1024 * 16);      // 16K vertices is 256 KiB per buffer (with 16 bytes per vertex)
+    gVertexBuffers_Draw.init<VVertex_Draw>(device, 1024 * 25);              // Around 25K vertices should be PLENTY for most scenes (about 1 MiB per buffer, if vertex size is '40' bytes)
 
-    // Current pipeline and vertex buffer set in use is undefined initially
-    gCurPipelineType = (VPipelineType) -1;
-    gpCurVertexBufferSet = nullptr;
+    // Current draw pipeline in use is undefined initially
+    gCurDrawPipelineType = (VPipelineType) -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shuts down the drawing module and frees up resources
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
-    gpCurVertexBufferSet = nullptr;
-    gCurPipelineType = {};
-    gpCurCmdBufRec = nullptr;
+    gCurDrawPipelineType = {};
     
     gVertexBuffers_Draw.destroy();
+    gVertexBuffers_OccPlane.destroy();
 
     if (gpDescriptorSet) {
         gpDescriptorSet->free(true);
@@ -113,93 +107,129 @@ void shutdown() noexcept {
     }
 
     gDescriptorPool.destroy(true);
+
+    for (vgl::CmdBuffer& buffer : gCmdBuffers_DrawPass) {
+        buffer.destroy(true);
+    }
+
+    for (vgl::CmdBuffer& buffer : gCmdBuffers_OccPlanePass) {
+        buffer.destroy(true);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Performs start of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
-void beginFrame(vgl::LogicalDevice& device, vgl::CmdBufferRecorder& cmdRec) noexcept {
-    // Save the command buffer recorder used
-    gpCurCmdBufRec = &cmdRec;
+void beginFrame(const uint32_t ringbufferIdx, const vgl::BaseRenderPass& renderPass, vgl::Framebuffer& framebuffer) noexcept {
+    // Begin recording the command buffers
+    gCmdBufRec_OccPlanePass.beginSecondaryCmdBuffer(
+        gCmdBuffers_OccPlanePass[ringbufferIdx],
+        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
+        renderPass.getVkRenderPass(),
+        0,
+        framebuffer.getVkFramebuffer()
+    );
 
-    // Setup vertex buffers
-    const uint32_t ringbufferIdx = device.getRingbufferMgr().getBufferIndex();
+    gCmdBufRec_DrawPass.beginSecondaryCmdBuffer(
+        gCmdBuffers_DrawPass[ringbufferIdx],
+        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
+        renderPass.getVkRenderPass(),
+        1,
+        framebuffer.getVkFramebuffer()
+    );
+
+    // Setup the vertex buffers
+    gVertexBuffers_OccPlane.beginFrame(ringbufferIdx);
     gVertexBuffers_Draw.beginFrame(ringbufferIdx);
 
-    // Expect all these to already have the following state
-    ASSERT(gCurPipelineType == (VPipelineType) -1);
-    ASSERT(!gpCurVertexBufferSet);
+    // Expect all this to already have the following state
+    ASSERT(gCurDrawPipelineType == (VPipelineType) -1);
 
     // Get the size of the current draw framebuffer
     const uint32_t fbWidth = VRenderer::getVkRendererFbWidth();
     const uint32_t fbHeight = VRenderer::getVkRendererFbHeight();
 
-    // First draw commands: set viewport and scissors dimensions
-    gpCurCmdBufRec->setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
-    gpCurCmdBufRec->setScissors(0, 0, fbWidth, fbHeight);
+    // First commands in the renderpass are to set the viewport and scissors dimensions.
+    // Add these commands to both subpasses:
+    gCmdBufRec_OccPlanePass.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
+    gCmdBufRec_DrawPass.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
+    gCmdBufRec_OccPlanePass.setScissors(0, 0, fbWidth, fbHeight);
+    gCmdBufRec_DrawPass.setScissors(0, 0, fbWidth, fbHeight);
+
+    // First command in the 'draw' subpass is to set the vertex buffer used
+    gCmdBufRec_DrawPass.bindVertexBuffer(*gVertexBuffers_Draw.pCurBuffer, 0, 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Performs end of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
-void endFrame() noexcept {
-    // Must have started a frame
-    ASSERT(gpCurCmdBufRec);
+void endFrame(const uint32_t ringbufferIdx, vgl::CmdBufferRecorder& primaryCmdRec) noexcept {
+    // Do any required drawing commands for the 'occlusion plane' subpass (if required)
+    if (gVertexBuffers_OccPlane.curOffset > 0) {
+        gCmdBufRec_OccPlanePass.bindPipeline(VPipelines::gPipelines[(uint32_t) VPipelineType::World_OccPlane]);
+        gVertexBuffers_OccPlane.endCurrentDrawBatch(gCmdBufRec_OccPlanePass);
+    }
 
-    // Finish the current draw batch and upload any vertices generated (vertex buffer set 'end frame')
+    // Finish the current 'draw' subpass batch
     endCurrentDrawBatch();
+
+    // Upload any vertices generated by invoking the 'end frame' event
+    gVertexBuffers_OccPlane.endFrame();
     gVertexBuffers_Draw.endFrame();
 
-    // Current pipeline and vertex buffer set are undefined on ending a frame
-    gCurPipelineType = (VPipelineType) -1;
-    gpCurVertexBufferSet = nullptr;
+    // Current draw pipeline is undefined on ending a frame
+    gCurDrawPipelineType = (VPipelineType) -1;
 
-    // Done with this recorder now
-    gpCurCmdBufRec = nullptr;
+    // Done recording commands now
+    gCmdBufRec_OccPlanePass.endCmdBuffer();
+    gCmdBufRec_DrawPass.endCmdBuffer();
+
+    // Submit the command buffers to the primary command buffer
+    primaryCmdRec.exec(gCmdBuffers_OccPlanePass[ringbufferIdx].getVkCommandBuffer());
+    primaryCmdRec.nextSubpass(VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+    primaryCmdRec.exec(gCmdBuffers_DrawPass[ringbufferIdx].getVkCommandBuffer());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Set which pipeline is being used for drawing with lazy early out if there is no change
+// Set which pipeline is being used for the 'draw' subpass with lazy early out if there is no change
 //------------------------------------------------------------------------------------------------------------------------------------------
-void setPipeline(const VPipelineType type) noexcept {
-    ASSERT(gpCurCmdBufRec);
-    ASSERT((uint32_t) type < (uint32_t) VPipelineType::NUM_TYPES);
-
+void setDrawPipeline(const VPipelineType type) noexcept {
     // Only switch pipelines if we need to
-    if (gCurPipelineType == type)
+    ASSERT((uint32_t) type < (uint32_t) VPipelineType::NUM_TYPES);
+    const VPipelineType oldPipelineType = gCurDrawPipelineType;
+
+    if (oldPipelineType == type)
         return;
 
     // Must end the current draw batch before switching
     endCurrentDrawBatch();
 
+    // Note: only need to bind the descriptor set once, can re-use among all draw pipelines
+    const bool bNeedToBindDescriptorSet = (oldPipelineType == (VPipelineType) -1);
+
     // Do the pipeline switch
-    gCurPipelineType = type;
+    gCurDrawPipelineType = type;
     vgl::Pipeline& pipeline = VPipelines::gPipelines[(uint32_t) type];
-    gpCurCmdBufRec->bindPipeline(pipeline);
+    gCmdBufRec_DrawPass.bindPipeline(pipeline);
 
-    // Switch to a new vertex buffer if we have to
-    VVertexBufferSet* pNewVertexBufferSet = getVertexBufferSetForPipelineType(type);
-
-    if (pNewVertexBufferSet != gpCurVertexBufferSet) {
-        gpCurVertexBufferSet = pNewVertexBufferSet;
-
-        if (pNewVertexBufferSet) {
-            ASSERT(pNewVertexBufferSet->pCurBuffer);
-            gpCurCmdBufRec->bindVertexBuffer(*pNewVertexBufferSet->pCurBuffer, 0, 0);
-        }
+    // Bind the 'draw' subpass descriptor set if we need to
+    if (bNeedToBindDescriptorSet) {
+        gCmdBufRec_DrawPass.bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
     }
-
-    // Bind the descriptor set used for all rendering for this pipeline
-    gpCurCmdBufRec->bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Set the model/view/projection transform matrix used
+// Set the model/view/projection transform matrix used for the 'occlusion plane' subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
-void setTransformMatrix(const Matrix4f& matrix) noexcept {
-    // Note: currently the transform matrix is the only uniform and it's only used by vertex shaders
-    ASSERT(gpCurCmdBufRec);
-    gpCurCmdBufRec->pushConstants(VPipelines::gPipelineLayout_drawing, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), matrix.e);
+void setOccPlaneTransformMatrix(const Matrix4f& matrix) noexcept {
+    gCmdBufRec_OccPlanePass.pushConstants(VPipelines::gPipelineLayout_occPlane, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), &matrix);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the model/view/projection transform matrix used for the 'draw' subpass
+//------------------------------------------------------------------------------------------------------------------------------------------
+void setDrawTransformMatrix(const Matrix4f& matrix) noexcept {
+    gCmdBufRec_DrawPass.pushConstants(VPipelines::gPipelineLayout_draw, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), &matrix);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,20 +277,17 @@ Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Ends the current draw batch and issues the command to draw the primitives using the pipeline
+// Ends the current primitive batch for the 'draw' subpass and issues the command to draw the primitives.
+// The primitives are drawn with whatever pipeline is currently bound.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void endCurrentDrawBatch() noexcept {
-    ASSERT(gpCurCmdBufRec);
-    
-    if (gpCurVertexBufferSet) {
-        gpCurVertexBufferSet->endCurrentDrawBatch(*gpCurCmdBufRec);
-    }
+    gVertexBuffers_Draw.endCurrentDrawBatch(gCmdBufRec_DrawPass);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a 2D/UI line to be drawn
+// Add a 2D/UI line to the 'draw' subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addUILine(
+void addDrawUILine(
     const float x1,
     const float y1,
     const float x2,
@@ -270,9 +297,8 @@ void addUILine(
     const uint8_t b,
     const uint8_t a
 ) noexcept {
-    // Ensure we are on the right pipeline and vertex buffer set
-    ASSERT(gCurPipelineType == VPipelineType::Lines);
-    ASSERT(gpCurVertexBufferSet == &gVertexBuffers_Draw);
+    // Ensure we are on the right pipeline
+    ASSERT(gCurDrawPipelineType == VPipelineType::Lines);
 
     // Fill in the vertices, starting first with common parameters
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(2);
@@ -295,9 +321,9 @@ void addUILine(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a UI sprite to be drawn
+// Add a UI sprite to the 'draw' subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addUISprite(
+void addDrawUISprite(
     const float x,
     const float y,
     const float w,
@@ -315,8 +341,8 @@ void addUISprite(
     const uint16_t texWinW,
     const uint16_t texWinH
 ) noexcept {
-    // Ensure we are on a compatible pipeline and have the correct vertex buffer set
-    const VPipelineType pipeline = gCurPipelineType;
+    // Ensure we are on a compatible draw pipeline
+    const VPipelineType pipeline = gCurDrawPipelineType;
 
     ASSERT(
         (pipeline == VPipelineType::UI_4bpp) ||
@@ -324,8 +350,6 @@ void addUISprite(
         (pipeline == VPipelineType::UI_8bpp_Add) ||
         (pipeline == VPipelineType::UI_16bpp)
     );
-
-    ASSERT(gpCurVertexBufferSet == &gVertexBuffers_Draw);
 
     // Figure out the scaling for the 'u' texture coordinate depending on the texture bit rate.
     // Note: UI 8bpp is the most commonly used, so I'm assuming that by default.
@@ -393,14 +417,14 @@ void addUISprite(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a triangle for the game's 3D view/world.
+// Add a triangle for the game's 3D view/world to the 'draw' subpass.
 // 
 // Notes:
 //  (1) The texture format is assumed to be 8 bits per pixel always.
 //  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
 //  (3) The alpha component is only used if alpha blending is being used.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addWorldTriangle(
+void addDrawWorldTriangle(
     const float x1,
     const float y1,
     const float z1,
@@ -431,14 +455,12 @@ void addWorldTriangle(
     const uint8_t stMulB,
     const uint8_t stMulA
 ) noexcept {
-    // Ensure we are on a compatible pipeline and have the correct vertex buffer set
+    // Ensure we are on a compatible pipeline
     ASSERT(
-        (gCurPipelineType == VPipelineType::World_Alpha) ||
-        (gCurPipelineType == VPipelineType::World_Additive) ||
-        (gCurPipelineType == VPipelineType::World_Subtractive)
+        (gCurDrawPipelineType == VPipelineType::World_Alpha) ||
+        (gCurDrawPipelineType == VPipelineType::World_Additive) ||
+        (gCurDrawPipelineType == VPipelineType::World_Subtractive)
     );
-
-    ASSERT(gpCurVertexBufferSet == &gVertexBuffers_Draw);
 
     // Fill in the vertices, starting first with common parameters
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(3);
@@ -470,6 +492,44 @@ void addWorldTriangle(
     pVerts[0].u = u1;   pVerts[0].v = v1;
     pVerts[1].u = u2;   pVerts[1].v = v2;
     pVerts[2].u = u3;   pVerts[2].v = v3;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a quadrilateral to the 'occlusion plane' drawing subpass
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addOccPlaneWorldQuad(
+    const float x1,
+    const float y1,
+    const float z1,
+    const float x2,
+    const float y2,
+    const float z2,
+    const float x3,
+    const float y3,
+    const float z3,
+    const float x4,
+    const float y4,
+    const float z4,
+    const uint16_t planeAngle,
+    const int16_t planeOffset
+) noexcept {
+    // Fill in the vertices, starting first with common parameters
+    VVertex_OccPlane* const pVerts = gVertexBuffers_OccPlane.allocVerts<VVertex_OccPlane>(6);
+
+    for (uint32_t i = 0; i < 6; ++i) {
+        VVertex_OccPlane& vert = pVerts[i];
+        vert.planeAngle = planeAngle;
+        vert.planeOffset = planeOffset;
+    }
+
+    // Fill in all the vertex coords
+    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
+    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
+    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
+
+    pVerts[3].x = x3;   pVerts[3].y = y3;   pVerts[3].z = z3;
+    pVerts[4].x = x4;   pVerts[4].y = y4;   pVerts[4].z = z4;
+    pVerts[5].x = x1;   pVerts[5].y = y1;   pVerts[5].z = z1;
 }
 
 END_NAMESPACE(VDrawing)

@@ -212,9 +212,9 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
     }
 
     // Ensure we are on the correct draw pipeline and submit the triangles
-    VDrawing::setPipeline(drawPipeline);
+    VDrawing::setDrawPipeline(drawPipeline);
 
-    VDrawing::addWorldTriangle(
+    VDrawing::addDrawWorldTriangle(
         p1[0], p1[1], p1[2], ul, vb,
         p3[0], p3[1], p3[2], ur, vt,
         p2[0], p2[1], p2[2], ur, vb,
@@ -225,7 +225,7 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         stMulR, stMulG, stMulB, stMulA
     );
 
-    VDrawing::addWorldTriangle(
+    VDrawing::addDrawWorldTriangle(
         p3[0], p3[1], p3[2], ur, vt,
         p1[0], p1[1], p1[2], ul, vb,
         p4[0], p4[1], p4[2], ul, vt,

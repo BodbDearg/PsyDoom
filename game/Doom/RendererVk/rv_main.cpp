@@ -47,7 +47,7 @@ void RV_DrawSubsector(subsector_t& subsec) noexcept {
     RV_GetSectorColor(*subsec.sector, secR, secG, secB);
 
     // TODO: Remove this - eventually we should be drawing most world geom with a single 'setPipeline' beforehand
-    VDrawing::setPipeline(VPipelineType::World_Alpha);
+    VDrawing::setDrawPipeline(VPipelineType::World_Alpha);
     
     // Draw all segs in the subsector
     const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
@@ -166,8 +166,8 @@ void RV_RenderPlayerView() noexcept {
     // Finish up any UI drawing batches first (so we don't disturb their matrix) then set the projection matrix to use.
     // Also make sure we are on a compatible pipeline to accept the new transform matrix.
     VDrawing::endCurrentDrawBatch();
-    VDrawing::setPipeline(VPipelineType::World_Alpha);
-    VDrawing::setTransformMatrix(gViewProjMatrix);
+    VDrawing::setDrawPipeline(VPipelineType::World_Alpha);
+    VDrawing::setDrawTransformMatrix(gViewProjMatrix);
 
     // Draw the sectors, back to front
     const int32_t numDrawSubsecs = (int32_t) gRVDrawSubsecs.size();

@@ -31,22 +31,22 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanValidationLayerCallback(
 
     // See what type of message we are dealing with:
     if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
-        std::printf("[VULKAN ERROR]: %s\n", pMessage);
+        std::printf("[VULKAN ERROR]: %s\n\n", pMessage);
     }
     else if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) {
-        std::printf("[VULKAN WARNING]: %s\n", pMessage);
+        std::printf("[VULKAN WARNING]: %s\n\n", pMessage);
     }
     else if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) {
-        std::printf("[VULKAN PERFORMANCE WARNING]: %s\n", pMessage);
+        std::printf("[VULKAN PERFORMANCE WARNING]: %s\n\n", pMessage);
     }
     else if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) {
         #if VULKAN_VALIDATION_LAYER_VERBOSE_LOGGING
-            std::printf("[VULKAN INFO]: %s\n", pMessage);
+            std::printf("[VULKAN INFO]: %s\n\n", pMessage);
         #endif
     }
     else if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) {
         #if VULKAN_VALIDATION_LAYER_VERBOSE_LOGGING
-            std::printf("[VULKAN DEBUG]: %s\n", pMessage);
+            std::printf("[VULKAN DEBUG]: %s\n\n", pMessage);
         #endif
     }
 

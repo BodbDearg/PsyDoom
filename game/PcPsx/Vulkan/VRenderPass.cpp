@@ -26,7 +26,7 @@ VRenderPass::~VRenderPass() noexcept {
 bool VRenderPass::init(
     vgl::LogicalDevice& device,
     const VkFormat colorFormat,
-    const VkFormat depthStencilFormat,
+    const VkFormat occPlaneFormat,
     const VkFormat colorMsaaResolveFormat,
     const uint32_t sampleCount
 ) noexcept {
@@ -54,16 +54,17 @@ bool VRenderPass::init(
         colorAttach.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;         // Ready for blitting to the swapchain image
     }
 
-    // Define the depth attachment
-    VkAttachmentDescription& depthAttach = renderPassDef.attachments.emplace_back();
-    depthAttach.format = depthStencilFormat;
-    depthAttach.samples = (VkSampleCountFlagBits) sampleCount;          // Can just cast for the correct conversion
-    depthAttach.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttach.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;             // Only need depth info as the renderpass is executing, don't store to save on bandwidth
-    depthAttach.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;        // Not using stencil buffers
-    depthAttach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;      // Not using stencil buffers
-    depthAttach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttach.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    // Define the occlusion plane attachment which can be sampled during drawing.
+    // This is what PsyDoom uses instead of a standard depth buffer for sprites.
+    VkAttachmentDescription& occPlaneAttach = renderPassDef.attachments.emplace_back();
+    occPlaneAttach.format = occPlaneFormat;
+    occPlaneAttach.samples = (VkSampleCountFlagBits) sampleCount;           // Can just cast for the correct conversion
+    occPlaneAttach.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    occPlaneAttach.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;              // Only need occlusion info as the renderpass is executing, don't store to save on bandwidth
+    occPlaneAttach.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    occPlaneAttach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    occPlaneAttach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    occPlaneAttach.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     // If doing MSAA, define the MSAA color resolve attachment
     if (sampleCount > 1) {
@@ -78,7 +79,16 @@ bool VRenderPass::init(
         resolveAttach.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;     // Ready for blitting to the swapchain image
     }
 
-    // Define the main drawing subpass and it's attachments
+    // Define the 'occlusion plane' subpass for drawing occlusion planes
+    {
+        vgl::SubpassDef& subpassDef = renderPassDef.subpasses.emplace_back();
+
+        VkAttachmentReference& occPlaneAttachRef = subpassDef.colorAttachments.emplace_back();
+        occPlaneAttachRef.attachment = 1;
+        occPlaneAttachRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    }
+
+    // Define the main 'draw' subpass and it's attachments
     {
         vgl::SubpassDef& subpassDef = renderPassDef.subpasses.emplace_back();
 
@@ -86,9 +96,9 @@ bool VRenderPass::init(
         colorAttachRef.attachment = 0;
         colorAttachRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference& depthAttachRef = subpassDef.depthStencilAttachments.emplace_back();
-        depthAttachRef.attachment = 1;
-        depthAttachRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        VkAttachmentReference& occPlaneAttachRef = subpassDef.inputAttachments.emplace_back();
+        occPlaneAttachRef.attachment = 1;
+        occPlaneAttachRef.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
     // If doing MSAA, define the MSAA color resolve subpass and the attachment resolved to as well as the input MSAA color attachment

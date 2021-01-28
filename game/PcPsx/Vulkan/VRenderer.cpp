@@ -48,17 +48,20 @@ static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
     VK_FORMAT_A2B10G10R10_UNORM_PACK32
 };
 
-// What formats we use for 16/32-bit color and depth buffers.
+// What formats we use for 16/32-bit color and the 'occlusion plane' attachment (PsyDoom's depth buffer of sorts).
 // Note that 'VK_FORMAT_A1R5G5B5_UNORM_PACK16' is not required to be supported by Vulkan as a framebuffer attachment, but it's pretty ubiquitous.
 static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
 static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
-static constexpr VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
+static constexpr VkFormat OCC_PLANE_FORMAT = VK_FORMAT_R16G16_SINT;
 
-// TODO: add ways to toggle PSX renderer
-bool gbUsePsxRenderer = false;      // Use the classic PSX renderer? In this case just blit the PSX framebuffer to the screen.
+// Use the classic PSX renderer? If this is enabled then just blit the PSX framebuffer to the screen.
+// TODO: add ways to toggle PSX renderer.
+bool gbUsePsxRenderer = false;
+
+// Cached pointers to all Vulkan API functions
+vgl::VkFuncs gVkFuncs;
 
 static bool                         gbDidBeginFrame;                // Whether a frame was begun
-static vgl::VkFuncs                 gVkFuncs;                       // Cached pointers to all Vulkan API functions
 static vgl::VulkanInstance          gVulkanInstance(gVkFuncs);      // Vulkan API instance object
 static vgl::WindowSurface           gWindowSurface;                 // Window surface to draw on
 static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical device chosen for rendering
@@ -68,10 +71,10 @@ static vgl::Swapchain               gSwapchain;                     // The swapc
 static VRenderPass                  gRenderPass;                    // The single render pass used for drawing for the new native Vulkan renderer
 static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
-// Draw color attachments, depth attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
+// Draw color attachments, occlusion plane attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
 // Note that the framebuffer might contain an additional MSAA resolve attachment (owned by the MSAA resolver) if that feature is active.
 static vgl::RenderTexture    gFbColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
-static vgl::RenderTexture    gFbDepthAttachments[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::RenderTexture    gFbOccPlaneAttachments[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::Framebuffer      gFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
 
 // Semaphores signalled when the acquired swapchain image is ready.
@@ -82,7 +85,7 @@ static vgl::Semaphore gSwapImageReadySemaphores[vgl::Defines::RINGBUFFER_SIZE];
 // One per ringbuffer slot, so we don't disturb a frame that is still being processed.
 static vgl::Semaphore gRenderDoneSemaphores[vgl::Defines::RINGBUFFER_SIZE];
 
-// Command buffers used for drawing operations in each frame.
+// Primary command buffers used for drawing operations in each frame.
 // One for each ringbuffer slot, so we can record a new buffer while a previous frame's buffer is still executing.
 static vgl::CmdBuffer gCmdBuffers[vgl::Defines::RINGBUFFER_SIZE];
 
@@ -106,10 +109,9 @@ static void decideDrawSampleCount() noexcept {
     // Must do at least 1 sample
     const int32_t wantedNumSamples = std::max(Config::gAAMultisamples, 1);
 
-    // Support up to 32x MSAA; note that both the depth and color render targets must support our MSAA mode.
-    // Therefore we only consider MSAA modes that are supported for both depth/stencil and color.
+    // Support up to 32x MSAA, that 'ought to be enough for anybody'....
     const VkPhysicalDeviceLimits& deviceLimits = gpPhysicalDevice->getProps().limits;
-    const VkSampleCountFlags deviceMsaaModes = deviceLimits.framebufferColorSampleCounts & deviceLimits.framebufferDepthSampleCounts;
+    const VkSampleCountFlags deviceMsaaModes = deviceLimits.framebufferColorSampleCounts;
 
     if ((wantedNumSamples >= 32) && (deviceMsaaModes & VK_SAMPLE_COUNT_32_BIT)) {
         gDrawSampleCount = 32;
@@ -133,7 +135,7 @@ static void destroyFramebuffers() noexcept {
     for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
         gFramebuffers[i].destroy(true);
         gFbColorAttachments[i].destroy(true);
-        gFbDepthAttachments[i].destroy(true);
+        gFbOccPlaneAttachments[i].destroy(true);
     }
 
     VMsaaResolver::destroyResolveColorAttachments();
@@ -197,7 +199,7 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
             return false;
         }
 
-        if (!gFbDepthAttachments[i].initAsDepthStencilBuffer(gDevice, DEPTH_FORMAT, 0, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
+        if (!gFbOccPlaneAttachments[i].initAsRenderTexture(gDevice, OCC_PLANE_FORMAT, VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
             destroyFramebuffers();
             return false;
         }
@@ -205,7 +207,7 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
         std::vector<const vgl::BaseTexture*> fbAttachments;
         fbAttachments.reserve(3);
         fbAttachments.push_back(&gFbColorAttachments[i]);
-        fbAttachments.push_back(&gFbDepthAttachments[i]);
+        fbAttachments.push_back(&gFbOccPlaneAttachments[i]);
 
         if (bDoingMsaa) {
             fbAttachments.push_back(&VMsaaResolver::gResolveColorAttachments[i]);
@@ -231,7 +233,6 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
 // Must be called only when there is a valid framebuffer and hence command buffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void beginFrame_Psx() noexcept {
-    ASSERT(gpCurCmdBuffer);
     ASSERT(gSwapchain.getAcquiredImageIdx() < gSwapchain.getLength());
 
     // Transition the PSX framebuffer to general in preparation for writing
@@ -282,8 +283,6 @@ static void beginFrame_Psx() noexcept {
 // Must be called only when there is a valid framebuffer and hence command buffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void endFrame_Psx() noexcept {
-    ASSERT(gpCurCmdBuffer);
-
     // Copy the PlayStation 1 framebuffer to the current framebuffer texture
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
     vgl::MutableTexture& psxFbTexture = gPsxFramebufferTextures[ringbufferIdx];
@@ -356,19 +355,15 @@ static void endFrame_Psx() noexcept {
 // Must be called only when there is a valid framebuffer and hence command buffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void beginFrame_VkRenderer() noexcept {
-    ASSERT(gpCurCmdBuffer);
-
-    // Begin the render pass
+    // Begin the render pass and clear all attachments
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    const vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
-
+    vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
     VkClearValue framebufferClearValues[2] = {};
-    framebufferClearValues[1].depthStencil.depth = MAX_DEPTH;
 
     gCmdBufferRec.beginRenderPass(
         gRenderPass,
         framebuffer,
-        VK_SUBPASS_CONTENTS_INLINE,
+        VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS,
         0,
         0,
         framebuffer.getWidth(),
@@ -378,7 +373,7 @@ static void beginFrame_VkRenderer() noexcept {
     );
 
     // Begin a frame for the drawing module
-    VDrawing::beginFrame(gDevice, gCmdBufferRec);
+    VDrawing::beginFrame(ringbufferIdx, gRenderPass, framebuffer);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -386,12 +381,11 @@ static void beginFrame_VkRenderer() noexcept {
 // Must be called only when there is a valid framebuffer and hence command buffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void endFrame_VkRenderer() noexcept {
-    ASSERT(gpCurCmdBuffer);
-    
-    // Finish up normal drawing
-    VDrawing::endFrame();
+    // Finish up drawing for the 'occlusion plane' and regular 'draw' subpasses
+    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
+    VDrawing::endFrame(ringbufferIdx, gCmdBufferRec);
 
-    // Do MSAA resolve if MSAA is enabled
+    // Do an MSAA resolve subpass if MSAA is enabled
     if (gDrawSampleCount > 1) {
         gCmdBufferRec.nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
         VMsaaResolver::doMsaaResolve(gDevice, gCmdBufferRec);
@@ -401,7 +395,6 @@ static void endFrame_VkRenderer() noexcept {
     gCmdBufferRec.endRenderPass();
     
     // Blit the drawing color attachment (or MSAA resolve target, if MSAA is active) to the swapchain image
-    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
     const vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
 
     const VkImage blitSrcImage = (gDrawSampleCount > 1) ? 
@@ -459,7 +452,7 @@ void init() noexcept {
     decideDrawSampleCount();
 
     // Initialize the draw render pass for the new renderer
-    if (!gRenderPass.init(gDevice, COLOR_16_FORMAT, DEPTH_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
+    if (!gRenderPass.init(gDevice, COLOR_16_FORMAT, OCC_PLANE_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
         FatalErrors::raise("Failed to create the Vulkan draw render pass!");
 
     // Create pipelines
@@ -535,8 +528,6 @@ void destroy() noexcept {
         fbTexture.destroy(true);
     }
 
-    gpCurCmdBuffer = nullptr;
-
     for (vgl::CmdBuffer& cmdBuffer : gCmdBuffers) {
         cmdBuffer.destroy(true);
     }
@@ -582,8 +573,7 @@ bool beginFrame() noexcept {
         return false;
 
     // Begin recording the command buffer for this frame
-    gpCurCmdBuffer = &gCmdBuffers[ringbufferIdx];
-    gCmdBufferRec.beginPrimaryCmdBuffer(*gpCurCmdBuffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+    gCmdBufferRec.beginPrimaryCmdBuffer(gCmdBuffers[ringbufferIdx], VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
     // The first command is to wait for any transfers to finish
     {
@@ -641,7 +631,7 @@ bool beginFrame() noexcept {
 // This will be the case if we have valid framebuffers and successfully started a frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool canSubmitDrawCmds() noexcept {
-    return gpCurCmdBuffer;
+    return gCmdBufferRec.isRecording();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -654,7 +644,7 @@ void endFrame() noexcept {
 
     // Renderer specific finishing up, if we are drawing.
     // May cause transfer tasks to be kicked off.
-    if (gpCurCmdBuffer) {
+    if (gCmdBufferRec.isRecording()) {
         if (gbUsePsxRenderer) {
             endFrame_Psx();
         } else {
@@ -667,7 +657,7 @@ void endFrame() noexcept {
     transferMgr.executePreFrameTransferTask();
 
     // If we do not have a framebuffer (and hence no command buffer) then simply wait until transfers have finished (device idle) and exit
-    if (!gpCurCmdBuffer) {
+    if (!gCmdBufferRec.isRecording()) {
         gDevice.waitUntilDeviceIdle();
         return;
     }
@@ -712,7 +702,7 @@ void endFrame() noexcept {
 
         vgl::Fence& ringbufferSlotFence = ringbufferMgr.getCurrentBufferFence();
         gDevice.submitCmdBuffer(
-            *gpCurCmdBuffer,
+            gCmdBuffers[ringbufferIdx],
             { cmdsWaitCond },
             &gRenderDoneSemaphores[ringbufferIdx],  // Note: signal render done semaphore and the ringbuffer slot fence when finished
             &ringbufferSlotFence
@@ -724,7 +714,6 @@ void endFrame() noexcept {
 
     // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame
     ringbufferMgr.acquireNextBuffer();
-    gpCurCmdBuffer = nullptr;
 
     // TODO: remove temp/hack renderer toggle and implement properly
     if (Input::isKeyboardKeyPressed(SDL_SCANCODE_F9)) {

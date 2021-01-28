@@ -17,6 +17,7 @@ enum class VPipelineType : uint8_t {
     UI_8bpp,            // 2D/UI: texture mapped @ 8bpp, alpha blended
     UI_8bpp_Add,        // 2D/UI: texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
     UI_16bpp,           // 2D/UI: texture mapped @ 16bpp, alpha blended
+    World_OccPlane,     // 3D world/view: draw information for occluding planes which occlude sprites and masked/translucent walls
     World_Alpha,        // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended
     World_Additive,     // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended
     World_Subtractive,  // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended
@@ -75,6 +76,28 @@ struct VVertex_Draw {
     // Used to control blending when semi-transparency is active; a value of '128' is regarded as 1.0.
     // The 'alpha' semi transparency multiply component effectively is the alpha for the vertex.
     uint8_t stmulR, stmulG, stmulB, stmulA;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Vulkan renderer vertex type: used to render occluding planes for walls.
+// These occluding planes are used to mask sprites as well as translucent or masked walls.
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct VVertex_OccPlane {
+    static constexpr uint16_t ANGLE_MASK    = 0x7FFF;   // Mask to extract the actual 15 angle bits
+    static constexpr uint16_t ANGLE_BITS    = 15;       // How many bits to encode the angle with
+    static constexpr uint16_t IS_PLANE_BIT  = 0x8000;   // A bit which is set to mark the texel as containing an occluding plane, packed into the 'angle' field
+
+    // XYZ Position of the vertex
+    float x, y, z;
+
+    // A 15-bit binary angle for the wall plane packed into the low 15-bits.
+    // The highest bit is set if the texel actually contains an occluding plane, so we can handle the case of no visible planes.
+    // Note: this value is really unsigned, but I used signed for shader packing reasons.
+    int16_t planeAngle;
+
+    // The integer offset of the occluding plane from the origin.
+    // Higher than integer precision would probably be ideal, but this saves a lot of memory and is good enough for most cases.
+    int16_t planeOffset;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
