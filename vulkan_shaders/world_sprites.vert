@@ -1,12 +1,12 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// World shader: vertex.
-// The view shader is responsible for drawing stuff in the 3D/world view.
-// Very similar to the UI shaders except it includes a 'scale' value for light diminishing effects.
-// All view textures are also assumed to be 8 bits per pixel.
+// World sprite shader: vertex.
+// This shader is responsible for drawing sprites, with no light diminishing effects applied.
+// It also does occlusion testing against occlusion planes.
+// All textures are also assumed to be 8 bits per pixel.
 //----------------------------------------------------------------------------------------------------------------------
-#include "ShaderCommon.h"
+#include "ShaderCommon_Vert.h"
 
 DECLARE_UNIFORMS()
 DECLARE_VS_INPUTS_VVERTEX_DRAW()
@@ -18,6 +18,7 @@ layout(location = 3) flat out uvec2 out_texWinPos;
 layout(location = 4) flat out uvec2 out_texWinSize;
 layout(location = 5) flat out uvec2 out_clutPos;
 layout(location = 6) flat out vec4 out_stmul;
+layout(location = 7) flat out vec2 out_sortPt;
 
 void main() {
     gl_Position = constants.mvpMatrix * vec4(in_pos, 1);
@@ -30,4 +31,5 @@ void main() {
     out_texWinSize = in_texWinSize;
     out_clutPos = in_clutPos;
     out_stmul = in_stmul / 128.0;
+    out_sortPt = in_sortPt;
 }

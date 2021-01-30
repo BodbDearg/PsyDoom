@@ -1,38 +1,4 @@
 //----------------------------------------------------------------------------------------------------------------------
-// Push constants used by most shaders, presently just a model/view/projection matrix
-//----------------------------------------------------------------------------------------------------------------------
-#define DECLARE_UNIFORMS()\
-    layout(push_constant) uniform Constants {   \
-        mat4    mvpMatrix;                      \
-    } constants;
-
-//----------------------------------------------------------------------------------------------------------------------
-// Declare the vertex inputs for the vertex type 'VVertex_Draw'.
-// Depending on the shaders involved, some of these attributes may be ignored.
-//
-// Meaning:
-//
-//  in_pos              Vertex XYZ position.
-//  in_color            RGB color for the vertex where 128.0 = fully white.
-//                      Values over 128.0 are overbright.
-//  in_lightDimMode     Light diminishing mode (VLightDimMode) for the 3D view shaders only. Ignored by UI shaders.
-//  in_uv               UV texture coordinate (in pixels)
-//  in_texWinPos        Top left XY position (in pixels) of the texture wrapping window
-//  in_texWinSize       Top left XY position (in pixels) of the texture wrapping window
-//  in_clutPos          XY position (in pixels) of the color lookup table for 4/8-bit textures that require it
-//  in_stmul            RGBA multiplier for when the pixel is marked semi-transparent (controls blending)
-//----------------------------------------------------------------------------------------------------------------------
-#define DECLARE_VS_INPUTS_VVERTEX_DRAW()\
-    layout(location = 0) in vec3    in_pos;             \
-    layout(location = 1) in vec3    in_color;           \
-    layout(location = 2) in uint    in_lightDimMode;    \
-    layout(location = 3) in vec2    in_uv;              \
-    layout(location = 4) in uvec2   in_texWinPos;       \
-    layout(location = 5) in uvec2   in_texWinSize;      \
-    layout(location = 6) in uvec2   in_clutPos;         \
-    layout(location = 7) in vec4    in_stmul;
-
-//----------------------------------------------------------------------------------------------------------------------
 // Transforms the given UV coordinate by the texture window and wraps it to the texture window
 //----------------------------------------------------------------------------------------------------------------------
 vec2 transformTexWinUV(vec2 uv, uvec2 texWinPos, uvec2 texWinSize) {
@@ -149,4 +115,64 @@ float getLightDiminishingMultiplier(float z, vec3 lightDimModeStrength) {
 
     // Scale the diminish intensity back to normalized color coords rather than 0-128
     return intensity / 128.0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Do shading for a world/3d-view texel, with or without light diminishing.
+// The light diminishing on/off setting should be a constant, so should hopefully not branch once optimized.
+//----------------------------------------------------------------------------------------------------------------------
+vec4 shadeWorldTexel(
+    bool bDoLightDiminish,
+    usampler2D vramTex,
+    vec3 in_color,
+    vec3 in_uv_z,
+    vec3 in_lightDimModeStrength,
+    uvec2 in_texWinPos,
+    uvec2 in_texWinSize,
+    uvec2 in_clutPos,
+    vec4 in_stmul
+) {
+    // Grab the basic texel
+    vec4 out_color = tex8bpp(vramTex, in_uv_z.xy, in_texWinPos, in_texWinSize, in_clutPos, in_stmul);
+
+    // Compute color multiply after accounting for input color and light diminishing effects.
+    // Add a little bias also to prevent switching back and forth between cases that are close, due to float inprecision...
+    vec3 colorMul = (bDoLightDiminish) ?
+        trunc(in_color * getLightDiminishingMultiplier(in_uv_z.z, in_lightDimModeStrength) + 0.0001) / 128.0 :
+        in_color / 128.0;
+
+    // The PSX renderer doesn't allow the color multiply to go larger than this:
+    colorMul = min(colorMul, 255.0 / 128.0);
+
+    // Apply the color multiply and bit crush the color in a manner similar to the PSX
+    out_color.rgb *= colorMul;
+    out_color = psxR5G5B5BitCrush(out_color);
+    return out_color;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Occlusion tests for sprites and transparent or masked wall geometry.
+// Tests the sort point against the texel read from input occlusion plane attachment.
+// Returns whether fragment should be considered occluded by the plane.
+//----------------------------------------------------------------------------------------------------------------------
+bool isOccludedTexel(isubpassInputMS occPlaneTex, vec2 sortPt) {
+    // Get the cocclusion plane angle and offset
+    ivec2 occPlaneComponents = subpassLoad(occPlaneTex, gl_SampleID).xy;
+    uint planeAngle = uint(occPlaneComponents.x);
+    float planeOffset = float(occPlaneComponents.y);
+
+    // Is it an occlusion plane at this texel?
+    // Clear the 'is plane' flag also once we confirm that this texel does have an occlusion plane.
+    if ((planeAngle & 0x8000) == 0)
+        return false;
+
+    planeAngle &= 0x7FFF;
+
+    // Get the radian angle (0-359.9999 degrees) of the occlusion plane and then the normal vector
+    float planeAngleRad = (float(planeAngle) / 32768.0) * 6.28318530718;
+    vec2 planeNorm = vec2(cos(planeAngleRad), sin(planeAngleRad));
+
+    // Get the distance of the point to the plane and judge whether occluded from that
+    float planeDist = dot(planeNorm, sortPt);
+    return (planeOffset < planeDist);
 }

@@ -27,10 +27,14 @@
 
 BEGIN_NAMESPACE(VDrawing)
 
-// A descriptor set and descriptor pool used for all 'draw' subpass operations.
-// Just binds the PSX VRAM texture to it's combined image sampler.
+// Ringbuffer index for the current frame being generated
+static uint32_t gCurRingbufferIdx;
+
+// Descriptor sets and a descriptor pool used for all 'draw' subpass operations.
+// Binds the PSX VRAM texture to it's combined image sampler in binding 0.
+// Binding 1 is for the occlusion plane texture.
 static vgl::DescriptorPool  gDescriptorPool;
-static vgl::DescriptorSet*  gpDescriptorSet;
+static vgl::DescriptorSet*  gpDescriptorSets[vgl::Defines::RINGBUFFER_SIZE];
 
 // Command buffers for recording 'draw occlusion plane' subpass and regular 'draw' subpass commands.
 // One for each ringbuffer slot, so we don't disturb a frame still being processed.
@@ -66,27 +70,31 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
     // Create the descriptor pool and descriptor set used for rendering.
     // Only using a single descriptor set which is bound to the PSX VRAM texture.
     {
-        // Make the pool
-        VkDescriptorPoolSize poolResourceCount = {};
-        poolResourceCount.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolResourceCount.descriptorCount = 1;
+        // Make the descriptor pool
+        VkDescriptorPoolSize poolResources[2] = {};
+        poolResources[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolResources[0].descriptorCount = vgl::Defines::RINGBUFFER_SIZE;
+        poolResources[1].type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        poolResources[1].descriptorCount = vgl::Defines::RINGBUFFER_SIZE;
 
-        if (!gDescriptorPool.init(device, { poolResourceCount }, 1))
+        if (!gDescriptorPool.init(device, { poolResources[0], poolResources[1] }, vgl::Defines::RINGBUFFER_SIZE))
             FatalErrors::raise("VDrawing: Failed to create a Vulkan descriptor pool!");
 
-        // Make the set
-        gpDescriptorSet = gDescriptorPool.allocDescriptorSet(VPipelines::gDescSetLayout_draw);
+        // Make the descriptor sets and bind the PSX VRAM texture and sampler to slot 0.
+        // Note: this particular binding only needs to be done once at startup!
+        for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
+            gpDescriptorSets[i] = gDescriptorPool.allocDescriptorSet(VPipelines::gDescSetLayout_draw);
 
-        if (!gpDescriptorSet)
-            FatalErrors::raise("VDrawing: Failed to allocate a required Vulkan descriptor set!");
+            if (!gpDescriptorSets[i])
+                FatalErrors::raise("VDrawing: Failed to allocate a required Vulkan descriptor set!");
 
-        // Bind the PSX VRAM texture and the sampler to it
-        gpDescriptorSet->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_draw);
+            gpDescriptorSets[i]->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_draw);
+        }
     }
 
     // Create the vertex buffer sets
     gVertexBuffers_OccPlane.init<VVertex_OccPlane>(device, 1024 * 16);      // 16K vertices is 256 KiB per buffer (with 16 bytes per vertex)
-    gVertexBuffers_Draw.init<VVertex_Draw>(device, 1024 * 25);              // Around 25K vertices should be PLENTY for most scenes (about 1 MiB per buffer, if vertex size is '40' bytes)
+    gVertexBuffers_Draw.init<VVertex_Draw>(device, 1024 * 21);              // Around 21K vertices should be PLENTY for most scenes (about 1 MiB per buffer, if vertex size is '48' bytes)
 
     // Current draw pipeline in use is undefined initially
     gCurDrawPipelineType = (VPipelineType) -1;
@@ -101,9 +109,11 @@ void shutdown() noexcept {
     gVertexBuffers_Draw.destroy();
     gVertexBuffers_OccPlane.destroy();
 
-    if (gpDescriptorSet) {
-        gpDescriptorSet->free(true);
-        gpDescriptorSet = nullptr;
+    for (vgl::DescriptorSet*& pDescriptorSet : gpDescriptorSets) {
+        if (pDescriptorSet) {
+            pDescriptorSet->free(true);
+            pDescriptorSet = nullptr;
+        }
     }
 
     gDescriptorPool.destroy(true);
@@ -120,7 +130,18 @@ void shutdown() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Performs start of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
-void beginFrame(const uint32_t ringbufferIdx, const vgl::BaseRenderPass& renderPass, vgl::Framebuffer& framebuffer) noexcept {
+void beginFrame(
+    const uint32_t ringbufferIdx,
+    const vgl::BaseRenderPass& renderPass,
+    vgl::Framebuffer& framebuffer,
+    vgl::BaseTexture& occPlaneAttachment
+) noexcept {
+    // Remember which ringbuffer slot we are on
+    gCurRingbufferIdx = ringbufferIdx;
+
+    // Bind the occlusion plane attachment to the descriptor set being used for this frame
+    gpDescriptorSets[ringbufferIdx]->bindInputAttachment(1, occPlaneAttachment);
+
     // Begin recording the command buffers
     gCmdBufRec_OccPlanePass.beginSecondaryCmdBuffer(
         gCmdBuffers_OccPlanePass[ringbufferIdx],
@@ -163,9 +184,10 @@ void beginFrame(const uint32_t ringbufferIdx, const vgl::BaseRenderPass& renderP
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Performs end of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
-void endFrame(const uint32_t ringbufferIdx, vgl::CmdBufferRecorder& primaryCmdRec) noexcept {
+void endFrame(vgl::CmdBufferRecorder& primaryCmdRec) noexcept {
     // Do any required drawing commands for the 'occlusion plane' subpass (if required)
     if (gVertexBuffers_OccPlane.curOffset > 0) {
+        gCmdBufRec_OccPlanePass.bindVertexBuffer(*gVertexBuffers_OccPlane.pCurBuffer, 0, 0);
         gCmdBufRec_OccPlanePass.bindPipeline(VPipelines::gPipelines[(uint32_t) VPipelineType::World_OccPlane]);
         gVertexBuffers_OccPlane.endCurrentDrawBatch(gCmdBufRec_OccPlanePass);
     }
@@ -185,9 +207,12 @@ void endFrame(const uint32_t ringbufferIdx, vgl::CmdBufferRecorder& primaryCmdRe
     gCmdBufRec_DrawPass.endCmdBuffer();
 
     // Submit the command buffers to the primary command buffer
-    primaryCmdRec.exec(gCmdBuffers_OccPlanePass[ringbufferIdx].getVkCommandBuffer());
+    primaryCmdRec.exec(gCmdBuffers_OccPlanePass[gCurRingbufferIdx].getVkCommandBuffer());
     primaryCmdRec.nextSubpass(VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-    primaryCmdRec.exec(gCmdBuffers_DrawPass[ringbufferIdx].getVkCommandBuffer());
+    primaryCmdRec.exec(gCmdBuffers_DrawPass[gCurRingbufferIdx].getVkCommandBuffer());
+
+    // No longer on a frame, so default this
+    gCurRingbufferIdx = {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -214,7 +239,7 @@ void setDrawPipeline(const VPipelineType type) noexcept {
 
     // Bind the 'draw' subpass descriptor set if we need to
     if (bNeedToBindDescriptorSet) {
-        gCmdBufRec_DrawPass.bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
+        gCmdBufRec_DrawPass.bindDescriptorSet(*gpDescriptorSets[gCurRingbufferIdx], pipeline, 0, 0, nullptr);
     }
 }
 
@@ -378,11 +403,11 @@ void addDrawUISprite(
 
     for (uint32_t i = 0; i < 6; ++i) {
         VVertex_Draw& vert = pVerts[i];
-        vert.z = {};                // Unused for UI
+        vert.z = {};                // Unused for UI shaders
         vert.r = r;
         vert.g = g;
         vert.b = b;
-        vert.lightDimMode = {};     // Unused for UI
+        vert.lightDimMode = {};     // Unused for UI shaders
         vert.texWinX = texPageX;
         vert.texWinY = texPageY;
         vert.texWinW = texWinW;
@@ -393,9 +418,11 @@ void addDrawUISprite(
         vert.stmulG = 128;
         vert.stmulB = 128;
         vert.stmulA = a;
+        vert.sortPtX = {};          // Unused for UI shaders
+        vert.sortPtZ = {};
     }
 
-    // Fill in verts xy and uv positions
+    // Fill in the xy positions
     pVerts[0].x = x;                pVerts[0].y = y;
     pVerts[1].x = (float)(x + w);   pVerts[1].y = y;
     pVerts[2].x = (float)(x + w);   pVerts[2].y = (float)(y + h);
@@ -418,6 +445,7 @@ void addDrawUISprite(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a triangle for the game's 3D view/world to the 'draw' subpass.
+// This overload is only used for geometry that is not tested against occlusion planes (like floors), hence no sort point is passed in.
 // 
 // Notes:
 //  (1) The texture format is assumed to be 8 bits per pixel always.
@@ -457,9 +485,11 @@ void addDrawWorldTriangle(
 ) noexcept {
     // Ensure we are on a compatible pipeline
     ASSERT(
-        (gCurDrawPipelineType == VPipelineType::World_Alpha) ||
-        (gCurDrawPipelineType == VPipelineType::World_Additive) ||
-        (gCurDrawPipelineType == VPipelineType::World_Subtractive)
+        (gCurDrawPipelineType == VPipelineType::World_SolidGeom) ||
+        (gCurDrawPipelineType == VPipelineType::World_AlphaGeom) ||
+        (gCurDrawPipelineType == VPipelineType::World_AlphaSprite) ||
+        (gCurDrawPipelineType == VPipelineType::World_AdditiveSprite) ||
+        (gCurDrawPipelineType == VPipelineType::World_SubtractiveSprite)
     );
 
     // Fill in the vertices, starting first with common parameters
@@ -481,10 +511,11 @@ void addDrawWorldTriangle(
         vert.stmulB = stMulB;
         vert.stmulA = stMulA;
         vert.lightDimMode = lightDimMode;
+        vert.sortPtX = {};                  // Not supported for this primitive type
+        vert.sortPtZ = {};
     }
 
-    // Fill in verts xy and uv positions.
-    // Note that the u coordinate must be scaled by 50% due to the 8 bits per pixel texture format, as VRAM coords are in terms of 16-bit pixels.
+    // Fill in verts xy and uv positions
     pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
     pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
     pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
@@ -492,6 +523,100 @@ void addDrawWorldTriangle(
     pVerts[0].u = u1;   pVerts[0].v = v1;
     pVerts[1].u = u2;   pVerts[1].v = v2;
     pVerts[2].u = u3;   pVerts[2].v = v3;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a quadrilateral for the game's 3D view/world to the 'draw' subpass.
+// 
+// Notes:
+//  (1) The texture format is assumed to be 8 bits per pixel always.
+//  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
+//  (3) The alpha component is only used if alpha blending is being used.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addDrawWorldQuad(
+    const float x1,
+    const float y1,
+    const float z1,
+    const float u1,
+    const float v1,
+    const float x2,
+    const float y2,
+    const float z2,
+    const float u2,
+    const float v2,
+    const float x3,
+    const float y3,
+    const float z3,
+    const float u3,
+    const float v3,
+    const float x4,
+    const float y4,
+    const float z4,
+    const float u4,
+    const float v4,
+    const float sortPtX,
+    const float sortPtZ,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const uint16_t clutX,
+    const uint16_t clutY,
+    const uint16_t texWinX,
+    const uint16_t texWinY,
+    const uint16_t texWinW,
+    const uint16_t texWinH,
+    const VLightDimMode lightDimMode,
+    const uint8_t stMulR,
+    const uint8_t stMulG,
+    const uint8_t stMulB,
+    const uint8_t stMulA
+) noexcept {
+    // Ensure we are on a compatible pipeline
+    ASSERT(
+        (gCurDrawPipelineType == VPipelineType::World_SolidGeom) ||
+        (gCurDrawPipelineType == VPipelineType::World_AlphaGeom) ||
+        (gCurDrawPipelineType == VPipelineType::World_AlphaSprite) ||
+        (gCurDrawPipelineType == VPipelineType::World_AdditiveSprite) ||
+        (gCurDrawPipelineType == VPipelineType::World_SubtractiveSprite)
+    );
+
+    // Fill in the vertices, starting first with common parameters
+    VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
+
+    for (uint32_t i = 0; i < 6; ++i) {
+        VVertex_Draw& vert = pVerts[i];
+        vert.r = r;
+        vert.g = g;
+        vert.b = b;
+        vert.texWinX = texWinX;
+        vert.texWinY = texWinY;
+        vert.texWinW = texWinW;
+        vert.texWinH = texWinH;
+        vert.clutX = clutX;
+        vert.clutY = clutY;
+        vert.stmulR = stMulR;
+        vert.stmulG = stMulG;
+        vert.stmulB = stMulB;
+        vert.stmulA = stMulA;
+        vert.lightDimMode = lightDimMode;
+        vert.sortPtX = sortPtX;
+        vert.sortPtZ = sortPtZ;
+    }
+
+    // Fill in verts xy and uv positions
+    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
+    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
+    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
+    pVerts[3].x = x3;   pVerts[3].y = y3;   pVerts[3].z = z3;
+    pVerts[4].x = x4;   pVerts[4].y = y4;   pVerts[4].z = z4;
+    pVerts[5].x = x1;   pVerts[5].y = y1;   pVerts[5].z = z1;
+
+    pVerts[0].u = u1;   pVerts[0].v = v1;
+    pVerts[1].u = u2;   pVerts[1].v = v2;
+    pVerts[2].u = u3;   pVerts[2].v = v3;
+    pVerts[3].u = u3;   pVerts[3].v = v3;
+    pVerts[4].u = u4;   pVerts[4].v = v4;
+    pVerts[5].u = u1;   pVerts[5].v = v1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

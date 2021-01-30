@@ -12,17 +12,19 @@
 // Affects the primitive types expected, shaders used, blending mode and so on.
 //------------------------------------------------------------------------------------------------------------------------------------------
 enum class VPipelineType : uint8_t {
-    Lines,              // Solid colored lines, alpha blended: can be in either 2D or 3D (for debug use for example)
-    UI_4bpp,            // 2D/UI: texture mapped @ 4bpp, alpha blended
-    UI_8bpp,            // 2D/UI: texture mapped @ 8bpp, alpha blended
-    UI_8bpp_Add,        // 2D/UI: texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
-    UI_16bpp,           // 2D/UI: texture mapped @ 16bpp, alpha blended
-    World_OccPlane,     // 3D world/view: draw information for occluding planes which occlude sprites and masked/translucent walls
-    World_Alpha,        // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended
-    World_Additive,     // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended
-    World_Subtractive,  // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended
-    Msaa_Resolve,       // Simple shader that resolves MSAA samples
-    NUM_TYPES           // Convenience declaration...
+    Lines,                      // Solid colored lines, alpha blended: can be in either 2D or 3D (for debug use for example)
+    UI_4bpp,                    // 2D/UI: texture mapped @ 4bpp, alpha blended
+    UI_8bpp,                    // 2D/UI: texture mapped @ 8bpp, alpha blended
+    UI_8bpp_Add,                // 2D/UI: texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
+    UI_16bpp,                   // 2D/UI: texture mapped @ 16bpp, alpha blended
+    World_OccPlane,             // 3D world/view: draw information for occluding planes which occlude sprites and masked/translucent walls
+    World_SolidGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, no blending - for fully solid/opaque geometry.
+    World_AlphaGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for masked and translucent walls.
+    World_AlphaSprite,          // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for sprites.
+    World_AdditiveSprite,       // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended - for sprites.
+    World_SubtractiveSprite,    // 3D world/view: Texture mapped @ 8bpp, light diminishing, subtractive blended - for sprites.
+    Msaa_Resolve,               // Simple shader that resolves MSAA samples
+    NUM_TYPES                   // Convenience declaration...
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -52,7 +54,7 @@ static_assert(sizeof(VShaderUniforms) <= 128);
 struct VVertex_Draw {
     // XYZ Position of the vertex
     float x, y, z;
-    
+
     // Color for the vertex: rgb where '128' is regarded as 1.0
     uint8_t r, g, b;
 
@@ -65,17 +67,21 @@ struct VVertex_Draw {
     
     // Texture wrapping window: x and y position
     uint16_t texWinX, texWinY;
-    
+
     // Texture wrapping window: width and height
     uint16_t texWinW, texWinH;
-    
+
     // CLUT location for 4-bit and 8-bit color modes: x and y
     uint16_t clutX, clutY;
-    
+
     // When a pixel is flagged as 'semi-transparent', the RGBA color to multiply that pixel by.
     // Used to control blending when semi-transparency is active; a value of '128' is regarded as 1.0.
     // The 'alpha' semi transparency multiply component effectively is the alpha for the vertex.
     uint8_t stmulR, stmulG, stmulB, stmulA;
+
+    // Used for sprite and masked/translucent wall rendering only.
+    // Specifies the sort point or center point at which the thing is sorted with respect to occluders (i.e walls).
+    float sortPtX, sortPtZ;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

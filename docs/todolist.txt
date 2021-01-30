@@ -21,14 +21,21 @@
 - Vk renderer: get loading plaque draw working
 - Vk renderer: implement proper scaling and widescreen support
 - Vk renderer: add option for 32-bit (smooth) shading
-- VK renderer: submit quads at once for certain geom to speed things up
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
+- Add a level end timer for speedrunning?
+- Add fast-load (skip waiting for sound to stop playing) for speedrunning?
+- Investigate game end pause issue (unable to unpause)
+    - May need to prioritize continue vs pause if conflicting key bindings
 - Fix bug when pausing and turning with view snapping back slightly.
+- Investigate default key bindings - Q & E for example.
+    - Maybe remove a few, might be be more confusing to have too many bindings.
 - Investigate Final Doom music pitch issue mentioned on Doomworld.
 - Investigate TCache overflow mentioned on Doomworld.
+- Investigate enemy sounds not playing sometimes. Deeper issue with WESS api or attenuation bug?
+- Use interpolation for map view.
 
 0.8 - Limit extending and modding?
 - Investigate a MAPINFO format for naming maps, choosing music etc.

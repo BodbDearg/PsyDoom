@@ -16,18 +16,22 @@ import sys
 # Job-specs for all the files to compile.
 # Corresponds to the 3 arguments of 'compile_shader'
 files_to_compile = [
-    [ "colored.frag",       "compiled/SPIRV_colored_frag.bin.h",        "frag", "gSPIRV_colored_frag"       ],
-    [ "colored.vert",       "compiled/SPIRV_colored_vert.bin.h",        "vert", "gSPIRV_colored_vert"       ],
-    [ "msaa_resolve.frag",  "compiled/SPIRV_msaa_resolve_frag.bin.h",   "frag", "gSPIRV_msaa_resolve_frag"  ],
-    [ "msaa_resolve.vert",  "compiled/SPIRV_msaa_resolve_vert.bin.h",   "vert", "gSPIRV_msaa_resolve_vert"  ],
-    [ "occ_plane.frag",     "compiled/SPIRV_occ_plane_frag.bin.h",      "frag", "gSPIRV_occ_plane_frag"     ],
-    [ "occ_plane.vert",     "compiled/SPIRV_occ_plane_vert.bin.h",      "vert", "gSPIRV_occ_plane_vert"     ],
-    [ "ui.vert",            "compiled/SPIRV_ui_vert.bin.h",             "vert", "gSPIRV_ui_vert"            ],
-    [ "ui_16bpp.frag",      "compiled/SPIRV_ui_16bpp_frag.bin.h",       "frag", "gSPIRV_ui_16bpp_frag"      ],
-    [ "ui_4bpp.frag",       "compiled/SPIRV_ui_4bpp_frag.bin.h",        "frag", "gSPIRV_ui_4bpp_frag"       ],
-    [ "ui_8bpp.frag",       "compiled/SPIRV_ui_8bpp_frag.bin.h",        "frag", "gSPIRV_ui_8bpp_frag"       ],
-    [ "world.frag",         "compiled/SPIRV_world_frag.bin.h",          "frag", "gSPIRV_world_frag"         ],
-    [ "world.vert",         "compiled/SPIRV_world_vert.bin.h",          "vert", "gSPIRV_world_vert"         ],
+    [ "colored.frag",           "compiled/SPIRV_colored_frag.bin.h",            "frag", "gSPIRV_colored_frag"           ],
+    [ "colored.vert",           "compiled/SPIRV_colored_vert.bin.h",            "vert", "gSPIRV_colored_vert"           ],
+    [ "msaa_resolve.frag",      "compiled/SPIRV_msaa_resolve_frag.bin.h",       "frag", "gSPIRV_msaa_resolve_frag"      ],
+    [ "msaa_resolve.vert",      "compiled/SPIRV_msaa_resolve_vert.bin.h",       "vert", "gSPIRV_msaa_resolve_vert"      ],
+    [ "occ_plane.frag",         "compiled/SPIRV_occ_plane_frag.bin.h",          "frag", "gSPIRV_occ_plane_frag"         ],
+    [ "occ_plane.vert",         "compiled/SPIRV_occ_plane_vert.bin.h",          "vert", "gSPIRV_occ_plane_vert"         ],
+    [ "ui.vert",                "compiled/SPIRV_ui_vert.bin.h",                 "vert", "gSPIRV_ui_vert"                ],
+    [ "ui_16bpp.frag",          "compiled/SPIRV_ui_16bpp_frag.bin.h",           "frag", "gSPIRV_ui_16bpp_frag"          ],
+    [ "ui_4bpp.frag",           "compiled/SPIRV_ui_4bpp_frag.bin.h",            "frag", "gSPIRV_ui_4bpp_frag"           ],
+    [ "ui_8bpp.frag",           "compiled/SPIRV_ui_8bpp_frag.bin.h",            "frag", "gSPIRV_ui_8bpp_frag"           ],
+    [ "world_alpha_geom.frag",  "compiled/SPIRV_world_alpha_geom_frag.bin.h",   "frag", "gSPIRV_world_alpha_geom_frag"  ],
+    [ "world_alpha_geom.vert",  "compiled/SPIRV_world_alpha_geom_vert.bin.h",   "vert", "gSPIRV_world_alpha_geom_vert"  ],
+    [ "world_solid_geom.frag",  "compiled/SPIRV_world_solid_geom_frag.bin.h",   "frag", "gSPIRV_world_solid_geom_frag"  ],
+    [ "world_solid_geom.vert",  "compiled/SPIRV_world_solid_geom_vert.bin.h",   "vert", "gSPIRV_world_solid_geom_vert"  ],
+    [ "world_sprites.frag",     "compiled/SPIRV_world_sprites_frag.bin.h",      "frag", "gSPIRV_world_sprites_frag"     ],
+    [ "world_sprites.vert",     "compiled/SPIRV_world_sprites_vert.bin.h",      "vert", "gSPIRV_world_sprites_vert"     ],
 ]
 
 # Compiles the input GLSL file to an output file with the specified name.

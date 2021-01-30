@@ -4,7 +4,7 @@
 // Fragment shader for rendering UI sprites (16bpp).
 // Does texture mapping (@16bpp), coloring and adjustments for blending.
 //----------------------------------------------------------------------------------------------------------------------
-#include "ShaderCommon.h"
+#include "ShaderCommon_Frag.h"
 
 layout(set = 0, binding = 0) uniform usampler2D vramTex;
 

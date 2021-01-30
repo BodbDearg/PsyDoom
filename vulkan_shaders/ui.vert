@@ -4,7 +4,7 @@
 // Vertex shader used in conjunction with all UI fragment shaders.
 // Used for rendering UI sprites and other 2D elements.
 //----------------------------------------------------------------------------------------------------------------------
-#include "ShaderCommon.h"
+#include "ShaderCommon_Vert.h"
 
 DECLARE_UNIFORMS()
 DECLARE_VS_INPUTS_VVERTEX_DRAW()

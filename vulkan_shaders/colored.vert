@@ -4,7 +4,7 @@
 // Simple vertex shader that transforms input vertices by a model view projection matrix.
 // The vertices are then output with the same input color that they receive on input.
 //----------------------------------------------------------------------------------------------------------------------
-#include "ShaderCommon.h"
+#include "ShaderCommon_Vert.h"
 
 DECLARE_UNIFORMS()
 DECLARE_VS_INPUTS_VVERTEX_DRAW()

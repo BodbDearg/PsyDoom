@@ -5,7 +5,7 @@
 // The occlusion plane shader simply encodes occlusion plane info for walls into an output render target.
 // These occlusion planes are used to decide when pixels from sprites and masked walls are occluded.
 //----------------------------------------------------------------------------------------------------------------------
-#include "ShaderCommon.h"
+#include "ShaderCommon_Vert.h"
 
 DECLARE_UNIFORMS()
 
@@ -17,6 +17,6 @@ layout(location = 0) flat out ivec2 out_planeInfo;
 
 void main() {
     gl_Position = constants.mvpMatrix * vec4(in_pos, 1);
-    out_planeInfo.r = in_planeAngle;
-    out_planeInfo.g = in_planeOffset;
+    out_planeInfo.x = in_planeAngle;
+    out_planeInfo.y = in_planeOffset;
 }

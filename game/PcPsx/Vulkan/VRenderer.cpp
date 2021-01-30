@@ -373,7 +373,7 @@ static void beginFrame_VkRenderer() noexcept {
     );
 
     // Begin a frame for the drawing module
-    VDrawing::beginFrame(ringbufferIdx, gRenderPass, framebuffer);
+    VDrawing::beginFrame(ringbufferIdx, gRenderPass, framebuffer, gFbOccPlaneAttachments[ringbufferIdx]);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -382,8 +382,7 @@ static void beginFrame_VkRenderer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void endFrame_VkRenderer() noexcept {
     // Finish up drawing for the 'occlusion plane' and regular 'draw' subpasses
-    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    VDrawing::endFrame(ringbufferIdx, gCmdBufferRec);
+    VDrawing::endFrame(gCmdBufferRec);
 
     // Do an MSAA resolve subpass if MSAA is enabled
     if (gDrawSampleCount > 1) {
@@ -395,6 +394,7 @@ static void endFrame_VkRenderer() noexcept {
     gCmdBufferRec.endRenderPass();
     
     // Blit the drawing color attachment (or MSAA resolve target, if MSAA is active) to the swapchain image
+    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
     const vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
 
     const VkImage blitSrcImage = (gDrawSampleCount > 1) ? 
