@@ -19,10 +19,10 @@ BEGIN_NAMESPACE(VPipelines)
 // The raw SPIRV binary code for the shaders
 #include "SPIRV_colored_frag.bin.h"
 #include "SPIRV_colored_vert.bin.h"
+#include "SPIRV_depth_frag.bin.h"
+#include "SPIRV_depth_vert.bin.h"
 #include "SPIRV_msaa_resolve_frag.bin.h"
 #include "SPIRV_msaa_resolve_vert.bin.h"
-#include "SPIRV_occ_plane_frag.bin.h"
-#include "SPIRV_occ_plane_vert.bin.h"
 #include "SPIRV_ui_16bpp_frag.bin.h"
 #include "SPIRV_ui_4bpp_frag.bin.h"
 #include "SPIRV_ui_8bpp_frag.bin.h"
@@ -36,7 +36,7 @@ BEGIN_NAMESPACE(VPipelines)
 
 // Vertex binding descriptions
 const VkVertexInputBindingDescription gVertexBindingDesc_draw           = { 0, sizeof(VVertex_Draw), VK_VERTEX_INPUT_RATE_VERTEX };
-const VkVertexInputBindingDescription gVertexBindingDesc_occPlane       = { 0, sizeof(VVertex_OccPlane), VK_VERTEX_INPUT_RATE_VERTEX };
+const VkVertexInputBindingDescription gVertexBindingDesc_depth          = { 0, sizeof(VVertex_Depth), VK_VERTEX_INPUT_RATE_VERTEX };
 const VkVertexInputBindingDescription gVertexBindingDesc_msaaResolve    = { 0, sizeof(VVertex_MsaaResolve), VK_VERTEX_INPUT_RATE_VERTEX };
 
 // Vertex attribute descriptions
@@ -51,8 +51,8 @@ const VkVertexInputAttributeDescription gVertexAttribs_draw[] = {
     { 7, 0, VK_FORMAT_R8G8B8A8_USCALED, offsetof(VVertex_Draw, stmulR) },
 };
 
-const VkVertexInputAttributeDescription gVertexAttribs_occPlane[] = {
-    { 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VVertex_OccPlane, x) },
+const VkVertexInputAttributeDescription gVertexAttribs_depth[] = {
+    { 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VVertex_Depth, x) },
 };
 
 const VkVertexInputAttributeDescription gVertexAttribs_msaaResolve[] = {
@@ -66,8 +66,8 @@ static vgl::ShaderModule    gShader_ui_16bpp_frag;
 static vgl::ShaderModule    gShader_ui_4bpp_frag;
 static vgl::ShaderModule    gShader_ui_8bpp_frag;
 static vgl::ShaderModule    gShader_ui_vert;
-static vgl::ShaderModule    gShader_occ_plane_frag;
-static vgl::ShaderModule    gShader_occ_plane_vert;
+static vgl::ShaderModule    gShader_depth_frag;
+static vgl::ShaderModule    gShader_depth_vert;
 static vgl::ShaderModule    gShader_world_solid_geom_frag;
 static vgl::ShaderModule    gShader_world_solid_geom_vert;
 static vgl::ShaderModule    gShader_world_alpha_geom_frag;
@@ -82,7 +82,7 @@ vgl::ShaderModule* const gShaders_colored[]             = { &gShader_colored_ver
 vgl::ShaderModule* const gShaders_ui_4bpp[]             = { &gShader_ui_vert, &gShader_ui_4bpp_frag };
 vgl::ShaderModule* const gShaders_ui_8bpp[]             = { &gShader_ui_vert, &gShader_ui_8bpp_frag };
 vgl::ShaderModule* const gShaders_ui_16bpp[]            = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
-vgl::ShaderModule* const gShaders_occ_plane[]           = { &gShader_occ_plane_vert, &gShader_occ_plane_frag };
+vgl::ShaderModule* const gShaders_depth[]               = { &gShader_depth_vert, &gShader_depth_frag };
 vgl::ShaderModule* const gShaders_world_solid_geom[]    = { &gShader_world_solid_geom_vert, &gShader_world_solid_geom_frag };
 vgl::ShaderModule* const gShaders_world_alpha_geom[]    = { &gShader_world_alpha_geom_vert, &gShader_world_alpha_geom_frag };
 vgl::ShaderModule* const gShaders_world_sprites[]       = { &gShader_world_sprites_vert, &gShader_world_sprites_frag };
@@ -97,7 +97,7 @@ vgl::DescriptorSetLayout gDescSetLayout_draw;           // Used by all the norma
 vgl::DescriptorSetLayout gDescSetLayout_msaaResolve;    // Used for MSAA resolve
 
 // Pipeline layouts
-vgl::PipelineLayout gPipelineLayout_occPlane;       // For rendering occluder planes
+vgl::PipelineLayout gPipelineLayout_depth;          // For rendering depth/occluders
 vgl::PipelineLayout gPipelineLayout_draw;           // Used by all the normal drawing pipelines
 vgl::PipelineLayout gPipelineLayout_msaaResolve;    // Used for MSAA resolve
 
@@ -126,7 +126,9 @@ vgl::PipelineColorBlendState gBlendState_additive;
 vgl::PipelineColorBlendState gBlendState_subtractive;
 
 // Pipeline depth/stencil states
-vgl::PipelineDepthStencilState gDepthState_disabled;    // No depth/stencil buffer: Depth write, test and all stencil operations disabled
+vgl::PipelineDepthStencilState gDepthState_disabled;        // No depth/stencil buffer: Depth write, test and all stencil operations disabled
+vgl::PipelineDepthStencilState gDepthState_writeAndTest;    // Write to the depth buffer and do a depth test
+vgl::PipelineDepthStencilState gDepthState_test;            // Do a depth test only (no write)
 
 // The pipelines themselves
 vgl::Pipeline gPipelines[(size_t) VPipelineType::NUM_TYPES];
@@ -156,8 +158,8 @@ static void initShaders(vgl::LogicalDevice& device) noexcept {
     initShader(device, gShader_ui_4bpp_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_4bpp_frag, sizeof(gSPIRV_ui_4bpp_frag), "ui_4bpp_frag");
     initShader(device, gShader_ui_8bpp_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_8bpp_frag, sizeof(gSPIRV_ui_8bpp_frag), "ui_8bpp_frag");
     initShader(device, gShader_ui_16bpp_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_16bpp_frag, sizeof(gSPIRV_ui_16bpp_frag), "ui_16bpp_frag");
-    initShader(device, gShader_occ_plane_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_occ_plane_vert, sizeof(gSPIRV_occ_plane_vert), "occ_plane_vert");
-    initShader(device, gShader_occ_plane_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_occ_plane_frag, sizeof(gSPIRV_occ_plane_frag), "occ_plane_frag");
+    initShader(device, gShader_depth_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_depth_vert, sizeof(gSPIRV_depth_vert), "depth_vert");
+    initShader(device, gShader_depth_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_depth_frag, sizeof(gSPIRV_depth_frag), "depth_frag");
     initShader(device, gShader_world_solid_geom_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_world_solid_geom_vert, sizeof(gSPIRV_world_solid_geom_vert), "world_solid_geom_vert");
     initShader(device, gShader_world_solid_geom_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_solid_geom_frag, sizeof(gSPIRV_world_solid_geom_frag), "world_solid_geom_frag");
     initShader(device, gShader_world_alpha_geom_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_world_alpha_geom_vert, sizeof(gSPIRV_world_alpha_geom_vert), "world_alpha_geom_vert");
@@ -198,17 +200,12 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
     {
         const VkSampler vkSampler = gSampler_draw.getVkSampler();
 
-        VkDescriptorSetLayoutBinding bindings[2] = {};
+        VkDescriptorSetLayoutBinding bindings[1] = {};
         bindings[0].binding = 0;
         bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         bindings[0].descriptorCount = 1;
         bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;      // Only reading the texture in fragment shaders
         bindings[0].pImmutableSamplers = &vkSampler;
-
-        bindings[1].binding = 1;
-        bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-        bindings[1].descriptorCount = 1;
-        bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;      // Only reading the texture in fragment shaders
         
         if (!gDescSetLayout_draw.init(device, bindings, C_ARRAY_SIZE(bindings)))
             FatalErrors::raise("Failed to init a Vulkan descriptor set layout!");
@@ -216,13 +213,13 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
 
     // MSAA resolve
     {
-        VkDescriptorSetLayoutBinding samplerBinding = {};
-        samplerBinding.binding = 0;
-        samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-        samplerBinding.descriptorCount = 1;
-        samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;    // This descriptor type can only be used in fragment shaders
-
-        if (!gDescSetLayout_msaaResolve.init(device, &samplerBinding, 1))
+        VkDescriptorSetLayoutBinding bindings[1] = {};
+        bindings[0].binding = 0;
+        bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        bindings[0].descriptorCount = 1;
+        bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;      // This descriptor type can only be used in fragment shaders
+        
+        if (!gDescSetLayout_msaaResolve.init(device, bindings, C_ARRAY_SIZE(bindings)))
             FatalErrors::raise("Failed to init a Vulkan descriptor set layout!");
     }
 }
@@ -232,7 +229,7 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
 // Requires descriptor set layouts to have been created first.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initPipelineLayouts(vgl::LogicalDevice& device) noexcept {
-    // Occlusion plane drawing pipeline layout: use push constants to set the MVP matrix and an empty descriptor set layout
+    // Depth rendering pipeline layout: use push constants to set the MVP matrix and an empty descriptor set layout
     {
         VkDescriptorSetLayout vkDescSetLayout = gDescSetLayout_empty.getVkLayout();
 
@@ -241,8 +238,8 @@ static void initPipelineLayouts(vgl::LogicalDevice& device) noexcept {
         uniformPushConstants.offset = 0;
         uniformPushConstants.size = sizeof(VShaderUniforms);
 
-        if (!gPipelineLayout_occPlane.init(device, &vkDescSetLayout, 1, &uniformPushConstants, 1))
-            FatalErrors::raise("Failed to init the 'occPlane' Vulkan pipeline layout!");
+        if (!gPipelineLayout_depth.init(device, &vkDescSetLayout, 1, &uniformPushConstants, 1))
+            FatalErrors::raise("Failed to init the 'depth' Vulkan pipeline layout!");
     }
 
     // Regular drawing pipeline layout: uses push constants to set the MVP matrix.
@@ -378,6 +375,15 @@ static void initPipelineColorBlendStates() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initPipelineDepthStencilStates() noexcept {
     gDepthState_disabled = vgl::PipelineDepthStencilState().setToDefault();
+
+    gDepthState_writeAndTest = vgl::PipelineDepthStencilState().setToDefault();
+    gDepthState_writeAndTest.bDepthTestEnable = true;
+    gDepthState_writeAndTest.bDepthWriteEnable = true;
+    gDepthState_writeAndTest.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+    gDepthState_test = vgl::PipelineDepthStencilState().setToDefault();
+    gDepthState_test.bDepthTestEnable = true;
+    gDepthState_test.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -474,18 +480,18 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initDrawPipeline(VPipelineType::UI_8bpp_Add, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
     initDrawPipeline(VPipelineType::UI_16bpp, renderPass, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_SolidGeom, renderPass, gShaders_world_solid_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_AlphaGeom, renderPass, gShaders_world_alpha_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_AlphaSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_AdditiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_SubtractiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_AlphaGeom, renderPass, gShaders_world_alpha_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_test);
+    initDrawPipeline(VPipelineType::World_AlphaSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_test);
+    initDrawPipeline(VPipelineType::World_AdditiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_test);
+    initDrawPipeline(VPipelineType::World_SubtractiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_test);
 
-    // Create the pipeline to draw occluder planes
+    // Create the pipeline to render depth/occluders
     initPipeline(
-        VPipelineType::World_OccPlane, renderPass, 0,
-        gShaders_occ_plane, nullptr, gPipelineLayout_occPlane,
-        gVertexBindingDesc_occPlane, gVertexAttribs_occPlane, C_ARRAY_SIZE(gVertexAttribs_occPlane),
+        VPipelineType::World_Depth, renderPass, 0,
+        gShaders_depth, nullptr, gPipelineLayout_depth,
+        gVertexBindingDesc_depth, gVertexAttribs_depth, C_ARRAY_SIZE(gVertexAttribs_depth),
         gInputAS_triList, gRasterState_noCull,
-        gBlendState_noBlend, gDepthState_disabled, gMultisampleState_perSettings
+        gBlendState_noBlend, gDepthState_writeAndTest, gMultisampleState_perSettings
     );
 
     // The pipeline to resolve MSAA: only bother creating this if we are doing MSAA.
@@ -521,7 +527,7 @@ void shutdown() noexcept {
 
     gPipelineLayout_msaaResolve.destroy(true);
     gPipelineLayout_draw.destroy(true);
-    gPipelineLayout_occPlane.destroy(true);
+    gPipelineLayout_depth.destroy(true);
 
     gDescSetLayout_msaaResolve.destroy(true);
     gDescSetLayout_draw.destroy(true);
@@ -537,8 +543,8 @@ void shutdown() noexcept {
     gShader_world_alpha_geom_vert.destroy(true);
     gShader_world_solid_geom_frag.destroy(true);
     gShader_world_solid_geom_vert.destroy(true);
-    gShader_occ_plane_frag.destroy(true);
-    gShader_occ_plane_vert.destroy(true);
+    gShader_depth_frag.destroy(true);
+    gShader_depth_vert.destroy(true);
     gShader_ui_16bpp_frag.destroy(true);
     gShader_ui_8bpp_frag.destroy(true);
     gShader_ui_4bpp_frag.destroy(true);

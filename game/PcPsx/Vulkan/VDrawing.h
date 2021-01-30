@@ -32,13 +32,12 @@ void shutdown() noexcept;
 void beginFrame(
     const uint32_t ringbufferIdx,
     const vgl::BaseRenderPass& renderPass,
-    vgl::Framebuffer& framebuffer,
-    vgl::BaseTexture& occPlaneAttachment
+    vgl::Framebuffer& framebuffer
 ) noexcept;
 
 void endFrame(vgl::CmdBufferRecorder& primaryCmdRec) noexcept;
 void setDrawPipeline(const VPipelineType type) noexcept;
-void setOccPlaneTransformMatrix(const Matrix4f& matrix) noexcept;
+void setDepthTransformMatrix(const Matrix4f& matrix) noexcept;
 void setDrawTransformMatrix(const Matrix4f& matrix) noexcept;
 Matrix4f computeTransformMatrixForUI() noexcept;
 Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const float viewZ, const float viewAngle) noexcept;
@@ -143,7 +142,7 @@ void addDrawWorldQuad(
     const uint8_t stMulA
 ) noexcept;
 
-void addOccPlaneWorldQuad(
+void addDepthWorldQuad(
     const float x1,
     const float y1,
     const float z1,

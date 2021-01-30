@@ -48,11 +48,11 @@ static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
     VK_FORMAT_A2B10G10R10_UNORM_PACK32
 };
 
-// What formats we use for 16/32-bit color and the 'occluder plane' attachment (PsyDoom's linear depth buffer).
+// What formats we use for 16/32-bit color and the depth buffer.
 // Note that 'VK_FORMAT_A1R5G5B5_UNORM_PACK16' is not required to be supported by Vulkan as a framebuffer attachment, but it's pretty ubiquitous.
 static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
 static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
-static constexpr VkFormat OCC_PLANE_FORMAT = VK_FORMAT_R32_SFLOAT;
+static constexpr VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
 
 // Use the classic PSX renderer? If this is enabled then just blit the PSX framebuffer to the screen.
 // TODO: add ways to toggle PSX renderer.
@@ -71,10 +71,10 @@ static vgl::Swapchain               gSwapchain;                     // The swapc
 static VRenderPass                  gRenderPass;                    // The single render pass used for drawing for the new native Vulkan renderer
 static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
-// Draw color attachments, occluder plane attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
+// Draw color attachments, depth attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
 // Note that the framebuffer might contain an additional MSAA resolve attachment (owned by the MSAA resolver) if that feature is active.
 static vgl::RenderTexture    gFbColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
-static vgl::RenderTexture    gFbOccPlaneAttachments[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::RenderTexture    gFbDepthAttachments[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::Framebuffer      gFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
 
 // Semaphores signalled when the acquired swapchain image is ready.
@@ -109,11 +109,13 @@ static void decideDrawSampleCount() noexcept {
     // Must do at least 1 sample
     const int32_t wantedNumSamples = std::max(Config::gAAMultisamples, 1);
 
-    // Support up to 32x MSAA, that 'ought to be enough for anybody'....
+    // Vulkan specifies up to 64x MSAA currently...
     const VkPhysicalDeviceLimits& deviceLimits = gpPhysicalDevice->getProps().limits;
-    const VkSampleCountFlags deviceMsaaModes = deviceLimits.framebufferColorSampleCounts;
+    const VkSampleCountFlags deviceMsaaModes = (deviceLimits.framebufferColorSampleCounts & deviceLimits.framebufferDepthSampleCounts);
 
-    if ((wantedNumSamples >= 32) && (deviceMsaaModes & VK_SAMPLE_COUNT_32_BIT)) {
+    if ((wantedNumSamples >= 64) && (deviceMsaaModes & VK_SAMPLE_COUNT_64_BIT)) {
+        gDrawSampleCount = 64;
+    } else if ((wantedNumSamples >= 32) && (deviceMsaaModes & VK_SAMPLE_COUNT_32_BIT)) {
         gDrawSampleCount = 32;
     } else if ((wantedNumSamples >= 16) && (deviceMsaaModes & VK_SAMPLE_COUNT_16_BIT)) {
         gDrawSampleCount = 16;
@@ -135,7 +137,7 @@ static void destroyFramebuffers() noexcept {
     for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
         gFramebuffers[i].destroy(true);
         gFbColorAttachments[i].destroy(true);
-        gFbOccPlaneAttachments[i].destroy(true);
+        gFbDepthAttachments[i].destroy(true);
     }
 
     VMsaaResolver::destroyResolveColorAttachments();
@@ -199,7 +201,7 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
             return false;
         }
 
-        if (!gFbOccPlaneAttachments[i].initAsRenderTexture(gDevice, OCC_PLANE_FORMAT, VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
+        if (!gFbDepthAttachments[i].initAsDepthStencilBuffer(gDevice, DEPTH_FORMAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
             destroyFramebuffers();
             return false;
         }
@@ -207,7 +209,7 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
         std::vector<const vgl::BaseTexture*> fbAttachments;
         fbAttachments.reserve(3);
         fbAttachments.push_back(&gFbColorAttachments[i]);
-        fbAttachments.push_back(&gFbOccPlaneAttachments[i]);
+        fbAttachments.push_back(&gFbDepthAttachments[i]);
 
         if (bDoingMsaa) {
             fbAttachments.push_back(&VMsaaResolver::gResolveColorAttachments[i]);
@@ -360,7 +362,7 @@ static void beginFrame_VkRenderer() noexcept {
     vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
 
     VkClearValue framebufferClearValues[2] = {};
-    framebufferClearValues[1].color.float32[0] = 65536.0f * 4;  // This depth is much bigger than the max limit for Doom levels of +/- 32767 units.
+    framebufferClearValues[1].depthStencil.depth = 1.0f;
 
     gCmdBufferRec.beginRenderPass(
         gRenderPass,
@@ -375,7 +377,7 @@ static void beginFrame_VkRenderer() noexcept {
     );
 
     // Begin a frame for the drawing module
-    VDrawing::beginFrame(ringbufferIdx, gRenderPass, framebuffer, gFbOccPlaneAttachments[ringbufferIdx]);
+    VDrawing::beginFrame(ringbufferIdx, gRenderPass, framebuffer);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -454,7 +456,7 @@ void init() noexcept {
     decideDrawSampleCount();
 
     // Initialize the draw render pass for the new renderer
-    if (!gRenderPass.init(gDevice, COLOR_16_FORMAT, OCC_PLANE_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
+    if (!gRenderPass.init(gDevice, COLOR_16_FORMAT, DEPTH_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
         FatalErrors::raise("Failed to create the Vulkan draw render pass!");
 
     // Create pipelines

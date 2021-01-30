@@ -149,12 +149,3 @@ vec4 shadeWorldTexel(
     out_color = psxR5G5B5BitCrush(out_color);
     return out_color;
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-// Occlusion tests for sprites and transparent or masked wall geometry.
-// Tests if the fragment is masked by occluder planes.
-//----------------------------------------------------------------------------------------------------------------------
-bool isOccludedTexel(subpassInputMS occPlaneTex, float fragZ) {
-    float occPlaneDepth = subpassLoad(occPlaneTex, gl_SampleID).x;
-    return (fragZ > occPlaneDepth);
-}

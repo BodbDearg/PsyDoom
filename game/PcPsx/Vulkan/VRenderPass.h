@@ -6,8 +6,7 @@
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // The single Vulkan render pass used by PsyDoom.
-// If MSAA is disabled it consists of only a single drawing subpass.
-// If MSAA is enabled an additional subpass is added for resolving the MSAA framebuffer to a single sample.
+// Consists of multiple subpasses, the amount of which depends on graphic settings.
 //------------------------------------------------------------------------------------------------------------------------------------------
 class VRenderPass : public vgl::BaseRenderPass {
 public:
@@ -17,7 +16,7 @@ public:
     bool init(
         vgl::LogicalDevice& device,
         const VkFormat colorFormat,
-        const VkFormat occPlaneFormat,
+        const VkFormat depthFormat,
         const VkFormat colorMsaaResolveFormat,
         const uint32_t sampleCount
     ) noexcept;

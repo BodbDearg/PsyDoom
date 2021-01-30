@@ -70,7 +70,7 @@ static void RV_DrawWall(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the fully opaque upper, lower and mid walls for a seg.
-// Also add occluder planes to that need to be drawn to that pass.
+// Also add occluder planes to that need to be drawn to the depth pass.
 // Also marks the wall as viewed for the automap, if it's visible.
 //
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
@@ -144,6 +144,13 @@ void RV_DrawSegSolid(
         const float bty = RV_FixedToFloat(backSec.ceilingheight);
         const float bby = RV_FixedToFloat(backSec.floorheight);
 
+        // Adjust mid wall size so that it only occupies the gap between the upper and lower walls
+        midTy = std::min(midTy, bty);
+        midBy = std::max(midBy, bby);
+
+        // Check to see if there is no opening, if so then treat the lower/upper walls as if they were one sided mid walls for occluder plane rendering
+        const bool bHasNoOpening = (midTy <= midBy);
+
         // Figure out whether we are to draw the top and bottom walls as well as the top and bottom occluder planes.
         // We draw the top/bottom walls when there is a front face visible and if the wall is not a sky wall.
         // We draw occluder planes for front facing walls that the eye line hits, or back facing walls that the eye line DOESN'T hit.
@@ -151,8 +158,8 @@ void RV_DrawSegSolid(
         const bool bIsNotSkyWall = (backSec.ceilingpic != -1);
         const bool bHasUpperWall = (bty < fty);
         const bool bHasLowerWall = (bby > fby);
-        const bool bEyeHitsUpperWall = (viewZ >= bty);
-        const bool bEyeHitsLowerWall = (viewZ <= bby);
+        const bool bEyeHitsUpperWall = ((viewZ >= bty) || bHasNoOpening);
+        const bool bEyeHitsLowerWall = ((viewZ <= bby) || bHasNoOpening);
 
         const bool bDrawUpperWall = (bHasUpperWall && bSegIsFrontFacing && bIsNotSkyWall);
         const bool bDrawLowerWall = (bHasLowerWall && bSegIsFrontFacing);
@@ -179,9 +186,9 @@ void RV_DrawSegSolid(
             RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
-        // Draw the upper wall occluder plane
+        // Draw the upper wall depth/occluder plane
         if (bDrawUpperWallOccPlane) {
-            VDrawing::addOccPlaneWorldQuad(
+            VDrawing::addDepthWorldQuad(
                 x1, OCC_PLANE_INF_TY, z1,
                 x2, OCC_PLANE_INF_TY, z2,
                 x2, bty, z2,
@@ -210,19 +217,15 @@ void RV_DrawSegSolid(
             RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
         }
 
-        // Draw the lower wall occluder plane
+        // Draw the lower wall depth/occluder plane
         if (bDrawLowerWallOccPlane) {
-            VDrawing::addOccPlaneWorldQuad(
+            VDrawing::addDepthWorldQuad(
                 x1, bby, z1,
                 x2, bby, z2,
                 x2, OCC_PLANE_INF_BY, z2,
                 x1, OCC_PLANE_INF_BY, z1
             );
         }
-
-        // Adjust mid wall size so that it only occupies the gap between the upper and lower walls
-        midTy = std::min(midTy, bty);
-        midBy = std::max(midBy, bby);
     }
 
     // Draw the mid wall and the mid wall occluder plane
@@ -256,8 +259,8 @@ void RV_DrawSegSolid(
 
         RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
 
-        // Draw the occluder plane
-        VDrawing::addOccPlaneWorldQuad(
+        // Draw the depth/occluder plane
+        VDrawing::addDepthWorldQuad(
             x1, OCC_PLANE_INF_TY, z1,
             x2, OCC_PLANE_INF_TY, z2,
             x2, OCC_PLANE_INF_BY, z2,

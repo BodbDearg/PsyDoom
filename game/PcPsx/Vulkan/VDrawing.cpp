@@ -30,11 +30,10 @@ BEGIN_NAMESPACE(VDrawing)
 // Ringbuffer index for the current frame being generated
 static uint32_t gCurRingbufferIdx;
 
-// Descriptor sets and a descriptor pool used for all 'draw' subpass operations.
+// Descriptor set and a descriptor pool used for all 'draw' subpass operations.
 // Binds the PSX VRAM texture to it's combined image sampler in binding 0.
-// Binding 1 is for the occluder plane texture.
 static vgl::DescriptorPool  gDescriptorPool;
-static vgl::DescriptorSet*  gpDescriptorSets[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::DescriptorSet*  gpDescriptorSet;
 
 // Command buffers for recording 'draw occluder plane' subpass and regular 'draw' subpass commands.
 // One for each ringbuffer slot, so we don't disturb a frame still being processed.
@@ -42,11 +41,11 @@ static vgl::CmdBuffer gCmdBuffers_OccPlanePass[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::CmdBuffer gCmdBuffers_DrawPass[vgl::Defines::RINGBUFFER_SIZE];
 
 // Command buffer recorders for each subpass or command buffer set
-static vgl::CmdBufferRecorder gCmdBufRec_OccPlanePass(VRenderer::gVkFuncs);
+static vgl::CmdBufferRecorder gCmdBufRec_DepthPass(VRenderer::gVkFuncs);
 static vgl::CmdBufferRecorder gCmdBufRec_DrawPass(VRenderer::gVkFuncs);
 
-// Vertex buffers: for the 'occluder plane draw' subpass (VVertex_OccPlane) and regular 'draw' subpass (VVertex_Draw)
-static VVertexBufferSet gVertexBuffers_OccPlane;
+// Vertex buffers: for the 'depth draw' subpass (VVertex_Depth) and regular 'draw' subpass (VVertex_Draw)
+static VVertexBufferSet gVertexBuffers_Depth;
 static VVertexBufferSet gVertexBuffers_Draw;
 
 // The current pipeline being used by the 'draw' subpass; used to help avoid unneccessary pipeline switches
@@ -71,32 +70,28 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
     // Only using a single descriptor set which is bound to the PSX VRAM texture.
     {
         // Make the descriptor pool
-        VkDescriptorPoolSize poolResources[2] = {};
+        VkDescriptorPoolSize poolResources[1] = {};
         poolResources[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolResources[0].descriptorCount = vgl::Defines::RINGBUFFER_SIZE;
-        poolResources[1].type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-        poolResources[1].descriptorCount = vgl::Defines::RINGBUFFER_SIZE;
 
-        if (!gDescriptorPool.init(device, { poolResources[0], poolResources[1] }, vgl::Defines::RINGBUFFER_SIZE))
+        if (!gDescriptorPool.init(device, { poolResources[0] }, 1))
             FatalErrors::raise("VDrawing: Failed to create a Vulkan descriptor pool!");
 
-        // Make the descriptor sets and bind the PSX VRAM texture and sampler to slot 0.
-        // Note: this particular binding only needs to be done once at startup!
-        for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
-            gpDescriptorSets[i] = gDescriptorPool.allocDescriptorSet(VPipelines::gDescSetLayout_draw);
+        // Make the descriptor set and bind the PSX VRAM texture and sampler to slot 0.
+        // This particular binding only needs to be done once at startup!
+        gpDescriptorSet = gDescriptorPool.allocDescriptorSet(VPipelines::gDescSetLayout_draw);
 
-            if (!gpDescriptorSets[i])
-                FatalErrors::raise("VDrawing: Failed to allocate a required Vulkan descriptor set!");
+        if (!gpDescriptorSet)
+            FatalErrors::raise("VDrawing: Failed to allocate a required Vulkan descriptor set!");
 
-            gpDescriptorSets[i]->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_draw);
-        }
+        gpDescriptorSet->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_draw);
     }
 
     // Create the vertex buffer sets
-    constexpr uint32_t OCC_PLANE_VB_SIZE = 512 * 1024;      // 128 KiB per buffer
-    constexpr uint32_t DRAW_VB_SIZE = 1024 * 1024;          // 1 MiB per buffer
+    constexpr uint32_t DEPTH_VB_SIZE = 256 * 1024;  // 256 KiB per buffer
+    constexpr uint32_t DRAW_VB_SIZE = 512 * 1024;   // 512 KiB per buffer
 
-    gVertexBuffers_OccPlane.init<VVertex_OccPlane>(device, OCC_PLANE_VB_SIZE / sizeof(VVertex_OccPlane));
+    gVertexBuffers_Depth.init<VVertex_Depth>(device, DEPTH_VB_SIZE / sizeof(VVertex_Depth));
     gVertexBuffers_Draw.init<VVertex_Draw>(device, DRAW_VB_SIZE / sizeof(VVertex_Draw));
 
     // Current draw pipeline in use is undefined initially
@@ -110,13 +105,11 @@ void shutdown() noexcept {
     gCurDrawPipelineType = {};
     
     gVertexBuffers_Draw.destroy();
-    gVertexBuffers_OccPlane.destroy();
+    gVertexBuffers_Depth.destroy();
 
-    for (vgl::DescriptorSet*& pDescriptorSet : gpDescriptorSets) {
-        if (pDescriptorSet) {
-            pDescriptorSet->free(true);
-            pDescriptorSet = nullptr;
-        }
+    if (gpDescriptorSet) {
+        gpDescriptorSet->free(true);
+        gpDescriptorSet = nullptr;
     }
 
     gDescriptorPool.destroy(true);
@@ -136,17 +129,13 @@ void shutdown() noexcept {
 void beginFrame(
     const uint32_t ringbufferIdx,
     const vgl::BaseRenderPass& renderPass,
-    vgl::Framebuffer& framebuffer,
-    vgl::BaseTexture& occPlaneAttachment
+    vgl::Framebuffer& framebuffer
 ) noexcept {
     // Remember which ringbuffer slot we are on
     gCurRingbufferIdx = ringbufferIdx;
 
-    // Bind the occluder plane attachment to the descriptor set being used for this frame
-    gpDescriptorSets[ringbufferIdx]->bindInputAttachment(1, occPlaneAttachment);
-
     // Begin recording the command buffers
-    gCmdBufRec_OccPlanePass.beginSecondaryCmdBuffer(
+    gCmdBufRec_DepthPass.beginSecondaryCmdBuffer(
         gCmdBuffers_OccPlanePass[ringbufferIdx],
         VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
         renderPass.getVkRenderPass(),
@@ -163,7 +152,7 @@ void beginFrame(
     );
 
     // Setup the vertex buffers
-    gVertexBuffers_OccPlane.beginFrame(ringbufferIdx);
+    gVertexBuffers_Depth.beginFrame(ringbufferIdx);
     gVertexBuffers_Draw.beginFrame(ringbufferIdx);
 
     // Expect all this to already have the following state
@@ -175,9 +164,9 @@ void beginFrame(
 
     // First commands in the renderpass are to set the viewport and scissors dimensions.
     // Add these commands to both subpasses:
-    gCmdBufRec_OccPlanePass.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
+    gCmdBufRec_DepthPass.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
     gCmdBufRec_DrawPass.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
-    gCmdBufRec_OccPlanePass.setScissors(0, 0, fbWidth, fbHeight);
+    gCmdBufRec_DepthPass.setScissors(0, 0, fbWidth, fbHeight);
     gCmdBufRec_DrawPass.setScissors(0, 0, fbWidth, fbHeight);
 
     // First command in the 'draw' subpass is to set the vertex buffer used
@@ -188,25 +177,25 @@ void beginFrame(
 // Performs end of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
 void endFrame(vgl::CmdBufferRecorder& primaryCmdRec) noexcept {
-    // Do any required drawing commands for the 'occluder plane' subpass (if required)
-    if (gVertexBuffers_OccPlane.curOffset > 0) {
-        gCmdBufRec_OccPlanePass.bindVertexBuffer(*gVertexBuffers_OccPlane.pCurBuffer, 0, 0);
-        gCmdBufRec_OccPlanePass.bindPipeline(VPipelines::gPipelines[(uint32_t) VPipelineType::World_OccPlane]);
-        gVertexBuffers_OccPlane.endCurrentDrawBatch(gCmdBufRec_OccPlanePass);
+    // Do any required drawing commands for the 'draw depth' subpass (if required)
+    if (gVertexBuffers_Depth.curOffset > 0) {
+        gCmdBufRec_DepthPass.bindVertexBuffer(*gVertexBuffers_Depth.pCurBuffer, 0, 0);
+        gCmdBufRec_DepthPass.bindPipeline(VPipelines::gPipelines[(uint32_t) VPipelineType::World_Depth]);
+        gVertexBuffers_Depth.endCurrentDrawBatch(gCmdBufRec_DepthPass);
     }
 
     // Finish the current 'draw' subpass batch
     endCurrentDrawBatch();
 
     // Upload any vertices generated by invoking the 'end frame' event
-    gVertexBuffers_OccPlane.endFrame();
+    gVertexBuffers_Depth.endFrame();
     gVertexBuffers_Draw.endFrame();
 
     // Current draw pipeline is undefined on ending a frame
     gCurDrawPipelineType = (VPipelineType) -1;
 
     // Done recording commands now
-    gCmdBufRec_OccPlanePass.endCmdBuffer();
+    gCmdBufRec_DepthPass.endCmdBuffer();
     gCmdBufRec_DrawPass.endCmdBuffer();
 
     // Submit the command buffers to the primary command buffer
@@ -242,15 +231,15 @@ void setDrawPipeline(const VPipelineType type) noexcept {
 
     // Bind the 'draw' subpass descriptor set if we need to
     if (bNeedToBindDescriptorSet) {
-        gCmdBufRec_DrawPass.bindDescriptorSet(*gpDescriptorSets[gCurRingbufferIdx], pipeline, 0, 0, nullptr);
+        gCmdBufRec_DrawPass.bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Set the model/view/projection transform matrix used for the 'occluder plane' subpass
+// Set the model/view/projection transform matrix used for the 'depth render' subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
-void setOccPlaneTransformMatrix(const Matrix4f& matrix) noexcept {
-    gCmdBufRec_OccPlanePass.pushConstants(VPipelines::gPipelineLayout_occPlane, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), &matrix);
+void setDepthTransformMatrix(const Matrix4f& matrix) noexcept {
+    gCmdBufRec_DepthPass.pushConstants(VPipelines::gPipelineLayout_depth, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), &matrix);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -291,7 +280,7 @@ Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const
     const float viewTy =  HALF_VIEW_3D_H / float(HALF_SCREEN_W);
     const float viewBy = (-HALF_VIEW_3D_H - STATUS_BAR_H) / float(HALF_SCREEN_W);
     const float zNear = 1.0f;
-    const float zFar = 32768.0f;
+    const float zFar = 65536.0f * 2.0f;
 
     // Compute the projection, rotation and translation matrices for the view.
     // Rotation is about the Y axis (Doom's Z axis).
@@ -614,9 +603,9 @@ void addDrawWorldQuad(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a quadrilateral to the 'occluder plane' drawing subpass
+// Add a quadrilateral to the depth drawing subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addOccPlaneWorldQuad(
+void addDepthWorldQuad(
     const float x1,
     const float y1,
     const float z1,
@@ -631,7 +620,7 @@ void addOccPlaneWorldQuad(
     const float z4
 ) noexcept {
     // Fill in the vertices
-    VVertex_OccPlane* const pVerts = gVertexBuffers_OccPlane.allocVerts<VVertex_OccPlane>(6);
+    VVertex_Depth* const pVerts = gVertexBuffers_Depth.allocVerts<VVertex_Depth>(6);
 
     pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
     pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;

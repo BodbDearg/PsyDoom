@@ -17,7 +17,7 @@ enum class VPipelineType : uint8_t {
     UI_8bpp,                    // 2D/UI: texture mapped @ 8bpp, alpha blended
     UI_8bpp_Add,                // 2D/UI: texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
     UI_16bpp,                   // 2D/UI: texture mapped @ 16bpp, alpha blended
-    World_OccPlane,             // 3D world/view: draw information for occluding planes which occlude sprites and masked/translucent walls
+    World_Depth,                // 3D world/view: draw depth for occluding planes which mask sprites and other geometry
     World_SolidGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, no blending - for fully solid/opaque geometry.
     World_AlphaGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for masked and translucent walls.
     World_AlphaSprite,          // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for sprites.
@@ -81,25 +81,11 @@ struct VVertex_Draw {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Vulkan renderer vertex type: used to render occluder planes for walls.
-// These occluding planes are used to mask sprites as well as translucent or masked walls.
+// Vulkan renderer vertex type: used to do a depth render pass and contains just a 3D position in world coordinates.
+// The output of the depth pass is used to help clip sprites and geometry.
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct VVertex_OccPlane {
-    static constexpr uint16_t ANGLE_MASK    = 0x7FFF;   // Mask to extract the actual 15 angle bits
-    static constexpr uint16_t ANGLE_BITS    = 15;       // How many bits to encode the angle with
-    static constexpr uint16_t IS_PLANE_BIT  = 0x8000;   // A bit which is set to mark the texel as containing an occluding plane, packed into the 'angle' field
-
-    // XYZ Position of the vertex
+struct VVertex_Depth {
     float x, y, z;
-
-    // A 15-bit binary angle for the wall plane packed into the low 15-bits.
-    // The highest bit is set if the texel actually contains an occluding plane, so we can handle the case of no visible planes.
-    // Note: this value is really unsigned, but I used signed for shader packing reasons.
-    int16_t planeAngle;
-
-    // The integer offset of the occluding plane from the origin.
-    // Higher than integer precision would probably be ideal, but this saves a lot of memory and is good enough for most cases.
-    int16_t planeOffset;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
