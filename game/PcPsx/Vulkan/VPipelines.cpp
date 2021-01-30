@@ -473,6 +473,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initDrawPipeline(VPipelineType::UI_8bpp_Add, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
     initDrawPipeline(VPipelineType::UI_16bpp, renderPass, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_SolidGeom, renderPass, gShaders_world_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_SolidGeomXray, renderPass, gShaders_world_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_AlphaGeom, renderPass, gShaders_world_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_test);
     initDrawPipeline(VPipelineType::World_AlphaSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_test);
     initDrawPipeline(VPipelineType::World_AdditiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_test);

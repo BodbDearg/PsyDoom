@@ -475,6 +475,7 @@ void addDrawWorldTriangle(
     // Ensure we are on a compatible pipeline
     ASSERT(
         (gCurDrawPipelineType == VPipelineType::World_SolidGeom) ||
+        (gCurDrawPipelineType == VPipelineType::World_SolidGeomXray) ||
         (gCurDrawPipelineType == VPipelineType::World_AlphaGeom) ||
         (gCurDrawPipelineType == VPipelineType::World_AlphaSprite) ||
         (gCurDrawPipelineType == VPipelineType::World_AdditiveSprite) ||
@@ -559,6 +560,7 @@ void addDrawWorldQuad(
     // Ensure we are on a compatible pipeline
     ASSERT(
         (gCurDrawPipelineType == VPipelineType::World_SolidGeom) ||
+        (gCurDrawPipelineType == VPipelineType::World_SolidGeomXray) ||
         (gCurDrawPipelineType == VPipelineType::World_AlphaGeom) ||
         (gCurDrawPipelineType == VPipelineType::World_AlphaSprite) ||
         (gCurDrawPipelineType == VPipelineType::World_AdditiveSprite) ||

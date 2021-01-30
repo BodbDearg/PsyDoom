@@ -19,6 +19,7 @@ enum class VPipelineType : uint8_t {
     UI_16bpp,                   // 2D/UI: texture mapped @ 16bpp, alpha blended
     World_Depth,                // 3D world/view: draw depth for occluding planes which mask sprites and other geometry
     World_SolidGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, no blending - for fully solid/opaque geometry.
+    World_SolidGeomXray,        // 3D world/view: Texture mapped @ 8bpp, light diminishing, no blending - for fully solid/opaque geometry (X-Ray vision cheat).
     World_AlphaGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for masked and translucent walls.
     World_AlphaSprite,          // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for sprites.
     World_AdditiveSprite,       // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended - for sprites.

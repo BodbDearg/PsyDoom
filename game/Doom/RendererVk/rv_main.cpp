@@ -187,7 +187,7 @@ void RV_RenderPlayerView() noexcept {
     // Set the pipeline to use for drawing solid geometry.
     // Also doing this here so we are on a compatible pipeline for setting the projection matrix.
     if (gpViewPlayer->cheats & CF_XRAYVISION) {
-        VDrawing::setDrawPipeline(VPipelineType::World_AlphaGeom);
+        VDrawing::setDrawPipeline(VPipelineType::World_SolidGeomXray);
     } else {
         VDrawing::setDrawPipeline(VPipelineType::World_SolidGeom);
     }
