@@ -27,10 +27,8 @@ BEGIN_NAMESPACE(VPipelines)
 #include "SPIRV_ui_4bpp_frag.bin.h"
 #include "SPIRV_ui_8bpp_frag.bin.h"
 #include "SPIRV_ui_vert.bin.h"
-#include "SPIRV_world_alpha_geom_frag.bin.h"
-#include "SPIRV_world_alpha_geom_vert.bin.h"
-#include "SPIRV_world_solid_geom_frag.bin.h"
-#include "SPIRV_world_solid_geom_vert.bin.h"
+#include "SPIRV_world_geom_frag.bin.h"
+#include "SPIRV_world_geom_vert.bin.h"
 #include "SPIRV_world_sprites_frag.bin.h"
 #include "SPIRV_world_sprites_vert.bin.h"
 
@@ -68,25 +66,22 @@ static vgl::ShaderModule    gShader_ui_8bpp_frag;
 static vgl::ShaderModule    gShader_ui_vert;
 static vgl::ShaderModule    gShader_depth_frag;
 static vgl::ShaderModule    gShader_depth_vert;
-static vgl::ShaderModule    gShader_world_solid_geom_frag;
-static vgl::ShaderModule    gShader_world_solid_geom_vert;
-static vgl::ShaderModule    gShader_world_alpha_geom_frag;
-static vgl::ShaderModule    gShader_world_alpha_geom_vert;
+static vgl::ShaderModule    gShader_world_geom_frag;
+static vgl::ShaderModule    gShader_world_geom_vert;
 static vgl::ShaderModule    gShader_world_sprites_frag;
 static vgl::ShaderModule    gShader_world_sprites_vert;
 static vgl::ShaderModule    gShader_msaa_resolve_frag;
 static vgl::ShaderModule    gShader_msaa_resolve_vert;
 
 // Sets of shader modules
-vgl::ShaderModule* const gShaders_colored[]             = { &gShader_colored_vert, &gShader_colored_frag };
-vgl::ShaderModule* const gShaders_ui_4bpp[]             = { &gShader_ui_vert, &gShader_ui_4bpp_frag };
-vgl::ShaderModule* const gShaders_ui_8bpp[]             = { &gShader_ui_vert, &gShader_ui_8bpp_frag };
-vgl::ShaderModule* const gShaders_ui_16bpp[]            = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
-vgl::ShaderModule* const gShaders_depth[]               = { &gShader_depth_vert, &gShader_depth_frag };
-vgl::ShaderModule* const gShaders_world_solid_geom[]    = { &gShader_world_solid_geom_vert, &gShader_world_solid_geom_frag };
-vgl::ShaderModule* const gShaders_world_alpha_geom[]    = { &gShader_world_alpha_geom_vert, &gShader_world_alpha_geom_frag };
-vgl::ShaderModule* const gShaders_world_sprites[]       = { &gShader_world_sprites_vert, &gShader_world_sprites_frag };
-vgl::ShaderModule* const gShaders_msaaResolve[]         = { &gShader_msaa_resolve_vert, &gShader_msaa_resolve_frag };
+vgl::ShaderModule* const gShaders_colored[]         = { &gShader_colored_vert, &gShader_colored_frag };
+vgl::ShaderModule* const gShaders_ui_4bpp[]         = { &gShader_ui_vert, &gShader_ui_4bpp_frag };
+vgl::ShaderModule* const gShaders_ui_8bpp[]         = { &gShader_ui_vert, &gShader_ui_8bpp_frag };
+vgl::ShaderModule* const gShaders_ui_16bpp[]        = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
+vgl::ShaderModule* const gShaders_depth[]           = { &gShader_depth_vert, &gShader_depth_frag };
+vgl::ShaderModule* const gShaders_world_geom[]      = { &gShader_world_geom_vert, &gShader_world_geom_frag };
+vgl::ShaderModule* const gShaders_world_sprites[]   = { &gShader_world_sprites_vert, &gShader_world_sprites_frag };
+vgl::ShaderModule* const gShaders_msaaResolve[]     = { &gShader_msaa_resolve_vert, &gShader_msaa_resolve_frag };
 
 // Pipeline samplers
 vgl::Sampler gSampler_draw;
@@ -160,10 +155,8 @@ static void initShaders(vgl::LogicalDevice& device) noexcept {
     initShader(device, gShader_ui_16bpp_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_16bpp_frag, sizeof(gSPIRV_ui_16bpp_frag), "ui_16bpp_frag");
     initShader(device, gShader_depth_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_depth_vert, sizeof(gSPIRV_depth_vert), "depth_vert");
     initShader(device, gShader_depth_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_depth_frag, sizeof(gSPIRV_depth_frag), "depth_frag");
-    initShader(device, gShader_world_solid_geom_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_world_solid_geom_vert, sizeof(gSPIRV_world_solid_geom_vert), "world_solid_geom_vert");
-    initShader(device, gShader_world_solid_geom_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_solid_geom_frag, sizeof(gSPIRV_world_solid_geom_frag), "world_solid_geom_frag");
-    initShader(device, gShader_world_alpha_geom_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_world_alpha_geom_vert, sizeof(gSPIRV_world_alpha_geom_vert), "world_alpha_geom_vert");
-    initShader(device, gShader_world_alpha_geom_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_alpha_geom_frag, sizeof(gSPIRV_world_alpha_geom_frag), "world_alpha_geom_frag");
+    initShader(device, gShader_world_geom_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_world_geom_vert, sizeof(gSPIRV_world_geom_vert), "world_geom_vert");
+    initShader(device, gShader_world_geom_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_geom_frag, sizeof(gSPIRV_world_geom_frag), "world_geom_frag");
     initShader(device, gShader_world_sprites_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_world_sprites_vert, sizeof(gSPIRV_world_sprites_vert), "world_sprites_vert");
     initShader(device, gShader_world_sprites_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_sprites_frag, sizeof(gSPIRV_world_sprites_frag), "world_sprites_frag");
     initShader(device, gShader_msaa_resolve_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_msaa_resolve_vert, sizeof(gSPIRV_msaa_resolve_vert), "msaa_resolve_vert");
@@ -479,8 +472,8 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initDrawPipeline(VPipelineType::UI_8bpp, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
     initDrawPipeline(VPipelineType::UI_8bpp_Add, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
     initDrawPipeline(VPipelineType::UI_16bpp, renderPass, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_SolidGeom, renderPass, gShaders_world_solid_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_AlphaGeom, renderPass, gShaders_world_alpha_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_test);
+    initDrawPipeline(VPipelineType::World_SolidGeom, renderPass, gShaders_world_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_AlphaGeom, renderPass, gShaders_world_geom, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_test);
     initDrawPipeline(VPipelineType::World_AlphaSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_test);
     initDrawPipeline(VPipelineType::World_AdditiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_test);
     initDrawPipeline(VPipelineType::World_SubtractiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_test);
@@ -539,10 +532,8 @@ void shutdown() noexcept {
     gShader_msaa_resolve_vert.destroy(true);
     gShader_world_sprites_frag.destroy(true);
     gShader_world_sprites_vert.destroy(true);
-    gShader_world_alpha_geom_frag.destroy(true);
-    gShader_world_alpha_geom_vert.destroy(true);
-    gShader_world_solid_geom_frag.destroy(true);
-    gShader_world_solid_geom_vert.destroy(true);
+    gShader_world_geom_frag.destroy(true);
+    gShader_world_geom_vert.destroy(true);
     gShader_depth_frag.destroy(true);
     gShader_depth_vert.destroy(true);
     gShader_ui_16bpp_frag.destroy(true);

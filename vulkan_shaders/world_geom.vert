@@ -1,8 +1,8 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// World solid geometry shader: vertex.
-// This shader is responsible for drawing fully opaque walls and floors, with light diminishing effects.
+// World geometry shader: vertex.
+// This shader is responsible for drawing all walls and floors, with light diminishing effects.
 // All textures are also assumed to be 8 bits per pixel.
 //----------------------------------------------------------------------------------------------------------------------
 #include "ShaderCommon_Vert.h"
@@ -16,6 +16,7 @@ layout(location = 2) flat out vec3 out_lightDimModeStrength;
 layout(location = 3) flat out uvec2 out_texWinPos;
 layout(location = 4) flat out uvec2 out_texWinSize;
 layout(location = 5) flat out uvec2 out_clutPos;
+layout(location = 6) flat out vec4 out_stmul;
 
 void main() {
     gl_Position = constants.mvpMatrix * vec4(in_pos, 1);
@@ -27,4 +28,5 @@ void main() {
     out_texWinPos = in_texWinPos;
     out_texWinSize = in_texWinSize;
     out_clutPos = in_clutPos;
+    out_stmul = in_stmul / 128.0;
 }

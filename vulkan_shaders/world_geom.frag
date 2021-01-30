@@ -1,8 +1,8 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// World solid geometry shader: fragment.
-// This shader is responsible for drawing fully opaque walls and floors, with light diminishing effects.
+// World geometry shader: fragment.
+// This shader is responsible for drawing all walls and floors, with light diminishing effects.
 // All textures are also assumed to be 8 bits per pixel.
 //----------------------------------------------------------------------------------------------------------------------
 #include "ShaderCommon_Frag.h"
@@ -15,6 +15,7 @@ layout(location = 2) flat in vec3 in_lightDimModeStrength;
 layout(location = 3) flat in uvec2 in_texWinPos;
 layout(location = 4) flat in uvec2 in_texWinSize;
 layout(location = 5) flat in uvec2 in_clutPos;
+layout(location = 6) flat in vec4 in_stmul;
 
 layout(location = 0) out vec4 out_color;
 
@@ -28,6 +29,6 @@ void main() {
         in_texWinPos,
         in_texWinSize,
         in_clutPos,
-        vec4(1, 1, 1, 1)
+        in_stmul
     );
 }

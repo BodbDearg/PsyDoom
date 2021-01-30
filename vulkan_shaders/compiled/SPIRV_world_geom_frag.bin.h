@@ -1,4 +1,4 @@
-static const uint32_t gSPIRV_world_alpha_geom_frag[] = 
+static const uint32_t gSPIRV_world_geom_frag[] = 
 {0x07230203,0x00010000,0x000d000a,0x00000211,
 0x00000000,0x00020011,0x00000001,0x0006000b,
 0x00000001,0x4c534c47,0x6474732e,0x3035342e,
