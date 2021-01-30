@@ -158,13 +158,15 @@ void RV_DrawSegSolid(
         const bool bIsNotSkyWall = (backSec.ceilingpic != -1);
         const bool bHasUpperWall = (bty < fty);
         const bool bHasLowerWall = (bby > fby);
+        const bool bHasUpperOccPlane = (bty != fty);
+        const bool bHasLowerOccPlane = (bby != fby);
         const bool bEyeHitsUpperWall = ((viewZ >= bty) || bHasNoOpening);
         const bool bEyeHitsLowerWall = ((viewZ <= bby) || bHasNoOpening);
 
         const bool bDrawUpperWall = (bHasUpperWall && bSegIsFrontFacing && bIsNotSkyWall);
         const bool bDrawLowerWall = (bHasLowerWall && bSegIsFrontFacing);
-        const bool bDrawUpperWallOccPlane = (bHasUpperWall && (bSegIsFrontFacing == bEyeHitsUpperWall) && bIsNotSkyWall);
-        const bool bDrawLowerWallOccPlane = (bHasLowerWall && (bSegIsFrontFacing == bEyeHitsLowerWall));
+        const bool bDrawUpperWallOccPlane = (bHasUpperOccPlane && (bSegIsFrontFacing == bEyeHitsUpperWall) && bIsNotSkyWall);
+        const bool bDrawLowerWallOccPlane = (bHasLowerOccPlane && (bSegIsFrontFacing == bEyeHitsLowerWall));
 
         // Draw the upper wall
         if (bDrawUpperWall) {
