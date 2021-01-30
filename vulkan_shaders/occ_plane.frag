@@ -1,13 +1,13 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// Occlusion plane shader: fragment.
-// The occlusion plane shader simply encodes occlusion plane info for walls into an output render target.
-// These occlusion planes are used to decide when pixels from sprites and masked walls are occluded.
+// Occluder plane shader: fragment.
+// Simply draws the linear depth of the plane to the occluder plane buffer.
+// These depths are used to decide when pixels from sprites and masked walls are occluded.
 //----------------------------------------------------------------------------------------------------------------------
-layout(location = 0) flat in ivec2 in_planeInfo;
-layout(location = 0) out ivec2 out_planeInfo;
+layout(location = 0) in float in_depth;
+layout(location = 0) out float out_depth;
 
 void main() {
-    out_planeInfo = in_planeInfo;
+    out_depth = in_depth;
 }

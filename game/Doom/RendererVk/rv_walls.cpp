@@ -28,9 +28,6 @@ static void RV_DrawWall(
     const float z2,
     const float yt,
     const float yb,
-    // Sort point for blended/masked walls for testing against occlusion planes
-    const float sortPtX,
-    const float sortPtZ,
     // Texture UV coords
     const float u1,
     const float u2,
@@ -63,7 +60,6 @@ static void RV_DrawWall(
         x1, yt, z1, u1, vt,
         x2, yt, z2, u2, vt,
         x2, yb, z2, u2, vb,
-        sortPtX, sortPtZ,
         colR, colG, colB,
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
@@ -74,7 +70,7 @@ static void RV_DrawWall(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the fully opaque upper, lower and mid walls for a seg.
-// Also add occlusion planes to that need to be drawn to that pass.
+// Also add occluder planes to that need to be drawn to that pass.
 // Also marks the wall as viewed for the automap, if it's visible.
 //
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
@@ -116,25 +112,7 @@ void RV_DrawSegSolid(
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorheight);
 
-    // Compute the plane offset and angle to use for occlusion plane rendering (angle of the plane normal).
-    //
-    // Notes:
-    //  (1) If the seg is backfacing then we need to flip the normal to get the correct result.
-    //  (2) The plane offset is just a 16-bit integer quantity and in theory it could overflow.
-    //      In practice it should not though, since Doom maps are limited to +/- 32767 units.
-    //
-    constexpr uint32_t TO_OCC_ANGLE_SHIFT = 32 - VVertex_OccPlane::ANGLE_BITS;
-
-    const bool bSegIsBackFacing = (seg.flags & SGF_BACKFACING);
-    const angle_t planeAngle = seg.angle + ANG90 + (bSegIsBackFacing ? ANG180 : 0);
-    const uint16_t planeAngle16 = (uint16_t)((planeAngle >> TO_OCC_ANGLE_SHIFT) | VVertex_OccPlane::IS_PLANE_BIT);
-    float planeNormalX = (+dz) / segLen;
-    float planeNormalZ = (-dx) / segLen;
-
-    float planeOffsetF = (-planeNormalX * x1 + -planeNormalZ * z1) * (bSegIsBackFacing ? -1.0f : +1.0f);
-    const int16_t planeOffset = (int16_t) planeOffsetF;
-
-    // Y values to use for stretching the occlusion planes to 'infinity' at the top and bottom of the screen
+    // Y values to use for stretching occluder planes to 'infinity' at the top and bottom of the screen
     const float OCC_PLANE_INF_TY = +65536.0f;
     const float OCC_PLANE_INF_BY = -65536.0f;
 
@@ -166,9 +144,9 @@ void RV_DrawSegSolid(
         const float bty = RV_FixedToFloat(backSec.ceilingheight);
         const float bby = RV_FixedToFloat(backSec.floorheight);
 
-        // Figure out whether we are to draw the top and bottom walls as well as the top and bottom occlusion planes.
+        // Figure out whether we are to draw the top and bottom walls as well as the top and bottom occluder planes.
         // We draw the top/bottom walls when there is a front face visible and if the wall is not a sky wall.
-        // We draw occlusion planes for front facing walls that the eye line hits, or back facing walls that the eye line DOESN'T hit.
+        // We draw occluder planes for front facing walls that the eye line hits, or back facing walls that the eye line DOESN'T hit.
         const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
         const bool bIsNotSkyWall = (backSec.ceilingpic != -1);
         const bool bHasUpperWall = (bty < fty);
@@ -198,18 +176,16 @@ void RV_DrawSegSolid(
                 vt = vOffset - wallH;
             }
 
-            RV_DrawWall(x1, z1, x2, z2, fty, bty, {}, {}, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
+            RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
-        // Draw the upper wall occlusion plane
+        // Draw the upper wall occluder plane
         if (bDrawUpperWallOccPlane) {
             VDrawing::addOccPlaneWorldQuad(
                 x1, OCC_PLANE_INF_TY, z1,
                 x2, OCC_PLANE_INF_TY, z2,
                 x2, bty, z2,
-                x1, bty, z1,
-                planeAngle16,
-                planeOffset
+                x1, bty, z1
             );
         }
 
@@ -231,18 +207,16 @@ void RV_DrawSegSolid(
                 vb = vOffset + wallH;
             }
 
-            RV_DrawWall(x1, z1, x2, z2, bby, fby, {}, {}, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
+            RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
         }
 
-        // Draw the lower wall occlusion plane
+        // Draw the lower wall occluder plane
         if (bDrawLowerWallOccPlane) {
             VDrawing::addOccPlaneWorldQuad(
                 x1, bby, z1,
                 x2, bby, z2,
                 x2, OCC_PLANE_INF_BY, z2,
-                x1, OCC_PLANE_INF_BY, z1,
-                planeAngle16,
-                planeOffset
+                x1, OCC_PLANE_INF_BY, z1
             );
         }
 
@@ -251,7 +225,7 @@ void RV_DrawSegSolid(
         midBy = std::max(midBy, bby);
     }
 
-    // Draw the mid wall and the mid wall occlusion plane
+    // Draw the mid wall and the mid wall occluder plane
     const bool bDrawMidWall = (bSegIsFrontFacing && (!seg.backsector));
 
     if (bDrawMidWall) {
@@ -280,16 +254,14 @@ void RV_DrawSegSolid(
             (gpViewPlayer->cheats & CF_XRAYVISION)
         );
 
-        RV_DrawWall(x1, z1, x2, z2, midTy, midBy, {}, {}, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
+        RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
 
-        // Draw the occlusion plane
+        // Draw the occluder plane
         VDrawing::addOccPlaneWorldQuad(
             x1, OCC_PLANE_INF_TY, z1,
             x2, OCC_PLANE_INF_TY, z2,
             x2, OCC_PLANE_INF_BY, z2,
-            x1, OCC_PLANE_INF_BY, z1,
-            planeAngle16,
-            planeOffset
+            x1, OCC_PLANE_INF_BY, z1
         );
     }
 }
@@ -393,11 +365,6 @@ void RV_DrawSegBlended(
         vb = vOffset + wallH;
     }
 
-    // This is the sort point for testing against occlusion planes.
-    // Use the middle of the seg for this purpose:
-    const float sortPtX = (x1 + x2) * 0.5f;
-    const float sortPtZ = (z1 + z2) * 0.5f;
-
     // Decide whether to draw the wall transparent and then draw.
     // Also make sure we are on the correct alpha blended pipeline before we draw.
     const bool bDrawTransparent = (
@@ -406,7 +373,7 @@ void RV_DrawSegBlended(
     );
 
     VDrawing::setDrawPipeline(VPipelineType::World_AlphaGeom);
-    RV_DrawWall(x1, z1, x2, z2, midTy, midBy, sortPtX, sortPtZ, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
+    RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
 }
 
 #endif

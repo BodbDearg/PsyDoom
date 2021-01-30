@@ -219,7 +219,6 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         p2[0], p2[1], p2[2], ur, vb,
         p3[0], p3[1], p3[2], ur, vt,
         p4[0], p4[1], p4[2], ul, vt,
-        depthThing.x, depthThing.z,
         sprColR, sprColG, sprColB,
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,

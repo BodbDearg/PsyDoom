@@ -152,27 +152,9 @@ vec4 shadeWorldTexel(
 
 //----------------------------------------------------------------------------------------------------------------------
 // Occlusion tests for sprites and transparent or masked wall geometry.
-// Tests the sort point against the texel read from input occlusion plane attachment.
-// Returns whether fragment should be considered occluded by the plane.
+// Tests if the fragment is masked by occluder planes.
 //----------------------------------------------------------------------------------------------------------------------
-bool isOccludedTexel(isubpassInputMS occPlaneTex, vec2 sortPt) {
-    // Get the cocclusion plane angle and offset
-    ivec2 occPlaneComponents = subpassLoad(occPlaneTex, gl_SampleID).xy;
-    uint planeAngle = uint(occPlaneComponents.x);
-    float planeOffset = float(occPlaneComponents.y);
-
-    // Is it an occlusion plane at this texel?
-    // Clear the 'is plane' flag also once we confirm that this texel does have an occlusion plane.
-    if ((planeAngle & 0x8000) == 0)
-        return false;
-
-    planeAngle &= 0x7FFF;
-
-    // Get the radian angle (0-359.9999 degrees) of the occlusion plane and then the normal vector
-    float planeAngleRad = (float(planeAngle) / 32768.0) * 6.28318530718;
-    vec2 planeNorm = vec2(cos(planeAngleRad), sin(planeAngleRad));
-
-    // Get the distance of the point to the plane and judge whether occluded from that
-    float planeDist = dot(planeNorm, sortPt);
-    return (planeOffset < planeDist);
+bool isOccludedTexel(subpassInputMS occPlaneTex, float fragZ) {
+    float occPlaneDepth = subpassLoad(occPlaneTex, gl_SampleID).x;
+    return (fragZ > occPlaneDepth);
 }

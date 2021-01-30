@@ -38,7 +38,7 @@ Matrix4f    gViewProjMatrix;                // The combined view and projection 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw subsector opaque/solid geometry.
-// This includes regular walls and floors, as well as occlusion planes which are drawn in separate subpass.
+// This includes regular walls and floors, as well as occluder planes which are drawn in separate subpass.
 // Note: assumes the correct draw pipeline has been set beforehand.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawSubsectorOpaque(subsector_t& subsec) noexcept {
@@ -165,7 +165,7 @@ void RV_RenderPlayerView() noexcept {
     if (!VRenderer::canSubmitDrawCmds())
         return;
 
-    // Determine various draw settings and clear screen occlusion info to start with.
+    // Determine various draw settings and clear x-axis occlusion info to start with.
     // Then traverse the BSP tree to determine what needs to be drawn and in what order
     RV_DetermineDrawParams();
     RV_ClearOcclussion();
@@ -192,11 +192,11 @@ void RV_RenderPlayerView() noexcept {
         VDrawing::setDrawPipeline(VPipelineType::World_SolidGeom);
     }
 
-    // Set the drawing matrix to use and also use it for drawing occlusion planes
+    // Set the drawing matrix to use and also use it for drawing occluder planes
     VDrawing::setDrawTransformMatrix(gViewProjMatrix);
     VDrawing::setOccPlaneTransformMatrix(gViewProjMatrix);
 
-    // Draw subsector fully opaque elems first along with occlusion planes.
+    // Draw subsector fully opaque elems first along with occluder planes.
     // Draw back to front for correct depth ordering.
     // Note: if the 'X-Ray' cheat is active then draw the walls with 50% alpha as an exception.
     const int32_t numDrawSubsecs = (int32_t) gRVDrawSubsecs.size();
@@ -206,7 +206,7 @@ void RV_RenderPlayerView() noexcept {
     }
 
     // Then draw blended elements in each subsector, back to front.
-    // These will be clipped & masked by occlusion planes.
+    // These will be clipped & masked by occluder planes.
     for (int32_t i = numDrawSubsecs - 1; i >= 0; --i) {
         RV_DrawSubsectorBlended(*gRVDrawSubsecs[i]);
     }

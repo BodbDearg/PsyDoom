@@ -32,11 +32,11 @@ static uint32_t gCurRingbufferIdx;
 
 // Descriptor sets and a descriptor pool used for all 'draw' subpass operations.
 // Binds the PSX VRAM texture to it's combined image sampler in binding 0.
-// Binding 1 is for the occlusion plane texture.
+// Binding 1 is for the occluder plane texture.
 static vgl::DescriptorPool  gDescriptorPool;
 static vgl::DescriptorSet*  gpDescriptorSets[vgl::Defines::RINGBUFFER_SIZE];
 
-// Command buffers for recording 'draw occlusion plane' subpass and regular 'draw' subpass commands.
+// Command buffers for recording 'draw occluder plane' subpass and regular 'draw' subpass commands.
 // One for each ringbuffer slot, so we don't disturb a frame still being processed.
 static vgl::CmdBuffer gCmdBuffers_OccPlanePass[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::CmdBuffer gCmdBuffers_DrawPass[vgl::Defines::RINGBUFFER_SIZE];
@@ -45,7 +45,7 @@ static vgl::CmdBuffer gCmdBuffers_DrawPass[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::CmdBufferRecorder gCmdBufRec_OccPlanePass(VRenderer::gVkFuncs);
 static vgl::CmdBufferRecorder gCmdBufRec_DrawPass(VRenderer::gVkFuncs);
 
-// Vertex buffers: for the 'occlusion plane draw' subpass (VVertex_OccPlane) and regular 'draw' subpass (VVertex_Draw)
+// Vertex buffers: for the 'occluder plane draw' subpass (VVertex_OccPlane) and regular 'draw' subpass (VVertex_Draw)
 static VVertexBufferSet gVertexBuffers_OccPlane;
 static VVertexBufferSet gVertexBuffers_Draw;
 
@@ -93,8 +93,11 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
     }
 
     // Create the vertex buffer sets
-    gVertexBuffers_OccPlane.init<VVertex_OccPlane>(device, 1024 * 16);      // 16K vertices is 256 KiB per buffer (with 16 bytes per vertex)
-    gVertexBuffers_Draw.init<VVertex_Draw>(device, 1024 * 21);              // Around 21K vertices should be PLENTY for most scenes (about 1 MiB per buffer, if vertex size is '48' bytes)
+    constexpr uint32_t OCC_PLANE_VB_SIZE = 512 * 1024;      // 128 KiB per buffer
+    constexpr uint32_t DRAW_VB_SIZE = 1024 * 1024;          // 1 MiB per buffer
+
+    gVertexBuffers_OccPlane.init<VVertex_OccPlane>(device, OCC_PLANE_VB_SIZE / sizeof(VVertex_OccPlane));
+    gVertexBuffers_Draw.init<VVertex_Draw>(device, DRAW_VB_SIZE / sizeof(VVertex_Draw));
 
     // Current draw pipeline in use is undefined initially
     gCurDrawPipelineType = (VPipelineType) -1;
@@ -139,7 +142,7 @@ void beginFrame(
     // Remember which ringbuffer slot we are on
     gCurRingbufferIdx = ringbufferIdx;
 
-    // Bind the occlusion plane attachment to the descriptor set being used for this frame
+    // Bind the occluder plane attachment to the descriptor set being used for this frame
     gpDescriptorSets[ringbufferIdx]->bindInputAttachment(1, occPlaneAttachment);
 
     // Begin recording the command buffers
@@ -185,7 +188,7 @@ void beginFrame(
 // Performs end of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
 void endFrame(vgl::CmdBufferRecorder& primaryCmdRec) noexcept {
-    // Do any required drawing commands for the 'occlusion plane' subpass (if required)
+    // Do any required drawing commands for the 'occluder plane' subpass (if required)
     if (gVertexBuffers_OccPlane.curOffset > 0) {
         gCmdBufRec_OccPlanePass.bindVertexBuffer(*gVertexBuffers_OccPlane.pCurBuffer, 0, 0);
         gCmdBufRec_OccPlanePass.bindPipeline(VPipelines::gPipelines[(uint32_t) VPipelineType::World_OccPlane]);
@@ -244,7 +247,7 @@ void setDrawPipeline(const VPipelineType type) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Set the model/view/projection transform matrix used for the 'occlusion plane' subpass
+// Set the model/view/projection transform matrix used for the 'occluder plane' subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
 void setOccPlaneTransformMatrix(const Matrix4f& matrix) noexcept {
     gCmdBufRec_OccPlanePass.pushConstants(VPipelines::gPipelineLayout_occPlane, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), &matrix);
@@ -418,8 +421,6 @@ void addDrawUISprite(
         vert.stmulG = 128;
         vert.stmulB = 128;
         vert.stmulA = a;
-        vert.sortPtX = {};          // Unused for UI shaders
-        vert.sortPtZ = {};
     }
 
     // Fill in the xy positions
@@ -445,7 +446,6 @@ void addDrawUISprite(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a triangle for the game's 3D view/world to the 'draw' subpass.
-// This overload is only used for geometry that is not tested against occlusion planes (like floors), hence no sort point is passed in.
 // 
 // Notes:
 //  (1) The texture format is assumed to be 8 bits per pixel always.
@@ -511,8 +511,6 @@ void addDrawWorldTriangle(
         vert.stmulB = stMulB;
         vert.stmulA = stMulA;
         vert.lightDimMode = lightDimMode;
-        vert.sortPtX = {};                  // Not supported for this primitive type
-        vert.sortPtZ = {};
     }
 
     // Fill in verts xy and uv positions
@@ -554,8 +552,6 @@ void addDrawWorldQuad(
     const float z4,
     const float u4,
     const float v4,
-    const float sortPtX,
-    const float sortPtZ,
     const uint8_t r,
     const uint8_t g,
     const uint8_t b,
@@ -599,8 +595,6 @@ void addDrawWorldQuad(
         vert.stmulB = stMulB;
         vert.stmulA = stMulA;
         vert.lightDimMode = lightDimMode;
-        vert.sortPtX = sortPtX;
-        vert.sortPtZ = sortPtZ;
     }
 
     // Fill in verts xy and uv positions
@@ -620,7 +614,7 @@ void addDrawWorldQuad(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a quadrilateral to the 'occlusion plane' drawing subpass
+// Add a quadrilateral to the 'occluder plane' drawing subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
 void addOccPlaneWorldQuad(
     const float x1,
@@ -634,20 +628,11 @@ void addOccPlaneWorldQuad(
     const float z3,
     const float x4,
     const float y4,
-    const float z4,
-    const uint16_t planeAngle,
-    const int16_t planeOffset
+    const float z4
 ) noexcept {
-    // Fill in the vertices, starting first with common parameters
+    // Fill in the vertices
     VVertex_OccPlane* const pVerts = gVertexBuffers_OccPlane.allocVerts<VVertex_OccPlane>(6);
 
-    for (uint32_t i = 0; i < 6; ++i) {
-        VVertex_OccPlane& vert = pVerts[i];
-        vert.planeAngle = planeAngle;
-        vert.planeOffset = planeOffset;
-    }
-
-    // Fill in all the vertex coords
     pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
     pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
     pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;

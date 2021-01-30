@@ -30,5 +30,4 @@
     layout(location = 4) in uvec2   in_texWinPos;       \
     layout(location = 5) in uvec2   in_texWinSize;      \
     layout(location = 6) in uvec2   in_clutPos;         \
-    layout(location = 7) in vec4    in_stmul;           \
-    layout(location = 8) in vec2    in_sortPt;
+    layout(location = 7) in vec4    in_stmul;

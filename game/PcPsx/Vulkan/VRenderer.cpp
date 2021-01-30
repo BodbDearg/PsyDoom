@@ -48,11 +48,11 @@ static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
     VK_FORMAT_A2B10G10R10_UNORM_PACK32
 };
 
-// What formats we use for 16/32-bit color and the 'occlusion plane' attachment (PsyDoom's depth buffer of sorts).
+// What formats we use for 16/32-bit color and the 'occluder plane' attachment (PsyDoom's linear depth buffer).
 // Note that 'VK_FORMAT_A1R5G5B5_UNORM_PACK16' is not required to be supported by Vulkan as a framebuffer attachment, but it's pretty ubiquitous.
 static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
 static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
-static constexpr VkFormat OCC_PLANE_FORMAT = VK_FORMAT_R16G16_SINT;
+static constexpr VkFormat OCC_PLANE_FORMAT = VK_FORMAT_R32_SFLOAT;
 
 // Use the classic PSX renderer? If this is enabled then just blit the PSX framebuffer to the screen.
 // TODO: add ways to toggle PSX renderer.
@@ -71,7 +71,7 @@ static vgl::Swapchain               gSwapchain;                     // The swapc
 static VRenderPass                  gRenderPass;                    // The single render pass used for drawing for the new native Vulkan renderer
 static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
-// Draw color attachments, occlusion plane attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
+// Draw color attachments, occluder plane attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
 // Note that the framebuffer might contain an additional MSAA resolve attachment (owned by the MSAA resolver) if that feature is active.
 static vgl::RenderTexture    gFbColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::RenderTexture    gFbOccPlaneAttachments[vgl::Defines::RINGBUFFER_SIZE];
@@ -358,7 +358,9 @@ static void beginFrame_VkRenderer() noexcept {
     // Begin the render pass and clear all attachments
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
     vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
+
     VkClearValue framebufferClearValues[2] = {};
+    framebufferClearValues[1].color.float32[0] = 65536.0f * 4;  // This depth is much bigger than the max limit for Doom levels of +/- 32767 units.
 
     gCmdBufferRec.beginRenderPass(
         gRenderPass,
@@ -381,7 +383,7 @@ static void beginFrame_VkRenderer() noexcept {
 // Must be called only when there is a valid framebuffer and hence command buffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void endFrame_VkRenderer() noexcept {
-    // Finish up drawing for the 'occlusion plane' and regular 'draw' subpasses
+    // Finish up drawing for the 'occluder plane' and regular 'draw' subpasses
     VDrawing::endFrame(gCmdBufferRec);
 
     // Do an MSAA resolve subpass if MSAA is enabled

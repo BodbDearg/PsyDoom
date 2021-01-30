@@ -127,8 +127,6 @@ void addDrawWorldQuad(
     const float z4,
     const float u4,
     const float v4,
-    const float sortPtX,
-    const float sortPtZ,
     const uint8_t r,
     const uint8_t g,
     const uint8_t b,
@@ -157,9 +155,7 @@ void addOccPlaneWorldQuad(
     const float z3,
     const float x4,
     const float y4,
-    const float z4,
-    const uint16_t planeAngle,
-    const int16_t planeOffset
+    const float z4
 ) noexcept;
 
 END_NAMESPACE(VDrawing)

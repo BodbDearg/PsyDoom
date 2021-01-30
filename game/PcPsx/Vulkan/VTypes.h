@@ -78,14 +78,10 @@ struct VVertex_Draw {
     // Used to control blending when semi-transparency is active; a value of '128' is regarded as 1.0.
     // The 'alpha' semi transparency multiply component effectively is the alpha for the vertex.
     uint8_t stmulR, stmulG, stmulB, stmulA;
-
-    // Used for sprite and masked/translucent wall rendering only.
-    // Specifies the sort point or center point at which the thing is sorted with respect to occluders (i.e walls).
-    float sortPtX, sortPtZ;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Vulkan renderer vertex type: used to render occluding planes for walls.
+// Vulkan renderer vertex type: used to render occluder planes for walls.
 // These occluding planes are used to mask sprites as well as translucent or masked walls.
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VVertex_OccPlane {

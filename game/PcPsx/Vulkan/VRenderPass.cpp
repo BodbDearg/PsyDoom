@@ -54,13 +54,13 @@ bool VRenderPass::init(
         colorAttach.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;         // Ready for blitting to the swapchain image
     }
 
-    // Define the occlusion plane attachment which can be sampled during drawing.
-    // This is what PsyDoom uses instead of a standard depth buffer for sprites.
+    // Define the occluder plane attachment which can be sampled during drawing.
+    // This is what PsyDoom uses instead of a standard depth buffer for sprites; it's essentially a depth buffer but linear so biased more easily.
     VkAttachmentDescription& occPlaneAttach = renderPassDef.attachments.emplace_back();
     occPlaneAttach.format = occPlaneFormat;
     occPlaneAttach.samples = (VkSampleCountFlagBits) sampleCount;           // Can just cast for the correct conversion
     occPlaneAttach.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    occPlaneAttach.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;              // Only need occlusion info as the renderpass is executing, don't store to save on bandwidth
+    occPlaneAttach.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;              // Only need occluder info as the renderpass is executing, don't store to save on bandwidth
     occPlaneAttach.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     occPlaneAttach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     occPlaneAttach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -79,7 +79,7 @@ bool VRenderPass::init(
         resolveAttach.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;     // Ready for blitting to the swapchain image
     }
 
-    // Define the 'occlusion plane' subpass for drawing occlusion planes
+    // Define the 'occluder plane' subpass for drawing occluder planes
     {
         vgl::SubpassDef& subpassDef = renderPassDef.subpasses.emplace_back();
 

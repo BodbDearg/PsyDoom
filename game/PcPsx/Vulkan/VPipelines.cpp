@@ -49,13 +49,10 @@ const VkVertexInputAttributeDescription gVertexAttribs_draw[] = {
     { 5, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, texWinW) },
     { 6, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, clutX) },
     { 7, 0, VK_FORMAT_R8G8B8A8_USCALED, offsetof(VVertex_Draw, stmulR) },
-    { 8, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_Draw, sortPtX) },
 };
 
 const VkVertexInputAttributeDescription gVertexAttribs_occPlane[] = {
     { 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VVertex_OccPlane, x) },
-    { 1, 0, VK_FORMAT_R16_SINT,         offsetof(VVertex_OccPlane, planeAngle) },
-    { 2, 0, VK_FORMAT_R16_SINT,         offsetof(VVertex_OccPlane, planeOffset) },
 };
 
 const VkVertexInputAttributeDescription gVertexAttribs_msaaResolve[] = {
@@ -100,7 +97,7 @@ vgl::DescriptorSetLayout gDescSetLayout_draw;           // Used by all the norma
 vgl::DescriptorSetLayout gDescSetLayout_msaaResolve;    // Used for MSAA resolve
 
 // Pipeline layouts
-vgl::PipelineLayout gPipelineLayout_occPlane;       // For rendering occlusion planes
+vgl::PipelineLayout gPipelineLayout_occPlane;       // For rendering occluder planes
 vgl::PipelineLayout gPipelineLayout_draw;           // Used by all the normal drawing pipelines
 vgl::PipelineLayout gPipelineLayout_msaaResolve;    // Used for MSAA resolve
 
@@ -482,7 +479,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initDrawPipeline(VPipelineType::World_AdditiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_SubtractiveSprite, renderPass, gShaders_world_sprites, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
 
-    // Create the pipeline to draw occlusion planes
+    // Create the pipeline to draw occluder planes
     initPipeline(
         VPipelineType::World_OccPlane, renderPass, 0,
         gShaders_occ_plane, nullptr, gPipelineLayout_occPlane,

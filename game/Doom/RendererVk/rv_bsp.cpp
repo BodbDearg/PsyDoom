@@ -38,7 +38,7 @@ static bool RV_IsOccludingSeg(const seg_t& seg, const sector_t& frontSector) noe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Check if the specified subsector is visible according to occlusion and view frustrum culling
+// Check if the specified subsector is visible according to x-axis occlusion and view frustrum culling
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_IsSubsecVisible(const int32_t subsecIdx) noexcept {
     // This is the 'x' coordinate min/max range of the subsector, in normalized device coordinates.
