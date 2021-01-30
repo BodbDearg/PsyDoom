@@ -667,6 +667,7 @@ CheatKeySequence gCheatKeys_AllMapLinesOn;
 CheatKeySequence gCheatKeys_AllMapThingsOn;
 CheatKeySequence gCheatKeys_XRayVision;
 CheatKeySequence gCheatKeys_VramViewer;
+CheatKeySequence gCheatKeys_NoTarget;
 
 static void setCheatKeySequence(CheatKeySequence& sequence, const char* const pKeysStr) noexcept {
     // Assign a cheat key sequence a value from a string.
@@ -749,6 +750,7 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "#\n"
         "#      No-clip:                Up, Up, Up, Up, Up, Up, Up, R1\n"
         "#      VRAM viewer:            Triangle, Square, Up, Left, Down, Right, X, Circle\n"
+        "#      No-target:              X, Up, X, Up, Square, Square, X, Square\n"
         "#---------------------------------------------------------------------------------------------------\n"
         "CheatKeySequence_GodMode = iddqd",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_GodMode, iniEntry.value.c_str()); },
@@ -795,6 +797,12 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "CheatKeySequence_VramViewer = idram\n",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_VramViewer, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_VramViewer, "idram"); }
+    },
+    {
+        "CheatKeySequence_NoTarget",
+        "CheatKeySequence_NoTarget = idcloak\n",
+        [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_NoTarget, iniEntry.value.c_str()); },
+        []() { setCheatKeySequence(gCheatKeys_NoTarget, "idcloak"); }
     },
 };
 

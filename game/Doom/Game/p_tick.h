@@ -24,12 +24,14 @@ enum cheatseq_t : int32_t {
     CHT_SEQ_UNUSED_06,
 // PsyDoom: reactivating the VRAM viewer - provide a cheat for it!
 // This is the same cheat code for the VRAM viewer used by the "GEC PlayStation Doom: Master Edition" project also.
+// PsyDoom: also adding a new 'notarget' cheat that causes enemies not to see the player.
 #if PSYDOOM_MODS
     CHT_SEQ_VRAM_VIEWER,
+    CHT_SEQ_NOTARGET,
 #else
     CHT_SEQ_UNUSED_07,
-#endif
     CHT_SEQ_UNUSED_08,
+#endif
     CHT_SEQ_XRAY_VISION,
     CHT_SEQ_UNUSED_10,
     CHT_SEQ_UNUSED_11,

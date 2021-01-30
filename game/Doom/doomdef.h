@@ -351,7 +351,8 @@ static constexpr uint32_t CF_XRAYVISION     = 0x80;     // Do 'xray vision' or t
 static constexpr uint32_t CF_NOPAUSEMSG     = 0x100;    // Don't draw the 'paused' plaque when paused: never set anywhere?
 
 #if PSYDOOM_MODS
-    static constexpr uint32_t CF_NOCLIP = 0x200;        // PsyDoom: flag for noclip, so the cheat can carry across levels
+    static constexpr uint32_t CF_NOCLIP     = 0x200;    // PsyDoom: flag for noclip, so the cheat can carry across levels
+    static constexpr uint32_t CF_NOTARGET   = 0x400;    // PsyDoom: new 'notarget' cheat that causes enemies not to see the player
 #endif
 
 // Player automap flags

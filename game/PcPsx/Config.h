@@ -67,6 +67,7 @@ extern CheatKeySequence gCheatKeys_AllMapLinesOn;
 extern CheatKeySequence gCheatKeys_AllMapThingsOn;
 extern CheatKeySequence gCheatKeys_XRayVision;
 extern CheatKeySequence gCheatKeys_VramViewer;
+extern CheatKeySequence gCheatKeys_NoTarget;
 
 void init() noexcept;
 void shutdown() noexcept;

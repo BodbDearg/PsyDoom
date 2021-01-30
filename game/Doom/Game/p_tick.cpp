@@ -56,7 +56,11 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
     { PAD_RIGHT,    PAD_LEFT,     PAD_R2,     PAD_R1,     PAD_TRIANGLE, PAD_L1,       PAD_CIRCLE, PAD_CROSS  },     // CHT_SEQ_LEVEL_WARP
     { PAD_LEFT,     PAD_LEFT,     PAD_LEFT,   PAD_LEFT,   PAD_LEFT,     PAD_LEFT,     PAD_LEFT,   PAD_LEFT   },     // CHT_SEQ_UNUSED_06
     { PAD_TRIANGLE, PAD_SQUARE,   PAD_UP,     PAD_LEFT,   PAD_DOWN,     PAD_RIGHT,    PAD_CROSS,  PAD_CIRCLE },     // PsyDoom: CHT_SEQ_VRAM_VIEWER (PSX: CHT_SEQ_UNUSED_07)
+#if PSYDOOM_MODS
+    { PAD_CROSS,    PAD_UP,       PAD_CROSS,  PAD_UP,     PAD_SQUARE,    PAD_SQUARE,  PAD_CROSS,  PAD_SQUARE },     // CHT_SEQ_NOTARGET
+#else
     { PAD_CROSS,    PAD_CROSS,    PAD_CROSS,  PAD_CROSS,  PAD_CROSS,    PAD_CROSS,    PAD_CROSS,  PAD_CROSS  },     // CHT_SEQ_UNUSED_08
+#endif
     { PAD_L1,       PAD_R2,       PAD_L2,     PAD_R1,     PAD_RIGHT,    PAD_TRIANGLE, PAD_CROSS,  PAD_RIGHT  },     // CHT_SEQ_XRAY_VISION
     { PAD_CIRCLE,   PAD_CIRCLE,   PAD_CIRCLE, PAD_CIRCLE, PAD_CIRCLE,   PAD_CIRCLE,   PAD_CIRCLE, PAD_CIRCLE },     // CHT_SEQ_UNUSED_10
     { PAD_SQUARE,   PAD_SQUARE,   PAD_SQUARE, PAD_SQUARE, PAD_SQUARE,   PAD_SQUARE,   PAD_SQUARE, PAD_SQUARE }      // CHT_SEQ_UNUSED_11
@@ -528,6 +532,18 @@ void P_CheckCheats() noexcept {
                     } else {
                         player.mo->flags &= ~MF_NOCLIP;
                         gStatusBar.message = "Incorporeal Mode OFF.";
+                    }
+                }   break;
+
+                // No-target cheat
+                case CHT_SEQ_NOTARGET: {
+                    player.cheats ^= CF_NOTARGET;
+                    gStatusBar.messageTicsLeft = 1;
+
+                    if (player.cheats & CF_NOTARGET) {
+                        gStatusBar.message = "Unperceivable Mode ON.";
+                    } else {
+                        gStatusBar.message = "Unperceivable Mode OFF.";
                     }
                 }   break;
             #endif

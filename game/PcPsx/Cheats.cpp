@@ -247,6 +247,21 @@ static void doToggleVramViewerCheat() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Executes the to cheat to toggle no-target
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void doToggleNoTargetCheat() noexcept {
+    player_t& player = gPlayers[gCurPlayerIndex];
+    player.cheats ^= CF_NOTARGET;
+    gStatusBar.messageTicsLeft = 30;
+
+    if (player.cheats & CF_NOTARGET) {
+        gStatusBar.message = "Unperceivable Mode ON.";
+    } else {
+        gStatusBar.message = "Unperceivable Mode OFF.";
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the cheats module and registers all cheats
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
@@ -260,6 +275,7 @@ void init() noexcept {
     addCheat(Config::gCheatKeys_AllMapThingsOn,         doToggleAllMapThingsCheat);
     addCheat(Config::gCheatKeys_XRayVision,             doToggleXRayVisionCheat);
     addCheat(Config::gCheatKeys_VramViewer,             doToggleVramViewerCheat);
+    addCheat(Config::gCheatKeys_NoTarget,               doToggleNoTargetCheat);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
