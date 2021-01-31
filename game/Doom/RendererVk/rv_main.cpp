@@ -8,6 +8,8 @@
 
 #include "Asserts.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/w_wad.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_user.h"
@@ -22,6 +24,7 @@
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VRenderer.h"
 #include "PcPsx/Vulkan/VTypes.h"
+#include "PsyQ/LIBGPU.h"
 #include "rv_bsp.h"
 #include "rv_flats.h"
 #include "rv_occlusion.h"
@@ -81,6 +84,58 @@ static void RV_DrawSubsectorBlended(subsector_t& subsec) noexcept {
 
     // Draw sprites in the subsector
     RV_DrawSubsectorSprites(subsec, secR, secG, secB);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the sky in 'sky hole' regions of the screen that have been cut-out and marked with alpha '0'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void RV_DrawSky() noexcept {
+    // Switch back to a UI transform matrix and set the draw pipeline
+    VDrawing::setDrawPipeline(VPipelineType::World_Sky);
+    VDrawing::setDrawTransformMatrix(VDrawing::computeTransformMatrixForUI());
+
+    // Do we need to upload the fire sky texture? If so then upload it...
+    // This code only executes for the fire sky - the regular sky is already in VRAM at this point.
+    texture_t& skytex = *gpSkyTexture;
+
+    if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
+        const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
+        const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
+        RECT vramRect = getTextureVramRect(skytex);
+
+        LIBGPU_LoadImage(vramRect, pTexData);
+        skytex.uploadFrameNum = gNumFramesDrawn;
+    }
+
+    // Get the texture page coordinates for the sky texture, and the CLUT coordinates
+    Gpu::TexFmt texFmt = {};
+    uint16_t texPageX = {};
+    uint16_t texPageY = {};
+    Gpu::BlendMode blendMode = {};
+    RV_TexPageIdToTexParams(skytex.texPageId, texFmt, texPageX, texPageY, blendMode);
+
+    uint16_t clutX = {};
+    uint16_t clutY = {};
+    RV_ClutIdToClutXy(gPaletteClutId_CurMapSky, clutX, clutY);
+
+    // Compute the 'u' coordinate for the sky
+    // TODO: support sub pixel precision for sky rotation
+    const uint8_t texU = (uint8_t)(skytex.texPageCoordX - (gViewAngle >> ANGLETOSKYSHIFT));
+
+    // Draw the sky quad itself
+    // TODO: support widescreen here
+    VDrawing::addDrawUISprite(
+        0, 0, 256, skytex.height,
+        texU, skytex.texPageCoordY,
+        128, 128, 128, 128,
+        clutX, clutY,
+        texPageX, texPageY,
+        skytex.width / 2, skytex.height
+    );
+
+    // End this draw batch and switch back to the projection matrix
+    VDrawing::endCurrentDrawBatch();
+    VDrawing::setDrawTransformMatrix(gViewProjMatrix);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -174,13 +229,6 @@ void RV_RenderPlayerView() noexcept {
     // Stat tracking: how many subsectors will we draw?
     gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
 
-    // Draw the sky if showing
-    if (gbIsSkyVisible) {
-        // TODO: need a native Vulkan Sky Drawing routine, so we can do widescreen etc.
-        Utils::onBeginUIDrawing();
-        R_DrawSky();
-    }
-
     // Finish up any UI drawing batches first - so we don't disturb their current transform matrix then set the projection matrix to use.
     VDrawing::endCurrentDrawBatch();
 
@@ -203,6 +251,11 @@ void RV_RenderPlayerView() noexcept {
 
     for (int32_t i = numDrawSubsecs - 1; i >= 0; --i) {
         RV_DrawSubsectorOpaque(*gRVDrawSubsecs[i]);
+    }
+
+    // Draw the sky if showing, this is drawn through 'sky hole' regions of the screen that are marked and cut-out with alpha '0'
+    if (gbIsSkyVisible) {
+        RV_DrawSky();
     }
 
     // Then draw blended elements in each subsector, back to front.

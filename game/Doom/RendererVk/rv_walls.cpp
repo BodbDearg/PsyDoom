@@ -17,6 +17,26 @@
 #include <cmath>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Check for a sector surrounding the given sector which has both a sky or void ceiling and is higher
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool RV_HasHigherSurroundingSkyOrVoidCeiling(const sector_t& sector) noexcept {
+    const int32_t numLines = sector.linecount;
+    const line_t* const* const pLines = sector.lines;
+
+    for (int32_t lineIdx = 0; lineIdx < numLines; ++lineIdx) {
+        const line_t& line = *pLines[lineIdx];
+        const sector_t* pNextSector = (line.frontsector == &sector) ? line.backsector : line.frontsector;
+
+        if (pNextSector && (pNextSector->ceilingpic < 0)) {
+            if (pNextSector->ceilingheight > sector.ceilingheight)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Draw a wall (upper, mid, lower) for a seg.
 // UV coordinates are in terms of 8bpp texels, not VRAM's 16bpp texels.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -69,6 +89,32 @@ static void RV_DrawWall(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Draw a wall in solid black with alpha zero, which should be stretched past the top of the screen.
+// This carves out a hole (alpha 0) that the sky can be rendered through later.
+// The 'holes' are rendered from the top edges of walls upwards.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void RV_DrawSkyHoleWall(
+    const float x1,
+    const float z1,
+    const float x2,
+    const float z2,
+    const float yt,
+    const float yb
+) noexcept {
+    VDrawing::addDrawWorldQuad(
+        x1, yb, z1, 0, 0,
+        x1, yt, z1, 0, 0,
+        x2, yt, z2, 0, 0,
+        x2, yb, z2, 0, 0,
+        0, 0, 0,
+        0, 0,
+        0, 0, 0, 0,
+        VLightDimMode::None,
+        0, 0, 0, 0
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the fully opaque upper, lower and mid walls for a seg.
 // Also add occluder planes to that need to be drawn to the depth pass.
 // Also marks the wall as viewed for the automap, if it's visible.
@@ -112,9 +158,10 @@ void RV_DrawSegSolid(
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorheight);
 
-    // Y values to use for stretching occluder planes to 'infinity' at the top and bottom of the screen
-    const float OCC_PLANE_INF_TY = +65536.0f;
-    const float OCC_PLANE_INF_BY = -65536.0f;
+    // Y values to use for stretching occluder planes and sky holes to 'infinity' at the top and bottom of the screen.
+    // These are not really infinite of course, but Doom levels should never be any bigger than this.
+    const float INF_TY = +65536.0f * 2.0f;
+    const float INF_BY = -65536.0f * 2.0f;
 
     // Get the upper/mid/lower textures for the seg.
     // Note that these array indexes are always guaranteed to be in range by the level setup code.
@@ -155,12 +202,12 @@ void RV_DrawSegSolid(
         // We draw the top/bottom walls when there is a front face visible and if the wall is not a sky wall.
         // We draw occluder planes if the opening gap narrows (floor or ceiling) and the eye hits the wall, or if the gap widens when the eye does not hit the wall.
         const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
-        const bool bIsNotSkyWall = (backSec.ceilingpic != -1);
+        const bool bIsSkyOrVoidWall = (backSec.ceilingpic < 0);
         const bool bHasUpperWall = (bty < fty);
         const bool bHasLowerWall = (bby > fby);
         const bool bEyeHitsUpperWall = ((viewZ >= midTy) || bHasNoOpening);
         const bool bEyeHitsLowerWall = ((viewZ <= midBy) || bHasNoOpening);
-        const bool bDrawUpperWall = (bHasUpperWall && bSegIsFrontFacing && bIsNotSkyWall);
+        const bool bDrawUpperWall = (bHasUpperWall && bSegIsFrontFacing && (!bIsSkyOrVoidWall));
         const bool bDrawLowerWall = (bHasLowerWall && bSegIsFrontFacing);
 
         const bool bDrawUpperWallOccPlane = (
@@ -202,11 +249,21 @@ void RV_DrawSegSolid(
         // Draw the upper wall depth/occluder plane
         if (bDrawUpperWallOccPlane) {
             VDrawing::addDepthWorldQuad(
-                x1, OCC_PLANE_INF_TY, z1,
-                x2, OCC_PLANE_INF_TY, z2,
+                x1, INF_TY, z1,
+                x2, INF_TY, z2,
                 x2, midTy, z2,
                 x1, midTy, z1
             );
+        }
+
+        // Carve out a hole for the sky (area rendered with alpha '0' that the sky can be seen through) if there is a sky
+        if ((frontSec.ceilingpic == -1) && ((backSec.ceilingpic >= 0) || bHasNoOpening) && bSegIsFrontFacing) {
+            // Hack special effect: treat the ceiling plane as a void (not to be rendered) and allow floating ceiling effects in certain situations.
+            // If the ceiling is a sky and the next highest sky or void ceiling is higher then treat the sky ceiling as if it were a void ceiling too.
+            // In the "GEC Master Edition" this can be used to create things like floating cubes, and in "Ballistyx" the altar top appears to be lower than surrounding building walls.
+            if (!RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec)) {
+                RV_DrawSkyHoleWall(x1, z1, x2, z2, INF_TY, fty);
+            }
         }
 
         // Draw the lower wall
@@ -235,8 +292,8 @@ void RV_DrawSegSolid(
             VDrawing::addDepthWorldQuad(
                 x1, midBy, z1,
                 x2, midBy, z2,
-                x2, OCC_PLANE_INF_BY, z2,
-                x1, OCC_PLANE_INF_BY, z1
+                x2, INF_BY, z2,
+                x1, INF_BY, z1
             );
         }
     }
@@ -274,11 +331,16 @@ void RV_DrawSegSolid(
 
         // Draw the depth/occluder plane
         VDrawing::addDepthWorldQuad(
-            x1, OCC_PLANE_INF_TY, z1,
-            x2, OCC_PLANE_INF_TY, z2,
-            x2, OCC_PLANE_INF_BY, z2,
-            x1, OCC_PLANE_INF_BY, z1
+            x1, INF_TY, z1,
+            x2, INF_TY, z2,
+            x2, INF_BY, z2,
+            x1, INF_BY, z1
         );
+
+        // Carve out a hole for the sky (area rendered with alpha '0' that the sky can be seen through) if there is a sky
+        if (frontSec.ceilingpic == -1) {
+            RV_DrawSkyHoleWall(x1, z1, x2, z2, INF_TY, fty);
+        }
     }
 }
 

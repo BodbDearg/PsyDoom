@@ -24,6 +24,7 @@ enum class VPipelineType : uint8_t {
     World_AlphaSprite,          // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for sprites.
     World_AdditiveSprite,       // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended - for sprites.
     World_SubtractiveSprite,    // 3D world/view: Texture mapped @ 8bpp, light diminishing, subtractive blended - for sprites.
+    World_Sky,                  // 3D world/view: Used to draw the sky in areas of the screen which have been carved out with alpha '0'
     Msaa_Resolve,               // Simple shader that resolves MSAA samples
     NUM_TYPES                   // Convenience declaration...
 };

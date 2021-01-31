@@ -358,18 +358,9 @@ void addDrawUISprite(
     const uint16_t texWinW,
     const uint16_t texWinH
 ) noexcept {
-    // Ensure we are on a compatible draw pipeline
-    const VPipelineType pipeline = gCurDrawPipelineType;
-
-    ASSERT(
-        (pipeline == VPipelineType::UI_4bpp) ||
-        (pipeline == VPipelineType::UI_8bpp) ||
-        (pipeline == VPipelineType::UI_8bpp_Add) ||
-        (pipeline == VPipelineType::UI_16bpp)
-    );
-
     // Figure out the scaling for the 'u' texture coordinate depending on the texture bit rate.
     // Note: UI 8bpp is the most commonly used, so I'm assuming that by default.
+    const VPipelineType pipeline = gCurDrawPipelineType;
     float uScale = 1.0f / 2.0f;
 
     switch (pipeline) {
@@ -379,6 +370,7 @@ void addDrawUISprite(
 
         case VPipelineType::UI_8bpp:
         case VPipelineType::UI_8bpp_Add:
+        case VPipelineType::World_Sky:
             break;
 
         case VPipelineType::UI_16bpp:
@@ -472,16 +464,6 @@ void addDrawWorldTriangle(
     const uint8_t stMulB,
     const uint8_t stMulA
 ) noexcept {
-    // Ensure we are on a compatible pipeline
-    ASSERT(
-        (gCurDrawPipelineType == VPipelineType::World_SolidGeom) ||
-        (gCurDrawPipelineType == VPipelineType::World_SolidGeomXray) ||
-        (gCurDrawPipelineType == VPipelineType::World_AlphaGeom) ||
-        (gCurDrawPipelineType == VPipelineType::World_AlphaSprite) ||
-        (gCurDrawPipelineType == VPipelineType::World_AdditiveSprite) ||
-        (gCurDrawPipelineType == VPipelineType::World_SubtractiveSprite)
-    );
-
     // Fill in the vertices, starting first with common parameters
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(3);
 
@@ -557,16 +539,6 @@ void addDrawWorldQuad(
     const uint8_t stMulB,
     const uint8_t stMulA
 ) noexcept {
-    // Ensure we are on a compatible pipeline
-    ASSERT(
-        (gCurDrawPipelineType == VPipelineType::World_SolidGeom) ||
-        (gCurDrawPipelineType == VPipelineType::World_SolidGeomXray) ||
-        (gCurDrawPipelineType == VPipelineType::World_AlphaGeom) ||
-        (gCurDrawPipelineType == VPipelineType::World_AlphaSprite) ||
-        (gCurDrawPipelineType == VPipelineType::World_AdditiveSprite) ||
-        (gCurDrawPipelineType == VPipelineType::World_SubtractiveSprite)
-    );
-
     // Fill in the vertices, starting first with common parameters
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
 
