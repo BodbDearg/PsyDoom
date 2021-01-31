@@ -153,20 +153,31 @@ void RV_DrawSegSolid(
 
         // Figure out whether we are to draw the top and bottom walls as well as the top and bottom occluder planes.
         // We draw the top/bottom walls when there is a front face visible and if the wall is not a sky wall.
-        // We draw occluder planes for front facing walls that the eye line hits, or back facing walls that the eye line DOESN'T hit.
+        // We draw occluder planes if the opening gap narrows (floor or ceiling) and the eye hits the wall, or if the gap widens when the eye does not hit the wall.
         const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
         const bool bIsNotSkyWall = (backSec.ceilingpic != -1);
         const bool bHasUpperWall = (bty < fty);
         const bool bHasLowerWall = (bby > fby);
-        const bool bHasUpperOccPlane = (bty != fty);
-        const bool bHasLowerOccPlane = (bby != fby);
-        const bool bEyeHitsUpperWall = ((viewZ >= bty) || bHasNoOpening);
-        const bool bEyeHitsLowerWall = ((viewZ <= bby) || bHasNoOpening);
-
+        const bool bEyeHitsUpperWall = ((viewZ >= midTy) || bHasNoOpening);
+        const bool bEyeHitsLowerWall = ((viewZ <= midBy) || bHasNoOpening);
         const bool bDrawUpperWall = (bHasUpperWall && bSegIsFrontFacing && bIsNotSkyWall);
         const bool bDrawLowerWall = (bHasLowerWall && bSegIsFrontFacing);
-        const bool bDrawUpperWallOccPlane = (bHasUpperOccPlane && (bSegIsFrontFacing == bEyeHitsUpperWall) && bIsNotSkyWall);
-        const bool bDrawLowerWallOccPlane = (bHasLowerOccPlane && (bSegIsFrontFacing == bEyeHitsLowerWall));
+
+        const bool bDrawUpperWallOccPlane = (
+            bSegIsFrontFacing && (
+                ((fty > bty) && (viewZ >= bty)) ||  // Eye above or at step down
+                ((fty < bty) && (viewZ < fty))  ||  // Eye below step up
+                bHasNoOpening                       // Always draw if the wall is treated as fully solid, because stuff behind it won't render and draw occluders
+            )
+        );
+
+        const bool bDrawLowerWallOccPlane = (
+            bSegIsFrontFacing && (
+                ((fby < bby) && (viewZ <= bby)) ||  // Eye below or at step up
+                ((fby > bby) && (viewZ > fby))  ||  // Eye above step down
+                bHasNoOpening                       // Always draw if the wall is treated as fully solid, because stuff behind it won't render and draw occluders
+            )
+        );
 
         // Draw the upper wall
         if (bDrawUpperWall) {
@@ -193,8 +204,8 @@ void RV_DrawSegSolid(
             VDrawing::addDepthWorldQuad(
                 x1, OCC_PLANE_INF_TY, z1,
                 x2, OCC_PLANE_INF_TY, z2,
-                x2, bty, z2,
-                x1, bty, z1
+                x2, midTy, z2,
+                x1, midTy, z1
             );
         }
 
@@ -222,8 +233,8 @@ void RV_DrawSegSolid(
         // Draw the lower wall depth/occluder plane
         if (bDrawLowerWallOccPlane) {
             VDrawing::addDepthWorldQuad(
-                x1, bby, z1,
-                x2, bby, z2,
+                x1, midBy, z1,
+                x2, midBy, z2,
                 x2, OCC_PLANE_INF_BY, z2,
                 x1, OCC_PLANE_INF_BY, z1
             );
