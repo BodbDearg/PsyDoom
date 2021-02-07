@@ -112,9 +112,10 @@ static void RV_DrawPlane(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw the floors and ceilings for the given subsector
+// Draw the floor or ceiling plane for the specified subsector.
+// Assumes the correct drawing pipeline has been set beforehand.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawFlats(const subsector_t& subsec, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
+void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
     // Ignore degenerate subsectors: I don't think this should ever be the case but add for safety
     if (subsec.numLeafEdges <= 2)
         return;
@@ -127,21 +128,26 @@ void RV_DrawFlats(const subsector_t& subsec, const uint8_t colR, const uint8_t c
     float triFanCenterY;
     RV_CalcSubsecTriFanCenter(pLeafEdges, numLeafEdges, triFanCenterX, triFanCenterY);
 
-    // Get the floor and ceiling plane height
+    // Drawing the floor or ceiling?
     const sector_t& sector = *subsec.sector;
-    const float floorH = RV_FixedToFloat(sector.floorheight);
-    const float ceilH = RV_FixedToFloat(sector.ceilingheight);
 
-    // Draw the floor plane if above it
-    if (gViewZf > floorH) {
-        texture_t& floorTex = gpFlatTextures[gpFlatTranslation[sector.floorpic]];
-        RV_DrawPlane<true>(pLeafEdges, numLeafEdges, floorH, triFanCenterX, triFanCenterY, colR, colG, colB, floorTex);
+    if (bDrawFloor) {
+        // Draw the floor plane if above it
+        const float floorH = RV_FixedToFloat(sector.floorheight);
+
+        if (gViewZf > floorH) {
+            texture_t& floorTex = gpFlatTextures[gpFlatTranslation[sector.floorpic]];
+            RV_DrawPlane<true>(pLeafEdges, numLeafEdges, floorH, triFanCenterX, triFanCenterY, colR, colG, colB, floorTex);
+        }
     }
+    else {
+        // Draw the ceiling plane if below it and not a sky (invalid ceiling pic)
+        const float ceilH = RV_FixedToFloat(sector.ceilingheight);
 
-    // Draw the ceiling plane if below it and not a sky (invalid ceiling pic)
-    if ((gViewZf < ceilH) && (sector.ceilingpic >= 0)) {
-        texture_t& ceilingTex = gpFlatTextures[gpFlatTranslation[sector.ceilingpic]];
-        RV_DrawPlane<false>(pLeafEdges, numLeafEdges, ceilH, triFanCenterX, triFanCenterY, colR, colG, colB, ceilingTex);
+        if ((gViewZf < ceilH) && (sector.ceilingpic >= 0)) {
+            texture_t& ceilingTex = gpFlatTextures[gpFlatTranslation[sector.ceilingpic]];
+            RV_DrawPlane<false>(pLeafEdges, numLeafEdges, ceilH, triFanCenterX, triFanCenterY, colR, colG, colB, ceilingTex);
+        }
     }
 }
 

@@ -229,21 +229,23 @@ void RV_DrawSegSolid(
         // Draw the upper wall
         if (bDrawUpperWall) {
             // Compute the top and bottom v coordinate and then draw
-            const float wallH = fty - bty;
+            const float wallBy = std::max(bty, fby);
+            const float unclippedWallH = fty - bty;         // Upper wall may be clipped against the floor, but some texcoords are easier to calculate from unclipped height
+            const float clippedWallH = fty - wallBy;
             float vt;
             float vb;
 
             if (line.flags & ML_DONTPEGTOP) {
                 // Top of texture is at top of upper wall
                 vt = vOffset;
-                vb = vOffset + wallH;
+                vb = vOffset + clippedWallH;
             } else {
                 // Bottom of texture is at bottom of upper wall
-                vb = vOffset;
-                vt = vOffset - wallH;
+                vt = vOffset - unclippedWallH;
+                vb = vt + clippedWallH;
             }
 
-            RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
+            RV_DrawWall(x1, z1, x2, z2, fty, wallBy, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
         // Draw the upper wall depth/occluder plane
@@ -270,21 +272,23 @@ void RV_DrawSegSolid(
         if (bDrawLowerWall) {
             // Compute the top and bottom v coordinate and then draw
             const float heightToLower = fty - bby;
-            const float wallH = bby - fby;
+            const float wallTy = std::min(bby, fty);
+            const float unclippedWallH = bby - fby;     // Lower wall may be clipped against the ceiling, but some texcoords are easier to calculate from unclipped height
+            const float clippedWallH = wallTy - fby;
             float vt;
             float vb;
 
             if (line.flags & ML_DONTPEGBOTTOM) {
                 // Don't anchor lower wall texture to the floor
-                vt = vOffset + heightToLower;
-                vb = vOffset + heightToLower + wallH;
+                vb = vOffset + heightToLower + unclippedWallH;
+                vt = vb - clippedWallH;
             } else {
                 // Anchor lower wall texture to the floor
-                vt = vOffset;
-                vb = vOffset + wallH;
+                vb = vOffset + unclippedWallH;
+                vt = vb - clippedWallH;
             }
 
-            RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
+            RV_DrawWall(x1, z1, x2, z2, wallTy, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
         }
 
         // Draw the lower wall depth/occluder plane
