@@ -104,8 +104,13 @@ struct subsector_t {
     int16_t     firstseg;           // Index of the first line segment for the subsector, in the global list of line segments
     int16_t     numLeafEdges;       // How many leaf edges there are for the subsector
     int16_t     firstLeafEdge;      // Index of the first leaf edge for the subsector, in the global list of leaf edges
+
+#if PSYDOOM_MODS
+    int32_t     vkDrawSubsecIdx;    // PsyDoom: repurpose unused fields to hold the draw subsector index for the new Vulkan renderer. Will be '-1' if not drawn.
+#else
     int16_t     _unknown1;          // Unused field: can't infer purpose because it is not used
     int16_t     _unknown2;          // Unused field: can't infer purpose because it is not used
+#endif
 };
 
 // The partition/dividing line for a bsp tree node: stores a position and line vector

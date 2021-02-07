@@ -7,59 +7,49 @@
 #include "rv_sprites.h"
 
 #include "Doom/Base/i_main.h"
+#include "Doom/Game/doomdata.h"
+#include "Doom/Game/p_setup.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
+#include "rv_bsp.h"
 #include "rv_main.h"
 #include "rv_utils.h"
 
 #include <vector>
 
-// Entries for a subsector thing: stores the thing, it's xyz position (Doom xzy) and it's depth after being transformed
-struct DepthThing {
-    mobj_t* pThing;
-    float   x, y, z;
-    float   depth;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Describes a piece of a sprite.
+// Sprites get split up by the infinitely high walls defined by BSP tree splits, on subsector boundaries.
+// Splitting sprites allows the individual pieces to be ordered correctly in relation to world geometry and other sprites.
+// This method is used by the recent Doom64 re-release, and is also suggested by John Carmack in his 1997 Doom source release notes.
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct SpriteFrag {
+    int32_t         nextSubsecFragIdx;                  // Index of the next sprite fragment in the linked list for the subsector
+    float           depth;                              // Depth of the sprite fragment
+    float           x1, z1;                             // 1st billboard endpoint: xz world position
+    float           x2, z2;                             // 2nd billboard endpoint: xz world position
+    float           yt, yb;                             // World top and bottom 'y' position
+    float           ul, ur;                             // 'U' Texture coordinate for left and right side of the sprite
+    float           vt, vb;                             // 'V' Texture coordinate for top and bottom of the sprite
+    VPipelineType   drawPipeline;                       // Which pipeline to render the sprite with
+    uint8_t         colR, colG, colB;                   // Color to shade the sprite with
+    uint8_t         stMulR, stMulG, stMulB, stMulA;     // Semi-transparency multiply vector for semi-transparent pixels
+    uint16_t        texWinX, texWinY;                   // Sprite texture window location
+    uint16_t        texWinW, texWinH;                   // Sprite texture window size
 };
 
-// Map-objects/things in the current subsector
-static std::vector<DepthThing> gSubsecThings;
+// All of the sprite fragments to be drawn in this frame
+static std::vector<SpriteFrag> gRvSpriteFrags;
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Gets a list of things/map-objects in the given subsector, sorted back to front
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_GetSubsectorThings(const subsector_t& subsec, std::vector<DepthThing>& subsecThings) noexcept {
-    // Get all of the things firstly and their depth
-    sector_t& sector = *subsec.sector;
+// The sprite fragment linked list for each draw subsector (-1 if no sprite fragments)
+static std::vector<int32_t> gRvDrawSubsecSprFrags;
 
-    for (mobj_t* pThing = sector.thinglist; pThing; pThing = pThing->snext) {
-        // Ignore the thing if not in this subsector
-        if (pThing->subsector != &subsec)
-            continue;
-
-        // Transform its xyz (Doom xzy) position by the view projection matrix to get the depth of the thing
-        DepthThing& depthThing = subsecThings.emplace_back();
-        depthThing.pThing = pThing;
-        depthThing.x = RV_FixedToFloat(pThing->x);
-        depthThing.y = RV_FixedToFloat(pThing->z);
-        depthThing.z = RV_FixedToFloat(pThing->y);
-
-        float viewXYZ[3];
-        gViewProjMatrix.transform3d(&depthThing.x, viewXYZ);
-        depthThing.depth = viewXYZ[2];
-    }
-
-    // Sort the thing list back to front
-    std::sort(
-        subsecThings.begin(),
-        subsecThings.end(),
-        [](const DepthThing& dt1, const DepthThing& dt2) noexcept {
-            return (dt1.depth > dt2.depth);
-        }
-    );
-}
+// Depth sorted sprite fragments to be drawn for the current draw subsector.
+// This temporary list is re-used for each subsector to avoid allocations.
+static std::vector<const SpriteFrag*> gRvSortedFrags;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get and cache the texture to use for the given thing and sprite frame, and get whether it is flipped.
@@ -89,12 +79,32 @@ static texture_t& RV_CacheThingSpriteFrame(const mobj_t& thing, const spritefram
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draws the given thing.
-// Some of this code is copied directly from 'R_DrawSubsectorSprites'.
+// Populates a sprite fragment entry (covering the entire sprite) for the given thing and using the specified sector color
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
+static void RV_InitSpriteFrag(
+    mobj_t& thing,
+    SpriteFrag& sprFrag,
+    const uint8_t secR,
+    const uint8_t secG,
+    const uint8_t secB
+) noexcept {
+    // Transform its xyz (Doom xzy) position by the view projection matrix to obtain the depth of the thing.
+    // This will be useful later for depth sorting.
+    const float thingPos[3] = {
+        RV_FixedToFloat(thing.x),
+        RV_FixedToFloat(thing.z),
+        RV_FixedToFloat(thing.y)
+    };
+
+    float thingDepth;
+
+    {
+        float viewXYZ[3];
+        gViewProjMatrix.transform3d(thingPos, viewXYZ);
+        thingDepth = viewXYZ[2];
+    }
+
     // Grab the sprite frame to use
-    const mobj_t& thing = *depthThing.pThing;
     const spritedef_t& spriteDef = gSprites[thing.sprite];
     const spriteframe_t& frame = spriteDef.spriteframes[thing.frame & FF_FRAMEMASK];
 
@@ -148,51 +158,41 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
     // Get the width and height to draw the sprite with and the offsetting to use
     const float spriteW = (float) tex.width * ASPECT_CORRECT;
     const float spriteH = (float) tex.height;
-    const float offsetY = - (float) tex.height + (float) tex.offsetY;
+    const float offsetY = -(float) tex.height + (float) tex.offsetY;
     const float offsetX = bFlipSprite ? 
         (-(float) tex.width + (float) tex.offsetX) * ASPECT_CORRECT :
         (-(float) tex.offsetX) * ASPECT_CORRECT;
 
-    // Get the x/y axis vectors for the view rotation matrix: these will be used to construct the sprite billboard
+    // Get the x axis vector for the view rotation matrix: this will be used to construct the sprite billboard
     float axisX[4];
-    float axisY[4];
     gSpriteBillboardMatrix.getRow(0, axisX);
-    gSpriteBillboardMatrix.getRow(1, axisY);
 
-    // Compute the world space offset and xy size of the sprite to billboard it
-    const float worldOffset[3] = {
-        axisX[0] * offsetX + axisY[0] * offsetY,
-        axisX[1] * offsetX + axisY[1] * offsetY,
-        axisX[2] * offsetX + axisY[2] * offsetY
+    // Compute the world space xyz position of the sprite (bottom left corner)
+    const float worldPos[3] = {
+        thingPos[0] + offsetX * axisX[0],
+        thingPos[1] + offsetY,
+        thingPos[2] + offsetX * axisX[2]
     };
 
-    const float worldXSize[3] = { axisX[0] * spriteW, axisX[1] * spriteW, axisX[2] * spriteW };
-    const float worldYSize[3] = { axisY[0] * spriteH, axisY[1] * spriteH, axisY[2] * spriteH };
+    // Compute the worldspace xz coords for the endpoints and top/bottom of the sprite
+    const float p1[2] = {
+        worldPos[0],
+        worldPos[2]
+    };
 
-    // Compute the worldspace coords of the 4 vertices used
-    float p1[3] = { depthThing.x + worldOffset[0], depthThing.y + worldOffset[1], depthThing.z + worldOffset[2] };
-    float p2[3] = { p1[0], p1[1], p1[2] };
-    float p3[3] = { p1[0], p1[1], p1[2] };
-    float p4[3] = { p1[0], p1[1], p1[2] };
+    const float p2[2] = {
+        worldPos[0] + spriteW * axisX[0],
+        worldPos[2] + spriteW * axisX[2]
+    };
 
-    p2[0] += worldXSize[0];
-    p2[1] += worldXSize[1];
-    p2[2] += worldXSize[2];
-    p3[0] += worldXSize[0];
-    p3[1] += worldXSize[1];
-    p3[2] += worldXSize[2];
-    p3[0] += worldYSize[0];
-    p3[1] += worldYSize[1];
-    p3[2] += worldYSize[2];
-    p4[0] += worldYSize[0];
-    p4[1] += worldYSize[1];
-    p4[2] += worldYSize[2];
+    const float yb = { worldPos[1] };
+    const float yt = { worldPos[1] + spriteH };
 
     // Compute the UV coords for the sprite
     float ul = 0.0f;
     float ur = (float) tex.width * 0.5f;    // Halved beause the texture format is 8bpp instead of 16bpp (VRAM coords are 16bpp)
-    float vt = 0.0f;
-    float vb = spriteH;
+    const float vt = 0.0f;
+    const float vb = spriteH;
 
     if (bFlipSprite) {
         std::swap(ul, ur);
@@ -206,43 +206,253 @@ void RV_DrawThing(const DepthThing& depthThing, const uint8_t colR, const uint8_
         sprColG = LIGHT_INTENSTIY_MAX;
         sprColB = LIGHT_INTENSTIY_MAX;
     } else {
-        sprColR = colR;
-        sprColG = colG;
-        sprColB = colB;
+        sprColR = secR;
+        sprColG = secG;
+        sprColB = secB;
     }
 
-    // Ensure we are on the correct draw pipeline and submit the quad
-    VDrawing::setDrawPipeline(drawPipeline);
+    // Finally populate the sprite fragment
+    sprFrag.nextSubsecFragIdx = -1;
+    sprFrag.depth = thingDepth;
+    sprFrag.x1 = p1[0];
+    sprFrag.z1 = p1[1];
+    sprFrag.x2 = p2[0];
+    sprFrag.z2 = p2[1];
+    sprFrag.yt = yt;
+    sprFrag.yb = yb;
+    sprFrag.ul = ul;
+    sprFrag.ur = ur;
+    sprFrag.vt = vt;
+    sprFrag.vb = vb;
+    sprFrag.drawPipeline = drawPipeline;
+    sprFrag.colR = sprColR;
+    sprFrag.colG = sprColG;
+    sprFrag.colB = sprColB;
+    sprFrag.stMulR = stMulR;
+    sprFrag.stMulG = stMulG;
+    sprFrag.stMulB = stMulB;
+    sprFrag.stMulA = stMulA;
+    sprFrag.texWinX = texWinX;
+    sprFrag.texWinY = texWinY;
+    sprFrag.texWinW = texWinW;
+    sprFrag.texWinH = texWinH;
+}
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the given sprite fragment
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void RV_DrawSpriteFrag(const SpriteFrag& sprFrag) noexcept {
+    VDrawing::setDrawPipeline(sprFrag.drawPipeline);
     VDrawing::addDrawWorldQuad(
-        p1[0], p1[1], p1[2], ul, vb,
-        p2[0], p2[1], p2[2], ur, vb,
-        p3[0], p3[1], p3[2], ur, vt,
-        p4[0], p4[1], p4[2], ul, vt,
-        sprColR, sprColG, sprColB,
+        sprFrag.x1, sprFrag.yb, sprFrag.z1, sprFrag.ul, sprFrag.vb,
+        sprFrag.x2, sprFrag.yb, sprFrag.z2, sprFrag.ur, sprFrag.vb,
+        sprFrag.x2, sprFrag.yt, sprFrag.z2, sprFrag.ur, sprFrag.vt,
+        sprFrag.x1, sprFrag.yt, sprFrag.z1, sprFrag.ul, sprFrag.vt,
+        sprFrag.colR, sprFrag.colG, sprFrag.colB,
         gClutX, gClutY,
-        texWinX, texWinY, texWinW, texWinH,
+        sprFrag.texWinX, sprFrag.texWinY,
+        sprFrag.texWinW, sprFrag.texWinH,
         VLightDimMode::None,
-        stMulR, stMulG, stMulB, stMulA
+        sprFrag.stMulR, sprFrag.stMulG, sprFrag.stMulB, sprFrag.stMulA
     );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draws all sprites in the given subsector
+// Makes the sprite fragment visit the specified subsector.
+// Adds it to the draw list of sprite fragments for that subsector.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawSubsectorSprites(const subsector_t& subsec, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
-    // Get a sorted list of things, draw each thing and then finish
-    RV_GetSubsectorThings(subsec, gSubsecThings);
+static void RV_SpriteFrag_VisitSubsector(const subsector_t& subsec, const SpriteFrag& frag) noexcept {
+    // If the subsector is not drawn then ignore and don't assign the sprite to a draw list
+    const int32_t drawSubsecIdx = subsec.vkDrawSubsecIdx;
 
-    for (const DepthThing& depthThing : gSubsecThings) {
-        // Don't draw the player's thing!
-        if (depthThing.pThing == gpViewPlayer->mo)
+    if (drawSubsecIdx < 0)
+        return;
+
+    ASSERT(drawSubsecIdx < gRvDrawSubsecSprFrags.size());
+
+    // Add this sprite fragment to the draw list for the subsector
+    const int32_t sprFragIdx = (int32_t) gRvSpriteFrags.size();
+    SpriteFrag& drawFrag = gRvSpriteFrags.emplace_back(frag);
+    drawFrag.nextSubsecFragIdx = gRvDrawSubsecSprFrags[drawSubsecIdx];
+    gRvDrawSubsecSprFrags[drawSubsecIdx] = sprFragIdx;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does recursive traversal of the BSP tree against the specified sprite fragment.
+// Splits up the fragment along BSP split boundaries as needed and assigns the fragments to a destination subsector.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) noexcept {
+    // Is this node number a subsector? If so then add the sprite fragment to it's draw lists
+    if (nodeIdx & NF_SUBSECTOR) {
+        // Note: this strange check is in the PC engine too...
+        // Under what circumstances can the node number be '-1'?
+        if (nodeIdx == -1) {
+            RV_SpriteFrag_VisitSubsector(gpSubsectors[0], frag);
+        } else {
+            RV_SpriteFrag_VisitSubsector(gpSubsectors[nodeIdx & (~NF_SUBSECTOR)], frag);
+        }
+    } else {
+        // This is not a subsector, continue traversing the BSP tree and splitting the sprite fragment
+        node_t& node = gpBspNodes[nodeIdx];
+
+        // Compute which side of the split the sprite endpoints are on using the cross product.
+        // This is pretty much the same code found in 'R_PointOnSide':
+        const float nodePx = RV_FixedToFloat(node.line.x);
+        const float nodePy = RV_FixedToFloat(node.line.y);
+        const float nodeDx = RV_FixedToFloat(node.line.dx);
+        const float nodeDy = RV_FixedToFloat(node.line.dy);
+        
+        const float relX1 = frag.x1 - nodePx;
+        const float relX2 = frag.x2 - nodePx;
+        const float relZ1 = frag.z1 - nodePy;
+        const float relZ2 = frag.z2 - nodePy;
+        
+        const float lprod1 = nodeDx * relZ1;
+        const float rprod1 = nodeDy * relX1;
+        const float lprod2 = nodeDx * relZ2;
+        const float rprod2 = nodeDy * relX2;
+
+        const bool bSide1 = (lprod1 < rprod1);
+        const bool bSide2 = (lprod2 < rprod2);
+
+        // Do we need to do a split or not?
+        if (bSide1 == bSide2) {
+            // No split needed, just recurse into the appropriate side
+            if (bSide1) {
+                RV_SpriteFrag_VisitBspNode(node.children[0], frag);
+            } else {
+                RV_SpriteFrag_VisitBspNode(node.children[1], frag);
+            }
+        } else {
+            // Need to split (uncommon case) - decide how far along the sprite's billboard that will happen.
+            // First get the un-normalized normal vector for the node.
+            const float nodeNx = -nodeDy;
+            const float nodeNy = +nodeDx;
+
+            // Compute the scaled perpendicular distance of each billboard point to the node plane
+            const float dist1 = std::abs(relX1 * nodeNx + relZ1 * nodeNy);
+            const float dist2 = std::abs(relX2 * nodeNx + relZ2 * nodeNy);
+
+            // Compute the 'time' of the intersection/split
+            const float splitT = std::clamp(dist1 / (dist1 + dist2), 0.0f, 1.0f);
+            const float splitT_inv = 1.0f - splitT;
+
+            // Produce a 2nd fragment by splitting the first, and modify the 1st fragment
+            SpriteFrag frag2 = frag;
+            frag2.x1 = frag.x1 * splitT_inv + frag.x2 * splitT;
+            frag2.z1 = frag.z1 * splitT_inv + frag.z2 * splitT;
+            frag2.ul = frag.ul * splitT_inv + frag.ur * splitT;
+
+            SpriteFrag frag1 = frag;
+            frag1.x2 = frag2.x1;
+            frag1.z2 = frag2.z1;
+            frag1.ur = frag2.ul;
+
+            // Recurse using the split fragments.
+            // Splits shouldn't happen TOO often so hopefully stack space should not be an issue.
+            if (bSide1) {
+                RV_SpriteFrag_VisitBspNode(node.children[0], frag1);
+                RV_SpriteFrag_VisitBspNode(node.children[1], frag2);
+            } else {
+                RV_SpriteFrag_VisitBspNode(node.children[1], frag1);
+                RV_SpriteFrag_VisitBspNode(node.children[0], frag2);
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Creates all of the sprite fragments for sprites contained in the specfied subsector
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, const int32_t drawSubsecIdx) noexcept {
+    // Sanity check!
+    ASSERT(drawSubsecIdx < gRvDrawSubsecs.size());
+
+    // Early out if there are no things in the sector
+    sector_t& sector = *subsec.sector;
+
+    if (!sector.thinglist)
+        return;
+
+    // Get the light/color value for the sector
+    uint8_t secR;
+    uint8_t secG;
+    uint8_t secB;
+    RV_GetSectorColor(*subsec.sector, secR, secG, secB);
+
+    // Build all fragments for this subsector
+    for (mobj_t* pThing = sector.thinglist; pThing; pThing = pThing->snext) {
+        // Ignore the thing if not in this subsector
+        if (pThing->subsector != &subsec)
             continue;
 
-        RV_DrawThing(depthThing, colR, colG, colB);
+        // Ignore this thing if it's the player
+        if (pThing->player == gpViewPlayer)
+            continue;
+
+        // Allocate and initialize a full sprite fragment for the thing and split via the BSP tree into subsector fragments
+        SpriteFrag sprFrag;
+        RV_InitSpriteFrag(*pThing, sprFrag, secR, secG, secB);
+
+        const int32_t bspRootNodeIdx = gNumBspNodes - 1;
+        RV_SpriteFrag_VisitBspNode(bspRootNodeIdx, sprFrag);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Builds a list of all the sprite fragments to be drawn for this frame
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_BuildSpriteFragLists() noexcept {
+    // Clear the list of sprite fragments to draw and init each draw subsector as having no sprite frags.
+    // ALso prealloc a minimum amount of memory for all of the draw vectors.
+    const int32_t numDrawSubsecs = (int32_t) gRvDrawSubsecs.size();
+
+    gRvSpriteFrags.clear();
+    gRvSpriteFrags.reserve(8192);
+    gRvDrawSubsecSprFrags.clear();
+    gRvDrawSubsecSprFrags.reserve(4196);
+    gRvDrawSubsecSprFrags.resize((size_t) numDrawSubsecs, -1);
+    gRvSortedFrags.reserve(256);
+
+    // Run through all of the draw subsectors and build a list of sprite fragments for each
+    for (int32_t drawSubsecIdx = 0; drawSubsecIdx < numDrawSubsecs; ++drawSubsecIdx) {
+        RV_BuildSubsectorSpriteFrags(*gRvDrawSubsecs[drawSubsecIdx], drawSubsecIdx);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw sprite fragments for the specified draw subsector index
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawSubsecSpriteFrags(const int32_t drawSubsecIdx) noexcept {
+    // Firstly gather all of the sprite fragments for this draw subsector
+    ASSERT(gRvSortedFrags.empty());
+    ASSERT(drawSubsecIdx < gRvDrawSubsecs.size());
+
+    int32_t nextSprIdx = gRvDrawSubsecSprFrags[drawSubsecIdx];
+    const SpriteFrag* const pAllSprFrags = gRvSpriteFrags.data();
+
+    while (nextSprIdx >= 0) {
+        ASSERT(nextSprIdx < gRvSpriteFrags.size());
+        const SpriteFrag& sprFrag = pAllSprFrags[nextSprIdx];
+        gRvSortedFrags.emplace_back(&sprFrag);
+        nextSprIdx = sprFrag.nextSubsecFragIdx;
     }
 
-    gSubsecThings.clear();
+    // Sort all of the sprite fragments back to front
+    std::sort(
+        gRvSortedFrags.begin(),
+        gRvSortedFrags.end(),
+        [](const SpriteFrag* const pFrag1, const SpriteFrag* const pFrag2) noexcept {
+            return (pFrag1->depth > pFrag2->depth);
+        }
+    );
+
+    // Draw all the sorted fragments and clear the temporary list to finish up
+    for (const SpriteFrag* const pSprFrag : gRvSortedFrags) {
+        RV_DrawSpriteFrag(*pSprFrag);
+    }
+
+    gRvSortedFrags.clear();
 }
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

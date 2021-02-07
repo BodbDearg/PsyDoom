@@ -16,6 +16,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "Gpu.h"
 #include "PsyQ/LIBGPU.h"
+#include "rv_bsp.h"
 #include "rv_main.h"
 
 #include <algorithm>
@@ -256,6 +257,16 @@ bool RV_GetLineNdcBounds(
     lx = x1;
     rx = x2;
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clear the draw order field for each subsector drawn this frame.
+// This cleanup is required to be done after doing drawing each frame, so that each subsector is marked as initially not being drawn.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_ClearSubsecDrawIndexes() noexcept {
+    for (subsector_t* pSubsec : gRvDrawSubsecs) {
+        pSubsec->vkDrawSubsecIdx = -1;
+    }
 }
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

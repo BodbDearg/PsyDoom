@@ -206,6 +206,10 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
         pDstSubsec->numLeafEdges = 0;
         pDstSubsec->firstLeafEdge = 0;
 
+        #if PSYDOOM_MODS
+            pDstSubsec->vkDrawSubsecIdx = -1;   // Initialize as 'not drawn' for new the Vulkan renderer
+        #endif
+
         ++pSrcSubsec;
         ++pDstSubsec;
     }

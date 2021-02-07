@@ -4,7 +4,7 @@
 
 struct subsector_t;
 
-extern std::vector<subsector_t*> gRVDrawSubsecs;
+extern std::vector<subsector_t*> gRvDrawSubsecs;
 
 void RV_BuildDrawSubsecList() noexcept;
 

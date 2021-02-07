@@ -40,16 +40,15 @@ Matrix4f    gSpriteBillboardMatrix;         // A transform matrix containing the
 Matrix4f    gViewProjMatrix;                // The combined view and projection transform matrix for the scene
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw subsector opaque/solid geometry.
-// This includes regular walls and floors, as well as occluder planes which are drawn in separate depth subpass.
-// Note: assumes the correct draw pipeline has been set beforehand.
+// Draw all fully opaque walls and all floors for the given subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSubsectorOpaque(subsector_t& subsec) noexcept {
-    // Get the light/color value for the sector
-    uint8_t secR;
-    uint8_t secG;
-    uint8_t secB;
-    RV_GetSectorColor(*subsec.sector, secR, secG, secB);
+static void RV_DrawSubsecOpaqueWallsAndFloors(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
+    // Set the pipeline to use for drawing solid geometry
+    if (gpViewPlayer->cheats & CF_XRAYVISION) {
+        VDrawing::setDrawPipeline(VPipelineType::World_SolidGeomXray);
+    } else {
+        VDrawing::setDrawPipeline(VPipelineType::World_SolidGeom);
+    }
 
     // Draw all opaque segs in the subsector
     const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
@@ -64,16 +63,9 @@ static void RV_DrawSubsectorOpaque(subsector_t& subsec) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draws blended & masked elements in the specified subsector.
-// This includes sprites, masked walls and translucent walls.
+// Draws all blended walls for the specified subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSubsectorBlended(subsector_t& subsec) noexcept {
-    // Get the light/color value for the sector
-    uint8_t secR;
-    uint8_t secG;
-    uint8_t secB;
-    RV_GetSectorColor(*subsec.sector, secR, secG, secB);
-
+static void RV_DrawSubsecBlendedWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
     // Draw all blended and masked segs in the subsector
     const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
     const seg_t* const pEndSeg = pBegSeg + subsec.numsegs;
@@ -81,9 +73,6 @@ static void RV_DrawSubsectorBlended(subsector_t& subsec) noexcept {
     for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
         RV_DrawSegBlended(*pSeg, subsec, secR, secG, secB);
     }
-
-    // Draw sprites in the subsector
-    RV_DrawSubsectorSprites(subsec, secR, secG, secB);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -226,42 +215,53 @@ void RV_RenderPlayerView() noexcept {
     RV_ClearOcclussion();
     RV_BuildDrawSubsecList();
 
+    // Build the list of sprite fragments to be drawn for each subsector
+    RV_BuildSpriteFragLists();
+
     // Stat tracking: how many subsectors will we draw?
     gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
 
     // Finish up any UI drawing batches first - so we don't disturb their current transform matrix then set the projection matrix to use.
     VDrawing::endCurrentDrawBatch();
 
-    // Set the pipeline to use for drawing solid geometry.
-    // Also doing this here so we are on a compatible pipeline for setting the projection matrix.
+    // Set the initial pipeline to the one used for drawing solid geometry.
+    // Doing this here also so we are on a compatible pipeline before setting the projection matrix (via push constants).
     if (gpViewPlayer->cheats & CF_XRAYVISION) {
         VDrawing::setDrawPipeline(VPipelineType::World_SolidGeomXray);
     } else {
         VDrawing::setDrawPipeline(VPipelineType::World_SolidGeom);
     }
 
-    // Set the drawing matrix to use and also use it for depth drawing pass
+    // Set the drawing matrix to use and also use it for depth drawing pass.
+    // Before we do this also, ensure we are on a compatible drawing pipeline.
     VDrawing::setDrawTransformMatrix(gViewProjMatrix);
     VDrawing::setDepthTransformMatrix(gViewProjMatrix);
 
-    // Draw subsector fully opaque elems first along with occluder planes (in the depth pass).
-    // Draw back to front for correct depth ordering.
-    // Note: if the 'X-Ray' cheat is active then draw the walls with 50% alpha as an exception.
-    const int32_t numDrawSubsecs = (int32_t) gRVDrawSubsecs.size();
+    // Draw all of the subsectors back to front
+    const int32_t numDrawSubsecs = (int32_t) gRvDrawSubsecs.size();
 
-    for (int32_t i = numDrawSubsecs - 1; i >= 0; --i) {
-        RV_DrawSubsectorOpaque(*gRVDrawSubsecs[i]);
+    for (int32_t drawSubsecIdx = numDrawSubsecs - 1; drawSubsecIdx >= 0; --drawSubsecIdx) {
+        // Get the light/color value for the sector
+        subsector_t& subsec = *gRvDrawSubsecs[drawSubsecIdx];
+        sector_t& sector = *subsec.sector;
+
+        uint8_t secR;
+        uint8_t secG;
+        uint8_t secB;
+        RV_GetSectorColor(sector, secR, secG, secB);
+
+        // Draw all subsector elements
+        RV_DrawSubsecOpaqueWallsAndFloors(subsec, secR, secG, secB);
+        RV_DrawSubsecBlendedWalls(subsec, secR, secG, secB);
+        RV_DrawSubsecSpriteFrags(drawSubsecIdx);
     }
+
+    // Cleanup after drawing the world: need to clear the draw order for each drawn subsector
+    RV_ClearSubsecDrawIndexes();
 
     // Draw the sky if showing, this is drawn through 'sky hole' regions of the screen that are marked and cut-out with alpha '0'
     if (gbIsSkyVisible) {
         RV_DrawSky();
-    }
-
-    // Then draw blended elements in each subsector, back to front.
-    // These will be clipped & masked by occluder planes rendered to the depth buffer.
-    for (int32_t i = numDrawSubsecs - 1; i >= 0; --i) {
-        RV_DrawSubsectorBlended(*gRVDrawSubsecs[i]);
     }
 
     // Switch back to UI renderng

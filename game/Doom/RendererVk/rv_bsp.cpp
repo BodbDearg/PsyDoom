@@ -16,7 +16,7 @@
 #include "rv_utils.h"
 
 // This is the list of subsectors to be drawn by the Vulkan renderer, in front to back order
-std::vector<subsector_t*> gRVDrawSubsecs;
+std::vector<subsector_t*> gRvDrawSubsecs;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the given line segment is occluding for the purposes of visibility testing.
@@ -171,9 +171,10 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
         }
     }
 
-    // Add the subsector to the draw list.
+    // Add the subsector to the draw list and set it's draw index.
     // If the sector has a sky then also mark the sky as visible.
-    gRVDrawSubsecs.push_back(&subsec);
+    subsec.vkDrawSubsecIdx = (int32_t) gRvDrawSubsecs.size();
+    gRvDrawSubsecs.push_back(&subsec);
 
     if (frontSector.ceilingpic < 0) {
         gbIsSkyVisible = true;
@@ -232,8 +233,8 @@ static void RV_VisitBspNode(const int32_t nodeIdx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_BuildDrawSubsecList() noexcept {
     // Prepare the draw subsectors list and prealloc enough memory
-    gRVDrawSubsecs.clear();
-    gRVDrawSubsecs.reserve(gNumSubsectors);
+    gRvDrawSubsecs.clear();
+    gRvDrawSubsecs.reserve(gNumSubsectors);
 
     // Initially assume the sky is not visible
     gbIsSkyVisible = false;

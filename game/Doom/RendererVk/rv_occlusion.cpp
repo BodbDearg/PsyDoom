@@ -30,7 +30,7 @@ typedef std::vector<OccRange>::iterator OccRangeIter;
 
 // These are all of the ranges of the screen that are currently occluded.
 // The list is kept in sorted order and there is no overlapping or touching ranges (those are merged).
-std::vector<OccRange> gOccRanges;
+std::vector<OccRange> gRvOccRanges;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return an iterator to the occlusion range that the given x value falls within.
@@ -40,8 +40,8 @@ std::vector<OccRange> gOccRanges;
 static OccRangeIter RV_GetOccRangeIter(const float x) noexcept {
     // Try and find the range where max value is >= the given x value.
     // This is all that is needed to satisfy the behavior documented above.
-    const auto begIter = gOccRanges.begin();
-    const auto endIter = gOccRanges.end();
+    const auto begIter = gRvOccRanges.begin();
+    const auto endIter = gRvOccRanges.end();
 
     return std::lower_bound(
         begIter,
@@ -69,7 +69,7 @@ static void RV_GrowOccRangeTo(OccRangeIter rangeIter, const float newXMax) noexc
         // If there is no next range then we can simply expand the current range to whatever size we want
         const OccRangeIter nextRangeIter = rangeIter + 1;
 
-        if (nextRangeIter == gOccRanges.end()) {
+        if (nextRangeIter == gRvOccRanges.end()) {
             range.xMax = newXMax;
             break;
         }
@@ -89,7 +89,7 @@ static void RV_GrowOccRangeTo(OccRangeIter rangeIter, const float newXMax) noexc
         nextRange.xMin = range.xMin;
 
         // Remove the old range we no longer want and continue the merging process
-        rangeIter = gOccRanges.erase(rangeIter);
+        rangeIter = gRvOccRanges.erase(rangeIter);
     }
 }
 
@@ -98,8 +98,8 @@ static void RV_GrowOccRangeTo(OccRangeIter rangeIter, const float newXMax) noexc
 // Intended to be called at the start of a frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_ClearOcclussion() noexcept {
-    gOccRanges.clear();
-    gOccRanges.reserve(128);    // This should be more than enough for even the most complex scenes
+    gRvOccRanges.clear();
+    gRvOccRanges.reserve(128);  // This should be more than enough for even the most complex scenes
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -118,8 +118,8 @@ void RV_OccludeRange(float xMin, float xMax) noexcept {
     OccRangeIter insertIter = RV_GetOccRangeIter(xMin);
 
     // Easy case: inserting at the end of the range list
-    if (insertIter == gOccRanges.end()) {
-        gOccRanges.push_back({ xMin, xMax });
+    if (insertIter == gRvOccRanges.end()) {
+        gRvOccRanges.push_back({ xMin, xMax });
         return;
     }
 
@@ -134,7 +134,7 @@ void RV_OccludeRange(float xMin, float xMax) noexcept {
         RV_GrowOccRangeTo(insertIter, newMax);
     } else {
         // No overlap with an existing range, just make a new one
-        gOccRanges.insert(insertIter, { xMin, xMax});
+        gRvOccRanges.insert(insertIter, { xMin, xMax});
     }
 }
 
@@ -155,7 +155,7 @@ bool RV_IsRangeVisible(float xMin, float xMax) noexcept {
     const OccRangeIter overlapRangeIter = RV_GetOccRangeIter(xMin);
 
     // If nothing is overlapped then the range is visible
-    if (overlapRangeIter == gOccRanges.end())
+    if (overlapRangeIter == gRvOccRanges.end())
         return true;
 
     // If the range is fully contained within the search range, then it is not visible.

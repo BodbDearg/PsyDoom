@@ -45,4 +45,6 @@ bool RV_GetLineNdcBounds(
     float& rx
 ) noexcept;
 
+void RV_ClearSubsecDrawIndexes() noexcept;
+
 #endif  // #if PSYDOOM_VULKAN_RENDERER
