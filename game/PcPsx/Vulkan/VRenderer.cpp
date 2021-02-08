@@ -48,11 +48,10 @@ static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
     VK_FORMAT_A2B10G10R10_UNORM_PACK32
 };
 
-// What formats we use for 16/32-bit color and the depth buffer.
+// What formats we use for 16 and 32-bit color.
 // Note that 'VK_FORMAT_A1R5G5B5_UNORM_PACK16' is not required to be supported by Vulkan as a framebuffer attachment, but it's pretty ubiquitous.
 static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
 static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
-static constexpr VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
 
 // Use the classic PSX renderer? If this is enabled then just blit the PSX framebuffer to the screen.
 // TODO: add ways to toggle PSX renderer.
@@ -71,11 +70,10 @@ static vgl::Swapchain               gSwapchain;                     // The swapc
 static VRenderPass                  gRenderPass;                    // The single render pass used for drawing for the new native Vulkan renderer
 static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
-// Draw color attachments, depth attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
+// Color attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
 // Note that the framebuffer might contain an additional MSAA resolve attachment (owned by the MSAA resolver) if that feature is active.
-static vgl::RenderTexture    gFbColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
-static vgl::RenderTexture    gFbDepthAttachments[vgl::Defines::RINGBUFFER_SIZE];
-static vgl::Framebuffer      gFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::RenderTexture   gFbColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
+static vgl::Framebuffer     gFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
 
 // Semaphores signalled when the acquired swapchain image is ready.
 // One per ringbuffer slot, so we don't disturb a frame that is still being processed.
@@ -111,7 +109,7 @@ static void decideDrawSampleCount() noexcept {
 
     // Vulkan specifies up to 64x MSAA currently...
     const VkPhysicalDeviceLimits& deviceLimits = gpPhysicalDevice->getProps().limits;
-    const VkSampleCountFlags deviceMsaaModes = (deviceLimits.framebufferColorSampleCounts & deviceLimits.framebufferDepthSampleCounts);
+    const VkSampleCountFlags deviceMsaaModes = deviceLimits.framebufferColorSampleCounts;
 
     if ((wantedNumSamples >= 64) && (deviceMsaaModes & VK_SAMPLE_COUNT_64_BIT)) {
         gDrawSampleCount = 64;
@@ -137,7 +135,6 @@ static void destroyFramebuffers() noexcept {
     for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
         gFramebuffers[i].destroy(true);
         gFbColorAttachments[i].destroy(true);
-        gFbDepthAttachments[i].destroy(true);
     }
 
     VMsaaResolver::destroyResolveColorAttachments();
@@ -201,15 +198,9 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
             return false;
         }
 
-        if (!gFbDepthAttachments[i].initAsDepthStencilBuffer(gDevice, DEPTH_FORMAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
-            destroyFramebuffers();
-            return false;
-        }
-
         std::vector<const vgl::BaseTexture*> fbAttachments;
         fbAttachments.reserve(3);
         fbAttachments.push_back(&gFbColorAttachments[i]);
-        fbAttachments.push_back(&gFbDepthAttachments[i]);
 
         if (bDoingMsaa) {
             fbAttachments.push_back(&VMsaaResolver::gResolveColorAttachments[i]);
@@ -361,8 +352,7 @@ static void beginFrame_VkRenderer() noexcept {
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
     vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
 
-    VkClearValue framebufferClearValues[2] = {};
-    framebufferClearValues[1].depthStencil.depth = 1.0f;
+    VkClearValue framebufferClearValues[1] = {};
 
     gCmdBufferRec.beginRenderPass(
         gRenderPass,
@@ -456,7 +446,7 @@ void init() noexcept {
     decideDrawSampleCount();
 
     // Initialize the draw render pass for the new renderer
-    if (!gRenderPass.init(gDevice, COLOR_16_FORMAT, DEPTH_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
+    if (!gRenderPass.init(gDevice, COLOR_16_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
         FatalErrors::raise("Failed to create the Vulkan draw render pass!");
 
     // Create pipelines

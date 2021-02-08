@@ -21,12 +21,11 @@ VRenderPass::~VRenderPass() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes the render pass with the specified color and depth formats
+// Initializes the render pass with the specified formats and sample counts
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool VRenderPass::init(
     vgl::LogicalDevice& device,
     const VkFormat colorFormat,
-    const VkFormat depthFormat,
     const VkFormat colorMsaaResolveFormat,
     const uint32_t sampleCount
 ) noexcept {
@@ -54,17 +53,6 @@ bool VRenderPass::init(
         colorAttach.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;         // Ready for blitting to the swapchain image
     }
 
-    // Define the depth attachment
-    VkAttachmentDescription& depthAttach = renderPassDef.attachments.emplace_back();
-    depthAttach.format = depthFormat;
-    depthAttach.samples = (VkSampleCountFlagBits) sampleCount;           // Can just cast for the correct conversion
-    depthAttach.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttach.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;              // Only needed during rendering, don't store at end of the pass to save on bandwidth
-    depthAttach.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    depthAttach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttach.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-
     // If doing MSAA, define the MSAA color resolve attachment
     if (sampleCount > 1) {
         VkAttachmentDescription& resolveAttach = renderPassDef.attachments.emplace_back();
@@ -78,15 +66,6 @@ bool VRenderPass::init(
         resolveAttach.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;     // Ready for blitting to the swapchain image
     }
 
-    // Define the 'draw depth' subpass for drawing occluder planes
-    {
-        vgl::SubpassDef& subpassDef = renderPassDef.subpasses.emplace_back();
-
-        VkAttachmentReference& depthAttachRef = subpassDef.depthStencilAttachments.emplace_back();
-        depthAttachRef.attachment = 1;
-        depthAttachRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    }
-
     // Define the main 'draw' subpass and it's attachments
     {
         vgl::SubpassDef& subpassDef = renderPassDef.subpasses.emplace_back();
@@ -94,10 +73,6 @@ bool VRenderPass::init(
         VkAttachmentReference& colorAttachRef = subpassDef.colorAttachments.emplace_back();
         colorAttachRef.attachment = 0;
         colorAttachRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference& depthAttachRef = subpassDef.depthStencilAttachments.emplace_back();
-        depthAttachRef.attachment = 1;
-        depthAttachRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
     }
 
     // If doing MSAA, define the MSAA color resolve subpass and the attachment resolved to as well as the input MSAA color attachment

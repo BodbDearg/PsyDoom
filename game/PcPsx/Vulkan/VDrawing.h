@@ -37,7 +37,6 @@ void beginFrame(
 
 void endFrame(vgl::CmdBufferRecorder& primaryCmdRec) noexcept;
 void setDrawPipeline(const VPipelineType type) noexcept;
-void setDepthTransformMatrix(const Matrix4f& matrix) noexcept;
 void setDrawTransformMatrix(const Matrix4f& matrix) noexcept;
 Matrix4f computeTransformMatrixForUI() noexcept;
 Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const float viewZ, const float viewAngle) noexcept;
@@ -140,21 +139,6 @@ void addDrawWorldQuad(
     const uint8_t stMulG,
     const uint8_t stMulB,
     const uint8_t stMulA
-) noexcept;
-
-void addDepthWorldQuad(
-    const float x1,
-    const float y1,
-    const float z1,
-    const float x2,
-    const float y2,
-    const float z2,
-    const float x3,
-    const float y3,
-    const float z3,
-    const float x4,
-    const float y4,
-    const float z4
 ) noexcept;
 
 END_NAMESPACE(VDrawing)

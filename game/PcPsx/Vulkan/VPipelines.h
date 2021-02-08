@@ -17,10 +17,8 @@ namespace vgl {
 BEGIN_NAMESPACE(VPipelines)
 
 extern vgl::Sampler                 gSampler_draw;
-extern vgl::DescriptorSetLayout     gDescSetLayout_empty;
 extern vgl::DescriptorSetLayout     gDescSetLayout_draw;
 extern vgl::DescriptorSetLayout     gDescSetLayout_msaaResolve;
-extern vgl::PipelineLayout          gPipelineLayout_depth;
 extern vgl::PipelineLayout          gPipelineLayout_draw;
 extern vgl::PipelineLayout          gPipelineLayout_msaaResolve;
 extern vgl::Pipeline                gPipelines[(size_t) VPipelineType::NUM_TYPES];

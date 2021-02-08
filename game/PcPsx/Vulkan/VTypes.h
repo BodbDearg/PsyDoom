@@ -17,7 +17,6 @@ enum class VPipelineType : uint8_t {
     UI_8bpp,                    // 2D/UI: texture mapped @ 8bpp, alpha blended
     UI_8bpp_Add,                // 2D/UI: texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
     UI_16bpp,                   // 2D/UI: texture mapped @ 16bpp, alpha blended
-    World_Depth,                // 3D world/view: draw depth for occluding planes which mask sprites and other geometry
     World_SolidGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, no blending - for fully solid/opaque geometry.
     World_SolidGeomXray,        // 3D world/view: Texture mapped @ 8bpp, light diminishing, no blending - for fully solid/opaque geometry (X-Ray vision cheat).
     World_AlphaGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for masked and translucent walls.
@@ -80,14 +79,6 @@ struct VVertex_Draw {
     // Used to control blending when semi-transparency is active; a value of '128' is regarded as 1.0.
     // The 'alpha' semi transparency multiply component effectively is the alpha for the vertex.
     uint8_t stmulR, stmulG, stmulB, stmulA;
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Vulkan renderer vertex type: used to do a depth render pass and contains just a 3D position in world coordinates.
-// The output of the depth pass is used to help clip sprites and geometry.
-//------------------------------------------------------------------------------------------------------------------------------------------
-struct VVertex_Depth {
-    float x, y, z;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

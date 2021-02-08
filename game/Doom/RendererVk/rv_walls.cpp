@@ -116,7 +116,6 @@ static void RV_DrawSkyHoleWall(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the fully opaque upper, lower and mid walls for a seg.
-// Also add occluder planes to that need to be drawn to the depth pass.
 // Also marks the wall as viewed for the automap, if it's visible.
 //
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
@@ -158,10 +157,9 @@ void RV_DrawSegSolid(
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorheight);
 
-    // Y values to use for stretching occluder planes and sky holes to 'infinity' at the top and bottom of the screen.
-    // These are not really infinite of course, but Doom levels should never be any bigger than this.
+    // Top Y value to use for stretching sky holes to 'infinity' at the top of the screen.
+    // This coordinate is not really infinite of course, but Doom levels should never be any bigger than this.
     const float INF_TY = +65536.0f * 2.0f;
-    const float INF_BY = -65536.0f * 2.0f;
 
     // Get the upper/mid/lower textures for the seg.
     // Note that these array indexes are always guaranteed to be in range by the level setup code.
@@ -195,36 +193,14 @@ void RV_DrawSegSolid(
         midTy = std::min(midTy, bty);
         midBy = std::max(midBy, bby);
 
-        // Check to see if there is no opening, if so then treat the lower/upper walls as if they were one sided mid walls for occluder plane rendering
-        const bool bHasNoOpening = (midTy <= midBy);
-
-        // Figure out whether we are to draw the top and bottom walls as well as the top and bottom occluder planes.
+        // Figure out whether we are to draw the top and bottom walls.
         // We draw the top/bottom walls when there is a front face visible and if the wall is not a sky wall.
-        // We draw occluder planes if the opening gap narrows (floor or ceiling) and the eye hits the wall, or if the gap widens when the eye does not hit the wall.
         const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
         const bool bIsSkyOrVoidWall = (backSec.ceilingpic < 0);
         const bool bHasUpperWall = (bty < fty);
         const bool bHasLowerWall = (bby > fby);
-        const bool bEyeHitsUpperWall = ((viewZ >= midTy) || bHasNoOpening);
-        const bool bEyeHitsLowerWall = ((viewZ <= midBy) || bHasNoOpening);
         const bool bDrawUpperWall = (bHasUpperWall && bSegIsFrontFacing && (!bIsSkyOrVoidWall));
         const bool bDrawLowerWall = (bHasLowerWall && bSegIsFrontFacing);
-
-        const bool bDrawUpperWallOccPlane = (
-            bSegIsFrontFacing && (
-                ((fty > bty) && (viewZ >= bty)) ||  // Eye above or at step down
-                ((fty < bty) && (viewZ < fty))  ||  // Eye below step up
-                bHasNoOpening                       // Always draw if the wall is treated as fully solid, because stuff behind it won't render and draw occluders
-            )
-        );
-
-        const bool bDrawLowerWallOccPlane = (
-            bSegIsFrontFacing && (
-                ((fby < bby) && (viewZ <= bby)) ||  // Eye below or at step up
-                ((fby > bby) && (viewZ > fby))  ||  // Eye above step down
-                bHasNoOpening                       // Always draw if the wall is treated as fully solid, because stuff behind it won't render and draw occluders
-            )
-        );
 
         // Draw the upper wall
         if (bDrawUpperWall) {
@@ -248,17 +224,9 @@ void RV_DrawSegSolid(
             RV_DrawWall(x1, z1, x2, z2, fty, wallBy, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
-        // Draw the upper wall depth/occluder plane
-        if (bDrawUpperWallOccPlane) {
-            VDrawing::addDepthWorldQuad(
-                x1, INF_TY, z1,
-                x2, INF_TY, z2,
-                x2, midTy, z2,
-                x1, midTy, z1
-            );
-        }
-
         // Carve out a hole for the sky (area rendered with alpha '0' that the sky can be seen through) if there is a sky
+        const bool bHasNoOpening = (midTy <= midBy);
+
         if ((frontSec.ceilingpic == -1) && ((backSec.ceilingpic >= 0) || bHasNoOpening) && bSegIsFrontFacing) {
             // Hack special effect: treat the ceiling plane as a void (not to be rendered) and allow floating ceiling effects in certain situations.
             // If the ceiling is a sky and the next highest sky or void ceiling is higher then treat the sky ceiling as if it were a void ceiling too.
@@ -290,19 +258,9 @@ void RV_DrawSegSolid(
 
             RV_DrawWall(x1, z1, x2, z2, wallTy, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
         }
-
-        // Draw the lower wall depth/occluder plane
-        if (bDrawLowerWallOccPlane) {
-            VDrawing::addDepthWorldQuad(
-                x1, midBy, z1,
-                x2, midBy, z2,
-                x2, INF_BY, z2,
-                x1, INF_BY, z1
-            );
-        }
     }
 
-    // Draw the mid wall and the mid wall occluder plane
+    // Draw the mid wall
     const bool bDrawMidWall = (bSegIsFrontFacing && (!seg.backsector));
 
     if (bDrawMidWall) {
@@ -332,14 +290,6 @@ void RV_DrawSegSolid(
         );
 
         RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
-
-        // Draw the depth/occluder plane
-        VDrawing::addDepthWorldQuad(
-            x1, INF_TY, z1,
-            x2, INF_TY, z2,
-            x2, INF_BY, z2,
-            x1, INF_BY, z1
-        );
 
         // Carve out a hole for the sky (area rendered with alpha '0' that the sky can be seen through) if there is a sky
         if (frontSec.ceilingpic == -1) {

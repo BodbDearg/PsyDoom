@@ -16,7 +16,6 @@ public:
     bool init(
         vgl::LogicalDevice& device,
         const VkFormat colorFormat,
-        const VkFormat depthFormat,
         const VkFormat colorMsaaResolveFormat,
         const uint32_t sampleCount
     ) noexcept;

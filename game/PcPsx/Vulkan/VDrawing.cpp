@@ -35,17 +35,14 @@ static uint32_t gCurRingbufferIdx;
 static vgl::DescriptorPool  gDescriptorPool;
 static vgl::DescriptorSet*  gpDescriptorSet;
 
-// Command buffers for recording 'draw occluder plane' subpass and regular 'draw' subpass commands.
+// Command buffers for recording 'draw' subpass commands.
 // One for each ringbuffer slot, so we don't disturb a frame still being processed.
-static vgl::CmdBuffer gCmdBuffers_OccPlanePass[vgl::Defines::RINGBUFFER_SIZE];
 static vgl::CmdBuffer gCmdBuffers_DrawPass[vgl::Defines::RINGBUFFER_SIZE];
 
-// Command buffer recorders for each subpass or command buffer set
-static vgl::CmdBufferRecorder gCmdBufRec_DepthPass(VRenderer::gVkFuncs);
+// Command buffer recorder for the 'draw' subpass
 static vgl::CmdBufferRecorder gCmdBufRec_DrawPass(VRenderer::gVkFuncs);
 
-// Vertex buffers: for the 'depth draw' subpass (VVertex_Depth) and regular 'draw' subpass (VVertex_Draw)
-static VVertexBufferSet gVertexBuffers_Depth;
+// Vertex buffers: for the 'draw' subpass (VVertex_Draw)
 static VVertexBufferSet gVertexBuffers_Draw;
 
 // The current pipeline being used by the 'draw' subpass; used to help avoid unneccessary pipeline switches
@@ -56,11 +53,6 @@ static VPipelineType gCurDrawPipelineType;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
     // Initialize the command buffers used
-    for (vgl::CmdBuffer& buffer : gCmdBuffers_OccPlanePass) {
-        if (!buffer.init(device.getCmdPool(), VK_COMMAND_BUFFER_LEVEL_SECONDARY))
-            FatalErrors::raise("VDrawing: initialize a secondary command buffer used for drawing!");
-    }
-
     for (vgl::CmdBuffer& buffer : gCmdBuffers_DrawPass) {
         if (!buffer.init(device.getCmdPool(), VK_COMMAND_BUFFER_LEVEL_SECONDARY))
             FatalErrors::raise("VDrawing: initialize a secondary command buffer used for drawing!");
@@ -87,11 +79,9 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
         gpDescriptorSet->bindTextureAndSampler(0, vramTex, VPipelines::gSampler_draw);
     }
 
-    // Create the vertex buffer sets
-    constexpr uint32_t DEPTH_VB_SIZE = 256 * 1024;  // 256 KiB per buffer
+    // Create the vertex buffers
     constexpr uint32_t DRAW_VB_SIZE = 512 * 1024;   // 512 KiB per buffer
 
-    gVertexBuffers_Depth.init<VVertex_Depth>(device, DEPTH_VB_SIZE / sizeof(VVertex_Depth));
     gVertexBuffers_Draw.init<VVertex_Draw>(device, DRAW_VB_SIZE / sizeof(VVertex_Draw));
 
     // Current draw pipeline in use is undefined initially
@@ -105,7 +95,6 @@ void shutdown() noexcept {
     gCurDrawPipelineType = {};
     
     gVertexBuffers_Draw.destroy();
-    gVertexBuffers_Depth.destroy();
 
     if (gpDescriptorSet) {
         gpDescriptorSet->free(true);
@@ -115,10 +104,6 @@ void shutdown() noexcept {
     gDescriptorPool.destroy(true);
 
     for (vgl::CmdBuffer& buffer : gCmdBuffers_DrawPass) {
-        buffer.destroy(true);
-    }
-
-    for (vgl::CmdBuffer& buffer : gCmdBuffers_OccPlanePass) {
         buffer.destroy(true);
     }
 }
@@ -134,25 +119,16 @@ void beginFrame(
     // Remember which ringbuffer slot we are on
     gCurRingbufferIdx = ringbufferIdx;
 
-    // Begin recording the command buffers
-    gCmdBufRec_DepthPass.beginSecondaryCmdBuffer(
-        gCmdBuffers_OccPlanePass[ringbufferIdx],
+    // Begin recording the 'draw' subpass command buffer
+    gCmdBufRec_DrawPass.beginSecondaryCmdBuffer(
+        gCmdBuffers_DrawPass[ringbufferIdx],
         VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
         renderPass.getVkRenderPass(),
         0,
         framebuffer.getVkFramebuffer()
     );
 
-    gCmdBufRec_DrawPass.beginSecondaryCmdBuffer(
-        gCmdBuffers_DrawPass[ringbufferIdx],
-        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
-        renderPass.getVkRenderPass(),
-        1,
-        framebuffer.getVkFramebuffer()
-    );
-
-    // Setup the vertex buffers
-    gVertexBuffers_Depth.beginFrame(ringbufferIdx);
+    // Setup vertex buffers for the frame
     gVertexBuffers_Draw.beginFrame(ringbufferIdx);
 
     // Expect all this to already have the following state
@@ -162,14 +138,9 @@ void beginFrame(
     const uint32_t fbWidth = VRenderer::getVkRendererFbWidth();
     const uint32_t fbHeight = VRenderer::getVkRendererFbHeight();
 
-    // First commands in the renderpass are to set the viewport and scissors dimensions.
-    // Add these commands to both subpasses:
-    gCmdBufRec_DepthPass.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
+    // First commands in the 'draw' subpass are to set the viewport and scissors dimensions, and to bind the correct vertex buffer:
     gCmdBufRec_DrawPass.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
-    gCmdBufRec_DepthPass.setScissors(0, 0, fbWidth, fbHeight);
     gCmdBufRec_DrawPass.setScissors(0, 0, fbWidth, fbHeight);
-
-    // First command in the 'draw' subpass is to set the vertex buffer used
     gCmdBufRec_DrawPass.bindVertexBuffer(*gVertexBuffers_Draw.pCurBuffer, 0, 0);
 }
 
@@ -177,30 +148,19 @@ void beginFrame(
 // Performs end of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
 void endFrame(vgl::CmdBufferRecorder& primaryCmdRec) noexcept {
-    // Do any required drawing commands for the 'draw depth' subpass (if required)
-    if (gVertexBuffers_Depth.curOffset > 0) {
-        gCmdBufRec_DepthPass.bindVertexBuffer(*gVertexBuffers_Depth.pCurBuffer, 0, 0);
-        gCmdBufRec_DepthPass.bindPipeline(VPipelines::gPipelines[(uint32_t) VPipelineType::World_Depth]);
-        gVertexBuffers_Depth.endCurrentDrawBatch(gCmdBufRec_DepthPass);
-    }
-
     // Finish the current 'draw' subpass batch
     endCurrentDrawBatch();
 
     // Upload any vertices generated by invoking the 'end frame' event
-    gVertexBuffers_Depth.endFrame();
     gVertexBuffers_Draw.endFrame();
 
     // Current draw pipeline is undefined on ending a frame
     gCurDrawPipelineType = (VPipelineType) -1;
 
     // Done recording commands now
-    gCmdBufRec_DepthPass.endCmdBuffer();
     gCmdBufRec_DrawPass.endCmdBuffer();
 
-    // Submit the command buffers to the primary command buffer
-    primaryCmdRec.exec(gCmdBuffers_OccPlanePass[gCurRingbufferIdx].getVkCommandBuffer());
-    primaryCmdRec.nextSubpass(VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+    // Submit command buffers to the primary command buffer
     primaryCmdRec.exec(gCmdBuffers_DrawPass[gCurRingbufferIdx].getVkCommandBuffer());
 
     // No longer on a frame, so default this
@@ -233,13 +193,6 @@ void setDrawPipeline(const VPipelineType type) noexcept {
     if (bNeedToBindDescriptorSet) {
         gCmdBufRec_DrawPass.bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Set the model/view/projection transform matrix used for the 'depth render' subpass
-//------------------------------------------------------------------------------------------------------------------------------------------
-void setDepthTransformMatrix(const Matrix4f& matrix) noexcept {
-    gCmdBufRec_DepthPass.pushConstants(VPipelines::gPipelineLayout_depth, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), &matrix);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -574,35 +527,6 @@ void addDrawWorldQuad(
     pVerts[3].u = u3;   pVerts[3].v = v3;
     pVerts[4].u = u4;   pVerts[4].v = v4;
     pVerts[5].u = u1;   pVerts[5].v = v1;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Add a quadrilateral to the depth drawing subpass
-//------------------------------------------------------------------------------------------------------------------------------------------
-void addDepthWorldQuad(
-    const float x1,
-    const float y1,
-    const float z1,
-    const float x2,
-    const float y2,
-    const float z2,
-    const float x3,
-    const float y3,
-    const float z3,
-    const float x4,
-    const float y4,
-    const float z4
-) noexcept {
-    // Fill in the vertices
-    VVertex_Depth* const pVerts = gVertexBuffers_Depth.allocVerts<VVertex_Depth>(6);
-
-    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
-    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
-    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
-
-    pVerts[3].x = x3;   pVerts[3].y = y3;   pVerts[3].z = z3;
-    pVerts[4].x = x4;   pVerts[4].y = y4;   pVerts[4].z = z4;
-    pVerts[5].x = x1;   pVerts[5].y = y1;   pVerts[5].z = z1;
 }
 
 END_NAMESPACE(VDrawing)

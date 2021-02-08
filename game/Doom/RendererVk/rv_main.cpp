@@ -299,10 +299,8 @@ void RV_RenderPlayerView() noexcept {
         VDrawing::setDrawPipeline(VPipelineType::World_SolidGeom);
     }
 
-    // Set the drawing matrix to use and also use it for depth drawing pass.
-    // Before we do this also, ensure we are on a compatible drawing pipeline.
+    // Set the drawing transform matrix to use
     VDrawing::setDrawTransformMatrix(gViewProjMatrix);
-    VDrawing::setDepthTransformMatrix(gViewProjMatrix);
 
     // Draw all of the subsectors back to front
     const int32_t numDrawSubsecs = (int32_t) gRvDrawSubsecs.size();
