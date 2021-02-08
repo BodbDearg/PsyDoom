@@ -1,8 +1,8 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// World geometry shader: vertex.
-// This shader is responsible for drawing all walls and floors, with light diminishing effects.
+// World shader: vertex.
+// This shader handles all in-game walls, floors, and sprites with or without light diminishing effects.
 // All textures are also assumed to be 8 bits per pixel.
 //----------------------------------------------------------------------------------------------------------------------
 #include "ShaderCommon_Vert.h"

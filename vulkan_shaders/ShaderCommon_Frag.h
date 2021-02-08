@@ -83,69 +83,7 @@ vec4 tex4bpp(usampler2D vram, vec2 uv, uvec2 texWinPos, uvec2 texWinSize, uvec2 
 // Used to help reproduce the shading of the PlayStation.
 //----------------------------------------------------------------------------------------------------------------------
 vec4 psxR5G5B5BitCrush(vec4 color) {
-    // Note: I added a slight amount here to prevent weird rounding issues on NV hardware.
+    // Note: I added a slight amount here to prevent weird rounding/precision issues.
     // This small bias prevents artifacts where pixels rapidly cycle between one 5-bit color component and the next.
     return trunc(color * 31 + 0.0001) / 31;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-// Compute the light diminishing multiplier for a pixel Z depth and strength vector for the different diminish styles.
-// We use the strength vector here to avoid 'if()' branching when supporting the different light diminishing modes.
-//----------------------------------------------------------------------------------------------------------------------
-float getLightDiminishingMultiplier(float z, vec3 lightDimModeStrength) {
-    // This is the light diminishing intensity when the effect is off (no change)
-    float offDimIntensity = 128.0;
-
-    // Compute the light diminishing intensity for floors
-    float floorDimIntensity = 160.0 - z * 0.5;
-
-    // Compute the light diminishing intensity for walls
-    float wallDimintensity = ((128 * 65536) / z) / 256;
-
-    // Compute the light diminishing intensity we will use
-    float intensity = (
-        offDimIntensity * lightDimModeStrength.x +
-        wallDimintensity * lightDimModeStrength.y + 
-        floorDimIntensity * lightDimModeStrength.z
-    );
-
-    // Clamp the intensity to the min/max allowed amounts (0.5x to 1.25x in normalized coords) and add a little bias to
-    // fix precision issues and flipping back and forth between values when the calculations are close:
-    intensity = trunc(clamp(intensity, 64, 160) + 0.0001);
-
-    // Scale the diminish intensity back to normalized color coords rather than 0-128
-    return intensity / 128.0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-// Do shading for a world/3d-view texel, with or without light diminishing.
-// The light diminishing on/off setting should be a constant, so should hopefully not branch once optimized.
-//----------------------------------------------------------------------------------------------------------------------
-vec4 shadeWorldTexel(
-    bool bDoLightDiminish,
-    usampler2D vramTex,
-    vec3 in_color,
-    vec3 in_uv_z,
-    vec3 in_lightDimModeStrength,
-    uvec2 in_texWinPos,
-    uvec2 in_texWinSize,
-    uvec2 in_clutPos,
-    vec4 in_stmul
-) {
-    // Grab the basic texel
-    vec4 out_color = tex8bpp(vramTex, in_uv_z.xy, in_texWinPos, in_texWinSize, in_clutPos, in_stmul);
-
-    // Compute color multiply after accounting for input color and light diminishing effects.
-    // Add a little bias also to prevent switching back and forth between cases that are close, due to float inprecision...
-    vec3 colorMul = (bDoLightDiminish) ?
-        trunc(in_color * getLightDiminishingMultiplier(in_uv_z.z, in_lightDimModeStrength) + 0.0001) / 128.0 :
-        in_color / 128.0;
-
-    // The PSX renderer doesn't allow the color multiply to go larger than this:
-    colorMul = min(colorMul, 255.0 / 128.0);
-
-    // Apply the color multiply and bit crush the color in a manner similar to the PSX
-    out_color.rgb *= colorMul;
-    out_color = psxR5G5B5BitCrush(out_color);
-    return out_color;
 }

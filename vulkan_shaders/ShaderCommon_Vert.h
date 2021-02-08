@@ -20,7 +20,7 @@
 //  in_texWinPos        Top left XY position (in pixels) of the texture wrapping window
 //  in_texWinSize       Top left XY position (in pixels) of the texture wrapping window
 //  in_clutPos          XY position (in pixels) of the color lookup table for 4/8-bit textures that require it
-//  in_stmul            RGBA multiplier for when the pixel is marked semi-transparent (controls blending)
+//  in_stmul            RGBA multiplier for when a sampled texel is marked semi-transparent (controls blending)
 //----------------------------------------------------------------------------------------------------------------------
 #define DECLARE_VS_INPUTS_VVERTEX_DRAW()\
     layout(location = 0) in vec3    in_pos;             \
