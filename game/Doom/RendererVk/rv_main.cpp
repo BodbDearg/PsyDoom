@@ -6,19 +6,16 @@
 
 #include "rv_main.h"
 
-#include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
-#include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_user.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/Renderer/r_sky.h"
 #include "Doom/Renderer/r_things.h"
-#include "Gpu.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Vulkan/VDrawing.h"
@@ -32,111 +29,13 @@
 #include "rv_utils.h"
 #include "rv_walls.h"
 
-float       gViewXf, gViewYf, gViewZf;      // View position in floating point format
-float       gViewAnglef;                    // View angle in radians (float)
-float       gViewCosf, gViewSinf;           // Sin and cosine for view angle
-uint16_t    gClutX, gClutY;                 // X and Y position in VRAM for the current CLUT (16-bit pixel coords)
-Matrix4f    gSpriteBillboardMatrix;         // A transform matrix containing the axis vectors used for sprite billboarding
-Matrix4f    gViewProjMatrix;                // The combined view and projection transform matrix for the scene
-
-static int32_t gNextFloorDrawSubsecIdx;     // Index of the next draw subsector to have its floor drawn
-static int32_t gNextCeilDrawSubsecIdx;      // Index of the next draw subsector to have its ceiling drawn
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Draw all fully opaque walls for the given subsector
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSubsecOpaqueWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
-    // Draw all opaque segs in the subsector
-    const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
-    const seg_t* const pEndSeg = pBegSeg + subsec.numsegs;
-
-    for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
-        RV_DrawSegSolid(*pSeg, subsec, secR, secG, secB);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Draws floors starting at the given draw subsector index. Tries to batch together as many similar floors (same height) as possible.
-// We draw flats in this way to try and avoid artifacts where sprites that extend into the floor/ceiling get cut off by neighboring flats.
-// Sprites which exhibit this problem are explosions and fireballs. Merging flat planes helps avoid it.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
-    ASSERT((fromDrawSubsecIdx >= 0) && (fromDrawSubsecIdx < (int32_t) gRvDrawSubsecs.size()));
-
-    // If we've already drawn the floors for this subsector then we are done
-    if (gNextFloorDrawSubsecIdx != fromDrawSubsecIdx)
-        return;
-
-    while (true) {
-        // Get the light/color value for the sector
-        subsector_t& subsec = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx];
-        sector_t& sector = *subsec.sector;
-
-        uint8_t secR;
-        uint8_t secG;
-        uint8_t secB;
-        RV_GetSectorColor(sector, secR, secG, secB);
-
-        // Draw the floor
-        RV_DrawFlat(subsec, true, secR, secG, secB);
-        gNextFloorDrawSubsecIdx--;
-
-        // Should we end the draw batch here?
-        if (gNextFloorDrawSubsecIdx < 0)
-            break;
-
-        if (gRvDrawSubsecs[gNextFloorDrawSubsecIdx]->sector->floorheight != sector.floorheight)
-            break;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Draws ceilings starting at the given draw subsector index. Tries to batch together as many similar ceilings (same height) as possible.
-// We draw flats in this way to try and avoid artifacts where sprites that extend into the floor/ceiling get cut off by neighboring flats.
-// Sprites which exhibit this problem are explosions and fireballs. Merging flat planes helps avoid it.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
-    ASSERT((fromDrawSubsecIdx >= 0) && (fromDrawSubsecIdx < (int32_t) gRvDrawSubsecs.size()));
-
-    // If we've already drawn the ceilings for this subsector then we are done
-    if (gNextCeilDrawSubsecIdx != fromDrawSubsecIdx)
-        return;
-
-    while (true) {
-        // Get the light/color value for the sector
-        subsector_t& subsec = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx];
-        sector_t& sector = *subsec.sector;
-
-        uint8_t secR;
-        uint8_t secG;
-        uint8_t secB;
-        RV_GetSectorColor(sector, secR, secG, secB);
-
-        // Draw the ceiling
-        RV_DrawFlat(subsec, false, secR, secG, secB);
-        gNextCeilDrawSubsecIdx--;
-
-        // Should we end the draw batch here?
-        if (gNextCeilDrawSubsecIdx < 0)
-            break;
-
-        if (gRvDrawSubsecs[gNextCeilDrawSubsecIdx]->sector->ceilingheight != sector.ceilingheight)
-            break;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Draws all blended walls for the specified subsector
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSubsecBlendedWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
-    // Draw all blended and masked segs in the subsector
-    const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
-    const seg_t* const pEndSeg = pBegSeg + subsec.numsegs;
-
-    for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
-        RV_DrawSegBlended(*pSeg, subsec, secR, secG, secB);
-    }
-}
+float           gViewXf, gViewYf, gViewZf;      // View position in floating point format
+float           gViewAnglef;                    // View angle in radians (float)
+float           gViewCosf, gViewSinf;           // Sin and cosine for view angle
+uint16_t        gClutX, gClutY;                 // X and Y position in VRAM for the current CLUT (16-bit pixel coords)
+Matrix4f        gSpriteBillboardMatrix;         // A transform matrix containing the axis vectors used for sprite billboarding
+Matrix4f        gViewProjMatrix;                // The combined view and projection transform matrix for the scene
+VPipelineType   gOpaqueGeomPipeline;            // The pipeline to use for drawing opaque geometry
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws the sky in 'sky hole' regions of the screen that have been cut-out and marked with alpha '0'
@@ -261,6 +160,13 @@ static void RV_DetermineDrawParams() noexcept {
 
     // Save the VRAM coordinate of the current palette CLUT
     RV_ClutIdToClutXy(g3dViewPaletteClutId, gClutX, gClutY);
+
+    // Determine the pipeline to use for drawing fully opaque geometry
+    if (gpViewPlayer->cheats & CF_XRAYVISION) {
+        gOpaqueGeomPipeline = VPipelineType::World_SolidGeomXray;
+    } else {
+        gOpaqueGeomPipeline = VPipelineType::World_SolidGeom;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -278,28 +184,14 @@ void RV_RenderPlayerView() noexcept {
     RV_ClearOcclussion();
     RV_BuildDrawSubsecList();
 
-    // Build the list of sprite fragments to be drawn for each subsector
+    // Build the list of sprite fragments to be drawn for each subsector and set which floors/ceilings are to be drawn next
     RV_BuildSpriteFragLists();
+    RV_InitNextDrawFlats();
 
-    // Set which floor and ceiling is to be drawn next
-    gNextFloorDrawSubsecIdx = (int32_t) gRvDrawSubsecs.size() - 1;
-    gNextCeilDrawSubsecIdx = gNextFloorDrawSubsecIdx;
-
-    // Stat tracking: how many subsectors will we draw?
-    gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
-
-    // Finish up any UI drawing batches first - so we don't disturb their current transform matrix then set the projection matrix to use.
+    // Finish up any UI drawing batches first - so we don't disturb their current transform matrix.
+    // Then set a compatible drawing pipeline (so we can push shader constants) and then the projection matrix to use.
     VDrawing::endCurrentDrawBatch();
-
-    // Set the initial pipeline to the one used for drawing solid geometry.
-    // Doing this here also so we are on a compatible pipeline before setting the projection matrix (via push constants).
-    if (gpViewPlayer->cheats & CF_XRAYVISION) {
-        VDrawing::setDrawPipeline(VPipelineType::World_SolidGeomXray);
-    } else {
-        VDrawing::setDrawPipeline(VPipelineType::World_SolidGeom);
-    }
-
-    // Set the drawing transform matrix to use
+    VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
     VDrawing::setDrawTransformMatrix(gViewProjMatrix);
 
     // Draw all of the subsectors back to front
@@ -314,13 +206,6 @@ void RV_RenderPlayerView() noexcept {
         uint8_t secG;
         uint8_t secB;
         RV_GetSectorColor(sector, secR, secG, secB);
-
-        // Set the pipeline to use for drawing solid geometry (for wall and floor drawing)
-        if (gpViewPlayer->cheats & CF_XRAYVISION) {
-            VDrawing::setDrawPipeline(VPipelineType::World_SolidGeomXray);
-        } else {
-            VDrawing::setDrawPipeline(VPipelineType::World_SolidGeom);
-        }
 
         // Draw all subsector opaque elements in the same batch (using the pipeline set above)
         RV_DrawSubsecOpaqueWalls(subsec, secR, secG, secB);

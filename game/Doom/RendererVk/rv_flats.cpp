@@ -5,17 +5,20 @@
 
 #include "rv_walls.h"
 
-#include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
+#include "rv_bsp.h"
 #include "rv_main.h"
 #include "rv_utils.h"
 
 #include <cmath>
+
+static int32_t gNextFloorDrawSubsecIdx;     // Index of the next draw subsector to have its floor drawn
+static int32_t gNextCeilDrawSubsecIdx;      // Index of the next draw subsector to have its ceiling drawn
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Figures out a 2D point (on the XZ plane) to act as the center of a triangle fan type arrangement for the subsector.
@@ -115,7 +118,7 @@ static void RV_DrawPlane(
 // Draw the floor or ceiling plane for the specified subsector.
 // Assumes the correct drawing pipeline has been set beforehand.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
+static void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const uint8_t colR, const uint8_t colG, const uint8_t colB) noexcept {
     // Ignore degenerate subsectors: I don't think this should ever be the case but add for safety
     if (subsec.numLeafEdges <= 2)
         return;
@@ -137,6 +140,7 @@ void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const uint8_t
 
         if (gViewZf > floorH) {
             texture_t& floorTex = gpFlatTextures[gpFlatTranslation[sector.floorpic]];
+            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
             RV_DrawPlane<true>(pLeafEdges, numLeafEdges, floorH, triFanCenterX, triFanCenterY, colR, colG, colB, floorTex);
         }
     }
@@ -146,8 +150,89 @@ void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const uint8_t
 
         if ((gViewZf < ceilH) && (sector.ceilingpic >= 0)) {
             texture_t& ceilingTex = gpFlatTextures[gpFlatTranslation[sector.ceilingpic]];
+            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
             RV_DrawPlane<false>(pLeafEdges, numLeafEdges, ceilH, triFanCenterX, triFanCenterY, colR, colG, colB, ceilingTex);
         }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Must be called before drawing subsectors and their flats.
+// Initializes which subsector floor and ceiling is to be drawn next.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_InitNextDrawFlats() noexcept {
+    const int32_t lastSubsecIdx = (int32_t) gRvDrawSubsecs.size() - 1;
+    gNextFloorDrawSubsecIdx = lastSubsecIdx;
+    gNextCeilDrawSubsecIdx = lastSubsecIdx;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws floors starting at the given draw subsector index. Tries to batch together as many similar floors (same height) as possible.
+// We draw flats in this way to try and avoid artifacts where sprites that extend into the floor/ceiling get cut off by neighboring flats.
+// Sprites which exhibit this problem are explosions and fireballs. Merging flat planes helps avoid it.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
+    ASSERT((fromDrawSubsecIdx >= 0) && (fromDrawSubsecIdx < (int32_t) gRvDrawSubsecs.size()));
+
+    // If we've already drawn the floors for this subsector then we are done
+    if (gNextFloorDrawSubsecIdx != fromDrawSubsecIdx)
+        return;
+
+    while (true) {
+        // Get the light/color value for the sector
+        subsector_t& subsec = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx];
+        sector_t& sector = *subsec.sector;
+
+        uint8_t secR;
+        uint8_t secG;
+        uint8_t secB;
+        RV_GetSectorColor(sector, secR, secG, secB);
+
+        // Draw the floor
+        RV_DrawFlat(subsec, true, secR, secG, secB);
+        gNextFloorDrawSubsecIdx--;
+
+        // Should we end the draw batch here?
+        if (gNextFloorDrawSubsecIdx < 0)
+            break;
+
+        if (gRvDrawSubsecs[gNextFloorDrawSubsecIdx]->sector->floorheight != sector.floorheight)
+            break;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws ceilings starting at the given draw subsector index. Tries to batch together as many similar ceilings (same height) as possible.
+// We draw flats in this way to try and avoid artifacts where sprites that extend into the floor/ceiling get cut off by neighboring flats.
+// Sprites which exhibit this problem are explosions and fireballs. Merging flat planes helps avoid it.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
+    ASSERT((fromDrawSubsecIdx >= 0) && (fromDrawSubsecIdx < (int32_t) gRvDrawSubsecs.size()));
+
+    // If we've already drawn the ceilings for this subsector then we are done
+    if (gNextCeilDrawSubsecIdx != fromDrawSubsecIdx)
+        return;
+
+    while (true) {
+        // Get the light/color value for the sector
+        subsector_t& subsec = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx];
+        sector_t& sector = *subsec.sector;
+
+        uint8_t secR;
+        uint8_t secG;
+        uint8_t secB;
+        RV_GetSectorColor(sector, secR, secG, secB);
+
+        // Draw the ceiling
+        RV_DrawFlat(subsec, false, secR, secG, secB);
+        gNextCeilDrawSubsecIdx--;
+
+        // Should we end the draw batch here?
+        if (gNextCeilDrawSubsecIdx < 0)
+            break;
+
+        if (gRvDrawSubsecs[gNextCeilDrawSubsecIdx]->sector->ceilingheight != sector.ceilingheight)
+            break;
     }
 }
 

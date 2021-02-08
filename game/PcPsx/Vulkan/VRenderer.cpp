@@ -60,6 +60,14 @@ bool gbUsePsxRenderer = false;
 // Cached pointers to all Vulkan API functions
 vgl::VkFuncs gVkFuncs;
 
+// Coordinate system conversion: scalars to convert from normalized device coords to the original PSX framebuffer coords (256x240).
+// Also where the where the original PSX framebuffer coords start in NDC space.
+//
+// Note: these are updated only at the start of each frame and ONLY if there is a valid framebuffer.
+// They should not be used outside of rendering and should only be used if the framebuffer is valid.
+float gNdcToPsxScaleX, gNdcToPsxScaleY;
+float gPsxNdcOffsetX, gPsxNdcOffsetY;
+
 static bool                         gbDidBeginFrame;                // Whether a frame was begun
 static vgl::VulkanInstance          gVulkanInstance(gVkFuncs);      // Vulkan API instance object
 static vgl::WindowSurface           gWindowSurface;                 // Window surface to draw on
@@ -424,6 +432,33 @@ static void endFrame_VkRenderer() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Update the values which help convert from normalized device coordinates to the original PSX framebuffer coordinate system (256x240).
+//------------------------------------------------------------------------------------------------------------------------------------------
+void static updateCoordSysConversions() noexcept {
+    // Get the area of the window that the original PSX framebuffer would be blitted to for the classic renderer
+    const uint32_t screenWidth = gSwapchain.getSwapExtentWidth();
+    const uint32_t screenHeight = gSwapchain.getSwapExtentHeight();
+
+    int32_t blitDstX = {};
+    int32_t blitDstY = {};
+    uint32_t blitDstW = {};
+    uint32_t blitDstH = {};
+    Video::getClassicFramebufferWindowRect(screenWidth, screenHeight, blitDstX, blitDstY, blitDstW, blitDstH);
+
+    // Compute all the scalings and offsets from this.
+    // If there is space leftover at the sides or top and bottom then the original PSX framebuffer would be centered.
+    const float blitWPercent = (float) blitDstW / (float) screenWidth;
+    const float blitHPercent = (float) blitDstH / (float) screenHeight;
+    gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DISP_RES_X;
+    gNdcToPsxScaleY = (0.5f / blitHPercent) * Video::ORIG_DISP_RES_Y;
+
+    const float blitStartXPercent = (float) blitDstX / screenWidth;
+    const float blitStartYPercent = (float) blitDstY / screenHeight;
+    gPsxNdcOffsetX = blitStartXPercent * 2.0f;
+    gPsxNdcOffsetY = blitStartYPercent * 2.0f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes Vulkan for PsyDoom
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
@@ -609,6 +644,9 @@ bool beginFrame() noexcept {
             &imgBarrier
         );
     }
+
+    // Update coordinate system conversions for drawing code that needs it
+    updateCoordSysConversions();
 
     // Renderer specific initialization
     if (gbUsePsxRenderer) {

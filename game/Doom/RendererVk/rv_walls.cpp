@@ -6,6 +6,7 @@
 #include "rv_walls.h"
 
 #include "Doom/Game/doomdata.h"
+#include "Doom/Game/p_setup.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
@@ -121,7 +122,7 @@ static void RV_DrawSkyHoleWall(
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawSegSolid(
+static void RV_DrawSegSolid(
     const seg_t& seg,
     const subsector_t& subsec,
     const uint8_t colR,
@@ -221,6 +222,7 @@ void RV_DrawSegSolid(
                 vb = vt + clippedWallH;
             }
 
+            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
             RV_DrawWall(x1, z1, x2, z2, fty, wallBy, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
@@ -256,6 +258,7 @@ void RV_DrawSegSolid(
                 vt = vb - clippedWallH;
             }
 
+            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
             RV_DrawWall(x1, z1, x2, z2, wallTy, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
         }
     }
@@ -289,6 +292,7 @@ void RV_DrawSegSolid(
             (gpViewPlayer->cheats & CF_XRAYVISION)
         );
 
+        VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
         RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
 
         // Carve out a hole for the sky (area rendered with alpha '0' that the sky can be seen through) if there is a sky
@@ -304,7 +308,7 @@ void RV_DrawSegSolid(
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawSegBlended(
+static void RV_DrawSegBlended(
     const seg_t& seg,
     const subsector_t& subsec,
     const uint8_t colR,
@@ -406,6 +410,32 @@ void RV_DrawSegBlended(
 
     VDrawing::setDrawPipeline(VPipelineType::World_AlphaGeom);
     RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw all fully opaque walls for the given subsector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawSubsecOpaqueWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
+    // Draw all opaque segs in the subsector
+    const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
+    const seg_t* const pEndSeg = pBegSeg + subsec.numsegs;
+
+    for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
+        RV_DrawSegSolid(*pSeg, subsec, secR, secG, secB);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws all blended walls for the specified subsector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawSubsecBlendedWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
+    // Draw all blended and masked segs in the subsector
+    const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
+    const seg_t* const pEndSeg = pBegSeg + subsec.numsegs;
+
+    for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
+        RV_DrawSegBlended(*pSeg, subsec, secR, secG, secB);
+    }
 }
 
 #endif

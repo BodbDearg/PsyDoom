@@ -18,6 +18,8 @@ static constexpr float MAX_DEPTH = 32768.0f;
 
 extern bool             gbUsePsxRenderer;
 extern vgl::VkFuncs     gVkFuncs;
+extern float            gNdcToPsxScaleX, gNdcToPsxScaleY;
+extern float            gPsxNdcOffsetX, gPsxNdcOffsetY;
 
 void init() noexcept;
 void destroy() noexcept;

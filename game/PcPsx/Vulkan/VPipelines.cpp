@@ -456,7 +456,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
         specializationInfo.pData = &numSamples;
 
         initPipeline(
-            VPipelineType::Msaa_Resolve, renderPass, 2,
+            VPipelineType::Msaa_Resolve, renderPass, 1,
             gShaders_msaaResolve, &specializationInfo, gPipelineLayout_msaaResolve,
             gVertexBindingDesc_msaaResolve, gVertexAttribs_msaaResolve, C_ARRAY_SIZE(gVertexAttribs_msaaResolve),
             gInputAS_triList, gRasterState_noCull,

@@ -80,7 +80,7 @@ bool VRenderPass::init(
         vgl::SubpassDef& subpassDef = renderPassDef.subpasses.emplace_back();
 
         VkAttachmentReference& resolveAttachRef = subpassDef.colorAttachments.emplace_back();
-        resolveAttachRef.attachment = 2;
+        resolveAttachRef.attachment = 1;
         resolveAttachRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference& msaaColorAttachRef = subpassDef.inputAttachments.emplace_back();

@@ -5,16 +5,13 @@
 
 #include "rv_utils.h"
 
-#include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
-#include "Doom/Game/p_user.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
-#include "Gpu.h"
 #include "PsyQ/LIBGPU.h"
 #include "rv_bsp.h"
 #include "rv_main.h"

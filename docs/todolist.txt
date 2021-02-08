@@ -6,6 +6,7 @@
 - Vk renderer: get loading plaque draw working
 - Vk renderer: implement proper scaling and widescreen support
 - Vk renderer: add option for 32-bit (smooth) shading
+- Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Add offical toggle and keybinding for old/new renderer.
