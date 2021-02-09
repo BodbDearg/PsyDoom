@@ -13,6 +13,7 @@
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "rv_main.h"
+#include "rv_sky.h"
 #include "rv_utils.h"
 
 #include <cmath>
@@ -90,28 +91,25 @@ static void RV_DrawWall(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw a wall in solid black with alpha zero, which should be stretched past the top of the screen.
-// This carves out a hole (alpha 0) that the sky can be rendered through later.
-// The 'holes' are rendered from the top edges of walls upwards.
+// Draw adds wall a quad for where the sky should be shown.
+// Typically this is a quad that sits on the top of walls and which is stretched upwards towards 'infinity' past the edge of the screen.
+// Note: also providing the option to preserve existing underlying stuff already drawn - useful for certain 'void' or 'no-render' hacks.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSkyHoleWall(
+static void RV_DrawSkyWall(
     const float x1,
     const float z1,
     const float x2,
     const float z2,
     const float yt,
-    const float yb
+    const float yb,
+    const bool bNoOverwrite
 ) noexcept {
-    VDrawing::addDrawWorldQuad(
-        x1, yb, z1, 0, 0,
-        x1, yt, z1, 0, 0,
-        x2, yt, z2, 0, 0,
-        x2, yb, z2, 0, 0,
-        0, 0, 0,
-        0, 0,
-        0, 0, 0, 0,
-        VLightDimMode::None,
-        0, 0, 0, 0
+    VDrawing::setDrawPipeline(bNoOverwrite ? VPipelineType::World_Sky_NoOverwrite : VPipelineType::World_Sky);
+    RV_AddSkyQuad(
+        x1, yb, z1,
+        x1, yt, z1,
+        x2, yt, z2,
+        x2, yb, z2
     );
 }
 
@@ -158,7 +156,7 @@ static void RV_DrawSegSolid(
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorheight);
 
-    // Top Y value to use for stretching sky holes to 'infinity' at the top of the screen.
+    // Top Y value to use for stretching sky quads to 'infinity' at the top of the screen.
     // This coordinate is not really infinite of course, but Doom levels should never be any bigger than this.
     const float INF_TY = +65536.0f * 2.0f;
 
@@ -226,16 +224,16 @@ static void RV_DrawSegSolid(
             RV_DrawWall(x1, z1, x2, z2, fty, wallBy, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
-        // Carve out a hole for the sky (area rendered with alpha '0' that the sky can be seen through) if there is a sky
+        // Draw a sky wall if there is a sky
         const bool bHasNoOpening = (midTy <= midBy);
 
         if ((frontSec.ceilingpic == -1) && ((backSec.ceilingpic >= 0) || bHasNoOpening) && bSegIsFrontFacing) {
             // Hack special effect: treat the ceiling plane as a void (not to be rendered) and allow floating ceiling effects in certain situations.
             // If the ceiling is a sky and the next highest sky or void ceiling is higher then treat the sky ceiling as if it were a void ceiling too.
             // In the "GEC Master Edition" this can be used to create things like floating cubes, and in "Ballistyx" the altar top appears to be lower than surrounding building walls.
-            if (!RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec)) {
-                RV_DrawSkyHoleWall(x1, z1, x2, z2, INF_TY, fty);
-            }
+            const bool bNoOverwriteBg = RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
+            const float skyBy = (backSec.ceilingpic == -1) ? std::max(fby, bby) : fty;
+            RV_DrawSkyWall(x1, z1, x2, z2, INF_TY, skyBy, bNoOverwriteBg);
         }
 
         // Draw the lower wall
@@ -295,9 +293,9 @@ static void RV_DrawSegSolid(
         VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
         RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
 
-        // Carve out a hole for the sky (area rendered with alpha '0' that the sky can be seen through) if there is a sky
+        // Draw a sky wall if there is a sky
         if (frontSec.ceilingpic == -1) {
-            RV_DrawSkyHoleWall(x1, z1, x2, z2, INF_TY, fty);
+            RV_DrawSkyWall(x1, z1, x2, z2, INF_TY, fty, false);
         }
     }
 }

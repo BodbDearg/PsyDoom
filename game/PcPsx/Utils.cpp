@@ -201,11 +201,22 @@ void onBeginUIDrawing() noexcept {
         );
 
         if (bSetDrawMatrix) {
-            // Note: before setting the transform matrix make sure we are on a compatible pipeline that can accept it as push constants.
-            // Also make sure to end the current drawing batch, in case draw commands before this are affected by the matrix change.
+            // Note: before setting the transform matrix and other uniforms make sure we are on a compatible pipeline that can accept these push constants.
+            // Also make sure to end the current drawing batch, in case draw commands before this are affected by the uniform changes.
             VDrawing::endCurrentDrawBatch();
             VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
-            VDrawing::setDrawTransformMatrix(VDrawing::computeTransformMatrixForUI());
+
+            // Set the draw uniforms, including the transform matrix
+            {
+                VShaderUniforms uniforms = {};
+                uniforms.mvpMatrix = VDrawing::computeTransformMatrixForUI();
+                uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
+                uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;
+                uniforms.psxNdcOffsetX = VRenderer::gPsxNdcOffsetX;
+                uniforms.psxNdcOffsetY = VRenderer::gPsxNdcOffsetY;
+
+                VDrawing::setDrawUniforms(uniforms);
+            }
         }
     #endif
 }

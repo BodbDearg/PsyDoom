@@ -5,6 +5,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_VULKAN_RENDERER
 
+#include "Matrix4.h"
+
 #include <cstdint>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,7 +25,8 @@ enum class VPipelineType : uint8_t {
     World_AlphaSprite,          // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for sprites.
     World_AdditiveSprite,       // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended - for sprites.
     World_SubtractiveSprite,    // 3D world/view: Texture mapped @ 8bpp, light diminishing, subtractive blended - for sprites.
-    World_Sky,                  // 3D world/view: Used to draw the sky in areas of the screen which have been carved out with alpha '0'
+    World_Sky,                  // 3D world/view: Used to draw the sky
+    World_Sky_NoOverwrite,      // 3D world/view: Used to draw the sky but only if nothing else is drawn underneath
     Msaa_Resolve,               // Simple shader that resolves MSAA samples
     NUM_TYPES                   // Convenience declaration...
 };
@@ -42,7 +45,12 @@ enum class VLightDimMode : uint8_t {
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VShaderUniforms {
     // Modelview projection matrix: used to transform vertices in the vertex shader
-    float mvpMatrix[4][4];
+    Matrix4f mvpMatrix;
+
+    // Coordinate system conversion: scalars to convert from normalized device coords to the original PSX framebuffer coords (256x240).
+    // Also where the where the original PSX framebuffer coords start in NDC space.
+    float ndcToPsxScaleX, ndcToPsxScaleY;
+    float psxNdcOffsetX, psxNdcOffsetY;
 };
 
 // Make sure shader uniforms are not bigger than the minimum push constant range required by Vulkan, which is 128 bytes.

@@ -196,10 +196,16 @@ void setDrawPipeline(const VPipelineType type) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Set the model/view/projection transform matrix used for the 'draw' subpass
+// Set uniforms used by draw shaders, including the model/view/projection transform matrix
 //------------------------------------------------------------------------------------------------------------------------------------------
-void setDrawTransformMatrix(const Matrix4f& matrix) noexcept {
-    gCmdBufRec_DrawPass.pushConstants(VPipelines::gPipelineLayout_draw, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VShaderUniforms), &matrix);
+void setDrawUniforms(const VShaderUniforms& uniforms) noexcept {
+    gCmdBufRec_DrawPass.pushConstants(
+        VPipelines::gPipelineLayout_draw,
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+        0,
+        sizeof(VShaderUniforms),
+        &uniforms
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -527,6 +533,66 @@ void addDrawWorldQuad(
     pVerts[3].u = u3;   pVerts[3].v = v3;
     pVerts[4].u = u4;   pVerts[4].v = v4;
     pVerts[5].u = u1;   pVerts[5].v = v1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a 3D quad for the sky to the 'draw' subpass.
+// 
+// Notes:
+//  (1) The texture format is assumed to be 8 bits per pixel always.
+//  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VDrawing::addDrawWorldSkyQuad(
+    const float x1,
+    const float y1,
+    const float z1,
+    const float x2,
+    const float y2,
+    const float z2,
+    const float x3,
+    const float y3,
+    const float z3,
+    const float x4,
+    const float y4,
+    const float z4,
+    const float skyUOffset,
+    const uint16_t clutX,
+    const uint16_t clutY,
+    const uint16_t texWinX,
+    const uint16_t texWinY,
+    const uint16_t texWinW,
+    const uint16_t texWinH
+) noexcept {
+    // Fill in the vertices, starting first with common parameters.
+    // Note: we store the sky UV offset based on player rotation in the UV coordinate.
+    VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
+
+    for (uint32_t i = 0; i < 6; ++i) {
+        VVertex_Draw& vert = pVerts[i];
+        vert.r = 128;
+        vert.g = 128;
+        vert.b = 128;
+        vert.lightDimMode = VLightDimMode::None;
+        vert.u = skyUOffset;
+        vert.v = 0.0f;
+        vert.texWinX = texWinX;
+        vert.texWinY = texWinY;
+        vert.texWinW = texWinW;
+        vert.texWinH = texWinH;
+        vert.clutX = clutX;
+        vert.clutY = clutY;
+        vert.stmulR = 128;
+        vert.stmulG = 128;
+        vert.stmulB = 128;
+        vert.stmulA = 128;
+    }
+
+    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
+    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
+    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
+    pVerts[3].x = x3;   pVerts[3].y = y3;   pVerts[3].z = z3;
+    pVerts[4].x = x4;   pVerts[4].y = y4;   pVerts[4].z = z4;
+    pVerts[5].x = x1;   pVerts[5].y = y1;   pVerts[5].z = z1;
 }
 
 END_NAMESPACE(VDrawing)

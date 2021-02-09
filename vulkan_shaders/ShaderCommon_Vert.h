@@ -1,10 +1,4 @@
-//----------------------------------------------------------------------------------------------------------------------
-// Push constants used by most shaders, presently just a model/view/projection matrix
-//----------------------------------------------------------------------------------------------------------------------
-#define DECLARE_UNIFORMS()\
-    layout(push_constant) uniform Constants {   \
-        mat4    mvpMatrix;                      \
-    } constants;
+#include "ShaderCommon.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // Declare the vertex inputs for the vertex type 'VVertex_Draw'.

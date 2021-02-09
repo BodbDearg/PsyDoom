@@ -449,11 +449,11 @@ void static updateCoordSysConversions() noexcept {
     // If there is space leftover at the sides or top and bottom then the original PSX framebuffer would be centered.
     const float blitWPercent = (float) blitDstW / (float) screenWidth;
     const float blitHPercent = (float) blitDstH / (float) screenHeight;
-    gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DISP_RES_X;
-    gNdcToPsxScaleY = (0.5f / blitHPercent) * Video::ORIG_DISP_RES_Y;
+    gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DRAW_RES_X;
+    gNdcToPsxScaleY = (0.5f / blitHPercent) * Video::ORIG_DRAW_RES_Y;
 
-    const float blitStartXPercent = (float) blitDstX / screenWidth;
-    const float blitStartYPercent = (float) blitDstY / screenHeight;
+    const float blitStartXPercent = (float) blitDstX / (float) screenWidth;
+    const float blitStartYPercent = (float) blitDstY / (float) screenHeight;
     gPsxNdcOffsetX = blitStartXPercent * 2.0f;
     gPsxNdcOffsetY = blitStartYPercent * 2.0f;
 }

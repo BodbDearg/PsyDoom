@@ -25,6 +25,7 @@
 #include "rv_bsp.h"
 #include "rv_flats.h"
 #include "rv_occlusion.h"
+#include "rv_sky.h"
 #include "rv_sprites.h"
 #include "rv_utils.h"
 #include "rv_walls.h"
@@ -36,58 +37,6 @@ uint16_t        gClutX, gClutY;                 // X and Y position in VRAM for 
 Matrix4f        gSpriteBillboardMatrix;         // A transform matrix containing the axis vectors used for sprite billboarding
 Matrix4f        gViewProjMatrix;                // The combined view and projection transform matrix for the scene
 VPipelineType   gOpaqueGeomPipeline;            // The pipeline to use for drawing opaque geometry
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Draws the sky in 'sky hole' regions of the screen that have been cut-out and marked with alpha '0'
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSky() noexcept {
-    // Switch back to a UI transform matrix and set the draw pipeline
-    VDrawing::setDrawPipeline(VPipelineType::World_Sky);
-    VDrawing::setDrawTransformMatrix(VDrawing::computeTransformMatrixForUI());
-
-    // Do we need to upload the fire sky texture? If so then upload it...
-    // This code only executes for the fire sky - the regular sky is already in VRAM at this point.
-    texture_t& skytex = *gpSkyTexture;
-
-    if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
-        const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
-        RECT vramRect = getTextureVramRect(skytex);
-
-        LIBGPU_LoadImage(vramRect, pTexData);
-        skytex.uploadFrameNum = gNumFramesDrawn;
-    }
-
-    // Get the texture page coordinates for the sky texture, and the CLUT coordinates
-    Gpu::TexFmt texFmt = {};
-    uint16_t texPageX = {};
-    uint16_t texPageY = {};
-    Gpu::BlendMode blendMode = {};
-    RV_TexPageIdToTexParams(skytex.texPageId, texFmt, texPageX, texPageY, blendMode);
-
-    uint16_t clutX = {};
-    uint16_t clutY = {};
-    RV_ClutIdToClutXy(gPaletteClutId_CurMapSky, clutX, clutY);
-
-    // Compute the 'u' coordinate for the sky
-    // TODO: support sub pixel precision for sky rotation
-    const uint8_t texU = (uint8_t)(skytex.texPageCoordX - (gViewAngle >> ANGLETOSKYSHIFT));
-
-    // Draw the sky quad itself
-    // TODO: support widescreen here
-    VDrawing::addDrawUISprite(
-        0, 0, 256, skytex.height,
-        texU, skytex.texPageCoordY,
-        128, 128, 128, 128,
-        clutX, clutY,
-        texPageX, texPageY,
-        skytex.width / 2, skytex.height
-    );
-
-    // End this draw batch and switch back to the projection matrix
-    VDrawing::endCurrentDrawBatch();
-    VDrawing::setDrawTransformMatrix(gViewProjMatrix);
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Determine various parameters affecting the draw, including view position, projection matrix and so on
@@ -170,6 +119,20 @@ static void RV_DetermineDrawParams() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Sets up shader uniforms for 3D drawing
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void RV_SetShaderUniformsFor3D() noexcept {
+    VShaderUniforms uniforms = {};
+    uniforms.mvpMatrix = gViewProjMatrix;
+    uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
+    uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;
+    uniforms.psxNdcOffsetX = VRenderer::gPsxNdcOffsetX;
+    uniforms.psxNdcOffsetY = VRenderer::gPsxNdcOffsetY;
+
+    VDrawing::setDrawUniforms(uniforms);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Renders the player's view.
 // Some of the high level logic here is copied from the original renderer's 'R_RenderPlayerView'.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,11 +151,16 @@ void RV_RenderPlayerView() noexcept {
     RV_BuildSpriteFragLists();
     RV_InitNextDrawFlats();
 
-    // Finish up any UI drawing batches first - so we don't disturb their current transform matrix.
-    // Then set a compatible drawing pipeline (so we can push shader constants) and then the projection matrix to use.
+    // Upload a new sky texture for this frame if required
+    if (gbIsSkyVisible) {
+        RV_CacheSkyTex();
+    }
+
+    // Finish up any UI drawing batches first - so we don't disturb their current set of shader uniforms and transform matrix.
+    // Then set a compatible drawing pipeline (so we can push shader constants) and then set the shader uniforms to use.
     VDrawing::endCurrentDrawBatch();
     VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
-    VDrawing::setDrawTransformMatrix(gViewProjMatrix);
+    RV_SetShaderUniformsFor3D();
 
     // Draw all of the subsectors back to front
     const int32_t numDrawSubsecs = (int32_t) gRvDrawSubsecs.size();
@@ -207,23 +175,18 @@ void RV_RenderPlayerView() noexcept {
         uint8_t secB;
         RV_GetSectorColor(sector, secR, secG, secB);
 
-        // Draw all subsector opaque elements in the same batch (using the pipeline set above)
+        // Draw all subsector opaque elements first
         RV_DrawSubsecOpaqueWalls(subsec, secR, secG, secB);
         RV_DrawSubsecFloors(drawSubsecIdx);
         RV_DrawSubsecCeilings(drawSubsecIdx);
 
-        // Draw all subsector blended elements (this may change the draw pipeline)
+        // Draw all subsector blended elements on top of that, with sprites always being the topmost element
         RV_DrawSubsecBlendedWalls(subsec, secR, secG, secB);
         RV_DrawSubsecSpriteFrags(drawSubsecIdx);
     }
 
     // Cleanup after drawing the world: need to clear the draw order for each drawn subsector
     RV_ClearSubsecDrawIndexes();
-
-    // Draw the sky if showing, this is drawn through 'sky hole' regions of the screen that are marked and cut-out with alpha '0'
-    if (gbIsSkyVisible) {
-        RV_DrawSky();
-    }
 
     // Switch back to UI renderng
     Utils::onBeginUIDrawing();

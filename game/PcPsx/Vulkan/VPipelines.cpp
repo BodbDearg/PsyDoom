@@ -21,6 +21,8 @@ BEGIN_NAMESPACE(VPipelines)
 #include "SPIRV_colored_vert.bin.h"
 #include "SPIRV_msaa_resolve_frag.bin.h"
 #include "SPIRV_msaa_resolve_vert.bin.h"
+#include "SPIRV_sky_frag.bin.h"
+#include "SPIRV_sky_vert.bin.h"
 #include "SPIRV_ui_16bpp_frag.bin.h"
 #include "SPIRV_ui_4bpp_frag.bin.h"
 #include "SPIRV_ui_8bpp_frag.bin.h"
@@ -57,6 +59,8 @@ static vgl::ShaderModule    gShader_ui_8bpp_frag;
 static vgl::ShaderModule    gShader_ui_vert;
 static vgl::ShaderModule    gShader_world_frag;
 static vgl::ShaderModule    gShader_world_vert;
+static vgl::ShaderModule    gShader_sky_frag;
+static vgl::ShaderModule    gShader_sky_vert;
 static vgl::ShaderModule    gShader_msaa_resolve_frag;
 static vgl::ShaderModule    gShader_msaa_resolve_vert;
 
@@ -66,6 +70,7 @@ vgl::ShaderModule* const gShaders_ui_4bpp[]     = { &gShader_ui_vert, &gShader_u
 vgl::ShaderModule* const gShaders_ui_8bpp[]     = { &gShader_ui_vert, &gShader_ui_8bpp_frag };
 vgl::ShaderModule* const gShaders_ui_16bpp[]    = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
 vgl::ShaderModule* const gShaders_world[]       = { &gShader_world_vert, &gShader_world_frag };
+vgl::ShaderModule* const gShaders_sky[]         = { &gShader_sky_vert, &gShader_sky_frag };
 vgl::ShaderModule* const gShaders_msaaResolve[] = { &gShader_msaa_resolve_vert, &gShader_msaa_resolve_frag };
 
 // Pipeline samplers
@@ -138,6 +143,8 @@ static void initShaders(vgl::LogicalDevice& device) noexcept {
     initShader(device, gShader_ui_16bpp_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ui_16bpp_frag, sizeof(gSPIRV_ui_16bpp_frag), "ui_16bpp_frag");
     initShader(device, gShader_world_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_world_vert, sizeof(gSPIRV_world_vert), "world_vert");
     initShader(device, gShader_world_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_frag, sizeof(gSPIRV_world_frag), "world_frag");
+    initShader(device, gShader_sky_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_sky_vert, sizeof(gSPIRV_sky_vert), "sky_vert");
+    initShader(device, gShader_sky_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_sky_frag, sizeof(gSPIRV_sky_frag), "sky_frag");
     initShader(device, gShader_msaa_resolve_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_msaa_resolve_vert, sizeof(gSPIRV_msaa_resolve_vert), "msaa_resolve_vert");
     initShader(device, gShader_msaa_resolve_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_msaa_resolve_frag, sizeof(gSPIRV_msaa_resolve_frag), "msaa_resolve_frag");
 }
@@ -202,7 +209,7 @@ static void initPipelineLayouts(vgl::LogicalDevice& device) noexcept {
         VkDescriptorSetLayout vkDescSetLayout = gDescSetLayout_draw.getVkLayout();
 
         VkPushConstantRange uniformPushConstants = {};
-        uniformPushConstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;   // Just needed in the vertex shader
+        uniformPushConstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         uniformPushConstants.offset = 0;
         uniformPushConstants.size = sizeof(VShaderUniforms);
 
@@ -440,8 +447,9 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initDrawPipeline(VPipelineType::World_AlphaSprite, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_AdditiveSprite, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_SubtractiveSprite, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Sky, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_oneMinusDstAlpha, gDepthState_disabled);
-
+    initDrawPipeline(VPipelineType::World_Sky, renderPass, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Sky_NoOverwrite, renderPass, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_oneMinusDstAlpha, gDepthState_disabled);
+    
     // The pipeline to resolve MSAA: only bother creating this if we are doing MSAA.
     // Specialize the shader to the number of samples also, so that loops can be unrolled.
     if (numSamples > 1) {
@@ -483,6 +491,8 @@ void shutdown() noexcept {
 
     gShader_msaa_resolve_frag.destroy(true);
     gShader_msaa_resolve_vert.destroy(true);
+    gShader_sky_frag.destroy(true);
+    gShader_sky_vert.destroy(true);
     gShader_world_frag.destroy(true);
     gShader_world_vert.destroy(true);
     gShader_ui_16bpp_frag.destroy(true);

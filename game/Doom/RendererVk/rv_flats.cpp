@@ -46,13 +46,9 @@ static void RV_CalcSubsecTriFanCenter(
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <bool IsFloor>
 static void RV_DrawPlane(
-    // Edges for the convex plane section
-    const leafedge_t* const pLeafEdges,
-    const uint16_t numLeafEdges,
-    // Height to draw the plane at and triangle fan center
+    // Plane details
+    const subsector_t& subsec,
     const float planeH,
-    const float triFanCenterX,
-    const float triFanCenterZ,
     // Texture and shading details
     const uint8_t colR,
     const uint8_t colG,
@@ -66,9 +62,20 @@ static void RV_DrawPlane(
     uint16_t texWinX, texWinY;
     uint16_t texWinW, texWinH;
     RV_GetTexWinXyWh(tex, texWinX, texWinY, texWinW, texWinH);
+
+    // Get the xz point to use as the center of a triangle fan for the subsector
+    const leafedge_t* const pLeafEdges = gpLeafEdges + subsec.firstLeafEdge;
+    const uint16_t numLeafEdges = subsec.numLeafEdges;
+
+    float triFanCenterX;
+    float triFanCenterZ;
+    RV_CalcSubsecTriFanCenter(pLeafEdges, numLeafEdges, triFanCenterX, triFanCenterZ);
     
     // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
     const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Flats : VLightDimMode::None;
+ 
+    // Ensure we have the correct draw pipeline set
+    VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
 
     // Do all the triangles for the plane.
     // Note that all draw calls assume that the correct pipeline has already been set beforehand.
@@ -123,35 +130,27 @@ static void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const 
     if (subsec.numLeafEdges <= 2)
         return;
 
-    // Get the xz point to use as the center of a triangle fan for the subsector
-    const leafedge_t* const pLeafEdges = gpLeafEdges + subsec.firstLeafEdge;
-    const uint16_t numLeafEdges = subsec.numLeafEdges;
-
-    float triFanCenterX;
-    float triFanCenterY;
-    RV_CalcSubsecTriFanCenter(pLeafEdges, numLeafEdges, triFanCenterX, triFanCenterY);
-
     // Drawing the floor or ceiling?
     const sector_t& sector = *subsec.sector;
 
     if (bDrawFloor) {
-        // Draw the floor plane if above it
+        // Draw the floor plane if the view is above it
         const float floorH = RV_FixedToFloat(sector.floorheight);
 
         if (gViewZf > floorH) {
             texture_t& floorTex = gpFlatTextures[gpFlatTranslation[sector.floorpic]];
-            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
-            RV_DrawPlane<true>(pLeafEdges, numLeafEdges, floorH, triFanCenterX, triFanCenterY, colR, colG, colB, floorTex);
+            RV_DrawPlane<true>(subsec, floorH, colR, colG, colB, floorTex);
         }
     }
     else {
-        // Draw the ceiling plane if below it and not a sky (invalid ceiling pic)
+        // Draw the ceiling plane if the view is below it and if it's a normal ceiling and not a sky or void ceiling
         const float ceilH = RV_FixedToFloat(sector.ceilingheight);
 
-        if ((gViewZf < ceilH) && (sector.ceilingpic >= 0)) {
-            texture_t& ceilingTex = gpFlatTextures[gpFlatTranslation[sector.ceilingpic]];
-            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
-            RV_DrawPlane<false>(pLeafEdges, numLeafEdges, ceilH, triFanCenterX, triFanCenterY, colR, colG, colB, ceilingTex);
+        if (gViewZf < ceilH) {
+            if (sector.ceilingpic >= 0) {
+                texture_t& ceilingTex = gpFlatTextures[gpFlatTranslation[sector.ceilingpic]];
+                RV_DrawPlane<false>(subsec, ceilH, colR, colG, colB, ceilingTex);
+            }
         }
     }
 }
