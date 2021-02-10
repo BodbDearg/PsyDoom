@@ -12,6 +12,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
+#include "rv_data.h"
 #include "rv_main.h"
 #include "rv_sky.h"
 #include "rv_utils.h"
@@ -121,7 +122,7 @@ static void RV_DrawSkyWall(
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawSegSolid(
-    const seg_t& seg,
+    const rvseg_t& seg,
     const subsector_t& subsec,
     const uint8_t colR,
     const uint8_t colG,
@@ -136,16 +137,14 @@ static void RV_DrawSegSolid(
     line_t& line = *seg.linedef;
     line.flags |= ML_MAPPED;
 
-    // Get the xz positions of the seg endpoints in floating point format and compute the seg length
-    vertex_t& v1 = *seg.vertex1;
-    vertex_t& v2 = *seg.vertex2;
-    const float x1 = RV_FixedToFloat(v1.x);
-    const float z1 = RV_FixedToFloat(v1.y);
-    const float x2 = RV_FixedToFloat(v2.x);
-    const float z2 = RV_FixedToFloat(v2.y);
+    // Get the xz positions of the seg endpoints and the seg length
+    const float x1 = seg.v1x;
+    const float z1 = seg.v1y;
+    const float x2 = seg.v2x;
+    const float z2 = seg.v2y;
     const float dx = x2 - x1;
     const float dz = z2 - z1;
-    const float segLen = std::sqrtf(dx * dx + dz * dz);
+    const float segLen = seg.length;
 
     // Figure out the top and bottom y values of the front sector.
     //
@@ -168,7 +167,7 @@ static void RV_DrawSegSolid(
 
     // Get u and v offsets for the seg and compute the u1 and u2 coordinates.
     // Note that the 'u' coordinate must be divided by '2' as our texture format is always 8bpp and VRAM coordinates are in terms of 16bpp pixels.
-    const float uOffset = RV_FixedToFloat(side.textureoffset + seg.offset);
+    const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
     const float vOffset = RV_FixedToFloat(side.rowoffset);
     const float u1 = (uOffset) * 0.5f;
     const float u2 = (uOffset + segLen) * 0.5f;
@@ -307,7 +306,7 @@ static void RV_DrawSegSolid(
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawSegBlended(
-    const seg_t& seg,
+    const rvseg_t& seg,
     const subsector_t& subsec,
     const uint8_t colR,
     const uint8_t colG,
@@ -331,16 +330,14 @@ static void RV_DrawSegBlended(
     if (!bCanDraw)
         return;
 
-    // Get the xz positions of the seg endpoints in floating point format and compute the seg length
-    vertex_t& v1 = *seg.vertex1;
-    vertex_t& v2 = *seg.vertex2;
-    const float x1 = RV_FixedToFloat(v1.x);
-    const float z1 = RV_FixedToFloat(v1.y);
-    const float x2 = RV_FixedToFloat(v2.x);
-    const float z2 = RV_FixedToFloat(v2.y);
+    // Get the xz positions of the seg endpoints and the seg length
+    const float x1 = seg.v1x;
+    const float z1 = seg.v1y;
+    const float x2 = seg.v2x;
+    const float z2 = seg.v2y;
     const float dx = x2 - x1;
     const float dz = z2 - z1;
-    const float segLen = std::sqrtf(dx * dx + dz * dz);
+    const float segLen = seg.length;
 
     // Figure out the top and bottom y values of the front sector.
     //
@@ -358,7 +355,7 @@ static void RV_DrawSegBlended(
 
     // Get u and v offsets for the seg and compute the u1 and u2 coordinates.
     // Note that the 'u' coordinate must be divided by '2' as our texture format is always 8bpp and VRAM coordinates are in terms of 16bpp pixels.
-    const float uOffset = RV_FixedToFloat(side.textureoffset + seg.offset);
+    const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
     const float vOffset = RV_FixedToFloat(side.rowoffset);
     const float u1 = (uOffset) * 0.5f;
     const float u2 = (uOffset + segLen) * 0.5f;
@@ -415,10 +412,10 @@ static void RV_DrawSegBlended(
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawSubsecOpaqueWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
     // Draw all opaque segs in the subsector
-    const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
-    const seg_t* const pEndSeg = pBegSeg + subsec.numsegs;
+    const rvseg_t* const pBegSeg = gpRvSegs.get() + subsec.firstseg;
+    const rvseg_t* const pEndSeg = pBegSeg + subsec.numsegs;
 
-    for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
+    for (const rvseg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
         RV_DrawSegSolid(*pSeg, subsec, secR, secG, secB);
     }
 }
@@ -428,10 +425,10 @@ void RV_DrawSubsecOpaqueWalls(subsector_t& subsec, const uint8_t secR, const uin
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawSubsecBlendedWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
     // Draw all blended and masked segs in the subsector
-    const seg_t* const pBegSeg = gpSegs + subsec.firstseg;
-    const seg_t* const pEndSeg = pBegSeg + subsec.numsegs;
+    const rvseg_t* const pBegSeg = gpRvSegs.get() + subsec.firstseg;
+    const rvseg_t* const pEndSeg = pBegSeg + subsec.numsegs;
 
-    for (const seg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
+    for (const rvseg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
         RV_DrawSegBlended(*pSeg, subsec, secR, secG, secB);
     }
 }

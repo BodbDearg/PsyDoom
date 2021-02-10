@@ -9,6 +9,7 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/RendererVk/rv_data.h"
 #include "Doom/RendererVk/rv_main.h"
 #include "Doom/UI/am_main.h"
 #include "Doom/UI/o_main.h"
@@ -678,7 +679,11 @@ void P_Start() noexcept {
     M_ClearRandom();
 
     #if PSYDOOM_MODS
-        // PsyDoom: initialize the new framerate uncapped turning system
+        // PsyDoom: initialize data-structures for the Vulkan renderer and the new framerate uncapped turning system
+        #if PSYDOOM_VULKAN_RENDERER
+            RV_InitLevelData();
+        #endif
+
         P_PlayerInitTurning();
 
         // PsyDoom: don't interpolate the first draw frame if doing uncapped framerates
@@ -751,6 +756,11 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
             G_PlayerFinishLevel(playerIdx);
         }
     }
+
+    // PsyDoom: free data-structures for the Vulkan renderer
+    #if PSYDOOM_VULKAN_RENDERER
+        RV_FreeLevelData();
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

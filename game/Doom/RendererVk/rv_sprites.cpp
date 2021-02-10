@@ -15,6 +15,7 @@
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "rv_bsp.h"
+#include "rv_data.h"
 #include "rv_main.h"
 #include "rv_utils.h"
 
@@ -285,7 +286,7 @@ static void RV_SpriteFrag_VisitSubsector(const subsector_t& subsec, const Sprite
 // Checks to see if the seg is blocking and if the sprite fragment intersects it.
 // Returns 'true' if the sprite fragment is allowed to be split against the seg.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool RV_SpriteFrag_CanSplit_VisitSeg(const seg_t& seg, SpriteFrag& frag) noexcept {
+static bool RV_SpriteFrag_CanSplit_VisitSeg(const rvseg_t& seg, SpriteFrag& frag) noexcept {
     // Is the seg two sided? If so then don't consider it blocking provided the back sector floor height is <= the sprite height.
     if (seg.backsector) {
         if (RV_FixedToFloat(seg.backsector->floorheight) <= gSpriteFragThingPos[1])
@@ -339,7 +340,7 @@ static bool RV_SpriteFrag_CanSplit_VisitSeg(const seg_t& seg, SpriteFrag& frag) 
 static bool RV_SpriteFrag_CanSplit_VisitSubsector(const subsector_t& subsec, SpriteFrag& frag) noexcept {
     // Check if the fragment can be split against all segs in the subsector
     const int32_t numSegs = subsec.numsegs;
-    const seg_t* const pSegs = gpSegs + subsec.firstseg;
+    const rvseg_t* const pSegs = gpRvSegs.get() + subsec.firstseg;
 
     for (int32_t i = 0; i < numSegs; ++i) {
         if (!RV_SpriteFrag_CanSplit_VisitSeg(pSegs[i], frag))

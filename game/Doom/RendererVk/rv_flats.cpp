@@ -12,6 +12,7 @@
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "rv_bsp.h"
+#include "rv_data.h"
 #include "rv_main.h"
 #include "rv_utils.h"
 
@@ -23,22 +24,20 @@ static int32_t gNextCeilDrawSubsecIdx;      // Index of the next draw subsector 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Figures out a 2D point (on the XZ plane) to act as the center of a triangle fan type arrangement for the subsector.
 // The subsector is convex so we should be able to do a triangle fan from this point to every other subector edge, in order to fill it.
+// N.B: assumes the subsector has at least 3 leaf edges!
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_CalcSubsecTriFanCenter(
-    const leafedge_t* const pLeafEdges,
-    const uint16_t numLeafEdges,
+    const rvleafedge_t* const pLeafEdges,
     float& triFanCenterX,
     float& triFanCenterZ
 ) noexcept {
-    ASSERT(pLeafEdges);
-    ASSERT(numLeafEdges >= 3);
-
     // Just use the first 3 points in the subsector, we don't need to average the whole lot...
-    const vertex_t& v1 = *pLeafEdges[0].vertex;
-    const vertex_t& v2 = *pLeafEdges[1].vertex;
-    const vertex_t& v3 = *pLeafEdges[2].vertex;
-    triFanCenterX = RV_FixedToFloat(v1.x + v2.x + v3.x) * (1.0f / 3.0f);
-    triFanCenterZ = RV_FixedToFloat(v1.y + v2.y + v3.y) * (1.0f / 3.0f);
+    ASSERT(pLeafEdges);
+    const rvleafedge_t& e1 = pLeafEdges[0];
+    const rvleafedge_t& e2 = pLeafEdges[1];
+    const rvleafedge_t& e3 = pLeafEdges[2];
+    triFanCenterX = (e1.v1x + e2.v1x + e3.v1x) * (1.0f / 3.0f);
+    triFanCenterZ = (e1.v1y + e2.v1y + e3.v1y) * (1.0f / 3.0f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -64,12 +63,13 @@ static void RV_DrawPlane(
     RV_GetTexWinXyWh(tex, texWinX, texWinY, texWinW, texWinH);
 
     // Get the xz point to use as the center of a triangle fan for the subsector
-    const leafedge_t* const pLeafEdges = gpLeafEdges + subsec.firstLeafEdge;
+    const rvleafedge_t* const pLeafEdges = gpRvLeafEdges.get() + subsec.firstLeafEdge;
     const uint16_t numLeafEdges = subsec.numLeafEdges;
+    ASSERT(numLeafEdges >= 3);
 
     float triFanCenterX;
     float triFanCenterZ;
-    RV_CalcSubsecTriFanCenter(pLeafEdges, numLeafEdges, triFanCenterX, triFanCenterZ);
+    RV_CalcSubsecTriFanCenter(pLeafEdges, triFanCenterX, triFanCenterZ);
     
     // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
     const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Flats : VLightDimMode::None;
@@ -81,12 +81,12 @@ static void RV_DrawPlane(
     // Note that all draw calls assume that the correct pipeline has already been set beforehand.
     for (uint16_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx) {
         // Get the edge coords
-        const vertex_t& v1 = *pLeafEdges[edgeIdx].vertex;
-        const vertex_t& v2 = *pLeafEdges[(edgeIdx + 1) % numLeafEdges].vertex;
-        const float x1 = RV_FixedToFloat(v1.x);
-        const float z1 = RV_FixedToFloat(v1.y);
-        const float x2 = RV_FixedToFloat(v2.x);
-        const float z2 = RV_FixedToFloat(v2.y);
+        const rvleafedge_t& e1 = pLeafEdges[edgeIdx];
+        const rvleafedge_t& e2 = pLeafEdges[(edgeIdx + 1) % numLeafEdges];
+        const float x1 = e1.v1x;
+        const float z1 = e1.v1y;
+        const float x2 = e2.v1x;
+        const float z2 = e2.v1y;
 
         // Note that the U texture coordinates must be halved due to 8bpp textures - VRAM coords are in terms of 16bpp pixels
         const float u1 = x1 * 0.5f;

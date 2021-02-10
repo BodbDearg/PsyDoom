@@ -11,6 +11,7 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "rv_data.h"
 #include "rv_main.h"
 #include "rv_occlusion.h"
 #include "rv_utils.h"
@@ -22,7 +23,7 @@ std::vector<subsector_t*> gRvDrawSubsecs;
 // Tells if the given line segment is occluding for the purposes of visibility testing.
 // Occluding segs should mark out areas of the screen that they cover, so that nothing behind draws.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool RV_IsOccludingSeg(const seg_t& seg, const sector_t& frontSector) noexcept {
+static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) noexcept {
     // One sided lines are always occluding
     if (!seg.backsector)
         return true;
@@ -48,17 +49,15 @@ static bool RV_IsSubsecVisible(const int32_t subsecIdx) noexcept {
     // Run through all leaf edges for the subsector and see which ones are on-screen at least somewhat.
     // Add these onscreen edges to the x coordinate range for the subsector.
     subsector_t& subsec = gpSubsectors[subsecIdx];
-    const leafedge_t* const pLeafEdges = gpLeafEdges + subsec.firstLeafEdge;
+    const rvleafedge_t* const pLeafEdges = gpRvLeafEdges.get() + subsec.firstLeafEdge;
     const uint32_t numLeafEdges = subsec.numLeafEdges;
     
     for (uint32_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx) {
-        // Get the edge points in float format
-        const leafedge_t& edge1 = pLeafEdges[edgeIdx];
-        const leafedge_t& edge2 = pLeafEdges[(edgeIdx + 1) % numLeafEdges];
-        const vertex_t& p1 = *edge1.vertex;
-        const vertex_t& p2 = *edge2.vertex;
-        const float p1f[2] = { RV_FixedToFloat(p1.x), RV_FixedToFloat(p1.y) };
-        const float p2f[2] = { RV_FixedToFloat(p2.x), RV_FixedToFloat(p2.y) };
+        // Get the edge points
+        const rvleafedge_t& edge1 = pLeafEdges[edgeIdx];
+        const rvleafedge_t& edge2 = pLeafEdges[(edgeIdx + 1) % numLeafEdges];
+        const float p1f[2] = { edge1.v1x, edge1.v1y };
+        const float p2f[2] = { edge2.v1x, edge2.v1y };
 
         // Get the normalized device x bounds of the segment and skip if offscreen
         float edgeLx = {};
@@ -122,19 +121,17 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
     subsector_t& subsec = gpSubsectors[subsecIdx];
     sector_t& frontSector = *subsec.sector;
 
-    seg_t* const pSegs = gpSegs + subsec.firstseg;
+    rvseg_t* const pSegs = gpRvSegs.get() + subsec.firstseg;
     const uint32_t numSegs = subsec.numsegs;
     
     for (uint32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
         // Firstly, clear the line segment flags
-        seg_t& seg = pSegs[segIdx];
+        rvseg_t& seg = pSegs[segIdx];
         seg.flags = 0;
 
         // Determine whether the segment is backfacing so we can re-use the result later
-        const vertex_t& p1 = *seg.vertex1;
-        const vertex_t& p2 = *seg.vertex2;
-        const float p1f[2] = { RV_FixedToFloat(p1.x), RV_FixedToFloat(p1.y) };
-        const float p2f[2] = { RV_FixedToFloat(p2.x), RV_FixedToFloat(p2.y) };
+        const float p1f[2] = { seg.v1x, seg.v1y };
+        const float p2f[2] = { seg.v2x, seg.v2y };
 
         {
             const float viewDx = gViewXf - p1f[0];

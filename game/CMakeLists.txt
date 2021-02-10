@@ -135,6 +135,8 @@ set(SOURCE_FILES
     "Doom/Renderer/sprinfo.cpp"
     "Doom/RendererVk/rv_bsp.cpp"
     "Doom/RendererVk/rv_bsp.h"
+    "Doom/RendererVk/rv_data.cpp"
+    "Doom/RendererVk/rv_data.h"
     "Doom/RendererVk/rv_flats.cpp"
     "Doom/RendererVk/rv_flats.h"
     "Doom/RendererVk/rv_main.cpp"
