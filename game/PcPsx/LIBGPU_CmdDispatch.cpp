@@ -130,7 +130,7 @@ void submit(const SPRT& sprite) noexcept {
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::usingVulkanRenderer()) {
             uint16_t texWinW = gpu.texWinXMask + 1;             // This calculation should work because the mask should always be for POW2 texture wrapping
-            uint16_t texWinH = gpu.texWinYMask + 1;     
+            uint16_t texWinH = gpu.texWinYMask + 1;
             uint16_t texWinX = gpu.texPageX + gpu.texWinX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
             uint16_t texWinY = gpu.texPageY + gpu.texWinY;
 

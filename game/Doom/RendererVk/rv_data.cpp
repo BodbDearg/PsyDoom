@@ -62,12 +62,18 @@ static void RV_InitLeafEdges() noexcept {
     for (int32_t i = 0; i < numEdges; ++i) {
         const leafedge_t& srcEdge = gpLeafEdges[i];
         const vertex_t& srcVertex = *srcEdge.vertex;
-        const int32_t srcSegIdx = (int32_t)(srcEdge.seg - gpSegs);
-        
+
         rvleafedge_t& dstEdge = gpRvLeafEdges[i];
         dstEdge.v1x = RV_FixedToFloat(srcVertex.x);
         dstEdge.v1y = RV_FixedToFloat(srcVertex.y);
-        dstEdge.seg = gpRvSegs.get() + srcSegIdx;
+
+        if (srcEdge.seg) {
+            const int32_t srcSegIdx = (int32_t)(srcEdge.seg - gpSegs);
+            ASSERT(srcSegIdx < gNumSegs);
+            dstEdge.seg = gpRvSegs.get() + srcSegIdx;
+        } else {
+            dstEdge.seg = nullptr;
+        }
     }
 }
 
