@@ -43,7 +43,7 @@ Matrix4f computeTransformMatrixForUI() noexcept;
 Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const float viewZ, const float viewAngle) noexcept;
 void endCurrentDrawBatch() noexcept;
 
-void addDrawUILine(
+void addUILine(
     const float x1,
     const float y1,
     const float x2,
@@ -54,7 +54,7 @@ void addDrawUILine(
     const uint8_t a
 ) noexcept;
 
-void addDrawUISprite(
+void addUISprite(
     const float x,
     const float y,
     const float w,
@@ -73,7 +73,7 @@ void addDrawUISprite(
     const uint16_t texWinH
 ) noexcept;
 
-void addDrawWorldTriangle(
+void addWorldTriangle(
     const float x1,
     const float y1,
     const float z1,
@@ -105,7 +105,7 @@ void addDrawWorldTriangle(
     const uint8_t stMulA
 ) noexcept;
 
-void addDrawWorldQuad(
+void addWorldQuad(
     const float x1,
     const float y1,
     const float z1,
@@ -142,7 +142,7 @@ void addDrawWorldQuad(
     const uint8_t stMulA
 ) noexcept;
 
-void addDrawWorldInfiniteSkyWall(
+void addWorldInfiniteSkyWall(
     const float x1,
     const float z1,
     const float x2,

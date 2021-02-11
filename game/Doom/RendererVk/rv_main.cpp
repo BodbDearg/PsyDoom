@@ -156,7 +156,7 @@ void RV_RenderPlayerView() noexcept {
         RV_CacheSkyTex();
     }
 
-    // Finish up any UI drawing batches first - so we don't disturb their current set of shader uniforms and transform matrix.
+    // Finish UI drawing batches first (if some are still active) - so we don't disturb their current set of shader uniforms and transform matrix.
     // Then set a compatible drawing pipeline (so we can push shader constants) and then set the shader uniforms to use.
     VDrawing::endCurrentDrawBatch();
     VDrawing::setDrawPipeline(gOpaqueGeomPipeline);

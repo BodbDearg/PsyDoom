@@ -100,7 +100,7 @@ void RV_AddInfiniteSkyWall(
 
     // Ensure the correct draw pipeline is set and add the wall
     VDrawing::setDrawPipeline(VPipelineType::World_Sky);
-    VDrawing::addDrawWorldInfiniteSkyWall(x1, z1, x2, z2, yb, uOffset, clutX, clutY, texWinX, texWinY, texWinW, texWinH);
+    VDrawing::addWorldInfiniteSkyWall(x1, z1, x2, z2, yb, uOffset, clutX, clutY, texWinX, texWinY, texWinW, texWinH);
 }
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

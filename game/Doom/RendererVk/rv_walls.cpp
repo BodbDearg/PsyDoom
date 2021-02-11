@@ -77,7 +77,7 @@ static void RV_DrawWall(
     // Note: assuming the correct draw pipeline has been already set.
     const uint8_t alpha = (bBlend) ? 64 : 128;
 
-    VDrawing::addDrawWorldQuad(
+    VDrawing::addWorldQuad(
         x1, yb, z1, u1, vb,
         x1, yt, z1, u1, vt,
         x2, yt, z2, u2, vt,

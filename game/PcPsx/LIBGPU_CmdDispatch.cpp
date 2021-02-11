@@ -173,7 +173,7 @@ void submit(const SPRT& sprite) noexcept {
                 }
 
                 // Actually add the sprite primitive to the draw list
-                VDrawing::addDrawUISprite(
+                VDrawing::addUISprite(
                     drawRect.x,
                     drawRect.y,
                     drawRect.w,
@@ -253,7 +253,7 @@ void submit(const LINE_F2& line) noexcept {
 
             if (VRenderer::canSubmitDrawCmds()) {
                 VDrawing::setDrawPipeline(VPipelineType::Lines);
-                VDrawing::addDrawUILine(
+                VDrawing::addUILine(
                     drawLine.x1,
                     drawLine.y1,
                     drawLine.x2,

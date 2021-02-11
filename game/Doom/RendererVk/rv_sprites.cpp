@@ -247,7 +247,7 @@ static void RV_InitSpriteFrag(
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawSpriteFrag(const SpriteFrag& sprFrag) noexcept {
     VDrawing::setDrawPipeline(sprFrag.drawPipeline);
-    VDrawing::addDrawWorldQuad(
+    VDrawing::addWorldQuad(
         sprFrag.x1, sprFrag.yb, sprFrag.z1, sprFrag.ul, sprFrag.vb,
         sprFrag.x2, sprFrag.yb, sprFrag.z2, sprFrag.ur, sprFrag.vb,
         sprFrag.x2, sprFrag.yt, sprFrag.z2, sprFrag.ur, sprFrag.vt,

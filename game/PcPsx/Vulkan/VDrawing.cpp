@@ -263,7 +263,7 @@ void endCurrentDrawBatch() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a 2D/UI line to the 'draw' subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addDrawUILine(
+void addUILine(
     const float x1,
     const float y1,
     const float x2,
@@ -299,7 +299,7 @@ void addDrawUILine(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a UI sprite to the 'draw' subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addDrawUISprite(
+void addUISprite(
     const float x,
     const float y,
     const float w,
@@ -373,7 +373,7 @@ void addDrawUISprite(
 //  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
 //  (3) The alpha component is only used if alpha blending is being used.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addDrawWorldTriangle(
+void addWorldTriangle(
     const float x1,
     const float y1,
     const float z1,
@@ -443,7 +443,7 @@ void addDrawWorldTriangle(
 //  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
 //  (3) The alpha component is only used if alpha blending is being used.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addDrawWorldQuad(
+void addWorldQuad(
     const float x1,
     const float y1,
     const float z1,
@@ -524,7 +524,7 @@ void addDrawWorldQuad(
 //  (1) The texture format is assumed to be 8 bits per pixel always.
 //  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VDrawing::addDrawWorldInfiniteSkyWall(
+void VDrawing::addWorldInfiniteSkyWall(
     const float x1,
     const float z1,
     const float x2,
