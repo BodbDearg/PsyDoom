@@ -91,29 +91,6 @@ static void RV_DrawWall(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw adds wall a quad for where the sky should be shown.
-// Typically this is a quad that sits on the top of walls and which is stretched upwards towards 'infinity' past the edge of the screen.
-// Note: also providing the option to preserve existing underlying stuff already drawn - useful for certain 'void' or 'no-render' hacks.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSkyWall(
-    const float x1,
-    const float z1,
-    const float x2,
-    const float z2,
-    const float yt,
-    const float yb,
-    const bool bNoOverwrite
-) noexcept {
-    VDrawing::setDrawPipeline(bNoOverwrite ? VPipelineType::World_Sky_NoOverwrite : VPipelineType::World_Sky);
-    RV_AddSkyQuad(
-        x1, yb, z1,
-        x1, yt, z1,
-        x2, yt, z2,
-        x2, yb, z2
-    );
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the fully opaque upper, lower and mid walls for a seg.
 // Also marks the wall as viewed for the automap, if it's visible.
 //
@@ -153,10 +130,6 @@ static void RV_DrawSegSolid(
     const sector_t& frontSec = *subsec.sector;
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorheight);
-
-    // Top Y value to use for stretching sky quads to 'infinity' at the top of the screen.
-    // This coordinate is not really infinite of course, but Doom levels should never be any bigger than this.
-    const float INF_TY = +65536.0f * 2.0f;
 
     // Get the upper/mid/lower textures for the seg.
     // Note that these array indexes are always guaranteed to be in range by the level setup code.
@@ -225,12 +198,15 @@ static void RV_DrawSegSolid(
         const bool bHasNoOpening = (midTy <= midBy);
 
         if ((frontSec.ceilingpic == -1) && ((backSec.ceilingpic >= 0) || bHasNoOpening) && bSegIsFrontFacing) {
-            // Hack special effect: treat the ceiling plane as a void (not to be rendered) and allow floating ceiling effects in certain situations.
+            // Hack special effect: treat the sky wall plane as a void (not to be rendered) and allow floating ceiling effects in certain situations.
             // If the ceiling is a sky and the next highest sky or void ceiling is higher then treat the sky ceiling as if it were a void ceiling too.
             // In the "GEC Master Edition" this can be used to create things like floating cubes, and in "Ballistyx" the altar top appears to be lower than surrounding building walls.
-            const bool bNoOverwriteBg = RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
+            const bool bTreatAsVoidCeiling = RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
             const float skyBy = (backSec.ceilingpic == -1) ? std::max(fby, bby) : fty;
-            RV_DrawSkyWall(x1, z1, x2, z2, INF_TY, skyBy, bNoOverwriteBg);
+
+            if (!bTreatAsVoidCeiling) {
+                RV_AddInfiniteSkyWall(x1, z1, x2, z2, skyBy);
+            }
         }
 
         // Draw the lower wall
@@ -292,7 +268,7 @@ static void RV_DrawSegSolid(
 
         // Draw a sky wall if there is a sky
         if (frontSec.ceilingpic == -1) {
-            RV_DrawSkyWall(x1, z1, x2, z2, INF_TY, fty, false);
+            RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);
         }
     }
 }

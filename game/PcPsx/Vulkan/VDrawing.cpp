@@ -517,25 +517,19 @@ void addDrawWorldQuad(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a 3D quad for the sky to the 'draw' subpass.
+// Add a vertical quad for the sky to the 'draw' subpass.
+// The bottom y coordinate and 2 endpoints are specified only and it is stretched past the end of the screen.
 // 
 // Notes:
 //  (1) The texture format is assumed to be 8 bits per pixel always.
 //  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VDrawing::addDrawWorldSkyQuad(
+void VDrawing::addDrawWorldInfiniteSkyWall(
     const float x1,
-    const float y1,
     const float z1,
     const float x2,
-    const float y2,
     const float z2,
-    const float x3,
-    const float y3,
-    const float z3,
-    const float x4,
-    const float y4,
-    const float z4,
+    const float yb,
     const float skyUOffset,
     const uint16_t clutX,
     const uint16_t clutY,
@@ -545,11 +539,12 @@ void VDrawing::addDrawWorldSkyQuad(
     const uint16_t texWinH
 ) noexcept {
     // Fill in the vertices, starting first with common parameters.
-    // Note: we store the sky UV offset based on player rotation in the UV coordinate.
+    // Note: we store the sky U offset based on player rotation in the U coordinate.
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
 
     for (uint32_t i = 0; i < 6; ++i) {
         VVertex_Draw& vert = pVerts[i];
+        vert.y = yb;
         vert.r = 128;
         vert.g = 128;
         vert.b = 128;
@@ -568,12 +563,15 @@ void VDrawing::addDrawWorldSkyQuad(
         vert.stmulA = 128;
     }
 
-    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
-    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
-    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
-    pVerts[3].x = x3;   pVerts[3].y = y3;   pVerts[3].z = z3;
-    pVerts[4].x = x4;   pVerts[4].y = y4;   pVerts[4].z = z4;
-    pVerts[5].x = x1;   pVerts[5].y = y1;   pVerts[5].z = z1;
+    // Note: the 'v' coordinate is used to determine whether the vertex is for the bottom or the top of the sky wall.
+    // If the 'v' coord is 1 then it means the vertex is for the top of the sky.
+    // The top of the sky is always stretched past the top of the screen.
+    pVerts[0].x = x1;   pVerts[0].z = z1;   pVerts[0].v = 0;
+    pVerts[1].x = x2;   pVerts[1].z = z2;   pVerts[1].v = 1;
+    pVerts[2].x = x2;   pVerts[2].z = z2;   pVerts[2].v = 0;
+    pVerts[3].x = x2;   pVerts[3].z = z2;   pVerts[3].v = 1;
+    pVerts[4].x = x1;   pVerts[4].z = z1;   pVerts[4].v = 0;
+    pVerts[5].x = x1;   pVerts[5].z = z1;   pVerts[5].v = 1;
 }
 
 END_NAMESPACE(VDrawing)

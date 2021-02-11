@@ -142,19 +142,12 @@ void addDrawWorldQuad(
     const uint8_t stMulA
 ) noexcept;
 
-void addDrawWorldSkyQuad(
+void addDrawWorldInfiniteSkyWall(
     const float x1,
-    const float y1,
     const float z1,
     const float x2,
-    const float y2,
     const float z2,
-    const float x3,
-    const float y3,
-    const float z3,
-    const float x4,
-    const float y4,
-    const float z4,
+    const float yb,
     const float skyUOffset,
     const uint16_t clutX,
     const uint16_t clutY,

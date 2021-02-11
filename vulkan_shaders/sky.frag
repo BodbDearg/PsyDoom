@@ -45,4 +45,3 @@ void main() {
     out_color = tex8bpp(vramTex, ivec2(uv), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1));
     out_color = psxR5G5B5BitCrush(out_color);
 }
-

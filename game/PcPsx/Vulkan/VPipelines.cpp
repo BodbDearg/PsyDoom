@@ -101,14 +101,12 @@ VkPipelineColorBlendAttachmentState gBlendAS_noBlend;           // No blending
 VkPipelineColorBlendAttachmentState gBlendAS_alpha;             // Regular alpha blending
 VkPipelineColorBlendAttachmentState gBlendAS_additive;          // Additive blending
 VkPipelineColorBlendAttachmentState gBlendAS_subtractive;       // Subtractive blending
-VkPipelineColorBlendAttachmentState gBlendAS_oneMinusDstAlpha;  // Blend when dest alpha is zero (used for sky rendering)
 
 // Pipeline color blend state for all attachments: note that all these assume blending ONLY on attachment at index '0'!
 vgl::PipelineColorBlendState gBlendState_noBlend;
 vgl::PipelineColorBlendState gBlendState_alpha;
 vgl::PipelineColorBlendState gBlendState_additive;
 vgl::PipelineColorBlendState gBlendState_subtractive;
-vgl::PipelineColorBlendState gBlendState_oneMinusDstAlpha;
 
 // Pipeline depth/stencil states
 vgl::PipelineDepthStencilState gDepthState_disabled;        // No depth/stencil buffer: Depth write, test and all stencil operations disabled
@@ -308,11 +306,6 @@ static void initPipelineColorBlendAttachmentStates() noexcept {
     gBlendAS_subtractive.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
     gBlendAS_subtractive.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
     gBlendAS_subtractive.colorBlendOp = VK_BLEND_OP_REVERSE_SUBTRACT;
-
-    gBlendAS_oneMinusDstAlpha = blendAS_blendCommon;
-    gBlendAS_oneMinusDstAlpha.srcColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
-    gBlendAS_oneMinusDstAlpha.dstColorBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
-    gBlendAS_oneMinusDstAlpha.colorBlendOp = VK_BLEND_OP_ADD;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -335,10 +328,6 @@ static void initPipelineColorBlendStates() noexcept {
     gBlendState_subtractive = vgl::PipelineColorBlendState().setToDefault();
     gBlendState_subtractive.pAttachments = &gBlendAS_subtractive;
     gBlendState_subtractive.attachmentCount = 1;
-
-    gBlendState_oneMinusDstAlpha = vgl::PipelineColorBlendState().setToDefault();
-    gBlendState_oneMinusDstAlpha.pAttachments = &gBlendAS_oneMinusDstAlpha;
-    gBlendState_oneMinusDstAlpha.attachmentCount = 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -448,7 +437,6 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initDrawPipeline(VPipelineType::World_AdditiveSprite, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_SubtractiveSprite, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_Sky, renderPass, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Sky_NoOverwrite, renderPass, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_oneMinusDstAlpha, gDepthState_disabled);
     
     // The pipeline to resolve MSAA: only bother creating this if we are doing MSAA.
     // Specialize the shader to the number of samples also, so that loops can be unrolled.

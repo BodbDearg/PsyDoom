@@ -13,6 +13,7 @@
 #include "Doom/Renderer/r_sky.h"
 #include "Gpu.h"
 #include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VTypes.h"
 #include "PsyQ/LIBGPU.h"
 #include "rv_main.h"
 #include "rv_utils.h"
@@ -76,22 +77,17 @@ void RV_CacheSkyTex() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a quad for the sky at the specified world position.
-// Note: assumes the correct draw pipeline has been set beforehand and that the sky texture is cached.
+// Add a vertical wall for where the sky should be rendered, stretched past the top of the screen.
+// The xz endpoints of the wall are simply specified, as well as the bottom y coordinate.
+//
+// Note: also providing the option to preserve existing underlying stuff already drawn - useful for certain 'void' or 'no-render' hacks.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_AddSkyQuad(
+void RV_AddInfiniteSkyWall(
     const float x1,
-    const float y1,
     const float z1,
     const float x2,
-    const float y2,
     const float z2,
-    const float x3,
-    const float y3,
-    const float z3,
-    const float x4,
-    const float y4,
-    const float z4
+    const float yb
 ) noexcept {
     // Get the basic texture params for the sky
     uint16_t texWinX, texWinY;
@@ -101,7 +97,10 @@ void RV_AddSkyQuad(
 
     // Get the sky 'U' texture coordinate and add the sky triangle
     const float uOffset = RV_GetSkyUCoordOffset();
-    VDrawing::addDrawWorldSkyQuad(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, uOffset, clutX, clutY, texWinX, texWinY, texWinW, texWinH);
+
+    // Ensure the correct draw pipeline is set and add the wall
+    VDrawing::setDrawPipeline(VPipelineType::World_Sky);
+    VDrawing::addDrawWorldInfiniteSkyWall(x1, z1, x2, z2, yb, uOffset, clutX, clutY, texWinX, texWinY, texWinW, texWinH);
 }
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER
