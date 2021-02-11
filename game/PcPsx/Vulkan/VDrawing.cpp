@@ -317,30 +317,6 @@ void addDrawUISprite(
     const uint16_t texWinW,
     const uint16_t texWinH
 ) noexcept {
-    // Figure out the scaling for the 'u' texture coordinate depending on the texture bit rate.
-    // Note: UI 8bpp is the most commonly used, so I'm assuming that by default.
-    const VPipelineType pipeline = gCurDrawPipelineType;
-    float uScale = 1.0f / 2.0f;
-
-    switch (pipeline) {
-        case VPipelineType::UI_4bpp:
-            uScale = 1.0 / 4.0f;
-            break;
-
-        case VPipelineType::UI_8bpp:
-        case VPipelineType::UI_8bpp_Add:
-        case VPipelineType::World_Sky:
-            break;
-
-        case VPipelineType::UI_16bpp:
-            uScale = 1.0f;
-            break;
-
-        default:
-            ASSERT_FAIL("Unhandled pipeline type!");
-            break;
-    }
-
     // Fill in the vertices, starting first with common parameters
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
 
@@ -364,17 +340,22 @@ void addDrawUISprite(
     }
 
     // Fill in the xy positions
-    pVerts[0].x = x;                pVerts[0].y = y;
-    pVerts[1].x = (float)(x + w);   pVerts[1].y = y;
-    pVerts[2].x = (float)(x + w);   pVerts[2].y = (float)(y + h);
-    pVerts[3].x = (float)(x + w);   pVerts[3].y = (float)(y + h);
-    pVerts[4].x = x;                pVerts[4].y = (float)(y + h);
-    pVerts[5].x = x;                pVerts[5].y = y;
+    const float xl = x;
+    const float xr = x + w;
+    const float yt = y;
+    const float yb = y + h;
 
-    const float ul = u * uScale;
-    const float ur = (u + w) * uScale;
+    const float ul = u;
+    const float ur = u + w;
     const float vt = v;
     const float vb = v + h;
+
+    pVerts[0].x = xl;   pVerts[0].y = yt;
+    pVerts[1].x = xr;   pVerts[1].y = yt;
+    pVerts[2].x = xr;   pVerts[2].y = yb;
+    pVerts[3].x = xr;   pVerts[3].y = yb;
+    pVerts[4].x = xl;   pVerts[4].y = yb;
+    pVerts[5].x = xl;   pVerts[5].y = yt;
 
     pVerts[0].u = ul;   pVerts[0].v = vt;
     pVerts[1].u = ur;   pVerts[1].v = vt;

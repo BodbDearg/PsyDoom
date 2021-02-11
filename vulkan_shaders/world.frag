@@ -12,9 +12,9 @@ layout(set = 0, binding = 0) uniform usampler2D vramTex;
 layout(location = 0) in vec3 in_color;
 layout(location = 1) in vec3 in_uv_z;
 layout(location = 2) flat in vec3 in_lightDimModeStrength;
-layout(location = 3) flat in uvec2 in_texWinPos;
-layout(location = 4) flat in uvec2 in_texWinSize;
-layout(location = 5) flat in uvec2 in_clutPos;
+layout(location = 3) flat in ivec2 in_texWinPos;
+layout(location = 4) flat in ivec2 in_texWinSize;
+layout(location = 5) flat in ivec2 in_clutPos;
 layout(location = 6) flat in vec4 in_stmul;
 
 layout(location = 0) out vec4 out_color;
@@ -53,7 +53,7 @@ float getLightDiminishingMultiplier(float z, vec3 lightDimModeStrength) {
 //----------------------------------------------------------------------------------------------------------------------
 void main() {
     // Sample the raw texel first
-    out_color = tex8bpp(vramTex, in_uv_z.xy, in_texWinPos, in_texWinSize, in_clutPos, in_stmul);
+    out_color = tex8bpp(vramTex, ivec2(in_uv_z.xy), in_texWinPos, in_texWinSize, in_clutPos, in_stmul);
 
     // Compute color multiply after accounting for input color and light diminishing effects.
     // Add a little bias also to prevent switching back and forth between cases that are close, due to float inprecision...

@@ -1,9 +1,9 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // This module is responsible for initializing data-structures used by the new Vulkan renderer.
-// These are more optimal versions of the regular render data-structures, with fixes like vertex welding applied.
+// These are more optimal versions of the regular render data-structures for the new renderer.
 // The module is initialized on starting a level and frees resources on ending a level.
 // 
-// Note: if the Vulkan renderer is not supported then initializing level data is a no-op.
+// Note: if the Vulkan renderer is not supported then initializing VK level data is a no-op.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "rv_data.h"
 

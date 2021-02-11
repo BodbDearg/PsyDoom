@@ -1,20 +1,12 @@
 #include "ShaderCommon.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// Transforms the given UV coordinate by the texture window and wraps it to the texture window
-//----------------------------------------------------------------------------------------------------------------------
-vec2 transformTexWinUV(vec2 uv, uvec2 texWinPos, uvec2 texWinSize) {
-    vec2 wrappedUv = mod(fract(uv / texWinSize) + 1.0, 1.0) * texWinSize;
-    return wrappedUv + texWinPos;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-// Directly read a 16-bit texel from PSX VRAM at 16 bits per pixel with nearest neighbor filtering.
+// Directly read a 16-bit texel from PSX VRAM at 16 bits per pixel with no filtering.
 // Applies semi-transparency modulations to the pixel if the PSX 'semi-transparent' flag is set.
 //----------------------------------------------------------------------------------------------------------------------
-vec4 getVramTexel(usampler2D vram, vec2 uv, vec4 stmul) {
+vec4 getVramTexel(usampler2D vram, ivec2 uv, vec4 stmul) {
     // If the texel bits are all zero then the pixel is transparent
-    uint texelBits = textureLod(vram, uv, 0).r;
+    uint texelBits = texelFetch(vram, uv, 0).r;
 
     if (texelBits == 0)
         return vec4(0, 0, 0, 0);
@@ -36,48 +28,53 @@ vec4 getVramTexel(usampler2D vram, vec2 uv, vec4 stmul) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// Sample a texture from PSX VRAM at 16 bits per pixel with nearest neighbor filtering.
+// Sample a texel from PSX VRAM at 16 bits per pixel with no filtering
 //----------------------------------------------------------------------------------------------------------------------
-vec4 tex16bpp(usampler2D vram, vec2 uv, uvec2 texWinPos, uvec2 texWinSize, vec4 stmul) {
-    // Wrap the UV coordinate and transform by the texture window
-    uv = transformTexWinUV(uv, texWinPos, texWinSize);
+vec4 tex16bpp(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, vec4 stmul) {
+    // Wrap the UV coordinate and transform by the texture window position
+    uv = uv % texWinSize;
+    uv += texWinPos;
 
-    // Lookup the texel from the CLUT and return it
+    // Lookup the texel directly - no CLUT for 16bpp mode
     return getVramTexel(vram, uv, stmul);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// Sample a texture from PSX VRAM at 8 bits per pixel with nearest neighbor filtering.
+// Sample a texel from PSX VRAM at 8 bits per pixel with no filtering
 //----------------------------------------------------------------------------------------------------------------------
-vec4 tex8bpp(usampler2D vram, vec2 uv, uvec2 texWinPos, uvec2 texWinSize, uvec2 clutPos, vec4 stmul) {
-    // Wrap the UV coordinate and transform by the texture window
-    uv = transformTexWinUV(uv, texWinPos, texWinSize);
+vec4 tex8bpp(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, ivec2 clutPos, vec4 stmul) {
+    // Wrap the UV coordinate and transform by the texture window position
+    uv = uv % texWinSize;
+    uv += texWinPos;
 
-    // Figure out which 8-bits of the 16-bit pixel we will use for the CLUT index and get the CLUT index
-    uint vramPixel = textureLod(vram, uv, 0).r;
-    uint byteIdx = uint(uv.x * 2) & 1;
-    uint clutIdx = vramPixel >> (byteIdx * 8);
+    // Figure out which 8-bits of the 16-bit pixel we will use for the CLUT index and get the CLUT index.
+    // Note: must adjust the uv 'x' coordinate for the 8bpp pixel rate since VRAM is 16bpp.
+    uint vramTexel = texelFetch(vram, ivec2(uv.x / 2, uv.y), 0).r;
+    uint byteIdx = uv.x & 1;
+    uint clutIdx = vramTexel >> (byteIdx * 8);
     clutIdx &= 0xFF;
 
     // Lookup the texel from the CLUT and return it
-    return getVramTexel(vram, vec2(clutPos.x + clutIdx, clutPos.y), stmul);
+    return getVramTexel(vram, ivec2(clutPos.x + clutIdx, clutPos.y), stmul);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// Sample a texture from PSX VRAM at 4 bits per pixel with nearest neighbor filtering.
+// Sample a texel from PSX VRAM at 4 bits per pixel with nearest neighbor filtering.
 //----------------------------------------------------------------------------------------------------------------------
-vec4 tex4bpp(usampler2D vram, vec2 uv, uvec2 texWinPos, uvec2 texWinSize, uvec2 clutPos, vec4 stmul) {
-    // Wrap the UV coordinate and transform by the texture window
-    uv = transformTexWinUV(uv, texWinPos, texWinSize);
+vec4 tex4bpp(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, ivec2 clutPos, vec4 stmul) {
+    // Wrap the UV coordinate and transform by the texture window position
+    uv = uv % texWinSize;
+    uv += texWinPos;
 
-    // Figure out which 4-bits of the 16-bit pixel we will use for the CLUT index and get the CLUT index
-    uint vramPixel = textureLod(vram, uv, 0).r;
-    uint nibbleIdx = uint(uv.x * 4) & 3;
-    uint clutIdx = vramPixel >> (nibbleIdx * 4);
+    // Figure out which 4-bits of the 16-bit pixel we will use for the CLUT index and get the CLUT index.
+    // Note: must adjust the uv 'x' coordinate for the 4bpp pixel rate since VRAM is 16bpp.
+    uint vramTexel = texelFetch(vram, ivec2(uv.x / 4, uv.y), 0).r;
+    uint nibbleIdx = uv.x & 3;
+    uint clutIdx = vramTexel >> (nibbleIdx * 4);
     clutIdx &= 0xF;
 
     // Lookup the texel from the CLUT and return it
-    return getVramTexel(vram, vec2(clutPos.x + clutIdx, clutPos.y), stmul);
+    return getVramTexel(vram, ivec2(clutPos.x + clutIdx, clutPos.y), stmul);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

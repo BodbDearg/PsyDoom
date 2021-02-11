@@ -37,8 +37,8 @@ static void RV_GetSkyTexParams(
     RV_TexPageIdToTexParams(skytex.texPageId, texFmt, texWinX, texWinY, blendMode);
     ASSERT(texFmt == Gpu::TexFmt::Bpp8);
 
-    // Set the texture window size - note that x is halved because the format is 8bpp and not 16bpp (VRAM coords are 16bpp)
-    texWinW = skytex.width / 2;
+    // Set the texture window size
+    texWinW = skytex.width;
     texWinH = skytex.height;
 
     // Get the CLUT location

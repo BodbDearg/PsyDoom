@@ -40,8 +40,7 @@ static bool RV_HasHigherSurroundingSkyOrVoidCeiling(const sector_t& sector) noex
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw a wall (upper, mid, lower) for a seg.
-// UV coordinates are in terms of 8bpp texels, not VRAM's 16bpp texels.
+// Draw a wall (upper, mid, lower) for a seg
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawWall(
     // Wall extents
@@ -165,12 +164,11 @@ static void RV_DrawSegSolid(
     texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
     texture_t& tex_l = gpTextures[gpTextureTranslation[side.bottomtexture]];
 
-    // Get u and v offsets for the seg and compute the u1 and u2 coordinates.
-    // Note that the 'u' coordinate must be divided by '2' as our texture format is always 8bpp and VRAM coordinates are in terms of 16bpp pixels.
+    // Get u and v offsets for the seg and the u1/u2 coordinates
     const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
     const float vOffset = RV_FixedToFloat(side.rowoffset);
-    const float u1 = (uOffset) * 0.5f;
-    const float u2 = (uOffset + segLen) * 0.5f;
+    const float u1 = uOffset;
+    const float u2 = uOffset + segLen;
 
     // These are the y values for the top and bottom of the mid wall
     float midTy = fty;
@@ -353,12 +351,11 @@ static void RV_DrawSegBlended(
     const side_t& side = *seg.sidedef;
     texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
 
-    // Get u and v offsets for the seg and compute the u1 and u2 coordinates.
-    // Note that the 'u' coordinate must be divided by '2' as our texture format is always 8bpp and VRAM coordinates are in terms of 16bpp pixels.
+    // Get u and v offsets for the seg and the u1/u2 coordinates
     const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
     const float vOffset = RV_FixedToFloat(side.rowoffset);
-    const float u1 = (uOffset) * 0.5f;
-    const float u2 = (uOffset + segLen) * 0.5f;
+    const float u1 = uOffset;
+    const float u2 = uOffset + segLen;
 
     // Get the floor and ceiling heights for the back sector
     const sector_t& backSec = *seg.backsector;

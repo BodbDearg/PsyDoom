@@ -129,12 +129,13 @@ void submit(const SPRT& sprite) noexcept {
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::usingVulkanRenderer()) {
-            uint16_t texWinW = gpu.texWinXMask + 1;   // This calculation should work because the mask should always be for POW2 texture wrapping
-            uint16_t texWinH = gpu.texWinYMask + 1;
+            uint16_t texWinW = gpu.texWinXMask + 1;             // This calculation should work because the mask should always be for POW2 texture wrapping
+            uint16_t texWinH = gpu.texWinYMask + 1;     
+            uint16_t texWinX = gpu.texPageX + gpu.texWinX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
+            uint16_t texWinY = gpu.texPageY + gpu.texWinY;
 
             if (VRenderer::canSubmitDrawCmds()) {
-                // Determine the draw alpha, set the correct pipeline and correct the texture window width for texture format bit rate.
-                // The texture window width is format dependent (4/8/16 bit pixels), but the HW Vulkan renderer uses VRAM coords (16bpp pixels).
+                // Determine the draw alpha and set the correct pipeline
                 uint8_t drawAlpha;
 
                 if (gpu.blendMode != Gpu::BlendMode::Add) {
@@ -144,12 +145,12 @@ void submit(const SPRT& sprite) noexcept {
                     switch (gpu.texFmt) {
                         case Gpu::TexFmt::Bpp4:
                             VDrawing::setDrawPipeline(VPipelineType::UI_4bpp);
-                            texWinW /= 4;
+                            texWinX *= 4;
                             break;
 
                         case Gpu::TexFmt::Bpp8:
                             VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
-                            texWinW /= 2;
+                            texWinX *= 2;
                             break;
 
                         case Gpu::TexFmt::Bpp16:
@@ -168,7 +169,6 @@ void submit(const SPRT& sprite) noexcept {
                     ASSERT_LOG(gpu.texFmt == Gpu::TexFmt::Bpp8, "Unsupported blend mode and texture format combo!");
 
                     VDrawing::setDrawPipeline(VPipelineType::UI_8bpp_Add);
-                    texWinW /= 2;
                     drawAlpha = 128;
                 }
 
@@ -186,8 +186,8 @@ void submit(const SPRT& sprite) noexcept {
                     drawAlpha,
                     gpu.clutX,
                     gpu.clutY,
-                    gpu.texPageX + gpu.texWinX,
-                    gpu.texPageY + gpu.texWinY,
+                    texWinX,
+                    texWinY,
                     texWinW,
                     texWinH
                 );

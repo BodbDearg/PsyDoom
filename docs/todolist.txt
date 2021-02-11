@@ -1,6 +1,7 @@
 0.7 - GPU & Rendering?
 - Fix occasional stiching on firesky texture with new VK renderer.
 - VK renderer: fix sky issue on "They Will Repent" GEC ME level
+- VK renderer: fix sky leaking issue on other GEC ME level
 - VK renderer: rework automap for high precision
 - Vk renderer: get screen fades working
 - Vk renderer: get loading plaque draw working
@@ -8,6 +9,7 @@
 - Vk renderer: add option for 32-bit (smooth) shading
 - Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
+- Vk renderer: investigate crash on draw buffer resize
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Investigate audio format conversions.
 - Add offical toggle and keybinding for old/new renderer.

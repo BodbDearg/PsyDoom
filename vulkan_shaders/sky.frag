@@ -12,9 +12,9 @@ layout(set = 0, binding = 0) uniform usampler2D vramTex;
 
 layout(location = 0) in vec4 in_clipPos;
 layout(location = 1) flat in vec2 in_uv_offset;
-layout(location = 2) flat in uvec2 in_texWinPos;
-layout(location = 3) flat in uvec2 in_texWinSize;
-layout(location = 4) flat in uvec2 in_clutPos;
+layout(location = 2) flat in ivec2 in_texWinPos;
+layout(location = 3) flat in ivec2 in_texWinSize;
+layout(location = 4) flat in ivec2 in_clutPos;
 
 layout(location = 0) out vec4 out_color;
 
@@ -39,11 +39,10 @@ void main() {
 
     // The uv coord to use for the sky is based on the PSX framebuffer coord.
     // We also add offsetting to account for view rotation and that is stored in the vertex uv attribute.
-    // Note: also need to multiply 'u' coordinate by 0.5 to account for 8bpp texturing, since VRAM coords are for 16bpp.
     vec2 uv = psxCoords + in_uv_offset;
-    uv.x *= 0.5;
 
     // Just do a standard 8bpp texel lookup to draw the sky
-    out_color = tex8bpp(vramTex, uv, in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1));
+    out_color = tex8bpp(vramTex, ivec2(uv), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1));
     out_color = psxR5G5B5BitCrush(out_color);
 }
+

@@ -88,18 +88,13 @@ static void RV_DrawPlane(
         const float x2 = e2.v1x;
         const float z2 = e2.v1y;
 
-        // Note that the U texture coordinates must be halved due to 8bpp textures - VRAM coords are in terms of 16bpp pixels
-        const float u1 = x1 * 0.5f;
-        const float u2 = x2 * 0.5f;
-        const float u3 = triFanCenterX * 0.5f;
-
         // Draw the triangle: note that UV coords are just the vertex coords (scaled in the case of U) - no offsetting to worry about here.
         // For ceilings as well reverse the winding order so backface culling works OK.
         if constexpr (IsFloor) {
             VDrawing::addDrawWorldTriangle(
-                x1, planeH, z1, u1, z1,
-                x2, planeH, z2, u2, z2,
-                triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
+                x1, planeH, z1, x1, z1,
+                x2, planeH, z2, x2, z2,
+                triFanCenterX, planeH, triFanCenterZ, triFanCenterX, triFanCenterZ,
                 colR, colG, colB,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
@@ -108,9 +103,9 @@ static void RV_DrawPlane(
             );
         } else {
             VDrawing::addDrawWorldTriangle(
-                x1, planeH, z1, u1, z1,
-                triFanCenterX, planeH, triFanCenterZ, u3, triFanCenterZ,
-                x2, planeH, z2, u2, z2,
+                x1, planeH, z1, x1, z1,
+                triFanCenterX, planeH, triFanCenterZ, triFanCenterX, triFanCenterZ,
+                x2, planeH, z2, x2, z2,
                 colR, colG, colB,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,

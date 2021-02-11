@@ -194,7 +194,7 @@ static void RV_InitSpriteFrag(
 
     // Compute the UV coords for the sprite
     float ul = 0.0f;
-    float ur = (float) tex.width * 0.5f;    // Halved beause the texture format is 8bpp instead of 16bpp (VRAM coords are 16bpp)
+    float ur = tex.width;
     const float vt = 0.0f;
     const float vb = spriteH;
 

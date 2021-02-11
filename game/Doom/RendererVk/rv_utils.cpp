@@ -12,6 +12,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "Gpu.h"
 #include "PsyQ/LIBGPU.h"
 #include "rv_bsp.h"
 #include "rv_main.h"
@@ -109,10 +110,28 @@ void RV_TexPageIdToTexParams(
     texPageX = ((texPageId & 0x000Fu) >> 0) * 64u;
     texPageY = ((texPageId & 0x0010u) >> 4) * 256u;
     blendMode = (Gpu::BlendMode)((texPageId >> 5) & 0x0003u);
+
+    // Convert the texture page coords from 16-bpp coordinates to format native coords
+    switch (texFmt) {
+        case Gpu::TexFmt::Bpp16:    // Nothing to do for this format!
+            break;
+
+        case Gpu::TexFmt::Bpp8:
+            texPageX *= 2;
+            break;
+
+        case Gpu::TexFmt::Bpp4:
+            texPageX *= 4;
+            break;
+
+        default:
+            ASSERT_FAIL("Unhandled format!");
+            break;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the x/y and width/height of the given texture's texture window in VRAM coords (in terms of 16-bit pixels).
+// Get the x/y and width/height of the given texture's texture window in 8bpp coords.
 // Assumes the texture format is 8-bits per pixel, which will be the case for all textures used in the 3D world.
 //
 // Note: I had an assert which checked the 8bpp texture assumption but there are some cases with levels where invalid textures sometimes
@@ -123,9 +142,10 @@ void RV_GetTexWinXyWh(const texture_t& tex, uint16_t& texWinX, uint16_t& texWinY
     const uint16_t texPageX = ((texPageId & 0x000Fu) >> 0) * 64u;
     const uint16_t texPageY = ((texPageId & 0x0010u) >> 4) * 256u;
 
-    texWinX = texPageX + tex.texPageCoordX / 2;     // Divide by 2 because the format is 8bpp and VRAM coords are 16bpp
+    // Note: multiply 'texPageX' by 2 because it is in 16bpp coords and we are dealing with an 8bpp format here
+    texWinX = texPageX * 2 + tex.texPageCoordX;
     texWinY = texPageY + tex.texPageCoordY;
-    texWinW = tex.width / 2;                        // Divide by 2 because the format is 8bpp and VRAM coords are 16bpp
+    texWinW = tex.width;
     texWinH = tex.height;
 }
 

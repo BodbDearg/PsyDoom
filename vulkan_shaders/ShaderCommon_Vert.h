@@ -11,9 +11,9 @@
 //                      Values over 128.0 are overbright.
 //  in_lightDimMode     Light diminishing mode (VLightDimMode) for the 3D view shaders only. Ignored by UI shaders.
 //  in_uv               UV texture coordinate (in pixels)
-//  in_texWinPos        Top left XY position (in pixels) of the texture wrapping window
-//  in_texWinSize       Top left XY position (in pixels) of the texture wrapping window
-//  in_clutPos          XY position (in pixels) of the color lookup table for 4/8-bit textures that require it
+//  in_texWinPos        Top left XY position (in current format pixel coords) of the texture wrapping window
+//  in_texWinSize       Top left XY position (in current format pixel coords) of the texture wrapping window
+//  in_clutPos          XY position (in 16 bpp pixel coords) of the color lookup table for 4/8-bit textures
 //  in_stmul            RGBA multiplier for when a sampled texel is marked semi-transparent (controls blending)
 //----------------------------------------------------------------------------------------------------------------------
 #define DECLARE_VS_INPUTS_VVERTEX_DRAW()\

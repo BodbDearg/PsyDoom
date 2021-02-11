@@ -11,9 +11,9 @@ DECLARE_VS_INPUTS_VVERTEX_DRAW()
 
 layout(location = 0) out vec4 out_clipPos;
 layout(location = 1) flat out vec2 out_uv_offset;
-layout(location = 2) flat out uvec2 out_texWinPos;
-layout(location = 3) flat out uvec2 out_texWinSize;
-layout(location = 4) flat out uvec2 out_clutPos;
+layout(location = 2) flat out ivec2 out_texWinPos;      // Note: pre-convert these to ivec2 for the frag shader
+layout(location = 3) flat out ivec2 out_texWinSize;
+layout(location = 4) flat out ivec2 out_clutPos;
 
 void main() {
     // Transform the vertex to clipspace and pass this position along into the fragment shader
@@ -22,7 +22,7 @@ void main() {
 
     // Pass along all the other info we need to draw the sky
     out_uv_offset = in_uv;
-    out_texWinPos = in_texWinPos;
-    out_texWinSize = in_texWinSize;
-    out_clutPos = in_clutPos;
+    out_texWinPos = ivec2(in_texWinPos);
+    out_texWinSize = ivec2(in_texWinSize);
+    out_clutPos = ivec2(in_clutPos);
 }
