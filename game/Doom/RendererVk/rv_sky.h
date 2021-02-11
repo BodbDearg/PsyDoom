@@ -3,6 +3,7 @@
 #if PSYDOOM_VULKAN_RENDERER
 
 void RV_CacheSkyTex() noexcept;
+void RV_DrawBackgroundSky() noexcept;
 
 void RV_AddInfiniteSkyWall(
     const float x1,

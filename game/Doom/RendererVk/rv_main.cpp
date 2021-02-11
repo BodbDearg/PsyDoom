@@ -151,9 +151,11 @@ void RV_RenderPlayerView() noexcept {
     RV_BuildSpriteFragLists();
     RV_InitNextDrawFlats();
 
-    // Upload a new sky texture for this frame if required
+    // Upload a new sky texture for this frame if required.
+    // Also draw the base (background) sky that is needed in some scenarios.
     if (gbIsSkyVisible) {
         RV_CacheSkyTex();
+        RV_DrawBackgroundSky();
     }
 
     // Finish UI drawing batches first (if some are still active) - so we don't disturb their current set of shader uniforms and transform matrix.

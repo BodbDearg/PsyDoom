@@ -157,6 +157,28 @@ void addWorldInfiniteSkyWall(
     const uint16_t texWinH
 ) noexcept;
 
+void addWorldSkyQuad(
+    const float x1,
+    const float y1,
+    const float z1,
+    const float x2,
+    const float y2,
+    const float z2,
+    const float x3,
+    const float y3,
+    const float z3,
+    const float x4,
+    const float y4,
+    const float z4,
+    const float skyUOffset,
+    const uint16_t clutX,
+    const uint16_t clutY,
+    const uint16_t texWinX,
+    const uint16_t texWinY,
+    const uint16_t texWinW,
+    const uint16_t texWinH
+) noexcept;
+
 END_NAMESPACE(VDrawing)
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

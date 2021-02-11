@@ -13,6 +13,7 @@
 #include "Doom/Renderer/r_sky.h"
 #include "Gpu.h"
 #include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VRenderer.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "PsyQ/LIBGPU.h"
 #include "rv_main.h"
@@ -74,6 +75,47 @@ void RV_CacheSkyTex() noexcept {
 
     LIBGPU_LoadImage(vramRect, pTexData);
     skytex.uploadFrameNum = gNumFramesDrawn;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws a background sky which covers the screen.
+// This sky is rendered before anything else, so it is completely a background layer.
+// This is needed for some custom maps (in the GEC master edition) because they rely on being able to see through 1 sided walls.
+// Those 1 sided walls can be seen through because they are masked to be fully transparent.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawBackgroundSky() noexcept {
+    // Use an identity transform matrix for drawing this sky quad
+    VShaderUniforms uniforms = {};
+    uniforms.mvpMatrix = Matrix4f::IDENTITY();
+    uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
+    uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;
+    uniforms.psxNdcOffsetX = VRenderer::gPsxNdcOffsetX;
+    uniforms.psxNdcOffsetY = VRenderer::gPsxNdcOffsetY;
+    VDrawing::setDrawUniforms(uniforms);
+
+    // Set the correct draw pipeline
+    VDrawing::setDrawPipeline(VPipelineType::World_Sky);
+
+    // Get the basic texture params for the sky
+    uint16_t texWinX, texWinY;
+    uint16_t texWinW, texWinH;
+    uint16_t clutX, clutY;
+    RV_GetSkyTexParams(texWinX, texWinY, texWinW, texWinH, clutX, clutY);
+
+    // Get the sky 'U' texture coordinate and add the sky triangle
+    const float uOffset = RV_GetSkyUCoordOffset();
+
+    // Submit the quad
+    VDrawing::addWorldSkyQuad(
+        -1.0f, -1.0f, 0.0f,
+        +1.0f, -1.0f, 0.0f,
+        +1.0f, +1.0f, 0.0f,
+        -1.0f, +1.0f, 0.0f,
+        uOffset,
+        clutX, clutY,
+        texWinX, texWinY,
+        texWinW, texWinH
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

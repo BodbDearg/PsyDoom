@@ -519,10 +519,6 @@ void addWorldQuad(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a vertical quad for the sky to the 'draw' subpass.
 // The bottom y coordinate and 2 endpoints are specified only and it is stretched past the end of the screen.
-// 
-// Notes:
-//  (1) The texture format is assumed to be 8 bits per pixel always.
-//  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VDrawing::addWorldInfiniteSkyWall(
     const float x1,
@@ -548,9 +544,8 @@ void VDrawing::addWorldInfiniteSkyWall(
         vert.r = 128;
         vert.g = 128;
         vert.b = 128;
-        vert.lightDimMode = VLightDimMode::None;
+        vert.lightDimMode = VLightDimMode::None;    // Unused for sky rendering
         vert.u = skyUOffset;
-        vert.v = 0.0f;
         vert.texWinX = texWinX;
         vert.texWinY = texWinY;
         vert.texWinW = texWinW;
@@ -572,6 +567,63 @@ void VDrawing::addWorldInfiniteSkyWall(
     pVerts[3].x = x2;   pVerts[3].z = z2;   pVerts[3].v = 1;
     pVerts[4].x = x1;   pVerts[4].z = z1;   pVerts[4].v = 0;
     pVerts[5].x = x1;   pVerts[5].z = z1;   pVerts[5].v = 1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a quad for the sky to the 'draw' subpass. Unlike the infinite sky wall, this quad is not stretched in any way
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addWorldSkyQuad(
+    const float x1,
+    const float y1,
+    const float z1,
+    const float x2,
+    const float y2,
+    const float z2,
+    const float x3,
+    const float y3,
+    const float z3,
+    const float x4,
+    const float y4,
+    const float z4,
+    const float skyUOffset,
+    const uint16_t clutX,
+    const uint16_t clutY,
+    const uint16_t texWinX,
+    const uint16_t texWinY,
+    const uint16_t texWinW,
+    const uint16_t texWinH
+) noexcept {
+    // Fill in the vertices, starting first with common parameters.
+    // Note: we store the sky U offset based on player rotation in the U coordinate.
+    VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
+
+    for (uint32_t i = 0; i < 6; ++i) {
+        VVertex_Draw& vert = pVerts[i];
+        vert.r = 128;
+        vert.g = 128;
+        vert.b = 128;
+        vert.lightDimMode = VLightDimMode::None;    // Unused for sky rendering
+        vert.u = skyUOffset;
+        vert.v = 0.0f;
+        vert.texWinX = texWinX;
+        vert.texWinY = texWinY;
+        vert.texWinW = texWinW;
+        vert.texWinH = texWinH;
+        vert.clutX = clutX;
+        vert.clutY = clutY;
+        vert.stmulR = 128;
+        vert.stmulG = 128;
+        vert.stmulB = 128;
+        vert.stmulA = 128;
+    }
+
+    // Fill the rest of the coords
+    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
+    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
+    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
+    pVerts[3].x = x3;   pVerts[3].y = y3;   pVerts[3].z = z3;
+    pVerts[4].x = x4;   pVerts[4].y = y4;   pVerts[4].z = z4;
+    pVerts[5].x = x1;   pVerts[5].y = y1;   pVerts[5].z = z1;
 }
 
 END_NAMESPACE(VDrawing)

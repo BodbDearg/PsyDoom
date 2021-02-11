@@ -1,15 +1,16 @@
 #include "ShaderCommon.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// Directly read a 16-bit texel from PSX VRAM at 16 bits per pixel with no filtering.
+// Directly read a 16-bit texel from PSX VRAM with no filtering.
 // Applies semi-transparency modulations to the pixel if the PSX 'semi-transparent' flag is set.
+// Will discard the fragment if the texel is '0' - the same behavior as the original PSX GPU.
 //----------------------------------------------------------------------------------------------------------------------
-vec4 getVramTexel(usampler2D vram, ivec2 uv, vec4 stmul) {
-    // If the texel bits are all zero then the pixel is transparent
+vec4 sampleVramTexelWithDiscard(usampler2D vram, ivec2 uv, vec4 stmul) {
+    // If the texel bits are all zero then the pixel is to be discarded
     uint texelBits = texelFetch(vram, uv, 0).r;
 
     if (texelBits == 0)
-        return vec4(0, 0, 0, 0);
+        discard;
 
     // Unpack the color
     vec4 color = vec4(
@@ -28,21 +29,23 @@ vec4 getVramTexel(usampler2D vram, ivec2 uv, vec4 stmul) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// Sample a texel from PSX VRAM at 16 bits per pixel with no filtering
+// Sample a texel from PSX VRAM at 16 bits per pixel with no filtering.
+// Will discard the fragment if the texel is '0'.
 //----------------------------------------------------------------------------------------------------------------------
-vec4 tex16bpp(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, vec4 stmul) {
+vec4 tex16bppWithDiscard(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, vec4 stmul) {
     // Wrap the UV coordinate and transform by the texture window position
     uv = uv % texWinSize;
     uv += texWinPos;
 
-    // Lookup the texel directly - no CLUT for 16bpp mode
-    return getVramTexel(vram, uv, stmul);
+    // Sample the texel directly - no CLUT for 16bpp mode
+    return sampleVramTexelWithDiscard(vram, uv, stmul);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// Sample a texel from PSX VRAM at 8 bits per pixel with no filtering
+// Sample a texel from PSX VRAM at 8 bits per pixel with no filtering.
+// Will discard the fragment if the texel is '0'.
 //----------------------------------------------------------------------------------------------------------------------
-vec4 tex8bpp(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, ivec2 clutPos, vec4 stmul) {
+vec4 tex8bppWithDiscard(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, ivec2 clutPos, vec4 stmul) {
     // Wrap the UV coordinate and transform by the texture window position
     uv = uv % texWinSize;
     uv += texWinPos;
@@ -54,14 +57,15 @@ vec4 tex8bpp(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, ivec2
     uint clutIdx = vramTexel >> (byteIdx * 8);
     clutIdx &= 0xFF;
 
-    // Lookup the texel from the CLUT and return it
-    return getVramTexel(vram, ivec2(clutPos.x + clutIdx, clutPos.y), stmul);
+    // Sample the texel from the CLUT and return it
+    return sampleVramTexelWithDiscard(vram, ivec2(clutPos.x + clutIdx, clutPos.y), stmul);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 // Sample a texel from PSX VRAM at 4 bits per pixel with nearest neighbor filtering.
+// Will discard the fragment if the texel is '0'.
 //----------------------------------------------------------------------------------------------------------------------
-vec4 tex4bpp(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, ivec2 clutPos, vec4 stmul) {
+vec4 tex4bppWithDiscard(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, ivec2 clutPos, vec4 stmul) {
     // Wrap the UV coordinate and transform by the texture window position
     uv = uv % texWinSize;
     uv += texWinPos;
@@ -73,8 +77,8 @@ vec4 tex4bpp(usampler2D vram, ivec2 uv, ivec2 texWinPos, ivec2 texWinSize, ivec2
     uint clutIdx = vramTexel >> (nibbleIdx * 4);
     clutIdx &= 0xF;
 
-    // Lookup the texel from the CLUT and return it
-    return getVramTexel(vram, ivec2(clutPos.x + clutIdx, clutPos.y), stmul);
+    // Sample the texel from the CLUT and return it
+    return sampleVramTexelWithDiscard(vram, ivec2(clutPos.x + clutIdx, clutPos.y), stmul);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

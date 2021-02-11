@@ -41,7 +41,11 @@ void main() {
     // We also add offsetting to account for view rotation and that is stored in the vertex uv attribute.
     vec2 uv = psxCoords + in_uv_offset;
 
+    // Don't draw the sky past where it should be drawn
+    if (uv.y >= in_texWinSize.y)
+        discard;
+
     // Just do a standard 8bpp texel lookup to draw the sky
-    out_color = tex8bpp(vramTex, ivec2(uv), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1));
+    out_color = tex8bppWithDiscard(vramTex, ivec2(uv), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1));
     out_color = psxR5G5B5BitCrush(out_color);
 }
