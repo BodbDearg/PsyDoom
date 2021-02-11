@@ -174,8 +174,8 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
 
     while (true) {
         // Get the light/color value for the sector
-        subsector_t& subsec = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx];
-        sector_t& sector = *subsec.sector;
+        const subsector_t& subsec = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx];
+        const sector_t& sector = *subsec.sector;
 
         uint8_t secR;
         uint8_t secG;
@@ -186,11 +186,13 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         RV_DrawFlat(subsec, true, secR, secG, secB);
         gNextFloorDrawSubsecIdx--;
 
-        // Should we end the draw batch here?
+        // Should we end the draw batch here? Stop if there is no next draw sector or if the floor height changes.
         if (gNextFloorDrawSubsecIdx < 0)
             break;
 
-        if (gRvDrawSubsecs[gNextFloorDrawSubsecIdx]->sector->floorheight != sector.floorheight)
+        const sector_t& nextSector = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx]->sector;
+
+        if (nextSector.floorheight != sector.floorheight)
             break;
     }
 }
@@ -209,8 +211,8 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
 
     while (true) {
         // Get the light/color value for the sector
-        subsector_t& subsec = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx];
-        sector_t& sector = *subsec.sector;
+        const subsector_t& subsec = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx];
+        const sector_t& sector = *subsec.sector;
 
         uint8_t secR;
         uint8_t secG;
@@ -221,11 +223,26 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
         RV_DrawFlat(subsec, false, secR, secG, secB);
         gNextCeilDrawSubsecIdx--;
 
-        // Should we end the draw batch here?
+        // Should we end the draw batch here? Stop if there is no next draw sector or if the ceiling height changes.
         if (gNextCeilDrawSubsecIdx < 0)
             break;
 
-        if (gRvDrawSubsecs[gNextCeilDrawSubsecIdx]->sector->ceilingheight != sector.ceilingheight)
+        const sector_t& nextSector = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx]->sector;
+
+        if (nextSector.ceilingheight != sector.ceilingheight)
+            break;
+
+        // Also break the batch if there is a change in sky or void ceiling status.
+        // If we don't do this then sky walls can sometimes bleed through to other neighboring ceilings:
+        const bool bIsSkyCeil = (sector.ceilingpic == -1);
+        const bool bIsNextSkyCeil = (nextSector.ceilingpic == -1);
+        const bool bIsVoidCeil = (sector.ceilingpic < -1);
+        const bool bIsNextVoidCeil = (nextSector.ceilingpic < -1);
+
+        if (bIsSkyCeil != bIsNextSkyCeil)
+            break;
+
+        if (bIsVoidCeil != bIsNextVoidCeil)
             break;
     }
 }

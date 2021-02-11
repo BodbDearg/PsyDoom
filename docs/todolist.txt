@@ -1,5 +1,4 @@
 0.7 - GPU & Rendering?
-- VK renderer: fix sky leaking issue on other GEC ME level
 - VK renderer: fix slight texcoord offset
 - VK renderer: rework automap for high precision
 - Vk renderer: get screen fades working
