@@ -37,7 +37,14 @@ static void fatalErrorHandler(const char* const msg) noexcept {
     // Kill the current window and show a GUI error box, except if in headless mode
     if (ProgArgs::gbHeadlessMode)
         return;
-    
+
+    // Only handle 1 fatal error in case further errors are raised while shutting down video!
+    static bool bDidHandleFatalError = false;
+
+    if (bDidHandleFatalError)
+        return;
+
+    bDidHandleFatalError = true;
     Video::shutdownVideo();
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "A fatal error has occurred!", msg, nullptr);
 }

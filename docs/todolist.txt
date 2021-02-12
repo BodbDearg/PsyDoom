@@ -20,7 +20,6 @@
 - Investigate occasional glitches switching between classic and new vk renderer
     - First noticed in House Of Pain, in lava area near the entrace.
     - More noticeable when moving.
-- Investigate strange rendering issue in 'The Mansion' with classic renderer
 - Investigate game end pause issue (unable to unpause)
     - May need to prioritize continue vs pause if conflicting key bindings
 - Fix bug when pausing and turning with view snapping back slightly.
