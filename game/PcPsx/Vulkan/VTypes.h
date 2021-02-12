@@ -15,6 +15,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 enum class VPipelineType : uint8_t {
     Lines,                      // Solid colored lines, alpha blended: can be in either 2D or 3D (for debug use for example)
+    Colored,                    // Solid colored triangles, alpha blended: can be in either 2D or 3D (for debug use for example)
     UI_4bpp,                    // 2D/UI: texture mapped @ 4bpp, alpha blended
     UI_8bpp,                    // 2D/UI: texture mapped @ 8bpp, alpha blended
     UI_8bpp_Add,                // 2D/UI: texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)

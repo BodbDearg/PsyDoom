@@ -2,7 +2,6 @@
 - VK renderer: rework automap for high precision
 - Vk renderer: get screen fades working
 - Vk renderer: get loading plaque draw working
-- Vk renderer: implement proper scaling and widescreen support
 - Vk renderer: add option for 32-bit (smooth) shading
 - Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
@@ -21,6 +20,7 @@
 - Investigate occasional glitches switching between classic and new vk renderer
     - First noticed in House Of Pain, in lava area near the entrace.
     - More noticeable when moving.
+- Investigate strange rendering issue in 'The Mansion' with classic renderer
 - Investigate game end pause issue (unable to unpause)
     - May need to prioritize continue vs pause if conflicting key bindings
 - Fix bug when pausing and turning with view snapping back slightly.

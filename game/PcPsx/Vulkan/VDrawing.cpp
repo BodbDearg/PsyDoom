@@ -134,13 +134,17 @@ void beginFrame(
     // Expect all this to already have the following state
     ASSERT(gCurDrawPipelineType == (VPipelineType) -1);
 
-    // Get the size of the current draw framebuffer
-    const uint32_t fbWidth = VRenderer::getVkRendererFbWidth();
-    const uint32_t fbHeight = VRenderer::getVkRendererFbHeight();
+    // First command in the drawing pass is to setup the viewport. Note that while the view is allowed to extend horizontally (widescreen)
+    // no extension is allowed vertically; instead, letterboxing will happen. I considered allowing a vertically long display but it won't work
+    // with the UI assets & design that Doom uses. I'm also not sure why someone would ever want to play that way anyway, even if it did work...
+    const int32_t viewportX = 0;
+    const int32_t viewportY = VRenderer::gClassicFramebufferY;
+    const int32_t viewportW = VRenderer::gFramebufferW;
+    const int32_t viewportH = VRenderer::gClassicFramebufferH;
+    gCmdBufRec_DrawPass.setViewport((float) viewportX, (float) viewportY, (float) viewportW, (float) viewportH, 0.0f, 1.0f);
+    gCmdBufRec_DrawPass.setScissors(viewportX, viewportY, viewportW, viewportH);
 
-    // First commands in the 'draw' subpass are to set the viewport and scissors dimensions, and to bind the correct vertex buffer:
-    gCmdBufRec_DrawPass.setViewport(0, 0, (float) fbWidth, (float) fbHeight, 0.0f, 1.0f);
-    gCmdBufRec_DrawPass.setScissors(0, 0, fbWidth, fbHeight);
+    // Bind the correct vertex buffer for drawing
     gCmdBufRec_DrawPass.bindVertexBuffer(*gVertexBuffers_Draw.pCurBuffer, 0, 0);
 }
 
@@ -213,12 +217,16 @@ void setDrawUniforms(const VShaderUniforms& uniforms) noexcept {
 // Scales and positions everything such that the original UI coordinates can be used for the same result.
 //------------------------------------------------------------------------------------------------------------------------------------------
 Matrix4f computeTransformMatrixForUI() noexcept {
-    // Projection parameters.
-    // TODO: support widescreen modes and don't stretch in widescreen.
-    const float viewLx = 0;
-    const float viewRx = SCREEN_W;
+    // The UI is centered horizontally in the viewport (if we are in widescreen mode) and occupies it's full vertical range.
+    // Compute how much leftover space there would be at the left and right due to widescreen.
+    const float xPadding = ((float) VRenderer::gClassicFramebufferX / (float) VRenderer::gClassicFramebufferW) * SCREEN_W;
+
+    // These are the projection parameters.
+    // Note: need to reverse by/ty to get the view the right way round (normally y is up with projection matrices).
+    const float viewLx = -xPadding;
+    const float viewRx = (float) SCREEN_W + xPadding;
     const float viewBy = 0;
-    const float viewTy = SCREEN_H;      // Note: need to reverse by/ty to get the view the right way round (normally y is up with projection matrices)
+    const float viewTy = SCREEN_H;
     const float zNear = 0.0f;
     const float zFar = 1.0f;
 
@@ -231,15 +239,16 @@ Matrix4f computeTransformMatrixForUI() noexcept {
 Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const float viewZ, const float viewAngle) noexcept {
     // Projection parameters.
     // Project as if we still had the old 256x200 3D viewport and off center to account for the status bar at the bottom.
-    // This matches the projection that the original PSX Doom used:
+    // This matches the projection that the original PSX Doom used, with allowance for widescreen:
     constexpr float STATUS_BAR_H = SCREEN_H - VIEW_3D_H;
 
-    const float viewLx = -1.0f;      // TODO: support widescreen modes
-    const float viewRx = 1.0f;
-    const float viewTy =  HALF_VIEW_3D_H / float(HALF_SCREEN_W);
-    const float viewBy = (-HALF_VIEW_3D_H - STATUS_BAR_H) / float(HALF_SCREEN_W);
+    const float widescrenScale = std::max((float) VRenderer::gFramebufferW / (float) VRenderer::gClassicFramebufferW, 1.0f);
+    const float viewLx = -widescrenScale;
+    const float viewRx = widescrenScale;
+    const float viewTy = (HALF_VIEW_3D_H / float(HALF_SCREEN_W));
+    const float viewBy = ((-HALF_VIEW_3D_H - STATUS_BAR_H) / float(HALF_SCREEN_W));
     const float zNear = 1.0f;
-    const float zFar = 65536.0f * 2.0f;
+    const float zFar = 65536.0f;
 
     // Compute the projection, rotation and translation matrices for the view.
     // Rotation is about the Y axis (Doom's Z axis).
@@ -273,9 +282,6 @@ void addUILine(
     const uint8_t b,
     const uint8_t a
 ) noexcept {
-    // Ensure we are on the right pipeline
-    ASSERT(gCurDrawPipelineType == VPipelineType::Lines);
-
     // Fill in the vertices, starting first with common parameters
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(2);
 
@@ -294,6 +300,86 @@ void addUILine(
     // Fill in xy positions
     pVerts[0].x = x1;   pVerts[0].y = y1;
     pVerts[1].x = x2;   pVerts[1].y = y2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a flat colored triangle to the 'draw' subpass
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addFlatColoredTriangle(
+    const float x1,
+    const float y1,
+    const float z1,
+    const float x2,
+    const float y2,
+    const float z2,
+    const float x3,
+    const float y3,
+    const float z3,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const uint8_t a
+) noexcept {
+    VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(3);
+
+    for (uint32_t i = 0; i < 3; ++i) {
+        VVertex_Draw& vert = pVerts[i];
+        vert = {};
+        vert.r = r;
+        vert.g = g;
+        vert.b = b;
+        vert.stmulR = 128;
+        vert.stmulG = 128;
+        vert.stmulB = 128;
+        vert.stmulA = a;
+    }
+
+    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
+    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
+    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a flat colored quad to the 'draw' subpass
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addFlatColoredQuad(
+    const float x1,
+    const float y1,
+    const float z1,
+    const float x2,
+    const float y2,
+    const float z2,
+    const float x3,
+    const float y3,
+    const float z3,
+    const float x4,
+    const float y4,
+    const float z4,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const uint8_t a
+) noexcept {
+    VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
+
+    for (uint32_t i = 0; i < 6; ++i) {
+        VVertex_Draw& vert = pVerts[i];
+        vert = {};
+        vert.r = r;
+        vert.g = g;
+        vert.b = b;
+        vert.stmulR = 128;
+        vert.stmulG = 128;
+        vert.stmulB = 128;
+        vert.stmulA = a;
+    }
+
+    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
+    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
+    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
+    pVerts[3].x = x3;   pVerts[3].y = y3;   pVerts[3].z = z3;
+    pVerts[4].x = x4;   pVerts[4].y = y4;   pVerts[4].z = z4;
+    pVerts[5].x = x1;   pVerts[5].y = y1;   pVerts[5].z = z1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

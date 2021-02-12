@@ -426,6 +426,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
 
     // Create all of the main drawing pipelines
     initDrawPipeline(VPipelineType::Lines, renderPass, gShaders_colored, gInputAS_lineList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::Colored, renderPass, gShaders_colored, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
     initDrawPipeline(VPipelineType::UI_4bpp, renderPass, gShaders_ui_4bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
     initDrawPipeline(VPipelineType::UI_8bpp, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
     initDrawPipeline(VPipelineType::UI_8bpp_Add, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);

@@ -60,6 +60,16 @@ bool gbUsePsxRenderer = false;
 // Cached pointers to all Vulkan API functions
 vgl::VkFuncs gVkFuncs;
 
+// Width and height of the framebuffer
+uint32_t    gFramebufferW;
+uint32_t    gFramebufferH;
+
+// Coordinate system conversion: where the classic PSX framebuffer is blitted to on the actual framebuffer in pixel terms
+int32_t     gClassicFramebufferX;
+int32_t     gClassicFramebufferY;
+uint32_t    gClassicFramebufferW;
+uint32_t    gClassicFramebufferH;
+
 // Coordinate system conversion: scalars to convert from normalized device coords to the original PSX framebuffer coords (256x240).
 // Also where the where the original PSX framebuffer coords start in NDC space.
 //
@@ -137,15 +147,78 @@ static void decideDrawSampleCount() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Update the values which help convert from normalized device coordinates to the original PSX framebuffer coordinate system (256x240).
+// Also updates the current framebuffer information.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void updateCoordSysInfo() noexcept {
+    // Save the size of the framebuffer
+    const bool bHaveFramebuffers = gFramebuffers[0].isValid();
+
+    if (bHaveFramebuffers) {
+        gFramebufferW = gFramebuffers[0].getWidth();
+        gFramebufferH = gFramebuffers[0].getHeight();
+    } else {
+        gFramebufferW = 0;
+        gFramebufferH = 0;
+    }
+
+    // Get the area of the window that the original PSX framebuffer would be blitted to for the classic renderer.
+    // This info is also used by the new Vulkan renderer to setup coordinate systems and projection matrices.
+    if (bHaveFramebuffers) {
+        Video::getClassicFramebufferWindowRect(
+            gFramebufferW,
+            gFramebufferH,
+            gClassicFramebufferX,
+            gClassicFramebufferY,
+            gClassicFramebufferW,
+            gClassicFramebufferH
+        );
+    } else {
+        gClassicFramebufferX = 0;
+        gClassicFramebufferY = 0;
+        gClassicFramebufferW = 0;
+        gClassicFramebufferH = 0;
+    }
+
+    // Compute scalings and offsets to help convert from normalized device coords to original PSX framebuffer coords.
+    // This is useful for things like sky rendering, which work in NDC space.
+    //
+    // Notes:
+    //  (1) If there is space leftover at the sides (widescreen) then the original PSX framebuffer is centered in NDC space.
+    //  (2) I don't allow vertical stretching of the original UI assets, hence the 'Y' axis conversions here are fixed.
+    //      The game viewport will be letterboxed (rather than extend) if the view is too long on the vertical axis.
+    //      Because of all this, it is assumed the PSX framebuffer uses all of NDC space vertically.
+    //
+    if (bHaveFramebuffers) {
+        const float blitWPercent = (float) gClassicFramebufferW / (float) gFramebufferW;
+        gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DRAW_RES_X;
+        gNdcToPsxScaleY = 0.5f * Video::ORIG_DRAW_RES_Y;
+
+        const float blitStartXPercent = (float) gClassicFramebufferX / (float) gFramebufferW;
+        gPsxNdcOffsetX = blitStartXPercent * 2.0f;
+        gPsxNdcOffsetY = 0;
+    } else {
+        gNdcToPsxScaleX = 0.0f;
+        gNdcToPsxScaleY = 0.0f;
+        gPsxNdcOffsetX = 0.0f;
+        gPsxNdcOffsetY = 0.0f;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Destroys all framebuffers immediately
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void destroyFramebuffers() noexcept {
+    // Destroy all the framebuffers and attachments
     for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
         gFramebuffers[i].destroy(true);
         gFbColorAttachments[i].destroy(true);
     }
 
     VMsaaResolver::destroyResolveColorAttachments();
+
+    // Update the coordinate system info to blank out everything - app should not use until we get a valid framebuffer again!
+    updateCoordSysInfo();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -225,7 +298,8 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
         VMsaaResolver::setMsaaResolveInputAttachments(gFbColorAttachments);
     }
 
-    // All good if we got to here!
+    // All good if we got to here - update coordinate system info:
+    updateCoordSysInfo();
     return true;
 }
 
@@ -432,36 +506,12 @@ static void endFrame_VkRenderer() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Update the values which help convert from normalized device coordinates to the original PSX framebuffer coordinate system (256x240).
-//------------------------------------------------------------------------------------------------------------------------------------------
-void static updateCoordSysConversions() noexcept {
-    // Get the area of the window that the original PSX framebuffer would be blitted to for the classic renderer
-    const uint32_t screenWidth = gSwapchain.getSwapExtentWidth();
-    const uint32_t screenHeight = gSwapchain.getSwapExtentHeight();
-
-    int32_t blitDstX = {};
-    int32_t blitDstY = {};
-    uint32_t blitDstW = {};
-    uint32_t blitDstH = {};
-    Video::getClassicFramebufferWindowRect(screenWidth, screenHeight, blitDstX, blitDstY, blitDstW, blitDstH);
-
-    // Compute all the scalings and offsets from this.
-    // If there is space leftover at the sides or top and bottom then the original PSX framebuffer would be centered.
-    const float blitWPercent = (float) blitDstW / (float) screenWidth;
-    const float blitHPercent = (float) blitDstH / (float) screenHeight;
-    gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DRAW_RES_X;
-    gNdcToPsxScaleY = (0.5f / blitHPercent) * Video::ORIG_DRAW_RES_Y;
-
-    const float blitStartXPercent = (float) blitDstX / (float) screenWidth;
-    const float blitStartYPercent = (float) blitDstY / (float) screenHeight;
-    gPsxNdcOffsetX = blitStartXPercent * 2.0f;
-    gPsxNdcOffsetY = blitStartYPercent * 2.0f;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes Vulkan for PsyDoom
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
+    // Coord sys info is initially invalid
+    updateCoordSysInfo();
+
     // Initialize the Vulkan API, the window surface, and choose a device to use
     if (!gVulkanInstance.init(Video::gpSdlWindow))
         FatalErrors::raise("Failed to initialize a Vulkan API instance!");
@@ -645,9 +695,6 @@ bool beginFrame() noexcept {
         );
     }
 
-    // Update coordinate system conversions for drawing code that needs it
-    updateCoordSysConversions();
-
     // Renderer specific initialization
     if (gbUsePsxRenderer) {
         beginFrame_Psx();
@@ -806,17 +853,6 @@ void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint
 
     // Unlock the texture to begin uploading the updates
     gPsxVramTexture.unlock();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Get the width and height of the framebuffer used for the native Vulkan renderer
-//------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t getVkRendererFbWidth() noexcept {
-    return (gFramebuffers[0].isValid()) ? gFramebuffers[0].getWidth() : 0;
-}
-
-uint32_t getVkRendererFbHeight() noexcept {
-    return (gFramebuffers[0].isValid()) ? gFramebuffers[0].getHeight() : 0;
 }
 
 END_NAMESPACE(VRenderer)
