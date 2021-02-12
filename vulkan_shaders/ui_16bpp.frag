@@ -18,7 +18,7 @@ layout(location = 5) flat in vec4 in_stmul;
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    out_color = tex16bppWithDiscard(vramTex, ivec2(in_uv), in_texWinPos, in_texWinSize, in_stmul);
+    out_color = tex16bppWithDiscard(vramTex, ivec2(floor(in_uv)), in_texWinPos, in_texWinSize, in_stmul);
     out_color.rgb *= in_color;
     out_color = psxR5G5B5BitCrush(out_color);
 }

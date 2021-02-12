@@ -46,6 +46,6 @@ void main() {
         discard;
 
     // Just do a standard 8bpp texel lookup to draw the sky
-    out_color = tex8bppWithDiscard(vramTex, ivec2(uv), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1));
+    out_color = tex8bppWithDiscard(vramTex, ivec2(floor(uv)), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1));
     out_color = psxR5G5B5BitCrush(out_color);
 }
