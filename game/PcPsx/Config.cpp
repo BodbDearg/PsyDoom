@@ -714,13 +714,14 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "# The cheat keys when this setting is enabled are as follows:\n"
         "#\n"
         "#      F1: God mode\n"
-        "#      F2: Noclip (new cheat for PC port!)\n"
+        "#      F2: No-clip (new cheat for PC port!)\n"
         "#      F3: All weapons keys and ammo\n"
         "#      F4: Level warp (note: secret maps can now be warped to also)\n"
         "#      F5: X-ray vision\n"
         "#      F6: Show all map things\n"
         "#      F7: Show all map lines\n"
         "#      F8: VRAM Viewer (functionality hidden in retail)\n"
+        "#      F9: No-target (new cheat for PC port!)\n"
         "#---------------------------------------------------------------------------------------------------\n"
         "EnableDevCheatShortcuts = 0\n",
         [](const IniUtils::Entry& iniEntry) { gbEnableDevCheatShortcuts = iniEntry.getBoolValue(); },

@@ -1,6 +1,7 @@
 0.7 - GPU & Rendering?
 - Vk renderer: get screen fades working
 - Vk renderer: get loading plaque draw working
+- Vk renderer: get VRAM viewer working again
 - Vk renderer: add option for 32-bit (smooth) shading
 - Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
@@ -11,7 +12,6 @@
 - Vk renderer: save renderer preference and provide menu option
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Investigate audio format conversions.
-- Add notarget to dev cheat shortcuts.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?

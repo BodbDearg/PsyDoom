@@ -320,6 +320,7 @@ void update() noexcept {
         checkDevCheat(SDL_SCANCODE_F6, doToggleAllMapThingsCheat);
         checkDevCheat(SDL_SCANCODE_F7, doToggleAllMapLinesCheat);
         checkDevCheat(SDL_SCANCODE_F8, doToggleVramViewerCheat);
+        checkDevCheat(SDL_SCANCODE_F9, doToggleNoTargetCheat);
     }
 
     // If we did a cheat then consume all inputs to try and prevent input conflicts
