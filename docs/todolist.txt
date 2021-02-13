@@ -15,7 +15,6 @@
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?
-- Fix issue with turn immediately after teleport. (view snapping back)
 - Add fast-load (skip waiting for sound to stop playing) for speedrunning?
 - Investigate occasional glitches switching between classic and new vk renderer
     - First noticed in House Of Pain, in lava area near the entrace.

@@ -994,6 +994,7 @@ void P_PlayerDoTurning() noexcept {
     const bool bCanTurn = (
         (!gbDemoPlayback) &&
         (player.playerstate == PST_LIVE) &&
+        (player.mo && (player.mo->reactiontime <= 0)) &&    // Disallow turning for a little bit after teleporting (original movement code did this too)
         (!gbGamePaused)
     );
 
