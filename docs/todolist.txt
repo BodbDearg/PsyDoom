@@ -5,9 +5,9 @@
 - Vk renderer: add option for 32-bit (smooth) shading
 - Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
-- Vk renderer: investigate crash on draw buffer resize
 - Vk renderer: don't use 'blended' pipelines for most sprites.
 - Vk renderer: can some pipelines now be removed since we are using masking and 'discard' now?
+- Vk renderer: fix UI sprite stiching.
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Investigate audio format conversions.
 - Add offical toggle and keybinding for old/new renderer.

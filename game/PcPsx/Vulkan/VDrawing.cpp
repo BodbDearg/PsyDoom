@@ -27,6 +27,25 @@
 
 BEGIN_NAMESPACE(VDrawing)
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enum representing a type of draw command. We store submitted draw commands in a list and record the Vulkan command buffer at the end
+// of the frame, once the vertex buffers are finalized and have known sizes.
+//------------------------------------------------------------------------------------------------------------------------------------------
+enum class DrawCmdType : uint32_t {
+    SetPipeline,        // Set the graphics pipeline to use: 1st arg is pipeline type, 2nd arg unused
+    SetUniforms,        // Set the uniforms to use: 1st arg is index in the uniforms list
+    Draw                // A command to draw primitives: 1st arg is vertex count, 2nd arg is vertex offset
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stores a single drawing command: the meaning of the arguments depends on the command type
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct DrawCmd {
+    DrawCmdType     type;
+    uint32_t        arg1;
+    uint32_t        arg2;
+};
+
 // Ringbuffer index for the current frame being generated
 static uint32_t gCurRingbufferIdx;
 
@@ -35,29 +54,75 @@ static uint32_t gCurRingbufferIdx;
 static vgl::DescriptorPool  gDescriptorPool;
 static vgl::DescriptorSet*  gpDescriptorSet;
 
-// Command buffers for recording 'draw' subpass commands.
-// One for each ringbuffer slot, so we don't disturb a frame still being processed.
-static vgl::CmdBuffer gCmdBuffers_DrawPass[vgl::Defines::RINGBUFFER_SIZE];
-
-// Command buffer recorder for the 'draw' subpass
-static vgl::CmdBufferRecorder gCmdBufRec_DrawPass(VRenderer::gVkFuncs);
-
 // Vertex buffers: for the 'draw' subpass (VVertex_Draw)
 static VVertexBufferSet gVertexBuffers_Draw;
 
 // The current pipeline being used by the 'draw' subpass; used to help avoid unneccessary pipeline switches
 static VPipelineType gCurDrawPipelineType;
 
+// Sets of uniforms for the current frame
+static std::vector<VShaderUniforms> gFrameUniforms;
+
+// Drawing commands for the current frame
+static std::vector<DrawCmd> gFrameDrawCmds;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Records all drawing commands for the current frame to a Vulkan command buffer
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void recordCmdBuffer(vgl::CmdBufferRecorder& cmdRec) noexcept {
+    // First command in the drawing pass is to setup the viewport. Note that while the view is allowed to extend horizontally (widescreen)
+    // no extension is allowed vertically; instead, letterboxing will happen. I considered allowing a vertically long display but it won't work
+    // with the UI assets & design that Doom uses. I'm also not sure why someone would ever want to play that way anyway, even if it did work...
+    const int32_t viewportX = 0;
+    const int32_t viewportY = VRenderer::gClassicFramebufferY;
+    const int32_t viewportW = VRenderer::gFramebufferW;
+    const int32_t viewportH = VRenderer::gClassicFramebufferH;
+    cmdRec.setViewport((float) viewportX, (float) viewportY, (float) viewportW, (float) viewportH, 0.0f, 1.0f);
+    cmdRec.setScissors(viewportX, viewportY, viewportW, viewportH);
+
+    // Bind the correct vertex buffer for drawing
+    cmdRec.bindVertexBuffer(*gVertexBuffers_Draw.pCurBuffer, 0, 0);
+
+    // Clear this flag once we bind the drawing descriptor set - it only needs to be done once since all draw pipeline layouts are compatible
+    bool bNeedToBindDescriptorSet = true;
+
+    // Handle each draw command
+    for (const DrawCmd& drawCmd : gFrameDrawCmds) {
+        switch (drawCmd.type) {
+            case DrawCmdType::SetPipeline: {
+                // Bind the pipeline
+                ASSERT(drawCmd.arg1 < (uint32_t) VPipelineType::NUM_TYPES);
+                vgl::Pipeline& pipeline = VPipelines::gPipelines[drawCmd.arg1];
+                cmdRec.bindPipeline(pipeline);
+
+                // Do we need to bind the draw descriptor set as well, after setting the pipeline?
+                if (bNeedToBindDescriptorSet) {
+                    cmdRec.bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
+                    bNeedToBindDescriptorSet = false;
+                }
+            }   break;
+
+            case DrawCmdType::SetUniforms: {
+                cmdRec.pushConstants(
+                    VPipelines::gPipelineLayout_draw,
+                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                    0,
+                    sizeof(VShaderUniforms),
+                    &gFrameUniforms[drawCmd.arg1]
+                );
+            }   break;
+
+            case DrawCmdType::Draw: {
+                cmdRec.draw(drawCmd.arg1, drawCmd.arg2);
+            }   break;
+        }
+    }
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the drawing module and allocates draw vertex buffers etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
-    // Initialize the command buffers used
-    for (vgl::CmdBuffer& buffer : gCmdBuffers_DrawPass) {
-        if (!buffer.init(device.getCmdPool(), VK_COMMAND_BUFFER_LEVEL_SECONDARY))
-            FatalErrors::raise("VDrawing: initialize a secondary command buffer used for drawing!");
-    }
-
     // Create the descriptor pool and descriptor set used for rendering.
     // Only using a single descriptor set which is bound to the PSX VRAM texture.
     {
@@ -80,20 +145,24 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
     }
 
     // Create the vertex buffers
-    constexpr uint32_t DRAW_VB_SIZE = 512 * 1024;   // 512 KiB per buffer
-
+    constexpr uint32_t DRAW_VB_SIZE = 1024 * 1024;
     gVertexBuffers_Draw.init<VVertex_Draw>(device, DRAW_VB_SIZE / sizeof(VVertex_Draw));
 
     // Current draw pipeline in use is undefined initially
     gCurDrawPipelineType = (VPipelineType) -1;
+
+    // Prealloc draw buffer memory
+    gFrameUniforms.reserve(16);
+    gFrameDrawCmds.reserve(2048);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shuts down the drawing module and frees up resources
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
+    gFrameDrawCmds.clear();
+    gFrameUniforms.clear();
     gCurDrawPipelineType = {};
-    
     gVertexBuffers_Draw.destroy();
 
     if (gpDescriptorSet) {
@@ -102,72 +171,35 @@ void shutdown() noexcept {
     }
 
     gDescriptorPool.destroy(true);
-
-    for (vgl::CmdBuffer& buffer : gCmdBuffers_DrawPass) {
-        buffer.destroy(true);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Performs start of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
-void beginFrame(
-    const uint32_t ringbufferIdx,
-    const vgl::BaseRenderPass& renderPass,
-    vgl::Framebuffer& framebuffer
-) noexcept {
-    // Remember which ringbuffer slot we are on
+void beginFrame(const uint32_t ringbufferIdx) noexcept {
+    // Remember which ringbuffer slot we are on and setup vertex buffers for the frame
     gCurRingbufferIdx = ringbufferIdx;
-
-    // Begin recording the 'draw' subpass command buffer
-    gCmdBufRec_DrawPass.beginSecondaryCmdBuffer(
-        gCmdBuffers_DrawPass[ringbufferIdx],
-        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT,
-        renderPass.getVkRenderPass(),
-        0,
-        framebuffer.getVkFramebuffer()
-    );
-
-    // Setup vertex buffers for the frame
     gVertexBuffers_Draw.beginFrame(ringbufferIdx);
 
     // Expect all this to already have the following state
     ASSERT(gCurDrawPipelineType == (VPipelineType) -1);
-
-    // First command in the drawing pass is to setup the viewport. Note that while the view is allowed to extend horizontally (widescreen)
-    // no extension is allowed vertically; instead, letterboxing will happen. I considered allowing a vertically long display but it won't work
-    // with the UI assets & design that Doom uses. I'm also not sure why someone would ever want to play that way anyway, even if it did work...
-    const int32_t viewportX = 0;
-    const int32_t viewportY = VRenderer::gClassicFramebufferY;
-    const int32_t viewportW = VRenderer::gFramebufferW;
-    const int32_t viewportH = VRenderer::gClassicFramebufferH;
-    gCmdBufRec_DrawPass.setViewport((float) viewportX, (float) viewportY, (float) viewportW, (float) viewportH, 0.0f, 1.0f);
-    gCmdBufRec_DrawPass.setScissors(viewportX, viewportY, viewportW, viewportH);
-
-    // Bind the correct vertex buffer for drawing
-    gCmdBufRec_DrawPass.bindVertexBuffer(*gVertexBuffers_Draw.pCurBuffer, 0, 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Performs end of frame logic for the drawing module
 //------------------------------------------------------------------------------------------------------------------------------------------
-void endFrame(vgl::CmdBufferRecorder& primaryCmdRec) noexcept {
-    // Finish the current 'draw' subpass batch
+void endFrame(vgl::CmdBufferRecorder& cmdRec) noexcept {
+    // Finish the current draw batch then record all drawing commands in the Vulkan command buffer
     endCurrentDrawBatch();
+    recordCmdBuffer(cmdRec);
 
-    // Upload any vertices generated by invoking the 'end frame' event
+    // Upload vertices generated during drawing, so the draw commands can use them
     gVertexBuffers_Draw.endFrame();
 
-    // Current draw pipeline is undefined on ending a frame
+    // Post frame cleanup: clear buffers, the current draw pipeline and ringbuffer index
+    gFrameDrawCmds.clear();
+    gFrameUniforms.clear();
     gCurDrawPipelineType = (VPipelineType) -1;
-
-    // Done recording commands now
-    gCmdBufRec_DrawPass.endCmdBuffer();
-
-    // Submit command buffers to the primary command buffer
-    primaryCmdRec.exec(gCmdBuffers_DrawPass[gCurRingbufferIdx].getVkCommandBuffer());
-
-    // No longer on a frame, so default this
     gCurRingbufferIdx = {};
 }
 
@@ -182,34 +214,26 @@ void setDrawPipeline(const VPipelineType type) noexcept {
     if (oldPipelineType == type)
         return;
 
-    // Must end the current draw batch before switching
+    // Do the pipeline switch and record the switch draw command.
+    // Note that we must end the current draw batch before switching!
     endCurrentDrawBatch();
-
-    // Note: only need to bind the descriptor set once, can re-use among all draw pipelines
-    const bool bNeedToBindDescriptorSet = (oldPipelineType == (VPipelineType) -1);
-
-    // Do the pipeline switch
     gCurDrawPipelineType = type;
-    vgl::Pipeline& pipeline = VPipelines::gPipelines[(uint32_t) type];
-    gCmdBufRec_DrawPass.bindPipeline(pipeline);
 
-    // Bind the 'draw' subpass descriptor set if we need to
-    if (bNeedToBindDescriptorSet) {
-        gCmdBufRec_DrawPass.bindDescriptorSet(*gpDescriptorSet, pipeline, 0, 0, nullptr);
-    }
+    DrawCmd& drawCmd = gFrameDrawCmds.emplace_back();
+    drawCmd.type = DrawCmdType::SetPipeline;
+    drawCmd.arg1 = (uint32_t) type;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set uniforms used by draw shaders, including the model/view/projection transform matrix
 //------------------------------------------------------------------------------------------------------------------------------------------
 void setDrawUniforms(const VShaderUniforms& uniforms) noexcept {
-    gCmdBufRec_DrawPass.pushConstants(
-        VPipelines::gPipelineLayout_draw,
-        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-        0,
-        sizeof(VShaderUniforms),
-        &uniforms
-    );
+    // Record the command to set the uniforms and save them for later
+    DrawCmd& drawCmd = gFrameDrawCmds.emplace_back();
+    drawCmd.type = DrawCmdType::SetUniforms;
+    drawCmd.arg1 = (uint32_t) gFrameUniforms.size();
+
+    gFrameUniforms.emplace_back(uniforms);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -266,7 +290,16 @@ Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const
 // The primitives are drawn with whatever pipeline is currently bound.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void endCurrentDrawBatch() noexcept {
-    gVertexBuffers_Draw.endCurrentDrawBatch(gCmdBufRec_DrawPass);
+    // Ignore if there are no vertices in the current batch
+    if (gVertexBuffers_Draw.curBatchSize <= 0)
+        return;
+
+    // Record the draw command
+    DrawCmd& drawCmd = gFrameDrawCmds.emplace_back();
+    drawCmd.type = DrawCmdType::Draw;
+    drawCmd.arg1 = gVertexBuffers_Draw.curBatchSize;
+    drawCmd.arg2 = gVertexBuffers_Draw.curBatchStart;
+    gVertexBuffers_Draw.endCurrentDrawBatch();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -606,7 +639,7 @@ void addWorldQuad(
 // Add a vertical quad for the sky to the 'draw' subpass.
 // The bottom y coordinate and 2 endpoints are specified only and it is stretched past the end of the screen.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VDrawing::addWorldInfiniteSkyWall(
+void addWorldInfiniteSkyWall(
     const float x1,
     const float z1,
     const float x2,

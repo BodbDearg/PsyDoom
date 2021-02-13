@@ -439,7 +439,7 @@ static void beginFrame_VkRenderer() noexcept {
     gCmdBufferRec.beginRenderPass(
         gRenderPass,
         framebuffer,
-        VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS,
+        VK_SUBPASS_CONTENTS_INLINE,
         0,
         0,
         framebuffer.getWidth(),
@@ -449,7 +449,7 @@ static void beginFrame_VkRenderer() noexcept {
     );
 
     // Begin a frame for the drawing module
-    VDrawing::beginFrame(ringbufferIdx, gRenderPass, framebuffer);
+    VDrawing::beginFrame(ringbufferIdx);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

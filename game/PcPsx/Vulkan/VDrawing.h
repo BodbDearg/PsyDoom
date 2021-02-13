@@ -29,14 +29,8 @@ BEGIN_NAMESPACE(VDrawing)
 
 void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept;
 void shutdown() noexcept;
-
-void beginFrame(
-    const uint32_t ringbufferIdx,
-    const vgl::BaseRenderPass& renderPass,
-    vgl::Framebuffer& framebuffer
-) noexcept;
-
-void endFrame(vgl::CmdBufferRecorder& primaryCmdRec) noexcept;
+void beginFrame(const uint32_t ringbufferIdx) noexcept;
+void endFrame(vgl::CmdBufferRecorder& cmdRec) noexcept;
 void setDrawPipeline(const VPipelineType type) noexcept;
 void setDrawUniforms(const VShaderUniforms& uniforms) noexcept;
 Matrix4f computeTransformMatrixForUI() noexcept;

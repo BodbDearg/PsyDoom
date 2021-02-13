@@ -394,13 +394,13 @@ bool Buffer::resizeToByteCount(
     }
 
     // Recreate the buffer with the new size, bail out if that fails
-    if (!initWithByteCount(*pDevice, mUsageFlags, usageMode, newSizeInBytes, bIsResizable))
+    if (!initWithByteCount(*pDevice, usageFlags, usageMode, newSizeInBytes, bIsResizable))
         return false;
 
     // Re-lock the buffer if a non zero lock size is specified
     const uint64_t actualNewSize = getSizeInBytes();
 
-    if ((newLockSizeInBytes) > 0 && (newLockOffsetInBytes < actualNewSize)) {
+    if ((newLockSizeInBytes > 0) && (newLockOffsetInBytes < actualNewSize)) {
         const uint64_t maxLockSize = actualNewSize - newLockOffsetInBytes;
         const uint64_t actualNewLockSize = std::min(maxLockSize, newLockSizeInBytes);
         

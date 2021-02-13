@@ -120,7 +120,7 @@ struct VVertexBufferSet {
         // Do we need to do a resize?
         if (newSize != curSize) {
             const bool bResizeOk = pCurBuffer->resizeToByteCount(
-                newSize,
+                (uint64_t) newSize * vertexSize,
                 vgl::Buffer::ResizeFlagBits::KEEP_LOCKED_DATA,
                 0,
                 UINT64_MAX      // Re-lock the entire buffer
@@ -158,11 +158,10 @@ struct VVertexBufferSet {
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------
-    // Ends the current draw batch and issues the command to draw the primitives using the pipeline
+    // Marks the current draw batch as ended
     //------------------------------------------------------------------------------------------------------------------------------------------
-    void endCurrentDrawBatch(vgl::CmdBufferRecorder& cmdRec) noexcept {
+    void endCurrentDrawBatch() noexcept {
         if (curBatchSize > 0) {
-            cmdRec.draw(curBatchSize, curBatchStart);
             curBatchStart = curOffset;
             curBatchSize = 0;
         }
