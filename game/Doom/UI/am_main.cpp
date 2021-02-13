@@ -8,8 +8,10 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/RendererVk/rv_automap.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
+#include "PcPsx/Video.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -17,20 +19,14 @@ static constexpr fixed_t MOVESTEP       = FRACUNIT * 128;   // Controls how fast
 static constexpr fixed_t SCALESTEP      = 2;                // How fast to scale in/out
 static constexpr int32_t MAXSCALE       = 64;               // Maximum map zoom
 static constexpr int32_t MINSCALE       = 8;                // Minimum map zoom
-static constexpr int32_t THING_TRI_SIZE = 24;               // The size of the triangles for thing displays on the automap
-
-// Map line colors
-static constexpr uint32_t COLOR_RED     = 0xA40000;
-static constexpr uint32_t COLOR_GREEN   = 0x00C000;
-static constexpr uint32_t COLOR_BROWN   = 0x8A5C30;
-static constexpr uint32_t COLOR_YELLOW  = 0xCCCC00;
-static constexpr uint32_t COLOR_GREY    = 0x808080;
-static constexpr uint32_t COLOR_AQUA    = 0x0080FF;
 
 static fixed_t  gAutomapXMin;
 static fixed_t  gAutomapXMax;
 static fixed_t  gAutomapYMin;
 static fixed_t  gAutomapYMax;
+
+// Internal module functions
+static void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Automap initialization logic
@@ -191,8 +187,12 @@ void AM_Drawer() noexcept {
         I_DrawPresent();
     #endif
 
-    #if PSYDOOM_MODS
-        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    // PsyDoom: if the Vulkan renderer is active then delegate automap drawing to that
+    #if PSYDOOM_MODS && PSYDOOM_VULKAN_RENDERER
+        if (Video::usingVulkanRenderer()) {
+            RV_DrawAutomap();
+            return;
+        }
     #endif
 
     // Determine the scale to render the map at
@@ -239,24 +239,26 @@ void AM_Drawer() noexcept {
             const int32_t x2 = d_fixed_to_int(((pLine->vertex2->x - ox) / SCREEN_W) * scale);
             const int32_t y2 = d_fixed_to_int(((pLine->vertex2->y - oy) / SCREEN_W) * scale);
 
-            // Decide on line color
-            uint32_t color = COLOR_BROWN;   // Normal two sided line
-            
-            if (((curPlayer.cheats & CF_ALLLINES) + curPlayer.powers[pw_allmap] != 0) &&
-                ((pLine->flags & ML_MAPPED) == 0)
-            ) {
-                color = COLOR_GREY;     // A known line (due to all map cheat/powerup) but unseen
+            // Decide on line color: start off with the normal two sided line color to begin with
+            uint32_t color = AM_COLOR_BROWN;
+
+            if (((curPlayer.cheats & CF_ALLLINES) + curPlayer.powers[pw_allmap] != 0) && ((pLine->flags & ML_MAPPED) == 0)) {
+                // A known line (due to all map cheat/powerup) but unseen
+                color = AM_COLOR_GREY;
             }
             else if (pLine->flags & ML_SECRET) {
-                color = COLOR_RED;      // Secret
+                // Secret
+                color = AM_COLOR_RED;
             }
             else if (pLine->special != 0) {
-                color = COLOR_YELLOW;   // Special or activatable thing
+                // Special or activatable thing
+                color = AM_COLOR_YELLOW;
             }
             else if ((pLine->flags & ML_TWOSIDED) == 0) {
-                color = COLOR_RED;      // One sided line
+                // One sided line
+                color = AM_COLOR_RED;
             }
-            
+
             DrawLine(color, x1, y1, x2, y2);
         }
     }
@@ -285,17 +287,17 @@ void AM_Drawer() noexcept {
             const fixed_t vx = pMObj->x - ox;
             const fixed_t vy = pMObj->y - oy;
 
-            const int32_t x1 = d_fixed_to_int(((vx + cos1 * THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t y1 = d_fixed_to_int(((vy + sin1 * THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t x2 = d_fixed_to_int(((vx + cos2 * THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t y2 = d_fixed_to_int(((vy + sin2 * THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t x3 = d_fixed_to_int(((vx + cos3 * THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t y3 = d_fixed_to_int(((vy + sin3 * THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t x1 = d_fixed_to_int(((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y1 = d_fixed_to_int(((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t x2 = d_fixed_to_int(((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y2 = d_fixed_to_int(((vy + sin2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t x3 = d_fixed_to_int(((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y3 = d_fixed_to_int(((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
 
             // Draw the triangle
-            DrawLine(COLOR_AQUA, x1, y1, x2, y2);
-            DrawLine(COLOR_AQUA, x2, y2, x3, y3);
-            DrawLine(COLOR_AQUA, x1, y1, x3, y3);
+            DrawLine(AM_COLOR_AQUA, x1, y1, x2, y2);
+            DrawLine(AM_COLOR_AQUA, x2, y2, x3, y3);
+            DrawLine(AM_COLOR_AQUA, x1, y1, x3, y3);
         }
     }
 
@@ -312,10 +314,10 @@ void AM_Drawer() noexcept {
             continue;
         
         // Change the colors of this player in COOP to distinguish
-        uint32_t color = COLOR_GREEN;
+        uint32_t color = AM_COLOR_GREEN;
 
         if ((gNetGame == gt_coop) && (playerIdx == gCurPlayerIndex)) {
-            color = COLOR_YELLOW;
+            color = AM_COLOR_YELLOW;
         }
 
         // Compute the the sine and cosines for the angles of the 3 points in the triangle
@@ -337,12 +339,12 @@ void AM_Drawer() noexcept {
         const fixed_t vx = player.mo->x - ox;
         const fixed_t vy = player.mo->y - oy;
 
-        const int32_t x1 = d_fixed_to_int(((vx + cos1 * THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t y1 = d_fixed_to_int(((vy + sin1 * THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t x2 = d_fixed_to_int(((vx + cos2 * THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t y2 = d_fixed_to_int(((vy + sin2 * THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t x3 = d_fixed_to_int(((vx + cos3 * THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t y3 = d_fixed_to_int(((vy + sin3 * THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t x1 = d_fixed_to_int(((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t y1 = d_fixed_to_int(((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t x2 = d_fixed_to_int(((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t y2 = d_fixed_to_int(((vy + sin2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t x3 = d_fixed_to_int(((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+        const int32_t y3 = d_fixed_to_int(((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
 
         // Draw the triangle
         DrawLine(color, x1, y1, x2, y2);
@@ -354,7 +356,7 @@ void AM_Drawer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw an automap line in the specified color
 //------------------------------------------------------------------------------------------------------------------------------------------
-void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept {
+static void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept {
     // Reject the line quickly using the 'Cohen-Sutherland' algorithm.
     // Note: no clipping is done since that is handled by the hardware.
     enum OutFlags : int32_t {
@@ -366,11 +368,13 @@ void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const in
     };
     
     uint32_t outcode1 = (x1 < -128) ? LEFT : INSIDE;
+
     if (x1 >  128) { outcode1 |= RIGHT;     }
     if (y1 < -100) { outcode1 |= BOTTOM;    }
     if (y1 >  100) { outcode1 |= TOP;       }
 
     uint32_t outcode2 = (x2 < -128) ? LEFT : INSIDE;
+
     if (x2 >  128) { outcode2 |= RIGHT;     }
     if (y2 < -100) { outcode2 |= BOTTOM;    }
     if (y2 >  100) { outcode2 |= TOP;       }

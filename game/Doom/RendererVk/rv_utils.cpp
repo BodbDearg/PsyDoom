@@ -13,6 +13,8 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Gpu.h"
+#include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VTypes.h"
 #include "PsyQ/LIBGPU.h"
 #include "rv_bsp.h"
 #include "rv_main.h"
@@ -284,6 +286,21 @@ void RV_ClearSubsecDrawIndexes() noexcept {
     for (subsector_t* pSubsec : gRvDrawSubsecs) {
         pSubsec->vkDrawSubsecIdx = -1;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws a black letterbox in the same vertical region where the status bar will show to cover the new areas exposed by widescreen.
+// The status bar looks very strange and sticks out otherwise, and moving it down causes other issues like the weapon feeling too low.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawWidescreenStatusBarLetterbox() noexcept {
+    VDrawing::setDrawPipeline(VPipelineType::Colored);
+    VDrawing::addFlatColoredQuad(
+        -65536.0f,    +200.0f,  0.0f,
+        +65536.0f,    +200.0f,  0.0f,
+        +65536.0f,  +65536.0f,  0.0f,
+        -65536.0f,  +65536.0f,  0.0f,
+        0, 0, 0, 128
+    );
 }
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

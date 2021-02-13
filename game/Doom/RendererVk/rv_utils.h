@@ -48,5 +48,6 @@ bool RV_GetLineNdcBounds(
 ) noexcept;
 
 void RV_ClearSubsecDrawIndexes() noexcept;
+void RV_DrawWidescreenStatusBarLetterbox() noexcept;
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

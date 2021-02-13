@@ -1,5 +1,4 @@
 0.7 - GPU & Rendering?
-- VK renderer: rework automap for high precision
 - Vk renderer: get screen fades working
 - Vk renderer: get loading plaque draw working
 - Vk renderer: add option for 32-bit (smooth) shading

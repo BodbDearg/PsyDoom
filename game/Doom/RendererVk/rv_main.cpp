@@ -190,19 +190,9 @@ void RV_RenderPlayerView() noexcept {
     // Cleanup after drawing the world: need to clear the draw order for each drawn subsector
     RV_ClearSubsecDrawIndexes();
 
-    // Switch back to UI renderng
+    // Switch back to UI renderng and draw a letterbox in the vertical region where the status bar would be
     Utils::onBeginUIDrawing();
-
-    // Draw a letter box in the same vertical region where the status bar will show to cover the new areas exposed by widescreen.
-    // The status bar looks very strange and sticks out otherwise, and moving it down causes other issues like the weapon feeling too low.
-    VDrawing::setDrawPipeline(VPipelineType::Colored);
-    VDrawing::addFlatColoredQuad(
-        -65536.0f,   +200.0f, 0.0f,
-        +65536.0f,   +200.0f, 0.0f,
-        +65536.0f, +65536.0f, 0.0f,
-        -65536.0f, +65536.0f, 0.0f,
-        0, 0, 0, 128
-    );
+    RV_DrawWidescreenStatusBarLetterbox();
 
     // Set the global current light value.
     // In the old renderer this was written to constantly but here we'll just set it once for the player gun, based on the player's sector.
