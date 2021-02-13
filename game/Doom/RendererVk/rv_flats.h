@@ -1,3 +1,5 @@
+#pragma once
+
 #if PSYDOOM_VULKAN_RENDERER
 
 struct subsector_t;
