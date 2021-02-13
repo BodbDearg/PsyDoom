@@ -574,11 +574,12 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     //--------------------------------------------------------------------------------------------------------------------------------------
     CONTROL_BIND_GROUP_HEADER(
         "#---------------------------------------------------------------------------------------------------\n"
-        "# Pause & Automap toggle\n"
+        "# Toggle in-game pause, automap, and toggle between the Vulkan and Classic renderer\n"
         "#---------------------------------------------------------------------------------------------------\n",
         Toggle_Pause, "P, Pause, Return, Gamepad Start"
     ),
-    CONTROL_BIND_GROUP_FOOTER(Toggle_Map, "Tab, M, Gamepad Back"),
+    CONTROL_BIND_GROUP_MIDDLE(Toggle_Map, "Tab, M, Gamepad Back"),
+    CONTROL_BIND_GROUP_FOOTER(Toggle_Renderer, "`"),
     //--------------------------------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------------------------------
     CONTROL_BIND_GROUP_HEADER(
@@ -794,7 +795,7 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
     },
     {
         "CheatKeySequence_VramViewer",
-        "CheatKeySequence_VramViewer = idram\n",
+        "CheatKeySequence_VramViewer = idram",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_VramViewer, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_VramViewer, "idram"); }
     },

@@ -46,9 +46,9 @@ struct InputSrcRange {
     uint16_t size;
 };
 
-static std::vector<InputSrc>    gInputSources;              // The global list of input sources for all control bindings
-static InputSrcRange            gBindings[NUM_BINDINGS];    // The inputs that each control binding uses
-static std::string              gCurInputName;              // Temporary string used to hold the current input name
+static std::vector<InputSrc>    gInputSources;                                  // The global list of input sources for all control bindings
+static InputSrcRange            gBindings[(uint16_t) Binding::NUM_BINDINGS];    // The inputs that each control binding uses
+static std::string              gCurInputName;                                  // Temporary string used to hold the current input name
 
 // Use case insensitive matching for all regexes and use ECMAScript
 static constexpr auto REGEX_OPTIONS = std::regex_constants::ECMAScript | std::regex_constants::icase;
@@ -204,7 +204,7 @@ static float getInputForBinding(const Binding binding) noexcept {
     float input = 0.0f;
     uint16_t bindingIdx = (uint16_t) binding;
 
-    if (bindingIdx < NUM_BINDINGS) {
+    if (bindingIdx < (uint16_t) Binding::NUM_BINDINGS) {
         const InputSrcRange inputRange = gBindings[bindingIdx];
 
         for (uint16_t i = 0; i < inputRange.size; ++i) {
@@ -446,7 +446,7 @@ void parseBinding(const Binding binding, const char* const str) noexcept {
     // Ignore if the binding is not valid
     uint16_t bindingIdx = (uint16_t) binding;
 
-    if (bindingIdx >= NUM_BINDINGS)
+    if (bindingIdx >= (uint16_t) Binding::NUM_BINDINGS)
         return;
 
     // Clear the binding
@@ -497,7 +497,7 @@ bool getBool(const Binding binding) noexcept {
 bool isJustPressed(const Binding binding) noexcept {
     uint16_t bindingIdx = (uint16_t) binding;
 
-    if (bindingIdx < NUM_BINDINGS) {
+    if (bindingIdx < (uint16_t) Binding::NUM_BINDINGS) {
         const InputSrcRange inputRange = gBindings[bindingIdx];
 
         for (uint16_t i = 0; i < inputRange.size; ++i) {

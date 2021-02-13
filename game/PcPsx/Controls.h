@@ -72,9 +72,11 @@ enum class Binding : uint16_t {
     PSXCheatCode_R1,
     PSXCheatCode_L2,
     PSXCheatCode_R2,
+    // Miscellaneous
+    Toggle_Renderer,
+    // How many bindings there are
+    NUM_BINDINGS
 };
-
-static constexpr uint16_t NUM_BINDINGS = (uint16_t) Binding::PSXCheatCode_R2 + 1;
 
 void init() noexcept;
 void shutdown() noexcept;

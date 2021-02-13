@@ -32,6 +32,7 @@
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VRenderer.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
@@ -900,6 +901,15 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 
     gPlayerUncommittedAxisTurning = 0;
     gPlayerUncommittedMouseTurning = 0;
+
+    // Check for renderer toggle
+    #if PSYDOOM_VULKAN_RENDERER
+        if (Controls::isJustPressed(Controls::Binding::Toggle_Renderer)) {
+            VRenderer::gbRequestRendererToggle = true;
+            gStatusBar.message = (VRenderer::gbUsePsxRenderer) ? "Vulkan Renderer" : "Classic Renderer";
+            gStatusBar.messageTicsLeft = 30;
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

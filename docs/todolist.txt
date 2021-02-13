@@ -8,9 +8,9 @@
 - Vk renderer: can some pipelines now be removed since we are using masking and 'discard' now?
 - Vk renderer: fix UI sprite stitching.
 - Vk renderer: add option to disable widescreen
+- Vk renderer: save renderer preference and provide menu option
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Investigate audio format conversions.
-- Add offical toggle and keybinding for old/new renderer.
 - Add notarget to dev cheat shortcuts.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.

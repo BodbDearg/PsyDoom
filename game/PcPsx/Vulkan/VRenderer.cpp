@@ -32,10 +32,6 @@
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
-// TODO: remove temp/hack renderer toggle and implement properly
-#include "PcPsx/Input.h"
-#include <SDL.h>
-
 BEGIN_NAMESPACE(VRenderer)
 
 // What color surface formats are supported for presentation, with the most preferential being first.
@@ -54,8 +50,10 @@ static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
 static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 
 // Use the classic PSX renderer? If this is enabled then just blit the PSX framebuffer to the screen.
-// TODO: add ways to toggle PSX renderer.
 bool gbUsePsxRenderer = false;
+
+// If external code sets this to true then the renderer will be toggled from Vulkan to classic and visa-versa at the next available opportunity
+bool gbRequestRendererToggle = false;
 
 // Cached pointers to all Vulkan API functions
 vgl::VkFuncs gVkFuncs;
@@ -794,12 +792,10 @@ void endFrame() noexcept {
     // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame
     ringbufferMgr.acquireNextBuffer();
 
-    // TODO: remove temp/hack renderer toggle and implement properly
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_F9)) {
-        gbUsePsxRenderer = false;
-    }
-    if (Input::isKeyboardKeyPressed(SDL_SCANCODE_F10)) {
-        gbUsePsxRenderer = true;
+    // Handle a renderer switch between Vulkan and classic if requested
+    if (gbRequestRendererToggle) {
+        gbUsePsxRenderer = (!gbUsePsxRenderer);
+        gbRequestRendererToggle = false;
     }
 }
 
