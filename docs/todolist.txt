@@ -8,6 +8,7 @@
 - Vk renderer: don't use 'blended' pipelines for most sprites.
 - Vk renderer: can some pipelines now be removed since we are using masking and 'discard' now?
 - Vk renderer: fix UI sprite stitching.
+- Vk renderer: fix occasional validation layer warning about push constants
 - Vk renderer: add option to disable widescreen
 - Vk renderer: save renderer preference and provide menu option
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
@@ -61,5 +62,6 @@
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
 - Do a final review/diff against PSXDOOM-RE to double check for any inconsistencies.
+- Add ability to input passwords with keyboard
 - Writeup final readmes and docs.
 - Makeup final logo

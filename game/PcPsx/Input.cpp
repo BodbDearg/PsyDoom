@@ -250,7 +250,8 @@ static void handleSdlEvents() noexcept {
             case SDL_KEYDOWN: {
                 const uint16_t scancode = (uint16_t) sdlEvent.key.keysym.scancode;
 
-                if (scancode < NUM_KEYBOARD_KEYS) {
+                // Note: ignore artifically repeated key events
+                if ((!sdlEvent.key.repeat) && (scancode < NUM_KEYBOARD_KEYS)) {
                     removeValueFromVector(scancode, gKeyboardKeysJustReleased);
                     gKeyboardKeysPressed.push_back(scancode);
                     gKeyboardKeysJustPressed.push_back(scancode);
@@ -260,7 +261,8 @@ static void handleSdlEvents() noexcept {
             case SDL_KEYUP: {
                 const uint16_t scancode = (uint16_t) sdlEvent.key.keysym.scancode;
 
-                if (scancode < NUM_KEYBOARD_KEYS) {
+                // Note: ignore artifically repeated key events
+                if ((!sdlEvent.key.repeat) && (scancode < NUM_KEYBOARD_KEYS)) {
                     removeValueFromVector(scancode, gKeyboardKeysPressed);
                     removeValueFromVector(scancode, gKeyboardKeysJustPressed);
                     gKeyboardKeysJustReleased.push_back(scancode);
