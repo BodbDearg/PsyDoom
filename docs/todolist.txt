@@ -6,7 +6,8 @@
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: don't use 'blended' pipelines for most sprites.
 - Vk renderer: can some pipelines now be removed since we are using masking and 'discard' now?
-- Vk renderer: fix UI sprite stiching.
+- Vk renderer: fix UI sprite stitching.
+- Vk renderer: add option to disable widescreen
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Investigate audio format conversions.
 - Add offical toggle and keybinding for old/new renderer.

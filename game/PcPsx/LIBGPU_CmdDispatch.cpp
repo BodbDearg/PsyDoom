@@ -169,6 +169,7 @@ void submit(const SPRT& sprite) noexcept {
                     ASSERT_LOG(gpu.texFmt == Gpu::TexFmt::Bpp8, "Unsupported blend mode and texture format combo!");
 
                     VDrawing::setDrawPipeline(VPipelineType::UI_8bpp_Add);
+                    texWinX *= 2;
                     drawAlpha = 128;
                 }
 
