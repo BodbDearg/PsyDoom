@@ -272,7 +272,9 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
             ((bDoingMsaa) ? VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT : VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
         );
 
-        if (!gFbColorAttachments[i].initAsRenderTexture(gDevice, COLOR_16_FORMAT, colorAttachUsage, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
+        const VkFormat colorAttachFmt = (Config::gbUseVulkan32BitShading) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
+
+        if (!gFbColorAttachments[i].initAsRenderTexture(gDevice, colorAttachFmt, colorAttachUsage, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
             destroyFramebuffers();
             return false;
         }
@@ -529,7 +531,9 @@ void init() noexcept {
     decideDrawSampleCount();
 
     // Initialize the draw render pass for the new renderer
-    if (!gMainRenderPass.init(gDevice, COLOR_16_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
+    const VkFormat colorAttachFmt = (Config::gbUseVulkan32BitShading) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
+
+    if (!gMainRenderPass.init(gDevice, colorAttachFmt, COLOR_32_FORMAT, gDrawSampleCount))
         FatalErrors::raise("Failed to create the Vulkan draw render pass!");
 
     // Create pipelines

@@ -6,6 +6,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 #include "ShaderCommon_Frag.h"
 
+// Whether to shade in 16-bit mode like the original PlayStation
+layout(constant_id = 0) const bool USE_PSX_16_BIT_SHADING = true;
+
+// A texture containing the entirety of PSX VRAM
 layout(set = 0, binding = 0) uniform usampler2D vramTex;
 
 layout(location = 0) in vec3 in_color;
@@ -20,5 +24,8 @@ layout(location = 0) out vec4 out_color;
 void main() {
     out_color = tex16bppWithDiscard(vramTex, ivec2(floor(in_uv)), in_texWinPos, in_texWinSize, in_stmul);
     out_color.rgb *= in_color;
-    out_color = psxR5G5B5BitCrush(out_color);
+
+    if (USE_PSX_16_BIT_SHADING) {
+        out_color = psxR5G5B5BitCrush(out_color);
+    }
 }

@@ -2,7 +2,6 @@
 - Vk renderer: get screen fades working
 - Vk renderer: get loading plaque draw working
 - Vk renderer: try to batch sky walls
-- Vk renderer: add option for 32-bit (smooth) shading
 - Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: fix UI sprite stitching.

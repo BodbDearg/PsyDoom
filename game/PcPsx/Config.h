@@ -30,6 +30,7 @@ extern bool     gbFullscreen;
 extern int32_t  gLogicalDisplayW;
 extern int32_t  gAAMultisamples;
 extern bool     gbFloorRenderGapFix;
+extern bool     gbUseVulkan32BitShading;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Audio settings

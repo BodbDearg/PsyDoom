@@ -46,6 +46,7 @@ bool        gbFullscreen;
 int32_t     gLogicalDisplayW;
 int32_t     gAAMultisamples;
 bool        gbFloorRenderGapFix;
+bool        gbUseVulkan32BitShading;
 
 static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     {
@@ -84,6 +85,21 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "LogicalDisplayWidth = 292\n",
         [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
         []() { gLogicalDisplayW = 292; }
+    },
+    {
+        "UseVulkan32BitShading",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Vulkan renderer only: whether higher precision 32-bit shading and framebuffers should be used.\n"
+        "# The original PSX framebuffer was only 16-bit, and by default the Vulkan renderer also uses this\n"
+        "# color mode to replicate the original game's lighting and shading as closely as possible.\n"
+        "# Setting this to '1' (enabled) will allow for smoother 32-bit shading with less color banding\n"
+        "# artifacts, but will also increase the overall image brightness and reduce contrast - making the\n"
+        "# display seem more 'washed out' and less atmospheric. It's recommended to leave this setting\n"
+        "# disabled for better visuals, but if you dislike banding a lot then it can be enabled if needed.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "UseVulkan32BitShading = 0\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseVulkan32BitShading = iniEntry.getBoolValue(false); },
+        []() { gbUseVulkan32BitShading = false; }
     },
     {
         "AntiAliasingMultisamples",

@@ -8,6 +8,7 @@
 #include "DescriptorSetLayout.h"
 #include "FatalErrors.h"
 #include "LogicalDevice.h"
+#include "PcPsx/Config.h"
 #include "PhysicalDevice.h"
 #include "Pipeline.h"
 #include "PipelineLayout.h"
@@ -390,12 +391,26 @@ static void initDrawPipeline(
     const vgl::PipelineColorBlendState& colorBlendState,
     const vgl::PipelineDepthStencilState& depthStencilState
 ) noexcept {
+    // Shader specialization info: whether to use the original PSX 16-bit shading or not
+    const VkBool32 bUse16BitShading = (!Config::gbUseVulkan32BitShading);
+
+    const VkSpecializationMapEntry specializationMapEntries[] = {
+        { 0, 0, sizeof(VkBool32) }
+    };
+
+    VkSpecializationInfo specializationInfo = {};
+    specializationInfo.mapEntryCount = C_ARRAY_SIZE(specializationMapEntries);
+    specializationInfo.pMapEntries = specializationMapEntries;
+    specializationInfo.dataSize = sizeof(VkBool32);
+    specializationInfo.pData = &bUse16BitShading;
+
+    // Create the pipeline
     initPipeline(
         pipelineType,
         renderPass,
         0,
         pShaderModules,
-        nullptr,
+        &specializationInfo,
         gPipelineLayout_draw,
         gVertexBindingDesc_draw,
         gVertexAttribs_draw,
