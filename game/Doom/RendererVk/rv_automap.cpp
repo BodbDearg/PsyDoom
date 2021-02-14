@@ -78,7 +78,7 @@ static void RV_SetupAutomapTransformMatrix() noexcept {
 // Add an automap line to be drawn
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_AddAutomapLine(const uint32_t color, const float x1, const float y1, const float x2, const float y2) noexcept {
-    VDrawing::addUILine(x1, y1, x2, y2, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t)(color), 128);
+    VDrawing::addUILine(x1, y1, x2, y2, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t)(color));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

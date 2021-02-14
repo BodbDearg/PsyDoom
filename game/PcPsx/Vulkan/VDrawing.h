@@ -44,8 +44,7 @@ void addUILine(
     const float y2,
     const uint8_t r,
     const uint8_t g,
-    const uint8_t b,
-    const uint8_t a
+    const uint8_t b
 ) noexcept;
 
 void addFlatColoredTriangle(
@@ -60,8 +59,7 @@ void addFlatColoredTriangle(
     const float z3,
     const uint8_t r,
     const uint8_t g,
-    const uint8_t b,
-    const uint8_t a
+    const uint8_t b
 ) noexcept;
 
 void addFlatColoredQuad(
@@ -79,8 +77,7 @@ void addFlatColoredQuad(
     const float z4,
     const uint8_t r,
     const uint8_t g,
-    const uint8_t b,
-    const uint8_t a
+    const uint8_t b
 ) noexcept;
 
 void addUISprite(

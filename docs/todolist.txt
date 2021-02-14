@@ -2,11 +2,10 @@
 - Vk renderer: get screen fades working
 - Vk renderer: get loading plaque draw working
 - Vk renderer: get VRAM viewer working again
+- Vk renderer: try to batch sky walls
 - Vk renderer: add option for 32-bit (smooth) shading
 - Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
-- Vk renderer: don't use 'blended' pipelines for most sprites.
-- Vk renderer: can some pipelines now be removed since we are using masking and 'discard' now?
 - Vk renderer: fix UI sprite stitching.
 - Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
 - Vk renderer: fix occasional validation layer warning about push constants

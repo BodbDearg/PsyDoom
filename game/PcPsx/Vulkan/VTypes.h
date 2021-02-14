@@ -14,21 +14,19 @@
 // Affects the primitive types expected, shaders used, blending mode and so on.
 //------------------------------------------------------------------------------------------------------------------------------------------
 enum class VPipelineType : uint8_t {
-    Lines,                      // Solid colored lines, alpha blended: can be in either 2D or 3D (for debug use for example)
-    Colored,                    // Solid colored triangles, alpha blended: can be in either 2D or 3D (for debug use for example)
-    UI_4bpp,                    // 2D/UI: texture mapped @ 4bpp, alpha blended
-    UI_8bpp,                    // 2D/UI: texture mapped @ 8bpp, alpha blended
-    UI_8bpp_Add,                // 2D/UI: texture mapped @ 8bpp, additive blended (used for player weapon when partial invisibility is active)
-    UI_16bpp,                   // 2D/UI: texture mapped @ 16bpp, alpha blended
-    World_SolidGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, no blending - for fully solid/opaque geometry.
-    World_SolidGeomXray,        // 3D world/view: Texture mapped @ 8bpp, light diminishing, no blending - for fully solid/opaque geometry (X-Ray vision cheat).
-    World_AlphaGeom,            // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for masked and translucent walls.
-    World_AlphaSprite,          // 3D world/view: Texture mapped @ 8bpp, light diminishing, alpha blended - for sprites.
-    World_AdditiveSprite,       // 3D world/view: Texture mapped @ 8bpp, light diminishing, additive blended - for sprites.
-    World_SubtractiveSprite,    // 3D world/view: Texture mapped @ 8bpp, light diminishing, subtractive blended - for sprites.
-    World_Sky,                  // 3D world/view: Used to draw the sky
-    Msaa_Resolve,               // Simple shader that resolves MSAA samples
-    NUM_TYPES                   // Convenience declaration...
+    Lines,                  // Solid colored lines, no blending: can be in either 2D or 3D (for debug use for example)
+    Colored,                // Solid colored triangles, no blending: can be in either 2D or 3D (for debug use for example)
+    UI_4bpp,                // 2D/UI: texture mapped @ 4bpp, masked but no blending
+    UI_8bpp,                // 2D/UI: texture mapped @ 8bpp, masked but no blending
+    UI_8bpp_Add,            // 2D/UI: texture mapped @ 8bpp, masked & additive blended (used for player weapon when partial invisibility is active)
+    UI_16bpp,               // 2D/UI: texture mapped @ 16bpp, masked but no blending
+    World_Masked,           // 3D world/view: textured @ 8bpp and lit, masked but no blending
+    World_Alpha,            // 3D world/view: textured @ 8bpp and lit, masked & alpha blended
+    World_Additive,         // 3D world/view: textured @ 8bpp and lit, masked & additive blended
+    World_Subtractive,      // 3D world/view: textured @ 8bpp and lit, masked & subtractive blended
+    World_Sky,              // 3D world/view: Used to draw the sky, masked but no blending
+    Msaa_Resolve,           // Simple shader that resolves MSAA samples
+    NUM_TYPES               // Convenience declaration...
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

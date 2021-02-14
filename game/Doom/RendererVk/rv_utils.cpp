@@ -299,7 +299,7 @@ void RV_DrawWidescreenStatusBarLetterbox() noexcept {
         +65536.0f,    +200.0f,  0.0f,
         +65536.0f,  +65536.0f,  0.0f,
         -65536.0f,  +65536.0f,  0.0f,
-        0, 0, 0, 128
+        0, 0, 0
     );
 }
 

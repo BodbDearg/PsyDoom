@@ -129,11 +129,11 @@ static void RV_InitSpriteFrag(
     uint8_t stMulG = 128;
     uint8_t stMulB = 128;
     uint8_t stMulA = 128;
-    VPipelineType drawPipeline = VPipelineType::World_AlphaSprite;
+    VPipelineType drawPipeline = VPipelineType::World_Masked;
 
     if (thing.flags & MF_BLEND_ON) {
         if (thing.flags & MF_BLEND_MODE_BIT1) {
-            drawPipeline = VPipelineType::World_AdditiveSprite;
+            drawPipeline = VPipelineType::World_Additive;
 
             if (thing.flags & MF_BLEND_MODE_BIT2) {
                 // Additive blend with 25% opacity
@@ -146,10 +146,10 @@ static void RV_InitSpriteFrag(
         } else {
             if (thing.flags & MF_BLEND_MODE_BIT2) {
                 // Subtractive blend with 100% opacity
-                drawPipeline = VPipelineType::World_SubtractiveSprite;
+                drawPipeline = VPipelineType::World_Subtractive;
             } else {
                 // Alpha blend with 50% opacity
-                drawPipeline = VPipelineType::World_AlphaSprite;
+                drawPipeline = VPipelineType::World_Alpha;
                 stMulA = 64;
             }
         }
@@ -249,9 +249,9 @@ static void RV_DrawSpriteFrag(const SpriteFrag& sprFrag) noexcept {
     VDrawing::setDrawPipeline(sprFrag.drawPipeline);
     VDrawing::addWorldQuad(
         sprFrag.x1, sprFrag.yb, sprFrag.z1, sprFrag.ul, sprFrag.vb,
-        sprFrag.x2, sprFrag.yb, sprFrag.z2, sprFrag.ur, sprFrag.vb,
-        sprFrag.x2, sprFrag.yt, sprFrag.z2, sprFrag.ur, sprFrag.vt,
         sprFrag.x1, sprFrag.yt, sprFrag.z1, sprFrag.ul, sprFrag.vt,
+        sprFrag.x2, sprFrag.yt, sprFrag.z2, sprFrag.ur, sprFrag.vt,
+        sprFrag.x2, sprFrag.yb, sprFrag.z2, sprFrag.ur, sprFrag.vb,
         sprFrag.colR, sprFrag.colG, sprFrag.colB,
         gClutX, gClutY,
         sprFrag.texWinX, sprFrag.texWinY,

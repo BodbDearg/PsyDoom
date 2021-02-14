@@ -235,7 +235,7 @@ void submit(const LINE_F2& line) noexcept {
 
     // Setup the line to be drawn then submit to the GPU
     const bool bColorLine = ((line.code & 0x1) == 0);
-    const bool bBlendLine = line.code & 0x2;
+    ASSERT_LOG((line.code & 0x2) == 0, "Blending not supported for lines! Doom shouldn't need this functionality!");
 
     Gpu::DrawLine drawLine = {};
     drawLine.x1 = line.x0;
@@ -261,8 +261,7 @@ void submit(const LINE_F2& line) noexcept {
                     drawLine.y2,
                     drawLine.color.comp.r,
                     drawLine.color.comp.g,
-                    drawLine.color.comp.b,
-                    (bBlendLine) ? 64 : 128
+                    drawLine.color.comp.b
                 );
             }
 
@@ -270,11 +269,7 @@ void submit(const LINE_F2& line) noexcept {
         }
     #endif
 
-    if (bBlendLine) {
-        Gpu::draw<Gpu::DrawMode::FlatColoredBlended>(gpu, drawLine);
-    } else {
-        Gpu::draw<Gpu::DrawMode::FlatColored>(gpu, drawLine);
-    }
+    Gpu::draw<Gpu::DrawMode::FlatColored>(gpu, drawLine);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

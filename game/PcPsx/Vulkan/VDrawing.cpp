@@ -312,8 +312,7 @@ void addUILine(
     const float y2,
     const uint8_t r,
     const uint8_t g,
-    const uint8_t b,
-    const uint8_t a
+    const uint8_t b
 ) noexcept {
     // Fill in the vertices, starting first with common parameters
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(2);
@@ -327,7 +326,7 @@ void addUILine(
         vert.stmulR = 128;
         vert.stmulG = 128;
         vert.stmulB = 128;
-        vert.stmulA = a;
+        vert.stmulA = 128;
     }
 
     // Fill in xy positions
@@ -350,8 +349,7 @@ void addFlatColoredTriangle(
     const float z3,
     const uint8_t r,
     const uint8_t g,
-    const uint8_t b,
-    const uint8_t a
+    const uint8_t b
 ) noexcept {
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(3);
 
@@ -364,7 +362,7 @@ void addFlatColoredTriangle(
         vert.stmulR = 128;
         vert.stmulG = 128;
         vert.stmulB = 128;
-        vert.stmulA = a;
+        vert.stmulA = 128;
     }
 
     pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
@@ -390,8 +388,7 @@ void addFlatColoredQuad(
     const float z4,
     const uint8_t r,
     const uint8_t g,
-    const uint8_t b,
-    const uint8_t a
+    const uint8_t b
 ) noexcept {
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
 
@@ -404,7 +401,7 @@ void addFlatColoredQuad(
         vert.stmulR = 128;
         vert.stmulG = 128;
         vert.stmulB = 128;
-        vert.stmulA = a;
+        vert.stmulA = 128;
     }
 
     pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;

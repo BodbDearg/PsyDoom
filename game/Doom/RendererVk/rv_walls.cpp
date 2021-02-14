@@ -376,7 +376,7 @@ static void RV_DrawSegBlended(
         (gpViewPlayer->cheats & CF_XRAYVISION)
     );
 
-    VDrawing::setDrawPipeline(VPipelineType::World_AlphaGeom);
+    VDrawing::setDrawPipeline(VPipelineType::World_Alpha);
     RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
 }
 

@@ -425,18 +425,16 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initPipelineDepthStencilStates();
 
     // Create all of the main drawing pipelines
-    initDrawPipeline(VPipelineType::Lines, renderPass, gShaders_colored, gInputAS_lineList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::Colored, renderPass, gShaders_colored, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_4bpp, renderPass, gShaders_ui_4bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_8bpp, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::Lines, renderPass, gShaders_colored, gInputAS_lineList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::Colored, renderPass, gShaders_colored, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::UI_4bpp, renderPass, gShaders_ui_4bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::UI_8bpp, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
     initDrawPipeline(VPipelineType::UI_8bpp_Add, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_16bpp, renderPass, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_SolidGeom, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_SolidGeomXray, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_AlphaGeom, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_AlphaSprite, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_AdditiveSprite, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_SubtractiveSprite, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::UI_16bpp, renderPass, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Masked, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Alpha, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Additive, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Subtractive, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
     initDrawPipeline(VPipelineType::World_Sky, renderPass, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
     
     // The pipeline to resolve MSAA: only bother creating this if we are doing MSAA.
