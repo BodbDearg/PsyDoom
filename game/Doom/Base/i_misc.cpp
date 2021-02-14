@@ -226,16 +226,26 @@ void I_DrawPausedOverlay() noexcept {
         I_DrawString(-1, 60, Game::getMapName(gMapNumToCheatWarpTo));
     }
     else if (player.cheats & CF_VRAMVIEWER) {
-        // Draw the vram viewer: first clear the background to black and then draw it
+        // Draw the vram viewer: first clear the background to black and then draw it.
+        // PsyDoom: if using the Vulkan renderer then stretch the coords for this past the standard UI space, in case the display is widescreen.
+        #if PSYDOOM_MODS
+            const bool bUsingVkRenderer = Video::usingVulkanRenderer();
+            const int16_t screenMinX = (bUsingVkRenderer) ? INT16_MIN : 0;
+            const int16_t screenMaxX = (bUsingVkRenderer) ? INT16_MAX : SCREEN_W;
+        #else
+            const int16_t screenMinX = 0;
+            const int16_t screenMaxX = SCREEN_W;
+        #endif
+
         {
             POLY_F4& polyPrim = *(POLY_F4*) LIBETC_getScratchAddr(128);
             LIBGPU_SetPolyF4(polyPrim);
             LIBGPU_setRGB0(polyPrim, 0, 0, 0);
             LIBGPU_setXY4(polyPrim,
-                0,          0,
-                SCREEN_W,   0,
-                0,          SCREEN_H,
-                SCREEN_W,   SCREEN_H
+                screenMinX, 0,
+                screenMaxX, 0,
+                screenMinX, SCREEN_H,
+                screenMaxX, SCREEN_H
             );
 
             I_AddPrim(polyPrim);

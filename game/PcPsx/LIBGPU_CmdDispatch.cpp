@@ -10,6 +10,56 @@
 
 BEGIN_NAMESPACE(LIBGPU_CmdDispatch)
 
+#if PSYDOOM_VULKAN_RENDERER
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper function which binds a Vulkan pipeline to use for drawing LIBGPU textured primitives.
+// Examines the current PSX GPU texture format and blend mode, and sets the draw pipeline accordingly.
+// Also makes adjustments to the texture window based on the texture format, so that it's a format native coord and a 16-bit pixel coord.
+// Also sets the alpha that the primitive should be drawn with, based on the blend mode.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void doSetupForVkRendererTexturedDraw(const bool bBlendPrimitive, uint16_t& outTexWinX, uint8_t& outDrawAlpha) noexcept {
+    Gpu::Core& gpu = PsxVm::gGpu;
+
+    // Note: we only only support a subset of possible blend mode and t
+    if (gpu.blendMode != Gpu::BlendMode::Add) {
+        // Normal case: most UI sprites are alpha blended
+        ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Unsupported blend mode and texture format combo!");
+
+        switch (gpu.texFmt) {
+            case Gpu::TexFmt::Bpp4:
+                VDrawing::setDrawPipeline(VPipelineType::UI_4bpp);
+                outTexWinX *= 4;
+                break;
+
+            case Gpu::TexFmt::Bpp8:
+                VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
+                outTexWinX *= 2;
+                break;
+
+            case Gpu::TexFmt::Bpp16:
+                VDrawing::setDrawPipeline(VPipelineType::UI_16bpp);
+                break;
+
+            default:
+                ASSERT_FAIL("Bad format!");
+                break;
+        }
+
+        outDrawAlpha = (bBlendPrimitive) ? 64 : 128;
+    }
+    else {
+        // Additive blending: used by the player weapon when the player is invisible
+        ASSERT_LOG(gpu.texFmt == Gpu::TexFmt::Bpp8, "Unsupported blend mode and texture format combo!");
+
+        VDrawing::setDrawPipeline(VPipelineType::UI_8bpp_Add);
+        outTexWinX *= 2;
+        outDrawAlpha = 128;
+    }
+}
+
+#endif  // #if PSYDOOM_VULKAN_RENDERER
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the GPU texture page, texture format, and blending (semi-transparency) mode from a 16-bit word as encoded by LIBGPU
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -135,45 +185,10 @@ void submit(const SPRT& sprite) noexcept {
             uint16_t texWinY = gpu.texPageY + gpu.texWinY;
 
             if (VRenderer::canSubmitDrawCmds()) {
-                // Determine the draw alpha and set the correct pipeline
-                uint8_t drawAlpha;
+                // Determine the draw alpha, set the correct pipeline then add the sprite to be drawn
+                uint8_t drawAlpha = {};
+                doSetupForVkRendererTexturedDraw(bBlendSprite, texWinX, drawAlpha);
 
-                if (gpu.blendMode != Gpu::BlendMode::Add) {
-                    // Normal case: most UI sprites are alpha blended
-                    ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Unsupported blend mode and texture format combo!");
-
-                    switch (gpu.texFmt) {
-                        case Gpu::TexFmt::Bpp4:
-                            VDrawing::setDrawPipeline(VPipelineType::UI_4bpp);
-                            texWinX *= 4;
-                            break;
-
-                        case Gpu::TexFmt::Bpp8:
-                            VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
-                            texWinX *= 2;
-                            break;
-
-                        case Gpu::TexFmt::Bpp16:
-                            VDrawing::setDrawPipeline(VPipelineType::UI_16bpp);
-                            break;
-
-                        default:
-                            ASSERT_FAIL("Bad format!");
-                            break;
-                    }
-
-                    drawAlpha = (bBlendSprite) ? 64 : 128;
-                }
-                else {
-                    // Additive blending: used by the player weapon when the player is invisible
-                    ASSERT_LOG(gpu.texFmt == Gpu::TexFmt::Bpp8, "Unsupported blend mode and texture format combo!");
-
-                    VDrawing::setDrawPipeline(VPipelineType::UI_8bpp_Add);
-                    texWinX *= 2;
-                    drawAlpha = 128;
-                }
-
-                // Actually add the sprite primitive to the draw list
                 VDrawing::addUISprite(
                     drawRect.x,
                     drawRect.y,
@@ -347,6 +362,29 @@ void submit(const POLY_F4& poly) noexcept {
     drawTri2.color.comp.g = g;
     drawTri2.color.comp.b = b;
 
+    // Are we using the Vulkan renderer? If so submit via that.
+    // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
+    #if PSYDOOM_VULKAN_RENDERER
+        if (Video::usingVulkanRenderer()) {
+            ASSERT_LOG((!bBlendPoly), "Don't support blending for POLY_F4 primitives forwarded to the Vulkan renderer!");
+
+            if (VRenderer::canSubmitDrawCmds()) {
+                VDrawing::setDrawPipeline(VPipelineType::Colored);
+                VDrawing::addFlatColoredQuad(
+                    poly.x0, poly.y0, 0.0f,
+                    poly.x1, poly.y1, 0.0f,
+                    poly.x3, poly.y3, 0.0f,
+                    poly.x2, poly.y2, 0.0f,
+                    r,
+                    g,
+                    b
+                );
+            }
+
+            return;
+        }
+    #endif  // #if PSYDOOM_VULKAN_RENDERER
+
     if (bBlendPoly) {
         Gpu::draw<Gpu::DrawMode::FlatColoredBlended>(gpu, drawTri1);
         Gpu::draw<Gpu::DrawMode::FlatColoredBlended>(gpu, drawTri2);
@@ -408,6 +446,46 @@ void submit(const POLY_FT4& poly) noexcept {
     drawTri2.color.comp.r = r;
     drawTri2.color.comp.g = g;
     drawTri2.color.comp.b = b;
+
+    // Are we using the Vulkan renderer? If so submit via that.
+    // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
+    #if PSYDOOM_VULKAN_RENDERER
+        if (Video::usingVulkanRenderer()) {
+            uint16_t texWinW = gpu.texWinXMask + 1;             // This calculation should work because the mask should always be for POW2 texture wrapping
+            uint16_t texWinH = gpu.texWinYMask + 1;
+            uint16_t texWinX = gpu.texPageX + gpu.texWinX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
+            uint16_t texWinY = gpu.texPageY + gpu.texWinY;
+
+            if (VRenderer::canSubmitDrawCmds()) {
+                // Determine the draw alpha, set the correct pipeline then add the quad to be drawn
+                uint8_t drawAlpha = {};
+                doSetupForVkRendererTexturedDraw(bBlendPoly, texWinX, drawAlpha);
+
+                VDrawing::addWorldQuad(
+                    poly.x0, poly.y0, 0.0f, poly.tu0, poly.tv0,
+                    poly.x1, poly.y1, 0.0f, poly.tu1, poly.tv1,
+                    poly.x3, poly.y3, 0.0f, poly.tu3, poly.tv3,
+                    poly.x2, poly.y2, 0.0f, poly.tu2, poly.tv2,
+                    r,
+                    g,
+                    b,
+                    gpu.clutX,
+                    gpu.clutY,
+                    texWinX,
+                    texWinY,
+                    texWinW,
+                    texWinH,
+                    VLightDimMode::None,
+                    128,
+                    128,
+                    128,
+                    drawAlpha
+                );
+            }
+
+            return;
+        }
+    #endif  // #if PSYDOOM_VULKAN_RENDERER
 
     if (bBlendPoly) {
         Gpu::draw<Gpu::DrawMode::TexturedBlended>(gpu, drawTri1);
