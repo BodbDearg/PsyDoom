@@ -8,6 +8,7 @@
 - Vk renderer: don't use 'blended' pipelines for most sprites.
 - Vk renderer: can some pipelines now be removed since we are using masking and 'discard' now?
 - Vk renderer: fix UI sprite stitching.
+- Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
 - Vk renderer: fix occasional validation layer warning about push constants
 - Vk renderer: add option to disable widescreen
 - Vk renderer: save renderer preference and provide menu option
@@ -22,7 +23,6 @@
     - More noticeable when moving.
 - Investigate game end pause issue (unable to unpause)
     - May need to prioritize continue vs pause if conflicting key bindings
-- Fix bug when pausing and turning with view snapping back slightly.
 - Investigate default key bindings - Q & E for example.
     - Maybe remove a few, might be be more confusing to have too many bindings.
 - Investigate Final Doom music pitch issue mentioned on Doomworld.

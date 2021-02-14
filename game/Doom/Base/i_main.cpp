@@ -1174,10 +1174,9 @@ bool I_NetUpdate() noexcept {
     // HOWEVER, in spite of all this (using the previous instead of the current move) we preserve the current effective view angle because
     // you are now allowed to turn at any time outside of the regular 30 Hz update loop for the player.
     {
-        // Note: this code assumes uncommitted turning has been rolled into this 'TickInput' prior to this function being called
-        ASSERT(gPlayerUncommittedAxisTurning == 0);
-        ASSERT(gPlayerUncommittedMouseTurning == 0);
-
+        // Note: this code assumes uncommitted turning has been rolled into this 'TickInput' prior to this function being called.
+        // The only situation where this should not be the case is if the game is paused and some of the uncommitted turning is being held onto for the next tick.
+        ASSERT((gPlayerUncommittedTurning == 0) || (gbGamePaused));
         const angle_t playerAngle = (bInGame) ? gPlayers[gCurPlayerIndex].mo->angle : 0;
         gPlayerNextTickViewAngle = playerAngle + gTickInputs[gCurPlayerIndex].analogTurn + gNextTickInputs.analogTurn;
     }

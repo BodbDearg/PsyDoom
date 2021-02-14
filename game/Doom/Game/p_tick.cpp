@@ -231,6 +231,12 @@ void P_CheckCheats() noexcept {
                 wess_seq_stop(sfx_sawhit);
                 S_Pause();
 
+                // PsyDoom: if there is any turning contained in tick inputs which hasn't been rolled into the player object then uncommit that turning now.
+                // The tick inputs from this point on will essentially be ignored/discarded, but we don't want the player to lose turning made in between 30 Hz frames.
+                #if PSYDOOM_MODS
+                    P_UncommitTurningTickInputs();
+                #endif
+
                 // Remember the tick we paused on and reset cheat button sequences
                 gCurCheatBtnSequenceIdx = 0;
                 gTicConOnPause = gTicCon;
@@ -894,13 +900,12 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // Do one more update of the player's turning before gathering the input
     P_PlayerDoTurning();
 
-    // Apply uncommited turning outside of the 30 Hz update loop from analog controllers, mouse and keyboard.
-    // This all gets committed under the 'analogTurn' field now:
-    inputs.analogTurn += gPlayerUncommittedAxisTurning;
-    inputs.analogTurn += gPlayerUncommittedMouseTurning;
-
-    gPlayerUncommittedAxisTurning = 0;
-    gPlayerUncommittedMouseTurning = 0;
+    // Apply uncommited turning outside of the 30 Hz update loop from analog controllers, mouse and keyboard etc.
+    // Don't do this if the game is paused however, hold on to the uncommitted turning in that case till the next tick.
+    if (!gbGamePaused) {
+        inputs.analogTurn += gPlayerUncommittedTurning;
+        gPlayerUncommittedTurning = 0;
+    }
 
     // Check for renderer toggle
     #if PSYDOOM_VULKAN_RENDERER

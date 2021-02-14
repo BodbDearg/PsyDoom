@@ -73,13 +73,10 @@ static bool gbOnGround;
     // Convenience typedef
     typedef std::chrono::high_resolution_clock::time_point time_point_t;
 
-    // How much turning done (due to mouse movement) which hasn't been merged into the player's map object.
+    // How much turning done which hasn't been merged into the player's map object.
     // This eventually gets rolled into the player's actual angle, but is used in the intermediate to update the renderer.
-    angle_t gPlayerUncommittedMouseTurning;
-
-    // Same as uncommitted turning due to mouse movement, but for gamepad or keyboard movement instead.
-    // This needs to be handled differently to mouse movement, hence separate vars.
-    angle_t gPlayerUncommittedAxisTurning;
+    // It basically allows for framerate uncapped turning movement with very little latency, outside of the 30 Hz update loop.
+    angle_t gPlayerUncommittedTurning;
 
     // Only used in network games: the view angle the player will use on the next frame.
     // Used in networked games to preserve any turning the user did, even though it won't be used until the next frame.
@@ -970,8 +967,7 @@ void P_PlayerThink(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerInitTurning() noexcept {
     gLastPlayerTurnTime = std::chrono::high_resolution_clock::now();
-    gPlayerUncommittedMouseTurning = 0;
-    gPlayerUncommittedAxisTurning = 0;
+    gPlayerUncommittedTurning = 0;
     gPlayerNextTickViewAngle = gPlayers[gCurPlayerIndex].mo->angle;
 }
 
@@ -1043,7 +1039,7 @@ void P_PlayerDoTurning() noexcept {
                 turnAmt /= VBLANKS_PER_TIC;
             }
             
-            gPlayerUncommittedAxisTurning += (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
+            gPlayerUncommittedTurning += (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
         }
 
         // Do analog controller turning from the gamepad
@@ -1060,7 +1056,7 @@ void P_PlayerDoTurning() noexcept {
 
             fixed_t turnAmt = FixedMul((fixed_t)(turnSpeed * axis), ticks60);
             turnAmt /= VBLANKS_PER_TIC;
-            gPlayerUncommittedAxisTurning -= (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
+            gPlayerUncommittedTurning -= (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
         }
 
         // Do turning from the mouse and consume the movements after we have counted them
@@ -1069,18 +1065,38 @@ void P_PlayerDoTurning() noexcept {
             const float turnSpeed = Config::gMouseTurnSpeed * PlayerPrefs::getTurnSpeedMultiplier();
             const fixed_t turnAmt = (fixed_t)(turnSpeed * axis);
 
-            gPlayerUncommittedMouseTurning += (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
+            gPlayerUncommittedTurning += (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
             Input::consumeMouseMovements();
         }
-    } 
-    else {
-        // No turning currently allowed!
-        gPlayerUncommittedMouseTurning = 0;
-        gPlayerUncommittedAxisTurning = 0;
     }
 
     // Remember the last time we did turning updates
     gLastPlayerTurnTime = now;
 }
 
-#endif
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called upon pausing the game; moves upcoming analog turning tick inputs back to being 'uncommitted' inputs.
+// Required to avoid the view snapping back when pausing while turning, because tick inputs are essentially discarded upon pause.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_UncommitTurningTickInputs() noexcept {
+    TickInputs& tickInputs = gTickInputs[gCurPlayerIndex];
+
+    // Note: for networked games we need to consider inputs for the next frame too
+    if (gNetGame == gt_single) {
+        gPlayerUncommittedTurning += tickInputs.analogTurn;
+        tickInputs.analogTurn = 0;
+    } else {
+        TickInputs& nextTickInputs = gNextTickInputs;
+        gPlayerUncommittedTurning += tickInputs.analogTurn;
+        gPlayerUncommittedTurning += nextTickInputs.analogTurn;
+        gPlayerNextTickViewAngle -= tickInputs.analogTurn;          // Don't double count, remove the turning from this since it's already in there
+        gPlayerNextTickViewAngle -= nextTickInputs.analogTurn;
+
+        // Note: even though it's REALLY bad practice to modify the inputs we said we'd do in the next frame, all peers understand that when
+        // the game is paused tick inputs are essentially discarded. So wiping the inputs in this way is ok to do in this limited situation:
+        tickInputs.analogTurn = 0;
+        nextTickInputs.analogTurn = 0;
+    }
+}
+
+#endif  // #if PSYDOOM_MODS

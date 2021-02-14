@@ -75,9 +75,9 @@ static void RV_DetermineDrawParams() noexcept {
             // Normal gameplay: take into consideration how much turning movement we haven't committed to the player object yet here.
             // For net games, we must use the view angle we said we would use NEXT as that is the most up-to-date angle.
             if (gNetGame == gt_single) {
-                gViewAngle = playerMobj.angle + gPlayerUncommittedAxisTurning + gPlayerUncommittedMouseTurning;
+                gViewAngle = playerMobj.angle + gPlayerUncommittedTurning;
             } else {
-                gViewAngle = gPlayerNextTickViewAngle + gPlayerUncommittedAxisTurning + gPlayerUncommittedMouseTurning;
+                gViewAngle = gPlayerNextTickViewAngle + gPlayerUncommittedTurning;
             }
         }
     }
