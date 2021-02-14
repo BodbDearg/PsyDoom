@@ -5,13 +5,13 @@
 #include "BaseRenderPass.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// The single Vulkan render pass used by PsyDoom.
+// The Vulkan render pass used by PsyDoom for pretty much all drawing, except for a few corner cases like screen crossfades.
 // Consists of multiple subpasses, the amount of which depends on graphic settings.
 //------------------------------------------------------------------------------------------------------------------------------------------
-class VRenderPass : public vgl::BaseRenderPass {
+class VMainRenderPass : public vgl::BaseRenderPass {
 public:
-    VRenderPass() noexcept;
-    ~VRenderPass() noexcept;
+    VMainRenderPass() noexcept;
+    ~VMainRenderPass() noexcept;
 
     bool init(
         vgl::LogicalDevice& device,
@@ -24,10 +24,10 @@ public:
 
 private:
     // Copy and move disallowed
-    VRenderPass(const VRenderPass& other) = delete;
-    VRenderPass(VRenderPass&& other) = delete;
-    VRenderPass& operator = (const VRenderPass& other) = delete;
-    VRenderPass& operator = (VRenderPass&& other) = delete;
+    VMainRenderPass(const VMainRenderPass& other) = delete;
+    VMainRenderPass(VMainRenderPass&& other) = delete;
+    VMainRenderPass& operator = (const VMainRenderPass& other) = delete;
+    VMainRenderPass& operator = (VMainRenderPass&& other) = delete;
 };
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

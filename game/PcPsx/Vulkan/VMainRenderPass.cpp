@@ -1,6 +1,6 @@
 #if PSYDOOM_VULKAN_RENDERER
 
-#include "VRenderPass.h"
+#include "VMainRenderPass.h"
 
 #include "LogicalDevice.h"
 #include "RenderPassDef.h"
@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Creates an uninitialized render pass
 //------------------------------------------------------------------------------------------------------------------------------------------
-VRenderPass::VRenderPass() noexcept
+VMainRenderPass::VMainRenderPass() noexcept
     : vgl::BaseRenderPass()
 {
 }
@@ -16,14 +16,14 @@ VRenderPass::VRenderPass() noexcept
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Automatically destroys and cleans up the render pass
 //------------------------------------------------------------------------------------------------------------------------------------------
-VRenderPass::~VRenderPass() noexcept {
+VMainRenderPass::~VMainRenderPass() noexcept {
     destroy();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the render pass with the specified formats and sample counts
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool VRenderPass::init(
+bool VMainRenderPass::init(
     vgl::LogicalDevice& device,
     const VkFormat colorFormat,
     const VkFormat colorMsaaResolveFormat,
@@ -101,7 +101,7 @@ bool VRenderPass::init(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Destroys the render pass and releases its resources
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPass::destroy(const bool bForceIfInvalid) noexcept {
+void VMainRenderPass::destroy(const bool bForceIfInvalid) noexcept {
     // Only destroy if we need to
     if ((!mbIsValid) && (!bForceIfInvalid))
         return;

@@ -26,9 +26,9 @@
 #include "Texture.h"
 #include "VDrawing.h"
 #include "VkFuncs.h"
+#include "VMainRenderPass.h"
 #include "VMsaaResolver.h"
 #include "VPipelines.h"
-#include "VRenderPass.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
@@ -83,7 +83,7 @@ static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical 
 static vgl::LogicalDevice           gDevice(gVkFuncs);              // The logical device used for Vulkan
 static uint32_t                     gDrawSampleCount;               // The number of samples to use when drawing (if > 1 then MSAA is active)
 static vgl::Swapchain               gSwapchain;                     // The swapchain we present to
-static VRenderPass                  gRenderPass;                    // The single render pass used for drawing for the new native Vulkan renderer
+static VMainRenderPass              gMainRenderPass;                // The render pass used for almost all drawing for the new native Vulkan renderer
 static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
 // Color attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
@@ -285,7 +285,7 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
             fbAttachments.push_back(&VMsaaResolver::gResolveColorAttachments[i]);
         }
 
-        if (!gFramebuffers[i].init(gRenderPass, fbAttachments)) {
+        if (!gFramebuffers[i].init(gMainRenderPass, fbAttachments)) {
             destroyFramebuffers();
             return false;
         }
@@ -435,7 +435,7 @@ static void beginFrame_VkRenderer() noexcept {
     VkClearValue framebufferClearValues[1] = {};
 
     gCmdBufferRec.beginRenderPass(
-        gRenderPass,
+        gMainRenderPass,
         framebuffer,
         VK_SUBPASS_CONTENTS_INLINE,
         0,
@@ -529,11 +529,11 @@ void init() noexcept {
     decideDrawSampleCount();
 
     // Initialize the draw render pass for the new renderer
-    if (!gRenderPass.init(gDevice, COLOR_16_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
+    if (!gMainRenderPass.init(gDevice, COLOR_16_FORMAT, COLOR_32_FORMAT, gDrawSampleCount))
         FatalErrors::raise("Failed to create the Vulkan draw render pass!");
 
     // Create pipelines
-    VPipelines::init(gDevice, gRenderPass, gDrawSampleCount);
+    VPipelines::init(gDevice, gMainRenderPass, gDrawSampleCount);
 
     // Init the MSAA resolver (if using MSAA)
     if (gDrawSampleCount > 1) {
@@ -620,7 +620,7 @@ void destroy() noexcept {
     destroyFramebuffers();
     VMsaaResolver::destroy();
     VPipelines::shutdown();
-    gRenderPass.destroy();
+    gMainRenderPass.destroy();
     gSwapchain.destroy();
     gDevice.destroy();
     gpPhysicalDevice = nullptr;
