@@ -11,7 +11,6 @@
 - Vk renderer: save renderer preference and provide menu option
 - Vk renderer: add render scale option
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
-- Investigate audio format conversions.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?
@@ -25,7 +24,6 @@
     - Maybe remove a few, might be be more confusing to have too many bindings.
 - Investigate Final Doom music pitch issue mentioned on Doomworld.
 - Investigate TCache overflow mentioned on Doomworld.
-- Investigate enemy sounds not playing sometimes. Deeper issue with WESS api or attenuation bug?
 - Use interpolation for map view.
 
 0.8 - Limit extending and modding?
@@ -39,13 +37,14 @@
     - No texture cache overflow
     - Expanded VRAM
     - Expanded SRAM
-    - More audio voices.
+    - More audio voices (will help sounds occasionally not playing)
     - Greatly enlargened heap
     - Remove temporary buffer limits
     - Remove geometry clipping limits where possible
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
 - New extended floating point SPU module with better sound quality?
+    - Will help clipping issues.
 
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.
