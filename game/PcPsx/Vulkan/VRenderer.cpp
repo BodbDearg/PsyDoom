@@ -669,6 +669,12 @@ bool beginFrame() noexcept {
     ASSERT(!gbDidBeginFrame);
     gbDidBeginFrame = true;
 
+    // Handle a renderer switch between Vulkan and classic if requested
+    if (gbRequestRendererToggle) {
+        gbUsePsxRenderer = (!gbUsePsxRenderer);
+        gbRequestRendererToggle = false;
+    }
+
     // Recreate the swapchain and framebuffers if required and bail if that operation failed
     if (!ensureValidSwapchainAndFramebuffers())
         return false;
@@ -822,12 +828,6 @@ void endFrame() noexcept {
 
     // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame
     ringbufferMgr.acquireNextBuffer();
-
-    // Handle a renderer switch between Vulkan and classic if requested
-    if (gbRequestRendererToggle) {
-        gbUsePsxRenderer = (!gbUsePsxRenderer);
-        gbRequestRendererToggle = false;
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
