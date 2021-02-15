@@ -52,6 +52,11 @@ static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 // Use the classic PSX renderer? If this is enabled then just blit the PSX framebuffer to the screen.
 bool gbUsePsxRenderer = false;
 
+// If 'true' then the Vulkan video backend should automatically call 'beginFrame' upon ending the frame.
+// Most of the time we will want this to be the case, but when we are setting up to do a crossfade then this behavior must be explicitly disabled.
+// For crossfade we want two whole frames worth of rendered images - we don't want one frame cleared because the frame has begun.
+bool gbAutoBeginNextFrame = true;
+
 // If external code sets this to true then the renderer will be toggled from Vulkan to classic and visa-versa at the next available opportunity
 bool gbRequestRendererToggle = false;
 
@@ -80,6 +85,8 @@ static bool                         gbDidBeginFrame;                // Whether a
 static vgl::VulkanInstance          gVulkanInstance(gVkFuncs);      // Vulkan API instance object
 static vgl::WindowSurface           gWindowSurface;                 // Window surface to draw on
 static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical device chosen for rendering
+static VkFormat                     gWindowSurfaceFormat;           // What color format the window surface should be in
+static VkColorSpaceKHR              gWindowSurfaceColorspace;       // What colorspace the window surface should use
 static vgl::LogicalDevice           gDevice(gVkFuncs);              // The logical device used for Vulkan
 static uint32_t                     gDrawSampleCount;               // The number of samples to use when drawing (if > 1 then MSAA is active)
 static vgl::Swapchain               gSwapchain;                     // The swapchain we present to
@@ -115,6 +122,25 @@ static vgl::MutableTexture gPsxFramebufferTextures[vgl::Defines::RINGBUFFER_SIZE
 // A mirrored copy of PSX VRAM (minus framebuffers) so we can access in the new Vulkan renderer.
 // Any texture uploads to PSX VRAM will get passed along from LIBGPU and eventually find their way in here.
 static vgl::Texture gPsxVramTexture;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Decides on the color format used for the window surface and the colorspace
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void decideWindowSurfaceFormat() noexcept {
+    // Firstly query the device surface capabilities
+    vgl::DeviceSurfaceCaps surfaceCaps;
+
+    if (!surfaceCaps.query(*gpPhysicalDevice, gWindowSurface))
+        FatalErrors::raise("Failed to query device surface capabilities!");
+
+    // Try to choose a valid surface format from what is available.
+    // Note hardcoding the colorspace to deliberately to SRGB - not considering HDR10 etc. for this project.
+    gWindowSurfaceFormat = surfaceCaps.getSupportedSurfaceFormat(ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS));
+    gWindowSurfaceColorspace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+
+    if (gWindowSurfaceFormat == VK_FORMAT_UNDEFINED)
+        FatalErrors::raise("Failed to find a suitable window surface format to present with!");
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Decides the multisample anti-aliasing sample count based on user preferences and hardware capabilities
@@ -232,7 +258,7 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
         bDidWaitForDeviceIdle = true;
         gSwapchain.destroy();
 
-        if (!gSwapchain.init(gDevice, ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS)))
+        if (!gSwapchain.init(gDevice, gWindowSurfaceFormat, gWindowSurfaceColorspace))
             return false;
     }
 
@@ -524,10 +550,11 @@ void init() noexcept {
     if (!gpPhysicalDevice)
         FatalErrors::raise("Failed to find a suitable rendering device for use with Vulkan!");
 
-    // Initialize the logical Vulkan device used for commands and operations and then decide draw sample count
+    // Initialize the logical Vulkan device used for commands and operations and then decide draw sample count and window surface format
     if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface))
         FatalErrors::raise("Failed to initialize a Vulkan logical device!");
 
+    decideWindowSurfaceFormat();
     decideDrawSampleCount();
 
     // Initialize the draw render pass for the new renderer

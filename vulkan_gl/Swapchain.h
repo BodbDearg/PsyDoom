@@ -22,7 +22,7 @@ public:
     Swapchain() noexcept;
     ~Swapchain() noexcept;
 
-    bool init(LogicalDevice& device, const VkFormat* const pValidSurfaceFormats, const uint32_t numValidSurfaceFormats) noexcept;
+    bool init(LogicalDevice& device, const VkFormat winSurfaceFormat, const VkColorSpaceKHR winSurfaceColorspace) noexcept;
     void destroy(const bool bForceIfInvalid = false) noexcept;
 
     inline bool isValid() const noexcept { return mbIsValid; }

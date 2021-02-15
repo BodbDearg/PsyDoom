@@ -43,7 +43,7 @@ Swapchain::~Swapchain() noexcept {
 // Attempts to initialize the swapchain using one of the desired surface formats in priority order.
 // Returns 'true' if successful.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool Swapchain::init(LogicalDevice& device, const VkFormat* const pValidSurfaceFormats, const uint32_t numValidSurfaceFormats) noexcept {
+bool Swapchain::init(LogicalDevice& device, const VkFormat winSurfaceFormat, const VkColorSpaceKHR winSurfaceColorspace) noexcept {
     // Preconditions
     ASSERT_LOG((!mbIsValid), "Must call destroy() before re-initializing!");
     ASSERT(device.getVkDevice());
@@ -63,19 +63,13 @@ bool Swapchain::init(LogicalDevice& device, const VkFormat* const pValidSurfaceF
         return false;
     }
 
+    // Save the surface format details specified
+    mSurfaceFormat.format = winSurfaceFormat;
+    mSurfaceFormat.colorSpace = winSurfaceColorspace;
+
     // Swapchain creation can fail validly if the window is zero sized and cannot currently be presented to
     if (mDeviceSurfaceCaps.isZeroSizedMaxImageExtent())
         return false;
-
-    // Try to choose a valid surface format from what is available.
-    // Note we are hardcoding the colorspace to SRGB at the moment, will need to revisit later if HDR10 is required...
-    mSurfaceFormat.format = mDeviceSurfaceCaps.getSupportedSurfaceFormat(pValidSurfaceFormats, numValidSurfaceFormats);
-    mSurfaceFormat.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-
-    if (mSurfaceFormat.format == VK_FORMAT_UNDEFINED) {
-        ASSERT_FAIL("Failed to find a suitable window surface format to present with!");
-        return false;
-    }
 
     // Choosing present mode, swap extent and swapchain length
     choosePresentMode();
