@@ -14,6 +14,7 @@
     - Shotguns dropped near wall in The Focus, behind the crushing ceilings
     - May not be splitting correctly in some situations
 - Investigate hang warping from Club Doom to Hangar
+- Fix renderer switch sometimes not happening in menus
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.

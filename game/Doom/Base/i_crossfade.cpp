@@ -115,6 +115,8 @@ void I_CrossfadeFrameBuffers() noexcept {
             curTotalVBlanks = I_GetTotalVBlanks();
         }
 
+        lastTotalVBlanks = curTotalVBlanks;
+
         // PsyDoom: if it's time to quit then exit early
         if (Input::isQuitRequested())
             break;

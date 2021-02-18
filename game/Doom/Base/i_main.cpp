@@ -112,6 +112,12 @@ uint32_t gLockedTexPagesMask;
 // A 64-KB buffer used for WAD loading and other stuff
 std::byte gTmpBuffer[TMP_BUFFER_SIZE];
 
+// PsyDoom: the time at which the app started.
+// Used for measuring the total vblanks elapsed since app start
+#if PSYDOOM_MODS
+    static std::chrono::steady_clock::time_point gAppStartTime;
+#endif
+
 // Video vblank timers: track the total amount, last total and current elapsed amount
 uint32_t gTotalVBlanks;
 uint32_t gLastTotalVBlanks;
@@ -217,6 +223,10 @@ static uint8_t gPadInputBuffer_2[34];
 // I'm just calling 'I_Main()' so as not to confuse it with this port's 'main()'...
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Main() noexcept {
+    #if PSYDOOM_MODS
+        gAppStartTime = std::chrono::steady_clock::now();   // For measuring vblanks since app start
+    #endif
+
     LIBSN__main();
     D_DoomMain();
 }
@@ -1319,15 +1329,15 @@ void I_SubmitGpuCmds() noexcept {}
 // PsyDoom: get the total number of vblanks elapsed, and use the current time adjustment in networked games
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t I_GetTotalVBlanks() noexcept {
-    typedef std::chrono::system_clock::time_point               time_point_t;
-    typedef std::chrono::system_clock::duration                 duration_t;
+    typedef std::chrono::steady_clock::time_point               time_point_t;
+    typedef std::chrono::steady_clock::duration                 duration_t;
     typedef std::chrono::duration<int64_t, std::ratio<1, 50>>   tick_50hz_t;
     typedef std::chrono::duration<int64_t, std::ratio<1, 60>>   tick_60hz_t;
     
-    const time_point_t now = std::chrono::system_clock::now();
-    const duration_t timeSinceEpoch = now.time_since_epoch();
+    const time_point_t now = std::chrono::steady_clock::now();
+    const duration_t timeSinceAppStart = now - gAppStartTime;
     const duration_t timeAdjustMs = std::chrono::milliseconds((gNetGame != gt_single) ? gNetTimeAdjustMs : 0);
-    const duration_t adjustedDuration = timeSinceEpoch + timeAdjustMs;
+    const duration_t adjustedDuration = timeSinceAppStart + timeAdjustMs;
 
     if (Game::gSettings.bUsePalTimings) {
         return (int32_t) std::chrono::duration_cast<tick_50hz_t>(adjustedDuration).count();
