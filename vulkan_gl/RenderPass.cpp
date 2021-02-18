@@ -1,6 +1,7 @@
-#include "BaseRenderPass.h"
+#include "RenderPass.h"
 
 #include "AttachmentUsageFlags.h"
+#include "Finally.h"
 #include "LogicalDevice.h"
 #include "RenderPassDef.h"
 #include "VkFuncs.h"
@@ -227,15 +228,15 @@ static uint32_t determineSubpassDependencies(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells how many color attachments there are for a subpass. Index MUST be valid!
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t BaseRenderPass::getNumSubpassColorAttachments(const uint32_t subpassIndex) const noexcept {
+uint32_t RenderPass::getNumSubpassColorAttachments(const uint32_t subpassIndex) const noexcept {
     ASSERT(subpassIndex < mNumSubpasses);
     return mNumSubpassColorAttachments[subpassIndex];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Constructs the renderpass base to be un-initialized and defaulted
+// Constructs the render pass to be un-initialized and defaulted
 //------------------------------------------------------------------------------------------------------------------------------------------
-BaseRenderPass::BaseRenderPass() noexcept
+RenderPass::RenderPass() noexcept
     : mbIsValid(false)
     , mNumSubpasses(0)
     , mNumAttachments(0)
@@ -246,21 +247,26 @@ BaseRenderPass::BaseRenderPass() noexcept
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Base renderpass destructor does nothing, must be implemented by derived classes
+// Ensures the render pass is destroyed
 //------------------------------------------------------------------------------------------------------------------------------------------
-BaseRenderPass::~BaseRenderPass() noexcept {
-    // We don't call destroy() here because it is redundant.
-    // It's expected that derived classes do this in their own destructors.
-    ASSERT_LOG(!mbIsValid, "Derived classes must call destroy() in their destructor!");
+RenderPass::~RenderPass() noexcept {
+    destroy();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes/creates the base render pass
+// Initializes the render pass
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool BaseRenderPass::init(LogicalDevice& device, const RenderPassDef& renderPassDef) noexcept {
+bool RenderPass::init(LogicalDevice& device, const RenderPassDef& renderPassDef) noexcept {
     // Preconditions
     ASSERT_LOG(!mbIsValid, "Must call destroy() before re-initializing!");
     ASSERT(device.getVkDevice());
+
+    // If anything goes wrong, cleanup on exit - don't half initialize!
+    auto cleanupOnError = finally([&]{
+        if (!mbIsValid) {
+            destroy(true);
+        }
+    });
 
     // Sanity check: all subpasses specified must have valid resolve attachment lists
     if (!renderPassDef.hasValidResolveAttachmentLists()) {
@@ -327,17 +333,18 @@ bool BaseRenderPass::init(LogicalDevice& device, const RenderPassDef& renderPass
 
     ASSERT(mVkRenderPass);
     
-    // Note: derived classes must set the 'isValid' flag to true
+    // Initialization was successful!
+    mbIsValid = true;
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Cleanup and destroy the render pass
+// Destroys the render pass immediately and releases it's resources
 //------------------------------------------------------------------------------------------------------------------------------------------
-void BaseRenderPass::destroy() noexcept {
-    // Preconditions
-    ASSERT_LOG(!mbIsValid, "Should be marked as not valid prior to this base 'destroy()' call by derived classes!");
-    ASSERT_LOG(((!mpDevice) || mpDevice->getVkDevice()), "Parent device must still be valid if defined!");
+void RenderPass::destroy(const bool bForceIfInvalid) noexcept {
+    // Only do if we need to cleanup
+    if ((!mbIsValid) && (!bForceIfInvalid))
+        return;
 
     // Do the cleanup
     mNumSubpasses = 0;

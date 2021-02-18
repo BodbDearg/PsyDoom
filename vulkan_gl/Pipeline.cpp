@@ -1,10 +1,10 @@
 #include "Pipeline.h"
 
-#include "BaseRenderPass.h"
 #include "Finally.h"
 #include "LogicalDevice.h"
 #include "PhysicalDevice.h"
 #include "PipelineLayout.h"
+#include "RenderPass.h"
 #include "RetirementMgr.h"
 #include "ShaderModule.h"
 #include "VkFuncs.h"
@@ -52,7 +52,7 @@ Pipeline::~Pipeline() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Pipeline::initGraphicsPipeline(
     const PipelineLayout& pipelineLayout,
-    const BaseRenderPass& renderPass,
+    const RenderPass& renderPass,
     const uint32_t subpassIndex,
     const ShaderModule* const* const ppShaderModules,
     const uint32_t numShaderModules,

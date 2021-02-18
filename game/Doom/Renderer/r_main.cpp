@@ -381,7 +381,7 @@ void R_SnapViewZInterpolation() noexcept {
 fixed_t R_CalcLerpFactor() noexcept {
     // Get the elapsed time since the last frame we saved data for
     const timepoint_t now = std::chrono::high_resolution_clock::now();
-    const double elapsedSeconds = std::chrono::duration<float>(now - gPrevFrameTime).count();
+    const double elapsedSeconds = std::chrono::duration<double>(now - gPrevFrameTime).count();
 
     // How many tics per second can the game do maximum?
     // For demo playback/recording the game is capped at 15 Hz for consistency, and the cap is 30 Hz for normal games.

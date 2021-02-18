@@ -19,7 +19,7 @@ layout(location = 5) flat out ivec2 out_clutPos;
 layout(location = 6) flat out vec4 out_stmul;
 
 void main() {
-    gl_Position = constants.mvpMatrix * vec4(in_pos, 1);
+    gl_Position = uniforms.mvpMatrix * vec4(in_pos, 1);
     out_color = in_color;
     out_uv_z = vec3(in_uv, gl_Position.z);
     out_lightDimModeStrength.x = (in_lightDimMode == 0) ? 1.0 : 0.0;    // No light diminishing

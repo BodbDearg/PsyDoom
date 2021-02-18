@@ -43,6 +43,6 @@ void getClassicFramebufferWindowRect(
 ) noexcept;
 
 void displayFramebuffer() noexcept;
-bool usingVulkanRenderer() noexcept;
+bool isUsingVulkanRenderPath() noexcept;
 
 END_NAMESPACE(Video)

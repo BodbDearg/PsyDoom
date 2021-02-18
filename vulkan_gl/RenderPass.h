@@ -11,12 +11,17 @@ class LogicalDevice;
 struct RenderPassDef;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Base definition for all renderpass types.
-// Handles the actual work of creating the Vulkan renderpass object, and whatever specific logic the derived renderpass type needs.
-// For example a derived renderpass might manage graphics pipeline caches, if required...
+// Defines a Vulkan render pass, which is a description of the framebuffer, it's inputs, outputs and rendering stages.
+// Initializes the render pass using the specified input definition.
 //------------------------------------------------------------------------------------------------------------------------------------------
-class BaseRenderPass {
+class RenderPass {
 public:
+    RenderPass() noexcept;
+    ~RenderPass() noexcept;
+
+    bool init(LogicalDevice& device, const RenderPassDef& renderPassDef) noexcept;
+    void destroy(const bool bForceIfInvalid = false) noexcept;
+
     inline bool isValid() const noexcept { return mbIsValid; }
     inline uint32_t getNumSubpasses() const noexcept { return mNumSubpasses; }
     inline uint32_t getNumAttachments() const noexcept { return mNumAttachments; }
@@ -25,18 +30,12 @@ public:
 
     uint32_t getNumSubpassColorAttachments(const uint32_t subpassIndex) const noexcept;
     
-protected:
+private:
     // Copy and move disallowed
-    BaseRenderPass(const BaseRenderPass& other) = delete;
-    BaseRenderPass(BaseRenderPass&& other) = delete;
-    BaseRenderPass& operator = (const BaseRenderPass& other) = delete;
-    BaseRenderPass& operator = (BaseRenderPass&& other) = delete;
-    
-    BaseRenderPass() noexcept;
-    ~BaseRenderPass() noexcept;
-
-    bool init(LogicalDevice& device, const RenderPassDef& renderPassDef) noexcept;
-    void destroy() noexcept;
+    RenderPass(const RenderPass& other) = delete;
+    RenderPass(RenderPass&& other) = delete;
+    RenderPass& operator = (const RenderPass& other) = delete;
+    RenderPass& operator = (RenderPass&& other) = delete;
     
     bool                    mbIsValid;
     uint32_t                mNumSubpasses;

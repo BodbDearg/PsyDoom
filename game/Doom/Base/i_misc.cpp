@@ -229,7 +229,7 @@ void I_DrawPausedOverlay() noexcept {
         // Draw the vram viewer: first clear the background to black and then draw it.
         // PsyDoom: if using the Vulkan renderer then stretch the coords for this past the standard UI space, in case the display is widescreen.
         #if PSYDOOM_MODS
-            const bool bUsingVkRenderer = Video::usingVulkanRenderer();
+            const bool bUsingVkRenderer = Video::isUsingVulkanRenderPath();
             const int16_t screenMinX = (bUsingVkRenderer) ? INT16_MIN : 0;
             const int16_t screenMaxX = (bUsingVkRenderer) ? INT16_MAX : SCREEN_W;
         #else

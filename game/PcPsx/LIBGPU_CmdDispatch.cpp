@@ -178,13 +178,13 @@ void submit(const SPRT& sprite) noexcept {
     // Are we using the Vulkan renderer? If so submit via that.
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
-        if (Video::usingVulkanRenderer()) {
+        if (Video::isUsingVulkanRenderPath()) {
             uint16_t texWinW = gpu.texWinXMask + 1;             // This calculation should work because the mask should always be for POW2 texture wrapping
             uint16_t texWinH = gpu.texWinYMask + 1;
             uint16_t texWinX = gpu.texPageX + gpu.texWinX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
             uint16_t texWinY = gpu.texPageY + gpu.texWinY;
 
-            if (VRenderer::canSubmitDrawCmds()) {
+            if (VRenderer::isRendering()) {
                 // Determine the draw alpha, set the correct pipeline then add the sprite to be drawn
                 uint8_t drawAlpha = {};
                 doSetupForVkRendererTexturedDraw(bBlendSprite, texWinX, drawAlpha);
@@ -264,10 +264,10 @@ void submit(const LINE_F2& line) noexcept {
     // Are we using the Vulkan renderer? If so submit via that.
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
-        if (Video::usingVulkanRenderer()) {
+        if (Video::isUsingVulkanRenderPath()) {
             ASSERT_LOG(gpu.blendMode == Gpu::BlendMode::Alpha50, "Only alpha blending is supported for PSX renderer lines forwarded to Vulkan!");
 
-            if (VRenderer::canSubmitDrawCmds()) {
+            if (VRenderer::isRendering()) {
                 VDrawing::setDrawPipeline(VPipelineType::Lines);
                 VDrawing::addUILine(
                     drawLine.x1,
@@ -365,10 +365,10 @@ void submit(const POLY_F4& poly) noexcept {
     // Are we using the Vulkan renderer? If so submit via that.
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
-        if (Video::usingVulkanRenderer()) {
+        if (Video::isUsingVulkanRenderPath()) {
             ASSERT_LOG((!bBlendPoly), "Don't support blending for POLY_F4 primitives forwarded to the Vulkan renderer!");
 
-            if (VRenderer::canSubmitDrawCmds()) {
+            if (VRenderer::isRendering()) {
                 VDrawing::setDrawPipeline(VPipelineType::Colored);
                 VDrawing::addFlatColoredQuad(
                     poly.x0, poly.y0, 0.0f,
@@ -450,13 +450,13 @@ void submit(const POLY_FT4& poly) noexcept {
     // Are we using the Vulkan renderer? If so submit via that.
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
-        if (Video::usingVulkanRenderer()) {
+        if (Video::isUsingVulkanRenderPath()) {
             uint16_t texWinW = gpu.texWinXMask + 1;             // This calculation should work because the mask should always be for POW2 texture wrapping
             uint16_t texWinH = gpu.texWinYMask + 1;
             uint16_t texWinX = gpu.texPageX + gpu.texWinX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
             uint16_t texWinY = gpu.texPageY + gpu.texWinY;
 
-            if (VRenderer::canSubmitDrawCmds()) {
+            if (VRenderer::isRendering()) {
                 // Determine the draw alpha, set the correct pipeline then add the quad to be drawn
                 uint8_t drawAlpha = {};
                 doSetupForVkRendererTexturedDraw(bBlendPoly, texWinX, drawAlpha);

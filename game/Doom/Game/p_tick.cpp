@@ -654,7 +654,7 @@ void P_Drawer() noexcept {
     } else {
         #if PSYDOOM_VULKAN_RENDERER
             // PsyDoom: use the new Vulkan renderer if enabled and bypass the classic one
-            if (Video::usingVulkanRenderer()) {
+            if (Video::isUsingVulkanRenderPath()) {
                 RV_RenderPlayerView();
             } else {
                 R_RenderPlayerView();
@@ -910,8 +910,15 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // Check for renderer toggle
     #if PSYDOOM_VULKAN_RENDERER
         if (Controls::isJustPressed(Controls::Binding::Toggle_Renderer)) {
-            VRenderer::gbRequestRendererToggle = true;
-            gStatusBar.message = (VRenderer::gbUsePsxRenderer) ? "Vulkan Renderer" : "Classic Renderer";
+            const bool bUseVulkan = VRenderer::isUsingPsxRenderPath();
+
+            if (bUseVulkan) {
+                VRenderer::switchToMainVulkanRenderPath();
+            } else {
+                VRenderer::switchToPsxRenderPath();
+            }
+
+            gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer" : "Classic Renderer";
             gStatusBar.messageTicsLeft = 30;
         }
     #endif

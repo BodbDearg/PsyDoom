@@ -189,7 +189,7 @@ void AM_Drawer() noexcept {
 
     // PsyDoom: if the Vulkan renderer is active then delegate automap drawing to that
     #if PSYDOOM_MODS && PSYDOOM_VULKAN_RENDERER
-        if (Video::usingVulkanRenderer()) {
+        if (Video::isUsingVulkanRenderPath()) {
             RV_DrawAutomap();
             return;
         }

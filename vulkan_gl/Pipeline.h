@@ -6,9 +6,9 @@
 
 BEGIN_NAMESPACE(vgl)
 
-class BaseRenderPass;
 class LogicalDevice;
 class PipelineLayout;
+class RenderPass;
 class ShaderModule;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ public:
 
     bool initGraphicsPipeline(
         const PipelineLayout& pipelineLayout,
-        const BaseRenderPass& renderPass,
+        const RenderPass& renderPass,
         const uint32_t subpassIndex,
         const ShaderModule* const* const ppShaderModules,
         const uint32_t numShaderModules,

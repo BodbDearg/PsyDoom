@@ -85,7 +85,7 @@ void RV_CacheSkyTex() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawBackgroundSky() noexcept {
     // Use an identity transform matrix for drawing this sky quad
-    VShaderUniforms uniforms = {};
+    VShaderUniforms_Draw uniforms = {};
     uniforms.mvpMatrix = Matrix4f::IDENTITY();
     uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
     uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;

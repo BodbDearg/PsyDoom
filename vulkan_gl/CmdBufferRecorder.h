@@ -6,13 +6,13 @@
 
 BEGIN_NAMESPACE(vgl)
 
-class BaseRenderPass;
 class Buffer;
 class CmdBuffer;
 class DescriptorSet;
 class Framebuffer;
 class Pipeline;
 class PipelineLayout;
+class RenderPass;
 struct VkFuncs;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ public:
     // ~~ Recorded commands ~~
     //-----------------------------------------------------------------------------------------------------------------    
     void beginRenderPass(
-        const BaseRenderPass& renderPass,
+        const RenderPass& renderPass,
         const Framebuffer& framebuffer,
         const VkSubpassContents subpassContents,
         const int32_t renderAreaX,

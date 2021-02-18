@@ -8,7 +8,6 @@
 #if PSYDOOM_VULKAN_RENDERER
 
 #include "Asserts.h"
-#include "BaseRenderPass.h"
 #include "Buffer.h"
 #include "CmdBufferRecorder.h"
 #include "Defines.h"
@@ -61,7 +60,7 @@ static VVertexBufferSet gVertexBuffers_Draw;
 static VPipelineType gCurDrawPipelineType;
 
 // Sets of uniforms for the current frame
-static std::vector<VShaderUniforms> gFrameUniforms;
+static std::vector<VShaderUniforms_Draw> gFrameUniforms;
 
 // Drawing commands for the current frame
 static std::vector<DrawCmd> gFrameDrawCmds;
@@ -74,9 +73,9 @@ static void recordCmdBuffer(vgl::CmdBufferRecorder& cmdRec) noexcept {
     // no extension is allowed vertically; instead, letterboxing will happen. I considered allowing a vertically long display but it won't work
     // with the UI assets & design that Doom uses. I'm also not sure why someone would ever want to play that way anyway, even if it did work...
     const int32_t viewportX = 0;
-    const int32_t viewportY = VRenderer::gClassicFramebufferY;
+    const int32_t viewportY = VRenderer::gPsxCoordsFbY;
     const int32_t viewportW = VRenderer::gFramebufferW;
-    const int32_t viewportH = VRenderer::gClassicFramebufferH;
+    const int32_t viewportH = VRenderer::gPsxCoordsFbH;
     cmdRec.setViewport((float) viewportX, (float) viewportY, (float) viewportW, (float) viewportH, 0.0f, 1.0f);
     cmdRec.setScissors(viewportX, viewportY, viewportW, viewportH);
 
@@ -107,7 +106,7 @@ static void recordCmdBuffer(vgl::CmdBufferRecorder& cmdRec) noexcept {
                     VPipelines::gPipelineLayout_draw,
                     VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                     0,
-                    sizeof(VShaderUniforms),
+                    sizeof(VShaderUniforms_Draw),
                     &gFrameUniforms[drawCmd.arg1]
                 );
             }   break;
@@ -227,7 +226,7 @@ void setDrawPipeline(const VPipelineType type) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set uniforms used by draw shaders, including the model/view/projection transform matrix
 //------------------------------------------------------------------------------------------------------------------------------------------
-void setDrawUniforms(const VShaderUniforms& uniforms) noexcept {
+void setDrawUniforms(const VShaderUniforms_Draw& uniforms) noexcept {
     // Record the command to set the uniforms and save them for later
     DrawCmd& drawCmd = gFrameDrawCmds.emplace_back();
     drawCmd.type = DrawCmdType::SetUniforms;
@@ -243,7 +242,7 @@ void setDrawUniforms(const VShaderUniforms& uniforms) noexcept {
 Matrix4f computeTransformMatrixForUI() noexcept {
     // The UI is centered horizontally in the viewport (if we are in widescreen mode) and occupies it's full vertical range.
     // Compute how much leftover space there would be at the left and right due to widescreen.
-    const float xPadding = ((float) VRenderer::gClassicFramebufferX / (float) VRenderer::gClassicFramebufferW) * SCREEN_W;
+    const float xPadding = ((float) VRenderer::gPsxCoordsFbX / (float) VRenderer::gPsxCoordsFbW) * SCREEN_W;
 
     // These are the projection parameters.
     // Note: need to reverse by/ty to get the view the right way round (normally y is up with projection matrices).
@@ -266,7 +265,7 @@ Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const
     // This matches the projection that the original PSX Doom used, with allowance for widescreen:
     constexpr float STATUS_BAR_H = SCREEN_H - VIEW_3D_H;
 
-    const float widescrenScale = std::max((float) VRenderer::gFramebufferW / (float) VRenderer::gClassicFramebufferW, 1.0f);
+    const float widescrenScale = std::max((float) VRenderer::gFramebufferW / (float) VRenderer::gPsxCoordsFbW, 1.0f);
     const float viewLx = -widescrenScale;
     const float viewRx = widescrenScale;
     const float viewTy = (HALF_VIEW_3D_H / float(HALF_SCREEN_W));

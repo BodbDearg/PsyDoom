@@ -41,7 +41,7 @@ static int32_t gDbgMsgBufPos;
 static void clearDrawingArea(const uint8_t r, const uint8_t g, const uint8_t b) noexcept {
     // Skip clearing the PSX drawing area if we are using the new Vulkan renderer for this frame
     #if PSYDOOM_VULKAN_RENDERER
-        if (!VRenderer::gbUsePsxRenderer)
+        if (Video::isUsingVulkanRenderPath())
             return;
     #endif
 

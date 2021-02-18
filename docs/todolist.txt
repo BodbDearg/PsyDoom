@@ -1,5 +1,4 @@
 0.7 - GPU & Rendering?
-- Vk renderer: get screen fades working
 - Vk renderer: get loading plaque draw working
 - Vk renderer: try to batch sky walls
 - Vk renderer: don't draw fully occluded sprites
@@ -10,6 +9,11 @@
 - Vk renderer: add option to disable widescreen
 - Vk renderer: save renderer preference and provide menu option
 - Vk renderer: add render scale option
+- Vk renderer: investigate sprite splitting issues on some sprites in Underhalls & The Focus
+    - Former Human at exit door in Underhalls
+    - Shotguns dropped near wall in The Focus, behind the crushing ceilings
+    - May not be splitting correctly in some situations
+- Investigate hang warping from Club Doom to Hangar
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
@@ -25,6 +29,7 @@
 - Investigate Final Doom music pitch issue mentioned on Doomworld.
 - Investigate TCache overflow mentioned on Doomworld.
 - Use interpolation for map view.
+- -pistolstart command line switch
 
 0.8 - Limit extending and modding?
 - Classic renderer: add support for 'void' ceiling type that the new VK renderer is starting to formalize.

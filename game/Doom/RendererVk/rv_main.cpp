@@ -122,7 +122,7 @@ static void RV_DetermineDrawParams() noexcept {
 // Sets up shader uniforms for 3D drawing
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_SetShaderUniformsFor3D() noexcept {
-    VShaderUniforms uniforms = {};
+    VShaderUniforms_Draw uniforms = {};
     uniforms.mvpMatrix = gViewProjMatrix;
     uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
     uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;
@@ -138,7 +138,7 @@ static void RV_SetShaderUniformsFor3D() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_RenderPlayerView() noexcept {
     // Do nothing if drawing is currently not allowed
-    if (!VRenderer::canSubmitDrawCmds())
+    if (!VRenderer::isRendering())
         return;
 
     // Determine various draw settings and clear x-axis occlusion info to start with.

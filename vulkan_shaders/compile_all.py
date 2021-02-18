@@ -18,6 +18,8 @@ import sys
 files_to_compile = [
     [ "colored.frag",       "compiled/SPIRV_colored_frag.bin.h",        "frag", "gSPIRV_colored_frag"       ],
     [ "colored.vert",       "compiled/SPIRV_colored_vert.bin.h",        "vert", "gSPIRV_colored_vert"       ],
+    [ "crossfade.frag",     "compiled/SPIRV_crossfade_frag.bin.h",      "frag", "gSPIRV_crossfade_frag"     ],
+    [ "crossfade.vert",     "compiled/SPIRV_crossfade_vert.bin.h",      "vert", "gSPIRV_crossfade_vert"     ],
     [ "msaa_resolve.frag",  "compiled/SPIRV_msaa_resolve_frag.bin.h",   "frag", "gSPIRV_msaa_resolve_frag"  ],
     [ "msaa_resolve.vert",  "compiled/SPIRV_msaa_resolve_vert.bin.h",   "vert", "gSPIRV_msaa_resolve_vert"  ],
     [ "sky.frag",           "compiled/SPIRV_sky_frag.bin.h",            "frag", "gSPIRV_sky_frag"           ],

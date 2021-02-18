@@ -26,6 +26,7 @@ enum class VPipelineType : uint8_t {
     World_Subtractive,      // 3D world/view: textured @ 8bpp and lit, masked & subtractive blended
     World_Sky,              // 3D world/view: Used to draw the sky, masked but no blending
     Msaa_Resolve,           // Simple shader that resolves MSAA samples
+    Crossfade,              // Used for doing crossfades
     NUM_TYPES               // Convenience declaration...
 };
 
@@ -39,9 +40,9 @@ enum class VLightDimMode : uint8_t {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Shader uniforms for the various shaders used by the Vulkan Renderer
+// Shader uniforms for the various shaders in the main 'draw' subpass
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct VShaderUniforms {
+struct VShaderUniforms_Draw {
     // Modelview projection matrix: used to transform vertices in the vertex shader
     Matrix4f mvpMatrix;
 
@@ -51,9 +52,18 @@ struct VShaderUniforms {
     float psxNdcOffsetX, psxNdcOffsetY;
 };
 
-// Make sure shader uniforms are not bigger than the minimum push constant range required by Vulkan, which is 128 bytes.
-// We pass these as push constants because the data is very small.
-static_assert(sizeof(VShaderUniforms) <= 128);
+// Make sure shader uniforms are not bigger than the minimum push constant range required by the Vulkan standard, which is 128 bytes.
+// We pass these as push constants because the data is very small and for a lot of GPUs push constants are more optimal.
+static_assert(sizeof(VShaderUniforms_Draw) <= 128);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shader uniforms for crossfading: contains just a single linear interpolation factor to control blending between the framebuffers
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct VShaderUniforms_Crossfade {
+    float lerpAmount;
+};
+
+static_assert(sizeof(VShaderUniforms_Crossfade) <= 128);    // Same restrictions apply as with 'VShaderUniforms_Draw' - see above...
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Vulkan renderer vertex type: used for all direct drawing operations
@@ -92,6 +102,15 @@ struct VVertex_Draw {
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct VVertex_MsaaResolve {
     float x, y;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Vulkan renderer vertex type: used for crossfading.
+// Contains a 2D position in normalized device coords, as well as UV coordinates to use for sampling.
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct VVertex_Crossfade {
+    float x, y;
+    float u, v;
 };
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

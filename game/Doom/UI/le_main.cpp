@@ -41,7 +41,12 @@ void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
     #endif
 
     S_StartSound(nullptr, sfx_barexp);
-    I_CrossFadeFrameBuffers();
+
+    #if PSYDOOM_MODS
+        I_PreCrossfade();
+    #endif
+
+    I_CrossfadeFrameBuffers();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

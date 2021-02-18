@@ -229,8 +229,13 @@ void M_Start() noexcept {
 
     // Draw the menu to the other framebuffer and do the cross fade
     gCurDispBufferIdx ^= 1;
+
+    #if PSYDOOM_MODS
+        I_PreCrossfade();
+    #endif
+
     M_Drawer();
-    I_CrossFadeFrameBuffers();
+    I_CrossfadeFrameBuffers();
 
     // Restore background clearing for both draw envs
     gDrawEnvs[0].isbg = true;

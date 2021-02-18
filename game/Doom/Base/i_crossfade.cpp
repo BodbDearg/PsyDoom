@@ -2,12 +2,34 @@
 
 #include "i_drawcmds.h"
 #include "i_main.h"
+#include "PcPsx/Input.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VCrossfader.h"
+#include "PcPsx/Vulkan/VRenderer.h"
+#include "PcPsx/Vulkan/VRenderPath_Psx.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
 #if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// New for PsyDoom: called before a crossfade to do some bootstrap/setup.
+// Should be called before rendering the the image to be faded into.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_PreCrossfade() noexcept {
+    #if PSYDOOM_VULKAN_RENDERER
+        if (Video::gBackendType == Video::BackendType::Vulkan) {
+            // If we are on the PSX render path ensure we will stay on it, render path switching is not allowed during crossfade.
+            // Otherwise allow the crossfader module to do it's setup and schedule a render path switch.
+            if (VRenderer::isUsingPsxRenderPath()) {
+                VRenderer::setNextRenderPath(VRenderer::gRenderPath_Psx);
+            } else {
+                VCrossfader::doPreCrossfadeSetup();
+            }
+        }
+    #endif
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cross fades the currently displaying framebuffer with the currently drawn (but not yet displaying) framebuffer (back buffer).
@@ -15,13 +37,18 @@
 // 2 fade framebuffers in order to do drawing and display for the cross fade effect.
 // PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void I_CrossFadeFrameBuffers() noexcept {
+void I_CrossfadeFrameBuffers() noexcept {
     // Clear out what we can from the texture cache
     I_PurgeTexCache();
 
-    // TODO: get this working with the new Vulkan renderer properly
-    if (Video::usingVulkanRenderer())
-        return;
+    // If we are using the Vulkan renderer then delegate to it's crossfader
+    #if PSYDOOM_VULKAN_RENDERER
+        if (Video::isUsingVulkanRenderPath()) {
+            constexpr uint32_t NUM_VBLANKS = 52;
+            VCrossfader::doCrossfade(NUM_VBLANKS);
+            return;
+        }
+    #endif
 
     // Setup the draw and display environments that we will ping-pong between while doing the cross fade.
     // Note that these will occupy some of the VRAM space normally used by the texture cache.
@@ -87,6 +114,10 @@ void I_CrossFadeFrameBuffers() noexcept {
             Utils::threadYield();
             curTotalVBlanks = I_GetTotalVBlanks();
         }
+
+        // PsyDoom: if it's time to quit then exit early
+        if (Input::isQuitRequested())
+            break;
     }
     
     I_SubmitGpuCmds();

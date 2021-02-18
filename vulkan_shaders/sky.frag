@@ -31,7 +31,7 @@ vec2 clipspaceToPsxCoords(vec4 clipSpace) {
     vec2 ndc = clipSpace.xy + 1.0;
 
     // Convert to the PSX coord system
-    return (ndc - constants.psxNdcOffset) * constants.ndcToPsxScale;
+    return (ndc - uniforms.psxNdcOffset) * uniforms.ndcToPsxScale;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

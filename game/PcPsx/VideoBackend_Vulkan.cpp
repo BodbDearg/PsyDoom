@@ -86,10 +86,7 @@ void VideoBackend_Vulkan::destroyRenderers() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VideoBackend_Vulkan::displayFramebuffer() noexcept {
     VRenderer::endFrame();
-
-    if (VRenderer::gbAutoBeginNextFrame) {
-        VRenderer::beginFrame();
-    }
+    VRenderer::beginFrame();
 }
 
 END_NAMESPACE(Video)

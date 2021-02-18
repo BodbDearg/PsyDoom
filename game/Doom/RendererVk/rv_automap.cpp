@@ -64,7 +64,7 @@ static void RV_SetupAutomapTransformMatrix() noexcept {
     );
 
     // Set the uniforms to contain this transform matrix
-    VShaderUniforms uniforms = {};
+    VShaderUniforms_Draw uniforms = {};
     uniforms.mvpMatrix = combinedTransformMatrix;
     uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
     uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;

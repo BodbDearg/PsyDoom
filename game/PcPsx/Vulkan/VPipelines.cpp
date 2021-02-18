@@ -14,12 +14,16 @@
 #include "PipelineLayout.h"
 #include "Sampler.h"
 #include "ShaderModule.h"
+#include "VRenderPath_Crossfade.h"
+#include "VRenderPath_Main.h"
 
 BEGIN_NAMESPACE(VPipelines)
 
 // The raw SPIRV binary code for the shaders
 #include "SPIRV_colored_frag.bin.h"
 #include "SPIRV_colored_vert.bin.h"
+#include "SPIRV_crossfade_frag.bin.h"
+#include "SPIRV_crossfade_vert.bin.h"
 #include "SPIRV_msaa_resolve_frag.bin.h"
 #include "SPIRV_msaa_resolve_vert.bin.h"
 #include "SPIRV_sky_frag.bin.h"
@@ -34,6 +38,7 @@ BEGIN_NAMESPACE(VPipelines)
 // Vertex binding descriptions
 const VkVertexInputBindingDescription gVertexBindingDesc_draw           = { 0, sizeof(VVertex_Draw), VK_VERTEX_INPUT_RATE_VERTEX };
 const VkVertexInputBindingDescription gVertexBindingDesc_msaaResolve    = { 0, sizeof(VVertex_MsaaResolve), VK_VERTEX_INPUT_RATE_VERTEX };
+const VkVertexInputBindingDescription gVertexBindingDesc_crossfade      = { 0, sizeof(VVertex_Crossfade), VK_VERTEX_INPUT_RATE_VERTEX };
 
 // Vertex attribute descriptions
 const VkVertexInputAttributeDescription gVertexAttribs_draw[] = {
@@ -51,19 +56,26 @@ const VkVertexInputAttributeDescription gVertexAttribs_msaaResolve[] = {
     { 0, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_MsaaResolve, x) },
 };
 
+const VkVertexInputAttributeDescription gVertexAttribs_crossfade[] = {
+    { 0, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_Crossfade, x) },
+    { 1, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_Crossfade, u) },
+};
+
 // Shaders: see the associated source files for more comments/details
-static vgl::ShaderModule    gShader_colored_frag;
 static vgl::ShaderModule    gShader_colored_vert;
+static vgl::ShaderModule    gShader_colored_frag;
+static vgl::ShaderModule    gShader_ui_vert;
 static vgl::ShaderModule    gShader_ui_16bpp_frag;
 static vgl::ShaderModule    gShader_ui_4bpp_frag;
 static vgl::ShaderModule    gShader_ui_8bpp_frag;
-static vgl::ShaderModule    gShader_ui_vert;
-static vgl::ShaderModule    gShader_world_frag;
 static vgl::ShaderModule    gShader_world_vert;
-static vgl::ShaderModule    gShader_sky_frag;
+static vgl::ShaderModule    gShader_world_frag;
 static vgl::ShaderModule    gShader_sky_vert;
-static vgl::ShaderModule    gShader_msaa_resolve_frag;
+static vgl::ShaderModule    gShader_sky_frag;
+static vgl::ShaderModule    gShader_crossfade_vert;
+static vgl::ShaderModule    gShader_crossfade_frag;
 static vgl::ShaderModule    gShader_msaa_resolve_vert;
+static vgl::ShaderModule    gShader_msaa_resolve_frag;
 
 // Sets of shader modules
 vgl::ShaderModule* const gShaders_colored[]     = { &gShader_colored_vert, &gShader_colored_frag };
@@ -72,18 +84,22 @@ vgl::ShaderModule* const gShaders_ui_8bpp[]     = { &gShader_ui_vert, &gShader_u
 vgl::ShaderModule* const gShaders_ui_16bpp[]    = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
 vgl::ShaderModule* const gShaders_world[]       = { &gShader_world_vert, &gShader_world_frag };
 vgl::ShaderModule* const gShaders_sky[]         = { &gShader_sky_vert, &gShader_sky_frag };
+vgl::ShaderModule* const gShaders_crossfade[]   = { &gShader_crossfade_vert, &gShader_crossfade_frag };
 vgl::ShaderModule* const gShaders_msaaResolve[] = { &gShader_msaa_resolve_vert, &gShader_msaa_resolve_frag };
 
 // Pipeline samplers
 vgl::Sampler gSampler_draw;
+vgl::Sampler gSampler_crossfade;
 
 // Pipeline descriptor set layouts
 vgl::DescriptorSetLayout gDescSetLayout_draw;           // Used by all the normal drawing pipelines
 vgl::DescriptorSetLayout gDescSetLayout_msaaResolve;    // Used for MSAA resolve
+vgl::DescriptorSetLayout gDescSetLayout_crossfade;      // For crossfading
 
 // Pipeline layouts
 vgl::PipelineLayout gPipelineLayout_draw;           // Used by all the normal drawing pipelines
 vgl::PipelineLayout gPipelineLayout_msaaResolve;    // Used for MSAA resolve
+vgl::PipelineLayout gPipelineLayout_crossfade;      // For crossfading
 
 // Pipeline input assembly states
 vgl::PipelineInputAssemblyState gInputAS_lineList;      // A list of lines
@@ -144,6 +160,8 @@ static void initShaders(vgl::LogicalDevice& device) noexcept {
     initShader(device, gShader_world_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_frag, sizeof(gSPIRV_world_frag), "world_frag");
     initShader(device, gShader_sky_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_sky_vert, sizeof(gSPIRV_sky_vert), "sky_vert");
     initShader(device, gShader_sky_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_sky_frag, sizeof(gSPIRV_sky_frag), "sky_frag");
+    initShader(device, gShader_crossfade_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_crossfade_vert, sizeof(gSPIRV_crossfade_vert), "crossfade_vert");
+    initShader(device, gShader_crossfade_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_crossfade_frag, sizeof(gSPIRV_crossfade_frag), "crossfade_frag");
     initShader(device, gShader_msaa_resolve_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_msaa_resolve_vert, sizeof(gSPIRV_msaa_resolve_vert), "msaa_resolve_vert");
     initShader(device, gShader_msaa_resolve_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_msaa_resolve_frag, sizeof(gSPIRV_msaa_resolve_frag), "msaa_resolve_frag");
 }
@@ -152,17 +170,32 @@ static void initShaders(vgl::LogicalDevice& device) noexcept {
 // Initializes all samplers
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initSamplers(vgl::LogicalDevice& device) noexcept {
-    // Just using a single sampler for now
-    vgl::SamplerSettings settings = vgl::SamplerSettings().setToDefault();
-    settings.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    settings.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    settings.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    settings.minLod = 0;
-    settings.maxLod = 0;
-    settings.unnormalizedCoordinates = true;    // Note: Vulkan requires min/max lod to be '0' and clamp to edge to be 'true' if using un-normalized coords
+    // Sampler used for most drawing operations
+    {
+        vgl::SamplerSettings settings = vgl::SamplerSettings().setToDefault();
+        settings.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        settings.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        settings.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        settings.minLod = 0;
+        settings.maxLod = 0;
+        settings.unnormalizedCoordinates = true;    // Note: Vulkan requires min/max lod to be '0' and clamp to edge to be 'true' if using un-normalized coords
 
-    if (!gSampler_draw.init(device, settings))
-        FatalErrors::raise("Failed to init a Vulkan sampler!");
+        if (!gSampler_draw.init(device, settings))
+            FatalErrors::raise("Failed to init a Vulkan sampler!");
+    }
+
+    // Sampler used for crossfade
+    {
+        vgl::SamplerSettings settings = vgl::SamplerSettings().setToDefault();
+        settings.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        settings.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        settings.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        settings.minLod = 0;
+        settings.maxLod = 0;
+
+        if (!gSampler_crossfade.init(device, settings))
+            FatalErrors::raise("Failed to init a Vulkan sampler!");
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -178,7 +211,7 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
         bindings[0].binding = 0;
         bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         bindings[0].descriptorCount = 1;
-        bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;      // Only reading the texture in fragment shaders
+        bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings[0].pImmutableSamplers = &vkSampler;
 
         if (!gDescSetLayout_draw.init(device, bindings, C_ARRAY_SIZE(bindings)))
@@ -191,9 +224,27 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
         bindings[0].binding = 0;
         bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         bindings[0].descriptorCount = 1;
-        bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;      // This descriptor type can only be used in fragment shaders
+        bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         if (!gDescSetLayout_msaaResolve.init(device, bindings, C_ARRAY_SIZE(bindings)))
+            FatalErrors::raise("Failed to init a Vulkan descriptor set layout!");
+    }
+
+    // Crossfading
+    {
+        const VkSampler vkSamplers[2] = {
+            gSampler_crossfade.getVkSampler(),
+            gSampler_crossfade.getVkSampler()
+        };
+
+        VkDescriptorSetLayoutBinding bindings[1] = {};
+        bindings[0].binding = 0;
+        bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bindings[0].descriptorCount = 2;
+        bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings[0].pImmutableSamplers = vkSamplers;
+
+        if (!gDescSetLayout_crossfade.init(device, bindings, C_ARRAY_SIZE(bindings)))
             FatalErrors::raise("Failed to init a Vulkan descriptor set layout!");
     }
 }
@@ -210,7 +261,7 @@ static void initPipelineLayouts(vgl::LogicalDevice& device) noexcept {
         VkPushConstantRange uniformPushConstants = {};
         uniformPushConstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         uniformPushConstants.offset = 0;
-        uniformPushConstants.size = sizeof(VShaderUniforms);
+        uniformPushConstants.size = sizeof(VShaderUniforms_Draw);
 
         if (!gPipelineLayout_draw.init(device, &vkDescSetLayout, 1, &uniformPushConstants, 1))
             FatalErrors::raise("Failed to init the 'draw' Vulkan pipeline layout!");
@@ -222,6 +273,19 @@ static void initPipelineLayouts(vgl::LogicalDevice& device) noexcept {
 
         if (!gPipelineLayout_msaaResolve.init(device, &vkDescSetLayout, 1, nullptr, 0))
             FatalErrors::raise("Failed to init the 'msaa resolve' Vulkan pipeline layout!");
+    }
+
+    // Crossfading pipeline layout: uses push constants to set the lerp factor
+    {
+        VkDescriptorSetLayout vkDescSetLayout = gDescSetLayout_crossfade.getVkLayout();
+
+        VkPushConstantRange uniformPushConstants = {};
+        uniformPushConstants.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        uniformPushConstants.offset = 0;
+        uniformPushConstants.size = sizeof(VShaderUniforms_Crossfade);
+
+        if (!gPipelineLayout_crossfade.init(device, &vkDescSetLayout, 1, &uniformPushConstants, 1))
+            FatalErrors::raise("Failed to init the 'crossfade' Vulkan pipeline layout!");
     }
 }
 
@@ -250,9 +314,10 @@ static void initPipelineRasterizationStates() noexcept {
 // Initializes all pipeline mulitsample states
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initPipelineMultisampleStates(vgl::LogicalDevice& device, const uint32_t numSamples) noexcept {
+    // This state always has multisampling disabled
     gMultisampleState_noMultisample = vgl::PipelineMultisampleState().setToDefault();
 
-    // Drawing can use whatever amount of multisamples have been configured
+    // This state *may* have a varying amount of multisampling depending on current graphic settings
     gMultisampleState_perSettings = vgl::PipelineMultisampleState().setToDefault();
     gMultisampleState_perSettings.rasterizationSamples = (VkSampleCountFlagBits) numSamples;
 
@@ -343,7 +408,7 @@ static void initPipelineDepthStencilStates() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initPipeline(
     const VPipelineType pipelineType,
-    const vgl::BaseRenderPass& renderPass,
+    const vgl::RenderPass& renderPass,
     const uint32_t subpassIdx,
     const vgl::ShaderModule* const pShaderModules[2],
     const VkSpecializationInfo* const pShaderSpecializationInfo,
@@ -384,7 +449,7 @@ static void initPipeline(
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initDrawPipeline(
     const VPipelineType pipelineType,
-    const vgl::BaseRenderPass& renderPass,
+    VRenderPath_Main& mainRPath,
     const vgl::ShaderModule* const pShaderModules[2],
     const vgl::PipelineInputAssemblyState& inputAssemblyState,
     const vgl::PipelineRasterizationState& rasterizerState,
@@ -407,7 +472,7 @@ static void initDrawPipeline(
     // Create the pipeline
     initPipeline(
         pipelineType,
-        renderPass,
+        mainRPath.getRenderPass(),
         0,
         pShaderModules,
         &specializationInfo,
@@ -424,9 +489,10 @@ static void initDrawPipeline(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes the pipelines module
+// Initializes all of the building blocks that make up pipelines, but not the pipelines themselves.
+// These elements have very few dependencies and can be initialized early in order to solve bootstrap dependency issues.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uint32_t numSamples) noexcept {
+void initPipelineComponents(vgl::LogicalDevice& device, const uint32_t numSamples) noexcept {
     // Create all pipeline creation inputs and states
     initShaders(device);
     initSamplers(device);
@@ -438,19 +504,29 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
     initPipelineColorBlendAttachmentStates();
     initPipelineColorBlendStates();
     initPipelineDepthStencilStates();
+}
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes all pipelines.
+// This step must be done after all pipeline components have been created.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void initPipelines(
+    VRenderPath_Main& mainRPath,
+    VRenderPath_Crossfade& crossfadeRPath,
+    const uint32_t numSamples
+) noexcept {
     // Create all of the main drawing pipelines
-    initDrawPipeline(VPipelineType::Lines, renderPass, gShaders_colored, gInputAS_lineList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::Colored, renderPass, gShaders_colored, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_4bpp, renderPass, gShaders_ui_4bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_8bpp, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_8bpp_Add, renderPass, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_16bpp, renderPass, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Masked, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Alpha, renderPass, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Additive, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Subtractive, renderPass, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Sky, renderPass, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::Lines, mainRPath, gShaders_colored, gInputAS_lineList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::Colored, mainRPath, gShaders_colored, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::UI_4bpp, mainRPath, gShaders_ui_4bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::UI_8bpp, mainRPath, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::UI_8bpp_Add, mainRPath, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::UI_16bpp, mainRPath, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Masked, mainRPath, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Alpha, mainRPath, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Additive, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Subtractive, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::World_Sky, mainRPath, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
     
     // The pipeline to resolve MSAA: only bother creating this if we are doing MSAA.
     // Specialize the shader to the number of samples also, so that loops can be unrolled.
@@ -466,33 +542,47 @@ void init(vgl::LogicalDevice& device, vgl::BaseRenderPass& renderPass, const uin
         specializationInfo.pData = &numSamples;
 
         initPipeline(
-            VPipelineType::Msaa_Resolve, renderPass, 1,
+            VPipelineType::Msaa_Resolve, mainRPath.getRenderPass(), 1,
             gShaders_msaaResolve, &specializationInfo, gPipelineLayout_msaaResolve,
             gVertexBindingDesc_msaaResolve, gVertexAttribs_msaaResolve, C_ARRAY_SIZE(gVertexAttribs_msaaResolve),
             gInputAS_triList, gRasterState_noCull,
             gBlendState_noBlend, gDepthState_disabled, gMultisampleState_noMultisample
         );
     }
+
+    // A pipeline using during crossfading
+    initPipeline(
+        VPipelineType::Crossfade, crossfadeRPath.getRenderPass(), 0,
+        gShaders_crossfade, nullptr, gPipelineLayout_crossfade,
+        gVertexBindingDesc_crossfade, gVertexAttribs_crossfade, C_ARRAY_SIZE(gVertexAttribs_crossfade),
+        gInputAS_triList, gRasterState_noCull,
+        gBlendState_noBlend, gDepthState_disabled, gMultisampleState_noMultisample
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tears down the pipelines module
+// Destroys all pipelines and their components
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
     for (vgl::Pipeline& pipeline : gPipelines) {
         pipeline.destroy(true);
     }
 
+    gPipelineLayout_crossfade.destroy(true);
     gPipelineLayout_msaaResolve.destroy(true);
     gPipelineLayout_draw.destroy(true);
 
+    gDescSetLayout_crossfade.destroy(true);
     gDescSetLayout_msaaResolve.destroy(true);
     gDescSetLayout_draw.destroy(true);
 
+    gSampler_crossfade.destroy();
     gSampler_draw.destroy();
 
     gShader_msaa_resolve_frag.destroy(true);
     gShader_msaa_resolve_vert.destroy(true);
+    gShader_crossfade_frag.destroy(true);
+    gShader_crossfade_vert.destroy(true);
     gShader_sky_frag.destroy(true);
     gShader_sky_vert.destroy(true);
     gShader_world_frag.destroy(true);

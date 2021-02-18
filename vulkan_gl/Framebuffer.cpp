@@ -1,10 +1,10 @@
 #include "Framebuffer.h"
 
 #include "Asserts.h"
-#include "BaseRenderPass.h"
 #include "BaseTexture.h"
 #include "Finally.h"
 #include "LogicalDevice.h"
+#include "RenderPass.h"
 #include "RetirementMgr.h"
 #include "Swapchain.h"
 #include "VkFuncs.h"
@@ -57,7 +57,7 @@ Framebuffer::~Framebuffer() noexcept {
 // This is used for the main display framebuffer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Framebuffer::init(
-    const BaseRenderPass& renderPass,
+    const RenderPass& renderPass,
     const Swapchain& swapchain,
     const uint32_t swapchainImageIdx,
     const std::vector<const BaseTexture*>& otherAttachments
@@ -96,7 +96,7 @@ bool Framebuffer::init(
 // This is used for render to texture framebuffers.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Framebuffer::init(
-    const BaseRenderPass& renderPass,
+    const RenderPass& renderPass,
     const std::vector<const BaseTexture*>& attachments
 ) noexcept {
     ASSERT(renderPass.isValid());
@@ -164,7 +164,7 @@ void Framebuffer::destroy(const bool bImmediately, const bool bForceIfInvalid) n
 // This actually does most of the init work for the framebuffer for all use cases
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Framebuffer::initInternal(
-    const BaseRenderPass& renderPass,
+    const RenderPass& renderPass,
     const uint32_t fbWidth,
     const uint32_t fbHeight
 ) noexcept {

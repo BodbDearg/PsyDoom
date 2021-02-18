@@ -7,9 +7,9 @@
 
 BEGIN_NAMESPACE(vgl)
 
-class BaseRenderPass;
 class BaseTexture;
 class LogicalDevice;
+class RenderPass;
 class Swapchain;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -24,14 +24,14 @@ public:
     ~Framebuffer() noexcept;
     
     bool init(
-        const BaseRenderPass& renderPass,
+        const RenderPass& renderPass,
         const Swapchain& swapchain,
         const uint32_t swapchainImageIdx,
         const std::vector<const BaseTexture*>& otherAttachments
     ) noexcept;
 
     bool init(
-        const BaseRenderPass& renderPass,
+        const RenderPass& renderPass,
         const std::vector<const BaseTexture*>& attachments
     ) noexcept;
 
@@ -52,7 +52,7 @@ private:
     Framebuffer& operator = (Framebuffer&& other) = delete;
     
     bool initInternal(
-        const BaseRenderPass& renderPass,
+        const RenderPass& renderPass,
         const uint32_t fbWidth,
         const uint32_t fbHeight
     ) noexcept;

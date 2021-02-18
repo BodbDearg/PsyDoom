@@ -1,8 +1,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Vulkan renderer, core functionality.
-// Manages the low level details of interacting with Vulkan for the new native Vulkan render path.
-// Also handles blitting the PSX framebuffer to the screen if we are using the classic PSX renderer and outputting via Vulkan.
-// Sets up key Vulkan objects and provides various Vulkan utility code.
+// Vulkan renderer, core manager/module.
+// Manages high level render paths and details for the frame lifecycle with Vulkan.
+// Also creates several key objects, such as the swapchain, the primary command buffer and so on.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "VRenderer.h"
 
@@ -24,11 +23,13 @@
 #include "Semaphore.h"
 #include "Swapchain.h"
 #include "Texture.h"
+#include "VCrossfader.h"
 #include "VDrawing.h"
 #include "VkFuncs.h"
-#include "VMainRenderPass.h"
-#include "VMsaaResolver.h"
 #include "VPipelines.h"
+#include "VRenderPath_Crossfade.h"
+#include "VRenderPath_Main.h"
+#include "VRenderPath_Psx.h"
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
@@ -49,54 +50,58 @@ static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
 static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
 static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 
-// Use the classic PSX renderer? If this is enabled then just blit the PSX framebuffer to the screen.
-bool gbUsePsxRenderer = false;
-
-// If 'true' then the Vulkan video backend should automatically call 'beginFrame' upon ending the frame.
-// Most of the time we will want this to be the case, but when we are setting up to do a crossfade then this behavior must be explicitly disabled.
-// For crossfade we want two whole frames worth of rendered images - we don't want one frame cleared because the frame has begun.
-bool gbAutoBeginNextFrame = true;
-
-// If external code sets this to true then the renderer will be toggled from Vulkan to classic and visa-versa at the next available opportunity
-bool gbRequestRendererToggle = false;
-
 // Cached pointers to all Vulkan API functions
 vgl::VkFuncs gVkFuncs;
 
-// Width and height of the framebuffer
+// Render paths used
+VRenderPath_Psx         gRenderPath_Psx;
+VRenderPath_Main        gRenderPath_Main;
+VRenderPath_Crossfade   gRenderPath_Crossfade;
+
+// A collection of all the render paths
+IVRendererPath* const gAllRenderPaths[] = {
+    &gRenderPath_Psx,
+    &gRenderPath_Main,
+    &gRenderPath_Crossfade,
+};
+
+// Coord system info: the width and height of the window/swap-chain surface we present to
+uint32_t    gPresentSurfaceW;
+uint32_t    gPresentSurfaceH;
+
+// Coord system info: the width and height to use for framebuffers created - esentially the render/draw resolution
 uint32_t    gFramebufferW;
 uint32_t    gFramebufferH;
 
-// Coordinate system conversion: where the classic PSX framebuffer is blitted to on the actual framebuffer in pixel terms
-int32_t     gClassicFramebufferX;
-int32_t     gClassicFramebufferY;
-uint32_t    gClassicFramebufferW;
-uint32_t    gClassicFramebufferH;
+// Coord system info: where the original PSX GPU framebuffer/coord-system maps to on the draw/render framebuffer
+int32_t     gPsxCoordsFbX;
+int32_t     gPsxCoordsFbY;
+uint32_t    gPsxCoordsFbW;
+uint32_t    gPsxCoordsFbH;
 
-// Coordinate system conversion: scalars to convert from normalized device coords to the original PSX framebuffer coords (256x240).
+// Coord system conversion: scalars to convert from normalized device coords to the original PSX framebuffer coords (256x240).
 // Also where the where the original PSX framebuffer coords start in NDC space.
 //
 // Note: these are updated only at the start of each frame and ONLY if there is a valid framebuffer.
 // They should not be used outside of rendering and should only be used if the framebuffer is valid.
 float gNdcToPsxScaleX, gNdcToPsxScaleY;
-float gPsxNdcOffsetX, gPsxNdcOffsetY;
+float gPsxNdcOffsetX,  gPsxNdcOffsetY;
 
 static bool                         gbDidBeginFrame;                // Whether a frame was begun
 static vgl::VulkanInstance          gVulkanInstance(gVkFuncs);      // Vulkan API instance object
 static vgl::WindowSurface           gWindowSurface;                 // Window surface to draw on
 static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical device chosen for rendering
-static VkFormat                     gWindowSurfaceFormat;           // What color format the window surface should be in
-static VkColorSpaceKHR              gWindowSurfaceColorspace;       // What colorspace the window surface should use
+static VkFormat                     gPresentSurfaceFormat;          // What color format the surface we are presenting to should be in
+static VkColorSpaceKHR              gPresentSurfaceColorspace;      // What colorspace the surface we are presenting to should use
 static vgl::LogicalDevice           gDevice(gVkFuncs);              // The logical device used for Vulkan
 static uint32_t                     gDrawSampleCount;               // The number of samples to use when drawing (if > 1 then MSAA is active)
-static vgl::Swapchain               gSwapchain;                     // The swapchain we present to
-static VMainRenderPass              gMainRenderPass;                // The render pass used for almost all drawing for the new native Vulkan renderer
-static vgl::CmdBufferRecorder       gCmdBufferRec(gVkFuncs);        // Command buffer recorder helper object
 
-// Color attachments and framebuffers for the new native Vulkan renderer - one per ringbuffer slot.
-// Note that the framebuffer might contain an additional MSAA resolve attachment (owned by the MSAA resolver) if that feature is active.
-static vgl::RenderTexture   gFbColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
-static vgl::Framebuffer     gFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
+// The swapchain we present to
+vgl::Swapchain gSwapchain;
+
+// Command buffer recorder helper object.
+// This begins recording at the start of every frame.
+vgl::CmdBufferRecorder gCmdBufferRec(gVkFuncs);
 
 // Semaphores signalled when the acquired swapchain image is ready.
 // One per ringbuffer slot, so we don't disturb a frame that is still being processed.
@@ -114,19 +119,18 @@ static vgl::CmdBuffer gCmdBuffers[vgl::Defines::RINGBUFFER_SIZE];
 // This will be null if we didn't acquire a framebuffer for this frame (zero sized window):
 static vgl::CmdBuffer* gpCurCmdBuffer;
 
-// PSX renderer framebuffers, as copied from the PSX GPU.
-// These are blitted onto the current framebuffer image.
-// One for each ringbuffer slot, so we can update while a previous frame's image is still blitting to the screen.
-static vgl::MutableTexture gPsxFramebufferTextures[vgl::Defines::RINGBUFFER_SIZE];
-
 // A mirrored copy of PSX VRAM (minus framebuffers) so we can access in the new Vulkan renderer.
 // Any texture uploads to PSX VRAM will get passed along from LIBGPU and eventually find their way in here.
 static vgl::Texture gPsxVramTexture;
 
+// The current and next frame render paths to use: these should always be valid
+static IVRendererPath* gpCurRenderPath;
+static IVRendererPath* gpNextRenderPath;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Decides on the color format used for the window surface and the colorspace
+// Decides on the color format used for the window/presentation surface as well as the colorspace
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void decideWindowSurfaceFormat() noexcept {
+static void decidePresentSurfaceFormat() noexcept {
     // Firstly query the device surface capabilities
     vgl::DeviceSurfaceCaps surfaceCaps;
 
@@ -135,11 +139,11 @@ static void decideWindowSurfaceFormat() noexcept {
 
     // Try to choose a valid surface format from what is available.
     // Note hardcoding the colorspace to deliberately to SRGB - not considering HDR10 etc. for this project.
-    gWindowSurfaceFormat = surfaceCaps.getSupportedSurfaceFormat(ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS));
-    gWindowSurfaceColorspace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+    gPresentSurfaceFormat = surfaceCaps.getSupportedSurfaceFormat(ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS));
+    gPresentSurfaceColorspace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 
-    if (gWindowSurfaceFormat == VK_FORMAT_UNDEFINED)
-        FatalErrors::raise("Failed to find a suitable window surface format to present with!");
+    if (gPresentSurfaceFormat == VK_FORMAT_UNDEFINED)
+        FatalErrors::raise("Failed to find a suitable surface format to present with!");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -171,40 +175,50 @@ static void decideDrawSampleCount() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Update the values which help convert from normalized device coordinates to the original PSX framebuffer coordinate system (256x240).
-// Also updates the current framebuffer information.
+// Update the resolution to render at and also helper values which aid converting between coordinate systems.
+// Updates everything based on the current present surface size.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void updateCoordSysInfo() noexcept {
-    // Save the size of the framebuffer
-    const bool bHaveFramebuffers = gFramebuffers[0].isValid();
+    // Save the size of the present surface
+    if (gSwapchain.isValid()) {
+        gPresentSurfaceW = gSwapchain.getSwapExtentWidth();
+        gPresentSurfaceH = gSwapchain.getSwapExtentHeight();
+    } else {
+        gPresentSurfaceW = 0;
+        gPresentSurfaceH = 0;
+    }
 
-    if (bHaveFramebuffers) {
-        gFramebufferW = gFramebuffers[0].getWidth();
-        gFramebufferH = gFramebuffers[0].getHeight();
+    // Save the size of the framebuffer
+    const bool bHaveValidPresentSurface = ((gPresentSurfaceW > 0) && (gPresentSurfaceH > 0));
+
+    if (bHaveValidPresentSurface) {
+        // TODO: support a render scale setting here...
+        gFramebufferW = gPresentSurfaceW;
+        gFramebufferH = gPresentSurfaceH;
     } else {
         gFramebufferW = 0;
         gFramebufferH = 0;
     }
 
-    // Get the area of the window that the original PSX framebuffer would be blitted to for the classic renderer.
+    // Get the rectangular region of the framebuffer that the original PlayStation framebuffer/coord-system would map to.
     // This info is also used by the new Vulkan renderer to setup coordinate systems and projection matrices.
-    if (bHaveFramebuffers) {
+    if (bHaveValidPresentSurface) {
         Video::getClassicFramebufferWindowRect(
             gFramebufferW,
             gFramebufferH,
-            gClassicFramebufferX,
-            gClassicFramebufferY,
-            gClassicFramebufferW,
-            gClassicFramebufferH
+            gPsxCoordsFbX,
+            gPsxCoordsFbY,
+            gPsxCoordsFbW,
+            gPsxCoordsFbH
         );
     } else {
-        gClassicFramebufferX = 0;
-        gClassicFramebufferY = 0;
-        gClassicFramebufferW = 0;
-        gClassicFramebufferH = 0;
+        gPsxCoordsFbX = 0;
+        gPsxCoordsFbY = 0;
+        gPsxCoordsFbW = 0;
+        gPsxCoordsFbH = 0;
     }
 
-    // Compute scalings and offsets to help convert from normalized device coords to original PSX framebuffer coords.
+    // Compute scalings and offsets to help convert from normalized device coords to original PSX framebuffer (256x240) coords.
     // This is useful for things like sky rendering, which work in NDC space.
     //
     // Notes:
@@ -213,12 +227,12 @@ static void updateCoordSysInfo() noexcept {
     //      The game viewport will be letterboxed (rather than extend) if the view is too long on the vertical axis.
     //      Because of all this, it is assumed the PSX framebuffer uses all of NDC space vertically.
     //
-    if (bHaveFramebuffers) {
-        const float blitWPercent = (float) gClassicFramebufferW / (float) gFramebufferW;
+    if (bHaveValidPresentSurface) {
+        const float blitWPercent = (float) gPsxCoordsFbW / (float) gPresentSurfaceW;
         gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DRAW_RES_X;
         gNdcToPsxScaleY = 0.5f * Video::ORIG_DRAW_RES_Y;
 
-        const float blitStartXPercent = (float) gClassicFramebufferX / (float) gFramebufferW;
+        const float blitStartXPercent = (float) gPsxCoordsFbX / (float) gPresentSurfaceW;
         gPsxNdcOffsetX = blitStartXPercent * 2.0f;
         gPsxNdcOffsetY = 0;
     } else {
@@ -230,305 +244,34 @@ static void updateCoordSysInfo() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Destroys all framebuffers immediately
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void destroyFramebuffers() noexcept {
-    // Destroy all the framebuffers and attachments
-    for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
-        gFramebuffers[i].destroy(true);
-        gFbColorAttachments[i].destroy(true);
-    }
-
-    VMsaaResolver::destroyResolveColorAttachments();
-
-    // Update the coordinate system info to blank out everything - app should not use until we get a valid framebuffer again!
-    updateCoordSysInfo();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Recreates the swapchain and new Vulkan renderer framebuffers if required and returns 'false' if that is not possible to do currently.
-// Recreation might fail if the window is currently zero sized for example.
+// Recreation might fail validly if the window is currently zero sized for example.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool ensureValidSwapchainAndFramebuffers() noexcept {
-    // No swapchain or invalid swapchain?
-    bool bDidWaitForDeviceIdle = false;
+    // Sanity checks
+    ASSERT(gpCurRenderPath);
 
+    // No swapchain or invalid swapchain? If that is the case then try to create or re-create...
     if ((!gSwapchain.isValid()) || gSwapchain.needsRecreate()) {
         gDevice.waitUntilDeviceIdle();
-        bDidWaitForDeviceIdle = true;
         gSwapchain.destroy();
 
-        if (!gSwapchain.init(gDevice, gWindowSurfaceFormat, gWindowSurfaceColorspace))
+        if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace))
             return false;
     }
 
-    // No framebuffers or framebuffer size incorrect?
-    const uint32_t wantedFbWidth = gSwapchain.getSwapExtentWidth();
-    const uint32_t wantedFbHeight = gSwapchain.getSwapExtentHeight();
+    // Do we need to update coord system info?
+    const uint32_t presentSurfaceW = gSwapchain.getSwapExtentWidth();
+    const uint32_t presentSurfaceH = gSwapchain.getSwapExtentHeight();
 
-    const bool bNeedNewFramebuffers = (
-        (!gFramebuffers[0].isValid()) ||
-        (gFramebuffers[0].getWidth() != wantedFbWidth) ||
-        (gFramebuffers[0].getHeight() != wantedFbHeight)
-    );
-
-    if (!bNeedNewFramebuffers)
-        return true;
-
-    // Need new framebuffers: wait for the device to become idle firstly so that old framebuffers are unused
-    if (!bDidWaitForDeviceIdle) {
-        gDevice.waitUntilDeviceIdle();
-        bDidWaitForDeviceIdle = true;
+    if ((presentSurfaceW != gPresentSurfaceW) || (presentSurfaceH != gPresentSurfaceH)) {
+        updateCoordSysInfo();
     }
 
-    // Destroy the old framebuffers and attachments, then create the new ones
-    destroyFramebuffers();
-    const bool bDoingMsaa = (gDrawSampleCount > 1);
-
-    if (bDoingMsaa) {
-        if (!VMsaaResolver::createResolveColorAttachments(gDevice, COLOR_32_FORMAT, wantedFbWidth, wantedFbHeight)) {
-            destroyFramebuffers();
-            return false;
-        }
-    }
-
-    for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
-        // Color attachment can either be used as a transfer source (for blits, no MSAA) or an input attachment for MSAA resolve
-        const VkImageUsageFlags colorAttachUsage = (
-            ((bDoingMsaa) ? VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT : VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
-        );
-
-        const VkFormat colorAttachFmt = (Config::gbUseVulkan32BitShading) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
-
-        if (!gFbColorAttachments[i].initAsRenderTexture(gDevice, colorAttachFmt, colorAttachUsage, wantedFbWidth, wantedFbHeight, gDrawSampleCount)) {
-            destroyFramebuffers();
-            return false;
-        }
-
-        std::vector<const vgl::BaseTexture*> fbAttachments;
-        fbAttachments.reserve(3);
-        fbAttachments.push_back(&gFbColorAttachments[i]);
-
-        if (bDoingMsaa) {
-            fbAttachments.push_back(&VMsaaResolver::gResolveColorAttachments[i]);
-        }
-
-        if (!gFramebuffers[i].init(gMainRenderPass, fbAttachments)) {
-            destroyFramebuffers();
-            return false;
-        }
-    }
-
-    // Need to set the input attachments for the MSAA resolver after creating the framebuffer attachments
-    if (bDoingMsaa) {
-        VMsaaResolver::setMsaaResolveInputAttachments(gFbColorAttachments);
-    }
-
-    // All good if we got to here - update coordinate system info:
-    updateCoordSysInfo();
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Frame begin logic for the classic PSX renderer.
-// Must be called only when there is a valid framebuffer and hence command buffer.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void beginFrame_Psx() noexcept {
-    ASSERT(gSwapchain.getAcquiredImageIdx() < gSwapchain.getLength());
-
-    // Transition the PSX framebuffer to general in preparation for writing
-    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-
-    {
-        vgl::MutableTexture& psxFbTexture = gPsxFramebufferTextures[ringbufferIdx];
-
-        VkImageMemoryBarrier imgBarrier = {};
-        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imgBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-        imgBarrier.image = psxFbTexture.getVkImage();
-        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imgBarrier.subresourceRange.levelCount = 1;
-        imgBarrier.subresourceRange.layerCount = 1;
-
-        gCmdBufferRec.addPipelineBarrier(
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            0,
-            nullptr,
-            1,
-            &imgBarrier
-        );
-    }
-
-    // Clear the swapchain image to opaque black.
-    // This is needed for the classic PSX renderer as not all parts of the image might be filled.
-    {
-        const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
-        const VkImage swapchainImage = gSwapchain.getVkImages()[swapchainIdx];
-
-        VkClearColorValue clearColor = {};
-        clearColor.float32[3] = 1.0f;
-
-        VkImageSubresourceRange imageResRange = {};
-        imageResRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageResRange.levelCount = 1;
-        imageResRange.layerCount = 1;
-
-        gCmdBufferRec.clearColorImage(swapchainImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageResRange);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Frame end logic for the classic PSX renderer.
-// Must be called only when there is a valid framebuffer and hence command buffer.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void endFrame_Psx() noexcept {
-    // Copy the PlayStation 1 framebuffer to the current framebuffer texture
-    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    vgl::MutableTexture& psxFbTexture = gPsxFramebufferTextures[ringbufferIdx];
-
-    {
-        Gpu::Core& gpu = PsxVm::gGpu;
-        const uint16_t* pSrcRowPixels = gpu.pRam + (gpu.displayAreaX + (uintptr_t) gpu.displayAreaY * gpu.ramPixelW);
-        uint16_t* pDstRowPixels = (uint16_t*) psxFbTexture.getBytes();
-
-        for (uint32_t y = 0; y < Video::ORIG_DRAW_RES_Y; ++y) {
-            // Note: don't bother doing multiple pixels at a time - compiler is smart and already optimizes this to use SIMD
-            for (uint32_t x = 0; x < Video::ORIG_DRAW_RES_X; ++x) {
-                const uint16_t srcPixel = pSrcRowPixels[x];
-                const uint16_t srcR = (srcPixel >>  0) & 0x1F;
-                const uint16_t srcG = (srcPixel >>  5) & 0x1F;
-                const uint16_t srcB = (srcPixel >> 10) & 0x1F;
-
-                const uint16_t dstPixel = (srcR << 10) | (srcG << 5) | (srcB << 0) | 0x8000;
-                pDstRowPixels[x] = dstPixel;
-            }
-
-            pSrcRowPixels += gpu.ramPixelW;
-            pDstRowPixels += Video::ORIG_DRAW_RES_X;
-        }
-    }
-
-    // Get the area of the window to blit the PSX framebuffer to
-    const uint32_t screenWidth = gSwapchain.getSwapExtentWidth();
-    const uint32_t screenHeight = gSwapchain.getSwapExtentHeight();
-
-    int32_t blitDstX = {};
-    int32_t blitDstY = {};
-    uint32_t blitDstW = {};
-    uint32_t blitDstH = {};
-    Video::getClassicFramebufferWindowRect(screenWidth, screenHeight, blitDstX, blitDstY, blitDstW, blitDstH);
-
-    // Blit the PSX framebuffer to the swapchain image
-    const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
-    const VkImage swapchainImage = gSwapchain.getVkImages()[swapchainIdx];
-
-    {
-        VkImageBlit blitRegion = {};
-        blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blitRegion.srcSubresource.layerCount = 1;
-        blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blitRegion.dstSubresource.layerCount = 1;
-        blitRegion.srcOffsets[1].x = Video::ORIG_DRAW_RES_X;
-        blitRegion.srcOffsets[1].y = Video::ORIG_DRAW_RES_Y;
-        blitRegion.srcOffsets[1].z = 1;
-        blitRegion.dstOffsets[0].x = std::clamp<int32_t>(blitDstX, 0, screenWidth);
-        blitRegion.dstOffsets[0].y = std::clamp<int32_t>(blitDstY, 0, screenHeight);
-        blitRegion.dstOffsets[1].x = std::clamp<int32_t>(blitDstX + blitDstW, 0, screenWidth);
-        blitRegion.dstOffsets[1].y = std::clamp<int32_t>(blitDstY + blitDstH, 0, screenHeight);
-        blitRegion.dstOffsets[1].z = 1;
-
-        gCmdBufferRec.blitImage(
-            psxFbTexture.getVkImage(),
-            VK_IMAGE_LAYOUT_GENERAL,
-            swapchainImage,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &blitRegion,
-            VK_FILTER_NEAREST
-        );
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Frame begin logic for the new Vulkan renderer.
-// Must be called only when there is a valid framebuffer and hence command buffer.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void beginFrame_VkRenderer() noexcept {
-    // Begin the render pass and clear all attachments
-    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
-
-    VkClearValue framebufferClearValues[1] = {};
-
-    gCmdBufferRec.beginRenderPass(
-        gMainRenderPass,
-        framebuffer,
-        VK_SUBPASS_CONTENTS_INLINE,
-        0,
-        0,
-        framebuffer.getWidth(),
-        framebuffer.getHeight(),
-        framebufferClearValues,
-        2
-    );
-
-    // Begin a frame for the drawing module
-    VDrawing::beginFrame(ringbufferIdx);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Frame end logic for the new Vulkan renderer.
-// Must be called only when there is a valid framebuffer and hence command buffer.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void endFrame_VkRenderer() noexcept {
-    // Finish up drawing for the 'occluder plane' and regular 'draw' subpasses
-    VDrawing::endFrame(gCmdBufferRec);
-
-    // Do an MSAA resolve subpass if MSAA is enabled
-    if (gDrawSampleCount > 1) {
-        gCmdBufferRec.nextSubpass(VK_SUBPASS_CONTENTS_INLINE);
-        VMsaaResolver::doMsaaResolve(gDevice, gCmdBufferRec);
-    }
-
-    // Done with the render pass now
-    gCmdBufferRec.endRenderPass();
-    
-    // Blit the drawing color attachment (or MSAA resolve target, if MSAA is active) to the swapchain image
-    const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    const vgl::Framebuffer& framebuffer = gFramebuffers[ringbufferIdx];
-
-    const VkImage blitSrcImage = (gDrawSampleCount > 1) ? 
-        VMsaaResolver::gResolveColorAttachments[ringbufferIdx].getVkImage() :   // Blit from the MSAA resolve color buffer
-        framebuffer.getAttachmentImages()[0];                                   // No MSAA: blit directly from the color buffer that was drawn to
-
-    const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
-    const VkImage blitDstImage = gSwapchain.getVkImages()[swapchainIdx];
-
-    {
-        VkImageBlit blitRegion = {};
-        blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blitRegion.srcSubresource.layerCount = 1;
-        blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blitRegion.dstSubresource.layerCount = 1;
-        blitRegion.srcOffsets[1].x = framebuffer.getWidth();
-        blitRegion.srcOffsets[1].y = framebuffer.getHeight();
-        blitRegion.srcOffsets[1].z = 1;
-        blitRegion.dstOffsets[1].x = gSwapchain.getSwapExtentWidth();
-        blitRegion.dstOffsets[1].y = gSwapchain.getSwapExtentHeight();
-        blitRegion.dstOffsets[1].z = 1;
-
-        gCmdBufferRec.blitImage(
-            blitSrcImage,
-            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            blitDstImage,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &blitRegion,
-            VK_FILTER_NEAREST
-        );
-    }
+    // Ensure the current render path has valid framebuffers
+    ASSERT(gFramebufferW > 0);
+    ASSERT(gFramebufferH > 0);
+    return gpCurRenderPath->ensureValidFramebuffers(gFramebufferW, gFramebufferH);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -554,25 +297,21 @@ void init() noexcept {
     if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface))
         FatalErrors::raise("Failed to initialize a Vulkan logical device!");
 
-    decideWindowSurfaceFormat();
+    decidePresentSurfaceFormat();
     decideDrawSampleCount();
 
-    // Initialize the draw render pass for the new renderer
-    const VkFormat colorAttachFmt = (Config::gbUseVulkan32BitShading) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
+    // Initialize all pipeline components: must be done BEFORE creating render paths, as they rely on some components
+    VPipelines::initPipelineComponents(gDevice, gDrawSampleCount);
 
-    if (!gMainRenderPass.init(gDevice, colorAttachFmt, COLOR_32_FORMAT, gDrawSampleCount))
-        FatalErrors::raise("Failed to create the Vulkan draw render pass!");
+    // Initialize all render paths
+    const VkFormat drawColorFormat = (Config::gbUseVulkan32BitShading) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
 
-    // Create pipelines
-    VPipelines::init(gDevice, gMainRenderPass, gDrawSampleCount);
+    gRenderPath_Psx.init(gDevice, COLOR_16_FORMAT);
+    gRenderPath_Main.init(gDevice, gDrawSampleCount, drawColorFormat, COLOR_32_FORMAT);
+    gRenderPath_Crossfade.init(gDevice, gSwapchain, gPresentSurfaceFormat, gRenderPath_Main);
 
-    // Init the MSAA resolver (if using MSAA)
-    if (gDrawSampleCount > 1) {
-        VMsaaResolver::init(gDevice);
-    }
-
-    // Try to init the swapchain and framebuffers
-    ensureValidSwapchainAndFramebuffers();
+    // Create all of the pipelines needed, these use the previously created pipeline components
+    VPipelines::initPipelines(gRenderPath_Main, gRenderPath_Crossfade, gDrawSampleCount);
 
     // Initialize various semaphores
     for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
@@ -591,12 +330,6 @@ void init() noexcept {
             FatalErrors::raise("Failed to create a Vulkan command buffer required for rendering!");
     }
 
-    // Initialize the PSX framebuffer textures used to hold the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer
-    for (vgl::MutableTexture& psxFbTex : gPsxFramebufferTextures) {
-        if (!psxFbTex.initAs2dTexture(gDevice, COLOR_16_FORMAT, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y))
-            FatalErrors::raise("Failed to create a Vulkan texture for the classic PSX renderer's framebuffer!");
-    }
-
     // Initialize the texture representing PSX VRAM and clear it all to black.
     // Note: use the R16 UINT format as we will have to unpack in the shader depending on the PSX texture format being used.
     Gpu::Core& psxGpu = PsxVm::gGpu;
@@ -610,8 +343,17 @@ void init() noexcept {
         gPsxVramTexture.unlock();
     }
 
-    // Initialize the main draw command submission module
+    // Initialize the draw command submission module and crossfader
     VDrawing::init(gDevice, gPsxVramTexture);
+    VCrossfader::init(gDevice);
+
+    // Set the initial render path and make it active.
+    // TODO: remember renderer preference here.
+    gpCurRenderPath = &gRenderPath_Main;
+    gpNextRenderPath = &gRenderPath_Main;
+
+    // Try to init the swapchain and framebuffers
+    ensureValidSwapchainAndFramebuffers();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -629,12 +371,12 @@ void destroy() noexcept {
     }
 
     // Tear everything down and make sure to destroy immediate where we have the option
+    VCrossfader::destroy();
     VDrawing::shutdown();
-    gPsxVramTexture.destroy(true);
 
-    for (vgl::MutableTexture& fbTexture : gPsxFramebufferTextures) {
-        fbTexture.destroy(true);
-    }
+    gpNextRenderPath = nullptr;
+    gpCurRenderPath = nullptr;
+    gPsxVramTexture.destroy(true);
 
     for (vgl::CmdBuffer& cmdBuffer : gCmdBuffers) {
         cmdBuffer.destroy(true);
@@ -648,32 +390,34 @@ void destroy() noexcept {
         semaphore.destroy();
     }
 
-    destroyFramebuffers();
-    VMsaaResolver::destroy();
+    gRenderPath_Crossfade.destroy();
+    gRenderPath_Main.destroy();
+    gRenderPath_Psx.destroy();
+
     VPipelines::shutdown();
-    gMainRenderPass.destroy();
     gSwapchain.destroy();
     gDevice.destroy();
     gpPhysicalDevice = nullptr;
     gWindowSurface.destroy();
     gVulkanInstance.destroy();
     gVkFuncs = {};
+
+    // Clear all coord sys info
+    updateCoordSysInfo();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Perform tasks that need to be done on frame startup.
-// Returns 'true' if a frame was successfully started and a draw can proceed, 'false' if no drawing should take place (invalid framebuffer).
+// Returns 'true' if a frame was successfully started and a draw can proceed, 'false' if no drawing should take place.
+// Alternatively 'isRendering()' can be queried at any time to tell if drawing can take place.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool beginFrame() noexcept {
     // Must have ended the frame or not started one previously
     ASSERT(!gbDidBeginFrame);
     gbDidBeginFrame = true;
 
-    // Handle a renderer switch between Vulkan and classic if requested
-    if (gbRequestRendererToggle) {
-        gbUsePsxRenderer = (!gbUsePsxRenderer);
-        gbRequestRendererToggle = false;
-    }
+    // Do a render path switch if requested
+    gpCurRenderPath = gpNextRenderPath;
 
     // Recreate the swapchain and framebuffers if required and bail if that operation failed
     if (!ensureValidSwapchainAndFramebuffers())
@@ -706,45 +450,16 @@ bool beginFrame() noexcept {
         );
     }
 
-    // Transition the swapchain image to transfer destination optimal in preparation for blitting.
-    // This is needed by both the classic PSX renderer and the new Vulkan renderer.
-    {
-        VkImageMemoryBarrier imgBarrier = {};
-        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-        imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        imgBarrier.image = gSwapchain.getVkImages()[swapchainIdx];
-        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imgBarrier.subresourceRange.levelCount = 1;
-        imgBarrier.subresourceRange.layerCount = 1;
-
-        gCmdBufferRec.addPipelineBarrier(
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            0,
-            nullptr,
-            1,
-            &imgBarrier
-        );
-    }
-
-    // Renderer specific initialization
-    if (gbUsePsxRenderer) {
-        beginFrame_Psx();
-    } else {
-        beginFrame_VkRenderer();
-    }
-
+    // Render path specific frame start
+    gpCurRenderPath->beginFrame(gSwapchain, gCmdBufferRec);
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tells if draw commands can currently be submitted.
-// This will be the case if we have valid framebuffers and successfully started a frame.
+// Tells if a render path is active for this frame and whether we are actually going to do some drawing.
+// This will be the case if we have a valid swapchain and render path framebuffers and have successfully started a frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool canSubmitDrawCmds() noexcept {
+bool isRendering() noexcept {
     return gCmdBufferRec.isRecording();
 }
 
@@ -756,14 +471,9 @@ void endFrame() noexcept {
     ASSERT(gbDidBeginFrame);
     gbDidBeginFrame = false;
 
-    // Renderer specific finishing up, if we are drawing.
-    // May cause transfer tasks to be kicked off.
-    if (gCmdBufferRec.isRecording()) {
-        if (gbUsePsxRenderer) {
-            endFrame_Psx();
-        } else {
-            endFrame_VkRenderer();
-        }
+    // Render path specific frame end, if we are rendering; note: may cause transfer tasks to be kicked off...
+    if (isRendering()) {
+        gpCurRenderPath->endFrame(gSwapchain, gCmdBufferRec);
     }
 
     // Begin executing any pending transfers
@@ -774,31 +484,6 @@ void endFrame() noexcept {
     if (!gCmdBufferRec.isRecording()) {
         gDevice.waitUntilDeviceIdle();
         return;
-    }
-
-    // Transition the swapchain image back to presentation optimal in preparation for presentation
-    const uint32_t swapchainIdx = gSwapchain.getAcquiredImageIdx();
-
-    {
-        VkImageMemoryBarrier imgBarrier = {};
-        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-        imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        imgBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        imgBarrier.image = gSwapchain.getVkImages()[swapchainIdx];
-        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imgBarrier.subresourceRange.levelCount = 1;
-        imgBarrier.subresourceRange.layerCount = 1;
-
-        gCmdBufferRec.addPipelineBarrier(
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            0,
-            nullptr,
-            1,
-            &imgBarrier
-        );
     }
 
     // End command recording and submit the command buffer to the device.
@@ -880,6 +565,48 @@ void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint
 
     // Unlock the texture to begin uploading the updates
     gPsxVramTexture.unlock();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gets the render path which is currently active for this frame
+//------------------------------------------------------------------------------------------------------------------------------------------
+IVRendererPath& getActiveRenderPath() noexcept {
+    ASSERT(gpCurRenderPath);
+    return *gpCurRenderPath;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gets the render path which will be active in the next frame
+//------------------------------------------------------------------------------------------------------------------------------------------
+IVRendererPath& getNextRenderPath() noexcept {
+    ASSERT(gpNextRenderPath);
+    return *gpNextRenderPath;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the render path which will be active in the next frame
+//------------------------------------------------------------------------------------------------------------------------------------------
+void setNextRenderPath(IVRendererPath& renderPath) noexcept {
+    gpNextRenderPath = &renderPath;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: tells if the classic PSX render path is the current render path being used
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isUsingPsxRenderPath() noexcept {
+    return (gpCurRenderPath == &gRenderPath_Psx);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helpers to switch between the PSX and main Vulkan render paths.
+// The switch happens at the beginning of the next frame.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void switchToPsxRenderPath() noexcept {
+    setNextRenderPath(gRenderPath_Psx);
+}
+
+void switchToMainVulkanRenderPath() noexcept {
+    setNextRenderPath(gRenderPath_Main);
 }
 
 END_NAMESPACE(VRenderer)

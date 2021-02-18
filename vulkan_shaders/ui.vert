@@ -17,7 +17,7 @@ layout(location = 4) flat out ivec2 out_clutPos;
 layout(location = 5) flat out vec4 out_stmul;
 
 void main() {
-    gl_Position = constants.mvpMatrix * vec4(in_pos, 1);
+    gl_Position = uniforms.mvpMatrix * vec4(in_pos, 1);
     out_color = in_color / 128.0;
     out_uv = in_uv;
     out_texWinPos = ivec2(in_texWinPos);

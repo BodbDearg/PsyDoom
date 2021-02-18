@@ -7,8 +7,15 @@
 #include <cstdint>
 
 namespace vgl {
+    class CmdBufferRecorder;
+    class Swapchain;
     struct VkFuncs;
 }
+
+class IVRendererPath;
+class VRenderPath_Main;
+class VRenderPath_Psx;
+class VRenderPath_Crossfade;
 
 BEGIN_NAMESPACE(VRenderer)
 
@@ -16,25 +23,35 @@ BEGIN_NAMESPACE(VRenderer)
 static constexpr float MIN_DEPTH = 1.0f;
 static constexpr float MAX_DEPTH = 32768.0f;
 
-extern bool             gbUsePsxRenderer;
-extern bool             gbAutoBeginNextFrame;
-extern bool             gbRequestRendererToggle;
-extern vgl::VkFuncs     gVkFuncs;
-extern uint32_t         gFramebufferW;
-extern uint32_t         gFramebufferH;
-extern int32_t          gClassicFramebufferX;
-extern int32_t          gClassicFramebufferY;
-extern uint32_t         gClassicFramebufferW;
-extern uint32_t         gClassicFramebufferH;
-extern float            gNdcToPsxScaleX, gNdcToPsxScaleY;
-extern float            gPsxNdcOffsetX, gPsxNdcOffsetY;
+extern vgl::VkFuncs             gVkFuncs;
+extern VRenderPath_Psx          gRenderPath_Psx;
+extern VRenderPath_Main         gRenderPath_Main;
+extern VRenderPath_Crossfade    gRenderPath_Crossfade;
+extern uint32_t                 gPresentSurfaceW;
+extern uint32_t                 gPresentSurfaceH;
+extern uint32_t                 gFramebufferW;
+extern uint32_t                 gFramebufferH;
+extern int32_t                  gPsxCoordsFbX;
+extern int32_t                  gPsxCoordsFbY;
+extern uint32_t                 gPsxCoordsFbW;
+extern uint32_t                 gPsxCoordsFbH;
+extern float                    gNdcToPsxScaleX, gNdcToPsxScaleY;
+extern float                    gPsxNdcOffsetX,  gPsxNdcOffsetY;
+extern vgl::Swapchain           gSwapchain;
+extern vgl::CmdBufferRecorder   gCmdBufferRec;
 
 void init() noexcept;
 void destroy() noexcept;
 bool beginFrame() noexcept;
-bool canSubmitDrawCmds() noexcept;
+bool isRendering() noexcept;
 void endFrame() noexcept;
 void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint16_t rectTy, const uint16_t rectBy) noexcept;
+IVRendererPath& getActiveRenderPath() noexcept;
+IVRendererPath& getNextRenderPath() noexcept;
+void setNextRenderPath(IVRendererPath& renderPath) noexcept;
+bool isUsingPsxRenderPath() noexcept;
+void switchToPsxRenderPath() noexcept;
+void switchToMainVulkanRenderPath() noexcept;
 
 END_NAMESPACE(VRenderer)
 

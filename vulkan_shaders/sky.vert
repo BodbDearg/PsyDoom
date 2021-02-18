@@ -23,7 +23,7 @@ void main() {
     // If this is the case then stretch it upwards based on the depth from the viewer.
     // We stretch based on depth to try and extend as little as possible and avoid precision issues.
     // Initially I extended sky walls by a fixed (large) amount and this caused occasional stitching artifacts, due to precision loss.
-    gl_Position = constants.mvpMatrix * vec4(in_pos, 1);
+    gl_Position = uniforms.mvpMatrix * vec4(in_pos, 1);
     gl_Position.y -= abs(gl_Position.z) * in_uv.y;
     out_clipPos = gl_Position;
 

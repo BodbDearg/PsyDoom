@@ -1,3 +1,7 @@
 #pragma once
 
-void I_CrossFadeFrameBuffers() noexcept;
+#if PSYDOOM_MODS
+    void I_PreCrossfade() noexcept;
+#endif
+
+void I_CrossfadeFrameBuffers() noexcept;

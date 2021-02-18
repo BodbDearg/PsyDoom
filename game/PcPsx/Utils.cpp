@@ -126,7 +126,13 @@ static bool waitForCond(const T& condLamba) noexcept {
         // Ok have to wait for a bit, do platform updates and a refresh of the display.
         // Refreshing the display helps prevent a brief (temporary) stutter issue after long pauses - I'm not sure why, maybe an SDL bug?
         // Doing a vsync'd present also reduces idle CPU usage a lot more than a spinning loop with thread yield.
-        Video::displayFramebuffer();
+        //
+        // Vulkan backend: this causes issues with certain things like crossfade, which rely on previous framebuffers.
+        // Don't do this if we are outputting via Vulkan.
+        if (Video::gBackendType != Video::BackendType::Vulkan) {
+            Video::displayFramebuffer();
+        }
+
         Utils::threadYield();
         doPlatformUpdates();
     }
@@ -203,8 +209,8 @@ void onBeginUIDrawing() noexcept {
         // Setup the UI transform matrix for drawing if using the Vulkan renderer
         const bool bSetDrawMatrix = (
             (Video::gBackendType == Video::BackendType::Vulkan) &&
-            (!VRenderer::gbUsePsxRenderer) &&
-            VRenderer::canSubmitDrawCmds()
+            (!VRenderer::isUsingPsxRenderPath()) &&
+            VRenderer::isRendering()
         );
 
         if (bSetDrawMatrix) {
@@ -215,7 +221,7 @@ void onBeginUIDrawing() noexcept {
 
             // Set the draw uniforms, including the transform matrix
             {
-                VShaderUniforms uniforms = {};
+                VShaderUniforms_Draw uniforms = {};
                 uniforms.mvpMatrix = VDrawing::computeTransformMatrixForUI();
                 uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
                 uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;

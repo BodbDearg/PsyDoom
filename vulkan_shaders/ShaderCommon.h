@@ -11,8 +11,8 @@
 //                  system of the original PSX framebuffer, which is useful for things like sky rendering.
 //----------------------------------------------------------------------------------------------------------------------
 #define DECLARE_UNIFORMS()\
-    layout(push_constant) uniform Constants {   \
+    layout(push_constant) uniform Uniforms {   \
         mat4    mvpMatrix;      \
         vec2    ndcToPsxScale;  \
         vec2    psxNdcOffset;   \
-    } constants;
+    } uniforms;

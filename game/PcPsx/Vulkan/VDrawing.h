@@ -23,7 +23,7 @@ namespace Gpu {
 enum class VLightDimMode : uint8_t;
 enum class VPipelineType : uint8_t;
 enum class VPipelineType : uint8_t;
-struct VShaderUniforms;
+struct VShaderUniforms_Draw;
 
 BEGIN_NAMESPACE(VDrawing)
 
@@ -32,7 +32,7 @@ void shutdown() noexcept;
 void beginFrame(const uint32_t ringbufferIdx) noexcept;
 void endFrame(vgl::CmdBufferRecorder& cmdRec) noexcept;
 void setDrawPipeline(const VPipelineType type) noexcept;
-void setDrawUniforms(const VShaderUniforms& uniforms) noexcept;
+void setDrawUniforms(const VShaderUniforms_Draw& uniforms) noexcept;
 Matrix4f computeTransformMatrixForUI() noexcept;
 Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const float viewZ, const float viewAngle) noexcept;
 void endCurrentDrawBatch() noexcept;

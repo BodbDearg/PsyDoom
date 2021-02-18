@@ -1,6 +1,5 @@
 #include "CmdBufferRecorder.h"
 
-#include "BaseRenderPass.h"
 #include "Buffer.h"
 #include "CmdBuffer.h"
 #include "CmdPool.h"
@@ -9,6 +8,7 @@
 #include "LogicalDevice.h"
 #include "Pipeline.h"
 #include "PipelineLayout.h"
+#include "RenderPass.h"
 #include "VkFuncs.h"
 
 BEGIN_NAMESPACE(vgl)
@@ -107,7 +107,7 @@ bool CmdBufferRecorder::isRecording() const noexcept {
 // Recorded command: begin a renderpass
 //------------------------------------------------------------------------------------------------------------------------------------------
 void CmdBufferRecorder::beginRenderPass(
-    const BaseRenderPass& renderPass,
+    const RenderPass& renderPass,
     const Framebuffer& framebuffer,
     const VkSubpassContents subpassContents,
     const int32_t renderAreaX,

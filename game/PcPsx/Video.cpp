@@ -251,12 +251,13 @@ void displayFramebuffer() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: tells if the Vulkan renderer is being used
+// Helper: tells if any of the render paths used by the new Vulkan renderer are currently in use.
+// Note: will return 'false' if we are using a Vulkan backend but just outputting the classic PSX renderer via Vulkan.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool usingVulkanRenderer() noexcept {
+bool isUsingVulkanRenderPath() noexcept {
     #if PSYDOOM_VULKAN_RENDERER
         if (gBackendType == BackendType::Vulkan)
-            return (!VRenderer::gbUsePsxRenderer);
+            return (!VRenderer::isUsingPsxRenderPath());    // Anything other than the PSX render path is to do with the new Vulkan renderer
     #endif
 
     return false;
