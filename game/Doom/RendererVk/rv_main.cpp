@@ -147,9 +147,13 @@ void RV_RenderPlayerView() noexcept {
     RV_ClearOcclussion();
     RV_BuildDrawSubsecList();
 
-    // Build the list of sprite fragments to be drawn for each subsector and set which floors/ceilings are to be drawn next
+    // Build the list of sprite fragments to be drawn for each subsector
     RV_BuildSpriteFragLists();
+
+    // Init which subsectors are to have flats and sky walls drawn next.
+    // We try and batch all those for performance reasons, and also to avoid visual artifacts with sprite clipping.
     RV_InitNextDrawFlats();
+    RV_InitNextDrawSkyWalls();
 
     // Upload a new sky texture for this frame if required.
     // Also draw the base (background) sky that is needed in some scenarios.
@@ -177,13 +181,15 @@ void RV_RenderPlayerView() noexcept {
         uint8_t secB;
         RV_GetSectorColor(sector, secR, secG, secB);
 
-        // Draw all subsector opaque elements first
+        // Draw all subsector sky walls and blended walls
+        RV_DrawSubsecSkyWalls(drawSubsecIdx);
+        RV_DrawSubsecBlendedWalls(subsec, secR, secG, secB);
+
+        // Draw all subsector opaque elements and then sprites on top of that.
+        // Most of the time these should all be on the same draw pipeline, so we can do batching.
         RV_DrawSubsecOpaqueWalls(subsec, secR, secG, secB);
         RV_DrawSubsecFloors(drawSubsecIdx);
         RV_DrawSubsecCeilings(drawSubsecIdx);
-
-        // Draw all subsector blended elements on top of that, with sprites always being the topmost element
-        RV_DrawSubsecBlendedWalls(subsec, secR, secG, secB);
         RV_DrawSubsecSpriteFrags(drawSubsecIdx);
     }
 

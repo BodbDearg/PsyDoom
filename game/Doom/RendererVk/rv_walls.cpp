@@ -12,12 +12,15 @@
 #include "Doom/Renderer/r_main.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
+#include "rv_bsp.h"
 #include "rv_data.h"
 #include "rv_main.h"
 #include "rv_sky.h"
 #include "rv_utils.h"
 
 #include <cmath>
+
+static int32_t gNextSkyWallDrawSubsecIdx;       // Index of the next draw subsector to have its sky walls drawn
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Check for a sector surrounding the given sector which has both a sky or void ceiling and is higher
@@ -91,7 +94,7 @@ static void RV_DrawWall(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw the fully opaque upper, lower and mid walls for a seg.
+// Draw the fully opaque or masked upper, lower and mid walls for a seg.
 // Also marks the wall as viewed for the automap, if it's visible.
 //
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
@@ -104,7 +107,10 @@ static void RV_DrawSegSolid(
     const uint8_t colG,
     const uint8_t colB
 ) noexcept {
-    // Skip the line segment if it's not visible at all
+    // Skip the line segment if it's not front facing or visible
+    if (seg.flags & SGF_BACKFACING)
+        return;
+
     if ((seg.flags & SGF_VISIBLE_COLS) == 0)
         return;
 
@@ -122,7 +128,7 @@ static void RV_DrawSegSolid(
     const float dz = z2 - z1;
     const float segLen = seg.length;
 
-    // Figure out the top and bottom y values of the front sector.
+    // Get the top and bottom y values of the front sector.
     //
     // Note: use the subsector passed into this function rather than the seg's reference to it - the subsector passed in is more reliable.
     // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
@@ -147,13 +153,14 @@ static void RV_DrawSegSolid(
     float midTy = fty;
     float midBy = fby;
 
-    // Grabbing some useful info: view height and front-facing status
-    const float viewZ = gViewZf;
-    const bool bSegIsFrontFacing = ((seg.flags & SGF_BACKFACING) == 0);
+    // Do we draw these walls transparent? (x-ray cheat)
+    const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
 
     // See if the seg's line is two sided or not, may need to draw upper/lower walls if two-sided
-    if (seg.backsector) {
-        // Figure out the bottom and top y values of the back sector and whether we are to draw the top and bottom walls
+    const bool bTwoSidedWall = seg.backsector;
+
+    if (bTwoSidedWall) {
+        // Get the bottom and top y values of the back sector
         const sector_t& backSec = *seg.backsector;
         const float bty = RV_FixedToFloat(backSec.ceilingheight);
         const float bby = RV_FixedToFloat(backSec.floorheight);
@@ -162,17 +169,13 @@ static void RV_DrawSegSolid(
         midTy = std::min(midTy, bty);
         midBy = std::max(midBy, bby);
 
-        // Figure out whether we are to draw the top and bottom walls.
-        // We draw the top/bottom walls when there is a front face visible and if the wall is not a sky wall.
-        const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
+        // Figure out whether there is upper and lower walls and whether the upper wall should be treated as a sky/void wall
         const bool bIsSkyOrVoidWall = (backSec.ceilingpic < 0);
         const bool bHasUpperWall = (bty < fty);
         const bool bHasLowerWall = (bby > fby);
-        const bool bDrawUpperWall = (bHasUpperWall && bSegIsFrontFacing && (!bIsSkyOrVoidWall));
-        const bool bDrawLowerWall = (bHasLowerWall && bSegIsFrontFacing);
 
-        // Draw the upper wall
-        if (bDrawUpperWall) {
+        // Draw the upper wall if existing not a sky or void wall
+        if (bHasUpperWall && (!bIsSkyOrVoidWall)) {
             // Compute the top and bottom v coordinate and then draw
             const float wallBy = std::max(bty, fby);
             const float unclippedWallH = fty - bty;         // Upper wall may be clipped against the floor, but some texcoords are easier to calculate from unclipped height
@@ -194,23 +197,8 @@ static void RV_DrawSegSolid(
             RV_DrawWall(x1, z1, x2, z2, fty, wallBy, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
-        // Draw a sky wall if there is a sky
-        const bool bHasNoOpening = (midTy <= midBy);
-
-        if ((frontSec.ceilingpic == -1) && ((backSec.ceilingpic >= 0) || bHasNoOpening) && bSegIsFrontFacing) {
-            // Hack special effect: treat the sky wall plane as a void (not to be rendered) and allow floating ceiling effects in certain situations.
-            // If the ceiling is a sky and the next highest sky or void ceiling is higher then treat the sky ceiling as if it were a void ceiling too.
-            // In the "GEC Master Edition" this can be used to create things like floating cubes, and in "Ballistyx" the altar top appears to be lower than surrounding building walls.
-            const bool bTreatAsVoidCeiling = RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
-            const float skyBy = (backSec.ceilingpic == -1) ? std::max(fby, bby) : fty;
-
-            if (!bTreatAsVoidCeiling) {
-                RV_AddInfiniteSkyWall(x1, z1, x2, z2, skyBy);
-            }
-        }
-
-        // Draw the lower wall
-        if (bDrawLowerWall) {
+        // Draw the lower wall if it exists
+        if (bHasLowerWall) {
             // Compute the top and bottom v coordinate and then draw
             const float heightToLower = fty - bby;
             const float wallTy = std::min(bby, fty);
@@ -234,10 +222,17 @@ static void RV_DrawSegSolid(
         }
     }
 
-    // Draw the mid wall
-    const bool bDrawMidWall = (bSegIsFrontFacing && (!seg.backsector));
+    // Draw the mid wall if the line is one sided or it's a masked wall
+    const bool bDrawMidWall = ((!bTwoSidedWall) || (line.flags & ML_MIDMASKED));
 
     if (bDrawMidWall) {
+        // Final Doom: force the mid wall to be 128 units in height if this flag is specified.
+        // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
+        // Note for PsyDoom this is restricted to two sided linedefs only, for more on that see 'R_DrawWalls' in the original renderer.
+        if (bTwoSidedWall && (line.flags & ML_MIDHEIGHT_128)) {
+            midTy = midBy + 128.0f;
+        }
+
         // Compute the top and bottom v coordinate
         const float wallH = midTy - midBy;
         float vt;
@@ -257,24 +252,14 @@ static void RV_DrawSegSolid(
             vb = vOffset + wallH;
         }
 
-        // Decide whether to draw the wall transparent and then draw
-        const bool bDrawTransparent = (
-            (line.flags & ML_MIDTRANSLUCENT) ||
-            (gpViewPlayer->cheats & CF_XRAYVISION)
-        );
-
+        // Draw the wall
         VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
         RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
-
-        // Draw a sky wall if there is a sky
-        if (frontSec.ceilingpic == -1) {
-            RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);
-        }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw the translucent or masked mid wall of a seg, if it has that.
+// Draw the translucent mid wall of a seg, if it has that.
 //
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
@@ -293,13 +278,9 @@ static void RV_DrawSegBlended(
     if ((seg.flags & SGF_VISIBLE_COLS) == 0)
         return;
 
-    // Must have a back sector and masked or translucent elements
+    // Must have a back sector and be translucent
     line_t& line = *seg.linedef;
-
-    const bool bCanDraw = (
-        (seg.backsector) &&
-        (line.flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT))
-    );
+    const bool bCanDraw = ((seg.backsector) && (line.flags & ML_MIDTRANSLUCENT));
 
     if (!bCanDraw)
         return;
@@ -313,7 +294,7 @@ static void RV_DrawSegBlended(
     const float dz = z2 - z1;
     const float segLen = seg.length;
 
-    // Figure out the top and bottom y values of the front sector.
+    // Get the top and bottom y values of the front sector.
     //
     // Note: use the subsector passed into this function rather than the seg's reference to it - the subsector passed in is more reliable.
     // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
@@ -369,19 +350,83 @@ static void RV_DrawSegBlended(
         vb = vOffset + wallH;
     }
 
-    // Decide whether to draw the wall transparent and then draw.
-    // Also make sure we are on the correct alpha blended pipeline before we draw.
-    const bool bDrawTransparent = (
-        (line.flags & ML_MIDTRANSLUCENT) ||
-        (gpViewPlayer->cheats & CF_XRAYVISION)
-    );
-
+    // Draw the wall and make sure we are on the correct alpha blended pipeline before we draw
     VDrawing::setDrawPipeline(VPipelineType::World_Alpha);
-    RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
+    RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, true);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw all fully opaque walls for the given subsector
+// Draws any 'infinite' sky walls for the specified seg which is assumed to be in a sky sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec) noexcept {
+    // This must only be called if the seg is in a sky sector!
+    ASSERT(seg.frontsector->ceilingpic == -1);
+
+    // Skip the line segment if it's not visible at all or if it's back facing
+    if ((seg.flags & SGF_VISIBLE_COLS) == 0)
+        return;
+
+    if (seg.flags & SGF_BACKFACING)
+        return;
+
+    // Get the xz positions of the seg endpoints
+    const float x1 = seg.v1x;
+    const float z1 = seg.v1y;
+    const float x2 = seg.v2x;
+    const float z2 = seg.v2y;
+
+    // Get the top and bottom y values of the front sector.
+    //
+    // Note: use the subsector passed into this function rather than the seg's reference to it - the subsector passed in is more reliable.
+    // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
+    // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
+    const sector_t& frontSec = *subsec.sector;
+    const float fty = RV_FixedToFloat(frontSec.ceilingheight);
+    const float fby = RV_FixedToFloat(frontSec.floorheight);
+
+    // See if the seg's line is two sided or not, may need to draw upper sky walls if two-sided
+    if (seg.backsector) {
+        // Get the bottom and top y values of the back sector
+        const sector_t& backSec = *seg.backsector;
+        const float bty = RV_FixedToFloat(backSec.ceilingheight);
+        const float bby = RV_FixedToFloat(backSec.floorheight);
+
+        // Get the mid wall size so that it only occupies the gap between the upper and lower walls
+        const float midTy = std::min(fty, bty);
+        const float midBy = std::max(fby, bby);
+
+        // Draw a sky wall if the back sector has a normal ceiling or if there is no opening
+        const bool bBackSecHasCeil = (backSec.ceilingpic >= 0);
+        const bool bHasNoOpening = (midTy <= midBy);
+
+        if (bBackSecHasCeil || bHasNoOpening) {
+            // Hack special effect: treat the sky wall plane as a void (not to be rendered) and allow floating ceiling effects in certain situations.
+            // If there is a higher surrounding sky or void ceiling then treat the sky wall for this sector as a void and don't render.
+            // In the "GEC Master Edition" this can be used to create things like floating cubes.
+            const bool bTreatAsVoidCeiling = RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
+            const float skyBy = (backSec.ceilingpic == -1) ? std::max(fty, bty) : fty;
+
+            if (!bTreatAsVoidCeiling) {
+                RV_AddInfiniteSkyWall(x1, z1, x2, z2, skyBy);
+            }
+        }
+    }
+    else {
+        // One sided line with a sky ceiling: just draw it
+        RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Must be called before drawing sky walls.
+// Initializes which subsector is to have sky walls drawn next.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_InitNextDrawSkyWalls() noexcept {
+    gNextSkyWallDrawSubsecIdx = (int32_t) gRvDrawSubsecs.size() - 1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw all fully opaque and masked walls for the given subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawSubsecOpaqueWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
     // Draw all opaque segs in the subsector
@@ -403,6 +448,50 @@ void RV_DrawSubsecBlendedWalls(subsector_t& subsec, const uint8_t secR, const ui
 
     for (const rvseg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
         RV_DrawSegBlended(*pSeg, subsec, secR, secG, secB);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws sky walls starting at the given draw subsector index.
+// Tries to batch together as many sky walls with the same ceiling height as possible, so the number of draw calls can be reduced.
+// Sky walls use a different draw pipeline to all other level geometry and sprites, therefore it's best if we can group them where possible.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawSubsecSkyWalls(const int32_t fromDrawSubsecIdx) noexcept {
+    ASSERT((fromDrawSubsecIdx >= 0) && (fromDrawSubsecIdx < (int32_t) gRvDrawSubsecs.size()));
+
+    // If we've already drawn the sky walls for this subsector then we are done
+    if (gNextSkyWallDrawSubsecIdx != fromDrawSubsecIdx)
+        return;
+
+    while (true) {
+        // Draw the sky walls for all segs in this subsector, if it's a sky sector
+        const subsector_t& subsec = *gRvDrawSubsecs[gNextSkyWallDrawSubsecIdx];
+        const sector_t& sector = *subsec.sector;
+        const bool bIsSkySector = (sector.ceilingpic == -1);
+
+        if (bIsSkySector) {
+            const rvseg_t* const pBegSeg = gpRvSegs.get() + subsec.firstseg;
+            const rvseg_t* const pEndSeg = pBegSeg + subsec.numsegs;
+
+            for (const rvseg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
+                RV_DrawSkySegSkyWalls(*pSeg, subsec);
+            }
+        }
+
+        // Should we end the draw batch here? Stop if there is no next draw sector, or if the sky status or ceiling height changes
+        gNextSkyWallDrawSubsecIdx--;
+
+        if (gNextSkyWallDrawSubsecIdx < 0)
+            break;
+
+        const sector_t& nextSector = *gRvDrawSubsecs[gNextSkyWallDrawSubsecIdx]->sector;
+        const bool bIsNextSkySector = (nextSector.ceilingpic == -1);
+
+        if (nextSector.ceilingheight != sector.ceilingheight)
+            break;
+
+        if (bIsSkySector != bIsNextSkySector)
+            break;
     }
 }
 

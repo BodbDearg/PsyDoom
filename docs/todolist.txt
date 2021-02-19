@@ -1,19 +1,21 @@
 0.7 - GPU & Rendering?
-- Vk renderer: try to batch sky walls
 - Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: fix UI sprite stitching.
 - Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
 - Vk renderer: add option to disable widescreen
+- Vk renderer: make sure sky does no masking
 - Vk renderer: save renderer preference and provide menu option
 - Vk renderer: add render scale option
 - Vk renderer: investigate sprite splitting issues on some sprites in Underhalls & The Focus
     - Former Human at exit door in Underhalls
     - Shotguns dropped near wall in The Focus, behind the crushing ceilings
     - May not be splitting correctly in some situations
+- Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
+- Classic renderer: implement sky wall drawing to fix 
+- Classic renderer: add a new textured row/column GPU primitive to accelerate world drawing    
 - Investigate hang warping from Club Doom to Hangar
 - Fix renderer switch sometimes not happening in menus
-- Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?
@@ -31,11 +33,11 @@
 - -pistolstart command line switch
 
 0.8 - Limit extending and modding?
-- Classic renderer: add support for 'void' ceiling type that the new VK renderer is starting to formalize.
-    - Any ceiling pic < -1 should be considered a 'void' (render nothing) ceiling.
 - Add map patching mechanism for a few select map bugs
     - Fix house of pain door bug
     - Fix Ballystix altar not being see through with new vk renderer (need to mark as 'void' ceiling)
+- Classic renderer: add support for 'void' ceiling type that the new VK renderer is starting to formalize.
+    - Any ceiling pic < -1 should be considered a 'void' (render nothing) ceiling.
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate engine limits and try to remove/expand where possible
     - No texture cache overflow
