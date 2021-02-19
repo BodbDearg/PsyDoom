@@ -1,5 +1,4 @@
 0.7 - GPU & Rendering?
-- Vk renderer: get loading plaque draw working
 - Vk renderer: try to batch sky walls
 - Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported

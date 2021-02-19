@@ -74,8 +74,11 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
         }
         
         // While we are waiting update the display to help prevent stutter after long pauses (if we are waiting a long time).
-        // See the 'Utils.cpp' file for more comments on this issue.
-        Video::displayFramebuffer();
+        // See the 'Utils.cpp' file for more comments on this issue; we don't do this for the Vulkan backend also.
+        if (Video::gBackendType != Video::BackendType::Vulkan) {
+            Video::displayFramebuffer();
+        }
+
         Utils::threadYield();
     }
 
