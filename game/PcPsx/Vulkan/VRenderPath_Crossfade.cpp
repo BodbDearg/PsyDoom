@@ -1,4 +1,4 @@
-#include "VRenderPath_FadeLoad.h"
+#include "VRenderPath_Crossfade.h"
 
 #if PSYDOOM_VULKAN_RENDERER
 
@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the render path to a default uninitialized state
 //------------------------------------------------------------------------------------------------------------------------------------------
-VRenderPath_FadeLoad::VRenderPath_FadeLoad() noexcept 
+VRenderPath_Crossfade::VRenderPath_Crossfade() noexcept 
     : mbIsValid(false)
     , mpDevice(nullptr)
     , mpSwapchain(nullptr)
@@ -26,14 +26,14 @@ VRenderPath_FadeLoad::VRenderPath_FadeLoad() noexcept
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Automatically destroys the render path if not already destroyed
 //------------------------------------------------------------------------------------------------------------------------------------------
-VRenderPath_FadeLoad::~VRenderPath_FadeLoad() noexcept {
+VRenderPath_Crossfade::~VRenderPath_Crossfade() noexcept {
     destroy();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the render path - this must always succeed
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_FadeLoad::init(
+void VRenderPath_Crossfade::init(
     vgl::LogicalDevice& device,
     vgl::Swapchain& swapchain,
     const VkFormat presentSurfaceFormat,
@@ -51,7 +51,7 @@ void VRenderPath_FadeLoad::init(
 
     // Create the renderpass
     if (!initRenderPass())
-        FatalErrors::raise("Failed to create the fade/load Vulkan renderpass!");
+        FatalErrors::raise("Failed to create the crossfade Vulkan renderpass!");
 
     // Now initialized
     mbIsValid = true;
@@ -60,7 +60,7 @@ void VRenderPath_FadeLoad::init(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tears down the render path
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_FadeLoad::destroy() noexcept {
+void VRenderPath_Crossfade::destroy() noexcept {
     if (!mbIsValid)
         return;
 
@@ -85,7 +85,7 @@ void VRenderPath_FadeLoad::destroy() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Creates or recreates the framebuffers for this render path
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool VRenderPath_FadeLoad::ensureValidFramebuffers([[maybe_unused]] const uint32_t fbWidth, [[maybe_unused]] const uint32_t fbHeight) noexcept {
+bool VRenderPath_Crossfade::ensureValidFramebuffers([[maybe_unused]] const uint32_t fbWidth, [[maybe_unused]] const uint32_t fbHeight) noexcept {
     ASSERT(mbIsValid);
 
     // Only do this if we need to actually create/re-create framebuffers
@@ -112,7 +112,7 @@ bool VRenderPath_FadeLoad::ensureValidFramebuffers([[maybe_unused]] const uint32
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Begins the frame for the render path
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_FadeLoad::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder& cmdRec) noexcept {
+void VRenderPath_Crossfade::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder& cmdRec) noexcept {
     // Sanity checks
     ASSERT(mbIsValid);
     ASSERT(mpDevice);
@@ -150,7 +150,7 @@ void VRenderPath_FadeLoad::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferR
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Ends the frame for the render path
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_FadeLoad::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder& cmdRec) noexcept {
+void VRenderPath_Crossfade::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder& cmdRec) noexcept {
     // Sanity checks and end the current render pass
     ASSERT(mbIsValid);
     ASSERT(swapchain.isValid());
@@ -160,7 +160,7 @@ void VRenderPath_FadeLoad::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRec
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Creates the Vulkan renderpass used by the render path
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool VRenderPath_FadeLoad::initRenderPass() noexcept {
+bool VRenderPath_Crossfade::initRenderPass() noexcept {
     // Sanity checks and getting the device
     ASSERT(mpDevice);
     vgl::LogicalDevice& device = *mpDevice;
@@ -194,7 +194,7 @@ bool VRenderPath_FadeLoad::initRenderPass() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the framebuffers need recreation
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool VRenderPath_FadeLoad::doFramebuffersNeedRecreate() noexcept {
+bool VRenderPath_Crossfade::doFramebuffersNeedRecreate() noexcept {
     // Firstly ensure we have the right amount of framebuffers
     ASSERT(mbIsValid);
     vgl::Swapchain& swapchain = *mpSwapchain;
@@ -222,26 +222,21 @@ bool VRenderPath_FadeLoad::doFramebuffersNeedRecreate() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Crossfade and loading plaque drawing setup.
+// Crossfade drawing setup.
 // These functions schedule specified framebuffer color attachment textures to be transitioned from an expected 'transfer source' image
 // layout to a 'shader read only' image layout at the beginning of the next render path frame. This transition is required to get the
 // framebuffers into the correct layout so they can be sampled in shaders.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_FadeLoad::scheduleOldFramebufferLayoutTransitions(vgl::RenderTexture& fb1ColorAttach, vgl::RenderTexture& fb2ColorAttach) noexcept {
+void VRenderPath_Crossfade::scheduleOldFramebufferLayoutTransitions(vgl::RenderTexture& fb1ColorAttach, vgl::RenderTexture& fb2ColorAttach) noexcept {
     mpOldFbImagesToLayout[0] = &fb1ColorAttach;
     mpOldFbImagesToLayout[1] = &fb2ColorAttach;
-}
-
-void VRenderPath_FadeLoad::scheduleOldFramebufferLayoutTransitions(vgl::RenderTexture& fbColorAttach) noexcept {
-    mpOldFbImagesToLayout[0] = &fbColorAttach;
-    mpOldFbImagesToLayout[1] = nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Transition the specified framebuffer texture/color-attachment (if valid) from an expected 'transfer source' image layout to the
 // 'shader read only' image layout. This prepares it for reading in shader code.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_FadeLoad::transitionOldFramebufferTexLayout(vgl::RenderTexture& fbColorAttach, vgl::CmdBufferRecorder& cmdRec) noexcept {
+void VRenderPath_Crossfade::transitionOldFramebufferTexLayout(vgl::RenderTexture& fbColorAttach, vgl::CmdBufferRecorder& cmdRec) noexcept {
     // Do nothing if invalid
     if (!fbColorAttach.isValid())
         return;

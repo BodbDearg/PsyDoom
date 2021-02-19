@@ -14,7 +14,7 @@ namespace vgl {
 }
 
 class IVRendererPath;
-class VRenderPath_FadeLoad;
+class VRenderPath_Crossfade;
 class VRenderPath_Main;
 class VRenderPath_Psx;
 
@@ -27,7 +27,7 @@ static constexpr float MAX_DEPTH = 32768.0f;
 extern vgl::VkFuncs             gVkFuncs;
 extern VRenderPath_Psx          gRenderPath_Psx;
 extern VRenderPath_Main         gRenderPath_Main;
-extern VRenderPath_FadeLoad     gRenderPath_FadeLoad;
+extern VRenderPath_Crossfade    gRenderPath_Crossfade;
 extern uint32_t                 gPresentSurfaceW;
 extern uint32_t                 gPresentSurfaceH;
 extern uint32_t                 gFramebufferW;
@@ -51,7 +51,6 @@ void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint
 IVRendererPath& getActiveRenderPath() noexcept;
 IVRendererPath& getNextRenderPath() noexcept;
 void setNextRenderPath(IVRendererPath& renderPath) noexcept;
-void setRenderPathImmediate(IVRendererPath& renderPath) noexcept;
 bool isUsingPsxRenderPath() noexcept;
 void switchToPsxRenderPath() noexcept;
 void switchToMainVulkanRenderPath() noexcept;

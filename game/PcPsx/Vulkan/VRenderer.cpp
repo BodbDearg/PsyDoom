@@ -24,7 +24,7 @@
 #include "VkFuncs.h"
 #include "VPipelines.h"
 #include "VPlaqueDrawer.h"
-#include "VRenderPath_FadeLoad.h"
+#include "VRenderPath_Crossfade.h"
 #include "VRenderPath_Main.h"
 #include "VRenderPath_Psx.h"
 #include "VulkanInstance.h"
@@ -53,13 +53,13 @@ vgl::VkFuncs gVkFuncs;
 // Render paths used
 VRenderPath_Psx         gRenderPath_Psx;
 VRenderPath_Main        gRenderPath_Main;
-VRenderPath_FadeLoad    gRenderPath_FadeLoad;
+VRenderPath_Crossfade   gRenderPath_Crossfade;
 
 // A collection of all the render paths
 IVRendererPath* const gAllRenderPaths[] = {
     &gRenderPath_Psx,
     &gRenderPath_Main,
-    &gRenderPath_FadeLoad,
+    &gRenderPath_Crossfade,
 };
 
 // Coord system info: the width and height of the window/swap-chain surface we present to
@@ -305,10 +305,10 @@ void init() noexcept {
 
     gRenderPath_Psx.init(gDevice, COLOR_16_FORMAT);
     gRenderPath_Main.init(gDevice, gDrawSampleCount, drawColorFormat, COLOR_32_FORMAT);
-    gRenderPath_FadeLoad.init(gDevice, gSwapchain, gPresentSurfaceFormat, gRenderPath_Main);
+    gRenderPath_Crossfade.init(gDevice, gSwapchain, gPresentSurfaceFormat, gRenderPath_Main);
 
     // Create all of the pipelines needed, these use the previously created pipeline components
-    VPipelines::initPipelines(gRenderPath_Main, gRenderPath_FadeLoad, gDrawSampleCount);
+    VPipelines::initPipelines(gRenderPath_Main, gRenderPath_Crossfade, gDrawSampleCount);
 
     // Initialize various semaphores
     for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
@@ -389,7 +389,7 @@ void destroy() noexcept {
         semaphore.destroy();
     }
 
-    gRenderPath_FadeLoad.destroy();
+    gRenderPath_Crossfade.destroy();
     gRenderPath_Main.destroy();
     gRenderPath_Psx.destroy();
 
@@ -588,34 +588,6 @@ IVRendererPath& getNextRenderPath() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void setNextRenderPath(IVRendererPath& renderPath) noexcept {
     gpNextRenderPath = &renderPath;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Immediately sets the current and next render paths.
-// If we are currently rendering, this will cause the current render path to end and the new one to begin.
-// This should be used sparingly, as it causes two render paths to execute in the same frame.
-// In some situations this call can be useful however, such as drawing Doom's loading plaques - which are awkward to handle cleanly.
-//------------------------------------------------------------------------------------------------------------------------------------------
-void setRenderPathImmediate(IVRendererPath& renderPath) noexcept {
-    // Save it as the next render path and bail if there is no switch
-    gpNextRenderPath = &renderPath;
-
-    if (&renderPath == gpCurRenderPath)
-        return;
-
-    // End the current render path, if we are rendering and begin this new one
-    if (isRendering()) {
-        gpCurRenderPath->endFrame(gSwapchain, gCmdBufferRec);
-        gpCurRenderPath = &renderPath;
-
-        // Note: need to ensure the new render path has valid framebuffers before we start.
-        // If that can't be ensured then just end rendering and command recording for the frame - pretend it had never been started in the first place.
-        if (renderPath.ensureValidFramebuffers(gFramebufferW, gFramebufferH)) {
-            renderPath.beginFrame(gSwapchain, gCmdBufferRec);
-        } else {
-            gCmdBufferRec.endCmdBuffer();
-        }
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

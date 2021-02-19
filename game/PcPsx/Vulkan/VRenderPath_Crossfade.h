@@ -17,16 +17,13 @@ namespace vgl {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// A render path used for crossfading screens and drawing loading plaques, i.e the following 2 scenarios:
-//  (1) Crossfading two previously rendered framebuffers.
-//  (2) Drawing a 'loading' or 'connecting' plaque over a previously rendered framebuffer.
-//
-// Outputs directly to the swapchain image.
+// A render path used for crossfading two previously screens which were done via the 'main' renderpath.
+// Outputs directly to the swapchain image, so it doesn't disturb the previous screens drawn.
 //------------------------------------------------------------------------------------------------------------------------------------------
-class VRenderPath_FadeLoad : public IVRendererPath {
+class VRenderPath_Crossfade : public IVRendererPath {
 public:
-    VRenderPath_FadeLoad() noexcept;
-    ~VRenderPath_FadeLoad() noexcept;
+    VRenderPath_Crossfade() noexcept;
+    ~VRenderPath_Crossfade() noexcept;
 
     void init(
         vgl::LogicalDevice& device,
@@ -44,7 +41,6 @@ public:
     inline const vgl::RenderPass& getRenderPass() const { return mRenderPass; }
 
     void scheduleOldFramebufferLayoutTransitions(vgl::RenderTexture& fb1ColorAttach, vgl::RenderTexture& fb2ColorAttach) noexcept;
-    void scheduleOldFramebufferLayoutTransitions(vgl::RenderTexture& fbColorAttach) noexcept;
 
 private:
     bool initRenderPass() noexcept;

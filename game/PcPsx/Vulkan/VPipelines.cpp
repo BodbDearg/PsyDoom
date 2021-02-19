@@ -14,7 +14,7 @@
 #include "PipelineLayout.h"
 #include "Sampler.h"
 #include "ShaderModule.h"
-#include "VRenderPath_FadeLoad.h"
+#include "VRenderPath_Crossfade.h"
 #include "VRenderPath_Main.h"
 
 BEGIN_NAMESPACE(VPipelines)
@@ -541,7 +541,7 @@ void initPipelineComponents(vgl::LogicalDevice& device, const uint32_t numSample
 //------------------------------------------------------------------------------------------------------------------------------------------
 void initPipelines(
     VRenderPath_Main& mainRPath,
-    VRenderPath_FadeLoad& fadeLoadRPath,
+    VRenderPath_Crossfade& crossfadeRPath,
     const uint32_t numSamples
 ) noexcept {
     // Create all of the main drawing pipelines
@@ -581,7 +581,7 @@ void initPipelines(
 
     // A pipeline using during crossfading
     initPipeline(
-        VPipelineType::Crossfade, fadeLoadRPath.getRenderPass(), 0,
+        VPipelineType::Crossfade, crossfadeRPath.getRenderPass(), 0,
         gShaders_crossfade, nullptr, gPipelineLayout_crossfade,
         gVertexBindingDesc_xyUv, gVertexAttribs_xyUv, C_ARRAY_SIZE(gVertexAttribs_xyUv),
         gInputAS_triList, gRasterState_noCull,
@@ -590,7 +590,7 @@ void initPipelines(
 
     // Used to draw loading plaques, both the background and the plaque itself
     initPipeline(
-        VPipelineType::LoadingPlaque, fadeLoadRPath.getRenderPass(), 0,
+        VPipelineType::LoadingPlaque, mainRPath.getRenderPass(), 0,
         gShaders_ndcTextured, nullptr, gPipelineLayout_loadingPlaque,
         gVertexBindingDesc_xyUv, gVertexAttribs_xyUv, C_ARRAY_SIZE(gVertexAttribs_xyUv),
         gInputAS_triList, gRasterState_noCull,

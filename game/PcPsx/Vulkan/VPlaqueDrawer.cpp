@@ -21,7 +21,6 @@
 #include "VDrawing.h"
 #include "VPipelines.h"
 #include "VRenderer.h"
-#include "VRenderPath_FadeLoad.h"
 #include "VRenderPath_Main.h"
 
 BEGIN_NAMESPACE(VPlaqueDrawer)
@@ -196,6 +195,38 @@ static void populateVertexBuffer(texture_t& plaqueTex, const int16_t plaqueX, co
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Transition the image layout for the background texture used to 'shader read only'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void transitionBackgroundTexImageLayout() noexcept {
+    // Sanity checks and getting the command buffer recorder
+    ASSERT(gpBackgroundTex);
+
+    vgl::CmdBufferRecorder& cmdRec = VRenderer::gCmdBufferRec;
+    ASSERT(cmdRec.isRecording());
+
+    // Schedule the layout transition
+    VkImageMemoryBarrier imgBarrier = {};
+    imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+    imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+    imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imgBarrier.image = gpBackgroundTex->getVkImage();
+    imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imgBarrier.subresourceRange.levelCount = 1;
+    imgBarrier.subresourceRange.layerCount = 1;
+
+    cmdRec.addPipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        0,
+        nullptr,
+        1,
+        &imgBarrier
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Setup all the resources needed for drawing loading plaques
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(vgl::LogicalDevice& device) noexcept {
@@ -250,15 +281,21 @@ void drawPlaque(texture_t& plaqueTex, const int16_t plaqueX, const int16_t plaqu
     gpDescSet_Background->bindTextureAndSampler(0, *gpBackgroundTex, VPipelines::gSampler_normClampNearest);
     gpDescSet_Plaque->bindTextureAndSampler(0, gPlaqueTex, VPipelines::gSampler_normClampNearest);
 
-    // Schedule the background for the plaque to be transitioned to 'shader read only' image layout.
-    // The render path will transition this texture as soon as it begins it's frame.
-    VRenderer::gRenderPath_FadeLoad.scheduleOldFramebufferLayoutTransitions(*gpBackgroundTex);
-
-    // Make sure we are on the correct render path for drawing the plaque
-    VRenderer::setRenderPathImmediate(VRenderer::gRenderPath_FadeLoad);
-
     // Only issue drawing commands if we can actually render
     if (VRenderer::isRendering()) {
+        // Forcibly end the current render path and record image layout transitions to get the background texture into the right format.
+        // These layout transitions need to be done outside of a render pass.
+        //
+        // This method is slightly messy in that it introduces unneccesary draw commmands by having mulitple render path invocations
+        // per frame (also unneccesary 'VDrawing' module invcocations), but given the flow of how and when loading plaques are drawn it's
+        // not a bad solution and it works nicely with the original Doom code. Performance is not critical for drawing loading plaques...
+        VRenderer::getActiveRenderPath().endFrame(VRenderer::gSwapchain, VRenderer::gCmdBufferRec);
+        transitionBackgroundTexImageLayout();
+
+        // Ensure we are still set to be on the main render path and begin the next frame
+        VRenderer::setNextRenderPath(VRenderer::gRenderPath_Main);
+        VRenderer::gRenderPath_Main.beginFrame(VRenderer::gSwapchain, VRenderer::gCmdBufferRec);
+
         // What size is the view being rendered to?
         vgl::Swapchain& swapchain = VRenderer::gSwapchain;
         const uint32_t viewportW = swapchain.getSwapExtentWidth();
@@ -285,10 +322,8 @@ void drawPlaque(texture_t& plaqueTex, const int16_t plaqueX, const int16_t plaqu
     // Cleanup when we are done by destroying the plaque tex later
     gPlaqueTex.destroy(false);
 
-    // Return back to the main render path after drawing the plaque and wait for all drawing to end.
-    // Have to do this in case external code decides to resize the background framebuffer used for plaque drawing.
-    // We must be sure plaque drawing is done with the framebuffer first, before we proceed...
-    VRenderer::setNextRenderPath(VRenderer::gRenderPath_Main);
+    // End the frame and wait for all drawing to end.
+    // We have to do this to avoid external code overwriting the background framebuffer before we are done using it.
     VRenderer::endFrame();
     device.waitUntilDeviceIdle();
 
