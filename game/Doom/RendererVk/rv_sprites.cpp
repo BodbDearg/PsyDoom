@@ -504,7 +504,7 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Creates all of the sprite fragments for sprites contained in the specfied subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, const int32_t drawSubsecIdx) noexcept {
+static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unused]] const int32_t drawSubsecIdx) noexcept {
     // Sanity check!
     ASSERT(drawSubsecIdx < gRvDrawSubsecs.size());
 
