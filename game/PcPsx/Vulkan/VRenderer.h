@@ -54,6 +54,7 @@ void setNextRenderPath(IVRendererPath& renderPath) noexcept;
 bool isUsingPsxRenderPath() noexcept;
 void switchToPsxRenderPath() noexcept;
 void switchToMainVulkanRenderPath() noexcept;
+void skipNextFramePresent() noexcept;
 
 END_NAMESPACE(VRenderer)
 

@@ -123,6 +123,12 @@ static vgl::Texture gPsxVramTexture;
 static IVRendererPath* gpCurRenderPath;
 static IVRendererPath* gpNextRenderPath;
 
+// If true then skip presenting the next frame
+static bool gbSkipNextFramePresent;
+
+// If true then we must wait on the swapchain image semaphore this frame (we had to acquire it)
+static bool gbDidAcquireSwapImageThisFrame;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Decides on the color format used for the window/presentation surface as well as the colorspace
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -373,6 +379,8 @@ void destroy() noexcept {
     VCrossfader::destroy();
     VDrawing::shutdown();
 
+    gbDidAcquireSwapImageThisFrame = false;
+    gbSkipNextFramePresent = false;
     gpNextRenderPath = nullptr;
     gpCurRenderPath = nullptr;
     gPsxVramTexture.destroy(true);
@@ -423,9 +431,18 @@ bool beginFrame() noexcept {
     if (!ensureValidSwapchainAndFramebuffers())
         return false;
 
-    // Acquire a swapchain image and bail if that failed
+    // Acquire a swapchain image and bail if that failed.
+    // Note: we might already have an image if we skipped presenting a frame last time around.
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
-    const uint32_t swapchainIdx = gSwapchain.acquireImage(gSwapImageReadySemaphores[ringbufferIdx]);
+    uint32_t swapchainIdx;
+    
+    if (gSwapchain.getAcquiredImageIdx() == vgl::Swapchain::INVALID_IMAGE_IDX) {
+        swapchainIdx = gSwapchain.acquireImage(gSwapImageReadySemaphores[ringbufferIdx]);
+        gbDidAcquireSwapImageThisFrame = (swapchainIdx != vgl::Swapchain::INVALID_IMAGE_IDX);
+    } else {
+        swapchainIdx = gSwapchain.getAcquiredImageIdx();
+        gbDidAcquireSwapImageThisFrame = false;
+    }
 
     if (swapchainIdx == vgl::Swapchain::INVALID_IMAGE_IDX)
         return false;
@@ -495,23 +512,42 @@ void endFrame() noexcept {
     const uint32_t ringbufferIdx = ringbufferMgr.getBufferIndex();
     
     {
-        vgl::CmdBufferWaitCond cmdsWaitCond = {};
-        cmdsWaitCond.pSemaphore = &gSwapImageReadySemaphores[ringbufferIdx];
-        cmdsWaitCond.blockedStageFlags = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+        // Conditions that the command buffer waits on.
+        // Just wait on the swap chain image to be acquired, unless we didn't actually have to acquire one this frame.
+        // Sometimes we might have just had a swap image due to a previous frame that wasn't presented...
+        std::vector<vgl::CmdBufferWaitCond> cmdBufferWaitConds;
 
+        if (gbDidAcquireSwapImageThisFrame) {
+            vgl::CmdBufferWaitCond& cmdsWaitCond = cmdBufferWaitConds.emplace_back();
+            cmdsWaitCond.pSemaphore = &gSwapImageReadySemaphores[ringbufferIdx];
+            cmdsWaitCond.blockedStageFlags = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+        }
+
+        // Note: signal the render done semaphore and the ringbuffer slot fence when finished.
+        // Skip signalling the render semaphore however if we are not presenting, as the swapchain will not be able to consume it.
+        // It needs to be in an unsignalled state the next time we go to use it...
         vgl::Fence& ringbufferSlotFence = ringbufferMgr.getCurrentBufferFence();
+        vgl::Semaphore* pSignalSemaphore = (gbSkipNextFramePresent) ? nullptr : &gRenderDoneSemaphores[ringbufferIdx];
+
         gDevice.submitCmdBuffer(
             gCmdBuffers[ringbufferIdx],
-            { cmdsWaitCond },
-            &gRenderDoneSemaphores[ringbufferIdx],  // Note: signal render done semaphore and the ringbuffer slot fence when finished
+            cmdBufferWaitConds,
+            pSignalSemaphore,
             &ringbufferSlotFence
         );
     }
 
-    // Present the current swapchain image once all the commands have finished
-    gSwapchain.presentAcquiredImage(gRenderDoneSemaphores[ringbufferIdx]);
+    // Present the current swapchain image once all the commands have finished, unless skip was requested
+    if (!gbSkipNextFramePresent) {
+        gSwapchain.presentAcquiredImage(gRenderDoneSemaphores[ringbufferIdx]);
+    } else {
+        // Skipping showing this frame? Don't bother presenting, and wait for all commands to finish
+        gDevice.waitUntilDeviceIdle();
+        gbSkipNextFramePresent = false;
+    }
 
-    // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame
+    // Move onto the next ringbuffer index and clear the command buffer used: will get it again once we begin a frame.
+    gbDidAcquireSwapImageThisFrame = false;
     ringbufferMgr.acquireNextBuffer();
 }
 
@@ -607,6 +643,14 @@ void switchToPsxRenderPath() noexcept {
 
 void switchToMainVulkanRenderPath() noexcept {
     setNextRenderPath(gRenderPath_Main);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Requests that the current frame being rendered (or the next frame that WILL be rendered) NOT be presented.
+// This is useful in some situations such as rendering crossfades.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void skipNextFramePresent() noexcept {
+    gbSkipNextFramePresent = true;
 }
 
 END_NAMESPACE(VRenderer)

@@ -170,7 +170,7 @@ bool Swapchain::presentAcquiredImage(const Semaphore& renderFinishedSemaphore) n
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = C_ARRAY_SIZE(waitSemaphores);
     presentInfo.pWaitSemaphores = waitSemaphores;
-    presentInfo.swapchainCount = C_ARRAY_SIZE(swapChainImageIndexes);
+    presentInfo.swapchainCount = C_ARRAY_SIZE(swapChains);
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = swapChainImageIndexes;
     presentInfo.pResults = nullptr;                         // Don't need an array of results, just 1 swap chain being presented!

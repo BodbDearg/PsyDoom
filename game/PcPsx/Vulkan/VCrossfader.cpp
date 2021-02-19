@@ -192,8 +192,10 @@ void doPreCrossfadeSetup() noexcept {
 
     VRenderer::gRenderPath_Crossfade.scheduleOldFramebufferLayoutTransitions(*gpCrossfadeTex1, *gpCrossfadeTex2);
 
-    // Schedule a transition to the crossfade render path next frame
+    // Schedule a transition to the crossfade render path next frame and request that the next frame rendered not be presented.
+    // This will be the frame we fade INTO and we don't want it shown onscreen after it is drawn.
     VRenderer::setNextRenderPath(VRenderer::gRenderPath_Crossfade);
+    VRenderer::skipNextFramePresent();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

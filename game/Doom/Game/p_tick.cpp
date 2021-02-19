@@ -282,7 +282,12 @@ void P_CheckCheats() noexcept {
         // About to open up the options menu, disable these player cheats and present what we have to the screen
         player_t& player = gPlayers[playerIdx];
         player.cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
-        I_DrawPresent();
+
+        #if !PSYDOOM_MODS
+            // PsyDoom: disable this as it causes a 1 frame black screen during transitions.
+            // Not sure why this was here?
+            I_DrawPresent();
+        #endif
 
         // Run the options menu
         const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);

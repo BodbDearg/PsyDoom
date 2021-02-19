@@ -4,7 +4,6 @@
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: fix UI sprite stitching.
 - Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
-- Vk renderer: fix occasional validation layer warning about push constants
 - Vk renderer: add option to disable widescreen
 - Vk renderer: save renderer preference and provide menu option
 - Vk renderer: add render scale option
