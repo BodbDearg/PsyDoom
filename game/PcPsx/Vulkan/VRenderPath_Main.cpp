@@ -201,7 +201,7 @@ void VRenderPath_Main::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecor
         framebuffer.getWidth(),
         framebuffer.getHeight(),
         framebufferClearValues,
-        2
+        C_ARRAY_SIZE(framebufferClearValues)
     );
 
     // Begin a frame for the drawing module
