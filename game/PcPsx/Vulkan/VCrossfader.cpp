@@ -5,7 +5,6 @@
 
 #if PSYDOOM_VULKAN_RENDERER
 
-#include "Buffer.h"
 #include "CmdBufferRecorder.h"
 #include "DescriptorPool.h"
 #include "DescriptorSet.h"
@@ -118,7 +117,7 @@ static void bindCrossfadeTextures() noexcept {
     ASSERT(gpCrossfadeTex1);
     ASSERT(gpCrossfadeTex2);
 
-    const VkSampler vkSampler = VPipelines::gSampler_crossfade.getVkSampler();
+    const VkSampler vkSampler = VPipelines::gSampler_normClampNearest.getVkSampler();
 
     VkDescriptorImageInfo imageInfos[2] = {};
     imageInfos[0].sampler = vkSampler;
@@ -157,7 +156,6 @@ static void drawCrossfadeFrame(const float fadePercentComplete) noexcept {
 // Setup all the resources needed for crossfading
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(vgl::LogicalDevice& device) noexcept {
-    // Create the vertex buffer, descriptor pool and set
     initVertexBuffer(device);
     initDescriptorPoolAndSet(device);
 }
@@ -220,6 +218,8 @@ void doCrossfade(const int32_t vblanksDuration) noexcept {
 
     while (true) {
         // Draw a fade frame if rendering and bind the crossfade textures to the descriptor set if required
+        I_IncDrawnFrameCount();
+
         if (VRenderer::isRendering()) {
             if (!bDidBindCrossfadeTextures) {
                 bindCrossfadeTextures();

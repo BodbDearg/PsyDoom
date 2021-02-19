@@ -9,17 +9,13 @@
 
 #include "CmdBufferRecorder.h"
 #include "CmdBufferWaitCond.h"
-#include "FatalErrors.h"
-#include "Framebuffer.h"
 #include "Gpu.h"
 #include "LogicalDevice.h"
-#include "MutableTexture.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/PsxVm.h"
 #include "PcPsx/Video.h"
 #include "PhysicalDevice.h"
 #include "PhysicalDeviceSelection.h"
-#include "RenderTexture.h"
 #include "Semaphore.h"
 #include "Swapchain.h"
 #include "Texture.h"
@@ -27,6 +23,7 @@
 #include "VDrawing.h"
 #include "VkFuncs.h"
 #include "VPipelines.h"
+#include "VPlaqueDrawer.h"
 #include "VRenderPath_FadeLoad.h"
 #include "VRenderPath_Main.h"
 #include "VRenderPath_Psx.h"
@@ -93,11 +90,10 @@ static vgl::WindowSurface           gWindowSurface;                 // Window su
 static const vgl::PhysicalDevice*   gpPhysicalDevice;               // Physical device chosen for rendering
 static VkFormat                     gPresentSurfaceFormat;          // What color format the surface we are presenting to should be in
 static VkColorSpaceKHR              gPresentSurfaceColorspace;      // What colorspace the surface we are presenting to should use
-static vgl::LogicalDevice           gDevice(gVkFuncs);              // The logical device used for Vulkan
 static uint32_t                     gDrawSampleCount;               // The number of samples to use when drawing (if > 1 then MSAA is active)
 
-// The swapchain we present to
-vgl::Swapchain gSwapchain;
+vgl::LogicalDevice  gDevice(gVkFuncs);      // The logical device used for Vulkan
+vgl::Swapchain      gSwapchain;             // The swapchain we present to
 
 // Command buffer recorder helper object.
 // This begins recording at the start of every frame.
@@ -293,12 +289,13 @@ void init() noexcept {
     if (!gpPhysicalDevice)
         FatalErrors::raise("Failed to find a suitable rendering device for use with Vulkan!");
 
-    // Initialize the logical Vulkan device used for commands and operations and then decide draw sample count and window surface format
-    if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface))
-        FatalErrors::raise("Failed to initialize a Vulkan logical device!");
-
+    // Decide on draw sample count and window/present surface format
     decidePresentSurfaceFormat();
     decideDrawSampleCount();
+
+    // Initialize the logical Vulkan device used for commands and operations and then 
+    if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface))
+        FatalErrors::raise("Failed to initialize a Vulkan logical device!");
 
     // Initialize all pipeline components: must be done BEFORE creating render paths, as they rely on some components
     VPipelines::initPipelineComponents(gDevice, gDrawSampleCount);
@@ -343,9 +340,10 @@ void init() noexcept {
         gPsxVramTexture.unlock();
     }
 
-    // Initialize the draw command submission module and crossfader
+    // Initialize the draw command submission module, crossfader and loading plaque drawer
     VDrawing::init(gDevice, gPsxVramTexture);
     VCrossfader::init(gDevice);
+    VPlaqueDrawer::init(gDevice);
 
     // Set the initial render path and make it active.
     // TODO: remember renderer preference here.
@@ -371,6 +369,7 @@ void destroy() noexcept {
     }
 
     // Tear everything down and make sure to destroy immediate where we have the option
+    VPlaqueDrawer::destroy();
     VCrossfader::destroy();
     VDrawing::shutdown();
 
@@ -397,6 +396,7 @@ void destroy() noexcept {
     VPipelines::shutdown();
     gSwapchain.destroy();
     gDevice.destroy();
+    gDrawSampleCount = 0;
     gpPhysicalDevice = nullptr;
     gWindowSurface.destroy();
     gVulkanInstance.destroy();
@@ -588,6 +588,34 @@ IVRendererPath& getNextRenderPath() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void setNextRenderPath(IVRendererPath& renderPath) noexcept {
     gpNextRenderPath = &renderPath;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Immediately sets the current and next render paths.
+// If we are currently rendering, this will cause the current render path to end and the new one to begin.
+// This should be used sparingly, as it causes two render paths to execute in the same frame.
+// In some situations this call can be useful however, such as drawing Doom's loading plaques - which are awkward to handle cleanly.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void setRenderPathImmediate(IVRendererPath& renderPath) noexcept {
+    // Save it as the next render path and bail if there is no switch
+    gpNextRenderPath = &renderPath;
+
+    if (&renderPath == gpCurRenderPath)
+        return;
+
+    // End the current render path, if we are rendering and begin this new one
+    if (isRendering()) {
+        gpCurRenderPath->endFrame(gSwapchain, gCmdBufferRec);
+        gpCurRenderPath = &renderPath;
+
+        // Note: need to ensure the new render path has valid framebuffers before we start.
+        // If that can't be ensured then just end rendering and command recording for the frame - pretend it had never been started in the first place.
+        if (renderPath.ensureValidFramebuffers(gFramebufferW, gFramebufferH)) {
+            renderPath.beginFrame(gSwapchain, gCmdBufferRec);
+        } else {
+            gCmdBufferRec.endCmdBuffer();
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

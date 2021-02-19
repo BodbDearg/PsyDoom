@@ -234,6 +234,8 @@ set(SOURCE_FILES
     "PcPsx/Vulkan/VMsaaResolver.h"
     "PcPsx/Vulkan/VPipelines.cpp"
     "PcPsx/Vulkan/VPipelines.h"
+    "PcPsx/Vulkan/VPlaqueDrawer.cpp"
+    "PcPsx/Vulkan/VPlaqueDrawer.h"
     "PcPsx/Vulkan/VRenderer.cpp"
     "PcPsx/Vulkan/VRenderer.h"
     "PcPsx/Vulkan/VRenderPath_FadeLoad.cpp"

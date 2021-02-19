@@ -8,6 +8,7 @@
 
 namespace vgl {
     class CmdBufferRecorder;
+    class LogicalDevice;
     class Swapchain;
     struct VkFuncs;
 }
@@ -37,6 +38,7 @@ extern uint32_t                 gPsxCoordsFbW;
 extern uint32_t                 gPsxCoordsFbH;
 extern float                    gNdcToPsxScaleX, gNdcToPsxScaleY;
 extern float                    gPsxNdcOffsetX,  gPsxNdcOffsetY;
+extern vgl::LogicalDevice       gDevice;
 extern vgl::Swapchain           gSwapchain;
 extern vgl::CmdBufferRecorder   gCmdBufferRec;
 
@@ -49,6 +51,7 @@ void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint
 IVRendererPath& getActiveRenderPath() noexcept;
 IVRendererPath& getNextRenderPath() noexcept;
 void setNextRenderPath(IVRendererPath& renderPath) noexcept;
+void setRenderPathImmediate(IVRendererPath& renderPath) noexcept;
 bool isUsingPsxRenderPath() noexcept;
 void switchToPsxRenderPath() noexcept;
 void switchToMainVulkanRenderPath() noexcept;

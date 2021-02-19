@@ -23,11 +23,12 @@ BEGIN_NAMESPACE(VPipelines)
 #include "SPIRV_colored_frag.bin.h"
 #include "SPIRV_colored_vert.bin.h"
 #include "SPIRV_crossfade_frag.bin.h"
-#include "SPIRV_crossfade_vert.bin.h"
 #include "SPIRV_msaa_resolve_frag.bin.h"
 #include "SPIRV_msaa_resolve_vert.bin.h"
 #include "SPIRV_sky_frag.bin.h"
 #include "SPIRV_sky_vert.bin.h"
+#include "SPIRV_ndc_textured_frag.bin.h"
+#include "SPIRV_ndc_textured_vert.bin.h"
 #include "SPIRV_ui_16bpp_frag.bin.h"
 #include "SPIRV_ui_4bpp_frag.bin.h"
 #include "SPIRV_ui_8bpp_frag.bin.h"
@@ -72,7 +73,8 @@ static vgl::ShaderModule    gShader_world_vert;
 static vgl::ShaderModule    gShader_world_frag;
 static vgl::ShaderModule    gShader_sky_vert;
 static vgl::ShaderModule    gShader_sky_frag;
-static vgl::ShaderModule    gShader_crossfade_vert;
+static vgl::ShaderModule    gShader_ndc_textured_vert;
+static vgl::ShaderModule    gShader_ndc_textured_frag;
 static vgl::ShaderModule    gShader_crossfade_frag;
 static vgl::ShaderModule    gShader_msaa_resolve_vert;
 static vgl::ShaderModule    gShader_msaa_resolve_frag;
@@ -84,22 +86,25 @@ vgl::ShaderModule* const gShaders_ui_8bpp[]     = { &gShader_ui_vert, &gShader_u
 vgl::ShaderModule* const gShaders_ui_16bpp[]    = { &gShader_ui_vert, &gShader_ui_16bpp_frag };
 vgl::ShaderModule* const gShaders_world[]       = { &gShader_world_vert, &gShader_world_frag };
 vgl::ShaderModule* const gShaders_sky[]         = { &gShader_sky_vert, &gShader_sky_frag };
-vgl::ShaderModule* const gShaders_crossfade[]   = { &gShader_crossfade_vert, &gShader_crossfade_frag };
+vgl::ShaderModule* const gShaders_ndcTextured[] = { &gShader_ndc_textured_vert, &gShader_ndc_textured_frag };
+vgl::ShaderModule* const gShaders_crossfade[]   = { &gShader_ndc_textured_vert, &gShader_crossfade_frag };
 vgl::ShaderModule* const gShaders_msaaResolve[] = { &gShader_msaa_resolve_vert, &gShader_msaa_resolve_frag };
 
 // Pipeline samplers
 vgl::Sampler gSampler_draw;
-vgl::Sampler gSampler_crossfade;
+vgl::Sampler gSampler_normClampNearest;
 
 // Pipeline descriptor set layouts
 vgl::DescriptorSetLayout gDescSetLayout_draw;           // Used by all the normal drawing pipelines
 vgl::DescriptorSetLayout gDescSetLayout_msaaResolve;    // Used for MSAA resolve
-vgl::DescriptorSetLayout gDescSetLayout_crossfade;      // For crossfading
+vgl::DescriptorSetLayout gDescSetLayout_crossfade;      // For drawing crossfades
+vgl::DescriptorSetLayout gDescSetLayout_loadingPlaque;  // For drawing loading plaques
 
 // Pipeline layouts
-vgl::PipelineLayout gPipelineLayout_draw;           // Used by all the normal drawing pipelines
-vgl::PipelineLayout gPipelineLayout_msaaResolve;    // Used for MSAA resolve
-vgl::PipelineLayout gPipelineLayout_crossfade;      // For crossfading
+vgl::PipelineLayout gPipelineLayout_draw;               // Used by all the normal drawing pipelines
+vgl::PipelineLayout gPipelineLayout_msaaResolve;        // Used for MSAA resolve
+vgl::PipelineLayout gPipelineLayout_crossfade;          // For drawing crossfades
+vgl::PipelineLayout gPipelineLayout_loadingPlaque;      // For drawing loading plaques
 
 // Pipeline input assembly states
 vgl::PipelineInputAssemblyState gInputAS_lineList;      // A list of lines
@@ -160,7 +165,8 @@ static void initShaders(vgl::LogicalDevice& device) noexcept {
     initShader(device, gShader_world_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_world_frag, sizeof(gSPIRV_world_frag), "world_frag");
     initShader(device, gShader_sky_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_sky_vert, sizeof(gSPIRV_sky_vert), "sky_vert");
     initShader(device, gShader_sky_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_sky_frag, sizeof(gSPIRV_sky_frag), "sky_frag");
-    initShader(device, gShader_crossfade_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_crossfade_vert, sizeof(gSPIRV_crossfade_vert), "crossfade_vert");
+    initShader(device, gShader_ndc_textured_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_ndc_textured_vert, sizeof(gSPIRV_ndc_textured_vert), "ndc_textured_vert");
+    initShader(device, gShader_ndc_textured_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_ndc_textured_frag, sizeof(gSPIRV_ndc_textured_frag), "ndc_textured_frag");
     initShader(device, gShader_crossfade_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_crossfade_frag, sizeof(gSPIRV_crossfade_frag), "crossfade_frag");
     initShader(device, gShader_msaa_resolve_vert, VK_SHADER_STAGE_VERTEX_BIT, gSPIRV_msaa_resolve_vert, sizeof(gSPIRV_msaa_resolve_vert), "msaa_resolve_vert");
     initShader(device, gShader_msaa_resolve_frag, VK_SHADER_STAGE_FRAGMENT_BIT, gSPIRV_msaa_resolve_frag, sizeof(gSPIRV_msaa_resolve_frag), "msaa_resolve_frag");
@@ -184,7 +190,7 @@ static void initSamplers(vgl::LogicalDevice& device) noexcept {
             FatalErrors::raise("Failed to init a Vulkan sampler!");
     }
 
-    // Sampler used for crossfade
+    // A sampler with nearest neighbor filtering, clamp to edge and using normalized coordinates
     {
         vgl::SamplerSettings settings = vgl::SamplerSettings().setToDefault();
         settings.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
@@ -193,7 +199,7 @@ static void initSamplers(vgl::LogicalDevice& device) noexcept {
         settings.minLod = 0;
         settings.maxLod = 0;
 
-        if (!gSampler_crossfade.init(device, settings))
+        if (!gSampler_normClampNearest.init(device, settings))
             FatalErrors::raise("Failed to init a Vulkan sampler!");
     }
 }
@@ -205,17 +211,17 @@ static void initSamplers(vgl::LogicalDevice& device) noexcept {
 static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
     // Regular drawing
     {
-        const VkSampler vkSampler = gSampler_draw.getVkSampler();
+         const VkSampler vkSamplers[] = { gSampler_draw.getVkSampler() };
 
         VkDescriptorSetLayoutBinding bindings[1] = {};
         bindings[0].binding = 0;
         bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        bindings[0].descriptorCount = 1;
+        bindings[0].descriptorCount = C_ARRAY_SIZE(vkSamplers);
         bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        bindings[0].pImmutableSamplers = &vkSampler;
+        bindings[0].pImmutableSamplers = vkSamplers;
 
         if (!gDescSetLayout_draw.init(device, bindings, C_ARRAY_SIZE(bindings)))
-            FatalErrors::raise("Failed to init a Vulkan descriptor set layout!");
+            FatalErrors::raise("Failed to init the 'draw' Vulkan descriptor set layout!");
     }
 
     // MSAA resolve
@@ -227,25 +233,40 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
         bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
         if (!gDescSetLayout_msaaResolve.init(device, bindings, C_ARRAY_SIZE(bindings)))
-            FatalErrors::raise("Failed to init a Vulkan descriptor set layout!");
+            FatalErrors::raise("Failed to init the 'MSAA resolve' Vulkan descriptor set layout!");
     }
 
     // Crossfading
     {
-        const VkSampler vkSamplers[2] = {
-            gSampler_crossfade.getVkSampler(),
-            gSampler_crossfade.getVkSampler()
+        const VkSampler vkSamplers[] = {
+            gSampler_normClampNearest.getVkSampler(),
+            gSampler_normClampNearest.getVkSampler()
         };
 
         VkDescriptorSetLayoutBinding bindings[1] = {};
         bindings[0].binding = 0;
         bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        bindings[0].descriptorCount = 2;
+        bindings[0].descriptorCount = C_ARRAY_SIZE(vkSamplers);
         bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings[0].pImmutableSamplers = vkSamplers;
 
         if (!gDescSetLayout_crossfade.init(device, bindings, C_ARRAY_SIZE(bindings)))
-            FatalErrors::raise("Failed to init a Vulkan descriptor set layout!");
+            FatalErrors::raise("Failed to init the 'crossfade' Vulkan descriptor set layout!");
+    }
+
+    // Loading plaque drawing
+    {
+        const VkSampler vkSamplers[] = { gSampler_normClampNearest.getVkSampler() };
+
+        VkDescriptorSetLayoutBinding bindings[1] = {};
+        bindings[0].binding = 0;
+        bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bindings[0].descriptorCount = C_ARRAY_SIZE(vkSamplers);
+        bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings[0].pImmutableSamplers = vkSamplers;
+
+        if (!gDescSetLayout_loadingPlaque.init(device, bindings, C_ARRAY_SIZE(bindings)))
+            FatalErrors::raise("Failed to init the 'loading plaque' Vulkan descriptor set layout!");
     }
 }
 
@@ -256,36 +277,44 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
 static void initPipelineLayouts(vgl::LogicalDevice& device) noexcept {
     // Regular drawing pipeline layout: uses push constants to set the MVP matrix.
     {
-        VkDescriptorSetLayout vkDescSetLayout = gDescSetLayout_draw.getVkLayout();
+        const VkDescriptorSetLayout vkDescSetLayouts[] = { gDescSetLayout_draw.getVkLayout() };
 
         VkPushConstantRange uniformPushConstants = {};
         uniformPushConstants.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         uniformPushConstants.offset = 0;
         uniformPushConstants.size = sizeof(VShaderUniforms_Draw);
 
-        if (!gPipelineLayout_draw.init(device, &vkDescSetLayout, 1, &uniformPushConstants, 1))
+        if (!gPipelineLayout_draw.init(device, vkDescSetLayouts, C_ARRAY_SIZE(vkDescSetLayouts), &uniformPushConstants, 1))
             FatalErrors::raise("Failed to init the 'draw' Vulkan pipeline layout!");
     }
 
     // MSAA resolve pipeline layout: no push constants needed for this one!
     {
-        VkDescriptorSetLayout vkDescSetLayout = gDescSetLayout_msaaResolve.getVkLayout();
+        const VkDescriptorSetLayout vkDescSetLayouts[] = { gDescSetLayout_msaaResolve.getVkLayout() };
 
-        if (!gPipelineLayout_msaaResolve.init(device, &vkDescSetLayout, 1, nullptr, 0))
+        if (!gPipelineLayout_msaaResolve.init(device, vkDescSetLayouts, C_ARRAY_SIZE(vkDescSetLayouts), nullptr, 0))
             FatalErrors::raise("Failed to init the 'msaa resolve' Vulkan pipeline layout!");
     }
 
-    // Crossfading pipeline layout: uses push constants to set the lerp factor
+    // Draw crossfade pipeline layout: uses push constants to set the lerp factor
     {
-        VkDescriptorSetLayout vkDescSetLayout = gDescSetLayout_crossfade.getVkLayout();
+        const VkDescriptorSetLayout vkDescSetLayouts[] = { gDescSetLayout_crossfade.getVkLayout() };
 
         VkPushConstantRange uniformPushConstants = {};
         uniformPushConstants.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         uniformPushConstants.offset = 0;
         uniformPushConstants.size = sizeof(VShaderUniforms_Crossfade);
 
-        if (!gPipelineLayout_crossfade.init(device, &vkDescSetLayout, 1, &uniformPushConstants, 1))
+        if (!gPipelineLayout_crossfade.init(device, vkDescSetLayouts, C_ARRAY_SIZE(vkDescSetLayouts), &uniformPushConstants, 1))
             FatalErrors::raise("Failed to init the 'crossfade' Vulkan pipeline layout!");
+    }
+
+    // Draw loading plaque layout: no push constants for this
+    {
+        const VkDescriptorSetLayout vkDescSetLayouts[] = { gDescSetLayout_loadingPlaque.getVkLayout() };
+
+        if (!gPipelineLayout_loadingPlaque.init(device, vkDescSetLayouts, C_ARRAY_SIZE(vkDescSetLayouts), nullptr, 0))
+            FatalErrors::raise("Failed to init the 'loading plaque' Vulkan pipeline layout!");
     }
 }
 
@@ -558,6 +587,15 @@ void initPipelines(
         gInputAS_triList, gRasterState_noCull,
         gBlendState_noBlend, gDepthState_disabled, gMultisampleState_noMultisample
     );
+
+    // Used to draw loading plaques, both the background and the plaque itself
+    initPipeline(
+        VPipelineType::LoadingPlaque, fadeLoadRPath.getRenderPass(), 0,
+        gShaders_ndcTextured, nullptr, gPipelineLayout_loadingPlaque,
+        gVertexBindingDesc_xyUv, gVertexAttribs_xyUv, C_ARRAY_SIZE(gVertexAttribs_xyUv),
+        gInputAS_triList, gRasterState_noCull,
+        gBlendState_noBlend, gDepthState_disabled, gMultisampleState_noMultisample
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -568,21 +606,24 @@ void shutdown() noexcept {
         pipeline.destroy(true);
     }
 
+    gPipelineLayout_loadingPlaque.destroy(true);
     gPipelineLayout_crossfade.destroy(true);
     gPipelineLayout_msaaResolve.destroy(true);
     gPipelineLayout_draw.destroy(true);
 
+    gDescSetLayout_loadingPlaque.destroy(true);
     gDescSetLayout_crossfade.destroy(true);
     gDescSetLayout_msaaResolve.destroy(true);
     gDescSetLayout_draw.destroy(true);
 
-    gSampler_crossfade.destroy();
+    gSampler_normClampNearest.destroy();
     gSampler_draw.destroy();
 
     gShader_msaa_resolve_frag.destroy(true);
     gShader_msaa_resolve_vert.destroy(true);
     gShader_crossfade_frag.destroy(true);
-    gShader_crossfade_vert.destroy(true);
+    gShader_ndc_textured_frag.destroy(true);
+    gShader_ndc_textured_vert.destroy(true);
     gShader_sky_frag.destroy(true);
     gShader_sky_vert.destroy(true);
     gShader_world_frag.destroy(true);

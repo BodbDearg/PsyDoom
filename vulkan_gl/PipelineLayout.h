@@ -21,7 +21,7 @@ public:
 
     bool init(
         LogicalDevice& device,
-        VkDescriptorSetLayout* const pDescriptorSetLayouts,
+        const VkDescriptorSetLayout* const pDescriptorSetLayouts,
         const uint32_t numDescriptorSetLayouts,
         VkPushConstantRange* const pPushConstantRanges,
         const uint32_t numPushConstantRanges

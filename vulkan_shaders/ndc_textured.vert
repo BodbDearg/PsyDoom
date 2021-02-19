@@ -1,8 +1,9 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// Crossfade shader: vertex.
-// The crossfade shader simply crossfades between two input images.
+// Textured normalized device coordinate shader: vertex.
+// This shader simply does texture mapping (with no shading) to input geometry in 2D NDC space.
+// It can be used for very simple image blitting.
 //----------------------------------------------------------------------------------------------------------------------
 layout(location = 0) in vec2 in_pos;
 layout(location = 1) in vec2 in_uv;

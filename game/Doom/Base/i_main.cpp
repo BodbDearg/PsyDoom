@@ -21,6 +21,7 @@
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
 #include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VPlaqueDrawer.h"
 #include "PcPsx/Vulkan/VRenderer.h"
 #include "PsyQ/LIBAPI.h"
 #include "PsyQ/LIBETC.h"
@@ -522,9 +523,13 @@ void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos,
             return;
     #endif
 
-    // TODO: get draw loading plaque working for the new Vulkan renderer
-    if (Video::isUsingVulkanRenderPath())
-        return;
+    #if PSYDOOM_MODS && PSYDOOM_VULKAN_RENDERER
+        // PsyDoom: If we are using the Vulkan render path then delegate to that instead
+        if (Video::isUsingVulkanRenderPath()) {
+            VPlaqueDrawer::drawPlaque(tex, xpos, ypos, clutId);
+            return;
+        }
+    #endif
 
     // Make sure the GPU is idle and copy the front buffer to the back buffer, will draw over that
     LIBGPU_DrawSync(0);

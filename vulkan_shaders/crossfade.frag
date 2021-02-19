@@ -1,8 +1,8 @@
 #version 460
 
 //----------------------------------------------------------------------------------------------------------------------
-// Crossfade shader: fragment.
-// The crossfade shader simply crossfades between two input images.
+// Crossfade fragment shader: this fragment shader simply crossfades between two input images.
+// It uses the 'ndc_textured' vertex shader to pass along the input uv.
 //----------------------------------------------------------------------------------------------------------------------
 
 // Controls how how much of each texture is mixed in

@@ -20,13 +20,15 @@ class VRenderPath_Main;
 BEGIN_NAMESPACE(VPipelines)
 
 extern vgl::Sampler                 gSampler_draw;
-extern vgl::Sampler                 gSampler_crossfade;
+extern vgl::Sampler                 gSampler_normClampNearest;
 extern vgl::DescriptorSetLayout     gDescSetLayout_draw;
 extern vgl::DescriptorSetLayout     gDescSetLayout_msaaResolve;
 extern vgl::DescriptorSetLayout     gDescSetLayout_crossfade;
+extern vgl::DescriptorSetLayout     gDescSetLayout_loadingPlaque;
 extern vgl::PipelineLayout          gPipelineLayout_draw;
 extern vgl::PipelineLayout          gPipelineLayout_msaaResolve;
 extern vgl::PipelineLayout          gPipelineLayout_crossfade;
+extern vgl::PipelineLayout          gPipelineLayout_loadingPlaque;
 extern vgl::Pipeline                gPipelines[(size_t) VPipelineType::NUM_TYPES];
 
 void initPipelineComponents(vgl::LogicalDevice& device, const uint32_t numSamples) noexcept;

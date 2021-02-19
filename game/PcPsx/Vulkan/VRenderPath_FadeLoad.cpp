@@ -122,8 +122,11 @@ void VRenderPath_FadeLoad::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferR
     // Transition the image layout for old framebuffer images, if required; this will happen on the first render path frame...
     if (mpOldFbImagesToLayout[0]) {
         transitionOldFramebufferTexLayout(*mpOldFbImagesToLayout[0], cmdRec);
-        transitionOldFramebufferTexLayout(*mpOldFbImagesToLayout[1], cmdRec);
         mpOldFbImagesToLayout[0] = nullptr;
+    }
+
+    if (mpOldFbImagesToLayout[1]) {
+        transitionOldFramebufferTexLayout(*mpOldFbImagesToLayout[1], cmdRec);
         mpOldFbImagesToLayout[1] = nullptr;
     }
 

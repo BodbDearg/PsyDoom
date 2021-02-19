@@ -27,6 +27,7 @@ enum class VPipelineType : uint8_t {
     World_Sky,              // 3D world/view: Used to draw the sky, masked but no blending
     Msaa_Resolve,           // Simple shader that resolves MSAA samples
     Crossfade,              // Used for doing crossfades
+    LoadingPlaque,          // Used for drawing loading plaques
     NUM_TYPES               // Convenience declaration...
 };
 
