@@ -105,10 +105,10 @@ struct VVertex_MsaaResolve {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Vulkan renderer vertex type: used for crossfading.
-// Contains a 2D position in normalized device coords, as well as UV coordinates to use for sampling.
+// Vulkan renderer vertex type: contains a simple 2D position and a UV coordinate.
+// Used for crossfade drawing and also for drawing loading plaques.
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct VVertex_Crossfade {
+struct VVertex_XyUv {
     float x, y;
     float u, v;
 };

@@ -38,7 +38,7 @@ BEGIN_NAMESPACE(VPipelines)
 // Vertex binding descriptions
 const VkVertexInputBindingDescription gVertexBindingDesc_draw           = { 0, sizeof(VVertex_Draw), VK_VERTEX_INPUT_RATE_VERTEX };
 const VkVertexInputBindingDescription gVertexBindingDesc_msaaResolve    = { 0, sizeof(VVertex_MsaaResolve), VK_VERTEX_INPUT_RATE_VERTEX };
-const VkVertexInputBindingDescription gVertexBindingDesc_crossfade      = { 0, sizeof(VVertex_Crossfade), VK_VERTEX_INPUT_RATE_VERTEX };
+const VkVertexInputBindingDescription gVertexBindingDesc_xyUv           = { 0, sizeof(VVertex_XyUv), VK_VERTEX_INPUT_RATE_VERTEX };
 
 // Vertex attribute descriptions
 const VkVertexInputAttributeDescription gVertexAttribs_draw[] = {
@@ -56,9 +56,9 @@ const VkVertexInputAttributeDescription gVertexAttribs_msaaResolve[] = {
     { 0, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_MsaaResolve, x) },
 };
 
-const VkVertexInputAttributeDescription gVertexAttribs_crossfade[] = {
-    { 0, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_Crossfade, x) },
-    { 1, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_Crossfade, u) },
+const VkVertexInputAttributeDescription gVertexAttribs_xyUv[] = {
+    { 0, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_XyUv, x) },
+    { 1, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_XyUv, u) },
 };
 
 // Shaders: see the associated source files for more comments/details
@@ -554,7 +554,7 @@ void initPipelines(
     initPipeline(
         VPipelineType::Crossfade, fadeLoadRPath.getRenderPass(), 0,
         gShaders_crossfade, nullptr, gPipelineLayout_crossfade,
-        gVertexBindingDesc_crossfade, gVertexAttribs_crossfade, C_ARRAY_SIZE(gVertexAttribs_crossfade),
+        gVertexBindingDesc_xyUv, gVertexAttribs_xyUv, C_ARRAY_SIZE(gVertexAttribs_xyUv),
         gInputAS_triList, gRasterState_noCull,
         gBlendState_noBlend, gDepthState_disabled, gMultisampleState_noMultisample
     );

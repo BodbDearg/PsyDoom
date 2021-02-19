@@ -25,7 +25,7 @@
 
 BEGIN_NAMESPACE(VCrossfader)
 
-// A vertex buffer containing a single quad (two triangles) of vertex type 'VVertex_CrossFade' covering the entire screen.
+// A vertex buffer containing a single quad (two triangles) of vertex type 'VVertex_XyUv' covering the entire screen.
 // This is used to draw a screen quad during the crossfade.
 static vgl::Buffer gVertexBuffer;
 
@@ -43,7 +43,7 @@ static vgl::RenderTexture* gpCrossfadeTex2;
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initVertexBuffer(vgl::LogicalDevice& device) noexcept {
     // Create the buffer
-    const bool bCreatedBufferOk = gVertexBuffer.initWithElementCount<VVertex_Crossfade>(
+    const bool bCreatedBufferOk = gVertexBuffer.initWithElementCount<VVertex_XyUv>(
         device,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         vgl::BufferUsageMode::STATIC,
@@ -54,7 +54,7 @@ static void initVertexBuffer(vgl::LogicalDevice& device) noexcept {
         FatalErrors::raise("Failed to initialize a vertex buffer used for crossfading!");
 
     // Lock the buffer and populate it
-    VVertex_Crossfade* const pv = gVertexBuffer.lockElements<VVertex_Crossfade>(0, 6);
+    VVertex_XyUv* const pv = gVertexBuffer.lockElements<VVertex_XyUv>(0, 6);
 
     if (!pv)
         FatalErrors::raise("Failed to lock a vertex buffer used for crossfading!");
@@ -66,7 +66,7 @@ static void initVertexBuffer(vgl::LogicalDevice& device) noexcept {
     pv[4].x = -1.0f;    pv[4].y = +1.0f;    pv[4].u = 0.0f;     pv[4].v = 1.0f;
     pv[5].x = -1.0f;    pv[5].y = -1.0f;    pv[5].u = 0.0f;     pv[5].v = 0.0f;
 
-    gVertexBuffer.unlockElements<VVertex_Crossfade>(6);
+    gVertexBuffer.unlockElements<VVertex_XyUv>(6);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -205,7 +205,6 @@ void doCrossfade(const int32_t vblanksDuration) noexcept {
     // Get the device to crossfade with
     ASSERT(gVertexBuffer.isValid());
     vgl::LogicalDevice& device = *gVertexBuffer.getDevice();
-    device.waitUntilDeviceIdle();
 
     // Prior to this being called the renderer should already be put into the crossfade render path, and crossfade textures determined
     ASSERT(&VRenderer::getActiveRenderPath() == &VRenderer::gRenderPath_FadeLoad);
