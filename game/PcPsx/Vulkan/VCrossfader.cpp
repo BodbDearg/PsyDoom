@@ -20,7 +20,7 @@
 #include "Swapchain.h"
 #include "VPipelines.h"
 #include "VRenderer.h"
-#include "VRenderPath_Crossfade.h"
+#include "VRenderPath_FadeLoad.h"
 #include "VRenderPath_Main.h"
 
 BEGIN_NAMESPACE(VCrossfader)
@@ -186,16 +186,16 @@ void doPreCrossfadeSetup() noexcept {
     ASSERT(gVertexBuffer.isValid());
     vgl::LogicalDevice& device = *gVertexBuffer.getDevice();
 
-    // Determine which textures/framebuffers to do the crossfade with and notify the crossfade render path about them.
-    // The crossfade render path will transition them to shader read only as soon as it starts its first frame.
+    // Determine which textures/framebuffers to do the crossfade with and notify the fade/load render path about them.
+    // The render path will transition them to shader read only as soon as it starts its first frame.
     determineCrossfadeTextures(device);
     ASSERT(gpCrossfadeTex1);
     ASSERT(gpCrossfadeTex2);
 
-    VRenderer::gRenderPath_Crossfade.scheduleCrossfadeTexureLayoutTransitions(*gpCrossfadeTex1, *gpCrossfadeTex2);
+    VRenderer::gRenderPath_FadeLoad.scheduleOldFramebufferLayoutTransitions(*gpCrossfadeTex1, *gpCrossfadeTex2);
 
-    // Schedule a transition to the crossfade render path next frame
-    VRenderer::setNextRenderPath(VRenderer::gRenderPath_Crossfade);
+    // Schedule a transition to the fade/load render path next frame
+    VRenderer::setNextRenderPath(VRenderer::gRenderPath_FadeLoad);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -208,7 +208,7 @@ void doCrossfade(const int32_t vblanksDuration) noexcept {
     device.waitUntilDeviceIdle();
 
     // Prior to this being called the renderer should already be put into the crossfade render path, and crossfade textures determined
-    ASSERT(&VRenderer::getActiveRenderPath() == &VRenderer::gRenderPath_Crossfade);
+    ASSERT(&VRenderer::getActiveRenderPath() == &VRenderer::gRenderPath_FadeLoad);
     ASSERT(gpCrossfadeTex1);
     ASSERT(gpCrossfadeTex2);
     

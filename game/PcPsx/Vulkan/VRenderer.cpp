@@ -27,7 +27,7 @@
 #include "VDrawing.h"
 #include "VkFuncs.h"
 #include "VPipelines.h"
-#include "VRenderPath_Crossfade.h"
+#include "VRenderPath_FadeLoad.h"
 #include "VRenderPath_Main.h"
 #include "VRenderPath_Psx.h"
 #include "VulkanInstance.h"
@@ -56,13 +56,13 @@ vgl::VkFuncs gVkFuncs;
 // Render paths used
 VRenderPath_Psx         gRenderPath_Psx;
 VRenderPath_Main        gRenderPath_Main;
-VRenderPath_Crossfade   gRenderPath_Crossfade;
+VRenderPath_FadeLoad    gRenderPath_FadeLoad;
 
 // A collection of all the render paths
 IVRendererPath* const gAllRenderPaths[] = {
     &gRenderPath_Psx,
     &gRenderPath_Main,
-    &gRenderPath_Crossfade,
+    &gRenderPath_FadeLoad,
 };
 
 // Coord system info: the width and height of the window/swap-chain surface we present to
@@ -308,10 +308,10 @@ void init() noexcept {
 
     gRenderPath_Psx.init(gDevice, COLOR_16_FORMAT);
     gRenderPath_Main.init(gDevice, gDrawSampleCount, drawColorFormat, COLOR_32_FORMAT);
-    gRenderPath_Crossfade.init(gDevice, gSwapchain, gPresentSurfaceFormat, gRenderPath_Main);
+    gRenderPath_FadeLoad.init(gDevice, gSwapchain, gPresentSurfaceFormat, gRenderPath_Main);
 
     // Create all of the pipelines needed, these use the previously created pipeline components
-    VPipelines::initPipelines(gRenderPath_Main, gRenderPath_Crossfade, gDrawSampleCount);
+    VPipelines::initPipelines(gRenderPath_Main, gRenderPath_FadeLoad, gDrawSampleCount);
 
     // Initialize various semaphores
     for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
@@ -390,7 +390,7 @@ void destroy() noexcept {
         semaphore.destroy();
     }
 
-    gRenderPath_Crossfade.destroy();
+    gRenderPath_FadeLoad.destroy();
     gRenderPath_Main.destroy();
     gRenderPath_Psx.destroy();
 

@@ -17,13 +17,16 @@ namespace vgl {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// A render path which crossfades the two framebuffers from the 'main' render path, directly into the swapchain image.
-// Used for implementing crossfades.
+// A render path used for crossfading screens and drawing loading plaques, i.e the following 2 scenarios:
+//  (1) Crossfading two previously rendered framebuffers.
+//  (2) Drawing a 'loading' or 'connecting' plaque over a previously rendered framebuffer.
+//
+// Outputs directly to the swapchain image.
 //------------------------------------------------------------------------------------------------------------------------------------------
-class VRenderPath_Crossfade : public IVRendererPath {
+class VRenderPath_FadeLoad : public IVRendererPath {
 public:
-    VRenderPath_Crossfade() noexcept;
-    ~VRenderPath_Crossfade() noexcept;
+    VRenderPath_FadeLoad() noexcept;
+    ~VRenderPath_FadeLoad() noexcept;
 
     void init(
         vgl::LogicalDevice& device,
@@ -40,12 +43,13 @@ public:
     inline bool isValid() const noexcept { return mbIsValid; }
     inline const vgl::RenderPass& getRenderPass() const { return mRenderPass; }
 
-    void scheduleCrossfadeTexureLayoutTransitions(vgl::RenderTexture& tex1, vgl::RenderTexture& tex2) noexcept;
+    void scheduleOldFramebufferLayoutTransitions(vgl::RenderTexture& fb1ColorAttach, vgl::RenderTexture& fb2ColorAttach) noexcept;
+    void scheduleOldFramebufferLayoutTransitions(vgl::RenderTexture& fbColorAttach) noexcept;
 
 private:
     bool initRenderPass() noexcept;
     bool doFramebuffersNeedRecreate() noexcept;
-    void transitionCrossfadeTextureLayout(vgl::RenderTexture& tex, vgl::CmdBufferRecorder& cmdRec) noexcept;
+    void transitionOldFramebufferTexLayout(vgl::RenderTexture& tex, vgl::CmdBufferRecorder& cmdRec) noexcept;
 
     bool                            mbIsValid;                      // True if the render path has been initialized
     vgl::LogicalDevice*             mpDevice;                       // The vulkan device used
@@ -54,7 +58,7 @@ private:
     VRenderPath_Main*               mpMainRenderPath;               // The main render path: used to source the images to crossfade between
     vgl::RenderPass                 mRenderPass;                    // The Vulkan renderpass for this render path
     std::vector<vgl::Framebuffer>   mFramebuffers;                  // Framebuffers for each swapchain image
-    vgl::RenderTexture*             mpCrossfadeTexToLayout[2];      // Framebuffer textures to crossfade which need to be changed to 'shader read only' layout at the start of the next frame, or null if no transition is needed
+    vgl::RenderTexture*             mpOldFbImagesToLayout[2];       // Old framebuffer images/textures which need to be changed to 'shader read only' layout at the start of the next frame, or null if no transition is needed
 };
 
 #endif

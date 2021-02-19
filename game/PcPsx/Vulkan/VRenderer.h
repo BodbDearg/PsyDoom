@@ -13,9 +13,9 @@ namespace vgl {
 }
 
 class IVRendererPath;
+class VRenderPath_FadeLoad;
 class VRenderPath_Main;
 class VRenderPath_Psx;
-class VRenderPath_Crossfade;
 
 BEGIN_NAMESPACE(VRenderer)
 
@@ -26,7 +26,7 @@ static constexpr float MAX_DEPTH = 32768.0f;
 extern vgl::VkFuncs             gVkFuncs;
 extern VRenderPath_Psx          gRenderPath_Psx;
 extern VRenderPath_Main         gRenderPath_Main;
-extern VRenderPath_Crossfade    gRenderPath_Crossfade;
+extern VRenderPath_FadeLoad     gRenderPath_FadeLoad;
 extern uint32_t                 gPresentSurfaceW;
 extern uint32_t                 gPresentSurfaceH;
 extern uint32_t                 gFramebufferW;

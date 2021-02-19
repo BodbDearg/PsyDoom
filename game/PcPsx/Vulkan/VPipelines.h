@@ -14,8 +14,8 @@ namespace vgl {
     class Sampler;
 }
 
+class VRenderPath_FadeLoad;
 class VRenderPath_Main;
-class VRenderPath_Crossfade;
 
 BEGIN_NAMESPACE(VPipelines)
 
@@ -33,7 +33,7 @@ void initPipelineComponents(vgl::LogicalDevice& device, const uint32_t numSample
 
 void initPipelines(
     VRenderPath_Main& mainRPath,
-    VRenderPath_Crossfade& crossfadeRPath,
+    VRenderPath_FadeLoad& fadeLoadRPath,
     const uint32_t numSamples
 ) noexcept;
 
