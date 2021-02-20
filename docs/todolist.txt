@@ -1,8 +1,10 @@
 0.7 - GPU & Rendering?
+- Vk renderer: get working on MacOS
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: fix UI sprite stitching.
 - Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
 - Vk renderer: add option to disable widescreen
+- Vk renderer: add option to disable Vulkan completely (to save RAM)
 - Vk renderer: save renderer preference and provide menu option
 - Vk renderer: add render scale option
 - Vk renderer: investigate sprite splitting issues on some sprites in Underhalls & The Focus
@@ -18,9 +20,6 @@
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?
 - Add fast-load (skip waiting for sound to stop playing) for speedrunning?
-- Investigate occasional glitches switching between classic and new vk renderer
-    - First noticed in House Of Pain, in lava area near the entrace.
-    - More noticeable when moving.
 - Investigate game end pause issue (unable to unpause)
     - May need to prioritize continue vs pause if conflicting key bindings
 - Investigate default key bindings - Q & E for example.

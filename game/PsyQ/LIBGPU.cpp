@@ -12,6 +12,7 @@
 #include "PcPsx/PsxVm.h"
 #include "PcPsx/Video.h"
 #include "PcPsx/Vulkan/VRenderer.h"
+#include "PcPsx/Vulkan/VRenderPath_Psx.h"
 
 #include <cstdarg>
 #include <cstdio>
@@ -39,10 +40,13 @@ static int32_t gDbgMsgBufPos;
 // PsyDoom helper function that clears the current drawing area to the specified color
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void clearDrawingArea(const uint8_t r, const uint8_t g, const uint8_t b) noexcept {
-    // Skip clearing the PSX drawing area if we are using the new Vulkan renderer for this frame
+    // Skip clearing the PSX drawing area if we are using the new Vulkan renderer for this frame and are not switching to the PSX renderer
     #if PSYDOOM_VULKAN_RENDERER
-        if (Video::isUsingVulkanRenderPath())
-            return;
+        if (Video::isUsingVulkanRenderPath()) {
+            if (&VRenderer::getNextRenderPath() != &VRenderer::gRenderPath_Psx) {
+                return;
+            }
+        }
     #endif
 
     Gpu::Color24F clearColor = {};
