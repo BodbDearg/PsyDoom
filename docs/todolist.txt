@@ -1,10 +1,8 @@
 0.7 - GPU & Rendering?
-- Vk renderer: don't draw fully occluded sprites
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: fix UI sprite stitching.
 - Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
 - Vk renderer: add option to disable widescreen
-- Vk renderer: make sure sky does no masking
 - Vk renderer: save renderer preference and provide menu option
 - Vk renderer: add render scale option
 - Vk renderer: investigate sprite splitting issues on some sprites in Underhalls & The Focus
@@ -12,8 +10,8 @@
     - Shotguns dropped near wall in The Focus, behind the crushing ceilings
     - May not be splitting correctly in some situations
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
-- Classic renderer: implement sky wall drawing to fix 
-- Classic renderer: add a new textured row/column GPU primitive to accelerate world drawing    
+- Classic renderer: implement sky wall drawing to fix some adjacent (higher) ceilings and walls not being occluded
+- Classic renderer: add a new textured row/column GPU primitive to accelerate world drawing
 - Investigate hang warping from Club Doom to Hangar
 - Fix renderer switch sometimes not happening in menus
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.

@@ -22,7 +22,7 @@ layout(location = 5) flat in vec4 in_stmul;
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    out_color = tex16bppWithDiscard(vramTex, ivec2(floor(in_uv)), in_texWinPos, in_texWinSize, in_stmul);
+    out_color = tex16bpp(vramTex, ivec2(floor(in_uv)), in_texWinPos, in_texWinSize, in_stmul, true);
     out_color.rgb *= in_color;
 
     if (USE_PSX_16_BIT_SHADING) {

@@ -57,7 +57,7 @@ float getLightDiminishingMultiplier(float z, vec3 lightDimModeStrength) {
 //----------------------------------------------------------------------------------------------------------------------
 void main() {
     // Sample the raw texel first
-    out_color = tex8bppWithDiscard(vramTex, ivec2(floor(in_uv_z.xy)), in_texWinPos, in_texWinSize, in_clutPos, in_stmul);
+    out_color = tex8bpp(vramTex, ivec2(floor(in_uv_z.xy)), in_texWinPos, in_texWinSize, in_clutPos, in_stmul, true);
 
     // Compute color multiply after accounting for input color and light diminishing effects.
     // Add a little bias also to prevent switching back and forth between cases that are close, due to float inprecision...

@@ -49,8 +49,9 @@ void main() {
     if (uv.y >= in_texWinSize.y)
         discard;
 
-    // Just do a standard 8bpp texel lookup to draw the sky
-    out_color = tex8bppWithDiscard(vramTex, ivec2(floor(uv)), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1));
+    // Just do a standard 8bpp texel lookup to draw the sky.
+    // Don't allow texels to be discarded for the sky however!
+    out_color = tex8bpp(vramTex, ivec2(floor(uv)), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1), false);
 
     if (USE_PSX_16_BIT_SHADING) {
         out_color = psxR5G5B5BitCrush(out_color);
