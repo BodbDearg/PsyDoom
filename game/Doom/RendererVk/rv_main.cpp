@@ -181,7 +181,7 @@ void RV_RenderPlayerView() noexcept {
         uint8_t secB;
         RV_GetSectorColor(sector, secR, secG, secB);
 
-        // Draw all subsector sky walls and blended walls
+        // Draw all subsector sky walls, blended and masked walls
         RV_DrawSubsecSkyWalls(drawSubsecIdx);
         RV_DrawSubsecBlendedWalls(subsec, secR, secG, secB);
 

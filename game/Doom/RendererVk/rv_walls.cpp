@@ -94,7 +94,7 @@ static void RV_DrawWall(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw the fully opaque or masked upper, lower and mid walls for a seg.
+// Draw the fully opaque upper, lower and mid walls for a seg.
 // Also marks the wall as viewed for the automap, if it's visible.
 //
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
@@ -222,17 +222,8 @@ static void RV_DrawSegSolid(
         }
     }
 
-    // Draw the mid wall if the line is one sided or it's a masked wall
-    const bool bDrawMidWall = ((!bTwoSidedWall) || (line.flags & ML_MIDMASKED));
-
-    if (bDrawMidWall) {
-        // Final Doom: force the mid wall to be 128 units in height if this flag is specified.
-        // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
-        // Note for PsyDoom this is restricted to two sided linedefs only, for more on that see 'R_DrawWalls' in the original renderer.
-        if (bTwoSidedWall && (line.flags & ML_MIDHEIGHT_128)) {
-            midTy = midBy + 128.0f;
-        }
-
+    // Draw the mid wall if the line is one sided
+    if (!bTwoSidedWall) {
         // Compute the top and bottom v coordinate
         const float wallH = midTy - midBy;
         float vt;
@@ -259,7 +250,7 @@ static void RV_DrawSegSolid(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw the translucent mid wall of a seg, if it has that.
+// Draw the translucent or masked mid wall of a seg, if it has that.
 //
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
@@ -278,9 +269,9 @@ static void RV_DrawSegBlended(
     if ((seg.flags & SGF_VISIBLE_COLS) == 0)
         return;
 
-    // Must have a back sector and be translucent
+    // Must have a back sector and be translucent or masked
     line_t& line = *seg.linedef;
-    const bool bCanDraw = ((seg.backsector) && (line.flags & ML_MIDTRANSLUCENT));
+    const bool bCanDraw = ((seg.backsector) && (line.flags & (ML_MIDTRANSLUCENT | ML_MIDMASKED)));
 
     if (!bCanDraw)
         return;
@@ -350,9 +341,12 @@ static void RV_DrawSegBlended(
         vb = vOffset + wallH;
     }
 
+    // Should this wall be drawn with 50% alpha or not?
+    const bool bBlend = (line.flags & ML_MIDTRANSLUCENT);
+
     // Draw the wall and make sure we are on the correct alpha blended pipeline before we draw
     VDrawing::setDrawPipeline(VPipelineType::World_Alpha);
-    RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, true);
+    RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bBlend);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -425,7 +419,7 @@ void RV_InitNextDrawSkyWalls() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draw all fully opaque and masked walls for the given subsector
+// Draw all fully opaque upper, lower and mid walls for the given subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawSubsecOpaqueWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
     // Draw all opaque segs in the subsector
@@ -438,7 +432,7 @@ void RV_DrawSubsecOpaqueWalls(subsector_t& subsec, const uint8_t secR, const uin
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draws all blended walls for the specified subsector
+// Draws all blended and masked mid walls for the specified subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawSubsecBlendedWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
     // Draw all blended and masked segs in the subsector
