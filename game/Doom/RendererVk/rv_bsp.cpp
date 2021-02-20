@@ -28,51 +28,30 @@ static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) n
     if (!seg.backsector)
         return true;
 
-    // If there is a zero sized gap between the sector in front of the line and behind it then count as occluding.
-    // This will happen most typically for closed doors:
+    // Get the mid-wall gap between the front and back sectors
     sector_t& backSector = *seg.backsector;
 
-    return (
-        (frontSector.floorheight >= backSector.ceilingheight) ||
-        (frontSector.ceilingheight <= backSector.floorheight)
-    );
-}
+    const fixed_t fty = frontSector.ceilingheight;
+    const fixed_t fby = frontSector.floorheight;
+    const fixed_t bty = backSector.ceilingheight;
+    const fixed_t bby = backSector.floorheight;
+    const fixed_t midTy = std::min(fty, bty);
+    const fixed_t midBy = std::max(fby, bby);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Check if the specified subsector is visible according to x-axis occlusion and view frustrum culling
-//------------------------------------------------------------------------------------------------------------------------------------------
-static bool RV_IsSubsecVisible(const int32_t subsecIdx) noexcept {
-    // This is the 'x' coordinate min/max range of the subsector, in normalized device coordinates.
-    float subsecXMin = +1.0f;
-    float subsecXMax = -1.0f;
+    // If there is a gap then the seg cannot be occluding
+    if (midTy > midBy)
+        return false;
 
-    // Run through all leaf edges for the subsector and see which ones are on-screen at least somewhat.
-    // Add these onscreen edges to the x coordinate range for the subsector.
-    subsector_t& subsec = gpSubsectors[subsecIdx];
-    const rvleafedge_t* const pLeafEdges = gpRvLeafEdges.get() + subsec.firstLeafEdge;
-    const uint32_t numLeafEdges = subsec.numLeafEdges;
-    
-    for (uint32_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx) {
-        // Get the edge points
-        const rvleafedge_t& edge1 = pLeafEdges[edgeIdx];
-        const rvleafedge_t& edge2 = pLeafEdges[(edgeIdx + 1) % numLeafEdges];
-        const float p1f[2] = { edge1.v1x, edge1.v1y };
-        const float p2f[2] = { edge2.v1x, edge2.v1y };
+    // The seg is occluding if there is no upper wall, since lower walls are always opaque
+    if (midBy >= fty)
+        return true;
 
-        // Get the normalized device x bounds of the segment and skip if offscreen
-        float edgeLx = {};
-        float edgeRx = {};
+    // If the upper wall is a normal wall then it occludes
+    if (backSector.ceilingpic >= 0)
+        return true;
 
-        if (!RV_GetLineNdcBounds(p1f[0], p1f[1], p2f[0], p2f[1], edgeLx, edgeRx))
-            continue;
-
-        // Edge is onscreen, add to the subsector NDC bounds
-        subsecXMin = std::min(subsecXMin, edgeLx);
-        subsecXMax = std::max(subsecXMax, edgeRx);
-    }
-
-    // Now that we have the bounds for the subsector, determine if it is visible
-    return RV_IsRangeVisible(subsecXMin, subsecXMax);
+    // Otherwise if the upper wall is sky or void, only make it occlude if there is no lower wall
+    return (midBy <= fby);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,10 +91,6 @@ static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
 // Adds it to the list of subsectors to be drawn, and marks the areas that its fully solid walls occlude.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
-    // Skip drawing the subsector if it is not visible
-    if (!RV_IsSubsecVisible(subsecIdx))
-        return;
-
     // Run through all of the segs for the subsector and mark out areas of the screen that they fully occlude.
     // Also determine whether each seg is visible and backfacing while we are at it.
     subsector_t& subsec = gpSubsectors[subsecIdx];

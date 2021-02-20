@@ -400,14 +400,13 @@ static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec)
         const bool bHasNoOpening = (midTy <= midBy);
 
         if (bBackSecHasCeil || bHasNoOpening) {
-            // Hack special effect: treat the sky wall plane as a void (not to be rendered) and allow floating ceiling effects in certain situations.
-            // If there is a higher surrounding sky or void ceiling then treat the sky wall for this sector as a void and don't render.
+            // Hack special effect: treat the sky wall as a void (not to be rendered) to allow floating ceiling effects in certain situations.
+            // If there is a higher surrounding sky or void ceiling then take that as an indication that this is not the true sky level and treat as a void.
             // In the "GEC Master Edition" this can be used to create things like floating cubes.
-            const bool bTreatAsVoidCeiling = RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
-            const float skyBy = (backSec.ceilingpic == -1) ? std::max(fty, bty) : fty;
-
-            if (!bTreatAsVoidCeiling) {
-                RV_AddInfiniteSkyWall(x1, z1, x2, z2, skyBy);
+            const bool bTreatAsVoidWall = RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
+            
+            if (!bTreatAsVoidWall) {
+                RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);
             }
         }
     }
