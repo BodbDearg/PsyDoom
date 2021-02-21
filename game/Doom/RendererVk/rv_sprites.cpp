@@ -42,6 +42,16 @@ struct SpriteFrag {
     uint16_t        texWinW, texWinH;                   // Sprite texture window size
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Describes a very short 2D line, crossing over a candidate sprite spliting BSP node.
+// Used for testing whether a split can occur by colliding the line against level geometry.
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct SplitTestLine {
+    float x1, z1;
+    float x2, z2;
+    float y;            // At what height is the test line: used to decide whether 2-sided lines should be treated as blocking
+};
+
 // All of the sprite fragments to be drawn in this frame
 static std::vector<SpriteFrag> gRvSpriteFrags;
 
@@ -282,68 +292,83 @@ static void RV_SpriteFrag_VisitSubsector(const subsector_t& subsec, const Sprite
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Used to check if a sprite fragment can be split against the specified seg.
-// Checks to see if the seg is blocking and if the sprite fragment intersects it.
-// Returns 'true' if the sprite fragment is allowed to be split against the seg.
+// Used to check if a sprite split test line collides against the specified seg.
+// Checks to see if the seg is considered blocking for the purposes of sprite splitting, and whether the line crosses it.
+// Returns 'true' if a sprite split is allowed to occur after testing against this seg.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool RV_SpriteFrag_CanSplit_VisitSeg(const rvseg_t& seg, SpriteFrag& frag) noexcept {
-    // Is the seg two sided? If so then don't consider it blocking provided the back sector floor height is <= the sprite height.
-    if (seg.backsector) {
-        if (RV_FixedToFloat(seg.backsector->floorheight) <= gSpriteFragThingPos[1])
+static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine& splitLine) noexcept {
+    // Is the seg two sided? If so then don't consider it a blocking line for sprite splitting in certain situations...
+    sector_t* const pBackSector = seg.backsector;
+
+    if (pBackSector) {
+        // Treat the 2 sided seg as blocking if the split line would hit either the upper or lower walls.
+        // In all other cases allow a split to take place across this seg, even if the split test line crosses it.
+        const sector_t& frontSector = *seg.frontsector;
+        const float midBy = RV_FixedToFloat(std::max(frontSector.floorheight, pBackSector->floorheight));
+        const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingheight, pBackSector->ceilingheight));
+
+        if ((splitLine.y > midBy) && (splitLine.y < midTy))
             return true;
     }
 
-    // Get the endpoints for the line for this segment.
-    // Note: could intersect against just the segment, but doing the whole line adds more tolerance for error.
-    const line_t& line = *seg.linedef;
-    const vertex_t& lineV1 = *line.vertex1;
-    const vertex_t& lineV2 = *line.vertex2;
-    const float lineX1 = RV_FixedToFloat(lineV1.x);
-    const float lineY1 = RV_FixedToFloat(lineV1.y);
-    const float lineX2 = RV_FixedToFloat(lineV2.x);
-    const float lineY2 = RV_FixedToFloat(lineV2.y);
+    // Get the endpoints for the line segment
+    const float segX1 = seg.v1x;
+    const float segY1 = seg.v1y;
+    const float segX2 = seg.v2x;
+    const float segY2 = seg.v2y;
 
     // Compute the intersection of two lines using the following equation method:
     //  http://paulbourke.net/geometry/pointlineplane/
     // See: "Intersection point of two line segments in 2 dimensions"
-    const float lineDx = lineX2 - lineX1;
-    const float lineDy = lineY2 - lineY1;
-    const float fragDx = frag.x2 - frag.x1;
-    const float fragDy = frag.z2 - frag.z1;
+    const float segDx = segX2 - segX1;
+    const float segDy = segY2 - segY1;
+    const float splitLineDx = splitLine.x2 - splitLine.x1;
+    const float splitLineDy = splitLine.z2 - splitLine.z1;
     
-    const float a = frag.z1 - lineY1;
-    const float b = frag.x1 - lineX1;
+    const float a = splitLine.z1 - segY1;
+    const float b = splitLine.x1 - segX1;
 
-    const float numerator1 = (lineDx * a) - (lineDy * b);
-    const float numerator2 = (fragDx * a) - (fragDy * b);
-    const float denominator = lineDy * fragDx - lineDx * fragDy;
+    const float numerator1 = (segDx * a) - (segDy * b);
+    const float numerator2 = (splitLineDx * a) - (splitLineDy * b);
+    const float denominator = segDy * splitLineDx - segDx * splitLineDy;
 
     // If the denominator is '0' then there is no intersection (parallel lines) and a split can happen
     if (denominator == 0)
         return true;
 
     // Otherwise the finite line segments intersect if 'tx' and 'ty' are between 0 and 1.
+    // I.E, if the following condition is true:
+    //
+    //      ((tx >= 0.0f) && (tx <= 1.0f) && (ty >= 0.0f) && (ty <= 1.0f))
+    //
+    // 'tx' and 'ty' are computed as follows:
+    //
+    //      const float tx = numerator1 / denominator;
+    //      const float ty = numerator2 / denominator;
+    //
     // Note that these time values can be used as linear interpolation values to get the actual x and y intersect point.
     // We don't need that here though so don't bother...
-    const float tx = numerator1 / denominator;
-    const float ty = numerator2 / denominator;
-    const bool bLinesIntersect = ((tx >= 0.0f) && (tx <= 1.0f) && (ty >= 0.0f) && (ty <= 1.0f));
+    //
+    // Optimizing to remove the divide, we get the code below:
+    const bool bLinesIntersect = (
+        (numerator1 >= 0.0f) && (numerator1 <= denominator) &&
+        (numerator2 >= 0.0f) && (numerator2 <= denominator)
+    );
 
     return (!bLinesIntersect);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Used to check if a sprite fragment can be split against the specified subsector.
-// Performs raycasts between the sprite endpoints to see if they cross blocking segs.
-// Returns 'true' if a split is allowed.
+// Tests if a sprite splitting line collides against the specified subsector.
+// Performs raycasts between the split line endpoints to see if they cross blocking segs.
+// Returns 'true' if a sprite split is allowed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool RV_SpriteFrag_CanSplit_VisitSubsector(const subsector_t& subsec, SpriteFrag& frag) noexcept {
-    // Check if the fragment can be split against all segs in the subsector
+static bool RV_SpriteSplitTest_VisitSubsector(const subsector_t& subsec, const SplitTestLine& splitLine) noexcept {
     const int32_t numSegs = subsec.numsegs;
     const rvseg_t* const pSegs = gpRvSegs.get() + subsec.firstseg;
 
     for (int32_t i = 0; i < numSegs; ++i) {
-        if (!RV_SpriteFrag_CanSplit_VisitSeg(pSegs[i], frag))
+        if (!RV_SpriteSplitTest_VisitSeg(pSegs[i], splitLine))
             return false;
     }
 
@@ -351,34 +376,35 @@ static bool RV_SpriteFrag_CanSplit_VisitSubsector(const subsector_t& subsec, Spr
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Used to check if a sprite fragment can be split against the specified BSP tree node.
-// Tests to make sure the sprite fragment doesn't cross any lines that we don't want it to split against, like one sided walls.
+// Used to test if a sprite splitting line collides against the specified BSP tree node and it's children.
+// Tests to make sure the line doesn't cross any lines we don't want to split against, like one sided walls.
+// Returns 'true' if a sprite split is allowed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool RV_SpriteFrag_CanSplit_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) noexcept {
+static bool RV_SpriteSplitTest_VisitBspNode(const int32_t nodeIdx, const SplitTestLine& splitLine) noexcept {
     // Is this node number a subsector?
     if (nodeIdx & NF_SUBSECTOR) {
         // Note: this strange check is in the PC engine too...
         // Under what circumstances can the node number be '-1'?
         if (nodeIdx == -1) {
-            return RV_SpriteFrag_CanSplit_VisitSubsector(gpSubsectors[0], frag);
+            return RV_SpriteSplitTest_VisitSubsector(gpSubsectors[0], splitLine);
         } else {
-            return RV_SpriteFrag_CanSplit_VisitSubsector(gpSubsectors[nodeIdx & (~NF_SUBSECTOR)], frag);
+            return RV_SpriteSplitTest_VisitSubsector(gpSubsectors[nodeIdx & (~NF_SUBSECTOR)], splitLine);
         }
     } else {
         // This is not a subsector, continue traversing the BSP tree and testing against it
         node_t& node = gpBspNodes[nodeIdx];
 
-        // Compute which side of the split the sprite endpoints are on using the cross product.
+        // Compute which side of the split the line endpoints are on using the cross product.
         // This is pretty much the same code found in 'R_PointOnSide':
         const float nodePx = RV_FixedToFloat(node.line.x);
         const float nodePy = RV_FixedToFloat(node.line.y);
         const float nodeDx = RV_FixedToFloat(node.line.dx);
         const float nodeDy = RV_FixedToFloat(node.line.dy);
 
-        const float relX1 = frag.x1 - nodePx;
-        const float relX2 = frag.x2 - nodePx;
-        const float relZ1 = frag.z1 - nodePy;
-        const float relZ2 = frag.z2 - nodePy;
+        const float relX1 = splitLine.x1 - nodePx;
+        const float relX2 = splitLine.x2 - nodePx;
+        const float relZ1 = splitLine.z1 - nodePy;
+        const float relZ2 = splitLine.z2 - nodePy;
 
         const float lprod1 = nodeDx * relZ1;
         const float rprod1 = nodeDy * relX1;
@@ -388,12 +414,12 @@ static bool RV_SpriteFrag_CanSplit_VisitBspNode(const int32_t nodeIdx, SpriteFra
         const int32_t side1 = (lprod1 < rprod1) ? 0 : 1;
         const int32_t side2 = (lprod2 < rprod2) ? 0 : 1;
 
-        // Check both sides of the tree the sprite's billboard line is on
-        if (!RV_SpriteFrag_CanSplit_VisitBspNode(node.children[side1], frag))
+        // Test against the sides of the tree that the line endpoints are on
+        if (!RV_SpriteSplitTest_VisitBspNode(node.children[side1], splitLine))
             return false;
 
         if (side1 != side2) {
-            if (!RV_SpriteFrag_CanSplit_VisitBspNode(node.children[side2], frag))
+            if (!RV_SpriteSplitTest_VisitBspNode(node.children[side2], splitLine))
                 return false;
         }
     }
@@ -403,7 +429,7 @@ static bool RV_SpriteFrag_CanSplit_VisitBspNode(const int32_t nodeIdx, SpriteFra
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does recursive traversal of the BSP tree against the specified sprite fragment.
-// Splits up the fragment along BSP split boundaries as needed and assigns the fragments to a destination subsector.
+// Splits up the fragment along BSP split boundaries as needed and assigns the fragments to appropriate destination subsectors.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) noexcept {
     // Is this node number a subsector? If so then add the sprite fragment to it's draw lists
@@ -448,10 +474,42 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
                 RV_SpriteFrag_VisitBspNode(node.children[1], frag);
             }
         } else {
-            // Need to split (less common case): first check if a split against this BSP node is allowed
-            if (!RV_SpriteFrag_CanSplit_VisitBspNode(nodeIdx, frag)) {
-                // Can't split, decide which part of the tree to place the sprite in based on the sprite's center point.
-                // If splits are not possible then ultimately we will put the thing's sprite in its natural subsector for rendering.
+            // Need to split (less common case): need to compute where the split would happen.
+            // First get the un-normalized normal vector for the node.
+            const float nodeNx = -nodeDy;
+            const float nodeNy = +nodeDx;
+
+            // Compute the scaled perpendicular distance of each billboard/sprite-fragment point to the node plane
+            const float dist1 = std::abs(relX1 * nodeNx + relZ1 * nodeNy);
+            const float dist2 = std::abs(relX2 * nodeNx + relZ2 * nodeNy);
+
+            // Compute the 'time' of the intersection/split
+            const float splitT = std::clamp(dist1 / (dist1 + dist2), 0.0f, 1.0f);
+            
+            // Compute points a little bit on either side of the split.
+            // We will make a line between these points and intersect against geometry to see if the split line can be crossed.
+            // In some cases we want to prohibit splits if the split would occur against a 1 sided line, for example.
+            //
+            // I wish there was a better way to do this, but unfortunately the BSP tree doesn't contain any info about what lines originally
+            // generated the splits, so we have no idea or way of telling whether a node line is solid/blocking or not.
+            // This collision test is a workaround of sorts.
+            const float splitT1 = std::clamp(splitT * 0.999f, 0.0f, 1.0f);
+            const float splitT2 = std::clamp(splitT * 1.001f, 0.0f, 1.0f);
+            const float splitT1_inv = (1.0f - splitT1);
+            const float splitT2_inv = (1.0f - splitT2);
+
+            const SplitTestLine splitLine = {
+                frag.x1 * splitT1_inv + frag.x2 * splitT1,
+                frag.z1 * splitT1_inv + frag.z2 * splitT1,
+                frag.x1 * splitT2_inv + frag.x2 * splitT2,
+                frag.z1 * splitT2_inv + frag.z2 * splitT2,
+                (frag.yt + frag.yb) * 0.5f  // Note: make the test line be at 1/2 of the height of the sprite; splits can happen across small step ups, not large ones
+            };
+
+            // Test the split line against geometry to see if this split would be allowed
+            if (!RV_SpriteSplitTest_VisitBspNode(nodeIdx, splitLine)) {
+                // Can't split, decide which part of the tree to place the sprite fragment in based on the sprite's center point.
+                // If splits are not possible then ultimately we will tend to put the thing's sprite parts closest to it's home subsector for rendering.
                 const float lprod_center = nodeDx * (gSpriteFragThingPos[2] - nodePy);
                 const float rprod_center = nodeDy * (gSpriteFragThingPos[0] - nodePx);
                 const bool bCenterSide = (lprod_center < rprod_center);
@@ -463,20 +521,9 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
                 }
             }
             else {
-                // Can split! Decide how far along the sprite's billboard the split will happen.
-                // First get the un-normalized normal vector for the node.
-                const float nodeNx = -nodeDy;
-                const float nodeNy = +nodeDx;
-
-                // Compute the scaled perpendicular distance of each billboard point to the node plane
-                const float dist1 = std::abs(relX1 * nodeNx + relZ1 * nodeNy);
-                const float dist2 = std::abs(relX2 * nodeNx + relZ2 * nodeNy);
-
-                // Compute the 'time' of the intersection/split
-                const float splitT = std::clamp(dist1 / (dist1 + dist2), 0.0f, 1.0f);
+                // Can split! Create two new smaller fragments, split along the split point.
                 const float splitT_inv = 1.0f - splitT;
 
-                // Produce a 2nd fragment by splitting the first, and modify the 1st fragment
                 SpriteFrag frag2 = frag;
                 frag2.x1 = frag.x1 * splitT_inv + frag.x2 * splitT;
                 frag2.z1 = frag.z1 * splitT_inv + frag.z2 * splitT;
