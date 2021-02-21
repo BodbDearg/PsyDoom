@@ -10,7 +10,6 @@
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Classic renderer: implement sky wall drawing to fix some adjacent (higher) ceilings and walls not being occluded
 - Classic renderer: add a new textured row/column GPU primitive to accelerate world drawing
-- Investigate hang warping from Club Doom to Hangar
 - Fix renderer switch sometimes not happening in menus
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
@@ -21,7 +20,6 @@
 - Investigate default key bindings - Q & E for example.
     - Maybe remove a few, might be be more confusing to have too many bindings.
 - Investigate Final Doom music pitch issue mentioned on Doomworld.
-- Investigate TCache overflow mentioned on Doomworld.
 - Use interpolation for map view.
 - -pistolstart command line switch
 

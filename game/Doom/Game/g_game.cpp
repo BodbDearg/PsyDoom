@@ -549,10 +549,12 @@ gameaction_t G_PlayDemoPtr() noexcept {
     gLockedTexPagesMask &= 1;
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 
-    // PsyDoom: cleanup the demo pointer when we're done and restore the previous game settings
+    // PsyDoom: cleanup the demo pointer when we're done and restore the previous game settings.
+    // Also purge the texture cache to cleanup any textures.
     #if PSYDOOM_MODS
         gpDemo_p = nullptr;
         Game::gSettings = prevGameSettings;
+        I_PurgeTexCache();
     #endif
 
     return exitAction;
