@@ -179,33 +179,34 @@ void submit(const SPRT& sprite) noexcept {
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::isUsingVulkanRenderPath()) {
-            uint16_t texWinW = gpu.texWinXMask + 1;             // This calculation should work because the mask should always be for POW2 texture wrapping
-            uint16_t texWinH = gpu.texWinYMask + 1;
             uint16_t texWinX = gpu.texPageX + gpu.texWinX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
             uint16_t texWinY = gpu.texPageY + gpu.texWinY;
 
             if (VRenderer::isRendering()) {
-                // Determine the draw alpha, set the correct pipeline then add the sprite to be drawn
+                // Determine the draw alpha, correct the 'texWinX' coord to be in terms of the sprite's pixel format and set the correct draw pipeline
                 uint8_t drawAlpha = {};
                 doSetupForVkRendererTexturedDraw(bBlendSprite, texWinX, drawAlpha);
 
+                // Draw the sprite and restrict the texture window to cover the exact area of VRAM occupied by the sprite.
+                // Ignoring the gpu texture window/page settings in this way and restricting to the exact pixels used by the
+                // sprite helps to avoid stitching artifacts.
                 VDrawing::addUISprite(
                     drawRect.x,
                     drawRect.y,
                     drawRect.w,
                     drawRect.h,
-                    drawRect.u,
-                    drawRect.v,
+                    0,                          // UV coords are local to the texture window, which covers the entire sprite area
+                    0,
                     drawRect.color.comp.r,
                     drawRect.color.comp.g,
                     drawRect.color.comp.b,
                     drawAlpha,
                     gpu.clutX,
                     gpu.clutY,
-                    texWinX,
-                    texWinY,
-                    texWinW,
-                    texWinH
+                    texWinX + sprite.tu0,
+                    texWinY + sprite.tv0,
+                    sprite.w,                   // Size texture window to cover sprite area only, as mentioned above
+                    sprite.h
                 );
             }
 
