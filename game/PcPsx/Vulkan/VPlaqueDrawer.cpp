@@ -299,7 +299,6 @@ void drawPlaque(texture_t& plaqueTex, const int16_t plaqueX, const int16_t plaqu
         VRenderer::gRenderPath_Main.beginFrame(VRenderer::gSwapchain, VRenderer::gCmdBufferRec);
 
         // What size is the view being rendered to?
-        vgl::Swapchain& swapchain = VRenderer::gSwapchain;
         const uint32_t viewportW = VRenderer::gFramebufferW;
         const uint32_t viewportH = VRenderer::gFramebufferH;
 
