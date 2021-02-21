@@ -101,6 +101,10 @@ gameaction_t RunMenu() noexcept {
         #endif
 
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
+        #if PSYDOOM_MODS
+            Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+        #endif
+
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
         I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
