@@ -224,17 +224,18 @@ static void updateCoordSysInfo() noexcept {
     // This is useful for things like sky rendering, which work in NDC space.
     //
     // Notes:
-    //  (1) If there is space leftover at the sides (widescreen) then the original PSX framebuffer is centered in NDC space.
+    //  (1) If there is space leftover at the sides (when widescreen is enabled) then the original PSX framebuffer is centered in NDC space.
     //  (2) I don't allow vertical stretching of the original UI assets, hence the 'Y' axis conversions here are fixed.
     //      The game viewport will be letterboxed (rather than extend) if the view is too long on the vertical axis.
     //      Because of all this, it is assumed the PSX framebuffer uses all of NDC space vertically.
-    //
+    const bool bAllowWidescreen = Config::gbVulkanWidescreenEnabled;
+
     if (bHaveValidPresentSurface) {
-        const float blitWPercent = (float) gPsxCoordsFbW / (float) gPresentSurfaceW;
+        const float blitWPercent = (bAllowWidescreen) ? (float) gPsxCoordsFbW / (float) gFramebufferW : 1.0f;
         gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DRAW_RES_X;
         gNdcToPsxScaleY = 0.5f * Video::ORIG_DRAW_RES_Y;
 
-        const float blitStartXPercent = (float) gPsxCoordsFbX / (float) gPresentSurfaceW;
+        const float blitStartXPercent = (bAllowWidescreen) ? (float) gPsxCoordsFbX / (float) gFramebufferW : 0.0f;
         gPsxNdcOffsetX = blitStartXPercent * 2.0f;
         gPsxNdcOffsetY = 0;
     } else {

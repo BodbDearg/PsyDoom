@@ -15,6 +15,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/UI/am_main.h"
 #include "Matrix4.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VRenderer.h"
@@ -53,7 +54,7 @@ static void RV_SetupAutomapTransformMatrix() noexcept {
     const Matrix4f centeringOffset = Matrix4f::translate(128.0f, 100.0f, 0.0f);
 
     // Get the UI projection & transform matrix and combine all the transforms
-    const Matrix4f uiTransformMatrix = VDrawing::computeTransformMatrixForUI();
+    const Matrix4f uiTransformMatrix = VDrawing::computeTransformMatrixForUI(Config::gbVulkanWidescreenEnabled);
 
     const Matrix4f combinedTransformMatrix = (
         viewTranslate *

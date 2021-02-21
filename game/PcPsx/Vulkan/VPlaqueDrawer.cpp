@@ -164,8 +164,10 @@ static void populateVertexBuffer(texture_t& plaqueTex, const int16_t plaqueX, co
     pVerts[4] = { -1.0f, +1.0f, 0.0f, 1.0f };
     pVerts[5] = { -1.0f, -1.0f, 0.0f, 0.0f };
 
-    // Get the UI transform matrix
-    const Matrix4f uiTransforms = VDrawing::computeTransformMatrixForUI();
+    // Get the UI transform matrix. Note that widescreen is always 'enabled' for drawing plaques since we don't restrict the viewport to
+    // be the original aspect ratio and instead allow it to span the entire framebuffer. That behavior is neccessary in order to correctly
+    // display a previous framebuffer image in all situations.
+    const Matrix4f uiTransforms = VDrawing::computeTransformMatrixForUI(true);
 
     // Get the 4 vertices of the plaque quad in original PSX coords and transform to NDC space
     const float lx = (float) plaqueX;
@@ -298,8 +300,8 @@ void drawPlaque(texture_t& plaqueTex, const int16_t plaqueX, const int16_t plaqu
 
         // What size is the view being rendered to?
         vgl::Swapchain& swapchain = VRenderer::gSwapchain;
-        const uint32_t viewportW = swapchain.getSwapExtentWidth();
-        const uint32_t viewportH = swapchain.getSwapExtentHeight();
+        const uint32_t viewportW = VRenderer::gFramebufferW;
+        const uint32_t viewportH = VRenderer::gFramebufferH;
 
         // Setup the viewport, bind the vertex buffer and pipeline used
         vgl::CmdBufferRecorder& cmdRec = VRenderer::gCmdBufferRec;

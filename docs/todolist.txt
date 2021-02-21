@@ -2,7 +2,6 @@
 - Vk renderer: get working on MacOS
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
-- Vk renderer: add option to disable widescreen
 - Vk renderer: add option to disable Vulkan completely (to save RAM)
 - Vk renderer: save renderer preference and provide menu option
 - Vk renderer: add render scale option

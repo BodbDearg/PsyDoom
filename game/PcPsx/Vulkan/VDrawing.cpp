@@ -18,6 +18,7 @@
 #include "Framebuffer.h"
 #include "Gpu.h"
 #include "LogicalDevice.h"
+#include "PcPsx/Config.h"
 #include "Pipeline.h"
 #include "VPipelines.h"
 #include "VRenderer.h"
@@ -69,13 +70,15 @@ static std::vector<DrawCmd> gFrameDrawCmds;
 // Records all drawing commands for the current frame to a Vulkan command buffer
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void recordCmdBuffer(vgl::CmdBufferRecorder& cmdRec) noexcept {
-    // First command in the drawing pass is to setup the viewport. Note that while the view is allowed to extend horizontally (widescreen)
-    // no extension is allowed vertically; instead, letterboxing will happen. I considered allowing a vertically long display but it won't work
-    // with the UI assets & design that Doom uses. I'm also not sure why someone would ever want to play that way anyway, even if it did work...
-    const int32_t viewportX = 0;
+    // First command in the drawing pass is to setup the viewport. Note that while the view is allowed to extend horizontally if widescreen
+    // is enabled, no extension is allowed vertically; instead, letterboxing will happen. I considered allowing a vertically long display
+    // but it won't work with the UI assets & design that Doom uses. I'm also not sure why someone want to play that way anyway...
+    const bool bAllowWidescreen = Config::gbVulkanWidescreenEnabled;
+    const int32_t viewportX = (bAllowWidescreen) ? 0 : VRenderer::gPsxCoordsFbX;
     const int32_t viewportY = VRenderer::gPsxCoordsFbY;
-    const int32_t viewportW = VRenderer::gFramebufferW;
+    const int32_t viewportW = (bAllowWidescreen) ? VRenderer::gFramebufferW : VRenderer::gPsxCoordsFbW;
     const int32_t viewportH = VRenderer::gPsxCoordsFbH;
+
     cmdRec.setViewport((float) viewportX, (float) viewportY, (float) viewportW, (float) viewportH, 0.0f, 1.0f);
     cmdRec.setScissors(viewportX, viewportY, viewportW, viewportH);
 
@@ -239,15 +242,15 @@ void setDrawUniforms(const VShaderUniforms_Draw& uniforms) noexcept {
 // Compute the transform matrix for the UI/2D elements in Doom.
 // Scales and positions everything such that the original UI coordinates can be used for the same result.
 //------------------------------------------------------------------------------------------------------------------------------------------
-Matrix4f computeTransformMatrixForUI() noexcept {
+Matrix4f computeTransformMatrixForUI(const bool bAllowWidescreen) noexcept {
     // The UI is centered horizontally in the viewport (if we are in widescreen mode) and occupies it's full vertical range.
     // Compute how much leftover space there would be at the left and right due to widescreen.
     const float xPadding = ((float) VRenderer::gPsxCoordsFbX / (float) VRenderer::gPsxCoordsFbW) * SCREEN_W;
 
     // These are the projection parameters.
     // Note: need to reverse by/ty to get the view the right way round (normally y is up with projection matrices).
-    const float viewLx = -xPadding;
-    const float viewRx = (float) SCREEN_W + xPadding;
+    const float viewLx = (bAllowWidescreen) ? -xPadding : 0.0f;
+    const float viewRx = (bAllowWidescreen) ? (float) SCREEN_W + xPadding : (float) SCREEN_W;
     const float viewBy = 0;
     const float viewTy = SCREEN_H;
     const float zNear = 0.0f;
@@ -265,9 +268,10 @@ Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const
     // This matches the projection that the original PSX Doom used, with allowance for widescreen:
     constexpr float STATUS_BAR_H = SCREEN_H - VIEW_3D_H;
 
-    const float widescrenScale = std::max((float) VRenderer::gFramebufferW / (float) VRenderer::gPsxCoordsFbW, 1.0f);
-    const float viewLx = -widescrenScale;
-    const float viewRx = widescrenScale;
+    const bool bAllowWidescreen = Config::gbVulkanWidescreenEnabled;
+    const float widescreenScale = std::max((float) VRenderer::gFramebufferW / (float) VRenderer::gPsxCoordsFbW, 1.0f);
+    const float viewLx = (bAllowWidescreen) ? -widescreenScale : -1.0f;
+    const float viewRx = (bAllowWidescreen) ? +widescreenScale : +1.0f;
     const float viewTy = (HALF_VIEW_3D_H / float(HALF_SCREEN_W));
     const float viewBy = ((-HALF_VIEW_3D_H - STATUS_BAR_H) / float(HALF_SCREEN_W));
     const float zNear = 1.0f;

@@ -28,6 +28,7 @@ extern float    gViewBobbingStrength;
 //------------------------------------------------------------------------------------------------------------------------------------------
 extern bool     gbFullscreen;
 extern int32_t  gLogicalDisplayW;
+extern bool     gbVulkanWidescreenEnabled;
 extern int32_t  gAAMultisamples;
 extern bool     gbFloorRenderGapFix;
 extern bool     gbUseVulkan32BitShading;

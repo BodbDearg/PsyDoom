@@ -1,5 +1,6 @@
 #include "Utils.h"
 
+#include "Config.h"
 #include "Doom/Game/p_tick.h"
 #include "FatalErrors.h"
 #include "Input.h"
@@ -222,7 +223,7 @@ void onBeginUIDrawing() noexcept {
             // Set the draw uniforms, including the transform matrix
             {
                 VShaderUniforms_Draw uniforms = {};
-                uniforms.mvpMatrix = VDrawing::computeTransformMatrixForUI();
+                uniforms.mvpMatrix = VDrawing::computeTransformMatrixForUI(Config::gbVulkanWidescreenEnabled);
                 uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
                 uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;
                 uniforms.psxNdcOffsetX = VRenderer::gPsxNdcOffsetX;
