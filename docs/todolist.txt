@@ -1,5 +1,6 @@
 0.7 - GPU & Rendering?
 - Vk renderer: get working on MacOS
+- Vk renderer: no MSAA on UI elements
 - Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
 - Vk renderer: save renderer preference and provide menu option
@@ -8,7 +9,6 @@
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Classic renderer: implement sky wall drawing to fix some adjacent (higher) ceilings and walls not being occluded
 - Classic renderer: add a new textured row/column GPU primitive to accelerate world drawing
-- Fix renderer switch sometimes not happening in menus
 - Maybe get rid of use of the 'scratchpad' and use globals or locals (where possible) for LIBGPU primitives.
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?

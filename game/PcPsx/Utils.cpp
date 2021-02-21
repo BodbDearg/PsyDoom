@@ -1,7 +1,9 @@
 #include "Utils.h"
 
 #include "Config.h"
+#include "Controls.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/UI/st_main.h"
 #include "FatalErrors.h"
 #include "Input.h"
 #include "Network.h"
@@ -233,6 +235,31 @@ void onBeginUIDrawing() noexcept {
             }
         }
     #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check to see if the button to toggle the Vulkan/classic renderers has been pressed.
+// If that is the case then this function will begin a renderer toggle, if that is possible.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void checkForRendererToggleInput() noexcept {
+    // Renderer can only be toggled if using the Vulkan backend
+    if (Video::gBackendType != Video::BackendType::Vulkan)
+        return;
+
+    // Do the toggle if the toggle button is just pressed
+    if (!Controls::isJustPressed(Controls::Binding::Toggle_Renderer))
+        return;
+
+    const bool bUseVulkan = VRenderer::isUsingPsxRenderPath();
+
+    if (bUseVulkan) {
+        VRenderer::switchToMainVulkanRenderPath();
+    } else {
+        VRenderer::switchToPsxRenderPath();
+    }
+
+    gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer" : "Classic Renderer";
+    gStatusBar.messageTicsLeft = 30;
 }
 
 END_NAMESPACE(Utils)

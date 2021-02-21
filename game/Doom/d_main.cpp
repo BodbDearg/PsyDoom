@@ -17,6 +17,7 @@
 #include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
+#include "PcPsx/Utils.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Renderer/r_data.h"
@@ -662,7 +663,7 @@ gameaction_t MiniLoop(
                 gGameTic++;
             }
         }
-        
+
         // Call the ticker function to do updates for the frame.
         // Note that I am calling this in all situations, even if the framerate is capped and if we haven't passed enough time for a game tick.
         // That allows for possible update logic which runs > 30 Hz in future, like framerate uncapped turning movement.
@@ -671,11 +672,12 @@ gameaction_t MiniLoop(
         if (exitAction != ga_nothing)
             break;
 
-        // PsyDoom: done with input events after the ticker has been called.
+        // PsyDoom: allow renderer toggle and clear input events after the ticker has been called.
         // Unless the ticker has requested that we hold onto them.
         // Also check if the app wants to quit, because the window was closed.
         #if PSYDOOM_MODS
             if (!gbKeepInputEvents) {
+                Utils::checkForRendererToggleInput();
                 Input::consumeEvents();
             } else {
                 gbKeepInputEvents = false;  // Temporary request only!
