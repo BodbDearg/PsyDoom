@@ -915,16 +915,18 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // Check for renderer toggle
     #if PSYDOOM_VULKAN_RENDERER
         if (Controls::isJustPressed(Controls::Binding::Toggle_Renderer)) {
-            const bool bUseVulkan = VRenderer::isUsingPsxRenderPath();
+            if (Video::gBackendType == Video::BackendType::Vulkan) {
+                const bool bUseVulkan = VRenderer::isUsingPsxRenderPath();
 
-            if (bUseVulkan) {
-                VRenderer::switchToMainVulkanRenderPath();
-            } else {
-                VRenderer::switchToPsxRenderPath();
+                if (bUseVulkan) {
+                    VRenderer::switchToMainVulkanRenderPath();
+                } else {
+                    VRenderer::switchToPsxRenderPath();
+                }
+
+                gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer" : "Classic Renderer";
+                gStatusBar.messageTicsLeft = 30;
             }
-
-            gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer" : "Classic Renderer";
-            gStatusBar.messageTicsLeft = 30;
         }
     #endif
 }

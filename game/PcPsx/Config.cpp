@@ -44,6 +44,7 @@ struct ConfigFieldHandler {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool        gbFullscreen;
 int32_t     gLogicalDisplayW;
+bool        gbDisableVulkanRenderer;
 bool        gbVulkanWidescreenEnabled;
 int32_t     gAAMultisamples;
 bool        gbFloorRenderGapFix;
@@ -86,6 +87,20 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "LogicalDisplayWidth = 292\n",
         [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
         []() { gLogicalDisplayW = 292; }
+    },
+    {
+        "DisableVulkanRenderer",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If set to '1' then the new Vulkan/hardware renderer will be completely disabled and the game will\n"
+        "# behave as if Vulkan is not available for use to PsyDoom, even if the opposite is true.\n"
+        "# If you only want to run PsyDoom using the classic PSX renderer then enabling this setting will\n"
+        "# save on system & video RAM and other resources. By default if Vulkan rendering is possible then\n"
+        "# the Vulkan renderer always needs to be active and use memory in order to allow for fast toggling\n"
+        "# between renderers.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "DisableVulkanRenderer = 0\n",
+        [](const IniUtils::Entry& iniEntry) { gbDisableVulkanRenderer = iniEntry.getBoolValue(false); },
+        []() { gbDisableVulkanRenderer = false; }
     },
     {
         "VulkanWidescreenEnabled",

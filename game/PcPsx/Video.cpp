@@ -69,7 +69,7 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void determineVideoBackend() noexcept {
     #if PSYDOOM_VULKAN_RENDERER
-        if (VideoBackend_Vulkan::isBackendSupported()) {
+        if ((!Config::gbDisableVulkanRenderer) && VideoBackend_Vulkan::isBackendSupported()) {
             gpVideoBackend = &gVideoBackend_Vulkan;
             gBackendType = BackendType::Vulkan;
             return;
