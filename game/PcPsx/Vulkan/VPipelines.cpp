@@ -594,7 +594,7 @@ void initPipelines(
         gShaders_ndcTextured, nullptr, gPipelineLayout_loadingPlaque,
         gVertexBindingDesc_xyUv, gVertexAttribs_xyUv, C_ARRAY_SIZE(gVertexAttribs_xyUv),
         gInputAS_triList, gRasterState_noCull,
-        gBlendState_noBlend, gDepthState_disabled, gMultisampleState_noMultisample
+        gBlendState_noBlend, gDepthState_disabled, gMultisampleState_perSettings
     );
 }
 
