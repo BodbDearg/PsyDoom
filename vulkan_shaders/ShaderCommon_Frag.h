@@ -40,10 +40,16 @@ vec4 tex16bpp(
     ivec2 texWinPos,
     ivec2 texWinSize,
     vec4 stmul,
+    const bool bWrap,
     const bool bAllowDiscard
 ) {
-    // Wrap the UV coordinate and transform by the texture window position
-    uv = uv % texWinSize;
+    // Wrap or clamp the UV coordinate, then transform by the texture window position
+    if (bWrap) {
+        uv = uv % texWinSize;
+    } else {
+        uv = clamp(uv, ivec2(0, 0), texWinSize - 1);
+    }
+
     uv += texWinPos;
 
     // Sample the texel directly - no CLUT for 16bpp mode
@@ -61,10 +67,16 @@ vec4 tex8bpp(
     ivec2 texWinSize,
     ivec2 clutPos,
     vec4 stmul,
+    const bool bWrap,
     const bool bAllowDiscard
 ) {
-    // Wrap the UV coordinate and transform by the texture window position
-    uv = uv % texWinSize;
+    // Wrap or clamp the UV coordinate, then transform by the texture window position
+    if (bWrap) {
+        uv = uv % texWinSize;
+    } else {
+        uv = clamp(uv, ivec2(0, 0), texWinSize - 1);
+    }
+
     uv += texWinPos;
 
     // Figure out which 8-bits of the 16-bit pixel we will use for the CLUT index and get the CLUT index.
@@ -89,10 +101,16 @@ vec4 tex4bpp(
     ivec2 texWinSize,
     ivec2 clutPos,
     vec4 stmul,
+    const bool bWrap,
     const bool bAllowDiscard
 ) {
-    // Wrap the UV coordinate and transform by the texture window position
-    uv = uv % texWinSize;
+    // Wrap or clamp the UV coordinate, then transform by the texture window position
+    if (bWrap) {
+        uv = uv % texWinSize;
+    } else {
+        uv = clamp(uv, ivec2(0, 0), texWinSize - 1);
+    }
+
     uv += texWinPos;
 
     // Figure out which 4-bits of the 16-bit pixel we will use for the CLUT index and get the CLUT index.

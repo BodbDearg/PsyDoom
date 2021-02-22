@@ -139,11 +139,11 @@ static void RV_InitSpriteFrag(
     uint8_t stMulG = 128;
     uint8_t stMulB = 128;
     uint8_t stMulA = 128;
-    VPipelineType drawPipeline = VPipelineType::World_Masked;
+    VPipelineType drawPipeline = VPipelineType::World_SpriteMasked;
 
     if (thing.flags & MF_BLEND_ON) {
         if (thing.flags & MF_BLEND_MODE_BIT1) {
-            drawPipeline = VPipelineType::World_Additive;
+            drawPipeline = VPipelineType::World_SpriteAdditive;
 
             if (thing.flags & MF_BLEND_MODE_BIT2) {
                 // Additive blend with 25% opacity
@@ -156,10 +156,10 @@ static void RV_InitSpriteFrag(
         } else {
             if (thing.flags & MF_BLEND_MODE_BIT2) {
                 // Subtractive blend with 100% opacity
-                drawPipeline = VPipelineType::World_Subtractive;
+                drawPipeline = VPipelineType::World_SpriteSubtractive;
             } else {
                 // Alpha blend with 50% opacity
-                drawPipeline = VPipelineType::World_Alpha;
+                drawPipeline = VPipelineType::World_SpriteAlpha;
                 stMulA = 64;
             }
         }

@@ -9,7 +9,7 @@
 DECLARE_UNIFORMS()
 
 // Whether to shade in 16-bit mode like the original PlayStation
-layout(constant_id = 0) const bool USE_PSX_16_BIT_SHADING = true;
+layout(constant_id = 1) const bool USE_PSX_16_BIT_SHADING = true;
 
 // A texture containing the entirety of PSX VRAM
 layout(set = 0, binding = 0) uniform usampler2D vramTex;
@@ -51,7 +51,7 @@ void main() {
 
     // Just do a standard 8bpp texel lookup to draw the sky.
     // Don't allow texels to be discarded for the sky however!
-    out_color = tex8bpp(vramTex, ivec2(floor(uv)), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1), false);
+    out_color = tex8bpp(vramTex, ivec2(floor(uv)), in_texWinPos, in_texWinSize, in_clutPos, vec4(1, 1, 1, 1), true, false);
 
     if (USE_PSX_16_BIT_SHADING) {
         out_color = psxR5G5B5BitCrush(out_color);

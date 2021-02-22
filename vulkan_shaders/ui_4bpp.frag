@@ -2,7 +2,7 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 // Fragment shader for rendering UI sprites (4bpp).
-// Does texture mapping (@4bpp), coloring and adjustments for blending.
+// Does texture mapping (@4bpp) with clamp to texture window, coloring and adjustments for blending.
 //----------------------------------------------------------------------------------------------------------------------
 #include "ShaderCommon_Frag.h"
 
@@ -22,7 +22,7 @@ layout(location = 5) flat in vec4 in_stmul;
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    out_color = tex4bpp(vramTex, ivec2(floor(in_uv)), in_texWinPos, in_texWinSize, in_clutPos, in_stmul, true);
+    out_color = tex4bpp(vramTex, ivec2(floor(in_uv)), in_texWinPos, in_texWinSize, in_clutPos, in_stmul, false, true);
     out_color.rgb *= in_color;
 
     if (USE_PSX_16_BIT_SHADING) {

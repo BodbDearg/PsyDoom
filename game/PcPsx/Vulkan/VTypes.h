@@ -14,21 +14,23 @@
 // Affects the primitive types expected, shaders used, blending mode and so on.
 //------------------------------------------------------------------------------------------------------------------------------------------
 enum class VPipelineType : uint8_t {
-    Lines,                  // Solid colored lines, no blending: can be in either 2D or 3D (for debug use for example)
-    Colored,                // Solid colored triangles, no blending: can be in either 2D or 3D (for debug use for example)
-    UI_4bpp,                // 2D/UI: texture mapped @ 4bpp, masked but no blending
-    UI_8bpp,                // 2D/UI: texture mapped @ 8bpp, masked but no blending
-    UI_8bpp_Add,            // 2D/UI: texture mapped @ 8bpp, masked & additive blended (used for player weapon when partial invisibility is active)
-    UI_16bpp,               // 2D/UI: texture mapped @ 16bpp, masked but no blending
-    World_Masked,           // 3D world/view: textured @ 8bpp and lit, masked but no blending
-    World_Alpha,            // 3D world/view: textured @ 8bpp and lit, masked & alpha blended
-    World_Additive,         // 3D world/view: textured @ 8bpp and lit, masked & additive blended
-    World_Subtractive,      // 3D world/view: textured @ 8bpp and lit, masked & subtractive blended
-    World_Sky,              // 3D world/view: Used to draw the sky, masked but no blending
-    Msaa_Resolve,           // Simple shader that resolves MSAA samples
-    Crossfade,              // Used for doing crossfades
-    LoadingPlaque,          // Used for drawing loading plaques
-    NUM_TYPES               // Convenience declaration...
+    Lines,                      // Solid colored lines, no blending: can be in either 2D or 3D (for debug use for example)
+    Colored,                    // Solid colored triangles, no blending: can be in either 2D or 3D (for debug use for example)
+    UI_4bpp,                    // 2D/UI: texture mapped @ 4bpp, masked but no blending
+    UI_8bpp,                    // 2D/UI: texture mapped @ 8bpp, masked but no blending
+    UI_8bpp_Add,                // 2D/UI: texture mapped @ 8bpp, masked & additive blended (used for player weapon when partial invisibility is active)
+    UI_16bpp,                   // 2D/UI: texture mapped @ 16bpp, masked but no blending
+    World_GeomMasked,           // 3D world/view: textured with wrapping @ 8bpp and lit, masked but no blending
+    World_GeomAlpha,            // 3D world/view: textured with wrapping @ 8bpp and lit, masked & alpha blended
+    World_SpriteMasked,         // 3D world/view: textured with clamping @ 8bpp and lit, masked but no blending
+    World_SpriteAlpha,          // 3D world/view: textured with clamping @ 8bpp and lit, masked & alpha blended
+    World_SpriteAdditive,       // 3D world/view: textured with clamping @ 8bpp and lit, masked & additive blended
+    World_SpriteSubtractive,    // 3D world/view: textured with clamping @ 8bpp and lit, masked & subtractive blended
+    World_Sky,                  // 3D world/view: used to draw the sky, masked but no blending
+    Msaa_Resolve,               // Simple shader that resolves MSAA samples
+    Crossfade,                  // Used for doing crossfades
+    LoadingPlaque,              // Used for drawing loading plaques
+    NUM_TYPES                   // Convenience declaration...
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

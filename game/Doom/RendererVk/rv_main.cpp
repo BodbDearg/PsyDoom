@@ -112,9 +112,9 @@ static void RV_DetermineDrawParams() noexcept {
 
     // Determine the pipeline to use for drawing fully opaque geometry
     if (gpViewPlayer->cheats & CF_XRAYVISION) {
-        gOpaqueGeomPipeline = VPipelineType::World_Alpha;
+        gOpaqueGeomPipeline = VPipelineType::World_GeomAlpha;
     } else {
-        gOpaqueGeomPipeline = VPipelineType::World_Masked;
+        gOpaqueGeomPipeline = VPipelineType::World_GeomMasked;
     }
 }
 

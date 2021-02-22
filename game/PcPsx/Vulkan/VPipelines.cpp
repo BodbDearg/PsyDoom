@@ -117,6 +117,7 @@ vgl::PipelineRasterizationState gRasterState_backFaceCull;
 // Pipeline multisample states
 vgl::PipelineMultisampleState gMultisampleState_noMultisample;
 vgl::PipelineMultisampleState gMultisampleState_perSettings;
+vgl::PipelineMultisampleState gMultisampleState_perSettingsEdgeOnly;    // Same as 'per settings' but don't multi-sample interior triangle texels
 
 // Pipeline color blend per-attachment states
 VkPipelineColorBlendAttachmentState gBlendAS_noBlend;           // No blending
@@ -356,6 +357,11 @@ static void initPipelineMultisampleStates(vgl::LogicalDevice& device, const uint
         gMultisampleState_perSettings.sampleShadingEnable = true;
         gMultisampleState_perSettings.minSampleShading = 1.0f;
     }
+
+    // This is a variant of the 'per settings' state but without sample rate shading (edge only MSAA).
+    // This mode is more appropriate for UI elements since MSAA can blur them slightly.
+    gMultisampleState_perSettingsEdgeOnly = vgl::PipelineMultisampleState().setToDefault();
+    gMultisampleState_perSettingsEdgeOnly.rasterizationSamples = (VkSampleCountFlagBits) numSamples;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -483,20 +489,29 @@ static void initDrawPipeline(
     const vgl::PipelineInputAssemblyState& inputAssemblyState,
     const vgl::PipelineRasterizationState& rasterizerState,
     const vgl::PipelineColorBlendState& colorBlendState,
-    const vgl::PipelineDepthStencilState& depthStencilState
+    const vgl::PipelineDepthStencilState& depthStencilState,
+    const bool bWrapTexture,
+    const bool bEdgeOnlyMsaa
 ) noexcept {
-    // Shader specialization info: whether to use the original PSX 16-bit shading or not
-    const VkBool32 bUse16BitShading = (!Config::gbUseVulkan32BitShading);
+    // Shader specialization constants
+    struct ShaderSpecConsts {
+        VkBool32 bWrapTexture;          // Whether to do wrapping (true) or clamping (false) when texturing
+        VkBool32 bUse16BitShading;      // Whether to use the original PSX 16-bit shading or not
+    } shaderSpecConsts;
+
+    shaderSpecConsts.bWrapTexture = bWrapTexture;
+    shaderSpecConsts.bUse16BitShading = (!Config::gbUseVulkan32BitShading);
 
     const VkSpecializationMapEntry specializationMapEntries[] = {
-        { 0, 0, sizeof(VkBool32) }
+        { 0, offsetof(ShaderSpecConsts, bWrapTexture), sizeof(shaderSpecConsts.bWrapTexture) },
+        { 1, offsetof(ShaderSpecConsts, bUse16BitShading), sizeof(shaderSpecConsts.bUse16BitShading) },
     };
 
     VkSpecializationInfo specializationInfo = {};
     specializationInfo.mapEntryCount = C_ARRAY_SIZE(specializationMapEntries);
     specializationInfo.pMapEntries = specializationMapEntries;
-    specializationInfo.dataSize = sizeof(VkBool32);
-    specializationInfo.pData = &bUse16BitShading;
+    specializationInfo.dataSize = sizeof(ShaderSpecConsts);
+    specializationInfo.pData = &shaderSpecConsts;
 
     // Create the pipeline
     initPipeline(
@@ -513,7 +528,7 @@ static void initDrawPipeline(
         rasterizerState,
         colorBlendState,
         depthStencilState,
-        gMultisampleState_perSettings
+        (bEdgeOnlyMsaa) ? gMultisampleState_perSettingsEdgeOnly : gMultisampleState_perSettings
     );
 }
 
@@ -545,17 +560,19 @@ void initPipelines(
     const uint32_t numSamples
 ) noexcept {
     // Create all of the main drawing pipelines
-    initDrawPipeline(VPipelineType::Lines, mainRPath, gShaders_colored, gInputAS_lineList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::Colored, mainRPath, gShaders_colored, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_4bpp, mainRPath, gShaders_ui_4bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_8bpp, mainRPath, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_8bpp_Add, mainRPath, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::UI_16bpp, mainRPath, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Masked, mainRPath, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Alpha, mainRPath, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Additive, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Subtractive, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled);
-    initDrawPipeline(VPipelineType::World_Sky, mainRPath, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled);
+    initDrawPipeline(VPipelineType::Lines, mainRPath, gShaders_colored, gInputAS_lineList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled, false, true);
+    initDrawPipeline(VPipelineType::Colored, mainRPath, gShaders_colored, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled, false, true);
+    initDrawPipeline(VPipelineType::UI_4bpp, mainRPath, gShaders_ui_4bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled, false, true);
+    initDrawPipeline(VPipelineType::UI_8bpp, mainRPath, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled, false, true);
+    initDrawPipeline(VPipelineType::UI_8bpp_Add, mainRPath, gShaders_ui_8bpp, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled, false, true);
+    initDrawPipeline(VPipelineType::UI_16bpp, mainRPath, gShaders_ui_16bpp, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled, false, true);
+    initDrawPipeline(VPipelineType::World_GeomMasked, mainRPath, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled, true, false);
+    initDrawPipeline(VPipelineType::World_GeomAlpha, mainRPath, gShaders_world, gInputAS_triList, gRasterState_backFaceCull, gBlendState_alpha, gDepthState_disabled, true, false);
+    initDrawPipeline(VPipelineType::World_SpriteMasked, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_noBlend, gDepthState_disabled, false, false);
+    initDrawPipeline(VPipelineType::World_SpriteAlpha, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_alpha, gDepthState_disabled, false, false);
+    initDrawPipeline(VPipelineType::World_SpriteAdditive, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled, false, false);
+    initDrawPipeline(VPipelineType::World_SpriteSubtractive, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled, false, false);
+    initDrawPipeline(VPipelineType::World_Sky, mainRPath, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled, true, true);
     
     // The pipeline to resolve MSAA: only bother creating this if we are doing MSAA.
     // Specialize the shader to the number of samples also, so that loops can be unrolled.
@@ -594,7 +611,7 @@ void initPipelines(
         gShaders_ndcTextured, nullptr, gPipelineLayout_loadingPlaque,
         gVertexBindingDesc_xyUv, gVertexAttribs_xyUv, C_ARRAY_SIZE(gVertexAttribs_xyUv),
         gInputAS_triList, gRasterState_noCull,
-        gBlendState_noBlend, gDepthState_disabled, gMultisampleState_perSettings
+        gBlendState_noBlend, gDepthState_disabled, gMultisampleState_perSettingsEdgeOnly
     );
 }
 
