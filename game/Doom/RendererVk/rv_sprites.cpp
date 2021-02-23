@@ -315,11 +315,6 @@ static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine&
 
             if ((splitLine.y >= midBy) && (splitLine.y <= midTy))
                 return true;
-
-            // If there is only a very small difference (small step) then consider the line non blocking also.
-            // This value of '24' is the standard maximum step-up for enemies in DOOM.
-            if (std::abs(fby - bby) <= 24.0f)
-                return true;
         }
     }
 
