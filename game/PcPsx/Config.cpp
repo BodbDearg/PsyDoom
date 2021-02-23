@@ -45,6 +45,7 @@ struct ConfigFieldHandler {
 bool        gbFullscreen;
 int32_t     gLogicalDisplayW;
 bool        gbDisableVulkanRenderer;
+bool        gbVulkanTripleBuffer;
 bool        gbVulkanWidescreenEnabled;
 int32_t     gAAMultisamples;
 bool        gbFloorRenderGapFix;
@@ -101,6 +102,24 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "DisableVulkanRenderer = 0\n",
         [](const IniUtils::Entry& iniEntry) { gbDisableVulkanRenderer = iniEntry.getBoolValue(false); },
         []() { gbDisableVulkanRenderer = false; }
+    },
+    {
+        "VulkanTripleBuffer",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If the Vulkan video backend is active and the Vulkan API is in use, whether to use triple\n"
+        "# buffering for output presentation. This setting affects both the classic renderer when it is\n"
+        "# output via Vulkan and the new Vulkan renderer itself.\n"
+        "#\n"
+        "# If enabled ('1') the game will render frames as fast as possible and may possibly discard\n"
+        "# previously rendered/queued frames while waiting for the display to become ready for output.\n"
+        "#\n"
+        "# Enabling ensures the most up-to-date view is shown when the time comes to display and helps to\n"
+        "# reduce perceived input latency but will also greatly increase GPU and CPU usage.\n"
+        "# Disable if you prefer to lower energy usage for slightly increased input latency.\n"
+        "#---------------------------------------------------------------------------------------------------\n"
+        "VulkanTripleBuffer = 1\n",
+        [](const IniUtils::Entry& iniEntry) { gbVulkanTripleBuffer = iniEntry.getBoolValue(true); },
+        []() { gbVulkanTripleBuffer = true; }
     },
     {
         "VulkanWidescreenEnabled",

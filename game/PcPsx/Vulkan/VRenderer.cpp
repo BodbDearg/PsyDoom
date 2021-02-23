@@ -289,7 +289,7 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
         gDevice.waitUntilDeviceIdle();
         gSwapchain.destroy();
 
-        if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace))
+        if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace, Config::gbVulkanTripleBuffer))
             return false;
     }
 

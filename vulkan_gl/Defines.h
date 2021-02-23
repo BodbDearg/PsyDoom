@@ -20,9 +20,6 @@ constexpr static const uint32_t MIN_IMAGE_ALIGNMENT = 4;
 static constexpr const uint8_t MIN_ACTIVE_GRAPHICS_SHADERS = 2;
 static constexpr const uint8_t MAX_ACTIVE_GRAPHICS_SHADERS = 5;
 
-// Maximum number of images in the swap chain; presently supporting up to triple buffering
-static constexpr const uint8_t MAX_SWAP_CHAIN_LENGTH = 3;
-
 // Hardware requirement: all hardware this engine runs on must support at least this dimension as the maximum 1d and 2d image size.
 // The engine guarantees that if it creates a rendering device, it will support at least this dimension of 1d and 2d image.
 static constexpr const uint16_t MIN_REQUIRED_2D_IMAGE_SIZE_LIMIT = 16384;

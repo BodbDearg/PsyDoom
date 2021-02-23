@@ -22,7 +22,13 @@ public:
     Swapchain() noexcept;
     ~Swapchain() noexcept;
 
-    bool init(LogicalDevice& device, const VkFormat winSurfaceFormat, const VkColorSpaceKHR winSurfaceColorspace) noexcept;
+    bool init(
+        LogicalDevice& device,
+        const VkFormat winSurfaceFormat,
+        const VkColorSpaceKHR winSurfaceColorspace,
+        const bool bTripleBuffer
+    ) noexcept;
+
     void destroy(const bool bForceIfInvalid = false) noexcept;
 
     inline bool isValid() const noexcept { return mbIsValid; }
@@ -49,9 +55,9 @@ private:
     Swapchain& operator = (const Swapchain& other) = delete;
     Swapchain& operator = (Swapchain&& other) = delete;
     
-    void choosePresentMode() noexcept;
+    void choosePresentMode(const bool bTripleBuffer) noexcept;
     bool chooseSwapExtent() noexcept;
-    void chooseSwapchainLength() noexcept;
+    void chooseSwapchainLength(const bool bTripleBuffer) noexcept;
     bool createSwapchain() noexcept;
     bool createSwapchainImageViews() noexcept;
 

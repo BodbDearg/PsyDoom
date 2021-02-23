@@ -43,7 +43,12 @@ Swapchain::~Swapchain() noexcept {
 // Attempts to initialize the swapchain using one of the desired surface formats in priority order.
 // Returns 'true' if successful.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool Swapchain::init(LogicalDevice& device, const VkFormat winSurfaceFormat, const VkColorSpaceKHR winSurfaceColorspace) noexcept {
+bool Swapchain::init(
+    LogicalDevice& device,
+    const VkFormat winSurfaceFormat,
+    const VkColorSpaceKHR winSurfaceColorspace,
+    const bool bTripleBuffer
+) noexcept {
     // Preconditions
     ASSERT_LOG((!mbIsValid), "Must call destroy() before re-initializing!");
     ASSERT(device.getVkDevice());
@@ -71,15 +76,14 @@ bool Swapchain::init(LogicalDevice& device, const VkFormat winSurfaceFormat, con
     if (mDeviceSurfaceCaps.isZeroSizedMaxImageExtent())
         return false;
 
-    // Choosing present mode, swap extent and swapchain length
-    choosePresentMode();
+    // Choose swapchain length, present mode and swap extent
+    chooseSwapchainLength(bTripleBuffer);
+    choosePresentMode(bTripleBuffer);
     
     if (!chooseSwapExtent()) {
         ASSERT_FAIL("Failed to choose a swap extent for the swapchain!");
         return false;
     }
-
-    chooseSwapchainLength();
 
     // Create the actual swap chain itself and get all images in the swap chain, abort on failure also
     if (!createSwapchain()) {
@@ -256,26 +260,19 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Chooses a presentation mode for the swap chain
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Swapchain::choosePresentMode() noexcept {
+void Swapchain::choosePresentMode(const bool bTripleBuffer) noexcept {
     // There should be a valid surface caps object and at least 1 valid present mode if we've reached here!
     const std::vector<VkPresentModeKHR>& vkPresentModes = mDeviceSurfaceCaps.getVkPresentModes();
     ASSERT(!vkPresentModes.empty());
 
-    // Prefer VK_PRESENT_MODE_MAILBOX_KHR if available since that allows us to implement tripple buffering.
-    // Whenever we submit new images to the queue in this mode and the queue is full then the current image in
-    // waiting will simply be replaced...
-    //
-    // Sigh... This actually appears to cause tearing with current NV drivers.
-    // Disable even though it is technically more desirable! Perhaps one day the bug will be fixed.
-    // Not sure how well or not this works on AMD.
-    //
-    // TODO: investigate if subpass dependencies might fix this - sync bug?
-    #if 0
+    // Prefer VK_PRESENT_MODE_MAILBOX_KHR if available when we want to do triple buffering. Whenever we submit new images to the queue
+    // in this mode and the queue is full then the current image in waiting will simply be replaced...
+    if (bTripleBuffer && (mLength >= 3)) {
         if (Utils::containerContains(vkPresentModes, VK_PRESENT_MODE_MAILBOX_KHR)) {
             mPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
             return;
         }
-    #endif
+    }
 
     // Prefer VK_PRESENT_MODE_FIFO_KHR
     if (Utils::containerContains(vkPresentModes, VK_PRESENT_MODE_FIFO_KHR)) {
@@ -340,11 +337,10 @@ bool Swapchain::chooseSwapExtent() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Choose how many images to use in the swap chain
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Swapchain::chooseSwapchainLength() noexcept {
-    // Try to choose the max swap chain length allowed by the engine unless we are limited otherwise.
-    // Note that '0' for max image count means no limit.
+void Swapchain::chooseSwapchainLength(const bool bTripleBuffer) noexcept {
+    // If we are doing triple buffering ask for 3 images, otherwise 2
     const VkSurfaceCapabilitiesKHR& vkSurfaceCaps = mDeviceSurfaceCaps.getVkSurfaceCapabilities();
-    mLength = Defines::MAX_SWAP_CHAIN_LENGTH;
+    mLength = (bTripleBuffer) ? 3 : 2;
 
     if (vkSurfaceCaps.maxImageCount != 0) {
         mLength = std::min(mLength, vkSurfaceCaps.maxImageCount);
