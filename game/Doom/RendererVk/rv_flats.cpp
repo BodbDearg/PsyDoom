@@ -5,6 +5,7 @@
 
 #include "rv_walls.h"
 
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
@@ -20,6 +21,28 @@
 
 static int32_t gNextFloorDrawSubsecIdx;     // Index of the next draw subsector to have its floor drawn
 static int32_t gNextCeilDrawSubsecIdx;      // Index of the next draw subsector to have its ceiling drawn
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: tells if the specified subsector has any visible masked or blended walls
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool RV_SubsecHasVisibleMaskedOrBlendedMidWalls(const subsector_t& subsec) noexcept {
+    const rvseg_t* const pSegs = gpRvSegs.get() + subsec.firstseg;
+    const int32_t numSegs = subsec.numsegs;
+
+    for (int32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
+        const rvseg_t& seg = pSegs[segIdx];
+
+        if (seg.flags & SGF_BACKFACING)
+            continue;
+
+        const uint32_t lineFlags = seg.linedef->flags;
+
+        if (lineFlags & (ML_MIDMASKED | ML_MIDTRANSLUCENT))
+            return true;
+    }
+
+    return false;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Figures out a 2D point (on the XZ plane) to act as the center of a triangle fan type arrangement for the subsector.
@@ -190,9 +213,15 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         if (gNextFloorDrawSubsecIdx < 0)
             break;
 
-        const sector_t& nextSector = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx]->sector;
+        const subsector_t& nextSubsec = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx];
+        const sector_t& nextSector = *nextSubsec.sector;
 
         if (nextSector.floorheight != sector.floorheight)
+            break;
+
+        // Break the batch if the next subsector has visible masked or blended mid walls.
+        // We can't batch across those without causing ordering issues for sprites behind them, which should be occluded by stuff in front:
+        if (RV_SubsecHasVisibleMaskedOrBlendedMidWalls(nextSubsec))
             break;
     }
 }
@@ -227,9 +256,15 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
         if (gNextCeilDrawSubsecIdx < 0)
             break;
 
-        const sector_t& nextSector = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx]->sector;
+        const subsector_t& nextSubsec = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx];
+        const sector_t& nextSector = *nextSubsec.sector;
 
         if (nextSector.ceilingheight != sector.ceilingheight)
+            break;
+
+        // Break the batch if the next subsector has visible masked or blended mid walls.
+        // We can't batch across those without causing ordering issues for sprites behind them, which should be occluded by stuff in front:
+        if (RV_SubsecHasVisibleMaskedOrBlendedMidWalls(nextSubsec))
             break;
 
         // Also break the batch if there is a change in sky or void ceiling status.
