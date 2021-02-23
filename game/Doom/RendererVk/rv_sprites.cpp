@@ -297,18 +297,30 @@ static void RV_SpriteFrag_VisitSubsector(const subsector_t& subsec, const Sprite
 // Returns 'true' if a sprite split is allowed to occur after testing against this seg.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine& splitLine) noexcept {
-    // Is the seg two sided? If so then don't consider it a blocking line for sprite splitting in certain situations...
+    // Is the seg two sided? If so then don't consider it a blocking line for sprite splitting in certain situations:
     sector_t* const pBackSector = seg.backsector;
 
     if (pBackSector) {
-        // Treat the 2 sided seg as blocking if the split line would hit either the upper or lower walls.
-        // In all other cases allow a split to take place across this seg, even if the split test line crosses it.
-        const sector_t& frontSector = *seg.frontsector;
-        const float midBy = RV_FixedToFloat(std::max(frontSector.floorheight, pBackSector->floorheight));
-        const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingheight, pBackSector->ceilingheight));
+        // Firstly only consider it non blocking if the line is not masked or translucent.
+        // Don't want sprites poking through mid wall textures like bars and so on:
+        if ((seg.linedef->flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT)) == 0) {
+            // Treat the 2 sided seg as blocking if the split line would hit either the upper or lower walls.
+            // In all other cases allow a split to take place across this seg, even if the split test line crosses it.
+            const sector_t& frontSector = *seg.frontsector;
 
-        if ((splitLine.y > midBy) && (splitLine.y < midTy))
-            return true;
+            const float fby = RV_FixedToFloat(frontSector.floorheight);
+            const float bby = RV_FixedToFloat(pBackSector->floorheight);
+            const float midBy = std::max(fby, bby);
+            const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingheight, pBackSector->ceilingheight));
+
+            if ((splitLine.y >= midBy) && (splitLine.y <= midTy))
+                return true;
+
+            // If there is only a very small difference (small step) then consider the line non blocking also.
+            // This value of '24' is the standard maximum step-up for enemies in DOOM.
+            if (std::abs(fby - bby) <= 24.0f)
+                return true;
+        }
     }
 
     // Get the endpoints for the line segment
