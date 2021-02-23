@@ -38,7 +38,7 @@ files_to_compile = [
 def compile_shader(input_glsl_file, output_c_file, shader_stage, c_var_name):
     # Generate the basic shader code uint32_t array encased in '{}'
     result = subprocess.call(
-        ["glslc", "-I", ".", "--target-env=vulkan1.0", "-fshader-stage=" + shader_stage, "-mfmt=c", "-O", "-o", output_c_file, input_glsl_file]
+        ["glslc", "-I", ".", "--target-env=vulkan1.1", "-fshader-stage=" + shader_stage, "-mfmt=c", "-O", "-o", output_c_file, input_glsl_file]
     )
 
     if result != 0:
