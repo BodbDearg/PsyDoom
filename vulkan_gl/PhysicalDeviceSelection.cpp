@@ -162,12 +162,14 @@ static bool isPhysicalDeviceWithSurfaceCapsSuitable(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Select the best physical device to use from a list of devices for the given window surface.
+// Select the best physical device to use from a list of devices when using the specified window surface.
+// An optional filter can be provided to further validate which devices can be used.
 // Returns null if no device in the given list was suitable.
 //------------------------------------------------------------------------------------------------------------------------------------------
 const PhysicalDevice* selectBestDevice(
     const std::vector<PhysicalDevice>& devices,
-    const WindowSurface& windowSurface
+    const WindowSurface& windowSurface,
+    const DeviceFilter deviceFilter
 ) noexcept {
     // Get the surface capabilities for all the devices
     std::vector<DeviceSurfaceCaps> deviceSurfaceCaps;
@@ -180,8 +182,10 @@ const PhysicalDevice* selectBestDevice(
 
     for (const PhysicalDevice& device : devices) {
         if (isPhysicalDeviceWithSurfaceCapsSuitable(device, *pCurDeviceSurfaceCaps)) {
-            if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
-                pBestDevice = &device;
+            if ((deviceFilter == nullptr) || deviceFilter(device, *pCurDeviceSurfaceCaps)) {
+                if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
+                    pBestDevice = &device;
+                }
             }
         }
 
@@ -195,13 +199,18 @@ const PhysicalDevice* selectBestDevice(
 // Same as above but for headless mode.
 // Selection criteria in this case does not need to worry about capabilities with respect to a window surface.
 //------------------------------------------------------------------------------------------------------------------------------------------
-const PhysicalDevice* selectBestHeadlessDevice(const std::vector<PhysicalDevice>& devices) noexcept {
+const PhysicalDevice* selectBestHeadlessDevice(
+    const std::vector<PhysicalDevice>& devices,
+    const HeadlessDeviceFilter deviceFilter
+) noexcept {
     const PhysicalDevice* pBestDevice = nullptr;
 
     for (const PhysicalDevice& device : devices) {
         if (isPhysicalDeviceSuitable(device)) {
-            if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
-                pBestDevice = &device;
+            if ((deviceFilter == nullptr) || deviceFilter(device)) {
+                if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
+                    pBestDevice = &device;
+                }
             }
         }
     }

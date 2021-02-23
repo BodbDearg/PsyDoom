@@ -130,13 +130,20 @@ uint32_t PhysicalDevice::findSuitableMemTypeIndex(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Search for the first supported device format in a list of formats for regular 'Texture' objects.
+// Optionally, additional required format feature flags can be supplied.
 // On failure to find a supported format, 'VK_FORMAT_UNDEFINED' is returned.
 //------------------------------------------------------------------------------------------------------------------------------------------
-VkFormat PhysicalDevice::findFirstSupportedTextureFormat(const VkFormat* const pFormats, const size_t numFormats) const noexcept {
-    constexpr VkFormatFeatureFlags reqVkFeatureFlags = (
+VkFormat PhysicalDevice::findFirstSupportedTextureFormat(
+    const VkFormat* const pFormats,
+    const size_t numFormats,
+    const VkFormatFeatureFlags extraReqFeatureFlags
+) const noexcept {
+    const VkFormatFeatureFlags reqVkFeatureFlags = extraReqFeatureFlags | (
+        VK_FORMAT_FEATURE_TRANSFER_SRC_BIT |
         VK_FORMAT_FEATURE_TRANSFER_DST_BIT |
-        VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
-        VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT
+        VK_FORMAT_FEATURE_BLIT_SRC_BIT |
+        VK_FORMAT_FEATURE_BLIT_DST_BIT |
+        VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
     );
 
     return findFirstSupportedFormatInternal(
@@ -149,15 +156,22 @@ VkFormat PhysicalDevice::findFirstSupportedTextureFormat(const VkFormat* const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Search for the first supported device format in a list of formats for 'RenderTexture' objects that are a color attachment.
+// Optionally, additional required format feature flags can be supplied.
 // On failure to find a supported format, 'VK_FORMAT_UNDEFINED' is returned.
 //------------------------------------------------------------------------------------------------------------------------------------------
-VkFormat PhysicalDevice::findFirstSupportedRenderTextureFormat(const VkFormat* const pFormats, const size_t numFormats) const noexcept {
-    constexpr VkFormatFeatureFlags reqVkFeatureFlags = (
+VkFormat PhysicalDevice::findFirstSupportedRenderTextureFormat(
+    const VkFormat* const pFormats,
+    const size_t numFormats,
+    const VkFormatFeatureFlags extraReqFeatureFlags
+) const noexcept {
+    const VkFormatFeatureFlags reqVkFeatureFlags = extraReqFeatureFlags | (
         VK_FORMAT_FEATURE_TRANSFER_SRC_BIT |
+        VK_FORMAT_FEATURE_TRANSFER_DST_BIT |
+        VK_FORMAT_FEATURE_BLIT_SRC_BIT |
+        VK_FORMAT_FEATURE_BLIT_DST_BIT |
         VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT |
         VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT |
-        VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
-        VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT
+        VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
     );
 
     return findFirstSupportedFormatInternal(
@@ -170,10 +184,15 @@ VkFormat PhysicalDevice::findFirstSupportedRenderTextureFormat(const VkFormat* c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Search for the first supported device format in a list of formats for 'RenderTexture' objects that are a depth/stencil attachment.
+// Optionally, additional required format feature flags can be supplied.
 // On failure to find a supported format, 'VK_FORMAT_UNDEFINED' is returned.
 //------------------------------------------------------------------------------------------------------------------------------------------
-VkFormat PhysicalDevice::findFirstSupportedDepthStencilBufferFormat(const VkFormat* const pFormats, const size_t numFormats) const noexcept {
-    constexpr VkFormatFeatureFlags reqVkFeatureFlags = (
+VkFormat PhysicalDevice::findFirstSupportedDepthStencilBufferFormat(
+    const VkFormat* const pFormats,
+    const size_t numFormats,
+    const VkFormatFeatureFlags extraReqFeatureFlags
+) const noexcept {
+    const VkFormatFeatureFlags reqVkFeatureFlags = extraReqFeatureFlags | (
         VK_FORMAT_FEATURE_TRANSFER_SRC_BIT |
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
     );

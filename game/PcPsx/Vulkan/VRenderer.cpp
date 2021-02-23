@@ -130,6 +130,36 @@ static bool gbSkipNextFramePresent;
 static bool gbDidAcquireSwapImageThisFrame;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Physical device selection callback: tells if the device is suitable for use with PsyDoom
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool isPhysicalDeviceSuitable(const vgl::PhysicalDevice& device, const vgl::DeviceSurfaceCaps& surfaceCaps) noexcept {
+    // Make sure at least one of the allowed surface formats are supported
+    if (!surfaceCaps.getSupportedSurfaceFormat(ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS)))
+        return false;
+
+    // Make sure these are supported as texture formats
+    constexpr VkFormat R16_UINT_FORMAT = VK_FORMAT_R16_UINT;
+
+    if (!device.findFirstSupportedTextureFormat(&R16_UINT_FORMAT, 1))   // Note: don't need linear sampling from this format, most HW doesn't support it anyway
+        return false;
+
+    if (!device.findFirstSupportedTextureFormat(&COLOR_16_FORMAT, 1, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+        return false;
+
+    if (!device.findFirstSupportedTextureFormat(&COLOR_32_FORMAT, 1, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+        return false;
+
+    // Make sure these are supported as color attachment formats
+    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_16_FORMAT, 1, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+        return false;
+
+    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_32_FORMAT, 1, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Decides on the color format used for the window/presentation surface as well as the colorspace
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void decidePresentSurfaceFormat() noexcept {
@@ -291,7 +321,11 @@ void init() noexcept {
     if (!gWindowSurface.init(Video::gpSdlWindow, gVulkanInstance))
         FatalErrors::raise("Failed to initialize a Vulkan window surface!");
 
-    gpPhysicalDevice = vgl::PhysicalDeviceSelection::selectBestDevice(gVulkanInstance.getPhysicalDevices(), gWindowSurface);
+    gpPhysicalDevice = vgl::PhysicalDeviceSelection::selectBestDevice(
+        gVulkanInstance.getPhysicalDevices(),
+        gWindowSurface,
+        isPhysicalDeviceSuitable
+    );
 
     if (!gpPhysicalDevice)
         FatalErrors::raise("Failed to find a suitable rendering device for use with Vulkan!");

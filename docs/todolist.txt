@@ -1,6 +1,5 @@
 0.7 - GPU & Rendering?
 - Vk renderer: get working on MacOS
-- Vk renderer: device selection: add code to ensure all formats used are supported
 - Vk renderer: add support for large allocs and maybe force framebuffers to be allocated outside of memory mgr
 - Vk renderer: save renderer preference and provide menu option
 - Vk renderer: add render scale option

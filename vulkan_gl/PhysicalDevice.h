@@ -38,9 +38,23 @@ public:
         const VkMemoryPropertyFlags requiredMemProps = 0
     ) const noexcept;
 
-    VkFormat findFirstSupportedTextureFormat(const VkFormat* const pFormats, const size_t numFormats) const noexcept;
-    VkFormat findFirstSupportedRenderTextureFormat(const VkFormat* const pFormats, const size_t numFormats) const noexcept;
-    VkFormat findFirstSupportedDepthStencilBufferFormat(const VkFormat* const pFormats, const size_t numFormats) const noexcept;
+    VkFormat findFirstSupportedTextureFormat(
+        const VkFormat* const pFormats,
+        const size_t numFormats,
+        const VkFormatFeatureFlags extraReqFeatureFlags = 0
+    ) const noexcept;
+
+    VkFormat findFirstSupportedRenderTextureFormat(
+        const VkFormat* const pFormats,
+        const size_t numFormats,
+        const VkFormatFeatureFlags extraReqFeatureFlags = 0
+    ) const noexcept;
+
+    VkFormat findFirstSupportedDepthStencilBufferFormat(
+        const VkFormat* const pFormats,
+        const size_t numFormats,
+        const VkFormatFeatureFlags extraReqFeatureFlags = 0
+    ) const noexcept;
 
     // Get the minimum required alignment for uniform buffers
     inline size_t getMinUniformBufferAlignment() const noexcept {

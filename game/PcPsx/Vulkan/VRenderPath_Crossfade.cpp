@@ -150,7 +150,7 @@ void VRenderPath_Crossfade::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBuffer
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Ends the frame for the render path
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_Crossfade::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder& cmdRec) noexcept {
+void VRenderPath_Crossfade::endFrame([[maybe_unused]] vgl::Swapchain& swapchain, vgl::CmdBufferRecorder& cmdRec) noexcept {
     // Sanity checks and end the current render pass
     ASSERT(mbIsValid);
     ASSERT(swapchain.isValid());
