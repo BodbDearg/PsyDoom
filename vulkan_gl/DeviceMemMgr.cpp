@@ -16,9 +16,11 @@ DeviceMemMgr::DeviceMemMgr(const VkFuncs& vkFuncs) noexcept
     , mVkFuncs(vkFuncs)
     , mpDevice(nullptr)
     , mPools()
+    , mUnpooledAllocs()
     , mDeviceLocalPools()
     , mHostVisiblePools()
     , mNextNewPoolId(1)
+    , mNextUnpooledAllocId(1)
     , mbDeviceMemExhausted(false)
 {
 }
@@ -60,22 +62,25 @@ void DeviceMemMgr::destroy(const bool bForceIfInvalid) noexcept {
 
     // If any other stuff is leftover then it is a leak
     #if ASSERTS_ENABLED == 1
-        for (std::pair<const PoolIdT, Pool>& poolKvp : mPools) {
+        for (std::pair<const MemMgrIdT, Pool>& poolKvp : mPools) {
             Pool& pool = poolKvp.second;
             ASSERT_LOG(pool.memMgr.getNumBytesAllocated() == 0, "Expect all resources to be freed at this point!");
 
-            for (std::pair<const PoolIdT, SubPool>& subPoolKvp : pool.subPools) {
+            for (std::pair<const MemMgrIdT, SubPool>& subPoolKvp : pool.subPools) {
                 SubPool& subPool = subPoolKvp.second;
                 ASSERT_LOG(subPool.memMgr.getNumBytesAllocated() == 0, "Expect all resources to be freed at this point!");
             }
         }
+
+        ASSERT_LOG(mUnpooledAllocs.empty(), "Expect all resources to be freed at this point!");
     #endif
 
     // Free all Vulkan memory allocated
     if (mpDevice) {
+        // Free up the memory for all pools
         const VkDevice vkDevice = mpDevice->getVkDevice();
         
-        for (std::pair<const PoolIdT, Pool>& poolKvp : mPools) {
+        for (std::pair<const MemMgrIdT, Pool>& poolKvp : mPools) {
             // Unmap any mapped memory in this pool and free the device memory
             Pool& pool = poolKvp.second;
             const VkDeviceMemory vkDeviceMemory = pool.vkDeviceMemory;
@@ -87,14 +92,22 @@ void DeviceMemMgr::destroy(const bool bForceIfInvalid) noexcept {
 
             mVkFuncs.vkFreeMemory(vkDevice, vkDeviceMemory, nullptr);
         }
+
+        // Free all unpooled allocations
+        for (std::pair<const MemMgrIdT, DeviceMemAlloc>& allocKvp : mUnpooledAllocs) {
+            freeUnpooledAlloc(allocKvp.second);
+        }
     }
 
     // Cleanup all these
-    mpDevice = nullptr;
-    mPools.clear();
-    mDeviceLocalPools.clear();
+    mbDeviceMemExhausted = false;
+    mNextUnpooledAllocId = 1;
+    mNextNewPoolId = 1;
     mHostVisiblePools.clear();
-    mNextNewPoolId = 0;
+    mDeviceLocalPools.clear();
+    mUnpooledAllocs.clear();
+    mPools.clear();
+    mpDevice = nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -116,7 +129,7 @@ uint64_t DeviceMemMgr::simulateAllocSize(const uint64_t numBytes) const noexcept
         if (numBytes <= MAIN_POOL_SIZE) {
             thisTierUS = MAIN_POOL_UNIT_SIZE;
         } else {
-            return 0;       // Too big - can't satisfy alloc!
+            return numBytes;    // Alloc is too big for pooling - must be allocated directly from Vulkan!
         }
     }
 
@@ -161,13 +174,18 @@ void DeviceMemMgr::alloc(
     if (numBytes <= 0)
         return;
 
-    // Try to do the alloc and save whether it was successful.
-    // Note that if '0' was given for allowable memory type bits then interpret that
-    // as meaning ALL memory types are allowed and set this bit field to all '1':
-    bool success = allocFromAllPools(numBytes, allowedVkMemTypeBits, allocMode, allocInfoOut);
+    // Should we attempt a pooled or unpooled alloc?
+    // Do an unpooled alloc if explicitly requested, or if the allocation is too big.
+    const bool bAllocUnpooled = (isUnpooledDeviceMemAllocMode(allocMode) || (numBytes > MAIN_POOL_SIZE));
 
-    if (!success) {
-        FatalErrors::outOfMemory();
+    // Try to do the alloc and die with an out of memory error if it fails
+    if (bAllocUnpooled) {
+        if (!allocUnpooled(numBytes, allowedVkMemTypeBits, allocMode, allocInfoOut))
+            FatalErrors::outOfMemory();
+    } 
+    else {
+        if (!allocFromAllPools(numBytes, allowedVkMemTypeBits, allocMode, allocInfoOut))
+            FatalErrors::outOfMemory();
     }
 }
 
@@ -180,11 +198,17 @@ void DeviceMemMgr::alloc(
 //      prevent bugs where we try to free the same thing twice.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DeviceMemMgr::dealloc(DeviceMemAlloc& allocInfo) noexcept {
+    // If it's an unpooled allocation then just dealloc directly
+    if (!allocInfo.bIsPooled) {
+        freeUnpooledAlloc(allocInfo);
+        return;
+    }
+
     // Get the pool the allocation is in: expect it to exist
     Pool& pool = mPools.at(allocInfo.poolId);
 
     // See if the alloc is in a sub pool or not
-    if (allocInfo.subPoolId != INVALID_POOL_ID) {
+    if (allocInfo.subPoolId != INVALID_MEM_MGR_ID) {
         // Alloc is in a sub-pool, get the reference to that and expect it to exist
         SubPool& subPool = pool.subPools.at(allocInfo.subPoolId);
 
@@ -247,7 +271,7 @@ void DeviceMemMgr::freeUnusedPools() noexcept {
             mVkFuncs.vkFreeMemory(vkDevice, vkDeviceMemory, nullptr);
 
             // Remove this pool from any lists that it is in
-            const PoolIdT poolId = pool.poolId;
+            const MemMgrIdT poolId = pool.poolId;
 
             for (size_t i = 0; i < mDeviceLocalPools.size();) {
                 if (mDeviceLocalPools[i] == poolId) {
@@ -299,6 +323,9 @@ bool DeviceMemMgr::allocFromAllPools(
     ASSERT(allocInfoOut.size == 0);
     ASSERT(!allocInfoOut.pBytes);
 
+    // Sanity check: this is for pooled allocations only
+    ASSERT(!isUnpooledDeviceMemAllocMode(allocMode));
+
     // If the alloc is bigger than then our pool size then it can't be done!
     if (numBytes > MAIN_POOL_SIZE)
         return false;
@@ -306,7 +333,7 @@ bool DeviceMemMgr::allocFromAllPools(
     // If we want device local memory then try to allocate that first
     if (allocMode == DeviceMemAllocMode::PREFER_DEVICE_LOCAL) {
         // Try the existing pools we have first
-        for (PoolIdT poolId : mDeviceLocalPools) {
+        for (MemMgrIdT poolId : mDeviceLocalPools) {
             Pool& pool = mPools.at(poolId);
 
             // See if this pool is allowed according to the Vulkan memory type bits
@@ -337,7 +364,7 @@ bool DeviceMemMgr::allocFromAllPools(
     }
 
     // If we require a host visible ram type or have exhaused on-device memory fallback to here
-    for (PoolIdT poolId : mHostVisiblePools) {
+    for (MemMgrIdT poolId : mHostVisiblePools) {
         Pool& pool = mPools.at(poolId);
 
         if (allocFromPool(numBytes, pool, allocInfoOut))
@@ -380,7 +407,7 @@ bool DeviceMemMgr::allocFromPool(
 
     if (numBytes < SUB_POOL_ALLOC_THRESHOLD) {
         // Try to alloc from all existing sub pools
-        for (std::pair<const PoolIdT, SubPool>& subPoolKvp : pool.subPools) {
+        for (std::pair<const MemMgrIdT, SubPool>& subPoolKvp : pool.subPools) {
             SubPool& subPool = subPoolKvp.second;
 
             if (subPool.memMgr.getMaxGuaranteedAllocInBytes() < numBytes)
@@ -408,6 +435,7 @@ bool DeviceMemMgr::allocFromPool(
     allocInfoOut.vkDeviceMemory = pool.vkDeviceMemory;
     allocInfoOut.offset = alloc.offset;
     allocInfoOut.size = alloc.size;
+    allocInfoOut.bIsPooled = true;
     allocInfoOut.bIsDeviceLocal = pool.bIsDeviceLocal;
     allocInfoOut.bIsHostVisible = pool.bIsHostVisible;
     allocInfoOut.poolId = pool.poolId;
@@ -444,6 +472,7 @@ bool DeviceMemMgr::allocFromSubPool(
     allocInfoOut.vkDeviceMemory = parentPool.vkDeviceMemory;
     allocInfoOut.offset = subPool.offset + alloc.offset;
     allocInfoOut.size = alloc.size;
+    allocInfoOut.bIsPooled = true;
     allocInfoOut.bIsDeviceLocal = parentPool.bIsDeviceLocal;
     allocInfoOut.bIsHostVisible = parentPool.bIsHostVisible;
     allocInfoOut.poolId = parentPool.poolId;
@@ -478,24 +507,20 @@ DeviceMemMgr::Pool* DeviceMemMgr::allocNewPool(
         (bRequireHostVisibleMem ? VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0)
     );
 
-    // Try to find a memory type that satisfies both the required memory property flags we want
-    // as well as being one of the allowed memory types specified via the memory type bits:
+    // Try to find a memory type that satisfies both the required memory property flags we want as well as being
+    // one of the allowed memory types specified via the memory type bits:
     const PhysicalDevice* pPhysicalDevice = mpDevice->getPhysicalDevice();
     ASSERT(pPhysicalDevice);
-
-    const uint32_t vkMemoryTypeIndex = pPhysicalDevice->findSuitableMemTypeIndex(
-        allowedVulkanMemTypeBits,
-        vkMemPropertyFlagsRequired
-    );
+    const uint32_t vkMemoryTypeIndex = pPhysicalDevice->findSuitableMemTypeIndex(allowedVulkanMemTypeBits, vkMemPropertyFlagsRequired);
 
     // If no suitable memory type can be found then bail out
     if (vkMemoryTypeIndex >= VK_MAX_MEMORY_TYPES)
         return nullptr;
 
     // Try to alloc a new id for this pool, if that fails then pool alloc fails
-    PoolIdT poolId = pickNewPoolId();
+    const MemMgrIdT poolId = pickNewPoolId();
 
-    if (poolId == INVALID_POOL_ID)
+    if (poolId == INVALID_MEM_MGR_ID)
         return nullptr;
 
     // Fill in the details of the memory alloc for vulkan
@@ -541,7 +566,7 @@ DeviceMemMgr::Pool* DeviceMemMgr::allocNewPool(
         )
         {
             // Failed to do a mapping - cleanup the buffer and return null!
-            ASSERT_FAIL("Failed to map vertex buffer memory to host visible buffer!");
+            ASSERT_FAIL("Failed to map device memory to a host visible buffer!");
             mVkFuncs.vkFreeMemory(vkDevice, vkDeviceMemory, nullptr);
             return nullptr;
         }
@@ -580,9 +605,9 @@ DeviceMemMgr::SubPool* DeviceMemMgr::allocNewSubPool(Pool& parentPool) noexcept 
         return nullptr;
 
     // Firstly try to alloc a new sub pool id, if that fails then sub pool alloc fails
-    PoolIdT subPoolId = pickNewSubPoolId(parentPool);
+    const MemMgrIdT subPoolId = pickNewSubPoolId(parentPool);
     
-    if (subPoolId == INVALID_POOL_ID)
+    if (subPoolId == INVALID_MEM_MGR_ID)
         return nullptr;
 
     // Try to alloc a new sub pool, if that fails then just return a null pointer
@@ -599,16 +624,165 @@ DeviceMemMgr::SubPool* DeviceMemMgr::allocNewSubPool(Pool& parentPool) noexcept 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Try to make an unpooled memory allocation and save the details in the output structure.
+// May fallback to using system RAM if possible, if device memory is requested and not possible.
+// Returns 'true' on successful allocation.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool DeviceMemMgr::allocUnpooled(
+    const uint64_t numBytes,
+    const uint32_t allowedVkMemTypeBits,
+    const DeviceMemAllocMode allocMode,
+    DeviceMemAlloc& allocInfoOut
+) noexcept {
+    // Note: this can be called even when a pooled allocation is requested, if the alloc is too big.
+    // Therefore the alloc mode can be either of these two things:
+    if ((allocMode == DeviceMemAllocMode::PREFER_DEVICE_LOCAL) || (allocMode == DeviceMemAllocMode::UNPOOLED_PREFER_DEVICE_LOCAL)) {
+        if (allocUnpooled(numBytes, allowedVkMemTypeBits, true, false, allocInfoOut))
+            return true;
+    }
+
+    // Fallback to using non-device (host visible) memory if that is possible, or if that was requested in the first place
+    return allocUnpooled(numBytes, allowedVkMemTypeBits, false, true, allocInfoOut);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to make an unpooled memory allocation of the exact specified type and save the details in the output structure.
+// Returns 'true' on successful allocation.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool DeviceMemMgr::allocUnpooled(
+    const uint64_t numBytes,
+    const uint32_t allowedVkMemTypeBits,
+    const bool bRequireDeviceLocalMem,
+    const bool bRequireHostVisibleMem,
+    DeviceMemAlloc& allocInfoOut
+) noexcept {
+    // Sanity checks
+    ASSERT(mbIsValid);
+    ASSERT(mpDevice && mpDevice->getVkDevice());
+    ASSERT_LOG(bRequireDeviceLocalMem || bRequireHostVisibleMem, "Must require either device local or host visible memory!");
+
+    // Figure out the vulkan memory property flags we want
+    const VkMemoryPropertyFlags vkMemPropertyFlagsRequired = (
+        (bRequireDeviceLocalMem ? VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT : 0) |
+        (bRequireHostVisibleMem ? VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0)
+    );
+
+    // Try to find a memory type that satisfies both the required memory property flags we want as well as being
+    // one of the allowed memory types specified via the memory type bits:
+    const PhysicalDevice* pPhysicalDevice = mpDevice->getPhysicalDevice();
+    ASSERT(pPhysicalDevice);
+    const uint32_t vkMemoryTypeIndex = pPhysicalDevice->findSuitableMemTypeIndex(allowedVkMemTypeBits, vkMemPropertyFlagsRequired);
+
+    // If no suitable memory type can be found then bail out
+    if (vkMemoryTypeIndex >= VK_MAX_MEMORY_TYPES)
+        return false;
+
+    // Allocate an id for the allocation and if that fails then the alloc itself fails
+    const MemMgrIdT allocId = pickNewUnpooledAllocId();
+
+    if (allocId == INVALID_MEM_MGR_ID)
+        return nullptr;
+
+    // Fill in the details of the memory alloc for vulkan
+    VkMemoryAllocateInfo memAllocInfo = {};
+    memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    memAllocInfo.allocationSize = numBytes;
+    memAllocInfo.memoryTypeIndex = vkMemoryTypeIndex;
+
+    // Do the memory allocation
+    const VkDevice vkDevice = mpDevice->getVkDevice();
+    VkDeviceMemory vkDeviceMemory = VK_NULL_HANDLE;
+
+    if (mVkFuncs.vkAllocateMemory(vkDevice, &memAllocInfo, nullptr, &vkDeviceMemory) != VK_SUCCESS)
+        return nullptr;
+
+    ASSERT(vkDeviceMemory);
+
+    // Get the memory type we picked to allocate and see whether it is device local and host visible
+    const VkMemoryType& vkMemoryType = pPhysicalDevice->getMemProps().memoryTypes[vkMemoryTypeIndex];
+
+    const bool bIsMemTypeDeviceLocal = (
+        (vkMemoryType.propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) != 0
+    );
+
+    const bool bIsMemTypeHostVisible = (
+        ((vkMemoryType.propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0) &&
+        ((vkMemoryType.propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) != 0)
+    );
+
+    // If the memory allocation is CPU mappable then do the mapping now
+    void* pMappedMemory = nullptr;
+
+    if (bIsMemTypeHostVisible) {
+        if (mVkFuncs.vkMapMemory(
+                vkDevice,
+                vkDeviceMemory,
+                0,
+                VK_WHOLE_SIZE,
+                0,
+                &pMappedMemory
+            )
+            != VK_SUCCESS
+        )
+        {
+            // Failed to do a mapping - cleanup the buffer and return null!
+            ASSERT_FAIL("Failed to map device memory to a host visible buffer!");
+            mVkFuncs.vkFreeMemory(vkDevice, vkDeviceMemory, nullptr);
+            return nullptr;
+        }
+    }
+
+    // Okay, all good! Save the allocation details:
+    DeviceMemAlloc& alloc = mUnpooledAllocs[allocId];
+    alloc.vkDeviceMemory = vkDeviceMemory;
+    alloc.offset = 0;
+    alloc.size = numBytes;
+    alloc.pBytes = (std::byte*) pMappedMemory;
+    alloc.bIsPooled = false;
+    alloc.bIsDeviceLocal = bIsMemTypeDeviceLocal;
+    alloc.bIsHostVisible = bIsMemTypeHostVisible;
+    alloc.allocId = allocId;
+    alloc.subPoolId = INVALID_MEM_MGR_ID;
+
+    // Copy the allocation details to output to finish up
+    allocInfoOut = alloc;
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Frees the memory for an unpooled allocation which should be valid; also unmaps any memory mapped
+//------------------------------------------------------------------------------------------------------------------------------------------
+void DeviceMemMgr::freeUnpooledAlloc(DeviceMemAlloc& alloc) noexcept {
+    // Sanity checks
+    ASSERT(alloc.vkDeviceMemory != VK_NULL_HANDLE);
+    ASSERT(!alloc.bIsPooled);
+
+    // Unmap any host visible memory (if mapped) then free the allocation
+    const VkDevice vkDevice = mpDevice->getVkDevice();
+    const VkDeviceMemory vkDeviceMemory = alloc.vkDeviceMemory;
+
+    if (alloc.pBytes) {
+        mVkFuncs.vkUnmapMemory(vkDevice, vkDeviceMemory);
+    }
+
+    mVkFuncs.vkFreeMemory(vkDevice, vkDeviceMemory, nullptr);
+
+    // Clear the alloc details and remove from the map
+    mUnpooledAllocs.erase(alloc.allocId);
+    alloc = {};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Attempt to choose a new pool id within the memory manager
 //------------------------------------------------------------------------------------------------------------------------------------------
-DeviceMemMgr::PoolIdT DeviceMemMgr::pickNewPoolId() noexcept {
+DeviceMemMgr::MemMgrIdT DeviceMemMgr::pickNewPoolId() noexcept {
     // Start our search using the next new pool id field in the memory manager
-    const PoolIdT origNextNewPoolId = mNextNewPoolId;
-    PoolIdT poolId = origNextNewPoolId;
+    const MemMgrIdT origNextNewPoolId = mNextNewPoolId;
+    MemMgrIdT poolId = origNextNewPoolId;
 
     do {
         // Make sure this is not the invalid pool id, and that there isn't already a pool with this id
-        if ((poolId != INVALID_POOL_ID) && (mPools.find(poolId) == mPools.end())) {
+        if ((poolId != INVALID_MEM_MGR_ID) && (mPools.find(poolId) == mPools.end())) {
             // Found a valid pool id to use. Increment the next new pool id and return the id chosen!
             mNextNewPoolId = poolId + 1;
             return poolId;
@@ -620,20 +794,20 @@ DeviceMemMgr::PoolIdT DeviceMemMgr::pickNewPoolId() noexcept {
     } while (poolId != origNextNewPoolId);      // Continue until we wrap around
 
     // We should never reach here in practice, but if we do we couldn't alloc a pool id!
-    return INVALID_POOL_ID;
+    return INVALID_MEM_MGR_ID;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempt to choose a new sub pool id within the the given parent pool
 //------------------------------------------------------------------------------------------------------------------------------------------
-DeviceMemMgr::PoolIdT DeviceMemMgr::pickNewSubPoolId(Pool& parentPool) noexcept {
+DeviceMemMgr::MemMgrIdT DeviceMemMgr::pickNewSubPoolId(Pool& parentPool) noexcept {
     // Start our search on the next new pool id on the parent
-    const PoolIdT origNextNewPoolId = parentPool.nextNewSubPoolId;
-    PoolIdT poolId = origNextNewPoolId;
+    const MemMgrIdT origNextNewPoolId = parentPool.nextNewSubPoolId;
+    MemMgrIdT poolId = origNextNewPoolId;
 
     do {
         // Make sure this is not the invalid pool id, and that there isn't already a sub pool with this id
-        if ((poolId != INVALID_POOL_ID) && (parentPool.subPools.find(poolId) ==  parentPool.subPools.end())) {
+        if ((poolId != INVALID_MEM_MGR_ID) && (parentPool.subPools.find(poolId) ==  parentPool.subPools.end())) {
             // Found a valid pool id to use. Increment the next new pool id and return the id chosen!
             parentPool.nextNewSubPoolId = poolId + 1;
             return poolId;
@@ -645,7 +819,32 @@ DeviceMemMgr::PoolIdT DeviceMemMgr::pickNewSubPoolId(Pool& parentPool) noexcept 
     } while (poolId != origNextNewPoolId);      // Continue until we wrap around
 
     // We should never reach here in practice, but if we do we couldn't alloc a pool id!
-    return INVALID_POOL_ID;
+    return INVALID_MEM_MGR_ID;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempt to choose a new unpooled alloc id within the memory manager
+//------------------------------------------------------------------------------------------------------------------------------------------
+DeviceMemMgr::MemMgrIdT DeviceMemMgr::pickNewUnpooledAllocId() noexcept {
+    // Start our search using the next new unpooled alloc id field in the memory manager
+    const MemMgrIdT origNextNewAllocId = mNextUnpooledAllocId;
+    MemMgrIdT allocId = origNextNewAllocId;
+
+    do {
+        // Make sure this is not the invalid alloc id, and that there isn't already an alloc with this id
+        if ((allocId != INVALID_MEM_MGR_ID) && (mUnpooledAllocs.find(allocId) == mUnpooledAllocs.end())) {
+            // Found a valid alloc id to use. Increment the next new alloc id and return the id chosen!
+            mNextNewPoolId = allocId + 1;
+            return allocId;
+        }
+
+        // This is not a valid alloc id, try another
+        ++allocId;
+
+    } while (allocId != origNextNewAllocId);     // Continue until we wrap around
+
+    // We should never reach here in practice, but if we do we couldn't alloc a pool id!
+    return INVALID_MEM_MGR_ID;
 }
 
 END_NAMESPACE(vgl)

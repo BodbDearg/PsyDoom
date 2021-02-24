@@ -125,7 +125,7 @@ bool VRenderPath_Main::ensureValidFramebuffers(const uint32_t fbWidth, const uin
             VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT :
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
-        if (!mColorAttachments[i].initAsRenderTexture(device, mColorFormat, colorAttachUsage, fbWidth, fbHeight, mNumDrawSamples))
+        if (!mColorAttachments[i].initAsRenderTexture(device, true, mColorFormat, colorAttachUsage, fbWidth, fbHeight, mNumDrawSamples))
             return false;
 
         std::vector<const vgl::BaseTexture*> fbAttachments;

@@ -147,7 +147,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
     }
 
     // Create the vertex buffers
-    constexpr uint32_t DRAW_VB_SIZE = 1024 * 1024;
+    constexpr uint32_t DRAW_VB_SIZE = 4 * 1024 * 1024;
     gVertexBuffers_Draw.init<VVertex_Draw>(device, DRAW_VB_SIZE / sizeof(VVertex_Draw));
 
     // Current draw pipeline in use is undefined initially
@@ -155,7 +155,7 @@ void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept {
 
     // Prealloc draw buffer memory
     gFrameUniforms.reserve(16);
-    gFrameDrawCmds.reserve(2048);
+    gFrameDrawCmds.reserve(4196);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

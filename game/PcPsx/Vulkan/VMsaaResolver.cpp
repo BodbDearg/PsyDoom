@@ -70,7 +70,7 @@ bool VMsaaResolver::createResolveAttachments(const VkFormat format, const uint32
         attachment.destroy(true);
         const VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
-        if (!attachment.initAsRenderTexture(device, format, imageUsageFlags, fbWidth, fbHeight, 1))
+        if (!attachment.initAsRenderTexture(device, true, format, imageUsageFlags, fbWidth, fbHeight, 1))
             return false;
     }
 

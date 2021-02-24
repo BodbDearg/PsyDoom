@@ -21,6 +21,7 @@ public:
 
     bool initAsRenderTexture(
         LogicalDevice& device,
+        const bool bUseUnpooledAlloc,
         const VkFormat textureFormat,
         const VkImageUsageFlags usageFlags,
         const uint32_t width,
@@ -31,6 +32,7 @@ public:
 
     bool initAsDepthStencilBuffer(
         LogicalDevice& device,
+        const bool bUseUnpooledAlloc,
         const VkFormat textureFormat,
         const VkImageUsageFlags usageFlags,
         const uint32_t width,

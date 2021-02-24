@@ -38,6 +38,7 @@ RenderTexture::~RenderTexture() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool RenderTexture::initAsRenderTexture(
     LogicalDevice& device,
+    const bool bUseUnpooledAlloc,
     const VkFormat textureFormat,
     const VkImageUsageFlags usageFlags,
     const uint32_t width,
@@ -52,7 +53,7 @@ bool RenderTexture::initAsRenderTexture(
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | usageFlags,
         VK_IMAGE_LAYOUT_UNDEFINED,
-        DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
+        (bUseUnpooledAlloc) ? DeviceMemAllocMode::UNPOOLED_PREFER_DEVICE_LOCAL : DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
         textureFormat,
         width,
         height,
@@ -71,6 +72,7 @@ bool RenderTexture::initAsRenderTexture(
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool RenderTexture::initAsDepthStencilBuffer(
     LogicalDevice& device,
+    const bool bUseUnpooledAlloc,
     const VkFormat textureFormat,
     const VkImageUsageFlags usageFlags,
     const uint32_t width,
@@ -84,7 +86,7 @@ bool RenderTexture::initAsDepthStencilBuffer(
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | usageFlags,
         VK_IMAGE_LAYOUT_UNDEFINED,
-        DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
+        (bUseUnpooledAlloc) ?  DeviceMemAllocMode::UNPOOLED_PREFER_DEVICE_LOCAL : DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
         textureFormat,
         width,
         height,
