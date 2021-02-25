@@ -224,9 +224,16 @@ static void updateCoordSysInfo() noexcept {
     const bool bHaveValidPresentSurface = ((gPresentSurfaceW > 0) && (gPresentSurfaceH > 0));
 
     if (bHaveValidPresentSurface) {
-        // TODO: support a render scale setting here...
-        gFramebufferW = gPresentSurfaceW;
-        gFramebufferH = gPresentSurfaceH;
+        // Custom render height or just use the present surface dimensions?
+        const int32_t userRenderH = Config::gVulkanRenderHeight;
+
+        if (userRenderH > 0) {
+            gFramebufferW = (uint32_t)(((uint64_t) userRenderH * gPresentSurfaceW) / gPresentSurfaceH);
+            gFramebufferH = Config::gVulkanRenderHeight;
+        } else {
+            gFramebufferW = gPresentSurfaceW;
+            gFramebufferH = gPresentSurfaceH;
+        }
     } else {
         gFramebufferW = 0;
         gFramebufferH = 0;

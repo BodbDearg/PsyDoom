@@ -63,6 +63,7 @@ struct ConfigFieldHandler {
 bool        gbFullscreen;
 int32_t     gLogicalDisplayW;
 bool        gbDisableVulkanRenderer;
+int32_t     gVulkanRenderHeight;
 bool        gbVulkanTripleBuffer;
 bool        gbVulkanWidescreenEnabled;
 int32_t     gAAMultisamples;
@@ -81,45 +82,35 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         []() { gbFullscreen = true; }
     },
     {
-        "LogicalDisplayWidth",
+        "AntiAliasingMultisamples",
         "#---------------------------------------------------------------------------------------------------\n"
-        "# Determines how the game can scale its rendered frames to fill the host display.\n"
-        "#\n"
-        "# Given an imagined logical resolution of 240 pixels tall, this is display width to use.\n"
-        "# If set to '292' for example, then the logical resolution will be 292x240 and this area would be\n"
-        "# scaled to fit the host's physical resolution as much as possible, while preserving aspect ratio.\n"
-        "# If set to the special value of '-1' then the game is free to scale the framebuffer to any aspect\n"
-        "# ratio and fill the entire display.\n"
-        "#\n"
-        "# Some background information:\n"
-        "# PSX Doom (NTSC) originally rendered to a 256x240 framebuffer but stretched that image to roughly\n"
-        "# a 292x240 area (in square pixel terms, or 320x240 in CRT non-square pixels) on output; this made\n"
-        "# the game feel much flatter and more compressed than the PC original. The PAL version also did the\n"
-        "# exact same stretching and simply added additional letterboxing to fill the extra scanlines on the\n"
-        "# top and bottom of the screen.\n"
-        "#\n"
-        "# Typical values:\n"
-        "#  292 = Use (approximately) the original PSX Doom aspect ratio and stretch mode.\n"
-        "#  256 = Preserve the render aspect ratio of 16:15 (256x240) - this makes for a more PC-like view.\n"
-        "#  -1  = Allow PsyDoom to stretch the framebuffer freely fill any window size or resolution.\n"
+        "# Vulkan renderer only: the number of multisamples to use for anti-aliasing the view.\n"
+        "# Increasing the number of samples can help smooth edges and prevent texture shimmer, but can be\n"
+        "# costly to do at high resolutions or on weaker GPUs. 4x is probably reasonable for most GPUs and\n"
+        "# screen resolution combinations, given the low requirements of Doom.\n"
+        "# Note: if the hardware is unable to support the number of samples specified then the next available\n"
+        "# sample count downwards will be selected.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "292", "\n",
-        [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
-        []() { gLogicalDisplayW = 292; }
+        "4", "\n",
+        [](const IniUtils::Entry& iniEntry) { gAAMultisamples = iniEntry.getIntValue(4); },
+        []() { gAAMultisamples = 4; }
     },
     {
-        "DisableVulkanRenderer",
+        "VulkanRenderHeight",
         "#---------------------------------------------------------------------------------------------------\n"
-        "# If set to '1' then the new Vulkan/hardware renderer will be completely disabled and the game will\n"
-        "# behave as if Vulkan is not available for use to PsyDoom, even if the opposite is true.\n"
-        "# If you only want to run PsyDoom using the classic PSX renderer then enabling this setting will\n"
-        "# save on system & video RAM and other resources. By default if Vulkan rendering is possible then\n"
-        "# the Vulkan renderer always needs to be active and use memory in order to allow for fast toggling\n"
-        "# between renderers.\n"
+        "# Vulkan renderer: determines the vertical resolution (in pixels) of the render/draw framebuffer.\n"
+        "# You can use this setting to render at a different resolution to the display resolution.\n"
+        "# Note: the horizontal render resolution is automatically determined using this setting and the\n"
+        "# current display/window resolution.\n"
+        "#\n"
+        "# Example values:\n"
+        "#  240 = Use the original PSX vertical resolution (240p)\n"
+        "#  480 = Use 2x the original PSX vertical resolution (480p)\n"
+        "#   -1 = Use the native vertical resolution of the display or window\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
-        [](const IniUtils::Entry& iniEntry) { gbDisableVulkanRenderer = iniEntry.getBoolValue(false); },
-        []() { gbDisableVulkanRenderer = false; }
+        "-1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gVulkanRenderHeight = iniEntry.getIntValue(-1); },
+        []() { gVulkanRenderHeight = -1; }
     },
     {
         "VulkanTripleBuffer",
@@ -152,31 +143,6 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         []() { gbVulkanWidescreenEnabled = true; }
     },
     {
-        "AntiAliasingMultisamples",
-        "#---------------------------------------------------------------------------------------------------\n"
-        "# Vulkan renderer only: the number of multisamples to use for anti-aliasing the view.\n"
-        "# Increasing the number of samples can help smooth edges and prevent texture shimmer, but can be\n"
-        "# costly to do at high resolutions or on weaker GPUs. 4x is probably reasonable for most GPUs and\n"
-        "# screen resolution combinations, given the low requirements of Doom.\n"
-        "# Note: if the hardware is unable to support the number of samples specified then the next available\n"
-        "# sample count downwards will be selected.\n"
-        "#---------------------------------------------------------------------------------------------------",
-        "4", "\n",
-        [](const IniUtils::Entry& iniEntry) { gAAMultisamples = iniEntry.getIntValue(4); },
-        []() { gAAMultisamples = 4; }
-    },
-    {
-        "FloorRenderGapFix",
-        "#---------------------------------------------------------------------------------------------------\n"
-        "# Classic renderer only: enable/disable a precision fix for the floor renderer to prevent gaps in\n"
-        "# the floor on some maps. This fix helps prevent some noticeable glitches on larger outdoor maps\n"
-        "# like 'Tower Of Babel'. Set to '1' to enable the fix, and '0' to disable (original PSX behavior).\n"
-        "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
-        [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
-        []() { gbFloorRenderGapFix = true; }
-    },
-    {
         "UseVulkan32BitShading",
         "#---------------------------------------------------------------------------------------------------\n"
         "# Vulkan renderer only: whether higher precision 32-bit shading and framebuffers should be used.\n"
@@ -190,6 +156,56 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseVulkan32BitShading = iniEntry.getBoolValue(false); },
         []() { gbUseVulkan32BitShading = false; }
+    },
+    {
+        "DisableVulkanRenderer",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If set to '1' then the new Vulkan/hardware renderer will be completely disabled and the game will\n"
+        "# behave as if Vulkan is not available for use to PsyDoom, even if the opposite is true.\n"
+        "# If you only want to run PsyDoom using the classic PSX renderer then enabling this setting will\n"
+        "# save on system & video RAM and other resources. By default if Vulkan rendering is possible then\n"
+        "# the Vulkan renderer always needs to be active and use memory in order to allow for fast toggling\n"
+        "# between renderers.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbDisableVulkanRenderer = iniEntry.getBoolValue(false); },
+        []() { gbDisableVulkanRenderer = false; }
+    },
+    {
+        "LogicalDisplayWidth",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Determines the game's horizontal stretch factor and affects both the Classic and Vulkan renderers.\n"
+        "#\n"
+        "# Given an original logical resolution of 256x240 pixels, this is the width to stretch that out to.\n"
+        "# If set to '292' for example, then the stretch factor would be 292/256 or 1.14 approximately.\n"
+        "#\n"
+        "# Some background information:\n"
+        "# PSX Doom (NTSC) originally rendered to a 256x240 framebuffer but stretched that to approximately\n"
+        "# 292x240 (in square pixel terms, or 320x240 in CRT non-square pixels) on output; this made the game\n"
+        "# feel much flatter and more compressed than the PC original. The PAL version also did the exact\n"
+        "# same stretching and simply added additional letterboxing to fill the extra scanlines on the top\n"
+        "# and bottom of the screen.\n"
+        "#\n"
+        "# Typical values:\n"
+        "#  292 = Use (approximately) the original PSX Doom stretch factor for the most authentic look.\n"
+        "#  256 = Don't stretch horizontally. Makes for a more PC-like view, but some art won't look right.\n"
+        "#  -1  = Stretch to fill: the logical display width is automatically set such that the original PSX\n"
+        "#        view area and UI elements will fill the display completely, regardless of how wide it is.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "292", "\n",
+        [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
+        []() { gLogicalDisplayW = 292; }
+    },
+    {
+        "FloorRenderGapFix",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Classic renderer only: enable/disable a precision fix for the floor renderer to prevent gaps in\n"
+        "# the floor on some maps. This fix helps prevent some noticeable glitches on larger outdoor maps\n"
+        "# like 'Tower Of Babel'. Set to '1' to enable the fix, and '0' to disable (original PSX behavior).\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
+        []() { gbFloorRenderGapFix = true; }
     },
 };
 
