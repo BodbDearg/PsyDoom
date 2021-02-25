@@ -7,7 +7,7 @@
 #include "ShaderCommon_Frag.h"
 
 // Whether to shade in 16-bit mode like the original PlayStation
-layout(constant_id = 0) const bool USE_PSX_16_BIT_SHADING = true;
+layout(constant_id = 1) const bool USE_PSX_16_BIT_SHADING = true;
 
 // A texture containing the entirety of PSX VRAM
 layout(set = 0, binding = 0) uniform usampler2D vramTex;
