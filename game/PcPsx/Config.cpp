@@ -7,7 +7,9 @@
 #include "IniUtils.h"
 #include "Utils.h"
 
+#include <cstring>
 #include <functional>
+#include <map>
 #include <SDL.h>
 #include <string>
 #include <vector>
@@ -17,20 +19,36 @@ BEGIN_NAMESPACE(Config)
 // MSVC: 't' file open option will cause '\n' to become '\r\n' (platform native EOL).
 // This is useful because it allows us to use '\n' in the code and have it converted transparently.
 #if _MSC_VER
-    static constexpr const char* FOPEN_WRITE_APPEND_TEXT = "at";
+    static constexpr const char* FOPEN_WRITE_TEXT = "wt";
 #else
-    static constexpr const char* FOPEN_WRITE_APPEND_TEXT = "a";
+    static constexpr const char* FOPEN_WRITE_TEXT = "w";
 #endif
+
+// A modification warning written to the top of every config file
+static constexpr const char* const FILE_MODIFICATION_WARNING = 
+R"(####################################################################################################
+# WARNING: this file is periodically re-organized by PsyDoom when new settings become available.
+# Existing setting values will be preserved, but may be reordered and have their comments updated.
+# If you have anything other than the value of a setting to save, do not put it in this file!
+####################################################################################################
+)";
+
+// A warning used to show that the fields following are unused
+static constexpr const char* const UNUSED_FIELDS_WARNING = 
+R"(####################################################################################################
+# UNUSED FIELDS! PsyDoom has detected the following setting fields which are not recognized or used.
+# These may be leftovers from an older version of PsyDoom, or perhaps user-added data.
+# These settings can be deleted safely without any ill effects because PsyDoom will not use them.
+####################################################################################################)";
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Defines functionality and data pertaining to a particular config field
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct ConfigFieldHandler {
-    // The string key for the config field
-    const char* name;
-    
-    // What text to insert into the config .ini file when the config value is not present
-    const char* iniDefaultStr;
+    const char* name;               // The string key for the config field
+    const char* preamble;           // Proceeds the actual key and value: normally used for commenting but can be null/empty if not needed.
+    const char* defaultValueStr;    // String representation of the default value. Note: the key/value is always put on a different line to the pre/postamble.
+    const char* postamble;          // Comes after the key and value. Can be used to add an additional newline but can be null/empty if not needed.
     
     // Logic for parsing the config value
     std::function<void (const IniUtils::Entry& iniEntry)> parseFunc;
@@ -57,8 +75,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Fullscreen or windowed mode toggle.\n"
         "# Set to '1' cause the PsyDoom to launch in fullscreen mode, and '0' to use windowed mode.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "Fullscreen = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFullscreen = iniEntry.getBoolValue(true); },
         []() { gbFullscreen = true; }
     },
@@ -84,8 +102,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#  292 = Use (approximately) the original PSX Doom aspect ratio and stretch mode.\n"
         "#  256 = Preserve the render aspect ratio of 16:15 (256x240) - this makes for a more PC-like view.\n"
         "#  -1  = Allow PsyDoom to stretch the framebuffer freely fill any window size or resolution.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "LogicalDisplayWidth = 292\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "292", "\n",
         [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
         []() { gLogicalDisplayW = 292; }
     },
@@ -98,8 +116,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# save on system & video RAM and other resources. By default if Vulkan rendering is possible then\n"
         "# the Vulkan renderer always needs to be active and use memory in order to allow for fast toggling\n"
         "# between renderers.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "DisableVulkanRenderer = 0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbDisableVulkanRenderer = iniEntry.getBoolValue(false); },
         []() { gbDisableVulkanRenderer = false; }
     },
@@ -116,8 +134,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# Enabling ensures the most up-to-date view is shown when the time comes to display and helps to\n"
         "# reduce perceived input latency but will also greatly increase GPU and CPU usage.\n"
         "# Disable if you prefer to lower energy usage for slightly increased input latency.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "VulkanTripleBuffer = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanTripleBuffer = iniEntry.getBoolValue(true); },
         []() { gbVulkanTripleBuffer = true; }
     },
@@ -128,8 +146,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# The in-game Vulkan renderer is capable of a wider field of view than the classic renderer on\n"
         "# modern widescreen displays. If desired however you can disable this ('0') for an aspect ratio more\n"
         "# like the original game with cropping at the sides of the screen.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "VulkanWidescreenEnabled = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanWidescreenEnabled = iniEntry.getBoolValue(true); },
         []() { gbVulkanWidescreenEnabled = true; }
     },
@@ -142,8 +160,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# screen resolution combinations, given the low requirements of Doom.\n"
         "# Note: if the hardware is unable to support the number of samples specified then the next available\n"
         "# sample count downwards will be selected.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "AntiAliasingMultisamples = 4\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "4", "\n",
         [](const IniUtils::Entry& iniEntry) { gAAMultisamples = iniEntry.getIntValue(4); },
         []() { gAAMultisamples = 4; }
     },
@@ -153,8 +171,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# Classic renderer only: enable/disable a precision fix for the floor renderer to prevent gaps in\n"
         "# the floor on some maps. This fix helps prevent some noticeable glitches on larger outdoor maps\n"
         "# like 'Tower Of Babel'. Set to '1' to enable the fix, and '0' to disable (original PSX behavior).\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "FloorRenderGapFix = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
         []() { gbFloorRenderGapFix = true; }
     },
@@ -168,8 +186,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# artifacts, but will also increase the overall image brightness and reduce contrast - making the\n"
         "# display seem more 'washed out' and less atmospheric. It's recommended to leave this setting\n"
         "# disabled for better visuals, but if you dislike banding a lot then it can be enabled if needed.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "UseVulkan32BitShading = 0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseVulkan32BitShading = iniEntry.getBoolValue(false); },
         []() { gbUseVulkan32BitShading = false; }
     },
@@ -195,8 +213,8 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
         "#  128  = ~2.9 MS\n"
         "#  256  = ~5.8 MS\n"
         "#  512  = ~11.6 MS\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "AudioBufferSize = 0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gAudioBufferSize = iniEntry.getIntValue(0); },
         []() { gAudioBufferSize = 0; }
     },
@@ -230,8 +248,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# A relative or absolute path can be used; relative paths are relative to the current OS working\n"
         "# directory, which is normally the directory that the PsyDoom executable is found in.\n"
         "# Note: this setting can also be overriden with the '-cue <CUE_PATH>' command-line argument.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "CueFilePath = Doom.cue\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "Doom.cue", "\n",
         [](const IniUtils::Entry& iniEntry) { gCueFilePath = iniEntry.value; },
         []() { gCueFilePath = "Doom.cue"; }
     },
@@ -241,8 +259,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Uncapped framerate toggle.\n"
         "# Setting to '1' allows PsyDoom to run beyond the original 30 FPS cap of PSX Doom.\n"
         "# Frames in between the original 30 FPS keyframes will have movements and rotations interpolated.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "UncapFramerate = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },
         []() { gbUncapFramerate = true; }
     },
@@ -259,8 +277,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#   0 = Use NTSC timings\n"
         "#   1 = Use PAL timings\n"
         "#  -1 = Auto-decide based on the game disc region\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "UsePalTimings = 0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gUsePalTimings = iniEntry.getIntValue(0); },
         []() { gUsePalTimings = 0; }
     },
@@ -276,8 +294,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Generally this setting should be left disabled, unless you are really curious...\n"
         "# Its main use is to ensure consistent demo recording & playback, where it will be force enabled.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "UseDemoTimings = 0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseDemoTimings = iniEntry.getBoolValue(false); },
         []() { gbUseDemoTimings = false; }
     },
@@ -287,8 +305,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Whether to use a tweak to the original player movement code which attempts to reduce input latency\n"
         "# for sideways and forward movement. The effect of this will be subtle but should improve gameplay.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "UseMoveInputLatencyTweak = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseMoveInputLatencyTweak = iniEntry.getBoolValue(true); },
         []() { gbUseMoveInputLatencyTweak = true; }
     },
@@ -298,8 +316,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Whether to apply a fix for a bug in the original games where sometimes the player would not take\n"
         "# splash damage from rockets launched very close to walls.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "UsePlayerRocketBlastFix = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUsePlayerRocketBlastFix = iniEntry.getBoolValue(true); },
         []() { gbUsePlayerRocketBlastFix = true; }
     },
@@ -316,8 +334,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#   0 = Always use the original PSX Doom player movement & turning logic\n"
         "#   1 = Always use the PSX Final Doom player movement & turning logic\n"
         "#  -1 = Auto-decide based on the game being played\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "UseFinalDoomPlayerMovement = -1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "-1", "\n",
         [](const IniUtils::Entry& iniEntry) { gUseFinalDoomPlayerMovement = iniEntry.getIntValue(-1); },
         []() { gUseFinalDoomPlayerMovement = -1; }
     },
@@ -334,8 +352,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#   0 = Opposite movements never cancel each other out\n"
         "#   1 = Opposite movements always cancel each other out\n"
         "#  -1 = Auto-decide based on the game being played\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "AllowMovementCancellation = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gAllowMovementCancellation = iniEntry.getIntValue(1); },
         []() { gAllowMovementCancellation = 1; }
     },
@@ -347,8 +365,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# for conflicting digital turn movements, therefore if you want the original behavior set to '0'.\n"
         "# This setting does not affect any turning other than digital, all other turning can always cancel.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "AllowTurningCancellation = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbAllowTurningCancellation = iniEntry.getBoolValue(true); },
         []() { gbAllowTurningCancellation = true; }
     },
@@ -359,8 +377,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# at 30 FPS versus 15 FPS. Enabling this setting will make view bobbing stronger, and much more\n"
         "# like the original PC version.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "FixViewBobStrength = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixViewBobStrength = iniEntry.getBoolValue(true); },
         []() { gbFixViewBobStrength = true; }
     },
@@ -379,8 +397,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# stronger gravity level however without issue.\n"
         "#\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "FixGravityStrength = 1\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixGravityStrength = iniEntry.getBoolValue(true); },
         []() { gbFixGravityStrength = true; }
     },
@@ -397,8 +415,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#    0 = Auto decide the limit based on the game (Doom vs Final Doom), in a faithful manner\n"
         "#   >0 = Limit the number of Lost Souls to this much\n"
         "#   <0 = Apply no limit\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "LostSoulSpawnLimit = 0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gLostSoulSpawnLimit = iniEntry.getIntValue(0); },
         []() { gLostSoulSpawnLimit = 0; }
     },
@@ -407,8 +425,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Multiplier for view bobbing strength, from 0.0 to 1.0.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "ViewBobbingStrength = 1.0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "1.0", "\n",
         [](const IniUtils::Entry& iniEntry) { gViewBobbingStrength = iniEntry.getFloatValue(1.0f); },
         []() { gViewBobbingStrength = 1.0f; }
     },
@@ -430,8 +448,8 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "MouseTurnSpeed",
         "#---------------------------------------------------------------------------------------------------\n"
         "# How much turning movement to apply per pixel of mouse movement\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "MouseTurnSpeed = 12.0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "12.0", "\n",
         [](const IniUtils::Entry& iniEntry) { gMouseTurnSpeed = iniEntry.getFloatValue(12.0f); },
         []() { gMouseTurnSpeed = 12.0f; }
     },
@@ -441,8 +459,8 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "# 0-1 range: controls when minor controller inputs are discarded.\n"
         "# The default of '0.125' only registers movement if the stick is at least 12.5% moved.\n"
         "# Setting too low may result in unwanted jitter and movement when the controller is resting.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "GamepadDeadZone = 0.125\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0.125", "\n",
         [](const IniUtils::Entry& iniEntry) { gGamepadDeadZone = iniEntry.getFloatValue(0.125f); },
         []() { gGamepadDeadZone = 0.125f; }
     },
@@ -457,26 +475,26 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "# with the PSX D-PAD were:\n"
         "#  Walk: 300 - 1000\n"
         "#  Run:  800 - 1400\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "GamepadFastTurnSpeed_High = 1400.0",
+        "#---------------------------------------------------------------------------------------------------",
+        "1400.0", "",
         [](const IniUtils::Entry& iniEntry) { gGamepadFastTurnSpeed_High = iniEntry.getFloatValue(1400.0f); },
         []() { gGamepadFastTurnSpeed_High = 1400.0f; }
     },
     {
         "GamepadFastTurnSpeed_Low",
-        "GamepadFastTurnSpeed_Low = 800.0",
+        "", "800.0", "",
         [](const IniUtils::Entry& iniEntry) { gGamepadFastTurnSpeed_Low = iniEntry.getFloatValue(800.0f); },
         []() { gGamepadFastTurnSpeed_Low = 800.0f; }
     },
     {
         "GamepadTurnSpeed_High",
-        "GamepadTurnSpeed_High = 1000.0",
+        "", "1000.0",  "",
         [](const IniUtils::Entry& iniEntry) { gGamepadTurnSpeed_High = iniEntry.getFloatValue(1000.0f); },
         []() { gGamepadTurnSpeed_High = 1000.0f; }
     },
     {
         "GamepadTurnSpeed_Low",
-        "GamepadTurnSpeed_Low = 600.0\n",
+        "", "600.0", "\n",
         [](const IniUtils::Entry& iniEntry) { gGamepadTurnSpeed_Low = iniEntry.getFloatValue(600.0f); },
         []() { gGamepadTurnSpeed_Low = 600.0f; }
     },
@@ -486,8 +504,8 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "# 0-1 range: controls the point at which an analog axis like a trigger, stick etc. is regarded\n"
         "# as 'pressed' when treated as a digital input (e.g trigger used for 'shoot' action).\n"
         "# The default of '0.5' (halfway depressed) is probably reasonable for most users.\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "AnalogToDigitalThreshold = 0.5\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0.5", "\n",
         [](const IniUtils::Entry& iniEntry) { gAnalogToDigitalThreshold = iniEntry.getFloatValue(0.5f); },
         []() { gAnalogToDigitalThreshold = 0.5f; }
     }
@@ -574,8 +592,7 @@ R"(#----------------------------------------------------------------------------
 #define CONTROL_BIND_GROUP_HEADER(GROUP_HEADER, BINDING_NAME, BINDING_VALUE)\
     {\
         #BINDING_NAME,\
-        GROUP_HEADER\
-        #BINDING_NAME " = " BINDING_VALUE,\
+        GROUP_HEADER, BINDING_VALUE, "",\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
         []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
     }
@@ -583,7 +600,7 @@ R"(#----------------------------------------------------------------------------
 #define CONTROL_BIND_GROUP_MIDDLE(BINDING_NAME, BINDING_VALUE)\
     {\
         #BINDING_NAME,\
-        #BINDING_NAME " = " BINDING_VALUE,\
+        "", BINDING_VALUE, "",\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
         []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
     }
@@ -591,7 +608,7 @@ R"(#----------------------------------------------------------------------------
 #define CONTROL_BIND_GROUP_FOOTER(BINDING_NAME, BINDING_VALUE)\
     {\
         #BINDING_NAME,\
-        #BINDING_NAME " = " BINDING_VALUE "\n",\
+        "", BINDING_VALUE, "\n",\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
         []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
     }
@@ -601,7 +618,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Analog movement and turning actions: these must a gamepad axis with a -1.0 to +1.0 range.\n"
         "# Note: analog turn sensitivity is specified by the gamepad sensitivity values in input_cfg.ini.\n"
-        "#---------------------------------------------------------------------------------------------------\n",
+        "#---------------------------------------------------------------------------------------------------",
         Analog_MoveForwardBack, "Gamepad LeftY"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Analog_MoveLeftRight, "Gamepad LeftX"),
@@ -612,7 +629,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Digital movement and turning actions. Turn sensitivity and acceleration are based on the original\n"
         "# PSX values, though greater precision can be achieved if using uncapped framerates.\n"
-        "#---------------------------------------------------------------------------------------------------\n",
+        "#---------------------------------------------------------------------------------------------------",
         Digital_MoveForward, "W, Up, Gamepad DpUp"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Digital_MoveBackward, "S, Down, Gamepad DpDown"),
@@ -625,7 +642,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_HEADER(
         "#---------------------------------------------------------------------------------------------------\n"
         "# In-game actions & modifiers\n"
-        "#---------------------------------------------------------------------------------------------------\n",
+        "#---------------------------------------------------------------------------------------------------",
         Action_Use, "Space, Mouse Right, Gamepad B"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Action_Attack, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, F, Gamepad Y"),
@@ -638,7 +655,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_HEADER(
         "#---------------------------------------------------------------------------------------------------\n"
         "# Toggle in-game pause, automap, and toggle between the Vulkan and Classic renderer\n"
-        "#---------------------------------------------------------------------------------------------------\n",
+        "#---------------------------------------------------------------------------------------------------",
         Toggle_Pause, "P, Pause, Return, Gamepad Start"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Toggle_Map, "Tab, M, Gamepad Back"),
@@ -648,7 +665,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_HEADER(
         "#---------------------------------------------------------------------------------------------------\n"
         "# Weapon switching: relative and absolute\n"
-        "#---------------------------------------------------------------------------------------------------\n",
+        "#---------------------------------------------------------------------------------------------------",
         Weapon_Scroll, "Mouse Wheel"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Weapon_Previous, "PageDown, Q, Gamepad LeftShoulder"),
@@ -666,7 +683,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_HEADER(
         "#---------------------------------------------------------------------------------------------------\n"
         "# Menu & UI controls\n"
-        "#---------------------------------------------------------------------------------------------------\n",
+        "#---------------------------------------------------------------------------------------------------",
         Menu_Up, "Up, W, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Menu_Down, "Down, S, Gamepad DpDown, Gamepad LeftY+, Gamepad RightY+"),
@@ -682,7 +699,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_HEADER(
         "#---------------------------------------------------------------------------------------------------\n"
         "# Automap controls\n"
-        "#---------------------------------------------------------------------------------------------------\n",
+        "#---------------------------------------------------------------------------------------------------",
         Automap_ZoomIn, "E, \\=, Gamepad RightTrigger"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Automap_ZoomOut, "Q, -, Gamepad LeftTrigger"),
@@ -698,7 +715,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
         "# Mappings to the original PlayStation controller buttons for the sole purpose of entering cheat\n"
         "# code sequences on the pause menu, the original way. For example inputs mapped to the PSX 'Cross'\n"
         "# button will be interpreted as that while attempting to enter an original cheat code sequence.\n"
-        "#---------------------------------------------------------------------------------------------------\n",
+        "#---------------------------------------------------------------------------------------------------",
         PSXCheatCode_Up, "Up, W, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"
     ),
     CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Down, "Down, S, Gamepad DpDown, Gamepad LeftY+, Gamepad RightY+"),
@@ -785,8 +802,8 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "#      F7: Show all map lines\n"
         "#      F8: VRAM Viewer (functionality hidden in retail)\n"
         "#      F9: No-target (new cheat for PC port!)\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "EnableDevCheatShortcuts = 0\n",
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbEnableDevCheatShortcuts = iniEntry.getBoolValue(); },
         []() { gbEnableDevCheatShortcuts = false; }
     },
@@ -816,56 +833,56 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "#      No-clip:                Up, Up, Up, Up, Up, Up, Up, R1\n"
         "#      VRAM viewer:            Triangle, Square, Up, Left, Down, Right, X, Circle\n"
         "#      No-target:              X, Up, X, Up, Square, Square, X, Square\n"
-        "#---------------------------------------------------------------------------------------------------\n"
-        "CheatKeySequence_GodMode = iddqd",
+        "#---------------------------------------------------------------------------------------------------",
+        "iddqd", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_GodMode, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_GodMode, "iddqd"); }
     },
     {
         "CheatKeySequence_NoClip",
-        "CheatKeySequence_NoClip = idclip",
+        "", "idclip", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_NoClip, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_NoClip, "idclip"); }
     },
     {
         "CheatKeySequence_LevelWarp",
-        "CheatKeySequence_LevelWarp = idclev",
+        "", "idclev", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_LevelWarp, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_LevelWarp, "idclev"); }
     },
     {
         "CheatKeySequence_WeaponsKeysAndArmor",
-        "CheatKeySequence_WeaponsKeysAndArmor = idkfa",
+        "", "idkfa", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_WeaponsKeysAndArmor, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_WeaponsKeysAndArmor, "idkfa"); }
     },
     {
         "CheatKeySequence_AllMapLinesOn",
-        "CheatKeySequence_AllMapLinesOn = iddt",
+        "", "iddt", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_AllMapLinesOn, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_AllMapLinesOn, "iddt"); }
     },
     {
         "CheatKeySequence_AllMapThingsOn",
-        "CheatKeySequence_AllMapThingsOn = idmt",
+        "", "idmt", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_AllMapThingsOn, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_AllMapThingsOn, "idmt"); }
     },
     {
         "CheatKeySequence_XRayVision",
-        "CheatKeySequence_XRayVision = idray",
+        "", "idray", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_XRayVision, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_XRayVision, "idray"); }
     },
     {
         "CheatKeySequence_VramViewer",
-        "CheatKeySequence_VramViewer = idram",
+        "", "idram", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_VramViewer, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_VramViewer, "idram"); }
     },
     {
         "CheatKeySequence_NoTarget",
-        "CheatKeySequence_NoTarget = idcloak\n",
+        "", "idcloak", "\n",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_NoTarget, iniEntry.value.c_str()); },
         []() { setCheatKeySequence(gCheatKeys_NoTarget, "idcloak"); }
     },
@@ -879,6 +896,95 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
 static bool gbDidGenerateNewConfig;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Saves an updated (or completely new) version of the specified config file.
+// Existing settings are preserved except for settings that have been removed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void updateConfigFile(
+    const std::string& cfgFilePath,
+    const ConfigFieldHandler* configFieldHandlers,
+    const size_t numConfigFieldHandlers,
+    const char* const fileHeader,
+    const FileData& existingCfgFileData
+) noexcept {
+    // Extract all fields from the existing file data (if we have it)
+    std::map<std::string, std::string> existingFields;
+
+    if (existingCfgFileData.bytes) {
+        IniUtils::parseIniFromString(
+            (const char*) existingCfgFileData.bytes.get(),
+            existingCfgFileData.size,
+            [&](const IniUtils::Entry& iniEntry) noexcept {
+                existingFields[iniEntry.key] = iniEntry.value;
+            }
+        );
+    }
+
+    // Open the config file for writing
+    std::FILE* const pFile = std::fopen(cfgFilePath.c_str(), FOPEN_WRITE_TEXT);
+
+    if (!pFile)
+        return;
+
+    // Write the modification warning and file header if existing
+    std::fprintf(pFile, "%s\n", FILE_MODIFICATION_WARNING);
+
+    if (fileHeader && fileHeader[0]) {
+        std::fprintf(pFile, "%s\n", fileHeader);
+    }
+
+    // Helper lambda: tells if a string ends in a new line character
+    const auto endsInNewLine = [](const char* const str) noexcept {
+        if (str) {
+            if (const size_t len = std::strlen(str); len > 0) {
+                const char lastChar = str[len - 1];
+                return ((lastChar == '\n') || (lastChar == '\r'));
+            }
+        }
+
+        return false;
+    };
+
+    // Write all config fields out to the file and as we find existing field values, remove them from the map to mark as consumed.
+    // We'll dump any unused fields found at the end of the file after we're done.
+    for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
+        const ConfigFieldHandler& handler = configFieldHandlers[i];
+
+        // Write the preamble for the field, if specified:
+        if (handler.preamble && handler.preamble[0]) {
+            std::fprintf(pFile, (endsInNewLine(handler.preamble)) ? "%s" : "%s\n", handler.preamble);
+        }
+
+        // Write the key and value for the field and use the pre-existing value if it's there.
+        // If the existing value is not there, fallback to using the default one.
+        const auto existingValIter = existingFields.find(handler.name);
+
+        if (existingValIter != existingFields.end()) {
+            std::fprintf(pFile, "%s = %s\n", handler.name, existingValIter->second.c_str());
+            existingFields.erase(existingValIter);
+        } else {
+            std::fprintf(pFile, "%s = %s\n", handler.name, handler.defaultValueStr);
+        }
+
+        // Write the postamble for the field, if specified:
+        if (handler.postamble && handler.postamble[0]) {
+            std::fprintf(pFile, (endsInNewLine(handler.postamble)) ? "%s" : "%s\n", handler.postamble);
+        }
+    }
+
+    // If there are unused config fields at the end then dump them out following a warning
+    if (!existingFields.empty()) {
+        std::fprintf(pFile, "%s\n", UNUSED_FIELDS_WARNING);
+
+        for (const auto& kvp : existingFields) {
+            std::fprintf(pFile, "%s = %s\n", kvp.first.c_str(), kvp.second.c_str());
+        }
+    }
+
+    // Close to flush the stream and finish up
+    std::fclose(pFile);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parse a given config file using the given config field handlers
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void parseConfigFile(
@@ -886,7 +992,7 @@ static void parseConfigFile(
     const char* fileName,
     const ConfigFieldHandler* configFieldHandlers,
     const size_t numConfigFieldHandlers,
-    const char* const newlyGeneratedFileHeader
+    const char* const cfgFileHeader
 ) noexcept {
     // Set all values to their initial defaults (until we parse otherwise)
     for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
@@ -900,40 +1006,38 @@ static void parseConfigFile(
     // Read and parse the ini file (if it exists).
     // Allow the file to exist in two different locations: (1) The current working directory and (2) The normal config folder.
     // The configuration file in the current working directory takes precedence over the one in the config folder.
-    std::string configFilePath;
+    std::string cfgFilePath;
     bool bCfgFileExists;
     
     if (FileUtils::fileExists(fileName)) {
-        configFilePath = fileName;
+        cfgFilePath = fileName;
         bCfgFileExists = true;
     } else {
-        configFilePath = configFolder + fileName;
-        bCfgFileExists = FileUtils::fileExists(configFilePath.c_str());
+        cfgFilePath = configFolder + fileName;
+        bCfgFileExists = FileUtils::fileExists(cfgFilePath.c_str());
     }
 
-    if (bCfgFileExists) {
-        const FileData fileData = FileUtils::getContentsOfFile(configFilePath.c_str(), 8, std::byte(0));
+    const FileData cfgFileData = (bCfgFileExists) ? FileUtils::getContentsOfFile(cfgFilePath.c_str(), 8, std::byte(0)) : FileData();
 
-        if (fileData.bytes) {
-            IniUtils::parseIniFromString(
-                (const char*) fileData.bytes.get(),
-                fileData.size,
-                [&](const IniUtils::Entry& iniEntry) noexcept {
-                    // Try to find a matching config field handler.
-                    // This is not an especially smart or fast way of doing it, but performance isn't an issue here:
-                    for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
-                        const ConfigFieldHandler& handler = configFieldHandlers[i];
+    if (bCfgFileExists && cfgFileData.bytes) {
+        IniUtils::parseIniFromString(
+            (const char*) cfgFileData.bytes.get(),
+            cfgFileData.size,
+            [&](const IniUtils::Entry& iniEntry) noexcept {
+                // Try to find a matching config field handler.
+                // This is not an especially smart or fast way of doing it, but performance isn't an issue here:
+                for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
+                    const ConfigFieldHandler& handler = configFieldHandlers[i];
 
-                        if (iniEntry.key != handler.name)
-                            continue;
+                    if (iniEntry.key != handler.name)
+                        continue;
                         
-                        handler.parseFunc(iniEntry);
-                        executedConfigHandler[i] = true;
-                        break;
-                    }
+                    handler.parseFunc(iniEntry);
+                    executedConfigHandler[i] = true;
+                    break;
                 }
-            );
-        }
+            }
+        );
     }
 
     // If we are missing expected config fields then we need to reopen the config and append to it
@@ -945,36 +1049,10 @@ static void parseConfigFile(
         }
     }
 
-    // Do we need to append any new config fields?
+    // Do we need to re-save the config file?
     if (numMissingConfigFields > 0) {
         gbDidGenerateNewConfig = true;
-        std::FILE* pFile = std::fopen(configFilePath.c_str(), FOPEN_WRITE_APPEND_TEXT);
-
-        if (pFile) {
-            // Only append a starting newline if it's an existing file.
-            // Otherwise append the header for this newly generated config file (if there is one).
-            if (bCfgFileExists) {
-                std::fwrite("\n", 1, 1, pFile);
-            } else if (newlyGeneratedFileHeader && newlyGeneratedFileHeader[0]) {
-                std::fprintf(pFile, "%s\n", newlyGeneratedFileHeader);
-            }
-
-            for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
-                if (!executedConfigHandler[i]) {
-                    const ConfigFieldHandler& handler = configFieldHandlers[i];
-                    numMissingConfigFields--;
-
-                    std::fwrite(handler.iniDefaultStr, std::strlen(handler.iniDefaultStr), 1, pFile);
-
-                    // Only append a newline between the fields if we're not on the last one
-                    if (numMissingConfigFields > 0) {
-                        std::fwrite("\n", 1, 1, pFile);
-                    }
-                }
-            }
-
-            std::fclose(pFile);
-        }
+        updateConfigFile(cfgFilePath, configFieldHandlers, numConfigFieldHandlers, cfgFileHeader, cfgFileData);
     }
 }
 
