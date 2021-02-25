@@ -596,14 +596,28 @@ void initPipelines(
         );
     }
 
-    // A pipeline using during crossfading
-    initPipeline(
-        VPipelineType::Crossfade, crossfadeRPath.getRenderPass(), 0,
-        gShaders_crossfade, nullptr, gPipelineLayout_crossfade,
-        gVertexBindingDesc_xyUv, gVertexAttribs_xyUv, C_ARRAY_SIZE(gVertexAttribs_xyUv),
-        gInputAS_triList, gRasterState_noCull,
-        gBlendState_noBlend, gDepthState_disabled, gMultisampleState_noMultisample
-    );
+    // A pipeline to use during crossfading
+    {
+        const VkSpecializationMapEntry specializationMapEntries[] = {
+            { 0, 0, sizeof(VkBool32) }
+        };
+
+        const VkBool32 bShade16Bit = (!Config::gbUseVulkan32BitShading);
+
+        VkSpecializationInfo specializationInfo = {};
+        specializationInfo.mapEntryCount = C_ARRAY_SIZE(specializationMapEntries);
+        specializationInfo.pMapEntries = specializationMapEntries;
+        specializationInfo.dataSize = sizeof(VkBool32);
+        specializationInfo.pData = &bShade16Bit;
+
+        initPipeline(
+            VPipelineType::Crossfade, crossfadeRPath.getRenderPass(), 0,
+            gShaders_crossfade, &specializationInfo, gPipelineLayout_crossfade,
+            gVertexBindingDesc_xyUv, gVertexAttribs_xyUv, C_ARRAY_SIZE(gVertexAttribs_xyUv),
+            gInputAS_triList, gRasterState_noCull,
+            gBlendState_noBlend, gDepthState_disabled, gMultisampleState_noMultisample
+        );
+    }
 
     // Used to draw loading plaques, both the background and the plaque itself
     initPipeline(

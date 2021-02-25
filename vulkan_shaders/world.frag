@@ -8,7 +8,7 @@
 #include "ShaderCommon_Frag.h"
 
 layout(constant_id = 0) const bool WRAP_TEXTURE = true;             // Whether to use wrap texture mode or clamp to edge; clamping is used for sprites to prevent edge artifacts
-layout(constant_id = 1) const bool USE_PSX_16_BIT_SHADING = true;   // Whether to shade in 16-bit mode like the original PlayStation
+layout(constant_id = 1) const bool USE_PSX_16_BIT_SHADING = true;   // Whether to shade with 16-bit precision like the original PlayStation
 
 // A texture containing the entirety of PSX VRAM
 layout(set = 0, binding = 0) uniform usampler2D vramTex;

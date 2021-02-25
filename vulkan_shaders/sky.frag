@@ -8,7 +8,7 @@
 
 DECLARE_UNIFORMS()
 
-// Whether to shade in 16-bit mode like the original PlayStation
+// Whether to shade with 16-bit precision like the original PlayStation
 layout(constant_id = 1) const bool USE_PSX_16_BIT_SHADING = true;
 
 // A texture containing the entirety of PSX VRAM
