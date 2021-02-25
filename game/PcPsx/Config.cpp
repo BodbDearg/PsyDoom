@@ -787,7 +787,7 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
     {
         "EnableDevCheatShortcuts",
         "#---------------------------------------------------------------------------------------------------\n"
-        "# Set to '1' to enable convenience single key cheats (keys F1-F8) on the pause menu.\n"
+        "# Set to '1' to enable convenience single key cheats (keys F1-F9) on the pause menu.\n"
         "# If you frequently use cheats for development purposes then these shortcuts might be useful.\n"
         "# They are disabled by default since they can be accidentally invoked very easily.\n"
         "#\n"
