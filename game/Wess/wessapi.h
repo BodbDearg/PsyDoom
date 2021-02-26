@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Asserts.h"
 #include "PcPsx/Types.h"
 #include "PsyQ/LIBSPU.h"
 
@@ -11,6 +12,15 @@ struct patch_voice;
 struct sequence_data;
 struct track_data;
 struct track_status;
+
+// A PsyDoom added macro for Wess API debug sanity-checks/assertions.
+// We've no idea what debug sanity checks might have been in the original code because the retail build doesn't include them.
+// This assert is added to help PsyDoom identify bad conditions in the WESS sequencer system early.
+#if PSYDOOM_MODS
+    #define WESS_ASSERT(Condition) ASSERT(Condition)
+#else
+    #define WESS_ASSERT(Condition)
+#endif
 
 // Maximum volume level that should be used for voices
 static constexpr uint8_t WESS_MAX_MASTER_VOL = 127;

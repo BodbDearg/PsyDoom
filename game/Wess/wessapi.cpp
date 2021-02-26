@@ -634,6 +634,7 @@ int32_t wess_load_module(
             // If the track is to be loaded figure out how much memory it would use and add to the total for the sequence.
             // Also update the maximum number of voices required for all sequences.
             if (bLoadTrack) {
+                WESS_ASSERT(numTracksToload < UINT8_MAX);
                 ++numTracksToload;
 
                 // Track is to be loaded: incorporate this track's size into the total size for the sequence and 32-bit align size
@@ -762,9 +763,7 @@ int32_t wess_load_module(
     gWess_end_seq_num = module.hdr.num_sequences;
 
     // PsyDoom: sanity check we haven't overflowed module memory
-    #if PSYDOOM_MODS
-        ASSERT(gpWess_wmd_end - gpWess_wmd_mem <= gWess_mem_limit);
-    #endif
+    WESS_ASSERT(gpWess_wmd_end - gpWess_wmd_mem <= gWess_mem_limit);
     
     // Load was a success!
     return true;
@@ -937,12 +936,17 @@ int32_t wess_seq_structrig(
         } else {
             trackStat.handled = false;
             trackStat.stopped = false;
+
+            WESS_ASSERT(seqStat.num_tracks_playing < UINT8_MAX);
             seqStat.num_tracks_playing++;
         }
 
         // There is one more track playing the sequence and globally
-        seqStat.num_tracks_active += 1;
-        mstat.num_active_tracks += 1;
+        WESS_ASSERT(seqStat.num_tracks_active < UINT8_MAX);
+        seqStat.num_tracks_active++;
+
+        WESS_ASSERT(mstat.num_active_tracks < UINT8_MAX);
+        mstat.num_active_tracks++;
 
         // Remember what track is being used on the sequence
         pTrackStatIndices[numTracksPlayed] = trackStatIdx;

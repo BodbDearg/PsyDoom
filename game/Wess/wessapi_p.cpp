@@ -13,7 +13,9 @@
 static void trackstart(track_status& trackStat, sequence_status& seqStat) noexcept {
     if (trackStat.stopped) {
         trackStat.stopped = false;
-        seqStat.num_tracks_playing += 1;
+
+        WESS_ASSERT(seqStat.num_tracks_playing < UINT8_MAX);
+        seqStat.num_tracks_playing++;
 
         if (seqStat.num_tracks_playing > 0) {
             seqStat.playmode = SEQ_STATE_PLAYING;
@@ -27,7 +29,9 @@ static void trackstart(track_status& trackStat, sequence_status& seqStat) noexce
 static void trackstop(track_status& trackStat, sequence_status& seqStat) noexcept {
     if (!trackStat.stopped) {
         trackStat.stopped = true;
-        seqStat.num_tracks_playing -= 1;
+
+        WESS_ASSERT(seqStat.num_tracks_playing > 0);
+        seqStat.num_tracks_playing--;
 
         if (seqStat.num_tracks_playing == 0) {
             seqStat.playmode = SEQ_STATE_STOPPED;

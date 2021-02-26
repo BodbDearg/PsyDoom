@@ -229,7 +229,7 @@ static void updateCoordSysInfo() noexcept {
 
         if (userRenderH > 0) {
             gFramebufferW = (uint32_t)(((uint64_t) userRenderH * gPresentSurfaceW) / gPresentSurfaceH);
-            gFramebufferH = Config::gVulkanRenderHeight;
+            gFramebufferH = userRenderH;
         } else {
             gFramebufferW = gPresentSurfaceW;
             gFramebufferH = gPresentSurfaceH;

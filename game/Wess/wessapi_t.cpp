@@ -42,7 +42,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
         cmdBytes[1] = trackStat.volume_cntrl;
 
         trackStat.pcur_cmd = cmdBytes;
-        gWess_CmdFuncArr[trackStat.driver_id][VolumeMod](trackStat);        
+        gWess_CmdFuncArr[trackStat.driver_id][VolumeMod](trackStat);
         trackStat.pcur_cmd = pPrevCmd;
     }
     else {

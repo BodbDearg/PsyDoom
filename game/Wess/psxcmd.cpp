@@ -4,7 +4,6 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxcmd.h"
 
-#include "Asserts.h"
 #include "Macros.h"
 #include "psxspu.h"
 #include "wessapi.h"
@@ -93,7 +92,7 @@ void add_music_mute_note(
     if (pSavedVoices) {
         // PsyDoom: sanity check we haven't exceeded the bounds of the saved notes array.
         // This shouldn't be called more times than there are hardware voices available!
-        ASSERT(pSavedVoices->size < SPU_NUM_VOICES);
+        WESS_ASSERT(pSavedVoices->size < SPU_NUM_VOICES);
 
         SavedVoice& voice = pSavedVoices->voices[pSavedVoices->size];
         voice.seq_idx = seqIdx;
@@ -423,6 +422,7 @@ void PSX_TrkOff(track_status& trackStat) noexcept {
         trackStat.stopped = true;
 
         sequence_status& seqStat = gpWess_drv_sequenceStats[trackStat.seqstat_idx];
+        WESS_ASSERT(seqStat.num_tracks_playing > 0);
         seqStat.num_tracks_playing--;
 
         if (seqStat.num_tracks_playing == 0) {
@@ -785,8 +785,11 @@ void PSX_voiceon(
     const uint32_t adsrShift = 31 - (patchVoice.adsr2 % 32);
     voiceStat.release_time_ms = adsr >> adsrShift;
     
-    // Inc voice count stats
+    // Increment voice count stats
+    WESS_ASSERT(trackStat.num_active_voices < UINT8_MAX);
     trackStat.num_active_voices++;
+
+    WESS_ASSERT(mstat.num_active_voices < UINT8_MAX);
     mstat.num_active_voices++;
 
     // Actually trigger the voice with the hardware
@@ -801,7 +804,10 @@ void PSX_voiceparmoff(voice_status& voiceStat) noexcept {
     track_status& trackStat = gpWess_drv_trackStats[voiceStat.trackstat_idx];
 
     // Update track and global voice stats
+    WESS_ASSERT(mstat.num_active_voices > 0);
     mstat.num_active_voices--;
+
+    WESS_ASSERT(trackStat.num_active_voices > 0);
     trackStat.num_active_voices--;
 
     // Turn off the track if there's no more voices active and it's allowed

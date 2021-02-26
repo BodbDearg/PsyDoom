@@ -225,6 +225,8 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
     // Mark the track as not playing anymore
     if (!trackStat.stopped) {
         trackStat.stopped = true;
+
+        WESS_ASSERT(seqStat.num_tracks_playing > 0);
         seqStat.num_tracks_playing--;
 
         if (seqStat.num_tracks_playing == 0) {
@@ -251,12 +253,18 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
 
         // Mark the track as inactive and update all stat counts
         trackStat.active = false;
+
+        WESS_ASSERT(mstat.num_active_tracks > 0);
         mstat.num_active_tracks--;
+
+        WESS_ASSERT(seqStat.num_tracks_active > 0);
         seqStat.num_tracks_active--;
         
         // If the sequence has no more tracks active then it too is now inactive
         if (seqStat.num_tracks_active == 0) {
             seqStat.active = false;
+
+            WESS_ASSERT(mstat.num_active_seqs > 0);
             mstat.num_active_seqs--;
         }
     }
