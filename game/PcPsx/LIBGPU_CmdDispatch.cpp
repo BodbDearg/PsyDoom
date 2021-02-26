@@ -189,7 +189,7 @@ void submit(const SPRT& sprite) noexcept {
 
                 // Draw the sprite and restrict the texture window to cover the exact area of VRAM occupied by the sprite.
                 // Ignoring the gpu texture window/page settings in this way and restricting to the exact pixels used by the
-                // sprite helps to avoid stitching artifacts.
+                // sprite helps to avoid stitching artifacts, especially when MSAA is active.
                 VDrawing::addUISprite(
                     drawRect.x,
                     drawRect.y,
@@ -205,8 +205,9 @@ void submit(const SPRT& sprite) noexcept {
                     gpu.clutY,
                     texWinX + sprite.tu0,
                     texWinY + sprite.tv0,
-                    sprite.w,                   // Size texture window to cover sprite area only, as mentioned above
-                    sprite.h
+                    // Size the texture window to cover only the region of sprite pixels that we need, to avoid artifacts as mentioned above
+                    std::min((uint16_t) sprite.w, drawRect.w),
+                    std::min((uint16_t) sprite.h, drawRect.h)
                 );
             }
 

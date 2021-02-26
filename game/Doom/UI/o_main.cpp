@@ -375,12 +375,34 @@ void O_Drawer() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
+    // Draw the options screen background
     {
         const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();
+        texture_t& bgTex = gTex_OptionsBg;
 
         for (int16_t y = 0; y < 4; ++y) {
             for (int16_t x = 0; x < 4; ++x) {
-                I_CacheAndDrawSprite(gTex_OptionsBg, x * 64, y * 64, bgPaletteClutId);
+                // PsyDoom: restrict these tiles to being drawn at a maximum size of 64x64.
+                // This helps to prevent slight seams between the tiles when using MSAA with the Final Doom options menu.
+                //
+                // The Final Doom background tile unfortunately has some black/empty rows and columns at the edges of the texture,
+                // and when MSAA is enabled these tend to work their way into the rendered image as seams. Restricting the draw area
+                // of the sprite to a maximum of 64x64 avoids including these unwanted pixels when MSAA is on.
+                #if PSYDOOM_MODS
+                    I_CacheTex(bgTex);
+                    I_DrawSprite(
+                        bgTex.texPageId,
+                        bgPaletteClutId,
+                        x * 64,
+                        y * 64,
+                        bgTex.texPageCoordX,
+                        bgTex.texPageCoordY,
+                        std::min((uint16_t) bgTex.width, uint16_t(64)),
+                        std::min((uint16_t) bgTex.height, uint16_t(64))
+                    );
+                #else
+                    I_CacheAndDrawSprite(bgTex, x * 64, y * 64, bgPaletteClutId);
+                #endif
             }
         }
     }
