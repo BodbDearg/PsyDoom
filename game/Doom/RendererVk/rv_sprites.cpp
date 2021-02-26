@@ -344,23 +344,11 @@ static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine&
         return true;
 
     // Otherwise the finite line segments intersect if 'tx' and 'ty' are between 0 and 1.
-    // I.E, if the following condition is true:
-    //
-    //      ((tx >= 0.0f) && (tx <= 1.0f) && (ty >= 0.0f) && (ty <= 1.0f))
-    //
-    // 'tx' and 'ty' are computed as follows:
-    //
-    //      const float tx = numerator1 / denominator;
-    //      const float ty = numerator2 / denominator;
-    //
     // Note that these time values can be used as linear interpolation values to get the actual x and y intersect point.
     // We don't need that here though so don't bother...
-    //
-    // Optimizing to remove the divide, we get the code below:
-    const bool bLinesIntersect = (
-        (numerator1 >= 0.0f) && (numerator1 <= denominator) &&
-        (numerator2 >= 0.0f) && (numerator2 <= denominator)
-    );
+    const float tx = numerator1 / denominator;
+    const float ty = numerator2 / denominator;
+    const bool bLinesIntersect = ((tx >= 0.0f) && (tx <= 1.0f) && (ty >= 0.0f) && (ty <= 1.0f));
 
     return (!bLinesIntersect);
 }
