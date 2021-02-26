@@ -419,11 +419,23 @@ void PSX_TrkOff(track_status& trackStat) noexcept {
     } else {
         // Otherwise decrement the number of sequence tracks playing and update state
         trackStat.off = true;
-        trackStat.stopped = true;
+
+        // PsyDoom: bug-fix, don't double count the track being stopped if it's already stopped.
+        // Otherwise we can potentially corrupt the track playing count and cause it to underflow etc.
+        // This can potentially cause infinite freezes in places where we are waiting for sounds to stop, like loading transitions.
+        #if PSYDOOM_MODS
+            const bool bNeedToStopTrack = (!trackStat.stopped);
+        #else
+            const bool bNeedToStopTrack = true;
+        #endif
 
         sequence_status& seqStat = gpWess_drv_sequenceStats[trackStat.seqstat_idx];
-        WESS_ASSERT(seqStat.num_tracks_playing > 0);
-        seqStat.num_tracks_playing--;
+
+        if (bNeedToStopTrack) {
+            trackStat.stopped = true;
+            WESS_ASSERT(seqStat.num_tracks_playing > 0);
+            seqStat.num_tracks_playing--;
+        }
 
         if (seqStat.num_tracks_playing == 0) {
             seqStat.playmode = SEQ_STATE_STOPPED;
