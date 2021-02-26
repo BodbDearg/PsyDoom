@@ -973,7 +973,9 @@ int32_t wess_seq_structrig(
         seqStat.volume = 128;
         seqStat.pan = 64;
         seqStat.active = true;
-        mstat.num_active_seqs += 1;
+
+        WESS_ASSERT(mstat.num_active_seqs < UINT8_MAX);
+        mstat.num_active_seqs++;
     }
 
     // Renable the sequencer's timer interrupts/updates and return what sequence index we started playing (if any)
