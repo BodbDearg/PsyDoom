@@ -84,7 +84,7 @@ static void recordCmdBuffer(vgl::CmdBufferRecorder& cmdRec) noexcept {
     const int32_t viewportWInt = (int32_t)(viewportX + viewportW) - viewportXInt;
     const int32_t viewportHInt = (int32_t)(viewportY + viewportH) - viewportYInt;
 
-    cmdRec.setViewport(viewportXInt, viewportYInt, viewportWInt, viewportHInt, 0.0f, 1.0f);
+    cmdRec.setViewport((float) viewportXInt, (float) viewportYInt, (float) viewportWInt, (float) viewportHInt, 0.0f, 1.0f);
     cmdRec.setScissors(viewportXInt, viewportYInt, viewportWInt, viewportHInt);
 
     // Bind the correct vertex buffer for drawing
