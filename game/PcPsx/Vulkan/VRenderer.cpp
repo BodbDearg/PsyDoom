@@ -75,10 +75,10 @@ uint32_t    gFramebufferH;
 float gCurLogicalDisplayW;
 
 // Coord system info: where the original PSX GPU framebuffer/coord-system maps to on the draw/render framebuffer
-int32_t     gPsxCoordsFbX;
-int32_t     gPsxCoordsFbY;
-uint32_t    gPsxCoordsFbW;
-uint32_t    gPsxCoordsFbH;
+float gPsxCoordsFbX;
+float gPsxCoordsFbY;
+float gPsxCoordsFbW;
+float gPsxCoordsFbH;
 
 // Coord system conversion: scalars to convert from normalized device coords to the original PSX framebuffer coords (256x240).
 // Also where the where the original PSX framebuffer coords start in NDC space.
@@ -259,8 +259,8 @@ static void updateCoordSysInfo() noexcept {
     // This info is also used by the new Vulkan renderer to setup coordinate systems and projection matrices.
     if (bHaveValidPresentSurface) {
         Video::getClassicFramebufferWindowRect(
-            gFramebufferW,
-            gFramebufferH,
+            (float) gFramebufferW,
+            (float) gFramebufferH,
             gPsxCoordsFbX,
             gPsxCoordsFbY,
             gPsxCoordsFbW,
@@ -271,6 +271,17 @@ static void updateCoordSysInfo() noexcept {
         gPsxCoordsFbY = 0;
         gPsxCoordsFbW = 0;
         gPsxCoordsFbH = 0;
+    }
+
+    // Is the framebuffer being pixel stretched? If that is the case then adjust the width
+    if (gFramebufferW > 0) {
+        if (Config::gbVulkanPixelStretch) {
+            const float pixelStretch = gCurLogicalDisplayW / (float) Video::ORIG_DRAW_RES_X;
+
+            gFramebufferW = (int32_t) std::max(std::ceil((float) gFramebufferW / pixelStretch), 1.0f);
+            gPsxCoordsFbX /= pixelStretch;
+            gPsxCoordsFbW /= pixelStretch;
+        }
     }
 
     // Compute scalings and offsets to help convert from normalized device coords to original PSX framebuffer (256x240) coords.

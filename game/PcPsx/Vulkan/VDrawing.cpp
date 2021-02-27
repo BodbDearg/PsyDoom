@@ -74,13 +74,18 @@ static void recordCmdBuffer(vgl::CmdBufferRecorder& cmdRec) noexcept {
     // is enabled, no extension is allowed vertically; instead, letterboxing will happen. I considered allowing a vertically long display
     // but it won't work with the UI assets & design that Doom uses. I'm also not sure why someone want to play that way anyway...
     const bool bAllowWidescreen = Config::gbVulkanWidescreenEnabled;
-    const int32_t viewportX = (bAllowWidescreen) ? 0 : VRenderer::gPsxCoordsFbX;
-    const int32_t viewportY = VRenderer::gPsxCoordsFbY;
-    const int32_t viewportW = (bAllowWidescreen) ? VRenderer::gFramebufferW : VRenderer::gPsxCoordsFbW;
-    const int32_t viewportH = VRenderer::gPsxCoordsFbH;
+    const float viewportX = (bAllowWidescreen) ? 0 : VRenderer::gPsxCoordsFbX;
+    const float viewportY = VRenderer::gPsxCoordsFbY;
+    const float viewportW = (bAllowWidescreen) ? (float) VRenderer::gFramebufferW : VRenderer::gPsxCoordsFbW;
+    const float viewportH = VRenderer::gPsxCoordsFbH;
 
-    cmdRec.setViewport((float) viewportX, (float) viewportY, (float) viewportW, (float) viewportH, 0.0f, 1.0f);
-    cmdRec.setScissors(viewportX, viewportY, viewportW, viewportH);
+    const int32_t viewportXInt = (int32_t)(viewportX);
+    const int32_t viewportYInt = (int32_t)(viewportY);
+    const int32_t viewportWInt = (int32_t)(viewportX + viewportW) - viewportXInt;
+    const int32_t viewportHInt = (int32_t)(viewportY + viewportH) - viewportYInt;
+
+    cmdRec.setViewport(viewportXInt, viewportYInt, viewportWInt, viewportHInt, 0.0f, 1.0f);
+    cmdRec.setScissors(viewportXInt, viewportYInt, viewportWInt, viewportHInt);
 
     // Bind the correct vertex buffer for drawing
     cmdRec.bindVertexBuffer(*gVertexBuffers_Draw.pCurBuffer, 0, 0);
@@ -245,7 +250,7 @@ void setDrawUniforms(const VShaderUniforms_Draw& uniforms) noexcept {
 Matrix4f computeTransformMatrixForUI(const bool bAllowWidescreen) noexcept {
     // The UI is centered horizontally in the viewport (if we are in widescreen mode) and occupies it's full vertical range.
     // Compute how much leftover space there would be at the left and right due to widescreen.
-    const float xPadding = ((float) VRenderer::gPsxCoordsFbX / (float) VRenderer::gPsxCoordsFbW) * SCREEN_W;
+    const float xPadding = (VRenderer::gPsxCoordsFbX / VRenderer::gPsxCoordsFbW) * (float) SCREEN_W;
 
     // These are the projection parameters.
     // Note: need to reverse by/ty to get the view the right way round (normally y is up with projection matrices).

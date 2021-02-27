@@ -30,6 +30,7 @@ extern bool     gbFullscreen;
 extern float    gLogicalDisplayW;
 extern bool     gbDisableVulkanRenderer;
 extern int32_t  gVulkanRenderHeight;
+extern bool     gbVulkanPixelStretch;
 extern bool     gbVulkanTripleBuffer;
 extern bool     gbVulkanWidescreenEnabled;
 extern int32_t  gAAMultisamples;

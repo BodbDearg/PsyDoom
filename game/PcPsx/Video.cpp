@@ -188,12 +188,12 @@ void shutdownVideo() noexcept {
 // Considers the current window size (specified in pixels) and user scaling settings.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void getClassicFramebufferWindowRect(
-    const uint32_t windowW,
-    const uint32_t windowH,
-    int32_t& rectX,
-    int32_t& rectY,
-    uint32_t& rectW,
-    uint32_t& rectH
+    const float windowW,
+    const float windowH,
+    float& rectX,
+    float& rectY,
+    float& rectW,
+    float& rectH
 ) noexcept {
     //If the window size is zero then make the output rect zero also
     if ((windowW <= 0) || (windowH <= 0)) {
@@ -209,25 +209,27 @@ void getClassicFramebufferWindowRect(
     if (Config::gLogicalDisplayW <= 0.0f) {
         rectX = 0;
         rectY = 0;
-        rectW = (uint32_t) windowW;
-        rectH = (uint32_t) windowH;
+        rectW = windowW;
+        rectH = windowH;
     } else {
         // If not using a free aspect ratio then determine the scale to output at, while preserving the chosen aspect ratio.
         // The chosen aspect ratio is determined by the user's logical display resolution width.
-        const float xScale = (float) windowW / Config::gLogicalDisplayW;
-        const float yScale = (float) windowH / (float) ORIG_DISP_RES_Y;
+        const float logicalXResolution = Config::gLogicalDisplayW;
+        const float xScale = windowW / logicalXResolution;
+        const float yScale = windowH / (float) ORIG_DISP_RES_Y;
         const float scale = std::min(xScale, yScale);
 
         // Determine output width and height and center the framebuffer image in the window
-        rectW = (uint32_t)(Config::gLogicalDisplayW * scale);
-        rectH = (uint32_t)((float) ORIG_DISP_RES_Y * scale);
-        rectX = windowW / 2 - rectW / 2;
-        rectY = windowH / 2 - rectH / 2;
+        rectW = logicalXResolution * scale;
+        rectH = (float) ORIG_DISP_RES_Y * scale;
+        rectX = (windowW - rectW) * 0.5;
+        rectY = (windowH - rectH) * 0.5;
     }
 
-    // Ensure the coordinates are within screen bounds
-    rectX = std::clamp<int32_t>(rectX, 0, windowW - 1);
-    rectY = std::clamp<int32_t>(rectY, 0, windowH - 1);
+    // Ensure the coordinates are within screen bounds.
+    // Note that rectX, rectY could technically go past screen bounds if the width or height is '0', but we shouldn't draw in that case.
+    rectX = std::clamp(rectX, 0.0f, windowW);
+    rectY = std::clamp(rectY, 0.0f, windowH);
 
     if (rectX + rectW > windowW) {
         rectW = windowW - rectX;

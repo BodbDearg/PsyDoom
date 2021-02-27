@@ -64,6 +64,7 @@ bool        gbFullscreen;
 float       gLogicalDisplayW;
 bool        gbDisableVulkanRenderer;
 int32_t     gVulkanRenderHeight;
+bool        gbVulkanPixelStretch;
 bool        gbVulkanTripleBuffer;
 bool        gbVulkanWidescreenEnabled;
 int32_t     gAAMultisamples;
@@ -100,17 +101,39 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Vulkan renderer: determines the vertical resolution (in pixels) of the render/draw framebuffer.\n"
         "# You can use this setting to render at a different resolution to the display resolution.\n"
-        "# Note: the horizontal render resolution is automatically determined using this setting and the\n"
-        "# current display/window resolution.\n"
+        "#\n"
+        "# Note: the horizontal render resolution is automatically determined using this setting, the\n"
+        "# current display/window resolution, and the setting of 'VulkanPixelStretch' (see below).\n"
         "#\n"
         "# Example values:\n"
-        "#  240 = Use the original PSX vertical resolution (240p)\n"
-        "#  480 = Use 2x the original PSX vertical resolution (480p)\n"
+        "#  240 = Use the original PSX vertical resolution (240p: for best results use pixel stretch!)\n"
+        "#  480 = Use 2x the original PSX vertical resolution (480p: for best results use pixel stretch!)\n"
         "#   -1 = Use the native vertical resolution of the display or window\n"
         "#---------------------------------------------------------------------------------------------------",
         "-1", "\n",
         [](const IniUtils::Entry& iniEntry) { gVulkanRenderHeight = iniEntry.getIntValue(-1); },
         []() { gVulkanRenderHeight = -1; }
+    },
+    {
+        "VulkanPixelStretch",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Vulkan renderer: controls whether rendered pixels are stretched horizontally on output according\n"
+        "# to the stretch factor determined via 'LogicalDisplayWidth'. It makes the Vulkan renderer mimic the\n"
+        "# pixel stretching of the original PlayStation renderer (see 'LogicalDisplayWidth' comments) and\n"
+        "# will cause the horizontal draw resolution to be reduced as a result.\n"
+        "#\n"
+        "# Pixel stretch is highly recommended if you want to match the rasterization of the original 240p\n"
+        "# renderer or some other low multiple of that like 480p. Without stretching, at low resolutions you\n"
+        "# may find that UI elements do not rasterize very well due to nearest neighbor filtering and the\n"
+        "# draw resolution not being an integer multiple of the original resolution.\n"
+        "#\n"
+        "# If you are rendering at modern resolutions like 1080p or 1440p however it is recommended that you\n"
+        "# leave this setting off ('0') so that the Vulkan renderer can operate at the highest horizontal\n"
+        "# resolution and not suffer aliasing from having to stretch horizontally the framebuffer on output.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbVulkanPixelStretch = iniEntry.getBoolValue(false); },
+        []() { gbVulkanPixelStretch = false; }
     },
     {
         "VulkanTripleBuffer",

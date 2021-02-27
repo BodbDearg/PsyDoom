@@ -192,17 +192,17 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
     const uint32_t screenWidth = swapchain.getSwapExtentWidth();
     const uint32_t screenHeight = swapchain.getSwapExtentHeight();
 
-    int32_t blitDstX = {};
-    int32_t blitDstY = {};
-    uint32_t blitDstW = {};
-    uint32_t blitDstH = {};
-    Video::getClassicFramebufferWindowRect(screenWidth, screenHeight, blitDstX, blitDstY, blitDstW, blitDstH);
+    float blitDstX = {};
+    float blitDstY = {};
+    float blitDstW = {};
+    float blitDstH = {};
+    Video::getClassicFramebufferWindowRect((float) screenWidth, (float) screenHeight, blitDstX, blitDstY, blitDstW, blitDstH);
 
     // Blit the PSX framebuffer to the swapchain image
     const uint32_t swapchainIdx = swapchain.getAcquiredImageIdx();
     const VkImage swapchainImage = swapchain.getVkImages()[swapchainIdx];
 
-    {
+    if ((blitDstW > 0) && (blitDstH > 0)) {
         VkImageBlit blitRegion = {};
         blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         blitRegion.srcSubresource.layerCount = 1;
@@ -211,10 +211,10 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
         blitRegion.srcOffsets[1].x = Video::ORIG_DRAW_RES_X;
         blitRegion.srcOffsets[1].y = Video::ORIG_DRAW_RES_Y;
         blitRegion.srcOffsets[1].z = 1;
-        blitRegion.dstOffsets[0].x = std::clamp<int32_t>(blitDstX, 0, screenWidth);
-        blitRegion.dstOffsets[0].y = std::clamp<int32_t>(blitDstY, 0, screenHeight);
-        blitRegion.dstOffsets[1].x = std::clamp<int32_t>(blitDstX + blitDstW, 0, screenWidth);
-        blitRegion.dstOffsets[1].y = std::clamp<int32_t>(blitDstY + blitDstH, 0, screenHeight);
+        blitRegion.dstOffsets[0].x = std::clamp<int32_t>((int32_t) blitDstX, 0, screenWidth);
+        blitRegion.dstOffsets[0].y = std::clamp<int32_t>((int32_t) blitDstY, 0, screenHeight);
+        blitRegion.dstOffsets[1].x = std::clamp<int32_t>((int32_t)(blitDstX + blitDstW), 0, screenWidth);
+        blitRegion.dstOffsets[1].y = std::clamp<int32_t>((int32_t)(blitDstY + blitDstH), 0, screenHeight);
         blitRegion.dstOffsets[1].z = 1;
 
         cmdRec.blitImage(

@@ -7,6 +7,7 @@
 #include "Video.h"
 
 #include <algorithm>
+#include <cmath>
 #include <SDL.h>
 
 BEGIN_NAMESPACE(Video)
@@ -190,18 +191,28 @@ void VideoBackend_SDL::presentSdlFramebufferTexture() noexcept {
         return;
 
     // Get the window area to output the PSX framebuffer to  and don't bother outputting if zero sized
-    SDL_Rect outputRect = {};
+    float outputRectX = {};
+    float outputRectY = {};
+    float outputRectW = {};
+    float outputRectH = {};
+
     Video::getClassicFramebufferWindowRect(
-        windowW,
-        windowH,
-        outputRect.x,
-        outputRect.y,
-        (uint32_t&) outputRect.w,   // Note: alias with different signedness isn't UB
-        (uint32_t&) outputRect.h
+        (float) windowW,
+        (float) windowH,
+        outputRectX,
+        outputRectY,
+        outputRectW,
+        outputRectH
     );
 
-    if ((outputRect.w <= 0) || (outputRect.h <= 0))
+    if ((outputRectW <= 0.0f) || (outputRectH <= 0.0f))
         return;
+
+    SDL_Rect outputRect = {};
+    outputRect.x = (int32_t) outputRectX;
+    outputRect.y = (int32_t) outputRectY;
+    outputRect.w = (int32_t) std::ceil(outputRectW);
+    outputRect.h = (int32_t) std::ceil(outputRectH);
 
     // Done writing to the locked framebuffer, update the texture with whatever writes we made
     unlockFramebufferTexture();

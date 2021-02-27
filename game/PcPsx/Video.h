@@ -34,12 +34,12 @@ void initVideo() noexcept;
 void shutdownVideo() noexcept;
 
 void getClassicFramebufferWindowRect(
-    const uint32_t windowW,
-    const uint32_t windowH,
-    int32_t& rectX,
-    int32_t& rectY,
-    uint32_t& rectW,
-    uint32_t& rectH
+    const float windowW,
+    const float windowH,
+    float& rectX,
+    float& rectY,
+    float& rectW,
+    float& rectH
 ) noexcept;
 
 void displayFramebuffer() noexcept;
