@@ -281,6 +281,8 @@ static void updateCoordSysInfo() noexcept {
             gFramebufferW = (int32_t) std::max(std::ceil((float) gFramebufferW / pixelStretch), 1.0f);
             gPsxCoordsFbX /= pixelStretch;
             gPsxCoordsFbW /= pixelStretch;
+            gPsxCoordsFbX = std::ceil(gPsxCoordsFbX);
+            gPsxCoordsFbW = std::ceil(gPsxCoordsFbW);
         }
     }
 
