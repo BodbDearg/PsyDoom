@@ -61,7 +61,7 @@ struct ConfigFieldHandler {
 // Graphics config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool        gbFullscreen;
-int32_t     gLogicalDisplayW;
+float       gLogicalDisplayW;
 bool        gbDisableVulkanRenderer;
 int32_t     gVulkanRenderHeight;
 bool        gbVulkanTripleBuffer;
@@ -193,8 +193,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#        view area and UI elements will fill the display completely, regardless of how wide it is.\n"
         "#---------------------------------------------------------------------------------------------------",
         "292", "\n",
-        [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getIntValue(292); },
-        []() { gLogicalDisplayW = 292; }
+        [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getFloatValue(292.0f); },
+        []() { gLogicalDisplayW = 292.0f; }
     },
     {
         "FloorRenderGapFix",

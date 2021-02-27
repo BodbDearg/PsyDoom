@@ -32,6 +32,7 @@ extern uint32_t                 gPresentSurfaceW;
 extern uint32_t                 gPresentSurfaceH;
 extern uint32_t                 gFramebufferW;
 extern uint32_t                 gFramebufferH;
+extern float                    gCurLogicalDisplayW;
 extern int32_t                  gPsxCoordsFbX;
 extern int32_t                  gPsxCoordsFbY;
 extern uint32_t                 gPsxCoordsFbW;

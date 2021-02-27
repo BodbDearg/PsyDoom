@@ -54,14 +54,14 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
     // In windowed mode make the window a multiple of the logical display resolution.
     // Also allow some room for window edges and other OS decoration...
     // If a free aspect ratio is being used (width <= 0) then just use the original display resolution width for this calculation.
-    const int32_t logicalDispW = (Config::gLogicalDisplayW <= 0) ? ORIG_DISP_RES_X : Config::gLogicalDisplayW;
+    const float logicalDispW = (Config::gLogicalDisplayW <= 0.0f) ? (float) ORIG_DISP_RES_X : Config::gLogicalDisplayW;
 
-    int32_t xMultiplier = std::max((displayMode.w - 20) / logicalDispW, 1);
-    int32_t yMultiplier = std::max((displayMode.h - 40) / ORIG_DISP_RES_Y, 1);
-    int32_t multiplier = std::min(xMultiplier, yMultiplier);
+    const float xScale = std::max(((float) displayMode.w - 20.0f) / logicalDispW, 1.0f);
+    const float yScale = std::max(((float) displayMode.h - 40.0f) / (float) ORIG_DISP_RES_Y, 1.0f);
+    const int32_t scale = std::max((int32_t) std::min(xScale, yScale), 1);
 
-    w = logicalDispW * multiplier;
-    h = ORIG_DISP_RES_Y * multiplier;
+    w = (int32_t)(logicalDispW * scale);
+    h = (int32_t)((float) ORIG_DISP_RES_Y * scale);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ void getClassicFramebufferWindowRect(
 
     // Are we using a free aspect ratio mode, specified by using a logical display width of <= 0?
     // If so then just stretch the output image in any way to fill the window.
-    if (Config::gLogicalDisplayW <= 0) {
+    if (Config::gLogicalDisplayW <= 0.0f) {
         rectX = 0;
         rectY = 0;
         rectW = (uint32_t) windowW;
@@ -214,12 +214,12 @@ void getClassicFramebufferWindowRect(
     } else {
         // If not using a free aspect ratio then determine the scale to output at, while preserving the chosen aspect ratio.
         // The chosen aspect ratio is determined by the user's logical display resolution width.
-        const float xScale = (float) windowW / (float) Config::gLogicalDisplayW;
+        const float xScale = (float) windowW / Config::gLogicalDisplayW;
         const float yScale = (float) windowH / (float) ORIG_DISP_RES_Y;
         const float scale = std::min(xScale, yScale);
 
         // Determine output width and height and center the framebuffer image in the window
-        rectW = (uint32_t)((float) Config::gLogicalDisplayW * scale);
+        rectW = (uint32_t)(Config::gLogicalDisplayW * scale);
         rectH = (uint32_t)((float) ORIG_DISP_RES_Y * scale);
         rectX = windowW / 2 - rectW / 2;
         rectY = windowH / 2 - rectH / 2;

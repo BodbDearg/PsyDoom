@@ -70,6 +70,10 @@ uint32_t    gPresentSurfaceH;
 uint32_t    gFramebufferW;
 uint32_t    gFramebufferH;
 
+// Coord system info: the current logical display width for the game.
+// This may change depending on the display size, if free stretching mode is enabled.
+float gCurLogicalDisplayW;
+
 // Coord system info: where the original PSX GPU framebuffer/coord-system maps to on the draw/render framebuffer
 int32_t     gPsxCoordsFbX;
 int32_t     gPsxCoordsFbY;
@@ -237,6 +241,18 @@ static void updateCoordSysInfo() noexcept {
     } else {
         gFramebufferW = 0;
         gFramebufferH = 0;
+    }
+
+    // Update the logical display width
+    if (Config::gLogicalDisplayW <= 0) {
+        if (gFramebufferH > 0) {
+            const float yScale = (float) gFramebufferH / (float) Video::ORIG_DISP_RES_Y;
+            gCurLogicalDisplayW = (float) gFramebufferW / yScale;
+        } else {
+            gCurLogicalDisplayW = 0.0f;
+        }
+    } else {
+        gCurLogicalDisplayW = Config::gLogicalDisplayW;
     }
 
     // Get the rectangular region of the framebuffer that the original PlayStation framebuffer/coord-system would map to.
