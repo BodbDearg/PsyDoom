@@ -576,28 +576,14 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
         SpriteFrag sprFrag;
         RV_InitSpriteFrag(*pThing, sprFrag, secR, secG, secB);
 
-        // Then split that fragment initially into two halves, with the division line being at the center.
-        // This helps the sprite split along subsector boundaries as much as possible in each direction from it's center.
-        // Due to the way the 'can split' tests work if we don't do this then the sprite might not split in some cases were we want it.
-        SpriteFrag sprFrag1 = sprFrag;
-        sprFrag1.x2 = (sprFrag.x1 + sprFrag1.x2) * 0.5f;
-        sprFrag1.z2 = (sprFrag.z1 + sprFrag1.z2) * 0.5f;
-        sprFrag1.ur = (sprFrag.ul + sprFrag1.ur) * 0.5f;
-
-        SpriteFrag sprFrag2 = sprFrag;
-        sprFrag2.x1 = sprFrag1.x2;
-        sprFrag2.z1 = sprFrag1.z2;
-        sprFrag2.ul = sprFrag1.ur;
-
-        // Split up the sprite fragment halves if neccessary and remember the position of the thing being split.
-        // The thing position is used to resolve cases that we can't split and decide on a sprite subsector.
+        // Split up the sprite fragment into further small pieces (on subsector boundaries) if neccessary and remember the position of the thing being split.
+        // The thing position is used to resolve cases that we can't split and where we need to decide on a sprite subsector.
         gSpriteFragThingPos[0] = RV_FixedToFloat(pThing->x);
         gSpriteFragThingPos[1] = RV_FixedToFloat(pThing->z);
         gSpriteFragThingPos[2] = RV_FixedToFloat(pThing->y);
 
         const int32_t bspRootNodeIdx = gNumBspNodes - 1;
-        RV_SpriteFrag_VisitBspNode(bspRootNodeIdx, sprFrag1);
-        RV_SpriteFrag_VisitBspNode(bspRootNodeIdx, sprFrag2);
+        RV_SpriteFrag_VisitBspNode(bspRootNodeIdx, sprFrag);
     }
 }
 
