@@ -242,24 +242,26 @@ void onBeginUIDrawing() noexcept {
 // If that is the case then this function will begin a renderer toggle, if that is possible.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void checkForRendererToggleInput() noexcept {
-    // Renderer can only be toggled if using the Vulkan backend
-    if (Video::gBackendType != Video::BackendType::Vulkan)
-        return;
+    #if PSYDOOM_VULKAN_RENDERER
+        // Renderer can only be toggled if using the Vulkan backend
+        if (Video::gBackendType != Video::BackendType::Vulkan)
+            return;
 
-    // Do the toggle if the toggle button is just pressed
-    if (!Controls::isJustPressed(Controls::Binding::Toggle_Renderer))
-        return;
+        // Do the toggle if the toggle button is just pressed
+        if (!Controls::isJustPressed(Controls::Binding::Toggle_Renderer))
+            return;
 
-    const bool bUseVulkan = VRenderer::isUsingPsxRenderPath();
+        const bool bUseVulkan = VRenderer::isUsingPsxRenderPath();
 
-    if (bUseVulkan) {
-        VRenderer::switchToMainVulkanRenderPath();
-    } else {
-        VRenderer::switchToPsxRenderPath();
-    }
+        if (bUseVulkan) {
+            VRenderer::switchToMainVulkanRenderPath();
+        } else {
+            VRenderer::switchToPsxRenderPath();
+        }
 
-    gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer" : "Classic Renderer";
-    gStatusBar.messageTicsLeft = 30;
+        gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer" : "Classic Renderer";
+        gStatusBar.messageTicsLeft = 30;
+    #endif
 }
 
 END_NAMESPACE(Utils)
