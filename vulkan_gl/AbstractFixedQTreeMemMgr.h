@@ -430,7 +430,7 @@ public:
     // Gives the size in bytes of the allocation at the given address; returns 0 if there is no valid allocation at the given address
     //--------------------------------------------------------------------------------------------------------------------------------------
     inline uint64_t getAllocSizeInBytes(const uint64_t allocOffsetInBytes) noexcept {
-        getAllocSizeInUnits(allocOffsetInBytes) * US
+        getAllocSizeInUnits(allocOffsetInBytes) * UnitSize;
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------

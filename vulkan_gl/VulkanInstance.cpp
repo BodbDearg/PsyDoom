@@ -5,6 +5,7 @@
 #include "PhysicalDevice.h"
 #include "VkFuncs.h"
 
+#include <cstdio>
 #include <SDL_vulkan.h>
 
 BEGIN_NAMESPACE(vgl)
@@ -241,11 +242,11 @@ void VulkanInstance::queryPhysicalDevices() noexcept {
     std::vector<VkPhysicalDevice> physicalDeviceHandles(deviceCount);
     mVkFuncs.vkEnumeratePhysicalDevices(mVkInstance, &deviceCount, physicalDeviceHandles.data());
 
-    // Now query the details of each physical device and save
+    // Now save the details for each physical device
     mPhysicalDevices.reserve(deviceCount);
 
     for (uint32_t i = 0; i < deviceCount; ++i) {
-        PhysicalDevice& physicalDevice = mPhysicalDevices.emplace_back(mVkFuncs, *this, physicalDeviceHandles[i]);
+        mPhysicalDevices.emplace_back(mVkFuncs, *this, physicalDeviceHandles[i]);
     }
 }
 

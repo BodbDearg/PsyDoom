@@ -126,7 +126,7 @@ struct Matrix4 {
     }
 
     inline void setColumn(const size_t col, const T src[4]) noexcept {
-        ASSERT(row < 4);
+        ASSERT(col < 4);
         e[0][col] = src[0];
         e[1][col] = src[1];
         e[2][col] = src[2];

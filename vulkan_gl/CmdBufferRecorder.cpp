@@ -281,7 +281,6 @@ void CmdBufferRecorder::bindIndexBufferUint16(const Buffer& buffer, const uint64
     ASSERT(buffer.isValid());
     ASSERT(offset < buffer.getSizeInBytes());
 
-    const VkBuffer vkBuffer = buffer.getVkBuffer();
     mVkFuncs.vkCmdBindIndexBuffer(mVkCommandBuffer, buffer.getVkBuffer(), offset, VkIndexType::VK_INDEX_TYPE_UINT16);
 }
 

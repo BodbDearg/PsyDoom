@@ -56,13 +56,6 @@ VRenderPath_Psx         gRenderPath_Psx;
 VRenderPath_Main        gRenderPath_Main;
 VRenderPath_Crossfade   gRenderPath_Crossfade;
 
-// A collection of all the render paths
-IVRendererPath* const gAllRenderPaths[] = {
-    &gRenderPath_Psx,
-    &gRenderPath_Main,
-    &gRenderPath_Crossfade,
-};
-
 // Coord system info: the width and height of the window/swap-chain surface we present to
 uint32_t    gPresentSurfaceW;
 uint32_t    gPresentSurfaceH;
@@ -115,10 +108,6 @@ static vgl::Semaphore gRenderDoneSemaphores[vgl::Defines::RINGBUFFER_SIZE];
 // Primary command buffers used for drawing operations in each frame.
 // One for each ringbuffer slot, so we can record a new buffer while a previous frame's buffer is still executing.
 static vgl::CmdBuffer gCmdBuffers[vgl::Defines::RINGBUFFER_SIZE];
-
-// Which command buffer we are using for this frame.
-// This will be null if we didn't acquire a framebuffer for this frame (zero sized window):
-static vgl::CmdBuffer* gpCurCmdBuffer;
 
 // A mirrored copy of PSX VRAM (minus framebuffers) so we can access in the new Vulkan renderer.
 // Any texture uploads to PSX VRAM will get passed along from LIBGPU and eventually find their way in here.

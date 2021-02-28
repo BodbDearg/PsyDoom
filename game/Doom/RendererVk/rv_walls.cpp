@@ -124,8 +124,6 @@ static void RV_DrawSegSolid(
     const float z1 = seg.v1y;
     const float x2 = seg.v2x;
     const float z2 = seg.v2y;
-    const float dx = x2 - x1;
-    const float dz = z2 - z1;
     const float segLen = seg.length;
 
     // Get the top and bottom y values of the front sector.
@@ -281,8 +279,6 @@ static void RV_DrawSegBlended(
     const float z1 = seg.v1y;
     const float x2 = seg.v2x;
     const float z2 = seg.v2y;
-    const float dx = x2 - x1;
-    const float dz = z2 - z1;
     const float segLen = seg.length;
 
     // Get the top and bottom y values of the front sector.

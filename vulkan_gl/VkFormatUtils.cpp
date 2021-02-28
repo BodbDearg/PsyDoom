@@ -296,6 +296,12 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_BC7_UNORM_BLOCK:
         case VK_FORMAT_BC7_SRGB_BLOCK:
             return true;
+            
+        //==================================================================================================================
+        // Unhandled/unknown formats
+        //==================================================================================================================
+        default:
+            break;
     }
 
     ASSERT_FAIL("Unhandled/unsupported format. Need to expand the case list!");
@@ -459,6 +465,12 @@ bool getMinBlockSizeForFormat(
             minBlockHeight = 4;
             minBlockDepth = 1;
             return true;
+            
+        //==================================================================================================================
+        // Unhandled/unknown formats
+        //==================================================================================================================
+        default:
+            break;
     }
 
     ASSERT_FAIL("Unhandled/unsupported format. Need to expand the case list!");
@@ -710,6 +722,12 @@ uint32_t getNumBitsPerPixelForFormat(const VkFormat format) noexcept {
         case VK_FORMAT_BC7_UNORM_BLOCK:
         case VK_FORMAT_BC7_SRGB_BLOCK:
             return 8;
+            
+        //==================================================================================================================
+        // Unhandled/unknown formats
+        //==================================================================================================================
+        default:
+            break;
     }
 
     ASSERT_FAIL("Unhandled/unsupported format. Need to expand the case list!");

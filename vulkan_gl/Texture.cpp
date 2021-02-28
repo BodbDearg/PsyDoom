@@ -42,10 +42,10 @@ Texture::Texture(Texture&& other) noexcept
     , mLockedOffsetX(other.mLockedOffsetX)
     , mLockedOffsetY(other.mLockedOffsetY)
     , mLockedOffsetZ(other.mLockedOffsetZ)
+    , mLockedStartLayer(other.mLockedStartLayer)
     , mLockedSizeX(other.mLockedSizeX)
     , mLockedSizeY(other.mLockedSizeY)
     , mLockedSizeZ(other.mLockedSizeZ)
-    , mLockedStartLayer(other.mLockedStartLayer)
     , mLockedNumLayers(other.mLockedNumLayers)
 {
     other.mbDidATextureUpload = false;
