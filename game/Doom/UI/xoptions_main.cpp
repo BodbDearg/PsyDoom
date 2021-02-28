@@ -176,8 +176,10 @@ gameaction_t XOptions_Update() noexcept {
 
         // Renderer toggle
         case menu_renderer: {
+            const bool bCanSwitchRenderers = (Video::gBackendType == Video::BackendType::Vulkan);
+
             #if PSYDOOM_VULKAN_RENDERER
-                if (Video::gBackendType == Video::BackendType::Vulkan) {
+                if (bCanSwitchRenderers) {
                     if (bMenuLeft && (!Video::isUsingVulkanRenderPath())) {
                         VRenderer::switchToMainVulkanRenderPath();
                         S_StartSound(nullptr, sfx_swtchx);
@@ -189,6 +191,12 @@ gameaction_t XOptions_Update() noexcept {
                 }
             #endif
 
+            // If renderer switch is not possible and an attempt was made to do so then play this sound
+            if (!bCanSwitchRenderers) {
+                if ((bMenuLeft && (!oldInputs.bMenuLeft)) || (bMenuRight && (!oldInputs.bMenuRight))) {
+                    S_StartSound(nullptr, sfx_itemup);
+                }
+            }
         }   break;
 
         // Exit to the options menu
