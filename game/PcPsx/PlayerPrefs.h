@@ -28,5 +28,6 @@ void pushSoundAndMusicPrefs() noexcept;
 void pullSoundAndMusicPrefs() noexcept;
 void pushLastPassword() noexcept;
 void pullLastPassword() noexcept;
+bool shouldStartupWithVulkanRenderer() noexcept;
 
 END_NAMESPACE(PlayerPrefs)

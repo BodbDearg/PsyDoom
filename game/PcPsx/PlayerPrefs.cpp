@@ -11,6 +11,7 @@
 #include "Game.h"
 #include "IniUtils.h"
 #include "Utils.h"
+#include "Video.h"
 #include "Wess/psxspu.h"
 
 #include <algorithm>
@@ -41,10 +42,11 @@ int32_t     gTurnSpeedMult100;      // In-game tweakable turn speed multiplier e
 bool        gbAlwaysRun;            // If set then the player runs by default and the run action causes slower walking
 
 // Internally kept settings
-static int32_t      gSoundVol;              // Option for sound volume
-static int32_t      gMusicVol;              // Option for music volume
-static Password     gLastPassword_Doom;     // Password for the current level the player is on: Doom
-static Password     gLastPassword_FDoom;    // Password for the current level the player is on: Final Doom
+static int32_t      gSoundVol;                      // Option for sound volume
+static int32_t      gMusicVol;                      // Option for music volume
+static Password     gLastPassword_Doom;             // Password for the current level the player is on: Doom
+static Password     gLastPassword_FDoom;            // Password for the current level the player is on: Final Doom
+static bool         gbStartupWithVulkanRenderer;    // Startup using the Vulkan renderer? (if enabled, and the host machine is capable)
 
 // If true then we save the prefs file to the current working directory rather than to the user data folder
 static bool gbUseWorkingDirPrefsFile = false;
@@ -141,6 +143,9 @@ static void loadPrefsFileIniEntry(const IniUtils::Entry& entry) noexcept {
     else if (entry.key == "alwaysRun") {
         gbAlwaysRun = entry.getBoolValue(gbAlwaysRun);
     }
+    else if (entry.key == "startupWithVulkanRenderer") {
+        gbStartupWithVulkanRenderer = entry.getBoolValue(gbStartupWithVulkanRenderer);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -158,6 +163,9 @@ void setToDefaults() noexcept {
     // Turn speed is normal by default and auto-run off
     gTurnSpeedMult100 = 100;
     gbAlwaysRun = false;
+
+    // Prefer the Vulkan renderer by default
+    gbStartupWithVulkanRenderer = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,6 +207,7 @@ void save() noexcept {
     std::fprintf(pFile, "lastPassword_FinalDoom = %s\n", gLastPassword_FDoom.getString().c_str());
     std::fprintf(pFile, "turnSpeedPercentMultiplier = %d\n", gTurnSpeedMult100);
     std::fprintf(pFile, "alwaysRun = %d\n", (int) gbAlwaysRun);
+    std::fprintf(pFile, "startupWithVulkanRenderer = %d\n", (int) Video::isUsingVulkanRenderPath());
 
     // Flush and close to finish up
     std::fflush(pFile);
@@ -261,6 +270,13 @@ void pullLastPassword() noexcept {
     for (int32_t i = 0; i < gNumPasswordCharsEntered; ++i) {
         lastPassword.pwChars[i] = pwCharIndexToChar(gPasswordCharBuffer[i]);
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should we startup using the Vulkan renderer where possible?
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool shouldStartupWithVulkanRenderer() noexcept {
+    return gbStartupWithVulkanRenderer;
 }
 
 END_NAMESPACE(PlayerPrefs)

@@ -1,6 +1,5 @@
 #include "o_main.h"
 
-#include "controls_main.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
@@ -16,15 +15,16 @@
 #include "PcPsx/Utils.h"
 #include "pw_main.h"
 #include "Wess/psxspu.h"
+#include "xoptions_main.h"
 
 // Available options and their names
 enum option_t : int32_t {
     opt_music,
     opt_sound,
     opt_password,
-// PsyDoom: Removing the psx controller configuration menu and replacing with 'controls'
+// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu
 #if PSYDOOM_MODS
-    opt_controls,
+    opt_extra_options,
 #else
     opt_config,
 #endif
@@ -36,9 +36,9 @@ const char gOptionNames[][16] = {
     { "Music Volume"    },
     { "Sound Volume"    },
     { "Password"        },
-// PsyDoom: Removing the psx controller configuration menu and replacing with 'controls'
+// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu
 #if PSYDOOM_MODS
-    { "Controls"   },
+    { "Extra Options"   },
 #else
     { "Configuration"   },
 #endif
@@ -54,31 +54,30 @@ struct menuitem_t {
 };
 
 static const menuitem_t gOptMenuItems_MainMenu[] = {
-    { opt_music,        62, 65  },
-    { opt_sound,        62, 105 },
-    { opt_password,     62, 145 },
-// PsyDoom: Removing the psx controller configuration menu and replacing with 'controls'
+    { opt_music,            62, 65  },
+    { opt_sound,            62, 105 },
+    { opt_password,         62, 145 },
+// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu
 #if PSYDOOM_MODS
-    { opt_controls,     62, 170 },
+    { opt_extra_options,    62, 170 },
 #else
-    { opt_config,       62, 170 },
+    { opt_config,           62, 170 },
 #endif
-    { opt_main_menu,    62, 195 },
-
+    { opt_main_menu,        62, 195 },
 };
 
 static const menuitem_t gOptMenuItems_Single[] = {
-    { opt_music,        62, 50  },
-    { opt_sound,        62, 90  },
-    { opt_password,     62, 130 },
-// PsyDoom: Removing the psx controller configuration menu
+    { opt_music,            62, 50  },
+    { opt_sound,            62, 90  },
+    { opt_password,         62, 130 },
+// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu
 #if PSYDOOM_MODS
-    { opt_controls,     62, 155 },
+    { opt_extra_options,    62, 155 },
 #else
-    { opt_config,       62, 155 },
+    { opt_config,           62, 155 },
 #endif
-    { opt_main_menu,    62, 180 },
-    { opt_restart,      62, 205 },
+    { opt_main_menu,        62, 180 },
+    { opt_restart,          62, 205 },
 };
 
 static const menuitem_t gOptMenuItems_NetGame[] = {
@@ -326,10 +325,10 @@ gameaction_t O_Control() noexcept {
                 }
             }   break;
 
-            // PsyDoom: Adding a new 'controls' menu
-            case opt_controls: {
+            // PsyDoom: Adding a new 'extra options' menu
+            case opt_extra_options: {
                 if (bMenuOk) {
-                    MiniLoop(Controls_Init, Controls_Shutdown, Controls_Update, Controls_Draw);
+                    MiniLoop(XOptions_Init, XOptions_Shutdown, XOptions_Update, XOptions_Draw);
                 }
             }   break;
 

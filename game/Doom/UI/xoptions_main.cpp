@@ -1,10 +1,11 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // This is an entirely new menu added for PsyDoom.
-// It provides options for turn sensitivity and autorun and is not available in multiplayer, similar to other control menus.
+// It provides extra options for turn sensitivity, autorun and renderer etc.
+// It is not available in multiplayer, similar to other nested menus in the options screen.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_MODS
 
-#include "controls_main.h"
+#include "xoptions_main.h"
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
@@ -19,6 +20,8 @@
 #include "PcPsx/Game.h"
 #include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/Utils.h"
+#include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VRenderer.h"
 
 #include <cstdio>
 
@@ -26,6 +29,7 @@
 enum MenuItem : uint32_t {
     menu_turn_speed,
     menu_always_run,
+    menu_renderer,
     menu_exit,
     num_menu_items
 };
@@ -47,9 +51,9 @@ static void DrawCursor(const int16_t cursorX, const int16_t cursorY) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes the controls menu
+// Initializes the menu
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Controls_Init() noexcept {
+void XOptions_Init() noexcept {
     S_StartSound(nullptr, sfx_pistol);
 
     // Initialize cursor position and vblanks until move
@@ -59,16 +63,16 @@ void Controls_Init() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Shuts down the controls menu
+// Shuts down the menu
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Controls_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
+void XOptions_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
     gCursorPos[gCurPlayerIndex] = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Runs update logic for the controls menu: does menu controls
+// Runs update logic for the menu: does menu controls
 //------------------------------------------------------------------------------------------------------------------------------------------
-gameaction_t Controls_Update() noexcept {
+gameaction_t XOptions_Update() noexcept {
     // PsyDoom: in all UIs tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
     const uint32_t playerIdx = gCurPlayerIndex;
 
@@ -170,6 +174,23 @@ gameaction_t Controls_Update() noexcept {
             }
         }   break;
 
+        // Renderer toggle
+        case menu_renderer: {
+            #if PSYDOOM_VULKAN_RENDERER
+                if (Video::gBackendType == Video::BackendType::Vulkan) {
+                    if (bMenuLeft && (!Video::isUsingVulkanRenderPath())) {
+                        VRenderer::switchToMainVulkanRenderPath();
+                        S_StartSound(nullptr, sfx_swtchx);
+                    }
+                    else if (bMenuRight && Video::isUsingVulkanRenderPath()) {
+                        VRenderer::switchToPsxRenderPath();
+                        S_StartSound(nullptr, sfx_swtchx);
+                    }
+                }
+            #endif
+
+        }   break;
+
         // Exit to the options menu
         case menu_exit: {
             if (bMenuOk) {
@@ -186,9 +207,9 @@ gameaction_t Controls_Update() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draws the options menu
+// Draws the menu
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Controls_Draw() noexcept {
+void XOptions_Draw() noexcept {
     // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
 
@@ -209,7 +230,7 @@ void Controls_Draw() noexcept {
     // Don't do any rendering if we are about to exit the menu
     if (gGameAction == ga_nothing) {
         // Menu title
-        I_DrawString(-1, 20, "Controls");
+        I_DrawString(-1, 20, "Extra Options");
 
         // Draw the turn speed slider
         int16_t cursorX = 62;
@@ -264,6 +285,14 @@ void Controls_Draw() noexcept {
 
         if (gCursorPos[gCurPlayerIndex] == menu_always_run) {
             cursorY = 105;
+        }
+
+        // Draw the renderer option
+        const bool bIsUsingVulkan = Video::isUsingVulkanRenderPath();
+        I_DrawString(62, 130, (bIsUsingVulkan) ? "Vulkan Renderer" : "Classic Renderer");
+
+        if (gCursorPos[gCurPlayerIndex] == menu_renderer) {
+            cursorY = 130;
         }
 
         // Draw the exit option

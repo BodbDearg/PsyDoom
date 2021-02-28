@@ -12,6 +12,7 @@
 #include "Gpu.h"
 #include "LogicalDevice.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/PsxVm.h"
 #include "PcPsx/Video.h"
 #include "PhysicalDevice.h"
@@ -423,9 +424,13 @@ void init() noexcept {
     VPlaqueDrawer::init(gDevice);
 
     // Set the initial render path and make it active.
-    // TODO: remember renderer preference here.
-    gpCurRenderPath = &gRenderPath_Main;
-    gpNextRenderPath = &gRenderPath_Main;
+    if (PlayerPrefs::shouldStartupWithVulkanRenderer()) {
+        gpCurRenderPath = &gRenderPath_Main;
+        gpNextRenderPath = &gRenderPath_Main;
+    } else {
+        gpCurRenderPath = &gRenderPath_Psx;
+        gpNextRenderPath = &gRenderPath_Psx;
+    }
 
     // Try to init the swapchain and framebuffers
     ensureValidSwapchainAndFramebuffers();
