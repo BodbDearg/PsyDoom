@@ -15,11 +15,15 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/RendererVk/rv_utils.h"
 #include "m_main.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
+#include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VTypes.h"
 #include "PsyQ/LIBGPU.h"
 
 // Win text for Doom 1 and 2, and Final Doom.
@@ -330,7 +334,7 @@ void F2_Start() noexcept {
     const mobjinfo_t& mobjInfo = gMObjInfo[gCastOrder[0].type];
     const state_t& state = gStates[mobjInfo.seestate];
 
-    gFinaleStage = F_STAGE_TEXT;
+    gFinaleStage = F_STAGE_CAST;
     gFinLinesDone = 0;
     gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
@@ -625,43 +629,99 @@ void F2_Drawer() noexcept {
             POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
         #endif
 
-        LIBGPU_SetPolyFT4(polyPrim);
-        LIBGPU_SetShadeTex(polyPrim, true);
-        polyPrim.clut = gPaletteClutIds[MAINPAL];
-        polyPrim.tpage = spriteTex.texPageId;
+        do {
+            // PsyDoom: new drawing path for when the Vulkan renderer is in use.
+            // This is needed to avoid artifacts when MSAA is enabled.
+            #if PSYDOOM_VULKAN_RENDERER
+                if (Video::isUsingVulkanRenderPath()) {
+                    // Set the correct draw pipeline
+                    VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
 
-        const int16_t ypos = 180 - spriteTex.offsetY;
-        int16_t xpos;
+                    // Decide on sprite position and texture coordinates
+                    float ul, ur;
+                    const int16_t ypos = 180 - spriteTex.offsetY;
+                    int16_t xpos;
 
-        if (!spriteFrame.flip[0]) {
-            polyPrim.tu0 = spriteTex.texPageCoordX;
-            polyPrim.tu1 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
-            polyPrim.tu2 = spriteTex.texPageCoordX;
-            polyPrim.tu3 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                    if (!spriteFrame.flip[0]) {
+                        ul = 0.0f;
+                        ur = (float) spriteTex.width;
+                        xpos = HALF_SCREEN_W - spriteTex.offsetX;
+                    } else {
+                        ul = (float) spriteTex.width;
+                        ur = (float) 0.0f;
+                        xpos = HALF_SCREEN_W + spriteTex.offsetX - spriteTex.width;
+                    }
 
-            xpos = HALF_SCREEN_W - spriteTex.offsetX;
-        } else {
-            polyPrim.tu0 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
-            polyPrim.tu1 = spriteTex.texPageCoordX;
-            polyPrim.tu2 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
-            polyPrim.tu3 = spriteTex.texPageCoordX;
+                    const float vt = 0.0f;
+                    const float vb = (float) spriteTex.height;
+                    const float xl = (float) xpos;
+                    const float xr = (float) xpos + (float) spriteTex.width;
+                    const float yt = (float) ypos;
+                    const float yb = (float) ypos + (float) spriteTex.height;
+
+                    // Get the sprite texture window and clut location.
+                    // Make sprite texture coordinates relative to a clamping texture window.
+                    uint16_t texWinX, texWinY, texWinW, texWinH;
+                    RV_GetTexWinXyWh(spriteTex, texWinX, texWinY, texWinW, texWinH);
+
+                    uint16_t clutX, clutY;
+                    RV_ClutIdToClutXy(gPaletteClutIds[MAINPAL], clutX, clutY);
+
+                    // Draw the sprite and skip the classic draw code
+                    VDrawing::addWorldQuad(
+                        xl, yt, 0.0f, ul, vt,
+                        xr, yt, 0.0f, ur, vt,
+                        xr, yb, 0.0f, ur, vb,
+                        xl, yb, 0.0f, ul, vb,
+                        128, 128, 128,
+                        clutX, clutY,
+                        texWinX, texWinY, texWinW, texWinH,
+                        VLightDimMode::None, 128, 128, 128, 128
+                    );
+
+                    break;
+                }
+            #endif
+
+            // Classic drawing code: use a PolyFT4 to draw the character
+            LIBGPU_SetPolyFT4(polyPrim);
+            LIBGPU_SetShadeTex(polyPrim, true);
+            polyPrim.clut = gPaletteClutIds[MAINPAL];
+            polyPrim.tpage = spriteTex.texPageId;
+
+            const int16_t ypos = 180 - spriteTex.offsetY;
+            int16_t xpos;
+
+            if (!spriteFrame.flip[0]) {
+                polyPrim.tu0 = spriteTex.texPageCoordX;
+                polyPrim.tu1 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                polyPrim.tu2 = spriteTex.texPageCoordX;
+                polyPrim.tu3 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+
+                xpos = HALF_SCREEN_W - spriteTex.offsetX;
+            } else {
+                polyPrim.tu0 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                polyPrim.tu1 = spriteTex.texPageCoordX;
+                polyPrim.tu2 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                polyPrim.tu3 = spriteTex.texPageCoordX;
             
-            xpos = HALF_SCREEN_W + spriteTex.offsetX - spriteTex.width;
-        }
+                xpos = HALF_SCREEN_W + spriteTex.offsetX - spriteTex.width;
+            }
 
-        LIBGPU_setXY4(polyPrim,
-            xpos,                       ypos,
-            spriteTex.width + xpos,     ypos,
-            xpos,                       spriteTex.height + ypos,
-            spriteTex.width + xpos,     spriteTex.height + ypos
-        );
+            LIBGPU_setXY4(polyPrim,
+                xpos,                       ypos,
+                spriteTex.width + xpos,     ypos,
+                xpos,                       spriteTex.height + ypos,
+                spriteTex.width + xpos,     spriteTex.height + ypos
+            );
         
-        polyPrim.tv0 = spriteTex.texPageCoordY;
-        polyPrim.tv1 = spriteTex.texPageCoordY;
-        polyPrim.tv2 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
-        polyPrim.tv3 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
+            polyPrim.tv0 = spriteTex.texPageCoordY;
+            polyPrim.tv1 = spriteTex.texPageCoordY;
+            polyPrim.tv2 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
+            polyPrim.tv3 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
 
-        I_AddPrim(polyPrim);
+            I_AddPrim(polyPrim);
+        } while (0);
 
         // Draw screen title and current character name
         I_DrawString(-1, 20, "Cast Of Characters");
