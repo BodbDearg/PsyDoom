@@ -5,7 +5,6 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
 #include "r_local.h"
@@ -223,13 +222,25 @@ void R_DrawWallPiece(
         RECT texRect;
         LIBGPU_setRECT(texRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
-        DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        #if PSYDOOM_MODS
+            DR_TWIN texWinPrim = {};
+        #else
+            DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        #endif
+
         LIBGPU_SetTexWindow(texWinPrim, texRect);
         I_AddPrim(texWinPrim);
     }
 
     // Initialization of the flat shaded textured triangle drawing primitive
-    POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
+    #if PSYDOOM_MODS
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        POLY_FT3 polyPrim = {};
+    #else
+        POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
+    #endif
+
     LIBGPU_SetPolyFT3(polyPrim);
         
     if (bTransparent) {

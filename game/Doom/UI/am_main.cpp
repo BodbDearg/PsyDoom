@@ -383,8 +383,14 @@ static void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, c
         return;
 
     // Setup the map line primitive and draw it.
+    //
     // Use the 1 KiB scratchpad also as temp storage space for the primitive.
-    LINE_F2& line = *(LINE_F2*) LIBETC_getScratchAddr(128);
+    // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+    #if PSYDOOM_MODS
+        LINE_F2 line = {};
+    #else
+        LINE_F2& line = *(LINE_F2*) LIBETC_getScratchAddr(128);
+    #endif
     
     LIBGPU_SetLineF2(line);
     LIBGPU_setRGB0(line, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t) color);

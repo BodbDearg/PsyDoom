@@ -20,7 +20,6 @@
 #include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
 #include <algorithm>
@@ -270,13 +269,14 @@ void DRAW_PasswordScreen() noexcept {
 
     // Setup the draw mode
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
-
         // PsyDoom: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS
+            DR_MODE drawModePrim = {};
             RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
+            DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
@@ -284,7 +284,12 @@ void DRAW_PasswordScreen() noexcept {
     }
 
     // Common sprite setup for all the password chars
-    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    #if PSYDOOM_MODS
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        SPRT spritePrim = {};
+    #else
+        SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    #endif
 
     LIBGPU_SetSprt(spritePrim);
     spritePrim.clut = gPaletteClutIds[UIPAL];

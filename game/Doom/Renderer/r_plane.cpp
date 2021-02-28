@@ -6,11 +6,12 @@
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
 #include "PcPsx/Config.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
 #include "r_local.h"
 #include "r_main.h"
+
+#include <vector>
 
 // Stores the extents of a horizontal flat span
 struct span_t {
@@ -25,6 +26,11 @@ enum : int32_t {
 
 // The bounds of each flat span for the currently drawing flat
 static span_t gFlatSpans[VIEW_3D_H];
+
+#if PSYDOOM_MODS
+    // PsyDoom: a temporary buffer used used to store screenspace x and y values (interleaved) for leaf edge vertices
+    static std::vector<int32_t> gLeafScreenVerts;
+#endif
 
 // Internal plane rendering function only: forward declare here
 static void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& tex) noexcept;
@@ -69,7 +75,13 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
         RECT texWinRect;
         LIBGPU_setRECT(texWinRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
-        DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        #if PSYDOOM_MODS
+            DR_TWIN texWinPrim = {};
+        #else
+            DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        #endif
+
         LIBGPU_SetTexWindow(texWinPrim, texWinRect);
         I_AddPrim(texWinPrim);
     }
@@ -91,23 +103,50 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
 // Draw the horizontal flat spans for the specified subsector's leaf
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& tex) noexcept {
-    // Compute the screen x and y values for each leaf vertex and save to scratchpad memory for fast access
-    uint32_t* const pVerticesScreenX = (uint32_t*) LIBETC_getScratchAddr(160);
-    uint32_t* const pVerticesScreenY = pVerticesScreenX + (MAX_LEAF_EDGES + 1);
+    // PsyDoom: if the leaf exceeds the maximum number of edges allowed then skip it.
+    // TODO: in limit removing work, remove this limit and make it compile time configurable.
+    #if PSYDOOM_MODS
+        if (leaf.numEdges > MAX_LEAF_EDGES)
+            return;
+    #endif
 
-    {
-        uint32_t* pVertScreenX = pVerticesScreenX;
-        uint32_t* pVertScreenY = pVerticesScreenY;
-        leafedge_t* pEdge = leaf.edges;
+    // Compute the screen x and y values for each leaf vertex and save to scratchpad memory for fast access.
+    // PsyDoom: use a vector for this rather than the scratchpad since we're removing the use of the scratchpad from the project.
+    #if PSYDOOM_MODS
+        ASSERT_LOG(gLeafScreenVerts.empty(), "Leaf screen verts list should be empty on entry to this function!");
+        gLeafScreenVerts.reserve(256);
 
-        for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pEdge, ++pVertScreenX, ++pVertScreenY) {
-            const vertex_t& vert = *pEdge->vertex;
-            const int32_t screenY = (HALF_VIEW_3D_H - 1) - d_fixed_to_int(planeViewZ * vert.scale);
+        {
+            leafedge_t* pEdge = leaf.edges;
 
-            *pVertScreenX = vert.screenx;
-            *pVertScreenY = screenY;
+            for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pEdge) {
+                const vertex_t& vert = *pEdge->vertex;
+                const int32_t screenY = (HALF_VIEW_3D_H - 1) - d_fixed_to_int(planeViewZ * vert.scale);
+
+                gLeafScreenVerts.push_back(vert.screenx);
+                gLeafScreenVerts.push_back(screenY);
+            }
         }
-    }
+
+        const int32_t* const pLeafScreenVerts = gLeafScreenVerts.data();
+    #else
+        int32_t* const pVerticesScreenX = (int32_t*) LIBETC_getScratchAddr(160);
+        int32_t* const pVerticesScreenY = pVerticesScreenX + (MAX_LEAF_EDGES + 1);
+
+        {
+            int32_t* pVertScreenX = pVerticesScreenX;
+            int32_t* pVertScreenY = pVerticesScreenY;
+            leafedge_t* pEdge = leaf.edges;
+
+            for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pEdge, ++pVertScreenX, ++pVertScreenY) {
+                const vertex_t& vert = *pEdge->vertex;
+                const int32_t screenY = (HALF_VIEW_3D_H - 1) - d_fixed_to_int(planeViewZ * vert.scale);
+
+                *pVertScreenX = vert.screenx;
+                *pVertScreenY = screenY;
+            }
+        }
+    #endif  // #if PSYDOOM_MODS
 
     // Determine the y bounds for the plane and for each row determine the x bounds.
     // Basically figuring out what spans we need to draw:
@@ -116,17 +155,29 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
 
     {
         // Add each edge's contribution to draw/span bounds
-        const uint32_t* pVertScreenY = pVerticesScreenY;
+        #if !PSYDOOM_MODS
+            const int32_t* pVertScreenY = pVerticesScreenY;
+        #endif
 
-        for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pVertScreenY) {
+        for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx) {
+            #if !PSYDOOM_MODS
+                ++pVertScreenY;
+            #endif
+
             int32_t nextEdgeIdx = edgeIdx + 1;
 
             if (edgeIdx == leaf.numEdges - 1) {
                 nextEdgeIdx = 0;
             }
 
-            const int32_t vertScreenY = *pVertScreenY;
-            const int32_t nextVertScreenY = pVerticesScreenY[nextEdgeIdx];
+            #if PSYDOOM_MODS
+                // PsyDoom: have to modify how these values are queried since they are now in a std::vector rather than the scratchpad
+                const int32_t vertScreenY = pLeafScreenVerts[edgeIdx * 2 + 1];
+                const int32_t nextVertScreenY = pLeafScreenVerts[nextEdgeIdx * 2 + 1];
+            #else
+                const int32_t vertScreenY = *pVertScreenY;
+                const int32_t nextVertScreenY = pVerticesScreenY[nextEdgeIdx];
+            #endif
 
             if (vertScreenY != nextVertScreenY) {
                 // Figure out the screen x and y value for the top and bottom point of the edge.
@@ -148,11 +199,21 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                     spanBound = SPAN_LEFT;
                 }
 
-                const fixed_t topScreenX = d_int_to_fixed((int32_t) pVerticesScreenX[topEdgeIdx]);
-                const fixed_t botScreenX = d_int_to_fixed((int32_t) pVerticesScreenX[botEdgeIdx]);
+                // PsyDoom: have to modify how these values are queried for the new (non-scratchpad) container used
+                #if PSYDOOM_MODS
+                    // PsyDoom: have to modify how these values are queried since they are now in a std::vector rather than the scratchpad
+                    const fixed_t topScreenX = d_int_to_fixed((int32_t) pLeafScreenVerts[topEdgeIdx * 2]);
+                    const fixed_t botScreenX = d_int_to_fixed((int32_t) pLeafScreenVerts[botEdgeIdx * 2]);
 
-                const int32_t topScreenY = pVerticesScreenY[topEdgeIdx];
-                const int32_t botScreenY = pVerticesScreenY[botEdgeIdx];
+                    const int32_t topScreenY = pLeafScreenVerts[topEdgeIdx * 2 + 1];
+                    const int32_t botScreenY = pLeafScreenVerts[botEdgeIdx * 2 + 1];
+                #else
+                    const fixed_t topScreenX = d_int_to_fixed((int32_t) pVerticesScreenX[topEdgeIdx]);
+                    const fixed_t botScreenX = d_int_to_fixed((int32_t) pVerticesScreenX[botEdgeIdx]);
+
+                    const int32_t topScreenY = pVerticesScreenY[topEdgeIdx];
+                    const int32_t botScreenY = pVerticesScreenY[botEdgeIdx];
+                #endif
 
                 // Figure out the size of the edge and x step per screen row
                 const fixed_t screenW = topScreenX - botScreenX;
@@ -219,7 +280,12 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
     #endif
 
     // Fill in the parts of the draw primitive that are common to all flat spans
-    POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
+    #if PSYDOOM_MODS
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        POLY_FT3 polyPrim = {};
+    #else
+        POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
+    #endif
 
     LIBGPU_SetPolyFT3(polyPrim);
     polyPrim.clut = g3dViewPaletteClutId;
@@ -474,4 +540,9 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
             }
         }
     }
+
+    // PsyDoom: need to cleanup this list before exiting
+    #if PSYDOOM_MODS
+        gLeafScreenVerts.clear();
+    #endif
 }

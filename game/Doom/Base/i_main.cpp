@@ -452,13 +452,24 @@ void I_DrawSprite(
 ) noexcept {
     // Set the drawing mode
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        #if PSYDOOM_MODS
+            DR_MODE drawModePrim = {};
+        #else
+            DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
+        #endif
+
         LIBGPU_SetDrawMode(drawModePrim, false, false, texPageId, nullptr);
         I_AddPrim(drawModePrim);
     }
 
-    // Setup the sprite primitive and submit
-    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    // Setup the sprite primitive and submit.
+    // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state.
+    #if PSYDOOM_MODS
+        SPRT spritePrim = {};
+    #else
+        SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    #endif
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_setRGB0(spritePrim, 128, 128, 128);
@@ -490,15 +501,13 @@ void I_DrawColoredSprite(
     const bool bSemiTransparent
 ) noexcept {
     // Set the drawing mode
-    {
-        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
-        LIBGPU_SetDrawMode(drawModePrim, false, false, texPageId, nullptr);
-        I_AddPrim(drawModePrim);
-    }
+    DR_MODE drawModePrim = {};
+    LIBGPU_SetDrawMode(drawModePrim, false, false, texPageId, nullptr);
+
+    I_AddPrim(drawModePrim);
 
     // Setup the sprite primitive and submit
-    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
-
+    SPRT spritePrim = {};
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_setRGB0(spritePrim, r, g, b);
     LIBGPU_setXY0(spritePrim, xpos, ypos);
@@ -945,7 +954,12 @@ void I_PurgeTexCache() noexcept {
 void I_VramViewerDraw(const int32_t texPageNum) noexcept {
     // Draw a sprite covering the screen which covers the entire vram page
     {
-        POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        #if PSYDOOM_MODS
+            POLY_FT4 polyPrim = {};
+        #else
+            POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
+        #endif
 
         LIBGPU_SetPolyFT4(polyPrim);
         LIBGPU_setRGB0(polyPrim, 128, 128, 128);
@@ -987,8 +1001,14 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
         if (!pTex)
             continue;
 
-        // Setup some stuff for all lines drawn
-        LINE_F2& linePrim = *(LINE_F2*) LIBETC_getScratchAddr(128);
+        // Setup some stuff for all lines drawn.
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state.
+        #if PSYDOOM_MODS
+            LINE_F2 linePrim = {};
+        #else
+            LINE_F2& linePrim = *(LINE_F2*) LIBETC_getScratchAddr(128);
+        #endif
+
         LIBGPU_SetLineF2(linePrim);
         LIBGPU_setRGB0(linePrim, 255, 0, 0);
         

@@ -18,7 +18,6 @@
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Renderer/r_data.h"
 #include "Renderer/r_main.h"
@@ -296,18 +295,21 @@ void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept {
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     // Setup the drawing mode
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
-
         // PsyDoom: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS
+            DR_MODE drawModePrim = {};
             RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
+            DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
     }
 
-    // Setting up some sprite primitive stuff for the 'draw string' call that follows
+    // Setting up some sprite primitive stuff for the 'draw string' call that follows.
+    // PsyDoom: no longer need to do this, not using scratchpad globals and 'draw string' now requires explicit shading settings.
+    #if !PSYDOOM_MODS
     {
         SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
@@ -317,6 +319,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         LIBGPU_setRGB0(spritePrim, 128, 128, 128);
         spritePrim.clut = Game::getTexPalette_DebugFontSmall();
     }
+    #endif  // #if !PSYDOOM_MODS
     
     // Format the message and print
     char msgBuffer[256];
@@ -335,7 +338,22 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         va_end(args);
     }
 
-    I_DrawStringSmall(gDebugDrawStringXPos, gDebugDrawStringYPos, msgBuffer);
+    // PsyDooom: have to explicitly specify sprite shading parameters now for 'draw string' rather than relying on global state
+    #if PSYDOOM_MODS
+        I_DrawStringSmall(
+            gDebugDrawStringXPos,
+            gDebugDrawStringYPos,
+            msgBuffer,
+            Game::getTexPalette_DebugFontSmall(),
+            128,
+            128,
+            128,
+            false,
+            false
+        );
+    #else
+        I_DrawStringSmall(gDebugDrawStringXPos, gDebugDrawStringYPos, msgBuffer);
+    #endif
 
     // The message scrolls down the screen as it is drawn more
     gDebugDrawStringYPos += 8;

@@ -26,7 +26,23 @@ enum : int32_t {
 };
 
 void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcept;
-void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) noexcept;
+
+#if PSYDOOM_MODS
+    void I_DrawStringSmall(
+        const int32_t x,
+        const int32_t y,
+        const char* const str,
+        const uint16_t clutId,
+        const uint8_t r,
+        const uint8_t g,
+        const uint8_t b,
+        const bool bSemiTransparent,
+        const bool bDisableShading
+    ) noexcept;
+#else
+    void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) noexcept;
+#endif
+
 void I_DrawPausedOverlay() noexcept;
 void I_UpdatePalette() noexcept;
 void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexcept;

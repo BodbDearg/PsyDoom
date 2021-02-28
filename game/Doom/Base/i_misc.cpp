@@ -88,17 +88,24 @@ const fontchar_t gBigFontChars[NUM_BIG_FONT_CHARS] = {
 // Draw a number using the large font at the specified pixel location
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcept {
-    // Basic setup of the drawing primitive
-    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    // Basic setup of the drawing primitive.
+    // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+    #if PSYDOOM_MODS
+        SPRT spritePrim = {};
+    #else
+        SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    #endif
 
     #if PSYDOOM_MODS
         // Set these primitive properties prior to drawing rather than allowing them to be undefined as in the original code.
+        // Also use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        //
         // I think this drawing code just happened to work because of the types of operations which occurred just before it.
         // They must have produced primitive state changes that we actually desired for this function...
         // Relying on external draw code and ordering however is brittle, so be explicit here and set exactly what we need:
         {
             // Set the draw mode to disable wrapping (zero sized text window) and texture page to the STATUS graphic
-            DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
+            DR_MODE drawModePrim = {};
             const RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
             I_AddPrim(drawModePrim);
@@ -165,12 +172,38 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw a string using the very small font used for hud status bar messages
 //------------------------------------------------------------------------------------------------------------------------------------------
-void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) noexcept {
+void I_DrawStringSmall(
+    const int32_t x,
+    const int32_t y,
+// PsyDoom: shading params must now be explicitly specified; don't rely on global state held in scratchpad memory
+#if PSYDOOM_MODS
+    const char* const str,
+    const uint16_t clutId,
+    const uint8_t r,
+    const uint8_t g,
+    const uint8_t b,
+    const bool bSemiTransparent,
+    const bool bDisableShading
+#else
+    const char* const str
+#endif
+) noexcept {
     // Common sprite setup for every character.
     //
-    // Note: lots of stuff like shading, color etc. is deliberately LEFT ALONE and not defined/specified here.
-    // It's up to external code to customize that if it wants.
-    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    // Note that in the original code lots of stuff like shading, color etc. is deliberately LEFT ALONE and not defined/specified here.
+    // It was up to external code to customize that if it wanted to.
+    // PsyDoom now fills in that state explicitly however and avoids global scratchpad usage...
+    #if PSYDOOM_MODS
+        SPRT spritePrim = {};
+        LIBGPU_SetSprt(spritePrim);
+        LIBGPU_setRGB0(spritePrim, r, g, b);
+        LIBGPU_SetSemiTrans(spritePrim, bSemiTransparent);
+        LIBGPU_SetShadeTex(spritePrim, bDisableShading);
+        spritePrim.clut = clutId;
+    #else
+        SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    #endif
+    
     LIBGPU_setWH(spritePrim, 8, 8);
     spritePrim.y0 = (int16_t) y;
     
@@ -238,7 +271,13 @@ void I_DrawPausedOverlay() noexcept {
         #endif
 
         {
-            POLY_F4& polyPrim = *(POLY_F4*) LIBETC_getScratchAddr(128);
+            // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+            #if PSYDOOM_MODS
+                POLY_F4 polyPrim = {};
+            #else
+                POLY_F4& polyPrim = *(POLY_F4*) LIBETC_getScratchAddr(128);
+            #endif
+
             LIBGPU_SetPolyF4(polyPrim);
             LIBGPU_setRGB0(polyPrim, 0, 0, 0);
             LIBGPU_setXY4(polyPrim,
@@ -364,13 +403,14 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
 void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexcept {
     // Set the draw mode to remove the current texture window and texture page to the STATUS graphic
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
-
         // PsyDoom: define the texture window while we are at it, rather than relying on the one set externally
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS
+            DR_MODE drawModePrim = {};
             const RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
+            DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
@@ -378,7 +418,12 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
     }
 
     // Some basic setup of the sprite primitive for all characters
-    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    #if PSYDOOM_MODS
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        SPRT spritePrim = {};
+    #else
+        SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    #endif
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(spritePrim, true);

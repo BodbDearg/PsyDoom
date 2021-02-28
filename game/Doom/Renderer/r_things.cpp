@@ -3,7 +3,6 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/g_game.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_data.h"
@@ -125,13 +124,25 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         RECT texWinRect;
         LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
 
-        DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        #if PSYDOOM_MODS
+            DR_TWIN texWinPrim = {};
+        #else
+            DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        #endif
+
         LIBGPU_SetTexWindow(texWinPrim, texWinRect);
         I_AddPrim(texWinPrim);
     }
     
     // Initialize the quad primitive used to draw sprites
-    POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
+    #if PSYDOOM_MODS
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        POLY_FT4 polyPrim = {};
+    #else
+        POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
+    #endif
+
     LIBGPU_SetPolyFT4(polyPrim);
     polyPrim.clut = g3dViewPaletteClutId;
 
@@ -287,14 +298,26 @@ void R_DrawWeapon() noexcept {
             bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_FLAGS) != 0);    // Minor logic bug? Should be testing against 'MF_BLEND_ON' instead?
             const uint16_t texPageId = tex.texPageId | LIBGPU_getTPage(0, (bIsTransparent) ? 1 : 0, 0, 0);
 
-            DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
+            // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+            #if PSYDOOM_MODS
+                DR_MODE drawMode = {};
+            #else
+                DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
+            #endif
+
             LIBGPU_SetDrawMode(drawMode, false, false, texPageId, &texWin);
             I_AddPrim(drawMode);
         }
 
         // Setup the sprite to be drawn and submit the drawing primitive.
         // Set transparency, size, UV coords, palette and color before drawing.
-        SPRT& spr = *(SPRT*) LIBETC_getScratchAddr(128);
+        #if PSYDOOM_MODS
+            // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+            SPRT spr = {};
+        #else
+            SPRT& spr = *(SPRT*) LIBETC_getScratchAddr(128);
+        #endif
+
         LIBGPU_SetSprt(spr);
 
         if (bIsTransparent) {

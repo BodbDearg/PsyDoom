@@ -305,6 +305,8 @@ if (PSYDOOM_INCLUDE_OLD_CODE)
         "Old/PsyQ/Old_LIBCD.h"
         "Old/PsyQ/Old_LIBCOMB.cpp"
         "Old/PsyQ/Old_LIBCOMB.h"
+        "Old/PsyQ/Old_LIBETC.cpp"
+        "Old/PsyQ/Old_LIBETC.h"
         "Old/PsyQ/Old_LIBGPU.cpp"
         "Old/PsyQ/Old_LIBGPU.h"
         "Old/Wess/Old_lcdload.cpp"

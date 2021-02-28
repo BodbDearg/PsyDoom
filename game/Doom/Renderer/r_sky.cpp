@@ -4,7 +4,6 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
 #include "r_main.h"
@@ -40,13 +39,25 @@ void R_DrawSky() noexcept {
             skytex.height
         };
 
-        DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        #if PSYDOOM_MODS
+            DR_MODE drawMode = {};
+        #else
+            DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
+        #endif
+
         LIBGPU_SetDrawMode(drawMode, false, false, skytex.texPageId, &textureWindow);
         I_AddPrim(drawMode);
     }
 
     // Setup and draw the sky sprite
-    SPRT& spr = *(SPRT*) LIBETC_getScratchAddr(128);
+    #if PSYDOOM_MODS
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        SPRT spr = {};
+    #else
+        SPRT& spr = *(SPRT*) LIBETC_getScratchAddr(128);
+    #endif
+
     LIBGPU_SetSprt(spr);
     LIBGPU_SetShadeTex(spr, true);
     LIBGPU_setXY0(spr, 0, 0);

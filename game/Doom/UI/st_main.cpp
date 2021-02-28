@@ -14,7 +14,6 @@
 #include "in_main.h"
 #include "Macros.h"
 #include "PcPsx/Game.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
 #include <cstdio>
@@ -301,31 +300,45 @@ void ST_Ticker() noexcept {
 void ST_Drawer() noexcept {
     // Setup the current texture page and texture window.
     // PsyDoom: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that.
+    // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
-
         #if PSYDOOM_MODS
+            DR_MODE drawModePrim = {};
             RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
+            DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
         I_AddPrim(drawModePrim);
     }
 
-    // Setup some sprite primitive state that is used for all the draw calls that follow
-    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    // Setup some sprite primitive state that is used for all the draw calls that follow.
+    // PsyDoom: it's now only used for stuff drawn immediately in this function, not string drawing etc.
+    #if PSYDOOM_MODS
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        SPRT spritePrim = {};
+    #else
+        SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
+    #endif
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(spritePrim, true);
-    spritePrim.clut = gPaletteClutIds[UIPAL];
+
+    const uint16_t uiPaletteClutId = gPaletteClutIds[UIPAL];
+    spritePrim.clut = uiPaletteClutId;
     
     // Draw the current status bar message, or the map name (if in the automap)
     player_t& player = gPlayers[gCurPlayerIndex];
 
     if (gStatusBar.messageTicsLeft > 0) {
-        I_DrawStringSmall(7, 193, gStatusBar.message);
+        // PsyDooom: have to explicitly specify sprite shading parameters now for 'draw string' rather than relying on global state
+        #if PSYDOOM_MODS
+            I_DrawStringSmall(7, 193, gStatusBar.message, uiPaletteClutId, 128, 128, 128, false, true);
+        #else
+            I_DrawStringSmall(7, 193, gStatusBar.message);
+        #endif
     } else {
         if (player.automapflags & AF_ACTIVE) {
             constexpr const char* const MAP_TITLE_FMT = "LEVEL %d:%s";
@@ -338,7 +351,12 @@ void ST_Drawer() noexcept {
                 std::sprintf(mapTitle, MAP_TITLE_FMT, gGameMap, gMapNames[gGameMap - 1]);
             #endif
 
-            I_DrawStringSmall(7, 193, mapTitle);
+            // PsyDooom: have to explicitly specify sprite shading parameters now for 'draw string' rather than relying on global state
+            #if PSYDOOM_MODS
+                I_DrawStringSmall(7, 193, mapTitle, uiPaletteClutId, 128, 128, 128, false, true);
+            #else
+                I_DrawStringSmall(7, 193, mapTitle);
+            #endif
         }
     }
 

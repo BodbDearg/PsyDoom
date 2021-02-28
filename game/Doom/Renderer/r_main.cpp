@@ -9,7 +9,6 @@
 #include "Doom/Game/p_user.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_bsp.h"
@@ -225,7 +224,13 @@ void R_RenderPlayerView() noexcept {
         RECT texWinRect;
         LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
 
-        DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+        #if PSYDOOM_MODS
+            DR_TWIN texWinPrim = {};
+        #else
+            DR_TWIN& texWinPrim = *(DR_TWIN*) LIBETC_getScratchAddr(128);
+        #endif
+
         LIBGPU_SetTexWindow(texWinPrim, texWinRect);
         I_AddPrim(texWinPrim);
     }

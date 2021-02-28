@@ -20,7 +20,6 @@
 #include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
 // Win text for Doom 1 and 2, and Final Doom.
@@ -619,7 +618,12 @@ void F2_Drawer() noexcept {
         I_CacheTex(spriteTex);
 
         // Setup and draw the sprite for the cast character
-        POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
+        #if PSYDOOM_MODS
+            // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
+            POLY_FT4 polyPrim = {};
+        #else
+            POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
+        #endif
 
         LIBGPU_SetPolyFT4(polyPrim);
         LIBGPU_SetShadeTex(polyPrim, true);
