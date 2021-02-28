@@ -61,6 +61,8 @@ struct ConfigFieldHandler {
 // Graphics config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool        gbFullscreen;
+int32_t     gOutputResolutionW;
+int32_t     gOutputResolutionH;
 float       gLogicalDisplayW;
 bool        gbDisableVulkanRenderer;
 int32_t     gVulkanRenderHeight;
@@ -81,6 +83,25 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFullscreen = iniEntry.getBoolValue(true); },
         []() { gbFullscreen = true; }
+    },
+    {
+        "OutputResolutionW",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Output resolution (width & height) for both the Vulkan and Classic renderers.\n"
+        "# In windowed mode this is the size of the window.\n"
+        "# In fullscreen mode this is the actual screen resolution to use.\n"
+        "# If the values are '0' or less (auto resolution) then this means use the current (desktop)\n"
+        "# resolution in fullscreen mode, and auto-decide the window size in windowed mode.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "-1", "",
+        [](const IniUtils::Entry& iniEntry) { gOutputResolutionW = iniEntry.getIntValue(-1); },
+        []() { gOutputResolutionW = -1; }
+    },
+    {
+        "OutputResolutionH",
+        "", "-1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gOutputResolutionH = iniEntry.getIntValue(-1); },
+        []() { gOutputResolutionH = -1; }
     },
     {
         "AntiAliasingMultisamples",

@@ -27,6 +27,8 @@ extern float    gViewBobbingStrength;
 // Video settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 extern bool     gbFullscreen;
+extern int32_t  gOutputResolutionW;
+extern int32_t  gOutputResolutionH;
 extern float    gLogicalDisplayW;
 extern bool     gbDisableVulkanRenderer;
 extern int32_t  gVulkanRenderHeight;

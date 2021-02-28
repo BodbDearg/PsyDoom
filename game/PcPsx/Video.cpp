@@ -44,24 +44,32 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
         FatalErrors::raise("Failed to determine current screen video mode!");
     }
 
-    // If in fullscreen then use the current screen resolution
+    // Determine automatically decided resolution
+    int32_t autoResolutionW = {};
+    int32_t autoResolutionH = {};
+
     if (Config::gbFullscreen) {
-        w = displayMode.w;
-        h = displayMode.h;
-        return;
+        // If in fullscreen then use the current screen resolution
+        autoResolutionW = displayMode.w;
+        autoResolutionH = displayMode.h;
+    }
+    else {
+        // In windowed mode make the window a multiple of the logical display resolution.
+        // Also allow some room for window edges and other OS decoration...
+        // If a free aspect ratio is being used (width <= 0) then just use the original display resolution width for this calculation.
+        const float logicalDispW = (Config::gLogicalDisplayW <= 0.0f) ? (float) ORIG_DISP_RES_X : Config::gLogicalDisplayW;
+
+        const float xScale = std::max(((float) displayMode.w - 20.0f) / logicalDispW, 1.0f);
+        const float yScale = std::max(((float) displayMode.h - 40.0f) / (float) ORIG_DISP_RES_Y, 1.0f);
+        const int32_t scale = std::max((int32_t) std::min(xScale, yScale), 1);
+
+        autoResolutionW = (int32_t)(logicalDispW * scale);
+        autoResolutionH = (int32_t)((float) ORIG_DISP_RES_Y * scale);
     }
 
-    // In windowed mode make the window a multiple of the logical display resolution.
-    // Also allow some room for window edges and other OS decoration...
-    // If a free aspect ratio is being used (width <= 0) then just use the original display resolution width for this calculation.
-    const float logicalDispW = (Config::gLogicalDisplayW <= 0.0f) ? (float) ORIG_DISP_RES_X : Config::gLogicalDisplayW;
-
-    const float xScale = std::max(((float) displayMode.w - 20.0f) / logicalDispW, 1.0f);
-    const float yScale = std::max(((float) displayMode.h - 40.0f) / (float) ORIG_DISP_RES_Y, 1.0f);
-    const int32_t scale = std::max((int32_t) std::min(xScale, yScale), 1);
-
-    w = (int32_t)(logicalDispW * scale);
-    h = (int32_t)((float) ORIG_DISP_RES_Y * scale);
+    // Save the actual resolution to use, taking into account user overrides
+    w = (Config::gOutputResolutionW > 0) ? Config::gOutputResolutionW : autoResolutionW;
+    h = (Config::gOutputResolutionH > 0) ? Config::gOutputResolutionH : autoResolutionH;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -222,8 +230,8 @@ void getClassicFramebufferWindowRect(
         // Determine output width and height and center the framebuffer image in the window
         rectW = logicalXResolution * scale;
         rectH = (float) ORIG_DISP_RES_Y * scale;
-        rectX = (windowW - rectW) * 0.5;
-        rectY = (windowH - rectH) * 0.5;
+        rectX = (windowW - rectW) * 0.5f;
+        rectY = (windowH - rectH) * 0.5f;
     }
 
     // Ensure the coordinates are within screen bounds.
