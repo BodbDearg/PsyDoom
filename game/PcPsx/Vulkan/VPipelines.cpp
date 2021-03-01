@@ -241,7 +241,12 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
     {
         const VkSampler vkSamplers[] = {
             gSampler_normClampNearest.getVkSampler(),
+            
+        // TODO: sampler arrays not supported on MoltenVK/Metal
+        // FIXME: sampler arrays not supported on MoltenVK/Metal
+        #ifndef __APPLE__
             gSampler_normClampNearest.getVkSampler()
+        #endif
         };
 
         VkDescriptorSetLayoutBinding bindings[1] = {};

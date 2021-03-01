@@ -44,8 +44,16 @@ static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
 };
 
 // What formats we use for 16 and 32-bit color.
-// Note that 'VK_FORMAT_A1R5G5B5_UNORM_PACK16' is not required to be supported by Vulkan as a framebuffer attachment, but it's pretty ubiquitous.
-static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
+// Note that 'VK_FORMAT_A1R5G5B5_UNORM_PACK16' is not required to be supported by Vulkan as a framebuffer attachment, but it's pretty ubiquitous *EXCEPT* on Apple/Metal.
+//
+// For Apple platforms 16-bit format support via Metal/MoltenVK is pretty much non existant, so fall back to using 32-bit formats instead.
+// The blending won't look as correct, but at least it works (sigh)...
+#ifdef __APPLE__
+    static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
+#else
+    static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
+#endif
+
 static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 
 // Cached pointers to all Vulkan API functions
@@ -137,17 +145,17 @@ static bool isPhysicalDeviceSuitable(const vgl::PhysicalDevice& device, const vg
     if (!device.findFirstSupportedTextureFormat(&R16_UINT_FORMAT, 1))   // Note: don't need linear sampling from this format, most HW doesn't support it anyway
         return false;
 
-    if (!device.findFirstSupportedTextureFormat(&COLOR_16_FORMAT, 1, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+    if (!device.findFirstSupportedTextureFormat(&COLOR_16_FORMAT, 1))
         return false;
 
-    if (!device.findFirstSupportedTextureFormat(&COLOR_32_FORMAT, 1, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+    if (!device.findFirstSupportedTextureFormat(&COLOR_32_FORMAT, 1))
         return false;
 
     // Make sure these are supported as color attachment formats
-    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_16_FORMAT, 1, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_16_FORMAT, 1))
         return false;
 
-    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_32_FORMAT, 1, VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_32_FORMAT, 1))
         return false;
 
     return true;

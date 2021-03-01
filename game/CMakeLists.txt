@@ -396,8 +396,7 @@ if (PLATFORM_WINDOWS)
     set_property(TARGET ${GAME_TGT_NAME} PROPERTY WIN32_EXECUTABLE true)        # Win32 GUI APP
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DUNICODE -D_UNICODE)   # Use Unicode WinMain()
 elseif(PLATFORM_MAC)
-    # Fixme: compile as a .app eventually
-    # SET_TARGET_PROPERTIES(${GAME_TGT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
+    SET_TARGET_PROPERTIES(${GAME_TGT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
 elseif (PLATFORM_LINUX)
     target_compile_options(${GAME_TGT_NAME} PRIVATE -pthread)
 endif()

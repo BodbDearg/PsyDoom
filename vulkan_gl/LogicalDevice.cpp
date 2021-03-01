@@ -319,18 +319,22 @@ bool LogicalDevice::createDeviceAndQueues() noexcept {
 
     // Create the device itself using all of these settings
     {
-        // Note: need the swapchain extension for creating the swapchain
-        const char* const DEVICE_EXTENSIONS[] = {
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME
-        };
+        // Note: need the swapchain extension for creating the swapchain.
+        // Enable the portability subset also if available (on MacOS) to identify parts of Vulkan we can't use, get a validation layer error otherwise.
+        std::vector<const char*> reqDeviceExts;
+        reqDeviceExts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        
+        if (mpPhysicalDevice->getExtensions().hasExtension("VK_KHR_portability_subset")) {
+            reqDeviceExts.push_back("VK_KHR_portability_subset");
+        }
 
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.pQueueCreateInfos = requiredQueueCreateInfos;
         createInfo.queueCreateInfoCount = numQueuesToCreate;
         createInfo.pEnabledFeatures = &enabledFeatures;
-        createInfo.ppEnabledExtensionNames = DEVICE_EXTENSIONS;
-        createInfo.enabledExtensionCount = C_ARRAY_SIZE(DEVICE_EXTENSIONS);
+        createInfo.ppEnabledExtensionNames = reqDeviceExts.data();
+        createInfo.enabledExtensionCount = (uint32_t) reqDeviceExts.size();
 
         if (mVkFuncs.vkCreateDevice(mpPhysicalDevice->getVkPhysicalDevice(), &createInfo, nullptr, &mVkDevice) != VK_SUCCESS) {
             ASSERT_FAIL("Failed to create a logical device!");

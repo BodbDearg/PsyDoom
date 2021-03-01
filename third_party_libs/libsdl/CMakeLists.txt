@@ -290,6 +290,7 @@ if (PLATFORM_MAC)
         "${SRC_DIR}/joystick/darwin/SDL_iokitjoystick_c.h"
         "${SRC_DIR}/joystick/iphoneos/SDL_mfijoystick.m"
         "${SRC_DIR}/joystick/iphoneos/SDL_mfijoystick_c.h"
+        "${SRC_DIR}/loadso/dlopen/SDL_sysloadso.c"
         "${SRC_DIR}/locale/macosx/SDL_syslocale.m"
         "${SRC_DIR}/misc/macosx/SDL_sysurl.m"
         "${SRC_DIR}/render/metal/SDL_render_metal.m"
@@ -325,6 +326,13 @@ if (PLATFORM_MAC)
         "${SRC_DIR}/video/cocoa/SDL_cocoawindow.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoawindow.m"
     )
+
+    if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+        list(APPEND SOURCE_FILES
+            "${SRC_DIR}/video/cocoa/SDL_cocoavulkan.h"
+            "${SRC_DIR}/video/cocoa/SDL_cocoavulkan.m"
+        )
+    endif()
 
     list(APPEND OTHER_FILES
         "${SRC_DIR}/render/metal/SDL_shaders_metal.metal"
@@ -449,7 +457,6 @@ if (PLATFORM_MAC)
     FIND_LIBRARY(IO_KIT_FRAMEWORK               IOKit)
     FIND_LIBRARY(METAL_FRAMEWORK                Metal)
 
-
     target_link_libraries(${LIBSDL_TGT_NAME}
         ${APP_KIT_FRAMEWORK}
         ${AUDIO_TOOLBOX_FRAMEWORK}
@@ -465,6 +472,10 @@ if (PLATFORM_MAC)
     )
 
     target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_VIDEO_METAL=1)
+    
+    if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
+        target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DVK_USE_PLATFORM_METAL_EXT=1)
+    endif()
 endif()
 
 if (PLATFORM_LINUX)

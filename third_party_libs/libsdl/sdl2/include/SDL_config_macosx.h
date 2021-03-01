@@ -241,7 +241,7 @@
 /* Enable Vulkan and Metal support */
 #ifndef SDL_VIDEO_VULKAN
 #if SDL_PLATFORM_SUPPORTS_METAL
-#define SDL_VIDEO_VULKAN 0
+#define SDL_VIDEO_VULKAN PSYDOOM_VULKAN_RENDERER
 #else
 #define SDL_VIDEO_VULKAN 0
 #endif

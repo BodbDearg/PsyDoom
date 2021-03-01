@@ -96,36 +96,45 @@ static void initPlaqueTex(vgl::LogicalDevice& device, const texture_t& tex, cons
     uint16_t clutX, clutY;
     RV_ClutIdToClutXy(clutId, clutX, clutY);
 
-    // Create the Vulkan texture and lock its pixels
-    if (!gPlaqueTex.initAs2dTexture(device, VK_FORMAT_A1R5G5B5_UNORM_PACK16, texW, texH))
-        FatalErrors::raise("Failed to create a Vulkan loading plaque texture!");
+    // Create the Vulkan texture and lock its pixels.
+    // Note that on Apple/Metal we can't use 16-bit textures, so fallback to 32-bit instead.
+    #ifndef __APPLE__
+        if (!gPlaqueTex.initAs2dTexture(device, VK_FORMAT_A1R5G5B5_UNORM_PACK16, texW, texH))
+            FatalErrors::raise("Failed to create a Vulkan loading plaque texture!");
 
-    uint16_t* const pPlaquePixels = (uint16_t*) gPlaqueTex.lock();
+        uint16_t* const pPlaquePixels = (uint16_t*) gPlaqueTex.lock();
 
-    // Populate all of those pixels
-    const uint16_t* const pVram = PsxVm::gGpu.pRam;
-    const uint32_t vramWidth = PsxVm::gGpu.ramPixelW;
-    const uint16_t* const pClut = pVram + ((clutY * vramWidth) + clutX);
+        // Populate all of those pixels
+        const uint16_t* const pVram = PsxVm::gGpu.pRam;
+        const uint32_t vramWidth = PsxVm::gGpu.ramPixelW;
+        const uint16_t* const pClut = pVram + ((clutY * vramWidth) + clutX);
 
-    for (uint32_t y = 0; y < texH; ++y) {
-        for (uint32_t x = 0; x < texW; ++x) {
-            // Get the destination and source pixel
-            uint16_t& dstPixel = pPlaquePixels[texW * y + x];
-            const uint16_t srcVram = pVram[(texY + y) * vramWidth + (texX + x) / 2];   // Note: divide x by '2' to convert to 16bpp pixel coords
-            const uint16_t srcColorIdx = (x & 1) ? srcVram >> 8 : srcVram & 0xFFu;
-            const uint16_t srcPixel = pClut[srcColorIdx];
+        for (uint32_t y = 0; y < texH; ++y) {
+            for (uint32_t x = 0; x < texW; ++x) {
+                // Get the destination and source pixel
+                uint16_t& dstPixel = pPlaquePixels[texW * y + x];
+                const uint16_t srcVram = pVram[(texY + y) * vramWidth + (texX + x) / 2];   // Note: divide x by '2' to convert to 16bpp pixel coords
+                const uint16_t srcColorIdx = (x & 1) ? srcVram >> 8 : srcVram & 0xFFu;
+                const uint16_t srcPixel = pClut[srcColorIdx];
 
-            // Convert the pixel components and save
-            if (srcPixel != 0) {
-                const uint16_t srcR = (srcPixel >>  0) & 0x1F;
-                const uint16_t srcG = (srcPixel >>  5) & 0x1F;
-                const uint16_t srcB = (srcPixel >> 10) & 0x1F;
-                dstPixel = (srcR << 10) | (srcG << 5) | (srcB << 0) | 0x8000;
-            } else {
-                dstPixel = 0;
+                // Convert the pixel components and save
+                if (srcPixel != 0) {
+                    const uint16_t srcR = (srcPixel >>  0) & 0x1F;
+                    const uint16_t srcG = (srcPixel >>  5) & 0x1F;
+                    const uint16_t srcB = (srcPixel >> 10) & 0x1F;
+                    dstPixel = (srcR << 10) | (srcG << 5) | (srcB << 0) | 0x8000;
+                } else {
+                    dstPixel = 0;
+                }
             }
         }
-    }
+    #else
+        // TODO: implement loading plaque fade for MacOS
+        if (!gPlaqueTex.initAs2dTexture(device, VK_FORMAT_B8G8R8A8_UNORM, texW, texH))
+            FatalErrors::raise("Failed to create a Vulkan loading plaque texture!");
+            
+        uint32_t* const pPlaquePixels = (uint32_t*) gPlaqueTex.lock();
+    #endif
 
     // Unlock the plaque texture to begin the texture upload
     gPlaqueTex.unlock();
