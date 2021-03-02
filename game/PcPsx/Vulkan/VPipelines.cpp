@@ -239,22 +239,22 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
 
     // Crossfading
     {
-        const VkSampler vkSamplers[] = {
-            gSampler_normClampNearest.getVkSampler(),
-            
-        // TODO: sampler arrays not supported on MoltenVK/Metal
-        // FIXME: sampler arrays not supported on MoltenVK/Metal
-        #ifndef __APPLE__
-            gSampler_normClampNearest.getVkSampler()
-        #endif
-        };
+        const VkSampler vkSampler = gSampler_normClampNearest.getVkSampler();
 
-        VkDescriptorSetLayoutBinding bindings[1] = {};
+        // Note: used to use an array of 2 textures, but MoltenVK didn't like that on MacOS.
+        // Use 2 separate texture bindings instead to work around the issue...
+        VkDescriptorSetLayoutBinding bindings[2] = {};
         bindings[0].binding = 0;
         bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        bindings[0].descriptorCount = C_ARRAY_SIZE(vkSamplers);
+        bindings[0].descriptorCount = 1;
         bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        bindings[0].pImmutableSamplers = vkSamplers;
+        bindings[0].pImmutableSamplers = &vkSampler;
+        
+        bindings[1].binding = 1;
+        bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bindings[1].descriptorCount = 1;
+        bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        bindings[1].pImmutableSamplers = &vkSampler;
 
         if (!gDescSetLayout_crossfade.init(device, bindings, C_ARRAY_SIZE(bindings)))
             FatalErrors::raise("Failed to init the 'crossfade' Vulkan descriptor set layout!");

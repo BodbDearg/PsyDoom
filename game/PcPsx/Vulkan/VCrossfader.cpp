@@ -119,6 +119,8 @@ static void bindCrossfadeTextures() noexcept {
 
     const VkSampler vkSampler = VPipelines::gSampler_normClampNearest.getVkSampler();
 
+    // Note: used to use an array of 2 textures, but MoltenVK didn't like that on MacOS.
+    // Use 2 separate texture bindings instead to work around the issue...
     VkDescriptorImageInfo imageInfos[2] = {};
     imageInfos[0].sampler = vkSampler;
     imageInfos[0].imageView = gpCrossfadeTex1->getVkImageView();
@@ -127,7 +129,8 @@ static void bindCrossfadeTextures() noexcept {
     imageInfos[1].imageView = gpCrossfadeTex2->getVkImageView();
     imageInfos[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-    gpDescriptorSet->bindTextures(0, imageInfos, C_ARRAY_SIZE(imageInfos));
+    gpDescriptorSet->bindTextures(0, &imageInfos[0], 1);
+    gpDescriptorSet->bindTextures(1, &imageInfos[1], 1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
