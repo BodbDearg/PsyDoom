@@ -43,21 +43,18 @@ static constexpr VkFormat ALLOWED_COLOR_SURFACE_FORMATS[] = {
     VK_FORMAT_A2B10G10R10_UNORM_PACK32
 };
 
-// What formats we use for 16 and 32-bit color.
+// What format we use for 32-bit color and the preferred format for 16-bit color.
 // Note that 'VK_FORMAT_A1R5G5B5_UNORM_PACK16' is not required to be supported by Vulkan as a framebuffer attachment, but it's pretty ubiquitous *EXCEPT* on Apple/Metal.
-//
-// For Apple platforms 16-bit format support via Metal/MoltenVK is pretty much non existant, so fall back to using 32-bit formats instead.
+// For Apple platforms 16-bit format support via Metal/MoltenVK is pretty much non existant, so fall back to using the 32-bit format instead.
 // The blending won't look as correct, but at least it works (sigh)...
-#ifdef __APPLE__
-    static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
-#else
-    static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
-#endif
-
+static constexpr VkFormat COLOR_16_FORMAT = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
 static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 
 // Cached pointers to all Vulkan API functions
 vgl::VkFuncs gVkFuncs;
+
+// Set to true if the 16 bit color format is supported, fallback to using the 32-bit format otherwise
+bool gbIs16BitColorSupported;
 
 // Render paths used
 VRenderPath_Psx         gRenderPath_Psx;
@@ -145,20 +142,24 @@ static bool isPhysicalDeviceSuitable(const vgl::PhysicalDevice& device, const vg
     if (!device.findFirstSupportedTextureFormat(&R16_UINT_FORMAT, 1))   // Note: don't need linear sampling from this format, most HW doesn't support it anyway
         return false;
 
-    if (!device.findFirstSupportedTextureFormat(&COLOR_16_FORMAT, 1))
-        return false;
-
     if (!device.findFirstSupportedTextureFormat(&COLOR_32_FORMAT, 1))
         return false;
 
     // Make sure these are supported as color attachment formats
-    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_16_FORMAT, 1))
-        return false;
-
     if (!device.findFirstSupportedRenderTextureFormat(&COLOR_32_FORMAT, 1))
         return false;
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Determines if 16-bit color framebuffers and textures are possible for the specified device
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void determine16BitColorSupport(const vgl::PhysicalDevice& device) noexcept {
+    gbIs16BitColorSupported = (
+        (device.findFirstSupportedTextureFormat(&COLOR_16_FORMAT, 1) != VK_FORMAT_UNDEFINED) &&
+        (device.findFirstSupportedRenderTextureFormat(&COLOR_16_FORMAT, 1) != VK_FORMAT_UNDEFINED)
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -364,7 +365,8 @@ void init() noexcept {
     if (!gpPhysicalDevice)
         FatalErrors::raise("Failed to find a suitable rendering device for use with Vulkan!");
 
-    // Decide on draw sample count and window/present surface format
+    // Decide whether 16-bit color is possible, draw sample count and window/present surface format
+    determine16BitColorSupport(*gpPhysicalDevice);
     decidePresentSurfaceFormat();
     decideDrawSampleCount();
 
@@ -376,9 +378,9 @@ void init() noexcept {
     VPipelines::initPipelineComponents(gDevice, gDrawSampleCount);
 
     // Initialize all render paths
-    const VkFormat drawColorFormat = (Config::gbUseVulkan32BitShading) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
+    const VkFormat drawColorFormat = (Config::gbUseVulkan32BitShading || (!gbIs16BitColorSupported)) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
 
-    gRenderPath_Psx.init(gDevice, COLOR_16_FORMAT);
+    gRenderPath_Psx.init(gDevice, (gbIs16BitColorSupported) ? COLOR_16_FORMAT : COLOR_32_FORMAT);
     gRenderPath_Main.init(gDevice, gDrawSampleCount, drawColorFormat, COLOR_32_FORMAT);
     gRenderPath_Crossfade.init(gDevice, gSwapchain, gPresentSurfaceFormat, gRenderPath_Main);
 
@@ -481,6 +483,7 @@ void destroy() noexcept {
     gpPhysicalDevice = nullptr;
     gWindowSurface.destroy();
     gVulkanInstance.destroy();
+    gbIs16BitColorSupported = false;
     gVkFuncs = {};
 
     // Clear all coord sys info

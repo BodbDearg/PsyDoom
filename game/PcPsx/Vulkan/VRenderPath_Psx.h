@@ -25,6 +25,9 @@ public:
     inline bool isValid() const noexcept { return mbIsValid; }
 
 private:
+    void copyPsxFramebufferToFbTexture_A1R5G5B5(const uint16_t* const pSrcPixels, uint16_t* pDstPixels) noexcept;
+    void copyPsxFramebufferToFbTexture_B8G8R8A8(const uint16_t* const pSrcPixels, uint32_t* pDstPixels) noexcept;
+
     bool                    mbIsValid;      // True if the render path has been initialized
     vgl::LogicalDevice*     mpDevice;       // The vulkan device used
 

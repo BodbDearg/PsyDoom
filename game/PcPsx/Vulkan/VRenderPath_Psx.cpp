@@ -37,6 +37,9 @@ void VRenderPath_Psx::init(vgl::LogicalDevice& device, const VkFormat psxFramebu
     ASSERT_LOG(!mbIsValid, "Can't initialize twice!");
     ASSERT(device.isValid());
     mpDevice = &device;
+    
+    // Only two framebuffer formats are supported
+    ASSERT((psxFramebufferFormat == VK_FORMAT_A1R5G5B5_UNORM_PACK16) || (psxFramebufferFormat == VK_FORMAT_B8G8R8A8_UNORM));
 
     // Initialize the PSX framebuffer textures used to hold the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer
     for (vgl::MutableTexture& psxFbTex : mPsxFramebufferTextures) {
@@ -168,23 +171,13 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
 
     {
         Gpu::Core& gpu = PsxVm::gGpu;
-        const uint16_t* pSrcRowPixels = gpu.pRam + (gpu.displayAreaX + (uintptr_t) gpu.displayAreaY * gpu.ramPixelW);
-        uint16_t* pDstRowPixels = (uint16_t*) psxFbTexture.getBytes();
-
-        for (uint32_t y = 0; y < Video::ORIG_DRAW_RES_Y; ++y) {
-            // Note: don't bother doing multiple pixels at a time - compiler is smart and already optimizes this to use SIMD
-            for (uint32_t x = 0; x < Video::ORIG_DRAW_RES_X; ++x) {
-                const uint16_t srcPixel = pSrcRowPixels[x];
-                const uint16_t srcR = (srcPixel >>  0) & 0x1F;
-                const uint16_t srcG = (srcPixel >>  5) & 0x1F;
-                const uint16_t srcB = (srcPixel >> 10) & 0x1F;
-
-                const uint16_t dstPixel = (srcR << 10) | (srcG << 5) | (srcB << 0) | 0x8000;
-                pDstRowPixels[x] = dstPixel;
-            }
-
-            pSrcRowPixels += gpu.ramPixelW;
-            pDstRowPixels += Video::ORIG_DRAW_RES_X;
+        const uint16_t* pSrcPixels = gpu.pRam + (gpu.displayAreaX + (uintptr_t) gpu.displayAreaY * gpu.ramPixelW);
+        
+        if (psxFbTexture.getFormat() == VK_FORMAT_A1R5G5B5_UNORM_PACK16) {
+            copyPsxFramebufferToFbTexture_A1R5G5B5(pSrcPixels, (uint16_t*) psxFbTexture.getBytes());
+        } else {
+            ASSERT(psxFbTexture.getFormat() == VK_FORMAT_B8G8R8A8_UNORM);
+            copyPsxFramebufferToFbTexture_B8G8R8A8(pSrcPixels, (uint32_t*) psxFbTexture.getBytes());
         }
     }
 
@@ -249,6 +242,62 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
             1,
             &imgBarrier
         );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Copies the PSX framebuffer to a Vulkan texture containing the same framebuffer.
+// This overload is for an A1R5G5B5 format destination framebuffer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VRenderPath_Psx::copyPsxFramebufferToFbTexture_A1R5G5B5(const uint16_t* const pSrcPixels, uint16_t* pDstPixels) noexcept {
+    Gpu::Core& gpu = PsxVm::gGpu;
+    const uint16_t ramPixelW = gpu.ramPixelW;
+    
+    const uint16_t* pSrcRowPixels = pSrcPixels;
+    uint16_t* pDstRowPixels = pDstPixels;
+
+    for (uint32_t y = 0; y < Video::ORIG_DRAW_RES_Y; ++y) {
+        // Note: don't bother doing multiple pixels at a time - compiler is smart and already optimizes this to use SIMD
+        for (uint32_t x = 0; x < Video::ORIG_DRAW_RES_X; ++x) {
+            const uint16_t srcPixel = pSrcRowPixels[x];
+            const uint16_t srcR = (srcPixel >>  0) & 0x1F;
+            const uint16_t srcG = (srcPixel >>  5) & 0x1F;
+            const uint16_t srcB = (srcPixel >> 10) & 0x1F;
+
+            const uint16_t dstPixel = (srcR << 10) | (srcG << 5) | (srcB << 0) | 0x8000;
+            pDstRowPixels[x] = dstPixel;
+        }
+
+        pSrcRowPixels += ramPixelW;
+        pDstRowPixels += Video::ORIG_DRAW_RES_X;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Copies the PSX framebuffer to a Vulkan texture containing the same framebuffer.
+// This overload is for an B8G8R8A8 format destination framebuffer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VRenderPath_Psx::copyPsxFramebufferToFbTexture_B8G8R8A8(const uint16_t* const pSrcPixels, uint32_t* pDstPixels) noexcept {
+    Gpu::Core& gpu = PsxVm::gGpu;
+    const uint16_t ramPixelW = gpu.ramPixelW;
+    
+    const uint16_t* pSrcRowPixels = pSrcPixels;
+    uint32_t* pDstRowPixels = pDstPixels;
+
+    for (uint32_t y = 0; y < Video::ORIG_DRAW_RES_Y; ++y) {
+        // Note: don't bother doing multiple pixels at a time - compiler is smart and already optimizes this to use SIMD
+        for (uint32_t x = 0; x < Video::ORIG_DRAW_RES_X; ++x) {
+            const uint32_t srcPixel = pSrcRowPixels[x];
+            const uint32_t srcR = ((srcPixel >>  0) & 0x1F) << 3;
+            const uint32_t srcG = ((srcPixel >>  5) & 0x1F) << 3;
+            const uint32_t srcB = ((srcPixel >> 10) & 0x1F) << 3;
+
+            const uint32_t dstPixel = (srcB << 0) | (srcG << 8) | (srcR << 16) | 0xFF000000u;
+            pDstRowPixels[x] = dstPixel;
+        }
+
+        pSrcRowPixels += ramPixelW;
+        pDstRowPixels += Video::ORIG_DRAW_RES_X;
     }
 }
 
