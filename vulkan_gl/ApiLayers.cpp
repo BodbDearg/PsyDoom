@@ -46,11 +46,11 @@ const VkLayerProperties* ApiLayers::getLayerByName(const char* const pName) cons
         return nullptr;
 
     // Do a binary search for the layer by it's name
-    size_t lower = 0;
-    size_t upper = mLayerProps.size() - 1;
+    int32_t lower = 0;
+    int32_t upper = (int32_t) mLayerProps.size() - 1;
 
     while (lower <= upper) {
-        const size_t mid = (lower + upper) / 2;
+        const int32_t mid = (lower + upper) / 2;
         const VkLayerProperties& layer = mLayerProps[mid];
         const int cmp = std::strcmp(pName, layer.layerName);
 

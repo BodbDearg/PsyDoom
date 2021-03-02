@@ -46,11 +46,11 @@ const VkExtensionProperties* InstanceExtensions::getExtensionByName(const char* 
         return nullptr;
 
     // Do a binary search for the extension by it's name
-    size_t lower = 0;
-    size_t upper = mExtProps.size() - 1;
+    int32_t lower = 0;
+    int32_t upper = (int32_t) mExtProps.size() - 1;
 
     while (lower <= upper) {
-        const size_t mid = (lower + upper) / 2;
+        const int32_t mid = (lower + upper) / 2;
         const VkExtensionProperties & ext = mExtProps[mid];
         const int cmp = std::strcmp(pName, ext.extensionName);
 
