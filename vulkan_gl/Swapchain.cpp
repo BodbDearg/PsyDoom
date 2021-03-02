@@ -9,7 +9,7 @@
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
-#include <SDL.h>
+#include <SDL_vulkan.h>
 
 BEGIN_NAMESPACE(vgl)
 
@@ -224,20 +224,18 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
     const VkFuncs& vkFuncs = mpDevice->getVkFuncs();
 
     if (mpDevice->getVulkanInstance()->areValidationLayersEnabled()) {
-        if (vkFuncs.vkQueueWaitIdle(mpDevice->getPresentationQueue()) != VK_SUCCESS) {
-            ASSERT_FAIL("Failed to wait for the queue to be idle!");
-        }
+        // Fail if waiting for the device to become idle fails
+        if (vkFuncs.vkQueueWaitIdle(mpDevice->getPresentationQueue()) != VK_SUCCESS)
+            return INVALID_IMAGE_IDX;
     }
 
     // If the swap chain needs recreation then acquiring an image fails
     if (mbNeedsRecreate)
-        return UINT32_MAX;
+        return INVALID_IMAGE_IDX;
 
     // Try to accquire an image from the swap chain and wait for as long as required.
     // Note that upon acquiring it may still not be ready to use as it may be in the process of being presented.
     // Therefore the app should wait on the 'mImageReadySemaphore' synchronization primitive.
-    mAcquiredImageIdx = UINT32_MAX;
-
     if (vkFuncs.vkAcquireNextImageKHR(
             mpDevice->getVkDevice(),
             mVkSwapchain,
@@ -249,7 +247,7 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
         != VK_SUCCESS
     )
     {
-        ASSERT_FAIL("Failed to acquire an image to render!");
+        mAcquiredImageIdx = INVALID_IMAGE_IDX;
         return UINT32_MAX;
     }
 
@@ -305,7 +303,7 @@ bool Swapchain::chooseSwapExtent() noexcept {
     
     int windowW = {};
     int windowH = {};
-    SDL_GetWindowSize(pSdlWindow, &windowW, &windowH);
+    SDL_Vulkan_GetDrawableSize(pSdlWindow, &windowW, &windowH);
 
     if ((windowW < 0) || (windowH < 0)) {
         ASSERT_FAIL("Invalid window size obtained from SDL!");
