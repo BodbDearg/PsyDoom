@@ -31,6 +31,8 @@
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
+#include <SDL_vulkan.h>
+
 BEGIN_NAMESPACE(VRenderer)
 
 // What color surface formats are supported for presentation, with the most preferential being first.
@@ -319,13 +321,19 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
     // Sanity checks
     ASSERT(gpCurRenderPath);
 
-    // No swapchain or invalid swapchain? If that is the case then try to create or re-create...
-    if ((!gSwapchain.isValid()) || gSwapchain.needsRecreate()) {
+    // No swapchain or invalid swapchain? If that is the case then try to create or re-create.
+    // Also recreate all 'image ready' semaphores too, in case any happen to be signalled in anticipation of a frame we never got to do.
+    if ((!gSwapchain.isValid()) || gSwapchain.needsRecreate() || VRenderer::isSwapchainOutOfDate()) {
         gDevice.waitUntilDeviceIdle();
         gSwapchain.destroy();
 
         if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace, Config::gbVulkanTripleBuffer))
             return false;
+            
+        for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
+            semaphore.destroy();
+            semaphore.init(gDevice);
+        }
     }
 
     // Do we need to update coord system info?
@@ -566,6 +574,15 @@ void endFrame() noexcept {
 
     // Render path specific frame end, if we are rendering; note: may cause transfer tasks to be kicked off...
     if (isRendering()) {
+        // MacOS: if the window has been resized just before we present, then skip the frame.
+        // Otherwise Metal errors will occur and the GPU driver will start causing issues.
+        #if __APPLE__
+            if (isSwapchainOutOfDate()) {
+                skipNextFramePresent();
+            }
+        #endif
+    
+        // Finish up the frame for the render path
         gpCurRenderPath->endFrame(gSwapchain, gCmdBufferRec);
     }
 
@@ -573,8 +590,8 @@ void endFrame() noexcept {
     vgl::TransferMgr& transferMgr = gDevice.getTransferMgr();
     transferMgr.executePreFrameTransferTask();
 
-    // If we do not have a framebuffer (and hence no command buffer) then simply wait until transfers have finished (device idle) and exit
-    if (!gCmdBufferRec.isRecording()) {
+    // If we are not rendering a frame then simply wait until transfers have finished (device idle) and exit
+    if (!isRendering()) {
         gDevice.waitUntilDeviceIdle();
         return;
     }
@@ -727,6 +744,24 @@ void switchToMainVulkanRenderPath() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void skipNextFramePresent() noexcept {
     gbSkipNextFramePresent = true;
+}
+
+bool willSkipNextFramePresent() noexcept {
+    return gbSkipNextFramePresent;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the swapchain size is out of date and thus whether it needs to be recreated
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isSwapchainOutOfDate() noexcept {
+    // We're always out of date if we have an invalid swapchain or window surface
+    if ((!gSwapchain.isValid()) || (!gWindowSurface.isValid()))
+        return true;
+
+    // See if the size is out of date
+    int winW = {}, winH = {};
+    SDL_Vulkan_GetDrawableSize(gWindowSurface.getSdlWindow(), &winW, &winH);
+    return ((winW != gSwapchain.getSwapExtentWidth()) || (winH != gSwapchain.getSwapExtentHeight()));
 }
 
 END_NAMESPACE(VRenderer)

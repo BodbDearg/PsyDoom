@@ -7,6 +7,7 @@
 #include "RenderPassDef.h"
 #include "Swapchain.h"
 #include "VDrawing.h"
+#include "VRenderer.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the render path to a default uninitialized state
@@ -230,6 +231,11 @@ void VRenderPath_Main::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorde
 
     // Done with the render pass now
     cmdRec.endRenderPass();
+    
+    // Only bother doing further commands if we're going to present.
+    // This avoids errors on MacOS/Metal also, where we try to blit to an incompatible destination window size.
+    if (VRenderer::willSkipNextFramePresent())
+        return;
     
     // Blit the drawing color attachment (or MSAA resolve target, if MSAA is active) to the swapchain image
     const uint32_t ringbufferIdx = device.getRingbufferMgr().getBufferIndex();

@@ -8,6 +8,7 @@
 #include "LogicalDevice.h"
 #include "PcPsx/PsxVm.h"
 #include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VRenderer.h"
 #include "Swapchain.h"
 
 #include <algorithm>
@@ -190,6 +191,11 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
     float blitDstW = {};
     float blitDstH = {};
     Video::getClassicFramebufferWindowRect((float) screenWidth, (float) screenHeight, blitDstX, blitDstY, blitDstW, blitDstH);
+
+    // Only bother doing further commands if we're going to present.
+    // This avoids errors on MacOS/Metal also, where we try to blit to an incompatible destination window size.
+    if (VRenderer::willSkipNextFramePresent())
+        return;
 
     // Blit the PSX framebuffer to the swapchain image
     const uint32_t swapchainIdx = swapchain.getAcquiredImageIdx();

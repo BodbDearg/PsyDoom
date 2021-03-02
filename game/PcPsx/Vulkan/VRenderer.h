@@ -57,6 +57,8 @@ bool isUsingPsxRenderPath() noexcept;
 void switchToPsxRenderPath() noexcept;
 void switchToMainVulkanRenderPath() noexcept;
 void skipNextFramePresent() noexcept;
+bool willSkipNextFramePresent() noexcept;
+bool isSwapchainOutOfDate() noexcept;
 
 END_NAMESPACE(VRenderer)
 

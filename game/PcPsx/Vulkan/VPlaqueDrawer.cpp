@@ -287,6 +287,14 @@ void drawPlaque(texture_t& plaqueTex, const int16_t plaqueX, const int16_t plaqu
 
     // Only issue drawing commands if we can actually render
     if (VRenderer::isRendering()) {
+        // MacOS: if the window has been resized just before we present, then skip the frame.
+        // Otherwise Metal errors will occur and the GPU driver will start causing issues.
+        #if __APPLE__
+            if (VRenderer::isSwapchainOutOfDate()) {
+                VRenderer::skipNextFramePresent();
+            }
+        #endif
+    
         // Forcibly end the current render path and record image layout transitions to get the background texture into the right format.
         // These layout transitions need to be done outside of a render pass.
         //
