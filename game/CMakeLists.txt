@@ -400,3 +400,20 @@ elseif(PLATFORM_MAC)
 elseif (PLATFORM_LINUX)
     target_compile_options(${GAME_TGT_NAME} PRIVATE -pthread)
 endif()
+
+# MacOS: linking against the installed Vulkan SDK and copying required Vulkan libraries and files to the app bundle
+if (PLATFORM_MAC AND PSYDOOM_INCLUDE_VULKAN_RENDERER)
+    find_package(vulkan REQUIRED)
+    target_link_libraries(${GAME_TGT_NAME} ${Vulkan_LIBRARIES})
+    get_filename_component(VULKAN_LIBS_DIR ${Vulkan_LIBRARIES} DIRECTORY)
+
+    add_custom_command(
+        TARGET ${GAME_TGT_NAME} POST_BUILD
+        COMMENT "Copy Vulkan dylibs and resources to app bundle"
+        COMMAND mkdir -p "$<TARGET_FILE_DIR:${GAME_TGT_NAME}>/../Frameworks"
+        COMMAND mkdir -p "$<TARGET_FILE_DIR:${GAME_TGT_NAME}>/../Resources/vulkan/icd.d"
+        COMMAND cp "${VULKAN_LIBS_DIR}/libvulkan.1.dylib" "$<TARGET_FILE_DIR:${GAME_TGT_NAME}>/../Frameworks"
+        COMMAND cp "${VULKAN_LIBS_DIR}/libMoltenVK.dylib" "$<TARGET_FILE_DIR:${GAME_TGT_NAME}>/../Frameworks"
+        COMMAND cp "${PROJECT_SOURCE_DIR}/Game/Resources/macOS/MoltenVK_icd.json" "$<TARGET_FILE_DIR:${GAME_TGT_NAME}>/../Resources/vulkan/icd.d"
+    )
+endif()
