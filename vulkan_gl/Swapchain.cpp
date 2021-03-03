@@ -214,45 +214,33 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
     ASSERT(imageReadySemaphore.isValid());
     ASSERT_LOG(mAcquiredImageIdx == INVALID_IMAGE_IDX, "Already acquired an image index, finish with the current one first!");
 
-    // Wait for the previous presentation to finish first...
-    //
-    // Note that this is not specifically required, but validation layers may require us to explicitly sync with the GPU in
-    // order to avoid a memory leak within the validation layer. See:
-    //  https://vulkan-tutorial.com/Drawing_a_triangle/Drawing/Rendering_and_presentation
-    //
-    ASSERT(mbIsValid);
-    const VkFuncs& vkFuncs = mpDevice->getVkFuncs();
-
-    if (mpDevice->getVulkanInstance()->areValidationLayersEnabled()) {
-        // Fail if waiting for the device to become idle fails
-        if (vkFuncs.vkQueueWaitIdle(mpDevice->getPresentationQueue()) != VK_SUCCESS)
-            return INVALID_IMAGE_IDX;
-    }
-
     // If the swap chain needs recreation then acquiring an image fails
     if (mbNeedsRecreate)
         return INVALID_IMAGE_IDX;
 
     // Try to accquire an image from the swap chain and wait for as long as required.
     // Note that upon acquiring it may still not be ready to use as it may be in the process of being presented.
-    // Therefore the app should wait on the 'mImageReadySemaphore' synchronization primitive.
-    if (vkFuncs.vkAcquireNextImageKHR(
-            mpDevice->getVkDevice(),
-            mVkSwapchain,
-            UINT64_MAX,
-            imageReadySemaphore.getVkSemaphore(),
-            VK_NULL_HANDLE,
-            &mAcquiredImageIdx
-        )
-        != VK_SUCCESS
-    )
-    {
+    // Therefore the app should wait on the 'imageReadySemaphore' synchronization primitive.
+    const VkFuncs& vkFuncs = mpDevice->getVkFuncs();
+    mAcquiredImageIdx = INVALID_IMAGE_IDX;
+    
+    const VkResult result = vkFuncs.vkAcquireNextImageKHR(
+        mpDevice->getVkDevice(),
+        mVkSwapchain,
+        UINT64_MAX,
+        imageReadySemaphore.getVkSemaphore(),
+        VK_NULL_HANDLE,
+        &mAcquiredImageIdx
+    );
+    
+    // Note: a return code of >= 0 means a 'success' result of some sort
+    if ((result >= 0) && (mAcquiredImageIdx < mLength)) {
+        ASSERT(mAcquiredImageIdx < mLength);
+        return mAcquiredImageIdx;
+    } else {
         mAcquiredImageIdx = INVALID_IMAGE_IDX;
-        return UINT32_MAX;
+        return INVALID_IMAGE_IDX;
     }
-
-    ASSERT(mAcquiredImageIdx < mLength);
-    return mAcquiredImageIdx;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
