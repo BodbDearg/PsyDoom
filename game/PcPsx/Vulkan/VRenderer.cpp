@@ -105,8 +105,14 @@ vgl::Swapchain      gSwapchain;             // The swapchain we present to
 vgl::CmdBufferRecorder gCmdBufferRec(gVkFuncs);
 
 // Semaphores signalled when the acquired swapchain image is ready.
-// One per ringbuffer slot, so we don't disturb a frame that is still being processed.
-static vgl::Semaphore gSwapImageReadySemaphores[vgl::Defines::RINGBUFFER_SIZE];
+// We flip/flop between these when acquiring images, since there can be at most 1 other frame active.
+// Unlike most other resources however, the ringbuffer index is NOT used to index this array.
+// This is because sometimes we don't present a swapchain image in a frame and instead carry it over to the next frame.
+static vgl::Semaphore gSwapImageReadySemaphores[2];
+
+// Which of the two 'swap image ready' semaphores we are currently using.
+// This field is only updated after swap image presentation or when the semaphores are created/recreated.
+static uint32_t gCurSwapchainSemaphoreIdx;
 
 // Semaphore signalled when rendering is done.
 // One per ringbuffer slot, so we don't disturb a frame that is still being processed.
@@ -314,15 +320,30 @@ static void updateCoordSysInfo() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Create or recreate the 'swap image ready' semaphores
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void recreateSwapImageReadySemaphores() noexcept {
+    gCurSwapchainSemaphoreIdx = 0;
+    
+    for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
+        semaphore.destroy();
+        
+        if (!semaphore.init(gDevice))
+            FatalErrors::raise("Failed to create a Vulkan 'swapchain image ready' semaphore!");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Recreates the swapchain and new Vulkan renderer framebuffers if required and returns 'false' if that is not possible to do currently.
 // Recreation might fail validly if the window is currently zero sized for example.
+//
+// Note: this function also creates the 'swap image ready' semaphores that are used with the swapchain.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool ensureValidSwapchainAndFramebuffers() noexcept {
     // Sanity checks
     ASSERT(gpCurRenderPath);
 
-    // No swapchain or invalid swapchain? If that is the case then try to create or re-create.
-    // Also recreate all 'image ready' semaphores too, in case any happen to be signalled in anticipation of a frame we never got to do.
+    // No swapchain or invalid swapchain? If that is the case then try to create or re-create...
     if ((!gSwapchain.isValid()) || gSwapchain.needsRecreate() || VRenderer::isSwapchainOutOfDate()) {
         gDevice.waitUntilDeviceIdle();
         gSwapchain.destroy();
@@ -330,10 +351,10 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
         if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace, Config::gbVulkanTripleBuffer))
             return false;
             
-        for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
-            semaphore.destroy();
-            semaphore.init(gDevice);
-        }
+        // Create or recreate the swap image synchronization semaphores too. We do this every time the swapchain is recreated in case
+        // one of the 'image ready' semaphores got signalled before drawing commands could consume that signal.
+        // The semaphores must always be in an unsignalled state before being used by 'vkAcquireNextImageKHR'.
+        recreateSwapImageReadySemaphores();
     }
 
     // Do we need to update coord system info?
@@ -395,12 +416,7 @@ void init() noexcept {
     // Create all of the pipelines needed, these use the previously created pipeline components
     VPipelines::initPipelines(gRenderPath_Main, gRenderPath_Crossfade, gDrawSampleCount);
 
-    // Initialize various semaphores
-    for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
-        if (!semaphore.init(gDevice))
-            FatalErrors::raise("Failed to create a Vulkan 'swapchain image ready' semaphore!");
-    }
-
+    // Create the 'render done' semaphores
     for (vgl::Semaphore& semaphore : gRenderDoneSemaphores) {
         if (!semaphore.init(gDevice))
             FatalErrors::raise("Failed to create the Vulkan 'render done' semaphore!");
@@ -475,6 +491,8 @@ void destroy() noexcept {
     for (vgl::Semaphore& semaphore : gRenderDoneSemaphores) {
         semaphore.destroy();
     }
+    
+    gCurSwapchainSemaphoreIdx = 0;
 
     for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
         semaphore.destroy();
@@ -521,7 +539,7 @@ bool beginFrame() noexcept {
     uint32_t swapchainIdx;
     
     if (gSwapchain.getAcquiredImageIdx() == vgl::Swapchain::INVALID_IMAGE_IDX) {
-        swapchainIdx = gSwapchain.acquireImage(gSwapImageReadySemaphores[ringbufferIdx]);
+        swapchainIdx = gSwapchain.acquireImage(gSwapImageReadySemaphores[gCurSwapchainSemaphoreIdx]);
         gbDidAcquireSwapImageThisFrame = (swapchainIdx != vgl::Swapchain::INVALID_IMAGE_IDX);
     } else {
         swapchainIdx = gSwapchain.getAcquiredImageIdx();
@@ -612,7 +630,7 @@ void endFrame() noexcept {
 
         if (gbDidAcquireSwapImageThisFrame) {
             vgl::CmdBufferWaitCond& cmdsWaitCond = cmdBufferWaitConds.emplace_back();
-            cmdsWaitCond.pSemaphore = &gSwapImageReadySemaphores[ringbufferIdx];
+            cmdsWaitCond.pSemaphore = &gSwapImageReadySemaphores[gCurSwapchainSemaphoreIdx];
             cmdsWaitCond.blockedStageFlags = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
         }
 
@@ -630,9 +648,11 @@ void endFrame() noexcept {
         );
     }
 
-    // Present the current swapchain image once all the commands have finished, unless skip was requested
+    // Present the current swapchain image once all the commands have finished, unless skip was requested.
+    // Also use a different semaphore (if presenting) for the next frame.
     if (!gbSkipNextFramePresent) {
         gSwapchain.presentAcquiredImage(gRenderDoneSemaphores[ringbufferIdx]);
+        gCurSwapchainSemaphoreIdx ^= 1;
     } else {
         // Skipping showing this frame? Don't bother presenting, and wait for all commands to finish
         gDevice.waitUntilDeviceIdle();
