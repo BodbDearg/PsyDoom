@@ -256,8 +256,6 @@ void displayFramebuffer() noexcept {
     if (ProgArgs::gbHeadlessMode)
         return;
 
-    // Note: doing updates before and after display seems to help reduce stutter/pauses on MacOS; I have no idea why...
-    Utils::doPlatformUpdates();
     gpVideoBackend->displayFramebuffer();
     Utils::doPlatformUpdates();
 }
