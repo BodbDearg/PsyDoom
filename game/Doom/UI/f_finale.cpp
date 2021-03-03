@@ -334,7 +334,7 @@ void F2_Start() noexcept {
     const mobjinfo_t& mobjInfo = gMObjInfo[gCastOrder[0].type];
     const state_t& state = gStates[mobjInfo.seestate];
 
-    gFinaleStage = F_STAGE_CAST;
+    gFinaleStage = F_STAGE_TEXT;
     gFinLinesDone = 0;
     gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
