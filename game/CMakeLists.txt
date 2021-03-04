@@ -405,6 +405,7 @@ endif()
 if (PLATFORM_MAC AND PSYDOOM_INCLUDE_VULKAN_RENDERER)
     find_package(vulkan REQUIRED)
     target_link_libraries(${GAME_TGT_NAME} ${Vulkan_LIBRARIES})
+    target_link_options(${GAME_TGT_NAME} PRIVATE -rpath @executable_path/../Frameworks) # So the runtime binary knows where to load .dylibs
     get_filename_component(VULKAN_LIBS_DIR ${Vulkan_LIBRARIES} DIRECTORY)
 
     add_custom_command(
