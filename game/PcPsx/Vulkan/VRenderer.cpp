@@ -781,7 +781,7 @@ bool isSwapchainOutOfDate() noexcept {
     // See if the size is out of date
     int winW = {}, winH = {};
     SDL_Vulkan_GetDrawableSize(gWindowSurface.getSdlWindow(), &winW, &winH);
-    return ((winW != gSwapchain.getSwapExtentWidth()) || (winH != gSwapchain.getSwapExtentHeight()));
+    return ((winW != (int) gSwapchain.getSwapExtentWidth()) || (winH != (int) gSwapchain.getSwapExtentHeight()));
 }
 
 END_NAMESPACE(VRenderer)
