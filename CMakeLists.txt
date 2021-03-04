@@ -7,6 +7,9 @@ set(GAME_VERSION_STR "0.6.1")
 # Where CMake will search for .cmake module files
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+# MacOS: target ARM and Intel 64-bit
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+
 # Causes CMake projects to go into their own folders
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 

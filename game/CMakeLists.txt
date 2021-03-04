@@ -403,7 +403,7 @@ endif()
 
 # MacOS: linking against the installed Vulkan SDK and copying required Vulkan libraries and files to the app bundle
 if (PLATFORM_MAC AND PSYDOOM_INCLUDE_VULKAN_RENDERER)
-    find_package(vulkan REQUIRED)
+    find_package(Vulkan REQUIRED)
     target_link_libraries(${GAME_TGT_NAME} ${Vulkan_LIBRARIES})
     target_link_options(${GAME_TGT_NAME} PRIVATE -rpath @executable_path/../Frameworks) # So the runtime binary knows where to load .dylibs
     get_filename_component(VULKAN_LIBS_DIR ${Vulkan_LIBRARIES} DIRECTORY)
