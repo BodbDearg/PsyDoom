@@ -324,26 +324,26 @@ static void draw(Core& core, const DrawRect& rect) noexcept {
 
     // Clip the rectangle bounds to the draw area and generate adjustments to the uv coords if that happens.
     // Note must translate the rectangle according to the draw offset too...
-    const uint16_t rectTx = rect.x + core.drawOffsetX;
-    const uint16_t rectTy = rect.y + core.drawOffsetY;
+    const int16_t rectTx = rect.x + core.drawOffsetX;
+    const int16_t rectTy = rect.y + core.drawOffsetY;
 
-    uint16_t begX = rectTx;
-    uint16_t begY = rectTy;
+    int16_t begX = rectTx;
+    int16_t begY = rectTy;
     uint16_t topLeftU = rect.u;
     uint16_t topLeftV = rect.v;
 
-    if (begX < core.drawAreaLx) {
+    if (begX < (int16_t) core.drawAreaLx) {
         topLeftU += core.drawAreaLx - begX;
         begX = core.drawAreaLx;
     }
 
-    if (begY < core.drawAreaTy) {
+    if (begY < (int16_t) core.drawAreaTy) {
         topLeftV += core.drawAreaTy - begY;
         begY = core.drawAreaTy;
     }
 
-    const uint16_t endX = std::min(rectTx + rect.w, core.drawAreaRx + 1);
-    const uint16_t endY = std::min(rectTy + rect.h, core.drawAreaBy + 1);
+    const int16_t endX = std::min(rectTx + (int16_t) rect.w, (int16_t) core.drawAreaRx + 1);
+    const int16_t endY = std::min(rectTy + (int16_t) rect.h, (int16_t) core.drawAreaBy + 1);
 
     // If we are in flat colored mode then decide the foreground color for every pixel in the rectangle
     const Color24F rectColor = rect.color;
@@ -356,10 +356,10 @@ static void draw(Core& core, const DrawRect& rect) noexcept {
     // Fill in the rectangle pixels
     uint16_t curV = topLeftV;
 
-    for (uint16_t y = begY; y < endY; ++y, ++curV) {
+    for (int16_t y = begY; y < endY; ++y, ++curV) {
         uint16_t curU = topLeftU;
 
-        for (uint16_t x = begX; x < endX; ++x, ++curU) {
+        for (int16_t x = begX; x < endX; ++x, ++curU) {
             // Get the foreground color for the rectangle pixel if the rectangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
             if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {

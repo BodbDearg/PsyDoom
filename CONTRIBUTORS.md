@@ -63,6 +63,8 @@ PsyDoom contributors (sorted alphabetically)
          https://github.com/BodbDearg/PsyDoom/issues/1
     * Found issues with the 'Inv Mouse Wheel' control binding:
          https://github.com/BodbDearg/PsyDoom/issues/3
+    * Discovered and raised bug with text disappearing on Finale:
+        https://github.com/BodbDearg/PsyDoom/issues/7
 
 * **[j0r9](https://github.com/j0r9)**
 
