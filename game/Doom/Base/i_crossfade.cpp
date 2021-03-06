@@ -2,6 +2,7 @@
 
 #include "i_drawcmds.h"
 #include "i_main.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
@@ -18,6 +19,10 @@
 // Should be called before rendering the the image to be faded into.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_PreCrossfade() noexcept {
+    // We skip doing crossfades if fast loading is enabled...
+    if (Config::gbUseFastLoading)
+        return;
+
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::gBackendType == Video::BackendType::Vulkan) {
             // If we are on the PSX render path ensure we will stay on it, render path switching is not allowed during crossfade.
@@ -40,6 +45,10 @@ void I_PreCrossfade() noexcept {
 void I_CrossfadeFrameBuffers() noexcept {
     // Clear out what we can from the texture cache
     I_PurgeTexCache();
+
+    // We skip doing crossfades if fast loading is enabled...
+    if (Config::gbUseFastLoading)
+        return;
 
     // If we are using the Vulkan renderer then delegate to it's crossfader
     #if PSYDOOM_VULKAN_RENDERER

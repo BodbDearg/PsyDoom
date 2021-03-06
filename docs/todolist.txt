@@ -4,7 +4,6 @@
 - Classic renderer: add a new textured row/column GPU primitive to accelerate world drawing
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?
-- Add fast-load (skip waiting for sound to stop playing) for speedrunning?
 - Investigate game end pause issue (unable to unpause)
     - May need to prioritize continue vs pause if conflicting key bindings
 - Investigate default key bindings - Q & E for example.

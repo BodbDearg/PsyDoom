@@ -8,6 +8,7 @@
 #include "FatalErrors.h"
 #include "i_main.h"
 #include "m_fixed.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
@@ -383,7 +384,18 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     if (gLoadedSoundAndMusMapNum != 0) {
         if (gCurMusicSeqIdx != 0) {
             S_StopMusic();
-            Utils::waitUntilSeqEnteredStatus(pMusicSeqDefs[gCurMusicSeqIdx].seqIdx, SequenceStatus::SEQUENCE_INACTIVE);
+
+            // PsyDoom: waiting for music to end now be optionally skipped if fast loading is enabled.
+            #if PSYDOOM_MODS
+                const bool bWaitForMusicToEnd = (!Config::gbUseFastLoading);
+            #else
+                const bool bWaitForMusicToEnd = true;
+            #endif
+
+            if (bWaitForMusicToEnd) {
+                Utils::waitUntilSeqEnteredStatus(pMusicSeqDefs[gCurMusicSeqIdx].seqIdx, SequenceStatus::SEQUENCE_INACTIVE);
+            }
+
             wess_seq_range_free(0 + NUMSFX, (Game::isFinalDoom()) ? NUM_MUSIC_SEQS_FINAL_DOOM : NUM_MUSIC_SEQS_DOOM);
         }
 

@@ -19,6 +19,7 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_tick.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/Utils.h"
@@ -69,9 +70,18 @@ void G_DoLoadLevel() noexcept {
     // Draw the loading plaque
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
 
-    // Wait for the pistol and barrel explode menu sounds to stop playing
-    Utils::waitUntilSeqExitedStatus(sfx_barexp, SequenceStatus::SEQUENCE_PLAYING);
-    Utils::waitUntilSeqExitedStatus(sfx_pistol, SequenceStatus::SEQUENCE_PLAYING);
+    // Wait for the pistol and barrel explode menu sounds to stop playing.
+    // PsyDoom: this can now be optionally skipped if fast loading is enabled.
+    #if PSYDOOM_MODS
+        const bool bWaitForSoundsToEnd = (!Config::gbUseFastLoading);
+    #else
+        const bool bWaitForSoundsToEnd = true;
+    #endif
+
+    if (bWaitForSoundsToEnd) {
+        Utils::waitUntilSeqExitedStatus(sfx_barexp, SequenceStatus::SEQUENCE_PLAYING);
+        Utils::waitUntilSeqExitedStatus(sfx_pistol, SequenceStatus::SEQUENCE_PLAYING);
+    }
 
     // PsyDoom: no startup warning initially and ensure all playing stuff is stopped
     #if PSYDOOM_MODS

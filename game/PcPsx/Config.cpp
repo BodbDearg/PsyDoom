@@ -285,6 +285,7 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::string      gCueFilePath;
 bool                    gbUncapFramerate;
+bool                    gbUseFastLoading;
 int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
@@ -323,6 +324,22 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },
         []() { gbUncapFramerate = true; }
+    },
+    {
+        "UseFastLoading",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Skip crossfades and waiting for sounds to finish playing during loading transitions?\n"
+        "# PsyDoom doesn't really have loading times given the speed of modern hardware however it still\n"
+        "# implements logic from the original game which artificially causes a certain amount of 'loading'.\n"
+        "# This logic waits for certain sounds to finish before allowing loading to 'complete' and also\n"
+        "# performs screen crossfades of a fixed duration. If you enable this setting ('1') then PsyDoom will\n"
+        "# skip doing all that and load everything as fast as possible. This may be desirable for speed\n"
+        "# running but can make loading transitions more jarring and cause sounds to cut out abruptly.\n"
+        "# If you are playing normally it is probably more pleasant to leave this setting disabled.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseFastLoading = iniEntry.getBoolValue(false); },
+        []() { gbUseFastLoading = false; }
     },
     {
         "UsePalTimings",
