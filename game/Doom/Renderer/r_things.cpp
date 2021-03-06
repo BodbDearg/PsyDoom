@@ -217,11 +217,19 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 
         const int32_t drawH = d_fixed_to_int(tex.height * scale);
 
-        // Sprite UV coordinates for left, right, top and bottom
-        const uint8_t tex_ul = tex.texPageCoordX;
-        const uint8_t tex_ur = tex.texPageCoordX + (uint8_t) tex.width - 1;
-        const uint8_t tex_vt = tex.texPageCoordY;
-        const uint8_t tex_vb = tex.texPageCoordY + (uint8_t) tex.height - 1;
+        // Sprite UV coordinates for left, right, top and bottom.
+        // PsyDoom: corrected UV coordinates to slight pixel stretching and use 16-bit coords in case of overflow.
+        #if PSYDOOM_MODS
+            const LibGpuUV tex_ul = (LibGpuUV) tex.texPageCoordX;
+            const LibGpuUV tex_ur = (LibGpuUV) tex.texPageCoordX + tex.width;
+            const LibGpuUV tex_vt = (LibGpuUV) tex.texPageCoordY;
+            const LibGpuUV tex_vb = (LibGpuUV) tex.texPageCoordY + tex.height;
+        #else
+            const LibGpuUV tex_ul = tex.texPageCoordX;
+            const LibGpuUV tex_ur = tex.texPageCoordX + (uint8_t) tex.width - 1;
+            const LibGpuUV tex_vt = tex.texPageCoordY;
+            const LibGpuUV tex_vb = tex.texPageCoordY + (uint8_t) tex.height - 1;
+        #endif
 
         // Set sprite UV coordinates and decide on draw x position
         const int32_t texOffsetX = d_fixed_to_int(tex.offsetX * ASPECT_CORRECT);

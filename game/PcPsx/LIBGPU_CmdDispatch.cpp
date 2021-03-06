@@ -169,8 +169,8 @@ void submit(const SPRT& sprite) noexcept {
     drawRect.y = sprite.y0;
     drawRect.w = sprite.w;
     drawRect.h = sprite.h;
-    drawRect.u = sprite.tu0;
-    drawRect.v = sprite.tv0;
+    drawRect.u = sprite.u0;
+    drawRect.v = sprite.v0;
     drawRect.color.comp.r = (bColorSprite) ? sprite.r0 : 128;   // Note: '128' is '1.0' or full strength color if we don't want to modulate
     drawRect.color.comp.g = (bColorSprite) ? sprite.g0 : 128;
     drawRect.color.comp.b = (bColorSprite) ? sprite.b0 : 128;
@@ -203,8 +203,8 @@ void submit(const SPRT& sprite) noexcept {
                     drawAlpha,
                     gpu.clutX,
                     gpu.clutY,
-                    texWinX + sprite.tu0,
-                    texWinY + sprite.tv0,
+                    texWinX + sprite.u0,
+                    texWinY + sprite.v0,
                     // Size the texture window to cover only the region of sprite pixels that we need, to avoid artifacts as mentioned above
                     std::min((uint16_t) sprite.w, drawRect.w),
                     std::min((uint16_t) sprite.h, drawRect.h)
@@ -235,8 +235,8 @@ void submit(const SPRT_8& sprite8) noexcept {
     sprite.code = sprite8.code;
     sprite.x0 = sprite8.x0;
     sprite.y0 = sprite8.y0;
-    sprite.tu0 = sprite8.tu0;
-    sprite.tv0 = sprite8.tv0;
+    sprite.u0 = sprite8.u0;
+    sprite.v0 = sprite8.v0;
     sprite.clut = sprite8.clut;
     sprite.w = 8;
     sprite.h = 8;
@@ -306,16 +306,16 @@ void submit(const POLY_FT3& poly) noexcept {
     Gpu::DrawTriangle drawTri = {};
     drawTri.x1 = poly.x0;
     drawTri.y1 = poly.y0;
-    drawTri.u1 = poly.tu0;
-    drawTri.v1 = poly.tv0;
+    drawTri.u1 = poly.u0;
+    drawTri.v1 = poly.v0;
     drawTri.x2 = poly.x1;
     drawTri.y2 = poly.y1;
-    drawTri.u2 = poly.tu1;
-    drawTri.v2 = poly.tv1;
+    drawTri.u2 = poly.u1;
+    drawTri.v2 = poly.v1;
     drawTri.x3 = poly.x2;
     drawTri.y3 = poly.y2;
-    drawTri.u3 = poly.tu2;
-    drawTri.v3 = poly.tv2;
+    drawTri.u3 = poly.u2;
+    drawTri.v3 = poly.v2;
     drawTri.color.comp.r = (bColorPoly) ? poly.r0 : 128;   // Note: '128' is '1.0' or full strength color if we don't want to modulate
     drawTri.color.comp.g = (bColorPoly) ? poly.g0 : 128;
     drawTri.color.comp.b = (bColorPoly) ? poly.b0 : 128;
@@ -419,32 +419,32 @@ void submit(const POLY_FT4& poly) noexcept {
 
     drawTri1.x1 = poly.x0;
     drawTri1.y1 = poly.y0;
-    drawTri1.u1 = poly.tu0;
-    drawTri1.v1 = poly.tv0;
+    drawTri1.u1 = poly.u0;
+    drawTri1.v1 = poly.v0;
     drawTri1.x2 = poly.x1;
     drawTri1.y2 = poly.y1;
-    drawTri1.u2 = poly.tu1;
-    drawTri1.v2 = poly.tv1;
+    drawTri1.u2 = poly.u1;
+    drawTri1.v2 = poly.v1;
     drawTri1.x3 = poly.x2;
     drawTri1.y3 = poly.y2;
-    drawTri1.u3 = poly.tu2;
-    drawTri1.v3 = poly.tv2;
+    drawTri1.u3 = poly.u2;
+    drawTri1.v3 = poly.v2;
     drawTri1.color.comp.r = r;
     drawTri1.color.comp.g = g;
     drawTri1.color.comp.b = b;
 
     drawTri2.x1 = poly.x1;
     drawTri2.y1 = poly.y1;
-    drawTri2.u1 = poly.tu1;
-    drawTri2.v1 = poly.tv1;
+    drawTri2.u1 = poly.u1;
+    drawTri2.v1 = poly.v1;
     drawTri2.x2 = poly.x2;
     drawTri2.y2 = poly.y2;
-    drawTri2.u2 = poly.tu2;
-    drawTri2.v2 = poly.tv2;
+    drawTri2.u2 = poly.u2;
+    drawTri2.v2 = poly.v2;
     drawTri2.x3 = poly.x3;
     drawTri2.y3 = poly.y3;
-    drawTri2.u3 = poly.tu3;
-    drawTri2.v3 = poly.tv3;
+    drawTri2.u3 = poly.u3;
+    drawTri2.v3 = poly.v3;
     drawTri2.color.comp.r = r;
     drawTri2.color.comp.g = g;
     drawTri2.color.comp.b = b;
@@ -464,10 +464,10 @@ void submit(const POLY_FT4& poly) noexcept {
                 doSetupForVkRendererTexturedDraw(bBlendPoly, texWinX, drawAlpha);
 
                 VDrawing::addWorldQuad(
-                    poly.x0, poly.y0, 0.0f, poly.tu0, poly.tv0,
-                    poly.x1, poly.y1, 0.0f, poly.tu1, poly.tv1,
-                    poly.x3, poly.y3, 0.0f, poly.tu3, poly.tv3,
-                    poly.x2, poly.y2, 0.0f, poly.tu2, poly.tv2,
+                    poly.x0, poly.y0, 0.0f, poly.u0, poly.v0,
+                    poly.x1, poly.y1, 0.0f, poly.u1, poly.v1,
+                    poly.x3, poly.y3, 0.0f, poly.u3, poly.v3,
+                    poly.x2, poly.y2, 0.0f, poly.u2, poly.v2,
                     r,
                     g,
                     b,

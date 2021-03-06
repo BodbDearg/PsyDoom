@@ -117,7 +117,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     #endif
 
     spritePrim.y0 = (int16_t) y;            // Always on the same row
-    spritePrim.tv0 = 195;                   // Digits are all on the same line in VRAM
+    spritePrim.v0 = 195;                    // Digits are all on the same line in VRAM
     LIBGPU_setWH(spritePrim, 11, 16);       // Digits are always this size
 
     // Work with unsigned while we are printing, until the end
@@ -155,7 +155,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         const int32_t digit = digits[digitIdx];
 
         spritePrim.x0 = (int16_t) curX;
-        spritePrim.tu0 = gBigFontChars[BIG_FONT_DIGITS + digit].u;
+        spritePrim.u0 = gBigFontChars[BIG_FONT_DIGITS + digit].u;
         I_AddPrim(spritePrim);
 
         curX -= 11;
@@ -164,7 +164,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     // Print the minus symbol if the value was negative
     if (bNegativeVal) {
         spritePrim.x0 = (int16_t) curX;
-        spritePrim.tu0 = gBigFontChars[BIG_FONT_EXCLAMATION].u;
+        spritePrim.u0 = gBigFontChars[BIG_FONT_EXCLAMATION].u;
         I_AddPrim(spritePrim);
     }
 }

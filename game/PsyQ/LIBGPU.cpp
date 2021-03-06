@@ -541,8 +541,8 @@ void LIBGPU_FntFlush([[maybe_unused]] const int32_t printStreamId) noexcept {
 
             spritePrim.x0 = xpos;
             spritePrim.y0 = ypos;
-            spritePrim.tu0 = glyphCol * 8;
-            spritePrim.tv0 = glyphRow * 8;
+            spritePrim.u0 = glyphCol * 8;
+            spritePrim.v0 = glyphRow * 8;
 
             LIBGPU_CmdDispatch::submit(spritePrim);
             LIBGPU_DrawSync(0);

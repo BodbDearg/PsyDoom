@@ -385,7 +385,7 @@ void ST_Drawer() noexcept {
     {
         LIBGPU_setWH(spritePrim, 11, 8);
         spritePrim.x0 = 100;
-        spritePrim.tv0 = 184;
+        spritePrim.v0 = 184;
 
         uint8_t texU = 114;
 
@@ -394,7 +394,7 @@ void ST_Drawer() noexcept {
 
             // Draw the card if we have it or if it's currently flashing
             if (bHaveCard || (gFlashCards[cardIdx].active && gFlashCards[cardIdx].doDraw)) {
-                spritePrim.tu0 = texU;
+                spritePrim.u0 = texU;
                 spritePrim.y0 = gCardY[cardIdx];
 
                 I_AddPrim(spritePrim);
@@ -417,14 +417,14 @@ void ST_Drawer() noexcept {
         // Note that numbers '1' and '2' are already baked into the status bar graphic, so we start at the shotgun.
         {
             LIBGPU_setWH(spritePrim, 4, 6);
-            spritePrim.tv0 = 184;
+            spritePrim.v0 = 184;
 
             uint8_t texU = 232;
 
             for (int32_t weaponIdx = wp_shotgun; weaponIdx < NUMMICROS; ++weaponIdx) {
                 if (player.weaponowned[weaponIdx]) {
                     LIBGPU_setXY0(spritePrim, gMicronumsX[weaponIdx] + 5, gMicronumsY[weaponIdx] + 3);
-                    spritePrim.tu0 = texU;
+                    spritePrim.u0 = texU;
 
                     I_AddPrim(spritePrim);
                 }

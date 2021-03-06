@@ -133,16 +133,16 @@ struct DrawLine {
 struct DrawTriangle {
     int16_t     x1;         // Triangle point 1: x
     int16_t     y1;         // Triangle point 1: y
-    uint16_t    u1;         // Triangle point 1: u texcoord
-    uint16_t    v1;         // Triangle point 1: v texcoord
+    int16_t     u1;         // Triangle point 1: u texcoord
+    int16_t     v1;         // Triangle point 1: v texcoord
     int16_t     x2;         // Triangle point 2: x
     int16_t     y2;         // Triangle point 2: y
-    uint16_t    u2;         // Triangle point 2: u texcoord
-    uint16_t    v2;         // Triangle point 2: v texcoord
+    int16_t     u2;         // Triangle point 2: u texcoord
+    int16_t     v2;         // Triangle point 2: v texcoord
     int16_t     x3;         // Triangle point 3: x
     int16_t     y3;         // Triangle point 3: y
-    uint16_t    u3;         // Triangle point 3: u texcoord
-    uint16_t    v3;         // Triangle point 3: v texcoord
+    int16_t     u3;         // Triangle point 3: u texcoord
+    int16_t     v3;         // Triangle point 3: v texcoord
     Color24F    color;      // Color to draw the triangle with
 };
 

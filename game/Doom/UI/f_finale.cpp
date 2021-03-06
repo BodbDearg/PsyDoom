@@ -693,17 +693,33 @@ void F2_Drawer() noexcept {
             int16_t xpos;
 
             if (!spriteFrame.flip[0]) {
-                polyPrim.tu0 = spriteTex.texPageCoordX;
-                polyPrim.tu1 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
-                polyPrim.tu2 = spriteTex.texPageCoordX;
-                polyPrim.tu3 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                // PsyDoom: corrected UV coordinates to avoid pixel doubling and use 16-bit coords in case of overflow
+                #if PSYDOOM_MODS
+                    polyPrim.u0 = (LibGpuUV) spriteTex.texPageCoordX;
+                    polyPrim.u1 = (LibGpuUV) spriteTex.texPageCoordX + spriteTex.width;
+                    polyPrim.u2 = (LibGpuUV) spriteTex.texPageCoordX;
+                    polyPrim.u3 = (LibGpuUV) spriteTex.texPageCoordX + spriteTex.width;
+                #else
+                    polyPrim.u0 = spriteTex.texPageCoordX;
+                    polyPrim.u1 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                    polyPrim.u2 = spriteTex.texPageCoordX;
+                    polyPrim.u3 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                #endif
 
                 xpos = HALF_SCREEN_W - spriteTex.offsetX;
             } else {
-                polyPrim.tu0 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
-                polyPrim.tu1 = spriteTex.texPageCoordX;
-                polyPrim.tu2 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
-                polyPrim.tu3 = spriteTex.texPageCoordX;
+                // PsyDoom: corrected UV coordinates to avoid pixel doubling and use 16-bit coords in case of overflow
+                #if PSYDOOM_MODS
+                    polyPrim.u0 = (LibGpuUV) spriteTex.texPageCoordX + spriteTex.width;
+                    polyPrim.u1 = (LibGpuUV) spriteTex.texPageCoordX;
+                    polyPrim.u2 = (LibGpuUV) spriteTex.texPageCoordX + spriteTex.width;
+                    polyPrim.u3 = (LibGpuUV) spriteTex.texPageCoordX;
+                #else
+                    polyPrim.u0 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                    polyPrim.u1 = spriteTex.texPageCoordX;
+                    polyPrim.u2 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
+                    polyPrim.u3 = spriteTex.texPageCoordX;
+                #endif
             
                 xpos = HALF_SCREEN_W + spriteTex.offsetX - spriteTex.width;
             }
@@ -715,10 +731,18 @@ void F2_Drawer() noexcept {
                 spriteTex.width + xpos,     spriteTex.height + ypos
             );
         
-            polyPrim.tv0 = spriteTex.texPageCoordY;
-            polyPrim.tv1 = spriteTex.texPageCoordY;
-            polyPrim.tv2 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
-            polyPrim.tv3 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
+            // PsyDoom: corrected UV coordinates to avoid pixel doubling and use 16-bit coords in case of overflow
+            #if PSYDOOM_MODS
+                polyPrim.v0 = (LibGpuUV) spriteTex.texPageCoordY;
+                polyPrim.v1 = (LibGpuUV) spriteTex.texPageCoordY;
+                polyPrim.v2 = (LibGpuUV) spriteTex.texPageCoordY + spriteTex.height;
+                polyPrim.v3 = (LibGpuUV) spriteTex.texPageCoordY + spriteTex.height;
+            #else
+                polyPrim.v0 = spriteTex.texPageCoordY;
+                polyPrim.v1 = spriteTex.texPageCoordY;
+                polyPrim.v2 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
+                polyPrim.v3 = spriteTex.texPageCoordY + (uint8_t) spriteTex.height - 1;
+            #endif
 
             I_AddPrim(polyPrim);
         } while (0);

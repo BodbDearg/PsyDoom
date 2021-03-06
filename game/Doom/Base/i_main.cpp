@@ -964,11 +964,21 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
         LIBGPU_SetPolyFT4(polyPrim);
         LIBGPU_setRGB0(polyPrim, 128, 128, 128);
 
+        // PsyDoom: fix these right and bottom UVs now that we can do 16-bit coordinates.
+        // This fixes slight pixel stretching issues in the VRAM viewer.
+        #if PSYDOOM_MODS
+            constexpr LibGpuUV BUV = 256;
+            constexpr LibGpuUV RUV = 256;
+        #else
+            constexpr LibGpuUV BUV = 255;
+            constexpr LibGpuUV RUV = 255;
+        #endif
+
         LIBGPU_setUV4(polyPrim,
             0,      0,
-            255,    0,
-            0,      255,
-            255,    255
+            RUV,    0,
+            0,      BUV,
+            RUV,    BUV
         );
 
         LIBGPU_setXY4(polyPrim,

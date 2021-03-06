@@ -574,6 +574,12 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
     float row_ef2 = ((float) lx - p2xf) * e2dy - ((float) ty - p2yf) * e2dx;
     float row_ef3 = ((float) lx - p3xf) * e3dy - ((float) ty - p3yf) * e3dx;
 
+    // Compute the bias for each edge function to use when texture mapping; sample as if we were 0.5x pixels in.
+    // Note: have to go in the opposite direction for 'y' since the top row of the screen is at y = 0.
+    const float ef1_bias = (e1dy - e1dx) * 0.5f;
+    const float ef2_bias = (e2dy - e2dx) * 0.5f;
+    const float ef3_bias = (e3dy - e3dx) * 0.5f;
+
     // Compute the total signed triangle area (x6) and from that a multiplier to normalize the barycentric vertex weights
     const float triArea = row_ef1 + row_ef2 + row_ef3;
     const float weightNormalize = 1.0f / triArea;
@@ -594,9 +600,9 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
             const bool bSign3 = (col_ef3 <= 0);
 
             // Compute the vertex weights
-            const float w1 = col_ef2 * weightNormalize;
-            const float w2 = col_ef3 * weightNormalize;
-            const float w3 = col_ef1 * weightNormalize;
+            const float w1 = (col_ef2 + ef2_bias) * weightNormalize;
+            const float w2 = (col_ef3 + ef3_bias) * weightNormalize;
+            const float w3 = (col_ef1 + ef1_bias) * weightNormalize;
 
             // Step the edge function to the next column
             col_ef1 += e1dy;
@@ -608,9 +614,9 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
             if ((bSign1 != bSign2) || (bSign2 != bSign3))
                 continue;
 
-            // Compute the texture coordinate to use and round up slightly if it's close to the next integer coord (to account for float inprecision and prevent 'fuzzyness')
-            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 1.0f / 128.0f);
-            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 + 1.0f / 128.0f);
+            // Compute the texture coordinate to use and nudge slightly if it's close to the next integer coord (to account for float inprecision and prevent 'fuzzyness')
+            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 1.0f / 8192.0f);
+            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 - 1.0f / 8192.0f);
 
             // Get the foreground color for the triangle pixel if the triangle is textured.
             // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...

@@ -12,6 +12,15 @@
 #include <cstdint>
 #include <cstddef>
 
+// The data type used for LIBGPU UV coordinates.
+// PsyDoom upgrades this to 16-bit signed from the original 8-bit unsigned UVs.
+// This enables things like tall walls to be drawn easily, proper UV mapping for 256 pixel wide textures etc.
+#if PSYDOOM_MODS
+    typedef int16_t LibGpuUV;
+#else
+    typedef uint8_t LibGpuUV;
+#endif
+
 // Represents a rectangular area of the framebuffer.
 // The coordinates assume 16-bit color values, for other modes coords will need to be scaled accordingly.
 // Note: negative values or values exceeding the 1024x512 (16-bit) framebuffer are NOT allowed!
@@ -21,8 +30,6 @@ struct RECT {
     int16_t     w;      // Size in VRAM
     int16_t     h;
 };
-
-static_assert(sizeof(RECT) == 8);
 
 // Drawing primitive: unconnected flat shaded line
 struct LINE_F2 {
@@ -37,8 +44,6 @@ struct LINE_F2 {
     int16_t     y1;
 };
 
-static_assert(sizeof(LINE_F2) == 16);
-
 // Drawing primitive: flat shaded textured triangle (polygon 3)
 struct POLY_FT3 {
     uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
@@ -48,22 +53,24 @@ struct POLY_FT3 {
     uint8_t     code;       // Type info for the hardware
     int16_t     x0;         // Vertex 1: position
     int16_t     y0;
-    uint8_t     tu0;        // Vertex 1: texture coords
-    uint8_t     tv0;
+    LibGpuUV    u0;         // Vertex 1: texture coords
+    LibGpuUV    v0;
     uint16_t    clut;       // Color lookup table id for 4/8-bit textures
     int16_t     x1;         // Vertex 2: position
     int16_t     y1;
-    uint8_t     tu1;        // Vertex 2: texture coords
-    uint8_t     tv1;
+    LibGpuUV    u1;         // Vertex 2: texture coords
+    LibGpuUV    v1;
     uint16_t    tpage;      // Texture page id
     int16_t     x2;         // Vertex 3: position
     int16_t     y2;
-    uint8_t     tu2;        // Vertex 3: texture coords
-    uint8_t     tv2;
-    uint16_t    pad;        // Not used
-};
+    LibGpuUV    u2;         // Vertex 3: texture coords
+    LibGpuUV    v2;
 
-static_assert(sizeof(POLY_FT3) == 32);
+// PsyDoom: this bloats the structure more than needed with 16-bit uvs
+#if !PSYDOOM_MODS
+    uint16_t    pad;        // Not used
+#endif
+};
 
 // Drawing primitive: flat shaded colored quad (polygon 4)
 struct POLY_F4 {
@@ -82,8 +89,6 @@ struct POLY_F4 {
     int16_t     y3;
 };
 
-static_assert(sizeof(POLY_F4) == 24);
-
 // Drawing primitive: flat shaded textured quad (polygon 4)
 struct POLY_FT4 {
     uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
@@ -93,27 +98,34 @@ struct POLY_FT4 {
     uint8_t     code;       // Type info for the hardware
     int16_t     x0;         // Vertex 1: position
     int16_t     y0;
-    uint8_t     tu0;        // Vertex 1: texture coords
-    uint8_t     tv0;
+    LibGpuUV    u0;         // Vertex 1: texture coords
+    LibGpuUV    v0;
     uint16_t    clut;       // Color lookup table id for 4/8-bit textures
     int16_t     x1;         // Vertex 2: position
     int16_t     y1;
-    uint8_t     tu1;        // Vertex 2: texture coords
-    uint8_t     tv1;
+    LibGpuUV    u1;         // Vertex 2: texture coords
+    LibGpuUV    v1;
     uint16_t    tpage;      // Texture page id
     int16_t     x2;         // Vertex 3: position
     int16_t     y2;
-    uint8_t     tu2;        // Vertex 3: texture coords
-    uint8_t     tv2;
+    LibGpuUV    u2;         // Vertex 3: texture coords
+    LibGpuUV    v2;
+
+// PsyDoom: this bloats the structure more than needed with 16-bit uvs
+#if !PSYDOOM_MODS
     uint16_t    pad1;       // Not used
+#endif
+
     int16_t     x3;         // Vertex 4: position
     int16_t     y3;
-    uint8_t     tu3;        // Vertex 4: texture coords
-    uint8_t     tv3;
-    uint16_t    pad2;       // Not used
-};
+    LibGpuUV    u3;         // Vertex 4: texture coords
+    LibGpuUV    v3;
 
-static_assert(sizeof(POLY_FT4) == 40);
+// PsyDoom: this bloats the structure more than needed with 16-bit uvs
+#if !PSYDOOM_MODS
+    uint16_t    pad2;       // Not used
+#endif
+};
 
 // Drawing primitive: arbitrarily sized sprite
 struct SPRT {
@@ -124,14 +136,12 @@ struct SPRT {
     uint8_t     code;       // Type info for the hardware
     int16_t     x0;         // Position of the sprite
     int16_t     y0;
-    uint8_t     tu0;        // Texture u/v coords: note could not use just 'v0' due to register name clashing
-    uint8_t     tv0;
+    LibGpuUV    u0;         // Texture u/v coords
+    LibGpuUV    v0;
     int16_t     clut;       // Which CLUT to use for color indexing
     int16_t     w;          // Draw width and height of the sprite
     int16_t     h;
 };
-
-static_assert(sizeof(SPRT) == 20);
 
 // Drawing primitive: 8x8 sprite
 struct SPRT_8 {
@@ -142,12 +152,10 @@ struct SPRT_8 {
     uint8_t     code;       // Type info for the hardware
     int16_t     x0;         // Position of the sprite
     int16_t     y0;
-    uint8_t     tu0;        // Texture u/v coords: note could not use just 'v0' due to register name clashing
-    uint8_t     tv0;
+    LibGpuUV    u0;         // Texture u/v coords
+    LibGpuUV    v0;
     int16_t     clut;       // Which CLUT to use for color indexing
 };
-
-static_assert(sizeof(SPRT_8) == 16);
 
 // Drawing primitive: modify the current draw mode
 struct DR_MODE {
@@ -155,15 +163,11 @@ struct DR_MODE {
     uint32_t    code[2];    // The settings made via 'LIBGPU_SetDrawMode()'
 };
 
-static_assert(sizeof(DR_MODE) == 12);
-
 // Drawing primitive: modify the current texture window as specified by 'LIBGPU_SetTexWindow()'
 struct DR_TWIN {
     uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint32_t    code[2];    // The settings made via 'LIBGPU_SetTexWindow()'
 };
-
-static_assert(sizeof(DR_TWIN) == 12);
 
 // Settings for the front buffer (buffer being displayed)
 struct DISPENV {
@@ -179,8 +183,6 @@ struct DR_ENV {
     uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
     uint32_t    code[15];   // Data populated by 'SetDrawEnv'
 };
-
-static_assert(sizeof(DR_ENV) == 64);
 
 // Settings for the back buffer (buffer being drawn to)
 struct DRAWENV {
@@ -372,51 +374,51 @@ inline constexpr void LIBGPU_setWH(T& prim, const int16_t w, const int16_t h) no
 
 // Set the uv coordinates for a draw primitive
 template <class T>
-inline constexpr void LIBGPU_setUV0(T& prim, const uint8_t tu0, const uint8_t tv0) noexcept {
-    prim.tu0 = tu0;
-    prim.tv0 = tv0;
+inline constexpr void LIBGPU_setUV0(T& prim, const LibGpuUV u0, const LibGpuUV v0) noexcept {
+    prim.u0 = u0;
+    prim.v0 = v0;
 }
 
 // Set the uv coordinates for a triangle draw primitive
 template <class T>
 inline constexpr void LIBGPU_setUV3(
     T& prim,
-    const uint8_t tu0,
-    const uint8_t tv0,
-    const uint8_t tu1,
-    const uint8_t tv1,
-    const uint8_t tu2,
-    const uint8_t tv2
+    const LibGpuUV u0,
+    const LibGpuUV v0,
+    const LibGpuUV u1,
+    const LibGpuUV v1,
+    const LibGpuUV u2,
+    const LibGpuUV v2
 ) noexcept {
-    prim.tu0 = tu0;
-    prim.tv0 = tv0;
-    prim.tu1 = tu1;
-    prim.tv1 = tv1;
-    prim.tu2 = tu2;
-    prim.tv2 = tv2;
+    prim.u0 = u0;
+    prim.v0 = v0;
+    prim.u1 = u1;
+    prim.v1 = v1;
+    prim.u2 = u2;
+    prim.v2 = v2;
 }
 
 // Set the uv coordinates for a quad draw primitive
 template <class T>
 inline constexpr void LIBGPU_setUV4(
     T& prim,
-    const uint8_t tu0,
-    const uint8_t tv0,
-    const uint8_t tu1,
-    const uint8_t tv1,
-    const uint8_t tu2,
-    const uint8_t tv2,
-    const uint8_t tu3,
-    const uint8_t tv3
+    const LibGpuUV u0,
+    const LibGpuUV v0,
+    const LibGpuUV u1,
+    const LibGpuUV v1,
+    const LibGpuUV u2,
+    const LibGpuUV v2,
+    const LibGpuUV u3,
+    const LibGpuUV v3
 ) noexcept {
-    prim.tu0 = tu0;
-    prim.tv0 = tv0;
-    prim.tu1 = tu1;
-    prim.tv1 = tv1;
-    prim.tu2 = tu2;
-    prim.tv2 = tv2;
-    prim.tu3 = tu3;
-    prim.tv3 = tv3;
+    prim.u0 = u0;
+    prim.v0 = v0;
+    prim.u1 = u1;
+    prim.v1 = v1;
+    prim.u2 = u2;
+    prim.v2 = v2;
+    prim.u3 = u3;
+    prim.v3 = v3;
 }
 
 // Set the length of the payload for a primitive

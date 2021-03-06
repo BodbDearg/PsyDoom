@@ -2,7 +2,6 @@
 - Classic renderer: allow wall heights > 256 units; make adjustments to the renderer to split up overly tall wall columns.
 - Classic renderer: implement sky wall drawing to fix some adjacent (higher) ceilings and walls not being occluded
 - Classic renderer: add a new textured row/column GPU primitive to accelerate world drawing
-- Classic renderer: investigate pixel doubling on VRAM viewer and Finale
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?
 - Add fast-load (skip waiting for sound to stop playing) for speedrunning?
