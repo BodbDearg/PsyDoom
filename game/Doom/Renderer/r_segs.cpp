@@ -48,12 +48,15 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             // Update mid texture top bound: anything above this is upper wall
             mid_ty = bsec_ty;
 
-            // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way
+            // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way.
+            // PsyDoom: removed this restriction because 16-bit UV coord support has been added to the GPU; this allows us to do tall walls greater than 256 units.
             int32_t tex_h = bsec_ty - fsec_ty;
 
-            if (tex_h > TEXCOORD_MAX) {
-                tex_h = TEXCOORD_MAX;
-            }
+            #if !PSYDOOM_MODS
+                if (tex_h > TEXCOORD_MAX) {
+                    tex_h = TEXCOORD_MAX;
+                }
+            #endif
 
             // Compute top and bottom texture 'v' coordinates
             int32_t vt, vb;
@@ -78,22 +81,31 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             // Update mid texture lower bound: anything below this is lower wall
             mid_by = bsec_by;
 
-            // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way
+            // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way.
+            // PsyDoom: removed this restriction because 16-bit UV coord support has been added to the GPU; this allows us to do tall walls greater than 256 units.
             int32_t tex_h = fsec_by - bsec_by;
 
-            if (tex_h > TEXCOORD_MAX) {
-                tex_h = TEXCOORD_MAX;
-            }
+            #if !PSYDOOM_MODS
+                if (tex_h > TEXCOORD_MAX) {
+                    tex_h = TEXCOORD_MAX;
+                }
+            #endif
 
             // Compute top and bottom texture 'v' coordinates
             int32_t vt, vb;
 
             if (line.flags & ML_DONTPEGBOTTOM) {
                 // Don't anchor lower wall texture to the floor.
-                // This seems to do a weird wrapping as well every 128 units - not sure why that is...
+                // This seems to do a weird wrapping as well every 128 units - not sure why that is, probably related to the limitations of  8-bit uv coords.
                 // This could maybe cause some weirdness in some cases with lower walls!
                 const int32_t wall_h = bsec_by - fsec_ty;
-                vt = (d_fixed_to_int(side.rowoffset) + wall_h) & (~128);
+
+                // PsyDoom: eliminate the weird wrapping as it's not needed anymore now with 16-bit UV coord support
+                #if PSYDOOM_MODS
+                    vt = d_fixed_to_int(side.rowoffset) + wall_h;
+                #else
+                    vt = (d_fixed_to_int(side.rowoffset) + wall_h) & (~128);
+                #endif
             } else {
                 // Anchor lower wall texture to the floor
                 vt = d_fixed_to_int(side.rowoffset);
@@ -141,12 +153,15 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
     // Drawing the mid wall
     {
-        // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way
+        // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way.
+        // PsyDoom: removed this restriction because 16-bit UV coord support has been added to the GPU; this allows us to do tall walls greater than 256 units.
         int32_t tex_h = mid_by - mid_ty;
 
-        if (tex_h > TEXCOORD_MAX) {
-            tex_h = TEXCOORD_MAX;
-        }
+        #if !PSYDOOM_MODS
+            if (tex_h > TEXCOORD_MAX) {
+                tex_h = TEXCOORD_MAX;
+            }
+        #endif
         
         // Compute top and bottom texture 'v' coordinates
         int32_t vt, vb;
@@ -439,9 +454,9 @@ void R_DrawWallPiece(
             LIBGPU_setRGB0(polyPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
 
             LIBGPU_setUV3(polyPrim,
-                (uint8_t) uCur, (uint8_t) vtCur,
-                (uint8_t) uCur, (uint8_t) vbCur,
-                (uint8_t) uCur, (uint8_t) vbCur
+                (LibGpuUV) uCur, (LibGpuUV) vtCur,
+                (LibGpuUV) uCur, (LibGpuUV) vbCur,
+                (LibGpuUV) uCur, (LibGpuUV) vbCur
             );
 
             LIBGPU_setXY3(polyPrim,
