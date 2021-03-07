@@ -29,8 +29,10 @@ static VideoBackend_SDL gVideoBackend_SDL;
 // Pointer to the video backend implementation in use
 static IVideoBackend* gpVideoBackend;
 
-SDL_Window*     gpSdlWindow;        // The SDL window being used
-BackendType     gBackendType;       // Which type of video backend is in use
+SDL_Window*     gpSdlWindow;    // The SDL window being used
+BackendType     gBackendType;   // Which type of video backend is in use
+int32_t         gTopOverscan;   // Sanitized config input: number of pixels to discard at the top of the screen in terms of the original 256x240 framebuffer
+int32_t         gBotOverscan;   // Sanitized config input: number of pixels to discard at the bottom of the screen in terms of the original 256x240 framebuffer
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Pick which resolution to use for the game's window on startup
@@ -128,6 +130,10 @@ void initVideo() noexcept {
     #else
         constexpr const char* gameVersionStr = "PsyDoom <UNKNOWN_VERSION>";
     #endif
+
+    // Set and sanitize overscan settings
+    gTopOverscan = std::clamp(Config::gTopOverscanPixels, 0, ORIG_DRAW_RES_Y / 2 - 1);
+    gBotOverscan = std::clamp(Config::gBottomOverscanPixels, 0, ORIG_DRAW_RES_Y / 2 - 1);
 
     // Decide what window size to use
     int32_t winSizeX = 0;

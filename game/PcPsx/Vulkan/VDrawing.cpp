@@ -19,6 +19,7 @@
 #include "Gpu.h"
 #include "LogicalDevice.h"
 #include "PcPsx/Config.h"
+#include "PcPsx/Video.h"
 #include "Pipeline.h"
 #include "VPipelines.h"
 #include "VRenderer.h"
@@ -256,8 +257,8 @@ Matrix4f computeTransformMatrixForUI(const bool bAllowWidescreen) noexcept {
     // Note: need to reverse by/ty to get the view the right way round (normally y is up with projection matrices).
     const float viewLx = (bAllowWidescreen) ? -xPadding : 0.0f;
     const float viewRx = (bAllowWidescreen) ? (float) SCREEN_W + xPadding : (float) SCREEN_W;
-    const float viewBy = 0;
-    const float viewTy = SCREEN_H;
+    const float viewTy = (float) Video::gTopOverscan;
+    const float viewBy = (float) SCREEN_H - (float) Video::gBotOverscan;
     const float zNear = 0.0f;
     const float zFar = 1.0f;
 
@@ -277,8 +278,8 @@ Matrix4f computeTransformMatrixFor3D(const float viewX, const float viewY, const
     const float widescreenScale = std::max((float) VRenderer::gFramebufferW / (float) VRenderer::gPsxCoordsFbW, 1.0f);
     const float viewLx = (bAllowWidescreen) ? -widescreenScale : -1.0f;
     const float viewRx = (bAllowWidescreen) ? +widescreenScale : +1.0f;
-    const float viewTy = (HALF_VIEW_3D_H / float(HALF_SCREEN_W));
-    const float viewBy = ((-HALF_VIEW_3D_H - STATUS_BAR_H) / float(HALF_SCREEN_W));
+    const float viewTy = (HALF_VIEW_3D_H - (float) Video::gTopOverscan) / (float) HALF_SCREEN_W;
+    const float viewBy = (-HALF_VIEW_3D_H - STATUS_BAR_H + (float) Video::gBotOverscan) / (float) HALF_SCREEN_W;
     const float zNear = 1.0f;
     const float zFar = 65536.0f;
 

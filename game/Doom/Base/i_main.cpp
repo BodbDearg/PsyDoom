@@ -981,11 +981,18 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
             RUV,    BUV
         );
 
+        // PsyDoom: adjust the bottom edge of the VRAM view to account for overscan of 8-pixels
+        #if PSYDOOM_MODS
+            const int16_t BY = 232;
+        #else
+            const int16_t BY = 240;
+        #endif
+
         LIBGPU_setXY4(polyPrim,
             0,      0,
             256,    0,
-            0,      240,
-            256,    240
+            0,      BY,
+            256,    BY
         );
 
         polyPrim.clut = gPaletteClutIds[MAINPAL];

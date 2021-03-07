@@ -50,9 +50,9 @@ enum menu_t : int32_t {
     static const int16_t gMenuYPos[NUMMENUITEMS] = {
         81,     // gamemode
         123,    // level
-        148,    // difficulty
-        190,    // options
-        215     // quit
+        145,    // difficulty
+        187,    // options
+        209     // quit
     };
 #else
     static const int16_t gMenuYPos[NUMMENUITEMS] = {

@@ -304,12 +304,13 @@ struct Matrix4 {
         //
         //  (1) Negated 'e[1][1]' to account for Vukan's new NDC and flipped y.
         //      See: https://matthewwellings.com/blog/the-new-vulkan-coordinate-system
+        //  (2) Reversed top and bottom y subtraction to account for Vulkan's flipped y.
         //
         return Matrix4(
             2 / (rx - lx),          0,                      0,               0,
-            0,                      2 / (ty - by),          0,               0,
+            0,                      2 / (by - ty),          0,               0,
             0,                      0,                      1  / (zn - zf),  0,
-            (lx + rx) / (lx - rx),  (ty + by) / (by - ty),  zn / (zn - zf),  1
+            (lx + rx) / (lx - rx),  (ty + by) / (ty - by),  zn / (zn - zf),  1
         );
     }
 

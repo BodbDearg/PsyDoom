@@ -70,6 +70,8 @@ bool        gbVulkanPixelStretch;
 bool        gbVulkanTripleBuffer;
 bool        gbVulkanWidescreenEnabled;
 int32_t     gAAMultisamples;
+int32_t     gTopOverscanPixels;
+int32_t     gBottomOverscanPixels;
 bool        gbFloorRenderGapFix;
 bool        gbUseVulkan32BitShading;
 
@@ -139,9 +141,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "VulkanPixelStretch",
         "#---------------------------------------------------------------------------------------------------\n"
         "# Vulkan renderer: controls whether rendered pixels are stretched horizontally on output according\n"
-        "# to the stretch factor determined via 'LogicalDisplayWidth'. It makes the Vulkan renderer mimic the\n"
-        "# pixel stretching of the original PlayStation renderer (see 'LogicalDisplayWidth' comments) and\n"
-        "# will cause the horizontal draw resolution to be reduced as a result.\n"
+        "# to the stretch factor determined via 'LogicalDisplayWidth' and also vertically due to overscan.\n"
+        "# It makes the Vulkan renderer mimic the pixel stretching of the original PlayStation renderer\n"
+        "# more closely and will cause the draw resolution to be reduced as a result.\n"
         "#\n"
         "# Pixel stretch is highly recommended if you want to match the rasterization of the original 240p\n"
         "# renderer or some other low multiple of that like 480p. Without stretching, at low resolutions you\n"
@@ -149,8 +151,8 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# draw resolution not being an integer multiple of the original resolution.\n"
         "#\n"
         "# If you are rendering at modern resolutions like 1080p or 1440p however it is recommended that you\n"
-        "# leave this setting off ('0') so that the Vulkan renderer can operate at the highest horizontal\n"
-        "# resolution and not suffer aliasing from having to stretch horizontally the framebuffer on output.\n"
+        "# leave this setting off ('0') so that the Vulkan renderer can operate at the highest resolutions\n"
+        "# and not suffer aliasing from having to stretch the framebuffer on output.\n"
         "#---------------------------------------------------------------------------------------------------",
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanPixelStretch = iniEntry.getBoolValue(false); },
@@ -239,6 +241,28 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "292", "\n",
         [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getFloatValue(292.0f); },
         []() { gLogicalDisplayW = 292.0f; }
+    },
+    {
+        "TopOverscanPixels",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# With respect to the original resolution of 256x240, determines how many rows of pixels are\n"
+        "# discarded at the top and bottom of the screen in order to emulate 'overscan' behavior of old CRT\n"
+        "# televisions. Affects the display and aspect ratio for both the Vulkan and Classic renderers.\n"
+        "#\n"
+        "# Accounting for overscan can help yield an aspect ratio closer to how the game looked on CRT TVs of\n"
+        "# it's time and can also be used to remove a region of dead space underneath the in-game HUD.\n"
+        "# PsyDoom will by default chop off 8 pixel rows at the bottom of the screen to remove HUD dead space\n"
+        "# but will NOT chop off pixel rows at the top of the screen in order to maximize the viewable area.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "",
+        [](const IniUtils::Entry& iniEntry) { gTopOverscanPixels = iniEntry.getIntValue(0); },
+        []() { gTopOverscanPixels = 0; }
+    },
+    {
+        "BottomOverscanPixels",
+        "", "8", "\n",
+        [](const IniUtils::Entry& iniEntry) { gBottomOverscanPixels = iniEntry.getIntValue(8); },
+        []() { gBottomOverscanPixels = 8; }
     },
     {
         "FloorRenderGapFix",

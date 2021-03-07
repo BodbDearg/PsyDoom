@@ -198,6 +198,9 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
         return;
 
     // Blit the PSX framebuffer to the swapchain image
+    ASSERT((Video::gTopOverscan >= 0) && (Video::gTopOverscan < Video::ORIG_DRAW_RES_Y / 2));
+    ASSERT((Video::gBotOverscan >= 0) && (Video::gBotOverscan < Video::ORIG_DRAW_RES_Y / 2));
+
     const uint32_t swapchainIdx = swapchain.getAcquiredImageIdx();
     const VkImage swapchainImage = swapchain.getVkImages()[swapchainIdx];
 
@@ -207,8 +210,9 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
         blitRegion.srcSubresource.layerCount = 1;
         blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         blitRegion.dstSubresource.layerCount = 1;
+        blitRegion.srcOffsets[0].y = Video::gTopOverscan;
         blitRegion.srcOffsets[1].x = Video::ORIG_DRAW_RES_X;
-        blitRegion.srcOffsets[1].y = Video::ORIG_DRAW_RES_Y;
+        blitRegion.srcOffsets[1].y = Video::ORIG_DRAW_RES_Y - Video::gBotOverscan;
         blitRegion.srcOffsets[1].z = 1;
         blitRegion.dstOffsets[0].x = std::clamp<int32_t>((int32_t) blitDstX, 0, screenWidth);
         blitRegion.dstOffsets[0].y = std::clamp<int32_t>((int32_t) blitDstY, 0, screenHeight);

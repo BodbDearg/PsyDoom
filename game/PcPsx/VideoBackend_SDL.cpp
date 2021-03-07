@@ -208,23 +208,32 @@ void VideoBackend_SDL::presentSdlFramebufferTexture() noexcept {
     if ((outputRectW <= 0.0f) || (outputRectH <= 0.0f))
         return;
 
-    SDL_Rect outputRect = {};
-    outputRect.x = (int32_t) outputRectX;
-    outputRect.y = (int32_t) outputRectY;
-    outputRect.w = (int32_t) std::ceil(outputRectW);
-    outputRect.h = (int32_t) std::ceil(outputRectH);
+    // These are the source and destination regions to blit
+    ASSERT((Video::gTopOverscan >= 0) && (Video::gTopOverscan < Video::ORIG_DRAW_RES_Y / 2));
+    ASSERT((Video::gBotOverscan >= 0) && (Video::gBotOverscan < Video::ORIG_DRAW_RES_Y / 2));
+
+    SDL_Rect srcRect = {};
+    srcRect.y = Video::gTopOverscan;
+    srcRect.w = Video::ORIG_DRAW_RES_X;
+    srcRect.h = Video::ORIG_DRAW_RES_Y - Video::gTopOverscan - Video::gBotOverscan;
+
+    SDL_Rect dstRect = {};
+    dstRect.x = (int32_t) outputRectX;
+    dstRect.y = (int32_t) outputRectY;
+    dstRect.w = (int32_t) std::ceil(outputRectW);
+    dstRect.h = (int32_t) std::ceil(outputRectH);
 
     // Done writing to the locked framebuffer, update the texture with whatever writes we made
     unlockFramebufferTexture();
 
     // Need to clear the window if we are not filling the whole screen.
     // Some stuff like NVIDIA video recording notifications can leave marks in the unused regions otherwise...
-    if ((outputRect.w != windowW) || (outputRect.h != windowH)) {
+    if ((dstRect.w != windowW) || (dstRect.h != windowH)) {
         SDL_RenderClear(mpRenderer);
     }
     
     // Blit the framebuffer to the display
-    SDL_RenderCopy(mpRenderer, mpFramebufferTexture, nullptr, &outputRect);
+    SDL_RenderCopy(mpRenderer, mpFramebufferTexture, &srcRect, &dstRect);
 
     // Present the rendered frame and re-lock the framebuffer texture
     SDL_RenderPresent(mpRenderer);

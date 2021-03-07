@@ -29,6 +29,8 @@ enum BackendType {
 
 extern BackendType  gBackendType;
 extern SDL_Window*  gpSdlWindow;
+extern int32_t      gTopOverscan;
+extern int32_t      gBotOverscan;
 
 void initVideo() noexcept;
 void shutdownVideo() noexcept;

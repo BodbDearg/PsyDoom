@@ -280,16 +280,25 @@ static void updateCoordSysInfo() noexcept {
         gPsxCoordsFbH = 0;
     }
 
-    // Is the framebuffer being pixel stretched? If that is the case then adjust the width
+    // Is the framebuffer being pixel stretched? If that is the case then adjust the width and height
     if (gFramebufferW > 0) {
         if (Config::gbVulkanPixelStretch) {
-            const float pixelStretch = gCurLogicalDisplayW / (float) Video::ORIG_DRAW_RES_X;
 
-            gFramebufferW = (int32_t) std::max(std::ceil((float) gFramebufferW / pixelStretch), 1.0f);
-            gPsxCoordsFbX /= pixelStretch;
-            gPsxCoordsFbW /= pixelStretch;
+            const float displayedPsxRows = (float)(Video::ORIG_DRAW_RES_Y - Video::gTopOverscan - Video::gBotOverscan);
+            const float xPixelStretch = (float) Video::ORIG_DRAW_RES_X / gCurLogicalDisplayW;
+            const float yPixelStretch = displayedPsxRows / (float) Video::ORIG_DRAW_RES_Y;
+
+            gFramebufferW = (int32_t) std::max(std::ceil((float) gFramebufferW * xPixelStretch), 1.0f);
+            gPsxCoordsFbX *= xPixelStretch;
+            gPsxCoordsFbW *= xPixelStretch;
             gPsxCoordsFbX = std::ceil(gPsxCoordsFbX);
             gPsxCoordsFbW = std::ceil(gPsxCoordsFbW);
+
+            gFramebufferH = (int32_t) std::max(std::ceil((float) gFramebufferH * yPixelStretch), 1.0f);
+            gPsxCoordsFbY *= yPixelStretch;
+            gPsxCoordsFbH *= yPixelStretch;
+            gPsxCoordsFbY = std::ceil(gPsxCoordsFbY);
+            gPsxCoordsFbH = std::ceil(gPsxCoordsFbH);
         }
     }
 
@@ -305,12 +314,14 @@ static void updateCoordSysInfo() noexcept {
 
     if (bHaveValidPresentSurface) {
         const float blitWPercent = (bAllowWidescreen) ? (float) gPsxCoordsFbW / (float) gFramebufferW : 1.0f;
+        const float displayedPsxRows = (float)(Video::ORIG_DRAW_RES_Y - Video::gTopOverscan - Video::gBotOverscan);
+
         gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DRAW_RES_X;
-        gNdcToPsxScaleY = 0.5f * Video::ORIG_DRAW_RES_Y;
+        gNdcToPsxScaleY = 0.5f * displayedPsxRows;
 
         const float blitStartXPercent = (bAllowWidescreen) ? (float) gPsxCoordsFbX / (float) gFramebufferW : 0.0f;
         gPsxNdcOffsetX = blitStartXPercent * 2.0f;
-        gPsxNdcOffsetY = 0;
+        gPsxNdcOffsetY = ((float) -Video::gTopOverscan * 2.0f) / displayedPsxRows;
     } else {
         gNdcToPsxScaleX = 0.0f;
         gNdcToPsxScaleY = 0.0f;
