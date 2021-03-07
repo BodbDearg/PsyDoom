@@ -966,7 +966,7 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
 
         // PsyDoom: fix these right and bottom UVs now that we can do 16-bit coordinates.
         // This fixes slight pixel stretching issues in the VRAM viewer.
-        #if PSYDOOM_MODS
+        #if PSYDOOM_LIMIT_REMOVING
             constexpr LibGpuUV BUV = 256;
             constexpr LibGpuUV RUV = 256;
         #else

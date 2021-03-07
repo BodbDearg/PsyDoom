@@ -15,7 +15,7 @@
 // The data type used for LIBGPU UV coordinates.
 // PsyDoom upgrades this to 16-bit signed from the original 8-bit unsigned UVs.
 // This enables things like tall walls to be drawn easily, proper UV mapping for 256 pixel wide textures etc.
-#if PSYDOOM_MODS
+#if PSYDOOM_LIMIT_REMOVING
     typedef int16_t LibGpuUV;
 #else
     typedef uint8_t LibGpuUV;
@@ -67,7 +67,7 @@ struct POLY_FT3 {
     LibGpuUV    v2;
 
 // PsyDoom: this bloats the structure more than needed with 16-bit uvs
-#if !PSYDOOM_MODS
+#if !PSYDOOM_LIMIT_REMOVING
     uint16_t    pad;        // Not used
 #endif
 };
@@ -112,7 +112,7 @@ struct POLY_FT4 {
     LibGpuUV    v2;
 
 // PsyDoom: this bloats the structure more than needed with 16-bit uvs
-#if !PSYDOOM_MODS
+#if !PSYDOOM_LIMIT_REMOVING
     uint16_t    pad1;       // Not used
 #endif
 
@@ -122,7 +122,7 @@ struct POLY_FT4 {
     LibGpuUV    v3;
 
 // PsyDoom: this bloats the structure more than needed with 16-bit uvs
-#if !PSYDOOM_MODS
+#if !PSYDOOM_LIMIT_REMOVING
     uint16_t    pad2;       // Not used
 #endif
 };

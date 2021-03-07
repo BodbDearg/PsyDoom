@@ -219,11 +219,11 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 
         // Sprite UV coordinates for left, right, top and bottom.
         // PsyDoom: corrected UV coordinates to slight pixel stretching and use 16-bit coords in case of overflow.
-        #if PSYDOOM_MODS
-            const LibGpuUV tex_ul = (LibGpuUV) tex.texPageCoordX;
-            const LibGpuUV tex_ur = (LibGpuUV) tex.texPageCoordX + tex.width;
-            const LibGpuUV tex_vt = (LibGpuUV) tex.texPageCoordY;
-            const LibGpuUV tex_vb = (LibGpuUV) tex.texPageCoordY + tex.height;
+        #if PSYDOOM_LIMIT_REMOVING
+            const LibGpuUV tex_ul = (LibGpuUV)(tex.texPageCoordX);
+            const LibGpuUV tex_ur = (LibGpuUV)(tex.texPageCoordX + tex.width);
+            const LibGpuUV tex_vt = (LibGpuUV)(tex.texPageCoordY);
+            const LibGpuUV tex_vb = (LibGpuUV)(tex.texPageCoordY + tex.height);
         #else
             const LibGpuUV tex_ul = tex.texPageCoordX;
             const LibGpuUV tex_ur = tex.texPageCoordX + (uint8_t) tex.width - 1;

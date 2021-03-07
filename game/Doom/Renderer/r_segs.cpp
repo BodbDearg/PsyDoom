@@ -52,7 +52,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             // PsyDoom: removed this restriction because 16-bit UV coord support has been added to the GPU; this allows us to do tall walls greater than 256 units.
             int32_t tex_h = bsec_ty - fsec_ty;
 
-            #if !PSYDOOM_MODS
+            #if !PSYDOOM_LIMIT_REMOVING
                 if (tex_h > TEXCOORD_MAX) {
                     tex_h = TEXCOORD_MAX;
                 }
@@ -85,7 +85,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             // PsyDoom: removed this restriction because 16-bit UV coord support has been added to the GPU; this allows us to do tall walls greater than 256 units.
             int32_t tex_h = fsec_by - bsec_by;
 
-            #if !PSYDOOM_MODS
+            #if !PSYDOOM_LIMIT_REMOVING
                 if (tex_h > TEXCOORD_MAX) {
                     tex_h = TEXCOORD_MAX;
                 }
@@ -100,8 +100,8 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
                 // This could maybe cause some weirdness in some cases with lower walls!
                 const int32_t wall_h = bsec_by - fsec_ty;
 
-                // PsyDoom: eliminate the weird wrapping as it's not needed anymore now with 16-bit UV coord support
-                #if PSYDOOM_MODS
+                // PsyDoom: eliminate the weird wrapping as it's not needed anymore now with 16-bit UV coord support and could cause problems
+                #if PSYDOOM_LIMIT_REMOVING
                     vt = d_fixed_to_int(side.rowoffset) + wall_h;
                 #else
                     vt = (d_fixed_to_int(side.rowoffset) + wall_h) & (~128);
@@ -157,7 +157,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
         // PsyDoom: removed this restriction because 16-bit UV coord support has been added to the GPU; this allows us to do tall walls greater than 256 units.
         int32_t tex_h = mid_by - mid_ty;
 
-        #if !PSYDOOM_MODS
+        #if !PSYDOOM_LIMIT_REMOVING
             if (tex_h > TEXCOORD_MAX) {
                 tex_h = TEXCOORD_MAX;
             }
