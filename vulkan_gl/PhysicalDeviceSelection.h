@@ -19,15 +19,18 @@ typedef bool (*DeviceFilter)(const PhysicalDevice& device, const DeviceSurfaceCa
 // Same as above but minus the device surface capabilities; for headless device selection
 typedef bool (*HeadlessDeviceFilter)(const PhysicalDevice& device) noexcept;
 
+bool checkBasicHeadlessDeviceSuitability(const PhysicalDevice& device) noexcept;
+bool checkBasicDeviceSuitability(const PhysicalDevice& device, const DeviceSurfaceCaps& deviceSurfaceCaps) noexcept;
+
 const PhysicalDevice* selectBestDevice(
     const std::vector<PhysicalDevice>& devices,
     const WindowSurface& windowSurface,
-    const DeviceFilter deviceFilter = nullptr
+    const DeviceFilter deviceFilter
 ) noexcept;
 
 const PhysicalDevice* selectBestHeadlessDevice(
     const std::vector<PhysicalDevice>& devices,
-    const HeadlessDeviceFilter deviceFilter = nullptr
+    const HeadlessDeviceFilter deviceFilter
 ) noexcept;
 
 END_NAMESPACE(PhysicalDeviceSelection)

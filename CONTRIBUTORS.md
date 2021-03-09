@@ -57,14 +57,16 @@ PsyDoom contributors (sorted alphabetically)
          https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2181219
     * Discovered issues with using a PlayStation classic controller:
          https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2224903
-    * Spotted saved_prefs.ini handling inconsistency:
+    * Spotted a saved_prefs.ini handling inconsistency:
          https://github.com/BodbDearg/PsyDoom/issues/1
-    * Made separate Doom/Final-Doom password suggestion:
+    * Made a separate Doom/Final-Doom password suggestion:
          https://github.com/BodbDearg/PsyDoom/issues/1
     * Found issues with the 'Inv Mouse Wheel' control binding:
          https://github.com/BodbDearg/PsyDoom/issues/3
-    * Discovered and raised bug with text disappearing on Finale:
+    * Discovered and a raised bug with text disappearing on Finale:
         https://github.com/BodbDearg/PsyDoom/issues/7
+    * Discovered issues creating the Vulkan PSX VRAM texture on an AMD Radeon HD 8790M.
+        https://github.com/BodbDearg/PsyDoom/issues/8
 
 * **[j0r9](https://github.com/j0r9)**
 

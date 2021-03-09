@@ -8,7 +8,9 @@
 
 namespace vgl {
     class CmdBufferRecorder;
+    class DeviceSurfaceCaps;
     class LogicalDevice;
+    class PhysicalDevice;
     class Swapchain;
     struct VkFuncs;
 }
@@ -44,6 +46,8 @@ extern vgl::LogicalDevice       gDevice;
 extern vgl::Swapchain           gSwapchain;
 extern vgl::CmdBufferRecorder   gCmdBufferRec;
 
+bool isHeadlessPhysicalDeviceSuitable(const vgl::PhysicalDevice& device) noexcept;
+bool isPhysicalDeviceSuitable(const vgl::PhysicalDevice& device, const vgl::DeviceSurfaceCaps& surfaceCaps) noexcept;
 void init() noexcept;
 void destroy() noexcept;
 bool beginFrame() noexcept;

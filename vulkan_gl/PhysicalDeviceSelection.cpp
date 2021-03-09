@@ -91,9 +91,17 @@ static void querySurfaceCapsForAllDevices(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tells if the given physical device is suitable for us to use with any renderer, both headless and rendering to a window
+// Basic/default checks for physical device suitability WITHOUT considering window/surface output capabilities.
+// These checks are minimal and are intended to be built upon by the host application.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool isPhysicalDeviceSuitable(const PhysicalDevice& device) noexcept {
+bool checkBasicHeadlessDeviceSuitability(const PhysicalDevice& device) noexcept {
+    // Device must support at least Vulkan 1.1.
+    // Need to use images with 'VK_FORMAT_FEATURE_TRANSFER_DST_BIT ' set and use 'VK_IMAGE_USAGE_TRANSFER_DST_BIT'.
+    const VkPhysicalDeviceProperties& deviceProps = device.getProps();
+
+    if (deviceProps.apiVersion < VK_API_VERSION_1_1)
+        return false;
+
     // Must have at least 1 queue family that supports both graphics and compute.
     // Note that if a queue family supports graphics and compute, it also supports transfer operations by extension implicitly...
     bool bFoundCombinedGraphicsComputeQueue = false;
@@ -113,7 +121,6 @@ static bool isPhysicalDeviceSuitable(const PhysicalDevice& device) noexcept {
         return false;
 
     // Check that the device supports the min required texture size limits
-    const VkPhysicalDeviceProperties& deviceProps = device.getProps();
     const VkPhysicalDeviceLimits& deviceLimits = deviceProps.limits;
 
     if (deviceLimits.maxImageDimension1D < Defines::MIN_REQUIRED_2D_IMAGE_SIZE_LIMIT)
@@ -127,15 +134,12 @@ static bool isPhysicalDeviceSuitable(const PhysicalDevice& device) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tells if the given physical device is suitable for use with a non headless renderer.
-// Uses the surface capabilities to determine.
+// Basic/default checks for physical device suitability that also take into consideration window/surface output capabilities.
+// These checks are minimal and are intended to be built upon by the host application.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool isPhysicalDeviceWithSurfaceCapsSuitable(
-    const PhysicalDevice& device,
-    const DeviceSurfaceCaps& deviceSurfaceCaps
-) noexcept {
-    // The physical device must pass basic suitability tests before we examine it's surface caps:
-    if (!isPhysicalDeviceSuitable(device))
+bool checkBasicDeviceSuitability(const PhysicalDevice& device, const DeviceSurfaceCaps& deviceSurfaceCaps) noexcept {
+    // The physical device must pass basic headless device suitability checks before we examine it's surface caps
+    if (!checkBasicHeadlessDeviceSuitability(device))
         return false;
 
     // If the device surface caps are not valid then the device is not valid also
@@ -163,7 +167,7 @@ static bool isPhysicalDeviceWithSurfaceCapsSuitable(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Select the best physical device to use from a list of devices when using the specified window surface.
-// An optional filter can be provided to further validate which devices can be used.
+// Uses a given filter function to decide which devices to use.
 // Returns null if no device in the given list was suitable.
 //------------------------------------------------------------------------------------------------------------------------------------------
 const PhysicalDevice* selectBestDevice(
@@ -171,6 +175,8 @@ const PhysicalDevice* selectBestDevice(
     const WindowSurface& windowSurface,
     const DeviceFilter deviceFilter
 ) noexcept {
+    ASSERT(deviceFilter);
+
     // Get the surface capabilities for all the devices
     std::vector<DeviceSurfaceCaps> deviceSurfaceCaps;
     querySurfaceCapsForAllDevices(devices, windowSurface, deviceSurfaceCaps);
@@ -181,11 +187,9 @@ const PhysicalDevice* selectBestDevice(
     const PhysicalDevice* pBestDevice = nullptr;
 
     for (const PhysicalDevice& device : devices) {
-        if (isPhysicalDeviceWithSurfaceCapsSuitable(device, *pCurDeviceSurfaceCaps)) {
-            if ((deviceFilter == nullptr) || deviceFilter(device, *pCurDeviceSurfaceCaps)) {
-                if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
-                    pBestDevice = &device;
-                }
+        if (deviceFilter(device, *pCurDeviceSurfaceCaps)) {
+            if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
+                pBestDevice = &device;
             }
         }
 
@@ -203,14 +207,13 @@ const PhysicalDevice* selectBestHeadlessDevice(
     const std::vector<PhysicalDevice>& devices,
     const HeadlessDeviceFilter deviceFilter
 ) noexcept {
+    ASSERT(deviceFilter);
     const PhysicalDevice* pBestDevice = nullptr;
 
     for (const PhysicalDevice& device : devices) {
-        if (isPhysicalDeviceSuitable(device)) {
-            if ((deviceFilter == nullptr) || deviceFilter(device)) {
-                if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
-                    pBestDevice = &device;
-                }
+        if (deviceFilter(device)) {
+            if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
+                pBestDevice = &device;
             }
         }
     }

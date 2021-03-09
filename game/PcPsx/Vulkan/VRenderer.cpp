@@ -137,30 +137,6 @@ static bool gbSkipNextFramePresent;
 static bool gbDidAcquireSwapImageThisFrame;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Physical device selection callback: tells if the device is suitable for use with PsyDoom
-//------------------------------------------------------------------------------------------------------------------------------------------
-static bool isPhysicalDeviceSuitable(const vgl::PhysicalDevice& device, const vgl::DeviceSurfaceCaps& surfaceCaps) noexcept {
-    // Make sure at least one of the allowed surface formats are supported
-    if (!surfaceCaps.getSupportedSurfaceFormat(ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS)))
-        return false;
-
-    // Make sure these are supported as texture formats
-    constexpr VkFormat R16_UINT_FORMAT = VK_FORMAT_R16_UINT;
-
-    if (!device.findFirstSupportedTextureFormat(&R16_UINT_FORMAT, 1))   // Note: don't need linear sampling from this format, most HW doesn't support it anyway
-        return false;
-
-    if (!device.findFirstSupportedTextureFormat(&COLOR_32_FORMAT, 1))
-        return false;
-
-    // Make sure these are supported as color attachment formats
-    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_32_FORMAT, 1))
-        return false;
-
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Determines if 16-bit color framebuffers and textures are possible for the specified device
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void determine16BitColorSupport(const vgl::PhysicalDevice& device) noexcept {
@@ -380,6 +356,55 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
     ASSERT(gFramebufferW > 0);
     ASSERT(gFramebufferH > 0);
     return gpCurRenderPath->ensureValidFramebuffers(gFramebufferW, gFramebufferH);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the specified physical device is suitable for use with PsyDoom and it's Vulkan renderer.
+// Checks the capabilities of the device to see if it can do what we need and whether certain required formats are supported.
+// This suitability check doesn't consider device surface capabilities; it just verifies what is possible to check for 'headless' mode.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isHeadlessPhysicalDeviceSuitable(const vgl::PhysicalDevice& device) noexcept {
+    // Must pass basic suitability checks first
+    if (!vgl::PhysicalDeviceSelection::checkBasicHeadlessDeviceSuitability(device))
+        return false;
+
+    // Make sure these are supported as texture formats.
+    // Note: not requiring linear sample filtering from any of these formats, only need 'nearest neighbor' filtering for this project.
+    // Most HW doesn't support filtering anyway for the R16_UINT case, which is the format used for the PSX VRAM texture...
+    constexpr VkFormat R16_UINT_FORMAT = VK_FORMAT_R16_UINT;
+
+    if (!device.findFirstSupportedTextureFormat(&R16_UINT_FORMAT, 1))
+        return false;
+
+    if (!device.findFirstSupportedTextureFormat(&COLOR_32_FORMAT, 1))
+        return false;
+
+    // Make sure these are supported as color attachment formats
+    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_32_FORMAT, 1))
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the specified physical device is suitable for use with PsyDoom and it's Vulkan renderer.
+// Checks the capabilities of the device to see if it can do what we need and whether certain required formats are supported.
+// This suitability check considers both headless device capabilities, and capabilities with respect to the given output surface.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isPhysicalDeviceSuitable(const vgl::PhysicalDevice& device, const vgl::DeviceSurfaceCaps& surfaceCaps) noexcept {
+    // Must pass basic suitability checks first
+    if (!vgl::PhysicalDeviceSelection::checkBasicDeviceSuitability(device, surfaceCaps))
+        return false;
+
+    // Must pass all of the headless checks
+    if (!isHeadlessPhysicalDeviceSuitable(device))
+        return false;
+
+    // Make sure at least one of the allowed output surface formats are supported
+    if (!surfaceCaps.getSupportedSurfaceFormat(ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS)))
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
