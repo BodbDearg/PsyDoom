@@ -223,7 +223,7 @@ VkFormat PhysicalDevice::findFirstSupportedFormatInternal(
     if (vkImageTilingMode == VK_IMAGE_TILING_OPTIMAL) {
         for (size_t i = 0; i < numFormats; ++i) {
             const VkFormat format = pFormats[i];
-            VkFormatProperties formatProps;
+            VkFormatProperties formatProps = {};
             mVkFuncs.vkGetPhysicalDeviceFormatProperties(mVkPhysicalDevice, format, &formatProps);
 
             if ((formatProps.optimalTilingFeatures & requiredVkFormatFeatureFlags) == requiredVkFormatFeatureFlags)
@@ -233,7 +233,7 @@ VkFormat PhysicalDevice::findFirstSupportedFormatInternal(
     else if (vkImageTilingMode == VK_IMAGE_TILING_LINEAR) {
         for (size_t i = 0; i < numFormats; ++i) {
             const VkFormat format = pFormats[i];
-            VkFormatProperties formatProps;
+            VkFormatProperties formatProps = {};
             mVkFuncs.vkGetPhysicalDeviceFormatProperties(mVkPhysicalDevice, format, &formatProps);
 
             if ((formatProps.linearTilingFeatures & requiredVkFormatFeatureFlags) == requiredVkFormatFeatureFlags)

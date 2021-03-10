@@ -427,8 +427,12 @@ void init() noexcept {
         isPhysicalDeviceSuitable
     );
 
-    if (!gpPhysicalDevice)
-        FatalErrors::raise("Failed to find a suitable rendering device for use with Vulkan!");
+    if (!gpPhysicalDevice) {
+        FatalErrors::raise(
+            "Failed to find a suitable rendering device for use with Vulkan!\n"
+            "Set 'DisableVulkanRenderer' to '1' in 'graphics_cfg.ini' as a workaround if this error continues to occur."
+        );
+    }
 
     // Decide whether 16-bit color is possible, draw sample count and window/present surface format
     determine16BitColorSupport(*gpPhysicalDevice);
@@ -468,8 +472,12 @@ void init() noexcept {
     // Note: use the R16 UINT format as we will have to unpack in the shader depending on the PSX texture format being used.
     Gpu::Core& psxGpu = PsxVm::gGpu;
 
-    if (!gPsxVramTexture.initAs2dTexture(gDevice, VK_FORMAT_R16_UINT, psxGpu.ramPixelW, psxGpu.ramPixelH))
-        FatalErrors::raise("Failed to create a Vulkan texture for PSX VRAM!");
+    if (!gPsxVramTexture.initAs2dTexture(gDevice, VK_FORMAT_R16_UINT, psxGpu.ramPixelW, psxGpu.ramPixelH)) {
+        FatalErrors::raise(
+            "Failed to create a Vulkan texture for PSX VRAM!\n"
+            "Set 'DisableVulkanRenderer' to '1' in 'graphics_cfg.ini' as a workaround if this error continues to occur."
+        );
+    }
 
     {
         std::byte* const pBytes = gPsxVramTexture.lock();
