@@ -110,7 +110,9 @@ enum class DrawMode : uint8_t {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// GPU drawing primitives: rectangles, lines and triangles
+// GPU drawing primitives: rectangles, lines and triangles.
+// PsyDoom also adds new Doom specific GPU primitives, floor rows and wall columns to accelerate rendering.
+// These should produce similar results to standard triangles, but at a much lower cost.
 //----------------------------------------------------------------------------------------------------------------------
 struct DrawRect {
     int16_t     x;          // Position of rectangle: x
@@ -144,6 +146,29 @@ struct DrawTriangle {
     int16_t     u3;         // Triangle point 3: u texcoord
     int16_t     v3;         // Triangle point 3: v texcoord
     Color24F    color;      // Color to draw the triangle with
+};
+
+// New Doom specific primitive
+struct DrawFloorRow {
+    int16_t     y;          // Row y value
+    int16_t     x1;         // Row point 1: x
+    int16_t     u1;         // Row point 1: u texcoord
+    int16_t     v1;         // Row point 1: v texcoord
+    int16_t     x2;         // Row point 2: x
+    int16_t     u2;         // Row point 2: u texcoord
+    int16_t     v2;         // Row point 2: v texcoord
+    Color24F    color;      // Color to draw the row with
+};
+
+// New Doom specific primitive with a constant 'u' value
+struct DrawWallCol {
+    int16_t     x;          // Column x value
+    int16_t     u;          // Column u texcoord
+    int16_t     y1;         // Column point 1: y
+    int16_t     v1;         // Column point 1: v texcoord
+    int16_t     y2;         // Column point 2: y
+    int16_t     v2;         // Column point 2: v texcoord
+    Color24F    color;      // Color to draw the column with
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -213,5 +238,11 @@ void draw(Core& core, const DrawLine& line) noexcept;
 
 template <DrawMode DrawMode>
 void draw(Core& core, const DrawTriangle& triangle) noexcept;
+
+template <DrawMode DrawMode>
+void draw(Core& core, const DrawFloorRow& row) noexcept;
+
+template <DrawMode DrawMode>
+void draw(Core& core, const DrawWallCol& col) noexcept;
 
 END_NAMESPACE(Gpu)

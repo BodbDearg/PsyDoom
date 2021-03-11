@@ -162,7 +162,7 @@ void submit(const SPRT& sprite) noexcept {
 
     // Setup the rectangle to be drawn then submit to the GPU
     const bool bColorSprite = ((sprite.code & 0x1) == 0);
-    const bool bBlendSprite = sprite.code & 0x2;
+    const bool bBlendSprite = (sprite.code & 0x2);
 
     Gpu::DrawRect drawRect = {};
     drawRect.x = sprite.x0;
@@ -290,7 +290,8 @@ void submit(const LINE_F2& line) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Handle a command to draw a flat shaded and textured polygon
+// Handle a command to draw a flat shaded and textured triangle.
+// Note: this function does not support pass-through to the Vulkan renderer; it's not needed since it's just ussed by the Classic renderer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void submit(const POLY_FT3& poly) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
@@ -301,7 +302,7 @@ void submit(const POLY_FT3& poly) noexcept {
 
     // Setup the triangle to be drawn then submit to the GPU
     const bool bColorPoly = ((poly.code & 0x1) == 0);
-    const bool bBlendPoly = poly.code & 0x2;
+    const bool bBlendPoly = (poly.code & 0x2);
 
     Gpu::DrawTriangle drawTri = {};
     drawTri.x1 = poly.x0;
@@ -335,7 +336,7 @@ void submit(const POLY_F4& poly) noexcept {
 
     // Setup the triangles to be drawn then submit to the GPU
     const bool bColorPoly = ((poly.code & 0x1) == 0);
-    const bool bBlendPoly = poly.code & 0x2;
+    const bool bBlendPoly = (poly.code & 0x2);
 
     const uint8_t r = (bColorPoly) ? poly.r0 : 128;     // Note: '128' is '1.0' or full strength color if we don't want to modulate
     const uint8_t g = (bColorPoly) ? poly.g0 : 128;
@@ -408,7 +409,7 @@ void submit(const POLY_FT4& poly) noexcept {
 
     // Setup the triangles to be drawn then submit to the GPU
     const bool bColorPoly = ((poly.code & 0x1) == 0);
-    const bool bBlendPoly = poly.code & 0x2;
+    const bool bBlendPoly = (poly.code & 0x2);
 
     const uint8_t r = (bColorPoly) ? poly.r0 : 128;     // Note: '128' is '1.0' or full strength color if we don't want to modulate
     const uint8_t g = (bColorPoly) ? poly.g0 : 128;
@@ -495,6 +496,73 @@ void submit(const POLY_FT4& poly) noexcept {
     } else {
         Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawTri1);
         Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawTri2);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Handle a command to draw a textured row of Doom floor pixels.
+// Note: this function does not support pass-through to the Vulkan renderer; it's not needed since it's just ussed by the Classic renderer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void submit(const FLOORROW_FT& row) noexcept {
+    Gpu::Core& gpu = PsxVm::gGpu;
+
+    // Set texture page and format, and the CLUT to use
+    setGpuTexPageId(row.tpage);
+    setGpuClutId(row.clut);
+
+    // Setup the row to be drawn then submit to the GPU
+    const bool bColorRow = ((row.code & 0x1) == 0);
+    const bool bBlendRow = (row.code & 0x2);
+
+    Gpu::DrawFloorRow drawRow = {};
+    drawRow.x1 = row.x0;
+    drawRow.x2 = row.x1;
+    drawRow.y = row.y0;
+    drawRow.u1 = row.u0;
+    drawRow.v1 = row.v0;
+    drawRow.u2 = row.u1;
+    drawRow.v2 = row.v1;
+    drawRow.color.comp.r = (bColorRow) ? row.r0 : 128;   // Note: '128' is '1.0' or full strength color if we don't want to modulate
+    drawRow.color.comp.g = (bColorRow) ? row.g0 : 128;
+    drawRow.color.comp.b = (bColorRow) ? row.b0 : 128;
+
+    if (bBlendRow) {
+        Gpu::draw<Gpu::DrawMode::TexturedBlended>(gpu, drawRow);
+    } else {
+        Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawRow);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Handle a command to draw a textured column of Doom wall pixels.
+// Note: this function does not support pass-through to the Vulkan renderer; it's not needed since it's just ussed by the Classic renderer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void submit(const WALLCOL_FT& col) noexcept {
+    Gpu::Core& gpu = PsxVm::gGpu;
+
+    // Set texture page and format, and the CLUT to use
+    setGpuTexPageId(col.tpage);
+    setGpuClutId(col.clut);
+
+    // Setup the column to be drawn then submit to the GPU
+    const bool bColorCol = ((col.code & 0x1) == 0);
+    const bool bBlendCol = (col.code & 0x2);
+
+    Gpu::DrawWallCol drawCol = {};
+    drawCol.y1 = col.y0;
+    drawCol.y2 = col.y1;
+    drawCol.x = col.x0;
+    drawCol.u = col.u0;
+    drawCol.v1 = col.v0;
+    drawCol.v2 = col.v1;
+    drawCol.color.comp.r = (bColorCol) ? col.r0 : 128;   // Note: '128' is '1.0' or full strength color if we don't want to modulate
+    drawCol.color.comp.g = (bColorCol) ? col.g0 : 128;
+    drawCol.color.comp.b = (bColorCol) ? col.b0 : 128;
+
+    if (bBlendCol) {
+        Gpu::draw<Gpu::DrawMode::TexturedBlended>(gpu, drawCol);
+    } else {
+        Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawCol);
     }
 }
 

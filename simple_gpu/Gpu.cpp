@@ -667,4 +667,250 @@ template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawTriangle&
 template void draw<DrawMode::Textured>(Core& core, const DrawTriangle& triangle) noexcept;
 template void draw<DrawMode::TexturedBlended>(Core& core, const DrawTriangle& triangle) noexcept;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws a single row of Doom floor pixels; texture format is assumed to be 8bpp.
+// This is a new primitive added to help accelerate the classic renderer for PsyDoom.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <DrawMode DrawMode>
+void draw(Core& core, const DrawFloorRow& row) noexcept {
+    sanityCheckGpuDrawState(core);
+
+    // Apply the draw offset to the row coordinates
+    const int16_t drawOffsetX = core.drawOffsetX;
+    const int16_t drawOffsetY = core.drawOffsetY;
+    const int32_t p1x = row.x1 + drawOffsetX;
+    const int32_t p2x = row.x2 + drawOffsetX;
+    const int32_t py = row.y + drawOffsetY;
+
+    // Get the minimum and maximum values of the row, and the swap the uvs if required
+    float u1, u2, v1, v2;
+    int32_t minX, maxX;
+
+    if (p1x < p2x) {
+        u1 = row.u1;    u2 = row.u2;
+        v1 = row.v1;    v2 = row.v2;
+        minX = p1x;     maxX = p2x;
+    } else {
+        u1 = row.u2;    u2 = row.u1;
+        v1 = row.v2;    v2 = row.v1;
+        minX = p2x;     maxX = p1x;
+    }
+
+    // Compute how much of the row will be rasterized; similar to triangles the last column is NOT drawn
+    const int32_t xrange = maxX - minX;
+    const int32_t lx = std::max((int32_t) core.drawAreaLx, minX);
+    const int32_t rx = std::min((int32_t) core.drawAreaRx, maxX - 1);
+    
+    // Compute the step in 't', the percentage along the line (used for interpolation of the uvs)
+    const float tStep = 1.0f / (float) xrange;
+
+    // Also similar to triangles, skip the row if the distances between the vertices exceed 1023 on the x dimension.
+    // Also skip if the row itself is outside the draw area.
+    if ((xrange >= 1024) || (py < core.drawAreaTy) || (py > core.drawAreaBy))
+        return;
+
+    // If we're going to draw textured and with a CLUT make sure it is up to date
+    if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+        updateClutCache(core);
+    }
+
+    // If we are in flat colored mode then decide the foreground color for every pixel in the row
+    const Color24F rowColor = row.color;
+    Color16 fgColor;
+
+    if constexpr ((DrawMode == DrawMode::FlatColored) || (DrawMode == DrawMode::FlatColoredBlended)) {
+        fgColor = color24FTo16(rowColor);
+    }
+
+    // Cache some GPU RAM related params
+    const uint16_t vramPixelW = core.ramPixelW;
+    const uint16_t vramXMask = core.ramXMask;
+    const uint16_t vramYMask = core.ramYMask;
+    uint16_t* const pVram = core.pRam;
+
+    // Process each pixel in the line being rasterized
+    float t = (0.5f + (float) lx - minX) * tStep;
+    float tinv = 1.0f - t;
+
+    uint16_t* pDstPixelRow = pVram + py * vramPixelW;
+
+    for (int32_t x = lx; x <= rx; ++x) {
+        // Compute the texture coordinate to use
+        const uint16_t u = (uint16_t)(u1 * tinv + u2 * t);
+        const uint16_t v = (uint16_t)(v1 * tinv + v2 * t);
+
+        // Step these to the next pixel
+        t += tStep;
+        tinv -= tStep;
+
+        // Get the foreground color for the row pixel if the row is textured.
+        // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
+        if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+            // Figure out the VRAM coordinates to read the VRAM pixel from
+            uint16_t vramX = u & core.texWinXMask;
+            uint16_t vramY = v & core.texWinYMask;
+            vramX += core.texWinX;
+            vramY += core.texWinY;
+            vramX /= 2;
+            vramX &= core.texPageXMask;
+            vramY &= core.texPageYMask;
+            vramX += core.texPageX;
+            vramY += core.texPageY;
+
+            // Read the VRAM pixel and lookup the actual texel using the clut index
+            const uint16_t vramPixel = pVram[(vramY & vramYMask) * vramPixelW + (vramX & vramXMask)];
+            const uint16_t clutIdx = (vramPixel >> ((u & 1) * 8)) & 0xFF;
+            fgColor = core.clutCache[clutIdx];
+
+            // Discard the texel if fully transparent, otherwise color multiply
+            if (fgColor.bits == 0)
+                continue;
+
+            fgColor = colorMul(fgColor, rowColor);
+        }
+
+        // Do blending with the background if that is enabled
+        uint16_t& dstPixel = pDstPixelRow[x];
+
+        if constexpr ((DrawMode == DrawMode::FlatColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
+            const Color16 bgColor = dstPixel;
+            fgColor = colorBlend(bgColor, fgColor, core.blendMode);
+        }
+
+        // Save the output pixel and step to the next pixel
+        dstPixel = fgColor;
+    }
+}
+
+// Instantiate the variants of this function
+template void draw<DrawMode::FlatColored>(Core& core, const DrawFloorRow& row) noexcept;
+template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawFloorRow& row) noexcept;
+template void draw<DrawMode::Textured>(Core& core, const DrawFloorRow& row) noexcept;
+template void draw<DrawMode::TexturedBlended>(Core& core, const DrawFloorRow& row) noexcept;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws a single column of Doom wall pixels; texture format is assumed to be 8bpp.
+// This is a new primitive added to help accelerate the classic renderer for PsyDoom.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <DrawMode DrawMode>
+void draw(Core& core, const DrawWallCol& col) noexcept {
+    sanityCheckGpuDrawState(core);
+
+    // Apply the draw offset to the column coordinates
+    const int16_t drawOffsetX = core.drawOffsetX;
+    const int16_t drawOffsetY = core.drawOffsetY;
+    const int32_t px = col.x + drawOffsetX;
+    const int32_t p1y = col.y1 + drawOffsetY;
+    const int32_t p2y = col.y2 + drawOffsetY;
+
+    // Get the minimum and maximum values of the column, and the swap the uvs if required
+    float v1, v2;
+    int32_t minY, maxY;
+
+    if (p1y < p2y) {
+        v1 = col.v1;    v2 = col.v2;
+        minY = p1y;     maxY = p2y;
+    } else {
+        v1 = col.v2;    v2 = col.v1;
+        minY = p2y;     maxY = p1y;
+    }
+
+    // Compute how much of the column will be rasterized; similar to triangles the last row is NOT drawn
+    const int32_t yrange = maxY - minY;
+    const int32_t ty = std::max((int32_t) core.drawAreaTy, minY);
+    const int32_t by = std::min((int32_t) core.drawAreaBy, maxY - 1);
+
+    // Compute the step in 't', the percentage along the line (used for interpolation of the uvs)
+    const float tStep = 1.0f / (float) yrange;
+
+    // Also similar to triangles, skip the column if the distances between the vertices exceed 511 on the y dimension.
+    // Also skip if the column itself is outside the draw area.
+    if ((yrange >= 512) || (px < core.drawAreaLx) || (px > core.drawAreaRx))
+        return;
+
+    // If we're going to draw textured and with a CLUT make sure it is up to date
+    if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+        updateClutCache(core);
+    }
+
+    // If we are in flat colored mode then decide the foreground color for every pixel in the column
+    const Color24F colColor = col.color;
+    Color16 fgColor;
+
+    if constexpr ((DrawMode == DrawMode::FlatColored) || (DrawMode == DrawMode::FlatColoredBlended)) {
+        fgColor = color24FTo16(colColor);
+    }
+
+    // Cache some GPU RAM related params
+    const uint16_t vramPixelW = core.ramPixelW;
+    uint16_t* const pVram = core.pRam;
+
+    // Pre-compute the 'x' coordinate in VRAM to read for the texture since 'u' is constant
+    const uint32_t u = col.u;
+    uint16_t texVramX;
+
+    if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+        texVramX = col.u & core.texWinXMask;
+        texVramX += core.texWinX;
+        texVramX /= 2;
+        texVramX &= core.texPageXMask;
+        texVramX += core.texPageX;
+        texVramX &= core.ramXMask;
+    }
+
+    // Process each pixel in the line being rasterized
+    float t = (0.5f + (float) ty - minY) * tStep;
+    float tinv = 1.0f - t;
+
+    uint16_t* pDstPixelCol = core.pRam + px;
+
+    for (int32_t y = ty; y <= by; ++y) {
+        // Compute the 'v' texture coordinate to use
+        const uint16_t v = (uint16_t)(v1 * tinv + v2 * t);
+
+        // Step these to the next pixel
+        t += tStep;
+        tinv -= tStep;
+
+        // Get the foreground color for the column pixel if the column is textured.
+        // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
+        if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+            // Figure out the VRAM coordinates to read the VRAM pixel from
+            uint16_t vramY = v & core.texWinYMask;
+            vramY += core.texWinY;
+            vramY &= core.texPageYMask;
+            vramY += core.texPageY;
+            vramY &= core.ramYMask;
+
+            // Read the VRAM pixel and lookup the actual texel using the clut index
+            const uint16_t vramPixel = pVram[vramY * vramPixelW + texVramX];
+            const uint16_t clutIdx = (vramPixel >> ((u & 1) * 8)) & 0xFF;
+            fgColor = core.clutCache[clutIdx];
+
+            // Discard the texel if fully transparent, otherwise color multiply
+            if (fgColor.bits == 0)
+                continue;
+
+            fgColor = colorMul(fgColor, colColor);
+        }
+
+        // Do blending with the background if that is enabled
+        uint16_t& dstPixel = pDstPixelCol[y * vramPixelW];
+
+        if constexpr ((DrawMode == DrawMode::FlatColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
+            const Color16 bgColor = dstPixel;
+            fgColor = colorBlend(bgColor, fgColor, core.blendMode);
+        }
+
+        // Save the output pixel and step to the next pixel
+        dstPixel = fgColor;
+    }
+}
+
+// Instantiate the variants of this function
+template void draw<DrawMode::FlatColored>(Core& core, const DrawWallCol& col) noexcept;
+template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawWallCol& col) noexcept;
+template void draw<DrawMode::Textured>(Core& core, const DrawWallCol& col) noexcept;
+template void draw<DrawMode::TexturedBlended>(Core& core, const DrawWallCol& col) noexcept;
+
 END_NAMESPACE(Gpu)

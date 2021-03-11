@@ -157,6 +157,43 @@ struct SPRT_8 {
     int16_t     clut;       // Which CLUT to use for color indexing
 };
 
+#if PSYDOOM_MODS
+    // New for PsyDoom: a flat shaded textured row of Doom floor pixels.
+    // This is used to accelerate the classic renderer and simplify the operations the GPU has to perform.
+    struct FLOORROW_FT {
+        uint8_t     r0;         // Color to shade the primitive with
+        uint8_t     g0;
+        uint8_t     b0;
+        uint8_t     code;       // Type info for the hardware
+        int16_t     x0;         // The 'x' position of the row vertices and the row 'y' value
+        int16_t     x1;
+        int16_t     y0;
+        uint16_t    clut;       // Color lookup table id for 4/8-bit textures
+        uint16_t    tpage;      // Texture page id
+        LibGpuUV    u0;         // Texture coords for vertex 1 and 2
+        LibGpuUV    v0;
+        LibGpuUV    u1;
+        LibGpuUV    v1;
+    };
+
+    // New for PsyDoom: a flat shaded textured column of Doom wall pixels.
+    // This is used to accelerate the classic renderer and simplify the operations the GPU has to perform.
+    struct WALLCOL_FT {
+        uint8_t     r0;         // Color to shade the primitive with
+        uint8_t     g0;
+        uint8_t     b0;
+        uint8_t     code;       // Type info for the hardware
+        int16_t     y0;         // The 'y' position of the column vertices and the column 'x' value
+        int16_t     y1;
+        int16_t     x0;
+        uint16_t    clut;       // Color lookup table id for 4/8-bit textures
+        uint16_t    tpage;      // Texture page id
+        LibGpuUV    u0;         // Constant 'u' texture coord and 'v' texture coords for vertex 1 and 2
+        LibGpuUV    v0;
+        LibGpuUV    v1;
+    };
+#endif
+
 // Drawing primitive: modify the current draw mode
 struct DR_MODE {
     uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive (PsyDoom: these fields are not needed anymore & ignored)
@@ -241,6 +278,12 @@ void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept;
 void LIBGPU_SetSprt8(SPRT_8& sprite) noexcept;
 void LIBGPU_SetSprt(SPRT & sprt) noexcept;
 void LIBGPU_SetLineF2(LINE_F2& line) noexcept;
+
+#if PSYDOOM_MODS
+    void LIBGPU_SetFloorRowFT(FLOORROW_FT& row) noexcept;
+    void LIBGPU_SetWallColFT(WALLCOL_FT& col) noexcept;
+#endif
+
 void LIBGPU_SetDumpFnt(const int32_t printStreamId) noexcept;
 void LIBGPU_FntLoad(const int32_t dstX, const int32_t dstY) noexcept;
 

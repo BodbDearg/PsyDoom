@@ -38,3 +38,11 @@ inline void I_AddPrim(const POLY_F4& poly) noexcept {
 inline void I_AddPrim(const POLY_FT4& poly) noexcept {
     LIBGPU_CmdDispatch::submit(poly);
 }
+
+inline void I_AddPrim(const FLOORROW_FT& row) noexcept {
+    LIBGPU_CmdDispatch::submit(row);
+}
+
+inline void I_AddPrim(const WALLCOL_FT& col) noexcept {
+    LIBGPU_CmdDispatch::submit(col);
+}

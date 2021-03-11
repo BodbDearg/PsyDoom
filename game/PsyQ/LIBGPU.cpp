@@ -430,6 +430,24 @@ void LIBGPU_SetLineF2(LINE_F2& line) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the specified primitive as a flat shaded and textured Doom floor row
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetFloorRowFT(FLOORROW_FT& row) noexcept {
+    // Note: don't care about the 'primitive id' element of the code here, just want to disable blending and enable coloring by default.
+    // This is because draw primitives are no longer saved in buffers, they get dispatched simply based on their C++ type which is known beforehand at compile time.
+    row.code = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the specified primitive as a flat shaded and textured Doom wall column
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetWallColFT(WALLCOL_FT& col) noexcept {
+    // Note: don't care about the 'primitive id' element of the code here, just want to disable blending and enable coloring by default.
+    // This is because draw primitives are no longer saved in buffers, they get dispatched simply based on their C++ type which is known beforehand at compile time.
+    col.code = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Set which print stream to use for debug printing.
 // Note: for this re-implementation of LIBGPU multiple debug print streams are NOT supported, therfore this call is ignored.
 //------------------------------------------------------------------------------------------------------------------------------------------

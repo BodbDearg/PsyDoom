@@ -281,15 +281,17 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
 
     // Fill in the parts of the draw primitive that are common to all flat spans
     #if PSYDOOM_MODS
-        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
-        POLY_FT3 polyPrim = {};
+        // PsyDoom: switched this to the new 'floor row' drawing primitive supported by PsyDoom's enhanced GPU - this performs better and with similar results.
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state.
+        FLOORROW_FT drawPrim = {};
+        LIBGPU_SetFloorRowFT(drawPrim);
     #else
-        POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
+        POLY_FT3& drawPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
+        LIBGPU_SetPolyFT3(drawPrim);
     #endif
 
-    LIBGPU_SetPolyFT3(polyPrim);
-    polyPrim.clut = g3dViewPaletteClutId;
-    polyPrim.tpage = tex.texPageId;
+    drawPrim.clut = g3dViewPaletteClutId;
+    drawPrim.tpage = tex.texPageId;
 
     // Draw all of the horizontal spans in the flat
     const span_t* pSpan = &gFlatSpans[planeBegY];
@@ -402,7 +404,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 b = gCurLightValB;
             }
 
-            LIBGPU_setRGB0(polyPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
+            LIBGPU_setRGB0(drawPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
         }
 
         // Determine how many span segments we will have to draw, minus 1.
@@ -413,43 +415,64 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         //
         // First of all check if if we have hit the limit, and need to split up the span into multiple pieces:
         int32_t numSpanPieces = 0;
-        
-        if ((spanUL > TEXCOORD_MAX) || (spanUR > TEXCOORD_MAX) || (spanVL > TEXCOORD_MAX) || (spanVR > TEXCOORD_MAX)) {
-            // It looks like we are going to need more than 1 span segment given the texture coordinates exceed the max possible by the hardware.
-            // Determine how much of the texture we are going to display across the span.
-            int32_t spanUSize = spanUR - spanUL;
-            int32_t spanVSize = spanVR - spanVL;
-            if (spanUSize < 0) { spanUSize = -spanUSize; }
-            if (spanVSize < 0) { spanVSize = -spanVSize; }
 
-            // Determine the number of span pieces we would need based on the u and v range pick the largest figure.
-            // The code here appears to be conservative and limits the max u & v range of each span piece to 128 units, well below the maximum of 256.
-            const uint32_t numUPieces = (uint32_t) spanUSize >> 7;
-            const uint32_t numVPieces = (uint32_t) spanVSize >> 7;
+        // PsyDoom: optimization, if we are using 16-bit UVs and using the floor render gap fix then we can always draw everything in one go.
+        // Otherwise emulate the old slightly more artifact prone behavior...
+        #if PSYDOOM_LIMIT_REMOVING
+            const bool bNeedToCheckForSpanSplits = (!bFixFloorGaps);
+        #else
+            const bool bNeedToCheckForSpanSplits = true;
+        #endif
 
-            if (numUPieces > numVPieces) {
-                numSpanPieces = numUPieces;
-            } else {
-                numSpanPieces = numVPieces;
+        if (bNeedToCheckForSpanSplits) {
+            if ((spanUL > TEXCOORD_MAX) || (spanUR > TEXCOORD_MAX) || (spanVL > TEXCOORD_MAX) || (spanVR > TEXCOORD_MAX)) {
+                // It looks like we are going to need more than 1 span segment given the texture coordinates exceed the max possible by the hardware.
+                // Determine how much of the texture we are going to display across the span.
+                int32_t spanUSize = spanUR - spanUL;
+                int32_t spanVSize = spanVR - spanVL;
+                if (spanUSize < 0) { spanUSize = -spanUSize; }
+                if (spanVSize < 0) { spanVSize = -spanVSize; }
+
+                // Determine the number of span pieces we would need based on the u and v range pick the largest figure.
+                // The code here appears to be conservative and limits the max u & v range of each span piece to 128 units, well below the maximum of 256.
+                const uint32_t numUPieces = (uint32_t) spanUSize >> 7;
+                const uint32_t numVPieces = (uint32_t) spanVSize >> 7;
+
+                if (numUPieces > numVPieces) {
+                    numSpanPieces = numUPieces;
+                } else {
+                    numSpanPieces = numVPieces;
+                }
             }
         }
 
         // Draw the flat span piece(s)
         if (numSpanPieces == 0) {
-            // Easy case - we can draw the entire flat span with a single polygon primitive
-            LIBGPU_setXY3(polyPrim,
-                (int16_t) spanL, (int16_t) spanY,
-                (int16_t) spanR, (int16_t) spanY,
-                (int16_t) spanR, (int16_t) spanY + 1
-            );
+            // Easy case - we can draw the entire flat span with a single polygon primitive.
+            // PsyDoom: now drawing this with the new GPU 'floor row' primitive instead of a polygon for better performance.
+            #if PSYDOOM_MODS
+                drawPrim.x0 = (int16_t) spanL;
+                drawPrim.x1 = (int16_t) spanR;
+                drawPrim.y0 = (int16_t) spanY;
+                drawPrim.u0 = (LibGpuUV) spanUL;
+                drawPrim.v0 = (LibGpuUV) spanVL;
+                drawPrim.u1 = (LibGpuUV) spanUR;
+                drawPrim.v1 = (LibGpuUV) spanVR;
+            #else
+                LIBGPU_setXY3(drawPrim,
+                    (int16_t) spanL, (int16_t) spanY,
+                    (int16_t) spanR, (int16_t) spanY,
+                    (int16_t) spanR, (int16_t) spanY + 1
+                );
 
-            LIBGPU_setUV3(polyPrim,
-                (uint8_t) spanUL, (uint8_t) spanVL,
-                (uint8_t) spanUR, (uint8_t) spanVR,
-                (uint8_t) spanUR, (uint8_t) spanVR
-            );
+                LIBGPU_setUV3(drawPrim,
+                    (uint8_t) spanUL, (uint8_t) spanVL,
+                    (uint8_t) spanUR, (uint8_t) spanVR,
+                    (uint8_t) spanUR, (uint8_t) spanVR
+                );
+            #endif
             
-            I_AddPrim(polyPrim);
+            I_AddPrim(drawPrim);
         } else {
             // Harder case: we must split up the flat span and issue multiple primitives.
             // Note also, the piece count is minus 1 so increment here now to get the true amount:
@@ -476,8 +499,10 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 spanUR = spanUL + uStep;
                 spanVR = spanVL + vStep;
 
-                // PsyDoom: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'
-                #if PSYDOOM_MODS
+                // PsyDoom: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
+                // This is only neccessary if we are not doing limit removing and don't have 16-bit uvs.
+                // If we have 16-bit uvs then we can just draw the whole thing in go all of the time.
+                #if PSYDOOM_MODS && !PSYDOOM_LIMIT_REMOVING
                     if (bFixFloorGaps) {
                         if (pieceIdx + 1 >= numSpanPieces) {
                             spanR = origSpanR;
@@ -518,20 +543,31 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 }
 
                 // Setup the rest of the drawing primitive and draw the span
-                LIBGPU_setXY3(polyPrim,
-                    (int16_t) spanL, (int16_t) spanY,
-                    (int16_t) spanR, (int16_t) spanY,
-                    (int16_t) spanR, (int16_t) spanY + 1
-                );
+                // PsyDoom: now drawing this with the new GPU 'floor row' primitive instead of a polygon for better performance.
+                #if PSYDOOM_MODS
+                    drawPrim.x0 = (int16_t) spanL;
+                    drawPrim.x1 = (int16_t) spanR;
+                    drawPrim.y0 = (int16_t) spanY;
+                    drawPrim.u0 = (LibGpuUV) spanUL;
+                    drawPrim.v0 = (LibGpuUV) spanVL;
+                    drawPrim.u1 = (LibGpuUV) spanUR;
+                    drawPrim.v1 = (LibGpuUV) spanVR;
+                #else
+                    LIBGPU_setXY3(drawPrim,
+                        (int16_t) spanL, (int16_t) spanY,
+                        (int16_t) spanR, (int16_t) spanY,
+                        (int16_t) spanR, (int16_t) spanY + 1
+                    );
 
-                LIBGPU_setUV3(polyPrim,
-                    (uint8_t) spanUL, (uint8_t) spanVL,
-                    (uint8_t) spanUR, (uint8_t) spanVR,
-                    (uint8_t) spanUR, (uint8_t) spanVR
-                );
-                
-                I_AddPrim(polyPrim);
-                
+                    LIBGPU_setUV3(drawPrim,
+                        (uint8_t) spanUL, (uint8_t) spanVL,
+                        (uint8_t) spanUR, (uint8_t) spanVR,
+                        (uint8_t) spanUR, (uint8_t) spanVR
+                    );
+                #endif
+
+                I_AddPrim(drawPrim);
+
                 // Move coords onto the next span.
                 // Note that the previous wrapping operation (if any) is also undone here.
                 spanL = spanR;

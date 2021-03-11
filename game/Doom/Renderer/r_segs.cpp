@@ -250,20 +250,21 @@ void R_DrawWallPiece(
 
     // Initialization of the flat shaded textured triangle drawing primitive
     #if PSYDOOM_MODS
-        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
-        POLY_FT3 polyPrim = {};
+        // PsyDoom: switched this to the new 'wall column' drawing primitive supported by PsyDoom's enhanced GPU - this performs better and with similar results.
+        // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state.
+        WALLCOL_FT drawPrim = {};
+        LIBGPU_SetWallColFT(drawPrim);
     #else
-        POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
+        POLY_FT3& drawPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
+        LIBGPU_SetPolyFT3(drawPrim);
     #endif
 
-    LIBGPU_SetPolyFT3(polyPrim);
-        
     if (bTransparent) {
-        LIBGPU_SetSemiTrans(polyPrim, true);
+        LIBGPU_SetSemiTrans(drawPrim, true);
     }
 
-    polyPrim.clut = g3dViewPaletteClutId;
-    polyPrim.tpage = tex.texPageId;
+    drawPrim.clut = g3dViewPaletteClutId;
+    drawPrim.tpage = tex.texPageId;
 
     // Compute scale and y coordinate step per wall column
     const fixed_t dscale = vert2.scale - vert1.scale;
@@ -450,22 +451,32 @@ void R_DrawWallPiece(
                 b = gCurLightValB;
             }
 
-            // Finally populate the triangle for the wall column and draw
-            LIBGPU_setRGB0(polyPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
+            // Finally populate the triangle for the wall column and draw.
+            // PsyDoom: now drawing this with the new GPU 'wall column' primitive instead of a polygon for better performance.
+            LIBGPU_setRGB0(drawPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
 
-            LIBGPU_setUV3(polyPrim,
-                (LibGpuUV) uCur, (LibGpuUV) vtCur,
-                (LibGpuUV) uCur, (LibGpuUV) vbCur,
-                (LibGpuUV) uCur, (LibGpuUV) vbCur
-            );
+            #if PSYDOOM_MODS
+                drawPrim.u0 = (LibGpuUV) uCur;
+                drawPrim.v0 = (LibGpuUV) vtCur;
+                drawPrim.v1 = (LibGpuUV) vbCur;
+                drawPrim.x0 = (int16_t)(xCur);
+                drawPrim.y0 = (int16_t)(ytCur - 1);
+                drawPrim.y1 = (int16_t)(ybCur + 1);
+            #else
+                LIBGPU_setUV3(drawPrim,
+                    (LibGpuUV) uCur, (LibGpuUV) vtCur,
+                    (LibGpuUV) uCur, (LibGpuUV) vbCur,
+                    (LibGpuUV) uCur, (LibGpuUV) vbCur
+                );
 
-            LIBGPU_setXY3(polyPrim,
-                (int16_t) xCur,     (int16_t) ytCur - 1,
-                (int16_t) xCur + 1, (int16_t) ybCur + 1,
-                (int16_t) xCur,     (int16_t) ybCur + 1
-            );
+                LIBGPU_setXY3(drawPrim,
+                    (int16_t)(xCur),     (int16_t)(ytCur - 1),
+                    (int16_t)(xCur + 1), (int16_t)(ybCur + 1),
+                    (int16_t)(xCur),     (int16_t)(ybCur + 1)
+                );
+            #endif
 
-            I_AddPrim(polyPrim);
+            I_AddPrim(drawPrim);
         }
 
         ++xCur;
