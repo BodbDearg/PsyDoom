@@ -2,12 +2,14 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/p_setup.h"
+#include "PcPsx/Config.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_local.h"
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_segs.h"
+#include "r_sky.h"
 #include "r_things.h"
 
 // The maximum number of new vertices that can be added to leafs by clipping operations.
@@ -138,6 +140,22 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     // This is useful for when working with edges as it saves checks!
     leaf_t& drawleaf = pLeafs[curLeafIdx];
     drawleaf.edges[drawleaf.numEdges] = drawleaf.edges[0];
+
+    // PsyDoom limit removing Classic renderer extension.
+    // Draw sky walls for leaf edges with associated segs if the ceiling is sky and the 'sky leak fix' is enabled.
+    #if PSYDOOM_LIMIT_REMOVING
+        if ((subsec.sector->ceilingpic == -1) && Config::gbSkyLeakFix) {
+            leafedge_t* pEdge = drawleaf.edges;
+        
+            for (int32_t edgeIdx = 0; edgeIdx < drawleaf.numEdges; ++edgeIdx, ++pEdge) {
+                seg_t* const pSeg = pEdge->seg;
+                
+                if (pSeg) {
+                    R_DrawSkySegWalls(subsec, *pEdge);
+                }
+            }
+        }
+    #endif
     
     // Draw the walls for all visible edges in the leaf
     {

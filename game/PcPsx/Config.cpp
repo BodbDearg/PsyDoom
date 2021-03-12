@@ -73,6 +73,7 @@ int32_t     gAAMultisamples;
 int32_t     gTopOverscanPixels;
 int32_t     gBottomOverscanPixels;
 bool        gbFloorRenderGapFix;
+bool        gbSkyLeakFix;
 bool        gbUseVulkan32BitShading;
 
 static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
@@ -275,6 +276,22 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
         []() { gbFloorRenderGapFix = true; }
+    },
+    {
+        "SkyLeakFix",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Classic renderer only: enable a limit removing feature that fixes ceilings and walls sometimes\n"
+        "# poking through the sky if sectors beyond the sky have higher ceilings. This isn't really much of\n"
+        "# an issue for the original retail maps but may frustrate the design of user maps if not fixed.\n"
+        "#\n"
+        "# Notes:\n"
+        "#  (1) The Vulkan renderer has this fix always enabled.\n"
+        "#  (2) Enabling this setting will reduce performance in Classic renderer mode due to extra sky\n"
+        "#      wall columns that must be drawn to patch over 'leaks' from rooms beyond.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbSkyLeakFix = iniEntry.getBoolValue(true); },
+        []() { gbSkyLeakFix = true; }
     },
 };
 

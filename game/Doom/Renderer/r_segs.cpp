@@ -75,7 +75,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             texture_t& tex = gpTextures[gpTextureTranslation[side.toptexture]];
             R_DrawWallPiece(edge, tex, fsec_ty, bsec_ty, vt, vb, false);
         }
-        
+
         // Do we need to render the lower wall? Do so if the floor raises...
         if (frontSec.floorheight < pBackSec->floorheight) {
             // Update mid texture lower bound: anything below this is lower wall
@@ -112,7 +112,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             }
 
             vb = vt + tex_h;
-            
+
             // Draw the columns of wall piece
             texture_t& tex = gpTextures[gpTextureTranslation[side.bottomtexture]];
             R_DrawWallPiece(edge, tex, bsec_by, fsec_by, vt, vb, false);
@@ -198,7 +198,7 @@ void R_DrawWallPiece(
     const int32_t vb,
     bool bTransparent
 ) noexcept {
-    // Firstly determine the x size of the seg onscreen: if zero or negative sized (back facing?) then ignore
+    // Firstly determine the x size of the leaf edge onscreen: if zero or negative sized (back facing?) then ignore
     const leafedge_t& nextEdge = (&edge)[1];
     const vertex_t& vert1 = *edge.vertex;
     const vertex_t& vert2 = *nextEdge.vertex;

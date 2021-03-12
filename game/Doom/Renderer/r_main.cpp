@@ -416,4 +416,27 @@ angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_
     return oldAngle + (angle_t) adjust;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// New for PsyDoom: check for a sector surrounding the given sector that has a sky or 'void' ceiling which also happens to be higher.
+// This is used by the Vulkan and limit extending Classic renderer to tell when to treat a sky ceiling as an implicit 'void' ceiling.
+// Void ceilings are a new concept introduced by PsyDoom and have a ceiling pic of less than -1.
+// When a void ceiling is encountered, nothing should be rendered there, which can be used to do floating platform type effects.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool R_HasHigherSurroundingSkyOrVoidCeiling(const sector_t& sector) noexcept {
+    const int32_t numLines = sector.linecount;
+    const line_t* const* const pLines = sector.lines;
+
+    for (int32_t lineIdx = 0; lineIdx < numLines; ++lineIdx) {
+        const line_t& line = *pLines[lineIdx];
+        const sector_t* pNextSector = (line.frontsector == &sector) ? line.backsector : line.frontsector;
+
+        if (pNextSector && (pNextSector->ceilingpic < 0)) {
+            if (pNextSector->ceilingheight > sector.ceilingheight)
+                return true;
+        }
+    }
+
+    return false;
+}
+
 #endif  // PSYDOOM_MODS

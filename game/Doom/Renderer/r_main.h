@@ -57,4 +57,5 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept;
     fixed_t R_CalcLerpFactor() noexcept;
     fixed_t R_LerpCoord(const fixed_t oldCoord, const fixed_t newCoord, const fixed_t mix) noexcept;
     angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_t mix) noexcept;
+    bool R_HasHigherSurroundingSkyOrVoidCeiling(const sector_t& sector) noexcept;
 #endif

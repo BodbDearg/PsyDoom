@@ -23,26 +23,6 @@
 static int32_t gNextSkyWallDrawSubsecIdx;       // Index of the next draw subsector to have its sky walls drawn
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Check for a sector surrounding the given sector which has both a sky or void ceiling and is higher
-//------------------------------------------------------------------------------------------------------------------------------------------
-static bool RV_HasHigherSurroundingSkyOrVoidCeiling(const sector_t& sector) noexcept {
-    const int32_t numLines = sector.linecount;
-    const line_t* const* const pLines = sector.lines;
-
-    for (int32_t lineIdx = 0; lineIdx < numLines; ++lineIdx) {
-        const line_t& line = *pLines[lineIdx];
-        const sector_t* pNextSector = (line.frontsector == &sector) ? line.backsector : line.frontsector;
-
-        if (pNextSector && (pNextSector->ceilingpic < 0)) {
-            if (pNextSector->ceilingheight > sector.ceilingheight)
-                return true;
-        }
-    }
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Draw a wall (upper, mid, lower) for a seg
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawWall(
@@ -350,7 +330,7 @@ static void RV_DrawSegBlended(
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec) noexcept {
     // This must only be called if the seg is in a sky sector!
-    ASSERT(seg.frontsector->ceilingpic == -1);
+    ASSERT(subsec.sector->ceilingpic == -1);
 
     // Skip the line segment if it's not visible at all or if it's back facing
     if ((seg.flags & SGF_VISIBLE_COLS) == 0)
@@ -393,7 +373,7 @@ static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec)
             // Hack special effect: treat the sky wall as a void (not to be rendered) to allow floating ceiling effects in certain situations.
             // If there is a higher surrounding sky or void ceiling then take that as an indication that this is not the true sky level and treat as a void.
             // In the "GEC Master Edition" this can be used to create things like floating cubes.
-            const bool bTreatAsVoidWall = RV_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
+            const bool bTreatAsVoidWall = R_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
             
             if (!bTreatAsVoidWall) {
                 RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);
