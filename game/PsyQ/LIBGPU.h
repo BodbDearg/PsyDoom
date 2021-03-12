@@ -342,6 +342,23 @@ void LIBGPU_SetShadeTex(PrimType& prim, const bool bDisableShading) noexcept {
     }
 }
 
+#if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom extension: set whether the drawing primitive discards pixels during texture mapping if all pixels are '0'.
+// This is a GPU extension which can be used to disable masking for things like the sky.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class PrimType>
+void LIBGPU_SetDisableMasking(PrimType& prim, const bool bDisable) noexcept {
+    if (bDisable) {
+        prim.code |= 0x80;
+    } else {
+        prim.code &= 0x7F;
+    }
+}
+
+#endif  // #if PSYDOOM_MODS
+
 // Set the color on a draw primitive
 template <class T>
 inline void LIBGPU_setRGB0(T& prim, const uint8_t r0, const uint8_t g0, const uint8_t b0) noexcept {

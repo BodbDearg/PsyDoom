@@ -134,6 +134,14 @@ void setGpuTexWin(const uint32_t texWin) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Set the GPU masking mode for the specified draw primitive
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class PrimT>
+void setGpuMaskingMode(const PrimT& prim) noexcept {
+    PsxVm::gGpu.bDisableMasking = (prim.code & 0x80);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Handle a command primitive to set the drawing mode: sets the texture page and window.
 // Originally this command would have also set the dithering and 'draw in display area' flag but both of those are no longer supported by
 // PsyDoom's new PSX GPU implementation, so we ignore those aspects of the command.
@@ -157,8 +165,9 @@ void submit(const DR_TWIN& texWin) noexcept {
 void submit(const SPRT& sprite) noexcept { 
     Gpu::Core& gpu = PsxVm::gGpu;
 
-    // Set the CLUT to use
+    // Set the CLUT to use and masking mode
     setGpuClutId(sprite.clut);
+    setGpuMaskingMode(sprite);
 
     // Setup the rectangle to be drawn then submit to the GPU
     const bool bColorSprite = ((sprite.code & 0x1) == 0);
@@ -296,9 +305,10 @@ void submit(const LINE_F2& line) noexcept {
 void submit(const POLY_FT3& poly) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
 
-    // Set texture page and format, and the CLUT to use
+    // Set texture page and format, the CLUT to use and masking mode
     setGpuTexPageId(poly.tpage);
     setGpuClutId(poly.clut);
+    setGpuMaskingMode(poly);
 
     // Setup the triangle to be drawn then submit to the GPU
     const bool bColorPoly = ((poly.code & 0x1) == 0);
@@ -403,9 +413,10 @@ void submit(const POLY_F4& poly) noexcept {
 void submit(const POLY_FT4& poly) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
 
-    // Set texture page and format, and the CLUT to use
+    // Set texture page and format, the CLUT to use and masking mode
     setGpuTexPageId(poly.tpage);
     setGpuClutId(poly.clut);
+    setGpuMaskingMode(poly);
 
     // Setup the triangles to be drawn then submit to the GPU
     const bool bColorPoly = ((poly.code & 0x1) == 0);
@@ -506,9 +517,10 @@ void submit(const POLY_FT4& poly) noexcept {
 void submit(const FLOORROW_FT& row) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
 
-    // Set texture page and format, and the CLUT to use
+    // Set texture page and format, the CLUT to use and masking mode
     setGpuTexPageId(row.tpage);
     setGpuClutId(row.clut);
+    setGpuMaskingMode(row);
 
     // Setup the row to be drawn then submit to the GPU
     const bool bColorRow = ((row.code & 0x1) == 0);
@@ -540,9 +552,10 @@ void submit(const FLOORROW_FT& row) noexcept {
 void submit(const WALLCOL_FT& col) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
 
-    // Set texture page and format, and the CLUT to use
+    // Set texture page and format, the CLUT to use and masking mode
     setGpuTexPageId(col.tpage);
     setGpuClutId(col.clut);
+    setGpuMaskingMode(col);
 
     // Setup the column to be drawn then submit to the GPU
     const bool bColorCol = ((col.code & 0x1) == 0);

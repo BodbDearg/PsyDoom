@@ -202,11 +202,12 @@ struct Core {
     TexFmt          texFmt;             // Current texture format in use
     uint16_t        clutX;              // X position of the current CLUT/color-index table in 16-bit VRAM pixels (CLUT is arranged in a row at this location)
     uint16_t        clutY;              // Y position of the current CLUT/color-index table in 16-bit VRAM pixels (CLUT is arranged in a row at this location)
+    bool            bDisableMasking;    // PSX GPU extension: disable pixel discard during texture mapping when all the texel bits are '0'?
 
     // CLUT cache to speed up texture mapping and the settings it was last saved with
+    TexFmt          clutCacheFmt;
     uint16_t        clutCacheX;
     uint16_t        clutCacheY;
-    TexFmt          clutCacheFmt;
     Color16         clutCache[256];
 };
 

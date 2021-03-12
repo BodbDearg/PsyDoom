@@ -48,6 +48,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     SPRT drawPrim = {};
     LIBGPU_SetSprt(drawPrim);
     LIBGPU_setRGB0(drawPrim, (uint8_t) 128, (uint8_t) 128, (uint8_t) 128);
+    LIBGPU_SetDisableMasking(drawPrim, true);
 
     drawPrim.clut =  gPaletteClutId_CurMapSky;
     drawPrim.y0 = 0;
@@ -155,6 +156,10 @@ void R_DrawSky() noexcept {
         // PsyDoom: I think the original UV calculations were not correct, because we've already set a texture window - coords should be relative to that.
         // It probably just always happened to work correctly in spite of this due to where the sky texture was located in VRAM.
         LIBGPU_setUV0(spr, (uint8_t)(-(gViewAngle >> ANGLETOSKYSHIFT)), 0);
+
+        // PsyDoom: also disable masking for this sprite, skies should always be fully opaque.
+        // This is required for the 'sky leak fix' to work correctly in some instances with the fire sky...
+        LIBGPU_SetDisableMasking(spr, true);
     #else
         LIBGPU_setUV0(spr, (uint8_t)(skytex.texPageCoordX - (gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
     #endif

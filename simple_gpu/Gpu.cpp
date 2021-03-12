@@ -63,6 +63,7 @@ void initCore(Core& core, const uint16_t ramPixelW, const uint16_t ramPixelH) no
     core.texFmt = TexFmt::Bpp16;
     core.clutX = 0;
     core.clutY = 240;
+    core.bDisableMasking = false;
 
     core.clutCacheX = UINT16_MAX;
     core.clutCacheY = UINT16_MAX;
@@ -354,6 +355,7 @@ static void draw(Core& core, const DrawRect& rect) noexcept {
     }
 
     // Fill in the rectangle pixels
+    const bool bEnableMasking = (!core.bDisableMasking);
     uint16_t curV = topLeftV;
 
     for (int16_t y = begY; y < endY; ++y, ++curV) {
@@ -361,11 +363,11 @@ static void draw(Core& core, const DrawRect& rect) noexcept {
 
         for (int16_t x = begX; x < endX; ++x, ++curU) {
             // Get the foreground color for the rectangle pixel if the rectangle is textured.
-            // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
+            // If the pixel is transparent and masking is enabled then also skip it, otherwise modulate it by the primitive color...
             if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
                 fgColor = readTexel<TexFmt>(core, curU, curV);
 
-                if (fgColor.bits == 0)
+                if ((fgColor.bits == 0) && bEnableMasking)
                     continue;
 
                 fgColor = colorMul(fgColor, rectColor);
@@ -586,6 +588,7 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
 
     // Process each pixel in the rectangular region being rasterized
     uint16_t* pDstPixelRow = core.pRam + ty * core.ramPixelW;
+    const bool bEnableMasking = (!core.bDisableMasking);
 
     for (int32_t y = ty; y <= by; ++y, pDstPixelRow += core.ramPixelW) {
         // The edge function for the current column starts off as the edge function for the row
@@ -619,11 +622,11 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
             const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 - 1.0f / 8192.0f);
 
             // Get the foreground color for the triangle pixel if the triangle is textured.
-            // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
+            // If the pixel is transparent and masking is enabled then also skip it, otherwise modulate it by the primitive color...
             if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
                 fgColor = readTexel<TexFmt>(core, u, v);
 
-                if (fgColor.bits == 0)
+                if ((fgColor.bits == 0) && bEnableMasking)
                     continue;
                 
                 fgColor = colorMul(fgColor, triangleColor);
@@ -733,6 +736,7 @@ void draw(Core& core, const DrawFloorRow& row) noexcept {
     float tinv = 1.0f - t;
 
     uint16_t* pDstPixelRow = pVram + py * vramPixelW;
+    const bool bEnableMasking = (!core.bDisableMasking);
 
     for (int32_t x = lx; x <= rx; ++x) {
         // Compute the texture coordinate to use
@@ -744,7 +748,7 @@ void draw(Core& core, const DrawFloorRow& row) noexcept {
         tinv -= tStep;
 
         // Get the foreground color for the row pixel if the row is textured.
-        // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
+        // If the pixel is transparent and masking is enabled then also skip it, otherwise modulate it by the primitive color...
         if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
             // Figure out the VRAM coordinates to read the VRAM pixel from
             uint16_t vramX = u & core.texWinXMask;
@@ -762,8 +766,7 @@ void draw(Core& core, const DrawFloorRow& row) noexcept {
             const uint16_t clutIdx = (vramPixel >> ((u & 1) * 8)) & 0xFF;
             fgColor = core.clutCache[clutIdx];
 
-            // Discard the texel if fully transparent, otherwise color multiply
-            if (fgColor.bits == 0)
+            if ((fgColor.bits == 0) && bEnableMasking)
                 continue;
 
             fgColor = colorMul(fgColor, rowColor);
@@ -863,6 +866,7 @@ void draw(Core& core, const DrawWallCol& col) noexcept {
     float tinv = 1.0f - t;
 
     uint16_t* pDstPixelCol = core.pRam + px;
+    const bool bEnableMasking = (!core.bDisableMasking);
 
     for (int32_t y = ty; y <= by; ++y) {
         // Compute the 'v' texture coordinate to use
@@ -873,7 +877,7 @@ void draw(Core& core, const DrawWallCol& col) noexcept {
         tinv -= tStep;
 
         // Get the foreground color for the column pixel if the column is textured.
-        // If the pixel is transparent then also skip it, otherwise modulate it by the primitive color...
+        // If the pixel is transparent and masking is enabled then also skip it, otherwise modulate it by the primitive color...
         if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
             // Figure out the VRAM coordinates to read the VRAM pixel from
             uint16_t vramY = v & core.texWinYMask;
@@ -887,8 +891,7 @@ void draw(Core& core, const DrawWallCol& col) noexcept {
             const uint16_t clutIdx = (vramPixel >> ((u & 1) * 8)) & 0xFF;
             fgColor = core.clutCache[clutIdx];
 
-            // Discard the texel if fully transparent, otherwise color multiply
-            if (fgColor.bits == 0)
+            if ((fgColor.bits == 0) && bEnableMasking)
                 continue;
 
             fgColor = colorMul(fgColor, colColor);
