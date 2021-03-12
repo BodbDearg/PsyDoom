@@ -251,8 +251,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#\n"
         "# Accounting for overscan can help yield an aspect ratio closer to how the game looked on CRT TVs of\n"
         "# it's time and can also be used to remove a region of dead space underneath the in-game HUD.\n"
-        "# PsyDoom will by default chop off 8 pixel rows at the bottom of the screen to remove HUD dead space\n"
-        "# but will NOT chop off pixel rows at the top of the screen in order to maximize the viewable area.\n"
+        "# By default, PsyDoom will chop off 6 pixel rows at the bottom of the screen to remove some of the\n"
+        "# HUD dead space without truncating the status bar or Doomguy's mugshot; the top of the screen will\n"
+        "# also be left untouched by default in order to maximize the viewable area.\n"
         "#---------------------------------------------------------------------------------------------------",
         "0", "",
         [](const IniUtils::Entry& iniEntry) { gTopOverscanPixels = iniEntry.getIntValue(0); },
@@ -260,9 +261,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     },
     {
         "BottomOverscanPixels",
-        "", "8", "\n",
-        [](const IniUtils::Entry& iniEntry) { gBottomOverscanPixels = iniEntry.getIntValue(8); },
-        []() { gBottomOverscanPixels = 8; }
+        "", "6", "\n",
+        [](const IniUtils::Entry& iniEntry) { gBottomOverscanPixels = iniEntry.getIntValue(6); },
+        []() { gBottomOverscanPixels = 6; }
     },
     {
         "FloorRenderGapFix",
