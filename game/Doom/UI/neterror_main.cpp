@@ -108,8 +108,10 @@ gameaction_t NetError_Update() noexcept {
     }
 
     // Only want to animate the skull cursor if ticks have elapsed: restricts the cursor to ticking at 30 Hz
-    if (gPlayersElapsedVBlanks[0] <= 0)
+    if (gPlayersElapsedVBlanks[0] <= 0) {
+        gbKeepInputEvents = true;   // Don't consume 'key pressed' etc. events yet, not ticking...
         return ga_nothing;
+    }
 
     // Animate the skull cursor
     if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {

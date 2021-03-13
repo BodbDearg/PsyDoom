@@ -143,8 +143,10 @@ void O_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
 gameaction_t O_Control() noexcept {
     // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
     #if PSYDOOM_MODS
-        if (gPlayersElapsedVBlanks[0] <= 0)
+        if (gPlayersElapsedVBlanks[0] <= 0) {
+            gbKeepInputEvents = true;   // Don't consume 'key pressed' etc. events yet, not ticking...
             return ga_nothing;
+        }
     #endif
 
     // Animate the skull cursor

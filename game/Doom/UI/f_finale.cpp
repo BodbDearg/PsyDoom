@@ -229,8 +229,10 @@ void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 gameaction_t F1_Ticker() noexcept {
     // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
     #if PSYDOOM_MODS
-        if (gPlayersElapsedVBlanks[0] <= 0)
+        if (gPlayersElapsedVBlanks[0] <= 0) {
+            gbKeepInputEvents = true;   // Don't consume 'key pressed' etc. events yet, not ticking...
             return ga_nothing;
+        }
     #endif
 
     // Grab inputs and set global game action
@@ -246,7 +248,7 @@ gameaction_t F1_Ticker() noexcept {
         const bool bMenuOk = ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS));
     #endif
 
-    // Not sure why this screen is updating cheats or checking for pause...
+    // Check for pause: this allows the user a path to exit back to the main menu if desired
     P_CheckCheats();
     
     if (gbGamePaused)
@@ -394,8 +396,10 @@ void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 gameaction_t F2_Ticker() noexcept {
     // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
     #if PSYDOOM_MODS
-        if (gPlayersElapsedVBlanks[0] <= 0)
+        if (gPlayersElapsedVBlanks[0] <= 0) {
+            gbKeepInputEvents = true;   // Don't consume 'key pressed' etc. events yet, not ticking...
             return ga_nothing;
+        }
     #endif
 
     // Grab inputs and set global game action
@@ -411,7 +415,7 @@ gameaction_t F2_Ticker() noexcept {
         const bool bMenuOk = ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS));
     #endif
 
-    // Not sure why this screen is updating cheats or checking for pause...
+    // Check for pause: this allows the user a path to exit back to the main menu if desired
     P_CheckCheats();
     
     if (gbGamePaused)

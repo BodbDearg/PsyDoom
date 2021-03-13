@@ -82,8 +82,10 @@ void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 gameaction_t TIC_PasswordScreen() noexcept {
     // PsyDoom: tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
     #if PSYDOOM_MODS
-        if (gPlayersElapsedVBlanks[0] <= 0)
+        if (gPlayersElapsedVBlanks[0] <= 0) {
+            gbKeepInputEvents = true;   // Don't consume 'key pressed' etc. events yet, not ticking...
             return ga_nothing;
+        }
     #endif
 
     // Do invalid password flash sfx every so often if currently active

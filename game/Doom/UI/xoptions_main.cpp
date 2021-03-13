@@ -76,8 +76,10 @@ gameaction_t XOptions_Update() noexcept {
     // PsyDoom: in all UIs tick only if vblanks are registered as elapsed; this restricts the code to ticking at 30 Hz for NTSC
     const uint32_t playerIdx = gCurPlayerIndex;
 
-    if (gPlayersElapsedVBlanks[playerIdx] <= 0)
+    if (gPlayersElapsedVBlanks[playerIdx] <= 0) {
+        gbKeepInputEvents = true;   // Don't consume 'key pressed' etc. events yet, not ticking...
         return ga_nothing;
+    }
 
     // Animate the skull cursor
     if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {

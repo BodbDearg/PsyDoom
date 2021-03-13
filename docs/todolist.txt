@@ -1,8 +1,6 @@
 0.7 - GPU & Rendering?
 - Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?
-- Investigate game end pause issue (unable to unpause)
-    - May need to prioritize continue vs pause if conflicting key bindings
 - Investigate Final Doom music pitch issue mentioned on Doomworld.
 - Use interpolation for map view.
 - Fix multiple overlapping item pickup issue?
