@@ -754,18 +754,18 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_MIDDLE(Digital_MoveBackward, "S, Down, Gamepad DpDown"),
     CONTROL_BIND_GROUP_MIDDLE(Digital_StrafeLeft, "A"),
     CONTROL_BIND_GROUP_MIDDLE(Digital_StrafeRight, "D"),
-    CONTROL_BIND_GROUP_MIDDLE(Digital_TurnLeft, "Left, \\,, Gamepad DpLeft"),
-    CONTROL_BIND_GROUP_FOOTER(Digital_TurnRight, "Right, ., Gamepad DpRight"),
+    CONTROL_BIND_GROUP_MIDDLE(Digital_TurnLeft, "Left, Gamepad DpLeft"),
+    CONTROL_BIND_GROUP_FOOTER(Digital_TurnRight, "Right, Gamepad DpRight"),
     //--------------------------------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------------------------------
     CONTROL_BIND_GROUP_HEADER(
         "#---------------------------------------------------------------------------------------------------\n"
         "# In-game actions & modifiers\n"
         "#---------------------------------------------------------------------------------------------------",
-        Action_Use, "Space, Mouse Right, Gamepad B"
+        Action_Use, "Space, E, Mouse Right, Gamepad B"
     ),
-    CONTROL_BIND_GROUP_MIDDLE(Action_Attack, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, F, Gamepad Y"),
-    CONTROL_BIND_GROUP_MIDDLE(Action_Respawn, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, F, Gamepad Y"),
+    CONTROL_BIND_GROUP_MIDDLE(Action_Attack, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, Gamepad Y"),
+    CONTROL_BIND_GROUP_MIDDLE(Action_Respawn, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, Gamepad Y"),
     CONTROL_BIND_GROUP_MIDDLE(Modifier_Run, "Left Shift, Right Shift, Gamepad X, Gamepad LeftTrigger"),
     CONTROL_BIND_GROUP_MIDDLE(Modifier_Strafe, "Left Alt, Right Alt, Gamepad A"),
     CONTROL_BIND_GROUP_FOOTER(Toggle_Autorun, "CapsLock"),
@@ -773,9 +773,9 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     //--------------------------------------------------------------------------------------------------------------------------------------
     CONTROL_BIND_GROUP_HEADER(
         "#---------------------------------------------------------------------------------------------------\n"
-        "# Toggle in-game pause, automap, and toggle between the Vulkan and Classic renderer\n"
+        "# Toggle in-game pause, automap, and toggle between the Classic and Vulkan renderer (if possible)\n"
         "#---------------------------------------------------------------------------------------------------",
-        Toggle_Pause, "P, Pause, Return, Gamepad Start"
+        Toggle_Pause, "P, Pause, Gamepad Start"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Toggle_Map, "Tab, M, Gamepad Back"),
     CONTROL_BIND_GROUP_FOOTER(Toggle_Renderer, "`"),
@@ -787,8 +787,8 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         Weapon_Scroll, "Mouse Wheel"
     ),
-    CONTROL_BIND_GROUP_MIDDLE(Weapon_Previous, "PageDown, Q, Gamepad LeftShoulder"),
-    CONTROL_BIND_GROUP_MIDDLE(Weapon_Next, "PageUp, E, Gamepad RightShoulder"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_Previous, "PageDown, \\[, Gamepad LeftShoulder"),
+    CONTROL_BIND_GROUP_MIDDLE(Weapon_Next, "PageUp, \\], Gamepad RightShoulder"),
     CONTROL_BIND_GROUP_MIDDLE(Weapon_FistChainsaw, "1"),
     CONTROL_BIND_GROUP_MIDDLE(Weapon_Pistol, "2"),
     CONTROL_BIND_GROUP_MIDDLE(Weapon_Shotgun, "3"),
@@ -803,12 +803,12 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Menu & UI controls\n"
         "#---------------------------------------------------------------------------------------------------",
-        Menu_Up, "Up, W, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"
+        Menu_Up, "Up, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"
     ),
-    CONTROL_BIND_GROUP_MIDDLE(Menu_Down, "Down, S, Gamepad DpDown, Gamepad LeftY+, Gamepad RightY+"),
-    CONTROL_BIND_GROUP_MIDDLE(Menu_Left, "Left, A, Gamepad DpLeft, Gamepad LeftX-, Gamepad RightX-"),
-    CONTROL_BIND_GROUP_MIDDLE(Menu_Right, "Right, D, Gamepad DpRight, Gamepad LeftX+, Gamepad RightX+"),
-    CONTROL_BIND_GROUP_MIDDLE(Menu_Ok, "Return, Space, Mouse Left, F, Left Ctrl, Right Ctrl, Gamepad A, Gamepad RightTrigger"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Down, "Down, Gamepad DpDown, Gamepad LeftY+, Gamepad RightY+"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Left, "Left, Gamepad DpLeft, Gamepad LeftX-, Gamepad RightX-"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Right, "Right, Gamepad DpRight, Gamepad LeftX+, Gamepad RightX+"),
+    CONTROL_BIND_GROUP_MIDDLE(Menu_Ok, "Return, Space, Mouse Left, Left Ctrl, Right Ctrl, Gamepad A, Gamepad RightTrigger"),
     CONTROL_BIND_GROUP_MIDDLE(Menu_Back, "Escape, Tab, Mouse Right, Gamepad B, Gamepad Back"),
     CONTROL_BIND_GROUP_MIDDLE(Menu_Start, "Gamepad Start"),
     CONTROL_BIND_GROUP_MIDDLE(Menu_EnterPasswordChar, "Return, Space, Mouse Left, Left Ctrl, Right Ctrl, Gamepad A, Gamepad RightTrigger"),
@@ -819,9 +819,9 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Automap controls\n"
         "#---------------------------------------------------------------------------------------------------",
-        Automap_ZoomIn, "E, \\=, Gamepad RightTrigger"
+        Automap_ZoomIn, "\\=, Keypad +, Gamepad RightTrigger"
     ),
-    CONTROL_BIND_GROUP_MIDDLE(Automap_ZoomOut, "Q, -, Gamepad LeftTrigger"),
+    CONTROL_BIND_GROUP_MIDDLE(Automap_ZoomOut, "-, Keypad -, Gamepad LeftTrigger"),
     CONTROL_BIND_GROUP_MIDDLE(Automap_MoveUp, "Up, W, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"),
     CONTROL_BIND_GROUP_MIDDLE(Automap_MoveDown, "Down, S, Gamepad DpDown, Gamepad LeftY+, Gamepad RightY+"),
     CONTROL_BIND_GROUP_MIDDLE(Automap_MoveLeft, "Left, A, Gamepad DpLeft, Gamepad LeftX-, Gamepad RightX-"),
@@ -846,8 +846,8 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_Square, "Left Shift, Right Shift, Gamepad X"),
     CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_L1, "A, Gamepad LeftShoulder"),
     CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_R1, "D, Gamepad RightShoulder"),
-    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_L2, "PageDown, Q, Gamepad LeftTrigger"),
-    CONTROL_BIND_GROUP_FOOTER(PSXCheatCode_R2, "PageUp, E, Gamepad RightTrigger"),
+    CONTROL_BIND_GROUP_MIDDLE(PSXCheatCode_L2, "PageDown, \\[, Gamepad LeftTrigger"),
+    CONTROL_BIND_GROUP_FOOTER(PSXCheatCode_R2, "PageUp, \\], Gamepad RightTrigger"),
 };
 
 // Done with these helper macros
