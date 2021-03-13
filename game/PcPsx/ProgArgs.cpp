@@ -33,6 +33,10 @@ uint16_t    gServerPort     = DEFAULT_NET_PORT;     // Port that the server list
 // Cheat: if true then do not spawn any monsters
 bool gbNoMonsters = false;
 
+// If true then start each level with just a pistol and 50 rounds, and full health.
+// Basically the exact same player state as if the level had been restarted.
+bool gbPistolStart = false;
+
 // Host that the client connects to: private so we don't expose std::string everywhere
 static std::string gServerHost;
 
@@ -98,6 +102,15 @@ static int parseArg_checkresult(const int argc, const char** const argv) {
 static int parseArg_nomonsters(const int argc, const char** const argv) {
     if ((argc >= 1) && (std::strcmp(argv[0], "-nomonsters") == 0)) {
         gbNoMonsters = true;
+        return 1;
+    }
+
+    return 0;
+}
+
+static int parseArg_pistolstart(const int argc, const char** const argv) {
+    if ((argc >= 1) && (std::strcmp(argv[0], "-pistolstart") == 0)) {
+        gbPistolStart = true;
         return 1;
     }
 
@@ -181,6 +194,7 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_saveresult,
     parseArg_checkresult,
     parseArg_nomonsters,
+    parseArg_pistolstart,
     parseArg_server,
     parseArg_client
 };
@@ -223,6 +237,7 @@ void init(const int argc, const char** const argv) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
     // Reset everything back to its initial state and free any memory allocated (to help leak detection)
+    gCueFileOverride = nullptr;
     gbHeadlessMode = false;
     gDataDirPath = "";
     gPlayDemoFilePath = "";
@@ -230,6 +245,9 @@ void shutdown() noexcept {
     gCheckDemoResultFilePath = "";
     gbIsNetServer = false;
     gbIsNetClient = false;
+    gServerPort = DEFAULT_NET_PORT;
+    gbNoMonsters = false;
+    gbPistolStart = false;
 }
 
 const char* getServerHost() noexcept {

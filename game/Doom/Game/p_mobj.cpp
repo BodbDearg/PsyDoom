@@ -245,7 +245,13 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     // Do rebirth logic if respawning
     player_t& player = gPlayers[mapThing.type - 1];
     
-    if (player.playerstate == PST_REBORN) {
+    #if PSYDOOM_MODS
+        const bool bDoPistolStart = ((player.playerstate == PST_REBORN) || Game::gSettings.bPistolStart);
+    #else
+        const bool bDoPistolStart = (player.playerstate == PST_REBORN);
+    #endif
+
+    if (bDoPistolStart) {
         G_PlayerReborn(mapThing.type - 1);
     }
     

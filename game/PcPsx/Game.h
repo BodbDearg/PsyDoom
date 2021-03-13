@@ -30,6 +30,7 @@ struct GameSettings {
     uint8_t     bFixViewBobStrength;            // Fix the strength of the view bobbing when running at 30 FPS so it's as intense as 15 FPS
     uint8_t     bFixGravityStrength;            // Fix the strength of gravity so it applies consistently regardless of framerate? (weakens overly strong gravity at 30 FPS)
     uint8_t     bNoMonsters;                    // Is the '-nomonsters' command line cheat activated?
+    uint8_t     bPistolStart;                   // Is the '-pistolstart' command line switch specified?
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength
 };

@@ -15,6 +15,7 @@ extern bool         gbIsNetServer;
 extern bool         gbIsNetClient;
 extern uint16_t     gServerPort;
 extern bool         gbNoMonsters;
+extern bool         gbPistolStart;
 
 void init(const int argc, const char** const argv) noexcept;
 void shutdown() noexcept;

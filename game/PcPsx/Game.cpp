@@ -120,6 +120,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bFixViewBobStrength = Config::gbFixViewBobStrength;
     settings.bFixGravityStrength = Config::gbFixGravityStrength;
     settings.bNoMonsters = ProgArgs::gbNoMonsters;
+    settings.bPistolStart = ProgArgs::gbPistolStart;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // Auto set the spawn limit based on the game
@@ -145,6 +146,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bFixViewBobStrength            = false;
     settings.bFixGravityStrength            = false;
     settings.bNoMonsters                    = false;
+    settings.bPistolStart                   = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
 }

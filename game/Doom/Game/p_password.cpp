@@ -4,6 +4,7 @@
 #include "Doom/d_main.h"
 #include "g_game.h"
 #include "p_inter.h"
+#include "PcPsx/Game.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper to make the encoding logic byte bit cleaner and remove some redundancy.
@@ -26,21 +27,41 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     uint8_t pwdata[8];
     D_memset(pwdata, std::byte(0), 8);
 
+    // Grab details on player items, ammo, health & armor.
+    // PsyDoom: if doing pistol starts then these stats will be altered for a pistol start, and the password will be computed accordingly.
+    #if PSYDOOM_MODS
+        const bool bPistolStart = Game::gSettings.bPistolStart;
+    #else
+        const bool bPistolStart = false;
+    #endif
+
+    const bool bPlayerBackpack = (bPistolStart) ? false : player.backpack;
+    const int32_t playerClips = (bPistolStart) ? 50 : player.ammo[am_clip];
+    const int32_t playerShells = (bPistolStart) ? 0 : player.ammo[am_shell];
+    const int32_t playerCells = (bPistolStart) ? 0 : player.ammo[am_cell];
+    const int32_t playerMissiles = (bPistolStart) ? 0 : player.ammo[am_misl];
+    const int32_t playerHealth = (bPistolStart) ? 100 : player.health;
+    const int32_t playerArmorPoints = (bPistolStart) ? 0 : player.armorpoints;
+    const int32_t playerArmorType = (bPistolStart) ? 0 : player.armortype;
+
     // Encode byte: current map and skill
     pwdata[0] = (uint8_t)((gNextMap & 63) << 2);
     pwdata[0] |= (uint8_t)(gGameSkill & 3);
 
-    // Encode byte: owned weapons (from shotgun onwards) and whether the backpack is owned
-    for (int32_t i = wp_shotgun; i < NUMWEAPONS; ++i) {
-        if (player.weaponowned[i]) {
-            pwdata[1] |= (uint8_t)(1 << (i - wp_shotgun));
+    // Encode byte: owned weapons (from shotgun onwards) and whether the backpack is owned.
+    // PsyDoom: if doing pistol starts then the weapon bits are simply '0', so we ignore in that case.
+    if (!bPistolStart) {
+        for (int32_t i = wp_shotgun; i < NUMWEAPONS; ++i) {
+            if (player.weaponowned[i]) {
+                pwdata[1] |= (uint8_t)(1 << (i - wp_shotgun));
+            }
         }
     }
 
-    pwdata[1] |= (player.backpack) ? 0x80 : 0;
+    pwdata[1] |= (bPlayerBackpack) ? 0x80 : 0;
 
     // Determine the maximum ammo amount for the calculations below
-    const uint8_t maxAmmoShift = (player.backpack) ? 1 : 0;
+    const uint8_t maxAmmoShift = (bPlayerBackpack) ? 1 : 0;
 
     const int32_t maxClips = gMaxAmmo[am_clip] << maxAmmoShift;
     const int32_t maxShells = gMaxAmmo[am_shell] << maxAmmoShift;
@@ -48,22 +69,22 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     const int32_t maxMissiles = gMaxAmmo[am_misl] << maxAmmoShift;
 
     // Encode byte: number of bullets and shells (in 1/8 of the maximum increments, rounded up)
-    const uint8_t clipsEnc = ceil8Div(player.ammo[am_clip] << 3, maxClips);
-    const uint8_t shellsEnc = ceil8Div(player.ammo[am_shell] << 3, maxShells);
+    const uint8_t clipsEnc = ceil8Div(playerClips << 3, maxClips);
+    const uint8_t shellsEnc = ceil8Div(playerShells << 3, maxShells);
     pwdata[2] = (clipsEnc << 4) | shellsEnc;
 
     // Encode byte: number of cells and missiles (in 1/8 of the maximum increments, rounded up)
-    const uint8_t cellsEnc = ceil8Div(player.ammo[am_cell] << 3, maxCells);
-    const uint8_t missilesEnc = ceil8Div(player.ammo[am_misl] << 3, maxMissiles);
+    const uint8_t cellsEnc = ceil8Div(playerCells << 3, maxCells);
+    const uint8_t missilesEnc = ceil8Div(playerMissiles << 3, maxMissiles);
     pwdata[3] = (cellsEnc << 4) | missilesEnc;
 
     // Encode byte: health and armor points (in 1/8 of the maximum increments (25 HP), rounded up)
-    const uint8_t healthPointsEnc = ceil8Div(player.health << 3, 200);
-    const uint8_t armorPointsEnc = ceil8Div(player.armorpoints << 3, 200);
+    const uint8_t healthPointsEnc = ceil8Div(playerHealth << 3, 200);
+    const uint8_t armorPointsEnc = ceil8Div(playerArmorPoints << 3, 200);
     pwdata[4] = (healthPointsEnc << 4) | armorPointsEnc;
 
     // Encode byte: armor type
-    pwdata[5] = (uint8_t)(player.armortype << 3);
+    pwdata[5] = (uint8_t)(playerArmorType << 3);
 
     // PsyDoom: incorporating an improvement from PSXDOOM-RE to encode an additional 2 map number bits.
     // This allows for map numbers from 0-255 instead of just 0-63, if required.

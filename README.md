@@ -76,6 +76,7 @@ The original goal of this project was to have a complete replacement for the ori
 - Other miscellaneous command line arguments
     - The .cue file used can be manually specified on launch via `-cue <CUE_FILE_PATH>`.
     - For a 'no monsters' cheat similar to PC Doom use the `-nomonsters` switch.
+    - To force pistol starts on all levels, use the `-pistolstart` switch. This setting also affects password generation and multiplayer.
     - To play a demo lump file and exit use `-playdemo <DEMO_LUMP_FILE_PATH>`.
     - To save the results of demo playback to a .json file use `-saveresult <RESULT_FILE_PATH>`.
     - To verify that the result of demo playback matches a result .json file use `-checkresult <RESULT_FILE_PATH>`. If the result matches the expected result, the return code from the executable will be '0'. On an unexpected result, a non-zero return code is returned.
