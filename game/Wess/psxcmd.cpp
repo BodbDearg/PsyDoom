@@ -205,21 +205,21 @@ void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8
     } else {
         if (trackStat.pitch_cntrl >= 1) {
             // Pitch shifting: up
-            const uint32_t pitchShiftFrac = trackStat.pitch_cntrl * voiceStat.ppatch_voice->pitchstep_up;
-            const uint16_t pitchShiftNote = (uint16_t)((32 + pitchShiftFrac) >> 13);
-            const uint16_t pitchShiftFine = (pitchShiftFrac & 0x1FFF) >> 6;
+            const uint32_t pitchShiftFrac = 32u + trackStat.pitch_cntrl * voiceStat.ppatch_voice->pitchstep_up;
+            const uint32_t pitchShiftNote = pitchShiftFrac >> 13;
+            const uint32_t pitchShiftFine = (pitchShiftFrac & 0x1FFFu) >> 6;
 
-            spuVoiceAttr.note = (voiceStat.note + pitchShiftNote) << 8;
-            spuVoiceAttr.note |= pitchShiftFine & 0x7F;
+            spuVoiceAttr.note = (uint16_t)((voiceStat.note + pitchShiftNote) << 8);
+            spuVoiceAttr.note |= pitchShiftFine & 0x7Fu;
         }
         else {
             // Pitch shifting: down
-            const uint32_t pitchShiftFrac = trackStat.pitch_cntrl * voiceStat.ppatch_voice->pitchstep_down;
-            const uint16_t pitchShiftNote = (uint16_t)(((32 - pitchShiftFrac) >> 13) + 1);
-            const uint16_t pitchShiftFine = 128 - ((pitchShiftFrac & 0x1FFF) >> 6);
+            const uint32_t pitchShiftFrac = 32u - trackStat.pitch_cntrl * voiceStat.ppatch_voice->pitchstep_down;
+            const uint32_t pitchShiftNote = (pitchShiftFrac >> 13) + 1;
+            const uint32_t pitchShiftFine = 128u - ((pitchShiftFrac & 0x1FFFu) >> 6);
 
-            spuVoiceAttr.note = (voiceStat.note - pitchShiftNote) << 8;
-            spuVoiceAttr.note |= pitchShiftFine & 0x7F;
+            spuVoiceAttr.note = (uint16_t)((voiceStat.note - pitchShiftNote) << 8);
+            spuVoiceAttr.note |= pitchShiftFine & 0x7Fu;
         }
     }
 
@@ -542,21 +542,21 @@ void PSX_PitchMod(track_status& trackStat) noexcept {
         } else {
             if (trackStat.pitch_cntrl >= 1) {
                 // Pitch shifting: up
-                const uint32_t pitchShiftFrac = trackStat.pitch_cntrl * voiceStat.ppatch_voice->pitchstep_up;
-                const uint16_t pitchShiftNote = (uint16_t)((32 + pitchShiftFrac) >> 13);
-                const uint16_t pitchShiftFine = (pitchShiftFrac & 0x1FFF) >> 6;
+                const uint32_t pitchShiftFrac = 32u + trackStat.pitch_cntrl * voiceStat.ppatch_voice->pitchstep_up;
+                const uint32_t pitchShiftNote = pitchShiftFrac >> 13;
+                const uint32_t pitchShiftFine = (pitchShiftFrac & 0x1FFFu) >> 6;
 
-                spuVoiceAttr.note = (voiceStat.note + pitchShiftNote) << 8;
-                spuVoiceAttr.note |= pitchShiftFine & 0x7F;
+                spuVoiceAttr.note = (uint16_t)((voiceStat.note + pitchShiftNote) << 8);
+                spuVoiceAttr.note |= pitchShiftFine & 0x7Fu;
             }
             else {
                 // Pitch shifting: down
-                const uint32_t pitchShiftFrac = trackStat.pitch_cntrl * voiceStat.ppatch_voice->pitchstep_down;
-                const uint16_t pitchShiftNote = (uint16_t)(((32 - pitchShiftFrac) >> 13) + 1);
-                const uint16_t pitchShiftFine = 128 - ((pitchShiftFrac & 0x1FFF) >> 6);
+                const uint32_t pitchShiftFrac = 32u - trackStat.pitch_cntrl * voiceStat.ppatch_voice->pitchstep_down;
+                const uint32_t pitchShiftNote = (pitchShiftFrac >> 13) + 1;
+                const uint32_t pitchShiftFine = 128u - ((pitchShiftFrac & 0x1FFFu) >> 6);
 
-                spuVoiceAttr.note = (voiceStat.note - pitchShiftNote) << 8;
-                spuVoiceAttr.note |= pitchShiftFine & 0x7F;
+                spuVoiceAttr.note = (uint16_t)((voiceStat.note - pitchShiftNote) << 8);
+                spuVoiceAttr.note |= pitchShiftFine & 0x7Fu;
             }
         }
 
