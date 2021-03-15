@@ -332,6 +332,7 @@ int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
 bool                    gbUsePlayerRocketBlastFix;
+bool                    gbUseSuperShotgunDelayTweak;
 int32_t                 gUseFinalDoomPlayerMovement;
 int32_t                 gAllowMovementCancellation;
 bool                    gbAllowTurningCancellation;
@@ -439,6 +440,21 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUsePlayerRocketBlastFix = iniEntry.getBoolValue(true); },
         []() { gbUsePlayerRocketBlastFix = true; }
+    },
+    {
+        "UseSuperShotgunDelayTweak",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Whether to apply a gameplay tweak to reduce the initial firing delay for the Super Shotgun.\n"
+        "# This tweak makes it more responsive and useful during fast action by reducing input latency and\n"
+        "# brings it more in line with the feel of the PC Super Shotgun. The tweak shifts some of the initial\n"
+        "# firing delay to later in the animation sequence, so that the overall firing time does not take any\n"
+        "# longer than it would normally. The tweak is disabled by default to preserve the original PSX feel\n"
+        "# but may be desirable for users who prefer this weapon to handle more like the PC version.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseSuperShotgunDelayTweak = iniEntry.getBoolValue(false); },
+        []() { gbUseSuperShotgunDelayTweak = false; }
     },
     {
         "UseFinalDoomPlayerMovement",

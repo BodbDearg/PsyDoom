@@ -102,6 +102,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 
     settings.bUseDemoTimings            = Config::gbUseDemoTimings;
     settings.bUsePlayerRocketBlastFix   = Config::gbUsePlayerRocketBlastFix;
+    settings.bUseSuperShotgunDelayTweak = Config::gbUseSuperShotgunDelayTweak;
     settings.bUseMoveInputLatencyTweak  = Config::gbUseMoveInputLatencyTweak;
 
     if (Config::gUseFinalDoomPlayerMovement < 0) {
@@ -139,6 +140,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUsePalTimings                 = (gGameVariant == GameVariant::PAL);
     settings.bUseDemoTimings                = true;
     settings.bUsePlayerRocketBlastFix       = false;
+    settings.bUseSuperShotgunDelayTweak     = false;
     settings.bUseMoveInputLatencyTweak      = false;
     settings.bUseFinalDoomPlayerMovement    = isFinalDoom();
     settings.bAllowMovementCancellation     = isFinalDoom();

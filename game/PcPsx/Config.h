@@ -16,6 +16,7 @@ extern int32_t  gUsePalTimings;
 extern bool     gbUseDemoTimings;
 extern bool     gbUseMoveInputLatencyTweak;
 extern bool     gbUsePlayerRocketBlastFix;
+extern bool     gbUseSuperShotgunDelayTweak;
 extern int32_t  gUseFinalDoomPlayerMovement;
 extern int32_t  gAllowMovementCancellation;
 extern bool     gbAllowTurningCancellation;

@@ -294,11 +294,11 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     gGameSkill = skill;
     gNetGame = gameType;
 
-    // PsyDoom: determine the game settings for single player games.
-    // Note: in a multiplayer game these will have already been determined before this point, hence no determination here.
-    // These settings may also be overwritten by demo playback, if a demo will be played.
+    // PsyDoom: determine the game settings for single player games that are not demos.
+    // In a multiplayer game these settings will have already been determined before this point, hence no determination here.
+    // For demo playback this will also be the case since correct settings must be forced for demo compatibility.
     #if PSYDOOM_MODS
-        if (gNetGame == gt_single) {
+        if ((gNetGame == gt_single) && (!gpDemo_p)) {
             Game::getUserGameSettings(Game::gSettings);
         }
     #endif
@@ -365,6 +365,17 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
         gMObjInfo[MT_HEADSHOT].speed = 20 * FRACUNIT;
         gMObjInfo[MT_TROOPSHOT].speed = 20 * FRACUNIT;
     }
+
+    // PsyDoom: apply the Super Shotgun delay tweak if enabled, or otherwise undo it
+    #if PSYDOOM_MODS
+        if (Game::gSettings.bUseSuperShotgunDelayTweak) {
+            gStates[S_DSGUN1].tics = 1;
+            gStates[S_DSGUN5].tics = 4;
+        } else {
+            gStates[S_DSGUN1].tics = 2;
+            gStates[S_DSGUN5].tics = 3;
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -532,9 +543,6 @@ gameaction_t G_PlayDemoPtr() noexcept {
         gPsxMouseSensitivity = Endian::littleToHost((int32_t) *gpDemo_p);
         gpDemo_p++;
     }
-    
-    // Do basic game initialization
-    G_InitNew(skill, mapNum, gt_single);
 
     // PsyDoom: determine the game settings to play back this classic demo correctly, depending on what game is being used.
     // Save the previous game settings also, so they can be restored later.
@@ -543,6 +551,9 @@ gameaction_t G_PlayDemoPtr() noexcept {
         const GameSettings prevGameSettings = Game::gSettings;
         Game::getClassicDemoGameSettings(Game::gSettings);
     #endif
+
+    // Do basic game initialization
+    G_InitNew(skill, mapNum, gt_single);
 
     // Load the map used by the demo
     G_DoLoadLevel();
