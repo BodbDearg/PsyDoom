@@ -2,23 +2,26 @@
 
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/m_fixed.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_local.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/Renderer/r_main.h"
 #include "Doom/RendererVk/rv_automap.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/PsxPadButtons.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
-static constexpr fixed_t MOVESTEP       = FRACUNIT * 128;   // Controls how fast manual automap movement happens
-static constexpr fixed_t SCALESTEP      = 2;                // How fast to scale in/out
-static constexpr int32_t MAXSCALE       = 64;               // Maximum map zoom
-static constexpr int32_t MINSCALE       = 8;                // Minimum map zoom
+static constexpr fixed_t MOVESTEP   = FRACUNIT * 128;   // Controls how fast manual automap movement happens
+static constexpr fixed_t SCALESTEP  = 2;                // How fast to scale in/out
+static constexpr int32_t MAXSCALE   = 64;               // Maximum map zoom
+static constexpr int32_t MINSCALE   = 8;                // Minimum map zoom
 
 static fixed_t  gAutomapXMin;
 static fixed_t  gAutomapXMax;
@@ -27,6 +30,44 @@ static fixed_t  gAutomapYMax;
 
 // Internal module functions
 static void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept;
+
+#if PSYDOOM_MODS
+
+// The position and rotation to use for the player this frame on the automap, and the free camera position and camera zoom
+static fixed_t gAM_PlayerX;
+static fixed_t gAM_PlayerY;
+static angle_t gAM_PlayerAngle;
+static fixed_t gAM_AutomapX;
+static fixed_t gAM_AutomapY;
+static fixed_t gAM_AutomapScale;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Compute the position and rotation to use for the automap for the player, taking into account framerate independent movement.
+// Also does the same for the 'free camera' automap position that is used when the player is manually panning over the map.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void AM_CalcPlayerMapTransforms() noexcept {
+    const player_t& player = gPlayers[gCurPlayerIndex];
+    const bool bUncapFramerate = Config::gbUncapFramerate;
+    
+    if (bUncapFramerate) {
+        const fixed_t lerpFactor = R_CalcLerpFactor();
+        gAM_PlayerX = R_LerpCoord(gOldViewX, player.mo->x, lerpFactor);
+        gAM_PlayerY = R_LerpCoord(gOldViewY, player.mo->y, lerpFactor);
+        gAM_PlayerAngle = R_LerpAngle(gOldViewAngle, player.mo->angle, lerpFactor);
+        gAM_AutomapX = R_LerpCoord(gOldAutomapX, player.automapx, lerpFactor);
+        gAM_AutomapY = R_LerpCoord(gOldAutomapY, player.automapy, lerpFactor);
+        gAM_AutomapScale = R_LerpCoord(gOldAutomapScale * FRACUNIT, player.automapscale * FRACUNIT, lerpFactor);
+    } else {
+        gAM_PlayerX = player.mo->x;
+        gAM_PlayerY = player.mo->y;
+        gAM_PlayerAngle = player.mo->angle;
+        gAM_AutomapX = player.automapx;
+        gAM_AutomapY = player.automapy;
+        gAM_AutomapScale = player.automapscale * FRACUNIT;
+    }
+}
+
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Automap initialization logic
@@ -187,28 +228,48 @@ void AM_Drawer() noexcept {
         I_DrawPresent();
     #endif
 
-    // PsyDoom: if the Vulkan renderer is active then delegate automap drawing to that
+    // PsyDoom: if the Vulkan renderer is active then delegate automap drawing to that.
+    // Otherwise compute the player map transforms to use, taking into account framerate independent movement.
     #if PSYDOOM_MODS && PSYDOOM_VULKAN_RENDERER
         if (Video::isUsingVulkanRenderPath()) {
             RV_DrawAutomap();
             return;
         }
+
+        AM_CalcPlayerMapTransforms();
     #endif
 
-    // Determine the scale to render the map at
+    // Determine the scale to render the map at.
+    // PsyDoom: use framerate uncapped scaling here.
     const player_t& curPlayer = gPlayers[gCurPlayerIndex];
-    const int32_t scale = curPlayer.automapscale;
 
-    // Determine the map camera origin depending on follow mode status
+    #if PSYDOOM_MODS
+        const fixed_t scale = gAM_AutomapScale;
+    #else
+        const int32_t scale = curPlayer.automapscale;
+    #endif
+
+    // Determine the map camera origin depending on follow mode status.
+    // PsyDoom: use framerate uncapped positions here.
     fixed_t ox, oy;
 
-    if (curPlayer.automapflags & AF_FOLLOW) {
-        ox = curPlayer.automapx;
-        oy = curPlayer.automapy;
-    } else {
-        ox = curPlayer.mo->x;
-        oy = curPlayer.mo->y;
-    }
+    #if PSYDOOM_MODS
+        if (curPlayer.automapflags & AF_FOLLOW) {
+            ox = gAM_AutomapX;
+            oy = gAM_AutomapY;
+        } else {
+            ox = gAM_PlayerX;
+            oy = gAM_PlayerY;
+        }
+    #else
+        if (curPlayer.automapflags & AF_FOLLOW) {
+            ox = curPlayer.automapx;
+            oy = curPlayer.automapy;
+        } else {
+            ox = curPlayer.mo->x;
+            oy = curPlayer.mo->y;
+        }
+    #endif
 
     // Draw all the map lines
     {
@@ -233,11 +294,19 @@ void AM_Drawer() noexcept {
             if (!bDraw)
                 continue;
 
-            // Compute the line points in viewspace
-            const int32_t x1 = d_fixed_to_int(((pLine->vertex1->x - ox) / SCREEN_W) * scale);
-            const int32_t y1 = d_fixed_to_int(((pLine->vertex1->y - oy) / SCREEN_W) * scale);
-            const int32_t x2 = d_fixed_to_int(((pLine->vertex2->x - ox) / SCREEN_W) * scale);
-            const int32_t y2 = d_fixed_to_int(((pLine->vertex2->y - oy) / SCREEN_W) * scale);
+            // Compute the line points in viewspace.
+            // PsyDoom: scale is now a fixed point number due to framerate uncapped automap movement.
+            #if PSYDOOM_MODS
+                const int32_t x1 = d_fixed_to_int(FixedMul((pLine->vertex1->x - ox) / SCREEN_W, scale));
+                const int32_t y1 = d_fixed_to_int(FixedMul((pLine->vertex1->y - oy) / SCREEN_W, scale));
+                const int32_t x2 = d_fixed_to_int(FixedMul((pLine->vertex2->x - ox) / SCREEN_W, scale));
+                const int32_t y2 = d_fixed_to_int(FixedMul((pLine->vertex2->y - oy) / SCREEN_W, scale));
+            #else
+                const int32_t x1 = d_fixed_to_int(((pLine->vertex1->x - ox) / SCREEN_W) * scale);
+                const int32_t y1 = d_fixed_to_int(((pLine->vertex1->y - oy) / SCREEN_W) * scale);
+                const int32_t x2 = d_fixed_to_int(((pLine->vertex2->x - ox) / SCREEN_W) * scale);
+                const int32_t y2 = d_fixed_to_int(((pLine->vertex2->y - oy) / SCREEN_W) * scale);
+            #endif
 
             // Decide on line color: start off with the normal two sided line color to begin with
             uint32_t color = AM_COLOR_BROWN;
@@ -283,16 +352,26 @@ void AM_Drawer() noexcept {
             const fixed_t sin2 = gFineSine[fineAng2];
             const fixed_t sin3 = gFineSine[fineAng3];
 
-            // Compute the line points
+            // Compute the line points.
+            // PsyDoom: scale is now a fixed point number due to framerate uncapped automap movement.
             const fixed_t vx = pMObj->x - ox;
             const fixed_t vy = pMObj->y - oy;
 
-            const int32_t x1 = d_fixed_to_int(((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t y1 = d_fixed_to_int(((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t x2 = d_fixed_to_int(((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t y2 = d_fixed_to_int(((vy + sin2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t x3 = d_fixed_to_int(((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-            const int32_t y3 = d_fixed_to_int(((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            #if PSYDOOM_MODS
+                const int32_t x1 = d_fixed_to_int(FixedMul((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+                const int32_t y1 = d_fixed_to_int(FixedMul((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+                const int32_t x2 = d_fixed_to_int(FixedMul((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+                const int32_t y2 = d_fixed_to_int(FixedMul((vy + sin2 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+                const int32_t x3 = d_fixed_to_int(FixedMul((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+                const int32_t y3 = d_fixed_to_int(FixedMul((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+            #else
+                const int32_t x1 = d_fixed_to_int(((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+                const int32_t y1 = d_fixed_to_int(((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+                const int32_t x2 = d_fixed_to_int(((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+                const int32_t y2 = d_fixed_to_int(((vy + sin2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+                const int32_t x3 = d_fixed_to_int(((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+                const int32_t y3 = d_fixed_to_int(((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            #endif
 
             // Draw the triangle
             DrawLine(AM_COLOR_AQUA, x1, y1, x2, y2);
@@ -309,6 +388,10 @@ void AM_Drawer() noexcept {
 
         // Flash the player's triangle when alive
         const player_t& player = gPlayers[playerIdx];
+
+        #if PSYDOOM_MODS
+            const bool bIsLocalPlayer = (gCurPlayerIndex == playerIdx);
+        #endif
         
         if ((player.playerstate == PST_LIVE) && (gGameTic & 2))
             continue;
@@ -320,12 +403,19 @@ void AM_Drawer() noexcept {
             color = AM_COLOR_YELLOW;
         }
 
-        // Compute the the sine and cosines for the angles of the 3 points in the triangle
+        // Compute the the sine and cosines for the angles of the 3 points in the triangle.
+        // PsyDoom: use a (potentially) framerate uncapped rotation if it is the local player.
         const mobj_t& mobj = *player.mo;
 
-        const uint32_t fineAng1 = (mobj.angle                ) >> ANGLETOFINESHIFT;
-        const uint32_t fineAng2 = (mobj.angle - ANG90 - ANG45) >> ANGLETOFINESHIFT;
-        const uint32_t fineAng3 = (mobj.angle + ANG90 + ANG45) >> ANGLETOFINESHIFT;
+        #if PSYDOOM_MODS
+            const angle_t playerAngle = (bIsLocalPlayer) ? gAM_PlayerAngle : mobj.angle;
+        #else
+            const angle_t playerAngle = mobj.angle;
+        #endif
+
+        const uint32_t fineAng1 = (playerAngle                ) >> ANGLETOFINESHIFT;
+        const uint32_t fineAng2 = (playerAngle - ANG90 - ANG45) >> ANGLETOFINESHIFT;
+        const uint32_t fineAng3 = (playerAngle + ANG90 + ANG45) >> ANGLETOFINESHIFT;
 
         const fixed_t cos1 = gFineCosine[fineAng1];
         const fixed_t cos2 = gFineCosine[fineAng2];
@@ -335,16 +425,35 @@ void AM_Drawer() noexcept {
         const fixed_t sin2 = gFineSine[fineAng2];
         const fixed_t sin3 = gFineSine[fineAng3];
 
-        // Compute the line points
-        const fixed_t vx = player.mo->x - ox;
-        const fixed_t vy = player.mo->y - oy;
+        // Compute the line points.
+        // PsyDoom: use a (potentially) framerate uncapped rotation if it is the local player.
+        #if PSYDOOM_MODS
+            const fixed_t playerX = (bIsLocalPlayer) ? gAM_PlayerX : mobj.x;
+            const fixed_t playerY = (bIsLocalPlayer) ? gAM_PlayerY : mobj.y;
+        #else
+            const fixed_t playerX = mobj.x;
+            const fixed_t playerY = mobj.y;
+        #endif
 
-        const int32_t x1 = d_fixed_to_int(((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t y1 = d_fixed_to_int(((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t x2 = d_fixed_to_int(((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t y2 = d_fixed_to_int(((vy + sin2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t x3 = d_fixed_to_int(((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
-        const int32_t y3 = d_fixed_to_int(((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+        const fixed_t vx = playerX - ox;
+        const fixed_t vy = playerY - oy;
+
+        #if PSYDOOM_MODS
+            // PsyDoom: scale is now a fixed point number due to framerate uncapped automap movement
+            const int32_t x1 = d_fixed_to_int(FixedMul((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+            const int32_t y1 = d_fixed_to_int(FixedMul((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+            const int32_t x2 = d_fixed_to_int(FixedMul((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+            const int32_t y2 = d_fixed_to_int(FixedMul((vy + sin2 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+            const int32_t x3 = d_fixed_to_int(FixedMul((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+            const int32_t y3 = d_fixed_to_int(FixedMul((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
+        #else
+            const int32_t x1 = d_fixed_to_int(((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y1 = d_fixed_to_int(((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t x2 = d_fixed_to_int(((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y2 = d_fixed_to_int(((vy + sin2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t x3 = d_fixed_to_int(((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+            const int32_t y3 = d_fixed_to_int(((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
+        #endif
 
         // Draw the triangle
         DrawLine(color, x1, y1, x2, y2);

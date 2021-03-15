@@ -41,6 +41,9 @@ extern int32_t          gNumDrawSubsectors;
     extern fixed_t      gOldViewY;
     extern fixed_t      gOldViewZ;
     extern angle_t      gOldViewAngle;
+    extern fixed_t      gOldAutomapX;
+    extern fixed_t      gOldAutomapY;
+    extern fixed_t      gOldAutomapScale;
     extern bool         gbSnapViewZInterpolation;
 #endif
 

@@ -13,6 +13,7 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/Renderer/r_main.h"
 #include "Doom/UI/am_main.h"
 #include "Matrix4.h"
 #include "PcPsx/Config.h"
@@ -24,6 +25,40 @@
 
 #include <cmath>
 
+// The position and rotation to use for the player this frame on the automap, and the free camera position and camera zoom
+static fixed_t gRvMap_PlayerX;
+static fixed_t gRvMap_PlayerY;
+static angle_t gRvMap_PlayerAngle;
+static fixed_t gRvMap_AutomapX;
+static fixed_t gRvMap_AutomapY;
+static fixed_t gRvMap_AutomapScale;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Compute the position and rotation to use for the automap for the player, taking into account framerate independent movement.
+// Also does the same for the 'free camera' automap position that is used when the player is manually panning over the map.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void RV_CalcPlayerMapTransforms() noexcept {
+    const player_t& player = gPlayers[gCurPlayerIndex];
+    const bool bUncapFramerate = Config::gbUncapFramerate;
+    
+    if (bUncapFramerate) {
+        const fixed_t lerpFactor = R_CalcLerpFactor();
+        gRvMap_PlayerX = R_LerpCoord(gOldViewX, player.mo->x, lerpFactor);
+        gRvMap_PlayerY = R_LerpCoord(gOldViewY, player.mo->y, lerpFactor);
+        gRvMap_PlayerAngle = R_LerpAngle(gOldViewAngle, player.mo->angle, lerpFactor);
+        gRvMap_AutomapX = R_LerpCoord(gOldAutomapX, player.automapx, lerpFactor);
+        gRvMap_AutomapY = R_LerpCoord(gOldAutomapY, player.automapy, lerpFactor);
+        gRvMap_AutomapScale = R_LerpCoord(gOldAutomapScale * FRACUNIT, player.automapscale * FRACUNIT, lerpFactor);
+    } else {
+        gRvMap_PlayerX = player.mo->x;
+        gRvMap_PlayerY = player.mo->y;
+        gRvMap_PlayerAngle = player.mo->angle;
+        gRvMap_AutomapX = player.automapx;
+        gRvMap_AutomapY = player.automapy;
+        gRvMap_AutomapScale = player.automapscale * FRACUNIT;
+    }
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the transform matrix for rendering the automap
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,17 +69,17 @@ static void RV_SetupAutomapTransformMatrix() noexcept {
     float amViewY;
 
     if (player.automapflags & AF_FOLLOW) {
-        amViewX = RV_FixedToFloat(player.automapx);
-        amViewY = RV_FixedToFloat(player.automapy);
+        amViewX = RV_FixedToFloat(gRvMap_AutomapX);
+        amViewY = RV_FixedToFloat(gRvMap_AutomapY);
     } else {
-        amViewX = RV_FixedToFloat(player.mo->x);
-        amViewY = RV_FixedToFloat(player.mo->y);
+        amViewX = RV_FixedToFloat(gRvMap_PlayerX);
+        amViewY = RV_FixedToFloat(gRvMap_PlayerY);
     }
 
     const Matrix4f viewTranslate = Matrix4f::translate(-amViewX, -amViewY, 0.0f);
 
     // Get the view scaling transform
-    const float amScale = (float) player.automapscale / (float) SCREEN_W;
+    const float amScale = RV_FixedToFloat(gRvMap_AutomapScale) / (float) SCREEN_W;
     const Matrix4f viewScale = Matrix4f::scale(amScale, amScale, 1.0f);
 
     // This matrix inverts the y coordinate of all vertices
@@ -189,6 +224,7 @@ static void RV_DrawAutomapPlayers() noexcept {
             continue;
 
         // Flash the player's triangle when alive
+        const bool bIsLocalPlayer = (gCurPlayerIndex == playerIdx);
         const player_t& player = gPlayers[playerIdx];
         
         if ((player.playerstate == PST_LIVE) && (gGameTic & 2))
@@ -201,12 +237,14 @@ static void RV_DrawAutomapPlayers() noexcept {
             color = AM_COLOR_YELLOW;
         }
 
-        // Compute the the sine and cosines for the angles of the 3 points in the triangle
+        // Compute the the sine and cosines for the angles of the 3 points in the triangle.
+        // Use a (potentially) framerate uncapped rotation if it is the local player.
         const mobj_t& mobj = *player.mo;
+        const angle_t playerAngle = (bIsLocalPlayer) ? gRvMap_PlayerAngle : mobj.angle;
 
-        const float ang1 = RV_AngleToFloat(mobj.angle);
-        const float ang2 = RV_AngleToFloat(mobj.angle - ANG90 - ANG45);
-        const float ang3 = RV_AngleToFloat(mobj.angle + ANG90 + ANG45);
+        const float ang1 = RV_AngleToFloat(playerAngle);
+        const float ang2 = RV_AngleToFloat(playerAngle - ANG90 - ANG45);
+        const float ang3 = RV_AngleToFloat(playerAngle + ANG90 + ANG45);
         
         const float cos1 = std::cos(ang1);
         const float cos2 = std::cos(ang2);
@@ -215,9 +253,12 @@ static void RV_DrawAutomapPlayers() noexcept {
         const float sin2 = std::sin(ang2);
         const float sin3 = std::sin(ang3);
 
-        // Compute the line points for the triangle
-        const float tx = RV_FixedToFloat(mobj.x);
-        const float ty = RV_FixedToFloat(mobj.y);
+        // Compute the line points for the triangle.
+        // Use a (potentially) framerate uncapped position if it is the local player.
+        const fixed_t playerX = (bIsLocalPlayer) ? gRvMap_PlayerX : mobj.x;
+        const fixed_t playerY = (bIsLocalPlayer) ? gRvMap_PlayerY : mobj.y;
+        const float tx = RV_FixedToFloat(playerX);
+        const float ty = RV_FixedToFloat(playerY);
 
         const float x1 = tx + cos1 * (float) AM_THING_TRI_SIZE;
         const float y1 = ty + sin1 * (float) AM_THING_TRI_SIZE;
@@ -237,7 +278,8 @@ static void RV_DrawAutomapPlayers() noexcept {
 // Draws the automap
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawAutomap() noexcept {
-    // Setup the draw transform matrix and switch to drawing lines
+    // Compute player map transforms, setup the draw transform matrix and switch to drawing lines
+    RV_CalcPlayerMapTransforms();
     RV_SetupAutomapTransformMatrix();
     VDrawing::setDrawPipeline(VPipelineType::Lines);
 

@@ -61,6 +61,9 @@ sector_t* gpCurDrawSector;
     fixed_t     gOldViewY;
     fixed_t     gOldViewZ;
     angle_t     gOldViewAngle;
+    fixed_t     gOldAutomapX;
+    fixed_t     gOldAutomapY;
+    fixed_t     gOldAutomapScale;
     bool        gbSnapViewZInterpolation;
 #endif
 
@@ -364,11 +367,16 @@ void R_NextInterpolation() noexcept {
     player_t& player = gPlayers[gCurPlayerIndex];
     mobj_t& mobj = *player.mo;
 
+    const bool bAutomapFreeCamera = (player.automapflags & AF_FOLLOW);
+
     gPrevFrameTime = std::chrono::high_resolution_clock::now();
     gOldViewX = mobj.x;
     gOldViewY = mobj.y;
     gOldViewZ = player.viewz;
     gOldViewAngle = mobj.angle;
+    gOldAutomapX = (bAutomapFreeCamera) ? player.automapx : mobj.x;     // Use the current player position if not following to avoid sudden jumps when switching to free camera
+    gOldAutomapY = (bAutomapFreeCamera) ? player.automapy : mobj.y;
+    gOldAutomapScale = player.automapscale;
     gbSnapViewZInterpolation = false;
 }
 
