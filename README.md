@@ -21,6 +21,9 @@ The original goal of this project was to have a complete replacement for the ori
 - The settings for the game can be changed by editing the .ini files found in the following folders:
   - Windows: `%APPDATA%\com.codelobster\PsyDoom`
   - MacOS: `~/Library/Application Support/com.codelobster/PsyDoom`
+- For the best audio quality, set your audio device's sample rate to 44.1 kHz (44,100 Hz or 'CD Quality').
+  - Sometimes using different sample rates like 48 kHz can result in strange noise/artifacts when the audio stream is resampled to a different rate by the host system.
+  - 44.1 kHz is the sample rate originally used by the PS1 SPU and the native sample rate of PsyDoom.
 - Keyboard controls currently default to the following:
   - Up/W and Down/S : Move Forward and Move Backward
   - A and D : Strafe Left and Right
