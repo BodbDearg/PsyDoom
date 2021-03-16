@@ -23,6 +23,7 @@ extern bool     gbAllowTurningCancellation;
 extern bool     gbFixViewBobStrength;
 extern bool     gbFixGravityStrength;
 extern int32_t  gLostSoulSpawnLimit;
+extern bool     gbUseLostSoulSpawnFix;
 extern float    gViewBobbingStrength;
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -1030,19 +1030,28 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     const fixed_t spawnY = actor.y + FixedMul(spawnDist, gFineSine[angle >> ANGLETOFINESHIFT]);
     const fixed_t spawnZ = actor.z + 8 * FRACUNIT;
 
-    // Spawn the skull and if it can't move (is already stuck in a wall) then kill it immediately.
-    // 
-    // BUG: note that this method of skull spawning and collision testing will sometimes result in skulls being spawned outside of the level.
-    // This is because it may have been pushed beyond a point where a collision test against a wall would fail.
-    // One fix might be to do a raycast from the skull position to the Pain Elemental and see if that is blocked by anything.
-    // I can't do that fix however without breaking demo compatibility, so I'll just leave the bug alone for authentic behavior...
+    // Spawn the skull and if it can't move (is already stuck in a wall) then kill it immediately
     mobj_t& skull = *P_SpawnMobj(spawnX, spawnY, spawnZ, MT_SKULL);
+    const bool bSpawnedInWall = (!P_TryMove(skull, skull.x, skull.y));
 
-    if (!P_TryMove(skull, skull.x, skull.y)) {
+    if (bSpawnedInWall) {
         P_DamageMObj(skull, &actor, &actor, 10000);
         return;
     }
-    
+
+    // Bug fix for PsyDoom: the above method of skull spawning and collision testing will sometimes result in skulls being spawned outside the level.
+    // This is because the new skull may have been pushed beyond the point where a collision test against walls would register anything.
+    // The fix for this is to do a raycast from the skull position to the Pain Elemental and see if that is blocked by anything.
+    // We must also apply this fix conditionally, since it can break demo compatibility with the original game.
+    if (Game::gSettings.bUseLostSoulSpawnFix) {
+        const bool bSpawnedPastWall = (!P_CheckSight(actor, skull));
+
+        if (bSpawnedPastWall) {
+            P_DamageMObj(skull, &actor, &actor, 10000);
+            return;
+        }
+    }
+
     // Otherwise make the skull adopt the parent Pain Elemental's target player and begin it's attack rush
     skull.target = actor.target;
     A_SkullAttack(skull);

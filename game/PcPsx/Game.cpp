@@ -129,6 +129,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.lostSoulSpawnLimit = Config::gLostSoulSpawnLimit;
     }
 
+    settings.bUseLostSoulSpawnFix = Config::gbUseLostSoulSpawnFix;
     settings.viewBobbingStrengthFixed = (int32_t)(std::clamp(Config::gViewBobbingStrength, 0.0f, 1.0f) * (float) FRACUNIT);
 }
 
@@ -149,6 +150,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bFixGravityStrength            = false;
     settings.bNoMonsters                    = false;
     settings.bPistolStart                   = false;
+    settings.bUseLostSoulSpawnFix           = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
 }

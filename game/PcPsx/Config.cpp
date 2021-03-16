@@ -339,6 +339,7 @@ bool                    gbAllowTurningCancellation;
 bool                    gbFixViewBobStrength;
 bool                    gbFixGravityStrength;
 int32_t                 gLostSoulSpawnLimit;
+bool                    gbUseLostSoulSpawnFix;
 float                   gViewBobbingStrength;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -554,6 +555,16 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gLostSoulSpawnLimit = iniEntry.getIntValue(0); },
         []() { gLostSoulSpawnLimit = 0; }
+    },
+    {
+        "UseLostSoulSpawnFix",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then apply a fix to the original game logic to try and prevent Lost Souls from\n"
+        "# being occasionally spawned outside of level bounds.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseLostSoulSpawnFix = iniEntry.getBoolValue(true); },
+        []() { gbUseLostSoulSpawnFix = true; }
     },
     {
         "ViewBobbingStrength",
