@@ -331,6 +331,7 @@ bool                    gbUseFastLoading;
 int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
+bool                    gbUseItemPickupFix;
 bool                    gbUsePlayerRocketBlastFix;
 bool                    gbUseSuperShotgunDelayTweak;
 int32_t                 gUseFinalDoomPlayerMovement;
@@ -430,6 +431,16 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseMoveInputLatencyTweak = iniEntry.getBoolValue(true); },
         []() { gbUseMoveInputLatencyTweak = true; }
+    },
+    {
+        "UseItemPickupFix",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then fix a bug from the original game where sometimes the player is prevented\n"
+        "# from picking up items if they are close to other items that cannot be picked up.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseItemPickupFix = iniEntry.getBoolValue(true); },
+        []() { gbUseItemPickupFix = true; }
     },
     {
         "UsePlayerRocketBlastFix",

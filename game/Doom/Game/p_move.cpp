@@ -4,11 +4,13 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "p_inter.h"
 #include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
+#include "PcPsx/Game.h"
 
 #include <algorithm>
 
@@ -520,8 +522,18 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
     // Are we colliding with an item that can be picked up?
     // If so then save it but return 'true' for no collision (pickups do not block).
     if ((mobj.flags & MF_SPECIAL) && (gTmFlags & MF_PICKUP)) {
-        gpMoveThing = &mobj;
-        return true;
+        // PsyDoom: fix not being able to pickup items that SHOULD be possible to pickup due to other nearby/overlapping items which CAN'T be picked up.
+        // Only set this thing as the current thing being touched if it's actually possible to pick it up.
+        #if PSYDOOM_MODS
+            const bool bCanPickup = ((!Game::gSettings.bUseItemPickupFix) || P_CanTouchSpecialThing(mobj, tryMoveThing));
+        #else
+            const bool bCanPickup = true;
+        #endif
+
+        if (bCanPickup) {
+            gpMoveThing = &mobj;
+            return true;
+        }
     }
 
     // In all other cases there is a collision if the item collided with is solid

@@ -25,6 +25,7 @@ struct GameSettings {
     uint8_t     bUsePlayerRocketBlastFix;       // Apply the fix for the player sometimes not receiving splash damage from rocket blasts?
     uint8_t     bUseSuperShotgunDelayTweak;     // Whether to apply the gameplay tweak that reduces the initial firing delay of the super shotgun
     uint8_t     bUseMoveInputLatencyTweak;      // Use a tweak to player movement which tries to reduce input latency? This affects movement slightly.
+    uint8_t     bUseItemPickupFix;              // Fix an original bug where sometimes valid items can't be picked up due to other items nearby that can't be picked up?
     uint8_t     bUseFinalDoomPlayerMovement;    // Whether to use the Final Doom way of doing player movement & turning
     uint8_t     bAllowMovementCancellation;     // Digital movement only: whether opposite move inputs can cancel each other out
     uint8_t     bAllowTurningCancellation;      // Digital turning only: whether opposite turn inputs can cancel each other out

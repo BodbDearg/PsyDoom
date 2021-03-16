@@ -135,9 +135,9 @@ bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numCl
 // The weapon type may be 'dropped' by monsters or placed in the level at the start, dropped weapons yield less ammo.
 // Returns 'true' if the pickup succeeded, 'false' if pickup is not allowed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropped) noexcept {
+bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bWasDropped) noexcept {
     // In co-op mode only allow placed weapons to be picked up if not already owned
-    if ((gNetGame == gt_coop) && (!bDropped)) {
+    if ((gNetGame == gt_coop) && (!bWasDropped)) {
         if (player.weaponowned[weapon])
             return false;
         
@@ -153,7 +153,7 @@ bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropp
 
     if (gWeaponInfo[weapon].ammo != am_noammo) {
         // Placed weapons give 2 clips, dropped weapons only give 1 clip
-        if (bDropped) {
+        if (bWasDropped) {
             bGaveAmmo = P_GiveAmmo(player, gWeaponInfo[weapon].ammo, 1);
         } else {
             bGaveAmmo = P_GiveAmmo(player, gWeaponInfo[weapon].ammo, 2);
@@ -200,7 +200,7 @@ bool P_GiveArmor(player_t& player, const int32_t armorType) noexcept {
     const int32_t armorAmt = armorType * 100;
     
     // Can only give the armor if it's more than the current armor amount
-    if (armorAmt <= player.armorpoints)
+    if (player.armorpoints >= armorAmt)
         return false;
     
     player.armortype = armorType;
@@ -628,6 +628,140 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         S_StartSound(nullptr, soundId);
     }
 }
+
+#if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: tells if the given key can be picked up the specified player
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool P_CanPlayerPickupKey(const player_t& player, const card_t cardType) noexcept {
+    ASSERT(cardType < NUMCARDS);
+
+    // The answer is 'yes' always in single player
+    if (gNetGame == gt_single)
+        return true;
+
+    // In multiplayer you can only pick it up if you don't already have it
+    return (!player.cards[cardType]);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: tells if the given weapon can be picked up the specified player
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool P_CanPlayerPickupWeapon(const player_t& player, const weapontype_t weapon, const bool bWasDropped) noexcept {
+    // In co-op mode only allow placed weapons to be picked up if not already owned
+    if ((gNetGame == gt_coop) && (!bWasDropped)) {
+        if (player.weaponowned[weapon])
+            return false;
+    }
+
+    // If ammo can be given from the weapon then we can pick it up
+    const ammotype_t ammoType = gWeaponInfo[weapon].ammo;
+
+    if (ammoType != am_noammo) {
+        if (player.ammo[ammoType] != player.maxammo[ammoType])
+            return true;
+    }
+
+    // Otherwise the weapon can only be picked up if it is not owned
+    return (!player.weaponowned[weapon]);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: tells if the given (touching) map thing can pickup the specified special item or pickup that it is touching.
+// This query is used to help fix an original game bug where sometimes it's not possible to pickup items that should be possible to pickup
+// if they overlap nearby items that the player is unable to pickup.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_CanTouchSpecialThing(const mobj_t& special, const mobj_t& toucher) noexcept {
+    // The special is expected to be marked as such
+    ASSERT(special.flags & MF_SPECIAL);
+
+    // Touching object must be a player!
+    const player_t* const pPlayer = toucher.player;
+
+    if (!pPlayer)
+        return false;
+
+    // See if the thing is out of reach vertically: cannot pickup if that is the case
+    const fixed_t dz = special.z - toucher.z;
+
+    if ((dz > toucher.height) || (dz < -8 * FRACUNIT))
+        return false;
+
+    // Touching object cannot pickup if it is dead
+    if (toucher.health <= 0)
+        return false;
+
+    // See what the item is and whether the player would be able to pick it up
+    const player_t& player = *pPlayer;
+
+    switch (special.sprite) {
+        // Keys: this logic varies a little bit between single player and multiplayer
+        case SPR_BKEY:  return P_CanPlayerPickupKey(player, it_bluecard);
+        case SPR_RKEY:  return P_CanPlayerPickupKey(player, it_redcard);
+        case SPR_YKEY:  return P_CanPlayerPickupKey(player, it_yellowcard);
+        case SPR_BSKU:  return P_CanPlayerPickupKey(player, it_blueskull);
+        case SPR_RSKU:  return P_CanPlayerPickupKey(player, it_redskull);
+        case SPR_YSKU:  return P_CanPlayerPickupKey(player, it_yellowskull);
+
+        // Health can be picked up so long as you're not over the cap
+        case SPR_STIM:
+        case SPR_MEDI:
+            return (player.health < MAXHEALTH);
+
+        // Armors can be picked up so long as you're below the strength of that armor pickup
+        case SPR_ARM1:  return (player.armorpoints < 100);
+        case SPR_ARM2:  return (player.armorpoints < 200);
+
+        // These bonus items can always be picked up
+        case SPR_BON1:
+        case SPR_BON2:
+        case SPR_SOUL:
+        case SPR_MEGA:
+        case SPR_PINV:
+        case SPR_PSTR:
+        case SPR_PINS:
+        case SPR_SUIT:
+        case SPR_PVIS:
+        case SPR_BPAK:
+            return true;
+
+        // The map powerup can only be picked up once
+        case SPR_PMAP: return (!player.powers[pw_allmap]);
+
+        // Ammo can be picked up if you're not at the max cap
+        case SPR_CLIP:
+        case SPR_AMMO:
+            return (player.ammo[am_clip] != player.maxammo[am_clip]);
+
+        case SPR_ROCK:
+        case SPR_BROK:
+            return (player.ammo[am_misl] != player.maxammo[am_misl]);
+
+        case SPR_CELL:
+        case SPR_CELP:
+            return (player.ammo[am_cell] != player.maxammo[am_cell]);
+
+        case SPR_SHEL:
+        case SPR_SBOX:
+            return (player.ammo[am_shell] != player.maxammo[am_shell]);
+
+        // Weapons are a bit more complex but the general rule is that you can pick it up if you don't have it, or need more ammo.
+        // Placed weapons however can only be picked up in co-op if not already owned.
+        case SPR_BFUG:  return P_CanPlayerPickupWeapon(player, wp_bfg, false);
+        case SPR_MGUN:  return P_CanPlayerPickupWeapon(player, wp_chaingun, (special.flags & MF_DROPPED));
+        case SPR_CSAW:  return P_CanPlayerPickupWeapon(player, wp_chainsaw, false);
+        case SPR_LAUN:  return P_CanPlayerPickupWeapon(player, wp_missile, false);
+        case SPR_PLAS:  return P_CanPlayerPickupWeapon(player, wp_plasma, false);
+        case SPR_SHOT:  return P_CanPlayerPickupWeapon(player, wp_shotgun, (special.flags & MF_DROPPED));
+        case SPR_SGN2:  return P_CanPlayerPickupWeapon(player, wp_supershotgun, (special.flags & MF_DROPPED));
+    }
+
+    // If it's something we don't recognize (shouldn't be the case) then just assume it can be picked up since it's a special
+    return true;
+}
+
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Kill the specified map object and put it into the dead/gibbed state.

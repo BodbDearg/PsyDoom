@@ -190,7 +190,7 @@ texture_t gTex_CONNECT;
 
     // The current network protocol version.
     // Should be incremented whenever the data format being transmitted changes.
-    static constexpr int32_t NET_PROTOCOL_VERSION = 4;
+    static constexpr int32_t NET_PROTOCOL_VERSION = 5;
 
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;

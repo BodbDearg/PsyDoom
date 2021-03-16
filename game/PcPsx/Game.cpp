@@ -104,6 +104,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bUsePlayerRocketBlastFix   = Config::gbUsePlayerRocketBlastFix;
     settings.bUseSuperShotgunDelayTweak = Config::gbUseSuperShotgunDelayTweak;
     settings.bUseMoveInputLatencyTweak  = Config::gbUseMoveInputLatencyTweak;
+    settings.bUseItemPickupFix          = Config::gbUseItemPickupFix;
 
     if (Config::gUseFinalDoomPlayerMovement < 0) {
         settings.bUseFinalDoomPlayerMovement = (isFinalDoom()) ? true : false;  // Auto decide based on the game
@@ -143,6 +144,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUsePlayerRocketBlastFix       = false;
     settings.bUseSuperShotgunDelayTweak     = false;
     settings.bUseMoveInputLatencyTweak      = false;
+    settings.bUseItemPickupFix              = false;
     settings.bUseFinalDoomPlayerMovement    = isFinalDoom();
     settings.bAllowMovementCancellation     = isFinalDoom();
     settings.bAllowTurningCancellation      = false;
