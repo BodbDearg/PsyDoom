@@ -392,7 +392,8 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Whether or not to use movement & timing code from the PAL version of the game.\n"
         "# This does not alter the refresh rate of the game, just how the game logic is processed & advanced.\n"
         "# The PAL version simulates the world and enemies slightly faster but the player moves at a slower\n"
-        "# rate, making the game more difficult. View bobbing is also much stronger in the PAL version.\n"
+        "# rate, making the game more difficult. View bobbing is also much stronger in the PAL version unless\n"
+        "# the 'view bob fix' is applied to make it more consistent with NTSC (PsyDoom default behavior).\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#\n"
         "# Allowed values:\n"
@@ -521,8 +522,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "FixViewBobStrength",
         "#---------------------------------------------------------------------------------------------------\n"
         "# Fix a bug from the original PSX Doom where view bobbing is not as strong when the game is running\n"
-        "# at 30 FPS versus 15 FPS. Enabling this setting will make view bobbing stronger, and much more\n"
-        "# like the original PC version.\n"
+        "# at 30 FPS versus 15 FPS? Enabling this setting will make view bobbing stronger, and much more\n"
+        "# like the original PC version. This fix also adjusts view bobbing when using PAL timings, so that\n"
+        "# it is not overly strong when walking.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
         "1", "\n",
@@ -580,7 +582,7 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
     {
         "ViewBobbingStrength",
         "#---------------------------------------------------------------------------------------------------\n"
-        "# Multiplier for view bobbing strength, from 0.0 to 1.0.\n"
+        "# Multiplier for view bobbing strength, from 0.0 to 1.0 (or above, to make the walk bob stronger).\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
         "1.0", "\n",

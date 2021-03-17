@@ -1,5 +1,4 @@
 0.7 - GPU & Rendering?
-- Investigate view bobbing run vs walk.
 - Add a level end timer for speedrunning?
 
 0.8 - Limit extending and modding?

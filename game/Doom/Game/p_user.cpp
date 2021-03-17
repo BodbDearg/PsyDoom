@@ -517,33 +517,31 @@ static void P_CalcHeight(player_t& player) noexcept {
         int32_t speedY = mobj.momy;
 
         #if PSYDOOM_MODS
-            // PsyDoom: fix the view bob strength if the game is running at 30 FPS.
-            // Needs to be doubled due to the way the calculations work out at this higher framerate.
-            const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
-
-            if (Game::gSettings.bFixViewBobStrength && (elapsedVBlanks < 4)) {
-                if (elapsedVBlanks == 2) {
-                    // Normal fixup case: at 30 FPS we need to double bob strength
-                    speedX *= 2;
-                    speedY *= 2;
-                } else if (elapsedVBlanks == 3) {
-                    // If running using PAL demo timings then we have 3 VBL per game tick and need to multiply strength by 1.5
-                    speedX = (speedX * 3) / 2;
-                    speedY = (speedY * 3) / 2;
-                } else if (elapsedVBlanks == 1) {
-                    // The game should never run at 60 Hz - but just in case we 4x the strength...
-                    speedX *= 4;
-                    speedY *= 4;
-                }
+        {
+            // PsyDoom: if we are doing 30 Hz ticks then adjust the speed fed into the view bobbing calculation to account for doubled friction @ 30 Hz.
+            // Undo 1 tick of friction to get a bobbing amount closer to what would happen if the game ran at 15 Hz.
+            if (Game::gSettings.bFixViewBobStrength && (gElapsedVBlanks <= 2)) {
+                speedX = FixedDiv(speedX, FRICTION);
+                speedY = FixedDiv(speedY, FRICTION);
             }
+
+            // PsyDoom: if we are applying the movement input latency tweak then un-apply this frame's friction for the bob calculation.
+            // This makes the bob operate at a similar strength to when the latency tweak is disabled.
+            // We need this adjustment because prior to the latency tweak view bobbing was calculated BEFORE friction was applied.
+            if (Game::gSettings.bUseMoveInputLatencyTweak) {
+                speedX = FixedDiv(speedX, FRICTION);
+                speedY = FixedDiv(speedY, FRICTION);
+            }
+        }
         #endif
 
         speedX = d_rshift<8>(speedX);
         speedY = d_rshift<8>(speedY);
         player.bob = (speedX * speedX) + (speedY * speedY);
 
-        // For some reason the PAL version divides this amount by 3 rather than 8...
-        if (Game::gSettings.bUsePalTimings) {
+        // For some reason the PAL version divides this amount by 3 rather than 16...
+        // PsyDoom: fix that and make the behavior consistent for both versions if the view bobbing fix is enabled.
+        if (Game::gSettings.bUsePalTimings && (!Game::gSettings.bFixViewBobStrength)) {
             player.bob /= 3;
         } else {
             player.bob = d_rshift<4>(player.bob);
