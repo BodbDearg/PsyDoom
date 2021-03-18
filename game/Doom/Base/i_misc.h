@@ -45,4 +45,9 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
 
 void I_DrawPausedOverlay() noexcept;
 void I_UpdatePalette() noexcept;
+
+#if PSYDOOM_MODS
+    int32_t I_GetStringWidth(const char* const str) noexcept;
+#endif
+
 void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexcept;

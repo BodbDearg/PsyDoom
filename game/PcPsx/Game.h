@@ -66,5 +66,8 @@ uint16_t getTexPalette_DOOM() noexcept;
 uint16_t getTexPalette_BUTTONS() noexcept;
 uint16_t getTexPalette_CONNECT() noexcept;
 uint16_t getTexPalette_DebugFontSmall() noexcept;
+void startLevelTimer() noexcept;
+void stopLevelTimer() noexcept;
+int64_t getLevelFinishTimeCentisecs() noexcept;
 
 END_NAMESPACE(Game)

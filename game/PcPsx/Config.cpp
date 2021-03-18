@@ -328,6 +328,7 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
 static std::string      gCueFilePath;
 bool                    gbUncapFramerate;
 bool                    gbUseFastLoading;
+bool                    gbEnableSinglePlayerLevelTimer;
 int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
@@ -385,6 +386,21 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseFastLoading = iniEntry.getBoolValue(false); },
         []() { gbUseFastLoading = false; }
+    },
+    {
+        "EnableSinglePlayerLevelTimer",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Enable an optional end of level time display, in single player mode?\n"
+        "# Setting to '1' shows the real time taken to complete a level, including any time spent in pause or\n"
+        "# option menus. This alters the display of the intermission screen slightly and condenses the\n"
+        "# stats shown in order to make room for time. This setting is not enabled by default because of font\n"
+        "# limitations making the time display look odd - the '.' separator must be used instead of ':'.\n"
+        "# The time is displayed in 3 components, minutes, seconds and hundredths of seconds and is limited\n"
+        "# to showing a maximum display of 999.59.99 - which is probably more than enough for any level.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableSinglePlayerLevelTimer = iniEntry.getBoolValue(false); },
+        []() { gbEnableSinglePlayerLevelTimer = false; }
     },
     {
         "UsePalTimings",

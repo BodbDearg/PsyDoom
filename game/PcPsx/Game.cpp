@@ -12,6 +12,7 @@
 #include "PsxVm.h"
 
 #include <algorithm>
+#include <chrono>
 
 BEGIN_NAMESPACE(Game)
 
@@ -43,6 +44,13 @@ GameType        gGameType;
 GameVariant     gGameVariant;
 GameSettings    gSettings;
 bool            gbIsPsxDoomForever;
+
+// Level timer: start time
+static std::chrono::high_resolution_clock::time_point gLevelStartTime;
+
+// Level timer: how many centiseconds (1/100 second units) were elapsed when the level was finished.
+// This value is only set once the end time is recorded.
+static int64_t gLevelFinishTimeCentisecs;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Determine which game type we are playing and from what region
@@ -288,6 +296,35 @@ uint16_t getTexPalette_CONNECT() noexcept {
 
 uint16_t getTexPalette_DebugFontSmall() noexcept {
     return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL : MAINPAL];
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Starts the timer for recording how long a playthrough of a level takes
+//------------------------------------------------------------------------------------------------------------------------------------------
+void startLevelTimer() noexcept {
+    // Record the start time
+    gLevelStartTime = std::chrono::high_resolution_clock::now();
+    gLevelFinishTimeCentisecs = {};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Ends the timer for recording how long a playthrough of a level takes and records the number of 1/100 second units elapsed (centiseconds).
+//------------------------------------------------------------------------------------------------------------------------------------------
+void stopLevelTimer() noexcept {
+    // Compute how much time has elapsed and save
+    const std::chrono::high_resolution_clock::time_point endTime = std::chrono::high_resolution_clock::now();
+    const std::chrono::high_resolution_clock::duration elapsedNs = endTime - gLevelStartTime;
+    typedef std::chrono::duration<int64_t, std::ratio<1,100>> centiseconds;
+
+    gLevelFinishTimeCentisecs = std::chrono::duration_cast<centiseconds>(elapsedNs).count();
+    gLevelStartTime = endTime;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the recorded duration of the level playthrough, after the timer has been stopped
+//------------------------------------------------------------------------------------------------------------------------------------------
+int64_t getLevelFinishTimeCentisecs() noexcept {
+    return gLevelFinishTimeCentisecs;
 }
 
 END_NAMESPACE(Game)

@@ -10,6 +10,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/PlayerPrefs.h"
@@ -394,21 +395,80 @@ void IN_Drawer() noexcept {
 void IN_SingleDrawer() noexcept {
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
 
-    I_DrawString(-1, 20, Game::getMapName(gGameMap));
-    I_DrawString(-1, 36, "Finished");
+    // PsyDoom: should we show the time taken to complete the level?
+    #if PSYDOOM_MODS
+        const bool bShowTime = Config::gbEnableSinglePlayerLevelTimer;
+    #endif
 
-    I_DrawString(57, 65, "Kills");
-    I_DrawString(182, 65, "%");
-    I_DrawNumber(170, 65, gKillValue[0]);
-    
-    I_DrawString(53, 91, "Items");
-    I_DrawString(182, 91, "%");
-    I_DrawNumber(170, 91, gItemValue[0]);
+    // PsyDoom: aligning these slightly better so that their right side is flush with the 'kills' label
+    #if PSYDOOM_MODS
+        const int32_t itemsX = 54;
+        const int32_t secretsX = 28;
+    #else
+        const int32_t itemsX = 53;
+        const int32_t secretsX = 26;
+    #endif
 
-    I_DrawString(26, 117, "Secrets");
-    I_DrawString(182, 117, "%");
-    I_DrawNumber(170, 117, gSecretValue[0]);
+    // These are most of the coordinates for the regular/original menu layout
+    int32_t percentSignX = 182;
+    int32_t percentValueX = 170;
+    int32_t mapNameY = 20;
+    int32_t finishedY = 36;
+    int32_t killsY = 65;
+    int32_t itemsY = 91;
+    int32_t secretsY = 117;
+
+    // Use a slightly different menu layout if we are showing the time.
+    // Compact a little to make room for the time field...
+    #if PSYDOOM_MODS
+        if (bShowTime) {
+            percentSignX = 202;
+            percentValueX = 190;
+            mapNameY = 10;
+            finishedY = 26;
+            killsY = 55;
+            itemsY = 75;
+            secretsY = 95;
+        }
+
+        const int32_t timeY = 115;
+    #endif
+
+    I_DrawString(-1, mapNameY, Game::getMapName(gGameMap));
+    I_DrawString(-1, finishedY, "Finished");
+
+    I_DrawString(57, killsY, "Kills");
+    I_DrawString(percentSignX, killsY, "%");
+    I_DrawNumber(percentValueX, killsY, gKillValue[0]);
     
+    I_DrawString(itemsX, itemsY, "Items");
+    I_DrawString(percentSignX, itemsY, "%");
+    I_DrawNumber(percentValueX, itemsY, gItemValue[0]);
+
+    I_DrawString(secretsX, secretsY, "Secrets");
+    I_DrawString(percentSignX, secretsY, "%");
+    I_DrawNumber(percentValueX, secretsY, gSecretValue[0]);
+
+    // Showing the time?
+    #if PSYDOOM_MODS
+        if (bShowTime) {
+            // Get the components of time elapsed and restrict the maximum time display to 999.59.99
+            constexpr int64_t MAX_TIME = 5997639;
+            int32_t hundreths = (int32_t) std::min(Game::getLevelFinishTimeCentisecs(), MAX_TIME);
+            int32_t seconds = hundreths / 100; hundreths %= 100;
+            int32_t minutes = seconds / 60; seconds %= 60;
+
+            // Format the time string and figure out how long it is
+            char timeString[256];
+            std::snprintf(timeString, C_ARRAY_SIZE(timeString), "%d.%02d.%02d", minutes, seconds, hundreths);
+            const int32_t timeStringWidth = I_GetStringWidth(timeString);
+
+            // Show the time elapsed
+            I_DrawString(64, timeY, "Time");
+            I_DrawString(213 - timeStringWidth, timeY, timeString);
+        }
+    #endif
+
     // Only draw the next map and password if there is a next map
     if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 145, "Entering");

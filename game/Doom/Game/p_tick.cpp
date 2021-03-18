@@ -721,12 +721,22 @@ void P_Start() noexcept {
             0
         );
     }
+
+    // PsyDoom: start the level timer
+    #if PSYDOOM_MODS
+        Game::startLevelTimer();
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shuts down main gameplay
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // PsyDoom: end the level timer
+    #if PSYDOOM_MODS
+        Game::stopLevelTimer();
+    #endif
+
     // Finish up any GPU related work
     LIBGPU_DrawSync(0);
 

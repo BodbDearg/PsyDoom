@@ -1,6 +1,3 @@
-0.7 - GPU & Rendering?
-- Add a level end timer for speedrunning?
-
 0.8 - Limit extending and modding?
 - Add map patching mechanism for a few select map bugs
     - Fix house of pain door bug

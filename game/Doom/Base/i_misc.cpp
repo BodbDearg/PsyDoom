@@ -359,7 +359,7 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
     const char* pCurChar = str;
 
     for (char c = *pCurChar; c != 0; ++pCurChar, c = *pCurChar) {
-        // Figure out which font character to use, and y positioning
+        // Figure out which font character to use and from that it's width
         int32_t charIdx = 0;
 
         if ((c >= 'A') && (c <= 'Z')) {
@@ -395,6 +395,55 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
     // Figure out an x position to center this string in the middle of the screen
     return (SCREEN_W - width) / 2;
 }
+
+#if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gives the width of the given string: useful for right aligning
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t I_GetStringWidth(const char* const str) noexcept {
+    // Go through the entire string and get the width of all characters that would be drawn
+    int32_t width = 0;
+    const char* pCurChar = str;
+
+    for (char c = *pCurChar; c != 0; ++pCurChar, c = *pCurChar) {
+        // Figure out which font character to use and from that it's width
+        int32_t charIdx = 0;
+
+        if ((c >= 'A') && (c <= 'Z')) {
+            charIdx = BIG_FONT_UCASE_ALPHA + (c - 'A');
+        }
+        else if ((c >= 'a') && (c <= 'z')) {
+            charIdx = BIG_FONT_LCASE_ALPHA + (c - 'a');
+        }
+        else if ((c >= '0') && (c <= '9')) {
+            charIdx = BIG_FONT_DIGITS + (c - '0');
+        }
+        else if (c == '%') {
+            charIdx = BIG_FONT_PERCENT;
+        }
+        else if (c == '!') {
+            charIdx = BIG_FONT_EXCLAMATION;
+        }
+        else if (c == '.') {
+            charIdx = BIG_FONT_PERIOD;
+        }
+        else if (c == '-') {
+            charIdx = BIG_FONT_MINUS;
+        }
+        else {
+            width += 6;     // Whitespace
+            continue;
+        }
+
+        const fontchar_t& fontchar = gBigFontChars[charIdx];
+        width += fontchar.w;
+    }
+
+    return width;
+}
+
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the given string using the big font at the given pixel location.
