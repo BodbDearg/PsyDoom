@@ -400,7 +400,7 @@ fixed_t R_CalcLerpFactor() noexcept {
     // For demo playback/recording the game is capped at 15 Hz for consistency, and the cap is 30 Hz for normal games.
     // These values are adjusted slightly for PAL mode also.
     const double normalTicsPerSec = (Game::gSettings.bUsePalTimings) ? 25.0 : 30.0;
-    const double demoTicsPerSec = (Game::gSettings.bUsePalTimings) ? 12.5 : 15.0;
+    const double demoTicsPerSec = (Game::gSettings.bUsePalTimings) ? 16.666666 : 15.0;
     const double ticsPerSec = (Game::gSettings.bUseDemoTimings) ? demoTicsPerSec : normalTicsPerSec;
 
     // Compute the lerp factor in 16.16 format
