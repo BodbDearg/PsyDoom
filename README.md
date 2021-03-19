@@ -1,22 +1,28 @@
 # PsyDoom
-This project backports PlayStation Doom and Final Doom to PC via reverse engineering. The code is derived directly from the original PlayStation machine code (see commit history for a timeline of its transformation) and now runs natively on modern systems, having been gradually converted from emulated MIPS instructions to structured C++ code over time. The specifics of the PlayStation's GPU and the SPU are internally emulated, helping the game look and sound as authentic as possible. The port is very accurate in terms of its gameplay and has been verified to reproduce exactly [4 playthroughs of PSX Doom & Final Doom (NTSC & PAL)](extras/psxdoom_demos) given the original per-frame inputs stored in demo recordings. The game also has no external dependencies and just needs a valid .cue file of the original game disc to run.
+This project backports PlayStation Doom and Final Doom to PC via reverse engineering. The code is derived directly from the original PlayStation machine code (see commit history for a timeline of its transformation) and now runs natively on modern systems, having been gradually converted from emulated MIPS instructions to structured C++ code over time. 
+
+The specifics of the PlayStation's GPU (for the original renderer) and the SPU are internally emulated, helping the game look and sound as authentic as possible. A new Vulkan renderer supporting widescreen & high resolutions is also available for systems that support it (enabled by default), allowing PlayStation Doom to be experienced in much higher definition.
+
+The port is very accurate in terms of its gameplay and has been verified to reproduce exactly [4 playthroughs of PSX Doom & Final Doom (NTSC & PAL)](extras/psxdoom_demos) given the original player inputs stored in demo recordings. The game also has no external dependencies and just needs a valid .cue file of the original game disc to run.
 
 A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE), by [Erick Vásquez García (Erick194)](https://github.com/Erick194) also completely recreates the Doom source code for the actual PlayStation hardware and 'PsyQ' SDK. The reverse engineering work for that project was used to help accelerate the transition to native C++ code for this project and to cross verify the reverse engineering work in both projects.
 
-As of right now the game mostly runs correctly, with a few very minor issues. Here is a recent video showing the project in action:
+Here is a recent video showing the project in action:
 
 [![Alt text](https://img.youtube.com/vi/ohS8tYPNr0M/0.jpg)](https://www.youtube.com/watch?v=ohS8tYPNr0M)
 
 The original goal of this project was to have a complete replacement for the original PlayStation Doom .EXE for modern systems. Now that this objective has been achieved, the focus turns to adding quality of life improvements, some modding features and additional polish.
 
 ## Running
-- Presently only Windows 64-bit and MacOS (Intel 64-bit) are supported. Linux is not currently supported but is planned for a future release.
 - Download the latest release build from here: https://github.com/BodbDearg/PsyDoom/releases
+- Presently only Windows 64-bit and MacOS (ARM/Intel 64-bit) are supported. Linux is not currently supported but is planned for a future release.
+  - The Vulkan renderer also requires a Vulkan 1.1 capable GPU. On MacOS a 'Metal' capable GPU is required.
+  - Note: ARM Support for MacOS is currently experimental/untested. If you have this platform, please let me know if it works! :)
 - On Windows, make sure to have the latest Visual C redistributable installed:
   - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 - The following items must be present in the working directory of the application:
-  - **DOOM.CUE**: A .cue file pointing to all of the tracks and binary data for the game disc. 
-    - Any original edition of the game is acceptable: NTSC-U, NTSC-J, PAL, NTSC-U 'Greatest Hits' etc.
+  - **DOOM.CUE**: A .cue file pointing to all the tracks and binary data for one of the original game discs.
+    - Any edition of the original game is acceptable: NTSC-U, NTSC-J, PAL, NTSC-U 'Greatest Hits' etc.
     - Both Doom and Final Doom can be used.
 - The settings for the game can be changed by editing the .ini files found in the following folders:
   - Windows: `%APPDATA%\com.codelobster\PsyDoom`
@@ -38,6 +44,7 @@ The original goal of this project was to have a complete replacement for the ori
   - Alt : Automap Manual Move
   - -/+ : Automap Zoom Out or In
   - Numbers 1-8 : Weapon switch
+  - \` : Toggle between the Vulkan and Classic (original) renderers, hardware permitting.
 - Mouse controls are currently defaulted to:
   - Left mouse : Fire
   - Right mouse : Use
