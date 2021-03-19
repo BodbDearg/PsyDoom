@@ -20,6 +20,8 @@ The original goal of this project was to have a complete replacement for the ori
   - Note: ARM Support for MacOS is currently experimental/untested. If you have this platform, please let me know if it works! :)
 - On Windows, make sure to have the latest Visual C redistributable installed:
   - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
+- On MacOS you must manually allow the .app through Gatekeeper in order to run the game, as the code is not signed.
+  - You must also enter the full path to DOOM.CUE in your `game_cfg.ini` file; PsyDoom cannot detect the .cue file even if it is placed in the same directory as the .app file due to OS security measures ('translocation').
 - The following items must be present in the working directory of the application:
   - **DOOM.CUE**: A .cue file pointing to all the tracks and binary data for one of the original game discs.
     - Any edition of the original game is acceptable: NTSC-U, NTSC-J, PAL, NTSC-U 'Greatest Hits' etc.
