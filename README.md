@@ -9,7 +9,7 @@ A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE), by [Eric
 
 Here is a recent video showing the project in action:
 
-[![Alt text](https://img.youtube.com/vi/ohS8tYPNr0M/0.jpg)](https://www.youtube.com/watch?v=ohS8tYPNr0M)
+[![Alt text](https://img.youtube.com/vi/0miyRHptfeA/0.jpg)](https://youtu.be/0miyRHptfeA)
 
 The original goal of this project was to have a complete replacement for the original PlayStation Doom .EXE for modern systems. Now that this objective has been achieved, the focus turns to adding quality of life improvements, some modding features and additional polish.
 
