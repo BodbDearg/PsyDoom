@@ -424,7 +424,24 @@ bool isHeadlessPhysicalDeviceSuitable(const vgl::PhysicalDevice& device) noexcep
         VK_FORMAT_FEATURE_BLIT_DST_BIT      // So it can be blitted to
     );
 
-    return bFoundSupportedSurfaceFormat;
+    if (!bFoundSupportedSurfaceFormat)
+        return false;
+
+    // Make sure all required vertex attribute formats are supported
+    constexpr VkFormat VERTEX_ATTRIB_FORMATS[] = {
+        VK_FORMAT_R32G32B32_SFLOAT,
+        VK_FORMAT_R8G8B8A8_UINT,
+        VK_FORMAT_R16G16_UINT,
+        VK_FORMAT_R32G32_SFLOAT
+    };
+
+    for (VkFormat format : VERTEX_ATTRIB_FORMATS) {
+        if (!device.findFirstSupportedBufferFormat(&format, 1, VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT))
+            return false;
+    }
+
+    // Device is good if we get to here!
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
