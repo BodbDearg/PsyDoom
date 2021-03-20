@@ -18,10 +18,10 @@ layout(location = 5) flat out vec4 out_stmul;
 
 void main() {
     gl_Position = uniforms.mvpMatrix * vec4(in_pos, 1);
-    out_color = in_color / 128.0;
+    out_color = vec3(in_color_lightDimMode.rgb) / 128.0;
     out_uv = in_uv;
     out_texWinPos = ivec2(in_texWinPos);
     out_texWinSize = ivec2(in_texWinSize);
     out_clutPos = ivec2(in_clutPos);
-    out_stmul = in_stmul / 128.0;
+    out_stmul = vec4(in_stmul) / 128.0;
 }

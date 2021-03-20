@@ -20,13 +20,13 @@ layout(location = 6) flat out vec4 out_stmul;
 
 void main() {
     gl_Position = uniforms.mvpMatrix * vec4(in_pos, 1);
-    out_color = in_color;
+    out_color = vec3(in_color_lightDimMode.rgb);
     out_uv_z = vec3(in_uv, gl_Position.z);
-    out_lightDimModeStrength.x = (in_lightDimMode == 0) ? 1.0 : 0.0;    // No light diminishing
-    out_lightDimModeStrength.y = (in_lightDimMode == 1) ? 1.0 : 0.0;    // Wall light diminishing
-    out_lightDimModeStrength.z = (in_lightDimMode == 2) ? 1.0 : 0.0;    // Floor light diminishing
+    out_lightDimModeStrength.x = (in_color_lightDimMode.a == 0) ? 1.0 : 0.0;    // No light diminishing
+    out_lightDimModeStrength.y = (in_color_lightDimMode.a == 1) ? 1.0 : 0.0;    // Wall light diminishing
+    out_lightDimModeStrength.z = (in_color_lightDimMode.a == 2) ? 1.0 : 0.0;    // Floor light diminishing
     out_texWinPos = ivec2(in_texWinPos);
     out_texWinSize = ivec2(in_texWinSize);
     out_clutPos = ivec2(in_clutPos);
-    out_stmul = in_stmul / 128.0;
+    out_stmul = vec4(in_stmul) / 128.0;
 }

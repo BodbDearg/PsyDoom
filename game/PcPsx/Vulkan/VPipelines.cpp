@@ -44,13 +44,12 @@ const VkVertexInputBindingDescription gVertexBindingDesc_xyUv           = { 0, s
 // Vertex attribute descriptions
 const VkVertexInputAttributeDescription gVertexAttribs_draw[] = {
     { 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VVertex_Draw, x) },
-    { 1, 0, VK_FORMAT_R8G8B8_USCALED,   offsetof(VVertex_Draw, r) },
-    { 2, 0, VK_FORMAT_R8_UINT,          offsetof(VVertex_Draw, lightDimMode) },
-    { 3, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_Draw, u) },
-    { 4, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, texWinX) },
-    { 5, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, texWinW) },
-    { 6, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, clutX) },
-    { 7, 0, VK_FORMAT_R8G8B8A8_USCALED, offsetof(VVertex_Draw, stmulR) },
+    { 1, 0, VK_FORMAT_R8G8B8A8_UINT,    offsetof(VVertex_Draw, r) },
+    { 2, 0, VK_FORMAT_R32G32_SFLOAT,    offsetof(VVertex_Draw, u) },
+    { 3, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, texWinX) },
+    { 4, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, texWinW) },
+    { 5, 0, VK_FORMAT_R16G16_UINT,      offsetof(VVertex_Draw, clutX) },
+    { 6, 0, VK_FORMAT_R8G8B8A8_UINT,    offsetof(VVertex_Draw, stmulR) },
 };
 
 const VkVertexInputAttributeDescription gVertexAttribs_msaaResolve[] = {
