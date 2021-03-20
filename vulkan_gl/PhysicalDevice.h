@@ -38,22 +38,43 @@ public:
         const VkMemoryPropertyFlags requiredMemProps = 0
     ) const noexcept;
 
+    VkFormat findFirstSupportedLinearTilingFormat(
+        const VkFormat* const pFormats,
+        const size_t numFormats,
+        const VkFormatFeatureFlags requiredFeatureFlags
+    ) const noexcept;
+
+    VkFormat findFirstSupportedOptimalTilingFormat(
+        const VkFormat* const pFormats,
+        const size_t numFormats,
+        const VkFormatFeatureFlags requiredFeatureFlags
+    ) const noexcept;
+
+    VkFormat findFirstSupportedBufferFormat(
+        const VkFormat* const pFormats,
+        const size_t numFormats,
+        const VkFormatFeatureFlags requiredFeatureFlags
+    ) const noexcept;
+
     VkFormat findFirstSupportedTextureFormat(
         const VkFormat* const pFormats,
         const size_t numFormats,
-        const VkFormatFeatureFlags extraReqFeatureFlags = 0
+        const VkImageTiling imageTiling,
+        const VkFormatFeatureFlags requiredFeatureFlags
     ) const noexcept;
 
     VkFormat findFirstSupportedRenderTextureFormat(
         const VkFormat* const pFormats,
         const size_t numFormats,
-        const VkFormatFeatureFlags extraReqFeatureFlags = 0
+        const VkImageTiling imageTiling,
+        const VkFormatFeatureFlags requiredFeatureFlags
     ) const noexcept;
 
     VkFormat findFirstSupportedDepthStencilBufferFormat(
         const VkFormat* const pFormats,
         const size_t numFormats,
-        const VkFormatFeatureFlags extraReqFeatureFlags = 0
+        const VkImageTiling imageTiling,
+        const VkFormatFeatureFlags requiredFeatureFlags
     ) const noexcept;
 
     // Get the minimum required alignment for uniform buffers
@@ -67,12 +88,6 @@ public:
     }
 
 private:
-    VkFormat findFirstSupportedFormatInternal(
-        const VkFormat* const pFormats,
-        const size_t numFormats,
-        const VkImageTiling vkImageTilingMode,
-        const VkFormatFeatureFlags requiredVkFormatFeatureFlags
-    ) const noexcept;
 
     const VkFuncs&                          mVkFuncs;                       // Pointers to Vulkan API functions
     VulkanInstance&                         mVulkanInstance;                // The Vulkan instane the physical device is associated with

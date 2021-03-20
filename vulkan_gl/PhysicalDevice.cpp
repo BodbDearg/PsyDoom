@@ -6,6 +6,32 @@
 BEGIN_NAMESPACE(vgl)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper that does most of the work for finding a supported format matching a given condition
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static VkFormat findFirstMatchingFormat(
+    const VkFuncs& vkFuncs,
+    const VkPhysicalDevice vkPhysicalDevice,
+    const VkFormat* const pFormats,
+    const size_t numFormats,
+    const VkFormatFeatureFlags requiredFeatureFlags,
+    const T& areFormatPropsOk
+) noexcept {
+    ASSERT(pFormats || (numFormats == 0));
+
+    for (size_t i = 0; i < numFormats; ++i) {
+        const VkFormat format = pFormats[i];
+        VkFormatProperties formatProps = {};
+        vkFuncs.vkGetPhysicalDeviceFormatProperties(vkPhysicalDevice, format, &formatProps);
+
+        if (areFormatPropsOk(formatProps))
+            return format;
+    }
+
+    return VK_FORMAT_UNDEFINED;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Creates this representation of the physical device using the device handle
 //------------------------------------------------------------------------------------------------------------------------------------------
 PhysicalDevice::PhysicalDevice(const VkFuncs& vkFuncs, VulkanInstance& vulkanInstance, const VkPhysicalDevice vkPhysicalDevice) noexcept
@@ -129,29 +155,81 @@ uint32_t PhysicalDevice::findSuitableMemTypeIndex(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Search for the first supported device format in a list of formats for regular 'Texture' objects.
-// Optionally, additional required format feature flags can be supplied.
-// On failure to find a supported format, 'VK_FORMAT_UNDEFINED' is returned.
+// Search for the first supported format for linear tiling, optimal tiling and buffer usage
+//------------------------------------------------------------------------------------------------------------------------------------------
+VkFormat PhysicalDevice::findFirstSupportedLinearTilingFormat(
+    const VkFormat* const pFormats,
+    const size_t numFormats,
+    const VkFormatFeatureFlags requiredFeatureFlags
+) const noexcept {
+    return findFirstMatchingFormat(
+        mVkFuncs,
+        mVkPhysicalDevice,
+        pFormats,
+        numFormats,
+        requiredFeatureFlags,
+        [&](const VkFormatProperties& props) noexcept -> bool {
+            return ((props.linearTilingFeatures & requiredFeatureFlags) == requiredFeatureFlags);
+        }
+    );
+}
+
+VkFormat PhysicalDevice::findFirstSupportedOptimalTilingFormat(
+    const VkFormat* const pFormats,
+    const size_t numFormats,
+    const VkFormatFeatureFlags requiredFeatureFlags
+) const noexcept {
+    return findFirstMatchingFormat(
+        mVkFuncs,
+        mVkPhysicalDevice,
+        pFormats,
+        numFormats,
+        requiredFeatureFlags,
+        [&](const VkFormatProperties& props) noexcept -> bool {
+            return ((props.optimalTilingFeatures & requiredFeatureFlags) == requiredFeatureFlags);
+        }
+    );
+}
+
+VkFormat PhysicalDevice::findFirstSupportedBufferFormat(
+    const VkFormat* const pFormats,
+    const size_t numFormats,
+    const VkFormatFeatureFlags requiredFeatureFlags
+) const noexcept {
+    return findFirstMatchingFormat(
+        mVkFuncs,
+        mVkPhysicalDevice,
+        pFormats,
+        numFormats,
+        requiredFeatureFlags,
+        [&](const VkFormatProperties& props) noexcept -> bool {
+            return ((props.bufferFeatures & requiredFeatureFlags) == requiredFeatureFlags);
+        }
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Search for the first supported format for textures, render textures and depth stencil buffers.
+// These just automatically add flags.
 //------------------------------------------------------------------------------------------------------------------------------------------
 VkFormat PhysicalDevice::findFirstSupportedTextureFormat(
     const VkFormat* const pFormats,
     const size_t numFormats,
-    const VkFormatFeatureFlags extraReqFeatureFlags
+    const VkImageTiling imageTiling,
+    const VkFormatFeatureFlags requiredFeatureFlags
 ) const noexcept {
-    const VkFormatFeatureFlags reqVkFeatureFlags = extraReqFeatureFlags | (
-        VK_FORMAT_FEATURE_TRANSFER_SRC_BIT |
+    constexpr VkFormatFeatureFlags BASE_FEATURE_FLAGS = (
         VK_FORMAT_FEATURE_TRANSFER_DST_BIT |
-        VK_FORMAT_FEATURE_BLIT_SRC_BIT |
-        VK_FORMAT_FEATURE_BLIT_DST_BIT |
         VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
     );
 
-    return findFirstSupportedFormatInternal(
-        pFormats,
-        numFormats,
-        VK_IMAGE_TILING_OPTIMAL,    // 'Texture' is always optimal
-        reqVkFeatureFlags
-    );
+    if (imageTiling == VK_IMAGE_TILING_OPTIMAL) {
+        return findFirstSupportedOptimalTilingFormat(pFormats, numFormats, BASE_FEATURE_FLAGS | requiredFeatureFlags);
+    } else if (imageTiling == VK_IMAGE_TILING_LINEAR) {
+        return findFirstSupportedLinearTilingFormat(pFormats, numFormats, BASE_FEATURE_FLAGS | requiredFeatureFlags);
+    }
+
+    return VK_FORMAT_UNDEFINED;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -162,24 +240,18 @@ VkFormat PhysicalDevice::findFirstSupportedTextureFormat(
 VkFormat PhysicalDevice::findFirstSupportedRenderTextureFormat(
     const VkFormat* const pFormats,
     const size_t numFormats,
-    const VkFormatFeatureFlags extraReqFeatureFlags
+    const VkImageTiling imageTiling,
+    const VkFormatFeatureFlags requiredFeatureFlags
 ) const noexcept {
-    const VkFormatFeatureFlags reqVkFeatureFlags = extraReqFeatureFlags | (
-        VK_FORMAT_FEATURE_TRANSFER_SRC_BIT |
-        VK_FORMAT_FEATURE_TRANSFER_DST_BIT |
-        VK_FORMAT_FEATURE_BLIT_SRC_BIT |
-        VK_FORMAT_FEATURE_BLIT_DST_BIT |
-        VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT |
-        VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT |
-        VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
-    );
+    constexpr VkFormatFeatureFlags BASE_FEATURE_FLAGS = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT;
 
-    return findFirstSupportedFormatInternal(
-        pFormats,
-        numFormats,
-        VK_IMAGE_TILING_OPTIMAL,    // 'RenderTexture' is always optimal
-        reqVkFeatureFlags
-    );
+    if (imageTiling == VK_IMAGE_TILING_OPTIMAL) {
+        return findFirstSupportedOptimalTilingFormat(pFormats, numFormats, BASE_FEATURE_FLAGS | requiredFeatureFlags);
+    } else if (imageTiling == VK_IMAGE_TILING_LINEAR) {
+        return findFirstSupportedLinearTilingFormat(pFormats, numFormats, BASE_FEATURE_FLAGS | requiredFeatureFlags);
+    }
+
+    return VK_FORMAT_UNDEFINED;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -190,55 +262,15 @@ VkFormat PhysicalDevice::findFirstSupportedRenderTextureFormat(
 VkFormat PhysicalDevice::findFirstSupportedDepthStencilBufferFormat(
     const VkFormat* const pFormats,
     const size_t numFormats,
-    const VkFormatFeatureFlags extraReqFeatureFlags
+    const VkImageTiling imageTiling,
+    const VkFormatFeatureFlags requiredFeatureFlags
 ) const noexcept {
-    const VkFormatFeatureFlags reqVkFeatureFlags = extraReqFeatureFlags | (
-        VK_FORMAT_FEATURE_TRANSFER_SRC_BIT |
-        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-    );
+    constexpr VkFormatFeatureFlags BASE_FEATURE_FLAGS = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    return findFirstSupportedFormatInternal(
-        pFormats,
-        numFormats,
-        VK_IMAGE_TILING_OPTIMAL,    // 'RenderTexture' is always optimal
-        reqVkFeatureFlags
-    );
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Internal implementation of finding the first supported device format from the given list of formats, subject to the given constraints.
-// Returns 'VK_FORMAT_UNDEFINED' if no suitable supported device format was found.
-//------------------------------------------------------------------------------------------------------------------------------------------
-VkFormat PhysicalDevice::findFirstSupportedFormatInternal(
-    const VkFormat* const pFormats,
-    const size_t numFormats,
-    const VkImageTiling vkImageTilingMode,
-    const VkFormatFeatureFlags requiredVkFormatFeatureFlags
-) const noexcept {
-    // Sanity checks
-    ASSERT(pFormats || (numFormats == 0));
-    
-    // Search for a format with the requested feature flags for the specified tiling mode.
-    // Note: only supporting optimal and linear tiling here, other future tiling modes will not be resolved or supported without modifications.
-    if (vkImageTilingMode == VK_IMAGE_TILING_OPTIMAL) {
-        for (size_t i = 0; i < numFormats; ++i) {
-            const VkFormat format = pFormats[i];
-            VkFormatProperties formatProps = {};
-            mVkFuncs.vkGetPhysicalDeviceFormatProperties(mVkPhysicalDevice, format, &formatProps);
-
-            if ((formatProps.optimalTilingFeatures & requiredVkFormatFeatureFlags) == requiredVkFormatFeatureFlags)
-                return format;
-        }
-    }
-    else if (vkImageTilingMode == VK_IMAGE_TILING_LINEAR) {
-        for (size_t i = 0; i < numFormats; ++i) {
-            const VkFormat format = pFormats[i];
-            VkFormatProperties formatProps = {};
-            mVkFuncs.vkGetPhysicalDeviceFormatProperties(mVkPhysicalDevice, format, &formatProps);
-
-            if ((formatProps.linearTilingFeatures & requiredVkFormatFeatureFlags) == requiredVkFormatFeatureFlags)
-                return format;
-        }
+    if (imageTiling == VK_IMAGE_TILING_OPTIMAL) {
+        return findFirstSupportedOptimalTilingFormat(pFormats, numFormats, BASE_FEATURE_FLAGS | requiredFeatureFlags);
+    } else if (imageTiling == VK_IMAGE_TILING_LINEAR) {
+        return findFirstSupportedLinearTilingFormat(pFormats, numFormats, BASE_FEATURE_FLAGS | requiredFeatureFlags);
     }
 
     return VK_FORMAT_UNDEFINED;

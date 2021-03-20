@@ -121,7 +121,7 @@ bool VRenderPath_Main::ensureValidFramebuffers(const uint32_t fbWidth, const uin
         mFramebuffers[i].destroy(true);
         mColorAttachments[i].destroy(true);
 
-        // Color attachment can either be used as a transfer source (for blits, no MSAA) or an input attachment for MSAA resolve
+        // Color attachment can either be used as a transfer & sampling source (for blits and crossfades, with no MSAA) or an input attachment for MSAA resolve
         const VkImageUsageFlags colorAttachUsage = (mNumDrawSamples > 1) ?
             VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT :
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;

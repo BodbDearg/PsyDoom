@@ -55,8 +55,10 @@ static constexpr VkFormat COLOR_32_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 // Cached pointers to all Vulkan API functions
 vgl::VkFuncs gVkFuncs;
 
-// Set to true if the 16 bit color format is supported, fallback to using the 32-bit format otherwise
-bool gbIs16BitColorSupported;
+// Set to true if the 16 bit color format is supported for the PSX and Vulkan framebuffers.
+// Fallback to using the 32-bit color format if 16-bit is not available.
+static bool gbCanPsxFbUse16BitColor;
+static bool gbCanVulkanFbUse16BitColor;
 
 // Render paths used
 VRenderPath_Psx         gRenderPath_Psx;
@@ -137,35 +139,6 @@ static bool gbSkipNextFramePresent;
 static bool gbDidAcquireSwapImageThisFrame;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Determines if 16-bit color framebuffers and textures are possible for the specified device
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void determine16BitColorSupport(const vgl::PhysicalDevice& device) noexcept {
-    gbIs16BitColorSupported = (
-        (device.findFirstSupportedTextureFormat(&COLOR_16_FORMAT, 1) != VK_FORMAT_UNDEFINED) &&
-        (device.findFirstSupportedRenderTextureFormat(&COLOR_16_FORMAT, 1) != VK_FORMAT_UNDEFINED)
-    );
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Decides on the color format used for the window/presentation surface as well as the colorspace
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void decidePresentSurfaceFormat() noexcept {
-    // Firstly query the device surface capabilities
-    vgl::DeviceSurfaceCaps surfaceCaps;
-
-    if (!surfaceCaps.query(*gpPhysicalDevice, gWindowSurface))
-        FatalErrors::raise("Failed to query device surface capabilities!");
-
-    // Try to choose a valid surface format from what is available.
-    // Note hardcoding the colorspace to deliberately to SRGB - not considering HDR10 etc. for this project.
-    gPresentSurfaceFormat = surfaceCaps.getSupportedSurfaceFormat(ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS));
-    gPresentSurfaceColorspace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-
-    if (gPresentSurfaceFormat == VK_FORMAT_UNDEFINED)
-        FatalErrors::raise("Failed to find a suitable surface format to present with!");
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Decides the multisample anti-aliasing sample count based on user preferences and hardware capabilities
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void decideDrawSampleCount() noexcept {
@@ -191,6 +164,47 @@ static void decideDrawSampleCount() noexcept {
     } else {
         gDrawSampleCount = 1;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Determines if 16-bit color framebuffers and textures are possible for the specified device
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void determine16BitColorSupport(const vgl::PhysicalDevice& device) noexcept {
+    // Can the PSX framebuffer texture use a 16-bit format?
+    // This is not used for any rendering, just for copying to and blitting from...
+    gbCanPsxFbUse16BitColor = device.findFirstSupportedLinearTilingFormat(
+        &COLOR_16_FORMAT,
+        1,
+        VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_BLIT_SRC_BIT
+    );
+
+    // Can the main draw framebuffer for the Vulkan renderer use 16-bit color?
+    gbCanVulkanFbUse16BitColor = device.findFirstSupportedRenderTextureFormat(
+        &COLOR_16_FORMAT,
+        1,
+        VK_IMAGE_TILING_OPTIMAL,
+        // Color attachment can either be used as a transfer & sampling source (for blits and crossfades, with no MSAA) or an input attachment for MSAA resolve
+        VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | ((gDrawSampleCount > 1) ? 0 : VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT | VK_FORMAT_FEATURE_BLIT_SRC_BIT)
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Decides on the color format used for the window/presentation surface as well as the colorspace
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void decidePresentSurfaceFormat() noexcept {
+    // Firstly query the device surface capabilities
+    vgl::DeviceSurfaceCaps surfaceCaps;
+
+    if (!surfaceCaps.query(*gpPhysicalDevice, gWindowSurface))
+        FatalErrors::raise("Failed to query device surface capabilities!");
+
+    // Try to choose a valid surface format from what is available.
+    // Note hardcoding the colorspace to deliberately to SRGB - not considering HDR10 etc. for this project.
+    gPresentSurfaceFormat = surfaceCaps.getSupportedSurfaceFormat(ALLOWED_COLOR_SURFACE_FORMATS, C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS));
+    gPresentSurfaceColorspace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+
+    if (gPresentSurfaceFormat == VK_FORMAT_UNDEFINED)
+        FatalErrors::raise("Failed to find a suitable surface format to present with!");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -368,22 +382,49 @@ bool isHeadlessPhysicalDeviceSuitable(const vgl::PhysicalDevice& device) noexcep
     if (!vgl::PhysicalDeviceSelection::checkBasicHeadlessDeviceSuitability(device))
         return false;
 
-    // Make sure these are supported as texture formats.
-    // Note: not requiring linear sample filtering from any of these formats, only need 'nearest neighbor' filtering for this project.
-    // Most HW doesn't support filtering anyway for the R16_UINT case, which is the format used for the PSX VRAM texture...
+    // Check that the PSX framebuffer can be created in either 16-bit or 32-bit color mode.
+    // We prefer 16-bit but fallback to 32-bit when that is unavailable:
+    constexpr VkFormatFeatureFlags PSX_FB_FORMAT_FEATURES = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_BLIT_SRC_BIT;
+    const bool bPsxFbFormatSupported = (
+        (device.findFirstSupportedLinearTilingFormat(&COLOR_16_FORMAT, 1, PSX_FB_FORMAT_FEATURES) != VK_FORMAT_UNDEFINED) ||
+        (device.findFirstSupportedLinearTilingFormat(&COLOR_32_FORMAT, 1, PSX_FB_FORMAT_FEATURES) != VK_FORMAT_UNDEFINED)
+    );
+
+    if (!bPsxFbFormatSupported)
+        return false;
+
+    // Check that texture format used for PSX VRAM is supported
     constexpr VkFormat R16_UINT_FORMAT = VK_FORMAT_R16_UINT;
 
-    if (!device.findFirstSupportedTextureFormat(&R16_UINT_FORMAT, 1))
+    if (!device.findFirstSupportedTextureFormat(&R16_UINT_FORMAT, 1, VK_IMAGE_TILING_OPTIMAL, 0))
         return false;
 
-    if (!device.findFirstSupportedTextureFormat(&COLOR_32_FORMAT, 1))
+    // Check that the texture format used for the Vulkan renderer framebuffer is supported in either 16-bit color 32-bit color.
+    // Because we don't know if MSAA will be enabled at this point, check the requirements for when both MSAA is enabled AND disabled.
+    constexpr VkFormatFeatureFlags VK_FB_FORMAT_FEATURES = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT | VK_FORMAT_FEATURE_BLIT_SRC_BIT;
+    const bool bVkFbFormatSupported = (
+        device.findFirstSupportedRenderTextureFormat(&COLOR_16_FORMAT, 1, VK_IMAGE_TILING_OPTIMAL, VK_FB_FORMAT_FEATURES) ||
+        device.findFirstSupportedRenderTextureFormat(&COLOR_32_FORMAT, 1, VK_IMAGE_TILING_OPTIMAL, VK_FB_FORMAT_FEATURES) 
+    );
+
+    if (!bVkFbFormatSupported)
         return false;
 
-    // Make sure these are supported as color attachment formats
-    if (!device.findFirstSupportedRenderTextureFormat(&COLOR_32_FORMAT, 1))
+    // Make sure that the format used for the plaque drawer is supported
+    constexpr VkFormat PLAQUE_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
+
+    if (!device.findFirstSupportedTextureFormat(&PLAQUE_FORMAT, 1, VK_IMAGE_TILING_OPTIMAL, 0))
         return false;
 
-    return true;
+    // Make sure one of the output surface formats is supported
+    const bool bFoundSupportedSurfaceFormat = device.findFirstSupportedRenderTextureFormat(
+        ALLOWED_COLOR_SURFACE_FORMATS,
+        C_ARRAY_SIZE(ALLOWED_COLOR_SURFACE_FORMATS),
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_BLIT_DST_BIT      // So it can be blitted to
+    );
+
+    return bFoundSupportedSurfaceFormat;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -435,9 +476,9 @@ void init() noexcept {
     }
 
     // Decide whether 16-bit color is possible, draw sample count and window/present surface format
+    decideDrawSampleCount();
     determine16BitColorSupport(*gpPhysicalDevice);
     decidePresentSurfaceFormat();
-    decideDrawSampleCount();
 
     // Initialize the logical Vulkan device used for commands and operations and then 
     if (!gDevice.init(*gpPhysicalDevice, &gWindowSurface))
@@ -447,9 +488,9 @@ void init() noexcept {
     VPipelines::initPipelineComponents(gDevice, gDrawSampleCount);
 
     // Initialize all render paths
-    const VkFormat drawColorFormat = (Config::gbUseVulkan32BitShading || (!gbIs16BitColorSupported)) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
+    const VkFormat drawColorFormat = (Config::gbUseVulkan32BitShading || (!gbCanVulkanFbUse16BitColor)) ? COLOR_32_FORMAT : COLOR_16_FORMAT;
 
-    gRenderPath_Psx.init(gDevice, (gbIs16BitColorSupported) ? COLOR_16_FORMAT : COLOR_32_FORMAT);
+    gRenderPath_Psx.init(gDevice, (gbCanPsxFbUse16BitColor) ? COLOR_16_FORMAT : COLOR_32_FORMAT);
     gRenderPath_Main.init(gDevice, gDrawSampleCount, drawColorFormat, COLOR_32_FORMAT);
     gRenderPath_Crossfade.init(gDevice, gSwapchain, gPresentSurfaceFormat, gRenderPath_Main);
 
@@ -553,7 +594,8 @@ void destroy() noexcept {
     gpPhysicalDevice = nullptr;
     gWindowSurface.destroy();
     gVulkanInstance.destroy();
-    gbIs16BitColorSupported = false;
+    gbCanVulkanFbUse16BitColor = false;
+    gbCanPsxFbUse16BitColor = false;
     gVkFuncs = {};
 
     // Clear all coord sys info

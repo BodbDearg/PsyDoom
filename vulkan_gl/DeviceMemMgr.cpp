@@ -554,17 +554,9 @@ DeviceMemMgr::Pool* DeviceMemMgr::allocNewPool(
     void* pMappedMemory = nullptr;
 
     if (bIsMemTypeHostVisible) {
-        if (mVkFuncs.vkMapMemory(
-                vkDevice,
-                vkDeviceMemory,
-                0,
-                VK_WHOLE_SIZE,
-                0,
-                &pMappedMemory
-            )
-            != VK_SUCCESS
-        )
-        {
+        const VkResult mapMemResult = mVkFuncs.vkMapMemory(vkDevice, vkDeviceMemory, 0, VK_WHOLE_SIZE, 0, &pMappedMemory);
+
+        if (mapMemResult != VK_SUCCESS) {
             // Failed to do a mapping - cleanup the buffer and return null!
             ASSERT_FAIL("Failed to map device memory to a host visible buffer!");
             mVkFuncs.vkFreeMemory(vkDevice, vkDeviceMemory, nullptr);
@@ -714,17 +706,9 @@ bool DeviceMemMgr::allocUnpooled(
     void* pMappedMemory = nullptr;
 
     if (bIsMemTypeHostVisible) {
-        if (mVkFuncs.vkMapMemory(
-                vkDevice,
-                vkDeviceMemory,
-                0,
-                VK_WHOLE_SIZE,
-                0,
-                &pMappedMemory
-            )
-            != VK_SUCCESS
-        )
-        {
+        const VkResult mapMemResult = mVkFuncs.vkMapMemory(vkDevice, vkDeviceMemory, 0, VK_WHOLE_SIZE, 0, &pMappedMemory);
+
+        if (mapMemResult != VK_SUCCESS) {
             // Failed to do a mapping - cleanup the buffer and return null!
             ASSERT_FAIL("Failed to map device memory to a host visible buffer!");
             mVkFuncs.vkFreeMemory(vkDevice, vkDeviceMemory, nullptr);

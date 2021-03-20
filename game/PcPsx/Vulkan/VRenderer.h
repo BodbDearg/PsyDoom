@@ -27,7 +27,6 @@ static constexpr float MIN_DEPTH = 1.0f;
 static constexpr float MAX_DEPTH = 32768.0f;
 
 extern vgl::VkFuncs             gVkFuncs;
-extern bool                     gbIs16BitColorSupported;
 extern VRenderPath_Psx          gRenderPath_Psx;
 extern VRenderPath_Main         gRenderPath_Main;
 extern VRenderPath_Crossfade    gRenderPath_Crossfade;
