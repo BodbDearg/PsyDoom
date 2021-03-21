@@ -325,6 +325,12 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Game config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
+#if __APPLE__
+    static constexpr const char* const DEFAULT_CUE_FILE_PATH = "";  // Not provided on MacOS because the user must input an absolute path
+#else
+    static constexpr const char* const DEFAULT_CUE_FILE_PATH = "Doom.cue";
+#endif
+
 static std::string      gCueFilePath;
 bool                    gbUncapFramerate;
 bool                    gbUseFastLoading;
@@ -354,11 +360,16 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# A valid .cue (cue sheet) file for the desired game must be provided in order to run PsyDoom.\n"
         "# A relative or absolute path can be used; relative paths are relative to the current OS working\n"
         "# directory, which is normally the directory that the PsyDoom executable is found in.\n"
-        "# Note: this setting can also be overriden with the '-cue <CUE_PATH>' command-line argument.\n"
+        "#\n"
+        "# Notes:\n"
+        "#  (1) On MacOS the full path to this file MUST be specified because the working directory for\n"
+        "#      PsyDoom may be randomized due to OS security restrictions. A default cue file location\n"
+        "#      will also NOT be provided on MacOS for this same reason.\n"
+        "#  (2) This setting can also be overriden with the '-cue <CUE_PATH>' command-line argument.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "Doom.cue", "\n",
+        DEFAULT_CUE_FILE_PATH, "\n",
         [](const IniUtils::Entry& iniEntry) { gCueFilePath = iniEntry.value; },
-        []() { gCueFilePath = "Doom.cue"; }
+        []() { gCueFilePath = DEFAULT_CUE_FILE_PATH; }
     },
     {
         "UncapFramerate",
