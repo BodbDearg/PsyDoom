@@ -6,6 +6,7 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <cstdlib>
 #include <vector>
 
 BEGIN_NAMESPACE(FatalErrors)
@@ -36,7 +37,12 @@ static constexpr const char* const UNSPECIFIED_ERROR_STR = "An unspecified/unkno
 
     // Use 'abort' in debug so the debugger pauses
     #if NDEBUG
-        std::quick_exit(-1);
+        // Quick exit is apparently better/safer for a multi-threaded app, but doesn't seem to be available on MacOS...
+        #if __APPLE__
+            std::exit(-1);
+        #else
+            std::quick_exit(-1);
+        #endif
     #else
         std::abort();
     #endif
