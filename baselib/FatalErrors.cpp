@@ -33,8 +33,13 @@ static constexpr const char* const UNSPECIFIED_ERROR_STR = "An unspecified/unkno
     if (gFatalErrorHandler) {
         gFatalErrorHandler((errorMsg != nullptr) ? errorMsg : UNSPECIFIED_ERROR_STR);
     }
-    
-    std::terminate();
+
+    // Use 'abort' in debug so the debugger pauses
+    #if NDEBUG
+        std::quick_exit(-1);
+    #else
+        std::abort();
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

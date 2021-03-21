@@ -2,6 +2,7 @@
 
 #include "Base/i_main.h"
 #include "cdmaptbl.h"
+#include "FatalErrors.h"
 #include "PcPsx/Cheats.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Controls.h"
@@ -47,8 +48,18 @@ int psx_main(const int argc, const char** const argv) noexcept {
         Input::init();
         PlayerPrefs::load();
 
-        // Initialize the emulated PSX components using the PSX Doom disc (supplied as a .cue file)
+        // Initialize the emulated PSX components using the PSX Doom disc (supplied as a .cue file).
+        // This must be provided in order for the game to run.
         const char* const cueFilePath = (ProgArgs::gCueFileOverride) ? ProgArgs::gCueFileOverride : Config::getCueFilePath();
+
+        if ((!cueFilePath) || (!cueFilePath[0])) {
+            FatalErrors::raise(
+                "The path to the .cue file for the game disc is not specified; PsyDoom needs this in order to run!\n\n"
+                "You can set the path to the .cue file by changing the 'CueFilePath' setting in 'game_cfg.ini'.\n"
+                "This configuration file will be found in PsyDoom's configuration directory.\n\n"
+                "Alternatively, you can use the '-cue <CUE_FILE_PATH>' program argument to specify the .cue file also."
+            );
+        }
 
         if (!PsxVm::init(cueFilePath))
             return 1;
