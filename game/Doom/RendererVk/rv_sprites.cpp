@@ -141,28 +141,26 @@ static void RV_InitSpriteFrag(
     uint8_t stMulA = 128;
     VPipelineType drawPipeline = VPipelineType::World_SpriteMasked;
 
-    if (thing.flags & MF_BLEND_ON) {
-        if (thing.flags & MF_BLEND_MODE_BIT1) {
-            drawPipeline = VPipelineType::World_SpriteAdditive;
+    if (thing.flags & MF_BLEND_MODE_BIT1) {
+        drawPipeline = VPipelineType::World_SpriteAdditive;
 
-            if (thing.flags & MF_BLEND_MODE_BIT2) {
-                // Additive blend with 25% opacity
-                stMulR = 32;
-                stMulG = 32;
-                stMulB = 32;
-            } else {
-                // Additive blend with 100% opacity ...
-            }
+        if (thing.flags & MF_BLEND_MODE_BIT2) {
+            // Additive blend with 25% opacity
+            stMulR = 32;
+            stMulG = 32;
+            stMulB = 32;
         } else {
-            if (thing.flags & MF_BLEND_MODE_BIT2) {
-                // Subtractive blend with 100% opacity
-                drawPipeline = VPipelineType::World_SpriteSubtractive;
-            } else {
-                // Alpha blend with 50% opacity
-                drawPipeline = VPipelineType::World_SpriteAlpha;
-                stMulA = 64;
-            }
+            // Additive blend with 100% opacity ...
         }
+    }
+    else if (thing.flags & MF_BLEND_MODE_BIT2) {
+        // Subtractive blend with 100% opacity
+        drawPipeline = VPipelineType::World_SpriteSubtractive;
+    }
+    else if (thing.flags & MF_BLEND_ON) {
+        // Alpha blend with 50% opacity
+        drawPipeline = VPipelineType::World_SpriteAlpha;
+        stMulA = 64;
     }
 
     // Aspect correction scaling value copied from 'R_DrawSubsectorSprites'.
