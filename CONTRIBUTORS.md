@@ -67,6 +67,8 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/BodbDearg/PsyDoom/issues/7
     * Discovered issues creating the Vulkan PSX VRAM texture on an AMD Radeon HD 8790M.
         https://github.com/BodbDearg/PsyDoom/issues/8
+    * Updated Open PsyDoom Config Folder.bat:
+        https://github.com/BodbDearg/PsyDoom/pull/9
 
 * **[j0r9](https://github.com/j0r9)**
 
