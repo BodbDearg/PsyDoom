@@ -74,22 +74,22 @@ bool RawBuffer::init(
         }
     });
 
-    // Get the device memory allocator and figure out how many bytes would actually be allocated for this request.
+    // Get the device memory allocator and estimate out how many bytes would actually be allocated for this request after rounding.
     // We'll size the buffer accordingly, so client code can make use of the extra bytes if it wants:
     DeviceMemMgr& deviceMemMgr = mpDevice->getDeviceMemMgr();
-    const uint64_t roundedSize = deviceMemMgr.simulateAllocSize(size);
+    const uint64_t roundedAllocSize = deviceMemMgr.estimateAllocSize(size);
 
-    if (roundedSize <= 0) {
+    if (roundedAllocSize <= 0) {
         ASSERT_FAIL("Alloc will not succeed, too big or 0 bytes!");
         return false;
     }
 
-    ASSERT_LOG(roundedSize >= size, "Rounded size should be at least as big as requested size!");
+    ASSERT_LOG(roundedAllocSize >= size, "Rounded size should be at least as big as requested size!");
 
     // Create the Vulkan buffer object:
     VkBufferCreateInfo bufferCreateInfo = {};
     bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferCreateInfo.size = roundedSize;
+    bufferCreateInfo.size = roundedAllocSize;
     bufferCreateInfo.usage = bufferUsageFlags;
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;   // Only used in one queue family at a time
 
@@ -105,43 +105,26 @@ bool RawBuffer::init(
 
     // Nab the memory requirements of the buffer, which memory types it is allowed to use and
     // what the exact memory requirements including size & alignment etc.
-    VkMemoryRequirements memRequirements;
-    vkFuncs.vkGetBufferMemoryRequirements(vkDevice, mVkBuffer, &memRequirements);
-
-    // Make sure we can support the alignment and size requirements for the alloc
-    if (deviceMemMgr.getMinAlignment() < memRequirements.alignment) {
-        ASSERT_FAIL("Unable to satisfy alignment requirements for the buffer!");
-        return false;
-    }
+    VkMemoryRequirements memReqs;
+    vkFuncs.vkGetBufferMemoryRequirements(vkDevice, mVkBuffer, &memReqs);
 
     // Try to do a device memory alloc
-    deviceMemMgr.alloc(
-        memRequirements.size,
-        memRequirements.memoryTypeBits,
-        allocMode,
-        mDeviceMemAlloc
-    );
+    deviceMemMgr.alloc(memReqs.size, memReqs.memoryTypeBits, memReqs.alignment, allocMode, mDeviceMemAlloc);
 
     // If that fails then bail out and return false for failure
     if (mDeviceMemAlloc.size <= 0)
         return false;
 
     // Okay, now that we have the buffer bind it to it's memory
-    if (vkFuncs.vkBindBufferMemory(
-            vkDevice,
-            mVkBuffer,
-            mDeviceMemAlloc.vkDeviceMemory,
-            mDeviceMemAlloc.offset
-        )
-        != VK_SUCCESS
-    )
-    {
+    const VkResult bindResult = vkFuncs.vkBindBufferMemory(vkDevice, mVkBuffer, mDeviceMemAlloc.vkDeviceMemory, mDeviceMemAlloc.offset);
+
+    if (bindResult != VK_SUCCESS) {
         ASSERT_FAIL("Failed to associate the Vulkan buffer with it's allocated memory!");
         return false;
     }
 
     // All good! Save the size of the buffer to mark it as valid:
-    mSize = roundedSize;
+    mSize = roundedAllocSize;
     return true;
 }
 

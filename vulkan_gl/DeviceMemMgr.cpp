@@ -111,10 +111,13 @@ void DeviceMemMgr::destroy(const bool bForceIfInvalid) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the expected allocation size for a given input size.
-// This is the amount that is GUARANTEED to be allocated if an allocation will succeed.
+// Get the estimated & rounded-up allocation size for a given input size, taking into account the characteristics of the memory manager.
+// 
+// Note: this is just an estimate of the actual allocation size required for a particular resource.
+// The call does NOT consider additional alignment requirements which may be imposed by the device driver when we go to allocate memory
+// for a specific resource, such as a buffer or an image. Those requirements may increase the actual allocation size once known.
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint64_t DeviceMemMgr::simulateAllocSize(const uint64_t numBytes) const noexcept {
+uint64_t DeviceMemMgr::estimateAllocSize(const uint64_t numBytes) const noexcept {
     // Figure out the the unit size for the tier to start the search on
     uint64_t thisTierUS;
     
@@ -154,38 +157,55 @@ uint64_t DeviceMemMgr::simulateAllocSize(const uint64_t numBytes) const noexcept
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Attempts to alloc the given amount of memory and saves the details in the given output struct.
-// The allowable vulkan memory type bits are also specified, or if '0' is given then any Vulkan memory type is allowable.
+// Attempts to alloc the specified amount of memory and saves the details for the allocation in the output struct.
+// The allowable Vulkan memory type bits are also specified, or if all bits are '0' then any Vulkan memory type is allowable.
+// The allignment requirements for the alloc must also be specified, as obtained from Vulkan API calls like 'vkGetBufferMemoryRequirements'.
 //
 // Notes:
 //  (1) The app will terminate if allocation fails due to it being too big or if we are out of memory.
 //  (2) If a zero sized alloc is requested the call will succeed and not terminate with an out of memory
 //      error but the given alloc info out will be all zeroed out.
+//  (3) The alignment specified *SHOULD* be a power of two.
+//      According to the Vulkan spec 'VkMemoryRequirements::alignment' should always be a power of two.
+//      If a non power of two alignment is given, then it will be treated as if it is the next power of two of up.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DeviceMemMgr::alloc(
     const uint64_t numBytes,
     const uint32_t allowedVkMemTypeBits,
+    const uint32_t alignment,
     const DeviceMemAllocMode allocMode,
     DeviceMemAlloc& allocInfoOut
 ) noexcept {
-    // Clear out the output info. Note that if there are no bytes to alloc then we are done
+    // Alignment is expected to always be a power of two
+    ASSERT(Utils::isPowerOf2(alignment));
+
+    // Clear out the output info; note that if there are no bytes to alloc then we are done
     allocInfoOut = {};
     
     if (numBytes <= 0)
         return;
 
     // Should we attempt a pooled or unpooled alloc?
-    // Do an unpooled alloc if explicitly requested, or if the allocation is too big.
-    const bool bAllocUnpooled = (isUnpooledDeviceMemAllocMode(allocMode) || (numBytes > MAIN_POOL_SIZE));
+    // Do an unpooled alloc if explicitly requested, or if the allocation or alignment requirements are too big.
+    const bool bAllocUnpooled = (
+        isUnpooledDeviceMemAllocMode(allocMode) ||
+        (numBytes >= MAIN_POOL_SIZE) ||
+        (alignment >= MAIN_POOL_SIZE)
+    );
 
-    // Try to do the alloc and die with an out of memory error if it fails
+    // Try to do the alloc and die with an out of memory error if it fails.
+    // Note that in the case of an unpooled alloc we don't need to worry about alignment, since the Vulkan spec states
+    // that the memory returned by 'vkAllocateMemory' must meet any possible alignment requirement of the implementation.
     if (bAllocUnpooled) {
         if (!allocUnpooled(numBytes, allowedVkMemTypeBits, allocMode, allocInfoOut))
             FatalErrors::outOfMemory();
     } 
     else {
-        if (!allocFromAllPools(numBytes, allowedVkMemTypeBits, allocMode, allocInfoOut))
+        if (!allocFromAllPools(numBytes, alignment, allowedVkMemTypeBits, allocMode, allocInfoOut))
             FatalErrors::outOfMemory();
+
+        // Sanity check alignment requirements have been met before exiting
+        ASSERT((alignment == 0) || (allocInfoOut.offset % alignment == 0));
     }
 }
 
@@ -313,6 +333,7 @@ void DeviceMemMgr::freeUnusedPools() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool DeviceMemMgr::allocFromAllPools(
     const uint64_t numBytes,
+    const uint32_t alignment,
     const uint32_t allowedVkMemTypeBits,
     const DeviceMemAllocMode allocMode,
     DeviceMemAlloc& allocInfoOut
@@ -339,7 +360,7 @@ bool DeviceMemMgr::allocFromAllPools(
             // See if this pool is allowed according to the Vulkan memory type bits
             if ((allowedVkMemTypeBits & pool.vkMemoryTypeBit) != 0) {
                 // This pool is allowed, try to allocate from it
-                if (allocFromPool(numBytes, pool, allocInfoOut))
+                if (allocFromPool(numBytes, alignment, pool, allocInfoOut))
                     return true;
             }
         }
@@ -351,7 +372,7 @@ bool DeviceMemMgr::allocFromAllPools(
                 // Note: this SHOULD succeed at this point!
                 ASSERT((pPool->vkMemoryTypeBit & allowedVkMemTypeBits) != 0);
 
-                if (allocFromPool(numBytes, *pPool, allocInfoOut)) {
+                if (allocFromPool(numBytes, alignment, *pPool, allocInfoOut)) {
                     return true;
                 } else {
                     ASSERT_FAIL("Expected allocation to succeed, and it didn't?!");
@@ -367,7 +388,7 @@ bool DeviceMemMgr::allocFromAllPools(
     for (MemMgrIdT poolId : mHostVisiblePools) {
         Pool& pool = mPools.at(poolId);
 
-        if (allocFromPool(numBytes, pool, allocInfoOut))
+        if (allocFromPool(numBytes, alignment, pool, allocInfoOut))
             return true;
     }
 
@@ -376,7 +397,7 @@ bool DeviceMemMgr::allocFromAllPools(
         // Note: this SHOULD succeed at this point
         ASSERT((pPool->vkMemoryTypeBit & allowedVkMemTypeBits) != 0);
 
-        if (allocFromPool(numBytes, *pPool, allocInfoOut)) {
+        if (allocFromPool(numBytes, alignment, *pPool, allocInfoOut)) {
             return true;
         } else {
             ASSERT_FAIL("Expected allocation to succeed, and it didn't?!");
@@ -388,10 +409,11 @@ bool DeviceMemMgr::allocFromAllPools(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Attempt to service an allocation using the given pool. Returns false on failure.
+// Attempt to service an allocation using the given pool; returns 'false' on failure
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool DeviceMemMgr::allocFromPool(
     const uint64_t numBytes,
+    const uint32_t alignment,
     Pool& pool,
     DeviceMemAlloc& allocInfoOut
 ) noexcept {
@@ -405,7 +427,7 @@ bool DeviceMemMgr::allocFromPool(
     // If that is the case then alloc it from a small sub pool instead of this main pool.
     static_assert(SUB_POOL_ALLOC_THRESHOLD <= SUB_POOL_SIZE, "Sub pool not big enough to accomodate sub pool alloc?!!");
 
-    if (numBytes < SUB_POOL_ALLOC_THRESHOLD) {
+    if ((numBytes < SUB_POOL_ALLOC_THRESHOLD) && (alignment * 2 < SUB_POOL_ALLOC_THRESHOLD)) {
         // Try to alloc from all existing sub pools
         for (std::pair<const MemMgrIdT, SubPool>& subPoolKvp : pool.subPools) {
             SubPool& subPool = subPoolKvp.second;
@@ -413,20 +435,20 @@ bool DeviceMemMgr::allocFromPool(
             if (subPool.memMgr.getMaxGuaranteedAllocInBytes() < numBytes)
                 continue;
 
-            if (allocFromSubPool(numBytes, pool, subPool, allocInfoOut))
+            if (allocFromSubPool(numBytes, alignment, pool, subPool, allocInfoOut))
                 return true;
         }
 
         // If that fails try to make a new sub pool and alloc from that
         if (SubPool* subPool = allocNewSubPool(pool))
-            return allocFromSubPool(numBytes, pool, *subPool, allocInfoOut);
+            return allocFromSubPool(numBytes, alignment, pool, *subPool, allocInfoOut);
 
         // Failed to alloc a new sub pool from this parent pool; can't alloc from this parent pool
         return false;
     }
 
     // Try to alloc and if that fails then return false
-    MemMgrAllocResult alloc = pool.memMgr.alloc(numBytes);
+    MemMgrAllocResult alloc = pool.memMgr.alloc(numBytes, alignment);
 
     if (alloc.size <= 0)
         return false;
@@ -452,6 +474,7 @@ bool DeviceMemMgr::allocFromPool(
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool DeviceMemMgr::allocFromSubPool(
     const uint64_t numBytes,
+    const uint32_t alignment,
     Pool& parentPool,
     SubPool& subPool,
     DeviceMemAlloc& allocInfoOut
@@ -463,7 +486,7 @@ bool DeviceMemMgr::allocFromSubPool(
     ASSERT(!allocInfoOut.pBytes);
 
     // Try to alloc and if that fails then return false
-    MemMgrAllocResult alloc = subPool.memMgr.alloc(numBytes);
+    MemMgrAllocResult alloc = subPool.memMgr.alloc(numBytes, alignment);
 
     if (alloc.size <= 0)
         return false;
@@ -602,8 +625,9 @@ DeviceMemMgr::SubPool* DeviceMemMgr::allocNewSubPool(Pool& parentPool) noexcept 
     if (subPoolId == INVALID_MEM_MGR_ID)
         return nullptr;
 
-    // Try to alloc a new sub pool, if that fails then just return a null pointer
-    MemMgrAllocResult allocResult = parentPool.memMgr.alloc(SUB_POOL_SIZE);
+    // Try to alloc a new sub pool, if that fails then just return a null pointer.
+    // Note: expect the sub pool to be aligned along boundaries of it's size.
+    MemMgrAllocResult allocResult = parentPool.memMgr.alloc(SUB_POOL_SIZE, SUB_POOL_SIZE);
 
     if (allocResult.size <= 0)
         return nullptr;

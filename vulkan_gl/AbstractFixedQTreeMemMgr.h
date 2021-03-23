@@ -3,6 +3,7 @@
 #include "Asserts.h"
 #include "Utils.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
@@ -185,15 +186,19 @@ public:
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // Try to allocate the given number of bytes and return the result
+    // Try to allocate the given number of bytes to the specified power of two alignment and return the result
     //--------------------------------------------------------------------------------------------------------------------------------------
-    AbstractFixedQTreeMemMgrUtils::AllocResult alloc(const uint64_t numAllocBytes) noexcept {
+    AbstractFixedQTreeMemMgrUtils::AllocResult alloc(const uint64_t numAllocBytes, const uint32_t alignment) noexcept {
+        // Alignment should always be a power of two
+        ASSERT(Utils::isPowerOf2(alignment));
+
         // A zero sized alloc always fails
         if (numAllocBytes <= 0)
             return AbstractFixedQTreeMemMgrUtils::AllocResult{ 0, 0 };
 
-        // Get the number of units that we need to allocate for this request
-        const uint64_t numUnitsReqForAlloc = getAllocSizeInBytesAsUnits(numAllocBytes);
+        // Get the number of units that we need to allocate for this request.
+        // If the alignment requirements are bigger than the size we need then round up the size to that.
+        const uint64_t numUnitsReqForAlloc = getAllocSizeInBytesAsUnits(std::max(numAllocBytes, (uint64_t) alignment));
 
         // See if there is enough room to satisfy this request by checking the maximum number of units that
         // can be allocated according to the root node. At the root this count will be the absolute biggest
@@ -201,15 +206,15 @@ public:
         if (numUnitsReqForAlloc > mBlocks[0].maxNewAllocInUnits)
             return AbstractFixedQTreeMemMgrUtils::AllocResult{ 0, 0 };
 
-        // Figure out the tier that we will allocate on:
-        const uint64_t allocTier = getAllocTierForSupportedUnitAlloc(numUnitsReqForAlloc);
+        // Figure out the tier that we will allocate on, taking into consideration alignment requirements
+        const uint64_t allocTier = getAllocTierForSupportedUnitAlloc(numUnitsReqForAlloc, alignment);
 
         // Okay, find where to slot in this allocation.
         // Keep moving down the tiers until we reach the tier to allocate at
         uint64_t curTier = 0;
         uint64_t curTierBlocksOffset = 0;
         uint64_t curTierBlockIdx = 0;
-        uint64_t curTierUnitsPerBlock = AbstractFixedQTreeMemMgrUtils::getNumBlocksForTier(NumTiers);
+        uint64_t curTierUnitsPerBlock = AbstractFixedQTreeMemMgrUtils::getNumBlocksForTier(NumTiers);   // The highest tier has a unit size of the # of blocks in the lowest tier
 
         if (curTier < allocTier) {
             while (true) {
@@ -558,49 +563,47 @@ private:
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Figure out how many memory units (at a minimum) would be required to service an allocation of a given amount of bytes.
     // Note that due to the way the quad tree works, we might use a lot more units for the allocation than this.
+    // Alignment must also be factored in, if it's more than the allocation size itself.
     //--------------------------------------------------------------------------------------------------------------------------------------
     constexpr inline uint64_t getAllocSizeInBytesAsUnits(const uint64_t allocSizeInBytes) noexcept {
         return Utils::udivCeil(allocSizeInBytes, UnitSize);
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // Figures out which tier to allocate the given allocation in units. The allocation in units is also expected to be supported by this
-    // manager potentially, I.E. it MUST not exceed the total amount of memory managed by the manager.
+    // Figures out which tier to allocate the given allocation in units.
+    // The allocation in units MUST NOT exceed the total amount of memory managed by the manager.
+    // Alignment is also taken into account and the allocation tier may be modified to satisfy alignment requirements.
     //--------------------------------------------------------------------------------------------------------------------------------------
-    constexpr inline uint64_t getAllocTierForSupportedUnitAlloc(const uint64_t allocSizeInUnits) noexcept {
+    constexpr inline uint64_t getAllocTierForSupportedUnitAlloc(const uint64_t allocSizeInUnits, const uint32_t alignment) noexcept {
         // Sanity checks: the alloc size in units MUST be valid for this call
         ASSERT(allocSizeInUnits > 0);
         ASSERT(allocSizeInUnits <= getCapacityInUnits());
 
-        // Method to determine the tier to allocate on:
-        // 
-        //  (1) Get the highest bit in the number (a)
-        //  (2) Get the number with only this bit set and all other bits zeroed (b)
-        //  (3) Get half of b (c)
-        //  (4) If the alloc size in units is greater than b + c then we need to round up by 1 bit, return:
-        //          NumTiers - ((a + 1) / 2)
-        //      Otherwise return:
-        //          NumTiers - (a / 2)
-        //
-        // Basically the idea is that every 2 bits represents a tier (since this is a QTree, and 2 bits means 4 possible values)
-        // and we are first finding what tier to tentatively use by finding the highest bit. We then consider the remainder with
-        // a number where only the highest bit is set and if the remainder is more than half of the number with only the highest
-        // bit set then we must round up our calculation by 1 bit.
-        //
-        // It's hard to explain this without working it out on paper but all that this calculation does is to ensure that we can
-        // accomodate the specified allocation in 1-3 blocks (inclusive) on the chosen tier.
-        //
-        // Note that we never allow 4 or more blocks to be allocated contiguously on a given tier since that will either be wasteful
-        // (if 4 blocks are required we should move up a tier!) or will overun/use the child blocks managed by another parent block
-        // on a higher tier (5+ blocks case).
-        const uint64_t a = Utils::highestSetBit(allocSizeInUnits);
-        const uint64_t b = uint64_t(1) << a;
-        const uint64_t c = b >> uint64_t(1);
+        // Get the initial tier to allocate on from the highest set bit of the alloc size (in units).
+        // Note that we divide by '2' to account for the fact that each tier contains 4 blocks, hence requires 2 bits of storage for block indices.
+        uint32_t tier = NumTiers - (uint32_t) Utils::highestSetBit(allocSizeInUnits) / 2u;
 
-        if (allocSizeInUnits > b + c)
-            return NumTiers - ((a + 1) >> uint64_t(1));
-        
-        return NumTiers - (a >> uint64_t(1));
+        // Figure out how many units per block there are on this tier.
+        // This call looks slightly confusing but we can basically invert the tier to get the number of units per block via 'getNumBlocksForTier()'.
+        uint64_t tierUnitsPerBlock = AbstractFixedQTreeMemMgrUtils::getNumBlocksForTier(NumTiers - tier);
+
+        // If the allocation exceeds 3 blocks on this tier then move to the next higher tier.
+        // We never allow 4 blocks to be allocated contiguously on a given tier; we want to reduce dealloc search time so move up a tier in this case.
+        if (allocSizeInUnits > tierUnitsPerBlock * 3) {
+            ASSERT_LOG(tier > 0, "Should never exceed 1 block of storage (let alone 3) on the root tier! The root tier is just a single block.");
+            --tier;
+        }
+
+        // If the tier unit count per block is smaller than the alignment requirement (in blocks) then move up a tier.
+        // Keep moving up tiers until we meet the alignment requirement.
+        const uint64_t alignmentInUnits = Utils::udivCeil((uint64_t) alignment, UnitSize);
+
+        while ((tierUnitsPerBlock < alignmentInUnits) && (tier > 0)) {
+            --tier;
+            tierUnitsPerBlock <<= 2;
+        }
+
+        return tier;
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------

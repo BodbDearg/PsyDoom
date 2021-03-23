@@ -32,15 +32,12 @@ public:
     void init(LogicalDevice& device) noexcept;
     void destroy(const bool bForceIfInvalid = false) noexcept;
 
-    // Returns the minimum guaranteed alignment for all allocations.
-    // All allocs are guaranteed to be aligned AT LEAST along these boundaries.
-    inline uint32_t getMinAlignment() const noexcept { return SUB_POOL_UNIT_SIZE; }
-
-    uint64_t simulateAllocSize(const uint64_t numBytes) const noexcept;
+    uint64_t estimateAllocSize(const uint64_t numBytes) const noexcept;
     
     void alloc(
         const uint64_t numBytes,
         const uint32_t allowedVkMemTypeBits,
+        const uint32_t alignment,
         const DeviceMemAllocMode allocMode,
         DeviceMemAlloc& allocInfoOut
     ) noexcept;
@@ -147,18 +144,21 @@ private:
     bool allocFromAllPools(
         const uint64_t numBytes,
         const uint32_t allowedVkMemTypeBits,
+        const uint32_t alignment,
         const DeviceMemAllocMode allocMode,
         DeviceMemAlloc& allocInfoOut
     ) noexcept;
 
     bool allocFromPool(
         const uint64_t numBytes,
+        const uint32_t alignment,
         Pool& pool,
         DeviceMemAlloc& allocInfoOut
     ) noexcept;
 
     bool allocFromSubPool(
         const uint64_t numBytes,
+        const uint32_t alignment,
         Pool& parentPool,
         SubPool& subPool,
         DeviceMemAlloc& allocInfoOut

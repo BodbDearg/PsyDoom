@@ -3,9 +3,7 @@
 #include "VideoBackend_Vulkan.h"
 
 #include "Asserts.h"
-#include "LogicalDevice.h"
 #include "PhysicalDeviceSelection.h"
-#include "Texture.h"
 #include "VkFuncs.h"
 #include "Vulkan/VRenderer.h"
 #include "VulkanInstance.h"
@@ -40,30 +38,7 @@ bool VideoBackend_Vulkan::isBackendSupported() noexcept {
         return false;
 
     const std::vector<vgl::PhysicalDevice>& physicalDevices = vulkanInstance.getPhysicalDevices();
-    const vgl::PhysicalDevice* const pSelectedDevice = vgl::PhysicalDeviceSelection::selectBestHeadlessDevice(
-        physicalDevices,
-        VRenderer::isHeadlessPhysicalDeviceSuitable
-    );
-
-    if (!pSelectedDevice)
-        return false;
-
-    // Attempt to workaround issue #8 on Github: failing to create the PSX VRAM texture on a AMD Radeon HD 8790M.
-    // The driver for this card seems to say that the VRAM texture format (and features) are supported but texture creation fails in spite of this.
-    // It might be that what the driver reports as supported isn't actually supported in some cases. Workaround this by doing a dry run of the
-    // creation of this texture; it's the most odd format used by PsyDoom so hopefully the check can catch issues with other drivers too...
-    vgl::LogicalDevice logicalDevice(vkFuncs);
-
-    if (!logicalDevice.init(*pSelectedDevice, nullptr))
-        return false;
-
-    vgl::Texture dummyVramTexture;
-
-    if (!dummyVramTexture.initAs2dTexture(logicalDevice, VK_FORMAT_R16_UINT, 1024, 512))
-        return false;
-
-    // All good if we get to here - this device works!
-    return true;
+    return vgl::PhysicalDeviceSelection::selectBestHeadlessDevice(physicalDevices, VRenderer::isHeadlessPhysicalDeviceSuitable);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

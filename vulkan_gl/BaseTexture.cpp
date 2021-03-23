@@ -272,20 +272,13 @@ bool BaseTexture::createImageMemBuffer(const DeviceMemAllocMode deviceMemAllocMo
     const VkDevice vkDevice = mpDevice->getVkDevice();
     const VkFuncs& vkFuncs = mpDevice->getVkFuncs();
 
-    VkMemoryRequirements memRequirements = {};
-    vkFuncs.vkGetImageMemoryRequirements(vkDevice, mVkImage, &memRequirements);
-    mSizeInBytes = memRequirements.size;
-    
-    // Get the device memory allocator and make sure it can support our alignment requirements
-    DeviceMemMgr& deviceMemMgr = mpDevice->getDeviceMemMgr();
-
-    if (deviceMemMgr.getMinAlignment() < memRequirements.alignment) {
-        ASSERT_FAIL("Unable to satisfy alignment requirements for the image!");
-        return false;
-    }
+    VkMemoryRequirements memReqs = {};
+    vkFuncs.vkGetImageMemoryRequirements(vkDevice, mVkImage, &memReqs);
+    mSizeInBytes = memReqs.size;
 
     // Try to do a device memory alloc and if that fails (size <= 0) bail out
-    deviceMemMgr.alloc(memRequirements.size, memRequirements.memoryTypeBits, deviceMemAllocMode, mDeviceMemAlloc);
+    DeviceMemMgr& deviceMemMgr = mpDevice->getDeviceMemMgr();
+    deviceMemMgr.alloc(memReqs.size, memReqs.memoryTypeBits, memReqs.alignment, deviceMemAllocMode, mDeviceMemAlloc);
 
     if (mDeviceMemAlloc.size <= 0)
         return false;
