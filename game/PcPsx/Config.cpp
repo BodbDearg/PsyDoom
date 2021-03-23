@@ -173,9 +173,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# reduce perceived input latency but will also greatly increase GPU and CPU usage.\n"
         "# Disable if you prefer to lower energy usage for slightly increased input latency.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
-        [](const IniUtils::Entry& iniEntry) { gbVulkanTripleBuffer = iniEntry.getBoolValue(true); },
-        []() { gbVulkanTripleBuffer = true; }
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbVulkanTripleBuffer = iniEntry.getBoolValue(false); },
+        []() { gbVulkanTripleBuffer = false; }
     },
     {
         "VulkanWidescreenEnabled",
