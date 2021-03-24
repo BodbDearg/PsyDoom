@@ -236,8 +236,9 @@ void VRenderPath_Main::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorde
     // This avoids errors on MacOS/Metal also, where we try to blit to an incompatible destination window size.
     if (VRenderer::willSkipNextFramePresent())
         return;
-    
-    // Blit the drawing color attachment (or MSAA resolve target, if MSAA is active) to the swapchain image
+
+    // Blit the drawing color attachment (or MSAA resolve target, if MSAA is active) to the swapchain image.
+    // Note that we must first wait for writes to the image to finish up from the render pass, hence add an image barrier first.
     const uint32_t ringbufferIdx = device.getRingbufferMgr().getBufferIndex();
     const vgl::Framebuffer& framebuffer = mFramebuffers[ringbufferIdx];
 
@@ -247,6 +248,28 @@ void VRenderPath_Main::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorde
 
     const uint32_t swapchainIdx = swapchain.getAcquiredImageIdx();
     const VkImage swapchainImage = swapchain.getVkImages()[swapchainIdx];
+
+    {
+        VkImageMemoryBarrier imgBarrier = {};
+        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+        imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        imgBarrier.image = blitSrcImage;
+        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imgBarrier.subresourceRange.levelCount = 1;
+        imgBarrier.subresourceRange.layerCount = 1;
+
+        cmdRec.addPipelineBarrier(
+            VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            nullptr,
+            1,
+            &imgBarrier
+        );
+    }
 
     {
         VkImageBlit blitRegion = {};
