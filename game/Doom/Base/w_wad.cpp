@@ -361,7 +361,7 @@ void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompr
         decode(pLumpBytes, pDest);
     } else {
         // No decompression needed, can just copy straight into the output buffer
-        const lumpinfo_t& nextLump = gpLumpInfo[lumpNum + 1];
+        const lumpinfo_t& nextLump = gpMapWadLumpInfo[lumpNum + 1];
         const uint32_t sizeToCopy = nextLump.filepos - lump.filepos;
         D_memcpy(pDest, pLumpBytes, sizeToCopy);
     }
