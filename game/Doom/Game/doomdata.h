@@ -83,15 +83,19 @@ static_assert(sizeof(mapvertex_t) == 8);
 // Data for a sector in a WAD file - original PSX Doom format.
 // Final Doom uses a different variant of this.
 struct mapsector_t {
-    int16_t     floorheight;        // Integer floor height for the sector
-    int16_t     ceilingheight;      // Integer ceiling height for the sector
-    char        floorpic[8];        // Floor texture lump name
-    char        ceilingpic[8];      // Ceiling texture lump name
-    uint8_t     lightlevel;         // Light level for the sector (normally 0-255)
-    uint8_t     colorid;            // Which of the sector light colors to use for the sector
-    int16_t     special;            // Special action for the sector: damage, secret, light flicker etc.
-    int16_t     tag;                // Tag for the sector for use in targetted actions (triggered by switches, line crossings etc.)
-    uint16_t    flags;              // New for PSX - sector flags: just 'SF_NO_REVERB' (0x1) is the only flag possible.
+    #if PSYDOOM_MODS
+        static constexpr int32_t MAXNAME = 8;
+    #endif
+
+    int16_t     floorheight;            // Integer floor height for the sector
+    int16_t     ceilingheight;          // Integer ceiling height for the sector
+    char        floorpic[MAXNAME];      // Floor texture lump name
+    char        ceilingpic[MAXNAME];    // Ceiling texture lump name
+    uint8_t     lightlevel;             // Light level for the sector (normally 0-255)
+    uint8_t     colorid;                // Which of the sector light colors to use for the sector
+    int16_t     special;                // Special action for the sector: damage, secret, light flicker etc.
+    int16_t     tag;                    // Tag for the sector for use in targetted actions (triggered by switches, line crossings etc.)
+    uint16_t    flags;                  // New for PSX - sector flags: just 'SF_NO_REVERB' (0x1) is the only flag possible.
 };
 
 static_assert(sizeof(mapsector_t) == 28);

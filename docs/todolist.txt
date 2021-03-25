@@ -1,5 +1,6 @@
 0.8 - Limit extending and modding?
 - Status bar extension for widescreen/vulkan.
+- Investigate ability to use 'Esc' to go back to options menu directly.
 - Add map patching mechanism for a few select map bugs
     - Fix house of pain door bug
     - Fix Ballystix altar not being see through with new vk renderer (need to mark as 'void' ceiling)

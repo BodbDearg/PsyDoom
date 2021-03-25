@@ -295,6 +295,16 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                 // First, figure out the floor texture number:
                 pDstSec->floorpic = R_FlatNumForName(pSrcSec->floorpic);
 
+                #if PSYDOOM_MODS
+                    // PsyDoom: if the floor texture is not found issue a descriptive error rather than crashing later
+                    if (pDstSec->floorpic == -1) {
+                        char picname[wadsector_t::MAXNAME + 1];
+                        std::memcpy(picname, pSrcSec->floorpic, wadsector_t::MAXNAME);
+                        picname[wadsector_t::MAXNAME] = 0;
+                        I_Error("R_FlatNumForName: can't find '%s'!", picname);
+                    }
+                #endif
+
                 // Figure out ceiling texture numebr.
                 // Note: if the ceiling has a sky then figure out the sky lump name for it instead - will load the sky lump later on.
                 const bool bCeilHasSky = (D_strncasecmp(pSrcSec->ceilingpic, SKY_LUMP_NAME, SKY_LUMP_NAME_LEN) == 0);
