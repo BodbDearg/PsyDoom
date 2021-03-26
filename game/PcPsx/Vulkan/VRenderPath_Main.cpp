@@ -323,9 +323,11 @@ void VRenderPath_Main::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorde
 // Creates the Vulkan renderpass used by the render path
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool VRenderPath_Main::initRenderPass() noexcept {
-    // Sanity checks and getting the device
+    // Sanity checks and some prerequisites
     ASSERT(mpDevice);
+
     vgl::LogicalDevice& device = *mpDevice;
+    const bool bMsaaEnabled = (mNumDrawSamples > 1);
 
     // Define the color attachment
     vgl::RenderPassDef renderPassDef;
@@ -338,7 +340,7 @@ bool VRenderPath_Main::initRenderPass() noexcept {
     colorAttach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    if (mNumDrawSamples > 1) {
+    if (bMsaaEnabled) {
         colorAttach.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;                 // Can save on bandwidth on tiled GPU architectures: don't need to write data to VRAM at the end of the renderpass
         colorAttach.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;     // Don't care: would say undefined but that is not allowed
     } else {
@@ -347,7 +349,7 @@ bool VRenderPath_Main::initRenderPass() noexcept {
     }
 
     // If doing MSAA, define the MSAA color resolve attachment
-    if (mNumDrawSamples > 1) {
+    if (bMsaaEnabled) {
         VkAttachmentDescription& resolveAttach = renderPassDef.attachments.emplace_back();
         resolveAttach.format = mResolveFormat;
         resolveAttach.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -369,7 +371,7 @@ bool VRenderPath_Main::initRenderPass() noexcept {
     }
 
     // If doing MSAA, define the MSAA color resolve subpass and the attachment resolved to as well as the input MSAA color attachment
-    if (mNumDrawSamples > 1) {
+    if (bMsaaEnabled) {
         vgl::SubpassDef& subpassDef = renderPassDef.subpasses.emplace_back();
 
         VkAttachmentReference& resolveAttachRef = subpassDef.colorAttachments.emplace_back();
@@ -379,6 +381,29 @@ bool VRenderPath_Main::initRenderPass() noexcept {
         VkAttachmentReference& msaaColorAttachRef = subpassDef.inputAttachments.emplace_back();
         msaaColorAttachRef.attachment = 0;
         msaaColorAttachRef.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
+
+    // Define external subpass dependencies: these must be manually filled in
+    {
+        // Main draw attachment must wait for previous blit to end (no msaa) or wait for previous drawing to end (msaa)
+        VkSubpassDependency& dep = renderPassDef.extraSubpassDeps.emplace_back();
+        dep.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dep.dstSubpass = 0;
+        dep.srcStageMask = (bMsaaEnabled) ? VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT : VK_PIPELINE_STAGE_TRANSFER_BIT;
+        dep.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dep.srcAccessMask = (bMsaaEnabled) ? VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT : VK_ACCESS_TRANSFER_READ_BIT;
+        dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    }
+
+    {
+        // Blit must wait on drawing or msaa resolve to finish (depending on whether msaa is enabled)
+        VkSubpassDependency& dep = renderPassDef.extraSubpassDeps.emplace_back();
+        dep.srcSubpass = (bMsaaEnabled) ? 1 : 0;
+        dep.dstSubpass = VK_SUBPASS_EXTERNAL;
+        dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dep.dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        dep.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dep.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     }
 
     // Finally, create the renderpass

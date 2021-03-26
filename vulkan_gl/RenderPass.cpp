@@ -278,13 +278,13 @@ bool RenderPass::init(LogicalDevice& device, const RenderPassDef& renderPassDef)
     mNumSubpasses = (uint32_t) renderPassDef.subpasses.size();
     mNumAttachments = (uint32_t) renderPassDef.attachments.size();
     mpDevice = &device;
-    
+
     // Fill in the Vulkan subpass descriptions and the attachment references for those subpasses
     mNumSubpassColorAttachments.clear();
 
     std::vector<VkSubpassDescription> subpassDescs;
     subpassDescs.reserve(renderPassDef.subpasses.size());
-        
+
     for (const SubpassDef& inSubpass : renderPassDef.subpasses) {
         // Sanity checks: these  preconditions are required by Vulkan
         ASSERT((inSubpass.depthStencilAttachments.size() == 0) || (inSubpass.depthStencilAttachments.size() == 1));
@@ -306,9 +306,11 @@ bool RenderPass::init(LogicalDevice& device, const RenderPassDef& renderPassDef)
         outSubpass.pPreserveAttachments = inSubpass.preserveAttachments.data();
     }
     
-    // Figure out the dependencies for all subpasses (excluding external subpass dependencies, which must be synchronized externally)
+    // Figure out the dependencies for all subpasses - excluding external subpass dependencies.
+    // External subpass dependencies must be specified manually via the 'extra' dependencies field.
     std::vector<VkSubpassDependency> subpassDependencies;
-    subpassDependencies.reserve(renderPassDef.subpasses.size() * 4);
+    subpassDependencies.reserve(renderPassDef.subpasses.size() * 4 + renderPassDef.extraSubpassDeps.size());
+    subpassDependencies.insert(subpassDependencies.begin(), renderPassDef.extraSubpassDeps.begin(), renderPassDef.extraSubpassDeps.end());
 
     for (uint32_t subpassIdx = 0; subpassIdx < mNumSubpasses; ++subpassIdx) {
         determineSubpassDependencies(subpassIdx, renderPassDef, subpassDependencies);

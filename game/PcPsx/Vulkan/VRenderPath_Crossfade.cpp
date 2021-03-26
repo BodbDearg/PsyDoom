@@ -187,6 +187,28 @@ bool VRenderPath_Crossfade::initRenderPass() noexcept {
         colorAttachRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     }
 
+    // Define external subpass dependencies: these must be manually filled in
+    {
+        // Just block color attachment output on everything to be safe, this fade is not performance critical and outside uses are complex...
+        VkSubpassDependency& dep = renderPassDef.extraSubpassDeps.emplace_back();
+        dep.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dep.dstSubpass = 0;
+        dep.srcStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+        dep.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dep.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        dep.dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+    }
+    {
+        // Presentation engine reads must wait for output to be written
+        VkSubpassDependency& dep = renderPassDef.extraSubpassDeps.emplace_back();
+        dep.srcSubpass = 0;
+        dep.dstSubpass = VK_SUBPASS_EXTERNAL;
+        dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dep.dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dep.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dep.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    }
+
     // Finally, create the renderpass
     return mRenderPass.init(device, renderPassDef);
 }

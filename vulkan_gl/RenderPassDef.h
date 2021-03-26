@@ -16,6 +16,10 @@ struct RenderPassDef {
     // All of the subpasses within the renderpass
     std::vector<SubpassDef> subpasses;
 
+    // Additional subpass dependencies; these can be used to specify dependencies on external subpasses.
+    // These dependencies cannot be automatically inferred based on the information in this data structure.
+    std::vector<VkSubpassDependency> extraSubpassDeps;
+
     bool findPrevSubpassAttachmentUsage(
         const uint32_t currentSubpassIdx,
         const uint32_t attachmentIdx,
