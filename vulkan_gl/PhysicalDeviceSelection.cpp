@@ -173,7 +173,7 @@ bool checkBasicDeviceSuitability(const PhysicalDevice& device, const DeviceSurfa
 const PhysicalDevice* selectBestDevice(
     const std::vector<PhysicalDevice>& devices,
     const WindowSurface& windowSurface,
-    const DeviceFilter deviceFilter
+    const DeviceFilter& deviceFilter
 ) noexcept {
     ASSERT(deviceFilter);
 
@@ -205,7 +205,7 @@ const PhysicalDevice* selectBestDevice(
 //------------------------------------------------------------------------------------------------------------------------------------------
 const PhysicalDevice* selectBestHeadlessDevice(
     const std::vector<PhysicalDevice>& devices,
-    const HeadlessDeviceFilter deviceFilter
+    const HeadlessDeviceFilter& deviceFilter
 ) noexcept {
     ASSERT(deviceFilter);
     const PhysicalDevice* pBestDevice = nullptr;

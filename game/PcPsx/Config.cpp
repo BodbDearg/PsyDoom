@@ -60,21 +60,24 @@ struct ConfigFieldHandler {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Graphics config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool        gbFullscreen;
-int32_t     gOutputResolutionW;
-int32_t     gOutputResolutionH;
-float       gLogicalDisplayW;
-bool        gbDisableVulkanRenderer;
-int32_t     gVulkanRenderHeight;
-bool        gbVulkanPixelStretch;
-bool        gbVulkanTripleBuffer;
-bool        gbVulkanWidescreenEnabled;
-int32_t     gAAMultisamples;
-int32_t     gTopOverscanPixels;
-int32_t     gBottomOverscanPixels;
-bool        gbFloorRenderGapFix;
-bool        gbSkyLeakFix;
-bool        gbUseVulkan32BitShading;
+bool            gbFullscreen;
+int32_t         gOutputResolutionW;
+int32_t         gOutputResolutionH;
+float           gLogicalDisplayW;
+bool            gbDisableVulkanRenderer;
+int32_t         gVulkanRenderHeight;
+bool            gbVulkanPixelStretch;
+bool            gbVulkanTripleBuffer;
+bool            gbVulkanWidescreenEnabled;
+int32_t         gAAMultisamples;
+int32_t         gTopOverscanPixels;
+int32_t         gBottomOverscanPixels;
+bool            gbFloorRenderGapFix;
+bool            gbSkyLeakFix;
+bool            gbUseVulkan32BitShading;
+std::string     gVulkanPreferredDevicesRegex;
+
+const char* getVulkanPreferredDevicesRegex() noexcept { return gVulkanPreferredDevicesRegex.c_str(); }
 
 static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
     {
@@ -292,6 +295,25 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbSkyLeakFix = iniEntry.getBoolValue(true); },
         []() { gbSkyLeakFix = true; }
+    },
+    {
+        "VulkanPreferredDevicesRegex",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Vulkan renderer: a case insensitive regex that can specify which GPUs are preferable to use.\n"
+        "# Useful in multi-GPU systems where you want to override PsyDoom's default 'best' device selection\n"
+        "# and choose a particular GPU to render with. If the regex matches part of the device's name then it\n"
+        "# is considered 'preferred' and selected over all other devices. If no preferred device can be\n"
+        "# chosen, then PsyDoom will attempt to select what it thinks is the best non-preferred device as a\n"
+        "# fallback.\n"
+        "#\n"
+        "# Example values:\n"
+        "#  AMD\n"
+        "#  NVIDIA.*RTX.*\n"
+        "#  Intel\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "", "\n",
+        [](const IniUtils::Entry& iniEntry) { gVulkanPreferredDevicesRegex = iniEntry.value; },
+        []() { gVulkanPreferredDevicesRegex = ""; }
     },
 };
 

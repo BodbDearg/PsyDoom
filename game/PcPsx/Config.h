@@ -46,6 +46,7 @@ extern int32_t  gBottomOverscanPixels;
 extern bool     gbFloorRenderGapFix;
 extern bool     gbSkyLeakFix;
 extern bool     gbUseVulkan32BitShading;
+const char*     getVulkanPreferredDevicesRegex() noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Audio settings

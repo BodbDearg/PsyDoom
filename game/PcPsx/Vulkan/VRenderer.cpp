@@ -31,6 +31,7 @@
 #include "VulkanInstance.h"
 #include "WindowSurface.h"
 
+#include <regex>
 #include <SDL_vulkan.h>
 
 BEGIN_NAMESPACE(VRenderer)
@@ -472,18 +473,44 @@ void init() noexcept {
     // Coord sys info is initially invalid
     updateCoordSysInfo();
 
-    // Initialize the Vulkan API, the window surface, and choose a device to use
+    // Initialize the Vulkan API and the window surface
     if (!gVulkanInstance.init(Video::gpSdlWindow))
         FatalErrors::raise("Failed to initialize a Vulkan API instance!");
 
     if (!gWindowSurface.init(Video::gpSdlWindow, gVulkanInstance))
         FatalErrors::raise("Failed to initialize a Vulkan window surface!");
 
-    gpPhysicalDevice = vgl::PhysicalDeviceSelection::selectBestDevice(
-        gVulkanInstance.getPhysicalDevices(),
-        gWindowSurface,
-        isPhysicalDeviceSuitable
-    );
+    // Choose a device to use and try to use the preferred device regex if set.
+    // If the regex is not specified or it does not produce a valid device selection then try selection against all devices.
+    const char* const preferredGpusRegexStr = Config::getVulkanPreferredDevicesRegex();
+
+    if (preferredGpusRegexStr && preferredGpusRegexStr[0]) {
+        try {
+            std::regex preferredGpusRegex(preferredGpusRegexStr, std::regex_constants::ECMAScript | std::regex_constants::icase);
+
+            gpPhysicalDevice = vgl::PhysicalDeviceSelection::selectBestDevice(
+                gVulkanInstance.getPhysicalDevices(),
+                gWindowSurface,
+                [&](const vgl::PhysicalDevice& device, const vgl::DeviceSurfaceCaps& surfaceCaps) -> bool {
+                    if (!std::regex_search(device.getName(), preferredGpusRegex))
+                        return false;
+
+                    return isPhysicalDeviceSuitable(device, surfaceCaps);
+                }
+            );
+
+        } catch (...) {
+            FatalErrors::raiseF("Invalid value for 'VulkanPreferredDevicesRegex' - not a valid regex:\n%s", preferredGpusRegexStr);
+        }
+    }
+
+    if (!gpPhysicalDevice) {
+        gpPhysicalDevice = vgl::PhysicalDeviceSelection::selectBestDevice(
+            gVulkanInstance.getPhysicalDevices(),
+            gWindowSurface,
+            isPhysicalDeviceSuitable
+        );
+    }
 
     if (!gpPhysicalDevice) {
         FatalErrors::raise(
