@@ -225,11 +225,8 @@ void onBeginUIDrawing() noexcept {
             // Set the draw uniforms, including the transform matrix
             {
                 VShaderUniforms_Draw uniforms = {};
+                VRenderer::initRendererUniformFields(uniforms);
                 uniforms.mvpMatrix = VDrawing::computeTransformMatrixForUI(Config::gbVulkanWidescreenEnabled);
-                uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
-                uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;
-                uniforms.psxNdcOffsetX = VRenderer::gPsxNdcOffsetX;
-                uniforms.psxNdcOffsetY = VRenderer::gPsxNdcOffsetY;
 
                 VDrawing::setDrawUniforms(uniforms);
             }

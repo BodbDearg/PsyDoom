@@ -101,11 +101,8 @@ static void RV_SetupAutomapTransformMatrix() noexcept {
 
     // Set the uniforms to contain this transform matrix
     VShaderUniforms_Draw uniforms = {};
+    VRenderer::initRendererUniformFields(uniforms);
     uniforms.mvpMatrix = combinedTransformMatrix;
-    uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
-    uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;
-    uniforms.psxNdcOffsetX = VRenderer::gPsxNdcOffsetX;
-    uniforms.psxNdcOffsetY = VRenderer::gPsxNdcOffsetY;
 
     VDrawing::setDrawUniforms(uniforms);
 }

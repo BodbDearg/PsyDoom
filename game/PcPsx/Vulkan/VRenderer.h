@@ -19,6 +19,7 @@ class IVRendererPath;
 class VRenderPath_Crossfade;
 class VRenderPath_Main;
 class VRenderPath_Psx;
+struct VShaderUniforms_Draw;
 
 BEGIN_NAMESPACE(VRenderer)
 
@@ -34,6 +35,8 @@ extern uint32_t                 gPresentSurfaceW;
 extern uint32_t                 gPresentSurfaceH;
 extern uint32_t                 gFramebufferW;
 extern uint32_t                 gFramebufferH;
+extern float                    gInvFramebufferW;
+extern float                    gInvFramebufferH;
 extern float                    gCurLogicalDisplayW;
 extern float                    gPsxCoordsFbX;
 extern float                    gPsxCoordsFbY;
@@ -53,6 +56,7 @@ bool beginFrame() noexcept;
 bool isRendering() noexcept;
 void endFrame() noexcept;
 void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint16_t rectTy, const uint16_t rectBy) noexcept;
+void initRendererUniformFields(VShaderUniforms_Draw& uniforms) noexcept;
 IVRendererPath& getActiveRenderPath() noexcept;
 IVRendererPath& getNextRenderPath() noexcept;
 void setNextRenderPath(IVRendererPath& renderPath) noexcept;

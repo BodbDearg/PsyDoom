@@ -70,9 +70,12 @@ VRenderPath_Crossfade   gRenderPath_Crossfade;
 uint32_t    gPresentSurfaceW;
 uint32_t    gPresentSurfaceH;
 
-// Coord system info: the width and height to use for framebuffers created - esentially the render/draw resolution
+// Coord system info: the width and height to use for framebuffers created - esentially the render/draw resolution.
+// Also the inverse of that for quick division.
 uint32_t    gFramebufferW;
 uint32_t    gFramebufferH;
+float       gInvFramebufferW;
+float       gInvFramebufferH;
 
 // Coord system info: the current logical display width for the game.
 // This may change depending on the display size, if free stretching mode is enabled.
@@ -274,7 +277,6 @@ static void updateCoordSysInfo() noexcept {
     // Is the framebuffer being pixel stretched? If that is the case then adjust the width and height
     if (gFramebufferW > 0) {
         if (Config::gbVulkanPixelStretch) {
-
             const float displayedPsxRows = (float)(Video::ORIG_DRAW_RES_Y - Video::gTopOverscan - Video::gBotOverscan);
             const float xPixelStretch = (float) Video::ORIG_DRAW_RES_X / gCurLogicalDisplayW;
             const float yPixelStretch = displayedPsxRows / (float) Video::ORIG_DRAW_RES_Y;
@@ -318,6 +320,15 @@ static void updateCoordSysInfo() noexcept {
         gNdcToPsxScaleY = 0.0f;
         gPsxNdcOffsetX = 0.0f;
         gPsxNdcOffsetY = 0.0f;
+    }
+
+    // Compute inverse framebuffer width and height
+    if (bHaveValidPresentSurface) {
+        gInvFramebufferW = 1.0f / (float) gFramebufferW;
+        gInvFramebufferH = 1.0f / (float) gFramebufferH;
+    } else {
+        gInvFramebufferW = 0.0f;
+        gInvFramebufferH = 0.0f;
     }
 }
 
@@ -844,6 +855,19 @@ void pushPsxVramUpdates(const uint16_t rectLx, const uint16_t rectRx, const uint
 
     // Unlock the texture to begin uploading the updates
     gPsxVramTexture.unlock();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Util function: initializes uniform fields in 'VShaderUniforms_Draw' that are sourced from this renderer module.
+// Used to avoid repeating the same code everywhere.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void initRendererUniformFields(VShaderUniforms_Draw& uniforms) noexcept {
+    uniforms.ndcToPsxScaleX = gNdcToPsxScaleX;
+    uniforms.ndcToPsxScaleY = gNdcToPsxScaleY;
+    uniforms.psxNdcOffsetX = gPsxNdcOffsetX;
+    uniforms.psxNdcOffsetY = gPsxNdcOffsetY;
+    uniforms.invDrawResX = gInvFramebufferW;
+    uniforms.invDrawResY = gInvFramebufferH;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

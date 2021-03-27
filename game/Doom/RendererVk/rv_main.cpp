@@ -123,11 +123,8 @@ static void RV_DetermineDrawParams() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_SetShaderUniformsFor3D() noexcept {
     VShaderUniforms_Draw uniforms = {};
+    VRenderer::initRendererUniformFields(uniforms);
     uniforms.mvpMatrix = gViewProjMatrix;
-    uniforms.ndcToPsxScaleX = VRenderer::gNdcToPsxScaleX;
-    uniforms.ndcToPsxScaleY = VRenderer::gNdcToPsxScaleY;
-    uniforms.psxNdcOffsetX = VRenderer::gPsxNdcOffsetX;
-    uniforms.psxNdcOffsetY = VRenderer::gPsxNdcOffsetY;
 
     VDrawing::setDrawUniforms(uniforms);
 }

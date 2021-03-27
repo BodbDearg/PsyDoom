@@ -53,6 +53,10 @@ struct VShaderUniforms_Draw {
     // Also where the where the original PSX framebuffer coords start in NDC space.
     float ndcToPsxScaleX, ndcToPsxScaleY;
     float psxNdcOffsetX, psxNdcOffsetY;
+
+    // Inverse draw resolution (1 / draw resolution).
+    // This is used to convert from screen space to normalized device coords.
+    float invDrawResX, invDrawResY;
 };
 
 // Make sure shader uniforms are not bigger than the minimum push constant range required by the Vulkan standard, which is 128 bytes.

@@ -9,10 +9,12 @@
 //  psxNdcOffset    Gives the offset in NDC space where 0,0 in the original PSX framebuffer coordinate system starts.
 //                  Together with 'ndcToPsxScale' this value can be used to transform vertices into the coordinate
 //                  system of the original PSX framebuffer, which is useful for things like sky rendering.
+//  invDrawRes      1 / drawResolution - useful for converting from 'gl_FragCoord' to NDC coordinates
 //----------------------------------------------------------------------------------------------------------------------
 #define DECLARE_UNIFORMS()\
     layout(push_constant) uniform Uniforms {   \
         mat4    mvpMatrix;      \
         vec2    ndcToPsxScale;  \
         vec2    psxNdcOffset;   \
+        vec2    invDrawRes;     \
     } uniforms;
