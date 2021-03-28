@@ -80,7 +80,10 @@ static bool gbLoadingFinalDoomMap;
 void (*gUpdateFireSkyFunc)(texture_t& skyTex) = nullptr;
 
 // Functions iternal to this module:
-static void P_LoadBlocks(const CdFileId file) noexcept;
+#if !PSYDOOM_LIMIT_REMOVING
+    static void P_LoadBlocks(const CdFileId file) noexcept;
+#endif
+
 static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept;
 
 #if !PSYDOOM_MODS
@@ -1094,14 +1097,23 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     P_SpawnSpecials();
     Z_Free2(*gpMainMemZone, pMapWadFileData);
 
-    // Loading map textures and sprites
+    // Loading map textures and sprites.
+    //
+    // PsyDoom limit removing: loading .IMG files for maps (e.g  MAPSPR01.IMG and MAPTEX01.IMG) is no longer done to make modding easier.
+    // Instead, all graphical resources will be loaded from WAD files. The .IMG files no longer need to be produced for PsyDoom and we can
+    // add new texture etc. lumps to the main IWAD without worrying about invalidating lump number references in existing .IMG files.
     if (!gbIsLevelBeingRestarted) {
-        const CdFileId mapTexFile = (CdFileId)((int32_t) CdFileId::MAPTEX01_IMG + mapIdxInFolder + mapFolderOffset);
-        const CdFileId mapSprFile = (CdFileId)((int32_t) CdFileId::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
-        
-        P_LoadBlocks(mapTexFile);
+        #if !PSYDOOM_LIMIT_REMOVING
+            const CdFileId mapTexFile = (CdFileId)((int32_t) CdFileId::MAPTEX01_IMG + mapIdxInFolder + mapFolderOffset);
+            const CdFileId mapSprFile = (CdFileId)((int32_t) CdFileId::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
+            P_LoadBlocks(mapTexFile);
+        #endif
+
         P_Init();
-        P_LoadBlocks(mapSprFile);
+
+        #if !PSYDOOM_LIMIT_REMOVING
+            P_LoadBlocks(mapSprFile);
+        #endif
     }
 
     // Check there is enough heap space left in order to run the level
@@ -1136,6 +1148,10 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     }
 }
 
+// PsyDoom limit removing: loading .IMG files for maps (e.g  MAPSPR01.IMG and MAPTEX01.IMG) is no longer done to make modding easier.
+// Instead, all graphical resources will be loaded from WAD files. The .IMG files no longer need to be produced for PsyDoom and we can
+// add new texture etc. lumps to the main IWAD without worrying about invalidating lump number references in existing .IMG files.
+#if !PSYDOOM_LIMIT_REMOVING
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Loads a list of memory blocks containing WAD lumps from the given file.
 //
@@ -1224,6 +1240,7 @@ static void P_LoadBlocks(const CdFileId file) noexcept {
     CloseFile(openFileIdx);
     Z_CheckHeap(*gpMainMemZone);
 }
+#endif  // #if !PSYDOOM_LIMIT_REMOVING
 
 #if !PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
