@@ -102,7 +102,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the horizontal flat spans for the specified subsector's leaf
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& tex) noexcept {
+void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& tex) noexcept {
     // PsyDoom: if the leaf exceeds the maximum number of edges allowed then skip it.
     // TODO: in limit removing work, remove this limit and make it compile time configurable.
     #if PSYDOOM_MODS
@@ -121,7 +121,18 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
 
             for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pEdge) {
                 const vertex_t& vert = *pEdge->vertex;
-                const int32_t screenY = (HALF_VIEW_3D_H - 1) - d_fixed_to_int(planeViewZ * vert.scale);
+
+                // PsyDoom: fix a numerical overflow and view corruption issue that could occur here with tall cliffs of 1024 units or more in height.
+                // Split the multiply into integer and fractional parts to gain 16-bits of precision and avoid overflows.
+                #if PSYDOOM_LIMIT_REMOVING
+                    const fixed_t vertScale = vert.scale;
+                    const int32_t vertIntScale = vertScale >> FRACBITS;
+                    const fixed_t vertFracScale = vertScale & FRACMASK;
+                    const int32_t vertY = (planeViewZ * vertIntScale) + d_fixed_to_int(planeViewZ * vertFracScale);
+                    const int32_t screenY = (HALF_VIEW_3D_H - 1) - vertY;
+                #else
+                    const int32_t screenY = (HALF_VIEW_3D_H - 1) - d_fixed_to_int(planeViewZ * vert.scale);
+                #endif
 
                 gLeafScreenVerts.push_back(vert.screenx);
                 gLeafScreenVerts.push_back(screenY);

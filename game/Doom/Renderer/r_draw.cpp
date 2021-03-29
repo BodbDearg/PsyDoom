@@ -192,8 +192,9 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
 // Returns the result in the given output leaf.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
-    // For some reason front plane clipping of leafs is much more aggressive than earlier stages of the rendering pipeline.
-    // This is the clipping distance used here - twice the amount used elsewhere.
+    // Front plane clipping of leafs is much more aggressive than earlier stages of the rendering pipeline - 2x the distance used elsewhere.
+    // This might have been done to work around a numerical overflow when computing the vertex 'screenY' value in 'R_DrawFlatSpans',
+    // which PsyDoom now fixes. Without PsyDoom's fix the original issue is greatly reduced if the clipping distance here is increased...
     constexpr int32_t CLIP_DIST = NEAR_CLIP_DIST * 2;
     
     // Run through all the source edges in the given leaf and see if each edge needs to be clipped, skipped or stored as-is
