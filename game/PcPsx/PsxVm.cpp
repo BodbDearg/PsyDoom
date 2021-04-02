@@ -51,7 +51,16 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
 bool init(const char* const doomCdCuePath) noexcept {
     // Init the GPU & SPU core
     Gpu::initCore(gGpu, Gpu::PS1_VRAM_W, Gpu::PS1_VRAM_H);
-    Spu::initPS1Core(gSpu);
+    constexpr uint32_t PSX_SPU_RAM_SIZE = 512 * 1024;
+
+    #if PSYDOOM_LIMIT_REMOVING
+        constexpr uint32_t DEFAULT_SPU_RAM_SIZE = 16 * 1024 * 1024;
+        const uint32_t spuRamSize = std::max<uint32_t>((Config::gSpuRamSize <= 0) ? DEFAULT_SPU_RAM_SIZE : Config::gSpuRamSize, PSX_SPU_RAM_SIZE);
+    #else
+        constexpr uint32_t spuRamSize = PSX_SPU_RAM_SIZE;
+    #endif
+
+    Spu::initCore(gSpu, spuRamSize, 24);
 
     // Parse the .cue info for the game disc
     {

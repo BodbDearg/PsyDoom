@@ -321,6 +321,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
 // Audio config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t gAudioBufferSize;
+int32_t gSpuRamSize;
 
 static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
     {
@@ -341,6 +342,20 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gAudioBufferSize = iniEntry.getIntValue(0); },
         []() { gAudioBufferSize = 0; }
+    },
+    {
+        "SpuRamSize",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# The size of available SPU RAM for loading sounds and sampled music instruments, in bytes.\n"
+        "# If <= 0 then PsyDoom will auto-configure the amount to 16 MiB, which is 32x the original 512 KiB\n"
+        "# that the PlayStation allowed. This greatly extended limit fixes a few bugs with sounds not playing\n"
+        "# on some maps and provides ample room for custom user maps and music. Note that values lower than\n"
+        "# 512 KiB will be ignored for compatibility reasons. This setting also has no effect if you build\n"
+        "# PsyDoom without limit removing features.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "-1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gSpuRamSize = iniEntry.getIntValue(-1); },
+        []() { gSpuRamSize = -1; }
     },
 };
 

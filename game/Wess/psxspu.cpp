@@ -6,18 +6,23 @@
 
 #include "PcPsx/BitShift.h"
 #include "PcPsx/ProgArgs.h"
+#include "PcPsx/PsxVm.h"
 #include "PsyQ/LIBSPU.h"
+#include "Spu.h"
 #include "wessarc.h"
-
-// How much SPU RAM there is in total (512 KiB)
-static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;
 
 // This much of SPU RAM is reserved at the start for the 4 capture buffers, 2 of which are used for CD Audio left/right samples.
 static constexpr uint32_t SPU_CAPTURE_BUFFERS_SIZE = 4 * 1024;
 
-// How much SPU RAM is usable if no reverb is used.
-// Reverb may require additional SPU RAM to be marked off limits, for the reverb work area.
-static constexpr uint32_t MAX_USABLE_SPU_RAM = SPU_RAM_SIZE - SPU_CAPTURE_BUFFERS_SIZE;
+// SPU Ram is dynamic in size and configurable in a limit removing build, hence these are no longer needed
+#if !PSYDOOM_LIMIT_REMOVING
+    // How much SPU RAM there was in total for the original PSX hardware (512 KiB)
+    static constexpr uint32_t SPU_RAM_SIZE = 16 * 1024 * 1024;
+
+    // How much SPU RAM is usable if no reverb is used.
+    // Reverb may require additional SPU RAM to be marked off limits, for the reverb work area.
+    static constexpr uint32_t MAX_USABLE_SPU_RAM = SPU_RAM_SIZE - SPU_CAPTURE_BUFFERS_SIZE;
+#endif
 
 // Dummy memory manager book keeping area used by 'LIBSPU_SpuInitMalloc' and LIBSPU malloc functions.
 // The SPU malloc functions are not used at all in DOOM, so this area will be unused.
@@ -31,7 +36,11 @@ static bool gbPsxSpu_initialized;
 
 // The end offset into usable SPU RAM.
 // Note: 4 KiB must be reserved at the start of SPU RAM for the 4 capture buffers, 2 of which are used for CD Audio left/right samples.
-uint32_t gPsxSpu_sram_end = MAX_USABLE_SPU_RAM;
+#if PSYDOOM_LIMIT_REMOVING
+    uint32_t gPsxSpu_sram_end = {};     // Must determine at runtime for limit removing builds
+#else
+    uint32_t gPsxSpu_sram_end = MAX_USABLE_SPU_RAM;
+#endif
 
 // If true then we process the 'psxspu_fadeengine' timer callback, otherwise the callback is ignored.
 // The timer callback was originally triggered via periodic timer interrupts, so this flag was used to temporarily ignore interrupts.
@@ -86,7 +95,13 @@ void psxspu_init_reverb(
         gPsxSpu_sram_end = LIBSPU_SpuGetReverbOffsetAddr();     // Reverb reduces the available SPU RAM because it needs a work area
     } else {
         LIBSPU_SpuSetReverb(SPU_OFF);
-        gPsxSpu_sram_end = MAX_USABLE_SPU_RAM;      // No reverb, so the amount usable is the max usable SPU RAM amount
+
+        // No reverb, so the amount usable is the max usable SPU RAM amount
+        #if PSYDOOM_LIMIT_REMOVING
+            gPsxSpu_sram_end = PsxVm::gSpu.ramSize - SPU_CAPTURE_BUFFERS_SIZE;
+        #else
+            gPsxSpu_sram_end = MAX_USABLE_SPU_RAM;
+        #endif
     }
 
     LIBSPU_SpuSetReverbVoice(bReverbEnabled, SPU_ALLCH);

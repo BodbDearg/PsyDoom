@@ -31,6 +31,27 @@ uint16_t LIBSPU__spu_note2pitch(
     const int32_t offsetNoteFrac
 ) noexcept;
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: computes the reverb base address (divided by 8) for potentially extended PSX sound ram given a reverb base address in
+// terms of the original 512 KB available (and divided by 8). The address returned will be at the end of the extended RAM area, if extended.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static uint32_t LIBSPU_GetExtReverbBaseAddr(const uint16_t origPsxReverbBaseAddr8) noexcept {
+    // Note: shouldn't need to lock the SPU for this query since ram size is set on init
+    Spu::Core& spu = PsxVm::gSpu;
+    uint32_t extBaseAddr8 = spu.ramSize / 8;
+
+    if (extBaseAddr8 > UINT16_MAX) {
+        extBaseAddr8 -= UINT16_MAX;     // Reverb area is 512 KiB maximum, at the end of SRAM
+    } else {
+        extBaseAddr8 = 0;               // SPU ram is not extended, reverb area starts at the start of SRAM
+    }
+
+    extBaseAddr8 += origPsxReverbBaseAddr8;
+    return extBaseAddr8;
+}
+#endif  // #if PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set one or more (or all) properties on a voice or voices using the information in the given struct
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,7 +306,13 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
 
         if (reverbMode < SPU_REV_MODE_MAX) {
             gReverbMode = reverbMode;
-            spu.reverbBaseAddr8 = gReverbWorkAreaBaseAddrs[gReverbMode];    // Update the reverb working area base address when changing mode
+
+            // Update the reverb working area base address when changing mode
+            #if PSYDOOM_LIMIT_REMOVING
+                spu.reverbBaseAddr8 = LIBSPU_GetExtReverbBaseAddr(gReverbWorkAreaBaseAddrs[reverbMode]);
+            #else
+                spu.reverbBaseAddr8 = gReverbWorkAreaBaseAddrs[gReverbMode];
+            #endif
         } else {
             // Bad reverb mode - this causes the call to fail!
             return SPU_ERROR;
@@ -529,11 +556,10 @@ int32_t LIBSPU_SpuClearReverbWorkArea() noexcept {
     Spu::Core& spu = PsxVm::gSpu;
     PsxVm::LockSpu spuLock;
 
-    const uint32_t reverbBaseAddr = (uint32_t) spu.reverbBaseAddr8 * 8;
+    const uint32_t reverbBaseAddr = spu.reverbBaseAddr8 * 8;
 
-    if (spu.bReverbWriteEnable || (reverbBaseAddr == 0)) {
+    if (spu.bReverbWriteEnable || (reverbBaseAddr == 0))
         return SPU_ERROR;
-    }
 
     // Zero the reverb area
     if (reverbBaseAddr < spu.ramSize) {
@@ -640,11 +666,13 @@ void LIBSPU_SpuInit() noexcept {
     LIBSPU_SpuStart();
 
     // Ensure the reverb work area address is correct
-    if (gReverbMode < SPU_REV_MODE_MAX) {
-        spu.reverbBaseAddr8 = gReverbWorkAreaBaseAddrs[gReverbMode];
-    } else {
-        spu.reverbBaseAddr8 = gReverbWorkAreaBaseAddrs[0];
-    }
+    const uint16_t reverbBaseAddr8 = gReverbWorkAreaBaseAddrs[(gReverbMode < SPU_REV_MODE_MAX) ? gReverbMode : 0];
+
+    #if PSYDOOM_LIMIT_REMOVING
+        spu.reverbBaseAddr8 = LIBSPU_GetExtReverbBaseAddr(reverbBaseAddr8);
+    #else
+        spu.reverbBaseAddr8 = reverbBaseAddr8;
+    #endif
 
     gTransferStartAddr = 0;
 }
