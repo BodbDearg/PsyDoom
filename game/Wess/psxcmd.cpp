@@ -886,8 +886,8 @@ void PSX_voicenote(
             break;
         }
 
-        // Only consider stealing the voice if the track is higher priority than the voice
-        if (trackStat.priority < voiceStat.priority)
+        // Only consider stealing the voice if the track is higher or equal priority to the voice
+        if (voiceStat.priority > trackStat.priority)
             continue;
 
         // If this voice is lower priority than the previously stolen voice then just steal it.
@@ -896,21 +896,21 @@ void PSX_voicenote(
         // The initial assignment of 'stolenVoicePriority' should mean that we always have a valid voice
         // status for the stolen voice, but this makes that a little more obvious at least.
         #if PSYDOOM_MODS
-            bStealVoice = ((!pStolenVoiceStat) || (voiceStat.priority < stolenVoicePriority));
+            bStealVoice = ((!pStolenVoiceStat) || (stolenVoicePriority > voiceStat.priority));
         #else
-            bStealVoice = (voiceStat.priority < stolenVoicePriority);
+            bStealVoice = (stolenVoicePriority > voiceStat.priority);
         #endif
 
         // If this voice is higher (or equal) priority to the one we stole previously then only steal under certain circumstances
         if (!bStealVoice) {
             if (voiceStat.release) {
                 // Steal this voice instead if it ends sooner or if the currently chosen voice to steal is NOT being released
-                if ((stolenVoiceOnOffAbsTime > voiceStat.onoff_abstime_ms) || (!pStolenVoiceStat->release)) {
+                if ((voiceStat.onoff_abstime_ms < stolenVoiceOnOffAbsTime) || (!pStolenVoiceStat->release)) {
                     bStealVoice = true;
                 }
             } else {
                 // Steal this voice instead if it ends sooner and the currently chosen voice to steal is also NOT being released
-                if ((stolenVoiceOnOffAbsTime > voiceStat.onoff_abstime_ms) && (!pStolenVoiceStat->release)) {
+                if ((voiceStat.onoff_abstime_ms < stolenVoiceOnOffAbsTime) && (!pStolenVoiceStat->release)) {
                     bStealVoice = true;
                 }
             }
