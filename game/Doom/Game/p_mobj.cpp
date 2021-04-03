@@ -177,7 +177,15 @@ void P_ExplodeMissile(mobj_t& mobj) noexcept {
 
     // Stop the missile sound and start the explode sound
     if (mobjInfo.deathsound != sfx_None) {
-        S_StopSound(mobj.target);
+        // PsyDoom: fix a PSX specific audio bug where projectiles launched by a thing could cause some of its other playing sounds
+        // to cut out upon that projectile exploding. This bug was most noticeable with imp death sounds cutting out periodically.
+        // The fix is to associate the projectile spawn sound with the projectile itself, rather than to the firer, and stop it accordingly.
+        #if PSYDOOM_MODS
+            S_StopSound(&mobj);
+        #else
+            S_StopSound(mobj.target);
+        #endif
+
         S_StartSound(&mobj, mobjInfo.deathsound);
     }
 }
@@ -538,7 +546,14 @@ mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noex
 
     // Play the initial spawning sound
     if (missileInfo.seesound != sfx_None) {
-        S_StartSound(&source, missileInfo.seesound);
+        // PsyDoom: fix a PSX specific audio bug where projectiles launched by a thing could cause some of its other playing sounds
+        // to cut out upon that projectile exploding. This bug was most noticeable with imp death sounds cutting out periodically.
+        // The fix is to associate the projectile spawn sound with the projectile itself, rather than to the firer, and stop it accordingly.
+        #if PSYDOOM_MODS
+            S_StartSound(&missile, missileInfo.seesound);
+        #else
+            S_StartSound(&source, missileInfo.seesound);
+        #endif
     }
     
     // Remember who fired the missile (for enemy AI, damage logic etc.)
@@ -604,7 +619,14 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
     mobj_t& missile = *P_SpawnMobj(source.x, source.y, source.z + 32 * FRACUNIT, missileType);
     
     if (missile.info->seesound != sfx_None) {
-        S_StartSound(&source, missile.info->seesound);
+        #if PSYDOOM_MODS
+            // PsyDoom: fix a PSX specific audio bug where projectiles launched by a thing could cause some of its other playing sounds
+            // to cut out upon that projectile exploding. This bug was most noticeable with imp death sounds cutting out periodically.
+            // The fix is to associate the projectile spawn sound with the projectile itself, rather than to the firer, and stop it accordingly.
+            S_StartSound(&missile, missile.info->seesound);
+        #else
+            S_StartSound(&source, missile.info->seesound);
+        #endif
     }
 
     // Set the missile velocity and angle and save the firer (for damage blame) 
