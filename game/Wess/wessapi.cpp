@@ -419,6 +419,11 @@ int32_t wess_load_module(
         wess_memcpy(&patchGroupHdr, gpWess_curWmdFileBytes, sizeof(patch_group_header));
         gpWess_curWmdFileBytes += sizeof(patch_group_header);
 
+        // PsyDoom: overwrite the hardware voice limit in the patch group to what we support (64 voices in limit removing builds)
+        #if PSYDOOM_MODS
+            patchGroupHdr.hw_voice_limit = SPU_NUM_VOICES;
+        #endif
+
         // Try to match against one of the sound drivers loaded
         for (int32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
             // Does this patch group play with this sound hardware? If it doesn't then skip over it:

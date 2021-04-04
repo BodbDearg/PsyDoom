@@ -52,8 +52,8 @@ static uint8_t          gWess_drv_totalVoices;                      // Maximum n
 static uint32_t         gWess_drv_hwVoiceLimit;                     // Maximum number of voices available to the PSX sound driver
 static uint32_t*        gpWess_drv_cur_abstime_ms;                  // Pointer to the current absolute time (milliseconds since launch) for the sequencer system
 static uint8_t          gWess_drv_chanReverbAmt[SPU_NUM_VOICES];    // Current reverb levels for each channel/voice
-static uint32_t         gWess_drv_voicesToRelease;                  // Bit mask for which voices are requested to be released (key off)
-static uint32_t         gWess_drv_voicesToMute;                     // Bit mask for which voices are requested to be muted
+static SpuVoiceMask     gWess_drv_voicesToRelease;                  // Bit mask for which voices are requested to be released (key off)
+static SpuVoiceMask     gWess_drv_voicesToMute;                     // Bit mask for which voices are requested to be muted
 static uint8_t          gWess_drv_muteReleaseRate;                  // Controls how fast muted voices are faded out; higher values means a faster fade.
 static SpuVoiceAttr     gWess_spuVoiceAttr;                         // Temporary used for setting voice parameters with LIBSPU
 static uint8_t          gWess_spuKeyStatuses[SPU_NUM_VOICES];       // Current voice statuses (4 possible states) returned by 'LIBSPU_SpuGetAllKeysStatus'.
@@ -139,7 +139,11 @@ void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8
     );
 
     // This is the voice we are manipulating
-    spuVoiceAttr.voice_bits = 1 << (voiceStat.ref_idx % 32);
+    #if PSYDOOM_LIMIT_REMOVING
+        spuVoiceAttr.voice_bits = SpuVoiceMask(1) << (voiceStat.ref_idx % 64);
+    #else
+        spuVoiceAttr.voice_bits = SpuVoiceMask(1) << (voiceStat.ref_idx % 32);
+    #endif
 
     // Setup reverb
     if (trackStat.reverb == 0) {
@@ -352,7 +356,7 @@ void PSX_DriverEntry1() noexcept {
     // Key off any voices that were requested to be released or muted
     {
         // Figure out what voices to key off (start releasing or turn off)
-        uint32_t voicesToTurnOff = 0;
+        SpuVoiceMask voicesToTurnOff = 0;
     
         if (gWess_drv_voicesToRelease != 0) {
             // Some voices are requested to be released (key off) - incorporate those and clear the command
@@ -482,7 +486,12 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
         // The release rate is exponential, hence the shifts here:
         voiceStat.release_time_ms = MAX_RELEASE_TIME_MS >> (31 - (gWess_drv_muteReleaseRate % 32));
         PSX_voicerelease(voiceStat);
-        gWess_drv_voicesToMute |= 1 << (voiceStat.ref_idx % 32);
+
+        #if PSYDOOM_LIMIT_REMOVING
+            gWess_drv_voicesToMute |= SpuVoiceMask(1) << (voiceStat.ref_idx % 64);
+        #else
+            gWess_drv_voicesToMute |= SpuVoiceMask(1) << (voiceStat.ref_idx % 32);
+        #endif
 
         // If there are no more active voices to visit then we are done
         numActiveVoicesToVisit--;
@@ -562,7 +571,12 @@ void PSX_PitchMod(track_status& trackStat) noexcept {
 
         // These are the attributes and voices to update on the SPU
         spuVoiceAttr.attr_mask = SPU_VOICE_NOTE;
-        spuVoiceAttr.voice_bits = 1 << (voiceStat.ref_idx % 32);
+
+        #if PSYDOOM_LIMIT_REMOVING
+            spuVoiceAttr.voice_bits = SpuVoiceMask(1) << (voiceStat.ref_idx % 64);
+        #else
+            spuVoiceAttr.voice_bits = SpuVoiceMask(1) << (voiceStat.ref_idx % 32);
+        #endif
         
         // Update the voice attributes on the SPU
         LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
@@ -656,7 +670,12 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
 
         // These are the attributes and voices to update on the SPU
         spuVoiceAttr.attr_mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
-        spuVoiceAttr.voice_bits = 1 << (voiceStat.ref_idx % 32);
+
+        #if PSYDOOM_LIMIT_REMOVING
+            spuVoiceAttr.voice_bits = SpuVoiceMask(1) << (voiceStat.ref_idx % 64);
+        #else
+            spuVoiceAttr.voice_bits = SpuVoiceMask(1) << (voiceStat.ref_idx % 32);
+        #endif
 
         // Update the voice attributes on the SPU
         LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
@@ -731,7 +750,12 @@ void PSX_PanMod(track_status& trackStat) noexcept {
 
         // These are the attributes and voices to update on the SPU
         spuVoiceAttr.attr_mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
-        spuVoiceAttr.voice_bits = 1 << (voiceStat.ref_idx % 32);
+
+        #if PSYDOOM_LIMIT_REMOVING
+            spuVoiceAttr.voice_bits = SpuVoiceMask(1) << (voiceStat.ref_idx % 64);
+        #else
+            spuVoiceAttr.voice_bits = SpuVoiceMask(1) << (voiceStat.ref_idx % 32);
+        #endif
 
         // Update the voice attributes on the SPU
         LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
@@ -837,7 +861,12 @@ void PSX_voiceparmoff(voice_status& voiceStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_voicerelease(voice_status& voiceStat) noexcept {
     const uint32_t curAbsTime = *gpWess_drv_cur_abstime_ms;
-    gWess_drv_voicesToRelease |= 1 << (voiceStat.ref_idx % 32);
+
+    #if PSYDOOM_LIMIT_REMOVING
+        gWess_drv_voicesToRelease |= SpuVoiceMask(1) << (voiceStat.ref_idx % 64);
+    #else
+        gWess_drv_voicesToRelease |= SpuVoiceMask(1) << (voiceStat.ref_idx % 32);
+    #endif
 
     voiceStat.release = true;
     voiceStat.onoff_abstime_ms = curAbsTime + voiceStat.release_time_ms;    // Compute when the voice is to be turned off or deallocated

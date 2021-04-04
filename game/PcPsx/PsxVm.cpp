@@ -49,18 +49,23 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
 // Initialize emulated PlayStation system components and use the given .cue file for the game disc
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool init(const char* const doomCdCuePath) noexcept {
-    // Init the GPU & SPU core
+    // Init the GPU core
     Gpu::initCore(gGpu, Gpu::PS1_VRAM_W, Gpu::PS1_VRAM_H);
+    
+    // Init the SPU core and use extended hardware voice counts (64 max) and an expanded RAM size (defaulted to 16 MiB) if the build is limit removing.
+    // Note: don't allow  SPU RAM to be smaller than the original 512 KiB for compatibility reasons.
     constexpr uint32_t PSX_SPU_RAM_SIZE = 512 * 1024;
 
     #if PSYDOOM_LIMIT_REMOVING
         constexpr uint32_t DEFAULT_SPU_RAM_SIZE = 16 * 1024 * 1024;
+        constexpr uint32_t SPU_VOICE_COUNT = 64;
         const uint32_t spuRamSize = std::max<uint32_t>((Config::gSpuRamSize <= 0) ? DEFAULT_SPU_RAM_SIZE : Config::gSpuRamSize, PSX_SPU_RAM_SIZE);
     #else
+        constexpr uint32_t SPU_VOICE_COUNT = 24;
         constexpr uint32_t spuRamSize = PSX_SPU_RAM_SIZE;
     #endif
 
-    Spu::initCore(gSpu, spuRamSize, 24);
+    Spu::initCore(gSpu, spuRamSize, SPU_VOICE_COUNT);
 
     // Parse the .cue info for the game disc
     {

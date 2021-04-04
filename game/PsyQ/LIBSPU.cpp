@@ -84,11 +84,11 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
     Spu::Core& spu = PsxVm::gSpu;
     PsxVm::LockSpu spuLock;
 
-    const uint32_t voiceBits = attribs.voice_bits;
+    const SpuVoiceMask voiceBits = attribs.voice_bits;
 
     for (uint32_t voiceIdx = 0; voiceIdx < spu.numVoices; ++voiceIdx) {
         // Skip this voice if we're not setting its attributes
-        if ((voiceBits & (1 << voiceIdx)) == 0)
+        if ((voiceBits & (SpuVoiceMask(1) << voiceIdx)) == 0)
             continue;
 
         // Set: voice 'pitch' or sample rate. Note that '4,096' = '44,100 Hz'.
@@ -605,7 +605,7 @@ void LIBSPU_SpuSetReverbDepth(const SpuReverbAttr& reverb) noexcept {
 //  SPU_BIT : enable or disable reverb for ALL voices based on whether the corresponding voice bit is set in 'voiceBits'.
 //            If the bit is set then reverb is enabled.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) noexcept {
+SpuVoiceMask LIBSPU_SpuSetReverbVoice(const int32_t onOff, const SpuVoiceMask voiceBits) noexcept {
     // Enabling/disabling reverb for every single voice with the bit mask?
     Spu::Core& spu = PsxVm::gSpu;
     PsxVm::LockSpu spuLock;
@@ -613,7 +613,7 @@ int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) n
     if (onOff == SPU_BIT) {
         for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
             Spu::Voice& voice = spu.pVoices[voiceIdx];
-            voice.bDoReverb = ((voiceBits & (1 << voiceIdx)) != 0);
+            voice.bDoReverb = (voiceBits & (SpuVoiceMask(1) << voiceIdx));
         }
 
         return voiceBits;
@@ -621,16 +621,16 @@ int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) n
     
     // Enable or disable reverb for specific voices and return the reverb status of all voices after
     const bool bEnableReverb = (onOff != SPU_OFF);
-    int32_t enabledVoiceBits = 0;
+    SpuVoiceMask enabledVoiceBits = 0;
 
     for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
         Spu::Voice& voice = spu.pVoices[voiceIdx];
 
-        if (voiceBits & (1 << voiceIdx)) {
+        if (voiceBits & (SpuVoiceMask(1) << voiceIdx)) {
             voice.bDoReverb = bEnableReverb;
         }
 
-        enabledVoiceBits |= (voice.bDoReverb) ? (1 << voiceIdx) : 0;
+        enabledVoiceBits |= (voice.bDoReverb) ? (SpuVoiceMask(1) << voiceIdx) : 0;
     }
 
     return enabledVoiceBits;
@@ -776,7 +776,7 @@ void LIBSPU_SpuSetKeyOnWithAttr(const SpuVoiceAttr& attribs) noexcept {
 // The voices affected are specified by the given voice bit mask.
 // The on/off action to perform must be either 'SPU_OFF' or 'SPU_ON'
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
+void LIBSPU_SpuSetKey(const int32_t onOff, const SpuVoiceMask voiceBits) noexcept {
     Spu::Core& spu = PsxVm::gSpu;
     PsxVm::LockSpu spuLock;
 
@@ -784,7 +784,7 @@ void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
     
     if (onOff == SPU_OFF) {
         for (uint32_t voiceIdx = 0; voiceIdx < numVoicesToSet; ++voiceIdx) {
-            if (voiceBits & (1 << voiceIdx)) {
+            if (voiceBits & (SpuVoiceMask(1) << voiceIdx)) {
                 Spu::Voice& voice = spu.pVoices[voiceIdx];
                 Spu::keyOff(voice);
             }
@@ -792,7 +792,7 @@ void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
     }
     else if (onOff == SPU_ON) {
         for (uint32_t voiceIdx = 0; voiceIdx < numVoicesToSet; ++voiceIdx) {
-            if (voiceBits & (1 << voiceIdx)) {
+            if (voiceBits & (SpuVoiceMask(1) << voiceIdx)) {
                 Spu::Voice& voice = spu.pVoices[voiceIdx];
                 Spu::keyOn(voice);
             }

@@ -4,7 +4,11 @@
 
 // The number of hardware SPU voices.
 // Note: this is not an original PsyQ constant - this is one I've made up.
-static constexpr uint32_t SPU_NUM_VOICES = 24;
+#if PSYDOOM_LIMIT_REMOVING
+    static constexpr uint32_t SPU_NUM_VOICES = 64;
+#else
+    static constexpr uint32_t SPU_NUM_VOICES = 24;
+#endif
 
 // Mode of operation for 'LIBSPU_SpuIsTransferCompleted'
 enum SpuTransferQuery : int32_t {
@@ -57,6 +61,13 @@ static constexpr uint32_t SPU_COMMON_EXTVOLR    = 0x00000800;   // External inpu
 static constexpr uint32_t SPU_COMMON_EXTREV     = 0x00001000;   // Whether reverb is enabled for external input
 static constexpr uint32_t SPU_COMMON_EXTMIX     = 0x00002000;   // Whether external input can be heard (is mixed with all other sounds)
 
+// Type for a voice bitmask; extended to 64-bits to allow for 64 SPU voices in PsyDoom
+#if PSYDOOM_LIMIT_REMOVING
+    typedef uint64_t SpuVoiceMask;
+#else
+    typedef uint32_t SpuVoiceMask;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Structure used for specifying voice attributes.
 //
@@ -73,27 +84,27 @@ static constexpr uint32_t SPU_COMMON_EXTMIX     = 0x00002000;   // Whether exter
 //  31      Sustain rate mode (0 = linear, 1 = exponential)
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct SpuVoiceAttr {
-    uint32_t    voice_bits;     // Which voices to set the attributes for. 1-bit per voice, starting with the lowest bit.
-    uint32_t    attr_mask;      // Which attributes to modify? 1-bit per attribute, starting with the lowest bit.
-    SpuVolume   volume;         // Volume
-    SpuVolume   volmode;        // Volume mode
-    SpuVolume   volumex;        // Current volume
-    uint16_t    pitch;          // Tone: pitch setting (set pitch/sample-rate directly)
-    uint16_t    note;           // Tone: note setting (pitch is computed using this and the base note)
-    uint16_t    sample_note;    // Waveform data: base note setting (the note which is regarded to be at 44,100 Hz)
-    int16_t     envx;           // Envelope volume
-    uint32_t    addr;           // Start address in SPU RAM for waveform data (note: this is rounded up to the next 8 byte boundary upon setting)
-    uint32_t    loop_addr;      // Start address in SPU RAM for loop  (note: this is rounded up to the next 8 byte boundary upon setting)
-    int32_t     a_mode;         // Attack rate volume mode
-    int32_t     s_mode;         // Sustain rate volume mode
-    int32_t     r_mode;         // Release rate volume mode
-    uint16_t    ar;             // Attack rate
-    uint16_t    dr;             // Decay rate
-    uint16_t    sr;             // Sustain rate
-    uint16_t    rr;             // Release rate
-    uint16_t    sl;             // Sustain level
-    uint16_t    adsr1;          // Envelope adsr (1st 16-bits, see above)
-    uint16_t    adsr2;          // Envelope adsr (2nd 16-bits, see above)
+    SpuVoiceMask    voice_bits;     // Which voices to set the attributes for. 1-bit per voice, starting with the lowest bit.
+    uint32_t        attr_mask;      // Which attributes to modify? 1-bit per attribute, starting with the lowest bit.
+    SpuVolume       volume;         // Volume
+    SpuVolume       volmode;        // Volume mode
+    SpuVolume       volumex;        // Current volume
+    uint16_t        pitch;          // Tone: pitch setting (set pitch/sample-rate directly)
+    uint16_t        note;           // Tone: note setting (pitch is computed using this and the base note)
+    uint16_t        sample_note;    // Waveform data: base note setting (the note which is regarded to be at 44,100 Hz)
+    int16_t         envx;           // Envelope volume
+    uint32_t        addr;           // Start address in SPU RAM for waveform data (note: this is rounded up to the next 8 byte boundary upon setting)
+    uint32_t        loop_addr;      // Start address in SPU RAM for loop  (note: this is rounded up to the next 8 byte boundary upon setting)
+    int32_t         a_mode;         // Attack rate volume mode
+    int32_t         s_mode;         // Sustain rate volume mode
+    int32_t         r_mode;         // Release rate volume mode
+    uint16_t        ar;             // Attack rate
+    uint16_t        dr;             // Decay rate
+    uint16_t        sr;             // Sustain rate
+    uint16_t        rr;             // Release rate
+    uint16_t        sl;             // Sustain level
+    uint16_t        adsr1;          // Envelope adsr (1st 16-bits, see above)
+    uint16_t        adsr2;          // Envelope adsr (2nd 16-bits, see above)
 };
 
 // Flags for specifying fields or sub-fields in 'SpuVoiceAttr'
@@ -223,12 +234,12 @@ static constexpr uint32_t SPU_REVF_INPUT_VOL_LEFT                   = 0x40000000
 static constexpr uint32_t SPU_REVF_INPUT_VOL_RIGHT                  = 0x80000000;
 
 // Return codes for some functions
-static constexpr int32_t SPU_SUCCESS    = 0;
-static constexpr int32_t SPU_ERROR      = -1;
+static constexpr int32_t SPU_SUCCESS = 0;
+static constexpr int32_t SPU_ERROR = -1;
 
 // Generic on/off or true/false values
-static constexpr int32_t SPU_OFF    = 0;
-static constexpr int32_t SPU_ON     = 1;
+static constexpr int32_t SPU_OFF = 0;
+static constexpr int32_t SPU_ON = 1;
 
 // Returned for each voice by 'LIBSPU_SpuGetAllKeysStatus' to indicate a voice + envelope status
 static constexpr int32_t SPU_OFF_ENV_ON = 2;
@@ -236,7 +247,7 @@ static constexpr int32_t SPU_ON_ENV_OFF = 3;
 
 // Parameter for various functions.
 // It means make changes to ALL voices indicated by a bitmask, not just voices for enabled or disabled bits.
-static constexpr int32_t SPU_BIT    = 8;
+static constexpr int32_t SPU_BIT = 8;
 
 // Which attributes in 'SpuReverbAttr' to use
 static constexpr uint32_t SPU_REV_MODE      = 0x01;
@@ -263,8 +274,12 @@ static constexpr int32_t SPU_VOICE_EXPIncN    = 5;      // Exponential increase 
 static constexpr int32_t SPU_VOICE_EXPIncR    = 6;      // Exponential increase (reverse phase): when volume is negative, increase exponentially to the maximum amount.
 static constexpr int32_t SPU_VOICE_EXPDec     = 7;      // Exponential decrease: when volume is positive or negative, decrease exponentially to the mininum amount.
 
-// A bitmask representing the bits for all 24 channels
-static constexpr int32_t SPU_ALLCH = 0x00FFFFFF;
+// A bitmask representing the bits for all of the available hardware voices/channels
+#if PSYDOOM_LIMIT_REMOVING
+    static constexpr SpuVoiceMask SPU_ALLCH = UINT64_MAX;   // 64 voices max for the new SPU
+#else
+    static constexpr SpuVoiceMask SPU_ALLCH = 0x00FFFFFF;   // 24 voices max for the original SPU
+#endif
 
 // Size of a malloc record for 'LIBSPU_SpuMalloc' (function which is not present here)
 static constexpr int32_t SPU_MALLOC_RECSIZ = 8;
@@ -276,7 +291,7 @@ uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept;
 int32_t LIBSPU_SpuClearReverbWorkArea() noexcept;
 void LIBSPU_SpuStart() noexcept;
 void LIBSPU_SpuSetReverbDepth(const SpuReverbAttr& reverb) noexcept;
-int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) noexcept;
+SpuVoiceMask LIBSPU_SpuSetReverbVoice(const int32_t onOff, const SpuVoiceMask voiceBits) noexcept;
 void LIBSPU_SpuInit() noexcept;
 int32_t LIBSPU_SpuSetReverb(const int32_t onOff) noexcept;
 void LIBSPU_SpuQuit() noexcept;
@@ -286,5 +301,5 @@ void LIBSPU_SpuSetTransferMode(const SpuTransferMode mode) noexcept;
 uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept;
 uint32_t LIBSPU_SpuWrite(const void* const pData, const uint32_t size) noexcept;
 void LIBSPU_SpuSetKeyOnWithAttr(const SpuVoiceAttr& attribs) noexcept;
-void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept;
+void LIBSPU_SpuSetKey(const int32_t onOff, const SpuVoiceMask voiceBits) noexcept;
 void LIBSPU_SpuGetAllKeysStatus(uint8_t statuses[SPU_NUM_VOICES]) noexcept;
