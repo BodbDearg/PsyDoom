@@ -68,7 +68,7 @@ static Spu::StereoSample SpuAudioCallback([[maybe_unused]] void* pUserData) noex
 
     // If the CD player is not currently active then return silence
     if ((!gCdPlayer.bPlay) || (!gCdPlayer.discReader.isTrackOpen()))
-        return Spu::StereoSample{ 0, 0 };
+        return Spu::StereoSample{};
 
     // Check if we have any data left in the buffer firstly
     constexpr int16_t SAMPLE_SIZE = sizeof(int16_t);
@@ -104,7 +104,7 @@ static Spu::StereoSample SpuAudioCallback([[maybe_unused]] void* pUserData) noex
             else {
                 // No looping, mark the CD player as no longer playing and return an empty sample
                 gCdPlayer.bPlay = false;
-                return Spu::StereoSample{ 0, 0 };
+                return Spu::StereoSample{};
             }
         }
 

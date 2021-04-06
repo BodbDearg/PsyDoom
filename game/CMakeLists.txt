@@ -16,7 +16,7 @@ requires the exact same hardware, compiler and execution environment to replicat
 )
 
 # This setting includes old stuff in the project
-set(PSYDOOM_INCLUDE_OLD_CODE FALSE CACHE BOOL 
+set(PSYDOOM_INCLUDE_OLD_CODE FALSE CACHE BOOL
 "If TRUE include source files from the 'Old' directory of the PsyDoom project.
 These files contain original or older versions of various functions, variables and data structures.
 These pieces of code are archived for future reference in case we need to refer back to the way things originally worked.

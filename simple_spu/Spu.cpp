@@ -2,6 +2,7 @@
 
 #include "Asserts.h"
 
+#include <algorithm>
 using namespace Spu;
 
 // A series of co-efficients used by the SPU's gaussian sample interpolation.
@@ -66,7 +67,7 @@ static void sramRead(
 static void decodeAdpcmBlock(Voice& voice, std::byte adpcmBlock[ADPCM_BLOCK_SIZE]) noexcept {
     // Hold the last 2 ADPCM samples we decoded here with the newest first.
     // They are required for the adaptive decoding throughout and carry across ADPCM blocks.
-    int16_t prevSamples[2] = {
+    Sample prevSamples[2] = {
         voice.samples[Voice::SAMPLE_BUFFER_SIZE - 1],
         voice.samples[Voice::SAMPLE_BUFFER_SIZE - 2],
     };
@@ -94,10 +95,19 @@ static void decodeAdpcmBlock(Voice& voice, std::byte adpcmBlock[ADPCM_BLOCK_SIZE
 
     // Get the ADPCM filter co-efficients, both positive and negative.
     // For more details on this see: https://problemkaputt.de/psx-spx.htm#cdromxaaudioadpcmcompression
-    constexpr int32_t FILTER_COEF_POS[5] = { 0, 60, 115,  98, 122 };
-    constexpr int32_t FILTER_COEF_NEG[5] = { 0,  0, -52, -55, -60 };
-    const int32_t filterCoefPos = FILTER_COEF_POS[adpcmFilter];
-    const int32_t filterCoefNeg = FILTER_COEF_NEG[adpcmFilter];
+    #if SIMPLE_SPU_FLOAT_SPU
+        constexpr float FILTER_COEF_POS[5] = { 0, 60.0f / 64.0f, 115.0f / 64.0f,  98.0f / 64.0f, 122.0f / 64.0f };
+        constexpr float FILTER_COEF_NEG[5] = { 0,             0, -52.0f / 64.0f, -55.0f / 64.0f, -60.0f / 64.0f };
+
+        const float filterCoefPos = FILTER_COEF_POS[adpcmFilter];
+        const float filterCoefNeg = FILTER_COEF_NEG[adpcmFilter];
+    #else
+        constexpr int32_t FILTER_COEF_POS[5] = { 0, 60, 115,  98, 122 };
+        constexpr int32_t FILTER_COEF_NEG[5] = { 0,  0, -52, -55, -60 };
+
+        const int32_t filterCoefPos = FILTER_COEF_POS[adpcmFilter];
+        const int32_t filterCoefNeg = FILTER_COEF_NEG[adpcmFilter];
+    #endif
 
     // Decode all of the samples
     for (int32_t sampleIdx = 0; sampleIdx < ADPCM_BLOCK_NUM_SAMPLES; sampleIdx++) {
@@ -106,19 +116,35 @@ static void decodeAdpcmBlock(Voice& voice, std::byte adpcmBlock[ADPCM_BLOCK_SIZE
             ((uint16_t) adpcmBlock[2 + sampleIdx / 2] & 0x0F) >> 0:
             ((uint16_t) adpcmBlock[2 + sampleIdx / 2] & 0xF0) >> 4;
 
-        // The 4-bit sample gets extended to 16-bit by shifting and is sign extended to 32-bit.
-        // After that we scale by the sample shift.
-        int32_t sample = (int32_t)(int16_t)(nibble << 12);
-        sample >>= sampleShift;
+        #if SIMPLE_SPU_FLOAT_SPU
+            // The 4-bit sample gets extended to 16-bit by shifting and is sign extended to 32-bit.
+            // After that we scale by the sample shift.
+            const int16_t sampleI16 = ((int16_t)(nibble << 12)) >> sampleShift;
+            Sample sample(sampleI16);
 
-        // Mix in previous samples using the filter coefficients chosen and scale the result; also clamp to a 16-bit range
-        sample += (prevSamples[0] * filterCoefPos + prevSamples[1] * filterCoefNeg + 32) / 64;
-        sample = std::clamp<int32_t>(sample, INT16_MIN, INT16_MAX);
-        voice.samples[Voice::NUM_PREV_SAMPLES + sampleIdx] = (int16_t) sample;
+            // Mix in previous samples using the filter coefficients chosen and scale the result
+            sample += prevSamples[0].value * filterCoefPos + prevSamples[1].value * filterCoefNeg;
+            sample = std::clamp(sample.value, -1.0f, 1.0f);
+            voice.samples[Voice::NUM_PREV_SAMPLES + sampleIdx] = sample;
 
-        // Move previous samples forward
-        prevSamples[1] = prevSamples[0];
-        prevSamples[0] = (int16_t) sample;
+            // Move previous samples forward
+            prevSamples[1] = prevSamples[0];
+            prevSamples[0] = sample;
+        #else
+            // The 4-bit sample gets extended to 16-bit by shifting and is sign extended to 32-bit.
+            // After that we scale by the sample shift.
+            int32_t sample = (int32_t)(int16_t)(nibble << 12);
+            sample >>= sampleShift;
+
+            // Mix in previous samples using the filter coefficients chosen and scale the result; also clamp to a 16-bit range
+            sample += (prevSamples[0].value * filterCoefPos + prevSamples[1].value * filterCoefNeg + 32) / 64;
+            sample = std::clamp<int32_t>(sample, INT16_MIN, INT16_MAX);
+            voice.samples[Voice::NUM_PREV_SAMPLES + sampleIdx] = (int16_t) sample;
+
+            // Move previous samples forward
+            prevSamples[1] = prevSamples[0];
+            prevSamples[0] = (int16_t) sample;
+        #endif
     }
 }
 
@@ -252,12 +278,11 @@ static void stepVoiceEnvelope(Voice& voice) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Sample getVoiceSample(const Voice& voice, const uint32_t index) noexcept {
     if (voice.bSamplesLoaded) {
-        if (index < Voice::SAMPLE_BUFFER_SIZE) {
+        if (index < Voice::SAMPLE_BUFFER_SIZE)
             return voice.samples[index];
-        }
     }
 
-    return 0;
+    return {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -269,10 +294,10 @@ static Sample getInterpolatedVoiceSample(const Voice& voice) noexcept {
     const int32_t gaussTableIdx = (int32_t)(uint8_t) voice.adpcmBlockPos.fields.gaussIdx;
 
     // Get the most recent sample and previous 3 samples
-    const int32_t samp1 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 3);
-    const int32_t samp2 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 2);
-    const int32_t samp3 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 1);
-    const int32_t samp4 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx    );
+    const Sample samp1 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 3);
+    const Sample samp2 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 2);
+    const Sample samp3 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx - 1);
+    const Sample samp4 = getVoiceSample(voice, Voice::NUM_PREV_SAMPLES + curSampleIdx    );
 
     // Sanity check...
     static_assert(-1 >> 1 == -1, "Right shift on signed types must be an arithmetic shift!");
@@ -290,12 +315,20 @@ static Sample getInterpolatedVoiceSample(const Voice& voice) noexcept {
 
     // According to No$PSX it shouldn't be possible for this table to cause an overflow past 16-bits.
     // Hence I'm not bothering to clamp here...
-    const int32_t sampMix1 = (gaussFactor1 * samp1) >> 15;
-    const int32_t sampMix2 = (gaussFactor2 * samp2) >> 15;
-    const int32_t sampMix3 = (gaussFactor3 * samp3) >> 15;
-    const int32_t sampMix4 = (gaussFactor4 * samp4) >> 15;
+    #if SIMPLE_SPU_FLOAT_SPU
+        const Sample sampMix1 = samp1 * int16_t(gaussFactor1);
+        const Sample sampMix2 = samp2 * int16_t(gaussFactor2);
+        const Sample sampMix3 = samp3 * int16_t(gaussFactor3);
+        const Sample sampMix4 = samp4 * int16_t(gaussFactor4);
+        return sampMix1 + sampMix2 + sampMix3 + sampMix4;
+    #else
+        const int32_t sampMix1 = (gaussFactor1 * samp1.value) >> 15;
+        const int32_t sampMix2 = (gaussFactor2 * samp2.value) >> 15;
+        const int32_t sampMix3 = (gaussFactor3 * samp3.value) >> 15;
+        const int32_t sampMix4 = (gaussFactor4 * samp4.value) >> 15;
 
-    return (int16_t)(sampMix1 + sampMix2 + sampMix3 + sampMix4);
+        return (int16_t)(sampMix1 + sampMix2 + sampMix3 + sampMix4);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -436,7 +469,12 @@ static void mixExternalInput(
 // Add the given sample to reverb input and return a sample of reverb output
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doReverb(
+#if SIMPLE_SPU_FLOAT_SPU
+    float* pReverbRam,
+    const uint32_t numReverbRamSamples,
+#else
     std::byte* pRam,
+#endif
     const uint32_t ramSize,
     const uint32_t reverbBaseAddr8,
     uint32_t& reverbCurAddr,
@@ -446,17 +484,29 @@ static void doReverb(
     const StereoSample reverbInput,
     StereoSample& reverbOutput
 ) noexcept {
-    // Helper: wrap an address to be within the reverb work area and guarantee that 16-bits can be read safely.
+    // Helper: wrap an address to be within the reverb work area and guarantee that 16-bits (or a single float, for the float SPU) can be read safely.
     // If there is no reverb work area (which should never be the case) then the address '0' is returned.
+    // Note that for the float SPU reverb addresses are still specified in terms of the main SPU ram, so that we can use the original SPU reverb settings.
     const uint32_t reverbBaseAddr = reverbBaseAddr8 * 8;
     const uint32_t reverbBaseAddr2 = reverbBaseAddr / 2;
-    const uint32_t reverbWorkAreaSize2 = (ramSize - reverbBaseAddr) / 2;
+
+    #if SIMPLE_SPU_FLOAT_SPU
+        const uint32_t reverbWorkAreaSize2 = std::min((ramSize - reverbBaseAddr) / 2, numReverbRamSamples);
+    #else
+        const uint32_t reverbWorkAreaSize2 = (ramSize - reverbBaseAddr) / 2;
+    #endif
 
     const auto wrapRevAddr16 = [=](uint32_t addr) noexcept -> uint32_t {
         if (reverbWorkAreaSize2 > 0) {
             const uint32_t addr2 = addr / 2;
             const uint32_t relativeAddr2 = (addr2 - reverbBaseAddr2) % reverbWorkAreaSize2;
-            return (reverbBaseAddr2 + relativeAddr2) * 2;
+
+            #if SIMPLE_SPU_FLOAT_SPU
+                // For the float SPU the reverb work area always starts at element '0' in reverb RAM
+                return relativeAddr2 * 2;
+            #else
+                return (reverbBaseAddr2 + relativeAddr2) * 2;
+            #endif
         }
 
         return 0;
@@ -464,18 +514,28 @@ static void doReverb(
 
     // Helpers: read and write a 16-bit sample relative to the current reverb address.
     // Wraps the read or write to be within the work area for reverb.
-    const auto revR = [=](uint32_t addrRelative) noexcept -> int16_t {
+    const auto revR = [=](uint32_t addrRelative) noexcept -> Sample {
         const uint32_t addr = wrapRevAddr16(reverbCurAddr + addrRelative);
-        const uint16_t data = (uint16_t) pRam[addr] | ((uint16_t) pRam[addr + 1] << 8);
-        return (int16_t) data;
+        
+        #if SIMPLE_SPU_FLOAT_SPU
+            return pReverbRam[addr / 2];
+        #else
+            const uint16_t data = (uint16_t) pRam[addr] | ((uint16_t) pRam[addr + 1] << 8);
+            return (int16_t) data;
+        #endif
     };
 
-    const auto revW = [=](uint32_t addrRelative, const int16_t sample) noexcept {
+    const auto revW = [=](uint32_t addrRelative, const Sample sample) noexcept {
         if (bReverbWriteEnable) {
-            const uint16_t data = (uint16_t) sample;
             const uint32_t addr = wrapRevAddr16(reverbCurAddr + addrRelative);
-            pRam[addr] = (std::byte) data;
-            pRam[addr + 1] = (std::byte)(data >> 8);
+
+            #if SIMPLE_SPU_FLOAT_SPU
+                pReverbRam[addr / 2] = sample.value;
+            #else
+                const uint16_t data = (uint16_t) sample;
+                pRam[addr] = (std::byte) data;
+                pRam[addr + 1] = (std::byte)(data >> 8);
+            #endif
         }
     };
 
@@ -576,7 +636,11 @@ static void doReverb(
     outR = outR * volAPF2 + revR(addrRAPF2 - dispAPF2);
 
     // Move along the reverb address for the next update by 1 16-bit sample
-    reverbCurAddr = wrapRevAddr16(reverbCurAddr + 2);
+    #if SIMPLE_SPU_FLOAT_SPU
+        reverbCurAddr = reverbBaseAddr + wrapRevAddr16(reverbCurAddr + 2);  // 'wrapRevAddr16' returns the address starting from '0' for the float SPU, need to fix up
+    #else
+        reverbCurAddr = wrapRevAddr16(reverbCurAddr + 2);
+    #endif
 
     // Scale and return the reverb output
     reverbOutput = StereoSample {
@@ -608,7 +672,12 @@ void doMasterMix(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Core initialization and teardown
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Spu::initCore(Core& core, const uint32_t ramSize, const uint32_t voiceCount) noexcept {
+#if SIMPLE_SPU_FLOAT_SPU
+    void Spu::initCore(Core& core, const uint32_t ramSize, const uint32_t voiceCount, const uint32_t numReverbRamSamples) noexcept
+#else
+    void Spu::initCore(Core& core, const uint32_t ramSize, const uint32_t voiceCount) noexcept
+#endif
+{
     // Zero init everything by default
     core = {};
 
@@ -630,17 +699,20 @@ void Spu::initCore(Core& core, const uint32_t ramSize, const uint32_t voiceCount
     core.pRam = new std::byte[roundedRamSize];
     core.ramSize = roundedRamSize;
     std::memset(core.pRam, 0, roundedRamSize);
-}
 
-void Spu::initPS1Core(Core& core) noexcept {
-    Spu::initCore(core, 512 * 1024, 24);
-}
-
-void Spu::initPS2Core(Core& core) noexcept {
-    Spu::initCore(core, 2048 * 1024, 48);
+    // For floating point SPUs allocate reverb RAM too
+    #if SIMPLE_SPU_FLOAT_SPU
+        ASSERT(numReverbRamSamples > 0);
+        core.pReverbRam = new float[numReverbRamSamples];
+        core.numReverbRamSamples = numReverbRamSamples;
+    #endif
 }
 
 void Spu::destroyCore(Core& core) noexcept {
+    #if SIMPLE_SPU_FLOAT_SPU
+        delete[] core.pReverbRam;
+    #endif
+
     delete[] core.pVoices;
     delete[] core.pRam;
     core = {};
@@ -675,7 +747,12 @@ StereoSample Spu::stepCore(Core& core) noexcept {
     // Do reverb every 2 cycles: PSX reverb operates at 22,050 Hz and the SPU operates at 44,100 Hz
     if ((core.cycleCount & 1) == 0) {
         doReverb(
+        #if SIMPLE_SPU_FLOAT_SPU
+            core.pReverbRam,
+            core.numReverbRamSamples,
+        #else
             core.pRam,
+        #endif
             core.ramSize,
             core.reverbBaseAddr8,
             core.reverbCurAddr,
@@ -713,11 +790,11 @@ void Spu::keyOn(Voice& voice) noexcept {
 
     // Zero the 3 previous samples used for interpolation and previous 2 samples used for ADPCM decoding
     static_assert(Voice::NUM_PREV_SAMPLES == 3);
-    voice.samples[0] = 0;
-    voice.samples[1] = 0;
-    voice.samples[2] = 0;
-    voice.samples[Voice::SAMPLE_BUFFER_SIZE - 2] = 0;
-    voice.samples[Voice::SAMPLE_BUFFER_SIZE - 1] = 0;
+    voice.samples[0] = {};
+    voice.samples[1] = {};
+    voice.samples[2] = {};
+    voice.samples[Voice::SAMPLE_BUFFER_SIZE - 2] = {};
+    voice.samples[Voice::SAMPLE_BUFFER_SIZE - 1] = {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

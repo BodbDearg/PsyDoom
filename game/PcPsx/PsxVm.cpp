@@ -100,7 +100,13 @@ bool init(const char* const doomCdCuePath) noexcept {
         // Note that if initialization succeeds then we've got our requested format, since we ask SDL not to allow any deviation.
         SDL_AudioSpec wantFmt = {};
         wantFmt.freq = 44100;
-        wantFmt.format = AUDIO_S16SYS;
+
+        #if SIMPLE_SPU_FLOAT_SPU
+            wantFmt.format = AUDIO_F32;
+        #else
+            wantFmt.format = AUDIO_S16SYS;
+        #endif
+
         wantFmt.channels = 2;
 
         if (Config::gAudioBufferSize > 0) {

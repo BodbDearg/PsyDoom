@@ -1,4 +1,5 @@
 0.8 - Limit extending and modding?
+- Optimize flat drawing for classic renderer, can use less spans.
 - Precache map sprites on startup.
 - Status bar extension for widescreen/vulkan.
 - Investigate ability to use 'Esc' to go back to options menu directly.

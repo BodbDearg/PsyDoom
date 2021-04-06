@@ -143,14 +143,27 @@ struct Volume {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Do a saturated/clamped addition and subtraction of sample values
+// Convert between a 16-bit sample and floating point
 //------------------------------------------------------------------------------------------------------------------------------------------
-static int16_t sampleAdd(const int16_t sample1, const int16_t sample2) noexcept {
+inline constexpr float toFloatSample(const int16_t sample) noexcept {
+    return (float) sample * (1.0f / 32768.0f);
+}
+
+inline constexpr int16_t toInt16Sample(const float sample) noexcept {
+    return (int16_t) std::clamp(sample * 32768.0f, float(INT16_MIN), float(INT16_MAX));
+}
+
+#if !SIMPLE_SPU_FLOAT_SPU
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do a saturated/clamped addition and subtraction of 16-bit sample values
+//------------------------------------------------------------------------------------------------------------------------------------------
+inline int16_t sampleAdd(const int16_t sample1, const int16_t sample2) noexcept {
     const int32_t result32 = (int32_t) sample1 + (int32_t) sample2;
     return (int16_t) std::clamp<int32_t>(result32, INT16_MIN, INT16_MAX);
 }
 
-static int16_t sampleSub(const int16_t sample1, const int16_t sample2) noexcept {
+inline int16_t sampleSub(const int16_t sample1, const int16_t sample2) noexcept {
     const int32_t result32 = (int32_t) sample1 - (int32_t) sample2;
     return (int16_t) std::clamp<int32_t>(result32, INT16_MIN, INT16_MAX);
 }
@@ -160,29 +173,65 @@ static int16_t sampleSub(const int16_t sample1, const int16_t sample2) noexcept 
 // Note that due to the way 2s complement works, +1.0 can never be expressed fully so we lose a little volume on each multiply.
 // I.E the volume range multiplier is from -0x8000 to +0x7FFF and we divide by 0x8000 essentially via shifting.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static int16_t sampleAttenuate(const int16_t sample, const int16_t volume) noexcept {
+inline int16_t sampleAttenuate(const int16_t sample, const int16_t volume) noexcept {
     const int32_t frac32 = (int32_t) sample * (int32_t) volume;
     return (int16_t)(frac32 >> 15);
 }
 
+#endif  // #if !SIMPLE_SPU_FLOAT_SPU
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Convenience container for a 16-bit sample which supports sample add, subtract & attenuate operations
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct Sample {
-    int16_t value;
+#if SIMPLE_SPU_FLOAT_SPU
+    struct Sample {
+        float value;
 
-    Sample() : value(0) {}
-    Sample(const int16_t value) : value(value) {}
+        inline Sample() noexcept : value(0) {}
+        inline Sample(const float value) noexcept : value(value) {}
+        inline Sample(const int16_t value) noexcept: value(toFloatSample(value)) {}     // Convenience auto-conversion from 16-bit
 
-    Sample operator *  (const int16_t& other) const noexcept    { return sampleAttenuate(value, other);     }
-    void   operator *= (const int16_t& other) noexcept          { value = sampleAttenuate(value, other);    }
-    Sample operator +  (const int16_t& other) const noexcept    { return sampleAdd(value, other);           }
-    void   operator += (const int16_t& other) noexcept          { value = sampleAdd(value, other);          }
-    Sample operator -  (const int16_t& other) const noexcept    { return sampleSub(value, other);           }
-    void   operator -= (const int16_t& other) noexcept          { value = sampleSub(value, other);          }
+        Sample(const Sample& other) noexcept = default;
+        Sample& operator = (const Sample& other) noexcept = default;
 
-    operator int16_t() const noexcept { return value; }
-};
+        // Convenience overloads for attenuating by a 16-bit volume level
+        inline Sample operator * (const int16_t& other) const noexcept {
+            return value * toFloatSample(other);
+        }
+
+        inline void operator *= (const int16_t& other) noexcept {
+            value *= toFloatSample(other);
+        }
+
+        inline Sample operator *  (const float& other) const noexcept   { return value * other; }
+        inline void   operator *= (const float& other) noexcept         { value *= other;       }
+        inline Sample operator +  (const float& other) const noexcept   { return value + other; }
+        inline void   operator += (const float& other) noexcept         { value += other;       }
+        inline Sample operator -  (const float& other) const noexcept   { return value - other; }
+        inline void   operator -= (const float& other) noexcept         { value -= other;       }
+
+        operator float() const noexcept { return value; }
+    };
+#else
+    struct Sample {
+        int16_t value;
+
+        inline Sample() noexcept : value(0) {}
+        inline Sample(const int16_t value) noexcept : value(value) {}
+
+        Sample(const Sample& other) noexcept = default;
+        Sample& operator = (const Sample& other) noexcept = default;
+
+        inline Sample operator *  (const int16_t& other) const noexcept { return sampleAttenuate(value, other);     }
+        inline void   operator *= (const int16_t& other) noexcept       { value = sampleAttenuate(value, other);    }
+        inline Sample operator +  (const int16_t& other) const noexcept { return sampleAdd(value, other);           }
+        inline void   operator += (const int16_t& other) noexcept       { value = sampleAdd(value, other);          }
+        inline Sample operator -  (const int16_t& other) const noexcept { return sampleSub(value, other);           }
+        inline void   operator -= (const int16_t& other) noexcept       { value = sampleSub(value, other);          }
+
+        operator int16_t() const noexcept { return value; }
+    };
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Holds a stereo sample and allows add/subtract/attenuate operations on that stereo sample
@@ -326,7 +375,7 @@ struct Voice {
     // Previously decoded samples from the last ADPCM block (3 previous samples) and the currently decoded ADPCM block.
     // At the beginning of the buffer there is 'NUM_PREV_SAMPLES' samples from the last ADPCM block, with the most recent sample last.
     // Those previous samples are used for gaussian interpolation.
-    int16_t samples[SAMPLE_BUFFER_SIZE];
+    Sample samples[SAMPLE_BUFFER_SIZE];
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,6 +391,10 @@ typedef StereoSample (*ExtInputCallback)(void* pUserData) noexcept;
 struct Core {
     std::byte*          pRam;                   // Sound RAM used by the SPU core
     uint32_t            ramSize;                // How big the RAM size for the SPU core
+#if SIMPLE_SPU_FLOAT_SPU
+    float*              pReverbRam;             // Holds floating point reverb samples for the extended floating point SPU
+    uint32_t            numReverbRamSamples;    // The number of floating point samples in reverb RAM
+#endif
     Voice*              pVoices;                // Each of the hardware voices for the SPU
     uint32_t            numVoices;              // How many voices the core provides
     Volume              masterVol;              // Master volume. Note: expected to be from -0x3FFF to +0x3FFF.
@@ -365,9 +418,21 @@ struct Core {
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 // Initialize and destroy an SPU core
-void initCore(Core& core, const uint32_t ramSize, const uint32_t voiceCount) noexcept;
-void initPS1Core(Core& core) noexcept;
-void initPS2Core(Core& core) noexcept;
+#if SIMPLE_SPU_FLOAT_SPU
+    void initCore(
+        Core& core,
+        const uint32_t ramSize,
+        const uint32_t voiceCount,
+        const uint32_t numReverbRamSamples = 128 * 1024     // More than big enough for any of the reverb modes in LIBSPU
+    ) noexcept;
+#else
+    void initCore(
+        Core& core,
+        const uint32_t ramSize,
+        const uint32_t voiceCount
+    ) noexcept;
+#endif
+
 void destroyCore(Core& core) noexcept;
 
 // Step the given SPU core

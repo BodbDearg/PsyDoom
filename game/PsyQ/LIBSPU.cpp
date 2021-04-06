@@ -562,10 +562,14 @@ int32_t LIBSPU_SpuClearReverbWorkArea() noexcept {
         return SPU_ERROR;
 
     // Zero the reverb area
-    if (reverbBaseAddr < spu.ramSize) {
-        const uint32_t reverbAreaSize = spu.ramSize - reverbBaseAddr;
-        std::memset(spu.pRam + reverbBaseAddr, 0, reverbAreaSize);
-    }
+    #if SIMPLE_SPU_FLOAT_SPU
+        std::memset(spu.pReverbRam, 0, sizeof(float) * spu.numReverbRamSamples);
+    #else
+        if (reverbBaseAddr < spu.ramSize) {
+            const uint32_t reverbAreaSize = spu.ramSize - reverbBaseAddr;
+            std::memset(spu.pRam + reverbBaseAddr, 0, reverbAreaSize);
+        }
+    #endif
 
     return SPU_SUCCESS;
 }
