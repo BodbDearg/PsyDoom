@@ -604,34 +604,34 @@ static void doReverb(
     Sample outR;
 
     outL = (
-        (Sample) revR(addrLComb1) * volComb1 +
-        (Sample) revR(addrLComb2) * volComb2 +
-        (Sample) revR(addrLComb3) * volComb3 +
-        (Sample) revR(addrLComb4) * volComb4
+        revR(addrLComb1) * volComb1 +
+        revR(addrLComb2) * volComb2 +
+        revR(addrLComb3) * volComb3 +
+        revR(addrLComb4) * volComb4
     );
 
     outR = (
-        (Sample) revR(addrRComb1) * volComb1 +
-        (Sample) revR(addrRComb2) * volComb2 +
-        (Sample) revR(addrRComb3) * volComb3 +
-        (Sample) revR(addrRComb4) * volComb4
+        revR(addrRComb1) * volComb1 +
+        revR(addrRComb2) * volComb2 +
+        revR(addrRComb3) * volComb3 +
+        revR(addrRComb4) * volComb4
     );
 
     // Late reverb APF1 (all pass filter 1, with input from COMB)
-    outL = outL - (Sample) revR(addrLAPF1 - dispAPF1) * volAPF1;
+    outL = outL - revR(addrLAPF1 - dispAPF1) * volAPF1;
     revW(addrLAPF1, outL);
     outL = outL * volAPF1 + revR(addrLAPF1 - dispAPF1);
 
-    outR = outR - (Sample) revR(addrRAPF1 - dispAPF1) * volAPF1;
+    outR = outR - revR(addrRAPF1 - dispAPF1) * volAPF1;
     revW(addrRAPF1, outR);
     outR = outR * volAPF1 + revR(addrRAPF1 - dispAPF1);
 
     // Late reverb APF2 (all pass filter 2, with input from APF1)
-    outL = outL - (Sample) revR(addrLAPF2 - dispAPF2) * volAPF2;
+    outL = outL - revR(addrLAPF2 - dispAPF2) * volAPF2;
     revW(addrLAPF2, outL);
     outL = outL * volAPF2 + revR(addrLAPF2 - dispAPF2);
 
-    outR = outR - (Sample) revR(addrRAPF2 - dispAPF2) * volAPF2;
+    outR = outR - revR(addrRAPF2 - dispAPF2) * volAPF2;
     revW(addrRAPF2, outR);
     outR = outR * volAPF2 + revR(addrRAPF2 - dispAPF2);
 

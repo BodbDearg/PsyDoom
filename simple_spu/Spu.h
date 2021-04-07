@@ -195,20 +195,20 @@ inline int16_t sampleAttenuate(const int16_t sample, const int16_t volume) noexc
         Sample& operator = (const Sample& other) noexcept = default;
 
         // Convenience overloads for attenuating by a 16-bit volume level
-        inline Sample operator * (const int16_t& other) const noexcept {
+        inline Sample operator * (const int16_t other) const noexcept {
             return value * toFloatSample(other);
         }
 
-        inline void operator *= (const int16_t& other) noexcept {
+        inline void operator *= (const int16_t other) noexcept {
             value *= toFloatSample(other);
         }
 
-        inline Sample operator *  (const float& other) const noexcept   { return value * other; }
-        inline void   operator *= (const float& other) noexcept         { value *= other;       }
-        inline Sample operator +  (const float& other) const noexcept   { return value + other; }
-        inline void   operator += (const float& other) noexcept         { value += other;       }
-        inline Sample operator -  (const float& other) const noexcept   { return value - other; }
-        inline void   operator -= (const float& other) noexcept         { value -= other;       }
+        inline Sample operator *  (const float other) const noexcept   { return value * other; }
+        inline void   operator *= (const float other) noexcept         { value *= other;       }
+        inline Sample operator +  (const float other) const noexcept   { return value + other; }
+        inline void   operator += (const float other) noexcept         { value += other;       }
+        inline Sample operator -  (const float other) const noexcept   { return value - other; }
+        inline void   operator -= (const float other) noexcept         { value -= other;       }
 
         operator float() const noexcept { return value; }
     };
@@ -222,12 +222,21 @@ inline int16_t sampleAttenuate(const int16_t sample, const int16_t volume) noexc
         Sample(const Sample& other) noexcept = default;
         Sample& operator = (const Sample& other) noexcept = default;
 
-        inline Sample operator *  (const int16_t& other) const noexcept { return sampleAttenuate(value, other);     }
-        inline void   operator *= (const int16_t& other) noexcept       { value = sampleAttenuate(value, other);    }
-        inline Sample operator +  (const int16_t& other) const noexcept { return sampleAdd(value, other);           }
-        inline void   operator += (const int16_t& other) noexcept       { value = sampleAdd(value, other);          }
-        inline Sample operator -  (const int16_t& other) const noexcept { return sampleSub(value, other);           }
-        inline void   operator -= (const int16_t& other) noexcept       { value = sampleSub(value, other);          }
+        // Convenience overloads for attenuating by a float volume level
+        inline Sample operator * (const float other) const noexcept {
+            return toInt16Sample(toFloatSample(value) * other);
+        }
+
+        inline void operator *= (const float other) noexcept {
+            value = (*this) * other;
+        }
+
+        inline Sample operator *  (const int16_t other) const noexcept { return sampleAttenuate(value, other);     }
+        inline void   operator *= (const int16_t other) noexcept       { value = sampleAttenuate(value, other);    }
+        inline Sample operator +  (const int16_t other) const noexcept { return sampleAdd(value, other);           }
+        inline void   operator += (const int16_t other) noexcept       { value = sampleAdd(value, other);          }
+        inline Sample operator -  (const int16_t other) const noexcept { return sampleSub(value, other);           }
+        inline void   operator -= (const int16_t other) noexcept       { value = sampleSub(value, other);          }
 
         operator int16_t() const noexcept { return value; }
     };
@@ -240,31 +249,40 @@ struct StereoSample {
     Sample left;
     Sample right;
 
-    StereoSample operator + (const StereoSample& other) const noexcept {
+    StereoSample operator + (const StereoSample other) const noexcept {
         return StereoSample{ left + other.left, right + other.right };
     }
 
-    void operator += (const StereoSample& other) noexcept {
+    void operator += (const StereoSample other) noexcept {
         left += other.left;
         right += other.right;
     }
 
-    StereoSample operator - (const StereoSample& other) const noexcept {
+    StereoSample operator - (const StereoSample other) const noexcept {
         return StereoSample{ left - other.left, right - other.right };
     }
 
-    void operator -= (const StereoSample& other) noexcept {
+    void operator -= (const StereoSample other) noexcept {
         left -= other.left;
         right -= other.right;
     }
 
-    StereoSample operator * (const Volume& volume) const noexcept {
+    StereoSample operator * (const Volume volume) const noexcept {
         return StereoSample{ left * volume.left, right * volume.right };
     }
 
-    void operator *= (const Volume& volume) noexcept {
+    StereoSample operator * (const float scale) const noexcept {
+        return StereoSample{ left * scale, right * scale };
+    }
+
+    void operator *= (const Volume volume) noexcept {
         left *= volume.left;
         right *= volume.right;
+    }
+
+    void operator *= (const float scale) noexcept {
+        left *= scale;
+        right *= scale;
     }
 };
 
