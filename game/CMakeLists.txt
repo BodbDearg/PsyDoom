@@ -178,6 +178,8 @@ set(SOURCE_FILES
     "Doom/UI/xoptions_main.cpp"
     "Doom/UI/xoptions_main.h"
     "EngineLimits.h"
+    "PcPsx/AudioCompressor.cpp"
+    "PcPsx/AudioCompressor.h"
     "PcPsx/BitShift.h"
     "PcPsx/Cheats.cpp"
     "PcPsx/Cheats.h"

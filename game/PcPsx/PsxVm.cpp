@@ -4,6 +4,7 @@
 #include "PsxVm.h"
 
 #include "Asserts.h"
+#include "AudioCompressor.h"
 #include "Config.h"
 #include "DiscInfo.h"
 #include "DiscReader.h"
@@ -26,6 +27,11 @@ Spu::Core   gSpu;
 static SDL_AudioDeviceID        gSdlAudioDeviceId;
 static std::recursive_mutex     gSpuMutex;
 
+// The audio compressor is only needed if we have a floating point SPU
+#if SIMPLE_SPU_FLOAT_SPU
+    static AudioCompressor::State gAudioCompState;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // A callback invoked by SDL to ask for audio from PsyDoom
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,14 +40,35 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
     if (outputSize <= 0)
         return;
 
-    // Lock the SPU and generate the requested number of samples
-    PsxVm::LockSpu spuLock;
-    const uint32_t numSamples = (uint32_t) outputSize / sizeof(Spu::StereoSample);
+    // How many samples are to be output?
+    const uint32_t numSamples = (uint32_t) outputSize / (sizeof(float) * 2);
     
+    // Lock the SPU and generate the requested number of samples
+    float* pOutputF = reinterpret_cast<float*>(pOutput);
+    PsxVm::LockSpu spuLock;
+
     for (uint32_t sampleIdx = 0; sampleIdx < numSamples; ++sampleIdx) {
+        // Get this sample in floating point format
         const Spu::StereoSample sample = Spu::stepCore(gSpu);
-        std::memcpy(pOutput, &sample, sizeof(sample));
-        pOutput += sizeof(sample);
+
+        #if SIMPLE_SPU_FLOAT_SPU
+            float sampleL = sample.left;
+            float sampleR = sample.right;
+        #else
+            float sampleL = Spu::toFloatSample(sample.left);
+            float sampleR = Spu::toFloatSample(sample.right);
+        #endif
+
+        // If using the floating point SPU apply audio compression.
+        // When using floating point sound the audio can get EXTREMELY loud (and painful to listen to) if not capped.
+        // When using the original 16-bit SPU the sound will also clip/distort if too loud, so no point in using compression in that case.
+        #if SIMPLE_SPU_FLOAT_SPU
+            AudioCompressor::compress(gAudioCompState, sampleL, sampleR);
+        #endif
+
+        pOutputF[0] = sampleL;
+        pOutputF[1] = sampleR;
+        pOutputF += 2;
     }
 }
 
@@ -66,6 +93,20 @@ bool init(const char* const doomCdCuePath) noexcept {
     #endif
 
     Spu::initCore(gSpu, spuRamSize, SPU_VOICE_COUNT);
+
+    // Init the audio compressor if using the float SPU (don't need it for the 16-bit SPU)
+    #if SIMPLE_SPU_FLOAT_SPU
+        AudioCompressor::init(
+            gAudioCompState,
+            -22.0f,             // thresholdDB
+            10.0f,              // kneeWidthDB
+            3.0f,               // compressionRatio
+            8.0f,               // postGainDB
+            0.150f,             // lpfResponseTime
+            0.002f,             // attackTime
+            0.005f              // releaseTime
+        );
+    #endif
 
     // Parse the .cue info for the game disc
     {
@@ -96,17 +137,11 @@ bool init(const char* const doomCdCuePath) noexcept {
     SDL_InitSubSystem(SDL_INIT_AUDIO);
 
     {
-        // Firstly try to open an audio device sampling at 44,100 Hz, stereo in signed 16-bit mode.
+        // Firstly try to open an audio device sampling at 44,100 Hz stereo in floating point mode.
         // Note that if initialization succeeds then we've got our requested format, since we ask SDL not to allow any deviation.
         SDL_AudioSpec wantFmt = {};
         wantFmt.freq = 44100;
-
-        #if SIMPLE_SPU_FLOAT_SPU
-            wantFmt.format = AUDIO_F32;
-        #else
-            wantFmt.format = AUDIO_S16SYS;
-        #endif
-
+        wantFmt.format = AUDIO_F32;
         wantFmt.channels = 2;
 
         if (Config::gAudioBufferSize > 0) {
