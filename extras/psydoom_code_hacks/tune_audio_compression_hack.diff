@@ -1,0 +1,139 @@
+This is a hack which patches PsyDoom at commit 'fd2cd5c370dca0b4d90c676cf6656575ce7fab22' with temporary changes to help with tuning the
+audio dynamic range compressor settings. Keeping this around in case I want to tune these values further in future...
+
+It introduces temporary keyboard controls to tweak the settings and disables compression when the classic renderer is used (for comparison).
+============================================================================================================================================
+
+diff --git a/game/PcPsx/PsxVm.cpp b/game/PcPsx/PsxVm.cpp
+index 0d7c2321..d5daf417 100644
+--- a/game/PcPsx/PsxVm.cpp
++++ b/game/PcPsx/PsxVm.cpp
+@@ -13,6 +13,7 @@
+ #include "IsoFileSys.h"
+ #include "ProgArgs.h"
+ #include "Spu.h"
++#include "Video.h"
+ 
+ #include <SDL.h>
+ #include <mutex>
+@@ -63,7 +64,9 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
+         // When using floating point sound the audio can get EXTREMELY loud (and painful to listen to) if not capped.
+         // When using the original 16-bit SPU the sound will also clip/distort if too loud, so no point in using compression in that case.
+         #if SIMPLE_SPU_FLOAT_SPU
++        if (Video::isUsingVulkanRenderPath()) {
+             AudioCompressor::compress(gAudioCompState, sampleL, sampleR);
++        }
+         #endif
+ 
+         pOutputF[0] = sampleL;
+@@ -72,6 +75,84 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
+     }
+ }
+ 
++void tempCompressorControls() {
++    PsxVm::LockSpu spuLock;
++
++    #if SIMPLE_SPU_FLOAT_SPU
++    // -
++    if (Input::isKeyboardKeyPressed(0x02D)) {
++        gAudioCompState.lpfLerpFactor -= 0.00002f;
++        std::printf("lpfLerpFactor = %f\n", gAudioCompState.lpfLerpFactor);
++    } 
++
++    // +
++    if (Input::isKeyboardKeyPressed(0x02E)) {
++        gAudioCompState.lpfLerpFactor += 0.00002f;
++        std::printf("lpfLerpFactor = %f\n", gAudioCompState.lpfLerpFactor);
++    }
++
++    // KP7
++    if (Input::isKeyboardKeyPressed(0x05F)) {
++        gAudioCompState.attackLerpFactor -= 0.0001f;
++        std::printf("attackLerpFactor = %f\n", gAudioCompState.attackLerpFactor);
++    }
++
++    // KP9
++    if (Input::isKeyboardKeyPressed(0x061)) {
++        gAudioCompState.attackLerpFactor += 0.0001f;
++        std::printf("attackLerpFactor = %f\n", gAudioCompState.attackLerpFactor);
++    }
++
++    // KP4
++    if (Input::isKeyboardKeyPressed(0x05C)) {
++        gAudioCompState.releaseLerpFactor -= 0.0001f;
++        std::printf("releaseLerpFactor = %f\n", gAudioCompState.releaseLerpFactor);
++    }
++
++    // KP6
++    if (Input::isKeyboardKeyPressed(0x05E)) {
++        gAudioCompState.releaseLerpFactor += 0.0001f;
++        std::printf("releaseLerpFactor = %f\n", gAudioCompState.releaseLerpFactor);
++    }
++
++    // KP1
++    if (Input::isKeyboardKeyPressed(0x059)) {
++        gAudioCompState.compressionRatio -= 0.01f;
++        std::printf("compressionRatio = %f\n", gAudioCompState.compressionRatio);
++    }
++
++    // KP3
++    if (Input::isKeyboardKeyPressed(0x05B)) {
++        gAudioCompState.compressionRatio += 0.01f;
++        std::printf("compressionRatio = %f\n", gAudioCompState.compressionRatio);
++    }
++
++    // KP0
++    if (Input::isKeyboardKeyPressed(0x062)) {
++        gAudioCompState.thresholdDB -= 0.01f;
++        std::printf("thresholdDB = %f\n", gAudioCompState.thresholdDB);
++    }
++
++    // KP .
++    if (Input::isKeyboardKeyPressed(0x063)) {
++        gAudioCompState.thresholdDB += 0.01f;
++        std::printf("thresholdDB = %f\n", gAudioCompState.thresholdDB);
++    }
++
++    // KP -
++    if (Input::isKeyboardKeyPressed(0x056)) {
++        gAudioCompState.kneeWidthDB -= 0.01f;
++        std::printf("kneeWidthDB = %f\n", gAudioCompState.kneeWidthDB);
++    }
++
++    // KP +
++    if (Input::isKeyboardKeyPressed(0x057)) {
++        gAudioCompState.kneeWidthDB += 0.01f;
++        std::printf("kneeWidthDB = %f\n", gAudioCompState.kneeWidthDB);
++    }
++    #endif
++}
++
+ //------------------------------------------------------------------------------------------------------------------------------------------
+ // Initialize emulated PlayStation system components and use the given .cue file for the game disc
+ //------------------------------------------------------------------------------------------------------------------------------------------
+diff --git a/game/PcPsx/PsxVm.h b/game/PcPsx/PsxVm.h
+index 57a00ac8..a92584db 100644
+--- a/game/PcPsx/PsxVm.h
++++ b/game/PcPsx/PsxVm.h
+@@ -28,6 +28,8 @@ extern Spu::Core    gSpu;
+ bool init(const char* const doomCdCuePath) noexcept;
+ void shutdown() noexcept;
+ 
++void tempCompressorControls();
++
+ // Fire timer (root counter) related events if appropriate.
+ // Note: this is implemented in LIBAPI, where timers are handled.
+ void generateTimerEvents() noexcept;
+diff --git a/game/PcPsx/Utils.cpp b/game/PcPsx/Utils.cpp
+index 681f735e..4506d9fe 100644
+--- a/game/PcPsx/Utils.cpp
++++ b/game/PcPsx/Utils.cpp
+@@ -99,6 +99,8 @@ void doPlatformUpdates() noexcept {
+     
+     if (now - gLastPlatformUpdateTime < std::chrono::milliseconds(4))
+         return;
++
++    PsxVm::tempCompressorControls();
+     
+     // Actually do the platform updates
+     gLastPlatformUpdateTime = now;
