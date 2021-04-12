@@ -17,8 +17,6 @@
     - Remove geometry clipping limits where possible
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
-- New extended floating point SPU module with better sound quality?
-    - Will help clipping issues.
 
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.

@@ -451,8 +451,16 @@ static void P_BuildMove(player_t& player) noexcept {
     // Apply Final Doom mouse movement also
     player.forwardmove += psxMouseMoveY;
     
-    // PsyDoom: do analog movements
+    // PsyDoom: do analog movements and also cancel any digital movement if using the analog controller
     #if PSYDOOM_MODS
+        if (inputs.analogForwardMove != 0.0f) {
+            player.forwardmove = 0;
+        }
+
+        if (inputs.analogSideMove != 0.0f) {
+            player.sidemove = 0;
+        }
+
         if (bFinalDoomMovementMode) {
             player.forwardmove -= FixedMul(inputs.analogForwardMove, FORWARD_MOVE_FDOOM[speedMode]);
             player.sidemove += FixedMul(inputs.analogSideMove, SIDE_MOVE_FDOOM[speedMode]);
@@ -466,8 +474,8 @@ static void P_BuildMove(player_t& player) noexcept {
     #endif
 
     // Clamp movement amounts: this was added in Final Doom
-    const fixed_t maxForwardMove = (bFinalDoomMovementMode) ? FORWARD_MOVE_FDOOM[1] : FORWARD_MOVE_DOOM[1];
-    const fixed_t maxSideMove = (bFinalDoomMovementMode) ? SIDE_MOVE_FDOOM[1] : SIDE_MOVE_DOOM[1];
+    const fixed_t maxForwardMove = (bFinalDoomMovementMode) ? FORWARD_MOVE_FDOOM[1] : (FORWARD_MOVE_DOOM[1] * elapsedVBlanks) / VBLANKS_PER_TIC;
+    const fixed_t maxSideMove = (bFinalDoomMovementMode) ? SIDE_MOVE_FDOOM[1] : (SIDE_MOVE_DOOM[1] * elapsedVBlanks) / VBLANKS_PER_TIC;
 
     player.forwardmove = std::clamp(player.forwardmove, -maxForwardMove, +maxForwardMove);
     player.sidemove = std::clamp(player.sidemove, -maxSideMove, +maxSideMove);
