@@ -11,6 +11,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "PcPsx/Game.h"
 
 #include <algorithm>
 
@@ -84,6 +85,15 @@ static void T_PlatRaise(plat_t& plat) noexcept {
         // Waiting to go back up (or down) again?
         case waiting: {
             plat.count--;
+
+            // PsyDoom: wait period is halved in 'turbo' mode
+            #if PSYDOOM_MODS
+                if (Game::gSettings.bTurboMode) {
+                    if (plat.count > 0) {
+                        plat.count--;
+                    }
+                }
+            #endif
 
             // Time to end the wait and begin moving again?
             if (plat.count == 0) {

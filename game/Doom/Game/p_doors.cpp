@@ -11,6 +11,9 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "PcPsx/Game.h"
+
+#include <algorithm>
 
 // State for a door thinker
 struct vldoor_t {
@@ -35,9 +38,21 @@ static void T_VerticalDoor(vldoor_t& door) noexcept {
     switch (door.direction) {
         // Door is waiting
         case 0: {
-            if (--door.topcountdown != 0)
-                break;
-            
+            // PsyDoom: wait period is halved in 'turbo' mode.
+            // Also make the condition check a little more resilent and handle negative numbers.
+            #if PSYDOOM_MODS
+                const int32_t ticksToCountdown = (Game::gSettings.bTurboMode) ? 2 : 1;
+                door.topcountdown = std::max(door.topcountdown - ticksToCountdown, 0);
+
+                if (door.topcountdown > 0)
+                    break;
+            #else
+                door.topcountdown--;
+
+                if (door.topcountdown != 0)
+                    break;
+            #endif
+
             switch (door.type) {
                 case BlazeRaise:
                     door.direction = -1;
@@ -51,7 +66,7 @@ static void T_VerticalDoor(vldoor_t& door) noexcept {
 
                 case Close30ThenOpen:
                     door.direction = 1;     // Opens after waiting, unlike the other doors (which normally close)
-                    S_StartSound((mobj_t*) &door.sector->soundorg, sfx_doropn);     
+                    S_StartSound((mobj_t*) &door.sector->soundorg, sfx_doropn);
                     break;
 
                 default:
@@ -61,8 +76,20 @@ static void T_VerticalDoor(vldoor_t& door) noexcept {
 
         // Door is doing initial wait
         case 2: {
-            if (--door.topcountdown != 0)
-                break;
+            // PsyDoom: wait period is halved in 'turbo' mode.
+            // Also make the condition check a little more resilent and handle negative numbers.
+            #if PSYDOOM_MODS
+                const int32_t ticksToCountdown = (Game::gSettings.bTurboMode) ? 2 : 1;
+                door.topcountdown = std::max(door.topcountdown - ticksToCountdown, 0);
+
+                if (door.topcountdown > 0)
+                    break;
+            #else
+                door.topcountdown--;
+
+                if (door.topcountdown != 0)
+                    break;
+            #endif
             
             switch (door.type) {
                 case RaiseIn5Mins: {

@@ -37,6 +37,10 @@ bool gbNoMonsters = false;
 // Basically the exact same player state as if the level had been restarted.
 bool gbPistolStart = false;
 
+// Cheat intended for speed running: player moves and fires 2x faster.
+// Doors and platforms also move 2x faster.
+bool gbTurboMode = false;
+
 // Host that the client connects to: private so we don't expose std::string everywhere
 static std::string gServerHost;
 
@@ -111,6 +115,15 @@ static int parseArg_nomonsters(const int argc, const char** const argv) {
 static int parseArg_pistolstart(const int argc, const char** const argv) {
     if ((argc >= 1) && (std::strcmp(argv[0], "-pistolstart") == 0)) {
         gbPistolStart = true;
+        return 1;
+    }
+
+    return 0;
+}
+
+static int parseArg_turbo(const int argc, const char** const argv) {
+    if ((argc >= 1) && (std::strcmp(argv[0], "-turbo") == 0)) {
+        gbTurboMode = true;
         return 1;
     }
 
@@ -195,8 +208,9 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_checkresult,
     parseArg_nomonsters,
     parseArg_pistolstart,
+    parseArg_turbo,
     parseArg_server,
-    parseArg_client
+    parseArg_client,
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -248,6 +262,7 @@ void shutdown() noexcept {
     gServerPort = DEFAULT_NET_PORT;
     gbNoMonsters = false;
     gbPistolStart = false;
+    gbTurboMode = false;
 }
 
 const char* getServerHost() noexcept {

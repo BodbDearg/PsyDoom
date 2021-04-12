@@ -800,7 +800,14 @@ void P_MovePsprites(player_t& player) noexcept {
 
     // Keep simulating player sprite tics while we are behind by one tick
     gTicRemainder[gPlayerNum] += gPlayersElapsedVBlanks[gPlayerNum];
-    
+
+    // PsyDoom: if using the turbo mode cheat allow weapons to fire 2x as fast
+    #if PSYDOOM_MODS
+        if (Game::gSettings.bTurboMode) {
+            gTicRemainder[gPlayerNum] += gPlayersElapsedVBlanks[gPlayerNum];
+        }
+    #endif
+
     while (gTicRemainder[gPlayerNum] >= tickVblLength) {
         gTicRemainder[gPlayerNum] -= tickVblLength;
         

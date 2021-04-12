@@ -131,6 +131,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bFixGravityStrength = Config::gbFixGravityStrength;
     settings.bNoMonsters = ProgArgs::gbNoMonsters;
     settings.bPistolStart = ProgArgs::gbPistolStart;
+    settings.bTurboMode = ProgArgs::gbTurboMode;
     settings.bUseLostSoulSpawnFix = Config::gbUseLostSoulSpawnFix;
 
     if (Config::gLostSoulSpawnLimit == 0) {
@@ -160,6 +161,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bFixGravityStrength            = false;
     settings.bNoMonsters                    = false;
     settings.bPistolStart                   = false;
+    settings.bTurboMode                     = false;
     settings.bUseLostSoulSpawnFix           = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;

@@ -480,6 +480,14 @@ static void P_BuildMove(player_t& player) noexcept {
     player.forwardmove = std::clamp(player.forwardmove, -maxForwardMove, +maxForwardMove);
     player.sidemove = std::clamp(player.sidemove, -maxSideMove, +maxSideMove);
 
+    // PsyDoom: apply 'turbo mode' (2x speed) cheat if enabled
+    #if PSYDOOM_MODS
+        if (Game::gSettings.bTurboMode) {
+            player.forwardmove *= 2;
+            player.sidemove *= 2;
+        }
+    #endif
+
     // If the player is not moving at all change the animation frame to standing
     mobj_t& mobj = *player.mo;
 

@@ -50,7 +50,7 @@ static constexpr fixed_t FLOORSPEED = FRACUNIT * 3;
 
 result_e T_MovePlane(
     sector_t& sector,
-    const fixed_t speed,
+    fixed_t speed,
     const fixed_t destHeight,
     const bool bCrush,
     const int32_t floorOrCeiling,

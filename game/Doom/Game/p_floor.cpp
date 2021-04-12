@@ -11,6 +11,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "PcPsx/Game.h"
 
 #include <algorithm>
 
@@ -20,12 +21,19 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 result_e T_MovePlane(
     sector_t& sector,                   // The sector to move up/down
-    const fixed_t speed,                // Speed of plane movement
+    fixed_t speed,                      // Speed of plane movement
     const fixed_t destHeight,           // Height that the floor or ceiling wants to get to
     const bool bCrush,                  // If true then damage things contained within when they are being crushed (not fitting vertically)
     const int32_t floorOrCeiling,       // 0 = floor, 1 = ceiling
     const int32_t direction             // -1 = down, 1 = up
 ) noexcept {
+    // PsyDoom: if the 'turbo' cheat is enabled allow planes to move 2x as fast
+    #if PSYDOOM_MODS
+        if (Game::gSettings.bTurboMode) {
+            speed *= 2;
+        }
+    #endif
+
     // What are we moving?
     if (floorOrCeiling == 0) {
         // Moving a floor
