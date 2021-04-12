@@ -68,6 +68,7 @@ bool            gbDisableVulkanRenderer;
 int32_t         gVulkanRenderHeight;
 bool            gbVulkanPixelStretch;
 bool            gbVulkanTripleBuffer;
+bool            gbVulkanDrawExtendedStatusBar;
 bool            gbVulkanWidescreenEnabled;
 int32_t         gAAMultisamples;
 int32_t         gTopOverscanPixels;
@@ -179,6 +180,18 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanTripleBuffer = iniEntry.getBoolValue(false); },
         []() { gbVulkanTripleBuffer = false; }
+    },
+    {
+        "VulkanDrawExtendedStatusBar",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Vulkan renderer only: draw extensions to the in-game status bar for widescreen mode?\n"
+        "# PsyDoom can extend the original PSX status bar to 'support' widescreen mode by repeating the part\n"
+        "# of the bar which contains all the weapon numbers. If you disable this setting, then a black\n"
+        "# letterbox will be rendered instead. This setting is also ignored if Vulkan widescreen is disabled.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbVulkanDrawExtendedStatusBar = iniEntry.getBoolValue(true); },
+        []() { gbVulkanDrawExtendedStatusBar = true; }
     },
     {
         "VulkanWidescreenEnabled",

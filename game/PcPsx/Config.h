@@ -39,6 +39,7 @@ extern bool     gbDisableVulkanRenderer;
 extern int32_t  gVulkanRenderHeight;
 extern bool     gbVulkanPixelStretch;
 extern bool     gbVulkanTripleBuffer;
+extern bool     gbVulkanDrawExtendedStatusBar;
 extern bool     gbVulkanWidescreenEnabled;
 extern int32_t  gAAMultisamples;
 extern int32_t  gTopOverscanPixels;

@@ -13,9 +13,13 @@
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"
 #include "Macros.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VRenderer.h"
 #include "PsyQ/LIBGPU.h"
 
+#include <cmath>
 #include <cstdio>
 
 static constexpr int32_t GIBTIME    = 2;    // How long frames in the gib animation last
@@ -366,6 +370,38 @@ void ST_Drawer() noexcept {
     LIBGPU_setWH(spritePrim, 256, 40);
 
     I_AddPrim(spritePrim);
+
+    // PsyDoom: draw extensions to the status bar for the Vulkan renderer in widescreen mode.
+    // Use the panel containing the weapon numbers as filler.
+    #if PSYDOOM_MODS
+        if (Video::isUsingVulkanRenderPath() && Config::gbVulkanWidescreenEnabled && Config::gbVulkanDrawExtendedStatusBar) {
+            // Note: adjusting the calculation slightly by 1 pixel to account for the adjustment by 1 pixel below (left status bar drawing)
+            constexpr int16_t EXT_PIECE_WIDTH = 62;
+            const int32_t numExtensionPieces = (int32_t) std::ceil((1 + VRenderer::gPsxCoordsFbW - (float) Video::ORIG_DRAW_RES_X) / (float) EXT_PIECE_WIDTH);
+
+            LIBGPU_setUV0(spritePrim, 194, 0);
+            LIBGPU_setWH(spritePrim, EXT_PIECE_WIDTH, 40);
+
+            // Draw the extended status bar to the right
+            int16_t x = 256;
+
+            for (int32_t i = 0; i < numExtensionPieces; ++i) {
+                LIBGPU_setXY0(spritePrim, x, 200);
+                I_AddPrim(spritePrim);
+                x += EXT_PIECE_WIDTH;
+            }
+        
+            // Draw the extended status bar to the left.
+            // Note: need to push forward by one pixel to avoid 2 doubled up columns of black pixels.
+            x = 1 - EXT_PIECE_WIDTH;
+
+            for (int32_t i = 0; i < numExtensionPieces; ++i) {
+                LIBGPU_setXY0(spritePrim, x, 200);
+                I_AddPrim(spritePrim);
+                x -= EXT_PIECE_WIDTH;
+            }
+        }
+    #endif
 
     // Figure out what weapon to display ammo for and what to show for the ammo amount
     const weapontype_t weapon = (player.pendingweapon == wp_nochange) ?
