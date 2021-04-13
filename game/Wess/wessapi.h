@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Asserts.h"
-#include "PcPsx/Types.h"
 #include "PsyQ/LIBSPU.h"
 
 #include <cstddef>

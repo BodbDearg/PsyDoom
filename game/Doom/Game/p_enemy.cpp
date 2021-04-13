@@ -9,6 +9,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "g_game.h"
+#include "info.h"
 #include "p_doors.h"
 #include "p_floor.h"
 #include "p_inter.h"

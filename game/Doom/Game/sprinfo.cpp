@@ -1,10 +1,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Definitions for sprite frames and sequences of sprite frames.
-// Used in rendering only.
+// Definitions for sprite frames and sequences of sprite frames
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-#include "Doom/Game/info.h"
-#include "r_local.h"
+#include "sprinfo.h"
 
 static const spriteframe_t gSpriteFrames[] = {
     { true,  { 857,  858,  859,  860,  861,  860,  859,  858  }, { 0, 0, 0, 0, 0, 1, 1, 1 } },  // SPR_TROO_0

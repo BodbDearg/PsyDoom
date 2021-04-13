@@ -3,6 +3,7 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/sprinfo.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_data.h"

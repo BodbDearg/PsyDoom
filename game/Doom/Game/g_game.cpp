@@ -13,6 +13,7 @@
 #include "Doom/UI/in_main.h"
 #include "doomdata.h"
 #include "Endian.h"
+#include "info.h"
 #include "p_inter.h"
 #include "p_local.h"
 #include "p_map.h"

@@ -9,6 +9,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
+#include "Doom/Game/sprinfo.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"

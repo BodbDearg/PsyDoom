@@ -6,8 +6,6 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #include "Doom/doomdef.h"
-#include "Doom/Game/info.h"
-#include "PcPsx/Types.h"
 
 struct line_t;
 
@@ -104,7 +102,6 @@ struct subsector_t {
     int16_t     firstseg;           // Index of the first line segment for the subsector, in the global list of line segments
     int16_t     numLeafEdges;       // How many leaf edges there are for the subsector
     int16_t     firstLeafEdge;      // Index of the first leaf edge for the subsector, in the global list of leaf edges
-
 #if PSYDOOM_MODS
     int32_t     vkDrawSubsecIdx;    // PsyDoom: repurpose unused fields to hold the draw subsector index for the new Vulkan renderer. Will be '-1' if not drawn.
 #else
@@ -166,19 +163,3 @@ struct leaf_t {
     int32_t     numEdges;                       // How many edges are actually in use for the leaf
     leafedge_t  edges[MAX_LEAF_EDGES + 1];      // +1 so we store the first edge at the end of the list and avoid bound checking
 };
-
-// Holds information for a sprite frame
-struct spriteframe_t {
-    bool32_t    rotate;     // When false 'lump[0]' should be used for all angles
-    uint32_t    lump[8];    // The lump number to use for viewing angles 0-7
-    uint8_t     flip[8];    // Whether to flip horizontally viewing angles 0-7, non zero if flip
-};
-
-// Holds information for a sequence of sprite frames
-struct spritedef_t {
-    int32_t                 numframes;          // How many frames in the sequence
-    const spriteframe_t*    spriteframes;       // The list of frames in the sequence
-};
-
-// The list of sprite sequences
-extern const spritedef_t gSprites[NUMSPRITES];

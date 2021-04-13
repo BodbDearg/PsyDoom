@@ -14,6 +14,7 @@
 #include "Doom/Renderer/r_sky.h"
 #include "doomdata.h"
 #include "g_game.h"
+#include "info.h"
 #include "p_firesky.h"
 #include "p_inter.h"
 #include "p_local.h"
@@ -21,6 +22,7 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
+#include "PcPsx/MobjSpritePrecacher.h"
 
 #include <cstring>
 
@@ -1115,6 +1117,11 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
             P_LoadBlocks(mapSprFile);
         #endif
     }
+
+    // PsyDoom: precache all sprites needed for the level
+    #if PSYDOOM_MODS
+        MobjSpritePrecacher::doPrecaching();
+    #endif
 
     // Check there is enough heap space left in order to run the level
     const int32_t freeMemForGameplay = Z_FreeMemory(*gpMainMemZone);

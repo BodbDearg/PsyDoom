@@ -13,6 +13,7 @@
 #include "Doom/UI/st_main.h"
 #include "doomdata.h"
 #include "g_game.h"
+#include "info.h"
 #include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"

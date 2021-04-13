@@ -14,6 +14,7 @@
 #include "Doom/UI/st_main.h"
 #include "doomdata.h"
 #include "g_game.h"
+#include "info.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
 #include "p_floor.h"

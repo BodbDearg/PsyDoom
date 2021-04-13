@@ -17,6 +17,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
+#include "info.h"
 #include "p_local.h"
 #include "p_map.h"
 #include "p_mobj.h"

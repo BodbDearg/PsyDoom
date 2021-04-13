@@ -4,6 +4,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "info.h"
 #include "p_inter.h"
 #include "p_local.h"
 #include "p_map.h"
