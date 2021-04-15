@@ -22,6 +22,11 @@ struct Args {
 // Converts the Windows style single arg list (wide character) to a standard C style argument list encoded in UTF-8
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Args getCmdLineArgs(const PWSTR lpCmdLine) {
+    // If the command line is an empty string then return no args.
+    // Otherwise 'CommandLineToArgvW' will give the path to the executable as an 'argument'.
+    if (!lpCmdLine[0])
+        return Args{};
+
     // Split up the command line string
     int argc = {};
     Args args = {};
