@@ -88,11 +88,12 @@ public:
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // Asynchronously read a specified number of packets and return 'false' if that did not start happening.
+    // Asynchronously try to read a single packet and return 'false' if that did not start happening.
     // Note that if the buffer is full then packet reading will pause until buffer slots are freed.
     //--------------------------------------------------------------------------------------------------------------------------------------
-    bool asyncReadNumPackets(int32_t numPackets) noexcept {
-        if ((numPackets <= 0) || mbError)
+    bool asyncReadSinglePacket() noexcept {
+        // Fails if the reader is in an error state
+        if (mbError)
             return false;
 
         // Kick off the read if there is a free buffer slot, otherwise wait until later
@@ -108,11 +109,12 @@ public:
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // Asynchronously try to fill up the packet buffer with incoming packets and return 'false' if that did not start happening
+    // Asynchronously request a single packet and return 'false' if that did not start happening.
+    // Call multiple times to request more than one packet.
     //--------------------------------------------------------------------------------------------------------------------------------------
     bool asyncFillPacketBuffer() noexcept {
         const int32_t curNumRequests = numPacketsRequested();
-        return (curNumRequests < BufferSize) ? asyncReadNumPackets(BufferSize - curNumRequests) : true;
+        return (curNumRequests < BufferSize) ? asyncReadSinglePacket() : true;
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
