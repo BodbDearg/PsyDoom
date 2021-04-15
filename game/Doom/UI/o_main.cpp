@@ -98,11 +98,21 @@ texture_t gTex_OptionsBg;
 int32_t gOptionsSndVol = S_SND_DEFAULT_VOL;
 int32_t gOptionsMusVol = S_MUS_DEFAULT_VOL;
 
+// PsyDoom: a flag to specify whether we should unpause the game after running the options menu
+#if PSYDOOM_MODS
+    bool gbUnpauseAfterOptionsMenu;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the options menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void O_Init() noexcept {
     S_StartSound(nullptr, sfx_pistol);      // Bam!
+
+    // PsyDoom: initially assume we don't unpause the game after the options menu is done
+    #if PSYDOOM_MODS
+        gbUnpauseAfterOptionsMenu = false;
+    #endif
 
     // Initialize cursor position and vblanks until move for all players
     gCursorFrame = 0;
@@ -192,6 +202,15 @@ gameaction_t O_Control() noexcept {
         // Allow the start or select buttons to close the menu
         if (bMenuStart || bMenuBack) {
             S_StartSound(nullptr, sfx_pistol);
+
+            // PsyDoom: should we unpause the game after closing the options menu?
+            // Input events will be wiped by the screen transition, so we need to remember if an unpause was requested too here.
+            // This code basically allows the 'Esc' key (in the default bindings) to function as both a 'pause' and 'menu back' key which toggles
+            // directly between the options menu and the game, bypassing the intermediate step of the pause screen:
+            #if PSYDOOM_MODS
+                gbUnpauseAfterOptionsMenu = (inputs.bTogglePause && (!oldInputs.bTogglePause));
+            #endif
+
             return ga_exit;
         }
         

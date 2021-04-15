@@ -892,7 +892,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# Toggle in-game pause, automap, and toggle between the Classic and Vulkan renderer (if possible)\n"
         "#---------------------------------------------------------------------------------------------------",
-        Toggle_Pause, "P, Pause, Gamepad Start"
+        Toggle_Pause, "Escape, P, Pause, Gamepad Start"
     ),
     CONTROL_BIND_GROUP_MIDDLE(Toggle_Map, "Tab, M, Gamepad Back"),
     CONTROL_BIND_GROUP_FOOTER(Toggle_Renderer, "`"),

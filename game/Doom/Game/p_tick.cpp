@@ -177,6 +177,30 @@ static int32_t P_GetNumMatchingCheatSeqBtns() noexcept {
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Logic executed when unpausing the game.
+// This was originally inline logic in 'P_CheckCheats' but I extracted it out for PsyDoom so it can be called in multiple places.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_OnGameUnpause() noexcept {
+    // Restart cd handling and fade out cd audio
+    psxcd_restart(0);
+
+    while (psxcd_seeking_for_play()) {
+        // Wait until the cdrom has stopped seeking to the current audio location.
+        // Note: should NEVER be in here in this emulated environment: seek happens instantly!
+    }
+
+    psxspu_start_cd_fade(500, gCdMusicVol);
+    S_Resume();
+
+    // When the pause menu is opened the warp menu and vram viewer are initially disabled
+    gPlayers[0].cheats &= ~(CF_VRAMVIEWER | CF_WARPMENU);
+
+    // Restore previous tick counters on unpause
+    gTicCon = gTicConOnPause;
+    gLastTgtGameTicCount = d_rshift<VBLANK_TO_TIC_SHIFT>(gTicConOnPause);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Handles the following:
 //  (1) Pausing/unpausing the game.
 //  (2) Opening the options menu when the game is paused.
@@ -238,26 +262,15 @@ void P_CheckCheats() noexcept {
                 // Remember the tick we paused on and reset cheat button sequences
                 gCurCheatBtnSequenceIdx = 0;
                 gTicConOnPause = gTicCon;
-                return;
+
+                // PsyDoom: allow 'pause' and 'menu back' to be executed with the same key stroke (typically the 'Esc' key)
+                #if !PSYDOOM_MODS
+                    return;
+                #endif
+            } else {
+                // Note: this was originally inline logic, but PsyDoom needs to now call this in multiple places
+                P_OnGameUnpause();
             }
-
-            // Otherwise restart cd handling and fade out cd audio
-            psxcd_restart(0);
-
-            while (psxcd_seeking_for_play()) {
-                // Wait until the cdrom has stopped seeking to the current audio location.
-                // Note: should NEVER be in here in this emulated environment: seek happens instantly!
-            }
-
-            psxspu_start_cd_fade(500, gCdMusicVol);
-            S_Resume();
-
-            // When the pause menu is opened the warp menu and vram viewer are initially disabled
-            gPlayers[0].cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
-
-            // Restore previous tick counters on unpause
-            gTicCon = gTicConOnPause;
-            gLastTgtGameTicCount = d_rshift<VBLANK_TO_TIC_SHIFT>(gTicConOnPause);
         }
 
         // Showing the options menu if the game is paused and the options button has just been pressed.
@@ -276,7 +289,7 @@ void P_CheckCheats() noexcept {
 
         if ((!bMenuBackJustPressed) || (!gbGamePaused))
             continue;
-        
+
         // About to open up the options menu, disable these player cheats and present what we have to the screen
         player_t& player = gPlayers[playerIdx];
         player.cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
@@ -289,7 +302,7 @@ void P_CheckCheats() noexcept {
 
         // Run the options menu
         const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
-        
+
         if (optionsAction != ga_exit) {
             gGameAction = optionsAction;
 
@@ -297,8 +310,17 @@ void P_CheckCheats() noexcept {
             if (optionsAction == ga_restart || optionsAction == ga_exitdemo) {
                 O_Drawer();
             }
+        } else {
+            // PsyDoom: allow the game to be unpaused at the same time when exiting the options menu.
+            // This allows the 'Esc' key (in the default bindings) to toggle between the options screen and gameplay (normally a 2 step operation).
+            #if PSYDOOM_MODS
+                if (gbUnpauseAfterOptionsMenu) {
+                    gbGamePaused = false;
+                    P_OnGameUnpause();
+                }
+            #endif
         }
-        
+
         return;
     }
 
