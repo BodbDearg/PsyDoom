@@ -126,6 +126,10 @@ gameaction_t RunMenu() noexcept {
         #endif
 
         // Once the net connection has been established, re-draw the background in prep for a loading or error plaque
+        #if PSYDOOM_MODS
+            Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+        #endif
+
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
         I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
