@@ -21,3 +21,7 @@ void M_Start() noexcept;
 void M_Stop(const gameaction_t exitAction) noexcept;
 gameaction_t M_Ticker() noexcept;
 void M_Drawer() noexcept;
+
+#if PSYDOOM_MODS
+    void M_DrawNetworkConnectDisplay() noexcept;
+#endif

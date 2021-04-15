@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/UI/m_main.h"
 #include "Input.h"
 #include "NetPacketReader.h"
 #include "NetPacketWriter.h"
@@ -77,6 +78,9 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
         // See the 'Utils.cpp' file for more comments on this issue; we don't do this for the Vulkan backend also.
         if (Video::gBackendType != Video::BackendType::Vulkan) {
             Video::displayFramebuffer();
+        } else {
+            // Hack for the Vulkan renderer, in case the user resizes the screen while we are connecting - redraw everything...
+            M_DrawNetworkConnectDisplay();
         }
 
         Utils::threadYield();

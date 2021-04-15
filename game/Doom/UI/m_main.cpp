@@ -523,3 +523,22 @@ void M_Drawer() noexcept {
     I_SubmitGpuCmds();
     I_DrawPresent();
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the display when the game is waiting for a network connection.
+// Used by the Network module to re-draw the display during network connection for the Vulkan renderer.
+// This is required if the user resizes the view while we are connecting, when we need to refresh the display.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void M_DrawNetworkConnectDisplay() noexcept {
+    I_IncDrawnFrameCount();
+    Utils::onBeginUIDrawing();
+    
+    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+    I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
+    I_CacheAndDrawSprite(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());
+
+    I_SubmitGpuCmds();
+    I_DrawPresent();
+}
+#endif  // #if PSYDOOM_MODS
