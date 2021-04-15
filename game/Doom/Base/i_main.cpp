@@ -1293,6 +1293,10 @@ bool I_NetUpdate() noexcept {
         );
 
         // Show the 'Network error' plaque
+        #if PSYDOOM_MODS
+            Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+        #endif
+
         I_IncDrawnFrameCount();
         I_CacheTex(gTex_NETERR);
         I_DrawSprite(
