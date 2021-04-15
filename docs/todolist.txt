@@ -1,5 +1,4 @@
 0.8 - Limit extending and modding?
-- Optimize flat drawing for classic renderer, can use less spans.
 - Add map patching mechanism for a few select map bugs
     - Fix house of pain door bug
     - Fix Ballystix altar not being see through with new vk renderer (need to mark as 'void' ceiling)
