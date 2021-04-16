@@ -222,9 +222,21 @@ void R_DrawWallPiece(
     // Only one frame of the animated texture stays in VRAM at a time!
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Decompress and get a pointer to the texture data
-        ASSERT(getDecodedSize(gpLumpCache[tex.lumpNum]) < TMP_BUFFER_SIZE);
-        decode(gpLumpCache[tex.lumpNum], gTmpBuffer);
-        const uint16_t* const pTexData = (uint16_t*)(gTmpBuffer + sizeof(texlump_header_t));
+        #if PSYDOOM_LIMIT_REMOVING
+            gTmpBuffer.ensureSize(getDecodedSize(gpLumpCache[tex.lumpNum]));
+            decode(gpLumpCache[tex.lumpNum], gTmpBuffer.bytes());
+            const uint16_t* const pTexData = (uint16_t*)(gTmpBuffer.bytes() + sizeof(texlump_header_t));
+        #else
+            // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
+            #if PSYDOOM_MODS
+                if (getDecodedSize(gpLumpCache[tex.lumpNum]) > TMP_BUFFER_SIZE) {
+                    I_Error("R_DrawWallPiece: lump %d size > 64 KiB!", tex.lumpNum);
+                }
+            #endif
+
+            decode(gpLumpCache[tex.lumpNum], gTmpBuffer);
+            const uint16_t* const pTexData = (uint16_t*)(gTmpBuffer + sizeof(texlump_header_t));
+        #endif
 
         // Upload to the GPU and mark the texture as loaded this frame
         const RECT texRect = getTextureVramRect(tex);

@@ -96,22 +96,30 @@ static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept;
 // Load map vertex data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadVertexes(const int32_t lumpNum) noexcept {
-    // Sanity check the vertices lump is not too big
+    // Sanity check the vertices lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadVertexes: lump > 64K");
-    }
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadVertexes: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
 
     // Alloc the runtime vertex array
     gNumVertexes = lumpSize / sizeof(mapvertex_t);
     gpVertexes = (vertex_t*) Z_Malloc(*gpMainMemZone, gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
     
     // Read the WAD vertexes into the temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
     // Convert the vertexes to the renderer runtime format
-    const mapvertex_t* pSrcVertex = (const mapvertex_t*) gTmpBuffer;
+    const mapvertex_t* pSrcVertex = (const mapvertex_t*) pTmpBufferBytes;
     vertex_t* pDstVertex = gpVertexes;
 
     for (int32_t vertexIdx = 0; vertexIdx < gNumVertexes; ++vertexIdx) {
@@ -127,23 +135,31 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
 // Load line segments from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadSegs(const int32_t lumpNum) noexcept {
-    // Sanity check the segs lump is not too big
+    // Sanity check the segs lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadSegs: lump > 64K");
-    }
-    
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadSegs: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
+
     // Alloc ram for the runtime segs and zero initialize
     gNumSegs = lumpSize / sizeof(mapseg_t);
     gpSegs = (seg_t*) Z_Malloc(*gpMainMemZone, gNumSegs * sizeof(seg_t), PU_LEVEL, nullptr);
     D_memset(gpSegs, std::byte(0), gNumSegs * sizeof(seg_t));
 
     // Read the map lump containing the segs into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
     // Process the WAD segs and convert them into runtime segs
-    const mapseg_t* pSrcSeg = (const mapseg_t*) gTmpBuffer;
+    const mapseg_t* pSrcSeg = (const mapseg_t*) pTmpBufferBytes;
     seg_t* pDstSeg = gpSegs;
 
     for (int32_t segIdx = 0; segIdx < gNumSegs; ++segIdx) {
@@ -186,12 +202,20 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
 // Load map subsectors using data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
-    // Sanity check the subsectors lump is not too big
+    // Sanity check the subsectors lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadSubsectors: lump > 64K");
-    }
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadSubsectors: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
 
     // Alloc ram for the runtime subsectors and zero initialize
     gNumSubsectors = lumpSize / sizeof(mapsubsector_t);
@@ -199,10 +223,10 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     D_memset(gpSubsectors, std::byte(0), gNumSubsectors * sizeof(subsector_t));
 
     // Read the map lump containing the subsectors into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
     
     // Process the WAD subsectors and convert them into runtime subsectors
-    const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) gTmpBuffer;
+    const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) pTmpBufferBytes;
     subsector_t* pDstSubsec = gpSubsectors;
 
     for (int32_t subsectorIdx = 0; subsectorIdx < gNumSubsectors; ++subsectorIdx) {
@@ -231,12 +255,20 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     skyLumpName[1] = 'K';
     skyLumpName[2] = 'Y';
 
-    // Sanity check the sectors lump is not too big
+    // Sanity check the sectors lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadSectors: lump > 64K");
-    }
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadSectors: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
 
     // Alloc ram for the runtime sectors and zero initialize
     if (gbLoadingFinalDoomMap) {
@@ -249,7 +281,7 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     D_memset(gpSectors, std::byte(0), gNumSectors * sizeof(sector_t));
 
     // Read the map lump containing the sectors into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
     // Process the WAD sectors and convert them into runtime sectors
     auto processWadSectors = [&](auto pWadSectors) noexcept {
@@ -332,9 +364,9 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 
     // Process the sectors found in the WAD file as Final Doom or original Doom format
     if (gbLoadingFinalDoomMap) {
-        processWadSectors((mapsector_final_t*) gTmpBuffer);
+        processWadSectors((mapsector_final_t*) pTmpBufferBytes);
     } else {
-        processWadSectors((mapsector_t*) gTmpBuffer);
+        processWadSectors((mapsector_t*) pTmpBufferBytes);
     }
 
     // Set the sky texture pointer
@@ -350,23 +382,31 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 // Load map bsp nodes from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadNodes(const int32_t lumpNum) noexcept {
-    // Sanity check the nodes lump is not too big
+    // Sanity check the nodes lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadNodes: lump > 64K");
-    }
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadNodes: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
 
     // Alloc ram for the runtime nodes
     gNumBspNodes = lumpSize / sizeof(mapnode_t);
     gpBspNodes = (node_t*) Z_Malloc(*gpMainMemZone, gNumBspNodes * sizeof(node_t), PU_LEVEL, nullptr);
 
     // Read the map lump containing the nodes into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
     // Process the WAD nodes and convert them into runtime nodes.
     // The format for nodes on the PSX appears identical to PC.
-    const mapnode_t* pSrcNode = (const mapnode_t*) gTmpBuffer;
+    const mapnode_t* pSrcNode = (const mapnode_t*) pTmpBufferBytes;
     node_t* pDstNode = gpBspNodes;
 
     for (int32_t nodeIdx = 0; nodeIdx < gNumBspNodes; ++nodeIdx) {
@@ -393,19 +433,27 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
 // Load map things and spawn them using data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadThings(const int32_t lumpNum) noexcept {
-    // Sanity check the things lump is not too big
+    // Sanity check the things lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadThings: lump > 64K");
-    }
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadThings: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
 
     // Determine how many things there are to spawn and read the lump from the WAD
     const int32_t numThings = lumpSize / sizeof(mapthing_t);
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
     // Spawn the map things
-    mapthing_t* pSrcThing = (mapthing_t*) gTmpBuffer;
+    mapthing_t* pSrcThing = (mapthing_t*) pTmpBufferBytes;
 
     for (int32_t thingIdx = 0; thingIdx < numThings; ++thingIdx) {
         // Endian correct the map thing and then spawn it
@@ -431,12 +479,20 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
 // Load linedefs from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
-    // Sanity check the linedefs lump is not too big
+    // Sanity check the linedefs lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadLineDefs: lump > 64K");
-    }
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadLineDefs: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
 
     // Alloc ram for the runtime linedefs and zero initialize
     gNumLines = lumpSize / sizeof(maplinedef_t);
@@ -444,10 +500,10 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
     D_memset(gpLines, std::byte(0), gNumLines * sizeof(line_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
     // Process the WAD linedefs and convert them into runtime linedefs
-    const maplinedef_t* pSrcLine = (maplinedef_t*) gTmpBuffer;
+    const maplinedef_t* pSrcLine = (maplinedef_t*) pTmpBufferBytes;
     line_t* pDstLine = gpLines;
 
     for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
@@ -524,12 +580,20 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
 // Load side definitions from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
-    // Sanity check the sidedefs lump is not too big
+    // Sanity check the sidedefs lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadSideDefs: lump > 64K");
-    }
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadSideDefs: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
 
     // Alloc ram for the runtime sidedefs and zero initialize
     if (gbLoadingFinalDoomMap) {
@@ -542,7 +606,7 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     D_memset(gpSides, std::byte(0), gNumSides  * sizeof(side_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
     // Process the WAD sidedefs and convert them into runtime sidedefs
     auto processWadSidedefs = [&](auto pWadSidedefs) noexcept {
@@ -576,9 +640,9 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
 
     // Process the sides found in the WAD file as Final Doom or original Doom format
     if (gbLoadingFinalDoomMap) {
-        processWadSidedefs((mapsidedef_final_t*) gTmpBuffer);
+        processWadSidedefs((mapsidedef_final_t*) pTmpBufferBytes);
     } else {
-        processWadSidedefs((mapsidedef_t*) gTmpBuffer);
+        processWadSidedefs((mapsidedef_t*) pTmpBufferBytes);
     }
 }
 
@@ -650,17 +714,25 @@ static void P_LoadRejectMap(const int32_t lumpNum) noexcept {
 // Load leafs from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadLeafs(const int32_t lumpNum) noexcept {
-    // Sanity check the leafs lump is not too big
+    // Sanity check the leafs lump is not too big.
+    // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
-    if (lumpSize > TMP_BUFFER_SIZE) {
-        I_Error("P_LoadLeafs: lump > 64K");
-    }
+    #if PSYDOOM_LIMIT_REMOVING
+        gTmpBuffer.ensureSize(lumpSize);
+        std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
+    #else
+        if (lumpSize > TMP_BUFFER_SIZE) {
+            I_Error("P_LoadLeafs: lump > 64K");
+        }
+
+        std::byte* const pTmpBufferBytes = gTmpBuffer;
+    #endif
 
     // Read the map lump containing the leaf edges into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer, true);
-    const std::byte* const pLumpBeg = gTmpBuffer;
-    const std::byte* const pLumpEnd = gTmpBuffer + lumpSize;
+    W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
+    const std::byte* const pLumpBeg = pTmpBufferBytes;
+    const std::byte* const pLumpEnd = pTmpBufferBytes + lumpSize;
 
     // Determine the number of leafs in the lump.
     // The number of leafs MUST equal the number of subsectors, and they must be in the same order as their subsectors.
@@ -689,7 +761,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     // Convert WAD leaf edges to runtime leaf edges and link them in with other map data structures
     gTotalNumLeafEdges = 0;
 
-    const std::byte* pLumpByte = gTmpBuffer;
+    const std::byte* pLumpByte = pTmpBufferBytes;
     subsector_t* pSubsec = gpSubsectors;
     leafedge_t* pDstEdge = gpLeafEdges;
 

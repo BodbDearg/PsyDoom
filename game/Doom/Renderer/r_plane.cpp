@@ -57,9 +57,22 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
             pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
         } else {
             const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
-            ASSERT(getDecodedSize(pCompressedLumpData) <= TMP_BUFFER_SIZE);
-            decode(pCompressedLumpData, gTmpBuffer);
-            pLumpData = gTmpBuffer;
+
+            #if PSYDOOM_LIMIT_REMOVING
+                gTmpBuffer.ensureSize(getDecodedSize(pCompressedLumpData));
+                decode(pCompressedLumpData, gTmpBuffer.bytes());
+                pLumpData = gTmpBuffer.bytes();
+            #else
+                // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
+                #if PSYDOOM_MODS
+                    if (getDecodedSize(pCompressedLumpData) > TMP_BUFFER_SIZE) {
+                        I_Error("R_DrawSubsectorFlat: lump %d size > 64 KiB!", tex.lumpNum);
+                    }
+                #endif
+
+                decode(pCompressedLumpData, gTmpBuffer);
+                pLumpData = gTmpBuffer;
+            #endif
         }
 
         // Load the decompressed texture to the required part of VRAM and mark as loaded

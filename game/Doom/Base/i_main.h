@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Doom/doomdef.h"
+#include "PcPsx/Buffer.h"
 
 #include <cstddef>
 
@@ -19,10 +20,13 @@ static constexpr uint32_t ALL_TPAGES_MASK       = (UINT32_MAX >> (32 - NUM_TCACH
 
 // Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB.
 // PsyDoom: small adjustment of +8 so that the textures for the 'legals' UI (and other large textures) can load without overflow.
-#if PSYDOOM_MODS
-    static constexpr uint32_t TMP_BUFFER_SIZE = 0x10008;
-#else
-    static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
+// PsyDoom: get rid of this constant if limit removing, since buffer size is now unlimited.
+#if !PSYDOOM_LIMIT_REMOVING
+    #if PSYDOOM_MODS
+        static constexpr uint32_t TMP_BUFFER_SIZE = 0x10008;
+    #else
+        static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
+    #endif
 #endif
 
 // Game control binding index: these are the actions which are configurable to different buttons.
@@ -67,7 +71,6 @@ extern uint32_t             gTCacheFillCellX;
 extern uint32_t             gTCacheFillCellY;
 extern uint32_t             gTCacheFillRowCellH;
 extern uint32_t             gLockedTexPagesMask;
-extern std::byte            gTmpBuffer[TMP_BUFFER_SIZE];
 extern uint32_t             gTotalVBlanks;
 extern uint32_t             gLastTotalVBlanks;
 extern uint32_t             gElapsedVBlanks;
@@ -84,6 +87,13 @@ extern texture_t            gTex_PAUSE;
 extern texture_t            gTex_LOADING;
 extern texture_t            gTex_NETERR;
 extern texture_t            gTex_CONNECT;
+
+// PsyDoom: the temporary buffer can now be resized to any size
+#if PSYDOOM_LIMIT_REMOVING
+    extern Buffer gTmpBuffer;
+#else
+    extern std::byte gTmpBuffer[TMP_BUFFER_SIZE];
+#endif
 
 void I_Main() noexcept;
 void I_PSXInit() noexcept;

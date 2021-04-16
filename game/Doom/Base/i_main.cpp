@@ -110,9 +110,6 @@ uint32_t    gTCacheFillRowCellH;
 // Sprites on the other hand are placed in 'unlocked' texture pages and can be evicted at any time.
 uint32_t gLockedTexPagesMask;
 
-// A 64-KB buffer used for WAD loading and other stuff
-std::byte gTmpBuffer[TMP_BUFFER_SIZE];
-
 // PsyDoom: the time at which the app started.
 // Used for measuring the total vblanks elapsed since app start
 #if PSYDOOM_MODS
@@ -183,6 +180,15 @@ texture_t gTex_PAUSE;
 texture_t gTex_LOADING;
 texture_t gTex_NETERR;
 texture_t gTex_CONNECT;
+
+// PsyDoom: the temporary buffer can now be resized to any size.
+// Start off with a plentiful 1 MiB however...
+#if PSYDOOM_LIMIT_REMOVING
+    Buffer gTmpBuffer(1024 * 1024);
+#else
+    // A 64-KiB buffer used for WAD loading and other stuff
+    std::byte gTmpBuffer[TMP_BUFFER_SIZE];
+#endif
 
 #if PSYDOOM_MODS
     // Max tolerated packet delay in milliseconds: after which we start adjusting clocks
@@ -395,9 +401,21 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     const bool bIsCompressed = (!gpbIsUncompressedLump[lumpNum]);
 
     if (bIsCompressed) {
-        ASSERT(getDecodedSize(pLumpData) <= TMP_BUFFER_SIZE);
-        decode(pLumpData, gTmpBuffer);
-        pLumpData = gTmpBuffer;
+        #if PSYDOOM_LIMIT_REMOVING
+            gTmpBuffer.ensureSize(getDecodedSize(pLumpData));
+            decode(pLumpData, gTmpBuffer.bytes());
+            pLumpData = gTmpBuffer.bytes();
+        #else
+            // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
+            #if PSYDOOM_MODS
+                if (getDecodedSize(pLumpData) > TMP_BUFFER_SIZE) {
+                    I_Error("I_LoadAndCacheTexLump: lump %d size > 64 KiB!", lumpNum);
+                }
+            #endif
+
+            decode(pLumpData, gTmpBuffer);
+            pLumpData = gTmpBuffer;
+        #endif
     }
 
     // Populate the basic info for the texture
@@ -803,9 +821,21 @@ void I_CacheTex(texture_t& tex) noexcept {
     const bool bIsTexCompressed = (!gpbIsUncompressedLump[tex.lumpNum]);
 
     if (bIsTexCompressed) {
-        ASSERT(getDecodedSize(pTexData) <= TMP_BUFFER_SIZE);
-        decode(pTexData, gTmpBuffer);
-        pTexData = gTmpBuffer;
+        #if PSYDOOM_LIMIT_REMOVING
+            gTmpBuffer.ensureSize(getDecodedSize(pTexData));
+            decode(pTexData, gTmpBuffer.bytes());
+            pTexData = gTmpBuffer.bytes();
+        #else
+            // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
+            #if PSYDOOM_MODS
+                if (getDecodedSize(pTexData) > TMP_BUFFER_SIZE) {
+                    I_Error("I_CacheTex: lump %d size > 64 KiB!", tex.lumpNum);
+                }
+            #endif
+
+            decode(pTexData, gTmpBuffer);
+            pTexData = gTmpBuffer;
+        #endif
     }
 
     // Upload the texture to VRAM at the current fill location

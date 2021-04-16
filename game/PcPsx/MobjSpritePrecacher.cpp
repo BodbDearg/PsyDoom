@@ -181,8 +181,9 @@ static void precacheSprites() noexcept {
         for (const spriteframe_t* pFrame = pBegFrame; pFrame < pEndFrame; ++pFrame) {
             for (int32_t sprLumpNum : pFrame->lump) {
                 // Die with an error if the lump number is invalid, otherwise cache the sprite
-                if ((sprLumpNum < firstSpriteLumpNum) || (sprLumpNum > lastSpriteLumpNum))
+                if ((sprLumpNum < firstSpriteLumpNum) || (sprLumpNum > lastSpriteLumpNum)) {
                     I_Error("SprCache: bad lump num %d!", sprLumpNum);
+                }
 
                 W_CacheLumpNum(sprLumpNum, PU_CACHE, false);
             }

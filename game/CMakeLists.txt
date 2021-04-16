@@ -182,6 +182,7 @@ set(SOURCE_FILES
     "PcPsx/AudioCompressor.cpp"
     "PcPsx/AudioCompressor.h"
     "PcPsx/BitShift.h"
+    "PcPsx/Buffer.h"
     "PcPsx/Cheats.cpp"
     "PcPsx/Cheats.h"
     "PcPsx/Config.cpp"

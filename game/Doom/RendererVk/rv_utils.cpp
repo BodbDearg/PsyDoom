@@ -169,9 +169,19 @@ void RV_UploadDirtyTex(texture_t& tex) noexcept {
         pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
     } else {
         const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
-        ASSERT(getDecodedSize(pCompressedLumpData) <= TMP_BUFFER_SIZE);
-        decode(pCompressedLumpData, gTmpBuffer);
-        pLumpData = gTmpBuffer;
+
+        #if PSYDOOM_LIMIT_REMOVING
+            gTmpBuffer.ensureSize(getDecodedSize(pCompressedLumpData));
+            decode(pCompressedLumpData, gTmpBuffer.bytes());
+            pLumpData = gTmpBuffer.bytes();
+        #else
+            if (getDecodedSize(pCompressedLumpData) > TMP_BUFFER_SIZE) {
+                I_Error("RV_UploadDirtyTex: lump %d size > 64 KiB!", tex.lumpNum);
+            }
+
+            decode(pCompressedLumpData, gTmpBuffer);
+            pLumpData = gTmpBuffer;
+        #endif
     }
 
     // Load the decompressed texture to the required part of VRAM and mark as loaded
