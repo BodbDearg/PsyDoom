@@ -44,7 +44,7 @@ result_e T_MovePlane(
             if (sector.floorheight - speed < destHeight) {
                 // Reached destination: allow move if not crushing stuff, otherwise restore previous height
                 sector.floorheight = destHeight;
-                
+
                 if (P_ChangeSector(sector, bCrush)) {
                     sector.floorheight = prevFloorH;
                     P_ChangeSector(sector, bCrush);     // Need to run again after restoring floor height (I won't repeat this comment for the other similar cases)
@@ -55,7 +55,7 @@ result_e T_MovePlane(
             else {
                 // Move ongoing: allow move if not crushing stuff, otherwise restore previous height
                 sector.floorheight -= speed;
-                
+
                 if (P_ChangeSector(sector, bCrush)) {
                     sector.floorheight = prevFloorH;
                     P_ChangeSector(sector, bCrush);
@@ -70,7 +70,7 @@ result_e T_MovePlane(
             if (sector.floorheight + speed > destHeight) {
                 // Reached destination: allow move if not crushing stuff, otherwise restore previous height
                 sector.floorheight = destHeight;
-                
+
                 if (P_ChangeSector(sector, bCrush)) {
                     sector.floorheight = prevFloorH;
                     P_ChangeSector(sector, bCrush);
@@ -104,7 +104,7 @@ result_e T_MovePlane(
             if (sector.ceilingheight - speed < destHeight) {
                 // Reached destination: allow move if not crushing stuff, otherwise restore previous height
                 sector.ceilingheight = destHeight;
-                
+
                 if (P_ChangeSector(sector, bCrush)) {
                     sector.ceilingheight = prevCeilH;
                     P_ChangeSector(sector, bCrush);
@@ -115,7 +115,7 @@ result_e T_MovePlane(
             else {
                 // Move ongoing: allow move if not crushing stuff, otherwise restore previous height
                 sector.ceilingheight -= speed;
-                
+
                 if (P_ChangeSector(sector, bCrush)) {
                     // For ceilings moving down allow the move if the crush flag is set, otherwise we need to restore
                     if (!bCrush) {
@@ -130,11 +130,11 @@ result_e T_MovePlane(
         else if (direction == 1) {
             // Moving a ceiling up
             const fixed_t prevCeilH = sector.ceilingheight;
-            
+
             if (speed + sector.ceilingheight > destHeight) {
                 // Reached destination: allow move if not crushing stuff, otherwise restore previous height
                 sector.ceilingheight = destHeight;
-                
+
                 if (P_ChangeSector(sector, bCrush)) {
                     sector.ceilingheight = prevCeilH;
                     P_ChangeSector(sector, bCrush);
@@ -249,7 +249,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
                 floor.speed = FLOORSPEED;
                 floor.floordestheight = P_FindLowestCeilingSurrounding(sector);
                 floor.floordestheight = std::min(floor.floordestheight, sector.ceilingheight);      // Don't go above the current ceiling
-                
+
                 if (floorType == raiseFloorCrush) {
                     floor.floordestheight -= 8 * FRACUNIT;      // Leave a small gap for crushing floors (in case player gets caught in it)
                 }
@@ -282,7 +282,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
                 floor.direction = 1;
                 floor.sector = &sector;
                 floor.speed = FLOORSPEED;
-                
+
                 // Raise the floor by the height of the lowest surrounding lower texture
                 fixed_t minLowerTexH = INT32_MAX;
 
@@ -319,7 +319,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
                 for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
                     if (!twoSided(sectorIdx, lineIdx))
                         continue;
-                    
+
                     side_t& side1 = *getSide(sectorIdx, lineIdx, 0);
                     const int32_t side1SectorIdx = (int32_t)(side1.sector - gpSectors);
                     sector_t& oppositeSector = *getSector(sectorIdx, lineIdx, (side1SectorIdx == sectorIdx) ? 1 : 0);
@@ -385,7 +385,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
         //  (1) The front sector of the line is the same sector as the previous step sector.
         //  (2) The back sector of the line has the same floor texture as the stairs.
         const int32_t stairFloorPic = firstSector.floorpic;
-        
+
         while (true) {
             bool bDidAStep = false;
             sector_t& sector = gpSectors[sectorIdx];

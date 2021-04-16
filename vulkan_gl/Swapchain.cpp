@@ -79,7 +79,7 @@ bool Swapchain::init(
     // Choose swapchain length, present mode and swap extent
     chooseSwapchainLength(bTripleBuffer);
     choosePresentMode(bTripleBuffer);
-    
+
     if (!chooseSwapExtent()) {
         ASSERT_FAIL("Failed to choose a swap extent for the swapchain!");
         return false;
@@ -108,7 +108,7 @@ void Swapchain::destroy(const bool bForceIfInvalid) noexcept {
     // Only destroy if we need to
     if ((!mbIsValid) && (!bForceIfInvalid))
         return;
-    
+
     // Preconditions
     ASSERT_LOG(((!mpDevice) || mpDevice->getVkDevice()), "Parent device must still be valid if defined!");
 
@@ -169,7 +169,7 @@ bool Swapchain::presentAcquiredImage(const Semaphore& renderFinishedSemaphore) n
     const VkSemaphore waitSemaphores[] = { renderFinishedSemaphore.getVkSemaphore() };
     const VkSwapchainKHR swapChains[] = { mVkSwapchain };
     const uint32_t swapChainImageIndexes[] = { mAcquiredImageIdx };
-    
+
     VkPresentInfoKHR presentInfo = {};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = C_ARRAY_SIZE(waitSemaphores);
@@ -223,7 +223,7 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
     // Therefore the app should wait on the 'imageReadySemaphore' synchronization primitive.
     const VkFuncs& vkFuncs = mpDevice->getVkFuncs();
     mAcquiredImageIdx = INVALID_IMAGE_IDX;
-    
+
     const VkResult result = vkFuncs.vkAcquireNextImageKHR(
         mpDevice->getVkDevice(),
         mVkSwapchain,
@@ -232,7 +232,7 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
         VK_NULL_HANDLE,
         &mAcquiredImageIdx
     );
-    
+
     // Note: a return code of >= 0 means a 'success' result of some sort
     if ((result >= 0) && (mAcquiredImageIdx < mLength)) {
         ASSERT(mAcquiredImageIdx < mLength);
@@ -288,7 +288,7 @@ bool Swapchain::chooseSwapExtent() noexcept {
     // Get the current size of the window
     SDL_Window* const pSdlWindow = mpDevice->getWindowSurface()->getSdlWindow();
     ASSERT(pSdlWindow);
-    
+
     int windowW = {};
     int windowH = {};
     SDL_Vulkan_GetDrawableSize(pSdlWindow, &windowW, &windowH);

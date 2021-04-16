@@ -71,7 +71,7 @@ bool LogicalDevice::init(const PhysicalDevice& physicalDevice, const WindowSurfa
     mpVulkanInstance = &physicalDevice.getVulkanInstance();
     mpPhysicalDevice = &physicalDevice;
     mpWindowSurface = pWindowSurface;
-    
+
     // Basic device setup steps:
     //
     //  1 - Create the Vulkan device and all of the queues associated with it
@@ -95,7 +95,7 @@ bool LogicalDevice::init(const PhysicalDevice& physicalDevice, const WindowSurfa
 
     if (!mTransferMgr.init(*this))
         return false;
-    
+
     // All went well!
     mbIsValid = true;
     return true;
@@ -115,7 +115,7 @@ void LogicalDevice::destroy(const bool bForceIfInvalid) noexcept {
     // Ensure the device is idle before proceeding.
     // Note that this will also release any retired resources and finish pending transfers.
     waitUntilDeviceIdle();
-    
+
     // Cleanup main objects
     mTransferMgr.destroy();
     mRetirementMgr.destroy();
@@ -233,7 +233,7 @@ void LogicalDevice::waitUntilDeviceIdle() noexcept {
 bool LogicalDevice::createDeviceAndQueues() noexcept {
     // Sanity checks
     ASSERT(mpPhysicalDevice);
-    
+
     // The physical device must have at least 1 valid graphics and transfer queue family
     if (mpPhysicalDevice->getGraphicsQueueFamilyIndexes().empty()) {
         ASSERT_FAIL("Device does not have any valid graphics queues for rendering!");
@@ -323,7 +323,7 @@ bool LogicalDevice::createDeviceAndQueues() noexcept {
         // Enable the portability subset also if available (on MacOS) to identify parts of Vulkan we can't use, get a validation layer error otherwise.
         std::vector<const char*> reqDeviceExts;
         reqDeviceExts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-        
+
         if (mpPhysicalDevice->getExtensions().hasExtension("VK_KHR_portability_subset")) {
             reqDeviceExts.push_back("VK_KHR_portability_subset");
         }

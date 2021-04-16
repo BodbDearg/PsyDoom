@@ -274,7 +274,7 @@ static void parseSectionDefinition(TextIStream& text, ObjFile& out) {
     constexpr uint32_t NUM_KNOWN_SECTION_TYPES = sizeof(KNOWN_SECTION_TYPES) / sizeof(KnownSectionType);
     ObjSectionType sectionType = {};
     bool bFoundSectionType = false;
-    
+
     for (uint32_t i = 0; i < NUM_KNOWN_SECTION_TYPES; ++i) {
         if (line.checkStringAhead(KNOWN_SECTION_TYPES[i].asString)) {
             line.consumeSpaceSeparatedTokenAhead(KNOWN_SECTION_TYPES[i].asString);
@@ -504,7 +504,7 @@ static void parseCodeDirective(TextIStream& text, ObjFile& out) {
     if (!pSection) {
         throw ParseException("Invalid current section number!");
     }
-    
+
     // Get the number of bytes
     TextIStream headerLine = text.readNextLineAsStream();
     headerLine.consumeSpaceSeparatedTokenAhead("2");

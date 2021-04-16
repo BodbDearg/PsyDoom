@@ -14,7 +14,4 @@ add_library(${ASIO_TGT_NAME} ${SOURCE_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
 target_compile_definitions(${ASIO_TGT_NAME} PUBLIC -DASIO_SEPARATE_COMPILATION)
-
-
-
 target_include_directories(${ASIO_TGT_NAME} PUBLIC ${INCLUDE_PATHS})

@@ -238,7 +238,7 @@ int32_t getEpisodeStartMap(const int32_t episodeNum) noexcept {
             case 3: return 25;
         }
     }
-    
+
     return 1;
 }
 

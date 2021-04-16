@@ -58,7 +58,7 @@ bool DiscReader::setTrackNum(int32_t trackNum) noexcept {
     // Success - save the current track number and track!
     mpCurTrack = pTrack;
     mCurTrackIdx = trackNum - 1;
-    
+
     // Seek to where we should be in the track data
     mCurOffset = -1;
 
@@ -110,13 +110,13 @@ bool DiscReader::trackSeekAbs(const int32_t offsetAbs) noexcept {
     // If we are already at this offset then there is nothing we need do
     if (mCurOffset == offsetAbs)
         return true;
-    
+
     // Do the seek and save the result if successful
     const int32_t physicalOffset = dataOffsetToPhysical(offsetAbs);
-    
+
     if (std::fseek((FILE*) mpOpenFile, physicalOffset, SEEK_SET) != 0)
         return false;
-    
+
     mCurOffset = offsetAbs;
     return true;
 }
@@ -141,10 +141,10 @@ bool DiscReader::trackSeekRel(const int32_t offsetRel) noexcept {
 
     // Do the seek and save the result if successful
     const int32_t physicalOffset = dataOffsetToPhysical(newOffset);
-    
+
     if (std::fseek((FILE*) mpOpenFile, physicalOffset, SEEK_SET) != 0)
         return false;
-    
+
     mCurOffset = newOffset;
     return true;
 }
@@ -157,7 +157,7 @@ bool DiscReader::trackSeekRel(const int32_t offsetRel) noexcept {
 bool DiscReader::read(void* const pBuffer, const int32_t numBytes) noexcept {
     ASSERT(pBuffer);
     ASSERT(numBytes >= 0);
-    
+
     // If there is no track open then the read fails
     if (!mpCurTrack) {
         std::memset(pBuffer, 0, (size_t) numBytes);

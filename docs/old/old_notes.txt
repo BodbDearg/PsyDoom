@@ -189,7 +189,7 @@ sector_t (92 bytes):
         020     mobj_t*     soundtarget;
         024     uint32_t    flags;
         028     int32_t     blockbox[4];
-        
+
         // degenmobj_t
         struct {
             038     fixed_t         x;

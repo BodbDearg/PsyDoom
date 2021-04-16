@@ -250,7 +250,7 @@ gameaction_t F1_Ticker() noexcept {
 
     // Check for pause: this allows the user a path to exit back to the main menu if desired
     P_CheckCheats();
-    
+
     if (gbGamePaused)
         return gGameAction;
 
@@ -268,7 +268,7 @@ gameaction_t F1_Ticker() noexcept {
             } else {
                 D_strncpy(gFinIncomingLine, textLine, gFinIncomingLineLen);
             }
-            
+
             // Null terminate the incomming text line and include this character in the length
             gFinIncomingLine[gFinIncomingLineLen] = 0;
             gFinIncomingLineLen++;
@@ -278,7 +278,7 @@ gameaction_t F1_Ticker() noexcept {
         // If all the lines are done and an action button is just pressed then exit the screen
         return ga_exit;
     }
-    
+
     return ga_nothing;
 }
 
@@ -297,12 +297,12 @@ void F1_Drawer() noexcept {
 
     // Show both the incoming and fully displayed text lines
     int32_t ypos = gFinTextYPos;
-    
+
     for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
         I_DrawString(-1, ypos, gFinTextLines[lineIdx]);
         ypos += 14;
     }
-    
+
     I_DrawString(-1, ypos, gFinIncomingLine);
 
     // Not sure why the finale screen would be 'paused'?
@@ -348,7 +348,7 @@ void F2_Start() noexcept {
         gFinTextLines = gDoom2WinText;
         gFinTextYPos = DOOM2_TEXT_YPOS;
     }
-    
+
     // Initialize the cast display
     gCastNum = 0;
     gpCastState = &state;
@@ -356,7 +356,7 @@ void F2_Start() noexcept {
     gbCastDeath = false;
     gCastFrames = 0;
     gCastOnMelee = 0;
-    
+
     // Load sound for the finale
     S_LoadMapSoundAndMusic(Game::getNumMaps() + 1);
 
@@ -417,10 +417,10 @@ gameaction_t F2_Ticker() noexcept {
 
     // Check for pause: this allows the user a path to exit back to the main menu if desired
     P_CheckCheats();
-    
+
     if (gbGamePaused)
         return gGameAction;
-    
+
     // Handle whatever finale stage we are on
     if (gFinaleStage == F_STAGE_TEXT) {
         // Currently popping up text: only advance if time has elapsed and on every 2nd tick
@@ -449,7 +449,7 @@ gameaction_t F2_Ticker() noexcept {
     else if (gFinaleStage == F_STAGE_SCROLLTEXT) {
         // Scrolling the finale text upwards for a bit before the cast call
         gFinTextYPos -= 1;
-        
+
         if (gFinTextYPos < -200) {
             gFinaleStage = F_STAGE_CAST;
         }
@@ -462,7 +462,7 @@ gameaction_t F2_Ticker() noexcept {
 
             // Play enemy death sound if it has it
             const mobjinfo_t& mobjinfo = gMObjInfo[gCastOrder[gCastNum].type];
-            
+
             if (mobjinfo.deathsound != 0) {
                 S_StartSound(nullptr, mobjinfo.deathsound);
             }
@@ -505,7 +505,7 @@ gameaction_t F2_Ticker() noexcept {
                 // If we still have time until the next state then there is nothing more to do
                 if (gCastTics > 0)
                     return ga_nothing;
-                
+
                 // Hacked in logic to play sounds on certain frames of animation
                 sfxenum_t soundId;
 
@@ -577,7 +577,7 @@ gameaction_t F2_Ticker() noexcept {
                 gpCastState = &gStates[mobjinfo.seestate];
                 gCastFrames = 0;
             }
-            
+
             // Update the number of tics to stay in this state.
             // If the state defines no time limit then make up one:
             gCastTics = gpCastState->tics;
@@ -613,7 +613,7 @@ void F2_Drawer() noexcept {
             I_DrawString(-1, ypos, gFinTextLines[lineIdx]);
             ypos += 14;
         }
-        
+
         I_DrawString(-1, ypos, gFinIncomingLine);
     }
     else if (gFinaleStage == F_STAGE_CAST) {
@@ -724,7 +724,7 @@ void F2_Drawer() noexcept {
                     polyPrim.u2 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
                     polyPrim.u3 = spriteTex.texPageCoordX;
                 #endif
-            
+
                 xpos = HALF_SCREEN_W + spriteTex.offsetX - spriteTex.width;
             }
 
@@ -734,7 +734,7 @@ void F2_Drawer() noexcept {
                 xpos,                       spriteTex.height + ypos,
                 spriteTex.width + xpos,     spriteTex.height + ypos
             );
-        
+
             // PsyDoom: corrected UV coordinates to avoid pixel doubling and use 16-bit coords in case of overflow
             #if PSYDOOM_LIMIT_REMOVING
                 polyPrim.v0 = (LibGpuUV) spriteTex.texPageCoordY;

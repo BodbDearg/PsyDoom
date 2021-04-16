@@ -87,7 +87,7 @@ struct CpuInstruction {
     // Get the target address for this instruction if it is a branch type instruction.
     // The instruction must be given it's address in the program in order to calculate this.
     uint32_t getBranchInstTargetAddr(const uint32_t thisInstAddr) const noexcept;
-    
+
     // Get the target address for this instruction if it is a jump with a constant/fixed address target.
     // This CANNOT be used obviously for 'jump to address in register' type instructions.
     uint32_t getFixedJumpInstTargetAddr(const uint32_t thisInstAddr) const noexcept;

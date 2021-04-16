@@ -42,7 +42,7 @@ void PsxPatch::writeToWmdFile(OutputStream& out) const THROWS {
     WmdPsxPatch psxPatch = {};
     psxPatch.numVoices = numVoices;
     psxPatch.firstVoiceIdx = firstVoiceIdx;
-    
+
     psxPatch.endianCorrect();
     out.write(psxPatch);
 }

@@ -186,7 +186,7 @@ void TextIStream::consumeStringAhead(const char* const consumeStr) {
     if (!checkStringAhead(consumeStr)) {
         throw TextStreamException("Unexpected string ahead!");
     }
-    
+
     curOffset += (uint32_t) std::strlen(consumeStr);
 }
 
@@ -212,7 +212,7 @@ void TextIStream::consumeAsciiWhiteSpaceAhead() {
         if (!isWhiteSpaceAsciiChar(peekChar())) {
             break;
         }
-        
+
         readChar();
     }
 }
@@ -224,7 +224,7 @@ uint32_t TextIStream::readDecimalUint() {
         if (!isDecimalDigit(peekChar())) {
             break;
         }
-        
+
         result *= 10;
         result += getDecimalDigitValue(readChar());
     }
@@ -239,7 +239,7 @@ uint32_t TextIStream::readHexUint() {
         if (!isHexDigit(peekChar())) {
             break;
         }
-        
+
         result <<= 4;
         result |= readHexDigit();
     }
@@ -255,7 +255,7 @@ TextIStream TextIStream::readNextLineAsStream() {
     if (isAtEnd()) {
         throw TextStreamException("Unexpected end of data!");
     }
-    
+
     const uint32_t startOffset = curOffset;
 
     while (!isNewLineAsciiChar(str[curOffset])) {

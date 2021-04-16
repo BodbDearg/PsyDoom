@@ -73,7 +73,7 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
 
                 // See if this track is music, if so then set its volume
                 track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
-                
+
                 if (trackStat.sound_class == MUSIC_CLASS) {
                     // Issue a sequencer command to to update the volume levels: change the track command stream temporarily also to do this
                     uint8_t* const pPrevCmdBytes = trackStat.pcur_cmd;

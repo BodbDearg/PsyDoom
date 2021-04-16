@@ -103,7 +103,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         //==================================================================================================================
         case VK_FORMAT_UNDEFINED:
             return false;
-        
+
         //==================================================================================================================
         // Depth/stencil formats
         //==================================================================================================================
@@ -115,7 +115,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_D32_SFLOAT:
         case VK_FORMAT_D32_SFLOAT_S8_UINT:
             return false;
-        
+
         //==================================================================================================================
         // 8 bit formats:
         //==================================================================================================================
@@ -126,7 +126,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_R8_SRGB:
         case VK_FORMAT_R4G4_UNORM_PACK8:    // RG
             return false;
-        
+
         //==================================================================================================================
         // 16 bit formats: 
         //==================================================================================================================
@@ -150,7 +150,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_B5G5R5A1_UNORM_PACK16:
         case VK_FORMAT_A1R5G5B5_UNORM_PACK16:
             return true;
-    
+
         //==================================================================================================================
         // 24 bit formats:
         //==================================================================================================================
@@ -165,7 +165,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_B8G8R8_SINT:
         case VK_FORMAT_B8G8R8_SRGB:
             return false;
-        
+
         //==================================================================================================================
         // 32 bit formats: 
         //==================================================================================================================
@@ -179,7 +179,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_R16G16_SFLOAT:
         case VK_FORMAT_B10G11R11_UFLOAT_PACK32:     // RGB
             return false;
-        
+
         case VK_FORMAT_R8G8B8A8_UNORM:              // RGBA
         case VK_FORMAT_R8G8B8A8_SNORM:
         case VK_FORMAT_R8G8B8A8_UINT:
@@ -204,7 +204,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_A2B10G10R10_UINT_PACK32:
         case VK_FORMAT_A2B10G10R10_SINT_PACK32:
             return true;
-        
+
         //==================================================================================================================
         // 48 bit formats:
         //==================================================================================================================
@@ -214,7 +214,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_R16G16B16_SINT:
         case VK_FORMAT_R16G16B16_SFLOAT:
             return false;
-        
+
         //==================================================================================================================
         // 64 bit formats:
         //==================================================================================================================
@@ -225,14 +225,14 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_R32G32_SINT:
         case VK_FORMAT_R32G32_SFLOAT:
             return false;
-        
+
         case VK_FORMAT_R16G16B16A16_UNORM:          // RGBA
         case VK_FORMAT_R16G16B16A16_SNORM:
         case VK_FORMAT_R16G16B16A16_UINT:
         case VK_FORMAT_R16G16B16A16_SINT:
         case VK_FORMAT_R16G16B16A16_SFLOAT:
             return true;
-        
+
         //==================================================================================================================
         // 96 bit formats:
         //==================================================================================================================
@@ -240,7 +240,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_R32G32B32_SINT:
         case VK_FORMAT_R32G32B32_SFLOAT:
             return false;
-        
+
         //==================================================================================================================
         // 128 bit formats: 
         //==================================================================================================================
@@ -248,12 +248,12 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_R64G64_SINT:
         case VK_FORMAT_R64G64_SFLOAT:
             return false;
-        
+
         case VK_FORMAT_R32G32B32A32_UINT:       // RGBA
         case VK_FORMAT_R32G32B32A32_SINT:
         case VK_FORMAT_R32G32B32A32_SFLOAT:
             return true;
-        
+
         //==================================================================================================================
         // 192 bit formats:
         //==================================================================================================================
@@ -261,7 +261,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_R64G64B64_SINT:
         case VK_FORMAT_R64G64B64_SFLOAT:
             return false;
-        
+
         //==================================================================================================================
         // 256 bit formats: 
         //==================================================================================================================
@@ -269,14 +269,14 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_R64G64B64A64_SINT:
         case VK_FORMAT_R64G64B64A64_SFLOAT:
             return true;
-        
+
         //==================================================================================================================
         // Block compression formats
         //==================================================================================================================
         case VK_FORMAT_BC1_RGB_UNORM_BLOCK:
         case VK_FORMAT_BC1_RGB_SRGB_BLOCK:
             return false;
-        
+
         case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
         case VK_FORMAT_BC1_RGBA_SRGB_BLOCK:
         case VK_FORMAT_BC2_UNORM_BLOCK:
@@ -284,7 +284,7 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_BC3_UNORM_BLOCK:
         case VK_FORMAT_BC3_SRGB_BLOCK:
             return true;
-        
+
         case VK_FORMAT_BC4_UNORM_BLOCK:
         case VK_FORMAT_BC4_SNORM_BLOCK:
         case VK_FORMAT_BC5_UNORM_BLOCK:
@@ -292,11 +292,11 @@ bool hasAlpha(const VkFormat format) noexcept {
         case VK_FORMAT_BC6H_UFLOAT_BLOCK:
         case VK_FORMAT_BC6H_SFLOAT_BLOCK:
             return false;
-        
+
         case VK_FORMAT_BC7_UNORM_BLOCK:
         case VK_FORMAT_BC7_SRGB_BLOCK:
             return true;
-            
+
         //==================================================================================================================
         // Unhandled/unknown formats
         //==================================================================================================================
@@ -465,7 +465,7 @@ bool getMinBlockSizeForFormat(
             minBlockHeight = 4;
             minBlockDepth = 1;
             return true;
-            
+
         //==================================================================================================================
         // Unhandled/unknown formats
         //==================================================================================================================
@@ -538,7 +538,7 @@ uint32_t getNumBitsPerPixelForFormat(const VkFormat format) noexcept {
         //==================================================================================================================
         case VK_FORMAT_UNDEFINED:
             return 0;
-        
+
         //==================================================================================================================
         // Depth/stencil formats
         //==================================================================================================================
@@ -582,7 +582,7 @@ uint32_t getNumBitsPerPixelForFormat(const VkFormat format) noexcept {
         case VK_FORMAT_B5G5R5A1_UNORM_PACK16:
         case VK_FORMAT_A1R5G5B5_UNORM_PACK16:
             return 16;
-    
+
         //==================================================================================================================
         // 24 bit formats:
         //==================================================================================================================
@@ -687,7 +687,7 @@ uint32_t getNumBitsPerPixelForFormat(const VkFormat format) noexcept {
         case VK_FORMAT_R64G64B64_SINT:
         case VK_FORMAT_R64G64B64_SFLOAT:
             return 192;
-        
+
         //==================================================================================================================
         // 256 bit formats: 
         //==================================================================================================================
@@ -695,7 +695,7 @@ uint32_t getNumBitsPerPixelForFormat(const VkFormat format) noexcept {
         case VK_FORMAT_R64G64B64A64_SINT:
         case VK_FORMAT_R64G64B64A64_SFLOAT:
             return 256;
-        
+
         //==================================================================================================================
         // Block compression formats
         //==================================================================================================================
@@ -722,7 +722,7 @@ uint32_t getNumBitsPerPixelForFormat(const VkFormat format) noexcept {
         case VK_FORMAT_BC7_UNORM_BLOCK:
         case VK_FORMAT_BC7_SRGB_BLOCK:
             return 8;
-            
+
         //==================================================================================================================
         // Unhandled/unknown formats
         //==================================================================================================================

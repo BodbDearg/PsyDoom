@@ -47,11 +47,11 @@ int32_t OpenFile(const CdFileId discFile) noexcept {
                 break;
         #endif
     }
-    
+
     if (fileSlotIdx >= MAX_OPEN_FILES) {
         I_Error("OpenFile: Too many open files!");
     }
-    
+
     // Save the opened file and return the opened file slot index
     gOpenPsxCdFiles[fileSlotIdx] = *pOpenedFile;
     return fileSlotIdx;
@@ -100,7 +100,7 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
         {
             constexpr uint32_t WARMUP_READ_MAX_SIZE = 8192;
             uint32_t warmupReadSize = size;
-    
+
             if (size > WARMUP_READ_MAX_SIZE) {
                 warmupReadSize = WARMUP_READ_MAX_SIZE;
             }

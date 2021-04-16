@@ -54,7 +54,7 @@ private:
     Swapchain(Swapchain&& other) = delete;
     Swapchain& operator = (const Swapchain& other) = delete;
     Swapchain& operator = (Swapchain&& other) = delete;
-    
+
     void choosePresentMode(const bool bTripleBuffer) noexcept;
     bool chooseSwapExtent() noexcept;
     void chooseSwapchainLength(const bool bTripleBuffer) noexcept;

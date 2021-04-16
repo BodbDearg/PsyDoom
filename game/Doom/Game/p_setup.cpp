@@ -99,7 +99,7 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     // Sanity check the vertices lump is not too big.
     // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
-    
+
     #if PSYDOOM_LIMIT_REMOVING
         gTmpBuffer.ensureSize(lumpSize);
         std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
@@ -114,7 +114,7 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     // Alloc the runtime vertex array
     gNumVertexes = lumpSize / sizeof(mapvertex_t);
     gpVertexes = (vertex_t*) Z_Malloc(*gpMainMemZone, gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
-    
+
     // Read the WAD vertexes into the temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
@@ -187,7 +187,7 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
         } else {
             pDstSeg->backsector = nullptr;
         }
-        
+
         // Take this opportunity to compute line fineangle if the seg is pointing in the same direction
         if (linedef.vertex1 == pDstSeg->vertex1) {
             linedef.fineangle = pDstSeg->angle >> ANGLETOFINESHIFT;
@@ -224,7 +224,7 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
 
     // Read the map lump containing the subsectors into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
-    
+
     // Process the WAD subsectors and convert them into runtime subsectors
     const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) pTmpBufferBytes;
     subsector_t* pDstSubsec = gpSubsectors;
@@ -385,7 +385,7 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
     // Sanity check the nodes lump is not too big.
     // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
-    
+
     #if PSYDOOM_LIMIT_REMOVING
         gTmpBuffer.ensureSize(lumpSize);
         std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
@@ -694,7 +694,7 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     gBlockmapHeight = blockmapHeader.height;
     gBlockmapOriginX = d_int_to_fixed(blockmapHeader.originx);
     gBlockmapOriginY = d_int_to_fixed(blockmapHeader.originy);
-    
+
     // Alloc and null initialize the list of map objects for each block
     const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(gppBlockLinks[0]);
     gppBlockLinks = (mobj_t**) Z_Malloc(*gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
@@ -717,7 +717,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     // Sanity check the leafs lump is not too big.
     // PsyDoom: if limit removing, just ensure the buffer is big enough instead - any size of data is allowed.
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
-    
+
     #if PSYDOOM_LIMIT_REMOVING
         gTmpBuffer.ensureSize(lumpSize);
         std::byte* const pTmpBufferBytes = gTmpBuffer.bytes();
@@ -745,7 +745,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
         leaf.numedges = Endian::littleToHost(leaf.numedges);
         pLumpByte += sizeof(mapleaf_t);
         ++numLeafs;
-        
+
         // Skip past the leaf edges and include them in the leaf edge count
         pLumpByte += leaf.numedges * sizeof(mapleafedge_t);
         totalLeafEdges += leaf.numedges;
@@ -757,7 +757,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
 
     // Allocate room for all the leaf edges
     gpLeafEdges = (leafedge_t*) Z_Malloc(*gpMainMemZone, totalLeafEdges * sizeof(leafedge_t), PU_LEVEL, nullptr);
-    
+
     // Convert WAD leaf edges to runtime leaf edges and link them in with other map data structures
     gTotalNumLeafEdges = 0;
 
@@ -818,7 +818,7 @@ static void P_GroupLines() noexcept {
     // Associate subsectors with their sectors
     {
         subsector_t* pSubsec = gpSubsectors;
-        
+
         for (int32_t subsecIdx = 0; subsecIdx < gNumSubsectors; ++subsecIdx) {
             const seg_t& seg = gpSegs[pSubsec->firstseg];
             pSubsec->sector = seg.sidedef->sector;
@@ -840,7 +840,7 @@ static void P_GroupLines() noexcept {
                 ++pLine->backsector->linecount;
                 ++totalLineRefs;
             }
-            
+
             ++pLine;
         }
     }
@@ -961,7 +961,7 @@ static void P_Init() noexcept {
             }
         }
     }
-    
+
     // Lock the texture page (2nd page) used exclusively by flat textures.
     // Also force the fill location in VRAM to the 3rd page after we add flats.
     //
@@ -993,7 +993,7 @@ static void P_Init() noexcept {
             W_CacheLumpNum(skyTex.lumpNum, PU_ANIMATION, true);
             gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
             gUpdateFireSkyFunc = P_UpdateFireSky;
-            
+
             // This gets the fire going, so it doesn't take a while to creep up when the map is started.
             // Do a number of fire update rounds before the player even enters the map:
             for (int32_t i = 0; i < 64; ++i) {
@@ -1032,7 +1032,7 @@ static void P_Init() noexcept {
             if (pSide->toptexture == -1) {
                 pSide->toptexture = 0;
             }
-            
+
             if (pSide->midtexture == -1) {
                 pSide->midtexture = 0;
             }
@@ -1042,7 +1042,7 @@ static void P_Init() noexcept {
             }
         }
     }
-    
+
     // Some more hardcoded limits and memory arrangement for textures, this time for wall textures.
     // Lock down the texture pages used by wall textures and set the cache to start filling immediately after that (on the 6th page).
     //
@@ -1054,7 +1054,7 @@ static void P_Init() noexcept {
     gTCacheFillCellX = 0;
     gTCacheFillCellY = 0;
     gTCacheFillRowCellH = 0;
-    
+
     // Clear out any floor or wall textures we had temporarily in RAM from the above caching.
     //
     // Small optimization opportunity: this is slightly wasteful in that if we have animated walls/floors, then they will be evicted by this
@@ -1079,7 +1079,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         gLockedTexPagesMask &= 1;
         Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
     }
-    
+
     I_PurgeTexCache();
     Z_CheckHeap(*gpMainMemZone);
     M_ClearRandom();
@@ -1124,7 +1124,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     gbLoadingFinalDoomMap = (!gCdMapTbl[(int32_t) mapWadFile_doom].startSector);
 
     const CdFileId mapWadFile = (gbLoadingFinalDoomMap) ? mapWadFile_finalDoom : mapWadFile_doom;
-    
+
     // Open the map wad
     void* const pMapWadFileData = W_OpenMapWad(mapWadFile);
 
@@ -1140,10 +1140,10 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         mapLumpName[3] = '0' + digit1;
         mapLumpName[4] = '0' + digit2;
     }
-    
+
     // Get the lump index for the map start lump
     const uint32_t mapStartLump = W_MapCheckNumForName(mapLumpName);
-    
+
     if (mapStartLump == -1) {
         I_Error("P_SetupLevel: %s not found", mapLumpName);
     }
@@ -1166,7 +1166,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     // Load and spawn map things. Also initialize the next deathmatch start.
     gpDeathmatchP = &gDeathmatchStarts[0];
     P_LoadThings(mapStartLump + ML_THINGS);
-    
+
     // Spawn special thinkers such as light flashes etc. and free up the loaded WAD data
     P_SpawnSpecials();
     Z_Free2(*gpMainMemZone, pMapWadFileData);
@@ -1206,7 +1206,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     // Spawn the player(s)
     if (gNetGame != gt_single) {
         I_NetHandshake();
-        
+
         // Randomly spawn players in different locations - this logic is a little strange.
         // We spawn all players in the same location but immediately respawn and remove the old 'mobj_t' to get the random starts.
         for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
@@ -1256,7 +1256,7 @@ static void P_LoadBlocks(const CdFileId file) noexcept {
         if (blockHeader.id != ZONEID) {
             I_Error("P_LoadBlocks: bad zoneid!");
         }
-            
+
         if (blockHeader.lumpNum >= gNumLumps) {
             I_Error("P_LoadBlocks: bad lumpnum!");
         }
@@ -1314,7 +1314,7 @@ static void P_LoadBlocks(const CdFileId file) noexcept {
         // Save whether the lump is compressed or not
         gpbIsUncompressedLump[blockHeader.lumpNum] = blockHeader.isUncompressed;
     }
-    
+
     // After all that is done close up the file and check the heap is still in a good state
     CloseFile(openFileIdx);
     Z_CheckHeap(*gpMainMemZone);
@@ -1335,7 +1335,7 @@ static void P_CacheSprite(const spritedef_t& sprdef) noexcept {
         // Cache all directions for the frame
         for (int32_t dirIdx = 0; dirIdx < 8; ++dirIdx) {
             const int32_t lumpNum = spriteFrame.lump[dirIdx];
-            
+
             if ((lumpNum < gFirstSpriteLumpNum) || (lumpNum > gLastSpriteLumpNum)) {
                 I_Error("CacheSprite: invalid sprite lump %d", lumpNum);
             }
@@ -1375,7 +1375,7 @@ static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
                 I_CacheTex(tex);
             }
         }
-        
+
         if (pSide->midtexture != -1) {
             texture_t& tex = gpTextures[pSide->midtexture];
 
@@ -1383,7 +1383,7 @@ static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
                 I_CacheTex(tex);
             }
         }
-        
+
         if (pSide->bottomtexture != -1) {
             texture_t& tex = gpTextures[pSide->bottomtexture];
 

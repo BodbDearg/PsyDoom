@@ -79,7 +79,7 @@ void Fence::destroy(const bool bForceIfInvalid) noexcept {
     // Only destroy if we need to
     if ((!mbIsValid) && (!bForceIfInvalid))
         return;
-    
+
     // Preconditions
     ASSERT_LOG((!mpDevice) || mpDevice->getVkDevice(), "Parent device must still be valid if defined!");
 

@@ -266,17 +266,17 @@ void I_PSXInit() noexcept {
     LIBGPU_SetDefDrawEnv(gDrawEnvs[0], 0, 0, 256, 240);
     gDrawEnvs[0].isbg = true;
     gDrawEnvs[0].dtd = false;
-    
+
     LIBGPU_SetDefDrawEnv(gDrawEnvs[1], 256, 0, 256, 240);
     gDrawEnvs[1].isbg = true;
     gDrawEnvs[1].dtd = false;
 
     LIBGPU_SetDefDispEnv(gDispEnvs[0], 256, 0, 256, 240);
     LIBGPU_SetDefDispEnv(gDispEnvs[1], 0, 0, 256, 240);
-    
+
     // Start off presenting this framebuffer
     gCurDispBufferIdx = 0;
-    
+
     // Not sure why interrupts were being disabled and then immediately re-enabled, perhaps to flush out some state?
     LIBAPI_EnterCriticalSection();
     LIBAPI_ExitCriticalSection();
@@ -291,10 +291,10 @@ void I_PSXInit() noexcept {
         //  (4) Set data transmission rate (bits per second)
         //
         LIBCOMB_AddCOMB();
-    
+
         gSioReadDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOER, EvMdNOINTR, nullptr);
         LIBAPI_EnableEvent(gSioReadDoneEvent);
-        
+
         gSioWriteDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOEW, EvMdNOINTR, nullptr);
         LIBAPI_EnableEvent(gSioWriteDoneEvent);
 
@@ -303,7 +303,7 @@ void I_PSXInit() noexcept {
 
         LIBCOMB_CombSetBPS(38400);
     #endif
-    
+
     // Clear both draw buffers by swapping twice (clears on swap)
     I_DrawPresent();
     I_DrawPresent();
@@ -349,7 +349,7 @@ void I_PSXInit() noexcept {
 
         // Load the debug font to VRAM
         LIBGPU_FntLoad(960, 256);
-    
+
         // Open a print stream for debug printing and make it current
         const int32_t printStreamId = LIBGPU_FntOpen(0, 0, 256, 200, false, 256);
         LIBGPU_SetDumpFnt(printStreamId);
@@ -427,19 +427,19 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     const int16_t patchH = Endian::littleToHost(patch.height);
     tex.width = patchW;
     tex.height = patchH;
-    
+
     if (patchW + 15 >= 0) {
         tex.width16 = (patchW + 15) / 16;
     } else {
         tex.width16 = (patchW + 30) / 16;   // Not sure why texture sizes would be negative? What does that mean?
     }
-    
+
     if (patchH + 15 >= 0) {
         tex.height16 = (patchH + 15) / 16;
     } else {
         tex.height16 = (patchH + 30) / 16;  // Not sure why texture sizes would be negative? What does that mean?
     }
-    
+
     tex.texPageId = 0;
     tex.lumpNum = (uint16_t) lumpNum;
     I_CacheTex(tex);
@@ -614,7 +614,7 @@ void I_DrawPresent() noexcept {
     #else
         const int32_t demoTickVBlanks = VBLANKS_PER_TIC;
     #endif
-    
+
     // Continously poll and wait until the required number of vblanks have elapsed before continuing
     while (true) {
         // PsyDoom: use 'I_GetTotalVBlanks' because it can adjust time in networked games
@@ -642,7 +642,7 @@ void I_DrawPresent() noexcept {
 
         gTotalVBlanks = curVBlanks;
         gElapsedVBlanks = elapsedVBlanks;
-        
+
         // The original code spun in this loop to limit the framerate to 30 FPS (2 vblanks)
         if (gElapsedVBlanks >= 2)
             break;
@@ -724,7 +724,7 @@ void I_CacheTex(texture_t& tex) noexcept {
             gTCacheFillCellX = 0;
             gTCacheFillRowCellH = 0;
         }
-        
+
         // Move onto another page in the texture cache if this page can't accomodate the texture.
         // Find one that is not locked and which is available for modification.
         if (gTCacheFillCellY + tex.height16 > TCACHE_CELLS_Y) {
@@ -765,7 +765,7 @@ void I_CacheTex(texture_t& tex) noexcept {
         {
             // Iterate through all the cells this texture would occupy
             texture_t** pCacheEntry = pTexStartCacheCell;
-            
+
             for (int32_t y = 0; y < tex.height16; ++y) {
                 for (int32_t x = 0; x < tex.width16; ++x) {
                     // Check to see if this cell is empty and move past it.
@@ -842,7 +842,7 @@ void I_CacheTex(texture_t& tex) noexcept {
     {
         const uint16_t tpageU = TEX_PAGE_VRAM_TEXCOORDS[gTCacheFillPage][0];
         const uint16_t tpageV = TEX_PAGE_VRAM_TEXCOORDS[gTCacheFillPage][1];
-        
+
         RECT dstVramRect;
         LIBGPU_setRECT(
             dstVramRect,
@@ -858,7 +858,7 @@ void I_CacheTex(texture_t& tex) noexcept {
     // Save the textures page coordinate
     tex.texPageCoordX = (uint8_t)(gTCacheFillCellX * TCACHE_CELL_SIZE);
     tex.texPageCoordY = (uint8_t)(gTCacheFillCellY * TCACHE_CELL_SIZE);
-    
+
     // Get and save the texture page id.
     tex.texPageId = LIBGPU_GetTPage(
         1,                                                                  // Format 1 = 8 bpp (indexed)
@@ -889,7 +889,7 @@ void I_RemoveTexCacheEntry(texture_t& tex) noexcept {
     // Wipe the texture page id used and clear any cells the texture occupies
     tex.texPageId = 0;
     texture_t** pCacheEntry = tex.ppTexCacheEntries;
-    
+
     for (int32_t y = 0; y < tex.height16; ++y) {
         for (int32_t x = 0; x < tex.width16; ++x) {
             *pCacheEntry = nullptr;
@@ -958,7 +958,7 @@ void I_PurgeTexCache() noexcept {
     // If all the pages are locked for some reason this code would loop forever, check for that situation first.
     const uint32_t lockedTPages = gLockedTexPagesMask;
     gTCacheFillPage = 0;
-    
+
     #if PSYDOOM_MODS
         if ((lockedTPages & ALL_TPAGES_MASK) != ALL_TPAGES_MASK) {
     #endif
@@ -1044,7 +1044,7 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
     for (int32_t entryIdx = 0; entryIdx < TCACHE_CELLS_X * TCACHE_CELLS_Y; ++entryIdx, ++pCacheEntry) {
         // Skip past this texture cache cell if there's no texture occupying it
         const texture_t* pTex = *pCacheEntry;
-        
+
         if (!pTex)
             continue;
 
@@ -1058,7 +1058,7 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
 
         LIBGPU_SetLineF2(linePrim);
         LIBGPU_setRGB0(linePrim, 255, 0, 0);
-        
+
         // Figure out the y position and height for the texture cache entry.
         // Have to rescale in using a 24.8 fixed point format because the screen is 240 pixels high, and the texture cache is 256 pixels high.
         // I'm not sure why there is negative checks here however, texcoords are never negative?
@@ -1295,7 +1295,7 @@ bool I_NetUpdate() noexcept {
     // Ideally it should be sitting in the packet queue ready to go, a full frame before when we need it.
     // We'll tolerate a certain amount of delay, after which the other peer must start moving it's clock forward.
     typedef std::chrono::system_clock::time_point time_point_t;
-    
+
     NetPacket_Tick inPkt;
     time_point_t inPktRecvTime;
     Network::recvTickPacket(inPkt, inPktRecvTime);
@@ -1415,7 +1415,7 @@ int32_t I_GetTotalVBlanks() noexcept {
     typedef std::chrono::steady_clock::duration                 duration_t;
     typedef std::chrono::duration<int64_t, std::ratio<1, 50>>   tick_50hz_t;
     typedef std::chrono::duration<int64_t, std::ratio<1, 60>>   tick_60hz_t;
-    
+
     const time_point_t now = std::chrono::steady_clock::now();
     const duration_t timeSinceAppStart = now - gAppStartTime;
     const duration_t timeAdjustMs = std::chrono::milliseconds((gNetGame != gt_single) ? gNetTimeAdjustMs : 0);

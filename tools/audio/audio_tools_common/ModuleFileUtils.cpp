@@ -18,7 +18,7 @@ using namespace AudioTools;
 bool ModuleFileUtils::readJsonFile(const char* const jsonFilePath, Module& moduleOut, std::string& errorMsgOut) noexcept {
     // Read the input json file
     const FileData fileData = FileUtils::getContentsOfFile(jsonFilePath, 8, std::byte(0));
-    
+
     if (!fileData.bytes) {
         errorMsgOut = "Could not read the .json file '";
         errorMsgOut += jsonFilePath;
@@ -35,7 +35,7 @@ bool ModuleFileUtils::readJsonFile(const char* const jsonFilePath, Module& modul
         errorMsgOut += "'! File may not be valid JSON.";
         return false;
     }
-    
+
     // Try to read the module from the json
     bool bReadModuleOk = false;
 
@@ -68,7 +68,7 @@ bool ModuleFileUtils::writeJsonFile(const char* const jsonFilePath, const Module
 
     // Write the json to the given file
     std::FILE* const pJsonFile = std::fopen(jsonFilePath, "w");
-    
+
     if (!pJsonFile) {
         errorMsgOut = "Could not open the .json file '";
         errorMsgOut += jsonFilePath;

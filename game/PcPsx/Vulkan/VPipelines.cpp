@@ -248,7 +248,7 @@ static void initDescriptorSetLayouts(vgl::LogicalDevice& device) noexcept {
         bindings[0].descriptorCount = 1;
         bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
         bindings[0].pImmutableSamplers = &vkSampler;
-        
+
         bindings[1].binding = 1;
         bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         bindings[1].descriptorCount = 1;
@@ -577,7 +577,7 @@ void initPipelines(
     initDrawPipeline(VPipelineType::World_SpriteAdditive, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_additive, gDepthState_disabled, false, false);
     initDrawPipeline(VPipelineType::World_SpriteSubtractive, mainRPath, gShaders_world, gInputAS_triList, gRasterState_noCull, gBlendState_subtractive, gDepthState_disabled, false, false);
     initDrawPipeline(VPipelineType::World_Sky, mainRPath, gShaders_sky, gInputAS_triList, gRasterState_backFaceCull, gBlendState_noBlend, gDepthState_disabled, true, true);
-    
+
     // The pipeline to resolve MSAA: only bother creating this if we are doing MSAA.
     // Specialize the shader to the number of samples also, so that loops can be unrolled.
     if (numSamples > 1) {

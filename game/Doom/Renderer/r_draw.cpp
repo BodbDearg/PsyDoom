@@ -45,20 +45,20 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     #endif
 
     leaf_t& leaf1 = pLeafs[0];
-    
+
     // Cache the entire leaf for the subsector to the scratchpad.
     // Also transform any leaf vertices that were not yet transformed up until this point.
     {
         const leafedge_t* pSrcEdge = gpLeafEdges + subsec.firstLeafEdge;
         leafedge_t* pDstEdge = leaf1.edges;
-        
+
         for (int32_t edgeIdx = 0; edgeIdx < subsec.numLeafEdges; ++edgeIdx, ++pSrcEdge, ++pDstEdge) {
             // Cache the leaf edge
             vertex_t& vert = *pSrcEdge->vertex;
-            
+
             pDstEdge->vertex = &vert;
             pDstEdge->seg = pSrcEdge->seg;
-            
+
             // Transform this leaf edge's vertexes if they need to be transformed
             if (vert.frameUpdated != gNumFramesDrawn) {
                 const SVECTOR viewToPt = {
@@ -66,35 +66,35 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
                     0,
                     (int16_t) d_fixed_to_int(vert.y - gViewY)
                 };
-                
+
                 VECTOR viewVec;
                 int32_t rotFlags;
                 LIBGTE_RotTrans(viewToPt, viewVec, rotFlags);
-                
+
                 vert.viewx = viewVec.vx;
                 vert.viewy = viewVec.vz;
-                
+
                 if (viewVec.vz > 3) {
                     vert.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
                     vert.screenx = d_fixed_to_int(vert.scale * vert.viewx) + HALF_SCREEN_W;
                 }
-                
+
                 vert.frameUpdated = gNumFramesDrawn;
             }
         }
-        
+
         leaf1.numEdges = subsec.numLeafEdges;
     }
-    
+
     // Begin the process of clipping the leaf.
     // Ping pong between the two leaf buffers for input and output..
     uint32_t curLeafIdx = 0;
     gNumNewClipVerts = 0;
-    
+
     // Clip the leaf against the front plane if required
     {
         leafedge_t* pEdge = leaf1.edges;
-        
+
         for (int32_t edgeIdx = 0; edgeIdx < subsec.numLeafEdges; ++edgeIdx, ++pEdge) {
             if (pEdge->vertex->viewy <= NEAR_CLIP_DIST + 1) {
                 R_FrontZClip(pLeafs[curLeafIdx], pLeafs[curLeafIdx ^ 1]);
@@ -103,38 +103,38 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
             }
         }
     }
-    
+
     // Check to see what side of the left view frustrum plane the leaf's points are on.
     // Clip the leaf if required, or discard if all the points are offscreen.
     const int32_t leftPlaneSide = R_CheckLeafSide(false, pLeafs[curLeafIdx]);
-    
+
     if (leftPlaneSide < 0)
         return;
-    
+
     if (leftPlaneSide > 0) {
         const int32_t numOutputEdges = R_LeftEdgeClip(pLeafs[curLeafIdx], pLeafs[curLeafIdx ^ 1]);
         curLeafIdx ^= 1;
-        
+
         if (numOutputEdges < 3)     // If there is not a triangle left then discard the subsector
             return;
     }
-    
+
     // Check to see what side of the right view frustrum plane the leaf's points are on.
     // Clip the leaf if required, or discard if all the points are offscreen.
     const int32_t rightPlaneSide = R_CheckLeafSide(true, pLeafs[curLeafIdx]);
-    
+
     if (rightPlaneSide < 0)
         return;
-    
+
     // Clip the leaf against the right view frustrum plane if required
     if (rightPlaneSide > 0) {
         const int32_t numOutputEdges = R_RightEdgeClip(pLeafs[curLeafIdx], pLeafs[curLeafIdx ^ 1]);
         curLeafIdx ^= 1;
-        
+
         if (numOutputEdges < 3)     // If there is not a triangle left then discard the subsector
             return;
     }
-    
+
     // Terminate the list of leaf edges by putting the first edge past the end of the list.
     // This allows the renderer to implicitly wraparound to the beginning of the list when accessing 1 past the end.
     // This is useful for when working with edges as it saves checks!
@@ -146,43 +146,43 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     #if PSYDOOM_LIMIT_REMOVING
         if ((subsec.sector->ceilingpic == -1) && Config::gbSkyLeakFix) {
             leafedge_t* pEdge = drawleaf.edges;
-        
+
             for (int32_t edgeIdx = 0; edgeIdx < drawleaf.numEdges; ++edgeIdx, ++pEdge) {
                 seg_t* const pSeg = pEdge->seg;
-                
+
                 if (pSeg) {
                     R_DrawSkySegWalls(subsec, *pEdge);
                 }
             }
         }
     #endif
-    
+
     // Draw the walls for all visible edges in the leaf
     {
         leafedge_t* pEdge = drawleaf.edges;
-        
+
         for (int32_t edgeIdx = 0; edgeIdx < drawleaf.numEdges; ++edgeIdx, ++pEdge) {
             seg_t* const pSeg = pEdge->seg;
-            
+
             // Only draw walls for this leaf edge if its seg has visible columns
             if (pSeg && (pSeg->flags & SGF_VISIBLE_COLS)) {
                 R_DrawWalls(*pEdge);
             }
         }
     }
-    
+
     // Draw the floor if above it
     sector_t& drawsec = *gpCurDrawSector;
-    
+
     if (gViewZ > drawsec.floorheight) {
         R_DrawSubsectorFlat(drawleaf, false);
     }
-    
+
     // Draw the ceiling if below it and it is not a sky ceiling
     if ((drawsec.ceilingpic != -1) && (gViewZ < drawsec.ceilingheight)) {
         R_DrawSubsectorFlat(drawleaf, true);
     }
-    
+
     // Draw all sprites in the subsector
     R_DrawSubsectorSprites(subsec);
 }
@@ -196,18 +196,18 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
     // This might have been done to work around a numerical overflow when computing the vertex 'screenY' value in 'R_DrawFlatSpans',
     // which PsyDoom now fixes. Without PsyDoom's fix the original issue is greatly reduced if the clipping distance here is increased...
     constexpr int32_t CLIP_DIST = NEAR_CLIP_DIST * 2;
-    
+
     // Run through all the source edges in the given leaf and see if each edge needs to be clipped, skipped or stored as-is
     const leafedge_t* pSrcEdge = inLeaf.edges;
     const int32_t numSrcEdges = inLeaf.numEdges;
-    
+
     leafedge_t* pDstEdge = outLeaf.edges;
     int32_t numDstEdges = 0;
-    
+
     for (int32_t srcEdgeIdx = 0; srcEdgeIdx < numSrcEdges; ++srcEdgeIdx, ++pSrcEdge) {
         // Grab the next edge after this and wraparound if required
         const leafedge_t* pNextSrcEdge;
-        
+
         if (srcEdgeIdx < numSrcEdges - 1) {
             pNextSrcEdge = pSrcEdge + 1;
         } else {
@@ -217,10 +217,10 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         // Get the 2 points in this edge and their signed distance to the clipping plane
         const vertex_t& srcVert1 = *pSrcEdge->vertex;
         const vertex_t& srcVert2 = *pNextSrcEdge->vertex;
-        
+
         const int32_t planeDist1 = CLIP_DIST - srcVert1.viewy;
         const int32_t planeDist2 = CLIP_DIST - srcVert2.viewy;
-        
+
         // See if we need to clip or not.
         // Generate a new edge and vertex if required.
         if (planeDist1 == 0) {
@@ -234,30 +234,30 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
                 pDstEdge->seg = pSrcEdge->seg;
                 ++numDstEdges;
                 ++pDstEdge;
-                
+
                 if (numDstEdges > MAX_LEAF_EDGES) {
                     I_Error("FrontZClip: Point Overflow");
                 }
             }
-            
+
             // Rare case: if the 2nd point is exactly on the plane then do not clip, will emit it's edge in the next iteration
             if (planeDist2 == 0)
                 continue;
-            
+
             // If both points are on the same side of the clipping plane then we do not clip
             if ((planeDist1 < 0) == (planeDist2 < 0))
                 continue;
-            
+
             // Clipping required: will make a new vertex because of the clipping operation:
             vertex_t& newVert = gNewClipVerts[gNumNewClipVerts];
             gNumNewClipVerts++;
-            
+
             if (gNumNewClipVerts >= MAX_NEW_CLIP_VERTS) {
                 // This check seems like it was slightly incorrect - should have been done BEFORE the vertex count increment perhaps?
                 // With this code it can trigger if you are at the maximum amount, but not exceeding the max...
                 I_Error("FrontZClip: exceeded max new vertexes\n");
             }
-            
+
             // Compute the intersection time of the edge against the plane.
             // Use the same method described in more detail in 'R_CheckBBox':
             fixed_t intersectT;
@@ -286,7 +286,7 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
             // Re-do perspective projection to compute screen x and scale for the vertex.
             // PsyDoom: fix an occasional overflow here by using 64-bit arithmetic.
             newVert.scale = (HALF_SCREEN_W * FRACUNIT) / newVert.viewy;
-            
+
             #if PSYDOOM_MODS
                 newVert.screenx = (int32_t) d_rshift<FRACBITS>((int64_t) newVert.viewx * newVert.scale) + HALF_SCREEN_W;
             #else
@@ -304,16 +304,16 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
                 pDstEdge->seg = nullptr;    // New edge will run along the clip plane, this is not associated with any seg
             }
         }
-        
+
         // If we get to here then we stored an edge, move along to the next edge
         ++numDstEdges;
         ++pDstEdge;
-        
+
         if (numDstEdges > MAX_LEAF_EDGES) {
             I_Error("FrontZClip: Point Overflow");
         }
     }
-    
+
     // Before we finish up, save the new number of edges after clipping
     outLeaf.numEdges = numDstEdges;
 }
@@ -331,7 +331,7 @@ int32_t R_CheckLeafSide(const bool bRightViewPlane, const leaf_t& leaf) noexcept
     // Loop vars for iterating through the leaf
     const leafedge_t* pLeafEdge = leaf.edges;
     const int32_t numLeafEdges = leaf.numEdges;
-    
+
     // Store whether each point is on the inside or outside of the leaf in scratchpad memory.
     // PsyDoom: use global memory instead, can hold a lot more! Also use normal bool.
     #if PSYDOOM_MODS
@@ -345,12 +345,12 @@ int32_t R_CheckLeafSide(const bool bRightViewPlane, const leaf_t& leaf) noexcept
     // Track how many points are on the inside or outside of the plane here.
     // For each point on the inside, increment - otherwise decrement.
     int32_t insideOutsideCount = 0;
-    
+
     // See which plane we are checking against, left or right view frustrum plane
     if (!bRightViewPlane) {
         for (int32_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx, ++pLeafEdge, ++pbPointOnOutside) {
             vertex_t& vert = *pLeafEdge->vertex;
-            
+
             if (-vert.viewx > vert.viewy) {
                 *pbPointOnOutside = true;
                 --insideOutsideCount;
@@ -362,7 +362,7 @@ int32_t R_CheckLeafSide(const bool bRightViewPlane, const leaf_t& leaf) noexcept
     } else {
         for (int32_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx, ++pLeafEdge, ++pbPointOnOutside) {
             vertex_t& vert = *pLeafEdge->vertex;
-            
+
             if (vert.viewx > vert.viewy) {
                 *pbPointOnOutside = true;
                 --insideOutsideCount;
@@ -372,12 +372,12 @@ int32_t R_CheckLeafSide(const bool bRightViewPlane, const leaf_t& leaf) noexcept
             }
         }
     }
-    
+
     // Terminate the list of whether each leaf point is on the front side of the plane or not by duplicating
     // the first entry in the list at the end. This allows the renderer to wraparound automatically to the
     // beginning of the list when accessing 1 past the end. This saves on checks when working with edges!
     *pbPointOnOutside = pbPointsOnOutside[0];
-    
+
     // Return what the renderer should do with the leaf
     if (insideOutsideCount == numLeafEdges) {
         // All points are on the inside, no clipping required
@@ -514,7 +514,7 @@ int32_t R_RightEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
     #else
         const bool32_t* pbPointOnOutside = (const bool32_t*) LIBETC_getScratchAddr(0);
     #endif
-    
+
     // Run through all the source edges in the given leaf and see if each edge needs to be clipped, skipped or stored as-is
     const leafedge_t* pSrcEdge = inLeaf.edges;
     const int32_t numSrcEdges = inLeaf.numEdges;
@@ -538,7 +538,7 @@ int32_t R_RightEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         // If both points are on the same side of the clipping plane then we do not clip
         if (bP1Inside == bP2Inside)
             continue;
-        
+
         // Clipping required: grab the next edge and the vertex to output to
         const leafedge_t* pNextSrcEdge;
 

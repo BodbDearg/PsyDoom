@@ -98,7 +98,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
         LIBGPU_SetTexWindow(texWinPrim, texWinRect);
         I_AddPrim(texWinPrim);
     }
-    
+
     // Get Z position of the plane (height) in viewspace
     fixed_t planeZ;
 
@@ -251,7 +251,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
                 #else
                     fixed_t x = botScreenX;
                 #endif
-                    
+
                 int32_t y = botScreenY;
 
                 if (botScreenY < 0) {
@@ -260,7 +260,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
                     #else
                         x -= botScreenY * xStep;
                     #endif
-                    
+
                     y = 0;
                 }
 
@@ -281,13 +281,13 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
                 // For each row in this edge, set the appropriate bound in the flat spans that the edge intersects
                 while (y < yEnd) {
                     span_t& span = gFlatSpans[y];
-                    
+
                     #if PSYDOOM_MODS
                         span.bounds[spanBound] = (int32_t) d_rshift<FRACBITS>(x);
                     #else
                         span.bounds[spanBound] = d_fixed_to_int(x);
                     #endif
-                    
+
                     x += xStep;
                     ++y;
                 }
@@ -356,7 +356,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
         // I'm not sure why the code is doing a 'ceil' type rounding operation here in the case negative coords...
         fixed_t uStepPerX = dist *  viewSin;
         fixed_t vStepPerX = dist * -viewCos;
-        
+
         if (uStepPerX < 0) {
             uStepPerX += HALF_SCREEN_W - 1;     // Round up if negative, why is this?
         }
@@ -408,7 +408,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
 
             if (gbDoViewLighting) {
                 int32_t lightIntensity = LIGHT_INTENSTIY_MAX - d_rshift<1>(dist);
-                
+
                 if (lightIntensity < LIGHT_INTENSTIY_MIN) {
                     lightIntensity = LIGHT_INTENSTIY_MIN;
                 }
@@ -495,7 +495,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
                     (uint8_t) spanUR, (uint8_t) spanVR
                 );
             #endif
-            
+
             I_AddPrim(drawPrim);
         } else {
             // Harder case: we must split up the flat span and issue multiple primitives.
@@ -535,7 +535,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
                         }
                     }
                 #endif
-                
+
                 // Wrap the uv coordinates to 128x128 using the smallest u or v coordinate as the basis for wrapping.
                 // Do this in a similar way to the initial draw preparation, except this time the wrapping is 128x128.
                 //

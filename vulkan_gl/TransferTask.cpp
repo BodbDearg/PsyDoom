@@ -101,14 +101,14 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
     // Get the queue that we use for submitting work in general to graphics device
     LogicalDevice& device = *cmdBuffer.getCmdPool()->getDevice();
     const uint32_t workQueueFamilyIdx = device.getWorkQueueFamilyIdx();
-    
+
     // Need to insert an image barrier to get the image in a format that is optimal as a transfer destination:
     const VkCommandBuffer vkCmdBuffer = cmdBuffer.getVkCommandBuffer();
     const VkFuncs& vkFuncs = device.getVkFuncs();
 
     const uint32_t startTexImage = TextureUtils::getNumTexImages(cmd.dstStartLayer, cmd.bTexIsCubemap);
     const uint32_t numTexImages = TextureUtils::getNumTexImages(cmd.dstNumLayers, cmd.bTexIsCubemap);
-    
+
     {
         VkImageMemoryBarrier barrier = {};
 
@@ -139,7 +139,7 @@ static void submitToCmdBufferImpl(CmdBuffer& cmdBuffer, const BufToTexTransCmd& 
             &barrier                                // Image memory barrier
         );
     }
-    
+
     // Next record the actual copy operations that will copy the data into the image.
     {
         // Use this buffer to submit the copy operations

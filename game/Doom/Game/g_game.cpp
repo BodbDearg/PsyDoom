@@ -89,7 +89,7 @@ void G_DoLoadLevel() noexcept {
         wess_seq_stopall();
         gLevelStartupWarning = nullptr;
     #endif
-    
+
     // Loading sound and music
     S_LoadMapSoundAndMusic(gGameMap);
 
@@ -203,7 +203,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
 
         for (int32_t attemptNum = 0; attemptNum < 16; ++attemptNum) {
             mapthing_t& spawnPt = gDeathmatchStarts[P_Random() % numSpawnPts];
-            
+
             // If we found a good position we can stop.
             // Make sure the map object type is correct for this player index also.
             if (P_CheckPosition(playerMobj, d_int_to_fixed(spawnPt.x), d_int_to_fixed(spawnPt.y))) {
@@ -246,7 +246,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     for (int32_t spawnPtIdx = 0; spawnPtIdx < MAXPLAYERS; ++spawnPtIdx) {
         gPlayerStarts[spawnPtIdx].type = 1 + (int16_t) spawnPtIdx;
     }
-    
+
     // Figure out what subsector the player will spawn in
     const fixed_t spawnX = d_int_to_fixed(pChosenSpawnPt->x);
     const fixed_t spawnY = d_int_to_fixed(pChosenSpawnPt->y);
@@ -258,7 +258,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     // Compute the fine angle for the map thing and wrap + restrict to 8 directions.
     // The angle in the wad is from 0-360, so we must scale and adjust accordingly.
     const uint32_t fineAngle = (((uint32_t) pChosenSpawnPt->angle * FINEANGLES) / 360) & FINE_ANGLE_MASK;
-    
+
     // Spawn teleport fog a bit away from the player in the direction the player is facing (clamped to 8 directions)
     mobj_t* const pSpawnedThing = P_SpawnMobj(
         spawnX + gFineCosine[fineAngle] * 20,
@@ -266,7 +266,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
         pSubsec->sector->floorheight,
         MT_TFOG
     );
-    
+
     // Play the teleport sound
     S_StartSound(pSpawnedThing, sfx_telept);
 }
@@ -398,28 +398,28 @@ void G_RunGame() noexcept {
 
         // Assume we are not restarting the current level at first
         gbIsLevelBeingRestarted = false;
-        
+
         // End demo recording actions
         if (gGameAction == ga_recorddemo) {
             G_EndDemoRecording();
         }
-        
+
         if (gGameAction == ga_warped)
             continue;
-        
+
         // Can restart the level if died or explicitly restarting
         if ((gGameAction == ga_died) || (gGameAction == ga_restart)) {
             gbIsLevelBeingRestarted = true;
             continue;
         }
-        
+
         // Cleanup after the level is done
         gLockedTexPagesMask &= 1;
         Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
-        
+
         if (gGameAction == ga_exitdemo)
             break;
-        
+
         // Do the intermission
         MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
@@ -460,7 +460,7 @@ void G_RunGame() noexcept {
 
             if (gGameAction == ga_warped || gGameAction == ga_restart)
                 continue;
-    
+
             if (gGameAction == ga_exitdemo)
                 break;
 

@@ -40,7 +40,7 @@ struct ObjPatch {
 // The section can contain code or data and any number of patches applied at link time.
 struct ObjSection {
     static constexpr uint16_t MAX_SECTION_NUMBER = 0xFFFEu;
-    
+
     uint16_t                    number;
     ObjSectionType              type;
     uint16_t                    alignment;

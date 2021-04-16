@@ -135,7 +135,7 @@ void psxcd_init() noexcept {
     // If we've already done this then just no-op
     if (gbPSXCD_IsCdInit)
         return;
-    
+
     gbPSXCD_IsCdInit = true;
 
     // Initialize the SPU and install the CD player as an external input to the SPU
@@ -184,7 +184,7 @@ PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
             break;
         }
     }
-    
+
     if (discReaderIdx < 0) {
         FatalErrors::raise("psxcd_open: out of file handles!");
     }
@@ -360,7 +360,7 @@ static void psxcd_play_internal(
         psxspu_set_cd_vol(0);
         psxspu_start_cd_fade(fadeUpTime, vol);
     }
-    
+
     // Skip the requested number of sectors
     {
         // N.B: don't hold this lock in the main thread at the same time as the SPU lock - otherwise deadlock might occur!
@@ -407,7 +407,7 @@ void psxcd_play_at_andloop(
     // Setting them to values other than this will no longer work! That's OK because Doom always followed these usage patterns:
     ASSERT(loopVol == vol);
     ASSERT(loopFadeUpTime == 0);
-    
+
     psxcd_play_internal(track, vol, sectorOffset, fadeUpTime, true, loopTrack, loopSectorOffset);
 }
 

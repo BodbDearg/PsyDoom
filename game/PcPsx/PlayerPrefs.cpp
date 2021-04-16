@@ -177,13 +177,13 @@ void load() noexcept {
     // We only do that if the .ini file is found there on launch!
     setToDefaults();
     gbUseWorkingDirPrefsFile = FileUtils::fileExists(PREFS_FILE_NAME);
-    
+
     // Read the .ini file if it exists, otherwise stop here
     const std::string prefsFilePath = getPrefsFilePath();
 
     if (!FileUtils::fileExists(prefsFilePath.c_str()))
         return;
-    
+
     const FileData prefsFileData = FileUtils::getContentsOfFile(prefsFilePath.c_str(), 1, std::byte(0));
     IniUtils::parseIniFromString((const char*) prefsFileData.bytes.get(), prefsFileData.size - 1, loadPrefsFileIniEntry);
 }

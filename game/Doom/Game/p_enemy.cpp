@@ -100,14 +100,14 @@ bool P_CheckMissileRange(mobj_t& attacker) noexcept {
     if (attacker.info->meleestate == S_NULL) {
         distFrac -= 128 * FRACUNIT;
     }
-    
+
     // Convert to integer distance and if you are a skull reduce the missile distance even more
     int32_t dist = d_fixed_to_int(distFrac);
-    
+
     if (attacker.type == MT_SKULL) {
         dist = d_rshift<1>(dist);
     }
-    
+
     // Cap the distance so there is always at least some chance of firing and decide randomly whether to fire.
     // The closer the target is the more likely we will fire:
     dist = std::min(dist, 200);
@@ -123,12 +123,12 @@ bool P_Move(mobj_t& actor) noexcept {
     // Move is unsuccessful if there is no direction
     if (actor.movedir == DI_NODIR)
         return false;
-    
+
     // Decide on where the actor will move to and try to move there
     const fixed_t moveSpeed = actor.info->speed;
     const fixed_t tryX = actor.x + moveSpeed * gMoveXSpeed[actor.movedir];
     const fixed_t tryY = actor.y + moveSpeed * gMoveYSpeed[actor.movedir];
-    
+
     if (P_TryMove(actor, tryX, tryY)) {
         // Move was successful: stop trying to float up/down (can reach whatever we're after)
         actor.flags &= ~MF_INFLOAT;
@@ -155,7 +155,7 @@ bool P_Move(mobj_t& actor) noexcept {
 
     if (!pBlockLine)
         return false;
-    
+
     if (pBlockLine->special) {
         // This line has a special: try to use it and set the movement direction to none
         actor.movedir = DI_NODIR;
@@ -217,7 +217,7 @@ void P_NewChaseDir(mobj_t& actor) noexcept {
     } else {
         vdirToTgt = DI_NODIR;
     }
-    
+
     // Try to move diagonally to the target
     if ((hdirToTgt != DI_NODIR) && (vdirToTgt != DI_NODIR)) {
         // Go east if dx > 0; Go south if dy < 0:
@@ -242,29 +242,29 @@ void P_NewChaseDir(mobj_t& actor) noexcept {
     if ((P_Random() > 200) || (std::abs(tgtDistY) > std::abs(tgtDistX))) {
         std::swap(tryDir1, tryDir2);
     }
-    
+
     if (tryDir1 == turnaroundDir) {
         tryDir1 = DI_NODIR;
     }
-    
+
     if (tryDir2 == turnaroundDir) {
         tryDir2 = DI_NODIR;
     }
-    
+
     if (tryDir1 != DI_NODIR) {
         actor.movedir = tryDir1;
-        
+
         if (P_TryWalk(actor))
             return;
     }
 
     if (tryDir2 != DI_NODIR) {
         actor.movedir = tryDir2;
-        
+
         if (P_TryWalk(actor))
             return;
     }
-    
+
     // If all that movement failed, try going in the previous movement direction
     if (oldMoveDir != DI_NODIR) {
         actor.movedir = oldMoveDir;
@@ -272,7 +272,7 @@ void P_NewChaseDir(mobj_t& actor) noexcept {
         if (P_TryWalk(actor))
             return;
     }
-    
+
     // Next try all of the possible move directions, except the turnaround dir.
     // Randomly start from opposite ends of the directions lists to change things up every so often.
     if (P_Random() & 1) {
@@ -296,7 +296,7 @@ void P_NewChaseDir(mobj_t& actor) noexcept {
                 return;
         }
     }
-    
+
     // Last ditch attempt: try to move in the opposite (turnaround) direction
     if (turnaroundDir != DI_NODIR) {
         actor.movedir = turnaroundDir;
@@ -325,7 +325,7 @@ bool P_LookForPlayers(mobj_t& actor, const bool bAllAround) noexcept {
         // This code assumes just 2 co-op players, if we wanted more it would need to chage.
         if (gbPlayerInGame[1]) {
             tgtPlayerIdx = P_Random() & 1;
-            
+
             // If the player we chose is already dead then pick the other player
             if (gPlayers[tgtPlayerIdx].health <= 0) {
                 tgtPlayerIdx ^= 1;
@@ -340,12 +340,12 @@ bool P_LookForPlayers(mobj_t& actor, const bool bAllAround) noexcept {
     // Note that the target field is not actually updated here, it's only done in 'A_Look':
     if (actor.subsector->sector->soundtarget == pTarget)
         return true;
-    
+
     // If not allowed to look all around then make sure the angle to the target is in range.
     // Must be within a 180 degree vision range:
     if (!bAllAround) {
         const angle_t angleToTgt = R_PointToAngle2(actor.x, actor.y, pTarget->x, pTarget->y) - actor.angle;
-        
+
         if (angleToTgt > ANG90 && angleToTgt < ANG270) {
             // Target not within the right vision angle range: when really close to the target regard it as seen anyway:
             const fixed_t distToTgt = P_AproxDistance(pTarget->x - actor.x, pTarget->y - actor.y);
@@ -379,7 +379,7 @@ void A_Look(mobj_t& actor) noexcept {
 
         actor.target = pNoiseMaker;
     }
-    
+
     // Play the see sound for the monster
     if (actor.info->seesound != sfx_None) {
         // Vary some sounds played randomly (imps and former humans):
@@ -426,7 +426,7 @@ void A_Chase(mobj_t& actor) noexcept {
     if (actor.threshold != 0) {
         actor.threshold--;
     }
-    
+
     // Turn towards the movement direction (in 45 degree increments) if required
     if (actor.movedir < DI_NODIR) {
         // Mask the actor angle to increments of 45 degrees and see if we need to adjust to point in the direction we want
@@ -453,7 +453,7 @@ void A_Chase(mobj_t& actor) noexcept {
         // Can't chase if no target: or if we have a new one we need to wait a little
         return;
     }
-    
+
     // If the monster just attacked then change move direction
     if (actor.flags & MF_JUSTATTACKED) {
         actor.flags &= ~MF_JUSTATTACKED;
@@ -529,7 +529,7 @@ void A_FaceTarget(mobj_t& actor) noexcept {
 void A_PosAttack(mobj_t& actor) noexcept {
     if (!actor.target)
         return;
-    
+
     A_FaceTarget(actor);
     S_StartSound(&actor, sfx_pistol);
 
@@ -608,12 +608,12 @@ void A_SpidAttack(mobj_t& actor) noexcept {
 
     S_StartSound(&actor, sfx_pistol);
     A_FaceTarget(actor);
-    
+
     // The Spider Mastermind fires 3 pellets per shot
     for (int32_t i = 0; i < 3; ++i) {
         const angle_t shootAngle = actor.angle + P_SubRandom() * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
         const int32_t damage = (P_Random() % 5 + 1) * 3;                            // 3-15 damage
-        
+
         P_LineAttack(actor, shootAngle, MISSILERANGE, INT32_MAX, damage);
     }
 }
@@ -678,7 +678,7 @@ void A_TroopAttack(mobj_t& actor) noexcept {
 void A_SargAttack(mobj_t& actor) noexcept {
     if (!actor.target)
         return;
-    
+
     A_FaceTarget(actor);
     const int32_t damage = ((P_Random() & 7) + 1) * 4;          // 4-32 damage
     P_LineAttack(actor, actor.angle, MELEERANGE, 0, damage);
@@ -692,7 +692,7 @@ void A_HeadAttack(mobj_t& actor) noexcept {
         return;
 
     A_FaceTarget(actor);
-    
+
     // Do a melee attack if possible, otherwise spawn a fireball
     if (P_CheckMeleeRange(actor)) {
         const int32_t damage = ((P_Random() & 7) + 1) * 8;      // 8-64 damage
@@ -719,7 +719,7 @@ void A_CyberAttack(mobj_t& actor) noexcept {
 void A_BruisAttack(mobj_t& actor) noexcept {
     if (!actor.target)
         return;
-    
+
     mobj_t& target = *actor.target;
 
     if (P_CheckMeleeRange(actor)) {
@@ -771,10 +771,10 @@ void A_Tracer(mobj_t& actor) noexcept {
 
     if ((!pTarget) || (pTarget->health <= 0))
         return;
-    
+
     // Gradually adjust to face the target if we're not already pointing directly at it
     const angle_t angleToTgt = R_PointToAngle2(actor.x, actor.y, pTarget->x, pTarget->y);
-    
+
     if (angleToTgt != actor.angle) {
         if (angleToTgt - actor.angle > ANG180) {
             actor.angle -= TRACEANGLE;
@@ -822,7 +822,7 @@ void A_Tracer(mobj_t& actor) noexcept {
 void A_SkelWhoosh(mobj_t& actor) noexcept {
     if (!actor.target)
         return;
-    
+
     A_FaceTarget(actor);
     S_StartSound(&actor, sfx_skeswg);
 }
@@ -946,15 +946,15 @@ void A_FatAttack3(mobj_t& actor) noexcept {
 void A_SkullAttack(mobj_t& actor) noexcept {
     if (!actor.target)
         return;
-    
+
     // Skull is now flying, play the attack sound and face the target
     actor.flags |= MF_SKULLFLY;
     S_StartSound(&actor, actor.info->attacksound);
     A_FaceTarget(actor);
-    
+
     // Set the xy velocity
     const uint32_t actorFineAngle = actor.angle >> ANGLETOFINESHIFT;
-    
+
     actor.momx = FixedMul(SKULLSPEED, gFineCosine[actorFineAngle]);
     actor.momy = FixedMul(SKULLSPEED, gFineSine[actorFineAngle]);
 
@@ -997,7 +997,7 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
         for (thinker_t* pThinker = gThinkerCap.next; pThinker != &gThinkerCap; pThinker = pThinker->next) {
             if (pThinker->function != P_MobjThinker)
                 continue;
-            
+
             if (((mobj_t*) pThinker)->type == MT_SKULL) {
                 ++numActiveSkulls;
             }

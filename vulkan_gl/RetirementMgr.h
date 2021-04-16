@@ -34,7 +34,7 @@ class RetirementMgr {
 public:
     RetirementMgr() noexcept;
     ~RetirementMgr() noexcept;
-    
+
     bool init(LogicalDevice& device) noexcept;
     void destroy(const bool bForceIfInvalid = false) noexcept;
     void registerRetirementProvider(IRetirementProvider& provider) noexcept;
@@ -57,7 +57,7 @@ public:
 
     inline bool isValid() const noexcept { return mbIsValid; }
     inline LogicalDevice* getDevice() const noexcept { return mpDevice; }
-    
+
 private:
     // Copy and move disallowed
     RetirementMgr(const RetirementMgr& other) = delete;
@@ -94,7 +94,7 @@ private:
     };
 
     RetiredResourceSet& getCurrentRetiredResourceSet() noexcept;
-    
+
     bool mbIsValid;
 
     #if ASSERTS_ENABLED == 1
@@ -103,7 +103,7 @@ private:
         // A destroy operation must result in complete destruction of an object and all its children.
         bool mbDebugIsDestroyingResources;
     #endif
-    
+
     LogicalDevice*                  mpDevice;
     RingbufferMgr*                  mpRingbufferMgr;
     RetiredResourceSet              mRetiredResourceSets[Defines::RINGBUFFER_SIZE];

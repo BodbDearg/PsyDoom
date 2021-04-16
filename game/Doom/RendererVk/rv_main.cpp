@@ -67,7 +67,7 @@ static void RV_DetermineDrawParams() noexcept {
         gViewX = R_LerpCoord(gOldViewX, newViewX, lerp);
         gViewY = R_LerpCoord(gOldViewY, newViewY, lerp);
         gViewZ = R_LerpCoord(gOldViewZ, newViewZ, lerp);
-        
+
         // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped
         if (gbDemoPlayback) {
             gViewAngle = R_LerpAngle(gOldViewAngle, newViewAngle, lerp);

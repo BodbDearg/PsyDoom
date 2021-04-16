@@ -322,7 +322,7 @@ std::byte* Texture::lock(
         mLockedSizeInBytes = 0;
         return nullptr;
     }
-    
+
     // All good, save the details of the buffer, locked region and return the locked memory
     mLockedVkStagingBuffer = buffer.vkBuffer;
     mpLockedBytes = buffer.pBytes;

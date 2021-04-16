@@ -147,7 +147,7 @@ void VideoBackend_SDL::copyPsxToSdlFramebufferTexture() noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
     const uint16_t* const vramPixels = gpu.pRam;
     uint32_t* pDstPixel = mpFramebufferPixels;
-    
+
     for (uint32_t y = 0; y < ORIG_DRAW_RES_Y; ++y) {
         const uint16_t* const rowPixels = vramPixels + ((intptr_t) y + gpu.displayAreaY) * gpu.ramPixelW;
         const uint32_t xStart = (uint32_t) gpu.displayAreaX;
@@ -160,7 +160,7 @@ void VideoBackend_SDL::copyPsxToSdlFramebufferTexture() noexcept {
             const uint32_t r = ((srcPixel >> 10) & 0x1F) << 3;
             const uint32_t g = ((srcPixel >> 5 ) & 0x1F) << 3;
             const uint32_t b = ((srcPixel >> 0 ) & 0x1F) << 3;
-            
+
             *pDstPixel = (
                0xFF000000 |
                (r << 16) |
@@ -231,7 +231,7 @@ void VideoBackend_SDL::presentSdlFramebufferTexture() noexcept {
     if ((dstRect.w != windowW) || (dstRect.h != windowH)) {
         SDL_RenderClear(mpRenderer);
     }
-    
+
     // Blit the framebuffer to the display
     SDL_RenderCopy(mpRenderer, mpFramebufferTexture, &srcRect, &dstRect);
 

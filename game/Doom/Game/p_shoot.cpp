@@ -55,13 +55,13 @@ void P_Shoot2() noexcept {
 
     gShootDiv.x = shooter.x;
     gShootDiv.y = shooter.y;
-    
+
     const int32_t attackRangeInt = d_fixed_to_int(gAttackRange);
     const uint32_t attackFineAngle = gAttackAngle >> ANGLETOFINESHIFT;
 
     gShootX2 = shooter.x + attackRangeInt * gFineCosine[attackFineAngle];
     gShootY2 = shooter.y + attackRangeInt * gFineSine[attackFineAngle];
-    
+
     // Precompute the line vector for the shot line and whether it's slope is positive
     gShootDiv.dx = gShootX2 - gShootDiv.x;
     gShootDiv.dy = gShootY2 - gShootDiv.y;
@@ -70,7 +70,7 @@ void P_Shoot2() noexcept {
     // Figure out the shot height and shot center line slope
     gShootZ = shooter.z + d_rshift<1>(shooter.height) + (8 * FRACUNIT);
     gAimMidSlope = d_rshift<1>(gAimTopSlope + gAimBottomSlope);
-    
+
     // Precompute the start and end points for the shot line (integer/whole coords)
     gSsx1 = d_fixed_to_int(gShootDiv.x);
     gSsy1 = d_fixed_to_int(gShootDiv.y);
@@ -89,7 +89,7 @@ void P_Shoot2() noexcept {
     if (!gpShootMObj) {
         PA_DoIntercept(nullptr, false, FRACUNIT);
     }
-    
+
     // If we hit a wall then adjust the hit spot slightly so the puff isn't in the wall - move it out
     if ((!gpShootMObj) && gpShootLine) {
         const fixed_t hitFracAdjust = FixedDiv(4 * FRACUNIT, gAttackRange);
@@ -137,7 +137,7 @@ bool PA_DoIntercept(void* const pObj, const bool bIsLine, const fixed_t hitFrac)
     #else
         ASSERT(test_pObj);
     #endif
-    
+
     // Otherwise do the test against the line or thing
     if (test_bIsLine) {
         return PA_ShootLine(*(line_t*) test_pObj, test_hitFrac);
@@ -171,11 +171,11 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
 
     // How far away is the hit point?
     const fixed_t hitDist = FixedMul(gAttackRange, hitFrac);
-    
+
     // Is there a lower wall which can be hit?
     if (fsec.floorheight != bsec.floorheight) {
         const fixed_t slopeToFloor = FixedDiv(highestFloorHeight - gShootZ, hitDist);
-        
+
         // The lower wall can be hit if its top is above the aim line and nothing else has been hit
         if ((!gpShootLine) && (slopeToFloor >= gAimMidSlope)) {
             gFirstLineFrac = hitFrac;
@@ -185,7 +185,7 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
         // Narrow the allowed vertical aim range by this lower wall - can only shoot above it now
         gAimBottomSlope = std::max(gAimBottomSlope, slopeToFloor);
     }
-    
+
     // Is there an upper wall which can be hit?
     if (fsec.ceilingheight != bsec.ceilingheight) {
         const fixed_t slopeToCeiling = FixedDiv(lowestCeilHeight - gShootZ, hitDist);
@@ -195,7 +195,7 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
             gFirstLineFrac = hitFrac;
             gpShootLine = &line;
         }
-        
+
         // Narrow the allowed vertical aim range by this upper wall - can only shoot below it now
         gAimTopSlope = std::min(gAimTopSlope, slopeToCeiling);
     }
@@ -216,14 +216,14 @@ bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
     // Can't shoot the thing if it's not shootable (corpse etc.)
     if ((thing.flags & MF_SHOOTABLE) == 0)
         return true;
-    
+
     // How far is the hit point away?
     const fixed_t hitDist = FixedMul(gAttackRange, hitFrac);
 
     // Are we shooting over the thing? If so then it cannot be hit.
     // Check the allowed shooting vertical range against the top of the thing's bounding box.
     fixed_t thingTopSlope = FixedDiv(thing.z + thing.height - gShootZ, hitDist);
-    
+
     if (gAimBottomSlope > thingTopSlope)
         return true;
 
@@ -233,7 +233,7 @@ bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
 
     if (gAimTopSlope < thingBottomSlope)
         return true;
-    
+
     // Clamp the parts of the thing we can hit to the allowed ranges for shooting
     thingTopSlope = std::min(thingTopSlope, gAimTopSlope);
     thingBottomSlope = std::max(thingBottomSlope, gAimBottomSlope);
@@ -284,7 +284,7 @@ static fixed_t PA_SightCrossLine(const line_t& line) noexcept {
         if (side1 == side2)
             return -1;
     }
-    
+
     // Compute the normal vector for the line
     const int32_t lineNx = lineY1 - lineY2;
     const int32_t lineNy = lineX2 - lineX1;
@@ -325,7 +325,7 @@ static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
             gThingLineVerts.p2.x = pmobj->x + pmobj->radius;
             gThingLineVerts.p2.y = pmobj->y + pmobj->radius;
         }
-        
+
         // See if the thing line intersects the sight/shoot line, ignore if it doesn't
         const fixed_t hitFrac = PA_SightCrossLine(gPartialThingLine);
 
@@ -341,7 +341,7 @@ static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
     const int32_t curValidCount = gValidCount;
     seg_t* const pSegs = gpSegs + subsec.firstseg;
     const int16_t numSegs = subsec.numsegs;
-    
+
     for (int32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
         // Don't check this line if we already checked for this sight check
         seg_t& seg = pSegs[segIdx];
@@ -353,7 +353,7 @@ static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
         // Don't check again for this sight test (mark) and get where the line intersects the sight line
         line.validcount = curValidCount;
         const fixed_t hitFrac = PA_SightCrossLine(line);
-            
+
         // Ignore the intersection if it's not along the sight line
         if ((hitFrac < 0) || (hitFrac > FRACUNIT))
             continue;
@@ -388,7 +388,7 @@ bool PA_CrossBSPNode(const int32_t nodeNum) noexcept {
     // Is this bsp node actually a subsector? (leaf node) If so then do sight checks against that:
     if (nodeNum & NF_SUBSECTOR) {
         const int32_t subsecNum = nodeNum & (~NF_SUBSECTOR);
-        
+
         if (subsecNum < gNumSubsectors) {
             return PA_CrossSubsector(gpSubsectors[subsecNum]);
         } else {
@@ -404,7 +404,7 @@ bool PA_CrossBSPNode(const int32_t nodeNum) noexcept {
     // If the sight line cannot cross the closest half-space then we are done: sight is obstructed
     if (!PA_CrossBSPNode(bspNode.children[sideNum]))
         return false;
-    
+
     // Check to see what side of the bsp split the end point for sight checking is on.
     // If it's in the same half-space we just raycasted against then we are done - sight is unobstructed.
     if (sideNum == PA_DivlineSide(gShootX2, gShootY2, bspNode.line))

@@ -32,7 +32,7 @@ public:
 
     inline bool isValid() const noexcept { return mbIsValid; }
     inline LogicalDevice* getDevice() const noexcept { return mpDevice; }
-    
+
     // Gets the current ringbuffer index to use
     inline uint8_t getBufferIndex() const noexcept {
         ASSERT(mbIsValid);
@@ -51,7 +51,7 @@ private:
     RingbufferMgr& operator = (RingbufferMgr&& other) = delete;
 
     void doCleanupForBufferIndex(const uint8_t ringbufferIndex) noexcept;
-    
+
     bool            mbIsValid;
     uint8_t         mBufferIndex;                           // Which ringbuffer we are currently on
     LogicalDevice*  mpDevice;

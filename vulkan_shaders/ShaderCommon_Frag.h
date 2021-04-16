@@ -21,7 +21,7 @@ vec4 sampleVramTexel(usampler2D vram, ivec2 uv, vec4 stmul, const bool bAllowDis
         (texelBits >> 10) & 0x1F,
         31.0
     ) / 31.0;
-    
+
     // Multiply by the semi-transparency multiply if the pixel is semi-transparent
     if ((texelBits & 0x8000) != 0) {
         color *= stmul;

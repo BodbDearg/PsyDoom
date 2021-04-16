@@ -145,7 +145,7 @@ private:
             // Did something go wrong?
             if (mbError)
                 return false;
-            
+
             // If there is a free packet slot then we are done
             if (hasFreeOutgoingPacketSlot())
                 return true;

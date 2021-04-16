@@ -151,7 +151,7 @@ void FuncSignatureUtils::printSigDisassembly(const FuncSignature& sig, std::ostr
         } else {
             out << "        ";
         }
-        
+
         // Decode the instruction
         CpuInstruction inst;
         inst.decode(instWord);

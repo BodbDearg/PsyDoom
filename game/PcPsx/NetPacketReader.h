@@ -23,7 +23,7 @@ public:
     typedef asio::ip::tcp::socket       SocketT;
     typedef std::chrono::system_clock   ClockT;
     typedef ClockT::time_point          TimePointT;
-    
+
     NetPacketReader(SocketT& socket) noexcept 
         : mTcpSocket(socket)
         , mBufBegIdx(0)
@@ -224,7 +224,7 @@ private:
             // Did something go wrong?
             if (mbError)
                 return false;
-            
+
             // If there is a packet now ready then we are done
             if (hasPacketReady())
                 return true;

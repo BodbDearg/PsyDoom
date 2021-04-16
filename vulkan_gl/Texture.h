@@ -97,7 +97,7 @@ private:
     Texture(const Texture& other) = delete;
     Texture& operator = (const Texture& other) = delete;
     Texture& operator = (Texture&& other) = delete;
-    
+
     bool            mbDidATextureUpload;        // Flag set to true after we schedule the first texture upload (might not have EXECUTED yet!)
     VkBuffer        mLockedVkStagingBuffer;     // If the texture is locked this is the staging buffer being used for transfer
     std::byte*      mpLockedBytes;              // If the texture is locked then these are the data bytes locked

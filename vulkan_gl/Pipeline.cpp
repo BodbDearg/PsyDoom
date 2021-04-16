@@ -235,7 +235,7 @@ bool Pipeline::initGraphicsPipeline(
     dynamicStateCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicStateCI.dynamicStateCount = C_ARRAY_SIZE(DYNAMIC_STATES);
     dynamicStateCI.pDynamicStates = DYNAMIC_STATES;
-    
+
     //------------------------------------------------------------------------------------------------------------------
     // Create the pipeline itself
     //------------------------------------------------------------------------------------------------------------------
@@ -353,7 +353,7 @@ void Pipeline::destroy(const bool bImmediately, const bool bForceIfInvalid) noex
 
     // Normal cleanup logic
     mbIsValid = false;
-    
+
     if (mVkPipeline) {
         ASSERT(mpDevice && mpDevice->getVkDevice());
         const VkFuncs& vkFuncs = mpDevice->getVkFuncs();

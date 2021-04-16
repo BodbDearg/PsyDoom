@@ -105,7 +105,7 @@ static const char* getNextInputNameUpper(const char* const str, std::string& nam
     while ((!nameOut.empty()) && isAsciiWhitespace(nameOut.back())) {
         nameOut.pop_back();
     }
-    
+
     return pCurChar;
 }
 
@@ -274,7 +274,7 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
 
         // Maybe a gamepad axis
         const SDL_GameControllerAxis axis = SDL_GameControllerGetAxisFromString(nameUpper.c_str() + NAME_PREFIX_LEN);
-        
+
         if (axis != SDL_CONTROLLER_AXIS_INVALID) {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInputUtils::sdlAxisToInput((uint8_t) axis);
@@ -460,7 +460,7 @@ void parseBinding(const Binding binding, const char* const str) noexcept {
 
         if (gCurInputName.empty())
             continue;
-        
+
         // Try to determine what this input is and ignore if not valid
         InputSrc inputSrc = {};
 
@@ -517,7 +517,7 @@ bool isJustPressed(const Binding binding) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t getPSXCheatButtonBits() noexcept {
     uint16_t buttonBits = 0;
-    
+
     auto addButtonBit = [&](const Binding binding, const uint16_t toButtonBits) noexcept {
         if (getBool(binding)) {
             buttonBits |= toButtonBits;

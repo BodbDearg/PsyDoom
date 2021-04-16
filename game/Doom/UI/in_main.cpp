@@ -198,7 +198,7 @@ void IN_Start() noexcept {
             PlayerPrefs::pullLastPassword();
         #endif
     }
-    
+
     // Play the intermission cd track
     psxcd_play_at_andloop(
         gCDTrackNum[cdmusic_intermission],
@@ -257,7 +257,7 @@ gameaction_t IN_Ticker() noexcept {
             const padbuttons_t oldTicButtons = gOldTicButtons[playerIdx];
             const bool bMenuOk = ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS));
         #endif
-        
+
         // Handle the player trying to goto to the next stage of the intermission when action buttons are pressed
         if (bMenuOk) {
             // Advance to the next stage of the intermission
@@ -292,7 +292,7 @@ gameaction_t IN_Ticker() noexcept {
     // If a full 15Hz tick has not yet elapsed then do not advance the count
     if (gGameTic <= gPrevGameTic)
         return ga_nothing;
-    
+
     // Count up the applicable stats for the current game mode.
     // The step is increments of '2' and if we go past our target then we clamp in each case.
     bool bStillCounting = false;
@@ -440,7 +440,7 @@ void IN_SingleDrawer() noexcept {
     I_DrawString(57, killsY, "Kills");
     I_DrawString(percentSignX, killsY, "%");
     I_DrawNumber(percentValueX, killsY, gKillValue[0]);
-    
+
     I_DrawString(itemsX, itemsY, "Items");
     I_DrawString(percentSignX, itemsY, "%");
     I_DrawNumber(percentValueX, itemsY, gItemValue[0]);
@@ -517,7 +517,7 @@ void IN_CoopDrawer() noexcept {
     );
 
     I_DrawString(208, 52, "him");
-    
+
     I_DrawString(57, 79, "Kills");
     I_DrawString(155, 79, "%");
     I_DrawString(228, 79, "%");
@@ -568,7 +568,7 @@ void IN_DeathmatchDrawer() noexcept {
 
     const facesprite_t* pFaceSpriteP1;
     const facesprite_t* pFaceSpriteP2;
-    
+
     if (gFragValue[0] > gFragValue[1]) {
         if (gCurPlayerIndex == 0) {
             pFaceSpriteP1 = &gFaceSprites[EVILFACE];
@@ -596,7 +596,7 @@ void IN_DeathmatchDrawer() noexcept {
         pFaceSpriteP1 = &gFaceSprites[0];
         pFaceSpriteP2 = &gFaceSprites[0];
     }
-        
+
     I_DrawSprite(
         gTex_STATUS.texPageId,
         gPaletteClutIds[UIPAL],

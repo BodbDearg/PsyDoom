@@ -88,7 +88,7 @@ struct VVertex_Draw {
     // 2D Texture coordinates for the vertex.
     // These coordinates are in terms of 16-bit pixels in VRAM.
     float u, v;
-    
+
     // Texture wrapping window: x and y position
     uint16_t texWinX, texWinY;
 

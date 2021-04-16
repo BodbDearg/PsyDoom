@@ -68,7 +68,7 @@ void VRenderPath_Crossfade::destroy() noexcept {
 
     mpOldFbImagesToLayout[0] = nullptr;
     mpOldFbImagesToLayout[1] = nullptr;
-    
+
     for (vgl::Framebuffer& framebuffer : mFramebuffers) {
         framebuffer.destroy(true);
     }

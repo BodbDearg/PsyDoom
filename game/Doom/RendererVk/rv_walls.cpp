@@ -374,7 +374,7 @@ static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec)
             // If there is a higher surrounding sky or void ceiling then take that as an indication that this is not the true sky level and treat as a void.
             // In the "GEC Master Edition" this can be used to create things like floating cubes.
             const bool bTreatAsVoidWall = R_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
-            
+
             if (!bTreatAsVoidWall) {
                 RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);
             }

@@ -228,9 +228,9 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
         gpDemoBuffer = (uint32_t*) Z_EndMalloc(*gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);
         ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
     #endif
-    
+
     CloseFile(openFileIdx);
-    
+
     // Play the demo, free the demo buffer and return the exit action
     const gameaction_t exitAction = G_PlayDemoPtr();
 
@@ -320,7 +320,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         spritePrim.clut = Game::getTexPalette_DebugFontSmall();
     }
     #endif  // #if !PSYDOOM_MODS
-    
+
     // Format the message and print
     char msgBuffer[256];
 
@@ -371,7 +371,7 @@ void D_memset(void* const pDst, const std::byte fillByte, const uint32_t count) 
     while (((uintptr_t) pDstByte & 3) != 0) {
         if (bytesLeft == 0)
             return;
-        
+
         *pDstByte = fillByte;
         ++pDstByte;
         --bytesLeft;
@@ -381,7 +381,7 @@ void D_memset(void* const pDst, const std::byte fillByte, const uint32_t count) 
     {
         const uint32_t fb32 = (uint32_t) fillByte;
         const uint32_t fillWord = (fb32 << 24) | (fb32 << 16) | (fb32 << 8) | fb32;
-    
+
         while (bytesLeft >= 32) {
             uint32_t* const pDstWords = (uint32_t*) pDstByte;
 
@@ -393,7 +393,7 @@ void D_memset(void* const pDst, const std::byte fillByte, const uint32_t count) 
             pDstWords[5] = fillWord;
             pDstWords[6] = fillWord;
             pDstWords[7] = fillWord;
-            
+
             pDstByte += 32;
             bytesLeft -= 32;
         }
@@ -447,11 +447,11 @@ int32_t D_strncasecmp(const char* str1, const char* str2, int32_t maxCount) noex
     while (*str1 && *str2) {
         if (*str1 != *str2)
             return 1;
-        
+
         ++str1;
         ++str2;
         --maxCount;
-        
+
         // Bug fix: if the function is called with 'maxCount' as '0' for some reason then prevent a near infinite loop
         // due to wrapping around to '-1'. I don't think this happened in practice but just guard against it here anyway
         // in case future mods happen to trigger this issue...
@@ -653,7 +653,7 @@ gameaction_t MiniLoop(
                     if (padBtns & PAD_START)
                         break;
                 #endif
-            
+
                 // PsyDoom: moving the end of demo check to above in order to work with uncapped framerates
                 #if !PSYDOOM_MODS
                     // Is the demo recording too big or are we at the end of the largest possible demo size? If so then stop right now...
@@ -709,7 +709,7 @@ gameaction_t MiniLoop(
 
         // Call the drawer function to do drawing for the frame
         pDrawer();
-        
+
         // Do we need to update sound? (sound updates at 15 Hz)
         if (gGameTic > gPrevGameTic) {
             S_UpdateSounds();
@@ -718,7 +718,7 @@ gameaction_t MiniLoop(
         gPrevGameTic = gGameTic;
         gbIsFirstTick = false;
     }
-    
+
     // Run cleanup logic for this game loop ending
     pStop(exitAction);
 

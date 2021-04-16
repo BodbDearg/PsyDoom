@@ -6,7 +6,7 @@
 static int32_t D_mystrlen(const char* pStr) noexcept {
     if (pStr) {
         int32_t len = 0;
-        
+
         while (*(pStr++)) {
             ++len;
         }
@@ -35,7 +35,7 @@ int32_t D_vsprintf(char* dstStr, const char* fmtStr, va_list args) noexcept {
         // Skip the '%' and handle the padding character specifier (if there)
         ++fmtStr;
         char paddingChar;
-        
+
         if (*fmtStr == '0') {
             paddingChar = '0';
             ++fmtStr;

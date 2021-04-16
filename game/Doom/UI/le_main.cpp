@@ -25,7 +25,7 @@ static texture_t gTex_LEGALS;
 void START_Legals() noexcept {
     I_PurgeTexCache();
     I_LoadAndCacheTexLump(gTex_LEGALS, "LEGALS", 0);
-    
+
     S_StartSound(nullptr, sfx_sgcock);
     gTitleScreenSpriteY = SCREEN_H;
 }
@@ -64,18 +64,18 @@ gameaction_t TIC_Legals() noexcept {
     // Scroll the legal text, otherwise check for timeout
     if (gTitleScreenSpriteY > 0) {
         gTitleScreenSpriteY--;
-    
+
         if (gTitleScreenSpriteY == 0) {
             gMenuTimeoutStartTicCon = gTicCon;
         }
     } else {
         // Must hold the legals text for a small amount of time before allowing skip (via a button press) or timeout
         const int32_t waitTicsElapsed = gTicCon - gMenuTimeoutStartTicCon;
-        
+
         if (waitTicsElapsed > 120) {
             if (waitTicsElapsed >= 180)
                 return ga_timeout;
-            
+
             // PsyDoom: only accept main menu buttons to skip
             #if PSYDOOM_MODS
                 if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)

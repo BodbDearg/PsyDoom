@@ -33,7 +33,7 @@ public:
     void destroy(const bool bForceIfInvalid = false) noexcept;
 
     uint64_t estimateAllocSize(const uint64_t numBytes) const noexcept;
-    
+
     void alloc(
         const uint64_t numBytes,
         const uint32_t allowedVkMemTypeBits,
@@ -41,7 +41,7 @@ public:
         const DeviceMemAllocMode allocMode,
         DeviceMemAlloc& allocInfoOut
     ) noexcept;
-    
+
     void dealloc(DeviceMemAlloc& allocInfo) noexcept;
     void freeUnusedPools() noexcept;
 
@@ -90,7 +90,7 @@ private:
         // The memory manager for this pool
         AbstractFixedQTreeMemMgr<SUB_POOL_UNIT_SIZE, SUB_POOL_NUM_TIERS> memMgr;
     };
-    
+
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Represents one pool of memory in the manager
     //--------------------------------------------------------------------------------------------------------------------------------------

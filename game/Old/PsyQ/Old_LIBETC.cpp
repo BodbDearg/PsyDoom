@@ -17,7 +17,7 @@ void* LIBETC_getScratchAddr(const uint32_t word32Index) {
         constexpr int32_t SCRATCHPAD_END_WORD_IDX = sizeof(gScratchpad) / sizeof(uint32_t);
         ASSERT(word32Index <= SCRATCHPAD_END_WORD_IDX);
     #endif
-    
+
     // Return the requested memory
     return gScratchpad + word32Index * sizeof(uint32_t);
 }

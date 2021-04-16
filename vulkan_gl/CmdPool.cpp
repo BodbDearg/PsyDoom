@@ -63,7 +63,7 @@ bool CmdPool::init(LogicalDevice& device, const uint32_t queueFamilyIdx, const b
     mpDevice = &device;
     mbIsTransient = bIsTransient;
     mQueueFamilyIdx = queueFamilyIdx;
-    
+
     // Create the command pool
     const VkFuncs& vkFuncs = mpDevice->getVkFuncs();
 
@@ -96,7 +96,7 @@ void CmdPool::destroy(const bool bForceIfInvalid) noexcept {
     // Only destroy if we need to
     if ((!mbIsValid) && (!bForceIfInvalid))
         return;
-    
+
     // Preconditions
     ASSERT_LOG((!mpDevice) || mpDevice->getVkDevice(), "Parent device must still be valid if defined!");
 

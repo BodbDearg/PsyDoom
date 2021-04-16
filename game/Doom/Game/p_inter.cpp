@@ -50,7 +50,7 @@ bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numCl
     // Can't give no ammo
     if (ammoType == am_noammo)
         return false;
-    
+
     // Sanity check ammo type.
     // PsyDoom: don't accept 'NUMAMMO' as a valid ammo type here, that's not valid either.
     #if PSYDOOM_MODS
@@ -140,7 +140,7 @@ bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bWasDr
     if ((gNetGame == gt_coop) && (!bWasDropped)) {
         if (player.weaponowned[weapon])
             return false;
-        
+
         player.weaponowned[weapon] = true;
         P_GiveAmmo(player, gWeaponInfo[weapon].ammo, 2);
         player.pendingweapon = weapon;
@@ -159,7 +159,7 @@ bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bWasDr
             bGaveAmmo = P_GiveAmmo(player, gWeaponInfo[weapon].ammo, 2);
         }
     }
-    
+
     // Give the weapon if not already owned
     bool bGaveWeapon = false;
 
@@ -198,11 +198,11 @@ bool P_GiveBody(player_t& player, const int32_t healthAmt) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_GiveArmor(player_t& player, const int32_t armorType) noexcept {
     const int32_t armorAmt = armorType * 100;
-    
+
     // Can only give the armor if it's more than the current armor amount
     if (player.armorpoints >= armorAmt)
         return false;
-    
+
     player.armortype = armorType;
     player.armorpoints = armorAmt;
     return true;
@@ -256,7 +256,7 @@ bool P_GivePower(player_t& player, const powertype_t power) noexcept {
         case pw_infrared:
             player.powers[power] = INFRATICS;
             return true;
-            
+
         default:
             break;
     }
@@ -281,7 +281,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
     // Touching object cannot pickup if it is dead
     if (toucher.health <= 0)
         return;
-    
+
     // See what was picked up and play the item pickup sound by default
     player_t& player = *toucher.player;
     sfxenum_t soundId = sfx_itemup;
@@ -385,7 +385,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_ARM1: {
             if (!P_GiveArmor(player, 1))
                 return;
-                
+
             player.message = "You pick up the armor.";
         }   break;
 
@@ -407,7 +407,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
 
         case SPR_BON2: {
             player.armorpoints = std::min(player.armorpoints + 2, 200);
-            
+
             if (player.armortype == 0) {
                 player.armortype = 1;
             }
@@ -465,7 +465,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_PMAP: {
             if (!P_GivePower(player, pw_allmap))
                 return;
-            
+
             player.message = "Computer Area Map";
             soundId = sfx_getpow;
         }   break;
@@ -492,7 +492,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
 
             player.message = "Picked up a box of bullets.";
         }   break;
-        
+
         case SPR_ROCK: {
             if (!P_GiveAmmo(player, am_misl, 1))
                 return;
@@ -510,28 +510,28 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_CELL: {
             if (!P_GiveAmmo(player, am_cell, 1))
                 return;
-            
+
             player.message = "Picked up an energy cell.";
         }   break;
 
         case SPR_CELP: {
             if (!P_GiveAmmo(player, am_cell, 5))
                 return;
-            
+
             player.message = "Picked up an energy cell pack.";
         }   break;
 
         case SPR_SHEL: {
             if (!P_GiveAmmo(player, am_shell, 1))
                 return;
-            
+
             player.message = "Picked up 4 shotgun shells.";
         }   break;
 
         case SPR_SBOX: {
             if (!P_GiveAmmo(player, am_shell, 5))
                 return;
-            
+
             player.message = "Picked up a box of shells.";
         }   break;
 
@@ -559,7 +559,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_BFUG: {
             if (!P_GiveWeapon(player, wp_bfg, false))
                 return;
-            
+
             player.message = "You got the BFG9000!  Oh, yes.";
             soundId = sfx_wpnup;
         }   break;
@@ -567,7 +567,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_MGUN: {
             if (!P_GiveWeapon(player, wp_chaingun, (special.flags & MF_DROPPED)))
                 return;
-            
+
             player.message = "You got the chaingun!";
             soundId = sfx_wpnup;
         }   break;
@@ -575,7 +575,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_CSAW: {
             if (!P_GiveWeapon(player, wp_chainsaw, false))
                 return;
-            
+
             player.message = "A chainsaw!  Find some meat!";
             soundId = sfx_wpnup;
         }   break;
@@ -583,7 +583,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_LAUN: {
             if (!P_GiveWeapon(player, wp_missile, false))
                 return;
-            
+
             player.message = "You got the rocket launcher!";
             soundId = sfx_wpnup;
         }   break;
@@ -599,7 +599,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_SHOT: {
             if (!P_GiveWeapon(player, wp_shotgun, (special.flags & MF_DROPPED)))
                 return;
-            
+
             player.message = "You got the shotgun!";
             soundId = sfx_wpnup;
         }   break;
@@ -612,12 +612,12 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             soundId = sfx_wpnup;
         }   break;
     }
-    
+
     // Include the item in item count stats if the flags allow it
     if (special.flags & MF_COUNTITEM) {
         player.itemcount++;
     }
-    
+
     // Remove the item on pickup and increase the bonus flash amount
     P_RemoveMobj(special);
     player.bonuscount += BONUSADD;
@@ -770,7 +770,7 @@ bool P_CanTouchSpecialThing(const mobj_t& special, const mobj_t& toucher) noexce
 void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
     // Target can no longer be shot, float or fly
     target.flags &= ~(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY);
-    
+
     // Gravity is now always applied to the thing's corpse, except for lost souls
     if (target.type != MT_SKULL) {
         target.flags &= ~MF_NOGRAVITY;
@@ -780,11 +780,11 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
     // Also reduce bounding box height considerably - not sure why that matters now though.
     target.flags |= MF_CORPSE | MF_DROPOFF;
     target.height = d_rshift<2>(target.height);
-    
+
     // Do stat counting adjustments for the kill
     player_t* const pTargetPlayer = target.player;
     player_t* const pKillerPlayer = (pKiller) ? pKiller->player : nullptr;
-    
+
     if (pTargetPlayer) {
         // A player was killed: someone must get or lose a frag for this
         if (pKillerPlayer && (pKillerPlayer != pTargetPlayer)) {
@@ -804,7 +804,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
         // This is true even for kills caused by other monsters (infighting) and environmental stuff.
         gPlayers[0].killcount += 1;
     }
-    
+
     // Player specific death logic
     bool bDoGibbing = false;
 
@@ -827,7 +827,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
         } else {
             S_StartSound(&target, sfx_pldeth);  // Normal death sound
         }
-        
+
         // New for PSX: Remove a player corpse if too many are lying around, to help memory usage.
         // Save this new corpse in a circular queue also for later removal.
         if (gDeadPlayerRemovalQueueIdx >= MAX_DEAD_PLAYERS) {
@@ -837,7 +837,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
         gDeadPlayerMobjRemovalQueue[gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS] = &target;
         gDeadPlayerRemovalQueueIdx++;
     }
-     
+
     // Monster gib triggering: trigger if end health is less than the negative amount of starting health
     if (target.health < -target.info->spawnhealth) {
         bDoGibbing = true;
@@ -849,7 +849,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
     P_SetMObjState(target, nextStateNum);
 
     target.tics = std::max(target.tics - (P_Random() & 1), 1);
-    
+
     // Do item dropping for the dead thing
     mobjtype_t dropItemType = {};
 
@@ -880,20 +880,20 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
     // Ignore if the target is already dead
     if (target.health <= 0)
         return;
-    
+
     // Shooting a lost soul kills all it's velocity
     if (target.flags & MF_SKULLFLY) {
         target.momz = 0;
         target.momy = 0;
         target.momx = 0;
     }
-    
+
     // Do adjustments to damage for the player based on skill and special faces due to damage
     player_t* const pTargetPlayer = target.player;
     player_t& curPlayer = gPlayers[gCurPlayerIndex];
 
     int32_t damageAmt = baseDamageAmt;
-    
+
     if (pTargetPlayer) {
         // In the lowest skill mode only half damage is applied
         if (gGameSkill == sk_baby) {
@@ -915,7 +915,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
         forceAngle = R_PointToAngle2(pInflictor->x, pInflictor->y, target.x, target.y);
         constexpr fixed_t FORCE_SCALE = 25 * FRACUNIT;
         fixed_t thrust = (damageAmt * FORCE_SCALE) / target.info->mass;
-        
+
         // Randomly make enemies fall forward off ledges sometimes, if enough damage is done and its up above
         if ((damageAmt < 40) && (damageAmt > target.health) && (target.z - pInflictor->z > 64 * FRACUNIT)) {
             if (P_Random() & 1) {
@@ -930,7 +930,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
 
         target.momx += thrustInt * gFineCosine[fineAngle];
         target.momy += thrustInt * gFineSine[fineAngle];
-        
+
         // PSX new logic: if it is the player then cap the accumulated velocity amount
         if (target.player) {
             constexpr fixed_t MAX_VELOCITY = 16 * FRACUNIT;
@@ -974,7 +974,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
             damageAmt -= armorDamage;
             pTargetPlayer->armorpoints -= armorDamage;
         }
-        
+
         // Do player pain sound
         S_StartSound(&target, sfx_plpain);
 
@@ -997,7 +997,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
             target.flags |= MF_JUSTHIT;
             P_SetMObjState(target, target.info->painstate);
         }
-        
+
         // Monster is fully awake now
         target.reactiontime = 0;
 

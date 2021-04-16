@@ -51,7 +51,7 @@ struct ExeWord {
     // Takes the address of the given word as input.
     inline void addReferencingWord(const uint32_t wordAddr) noexcept {
         const uint32_t wordEndAddr = wordAddr + 4;
-        
+
         if (startReferencingAddr == endReferencingAddr) {
             // No references yet set!
             startReferencingAddr = wordAddr;

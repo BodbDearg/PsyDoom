@@ -42,10 +42,10 @@ void START_Title() noexcept {
     W_CacheLumpName("LOADING", PU_STATIC, false);
     I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
-    
+
     // Load sounds for the menu
     S_LoadMapSoundAndMusic(0);
-    
+
     // Cache commonly used UI lumps for fast access and upload them to VRAM
     W_CacheLumpName(Game::getTexLumpName_OptionsBg(), PU_STATIC, false);
     W_CacheLumpName("NETERR", PU_STATIC, false);
@@ -61,7 +61,7 @@ void START_Title() noexcept {
         W_CacheLumpName("BUTTONS", PU_STATIC, false);
         I_LoadAndCacheTexLump(gTex_BUTTONS, "BUTTONS", 0);
     #endif
-    
+
     // Cache the fire sky texture used in the title screen and save it's reference
     {
         const int32_t skyTexLumpNum = R_TextureNumForName("SKY09");
@@ -73,7 +73,7 @@ void START_Title() noexcept {
         W_CacheLumpNum(skyTex.lumpNum, PU_CACHE, true);
         I_CacheTex(skyTex);
     }
-    
+
     // Doom: initially the DOOM logo is offscreen.
     // Final Doom: it doesn't move and covers the fire.
     if (Game::isFinalDoom()) {
@@ -84,7 +84,7 @@ void START_Title() noexcept {
 
     // Play the music for the title screen
     psxcd_play(gCDTrackNum[cdmusic_title_screen], gCdMusicVol);
-    
+
     // Wait until some cd audio has been read
     Utils::waitForCdAudioPlaybackStart();
 }
@@ -117,7 +117,7 @@ gameaction_t TIC_Title() noexcept {
         if (gTicButtons[0] != 0)
             return ga_exit;
     #endif
-    
+
     // Decrement the time until the title sprite moves
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gCurPlayerIndex];
     gVBlanksUntilTitleSprMove -= elapsedVBlanks;
@@ -165,7 +165,7 @@ gameaction_t TIC_Title() noexcept {
 
         // Update the fire sky if it is time to do that
         gVBlanksUntilTitleFireMove -= elapsedVBlanks;
-    
+
         if (gVBlanksUntilTitleFireMove <= 0) {
             gVBlanksUntilTitleFireMove = 2;
 
@@ -196,7 +196,7 @@ gameaction_t TIC_Title() noexcept {
             // Run the fire sky simulation
             P_UpdateFireSky(*gpSkyTexture);
         }
-    
+
         // Once the title sprite reaches the top of the screen, timeout after a while...
         if (gTitleScreenSpriteY == 0) {
             const bool bHasTimedOut = (gTicCon - gMenuTimeoutStartTicCon >= 1800);

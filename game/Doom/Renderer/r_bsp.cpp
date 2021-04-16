@@ -93,7 +93,7 @@ void R_RenderBSPNode(const int32_t bspnum) noexcept {
             if (R_CheckBBox(node.bbox[1])) {
                 R_RenderBSPNode(node.children[1]);
             }
-            
+
             if (R_CheckBBox(node.bbox[0])) {
                 R_RenderBSPNode(node.children[0]);
             }
@@ -131,7 +131,7 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     // Build a lookup table code from our position relative to the two box dimensions.
     // The LUT determines which points to compare against.
     const int32_t boxpos = boxx + d_lshift<2>(boxy);
-    
+
     // If we are fully inside the BSP node bounding box then regard it as always visible
     if (boxpos == 5)
         return true;
@@ -216,7 +216,7 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     if ((-vx1 > vy1) && (-vx2 > vy2)) {
         return false;
     }
-    
+
     // Is the node BB fully outside the view frustrum to the right?
     if ((vx1 > vy1) && (vx2 > vy2)) {
         return false;
@@ -285,7 +285,7 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     if (vy2 < 1) {
         vy2 = 1;
     }
-    
+
     // Do perspective division to compute the screen space start and end x values of the box.
     // Scale the result accordingly, noting at at this point the x values have a range of +/- HALF_SCREEN_W.
     int32_t begX = (vx1 * HALF_SCREEN_W) / vy1;
@@ -302,13 +302,13 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     if (endX > SCREEN_W) {
         endX = SCREEN_W;
     }
-    
+
     // PsyDoom: sometimes 'begX' here ends up offscreen - added an extra safety check to avoid overstepping array bounds:
     #if PSYDOOM_MODS
         if (begX >= SCREEN_W)
             return false;
     #endif
-    
+
     // As a final check, scan through all of the columns for the node's bounding box.
     // At least one bounding box column must NOT be occluded by an already drawn fully solid 1 sided or opaque column.
     // If we don't find any unobscured columns then the BSP node is obscured by blocking geometry, and thus can be ignored:
@@ -332,7 +332,7 @@ void R_Subsector(const int32_t subsecNum) noexcept {
     if (subsecNum >= gNumSubsectors) {
         I_Error("R_Subsector: ss %i with numss = %i", subsecNum, gNumSubsectors);
     }
-    
+
     // If we've hit the limit for the number of subsectors that can be drawn then stop emitting, otherwise add the subsector to the draw list.
     // PsyDoom: with the limit removing engine we can now kill this check.
     #if !PSYDOOM_LIMIT_REMOVING
@@ -350,7 +350,7 @@ void R_Subsector(const int32_t subsecNum) noexcept {
         *gppEndDrawSubsector = &subsec;
         gppEndDrawSubsector++;
     #endif
-    
+
     // Do draw preparation on all of the segs in the subsector.
     // This figures out what areas of the screen they occlude, updates transformed vertex positions, and more...
     seg_t* pSeg = &gpSegs[subsec.firstseg];
@@ -368,48 +368,48 @@ void R_Subsector(const int32_t subsecNum) noexcept {
 void R_AddLine(seg_t& seg) noexcept {
     // Initially assume no columns in the seg are visible
     seg.flags &= (~SGF_VISIBLE_COLS);
-    
+
     // Transform the 2 seg vertices if required.
     // Transform into view space but also figure out screen X and scaling due to perspective.
     vertex_t& segv1 = *seg.vertex1;
-    
+
     if (segv1.frameUpdated != gNumFramesDrawn) {
         const SVECTOR viewToPt = {
             (int16_t) d_fixed_to_int(segv1.x - gViewX),
             0,
             (int16_t) d_fixed_to_int(segv1.y - gViewY)
         };
-        
+
         VECTOR viewVec;
         int32_t rotFlags;
         LIBGTE_RotTrans(viewToPt, viewVec, rotFlags);
 
         segv1.viewx = viewVec.vx;
         segv1.viewy = viewVec.vz;
-        
+
         // Do perspective division if the point is not too close.
         // This check seems slightly incorrect, should be maybe be '>= NEAR_CLIP_DIST' instead?
         if (viewVec.vz > NEAR_CLIP_DIST + 1) {
             segv1.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
             segv1.screenx = d_fixed_to_int(viewVec.vx * segv1.scale) + HALF_SCREEN_W;
         }
-        
+
         segv1.frameUpdated = gNumFramesDrawn;
     }
-    
+
     vertex_t& segv2 = *seg.vertex2;
-    
+
     if (segv2.frameUpdated != gNumFramesDrawn) {
         const SVECTOR viewToPt = {
             (int16_t) d_fixed_to_int(segv2.x - gViewX),
             0,
             (int16_t) d_fixed_to_int(segv2.y - gViewY)
         };
-        
+
         VECTOR viewVec;
         int32_t rotFlags;
         LIBGTE_RotTrans(viewToPt, viewVec, rotFlags);
-        
+
         segv2.viewx = viewVec.vx;
         segv2.viewy = viewVec.vz;
 
@@ -419,66 +419,66 @@ void R_AddLine(seg_t& seg) noexcept {
             segv2.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
             segv2.screenx = d_fixed_to_int(viewVec.vx * segv2.scale) + HALF_SCREEN_W;
         }
-        
+
         segv2.frameUpdated = gNumFramesDrawn;
     }
-    
+
     // Store the clipped line segment points here: initially the line is unclipped
     int32_t v1x = segv1.viewx;
     int32_t v1y = segv1.viewy;
     int32_t v2x = segv2.viewx;
     int32_t v2y = segv2.viewy;
-    
+
     // Are both line segment points outside the LEFT view frustrum plane?
     if ((-v1x > v1y) && (-v2x > v2y))
         return;
-    
+
     // Are both line segment points outside the RIGHT view frustrum plane?
     if ((v1x > v1y) && (v2x > v2y))
         return;
-    
+
     // Use 'v2 x v1' (vector cross product) to determine the winding order for the line segment.
     // If the line segment is back facing then we ignore it.
     {
         const int32_t cross = (v2x * v1y) - (v1x * v2y);
-        
+
         if (cross <= 0)
             return;
     }
-    
+
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Lots of line/plane clipping code follows below...
     // For more details on how the clipping works, see the comments in 'R_CheckBBox'.
     //--------------------------------------------------------------------------------------------------------------------------------------
-    
+
     // Is P1 outside the LEFT view frustrum plane and P2 inside?
     // If so then clip against the LEFT plane:
     if ((-v1x > v1y) && (-v2x < v2y)) {
         const int32_t a = v1x + v1y;
         const int32_t b = -v2x - v2y;
         const fixed_t t = d_int_to_fixed(a) / (a + b);
-        
+
         const fixed_t yAdjust = (v2y - v1y) * t;
         v1y += d_fixed_to_int(yAdjust);
         v1x = -v1y;
     }
-    
+
     // Is P2 outside the RIGHT view frustrum plane and P1 inside?
     // If so then clip against the RIGHT plane:
     if ((v1x < v1y) && (v2x > v2y)) {
         const int32_t a = v1x - v1y;
         const int32_t b = -v2x + v2y;
         const fixed_t t = d_int_to_fixed(a) / (a + b);
-        
+
         const fixed_t yAdjust = (v2y - v1y) * t;
         v2y = v1y + d_fixed_to_int(yAdjust);
         v2x = v2y;
     }
-    
+
     // If both points are at or before the near plane after clipping then ignore the seg
     if (v1y <= NEAR_CLIP_DIST && v2y <= NEAR_CLIP_DIST)
         return;
-    
+
     // Clip against the front plane if one of the points is on the inside and the other on the outside.
     // Note that clipping is slightly over eager and clips a little after the near plane.
     // This is probably due to accuracy issues...
@@ -486,7 +486,7 @@ void R_AddLine(seg_t& seg) noexcept {
         const int32_t a = NEAR_CLIP_DIST - v1y;
         const int32_t b = v2y - NEAR_CLIP_DIST;
         const fixed_t t = d_int_to_fixed(a) / (a + b);
-    
+
         const fixed_t xAdjust = (v2x - v1x) * t;
         v1x += d_fixed_to_int(xAdjust);
         v1y = NEAR_CLIP_DIST;
@@ -495,21 +495,21 @@ void R_AddLine(seg_t& seg) noexcept {
         const int32_t a = NEAR_CLIP_DIST - v2y;
         const int32_t b = v1y - NEAR_CLIP_DIST;
         const fixed_t t = d_int_to_fixed(a) / (a + b);
-        
+
         const fixed_t xAdjust = (v1x - v2x) * t;
         v2x += d_fixed_to_int(xAdjust);
         v2y = NEAR_CLIP_DIST;
     }
-    
+
     // Do perspective division to compute the screen space start and end x values for the line seg.
     // Scale the result accordingly, noting at at this point the x values have a range of +/- HALF_SCREEN_W.
     int32_t begX = (v1x * HALF_SCREEN_W) / v1y;
     int32_t endX = (v2x * HALF_SCREEN_W) / v2y;
-    
+
     // Bring into the range 0-SCREEN_W
     begX += HALF_SCREEN_W;
     endX += HALF_SCREEN_W;
-    
+
     // If the seg is zero sized then ignore.
     // PsyDoom: change this to discard a malformed line also (end before beg)
     #if PSYDOOM_MODS
@@ -524,29 +524,29 @@ void R_AddLine(seg_t& seg) noexcept {
     if (gpCurDrawSector->ceilingpic == -1) {
         gbIsSkyVisible = true;
     }
-    
+
     // Clamp the x values to the screen range
     if (begX < 0) {
         begX = 0;
     }
-    
+
     if (endX > SCREEN_W) {
         endX = SCREEN_W;
     }
-    
+
     // PsyDoom: sometimes 'begX' here ends up offscreen - added extra safety checks to avoid overstepping array bounds.
     // Also discard the line if the clamping above has reduced it to size zero (or negative!).
     #if PSYDOOM_MODS
         if ((begX >= SCREEN_W) || (endX <= begX))
             return;
     #endif
-    
+
     // Determine the first visible (not fully occluded) column of the seg
     int32_t visibleBegX = SCREEN_W;
-    
+
     {
         const bool* pbIsSolidCol = &gbSolidCols[begX];
-        
+
         for (int32_t x = begX; x < endX; ++x, ++pbIsSolidCol) {
             if (!(*pbIsSolidCol)) {
                 visibleBegX = x;
@@ -557,10 +557,10 @@ void R_AddLine(seg_t& seg) noexcept {
 
     // Determine the last visible (not fully occluded) column of the seg
     int32_t visibleEndX = 0;
-    
+
     {
         const bool* pbIsSolidCol = &gbSolidCols[endX - 1];
-        
+
         for (int32_t x = endX - 1; x >= begX; --x, --pbIsSolidCol) {
             if (!(*pbIsSolidCol)) {
                 visibleEndX = x;
@@ -576,13 +576,13 @@ void R_AddLine(seg_t& seg) noexcept {
         seg.visibleEndX = (int16_t)(visibleEndX + 1);
         seg.flags |= SGF_VISIBLE_COLS;
     }
-    
+
     // Mark any columns that this seg fully occludes as 'solid'.
     // Only do this however if the seg is not drawn with translucent parts or transparency:
     if ((seg.linedef->flags & ML_MIDMASKED) == 0) {
         const sector_t& frontSec = *gpCurDrawSector;
         const sector_t* const pBackSec = seg.backsector;
-        
+
         // Is this seg something that fully occludes stuff behind it?
         // This will be the case if the seg is one sided (no back sector) or if there is no height gap between sectors.
         if ((!pBackSec) ||
@@ -596,7 +596,7 @@ void R_AddLine(seg_t& seg) noexcept {
             // Probably doesn't make a huge difference in reality though..
             //
             bool* pbIsSolidCol = &gbSolidCols[begX];
-            
+
             for (int32_t x = begX; x < endX; ++x, ++pbIsSolidCol) {
                 *pbIsSolidCol = true;
             }

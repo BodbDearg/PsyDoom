@@ -45,7 +45,7 @@ public:
     inline void padAlign(const size_t toNumBytes, const std::byte padByte = std::byte(0)) THROWS {
         if (toNumBytes < 2)
             return;
-        
+
         const size_t offset = tell();
         const size_t modulus = offset % toNumBytes;
 

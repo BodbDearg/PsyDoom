@@ -51,7 +51,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
     // Missiles cannot teleport (wouldn't that have been fun though?!)
     if (mobj.flags & MF_MISSILE)
         return false;
-    
+
     // Search for a teleport destination marker in a sector with a tag matching the given line
     sector_t* const pSectors = gpSectors;
 
@@ -82,7 +82,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
 
             // Mark the object as currently teleporting and telefrag if a player
             mobj.flags |= MF_TELEPORT;
-            
+
             if (mobj.player) {
                 P_Telefrag(mobj, pDstMarker->x, pDstMarker->y);
             }
@@ -93,7 +93,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
 
             if (!bCanMove)
                 return false;
-            
+
             // Ground the thing being teleported
             mobj.z = mobj.floorz;
 

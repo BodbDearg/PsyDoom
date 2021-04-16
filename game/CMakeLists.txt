@@ -395,7 +395,7 @@ if (COMPILER_MSVC)
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4245)     # Conversion from signed to unsigned
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4702)     # Unreachable code
     target_compile_options(${GAME_TGT_NAME} PUBLIC /W4)         # Enable all warnings (except the ones disabled above)
-    
+
     # MSVC: Don't complain about using regular 'std::fopen()' etc.
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)
 else()

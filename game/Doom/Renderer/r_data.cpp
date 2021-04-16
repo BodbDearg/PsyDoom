@@ -82,7 +82,7 @@ void R_InitTextures() noexcept {
         maptexture_t* const pMapTextures = (maptexture_t*) W_CacheLumpName("TEXTURE1", PU_CACHE, true);
         maptexture_t* pMapTex = pMapTextures;
         texture_t* pTex = gpTextures;
-        
+
         for (int32_t lumpNum = gFirstTexLumpNum; lumpNum <= gLastTexLumpNum; ++lumpNum, ++pMapTex, ++pTex) {
             pTex->lumpNum = (uint16_t) lumpNum;
             pTex->texPageId = 0;
@@ -94,7 +94,7 @@ void R_InitTextures() noexcept {
             } else {
                 pTex->width16 = (pTex->width + 30) / 16;    // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
             }
-            
+
             if (pTex->height + 15 >= 0) {
                 pTex->height16 = (pTex->height + 15) / 16;
             } else {
@@ -105,14 +105,14 @@ void R_InitTextures() noexcept {
         // Cleanup this after we are done
         Z_Free2(*gpMainMemZone, pMapTextures);
     }
-    
+
     // Init the texture translation table: initially all textures translate to themselves
     int32_t* const pTexTranslation = gpTextureTranslation;
 
     for (int32_t texIdx = 0; texIdx < gNumTexLumps; ++texIdx) {
         pTexTranslation[texIdx] = texIdx;
     }
-    
+
     // Clear out any blocks marked as 'cache' which can be evicted.
     // This call is here probably to try and avoid spikes in memory load.
     Z_FreeTags(*gpMainMemZone, PU_CACHE);
@@ -184,7 +184,7 @@ void R_InitSprites() noexcept {
     maptexture_t* const pMapSpriteTextures = (maptexture_t*) W_CacheLumpName("SPRITE1", PU_CACHE, true);
     maptexture_t* pMapTex = pMapSpriteTextures;
     texture_t* pTex = gpSpriteTextures;
-        
+
     for (int32_t lumpNum = gFirstSpriteLumpNum; lumpNum <= gLastSpriteLumpNum; ++lumpNum, ++pTex, ++pMapTex) {
         pTex->lumpNum = (uint16_t) lumpNum;
         pTex->texPageId = 0;
@@ -220,7 +220,7 @@ int32_t R_TextureNumForName(const char* const name) noexcept {
     // Chunk up the name for faster comparisons and also make case insensitive (uppercase).
     // Note: using a union here to try and avoid strict aliasing violations.
     lumpname_t nameUpper = {};
-    
+
     for (int32_t i = 0; (i < 8) && name[i]; ++i) {
         char c = name[i];
 
@@ -254,7 +254,7 @@ int32_t R_FlatNumForName(const char* const name) noexcept {
     // Chunk up the name for faster comparisons and also make case insensitive (uppercase).
     // Note: using a union here to try and avoid strict aliasing violations.
     lumpname_t nameUpper = {};
-    
+
     for (int32_t i = 0; (i < 8) && name[i]; ++i) {
         char c = name[i];
 
@@ -337,7 +337,7 @@ void R_InitPalette() noexcept {
 
             dstVramRect.x = (int16_t)(palTPage * 256);
             dstVramRect.y = (int16_t)(palRow - palTPage * PAL_ROWS_PER_TPAGE + SCREEN_H);
-            
+
             // Upload the palette to VRAM and save the CLUT id for this location
             LIBGPU_LoadImage(dstVramRect, (const uint16_t*) pPalette->colors);
             *pClutId = LIBGPU_GetClut(dstVramRect.x, dstVramRect.y);
@@ -346,7 +346,7 @@ void R_InitPalette() noexcept {
 
     // Set the initial palette to use for the 3d view: use the regular palette
     g3dViewPaletteClutId = gPaletteClutIds[MAINPAL];
-    
+
     // Clear out the palette data we just loaded as it's now in VRAM and doesn't need a backing RAM store.
     // This will also clear out anything else that is non essential.
     Z_FreeTags(*gpMainMemZone, PU_CACHE);
@@ -365,7 +365,7 @@ RECT getTextureVramRect(const texture_t& tex) noexcept {
     const int16_t texPageCoordX = (int16_t)(uint16_t) tex.texPageCoordX;    // N.B: make sure to zero extend!
     const int16_t texPageCoordY = (int16_t)(uint16_t) tex.texPageCoordY;
     const int16_t texPageId = (int16_t) tex.texPageId;
-    
+
     // Note: all x dimension coordinates get divided by 2 because 'RECT' coords are for 16-bit mode.
     // This function assumes all textures are 8 bits per pixel.
     RECT rect;

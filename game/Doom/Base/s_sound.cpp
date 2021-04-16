@@ -501,7 +501,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
     mobj_t* pListener = gPlayers[gCurPlayerIndex].mo;
     int32_t vol = WESS_MAX_MASTER_VOL;
     int32_t pan = WESS_PAN_CENTER;
-    
+
     #if PSYDOOM_MODS
         // PsyDoom: adding an extra safety check here
         const bool bAttenuateSound = (pOrigin && pListener && (pOrigin != pListener));
@@ -521,7 +521,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
         // Figure out the relative angle to the player.
         // Not sure what the addition of UINT32_MAX is about, was in Linux Doom also but not commented.
         angle_t angle = R_PointToAngle2(pListener->x, pListener->y, pOrigin->x, pOrigin->y);
-        
+
         if (angle <= pListener->angle) {
             angle += UINT32_MAX;
         }
@@ -533,7 +533,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
             const fixed_t sina = gFineSine[angle >> ANGLETOFINESHIFT];
             pan = WESS_PAN_CENTER - d_rshift<1>(d_fixed_to_int(FixedMul(sina, S_STEREO_SWING)));
         }
-        
+
         // Figure out volume level
         if (approxDist < S_CLOSE_DIST) {
             vol = WESS_MAX_MASTER_VOL;

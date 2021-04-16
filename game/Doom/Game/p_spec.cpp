@@ -106,7 +106,7 @@ void P_SetAnimsToBasePic() noexcept {
         if (animdef.istexture) {
             const int32_t startPic = R_TextureNumForName(animdef.startname);
             const int32_t endPic = R_TextureNumForName(animdef.endname);
-            
+
             for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx) {
                 side_t& side = gpSides[sideIdx];
 
@@ -125,7 +125,7 @@ void P_SetAnimsToBasePic() noexcept {
         } else {
             const int32_t startPic = R_FlatNumForName(animdef.startname);
             const int32_t endPic = R_FlatNumForName(animdef.endname);
-            
+
             for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
                 sector_t& sector = gpSectors[secIdx];
 
@@ -199,7 +199,7 @@ void P_InitPicAnims() noexcept {
                 dstTex.ppTexCacheEntries = basetex.ppTexCacheEntries;
             }
         }
-        
+
         // Init the anim state and move onto the next
         lastanim.istexture = animdef.istexture;
         lastanim.numpics = lastanim.picnum - lastanim.basepic + 1;
@@ -252,7 +252,7 @@ fixed_t P_FindLowestFloorSurrounding(sector_t& sector) noexcept {
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
         line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
-        
+
         if (pNextSector && (pNextSector->floorheight < lowestFloor)) {
             lowestFloor = pNextSector->floorheight;
         }
@@ -267,7 +267,7 @@ fixed_t P_FindLowestFloorSurrounding(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept {
     fixed_t highestFloor = -500 * FRACUNIT;
-    
+
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
         line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
@@ -318,7 +318,7 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
                 nextHighestFloor = floorH;
             }
         }
-        
+
         // If there is no next highest floor return the input height rather than something undefined
         return (nextHighestFloor != INT32_MAX) ? nextHighestFloor : baseHeight;
     #else
@@ -355,7 +355,7 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
 //------------------------------------------------------------------------------------------------------------------------------------------
 fixed_t P_FindLowestCeilingSurrounding(sector_t& sector) noexcept {
     fixed_t lowestHeight = INT32_MAX;
-    
+
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
         line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
@@ -413,7 +413,7 @@ int32_t P_FindSectorFromLineTag(line_t& line, const int32_t searchStart) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t P_FindMinSurroundingLight(sector_t& sector, const int32_t maxLightLevel) noexcept {
     int32_t minLightLevel = maxLightLevel;
-    
+
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
         line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
@@ -464,7 +464,7 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
         //----------------------------------------------------------------------------------------------------------------------------------
         // Once only triggers
         //----------------------------------------------------------------------------------------------------------------------------------
-        
+
         // Open door
         case 2:
             EV_DoDoor(line, Open);
@@ -919,7 +919,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
     // Logic only runs when the player is on the floor
     if (player.mo->z != sector.floorheight)
         return;
-    
+
     switch (sector.special) {
         // Hellslime damage
         case 5: {
@@ -1028,7 +1028,7 @@ void P_UpdateSpecials() noexcept {
             }   break;
         }
     }
-    
+
     // Update active switches/buttons and switch their wall textures back if it is time
     for (int32_t buttonIdx = 0; buttonIdx < MAXBUTTONS; ++buttonIdx) {
         // Ignore this button if it is not active
@@ -1226,7 +1226,7 @@ void P_SpawnSpecials() noexcept {
 
     // Save scrolling line specials to their own list (for quick updating)
     gNumLinespecials = 0;
-    
+
     for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
         line_t& line = gpLines[lineIdx];
 
@@ -1241,7 +1241,7 @@ void P_SpawnSpecials() noexcept {
                     gNumLinespecials++;
                 }
             }   break;
-            
+
             default:
                 break;
         }
@@ -1278,7 +1278,7 @@ void P_SpawnSpecials() noexcept {
             case MT_MISC7:  gMapYellowKeyType   = it_yellowskull;   break;
             case MT_MISC8:  gMapRedKeyType      = it_redskull;      break;
             case MT_MISC9:  gMapBlueKeyType     = it_blueskull;     break;
-            
+
             default: break;
         }
     }

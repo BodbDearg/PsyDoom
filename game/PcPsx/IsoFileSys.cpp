@@ -239,7 +239,7 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
             // Read the name of the record and null terminate.
             // Remove the version part of the name (';1' etc.) at the end of the string also.
             char recordName[256];
-            
+
             if ((sizeof(IsoDirRecord) + record.nameLen > recordLen) || (!discReader.read(recordName, record.nameLen)))
                 return false;
 
@@ -266,7 +266,7 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
             IsoFileSysEntry& fsEntry = entries.emplace_back();
             fsEntry.bIsDirectory = record.isDirectory();
             fsEntry.parentIdx = (uint16_t) dir.parentDirIndex;
-            
+
             std::strncpy(fsEntry.name, recordName, C_ARRAY_SIZE(fsEntry.name) - 1);
             fsEntry.name[C_ARRAY_SIZE(fsEntry.name) - 1] = 0;
             fsEntry.nameLen = (uint8_t) std::strlen(fsEntry.name);

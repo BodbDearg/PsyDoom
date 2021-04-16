@@ -39,10 +39,10 @@ void START_Credits() noexcept {
         I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
         I_LoadAndCacheTexLump(gTex_LEVCRED2, "LEVCRED2", 0);
     }
-    
+
     gCreditsScrollYPos = SCREEN_H;
     gCreditsPage = 0;
-    
+
     // Play the credits music
     psxcd_play_at_andloop(
         gCDTrackNum[cdmusic_credits_demo],
@@ -54,7 +54,7 @@ void START_Credits() noexcept {
         0,
         0
     );
-    
+
     // Wait until some cd audio has been read
     Utils::waitForCdAudioPlaybackStart();
 }
@@ -93,13 +93,13 @@ gameaction_t TIC_Credits() noexcept {
         if (gTicButtons[0] != 0)
             return ga_exit;
     #endif
-    
+
     // We only update/scroll this screen periodically, see if it is time
     gVBlanksUntilCreditScreenUpdate -= gPlayersElapsedVBlanks[0];
 
     if (gVBlanksUntilCreditScreenUpdate > 0)
         return ga_nothing;
-    
+
     gVBlanksUntilCreditScreenUpdate = 2;
     gCreditsScrollYPos -= 1;
 
@@ -144,7 +144,7 @@ void DRAW_Credits() noexcept {
     #if PSYDOOM_MODS
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
-    
+
     // Draw the background and scrolling credits text for whatever credits page we are on
     if (Game::isFinalDoom()) {
         // Final Doom: there are 3 pages: level, ID and Williams credits

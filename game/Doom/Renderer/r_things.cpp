@@ -37,7 +37,7 @@ static vissprite_t  gVisSpriteHead;
 void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
     // Initially the linked list of draw sprites is empty, cap it off as such
     gVisSpriteHead.next = &gVisSpriteHead;
-    
+
     // Run through all the things in the current sector and add things in this subsector to the draw list
     sector_t& sector = *subsec.sector;
     int32_t numDrawSprites = 0;
@@ -85,7 +85,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
                 if (viewpos.vx > leftRightClipX)
                     continue;
             }
-        
+
             // Sprite is not offscreen! Save viewspace position, scale due to perspective, and it's thing.
             pVisSprite->viewx = viewpos.vx;
             pVisSprite->scale = (HALF_SCREEN_W * FRACUNIT) / viewpos.vz;
@@ -139,7 +139,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         LIBGPU_SetTexWindow(texWinPrim, texWinRect);
         I_AddPrim(texWinPrim);
     }
-    
+
     // Initialize the quad primitive used to draw sprites
     #if PSYDOOM_MODS
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
@@ -157,7 +157,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         const mobj_t& thing = *pSpr->thing;
         const spritedef_t& spriteDef = gSprites[thing.sprite];
         const spriteframe_t& frame = spriteDef.spriteframes[thing.frame & FF_FRAMEMASK];
-        
+
         // Decide on which sprite lump to use and whether the sprite is flipped.
         // If the frame supports rotations then decide on the exact orientation to use, otherwise use the default.
         int32_t lumpNum;
@@ -181,7 +181,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 
         // Get the 3 blending flags and set whether the sprite is semi transparent
         const uint32_t blendFlags = (thing.flags & MF_ALL_BLEND_FLAGS) >> 28;
-        
+
         if (blendFlags != 0) {  // Minor logic bug? Should be testing against 'MF_BLEND_ON' instead?
             LIBGPU_SetSemiTrans(polyPrim, true);
         } else {
@@ -210,7 +210,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         // framebuffer to roughly 293 pixels, so sprites like the Cacodemon still appear mostly round rather than elliptical.
         // Oh well, points for effort at least!
         constexpr fixed_t ASPECT_CORRECT = (FRACUNIT * 4) / 5;
-        
+
         const fixed_t scale = pSpr->scale;
         int32_t drawY = d_fixed_to_int(thing.z - gViewZ);
         drawY += tex.offsetY;
@@ -286,7 +286,7 @@ void R_DrawWeapon() noexcept {
     // Run through all of the player sprites for the view player and render
     player_t& player = *gpViewPlayer;
     pspdef_t* pSprite = player.psprites;
-    
+
     for (int32_t pspIdx = 0; pspIdx < NUMPSPRITES; ++pspIdx, ++pSprite) {
         // Is this particular player sprite slot showing anything?
         if (!pSprite->state)
@@ -363,7 +363,7 @@ void R_DrawWeapon() noexcept {
                 (uint8_t) gCurLightValB
             );
         }
-        
+
         I_AddPrim(spr);
     }
 }

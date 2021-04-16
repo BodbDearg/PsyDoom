@@ -203,10 +203,10 @@ void I_DrawStringSmall(
     #else
         SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
     #endif
-    
+
     LIBGPU_setWH(spritePrim, 8, 8);
     spritePrim.y0 = (int16_t) y;
-    
+
     // Draw each visible character in the string
     int32_t curX = x;
     const char* pCurChar = str;
@@ -289,7 +289,7 @@ void I_DrawPausedOverlay() noexcept {
 
             I_AddPrim(polyPrim);
         }
-        
+
         I_VramViewerDraw(gVramViewerTexPage);
     }
 }
@@ -304,7 +304,7 @@ void I_UpdatePalette() noexcept {
 
     if (player.powers[pw_strength] != 0) {
         const int32_t berserkAmount = 12 - d_rshift<6>(player.powers[pw_strength]);
-        
+
         if (berserkAmount > redAmount) {
             redAmount = berserkAmount;
         }
@@ -325,7 +325,7 @@ void I_UpdatePalette() noexcept {
     }
     else if (redAmount != 0) {
         int32_t redPalIdx = d_rshift<3>(redAmount + 7);
-        
+
         if (redPalIdx >= NUMREDPALS) {
             redPalIdx = NUMREDPALS - 1;
         }
@@ -337,7 +337,7 @@ void I_UpdatePalette() noexcept {
     }
     else if (player.bonuscount != 0) {
         int32_t bonusPalIdx = d_rshift<3>(player.bonuscount + 7);
-        
+
         if (bonusPalIdx >= NUMBONUSPALS) {
             bonusPalIdx = NUMBONUSPALS - 1;
         }
@@ -522,7 +522,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
         LIBGPU_setXY0(spritePrim, (int16_t) curX, (int16_t) curY);
         LIBGPU_setUV0(spritePrim, fontchar.u, fontchar.v);
         LIBGPU_setWH(spritePrim, fontchar.w, fontchar.h);
-    
+
         I_AddPrim(spritePrim);
 
         // Move past the drawn character

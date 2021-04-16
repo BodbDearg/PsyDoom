@@ -52,7 +52,7 @@
         do {\
             FatalErrors::raiseF("Assert failed!\n%s\n", Message);\
         } while (0)
-    
+
     #define ASSERT_FAIL_F(MessageFormat, ...)\
         do {\
             FatalErrors::raiseF("Assert failed!\n" ## MessageFormat ## "\n", __VA_ARGS__);\

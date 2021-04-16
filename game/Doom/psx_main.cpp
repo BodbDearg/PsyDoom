@@ -67,7 +67,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
         // Determine the game type and variant and initialize the table of files on the CD from the file system
         Game::determineGameTypeAndVariant();
         CdMapTbl_Init();
-        
+
         // Initialize the display, modding manager and cheats
         Video::initVideo();
         ModMgr::init();

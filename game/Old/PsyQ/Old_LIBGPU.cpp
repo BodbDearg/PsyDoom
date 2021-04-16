@@ -26,7 +26,7 @@ void LIBGPU_DrawOTag(const void* const pPrimList, std::byte* const pGpuCmdBuffer
         // Stop if we've reached the end of the primitive list, otherwise move onto the next one
         if (nextPrimOffset24 == 0x00FFFFFF)
             break;
-        
+
         pCurPrim = (uint32_t*)(pGpuCmdBuffer + nextPrimOffset24);
     }
 }

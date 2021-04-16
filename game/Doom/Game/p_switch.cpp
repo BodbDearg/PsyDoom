@@ -94,7 +94,7 @@ void P_InitSwitchList() noexcept {
         // Get both textures for the switch
         const int32_t tex1Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name1);
         const int32_t tex2Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name2);
-        
+
         texture_t& tex1 = gpTextures[tex1Lump];
         texture_t& tex2 = gpTextures[tex2Lump];
 
@@ -106,7 +106,7 @@ void P_InitSwitchList() noexcept {
         if ((tex2.texPageId != 0) && (tex1.texPageId == 0)) {
             I_CacheTex(tex1);
         }
-        
+
         // Save what lumps the switch uses
         pSwitchLump[0] = tex1Lump;
         pSwitchLump[1] = tex2Lump;
@@ -122,7 +122,7 @@ static void P_StartButton(line_t& line, const bwhere_e where, const int32_t text
     // Try to find a slot to save the state of the button in
     for (int32_t btnIdx = 0; btnIdx < MAXBUTTONS; ++btnIdx) {
         button_t& button = gButtonList[btnIdx];
-        
+
         if (button.btimer == 0) {
             // Button slot is not in use: save the button state for later restoration and end search
             button.line = &line;
@@ -144,7 +144,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
     if (!bUseAgain) {
         line.special = 0;
     }
-    
+
     // Choose the sound for the switch.
     // Use a different sound for the exit switch (special = 11).
     const sfxenum_t soundId = (line.special == 11) ? sfx_swtchx : sfx_swtchn;
@@ -153,7 +153,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
     // When a match is found flip the texture to the opposite switch texture.
     // If the switch is usable again, switch it back after a while.
     side_t& side = gpSides[line.sidenum[0]];
-    
+
     for (int32_t switchListIdx = 0; switchListIdx < NUM_SWITCHES * 2; ++switchListIdx) {
         const int32_t switchTex = gSwitchList[switchListIdx];
 
@@ -206,7 +206,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         // Monsters cannot activate lines that are marked as secrets
         if (line.flags & ML_SECRET)
             return false;
-        
+
         // Presently only ordinary manual doors can be activated by monsters
         switch (line.special) {
             case 1:     // Manual door raise
@@ -540,7 +540,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
                 P_ChangeSwitchTexture(line, false);
             }
         }   break;
-        
+
         // Blazing door raise (faster than turbo!)
         case 111: {
             if (EV_DoDoor(line, BlazeRaise)) {

@@ -30,7 +30,7 @@ public:
         const DeviceMemAllocMode allocMode,
         const VkBufferUsageFlags bufferUsageFlags
     ) noexcept;
-    
+
     void destroy(const bool bImmediately = false, const bool bForceIfInvalid = false) noexcept;
     bool isValid() const noexcept;
 
@@ -41,7 +41,7 @@ public:
     inline bool isDeviceLocal() const noexcept { return mDeviceMemAlloc.bIsDeviceLocal; }
     inline bool isHostVisible() const noexcept { return mDeviceMemAlloc.bIsHostVisible; }
     inline std::byte* getBytes() const noexcept { return mDeviceMemAlloc.pBytes; }
-    
+
 private:
     // Copy and move assign disallowed
     RawBuffer(const RawBuffer& other) = delete;
@@ -50,7 +50,7 @@ private:
 
     // Retirement manager has intrusive access (for modifying retirement state)
     friend class RetirementMgr;
-    
+
     uint64_t            mSize;                  // Note: this controls 'validity' of the buffer to save memory - no 'valid' flag
     uint64_t            mOrigRequestedSize;
     LogicalDevice*      mpDevice;

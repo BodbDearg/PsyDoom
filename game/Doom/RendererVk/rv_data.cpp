@@ -31,13 +31,13 @@ static void RV_InitSegs() noexcept {
         const seg_t& srcSeg = gpSegs[i];
         const vertex_t& srcV1 = *srcSeg.vertex1;
         const vertex_t& srcV2 = *srcSeg.vertex2;
-        
+
         rvseg_t& dstSeg = gpRvSegs[i];
         dstSeg.v1x = RV_FixedToFloat(srcV1.x);
         dstSeg.v1y = RV_FixedToFloat(srcV1.y);
         dstSeg.v2x = RV_FixedToFloat(srcV2.x);
         dstSeg.v2y = RV_FixedToFloat(srcV2.y);
-        
+
         const double edgeDx = (double) dstSeg.v2x - dstSeg.v1x;
         const double edgeDy = (double) dstSeg.v2y - dstSeg.v1y;
         dstSeg.length = (float) std::sqrt(edgeDx * edgeDx + edgeDy * edgeDy);

@@ -29,14 +29,14 @@ public:
     inline VkRenderPass getVkRenderPass() const noexcept { return mVkRenderPass; }
 
     uint32_t getNumSubpassColorAttachments(const uint32_t subpassIndex) const noexcept;
-    
+
 private:
     // Copy and move disallowed
     RenderPass(const RenderPass& other) = delete;
     RenderPass(RenderPass&& other) = delete;
     RenderPass& operator = (const RenderPass& other) = delete;
     RenderPass& operator = (RenderPass&& other) = delete;
-    
+
     bool                    mbIsValid;
     uint32_t                mNumSubpasses;
     uint32_t                mNumAttachments;

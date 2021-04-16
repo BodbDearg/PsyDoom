@@ -37,7 +37,7 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
     // If there is no master status struct then we cannot initialize
     if (!pMStat)
         return false;
-    
+
     // Try to find the patch group in the currently loaded module for the PlayStation
     module_data& module = *pMStat->pmodule;
     patch_group_data* pPatchGroup = nullptr;
@@ -62,7 +62,7 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
         uint8_t* pPatchesData = pPatchGroup->pdata;
         gpWess_lcd_load_patches = (patch*) pPatchesData;
         pPatchesData += sizeof(patch) * pPatchGroup->hdr.num_patches;
-        
+
         wess_align_byte_ptr(pPatchesData, alignof(patch_voice));
         gpWess_lcd_load_patchVoices = (patch_voice*) pPatchesData;
         pPatchesData += sizeof (patch_voice) * pPatchGroup->hdr.num_patch_voices;
@@ -110,7 +110,7 @@ int32_t wess_dig_lcd_data_read(
     uint32_t sectorBytesLeft = CDROM_SECTOR_SIZE;
     int32_t bytesWritten = 0;
     uint32_t sndDataOffset = 0;
-    
+
     // Continue uploading sound bytes to the SPU until we have exhausted all bytes in the given input sector buffer
     while (sectorBytesLeft > 0) {
         // Do we need to switch over to uploading a new sound?
@@ -138,7 +138,7 @@ int32_t wess_dig_lcd_data_read(
             // If we have finished uploading all sounds then we are done
             if (gWess_lcd_load_soundNum >= gWess_lcd_load_numSounds)
                 return bytesWritten;
-            
+
             // Otherwise switch over to reading and uploading the next sound.
             // Set the number of bytes to read, and where to upload it to in SPU ram when we are done.
             gWess_lcd_load_soundNum++;

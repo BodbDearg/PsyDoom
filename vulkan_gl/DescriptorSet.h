@@ -25,9 +25,9 @@ public:
 
     inline DescriptorPool* getParentPool() const noexcept { return mpParentPool; }
     inline VkDescriptorSet getVkDescriptorSet() const noexcept { return mVkDescriptorSet; }
-    
+
     void free(const bool bImmediately = false) noexcept;
-    
+
     void bindBufferBytes(
         const uint32_t bindingNum,
         const Buffer& buffer,
@@ -62,14 +62,14 @@ private:
     DescriptorSet(const DescriptorSet& other) = delete;
     DescriptorSet& operator = (const DescriptorSet& other) = delete;
     DescriptorSet& operator = (DescriptorSet&& other) = delete;
-    
+
     // Descriptor pool and retirement manager get intrusive access
     friend class DescriptorPool;
     friend class RetirementMgr;
 
     void init(DescriptorPool& parentPool, const VkDescriptorSet vkDescriptorSet) noexcept;  
     void release() noexcept;
-    
+
     DescriptorPool*     mpParentPool;
     VkDescriptorSet     mVkDescriptorSet;
 };

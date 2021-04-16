@@ -513,7 +513,7 @@ void ConstInstructionEvaluator::initEvaluator(const ExeFile& exe, const ProgElem
         instruction.regOut.clear();
         instruction.execCount = 0;
     }
-    
+
     // We start off by evaluating the first instruction in the function with the given input registers
     {
         BranchPath& branchPath = mBranchPathsToExec.emplace_back();
@@ -556,7 +556,7 @@ void ConstInstructionEvaluator::evalBranchPath(const BranchPath& branchPath) noe
 
     if (instructionIdx >= numInstructions)
         return;
-    
+
     // Our inital input for all instructions will be the register state stored in the branch path
     ConstEvalRegState inputRegState = branchPath.regStates;
 
@@ -571,7 +571,7 @@ void ConstInstructionEvaluator::evalBranchPath(const BranchPath& branchPath) noe
         // If the instruction is a trap instruction (illegal) then do not execute any instructions following it
         if (CpuOpcodeUtils::isTrapOpcode(thisInst.instruction.opcode))
             break;
-        
+
         // If the instruction is a branch or jump then the next instruction gets executed also.
         // Determine what the next input state will be based on whether there is a branch or not:
         const CpuOpcode thisInstOpcode = thisInst.instruction.opcode;

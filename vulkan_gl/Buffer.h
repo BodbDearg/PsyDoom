@@ -20,7 +20,7 @@ enum class BufferUsageMode : uint8_t {
     // buffers are required to do transfers) because it is not expected to be updated often. Instead a temporary
     // buffer will be allocated once via the transfer manager for the purposes of a once-off transfer.
     STATIC,
-    
+
     // The buffer is populated very frequently or once per frame.
     // Prefer to transfer the buffer into on-device memory before being used (if possible!) but fallback to
     // regular RAM if we are out of GPU memory.
@@ -96,7 +96,7 @@ public:
     inline VkImageUsageFlags getUsageFlags() const noexcept { return mUsageFlags; }
     inline BufferUsageMode getUsageMode() const noexcept { return mUsageMode; }
     inline bool isResizable() const noexcept { return mbIsResizable; }
-    
+
     uint64_t getSizeInBytes() const noexcept;
     uint64_t getOrigRequestedSizeInBytes() const noexcept;
 
@@ -120,7 +120,7 @@ public:
 
     template <class T>
     inline T* getLockedElements() const noexcept { return reinterpret_cast<T*>(mpLockedBytes); }
-    
+
     // Get the underlying Vulkan buffer
     inline VkBuffer getVkBuffer() const noexcept { return mBuffer.getVkBuffer(); }
 
@@ -155,7 +155,7 @@ public:
         // The result of the transfer will not be immediately be available in the resized buffer unless 'COPY_RAM_IMMEDIATE'
         // is specified and both the old and new buffer are stored in CPU visible memory.
         static constexpr ResizeFlags KEEP_DATA = 0x01;
-        
+
         // Keep previously locked data in the new buffer in the region.
         // The region of data preserved is the intersection of the old locked area and new locked area.
         // Any data outside of that region is lost.
@@ -194,7 +194,7 @@ private:
     Buffer(const Buffer& other) = delete;
     Buffer& operator = (const Buffer& other) = delete;
     Buffer& operator = (Buffer&& other) = delete;
-    
+
     bool                mbIsValid;
     VkBufferUsageFlags  mUsageFlags;
     BufferUsageMode     mUsageMode;

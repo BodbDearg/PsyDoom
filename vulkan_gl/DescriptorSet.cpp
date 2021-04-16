@@ -55,7 +55,7 @@ void DescriptorSet::free(const bool bImmediately) noexcept {
     ASSERT(mpParentPool && mpParentPool->isValid());
     ASSERT(mpParentPool->getDevice());
     ASSERT(mpParentPool->getDevice()->getRetirementMgr().isValid());
-    
+
     if (bImmediately) {
         mpParentPool->freeDescriptorSet(*this);
     } else {
@@ -84,7 +84,7 @@ void DescriptorSet::bindBufferBytes(
     ASSERT(device.getVkDevice());
     ASSERT(bufferOffsetInBytes < buffer.getSizeInBytes());
     ASSERT(bufferOffsetInBytes + bufferRangeInBytes <= buffer.getSizeInBytes());
-    
+
     // Fill in the buffer info struct
     VkDescriptorBufferInfo bufferInfo = {};
     bufferInfo.buffer = buffer.getVkBuffer();

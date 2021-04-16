@@ -17,7 +17,7 @@ static constexpr const char* const UNSPECIFIED_ERROR_STR = "An unspecified/unkno
     } else {
         std::printf("[FATAL ERROR] %s\n", UNSPECIFIED_ERROR_STR);
     }
-    
+
     std::terminate();
 }
 

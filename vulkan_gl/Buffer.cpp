@@ -25,7 +25,7 @@ static inline VkBufferUsageFlags getVkBufferUsageFlagsForBufferUsageMode(const B
                 return VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             }
         }
-        
+
         case BufferUsageMode::IMMEDIATE:
             return 0;
     }
@@ -118,7 +118,7 @@ bool Buffer::initWithByteCount(
     const DeviceMemAllocMode mainBufferMemAllocMode = (usageMode == BufferUsageMode::IMMEDIATE) 
         ? DeviceMemAllocMode::REQUIRE_HOST_VISIBLE
         : DeviceMemAllocMode::PREFER_DEVICE_LOCAL;
-    
+
     if (!mBuffer.init(device, sizeInBytes, mainBufferMemAllocMode, mUsageFlags)) {
         ASSERT_FAIL("Creating the main raw buffer for a buffer failed!");
         return false;
@@ -142,7 +142,7 @@ bool Buffer::initWithByteCount(
             }
         }
     }
-    
+
     // Success!
     mbIsValid = true;
     return true;
@@ -155,11 +155,11 @@ void Buffer::destroy(const bool bImmediateCleanup, const bool bForceIfInvalid) n
     // Only destroy if we need to
     if ((!mbIsValid) && (!bForceIfInvalid))
         return;
-    
+
     // Preconditions: note not clearing out lock details since they should already be cleared (due to no lock) at this point
     ASSERT_LOG((!getDevice()) || getDevice()->getVkDevice(), "Parent device must still be valid if defined!");
     ASSERT_LOG((!mbIsLocked), "Destroying a buffer that has not been unlocked!");
-    
+
     // Destroy the buffer
     mbIsValid = false;
     mStagingBuffer.destroy(bImmediateCleanup);
@@ -375,7 +375,7 @@ bool Buffer::resizeToByteCount(
     mLockedSize         = 0;
     mLockedVkBuffer     = VK_NULL_HANDLE;
     mpLockedBytes       = nullptr;
-    
+
     RawBuffer oldBuffer(std::move(mBuffer));
     RawBuffer oldStagingBuffer(std::move(mStagingBuffer));
 
@@ -384,7 +384,7 @@ bool Buffer::resizeToByteCount(
     const bool bKeepLockedData = ((resizeFlags & ResizeFlagBits::KEEP_LOCKED_DATA) != 0);
     const bool bMainBufferIsStagingBuffer = (oldBuffer.getBytes() != nullptr);
     const bool bDestroyStagingBufferImmediately = ((!bKeepLockedData) || (!bWasLocked));
-    
+
     if (bDestroyStagingBufferImmediately) {
         oldStagingBuffer.destroy(true);
     }
@@ -403,7 +403,7 @@ bool Buffer::resizeToByteCount(
     if ((newLockSizeInBytes > 0) && (newLockOffsetInBytes < actualNewSize)) {
         const uint64_t maxLockSize = actualNewSize - newLockOffsetInBytes;
         const uint64_t actualNewLockSize = std::min(maxLockSize, newLockSizeInBytes);
-        
+
         if (!lockBytes(newLockOffsetInBytes, actualNewLockSize)) {
             ASSERT_FAIL("Re-lock after buffer resize failed!");
             destroy(true);

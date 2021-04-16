@@ -49,7 +49,7 @@ public:
     inline RetirementMgr& getRetirementMgr() noexcept { return mRetirementMgr; }
     inline TransferMgr& getTransferMgr() noexcept { return mTransferMgr; }
     inline CmdPool& getCmdPool() noexcept { return mCmdPool; }
-    
+
     bool submitCmdBuffer(
         const CmdBuffer& cmdBuffer,
         const std::vector<CmdBufferWaitCond>& waitConditions,
@@ -70,12 +70,12 @@ private:
     void destroyDeviceAndQueues() noexcept;
     bool chooseOptimalWorkQueueFamily(const std::vector<uint32_t>& validPresentationQueueFamilies) noexcept;
     bool chooseOptimalPresentationQueueFamily(const std::vector<uint32_t>& validPresentationQueueFamilies) noexcept;
-    
+
     bool gatherCreatedQueueHandles(
         const VkDeviceQueueCreateInfo* const pQueueCreateInfos, 
         const uint32_t numQueueCreateInfos
     ) noexcept;
-    
+
     VkFuncs&                mVkFuncs;                       // Pointers to Vulkan API functions
     bool                    mbIsValid;                      // True if the logical device was created & initialized successfully
     bool                    mbIsHeadless;                   // If true we are not presenting to a window surface, the device is in 'headless' mode

@@ -39,7 +39,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
 
     if (!ProgArgs::gDataDirPath[0])
         return;
-    
+
     // Build a map from filename to file index
     std::map<std::string, uint32_t> nameToFileIndex;
 
@@ -53,26 +53,26 @@ static void determineFileOverridesInUserDataDir() noexcept {
     #if __APPLE__
         do {
             DIR* const pDir = opendir(ProgArgs::gDataDirPath);
-            
+
             if (!pDir) {
                 FatalErrors::raiseF("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
                 break;
             }
-            
+
             errno = 0;
-            
+
             while (dirent* const pDirEnt = readdir(pDir)) {
                 // Try to match this file against game files and flag as an override if matching
                 auto nameToFileIndexIter = nameToFileIndex.find(pDirEnt->d_name);
-                
+
                 if (nameToFileIndexIter != nameToFileIndex.end()) {
                     const uint32_t fileIdx = nameToFileIndexIter->second;
                     gbFileHasOverrides[fileIdx] = true;
                 }
             }
-            
+
             closedir(pDir);
-            
+
             if (errno) {
                 FatalErrors::raiseF("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
             }
@@ -183,7 +183,7 @@ bool openOverridenFile(const CdFileId discFile, PsxCd_File& fileOut) noexcept {
     }
 
     std::string filePath = getOverridenFilePath(discFile);
-    
+
     // Open the file and save it in the file slot index
     std::FILE* const pFile = std::fopen(filePath.c_str(), "rb");
 
@@ -245,7 +245,7 @@ int32_t readFromOverridenFile(void* const pDest, int32_t numBytes, PsxCd_File& f
 int32_t seekForOverridenFile(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept {
     ASSERT(isValidOverridenFile(file));
     std::FILE* const pFile = gOpenFileSlots[file.overrideFileHandle - 1];
-    
+
     if (mode == PsxCd_SeekMode::SET) {
         return (std::fseek(pFile, offset, SEEK_SET) == 0) ? 0 : -1;
     } else if (mode == PsxCd_SeekMode::CUR) {

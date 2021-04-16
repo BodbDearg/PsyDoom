@@ -190,7 +190,7 @@ bool Framebuffer::initInternal(
     mWidth = fbWidth;
     mHeight = fbHeight;
     mpDevice = &device;
-    
+
     // Create the framebuffer
     VkFramebufferCreateInfo fbCreateInfo = {};
     fbCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

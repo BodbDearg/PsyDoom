@@ -163,7 +163,7 @@ uint64_t getMipLevelsByteSize(
 
     uint64_t totalSize = 0;
     uint32_t mipLevel = 0;
-    
+
     uint32_t mipLevelWidth = {};
     uint32_t mipLevelHeight = {};
     uint32_t mipLevelDepth = {};

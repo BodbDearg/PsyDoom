@@ -62,7 +62,7 @@ static uint32_t determineSubpassDependencies(
             VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
         );
-        
+
         // Now find what other subpass it depends on and fill in the operations we must wait on
         uint32_t referencingSubpassIdx = {};
         AttachmentUsageFlags referencingSubpassUsageFlags = 0;
@@ -74,7 +74,7 @@ static uint32_t determineSubpassDependencies(
             referencingSubpassIdx,
             referencingSubpassUsageFlags
         );
-        
+
         if (inUseByPrevSubpass) {
             dependency.srcSubpass = referencingSubpassIdx;
 
@@ -120,7 +120,7 @@ static uint32_t determineSubpassDependencies(
             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
         );
-        
+
         // Now find what other subpass it depends on and fill in the operations we must wait on
         uint32_t referencingSubpassIdx = {};
         AttachmentUsageFlags referencingSubpassUsageFlags = 0;
@@ -132,7 +132,7 @@ static uint32_t determineSubpassDependencies(
             referencingSubpassIdx,
             referencingSubpassUsageFlags
         );
-        
+
         if (inUseByPrevSubpass) {
             dependency.srcSubpass = referencingSubpassIdx;
 
@@ -187,7 +187,7 @@ static uint32_t determineSubpassDependencies(
             referencingSubpassIdx,
             referencingSubpassUsageFlags
         );
-        
+
         if (inUseByPrevSubpass) {
             dependency.srcSubpass = referencingSubpassIdx;
 
@@ -305,7 +305,7 @@ bool RenderPass::init(LogicalDevice& device, const RenderPassDef& renderPassDef)
         outSubpass.preserveAttachmentCount = (uint32_t) inSubpass.preserveAttachments.size();
         outSubpass.pPreserveAttachments = inSubpass.preserveAttachments.data();
     }
-    
+
     // Figure out the dependencies for all subpasses - excluding external subpass dependencies.
     // External subpass dependencies must be specified manually via the 'extra' dependencies field.
     std::vector<VkSubpassDependency> subpassDependencies;
@@ -334,7 +334,7 @@ bool RenderPass::init(LogicalDevice& device, const RenderPassDef& renderPassDef)
     }
 
     ASSERT(mVkRenderPass);
-    
+
     // Initialization was successful!
     mbIsValid = true;
     return true;

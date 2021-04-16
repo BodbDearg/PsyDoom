@@ -33,17 +33,17 @@ void Sequence::readFromJson(const rapidjson::Value& jsonRoot) noexcept {
 void Sequence::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
     // Sequence properties
     jsonRoot.AddMember("unknownWmdField", unknownWmdField, jsonAlloc);
-    
+
     // Write all tracks
     {
         rapidjson::Value tracksArray(rapidjson::kArrayType);
-        
+
         for (const Track& track : tracks) {
             rapidjson::Value trackObj(rapidjson::kObjectType);
             track.writeToJson(trackObj, jsonAlloc);
             tracksArray.PushBack(trackObj, jsonAlloc);
         }
-        
+
         jsonRoot.AddMember("tracks", tracksArray, jsonAlloc);
     }
 }
@@ -62,7 +62,7 @@ void Sequence::readFromWmdFile(InputStream& in) THROWS {
 
     // Read all the tracks in the sequence
     tracks.clear();
-    
+
     for (uint32_t trackIdx = 0; trackIdx < seqHdr.numTracks; ++trackIdx) {
         tracks.emplace_back().readFromWmdFile(in);
     }

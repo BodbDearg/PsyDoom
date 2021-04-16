@@ -84,7 +84,7 @@ static void decodeAdpcmBlock(Voice& voice, std::byte adpcmBlock[ADPCM_BLOCK_SIZE
     // Also according to NO$PSX: "For both 4bit and 8bit ADPCM, reserved shift values 13..15 will act same as shift = 9"
     uint32_t sampleShift = (uint32_t) adpcmBlock[0] & 0x0F;
     uint32_t adpcmFilter = ((uint32_t) adpcmBlock[0] & 0x70) >> 4;
-    
+
     if (adpcmFilter > 4) {
         adpcmFilter = 0;
     }
@@ -169,7 +169,7 @@ static EnvPhase getNextEnvPhase(const EnvPhase phase) noexcept {
 static EnvPhaseParams getEnvPhaseParams(const AdsrEnvelope env, const EnvPhase phase, const int16_t envLevel) noexcept {
     // Envelope level shouldn't be negative, but just in case...
     const int32_t absEnvLevel = std::abs((int32_t) envLevel);
-    
+
     // Gather basic info for the envelope phase
     int32_t     targetLevel;
     int32_t     stepUnscaled;
@@ -219,7 +219,7 @@ static EnvPhaseParams getEnvPhaseParams(const AdsrEnvelope env, const EnvPhase p
     params.targetLevel = targetLevel;
     params.stepCycles = 1 << std::max<int32_t>(0, stepScale - 11);
     params.step = stepUnscaled * stepScaleMultiplier;
-    
+
     if (bExponential) {
         // Adjustments based on the current envelope level when the envelope mode is 'exponential'.
         // Slower fade-outs as the envelope level decreases & 4x slower fade-ins when envelope level surpasses '0x6000'.
@@ -268,7 +268,7 @@ static void stepVoiceEnvelope(Voice& voice) noexcept {
     } else {
         voice.envWaitCycles = envParams.stepCycles;
     }
-    
+
     voice.envLevel = (int16_t) newEnvLevel;
 }
 
@@ -373,7 +373,7 @@ static void stepVoice(
             sampleEnvScaled * realVoiceVolL,
             sampleEnvScaled * realVoiceVolR
         };
-        
+
         output += sampleVolScaled;
 
         // Only include in the output to reverberate if reverb is enabled for the voice
@@ -455,7 +455,7 @@ static void mixExternalInput(
 ) noexcept {
     if (!pExtCallback)
         return;
-    
+
     const StereoSample extSample = pExtCallback(pExtCallbackUserData);
     const StereoSample extSampleScaled = extSample * extVolume;
     output += extSampleScaled;
@@ -516,7 +516,7 @@ static void doReverb(
     // Wraps the read or write to be within the work area for reverb.
     const auto revR = [=](uint32_t addrRelative) noexcept -> Sample {
         const uint32_t addr = wrapRevAddr16(reverbCurAddr + addrRelative);
-        
+
         #if SIMPLE_SPU_FLOAT_SPU
             return pReverbRam[addr / 2];
         #else
@@ -685,7 +685,7 @@ void doMasterMix(
     if (voiceCount > 0) {
         core.pVoices = new Voice[voiceCount];
         core.numVoices = voiceCount;
-        
+
         for (uint32_t i = 0; i < voiceCount; ++i) {
             core.pVoices[i] = {};
         }

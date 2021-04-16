@@ -42,7 +42,7 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
 
     // How many samples are to be output?
     const uint32_t numSamples = (uint32_t) outputSize / (sizeof(float) * 2);
-    
+
     // Lock the SPU and generate the requested number of samples
     float* pOutputF = reinterpret_cast<float*>(pOutput);
     PsxVm::LockSpu spuLock;
@@ -78,7 +78,7 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
 bool init(const char* const doomCdCuePath) noexcept {
     // Init the GPU core
     Gpu::initCore(gGpu, Gpu::PS1_VRAM_W, Gpu::PS1_VRAM_H);
-    
+
     // Init the SPU core and use extended hardware voice counts (64 max) and an expanded RAM size (defaulted to 16 MiB) if the build is limit removing.
     // Note: don't allow  SPU RAM to be smaller than the original 512 KiB for compatibility reasons.
     constexpr uint32_t PSX_SPU_RAM_SIZE = 512 * 1024;

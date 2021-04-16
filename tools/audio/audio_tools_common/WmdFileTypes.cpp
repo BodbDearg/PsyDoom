@@ -200,7 +200,7 @@ uint32_t AudioTools::getNumWmdTrackCmdArgs(const WmdTrackCmdType type) noexcept 
         case WmdTrackCmdType::TrkEnd:
         case WmdTrackCmdType::NullEvent:
             return 0;
-            
+
         case WmdTrackCmdType::PatchChg:
         case WmdTrackCmdType::PatchMod:
         case WmdTrackCmdType::PitchMod:
@@ -221,7 +221,7 @@ uint32_t AudioTools::getNumWmdTrackCmdArgs(const WmdTrackCmdType type) noexcept 
         case WmdTrackCmdType::TrkGosub:
         case WmdTrackCmdType::TrkJump:
             return 1;
-            
+
         case WmdTrackCmdType::NoteOn:
         case WmdTrackCmdType::StatusMark:
         case WmdTrackCmdType::WriteIterBox:
@@ -230,10 +230,10 @@ uint32_t AudioTools::getNumWmdTrackCmdArgs(const WmdTrackCmdType type) noexcept 
         case WmdTrackCmdType::GateJump:
         case WmdTrackCmdType::IterJump:
             return 3;
-        
+
         default: break;
     }
-    
+
     return 0;
 }
 
@@ -249,7 +249,7 @@ const char* AudioTools::toString(const WmdSoundDriverId value) noexcept {
         default:
             break;
     }
-    
+
     return "";
 }
 
@@ -260,7 +260,7 @@ const char* AudioTools::toString(const WmdSoundClass value) noexcept {
         case WmdSoundClass::DRUMS:      return "DRUMS";
         case WmdSoundClass::SFXDRUMS:   return "SFXDRUMS";
     }
-    
+
     return "";
 }
 
@@ -303,7 +303,7 @@ const char* AudioTools::toString(const WmdTrackCmdType value) noexcept {
         case WmdTrackCmdType::TrkEnd:           return "TrkEnd";
         case WmdTrackCmdType::NullEvent:        return "NullEvent";
     }
-    
+
     return "";
 }
 
@@ -325,7 +325,7 @@ static T stringToEnum(const char* const str, const std::map<std::string, T, std:
             return (char) ::toupper(c);
         }
     );
-    
+
     // Find in the name map and return the enum
     const auto iter = nameToEnumMap.find(strUpper);
     return (iter != nameToEnumMap.end()) ? iter->second : (T) -1;

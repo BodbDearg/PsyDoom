@@ -101,7 +101,7 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
                     case lowerAndCrush:
                         P_RemoveActiveCeiling(ceiling);
                         break;
-                        
+
                     default:
                         break;
                 }

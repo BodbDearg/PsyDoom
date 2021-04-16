@@ -104,11 +104,11 @@ bool readVagFile(
             if (hdr.version != VAG_FILE_VERSION)
                 throw "The .vag file version is not recognized! The only supported version is '3'.";
         #endif
-        
+
         // Verify the size in the header file: it must include the required number of implicit blocks and be block size aligned
         if (hdr.adpcmDataSize < VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE)
             throw "Invalid size specified in the .vag file header!";
-        
+
         if (hdr.adpcmDataSize % ADPCM_BLOCK_SIZE != 0)
             throw "Invalid size specified in the .vag file header!";
 
@@ -210,7 +210,7 @@ void decodePsxAdpcmSamples(
         // Also according to NO$PSX: "For both 4bit and 8bit ADPCM, reserved shift values 13..15 will act same as shift = 9"
         uint32_t sampleShift = (uint32_t) adpcmBlock[0] & 0x0F;
         uint32_t adpcmFilter = ((uint32_t) adpcmBlock[0] & 0x70) >> 4;
-        
+
         if (adpcmFilter > 4) {
             adpcmFilter = 0;
         }
@@ -401,7 +401,7 @@ void encodePcmSoundToPsxAdpcm(
         const uint32_t startSampIdx = blockIdx * ADPCM_BLOCK_NUM_SAMPLES;
         const uint32_t endSampIdx = std::min(startSampIdx + ADPCM_BLOCK_NUM_SAMPLES, numSamples);
         const int32_t numSamplesToCopy = endSampIdx - startSampIdx;
-        
+
         std::memcpy(blockSamples, pSamples + startSampIdx, numSamplesToCopy * sizeof(int16_t));
 
         // Encode the ADPCM block

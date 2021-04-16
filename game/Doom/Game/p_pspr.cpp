@@ -116,7 +116,7 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
 
     if ((sector.validcount == gValidCount) && (sector.soundtraversed <= soundTraversed))
         return;
-    
+
     // Flood fill this sector and save the thing that made noise and whether sound was blocked
     sector.validcount = gValidCount;
     sector.soundtraversed = soundTraversed;
@@ -130,7 +130,7 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
         // Sound can't pass single sided lines
         if (!pBackSector)
             continue;
-        
+
         sector_t& frontSector = *line.frontsector;
 
         // If the sector is a closed door then sound can't pass through it
@@ -142,7 +142,7 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
 
         // Need to recurse into the sector on the opposite side of this sector's line
         sector_t& checkSector = (&frontSector == &sector) ? *pBackSector : frontSector;
-        
+
         if (line.flags & ML_SOUNDBLOCK) {
             if (!bStopOnSoundBlock) {
                 P_RecursiveSound(checkSector, true);
@@ -201,7 +201,7 @@ void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t st
             if (!sprite.state)
                 break;
         }
-        
+
         // Execute the next state if the tics left is zero (state is an instant cycle through)
         nextStateNum = sprite.state->nextstate;
 
@@ -217,13 +217,13 @@ static void P_BringUpWeapon(player_t& player) noexcept {
     if (player.pendingweapon == wp_nochange) {
         player.pendingweapon = player.readyweapon;
     }
-    
+
     // If we're raising the chainsaw then play its up sound.
     // Exception: don't do this on level start.
     if ((player.pendingweapon == wp_chainsaw) && gbIsLevelDataCached) {
         S_StartSound(player.mo, sfx_sawup);
     }
-    
+
     // No longer have a pending weapon but remember what it was (for what comes next)
     const statenum_t nextWeaponState = gWeaponInfo[player.pendingweapon].upstate;
     player.pendingweapon = wp_nochange;
@@ -284,7 +284,7 @@ static bool P_CheckAmmo(player_t& player) noexcept {
     else {
         player.pendingweapon = wp_fist;
     }
-    
+
     // Start lowering the current weapon
     P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].downstate);
     return false;
@@ -297,7 +297,7 @@ void P_FireWeapon(player_t& player) noexcept {
     // If there is not enough ammo then you can't fire
     if (!P_CheckAmmo(player))
         return;
-    
+
     // Player is now in the attacking state
     P_SetMObjState(*player.mo, S_PLAY_ATK1);
 
@@ -347,7 +347,7 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
         P_FireWeapon(player);
         return;
     }
-    
+
     // Otherwise do weapon bobbing based on current movement speed
     constexpr uint32_t COSA_MASK = FINEANGLES - 1;
     constexpr uint32_t SINA_MASK = FINEANGLES / 2 - 1;
@@ -442,7 +442,7 @@ void A_GunFlash(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
 void A_Punch(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     // Figure out the damage amount (3-24) and 10x it if we have beserk
     int32_t damage = ((P_Random() & 7) + 1) * 3;
-    
+
     if (player.powers[pw_strength]) {
         damage *= 10;
     }
@@ -453,7 +453,7 @@ void A_Punch(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     // Left shift of signed numbers when there is overflow is undefined behavior in C/C++, and produces an implementation defined result.
     // I've found if I omit ths cast then demos will break, due to different behavior:
     const angle_t angleVariance = ((angle_t) P_SubRandom()) << 18;
-    
+
     mobj_t& playerMobj = *player.mo;
     const angle_t attackAngle = playerMobj.angle + angleVariance;
     P_LineAttack(playerMobj, attackAngle, MELEERANGE, INT32_MAX, damage);
@@ -577,7 +577,7 @@ static void P_BulletSlope(mobj_t& mobj) noexcept {
 static void P_GunShot(mobj_t& mobj, const bool bAccurate) noexcept {
     const int32_t damage = ((P_Random() & 3) + 1) * 4;
     angle_t angle = mobj.angle;
-    
+
     if (!bAccurate) {
         // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
         // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
@@ -594,7 +594,7 @@ void A_FirePistol(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept 
     // Play the sound and decrement ammo count
     mobj_t& playerMobj = *player.mo;
     S_StartSound(&playerMobj, sfx_pistol);
-    
+
     const weaponinfo_t& weaponInfo = gWeaponInfo[player.readyweapon];
     player.ammo[weaponInfo.ammo]--;
 
@@ -613,7 +613,7 @@ void A_FireShotgun(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept
 
     const weaponinfo_t& weaponInfo = gWeaponInfo[player.readyweapon];
     player.ammo[weaponInfo.ammo]--;
-    
+
     // Do muzzle flash
     P_SetPsprite(player, ps_flash, weaponInfo.flashstate);
 
@@ -643,7 +643,7 @@ void A_FireShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcep
     // Decrement ammo amount and do the muzzle flash
     const weaponinfo_t& weaponInfo = gWeaponInfo[player.readyweapon];
     player.ammo[weaponInfo.ammo] -= 2;
-    
+
     P_SetPsprite(player, ps_flash, weaponInfo.flashstate);
 
     // Figure out the vertical aim slope
@@ -782,7 +782,7 @@ void P_SetupPsprites(const int32_t playerIdx) noexcept {
     for (int32_t i = 0; i < NUMPSPRITES; ++i) {
         player.psprites[i].state = nullptr;
     }
-    
+
     // Raise the current weapon
     player.pendingweapon = player.readyweapon;
     P_BringUpWeapon(player);
@@ -811,7 +811,7 @@ void P_MovePsprites(player_t& player) noexcept {
 
     while (gTicRemainder[gPlayerNum] >= tickVblLength) {
         gTicRemainder[gPlayerNum] -= tickVblLength;
-        
+
         // Tic all player sprites and advance them to the next state if required
         for (int32_t playerSprIdx = 0; playerSprIdx < NUMPSPRITES; ++playerSprIdx) {
             pspdef_t& playerSpr = player.psprites[playerSprIdx];
@@ -832,7 +832,7 @@ void P_MovePsprites(player_t& player) noexcept {
             }
         }
     }
-    
+
     // Sync the muzzle flash offset to the weapon offset
     player.psprites[ps_flash].sx = player.psprites[ps_weapon].sx;
     player.psprites[ps_flash].sy = player.psprites[ps_weapon].sy;

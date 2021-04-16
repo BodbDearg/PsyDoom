@@ -52,7 +52,7 @@ bool WindowSurface::init(SDL_Window* const pSdlWindow, VulkanInstance& vulkanIns
         ASSERT_FAIL("Failed to create the window surface!");
         return false;
     }
-    
+
     mbIsValid = true;
     return true;
 }
@@ -64,7 +64,7 @@ void WindowSurface::destroy(const bool bForceIfInvalid) noexcept {
     // Only destroy if we need to
     if ((!mbIsValid) && (!bForceIfInvalid))
         return;
-    
+
     // Destroy the surface
     mbIsValid = false;
 

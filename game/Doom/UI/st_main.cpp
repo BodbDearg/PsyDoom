@@ -127,12 +127,12 @@ void ST_Init() noexcept {
 
     // Lock down the first texture cache page (keep in VRAM at all times) and move the next fill location to the next page after
     gLockedTexPagesMask |= 1;
-    
+
     gTCacheFillPage = 1;
     gTCacheFillCellX = 0;
     gTCacheFillCellY = 0;
     gTCacheFillRowCellH = 0;
-    
+
     // The STATUS texture can now be evicted from memory since it will always be in VRAM
     Z_FreeTags(*gpMainMemZone, PU_CACHE);
 }
@@ -185,7 +185,7 @@ void ST_Ticker() noexcept {
 
         gbDoSpclFace = false;
     }
-    
+
     // Handle if we are doing a special face
     if (gStatusBar.specialFace != f_none) {
         gbDoSpclFace = true;
@@ -201,7 +201,7 @@ void ST_Ticker() noexcept {
         gStatusBar.gibframe = 0;
         gStatusBar.gotgibbed = false;
     }
-    
+
     // Animate being gibbed
     if (gbGibDraw) {
         gStatusBar.gibframeTicsLeft -= 1;
@@ -257,7 +257,7 @@ void ST_Ticker() noexcept {
                 if (flashCard.times == 0) {
                     flashCard.active = false;
                 }
-                
+
                 // Play the item pickup sound if flashing on
                 if (flashCard.doDraw && flashCard.active) {
                     S_StartSound(nullptr, sfx_itemup);
@@ -265,7 +265,7 @@ void ST_Ticker() noexcept {
             }
         }
     }
-    
+
     // Decide on the face frame to use
     if ((player.cheats & CF_GODMODE) || (player.powers[pw_invulnerability] != 0)) {
         // Godmode/invulnerability face
@@ -290,7 +290,7 @@ void ST_Ticker() noexcept {
             gStatusBar.face = DEADFACE;
         }
     }
-    
+
     // Save the sprite info for the face that will be drawn
     gpCurSBFaceSprite = &gFaceSprites[gStatusBar.face];
 
@@ -332,7 +332,7 @@ void ST_Drawer() noexcept {
 
     const uint16_t uiPaletteClutId = gPaletteClutIds[UIPAL];
     spritePrim.clut = uiPaletteClutId;
-    
+
     // Draw the current status bar message, or the map name (if in the automap)
     player_t& player = gPlayers[gCurPlayerIndex];
 
@@ -390,7 +390,7 @@ void ST_Drawer() noexcept {
                 I_AddPrim(spritePrim);
                 x += EXT_PIECE_WIDTH;
             }
-        
+
             // Draw the extended status bar to the left.
             // Note: need to push forward by one pixel to avoid 2 doubled up columns of black pixels.
             x = 1 - EXT_PIECE_WIDTH;
@@ -475,7 +475,7 @@ void ST_Drawer() noexcept {
         LIBGPU_setXY0(spritePrim, gMicronumsX[microNumIdx], gMicronumsY[microNumIdx]);
         LIBGPU_setUV0(spritePrim, 164, 192);
         LIBGPU_setWH(spritePrim, 12, 12);
-        
+
         I_AddPrim(spritePrim);
     } else {
         // Draw the frags container box

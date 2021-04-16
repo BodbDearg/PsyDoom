@@ -127,7 +127,7 @@ bool wess_init() noexcept {
     if (!gbWess_WessTimerActive) {
         wess_install_handler();
     }
-    
+
     wess_low_level_init();
     gbWess_sysinit = true;
     return true;
@@ -243,7 +243,7 @@ static bool conditional_read(const uint32_t readFlag, uint8_t*& pDstMemPtr, cons
     // Either skip over the memory block or read it
     if (readFlag) {
         wess_memcpy(pDstMemPtr, gpWess_curWmdFileBytes, readSize);
-        
+
         pDstMemPtr += readSize;
         pDstMemPtr += (uintptr_t) pDstMemPtr & 1;       // 32-bit align the pointer after the read...
         pDstMemPtr += (uintptr_t) pDstMemPtr & 2;       // 32-bit align the pointer after the read...
@@ -270,7 +270,7 @@ int32_t wess_load_module(
 ) noexcept {
     // Save the maximum memory limit and unload the current module (if loaded)
     gWess_mem_limit = memoryAllowance;
-    
+
     if (gbWess_module_loaded) {
         wess_unload_module();
     }
@@ -278,7 +278,7 @@ int32_t wess_load_module(
     // Figure out how many sound drivers are available (and thus how many patch groups to allocate)
     const int32_t numPatchGroups = get_num_Wess_Sound_Drivers(pSettingTagLists);
     gWess_num_snd_drv = numPatchGroups;
-    
+
     // Allocate the required amount of memory or just save what we were given (if given memory)
     if (pDestMem) {
         gbWess_wmd_mem_is_mine = false;
@@ -292,20 +292,20 @@ int32_t wess_load_module(
             return gbWess_module_loaded;
         }
     }
-    
+
     // Zero initialize the loaded module memory
     gWess_wmd_size = memoryAllowance;
     zeroset(gpWess_wmd_mem, memoryAllowance);
 
     // No sequences initially
     gWess_end_seq_num = 0;
-    
+
     // If the WESS API has not been initialized or an input WMD file is not supplied then we can't load the module
     if ((!Is_System_Active()) || (!pWmdFile)) {
         free_mem_if_mine();
         return gbWess_module_loaded;
     }
-   
+
     // Input file pointers
     gpWess_curWmdFileBytes = (const uint8_t*) pWmdFile;
     gpWess_wmdFileBytesBeg = (const uint8_t*) pWmdFile;
@@ -316,7 +316,7 @@ int32_t wess_load_module(
     // PsyDoom: added alignment code to align the destination pointer to prevent undefined behavior for various types.
     // This may increase memory usage in the WMD.
     uint8_t* pCurDestBytes = (uint8_t*) pDestMem;
-    
+
     // Alloc the root master status structure
     wess_align_byte_ptr(pCurDestBytes, alignof(master_status_structure));
     master_status_structure& mstat = *(master_status_structure*) pCurDestBytes;
@@ -350,7 +350,7 @@ int32_t wess_load_module(
         free_mem_if_mine();
         return false;
     }
-    
+
     // Alloc the sequence status structs and link to the master status struct
     wess_align_byte_ptr(pCurDestBytes, alignof(sequence_status));
     sequence_status* const pSeqStat = (sequence_status*) pCurDestBytes;
@@ -431,11 +431,11 @@ int32_t wess_load_module(
 
             if (patchGroupHdr.driver_id != patchGroup.hw_table_list.driver_id)
                 continue;
-            
+
             // Save the header, pointer to patch data and offset, and increment the total voice count.
             // PsyDoom: also ensure the destination bytes pointer is properly aligned.
             wess_align_byte_ptr(pCurDestBytes, alignof(patch));
-            
+
             patchGroup.hdr = patchGroupHdr;
             patchGroup.pdata = pCurDestBytes;
             patchGroup.modfile_offset = (int32_t)(gpWess_curWmdFileBytes - gpWess_wmdFileBytesBeg);
@@ -456,7 +456,7 @@ int32_t wess_load_module(
 
             {
                 wess_align_byte_ptr(pCurDestBytes, alignof(patch_voice));
-                
+
                 const bool bReadSuccess = conditional_read(
                     patchGroupHdr.load_flags & LOAD_PATCH_VOICES,
                     pCurDestBytes,
@@ -466,42 +466,42 @@ int32_t wess_load_module(
                 if (!bReadSuccess)
                     return false;
             }
-            
+
             {
                 wess_align_byte_ptr(pCurDestBytes, alignof(patch_sample));
-            
+
                 const bool bReadSuccess = conditional_read(
                     patchGroupHdr.load_flags & LOAD_PATCH_SAMPLES,
                     pCurDestBytes,
                     (int32_t) patchGroupHdr.num_patch_samples * patchGroupHdr.patch_sample_size
                 );
-                
+
                 if (!bReadSuccess)
                     return false;
             }
-            
+
             {
                 wess_align_byte_ptr(pCurDestBytes, alignof(drum_patch));
-            
+
                 const bool bReadSuccess = conditional_read(
                     patchGroupHdr.load_flags & LOAD_DRUM_PATCHES,
                     pCurDestBytes,
                     (int32_t) patchGroupHdr.num_drum_patches * patchGroupHdr.drum_patch_size
                 );
-                
+
                 if (!bReadSuccess)
                     return false;
             }
 
             {
                 wess_align_byte_ptr(pCurDestBytes, alignof(void*));
-            
+
                 const bool bReadSuccess = conditional_read(
                     patchGroupHdr.load_flags & LOAD_EXTRA_DATA,
                     pCurDestBytes,
                     patchGroupHdr.extra_data_size
                 );
-                
+
                 if (!bReadSuccess)
                     return false;
             }
@@ -574,7 +574,7 @@ int32_t wess_load_module(
     uint8_t maxTracksPerSeq = MINIMUM_TRACK_INDXS_FOR_A_SEQUENCE;
     uint8_t maxVoicesPerTrack = 0;
     uint8_t maxLocStackSizePerTrack = 0;
-    
+
     // Determine track stats and sequence headers for all sequences
     for (int32_t seqIdx = 0; seqIdx < module.hdr.num_sequences; ++seqIdx) {
         // Read the sequence header, save the sequence position in the file and move past it
@@ -663,7 +663,7 @@ int32_t wess_load_module(
             gpWess_curWmdFileBytes += (uint32_t) trackHdr.num_labels * sizeof(uint32_t);
             gpWess_curWmdFileBytes += trackHdr.cmd_stream_size;
         }
-        
+
         // Incorporate track count into the global max
         if (numTracksToload > maxTracksPerSeq) {
             maxTracksPerSeq = numTracksToload;
@@ -725,7 +725,7 @@ int32_t wess_load_module(
     // Allocate the sub-stacks for each track work area.
     // These are used to hold a stack track locations that can be pushed and popped to by sequencer commands for save/return behavior.
     wess_align_byte_ptr(pCurDestBytes, alignof(void*));
-    
+
     for (uint8_t trackIdx = 0; trackIdx < module.hdr.max_active_tracks; ++trackIdx) {
         track_status& trackStat = pTrackStat[trackIdx];
 
@@ -737,11 +737,11 @@ int32_t wess_load_module(
 
     // Initialize the sequencer
     gWess_CmdFuncArr[NoSound_ID][DriverInit](mstat);
-    
+
     // Initialize loaded drivers
     for (int32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++ patchGroupIdx) {
         patch_group_data& patchGroup = pPatchGroups[patchGroupIdx];
-        
+
         // Initialize the driver if we are loading any voices and tracks relating to it
         const bool bInitDriver = (
             patchGroup.hw_table_list.sfxload ||
@@ -769,7 +769,7 @@ int32_t wess_load_module(
 
     // PsyDoom: sanity check we haven't overflowed module memory
     WESS_ASSERT(gpWess_wmd_end - gpWess_wmd_mem <= gWess_mem_limit);
-    
+
     // Load was a success!
     return true;
 }
@@ -808,31 +808,31 @@ void filltrackstat(track_status& trackStat, const track_data& track, const Trigg
     } else {
         trackStat.volume_cntrl = track.hdr.init_volume_cntrl;
     }
-    
+
     if (attribsMask & TRIGGER_PAN) {
         trackStat.pan_cntrl = pAttribs->pan_cntrl;
     } else {
         trackStat.pan_cntrl = track.hdr.init_pan_cntrl;
     }
-    
+
     if (attribsMask & TRIGGER_PATCH) {
         trackStat.patch_idx = pAttribs->patch_idx;
     } else {
         trackStat.patch_idx = track.hdr.init_patch_idx;
     }
-    
+
     if (attribsMask & TRIGGER_PITCH) {
         trackStat.pitch_cntrl = pAttribs->pitch_cntrl;
     } else {
         trackStat.pitch_cntrl = track.hdr.init_pitch_cntrl;
     }
-    
+
     if ((attribsMask & TRIGGER_MUTEMODE) && (trackStat.mutegroups_mask & (1 << pAttribs->mutegroup))) {
         trackStat.mute = true;
     } else {
         trackStat.mute = false;
     }
-    
+
     if (attribsMask & TRIGGER_TEMPO) {
         trackStat.tempo_qpm = pAttribs->tempo_qpm;
     } else {
@@ -854,7 +854,7 @@ void filltrackstat(track_status& trackStat, const track_data& track, const Trigg
     } else {
         trackStat.looped = false;
     }
-    
+
     if (attribsMask & TRIGGER_REVERB) {
         trackStat.reverb = pAttribs->reverb;
     } else {
@@ -1016,7 +1016,7 @@ SequenceStatus wess_seq_status(const int32_t seqIdx) noexcept {
     // Is the sequence number a valid one?
     if (!Is_Seq_Num_Valid(seqIdx))
         return SEQUENCE_INVALID;
-    
+
     // Try to find the specified sequence number among all the sequences
     master_status_structure& mstat = *gpWess_pm_stat;
     const int32_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
@@ -1037,7 +1037,7 @@ SequenceStatus wess_seq_status(const int32_t seqIdx) noexcept {
             return SEQUENCE_INACTIVE;   // Invalid/unknown play mode!
         }
     }
-    
+
     // If the sequence number was not found assume not playing and not paused
     return SEQUENCE_INACTIVE;
 }
@@ -1053,7 +1053,7 @@ void wess_seq_stop(const int32_t seqIdx) noexcept {
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
     gbWess_SeqOn = false;
-    
+
     // Run through all of the sequences searching for the one we are interested in
     master_status_structure& mstat = *gpWess_pm_stat;
 
@@ -1071,7 +1071,7 @@ void wess_seq_stop(const int32_t seqIdx) noexcept {
 
         if (!seqStat.active)
             continue;
-        
+
         if (seqStat.seq_idx == seqIdx) {
             // This is the sequence we want, go through all the tracks and stop each one
             uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
@@ -1083,7 +1083,7 @@ void wess_seq_stop(const int32_t seqIdx) noexcept {
 
                 if (trackStatIdx == 0xFF)
                     continue;
-                
+
                 // Call the driver function to turn off the track
                 track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
                 gWess_CmdFuncArr[trackStat.driver_id][TrkOff](trackStat);
@@ -1140,7 +1140,7 @@ void wess_seq_stopall() noexcept {
 
                 if (trackStatIdx == 0xFF)
                     continue;
-                
+
                 // Call the driver function to turn off the track
                 track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
                 gWess_CmdFuncArr[trackStat.driver_id][TrkOff](trackStat);

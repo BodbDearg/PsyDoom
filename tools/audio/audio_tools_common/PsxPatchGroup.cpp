@@ -21,12 +21,12 @@ void PsxPatchGroup::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
 
     // Save basic patch group properties
     hwVoiceLimit = JsonUtils::clampedGetOrDefault<uint8_t>(jsonRoot, "hwVoiceLimit", 1);
-    
+
     // Load all patches, patch voices, and patch samples
     patches.clear();
     patchVoices.clear();
     patchSamples.clear();
-    
+
     if (const rapidjson::Value* const pPatchesArray = JsonUtils::tryGetArray(jsonRoot, "patches")) {
         for (rapidjson::SizeType i = 0; i < pPatchesArray->Size(); ++i) {
             const rapidjson::Value& patchObj = (*pPatchesArray)[i];
@@ -34,7 +34,7 @@ void PsxPatchGroup::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
             patch.readFromJson(patchObj);
         }
     }
-    
+
     if (const rapidjson::Value* const pPatchVoicesArray = JsonUtils::tryGetArray(jsonRoot, "patchVoices")) {
         for (rapidjson::SizeType i = 0; i < pPatchVoicesArray->Size(); ++i) {
             const rapidjson::Value& patchVoiceObj = (*pPatchVoicesArray)[i];
@@ -42,7 +42,7 @@ void PsxPatchGroup::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
             patchVoice.readFromJson(patchVoiceObj);
         }
     }
-    
+
     if (const rapidjson::Value* const pPatchSamplesArray = JsonUtils::tryGetArray(jsonRoot, "patchSamples")) {
         for (rapidjson::SizeType i = 0; i < pPatchSamplesArray->Size(); ++i) {
             const rapidjson::Value& patchSampleObj = (*pPatchSamplesArray)[i];
@@ -58,43 +58,43 @@ void PsxPatchGroup::readFromJson(const rapidjson::Value& jsonRoot) THROWS {
 void PsxPatchGroup::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
     // Group global properties
     jsonRoot.AddMember("hwVoiceLimit", hwVoiceLimit, jsonAlloc);
-    
+
     // Save patch samples
     {
         rapidjson::Value patchSamplesArray(rapidjson::kArrayType);
-        
+
         for (const PsxPatchSample& patchSample : patchSamples) {
             rapidjson::Value patchSampleObj(rapidjson::kObjectType);
             patchSample.writeToJson(patchSampleObj, jsonAlloc);
             patchSamplesArray.PushBack(patchSampleObj, jsonAlloc);
         }
-        
+
         jsonRoot.AddMember("patchSamples", patchSamplesArray, jsonAlloc);
     }
-    
+
     // Save patch voices
     {
         rapidjson::Value patchVoicesArray(rapidjson::kArrayType);
-        
+
         for (const PsxPatchVoice& patchVoice : patchVoices) {
             rapidjson::Value patchVoiceObj(rapidjson::kObjectType);
             patchVoice.writeToJson(patchVoiceObj, jsonAlloc);
             patchVoicesArray.PushBack(patchVoiceObj, jsonAlloc);
         }
-        
+
         jsonRoot.AddMember("patchVoices", patchVoicesArray, jsonAlloc);
     }
-    
+
     // Save patches
     {
         rapidjson::Value patchesArray(rapidjson::kArrayType);
-        
+
         for (const PsxPatch& patch : patches) {
             rapidjson::Value patchObj(rapidjson::kObjectType);
             patch.writeToJson(patchObj, jsonAlloc);
             patchesArray.PushBack(patchObj, jsonAlloc);
         }
-        
+
         jsonRoot.AddMember("patches", patchesArray, jsonAlloc);
     }
 }
@@ -110,7 +110,7 @@ void PsxPatchGroup::readFromWmdFile(InputStream& in, const WmdPatchGroupHdr& hdr
     patches.clear();
     patchVoices.clear();
     patchSamples.clear();
-    
+
     if (hdr.loadFlags & LOAD_PATCHES) {
         for (uint32_t i = 0; i < hdr.numPatches; ++i) {
             patches.emplace_back().readFromWmdFile(in);
@@ -156,7 +156,7 @@ void PsxPatchGroup::writeToWmdFile(OutputStream& out) const THROWS {
         groupHdr.loadFlags = (WmdPatchGroupLoadFlags)(LOAD_PATCHES | LOAD_PATCH_VOICES | LOAD_PATCH_SAMPLES | LOAD_DRUM_PATCHES);   // Note: add the drum flag so our diff with original game .WMDs is the same
         groupHdr.driverId = WmdSoundDriverId::PSX;
         groupHdr.hwVoiceLimit = hwVoiceLimit;
-        
+
         if (patches.size() > UINT16_MAX)
             throw "Too many patches in the PSX patch group for a .WMD file!";
 
@@ -251,7 +251,7 @@ uint32_t PsxPatchGroup::guessSampleRateForPatchSample(const uint32_t patchSample
 
         return (uint32_t) sampleRateRounded;
     }
-    
+
     // If we don't find a patch voice using the sample, then fallback to assuming it's at 11,050 Hz.
     // This is the sample rate used by a lot of PSX Doom sounds:
     return 11050;

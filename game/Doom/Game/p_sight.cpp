@@ -64,7 +64,7 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
 
     if ((gpRejectMatrix[rejectMapByte] & (1 << rejectMapBit)) != 0)
         return false;
-    
+
     // Store the start and end points of the sight line.
     // Note that the coordinates are truncated to be on odd integer coordinates.
     // Not sure why this is done, or what it's trying to avoid - it's in the 3DO and Jag Doom sources but not explained.
@@ -77,7 +77,7 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     // Precalculate the vector for the sight line
     gSTrace.dx = gT2x - gSTrace.x;
     gSTrace.dy = gT2y - gSTrace.y;
-    
+
     // Precalculate the truncated start and end points for the sight line for later use
     gT1xs = d_fixed_to_int(gSTrace.x);
     gT1ys = d_fixed_to_int(gSTrace.y);
@@ -87,11 +87,11 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     // This is how high the sight point is at (eyeball level -1/4 height down from the top)
     const fixed_t sightZStart = mobj1.z + mobj1.height - d_rshift<2>(mobj1.height);
     gSightZStart = sightZStart;
-    
+
     // Figure out the initial top and bottom slopes for the the vertical sight range
     gTopSlope = mobj2.z + mobj2.height - sightZStart;
     gBottomSlope = mobj2.z - sightZStart;
-    
+
     // Doing a new raycast so update the visitation mark which tells us if stuff has already been processed
     gValidCount++;
 
@@ -128,7 +128,7 @@ static fixed_t PS_SightCrossLine(line_t& line) noexcept {
         if (side1 == side2)
             return -1;
     }
-    
+
     // Compute the normal vector for the line
     const int32_t lineNx = lineY1 - lineY2;
     const int32_t lineNy = lineX2 - lineX1;
@@ -163,7 +163,7 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         // Multiple segs might reference the same line, so this saves redundant work:
         if (line.validcount == gValidCount)
             continue;
-        
+
         // Don't check the line again until the next sight check
         line.validcount = gValidCount;
 
@@ -178,7 +178,7 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         // If the line is impassible (no back sector) then it blocks sight:
         if (!line.backsector)
             return false;
-        
+
         // If there is no height difference between the front and back sectors then the line can't block.
         // In this case it has no upper or lower walls:
         sector_t& bsec = *line.backsector;
@@ -190,10 +190,10 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         // If there is no vertical gap in the two sided line then sight is completely obscured
         const fixed_t lowestCeil = std::min(fsec.ceilingheight, bsec.ceilingheight);
         const fixed_t highestFloor = std::max(fsec.floorheight, bsec.floorheight);
-        
+
         if (lowestCeil <= highestFloor)
             return false;
-        
+
         // Narrow the allowed vertical sight range: against bottom wall
         if (fsec.floorheight != bsec.floorheight) {
             const fixed_t dz = highestFloor - gSightZStart;
@@ -231,7 +231,7 @@ bool PS_CrossBSPNode(const int32_t nodeNum) noexcept {
     // Is this bsp node actually a subsector? (leaf node) If so then do sight checks against that:
     if (nodeNum & NF_SUBSECTOR) {
         const int32_t subsecNum = nodeNum & (~NF_SUBSECTOR);
-        
+
         if (subsecNum < gNumSubsectors) {
             return PS_CrossSubsector(gpSubsectors[subsecNum]);
         } else {
@@ -247,7 +247,7 @@ bool PS_CrossBSPNode(const int32_t nodeNum) noexcept {
     // If the sight line cannot cross the closest half-space then we are done: sight is obstructed
     if (!PS_CrossBSPNode(bspNode.children[sideNum]))
         return false;
-    
+
     // Check to see what side of the bsp split the end point for sight checking is on.
     // If it's in the same half-space we just raycasted against then we are done - sight is unobstructed.
     if (sideNum == PA_DivlineSide(gT2x, gT2y, bspNode.line))

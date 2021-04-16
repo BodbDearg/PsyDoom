@@ -160,7 +160,7 @@ uint8_t* Write_Vlq(uint8_t* const pTrackBytes, const uint32_t value) noexcept {
             pEncodedByte++;
         }
     }
-    
+
     // Copy the encoded value to the given output buffer.
     // Note that the ordering here gets reversed, so it winds up being read in the correct order.
     uint8_t* pOutputByte = pTrackBytes;
@@ -259,7 +259,7 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
 
         WESS_ASSERT(seqStat.num_tracks_active > 0);
         seqStat.num_tracks_active--;
-        
+
         // If the sequence has no more tracks active then it too is now inactive
         if (seqStat.num_tracks_active == 0) {
             seqStat.active = false;
@@ -268,7 +268,7 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
             mstat.num_active_seqs--;
         }
     }
-    
+
     // If the track is being switched off then it is no longer on a manual time limit
     trackStat.timed = false;
 }
@@ -368,7 +368,7 @@ void Eng_StatusMark(track_status& trackStat) noexcept {
 
     // Try to find a matching active callback type to invoke
     const uint8_t maxCallbacks = mstat.pmodule->hdr.max_callbacks;
-        
+
     for (uint8_t i = 0; i < maxCallbacks; ++i) {
         callback_status& callbackStat = mstat.pcallback_stats[i];
 
@@ -386,7 +386,7 @@ void Eng_StatusMark(track_status& trackStat) noexcept {
             callbackStat.pfunc(callbackType, callbackVal);
             break;
         }
-        
+
         // If there are no more callbacks left to visit then we are done searching
         activeCallbacksLeftToVisit--;
 
@@ -413,7 +413,7 @@ void Eng_GateJump(track_status& trackStat) noexcept {
 
         // Goto the track label specified in the command (if valid)
         const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[3]) | ((int16_t) trackStat.pcur_cmd[4] << 8);
-        
+
         if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
             const uint32_t targetOffset = trackStat.plabels[labelIdx];
             trackStat.pcur_cmd = trackStat.pcmds_start + targetOffset;
@@ -518,10 +518,10 @@ void Eng_SeqTempo(track_status& trackStat) noexcept {
 
     // Read the new quarter notes per minute (BPM) amount from the command
     const uint16_t newQpm = ((uint16_t) trackStat.pcur_cmd[1]) | ((uint16_t) trackStat.pcur_cmd[2] << 8);
-    
+
     // Set the tempo for all active tracks in this track's sequence
     uint8_t activeTracksLeftToVisit = seqStat.num_tracks_active;
-    
+
     for (uint16_t i = 0; i < sequence.hdr.num_tracks; ++i) {
         // See if this sequence track slot is in use, if not then ignore.
         //
@@ -540,7 +540,7 @@ void Eng_SeqTempo(track_status& trackStat) noexcept {
 
         // If there are no more active tracks left to visit in the sequence then we are done
         activeTracksLeftToVisit--;
-        
+
         if (activeTracksLeftToVisit == 0)
             break;
     }
@@ -578,7 +578,7 @@ void Eng_SeqGosub(track_status& trackStat) noexcept {
             track_status& thisTrackStat = gpWess_eng_trackStats[trackStatIdx];
             *thisTrackStat.ploc_stack_cur = thisTrackStat.pcur_cmd + gWess_seq_CmdLength[SeqGosub];
             thisTrackStat.ploc_stack_cur++;
-            
+
             // Update the track to the new location
             thisTrackStat.pcur_cmd = thisTrackStat.pcmds_start + thisTrackStat.plabels[labelIdx];
 
@@ -601,7 +601,7 @@ void Eng_SeqJump(track_status& trackStat) noexcept {
     master_status_structure& mstat = *gpWess_eng_mstat;
     sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
     const sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
-    
+
     // Get the label to jump to from the command and do not do any jump if the label index is invalid
     const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[1]) | ((int16_t) trackStat.pcur_cmd[2] << 8);
 
@@ -645,7 +645,7 @@ void Eng_SeqRet(track_status& trackStat) noexcept {
     master_status_structure& mstat = *gpWess_eng_mstat;
     sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
     const sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
-    
+
     // Restore the previous location for all active tracks in the sequence
     uint8_t activeTracksLeftToVisit = seqStat.num_tracks_active;
 
@@ -729,7 +729,7 @@ void Eng_TrkTempo(track_status& trackStat) noexcept {
 void Eng_TrkGosub(track_status& trackStat) noexcept {
     // Ignore the command if the label is invalid
     const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[1]) | ((int16_t) trackStat.pcur_cmd[2] << 8);
-  
+
     if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
         // Save the return location to after this command in the track's location stack.
         // PsyDoom: small correction here, though makes no difference - the command length taken should be 'TrkGosub' instead of 'SeqGosub'.
@@ -741,7 +741,7 @@ void Eng_TrkGosub(track_status& trackStat) noexcept {
 
         // Used up one slot in the location stack
         trackStat.ploc_stack_cur++;
-        
+
         // Jump to the specified label
         const uint32_t targetOffset = trackStat.plabels[labelIdx];
         trackStat.pcur_cmd = trackStat.pcmds_start + targetOffset;

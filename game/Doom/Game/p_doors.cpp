@@ -90,7 +90,7 @@ static void T_VerticalDoor(vldoor_t& door) noexcept {
                 if (door.topcountdown != 0)
                     break;
             #endif
-            
+
             switch (door.type) {
                 case RaiseIn5Mins: {
                     door.direction = 1;     // Open thyself!
@@ -158,7 +158,7 @@ static void T_VerticalDoor(vldoor_t& door) noexcept {
 
             if (planeMoveResult != pastdest)
                 break;
-            
+
             // Door has fully opened: decide what to do
             switch (door.type) {
                 // These doors will wait and close again after a while
@@ -389,7 +389,7 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
             S_StartSound((mobj_t*) &doorSector.soundorg, sfx_doropn);
             break;
     }
-    
+
     // Need to create a new door thinker to run the door logic: create and set as the sector special
     vldoor_t& newDoor = *(vldoor_t*) Z_Malloc(*gpMainMemZone, sizeof(vldoor_t), PU_LEVSPEC, nullptr);
     P_AddThinker(newDoor.thinker);
@@ -401,7 +401,7 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
     newDoor.sector = &doorSector;
     newDoor.direction = 1;
     newDoor.topwait = VDOORWAIT;
-    
+
     // Door specific config
     switch (line.special) {
         case 1:

@@ -115,7 +115,7 @@ gameaction_t RunMenu() noexcept {
         // Otherwise for a net game, we need to establish a connection and show the 'connecting' plaque...
         if (gStartGameType == gt_single)
             break;
-        
+
         I_DrawLoadingPlaque(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());
         I_NetSetup();
 
@@ -135,7 +135,7 @@ gameaction_t RunMenu() noexcept {
         I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
         I_SubmitGpuCmds();
         I_DrawPresent();
-        
+
         // Play a sound to acknowledge that the connecting process has ended
         S_StartSound(nullptr, sfx_pistol);
 
@@ -176,30 +176,30 @@ void M_Start() noexcept {
 
     // Clear out any textures that can be unloaded
     I_PurgeTexCache();
-    
+
     // Show the loading plaque
     I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
-    
+
     // Load sounds for the menu
     S_LoadMapSoundAndMusic(0);
-    
+
     // Load and cache some commonly used UI textures
     I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
     I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
     I_LoadAndCacheTexLump(gTex_CONNECT, "CONNECT", 0);
-    
+
     // Some basic menu setup
     gCursorFrame = 0;
     gCursorPos[0] = 0;
     gVBlanksUntilMenuMove[0] = 0;
-    
+
     if (gStartGameType == gt_single) {
         gMaxStartEpisodeOrMap = Game::getNumEpisodes();
     } else {
         gMaxStartEpisodeOrMap = Game::getNumRegularMaps();  // For multiplayer any of the normal (non secret) maps can be selected
     }
-    
+
     if (gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
         // Wrap back around if we have to...
         gStartMapOrEpisode = 1;
@@ -324,11 +324,11 @@ gameaction_t M_Ticker() noexcept {
     if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {
         gCursorFrame ^= 1;
     }
-    
+
     // If start is pressed then begin a game, no matter what menu option is picked
     if (bMenuStart)
         return ga_exit;
-    
+
     // If an 'ok' button is pressed then we can either start a map or open the options
     if (bMenuOk && (gCursorPos[0] >= gamemode)) {
         if (gCursorPos[0] < options)
@@ -366,7 +366,7 @@ gameaction_t M_Ticker() noexcept {
     // Do menu up/down movements
     if (bMenuDown) {
         gCursorPos[0]++;
-        
+
         if (gCursorPos[0] == NUMMENUITEMS) {
             gCursorPos[0] = (menu_t) 0;
         }
@@ -388,7 +388,7 @@ gameaction_t M_Ticker() noexcept {
         if (bMenuRight) {
             if (gStartGameType < gt_deathmatch) {
                 gStartGameType = (gametype_t)((uint32_t) gStartGameType + 1);
-                
+
                 if (gStartGameType == gt_coop) {
                     gStartMapOrEpisode = 1;
                 }
@@ -424,7 +424,7 @@ gameaction_t M_Ticker() noexcept {
         // Menu left/right movements: level/episode select
         if (bMenuRight) {
             gStartMapOrEpisode += 1;
-            
+
             if (gStartMapOrEpisode <= gMaxStartEpisodeOrMap) {
                 S_StartSound(nullptr, sfx_swtchx);
             } else {
@@ -433,7 +433,7 @@ gameaction_t M_Ticker() noexcept {
         }
         else if (bMenuLeft) {
             gStartMapOrEpisode -= 1;
-            
+
             if (gStartMapOrEpisode > 0) {
                 S_StartSound(nullptr, sfx_swtchx);
             } else {
@@ -518,7 +518,7 @@ void M_Drawer() noexcept {
     #if PSYDOOM_MODS
         I_DrawString(74, gMenuYPos[menu_quit], "Quit");
     #endif
-    
+
     // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();
@@ -533,7 +533,7 @@ void M_Drawer() noexcept {
 void M_DrawNetworkConnectDisplay() noexcept {
     I_IncDrawnFrameCount();
     Utils::onBeginUIDrawing();
-    
+
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
     I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
     I_CacheAndDrawSprite(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());

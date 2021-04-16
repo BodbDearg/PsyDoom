@@ -258,7 +258,7 @@ static void printNonBranchOrJumpInstruction(
     // If the instruction is a nop then stop here
     if (inst.isNOP())
         return;
-    
+
     // Log where we are in the stream (so we can tell how long the instruction was when printed)
     const int64_t instructionStartStreamPos = out.tellp();
 
@@ -638,7 +638,7 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
         // The address for this instruction and the next
         const uint32_t thisInstAddr = wordIdx * 4 + exe.baseAddress;
         const uint32_t nextInstAddr = thisInstAddr + 4;
-        
+
         // Decode this instruction
         CpuInstruction thisInst;
         thisInst.CpuInstruction::decode(exe.words[wordIdx].value);
@@ -685,7 +685,7 @@ static void printFunctionPrototype(const ProgElem& progElem, std::ostream& out) 
 static void validateFuncElemRange(const ExeFile& exe, const ProgElem& progElem) noexcept {
     // Must be a function
     assert(progElem.type == ProgElemType::FUNCTION);
-    
+
     // Is this function outside of the .EXE image range?
     // Also make sure it is properly aligned...
     const uint32_t exeStart = exe.baseAddress;

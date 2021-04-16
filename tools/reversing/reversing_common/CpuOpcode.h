@@ -1047,7 +1047,7 @@ namespace CpuOpcodeUtils {
             case CpuOpcode::JALR:
             case CpuOpcode::JR:
                 return true;
-            
+
             default:
                 return false;
         }
@@ -1062,7 +1062,7 @@ namespace CpuOpcodeUtils {
             case CpuOpcode::J:
             case CpuOpcode::JAL:
                 return true;
-            
+
             default:
                 return false;
         }
@@ -1073,7 +1073,7 @@ namespace CpuOpcodeUtils {
             case CpuOpcode::JAL:
             case CpuOpcode::JALR:
                 return true;
-                
+
             default:
                 return false;
         }
@@ -1094,7 +1094,7 @@ namespace CpuOpcodeUtils {
             case CpuOpcode::TNE:
             case CpuOpcode::TNEI:
                 return true;
-            
+
             default:
                 return false;
         }

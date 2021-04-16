@@ -48,7 +48,7 @@ static fixed_t gAM_AutomapScale;
 static void AM_CalcPlayerMapTransforms() noexcept {
     const player_t& player = gPlayers[gCurPlayerIndex];
     const bool bUncapFramerate = Config::gbUncapFramerate;
-    
+
     if (bUncapFramerate) {
         const fixed_t lerpFactor = R_CalcLerpFactor();
         gAM_PlayerX = R_LerpCoord(gOldViewX, player.mo->x, lerpFactor);
@@ -86,7 +86,7 @@ void AM_Control(player_t& player) noexcept {
     // If the game is paused we do nothing
     if (gbGamePaused)
         return;
-    
+
     // Toggle the automap on and off if select has just been pressed
     #if PSYDOOM_MODS
         TickInputs& inputs = gTickInputs[gPlayerNum];
@@ -135,14 +135,14 @@ void AM_Control(player_t& player) noexcept {
         player.automapflags &= ~AF_FOLLOW;
         return;
     }
-    
+
     // Snap the manual automap movement position to the player location once we transition from following to not following
     if ((player.automapflags & AF_FOLLOW) == 0) {
         player.automapflags |= AF_FOLLOW;
         player.automapx = player.mo->x;
         player.automapy = player.mo->y;
     }
-    
+
     // Figure out the movement amount for manual camera movement
     const fixed_t moveStep = (bPanFast) ? MOVESTEP * 2 : MOVESTEP;
 
@@ -184,11 +184,11 @@ void AM_Control(player_t& player) noexcept {
             player.automapy = gAutomapYMin;
         }
     }
-    
+
     // Scale up and down
     if (bAutomapZoomOut) {
         player.automapscale -= SCALESTEP;
-        
+
         if (player.automapscale < MINSCALE) {
             player.automapscale = MINSCALE;
         }
@@ -331,7 +331,7 @@ void AM_Drawer() noexcept {
             DrawLine(color, x1, y1, x2, y2);
         }
     }
-    
+
     // Show all map things cheat: display a little wireframe triangle for for all things
     if (curPlayer.cheats & CF_ALLMOBJ) {
         for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
@@ -392,10 +392,10 @@ void AM_Drawer() noexcept {
         #if PSYDOOM_MODS
             const bool bIsLocalPlayer = (gCurPlayerIndex == playerIdx);
         #endif
-        
+
         if ((player.playerstate == PST_LIVE) && (gGameTic & 2))
             continue;
-        
+
         // Change the colors of this player in COOP to distinguish
         uint32_t color = AM_COLOR_GREEN;
 
@@ -475,7 +475,7 @@ static void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, c
         BOTTOM  = 4,
         TOP     = 8
     };
-    
+
     uint32_t outcode1 = (x1 < -128) ? LEFT : INSIDE;
 
     if (x1 >  128) { outcode1 |= RIGHT;     }
@@ -487,7 +487,7 @@ static void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, c
     if (x2 >  128) { outcode2 |= RIGHT;     }
     if (y2 < -100) { outcode2 |= BOTTOM;    }
     if (y2 >  100) { outcode2 |= TOP;       }
-    
+
     if (outcode1 & outcode2)
         return;
 
@@ -500,10 +500,10 @@ static void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, c
     #else
         LINE_F2& line = *(LINE_F2*) LIBETC_getScratchAddr(128);
     #endif
-    
+
     LIBGPU_SetLineF2(line);
     LIBGPU_setRGB0(line, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t) color);
     LIBGPU_setXY2(line, (int16_t)(x1 + 128), (int16_t)(100 - y1), (int16_t)(x2 + 128), (int16_t)(100 - y2));
-    
+
     I_AddPrim(line);
 }

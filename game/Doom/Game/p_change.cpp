@@ -82,12 +82,12 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
         P_RemoveMobj(mobj);
         return true;
     }
-    
+
     // If the thing is not shootable then don't do anything more to it.
     // This will be the case for decorative things etc.
     if ((mobj.flags & MF_SHOOTABLE) == 0)
         return true;
-    
+
     // Things in the current sector do not fit into it's height range
     gbNofit = true;
 
@@ -132,6 +132,6 @@ bool P_ChangeSector(sector_t& sector, const bool bCrunch) noexcept {
             P_BlockThingsIterator(x, y, PIT_ChangeSector);
         }
     }
-    
+
     return gbNofit;     // Did all the things in the sector fit?
 }

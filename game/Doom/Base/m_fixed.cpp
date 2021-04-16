@@ -25,7 +25,7 @@ fixed_t FixedDiv(const fixed_t a, const fixed_t b) noexcept {
     const bool bNegativeResult = ((a ^ b) < 0);
     uint32_t dividend = (a < 0) ? -a : a;
     uint32_t divisor = (b < 0) ? -b : b;
-    
+
     // Start off asuming the max result is '1.0'.
     // Shift up the max result by 1 bit until we make the divisor bigger than the dividend.
     // This gives the maximum possible estimated result:

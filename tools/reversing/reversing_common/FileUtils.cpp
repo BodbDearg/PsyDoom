@@ -5,7 +5,7 @@ bool FileUtils::readFileAsString(const char* const filePath, std::string& out) n
 
     if (!pFile)
         return false;
-    
+
     bool success = false;
 
     do {

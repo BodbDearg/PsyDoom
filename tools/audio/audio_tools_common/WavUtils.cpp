@@ -267,7 +267,7 @@ bool writePcmSoundToWavFile(
 
     // Do endian correction of the sample data if needed, always write as little endian
     std::vector<int16_t> byteSwappedSamples;
-    
+
     if constexpr (Endian::isBig()) {
         byteSwappedSamples.reserve(numSamples);
 

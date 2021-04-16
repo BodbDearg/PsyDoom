@@ -65,7 +65,7 @@ static void printHexOffset(const int32_t offset, std::ostream& out) {
     if (offset >= 0) {
         out << "+";
     }
-    
+
     PrintUtils::printHexI32(offset, false, out);
 }
 
@@ -499,7 +499,7 @@ static bool decodeMainOpcode1Ins(CpuInstruction& ins, const uint32_t machineCode
         case 0b01001:   // TGEIU    SSSSS 01001 IIIII IIIII IIIIII
             ins.opcode = CpuOpcode::TGEIU;
             return true;
-        
+
         case 0b01010:   // TLTI     SSSSS 01010 IIIII IIIII IIIIII
             ins.opcode = CpuOpcode::TLTI;
             return true;
@@ -507,7 +507,7 @@ static bool decodeMainOpcode1Ins(CpuInstruction& ins, const uint32_t machineCode
         case 0b01011:   // TLTIU    SSSSS 01011 IIIII IIIII IIIIII
             ins.opcode = CpuOpcode::TLTIU;
             return true;
-            
+
         case 0b01100:   // TEQI     SSSSS 01100 IIIII IIIII IIIIII
             ins.opcode = CpuOpcode::TEQI;
             return true;
@@ -523,7 +523,7 @@ static bool decodeMainOpcode1Ins(CpuInstruction& ins, const uint32_t machineCode
         case 0b10001:   // BGEZAL   SSSSS 10001 IIIII IIIII IIIIII
             ins.opcode = CpuOpcode::BGEZAL;
             return true;
-                
+
         // Illegal secondary opcode
         default: break;
     }
@@ -639,7 +639,7 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
     switch (mainOpcode) {
         case 0b000000: return decodeMainOpcode0Ins(*this, machineCode26Bit);
         case 0b000001: return decodeMainOpcode1Ins(*this, machineCode26Bit);
-        
+
         case 0b000010:  // J        000010 IIIII IIIII IIIII IIIII IIIIII
             opcode = CpuOpcode::J;
             immediateVal = machineCode26Bit;
@@ -649,7 +649,7 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
             opcode = CpuOpcode::JAL;
             immediateVal = machineCode26Bit;
             return true;
-        
+
         case 0b000100:  // BEQ      000100 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::BEQ;
             regS = decodedRegS;
@@ -663,7 +663,7 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b000110:  // BLEZ     000110 SSSSS ----- IIIII IIIII IIIIII
             opcode = CpuOpcode::BLEZ;
             regS = decodedRegS;
@@ -675,49 +675,49 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
             regS = decodedRegS;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b001000:  // ADDI     001000 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::ADDI;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b001001:  // ADDIU    001001 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::ADDIU;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b001010:  // SLTI     001010 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SLTI;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b001011:  // SLTIU    001011 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SLTIU;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b001100:  // ANDI     001100 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::ANDI;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b001101:  // ORI      001101 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::ORI;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b001110:  // XORI     001110 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::XORI;
             regS = decodedRegS;
@@ -730,7 +730,7 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b010000: return decodeMainOpcode16Ins(*this, machineCode26Bit);
         case 0b010010: return decodeMainOpcode18Ins(*this, machineCode26Bit);
 
@@ -747,21 +747,21 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b100010:  // LWL      100010 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::LWL;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b100011:  // LW       100011 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::LW;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b100100:  // LBU      100100 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::LBU;
             regS = decodedRegS;
@@ -782,49 +782,49 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
- 
+
         case 0b101000:  // SB       101000 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SB;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b101001:  // SH       101001 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SH;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b101010:  // SWL      101010 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SWL;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b101011:  // SW       101011 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SW;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b101110:  // SWR      101110 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SWR;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b110010:  // LWC2     110010 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::LWC2;
             regS = decodedRegS;
             regT = decodedRegT;
             immediateVal = decodedImm16;
             return true;
-        
+
         case 0b111010:  // SWC2     111010 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SWC2;
             regS = decodedRegS;
@@ -882,7 +882,7 @@ uint8_t CpuInstruction::getDestGprIdx() const noexcept {
 
         default: break;
     }
-    
+
     return 0xFFu;   // No destination GPR for this instruction
 }
 
@@ -958,7 +958,7 @@ uint8_t CpuInstruction::getInputGprIdx1() const noexcept {
 
         default: break;
     }
-    
+
     return 0xFFu;   // No 1st input GPR for this instruction
 }
 
@@ -997,7 +997,7 @@ uint8_t CpuInstruction::getInputGprIdx2() const noexcept {
 
         default: break;
     }
-    
+
     return 0xFFu;   // No 2nd input GPR for this instruction
 }
 
@@ -1039,7 +1039,7 @@ bool CpuInstruction::isNOP() const noexcept {
         case CpuOpcode::ADDI:   return ((immediateVal == 0) && (regS == regT));
         case CpuOpcode::ADDIU:  return ((immediateVal == 0) && (regS == regT));
         case CpuOpcode::ADDU:   return ((regT == CpuGpr::ZERO) && (regS == regD));
-        
+
         // NOPs for branch conditions that can never be true (0 < 0 and 0 > 0)
         case CpuOpcode::BGTZ:       return (regS == CpuGpr::ZERO);
         case CpuOpcode::BLTZ:       return (regS == CpuGpr::ZERO);
@@ -1048,7 +1048,7 @@ bool CpuInstruction::isNOP() const noexcept {
         // NOP if testing the same register is NOT EQUAL to itself
         case CpuOpcode::BNE:
             return (regS == regT);
-        
+
         // NOPs for OR-ing a register with '0' and storing the result to the same register
         case CpuOpcode::OR:
             return (
@@ -1195,7 +1195,7 @@ void CpuInstruction::print(
                 out << " (EXT)";
             }
         }   break;
-        
+
         case CpuOpcode::BGEZ:
         case CpuOpcode::BGEZAL:
         case CpuOpcode::BGTZ:
@@ -1425,7 +1425,7 @@ void CpuInstruction::print(
             out << ", ";
             PrintUtils::printHexU32(immediateVal, false, out);
             break;
-        
+
         case CpuOpcode::TEQI:
         case CpuOpcode::TGEI:
         case CpuOpcode::TLTI:

@@ -71,7 +71,7 @@ static bool printVagInfo(const char* const vagFilePath) noexcept {
     std::printf("Audio only size (bytes):       %zu\n", adpcmData.size());
     std::printf("Audio + header size (bytes):   %zu\n", adpcmData.size() + sizeof(VagUtils::VagFileHdr));
     std::printf("Looped:                        %s\n", (bIsLooped) ? "Yes" : "No");
-    
+
     if (bIsLooped) {
         const int loopDurationSamples = (int) loopEndSample - (int) loopStartSample;
 

@@ -17,7 +17,7 @@ template <class T>
 inline T getOrDefault(const rapidjson::Value& jsonObj, const char* const fieldName, const T& defaultVal) noexcept {
     if (jsonObj.IsObject()) {
         auto iter = jsonObj.FindMember(fieldName);
-        
+
         if (iter != jsonObj.MemberEnd()) {
             const rapidjson::Value& fieldVal = iter->value;
 
@@ -60,7 +60,7 @@ inline const rapidjson::Value* tryGetArray(const rapidjson::Value& jsonObj, cons
             }
         }
     }
-    
+
     return nullptr;
 }
 

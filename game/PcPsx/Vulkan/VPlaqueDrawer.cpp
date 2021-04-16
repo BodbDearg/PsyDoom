@@ -254,7 +254,7 @@ void destroy() noexcept {
         gDescriptorPool.freeDescriptorSet(*gpDescSet_Plaque);
         gpDescSet_Plaque = nullptr;
     }
-    
+
     gDescriptorPool.destroy(true);
     gVertexBuffer.destroy(true);
 }
@@ -294,7 +294,7 @@ void drawPlaque(texture_t& plaqueTex, const int16_t plaqueX, const int16_t plaqu
                 VRenderer::skipNextFramePresent();
             }
         #endif
-    
+
         // Forcibly end the current render path and record image layout transitions to get the background texture into the right format.
         // These layout transitions need to be done outside of a render pass.
         //

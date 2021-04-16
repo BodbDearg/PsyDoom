@@ -88,7 +88,7 @@ void sequenceToMidi(const Sequence& sequence, MidiFile& midiFile) noexcept {
             MidiCmd& midiCmd = midiTrack.cmds.emplace_back();
             midiCmd.delayQnp = trackCmd.delayQnp + skippedCmdsDelayQnp;
             skippedCmdsDelayQnp = 0;
-            
+
             switch (trackCmd.type) {
                 case WmdTrackCmdType::PitchMod:
                     midiCmd.type = MidiCmd::Type::SetPitchBend;
@@ -183,7 +183,7 @@ void midiToSequence(const MidiFile& midiFile, Sequence& sequence, const bool bIs
         // Clear track data
         track.labels.clear();
         track.cmds.clear();
-        
+
         // If it's music then we will be looping, make a location pointing to the start command in the track
         if (bIsMusic) {
             track.labels.push_back(0);

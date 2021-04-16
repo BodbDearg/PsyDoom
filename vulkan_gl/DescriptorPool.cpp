@@ -64,7 +64,7 @@ bool DescriptorPool::init(
     ASSERT_LOG((!mbIsValid), "Must call destroy() before re-initializing!");
     ASSERT(device.getVkDevice());
     ASSERT(maxSetAllocs > 0);
-    
+
     // If anything goes wrong, cleanup on exit - don't half initialize!
     auto cleanupOnError = finally([&]{
         if (!mbIsValid) {
@@ -141,7 +141,7 @@ void DescriptorPool::destroy(const bool bImmediately, const bool bForceIfInvalid
         vkFuncs.vkDestroyDescriptorPool(mpDevice->getVkDevice(), mVkPool, nullptr);
         mVkPool = VK_NULL_HANDLE;
     }
-    
+
     mFreeSetIndexes.clear();
     mDescriptorSets.clear();
     mpDevice = nullptr;
@@ -226,7 +226,7 @@ void DescriptorPool::freeDescriptorSet(DescriptorSet& descriptorSet) noexcept {
     if ((&descriptorSet >= pDescSetsBeg) && (&descriptorSet < pDescSetsEnd)) {
         setIndex = (uint32_t)(&descriptorSet - pDescSetsBeg);
     }
-    
+
     ASSERT(setIndex < mDescriptorSets.size());
 
     // Free the descriptor set

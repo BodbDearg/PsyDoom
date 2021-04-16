@@ -98,7 +98,7 @@ public:
         const uint32_t imageMemoryBarrierCount,
         const VkImageMemoryBarrier* const pImageMemoryBarriers
     ) noexcept;
-    
+
     void bindPipeline(const Pipeline& pipeline) noexcept;
     void bindVertexBuffer(const Buffer& buffer, const uint32_t bindingIndex, const uint64_t offset) noexcept;
     void bindIndexBufferUint16(const Buffer& buffer, const uint64_t offset) noexcept;

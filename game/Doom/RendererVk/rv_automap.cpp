@@ -40,7 +40,7 @@ static fixed_t gRvMap_AutomapScale;
 static void RV_CalcPlayerMapTransforms() noexcept {
     const player_t& player = gPlayers[gCurPlayerIndex];
     const bool bUncapFramerate = Config::gbUncapFramerate;
-    
+
     if (bUncapFramerate) {
         const fixed_t lerpFactor = R_CalcLerpFactor();
         gRvMap_PlayerX = R_LerpCoord(gOldViewX, player.mo->x, lerpFactor);
@@ -223,10 +223,10 @@ static void RV_DrawAutomapPlayers() noexcept {
         // Flash the player's triangle when alive
         const bool bIsLocalPlayer = (gCurPlayerIndex == playerIdx);
         const player_t& player = gPlayers[playerIdx];
-        
+
         if ((player.playerstate == PST_LIVE) && (gGameTic & 2))
             continue;
-        
+
         // Change the colors of this player in COOP to distinguish
         uint32_t color = AM_COLOR_GREEN;
 
@@ -242,7 +242,7 @@ static void RV_DrawAutomapPlayers() noexcept {
         const float ang1 = RV_AngleToFloat(playerAngle);
         const float ang2 = RV_AngleToFloat(playerAngle - ANG90 - ANG45);
         const float ang3 = RV_AngleToFloat(playerAngle + ANG90 + ANG45);
-        
+
         const float cos1 = std::cos(ang1);
         const float cos2 = std::cos(ang2);
         const float cos3 = std::cos(ang3);

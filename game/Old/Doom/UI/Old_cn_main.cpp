@@ -48,7 +48,7 @@ texture_t gTex_BUTTONS;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_ControlsScreen() noexcept {
     S_StartSound(nullptr, sfx_pistol);
-    
+
     gCursorFrame = 0;
     gCursorPos[0] = 0;
 
@@ -78,7 +78,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
     if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {
         gCursorFrame ^= 1;
     }
-    
+
     // Do menu up/down movements
     #if PSYDOOM_MODS
         const TickInputs& tickInputs = gTickInputs[0];
@@ -101,7 +101,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
         const bool bMenuBack = (ticButtons & PAD_SELECT);
         const bool bMenuOk = ((ticButtons != oldTicButtons) && PAD_ACTION_BTNS);
     #endif
-    
+
     if (!bMenuMove) {
         // If no buttons are currently pressed then you can move immediately next time they are
         gVBlanksUntilMenuMove[0] = 0;
@@ -116,7 +116,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
             if (bMenuDown) {
                 // Down is pressed and movement is allowed: move, wraparound (if required) and play a sound
                 gCursorPos[0]++;
-                
+
                 if (gCursorPos[0] > NUM_BINDABLE_BTNS) {
                     gCursorPos[0] = 0;
                 }
@@ -126,7 +126,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
             else if (bMenuUp) {
                 // Up is pressed and movement is allowed: move, wraparound (if required) and play a sound
                 gCursorPos[0]--;
-                
+
                 if (gCursorPos[0] < 0) {
                     gCursorPos[0] = NUM_BINDABLE_BTNS;
                 }
@@ -146,7 +146,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
         if (ticButtons == gOldTicButtons[0])
             return ga_nothing;
     #endif
-    
+
     if (gCursorPos[0] < 8) {
         // PsyDoom: only getting the PSX buttons at this point and only do a PSX binding if there is a change.
         // This controls menu is purely concerned with the original PSX controller inputs, not anything the PC might be using.
@@ -232,7 +232,7 @@ void DRAW_ControlsScreen() noexcept {
                 while (bindableBtnIdx < NUM_BINDABLE_BTNS) {
                     if (bindingButton == *pBtnMask)
                         break;
-                    
+
                     ++pBtnMask;
                     ++bindableBtnIdx;
                 }

@@ -35,7 +35,7 @@ public:
     inline bool isValid() const noexcept { return mbIsValid; }
     inline LogicalDevice* getDevice() const noexcept { return mpDevice; }
     inline VkFence getVkFence() const noexcept { return mVkFence; }
-    
+
 private:
     // Copy and move assign disallowed
     Fence(const Fence& other) = delete;

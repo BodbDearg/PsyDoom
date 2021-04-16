@@ -166,7 +166,7 @@ struct Matrix4 {
         dst[1] = y;
         dst[2] = z;
     }
-    
+
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Transforms the given 4D vector by this matrix and returns the result
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -280,7 +280,7 @@ struct Matrix4 {
     static inline Matrix4 invScale(const T s[3]) noexcept {
         return invScale(s[0], s[1], s[2]);
     }
-   
+
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Creates a right handed orthographic off-center projection matrix
     //
@@ -348,7 +348,7 @@ struct Matrix4 {
             0,                      0,                      zn * zf / (zn - zf),  0
         );
     }
-    
+
     // The actual elements of the matrix
     T e[4][4];
 };

@@ -109,7 +109,7 @@ void RenderTexture::destroy(const bool bImmediately, const bool bForceIfInvalid)
 
     // Preconditions
     ASSERT_LOG((!mpDevice) || mpDevice->getVkDevice(), "Parent device must still be valid if defined!");
-    
+
     // Gradual 'retirement' logic if specified and possible
     if ((!bImmediately) && mbIsValid) {
         mpDevice->getRetirementMgr().retire(*this);

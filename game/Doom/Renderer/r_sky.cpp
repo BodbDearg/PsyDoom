@@ -123,7 +123,7 @@ void R_DrawSky() noexcept {
         LIBGPU_LoadImage(vramRect, pTexData);
         skytex.uploadFrameNum = gNumFramesDrawn;
     }
-    
+
     // Set the draw mode firstly
     {
         RECT texWindow = { skytex.texPageCoordX, skytex.texPageCoordY, skytex.width, skytex.height };
@@ -220,7 +220,7 @@ void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
             // If there is a higher surrounding sky or void ceiling then take that as an indication that this is not the true sky level and treat as a void.
             // In the "GEC Master Edition" this can be used to create things like floating cubes.
             const bool bTreatAsVoidWall = R_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
-            
+
             if (!bTreatAsVoidWall) {
                 R_AddFrontFacingInfiniteSkyWall(edge, ftz);
             }

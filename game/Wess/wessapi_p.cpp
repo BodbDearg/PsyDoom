@@ -81,7 +81,7 @@ void wess_seq_pause(const int32_t seqIdx, const bool bMute) noexcept {
                     // Pause the track
                     track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
                     trackstop(trackStat, seqStat);
-                    
+
                     // If muting then call the driver function to mute the track
                     if (bMute) {
                         gWess_CmdFuncArr[trackStat.driver_id][TrkMute](trackStat);
@@ -133,7 +133,7 @@ void wess_seq_restart(const int32_t seqIdx) noexcept {
 
             if (!seqStat.active)
                 continue;
-            
+
             // If this is the sequence number we are interested in then run through all of it's tracks and pause each of them
             if (seqStat.seq_idx == seqIdx) {
                 uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
@@ -181,7 +181,7 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
     gbWess_SeqOn = false;
-    
+
     // If muting temporarily, then save the state of all voices to the given state struct (if given).
     // This allows the voices to be restored to what they were previously.
     if (bMute) {
@@ -216,7 +216,7 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
 
                 // Issue a driver command to mute the track (if required) and then pause the track
                 track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
-                
+
                 if (bMute == 1) {
                     gWess_CmdFuncArr[trackStat.driver_id][TrkMute](trackStat);
                 }
@@ -229,7 +229,7 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
                 if (numActiveTracksToVisit == 0)
                     break;
             }
-            
+
             // If there are no more active sequences to visit then we are done
             numActiveSeqsToVisit--;
 
@@ -315,7 +315,7 @@ void wess_seq_restartall(SavedVoiceList* const pSavedVoices) noexcept {
                 break;
         }
     }
-    
+
     // Clear storage in the list of saved voices for re-use again
     if (pSavedVoices) {
         pSavedVoices->size = 0;

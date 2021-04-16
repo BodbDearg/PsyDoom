@@ -32,7 +32,7 @@ RingbufferMgr::~RingbufferMgr() noexcept {
 bool RingbufferMgr::init(LogicalDevice& device) noexcept {
     // Preconditions
     ASSERT_LOG(!mbIsValid, "Must call destroy() before re-initializing!");
-    
+
     // If anything goes wrong, cleanup on exit - don't half initialize!
     auto cleanupOnError = finally([&]{
         if (!mbIsValid) {
@@ -51,10 +51,10 @@ bool RingbufferMgr::init(LogicalDevice& device) noexcept {
 
         if (!pCurFence->init(device, Fence::InitMode::UNSIGNALLED))
             return false;
-        
+
         Fence* const pEndFence = pCurFence + Defines::RINGBUFFER_SIZE;
         ++pCurFence;
-        
+
         while (pCurFence < pEndFence) {
             if (!pCurFence->init(device, Fence::InitMode::SIGNALLED))
                 return false;
@@ -82,13 +82,13 @@ void RingbufferMgr::destroy(const bool bForceIfInvalid) noexcept {
     {
         Fence* pCurFence = mFences;
         Fence* const pEndFence = pCurFence + Defines::RINGBUFFER_SIZE;
-        
+
         while (pCurFence < pEndFence) {
             pCurFence->destroy();
             ++pCurFence;
         }
     }
-    
+
     mpDevice = nullptr;
     mBufferIndex = 0;
 }
@@ -117,7 +117,7 @@ uint8_t RingbufferMgr::acquireNextBuffer() noexcept {
 
     // Cleanup all resources that we can for this ringbuffer index
     doCleanupForBufferIndex(nextBufferIdx);
-    
+
     // Reset the fence for this ringbuffer slot.
     // It will be signalled again once all operations have completed for this ringbuffer slot:
     nextRingbufferFence.resetSignal();

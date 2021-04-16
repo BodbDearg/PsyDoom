@@ -58,7 +58,7 @@ static uint32_t LIBSPU_GetExtReverbBaseAddr(const uint16_t origPsxReverbBaseAddr
 void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
     // Figure out what attributes to set for the specified voices
     const uint32_t attribMask = attribs.attr_mask;
-    
+
     const bool bSetAllAttribs   = (attribMask == 0);
     const bool bSetPitch        = (bSetAllAttribs || (attribMask & SPU_VOICE_PITCH));
     const bool bSetBaseNote     = (bSetAllAttribs || (attribMask & SPU_VOICE_SAMPLE_NOTE));
@@ -383,13 +383,13 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
             spu.reverbVol.right = reverbAttr.depth.right;
         }
     }
-    
+
     // Update the SPU reverb registers if setting reverb mode, delay time or feedback.
     // If we are just updating the left/right reverb depth however, then we can skip this.
     if (bSetReverbMode || bSetReverbDelay || bSetReverbFeedback) {
         const uint32_t regBits = reverbDef.fieldBits;
         const bool bSetAllRegs = (regBits == 0);
-        
+
         const auto updateReg = [=](const uint32_t idx, auto& reg, const uint16_t value) noexcept {
             if (bSetAllRegs || (regBits & (1 << idx))) {
                 reg = value;
@@ -429,7 +429,7 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
         updateReg(30, spu.reverbRegs.volLIn, reverbDef.inputVolLeft);
         updateReg(31, spu.reverbRegs.volRIn, reverbDef.inputVolRight);
     }
-    
+
     // Clear the reverb working area if that was specified
     if (bClearReverbWorkingArea) {
         LIBSPU_SpuClearReverbWorkArea();
@@ -446,7 +446,7 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
 void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept {
     // Figure out what attributes we are setting
     const uint32_t attribMask = attribs.mask;
-    
+
     const bool bSetAllAttribs   = (attribMask == 0);
     const bool bSetMVolL        = (bSetAllAttribs || (attribMask & SPU_COMMON_MVOLL));
     const bool bSetMVolModeL    = (bSetAllAttribs || (attribMask & SPU_COMMON_MVOLMODEL));
@@ -498,7 +498,7 @@ void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept {
     // Because of this, parameters relating to CD volume and reverb are set for the 'external input' on the SPU and not on dedicated
     // fields relating to CD audio specifically. Because there is only one external input also, I'm ignoring anything requested here
     // related to the PlayStation's original external input. Doom didn't use this input so that's okay to do...
-    
+
     // Set: cd volume left and right
     if (bSetCdVolL) {
         spu.extInputVol.left = attribs.cd.volume.left;
@@ -526,7 +526,7 @@ void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept {
         if (bSetExtVolR) {
             spu.extInputVol.right = attribs.ext.volume.right;
         }
-    
+
         if (bSetExtReverb) {
             spu.bExtReverbEnable = (attribs.ext.reverb != 0);
         }
@@ -622,7 +622,7 @@ SpuVoiceMask LIBSPU_SpuSetReverbVoice(const int32_t onOff, const SpuVoiceMask vo
 
         return voiceBits;
     }
-    
+
     // Enable or disable reverb for specific voices and return the reverb status of all voices after
     const bool bEnableReverb = (onOff != SPU_OFF);
     SpuVoiceMask enabledVoiceBits = 0;
@@ -735,7 +735,7 @@ uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept {
     // Per PsyQ docs the address given is rounded up to the next 8-byte boundary.
     // It also must be in range or the instruction is ignored and '0' returned.
     const uint32_t alignedAddr = (addr + 7) & (~7u);
-    
+
     Spu::Core& spu = PsxVm::gSpu;
     PsxVm::LockSpu spuLock;
 
@@ -785,7 +785,7 @@ void LIBSPU_SpuSetKey(const int32_t onOff, const SpuVoiceMask voiceBits) noexcep
     PsxVm::LockSpu spuLock;
 
     const uint32_t numVoicesToSet = std::min(SPU_NUM_VOICES, spu.numVoices);
-    
+
     if (onOff == SPU_OFF) {
         for (uint32_t voiceIdx = 0; voiceIdx < numVoicesToSet; ++voiceIdx) {
             if (voiceBits & (SpuVoiceMask(1) << voiceIdx)) {

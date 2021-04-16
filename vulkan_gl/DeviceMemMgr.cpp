@@ -79,7 +79,7 @@ void DeviceMemMgr::destroy(const bool bForceIfInvalid) noexcept {
     if (mpDevice) {
         // Free up the memory for all pools
         const VkDevice vkDevice = mpDevice->getVkDevice();
-        
+
         for (std::pair<const MemMgrIdT, Pool>& poolKvp : mPools) {
             // Unmap any mapped memory in this pool and free the device memory
             Pool& pool = poolKvp.second;
@@ -120,7 +120,7 @@ void DeviceMemMgr::destroy(const bool bForceIfInvalid) noexcept {
 uint64_t DeviceMemMgr::estimateAllocSize(const uint64_t numBytes) const noexcept {
     // Figure out the the unit size for the tier to start the search on
     uint64_t thisTierUS;
-    
+
     if (numBytes < SUB_POOL_ALLOC_THRESHOLD) {
         if (numBytes > 0) {
             thisTierUS = SUB_POOL_UNIT_SIZE;
@@ -181,7 +181,7 @@ void DeviceMemMgr::alloc(
 
     // Clear out the output info; note that if there are no bytes to alloc then we are done
     allocInfoOut = {};
-    
+
     if (numBytes <= 0)
         return;
 
@@ -490,7 +490,7 @@ bool DeviceMemMgr::allocFromSubPool(
 
     if (alloc.size <= 0)
         return false;
-    
+
     // Otherwise fill in the result details and return true for success
     allocInfoOut.vkDeviceMemory = parentPool.vkDeviceMemory;
     allocInfoOut.offset = subPool.offset + alloc.offset;
@@ -621,7 +621,7 @@ DeviceMemMgr::SubPool* DeviceMemMgr::allocNewSubPool(Pool& parentPool) noexcept 
 
     // Firstly try to alloc a new sub pool id, if that fails then sub pool alloc fails
     const MemMgrIdT subPoolId = pickNewSubPoolId(parentPool);
-    
+
     if (subPoolId == INVALID_MEM_MGR_ID)
         return nullptr;
 

@@ -545,7 +545,7 @@ bool writeMidiFile(OutputStream& out, const MidiFile& midiFile) noexcept {
             // Write the track data itself
             out.writeBytes(trackOut.getBytes().data(), trackOut.tell());
         }
-        
+
         // Ensure all pending writes have completed to finish up
         out.flush();
         bWroteFileOk = true;
@@ -629,7 +629,7 @@ uint32_t writeVarLenQuant(OutputStream& out, const uint32_t valueIn) THROWS {
             pEncodedByte++;
         }
     }
-    
+
     // Write the encoded value to the given output stream.
     // Note that the ordering here gets reversed, so it winds up being read in the correct order.
     uint32_t numBytesWritten = 0;

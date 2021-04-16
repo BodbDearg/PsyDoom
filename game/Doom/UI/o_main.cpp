@@ -213,7 +213,7 @@ gameaction_t O_Control() noexcept {
 
             return ga_exit;
         }
-        
+
         // Check for up/down movement
         if (!bMenuMove) {
             // If there are no direction buttons pressed then the next move is allowed instantly
@@ -224,7 +224,7 @@ gameaction_t O_Control() noexcept {
 
             if (gVBlanksUntilMenuMove[playerIdx] <= 0) {
                 gVBlanksUntilMenuMove[playerIdx] = 15;
-                
+
                 if (bMenuDown) {
                     gCursorPos[playerIdx]++;
 
@@ -262,7 +262,7 @@ gameaction_t O_Control() noexcept {
                 if (playerIdx == gCurPlayerIndex) {
                     if (bMenuRight) {
                         gOptionsMusVol++;
-                        
+
                         if (gOptionsMusVol > S_MAX_VOL) {
                             gOptionsMusVol = S_MAX_VOL;
                         } else {
@@ -272,7 +272,7 @@ gameaction_t O_Control() noexcept {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
-                        
+
                         gCdMusicVol = (gOptionsMusVol * PSXSPU_MAX_CD_VOL) / S_MAX_VOL;
                     }
                     else if (bMenuLeft) {
@@ -287,7 +287,7 @@ gameaction_t O_Control() noexcept {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
-                        
+
                         gCdMusicVol = (gOptionsMusVol * PSXSPU_MAX_CD_VOL) / S_MAX_VOL;
                     }
                 }
@@ -310,7 +310,7 @@ gameaction_t O_Control() noexcept {
                             gOptionsSndVol = S_MAX_VOL;
                         } else {
                             S_SetSfxVolume(doomToWessVol(gOptionsSndVol));
-                            
+
                             if (gOptionsSndVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
@@ -323,7 +323,7 @@ gameaction_t O_Control() noexcept {
                             gOptionsSndVol = 0;
                         } else {
                             S_SetSfxVolume(doomToWessVol(gOptionsSndVol));
-                            
+
                             if (gOptionsSndVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
@@ -435,7 +435,7 @@ void O_Drawer() noexcept {
         // Draw each menu item for the current options screen layout.
         // The available options will vary depending on game mode.
         const menuitem_t* pMenuItem = gpOptionsMenuItems;
-        
+
         for (int32_t optIdx = 0; optIdx < gOptionsMenuSize; ++optIdx, ++pMenuItem) {
             // Draw the option label
             I_DrawString(pMenuItem->x, pMenuItem->y, gOptionNames[pMenuItem->option]);

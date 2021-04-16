@@ -39,7 +39,7 @@ bool CmdBufferRecorder::beginPrimaryCmdBuffer(CmdBuffer& cmdBuffer, const VkComm
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = usageFlags;
-    
+
     if (mVkFuncs.vkBeginCommandBuffer(cmdBuffer.getVkCommandBuffer(), &beginInfo) != VK_SUCCESS) {
         ASSERT_FAIL("Failed to begin command buffer recording!");
         return false;
@@ -121,7 +121,7 @@ void CmdBufferRecorder::beginRenderPass(
     ASSERT(renderPass.isValid());
     ASSERT(framebuffer.isValid());
     ASSERT((pClearValues != nullptr) || (numClearValues <= 0));
-    
+
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = renderPass.getVkRenderPass();

@@ -29,7 +29,7 @@ public:
     inline VkImageView getVkImageView() const noexcept { return mVkImageView; }
     inline uint64_t getSizeInBytes() const noexcept { return mSizeInBytes; }
     inline uint64_t getAllocSizeInBytes() const noexcept { return mDeviceMemAlloc.size; }
-    
+
 protected:
     BaseTexture() noexcept;
     BaseTexture(BaseTexture&& other) noexcept;
@@ -88,7 +88,7 @@ private:
         const VkImageUsageFlags vkImageUsageFlags,
         const VkImageLayout vkInitialImageLayout
     ) noexcept;
-    
+
     bool createImageMemBuffer(const DeviceMemAllocMode deviceMemAllocMode) noexcept;
 
     bool createImageView(

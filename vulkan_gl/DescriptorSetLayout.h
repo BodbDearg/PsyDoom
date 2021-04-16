@@ -35,7 +35,7 @@ private:
     DescriptorSetLayout(const DescriptorSetLayout& other) = delete;
     DescriptorSetLayout& operator = (const DescriptorSetLayout& other) = delete;
     DescriptorSetLayout& operator = (DescriptorSetLayout&& other) = delete;
-    
+
     bool                    mbIsValid;      // True if the layout has been validly initialized/created
     LogicalDevice*          mpDevice;       // Device the layout was created with
     VkDescriptorSetLayout   mVkLayout;      // The Vulkan descriptor set layout object

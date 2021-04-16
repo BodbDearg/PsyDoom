@@ -98,7 +98,7 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
 
     rvseg_t* const pSegs = gpRvSegs.get() + subsec.firstseg;
     const uint32_t numSegs = subsec.numsegs;
-    
+
     for (uint32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
         // Firstly, clear the line segment flags
         rvseg_t& seg = pSegs[segIdx];
@@ -192,7 +192,7 @@ static void RV_VisitBspNode(const int32_t nodeIdx) noexcept {
             if (RV_NodeBBVisible(node.bbox[1])) {
                 RV_VisitBspNode(node.children[1]);
             }
-            
+
             if (RV_NodeBBVisible(node.bbox[0])) {
                 RV_VisitBspNode(node.children[0]);
             }

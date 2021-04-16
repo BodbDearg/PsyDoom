@@ -75,7 +75,7 @@ public:
 
     // Cleanup/destroy the texture
     void destroy(const bool bImmediately = false, const bool bForceIfInvalid = false) noexcept;
-      
+
 private:
     // Copy and move assign disallowed
     MutableTexture(const MutableTexture& other) = delete;

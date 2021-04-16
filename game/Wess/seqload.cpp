@@ -96,7 +96,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
     master_status_structure& mstat = *gpWess_seqld_mstat;
     module_data& module = *mstat.pmodule;
     sequence_data& sequence = module.psequences[seqIdx];
-    
+
     uint8_t* pCurSeqMem = (uint8_t*) pSeqMem;
     wess_align_byte_ptr(pCurSeqMem, alignof(track_data));
     sequence.ptracks = (track_data*) pCurSeqMem;
@@ -181,7 +181,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
                 // Track is SFX: find a driver which wants to load SFX
                 for (uint32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
                     patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
-                    
+
                     if (patchGroup.hw_table_list.sfxload) {
                         track.hdr.driver_id = (SoundDriverId) patchGroup.hw_table_list.driver_id;
                         break;
@@ -192,7 +192,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
                 // Track is music: find a driver which wants to load music
                 for (uint32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
                     patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
-                    
+
                     if (patchGroup.hw_table_list.musload) {
                         track.hdr.driver_id = (SoundDriverId) patchGroup.hw_table_list.driver_id;
                         break;
@@ -203,7 +203,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
                 // Track is drums: find a driver which wants to load drums
                 for (uint32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
                     patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
-                    
+
                     if (patchGroup.hw_table_list.drmload) {
                         track.hdr.driver_id = (SoundDriverId) patchGroup.hw_table_list.driver_id;
                         break;
@@ -232,7 +232,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
         pCurSeqMem += trackCmdStreamSize;
         pCurSeqMem += ((uintptr_t) pCurSeqMem) & 1;
         pCurSeqMem += ((uintptr_t) pCurSeqMem) & 2;
-        
+
         // Read the track command stream
         if (module_read(track.pcmd_stream, trackCmdStreamSize, moduleFile) != trackCmdStreamSize) {
             wess_seq_load_err(SEQLOAD_FREAD);
@@ -246,7 +246,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
         track_data& track = sequence.ptracks[0];
         track.hdr = gWess_seqld_emptyTrackHdr;
         track.plabels = (uint32_t*) pCurSeqMem;
-        
+
         // Init and alloc the track command stream with two commands.
         // Note that the memory pointer must be aligned after because it could wind up on an unaligned address.
         sequence.hdr.num_tracks = 1;
@@ -303,7 +303,7 @@ bool wess_seq_loader_init(master_status_structure* const pMStat, const CdFileId 
     emptyTrackHdr.init_mutegroups_mask = 0;
     emptyTrackHdr.num_labels = 0;
     emptyTrackHdr.cmd_stream_size = 2;      // 2 commands of a single byte each in the default track
-    
+
     // If requested, pre-open the module file also to have it ready
     if (bOpenModuleFile) {
         if (!open_sequence_data()) {

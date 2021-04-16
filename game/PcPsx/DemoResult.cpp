@@ -102,7 +102,7 @@ bool saveToJsonFile(const char* const jsonFilePath) noexcept {
 
             playerJson.AddMember("ammo", ammoJson, allocator);
         }
-    
+
         // Level stats
         playerJson.AddMember("killcount", player.killcount, allocator);
         playerJson.AddMember("itemcount", player.itemcount, allocator);
@@ -148,7 +148,7 @@ static const rapidjson::Value& getJsonFieldOrNull(const rapidjson::Value& jsonOb
 
     if (iter == jsonObj.MemberEnd())
         return JSON_NULL;
-    
+
     return iter->value;
 }
 
@@ -182,7 +182,7 @@ static bool verifyJsonArrayFieldMatches(
 
     for (unsigned i = 0; i < arraySize; ++i) {
         const rapidjson::Value& arrayValue = field[i];
-        
+
         if ((!arrayValue.Is<JsonT>()) || ((CppT) arrayValue.Get<JsonT>() != expectedValues[i])) {
             return false;
         }

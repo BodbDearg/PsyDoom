@@ -49,7 +49,7 @@ struct ConfigFieldHandler {
     const char* preamble;           // Proceeds the actual key and value: normally used for commenting but can be null/empty if not needed.
     const char* defaultValueStr;    // String representation of the default value. Note: the key/value is always put on a different line to the pre/postamble.
     const char* postamble;          // Comes after the key and value. Can be used to add an additional newline but can be null/empty if not needed.
-    
+
     // Logic for parsing the config value
     std::function<void (const IniUtils::Entry& iniEntry)> parseFunc;
 
@@ -1244,7 +1244,7 @@ static void parseConfigFile(
     // The configuration file in the current working directory takes precedence over the one in the config folder.
     std::string cfgFilePath;
     bool bCfgFileExists;
-    
+
     if (FileUtils::fileExists(fileName)) {
         cfgFilePath = fileName;
         bCfgFileExists = true;
@@ -1267,7 +1267,7 @@ static void parseConfigFile(
 
                     if (iniEntry.key != handler.name)
                         continue;
-                        
+
                     handler.parseFunc(iniEntry);
                     executedConfigHandler[i] = true;
                     break;

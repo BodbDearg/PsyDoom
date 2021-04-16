@@ -32,7 +32,7 @@ public:
 
     // Gives the name of the device as a null terminated C-String
     inline const char* getName() const noexcept { return mProps.deviceName; }
-    
+
     uint32_t findSuitableMemTypeIndex(
         const uint32_t allowedMemTypesIndexMask,
         const VkMemoryPropertyFlags requiredMemProps = 0

@@ -71,7 +71,7 @@ void VRenderPath_Main::destroy() noexcept {
         return;
 
     mbIsValid = false;
-    
+
     for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
         mFramebuffers[i].destroy(true);
         mColorAttachments[i].destroy(true);
@@ -231,7 +231,7 @@ void VRenderPath_Main::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorde
 
     // Done with the render pass now
     cmdRec.endRenderPass();
-    
+
     // Only bother doing further commands if we're going to present.
     // This avoids errors on MacOS/Metal also, where we try to blit to an incompatible destination window size.
     if (VRenderer::willSkipNextFramePresent())

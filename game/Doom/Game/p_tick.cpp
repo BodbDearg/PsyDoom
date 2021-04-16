@@ -91,7 +91,6 @@ int32_t     gTicConOnPause;                         // What 1 vblank tick we pau
     uint32_t    gOldTicButtons[MAXPLAYERS];     // Previously pressed buttons by all players
 #endif
 
-
 static uint16_t     gCheatSequenceBtns[CHEAT_SEQ_LEN];      // Cheat sequence buttons inputted by the player
 static int32_t      gNumActiveThinkers;                     // Stat tracking count, no use other than that
 
@@ -231,7 +230,7 @@ void P_CheckCheats() noexcept {
             const uint32_t padBtns = gTicButtons[playerIdx];
             const uint32_t oldPadBtns = gOldTicButtons[playerIdx];
         #endif
-        
+
         // Toggling pause?
         #if PSYDOOM_MODS
             const bool bPauseJustPressed = (inputs.bTogglePause && (!oldInputs.bTogglePause));
@@ -360,14 +359,14 @@ void P_CheckCheats() noexcept {
             gVBlanksUntilMenuMove[0] = 0;
         }
     #endif
-    
+
     // Are we showing the cheat warp menu?
     // If so then do the controls for that and exit.
     player_t& player = gPlayers[0];
-    
+
     if (player.cheats & CF_WARPMENU) {
         gVBlanksUntilMenuMove[0] -= gPlayersElapsedVBlanks[0];
-        
+
         if (gVBlanksUntilMenuMove[0] <= 0) {
             if (bMenuLeft) {
                 gMapNumToCheatWarpTo--;
@@ -380,7 +379,7 @@ void P_CheckCheats() noexcept {
                         gMapNumToCheatWarpTo = 1;
                     #endif
                 }
-                
+
                 gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
             }
             else if (bMenuRight) {
@@ -497,7 +496,7 @@ void P_CheckCheats() noexcept {
                         gStatusBar.message = "All Powerful Mode OFF.";
                     }
                 }   break;
-                
+
                 // Weapons ammo and keys cheat
                 case CHT_SEQ_WEAPONS_AND_AMMO: {
                     // Grant any keys that are present in the level.
@@ -535,7 +534,7 @@ void P_CheckCheats() noexcept {
                 // Level warp cheat, bring up the warp menu
                 case CHT_SEQ_LEVEL_WARP: {
                     player.cheats |= CF_WARPMENU;
-                    
+
                     if (gGameMap > maxCheatWarpLevel) {
                         gMapNumToCheatWarpTo = maxCheatWarpLevel;
                     } else {
@@ -581,7 +580,7 @@ void P_CheckCheats() noexcept {
                 }   break;
             #endif
             }
-            
+
             // A full cheat sequence (8 buttons) was entered - we are done checking for cheats
             break;
         }
@@ -706,7 +705,7 @@ void P_Start() noexcept {
     // Initialize some basic fields and the automap
     gbGamePaused = false;
     gValidCount = 1;
-    
+
     AM_Start();
     M_ClearRandom();
 
@@ -777,7 +776,7 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
             }
         }
     #endif
-    
+
     // Stop all sounds and music.
     // PsyDoom: don't stop all sounds, let them fade out naturally - otherwise the pistol sound on closing the main menu gets cut off.
     // We stop all sounds anyway when pausing, which is the only route out of the game.

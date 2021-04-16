@@ -93,7 +93,7 @@ int32_t W_CheckNumForName(const char* const name) noexcept {
 
         if (lumpNameW1 == findNameW1 && lumpNameW2 == findNameW2)
             return lumpIdx;
-        
+
         ++lumpIdx;
         ++pLump;
     };
@@ -148,7 +148,7 @@ void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress
             I_Error("W_ReadLump: %i >= numlumps", lumpNum);
         }
     #endif
-    
+
     // The lump requested and the next one after that
     const lumpinfo_t& lump = gpLumpInfo[lumpNum];
     const lumpinfo_t& nextLump = gpLumpInfo[lumpNum + 1];
@@ -160,7 +160,7 @@ void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress
     if (bDecompress && (((uint8_t) lump.name.chars[0] & 0x80u) != 0)) {
         // Decompression needed, must alloc a temp buffer for the compressed data before reading and decompressing!
         void* const pTmpBuffer = Z_EndMalloc(*gpMainMemZone, lump.size, PU_STATIC, nullptr);
-        
+
         SeekAndTellFile(gMainWadFileIdx, lump.filepos, PsxCd_SeekMode::SET);
         ReadFile(gMainWadFileIdx, pTmpBuffer, sizeToRead);
         decode(pTmpBuffer, pDest);
@@ -196,7 +196,7 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
 
     // If the lump is already loaded then we don't need to do anything
     void*& lumpCacheEntry = gpLumpCache[lumpNum];
-    
+
     if (!lumpCacheEntry) {
         // If the level loading is done then we should NOT be loading lumps during gameplay.
         // Because CD-ROM I/O is so slow, this would cause very serious stalls and slowdowns during gameplay, so consider it a fatal error.
@@ -209,12 +209,12 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
                 I_Error("cache miss on lump %i", lumpNum);
             }
         #endif
-        
+
         // Figure out how much data we will need to allocate. If we are decompressing then this will be the decompressed size, otherwise
         // it will be the actual size of the lump before decompression is applied:
         const lumpinfo_t& lumpInfo = gpLumpInfo[lumpNum];
         int32_t sizeToRead;
-        
+
         if (bDecompress) {
             sizeToRead = lumpInfo.size;
         } else {
@@ -276,7 +276,7 @@ void* W_OpenMapWad(const CdFileId discFile) noexcept {
     if (!bIsValidWad) {
         I_Error("W_OpenMapWad: invalid map IWAD id");
     }
-    
+
     // Finish up by saving some high level map wad info
     gNumMapWadLumps = wadinfo.numlumps;
     gpMapWadLumpInfo = (lumpinfo_t*)((std::byte*) gpMapWadFileData + wadinfo.infotableofs);
@@ -314,7 +314,7 @@ int32_t W_MapCheckNumForName(const char* const name) noexcept {
     // Try to find the given lump name and compare names using 32-bit words rather than single chars
     lumpinfo_t* pLump = gpMapWadLumpInfo;
     int32_t lumpIdx = 0;
-    
+
     while (lumpIdx < gNumMapWadLumps) {
         // Note: must mask the highest bit of the first character of the lump name.
         // This bit is used to indicate whether the lump is compressed or not.
@@ -323,7 +323,7 @@ int32_t W_MapCheckNumForName(const char* const name) noexcept {
 
         if (lumpNameW1 == findNameW1 && lumpNameW2 == findNameW2)
             return lumpIdx;
-        
+
         ++lumpIdx;
         ++pLump;
     };
@@ -355,7 +355,7 @@ void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompr
     // set in the first character, indicating that the lump is compressed.
     const lumpinfo_t& lump = gpMapWadLumpInfo[lumpNum];
     const std::byte* const pLumpBytes = (std::byte*) gpMapWadFileData + lump.filepos;
-    
+
     if (bDecompress && (((uint8_t) lump.name.chars[0] & 0x80u) != 0)) {
         // Decompression needed: decompress to the given output buffer
         decode(pLumpBytes, pDest);
@@ -377,7 +377,7 @@ void decode(const void* pSrc, void* pDst) noexcept {
 
     uint32_t idByte = 0;        // Controls whether there is compressed or uncompressed data ahead
     uint32_t haveIdByte = 0;    // Controls when to read an id byte, when '0' we need to read another one
-    
+
     while (true) {
         // Read the id byte if required.
         // We need 1 id byte for every 8 bytes of uncompressed output, or every 8 runs of compressed data.
@@ -385,7 +385,7 @@ void decode(const void* pSrc, void* pDst) noexcept {
             idByte = *pSrcByte;
             ++pSrcByte;
         }
-        
+
         haveIdByte = (haveIdByte + 1) & 7;
 
         if (idByte & 1) {
@@ -414,7 +414,7 @@ void decode(const void* pSrc, void* pDst) noexcept {
             ++pSrcByte;
             ++pDstByte;
         }
-        
+
         idByte >>= 1;
     }
 }
@@ -449,7 +449,7 @@ uint32_t getDecodedSize(const void* const pSrc) noexcept {
 
             if (numRepeatedBytes == 1)
                 break;
-            
+
             size += numRepeatedBytes;
         } else {
             ++size;

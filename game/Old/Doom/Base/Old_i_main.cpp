@@ -83,7 +83,7 @@ void I_NetSetup() noexcept {
             }
         } while (!LIBAPI_TestEvent(gSioReadDoneEvent));
     }
-    
+
     // Do a synchronization handshake between the players
     I_NetHandshake();
 
@@ -123,7 +123,7 @@ void I_NetSetup() noexcept {
         // Read the game details and control bindings for the other player and wait until it is read.
         LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
         while (!LIBAPI_TestEvent(gSioReadDoneEvent)) {}
-        
+
         // Save the game details and the control bindings
         const uint32_t otherPlayerBtns = (
             ((uint32_t) gNetInputPacket[4] << 0) |
@@ -144,7 +144,7 @@ void I_NetSetup() noexcept {
         gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
         gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
         gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
-        
+
         // Wait until we are cleared to send to the receiver and send the output packet.
         while (!LIBCOMB_CombCTS()) {}
         LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
@@ -165,7 +165,7 @@ void I_NetHandshake() noexcept {
         // Send the sync byte and get the other one back
         gNetOutputPacket[0] = syncByte;
         I_NetSendRecv();
-        
+
         // Is it what we expected? If it isn't then start over, otherwise move onto the next sync byte:
         if (gNetInputPacket[0] == gNetOutputPacket[0]) {
             syncByte++;
@@ -273,7 +273,7 @@ void I_NetSendRecv() noexcept {
         if (gCurPlayerIndex == 0) {
             // Player 1: start by waiting until we are clear to send
             while (!LIBCOMB_CombCTS()) {}
-            
+
             // Write the output packet
             LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
 
@@ -281,7 +281,7 @@ void I_NetSendRecv() noexcept {
             // Timeout after 5 seconds and retry the entire send/receive procedure.
             LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
             const int32_t startVBlanks = LIBETC_VSync(-1);
-            
+
             while (true) {
                 // If the read is done then we can finish up this round of sending/receiving
                 if (LIBAPI_TestEvent(gSioReadDoneEvent))
@@ -294,7 +294,7 @@ void I_NetSendRecv() noexcept {
         } else {
             // Player 2: start by reading the input packet
             LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
-            
+
             // Wait until the input packet is read.
             // Timeout after 5 seconds and retry the entire send/receive procedure.
             const int32_t startVBlanks = LIBETC_VSync(-1);
@@ -336,7 +336,7 @@ uint32_t I_LocalButtonsToNet(const padbuttons_t pCtrlBindings[NUM_CTRL_BINDS]) n
             if (gBtnMasks[buttonIdx] == pCtrlBindings[bindingIdx])
                 break;
         }
-        
+
         // Encode the button using a 4 bit slot in the 32-bit integer
         encodedBindings |= buttonIdx << (bindingIdx * 4);
     }

@@ -72,9 +72,9 @@ void RetirementMgr::destroy(const bool bForceIfInvalid) noexcept {
     for (IRetirementProvider* pRetirementProvider : mExternalRetirementProviders) {
         pRetirementProvider->freeRetiredResourcesForAllRingbufferSlots();
     }
-    
+
     mExternalRetirementProviders.clear();
-    
+
     for (RetiredResourceSet& set : mRetiredResourceSets) {
         set.clear();
         set.compact();
@@ -83,7 +83,7 @@ void RetirementMgr::destroy(const bool bForceIfInvalid) noexcept {
     #if ASSERTS_ENABLED == 1
         mbDebugIsDestroyingResources = false;
     #endif
-    
+
     mpRingbufferMgr = nullptr;
     mpDevice = nullptr;
 }
@@ -112,15 +112,15 @@ void RetirementMgr::unregisterRetirementProvider(IRetirementProvider& provider) 
 void RetirementMgr::freeRetiredResourcesForAllRingbufferSlots() noexcept {
     if (!mbIsValid)
         return;
-    
+
     #if ASSERTS_ENABLED == 1
         mbDebugIsDestroyingResources = true;
     #endif
-    
+
     for (IRetirementProvider* pRetirementProvider : mExternalRetirementProviders) {
         pRetirementProvider->freeRetiredResourcesForAllRingbufferSlots();
     }
-    
+
     for (RetiredResourceSet& set : mRetiredResourceSets) {
         set.clear();
     }
@@ -140,7 +140,7 @@ void RetirementMgr::freeRetiredResourcesForRingbufferIndex(const uint8_t ringbuf
     #if ASSERTS_ENABLED == 1
         mbDebugIsDestroyingResources = true;
     #endif
-    
+
     for (IRetirementProvider* pRetirementProvider : mExternalRetirementProviders) {
         pRetirementProvider->freeRetiredResourcesForRingbufferIndex(ringbufferIndex);
     }
@@ -152,7 +152,6 @@ void RetirementMgr::freeRetiredResourcesForRingbufferIndex(const uint8_t ringbuf
         mbDebugIsDestroyingResources = false;
     #endif
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Retire resources of different types. The retired resources are placed in the retired resource list

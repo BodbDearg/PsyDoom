@@ -330,7 +330,7 @@ static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine&
     const float segDy = segY2 - segY1;
     const float splitLineDx = splitLine.x2 - splitLine.x1;
     const float splitLineDy = splitLine.z2 - splitLine.z1;
-    
+
     const float a = splitLine.z1 - segY1;
     const float b = splitLine.x1 - segX1;
 
@@ -445,12 +445,12 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
         const float nodePy = RV_FixedToFloat(node.line.y);
         const float nodeDx = RV_FixedToFloat(node.line.dx);
         const float nodeDy = RV_FixedToFloat(node.line.dy);
-        
+
         const float relX1 = frag.x1 - nodePx;
         const float relX2 = frag.x2 - nodePx;
         const float relZ1 = frag.z1 - nodePy;
         const float relZ2 = frag.z2 - nodePy;
-        
+
         const float lprod1 = nodeDx * relZ1;
         const float rprod1 = nodeDy * relX1;
         const float lprod2 = nodeDx * relZ2;
@@ -479,7 +479,7 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
 
             // Compute the 'time' of the intersection/split
             const float splitT = std::clamp(dist1 / (dist1 + dist2), 0.0f, 1.0f);
-            
+
             // Compute points a little bit on either side of the split.
             // We will make a line between these points and intersect against geometry to see if the split line can be crossed.
             // In some cases we want to prohibit splits if the split would occur against a 1 sided line, for example.

@@ -149,7 +149,7 @@ static void P_PlayerMove(mobj_t& mobj) noexcept {
 static void P_PlayerXYMovement(mobj_t& mobj) noexcept {
     // Physically move the player and cross special lines, touch things etc.
     P_PlayerMove(mobj);
-    
+
     // No friction when the player is in the air
     if (mobj.z > mobj.floorz)
         return;
@@ -157,7 +157,7 @@ static void P_PlayerXYMovement(mobj_t& mobj) noexcept {
     // If the player is a corpse and over a step then don't apply friction: slide down it
     if ((mobj.flags & MF_CORPSE) && (mobj.floorz != mobj.subsector->sector->floorheight))
         return;
-        
+
     // If the player has reached a low enough velocity then stop completely, otherwise apply friction
     if ((std::abs(mobj.momx) < STOPSPEED) && (std::abs(mobj.momy) < STOPSPEED)) {
         mobj.momx = 0;
@@ -180,7 +180,7 @@ static void P_PlayerZMovement(mobj_t& mobj) noexcept {
         player.viewheight -= mobj.floorz - mobj.z;                              // Adjust the view height by the difference
         player.deltaviewheight = d_rshift<2>(VIEWHEIGHT - player.viewheight);   // This does a nice curved motion up (fast at first, then slowing down)
     }
-    
+
     // Advance z position by the velocity
     mobj.z += mobj.momz;
 
@@ -250,7 +250,7 @@ static void P_BuildMove(player_t& player) noexcept {
     // Grab some useful stuff: elapsed vblanks, current and old inputs etc.
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
     const bool bFinalDoomMovementMode = Game::gSettings.bUseFinalDoomPlayerMovement;
-    
+
     #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gPlayerNum];
         const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
@@ -281,17 +281,17 @@ static void P_BuildMove(player_t& player) noexcept {
         const bool bRun = (curBtns & pBtnBindings[cbind_run]);
         const bool bStrafe = (curBtns & pBtnBindings[cbind_strafe]);
     #endif
-    
+
     // Do turn acceleration if turn is held continously for 2 frames or more
     const bool bLeftTurnAccel = (bTurnLeft && bOldTurnLeft);
     const bool bRightTurnAccel = (bTurnRight && bOldTurnRight);
-    
+
     if (bLeftTurnAccel || bRightTurnAccel) {
         player.turnheld = std::min(player.turnheld + 1, TURN_ACCEL_TICS - 1);
     } else {
         player.turnheld = 0;
     }
-    
+
     // Initially assume no turning or movement
     player.angleturn = 0;
     player.sidemove = 0;
@@ -299,7 +299,7 @@ static void P_BuildMove(player_t& player) noexcept {
 
     // What movement speed is being used, run or normal?
     const uint32_t speedMode = (bRun) ? 1 : 0;
-    
+
     // Do strafe left/right controls
     const bool bAllowMoveCancel = Game::gSettings.bAllowMovementCancellation;
 
@@ -307,7 +307,7 @@ static void P_BuildMove(player_t& player) noexcept {
         if (bStrafeLeft) {
             player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
         }
-        
+
         if (bStrafeRight && (bAllowMoveCancel || (!bStrafeLeft))) {
             player.sidemove += SIDE_MOVE_FDOOM[speedMode];
         }
@@ -316,7 +316,7 @@ static void P_BuildMove(player_t& player) noexcept {
         if (bStrafeLeft) {
             player.sidemove += (-SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
-        
+
         if (bStrafeRight && (bAllowMoveCancel || (!bStrafeLeft))) {
             player.sidemove += (+SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
@@ -338,7 +338,7 @@ static void P_BuildMove(player_t& player) noexcept {
             if (bTurnLeft) {
                 player.sidemove -= SIDE_MOVE_FDOOM[speedMode];
             }
-            
+
             if (bTurnRight && (bAllowTurnCancel || (!bTurnLeft))) {
                 player.sidemove += SIDE_MOVE_FDOOM[speedMode];
             }
@@ -348,7 +348,7 @@ static void P_BuildMove(player_t& player) noexcept {
             if (bTurnLeft) {
                 player.sidemove = (-SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
             }
-            
+
             if (bTurnRight && (bAllowTurnCancel || (!bTurnLeft))) {
                 player.sidemove = (+SIDE_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
             }
@@ -376,7 +376,7 @@ static void P_BuildMove(player_t& player) noexcept {
                 if (bTurnLeft) {
                     turnAmt += turnSpeed;
                 }
-                
+
                 if (bTurnRight && (bAllowTurnCancel || (!bTurnLeft))) {
                     turnAmt -= turnSpeed;
                 }
@@ -387,7 +387,7 @@ static void P_BuildMove(player_t& player) noexcept {
                 if (bTurnLeft) {
                     turnAmt += turnSpeed;
                 }
-                
+
                 if (bTurnRight && (bAllowTurnCancel || (!bTurnLeft))) {
                     turnAmt -= turnSpeed;
                 }
@@ -443,7 +443,7 @@ static void P_BuildMove(player_t& player) noexcept {
         if (bMoveForward) {
             player.forwardmove += (+FORWARD_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
-        
+
         if (bMoveBackward && (bAllowMoveCancel || (!bMoveForward))) {
             player.forwardmove += (-FORWARD_MOVE_DOOM[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
@@ -451,7 +451,7 @@ static void P_BuildMove(player_t& player) noexcept {
 
     // Apply Final Doom mouse movement also
     player.forwardmove += psxMouseMoveY;
-    
+
     // PsyDoom: do analog movements and also cancel any digital movement if using the analog controller
     #if PSYDOOM_MODS
         if (inputs.analogForwardMove != 0.0f) {
@@ -571,7 +571,7 @@ static void P_CalcHeight(player_t& player) noexcept {
 
         player.bob = std::min(player.bob, MAXBOB);
     }
-    
+
     // When we are not on the ground just set the view z based on map object z and clamp below the ceiling
     const fixed_t maxViewZ = mobj.ceilingz - 4 * FRACUNIT;
 
@@ -649,7 +649,7 @@ static void P_MovePlayer(player_t& player) noexcept {
 
     // Save whether we are on the ground
     gbOnGround = (mobj.z <= mobj.floorz);
-    
+
     // Apply side and forward/backward movement velocity
     if ((player.forwardmove != 0) && gbOnGround) {
         P_Thrust(player, mobj.angle, player.forwardmove);
@@ -759,7 +759,7 @@ void P_PlayerThink(player_t& player) noexcept {
     if (player.playerstate == PST_LIVE) {
         // Get the current weapon being switched to, or the ready weapon if not switching weapons
         const weapontype_t curWeaponType = (player.pendingweapon == wp_nochange) ? player.readyweapon : player.pendingweapon;
-        
+
         // Get the current micro box that is highlighted (for this weapon)
         int32_t weaponMicroBoxIdx = WEAPON_MICRO_INDEXES[curWeaponType];
         int32_t nextWeaponIdx = weaponMicroBoxIdx;
@@ -1031,7 +1031,7 @@ void P_PlayerDoTurning() noexcept {
                 if (inputs.bTurnLeft) {
                     turnAmt += turnSpeed;
                 }
-                
+
                 if (inputs.bTurnRight && (bAllowTurnCancel || (!inputs.bTurnLeft))) {
                     turnAmt -= turnSpeed;
                 }
@@ -1042,7 +1042,7 @@ void P_PlayerDoTurning() noexcept {
                 if (inputs.bTurnLeft) {
                     turnAmt += turnSpeed;
                 }
-                
+
                 if (inputs.bTurnRight && (bAllowTurnCancel || (!inputs.bTurnLeft))) {
                     turnAmt -= turnSpeed;
                 }
@@ -1053,7 +1053,7 @@ void P_PlayerDoTurning() noexcept {
             if (!bFinalDoomMovementMode) {
                 turnAmt /= VBLANKS_PER_TIC;
             }
-            
+
             gPlayerUncommittedTurning += (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
         }
 

@@ -38,7 +38,7 @@ union JoyHat {
     } fields;
 
     uint16_t bits;
-    
+
     inline JoyHat() noexcept : bits() {}
     inline JoyHat(const uint16_t bits) noexcept : bits(bits) {}
 

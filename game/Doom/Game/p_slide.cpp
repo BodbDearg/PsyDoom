@@ -133,13 +133,13 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     gEndBox[BOXBOTTOM] = gSlideY - CLIPRADIUS * FRACUNIT;
     gEndBox[BOXLEFT] = gSlideX - CLIPRADIUS * FRACUNIT;
     gEndBox[BOXRIGHT] = gSlideX + CLIPRADIUS * FRACUNIT;
-    
+
     if (dx > 0) {
         gEndBox[BOXRIGHT] += dx;
     } else {
         gEndBox[BOXLEFT] += dx;
     }
-    
+
     if (dy > 0) {
         gEndBox[BOXTOP] += dy;
     } else {
@@ -151,7 +151,7 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(gEndBox[BOXBOTTOM] - gBlockmapOriginY), 0);
     const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gEndBox[BOXLEFT] - gBlockmapOriginX), 0);
     const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gEndBox[BOXRIGHT] - gBlockmapOriginX), gBlockmapWidth - 1);
-    
+
     // Increment this counter for the line checks that follow: doing new checks
     gValidCount++;
 
@@ -165,7 +165,7 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
             // Collide against all of the lines in this cell
             for (; *pLineNum != -1; ++pLineNum) {
                 line_t& line = gpLines[*pLineNum];
-                
+
                 // Only collide against this line if we didn't already do it
                 if (line.validcount != gValidCount) {
                     line.validcount = gValidCount;
@@ -222,7 +222,7 @@ static fixed_t SL_CrossFrac() noexcept {
     // If the points don't cross the line then there 
     if ((dist1 < 0) == (dist2 < 0))
         return FRACUNIT;
-    
+
     // Otherwise compute the fraction along the move line that the intersection occurs at
     return FixedDiv(dist1, dist1 - dist2);
 }
@@ -281,13 +281,13 @@ static void SL_ClipToLine() noexcept {
 
     if (moveP1Side == SIDE_BACK)
         return;
-    
+
     // If the move end point is (roughly) along or in front of the line then the move is allowed and we don't need to clip
     const int32_t moveP2Side = SL_PointOnSide(gP4x, gP4y);
 
     if ((moveP2Side == SIDE_ON) || (moveP2Side == SIDE_FRONT))
         return;
-    
+
     // If the move start point is already on the line and the end point is behind then disallow the move entirely
     if (moveP1Side == SIDE_ON) {
         gBlockNvx = -gNvy;
@@ -433,7 +433,7 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
     const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(maxMoveX - gBlockmapOriginX), gBlockmapWidth - 1);
     const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(minMoveY - gBlockmapOriginY), 0);
     const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(maxMoveY - gBlockmapOriginY), gBlockmapHeight - 1);
-    
+
     // Hit no special line yet and increment the valid count for a fresh check
     gpSpecialLine = nullptr;
     gValidCount++;
@@ -442,7 +442,7 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
     for (int32_t bmapX = bmapLx; bmapX <= bmapRx; ++bmapX) {
         for (int32_t bmapY = bmapBy; bmapY <= bmapTy; ++bmapY) {
             const int32_t firstLineOffset = gpBlockmap[bmapX + bmapY * gBlockmapWidth];
-            
+
             for (int16_t* pLineNum = (int16_t*) &gpBlockmapLump[firstLineOffset]; *pLineNum != -1; ++pLineNum) {
                 // Ignore the line if it has no special or if we already checked
                 line_t& line = gpLines[*pLineNum];

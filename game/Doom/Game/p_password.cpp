@@ -168,11 +168,11 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
 
     if (expectedXorMask != encrypted[9])
         return false;
-    
+
     // Convert the 9 (5-bit) bytes back out to 6 8-bit bytes.
     constexpr int32_t NUM_OUTPUT_BITS = 48;
     uint8_t pwdata[8];
-    
+
     for (int32_t dstBitIdx = 0; dstBitIdx < NUM_OUTPUT_BITS;) {
         uint8_t dstByte = 0;
 
@@ -192,7 +192,7 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
         const int32_t dstByteIdx = (dstBitIdx - 1) / 8;     // -1 because we are now on the next dest byte
         pwdata[dstByteIdx] = dstByte;
     }
-    
+
     // Decode byte: current map and skill.
     // PsyDoom: incorporating an improvement from PSXDOOM-RE to decode an additional 2 map number bits.
     // This allows for map numbers from 0-255 instead of just 0-63, if required.
@@ -229,14 +229,14 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
 
     if ((cellsEnc > 8) || (missilesEnc > 8))
         return false;
-    
+
     // Decode and verify byte: health and armor points (in 1/8 of the maximum increments (25 HP))
     const int32_t healthPointsEnc = pwdata[4] >> 4;
     const int32_t armorPointsEnc = pwdata[4] & 0xF;
 
     if ((healthPointsEnc > 8) || (healthPointsEnc == 0) || (armorPointsEnc > 8))    // Note: '0' health (dead) is not a valid password!
         return false;
-    
+
     // Decode byte: armor type
     #if PSYDOOM_MODS
         const int32_t armorType = (pwdata[5] >> 3) & 0x3;  // PsyDoom: added a mask operation here on account of the 'nightmare' flag now being in the top bit
@@ -267,7 +267,7 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
             pPlayer->maxammo[i] <<= 1;
         }
     }
-    
+
     // Apply: ammo, health and armor
     pPlayer->ammo[am_clip] = (clipsEnc * pPlayer->maxammo[am_clip]) / 8;
     pPlayer->ammo[am_shell] = (shellsEnc * pPlayer->maxammo[am_shell]) / 8;

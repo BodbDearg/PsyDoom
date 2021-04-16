@@ -73,7 +73,7 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
             gbWasWaitForAsyncNetOpAborted = true;
             return false;
         }
-        
+
         // While we are waiting update the display to help prevent stutter after long pauses (if we are waiting a long time).
         // See the 'Utils.cpp' file for more comments on this issue; we don't do this for the Vulkan backend also.
         if (Video::gBackendType != Video::BackendType::Vulkan) {
@@ -179,7 +179,7 @@ bool initForClient() noexcept {
         // Start asynchronously resolving the host address
         asio::ip::tcp::resolver tcpResolver(*gpIoContext);
         asio::ip::tcp::resolver::query tcpResolverQuery(ProgArgs::getServerHost(), std::to_string(ProgArgs::gServerPort));
-        
+
         asio::ip::tcp::resolver::iterator resolverIter;
         bool bDoneAsyncOp = false;
 
@@ -282,7 +282,7 @@ bool sendBytes(const void* const pBuffer, const int32_t numBytes) noexcept {
     // Begin writing the bytes and wait until that is done
     bool bWasSuccessful = false;
     bool bDoneAsyncOp = false;
-    
+
     try {
         asio::async_write(
             *gpSocket,
@@ -367,7 +367,7 @@ bool sendTickPacket(const NetPacket_Tick& packet) noexcept {
         shutdown();
         return false;
     }
-    
+
     return true;
 }
 
@@ -382,7 +382,7 @@ bool requestTickPackets() noexcept {
         shutdown();
         return false;
     }
-    
+
     return true;
 }
 
@@ -398,7 +398,7 @@ bool recvTickPacket(NetPacket_Tick& packet, std::chrono::system_clock::time_poin
         shutdown();
         return false;
     }
-    
+
     return true;
 }
 

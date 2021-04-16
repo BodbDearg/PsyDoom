@@ -62,7 +62,7 @@ void P_TryMove2() noexcept {
     mobj_t& tryMoveThing = *gpTryMoveThing;
     gOldX = tryMoveThing.x;
     gOldY = tryMoveThing.y;
-    
+
     // Check if the move can be done and initially assume no movement (or floating) is allowed
     gbTryMove2 = false;
     gbFloatOk = false;
@@ -109,10 +109,10 @@ void P_TryMove2() noexcept {
         if ((!bCanGoOverLedges) && (gTmFloorZ - gTmDropoffZ > 24 * FRACUNIT))
             return;
     }
-    
+
     // Move is OK at this point: update the thing's location in the blockmap and sector thing lists
     PM_UnsetThingPosition(tryMoveThing);
-    
+
     tryMoveThing.floorz = gTmFloorZ;
     tryMoveThing.ceilingz = gTmCeilingZ;
     tryMoveThing.x = gTryMoveX;
@@ -182,7 +182,7 @@ static void PM_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.bnext) {
             thing.bnext->bprev = thing.bprev;
         }
-        
+
         if (thing.bprev) {
             thing.bprev->bnext = thing.bnext;
         } else {
@@ -215,13 +215,13 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
     // Note: this function needs the subsector precomputed externally
     subsector_t& newSubsec = *gpNewSubsec;
     mobj.subsector = &newSubsec;
-    
+
     // Add the thing to sector thing lists, if the thing flags allow it
     if ((mobj.flags & MF_NOSECTOR) == 0) {
         sector_t& newSector = *newSubsec.sector;
         mobj.sprev = nullptr;
         mobj.snext = newSector.thinglist;
-        
+
         if (newSector.thinglist) {
             newSector.thinglist->sprev = &mobj;
         }
@@ -311,7 +311,7 @@ static void PM_CheckPosition() noexcept {
         const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS), gBlockmapWidth - 1);
         const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXTOP] - gBlockmapOriginY + MAXRADIUS), gBlockmapHeight - 1);
         const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS), 0);
-    
+
         // Test against everything in this blockmap range; stop and set the result 'false' if a definite collision happens
         for (int32_t x = bmapLx; x <= bmapRx; ++x) {
             for (int32_t y = bmapBy; y <= bmapTy; ++y) {
@@ -322,7 +322,7 @@ static void PM_CheckPosition() noexcept {
             }
         }
     }
-    
+
     // Do collision against lines
     {
         const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXLEFT] - gBlockmapOriginX), 0);
@@ -359,7 +359,7 @@ static bool PM_BoxCrossLine(line_t& line) noexcept {
 
     if (bTestBBOutsideLineBB)
         return false;
-    
+
     // Choose what line diagonal in the test box to test for crossing the line.
     // This code is trying to get a box diagonal that is as perpendicular to the line as possible.
     // Some lines for instance might run at 45 degrees and be parallel to the opposite box diagonal...
@@ -401,7 +401,7 @@ static bool PIT_CheckLine(line_t& line) noexcept {
     // A 1 sided line cannot be crossed: register a collision against this
     if (!line.backsector)
         return false;
-    
+
     // If not a projectile and the line is marked as explicitly blocking then block
     mobj_t& tryMoveThing = *gpTryMoveThing;
 
@@ -409,7 +409,7 @@ static bool PIT_CheckLine(line_t& line) noexcept {
         // If the line blocks everything then register a collision
         if (line.flags & ML_BLOCKING)
             return false;
-        
+
         // If the line blocks monsters and the thing is not a player then block
         if ((line.flags & ML_BLOCKMONSTERS) && (!tryMoveThing.player))
             return false;
@@ -464,7 +464,7 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
     // If it's not a special, blocking or shootable then we can't collide with it
     if ((mobj.flags & (MF_SPECIAL | MF_SOLID | MF_SHOOTABLE)) == 0)
         return true;
-    
+
     // The thing cannot collide with itself
     mobj_t& tryMoveThing = *gpTryMoveThing;
 
@@ -478,7 +478,7 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
 
     if ((dx >= totalRadius) || (dy >= totalRadius))
         return true;
-    
+
     // Is the thing being moved a skull which is slamming into this thing?
     if (tryMoveThing.flags & MF_SKULLFLY) {
         gpMoveThing = &mobj;
@@ -490,11 +490,11 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
         // Is the missile flying above the thing? If so then no collision:
         if (tryMoveThing.z > mobj.z + mobj.height)
             return true;
-        
+
         // Is the missile flying below the thing? If so then no collision:
         if (tryMoveThing.z + tryMoveThing.height < mobj.z)
             return true;
-        
+
         // If we are colliding with the same species which fired the missile in most cases explode/collide the missile, but don't damage what was hit.
         // The firing thing is in the 'target' field for missiles.
         mobj_t& firingThing = *tryMoveThing.target;
@@ -503,7 +503,7 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
             // Missiles don't collide with the things which fired them
             if (&mobj == &firingThing)
                 return true;
-            
+
             // Explode, but do no damage by just returning 'false' and not saving what was hit.
             // The exception to this is if the thing type is a player; players can splash damage other players with rockets...
             if (mobj.type != MT_PLAYER)
@@ -519,7 +519,7 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
         // Otherwise just explode the missile (but do no damage) if the thing hit was solid
         return ((mobj.flags & MF_SOLID) == 0);
     }
-    
+
     // Are we colliding with an item that can be picked up?
     // If so then save it but return 'true' for no collision (pickups do not block).
     if ((mobj.flags & MF_SPECIAL) && (gTmFlags & MF_PICKUP)) {
@@ -559,7 +559,7 @@ static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
         // Only check the line if not already checked this test
         if (line.validcount != gValidCount) {
             line.validcount = gValidCount;
-            
+
             // If it's collided with and definitely blocking then stop
             if (PM_BoxCrossLine(line) && (!PIT_CheckLine(line)))
                 return false;

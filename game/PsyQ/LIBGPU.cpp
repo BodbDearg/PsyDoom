@@ -162,7 +162,7 @@ void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noe
             // The copy wraps around to the left side of VRAM, need to do 2 separate memcpy operations:
             const int32_t numWrappedPixels = dstLx + rowW - gpu.ramPixelW;
             const int32_t numNonWrappedPixels = rowW - numWrappedPixels;
-            
+
             std::memcpy(pDstRow + dstLx, pSrcPixels, numNonWrappedPixels * sizeof(uint16_t));
             pSrcPixels += numNonWrappedPixels;
 
@@ -216,16 +216,16 @@ int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t 
 //------------------------------------------------------------------------------------------------------------------------------------------
 DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
-    
+
     // Set drawing area and offset
     gpu.drawAreaLx = env.clip.x;
     gpu.drawAreaTy = env.clip.y;
     gpu.drawAreaRx = env.clip.x + env.clip.w - 1;
     gpu.drawAreaBy = env.clip.y + env.clip.h - 1;
-    
+
     gpu.drawOffsetX = env.ofs[0];
     gpu.drawOffsetY = env.ofs[1];
-    
+
     // Set the texture window offset and mask.
     // Note: texture windows are assumed powers of 2 for the GPU, this is the only way masking and wraparound can work properly...
     gpu.texWinX = env.tw.x;
@@ -238,7 +238,7 @@ DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept {
     } else {
         gpu.texWinXMask = 1;
     }
-    
+
     if (env.tw.h == 0) {
         gpu.texWinYMask = 0;
     } else if (env.tw.h > 1) {
@@ -344,7 +344,7 @@ uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept {
     // If no rect then return an invalid encoding
     if (!pRect)
         return 0;
-    
+
     // Encode the texture window using 5 bits for each piece of info
     constexpr uint32_t CMD_HEADER = 0xE2000000;
 
@@ -526,7 +526,7 @@ void LIBGPU_FntFlush([[maybe_unused]] const int32_t printStreamId) noexcept {
     LIBGPU_TermPrim(spritePrim);
     LIBGPU_setRGB0(spritePrim, 127, 127, 127);
     spritePrim.clut = gDFontClutId;
-    
+
     // Print all characters in the message buffer
     const int16_t xend = gDFontDispX + gDFontDispW;
     const int16_t yend = gDFontDispY + gDFontDispH;
@@ -603,7 +603,7 @@ void LIBGPU_FntPrint([[maybe_unused]] const int32_t printStreamId, const char* c
     const int32_t bufCharsAvailable = DBG_MSG_BUF_SIZE - gDbgMsgBufPos;
     const int numCharsWritten = vsnprintf(gDbgMsgBuf, (size_t) bufCharsAvailable, fmtMsg, args);
     gDbgMsgBufPos += numCharsWritten;
-    
+
     va_end(args);
 }
 
@@ -633,7 +633,7 @@ uint16_t LIBGPU_LoadTPage(
     dstRect.x = (int16_t) dstX;
     dstRect.y = (int16_t) dstY;
     dstRect.h = (int16_t) imgH;
-    
+
     if (bitDepth == 0) {
         dstRect.w = (int16_t)(imgW / 4);    // 4-bits per pixel mode
     } else if (bitDepth == 1) {
@@ -686,7 +686,7 @@ DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, co
     env.r0 = 0;
     env.g0 = 0;
     env.b0 = 0;
-  
+
     env.isbg = false;
     return env;
 }
@@ -707,9 +707,9 @@ DISPENV& LIBGPU_SetDefDispEnv(DISPENV& disp, const int32_t x, const int32_t y, c
 
     disp.isinter = 0;
     disp.isrgb24 = 0;
-  
+
     disp._pad[0] = 0;
     disp._pad[1] = 0;
-  
+
     return disp;
 }

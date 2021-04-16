@@ -37,7 +37,7 @@ void Track::readFromJson(const rapidjson::Value& jsonRoot) noexcept {
     if (const rapidjson::Value* const pLabelsArray = JsonUtils::tryGetArray(jsonRoot, "labels")) {
         for (rapidjson::SizeType i = 0; i < pLabelsArray->Size(); ++i) {
             const rapidjson::Value& labelVal = (*pLabelsArray)[i];
-            
+
             if (labelVal.IsNumber()) {
                 const uint32_t labelCmdIdx = (uint32_t) std::clamp<double>(labelVal.Get<double>(), 0, UINT32_MAX);
                 labels.push_back(labelCmdIdx);
@@ -75,28 +75,28 @@ void Track::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::Allocat
     jsonRoot.AddMember("maxVoices", maxVoices, jsonAlloc);
     jsonRoot.AddMember("locStackSize", locStackSize, jsonAlloc);
     jsonRoot.AddMember("priority", priority, jsonAlloc);
-    
+
     // Write track labels
     {
         rapidjson::Value labelsArray(rapidjson::kArrayType);
-        
+
         for (uint32_t cmdIdx : labels) {
             labelsArray.PushBack(cmdIdx, jsonAlloc);
         }
-        
+
         jsonRoot.AddMember("labels", labelsArray, jsonAlloc);
     }
-    
+
     // Write track commands
     {
         rapidjson::Value cmdsArray(rapidjson::kArrayType);
-        
+
         for (const TrackCmd& cmd : cmds) {
             rapidjson::Value cmdObj(rapidjson::kObjectType);
             cmd.writeToJson(cmdObj, jsonAlloc);
             cmdsArray.PushBack(cmdObj, jsonAlloc);
         }
-        
+
         jsonRoot.AddMember("cmds", cmdsArray, jsonAlloc);
     }
 }
@@ -136,7 +136,7 @@ void Track::readFromWmdFile(InputStream& in) THROWS {
     // Read each track command
     cmds.clear();
     cmds.reserve(trackHdr.cmdStreamSize);
-    
+
     uint32_t curCmdByteOffset = 0;
 
     while (curCmdByteOffset < trackHdr.cmdStreamSize) {
@@ -201,7 +201,7 @@ void Track::writeToWmdFile(OutputStream& out) const THROWS {
         hdr.initMutegroupsMask = initMutegroupsMask;
         hdr.initPpq = initPpq;
         hdr.initQpm = initQpm;
-        
+
         if (labels.size() > UINT16_MAX)
             throw "Too many labels in a track for a .WMD file!";
 

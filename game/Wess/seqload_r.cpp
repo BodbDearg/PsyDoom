@@ -33,7 +33,7 @@ int32_t wess_seq_range_load(const int32_t firstSeqIdx, const int32_t numSeqs, vo
 
     // Try load all of the sequences specified
     const int32_t endSeqIdx = firstSeqIdx + numSeqs;
-    
+
     int32_t totalBytesUsed = 0;
     uint8_t* pSeqMemBytes = (uint8_t*) pSeqMem;
 

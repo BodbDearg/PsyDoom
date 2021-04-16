@@ -92,7 +92,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
     if (gInvalidPasswordFlashTicsLeft != 0) {
         if (gGameTic > gPrevGameTic) {
             gInvalidPasswordFlashTicsLeft -= 1;
-            
+
             if ((gInvalidPasswordFlashTicsLeft & 7) == 4) {
                 S_StartSound(nullptr, sfx_itemup);
             }
@@ -133,7 +133,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
 
         if (gVBlanksUntilMenuMove[0] <= 0) {
             gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
-            
+
             if (bMenuUp) {
                 if (gCurPasswordCharIdx >= 8) {
                     gCurPasswordCharIdx -= 8;
@@ -203,16 +203,16 @@ gameaction_t TIC_PasswordScreen() noexcept {
         if (gNumPasswordCharsEntered < PW_SEQ_LEN) {
             gPasswordCharBuffer[gNumPasswordCharsEntered] = (uint8_t) gCurPasswordCharIdx;
             gNumPasswordCharsEntered++;
-            
+
             // If the password sequence is not yet complete then there is nothing more to do
             if (gNumPasswordCharsEntered < PW_SEQ_LEN)
                 return ga_nothing;
         }
-        
+
         // Process the password once it is complete
         int32_t mapNum = {};
         skill_t skill = {};
-        
+
         if (P_ProcessPassword(gPasswordCharBuffer, mapNum, skill, nullptr)) {
             // Valid password entered, begin warping to the destination map
             gbUsingAPassword = true;
@@ -312,7 +312,7 @@ void DRAW_PasswordScreen() noexcept {
         if (gCurPasswordCharIdx == pwCharIdx) {
             if (gTicCon & 8)
                 continue;
-            
+
             LIBGPU_setRGB0(spritePrim, 255, 0, 0);          // Selected characters are color multiplied almost 2x and only red
         } else {
             LIBGPU_setRGB0(spritePrim, 128, 128, 128);      // Regular characters have normal brightness
@@ -339,7 +339,7 @@ void DRAW_PasswordScreen() noexcept {
         LIBGPU_setXY0(spritePrim, charX, charY);
         LIBGPU_setUV0(spritePrim, fontChar.u, fontChar.v);
         LIBGPU_setWH(spritePrim, fontChar.w, fontChar.h);
-        
+
         I_AddPrim(spritePrim);
     }
 
@@ -360,7 +360,7 @@ void DRAW_PasswordScreen() noexcept {
             charStr[1] = 0;
 
             int32_t xpos = CHARS_START_X;
-        
+
             for (int32_t charIdx = 0; charIdx < gNumPasswordCharsEntered; ++charIdx) {
                 const uint8_t pwCharIdx = gPasswordCharBuffer[charIdx];
                 charStr[0] = gPasswordChars[pwCharIdx];
@@ -368,7 +368,7 @@ void DRAW_PasswordScreen() noexcept {
                 xpos += CHARS_SPACING;
             }
         }
-        
+
         // Draw password characters that need to be input
         {
             int32_t xpos = gNumPasswordCharsEntered * CHARS_SPACING + CHARS_START_X;

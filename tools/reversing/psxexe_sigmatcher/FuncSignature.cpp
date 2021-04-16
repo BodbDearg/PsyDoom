@@ -44,7 +44,7 @@ void FuncSignatureUtils::readSigFromTextStream(TextIStream& in, FuncSignature& o
     for (uint32_t i = numWildcardInstructions; i > 0; --i) {
         const uint32_t index = in.readDecimalUint();
         in.skipAsciiWhiteSpace();
-        
+
         if (index < out.bInstructionIsPatched.size()) {
             out.bInstructionIsPatched[index] = true;
         }

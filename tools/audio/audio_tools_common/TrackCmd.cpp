@@ -25,17 +25,17 @@ void TrackCmd::readFromJson(const rapidjson::Value& jsonRoot) noexcept {
 void TrackCmd::writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept {
     jsonRoot.AddMember("type", rapidjson::StringRef(toString(type)), jsonAlloc);
     jsonRoot.AddMember("delayQnp", delayQnp, jsonAlloc);
-    
+
     const int32_t numCmdArgs = getNumWmdTrackCmdArgs(type);
-    
+
     if (numCmdArgs >= 1) {
         jsonRoot.AddMember("arg1", arg1, jsonAlloc);
     }
-    
+
     if (numCmdArgs >= 2) {
         jsonRoot.AddMember("arg2", arg2, jsonAlloc);
     }
-    
+
     if (numCmdArgs >= 3) {
         jsonRoot.AddMember("arg3", arg3, jsonAlloc);
     }

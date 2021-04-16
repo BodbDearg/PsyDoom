@@ -25,7 +25,7 @@ public:
     inline bool isValid() const noexcept { return mbIsValid; }
     inline LogicalDevice* getDevice() const noexcept { return mpDevice; }
     inline VkSemaphore getVkSemaphore() const noexcept { return mVkSemaphore; }
-    
+
 private:
     // Copy and move assign disallowed
     Semaphore(const Semaphore& other) = delete;

@@ -63,7 +63,7 @@ void I_CrossfadeFrameBuffers() noexcept {
     // Note that these will occupy some of the VRAM space normally used by the texture cache.
     DRAWENV drawEnvs[2];
     DISPENV dispEnvs[2];
-    
+
     LIBGPU_SetDefDrawEnv(drawEnvs[0], 512, 256, 256, 240);
     drawEnvs[0].isbg = true;
     drawEnvs[0].dtd = false;
@@ -76,7 +76,7 @@ void I_CrossfadeFrameBuffers() noexcept {
 
     LIBGPU_SetDefDispEnv(dispEnvs[0], 768, 256, 256, 240);
     LIBGPU_SetDefDispEnv(dispEnvs[1], 512, 256, 256, 240);
-    
+
     // Copy the current framebuffer to the 1st fade framebuffer, that will be initially displayed
     LIBGPU_MoveImage(gDispEnvs[gCurDispBufferIdx].disp, 768, 256);
     LIBGPU_DrawSync(0);
@@ -93,7 +93,7 @@ void I_CrossfadeFrameBuffers() noexcept {
     // Run the cross fade until completion
     uint32_t framebufferIdx = 0;
     int32_t lastTotalVBlanks = I_GetTotalVBlanks();
-    
+
     for (int32_t fade = 255; fade >= 0; fade -= 5) {
         // PsyDoom: now drawing using sprites rather than polygons (as per the original code) to avoid the last row and column being clipped.
         // According to the NO$PSX specs: "Polygons are displayed up to <excluding> their lower-right coordinates."
@@ -107,7 +107,7 @@ void I_CrossfadeFrameBuffers() noexcept {
 
         I_SubmitGpuCmds();
         LIBGPU_DrawSync(0);
-        
+
         LIBETC_VSync(0);
         LIBGPU_PutDrawEnv(drawEnvs[framebufferIdx]);
         LIBGPU_PutDispEnv(dispEnvs[framebufferIdx]);
@@ -130,7 +130,7 @@ void I_CrossfadeFrameBuffers() noexcept {
         if (Input::isQuitRequested())
             break;
     }
-    
+
     I_SubmitGpuCmds();
     I_DrawPresent();
 }

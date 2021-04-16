@@ -143,7 +143,7 @@ static void closeCurrentGameController() noexcept {
         gpGameController = nullptr;
         gpJoystick = nullptr;       // Managed by the game controller object, already closed!
     }
-    
+
     // Close the current generic joystick, if that's all we have and not the 'game controller' interface
     if (gpJoystick) {
         SDL_JoystickClose(gpJoystick);
@@ -223,14 +223,14 @@ static void updateJoystickHat(const JoyHat hat, const bool bPressed) noexcept {
 static void handleSdlEvents() noexcept {
     SDL_Event sdlEvent;
     bool bConsumeEvents = false;
-    
+
     while (SDL_PollEvent(&sdlEvent) != 0) {
         switch (sdlEvent.type) {
             case SDL_QUIT:
                 // The application is requesting to quit
                 gbIsQuitRequested = true;
                 break;
-            
+
             case SDL_WINDOWEVENT: {
                 switch (sdlEvent.window.event) {
                     case SDL_WINDOWEVENT_FOCUS_GAINED:
@@ -246,7 +246,7 @@ static void handleSdlEvents() noexcept {
                         break;
                 }
             }   break;
-            
+
             case SDL_KEYDOWN: {
                 const uint16_t scancode = (uint16_t) sdlEvent.key.keysym.scancode;
 
@@ -462,7 +462,7 @@ void init() noexcept {
     SDL_GameControllerEventState(SDL_ENABLE);       // Want game controller events
 
     gbIsQuitRequested = false;
-    
+
     gpKeyboardState = SDL_GetKeyboardState(&gNumKeyboardStateKeys);
     gKeyboardKeysJustPressed.reserve(16);
     gKeyboardKeysJustReleased.reserve(16);
@@ -511,7 +511,7 @@ void shutdown() noexcept {
     emptyAndShrinkVector(gJoystickButtonsJustReleased);
     emptyAndShrinkVector(gJoystickButtonsJustPressed);
     emptyAndShrinkVector(gJoystickButtonsPressed);
-    
+
     emptyAndShrinkVector(gJoystickAxesJustReleased);
     emptyAndShrinkVector(gJoystickAxesJustPressed);
     emptyAndShrinkVector(gJoystickAxesPressed);
@@ -600,14 +600,14 @@ bool areAnyKeysOrButtonsPressed() noexcept {
     // Check keyboard and mouse for any button pressed
     if (!gKeyboardKeysPressed.empty())
         return true;
-    
+
     if (!gMouseButtonsPressed.empty())
         return true;
-    
+
     // Check game controller or generic joypad for any digital (or converted to digital) input
     if (!gGamepadInputsPressed.empty())
         return true;
-    
+
     if (!gJoystickAxesPressed.empty())
         return true;
 
@@ -795,10 +795,10 @@ float getJoystickAxisValue(const uint32_t axis) noexcept {
 float getAdjustedGamepadInputValue(const GamepadInput input, const float deadZone) noexcept {
     const float rawAxis = getGamepadInputValue(input);
     const float clampedDeadZone = std::clamp(deadZone, 0.0f, 0.9999f);
-    
+
     const GamepadInput oppositeInput = GamepadInputUtils::getOppositeAxis(input);
     const bool b2dAxisPair = (input != oppositeInput);
-    
+
     if (b2dAxisPair) {
         // A 2d-axis pair
         const float rawAxisOpp = getGamepadInputValue(oppositeInput);
@@ -833,7 +833,7 @@ float getAdjustedGamepadInputValue(const GamepadInput input, const float deadZon
 float getAdjustedJoystickAxisValue(const uint32_t axis, const float deadZone) noexcept {
     const float rawAxis = getJoystickAxisValue(axis);
     const float clampedDeadZone = std::clamp(deadZone, 0.0f, 0.9999f);
-    
+
     if (rawAxis >= 0) {
         return std::clamp((rawAxis - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f, 1.0f);
     } else {

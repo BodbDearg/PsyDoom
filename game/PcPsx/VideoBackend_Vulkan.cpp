@@ -21,7 +21,7 @@ bool VideoBackend_Vulkan::isBackendSupported() noexcept {
     // Must be able to load the Vulkan library or have it embedded in the application
     if (SDL_Vulkan_LoadLibrary(nullptr) != 0)
         return false;
-        
+
     // Must be able to retrieve Vulkan functions
     if (!SDL_Vulkan_GetVkGetInstanceProcAddr())
         return false;

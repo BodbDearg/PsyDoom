@@ -81,7 +81,7 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/JaCzekanski/Avocado
 
 * **Martin Korth**
-   
+
    * Author of the NO$PSX emulator and also of the NO$PSX specs, which have been extremely helpful during development:
         https://problemkaputt.de/psx-spx.htm
 

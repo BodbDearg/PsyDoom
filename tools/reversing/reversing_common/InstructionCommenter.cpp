@@ -38,7 +38,7 @@ void InstructionCommenter::tryCommentInstruction(
     // If the instruction is a NOP then there is nothing to do
     if (inst.isNOP())
         return;
-    
+
     // Get the register states for this instruction
     ConstEvalRegState inRegState;
     ConstEvalRegState outRegState;
@@ -138,7 +138,7 @@ void InstructionCommenter::tryCommentInstruction(
                 printNameAndAddress(addr, exe, out);
             }
         } break;
-        
+
         // Comment stores
         case CpuOpcode::SB:
         case CpuOpcode::SH:

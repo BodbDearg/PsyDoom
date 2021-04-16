@@ -22,7 +22,7 @@ static PsxCd_File* wess_dig_lcd_data_open(const CdFileId file) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_dig_lcd_psxcd_sync() noexcept {
     const uint32_t timeoutMs = gWess_Millicount + 8000;
-    
+
     while (gWess_Millicount < timeoutMs) {
         // Note: the sync result was a global but it wasn't used anywhere else so I made it local instead...
         uint8_t syncResult[8];
@@ -62,7 +62,7 @@ int32_t wess_dig_lcd_load(
 
         gWess_lcd_load_soundNum = 0;
         gWess_lcd_load_soundBytesLeft = 0;
-        
+
         psxcd_init_pos();
         psxcd_set_data_mode();
         PsxCd_File* const pLcdFile = wess_dig_lcd_data_open(lcdFileToLoad);
@@ -75,7 +75,7 @@ int32_t wess_dig_lcd_load(
             if (pLcdFile->file.pos == 0)
                 return 0;
         #endif
-        
+
         // Begin reading the LCD file, starting with the first sector, which contains the header.
         // Also initialize the I/O location before the read.
         const int32_t lcdFileSize = pLcdFile->file.size;
@@ -110,7 +110,7 @@ int32_t wess_dig_lcd_load(
         // Figure out how many sound bytes there is to read.
         // The first sector is discounted, as that is the LCD header sector:
         int32_t lcdSoundBytesLeft = lcdFileSize - CD_SECTOR_SIZE;
-        
+
         if (lcdSoundBytesLeft < 0) {
             lcdSoundBytesLeft = 0;
         }
@@ -134,12 +134,12 @@ int32_t wess_dig_lcd_load(
                 LIBCD_CdFlush();
                 break;
             }
-            
+
             // Grab the contents of this CD sector
             uint8_t* const pSectorBuffer = (bUseSectorBuffer2) ? gWess_sectorBuffer2 : gWess_sectorBuffer1;
             LIBCD_CdGetSector(pSectorBuffer, CD_SECTOR_SIZE / sizeof(uint32_t));
             lcdSoundBytesLeft -= CD_SECTOR_SIZE;
-            
+
             if (lcdSoundBytesLeft < 0) {
                 lcdSoundBytesLeft = 0;
             }
@@ -162,7 +162,7 @@ int32_t wess_dig_lcd_load(
         // If all of the LCD bytes were read successfully then we can finish up, otherwise let the loop try again
         if (cdStatus != CdlDiskError) {
             LIBCD_CdControl(CdlPause, nullptr, nullptr);
-            
+
             if (wess_dig_lcd_psxcd_sync() == 0) {
                 LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
                 psxcd_enable_callbacks();

@@ -18,19 +18,19 @@ void Module::readFromJson(const rapidjson::Document& doc) THROWS {
     // Read basic module properties
     if (!doc.IsObject())
         throw "Module root must be a json object!";
-    
+
     maxActiveSequences = JsonUtils::clampedGetOrDefault<uint8_t>(doc, "maxActiveSequences", 1);
     maxActiveTracks = JsonUtils::clampedGetOrDefault<uint8_t>(doc, "maxActiveTracks", 1);
     maxGatesPerSeq = JsonUtils::clampedGetOrDefault<uint8_t>(doc, "maxGatesPerSeq", 1);
     maxItersPerSeq = JsonUtils::clampedGetOrDefault<uint8_t>(doc, "maxItersPerSeq", 1);
     maxCallbacks = JsonUtils::clampedGetOrDefault<uint8_t>(doc, "maxCallbacks", 1);
-    
+
     // Read the PSX sound driver patch group
     if (const auto patchGroupIter = doc.FindMember("psxPatchGroup"); patchGroupIter != doc.MemberEnd()) {
         const rapidjson::Value& patchGroupObj = patchGroupIter->value;
         psxPatchGroup.readFromJson(patchGroupObj);
     }
-    
+
     // Read all sequences
     sequences.clear();
 
@@ -63,17 +63,17 @@ void Module::writeToJson(rapidjson::Document& doc) const noexcept {
         psxPatchGroup.writeToJson(patchGroupObj, jsonAlloc);
         doc.AddMember("psxPatchGroup", patchGroupObj, jsonAlloc);
     }
-    
+
     // Write all the sequences
     {
         rapidjson::Value sequencesArray(rapidjson::kArrayType);
-        
+
         for (const Sequence& sequence : sequences) {
             rapidjson::Value sequenceObj(rapidjson::kObjectType);
             sequence.writeToJson(sequenceObj, jsonAlloc);
             sequencesArray.PushBack(sequenceObj, jsonAlloc);
         }
-        
+
         doc.AddMember("sequences", sequencesArray, jsonAlloc);
     }
 }
@@ -92,7 +92,7 @@ void Module::readFromWmdFile(InputStream& in) THROWS {
 
     if (moduleHdr.moduleVersion != WMD_VERSION)
         throw "Bad .WMD file version!";
-    
+
     this->maxActiveSequences = moduleHdr.maxActiveSequences;
     this->maxActiveTracks = moduleHdr.maxActiveTracks;
     this->maxGatesPerSeq = moduleHdr.maxGatesPerSeq;
@@ -118,7 +118,7 @@ void Module::readFromWmdFile(InputStream& in) THROWS {
 
     // Read all sequences
     sequences.clear();
-    
+
     for (uint32_t seqIdx = 0; seqIdx < moduleHdr.numSequences; ++seqIdx) {
         sequences.emplace_back().readFromWmdFile(in);
     }

@@ -70,7 +70,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
                 vb = d_fixed_to_int(side.rowoffset) + TEXCOORD_MAX;
                 vt = vb - tex_h;
             }
-            
+
             // Draw the columns of wall piece
             texture_t& tex = gpTextures[gpTextureTranslation[side.toptexture]];
             R_DrawWallPiece(edge, tex, fsec_ty, bsec_ty, vt, vb, false);
@@ -122,7 +122,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
         if ((line.flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT)) == 0)
             return;
     }
-    
+
     // Final Doom: force the mid wall to be 128 units (127 for PsyDoom) in height if this flag is specified.
     // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
     if (line.flags & ML_MIDHEIGHT_128) {
@@ -162,7 +162,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
                 tex_h = TEXCOORD_MAX;
             }
         #endif
-        
+
         // Compute top and bottom texture 'v' coordinates
         int32_t vt, vb;
 
@@ -212,7 +212,7 @@ void R_DrawWallPiece(
 
     // Force the wall to be transparent if the X-Ray vision cheat is on
     player_t& player = *gpViewPlayer;
-    
+
     if (player.cheats & CF_XRAYVISION) {
         bTransparent = true;
     }
@@ -281,7 +281,7 @@ void R_DrawWallPiece(
     // Compute scale and y coordinate step per wall column
     const fixed_t dscale = vert2.scale - vert1.scale;
     const fixed_t scaleStep = dscale / dx;
-    
+
     const fixed_t dyt = (yt * vert2.scale) - (yt * vert1.scale);
     const fixed_t ytStep = dyt / dx;
 
@@ -347,7 +347,7 @@ void R_DrawWallPiece(
     //
     // I'm not sure what those mean exactly, but it's clear one line is being advanced and intersected against another.
     //--------------------------------------------------------------------------------------------------------------------------------------
-    
+
     // Compute the stepping values used in the loop to compute u coords and also the initial components of the interesection equation
     const fixed_t isectNumStep = d_rshift<4>(segViewDot * segViewCos);
     const fixed_t isectDivStep = d_rshift<4>(segViewSin);
@@ -372,7 +372,7 @@ void R_DrawWallPiece(
     if (seg.visibleBegX > x1) {
         const int32_t numColsToSkip = seg.visibleBegX - x1;
         xCur = seg.visibleBegX;
-        
+
         ytCur_frac += numColsToSkip * ytStep;
         ybCur_frac += numColsToSkip * ybStep;
         isectNum += numColsToSkip * isectNumStep;
@@ -421,7 +421,7 @@ void R_DrawWallPiece(
                 // Compute the amount of 'v' coordinate for half of the screen
                 const fixed_t vHalfScreenFrac = d_int_to_fixed(HALF_VIEW_3D_H) / colHeight;
                 const int32_t vHalfScreen = d_fixed_to_int(vHalfScreenFrac * vHeight);
-                
+
                 // Clamp the render coordinates to the top and bottom of the screen if required
                 const int32_t vtOrig = vtCur;
 

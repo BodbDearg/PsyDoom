@@ -77,7 +77,7 @@ static_assert(sizeof(ExeHeader) == 2048);
 //------------------------------------------------------------------------------------------------------------------------------------------
 static uint32_t readExeFileWords(const char* const path, std::unique_ptr<uint32_t[]>& words) noexcept {
     FILE* const pFile = std::fopen(path, "rb");
-    
+
     if (!pFile) {
         FATAL_ERROR_F("Unable to open PSX .EXE file at path '%s'!", path);
     }
@@ -128,7 +128,7 @@ void ExeFile::loadFromFile(const char* const path) noexcept {
     // Read the raw 32-bit words of the .EXE file
     std::unique_ptr<uint32_t[]> exeFileWords;
     const uint32_t numExeWords = readExeFileWords(path, exeFileWords);
-    
+
     // There must be > 2,048 bytes (> 512 32-bit words) in the .EXE file for it to be valid.
     // The first 2,048 bytes is the header of the .EXE.
     if (numExeWords <= 512) {
@@ -163,7 +163,7 @@ void ExeFile::loadFromFile(const char* const path) noexcept {
     // Alloc program words and initialize
     const uint32_t numProgWords = header.progSize / sizeof(uint32_t);
     words.reset(new ExeWord[numProgWords]);
-    
+
     {
         constexpr uint32_t EXE_HEADER_SIZE_IN_WORDS = sizeof(ExeHeader) / sizeof(uint32_t);
 
@@ -229,7 +229,7 @@ const ProgElem* ExeFile::findProgElemAtAddr(const uint32_t addr) const noexcept 
             return &elem;
        }
     }
-    
+
     return nullptr;
 }
 

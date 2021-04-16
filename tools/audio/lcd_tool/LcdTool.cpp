@@ -88,7 +88,7 @@ static bool readModuleFile(const char* const filePath, Module& module, std::stri
 
     // Is it probably a JSON file?
     const bool bGuessIsJsonFile = ((filePathUpper.length() >= 5) && (filePathUpper.rfind(".JSON") == filePathUpper.length() - 5));
-    
+
     // Do the reading of the module file, starting with the guessed format
     const auto readAsWmd = [&]() noexcept {
         errorMsg.clear();
@@ -277,7 +277,7 @@ static bool listLcd(const char* const lcdFilePath, const char* const wmdFilePath
         totalSizeInSamples += numSamples;
         totalSizeInBytes += (uint32_t) sample.adpcmData.size();
     }
- 
+
     // Print the totals for all samples
     std::printf("\n");
     std::printf("Total size (samples):  %u\n", (unsigned) totalSizeInSamples);

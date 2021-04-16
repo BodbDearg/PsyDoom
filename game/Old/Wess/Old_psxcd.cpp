@@ -208,15 +208,15 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
     // Are callbacks disabled currently? If so then ignore...
     if (!gbPSXCD_cb_enable_flag)
         return;
-    
+
     // Save the status bits and int results for the command
     gPSXCD_cdl_stat = pResult[0];
     gPSXCD_cdl_intr = status;
-    
+
     if ((pResult[0] & CdlStatRead) && gbPSXCD_async_on && (gPSXCD_cdl_com == CdlReadN)) {
         // Update read stats
         gPSXCD_readcount++;
-        
+
         // Is there data ready for reading?
         if (status == CdlDataReady) {
             if (gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].command == PSXCD_COMMAND_READ) {
@@ -259,7 +259,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
                 // Don't know what this command is, so terminate the command list
                 gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].command = PSXCD_COMMAND_END;
             }
-            
+
             // Are we finishing up the command list? If so then pause the cdrom:
             if (gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].command == PSXCD_COMMAND_END) {
                 gbPSXCD_async_on = false;
@@ -270,7 +270,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
 
             return;
         }
-        
+
         // Did an error happen? If so then cancel the current command
         if (status == CdlDiskError) {
             LIBCD_CdFlush();
@@ -295,7 +295,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
 
             return;
         }
-        
+
         // If we have reached the end then we might want to loop around again
         if (status == CdlDataEnd) {
             // Clear the command and location if we have reached the end
@@ -318,7 +318,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
 
             return;
         }
-        
+
         // If there is a disk error cancel any current command
         if (status == CdlDiskError) {
             LIBCD_CdFlush();
@@ -384,7 +384,7 @@ void psxcd_init() noexcept {
     if (trackCount != 0) {
         gbPSXCD_init_pos = false;
         gbPSXCD_async_on = false;
-        
+
         // Set command complete and data callbacks and save the old ones for later restoring
         gPSXCD_cbsyncsave = LIBCD_CdSyncCallback(PSXCD_cbcomplete);
         gPSXCD_cbreadysave = LIBCD_CdReadyCallback(PSXCD_cbready);
@@ -421,7 +421,7 @@ void psxcd_set_data_mode() noexcept {
 
         // Disable cd audio mixing
         psxspu_setcdmixoff();
-        
+
         // Ensure no pending commands and set the cdrom mode to double speed data
         psxcd_sync();
 
@@ -437,12 +437,12 @@ void psxcd_set_data_mode() noexcept {
         }
 
         psxcd_sync();
-        
+
         if (gPSXCD_cdl_com == CdlPause) {
             LIBCD_CdFlush();
         }
     }
-    
+
     // Stop the cdrom at the current location when we are done to finish up
     gPSXCD_cdl_com = CdlPause;
     LIBCD_CdControl(CdlPause, nullptr, nullptr);
@@ -522,10 +522,10 @@ bool psxcd_seeking_for_play() noexcept {
     // If we are not seeking then the answer is simple
     if (!gbPSXCD_seeking_for_play)
         return false;
-    
+
     // The cdrom is still busy seeking: check to make sure there was not an error
     gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result);
-    
+
     if ((gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
         // Some sort of error happened and not on standby: cancel the current command and record the command details
         LIBCD_CdFlush();
@@ -540,7 +540,7 @@ bool psxcd_seeking_for_play() noexcept {
         gPSXCD_cdl_com = CdlSeekP;
         LIBCD_CdControlF(CdlSeekP, (uint8_t*) &gPSXCD_lastloc);
     }
-    
+
     return true;
 }
 
@@ -619,7 +619,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
         // Clear the error flag and ensure we are in data mode
         bReadError = false;
         psxcd_set_data_mode();
-        
+
         // Save read details
         gpPSXCD_lastdestptr = pDest;
         gPSXCD_lastreadbytes = numBytes;
@@ -644,7 +644,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
                 gPSXCD_cur_io_loc = file.new_io_loc;
                 gbPSXCD_init_pos = true;
             }
-            
+
             // Decide how many bytes do we want to read from the sector
             const int32_t sectorBytesLeft = CD_SECTOR_SIZE - file.io_block_offset;
             const int32_t bytesToCopy = (numBytesLeft <= sectorBytesLeft) ? numBytesLeft : sectorBytesLeft;
@@ -683,7 +683,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
                 file.io_block_offset = 0;
             }
         }
-        
+
         // Next queue commands to read as many whole sectors as we can in one read operation.
         const int32_t wholeSectorsToRead = numBytesLeft / CD_SECTOR_SIZE;
 
@@ -701,7 +701,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
 
             // How many bytes would be read by this operation?
             const int32_t wholeSectorBytes = wholeSectorsToRead * CD_SECTOR_SIZE;
-            
+
             // Queue the read command
             gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].command = PSXCD_COMMAND_READ;
             gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].amount = wholeSectorsToRead;
@@ -800,7 +800,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
                 if (psxcd_critical_sync()) {
                     gPSXCD_cdl_com = CdlReadN;
                     LIBCD_CdControl(CdlReadN, (const uint8_t*) &gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].io_loc, nullptr);
-                    
+
                     if (psxcd_critical_sync()) {
                         // We are now doing an asynchronous read.
                         // The flag won't be cleared until it is done or cancelled.
@@ -823,7 +823,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
             file = gPSXCD_lastfilestruct;
         }
     } while (bReadError);
-    
+
     return numBytes;
 }
 
@@ -852,7 +852,7 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
         const int32_t secOffset = (file.io_block_offset + offset) / CD_SECTOR_SIZE;
         const int32_t newDiscSector = curIoSec + secOffset;
         LIBCD_CdIntToPos(newDiscSector, file.new_io_loc);
-        
+
         // Figure out the offset within the destination sector we want to go to
         file.io_block_offset = ((uint32_t)(file.io_block_offset + offset)) % CD_SECTOR_SIZE;
     }
@@ -978,7 +978,7 @@ void psxcd_play_at_andloop(
     gPSXCD_playvol = vol;
     gPSXCD_playfadeuptime = fadeUpTime;
     gPSXCD_playcount = 0;
-    
+
     // Save the parameters for when we loop
     gPSXCD_looptrack = loopTrack;
     gPSXCD_loopvol = loopVol;
@@ -1009,7 +1009,7 @@ void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorO
 
     if (trackLoc == 0)
         return;
-    
+
     // Ensure we are in audio mode before beginning playback
     gbPSXCD_playflag = false;
     gbPSXCD_loopflag = false;
@@ -1177,7 +1177,7 @@ void psxcd_pause() noexcept {
             // Wait for the fade to complete...
         }
     }
-    
+
     // Ensure no active commands, and issue the pause command
     psxcd_sync();
 

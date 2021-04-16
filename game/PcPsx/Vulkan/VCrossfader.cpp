@@ -174,7 +174,7 @@ void destroy() noexcept {
         gDescriptorPool.freeDescriptorSet(*gpDescriptorSet);
         gpDescriptorSet = nullptr;
     }
-    
+
     gDescriptorPool.destroy(true);
     gVertexBuffer.destroy(true);
 }
@@ -213,7 +213,7 @@ void doCrossfade(const int32_t vblanksDuration) noexcept {
     ASSERT(&VRenderer::getActiveRenderPath() == &VRenderer::gRenderPath_Crossfade);
     ASSERT(gpCrossfadeTex1);
     ASSERT(gpCrossfadeTex2);
-    
+
     // Sample the begin time (in vblanks) for the crossfade
     const int32_t fadeBeginTimeVbl = I_GetTotalVBlanks();
     float percentComplete = 0.0f;

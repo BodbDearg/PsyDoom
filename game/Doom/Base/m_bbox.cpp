@@ -22,7 +22,7 @@ void M_AddToBox(fixed_t* const pBox, const fixed_t x, const fixed_t y) noexcept 
     } else if (x > pBox[BOXRIGHT]) {
         pBox[BOXRIGHT] = x;
     }
-    
+
     if (y < pBox[BOXBOTTOM]) {
         pBox[BOXBOTTOM] = y;
     } else if (y > pBox[BOXTOP]) {

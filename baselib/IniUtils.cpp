@@ -132,12 +132,12 @@ static void parseSectionHeader(ParserState& state) noexcept {
     // Consume the expected opening '[' or if that fails then just skip the line
     if (state.pCurChar >= state.pEndChar)
         return;
-    
+
     if (state.pCurChar[0] != '[') {
         skipRestOfLine(state);
         return;
     }
-    
+
     ++state.pCurChar;
 
     // Parse the section name

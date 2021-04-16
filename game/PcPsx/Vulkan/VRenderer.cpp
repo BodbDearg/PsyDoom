@@ -337,10 +337,10 @@ static void updateCoordSysInfo() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void recreateSwapImageReadySemaphores() noexcept {
     gCurSwapchainSemaphoreIdx = 0;
-    
+
     for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
         semaphore.destroy();
-        
+
         if (!semaphore.init(gDevice))
             FatalErrors::raise("Failed to create a Vulkan 'swapchain image ready' semaphore!");
     }
@@ -363,7 +363,7 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
 
         if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace, Config::gbVulkanTripleBuffer))
             return false;
-            
+
         // Create or recreate the swap image synchronization semaphores too. We do this every time the swapchain is recreated in case
         // one of the 'image ready' semaphores got signalled before drawing commands could consume that signal.
         // The semaphores must always be in an unsignalled state before being used by 'vkAcquireNextImageKHR'.
@@ -631,7 +631,7 @@ void destroy() noexcept {
     for (vgl::Semaphore& semaphore : gRenderDoneSemaphores) {
         semaphore.destroy();
     }
-    
+
     gCurSwapchainSemaphoreIdx = 0;
 
     for (vgl::Semaphore& semaphore : gSwapImageReadySemaphores) {
@@ -678,7 +678,7 @@ bool beginFrame() noexcept {
     // Note: we might already have an image if we skipped presenting a frame last time around.
     const uint32_t ringbufferIdx = gDevice.getRingbufferMgr().getBufferIndex();
     uint32_t swapchainIdx;
-    
+
     if (gSwapchain.getAcquiredImageIdx() == vgl::Swapchain::INVALID_IMAGE_IDX) {
         swapchainIdx = gSwapchain.acquireImage(gSwapImageReadySemaphores[gCurSwapchainSemaphoreIdx]);
         gbDidAcquireSwapImageThisFrame = (swapchainIdx != vgl::Swapchain::INVALID_IMAGE_IDX);
@@ -740,7 +740,7 @@ void endFrame() noexcept {
                 skipNextFramePresent();
             }
         #endif
-    
+
         // Finish up the frame for the render path
         gpCurRenderPath->endFrame(gSwapchain, gCmdBufferRec);
     }
@@ -759,10 +759,10 @@ void endFrame() noexcept {
     // Wait for the current swapchain image to be acquired before executing this command buffer.
     // Signal the current ringbuffer slot fence when drawing is done.
     gCmdBufferRec.endCmdBuffer();
-    
+
     vgl::RingbufferMgr& ringbufferMgr = gDevice.getRingbufferMgr();
     const uint32_t ringbufferIdx = ringbufferMgr.getBufferIndex();
-    
+
     {
         // Conditions that the command buffer waits on.
         // Just wait on the swap chain image to be acquired, unless we didn't actually have to acquire one this frame.

@@ -99,7 +99,7 @@ TransferMgr::StagingBuffer TransferMgr::allocTempStagingBuffer(const uint32_t nu
     RingbufferSlot& ringbufferSlot = getCurrentRingbufferSlot();
     std::vector<RawBuffer>& tmpBuffers = ringbufferSlot.tmpStagingBuffers;
     RawBuffer& tmpBuffer = tmpBuffers.emplace_back();
-    
+
     if (!tmpBuffer.init(
             *mpDevice,
             numBytes,

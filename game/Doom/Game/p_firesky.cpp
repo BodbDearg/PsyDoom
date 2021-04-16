@@ -26,7 +26,7 @@ void P_UpdateFireSky(texture_t& skyTex) noexcept {
     // Grab the lump data for the fire sky and the 1st (top) row of fire
     uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
     uint8_t* const pRow0 = pLumpData + sizeof(texlump_header_t);
-    
+
     // Fire propagates up, so we always sample from a row below the destination
     uint8_t* pSrcRow = pRow0 + FIRESKY_W;
 
@@ -35,7 +35,7 @@ void P_UpdateFireSky(texture_t& skyTex) noexcept {
         for (int32_t y = 1; y < FIRESKY_H; ++y) {
             // Destination row is 1 above the source
             uint8_t* const pDstRow = pSrcRow - FIRESKY_W;
-            
+
             // Sample the 'temperature' in the source row.
             // If it's a dead pixel then just output a zero (black) pixel in the destination row:
             const uint8_t srcTemp = pSrcRow[x];

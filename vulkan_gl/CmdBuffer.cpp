@@ -104,7 +104,7 @@ void CmdBuffer::destroy(const bool bImmediately, const bool bForceIfInvalid) noe
 
     // Regular cleanup logic
     mbIsValid = false;
-    
+
     if (mVkCommandBuffer) {
         ASSERT(mpCmdPool);
         ASSERT(mpCmdPool->getDevice()->getVkDevice());

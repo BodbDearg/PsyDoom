@@ -21,14 +21,14 @@ typedef uint8_t AttachmentUsageFlags;
 struct SubpassDef {
     // Which attachments are used as color buffers to render to
     std::vector<VkAttachmentReference> colorAttachments;
-    
+
     // Which of the color attachments are resolved to a single sample if multi sampled.
     // Note that this list must NOT reference an attachment that is not in 'colorAttachments'.
     std::vector<VkAttachmentReference> colorResolveAttachments;
-    
+
     // Attachment for depth/stencil buffer if specified
     std::vector<VkAttachmentReference> depthStencilAttachments;
-    
+
     // Which attachments are used as inputs into shaders
     std::vector<VkAttachmentReference> inputAttachments;
 

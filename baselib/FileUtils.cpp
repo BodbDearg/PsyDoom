@@ -50,15 +50,15 @@ FileData getContentsOfFile(
     // Figure out what size it is and rewind back to the start
     if (std::fseek(pFile, 0, SEEK_END) != 0)
         return FileData();
-    
+
     const long fileSize = std::ftell(pFile);
 
     if (fileSize <= 0 || fileSize >= INT32_MAX)
         return FileData();
-    
+
     if (std::fseek(pFile, 0, SEEK_SET) != 0)
         return FileData();
-    
+
     // Try to read the file contents
     std::byte* const pTmpBuffer = new std::byte[(size_t) fileSize + numExtraBytes];
 
@@ -136,7 +136,7 @@ int64_t getFileSize(const char* filePath) noexcept {
         // Use standard Unix file functions instead for now, but some day this can be removed.
         #ifdef __APPLE__
             struct stat fileInfo;
-            
+
             if (stat(filePath, &fileInfo) < 0)
                 return -1;
 

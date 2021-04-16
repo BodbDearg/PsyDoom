@@ -29,7 +29,7 @@ static constexpr const char* const UNSPECIFIED_ERROR_STR = "An unspecified/unkno
     } else {
         std::printf("[FATAL ERROR] %s\n", UNSPECIFIED_ERROR_STR);
     }
-    
+
     // Call the user error handler and finish up
     if (gFatalErrorHandler) {
         gFatalErrorHandler((errorMsg != nullptr) ? errorMsg : UNSPECIFIED_ERROR_STR);

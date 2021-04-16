@@ -127,7 +127,7 @@ void psxspu_set_reverb_depth(const int16_t depthLeft, const int16_t depthRight) 
 void psxspu_init() noexcept {
     if (gbPsxSpu_initialized)
         return;
-    
+
     gbPsxSpu_timer_callback_enabled = false;
 
     LIBSPU_SpuInit();
@@ -162,7 +162,7 @@ void psxspu_init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void psxspu_set_master_volume(const int32_t vol) noexcept {
     gbPsxSpu_timer_callback_enabled = false;
-    
+
     SpuCommonAttr attribs;
     attribs.mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
     attribs.mvol.left = (int16_t) vol;
@@ -177,7 +177,7 @@ static void psxspu_set_master_volume(const int32_t vol) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void psxspu_set_cd_volume(const int32_t vol) noexcept {
     gbPsxSpu_timer_callback_enabled = false;
-    
+
     SpuCommonAttr attribs;
     attribs.mask = SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
     attribs.cd.volume.left = (int16_t) vol;
@@ -192,12 +192,12 @@ static void psxspu_set_cd_volume(const int32_t vol) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_setcdmixon() noexcept {
     gbPsxSpu_timer_callback_enabled = false;
-  
+
     SpuCommonAttr attribs;
     attribs.mask = SPU_COMMON_CDMIX;
     attribs.cd.mix = true;
     LIBSPU_SpuSetCommonAttr(attribs);
-  
+
     gbPsxSpu_timer_callback_enabled =  true;
 }
 
@@ -321,7 +321,7 @@ bool psxspu_get_cd_fade_status() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_set_master_vol(const int32_t vol) noexcept {
     gbPsxSpu_timer_callback_enabled = 0;
-    
+
     gPsxSpu_master_vol = vol;
     gPsxSpu_master_vol_fixed = d_lshift<16>(vol);
     gPsxSpu_master_fade_ticks_left = 0;

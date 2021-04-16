@@ -71,7 +71,7 @@ static void printProgWordReferences(const ExeWord& word, const ProgElem* const p
         for (uint32_t i = numWordReferences; i < 4; ++i) {
             out.put(' ');
         }
-        
+
         out << "      ";
     } else {
         out << "              ";
@@ -275,7 +275,7 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
         // Note that if it's out of bounds (a zero initialized global, in the BSS section) then it's just zero, since it's not specified in the .EXE image:
         const uint32_t wordIdx = (addr - exe.baseAddress) / 4;
         const ExeWord exeWord = (wordIdx < exe.sizeInWords) ? exe.words[wordIdx] : ExeWord{};
-    
+
         // Shift and/or mask the word's value if the size is less than 32-bits
         uint32_t elemVal = exeWord.value;
 
@@ -392,7 +392,7 @@ static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, st
     const uint32_t wordIdx = (progElem.startAddr - exe.baseAddress) / 4;
     const bool bIsNonBssGlobal = (wordIdx < exe.sizeInWords);
     const ExeWord exeWord = (bIsNonBssGlobal) ? exe.words[wordIdx] : ExeWord{};
-    
+
     // Shift and/or mask the word's value if the size is less than 32-bits
     uint32_t varVal = exeWord.value;
 
@@ -521,7 +521,7 @@ static void validateProgElemRange(const ExeFile& exe, const ProgElem& progElem) 
         (progElem.endAddr <= progElem.startAddr) ||
         (bOutsideOfExeRange && (!bIsAllowedOutsideOfExeRange))
     );
-    
+
     if (bProgElemRangeInvalid) {
         FATAL_ERROR("Invalid program element! The range defined for the element is not valid for the .EXE");
     }
@@ -648,7 +648,7 @@ void DisassemblyPrinter::printExe(const ExeFile& exe, std::ostream& out) {
         if (curProgElemIdx < numProgElems) {
             const uint32_t curByteAddr = exeBaseAddr + curProgByteIdx;
             const ProgElem& progElem = exe.progElems[curProgElemIdx];
-            
+
             if (progElem.containsByteAtAddr(curByteAddr) || progElem.endAddr <= curByteAddr) {
                 // Time to print this program element
                 printProgElem(exe, progElem, out);

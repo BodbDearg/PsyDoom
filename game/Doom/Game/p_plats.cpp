@@ -63,7 +63,7 @@ static void T_PlatRaise(plat_t& plat) noexcept {
                     case blazeDWUS:
                         P_RemoveActivePlat(plat);
                         break;
-                        
+
                     default:
                         break;
                 }
@@ -73,7 +73,7 @@ static void T_PlatRaise(plat_t& plat) noexcept {
         // Going down
         case down: {
             const result_e moveResult = T_MovePlane(sector, plat.speed, plat.low, false, 0, -1);
-            
+
             // Time to start waiting before going back up again?
             if (moveResult == pastdest) {
                 plat.status = waiting;
@@ -124,7 +124,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
         default:
             break;
     }
-    
+
     // Spawn moving platforms for all sectors matching the line tag (which don't already have specials)
     bool bActivatedPlats = false;
 
@@ -147,7 +147,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
         plat.thinker.function = (think_t) &T_PlatRaise;
         plat.crush = false;
         plat.tag = line.tag;
-        
+
         // Platform specific setup and sounds
         switch (platType) {
             case raiseToNearestAndChange: {

@@ -96,10 +96,10 @@ void doPlatformUpdates() noexcept {
     // Only do these updates if enough time has elapsed.
     // Do this to prevent excessive CPU usage in loops that are periodically trying to update sound etc. while waiting for some event.
     const timepoint_t now = std::chrono::high_resolution_clock::now();
-    
+
     if (now - gLastPlatformUpdateTime < std::chrono::milliseconds(4))
         return;
-    
+
     // Actually do the platform updates
     gLastPlatformUpdateTime = now;
     Network::doUpdates();

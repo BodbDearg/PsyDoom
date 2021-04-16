@@ -14,7 +14,7 @@ struct CdlLOC {
     uint8_t second;     // Note: in binary coded decimal form
     uint8_t sector;     // Note: in binary coded decimal form
     uint8_t track;      // Unused in this PsyQ SDK version: normally '0'
-    
+
     // Conversion to and from a single 32-bit int
     void operator = (const uint32_t loc32) noexcept {
         minute = (uint8_t)(loc32 >> 0);

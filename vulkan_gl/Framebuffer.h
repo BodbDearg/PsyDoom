@@ -22,7 +22,7 @@ public:
     Framebuffer() noexcept;
     Framebuffer(Framebuffer&& other) noexcept;
     ~Framebuffer() noexcept;
-    
+
     bool init(
         const RenderPass& renderPass,
         const Swapchain& swapchain,
@@ -36,7 +36,7 @@ public:
     ) noexcept;
 
     void destroy(const bool bImmediately = false, const bool bForceIfInvalid = false) noexcept;
-    
+
     inline bool isValid() const noexcept { return mbIsValid; }
     inline uint32_t getWidth() const noexcept { return mWidth; }
     inline uint32_t getHeight() const noexcept { return mHeight; }
@@ -44,13 +44,13 @@ public:
     inline VkFramebuffer getVkFramebuffer() const noexcept { return mVkFramebuffer; }
     inline const std::vector<VkImage> getAttachmentImages() const noexcept { return mAttachmentImages; }
     inline const std::vector<VkImageView> getAttachmentImageViews() const noexcept { return mAttachmentImageViews; }
-    
+
 private:
     // Copy and move assign disallowed
     Framebuffer(const Framebuffer& other) = delete;
     Framebuffer& operator = (const Framebuffer& other) = delete;
     Framebuffer& operator = (Framebuffer&& other) = delete;
-    
+
     bool initInternal(
         const RenderPass& renderPass,
         const uint32_t fbWidth,

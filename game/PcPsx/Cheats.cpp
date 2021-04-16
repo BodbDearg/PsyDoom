@@ -149,11 +149,11 @@ static void doToggleNoClipCheat() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doOpenLevelWarpCheat() noexcept {
     ensureGamePaused();
-    
+
     player_t& player = gPlayers[gCurPlayerIndex];
     player.cheats |= CF_WARPMENU;
     const int32_t maxCheatWarpLevel = Game::getNumMaps();
-    
+
     if (gGameMap > maxCheatWarpLevel) {
         gMapNumToCheatWarpTo = maxCheatWarpLevel;
     } else {

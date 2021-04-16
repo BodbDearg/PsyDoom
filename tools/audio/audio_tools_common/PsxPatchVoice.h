@@ -30,7 +30,7 @@ struct PsxPatchVoice {
         PsxAdsrEnvelope     adsr;
         uint32_t            adsrBits;
     };
-    
+
     void readFromJson(const rapidjson::Value& jsonRoot) THROWS;
     void writeToJson(rapidjson::Value& jsonRoot, rapidjson::Document::AllocatorType& jsonAlloc) const noexcept;
     void readFromWmdFile(InputStream& in) THROWS;

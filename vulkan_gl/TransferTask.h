@@ -37,7 +37,7 @@ private:
     TransferTask(TransferTask&& other) = delete;
     TransferTask& operator = (const TransferTask& other) = delete;
     TransferTask& operator = (TransferTask&& other) = delete;
-    
+
     // Only these classes have access
     friend class Buffer;
     friend class RenderTexture;

@@ -43,7 +43,7 @@ public:
     void destroy(const bool bImmediately = false, const bool bForceIfInvalid = false) noexcept;
 
     void scheduleCopyTo(MutableTexture& mutableTex, TransferTask& transferTask) noexcept;
-    
+
 private:
     // Copy and move assign are disallowed
     RenderTexture(const RenderTexture& other) = delete;

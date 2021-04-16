@@ -22,7 +22,7 @@ bool Lcd::readFromLcdFile(InputStream& in, const PsxPatchGroup& patchGroup, std:
 
         if (numLcdSounds > MAX_LCD_FILE_SAMPLES)
             throw "Too many sounds in the .LCD file! File is corrupt!";
-    
+
         // Extract each of the sounds in the .LCD
         for (uint16_t soundIdx = 0; soundIdx < numLcdSounds; ++soundIdx) {
             // Get what patch sample this is and validate it is in range
@@ -108,7 +108,7 @@ bool Lcd::writeToLcdFile(OutputStream& out, const PsxPatchGroup& patchGroup, std
 
             if (sample.adpcmData.size() != patchGroup.patchSamples[sample.patchSampleIdx].size)
                 throw "Failed to write the .LCD file because the ADPCM data size for one or more samples does not match the sample size specified by the .WMD file!";
-        
+
             out.writeBytes(sample.adpcmData.data(), sample.adpcmData.size());
         }
 

@@ -38,7 +38,7 @@ void VRenderPath_Psx::init(vgl::LogicalDevice& device, const VkFormat psxFramebu
     ASSERT_LOG(!mbIsValid, "Can't initialize twice!");
     ASSERT(device.isValid());
     mpDevice = &device;
-    
+
     // Only two framebuffer formats are supported
     ASSERT((psxFramebufferFormat == VK_FORMAT_A1R5G5B5_UNORM_PACK16) || (psxFramebufferFormat == VK_FORMAT_B8G8R8A8_UNORM));
 
@@ -164,7 +164,7 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
     ASSERT(mbIsValid);
     ASSERT(swapchain.isValid());
     ASSERT(swapchain.getAcquiredImageIdx() < swapchain.getLength());
-    
+
     // Copy the PlayStation 1 framebuffer to the current framebuffer texture
     vgl::LogicalDevice& device = *mpDevice;
     const uint32_t ringbufferIdx = device.getRingbufferMgr().getBufferIndex();
@@ -173,7 +173,7 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
     {
         Gpu::Core& gpu = PsxVm::gGpu;
         const uint16_t* pSrcPixels = gpu.pRam + (gpu.displayAreaX + (uintptr_t) gpu.displayAreaY * gpu.ramPixelW);
-        
+
         if (psxFbTexture.getFormat() == VK_FORMAT_A1R5G5B5_UNORM_PACK16) {
             copyPsxFramebufferToFbTexture_A1R5G5B5(pSrcPixels, (uint16_t*) psxFbTexture.getBytes());
         } else {
@@ -262,7 +262,7 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
 void VRenderPath_Psx::copyPsxFramebufferToFbTexture_A1R5G5B5(const uint16_t* const pSrcPixels, uint16_t* pDstPixels) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
     const uint16_t ramPixelW = gpu.ramPixelW;
-    
+
     const uint16_t* pSrcRowPixels = pSrcPixels;
     uint16_t* pDstRowPixels = pDstPixels;
 
@@ -290,7 +290,7 @@ void VRenderPath_Psx::copyPsxFramebufferToFbTexture_A1R5G5B5(const uint16_t* con
 void VRenderPath_Psx::copyPsxFramebufferToFbTexture_B8G8R8A8(const uint16_t* const pSrcPixels, uint32_t* pDstPixels) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
     const uint16_t ramPixelW = gpu.ramPixelW;
-    
+
     const uint16_t* pSrcRowPixels = pSrcPixels;
     uint32_t* pDstRowPixels = pDstPixels;
 

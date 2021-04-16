@@ -76,7 +76,7 @@ void P_RespawnSpecials() noexcept {
     // Only respawn in deathmatch
     if (gNetGame != gt_deathmatch)
         return;
-    
+
     // No respawning if there is nothing to respawn
     if (gItemRespawnQueueHead == gItemRespawnQueueTail)
         return;
@@ -88,7 +88,7 @@ void P_RespawnSpecials() noexcept {
 
     // Wait 120 seconds before respawning things
     const int32_t slotIdx = gItemRespawnQueueTail & ITEMQUESIZE_MASK;
-    
+
     if (gTicCon - gItemRespawnTime[slotIdx] < 120 * TICRATE)
         return;
 
@@ -105,10 +105,10 @@ void P_RespawnSpecials() noexcept {
         mobj_t& mobj = *P_SpawnMobj(x, y, sec.floorheight, MT_IFOG);
         S_StartSound(&mobj, sfx_itmbk);
     }
-    
+
     // Try to find the type enum for the thing to be spawned
     int32_t mobjTypeIdx = 0;
-    
+
     for (; mobjTypeIdx < NUMMOBJTYPES; mobjTypeIdx++) {
         if (mapthing.type == gMObjInfo[mobjTypeIdx].doomednum)  // Is this the mobj definition we want?
             break;
@@ -218,15 +218,15 @@ mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mob
     mobj.tics = state.tics;
     mobj.sprite = state.sprite;
     mobj.frame = state.frame;
-    
+
     // Add to the sector thing list and the blockmap
     P_SetThingPosition(mobj);
-    
+
     // Decide on the z position for the thing (specified z, or floor/ceiling)
     sector_t& sec = *mobj.subsector->sector;
     mobj.floorz = sec.floorheight;
     mobj.ceilingz = sec.ceilingheight;
-    
+
     if (z == ONFLOORZ) {
         mobj.z = mobj.floorz;
     } else if (z == ONCEILINGZ) {
@@ -250,10 +250,10 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     // Is this player in the game? Do not spawn if not:
     if (!gbPlayerInGame[mapThing.type - 1])
         return;
-    
+
     // Do rebirth logic if respawning
     player_t& player = gPlayers[mapThing.type - 1];
-    
+
     #if PSYDOOM_MODS
         const bool bDoPistolStart = ((player.playerstate == PST_REBORN) || Game::gSettings.bPistolStart);
     #else
@@ -263,7 +263,7 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     if (bDoPistolStart) {
         G_PlayerReborn(mapThing.type - 1);
     }
-    
+
     // Spawn the player map object and initialize it's fields
     const fixed_t spawnX = d_int_to_fixed(mapThing.x);
     const fixed_t spawnY = d_int_to_fixed(mapThing.y);
@@ -294,20 +294,20 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     player.viewz = mobj.z + VIEWHEIGHT;
 
     P_SetupPsprites(mapThing.type - 1);
-    
+
     // Give all keys to players in deathmatch
     if (gNetGame == gt_deathmatch) {
         for (int32_t cardIdx = 0; cardIdx < NUMCARDS; ++cardIdx) {
             player.cards[cardIdx] = true;
         }
     }
-    
+
     // Single player only logic
     if (gNetGame == gt_single) {
         // Only process passwords if we are spawning the user's player
         if (gCurPlayerIndex != mapThing.type - 1)
             return;
-        
+
         // Add weapons from a password (if we are using one)
         if (gbUsingAPassword) {
             int32_t mapNum = {};
@@ -353,11 +353,11 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 
         return;
     }
-    
+
     // Ignore if it's a deathmatch only thing and this is not deathmatch
     if ((mapthing.options & MTF_DEATHMATCH) && (gNetGame != gt_deathmatch))
         return;
-    
+
     // Ignore the thing if it's not for this skill level.
     // Note: 'bSkillMatch' was undefined in the original code if the game skill was greater than nightmare but I'm defaulting it here.
     bool bSkillMatch = false;
@@ -369,10 +369,10 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     } else if (gGameSkill <= sk_nightmare) {
         bSkillMatch = (mapthing.options & MTF_HARD);
     }
-    
+
     if (!bSkillMatch)
         return;
-    
+
     // Try to figure out the thing type using the DoomEd num.
     // If that fails then issue a fatal error.
     mobjtype_t thingType = NUMMOBJTYPES;
@@ -383,7 +383,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
             break;
         }
     }
-    
+
     if (thingType == NUMMOBJTYPES) {
         I_Error("P_SpawnMapThing: Unknown doomednum %d at (%d, %d)", (int) mapthing.type, (int) mapthing.x, (int) mapthing.y);
         return;
@@ -420,11 +420,11 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     if (mobj.flags & MF_COUNTKILL) {
         gTotalKills++;
     }
-    
+
     if (mobj.flags & MF_COUNTITEM) {
         gTotalItems++;
     }
-    
+
     // Set thing angle
     mobj.angle = ANG45 * (mapthing.angle / 45);
 
@@ -463,7 +463,7 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
     if (mobj.tics < 1) {
         mobj.tics = 1;
     }
-    
+
     // Don't do sparks if punching the wall
     if (gAttackRange == MELEERANGE) {
         P_SetMObjState(mobj, S_PUFF3);
@@ -481,11 +481,11 @@ void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32
     // Give some upward momentum and randomly adjust tics left
     mobj.momz = 2 * FRACUNIT;
     mobj.tics -= P_Random() & 1;
-    
+
     if (mobj.tics < 1) {
         mobj.tics = 1;
     }
-    
+
     // Adjust the type of blood, based on the damage amount
     if ((damage >= 9) && (damage <= 12)) {
         P_SetMObjState(mobj, S_BLOOD2);
@@ -524,13 +524,13 @@ void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
             }
         }
     #endif
-    
+
     // Note: using division by '2' here yields a slightly different result in some cases, such as with the number '0x80000001'.
     // Shifts are required for demo accurate behavior!
     mobj.x += d_rshift<1>(mobj.momx);
     mobj.y += d_rshift<1>(mobj.momy);
     mobj.z += d_rshift<1>(mobj.momz);
-    
+
     if (!P_TryMove(mobj, mobj.x, mobj.y)) {
         P_ExplodeMissile(mobj);
     }
@@ -556,18 +556,18 @@ mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noex
             S_StartSound(&source, missileInfo.seesound);
         #endif
     }
-    
+
     // Remember who fired the missile (for enemy AI, damage logic etc.)
     missile.target = &source;
 
     // Decide on the angle/direction to fire the missile in.
     // If the target thing has the invsibility powerup also, then randomize it's direction a bit for bad aim.
     angle_t angle = R_PointToAngle2(source.x, source.y, dest.x, dest.y);
-    
+
     if (dest.flags & MF_ALL_BLEND_FLAGS) {
         angle += d_lshift<20>(P_SubRandom());
     }
-    
+
     missile.angle = angle;
 
     // Set the missile velocity based on the direction it's going in
@@ -600,10 +600,10 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
 
     if (!gpLineTarget) {
         constexpr angle_t AIM_WIGGLE = ANG45 / 8;
-        
+
         aimAngle = source.angle + AIM_WIGGLE;
         aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
-        
+
         if (!gpLineTarget) {
             aimAngle = source.angle - AIM_WIGGLE;
             aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
@@ -618,7 +618,7 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
 
     // Spawn the missile and make the fire sound
     mobj_t& missile = *P_SpawnMobj(source.x, source.y, source.z + 32 * FRACUNIT, missileType);
-    
+
     if (missile.info->seesound != sfx_None) {
         #if PSYDOOM_MODS
             // PsyDoom: fix a PSX specific audio bug where projectiles launched by a thing could cause some of its other playing sounds
@@ -632,7 +632,7 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
 
     // Set the missile velocity and angle and save the firer (for damage blame) 
     const int32_t missileSpeed = d_fixed_to_int(missile.info->speed);
-    
+
     missile.target = &source;
     missile.angle = aimAngle;
     missile.momx = gFineCosine[aimAngle >> ANGLETOFINESHIFT] * missileSpeed;

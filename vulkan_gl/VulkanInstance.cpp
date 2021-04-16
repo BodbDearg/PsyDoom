@@ -102,7 +102,7 @@ VulkanInstance::~VulkanInstance() noexcept {
 bool VulkanInstance::init(SDL_Window* const pSdlWindow) noexcept {
     // Preconditions
     ASSERT_LOG((!mbIsValid), "Must call destroy() before re-initializing!");
-    
+
     // If anything goes wrong, cleanup on exit - don't half initialize!
     auto cleanupOnError = finally([&]() {
         if (!mbIsValid) {
@@ -115,7 +115,7 @@ bool VulkanInstance::init(SDL_Window* const pSdlWindow) noexcept {
     mVkFuncs.loadGlobalFuncs();
     mApiLayers.init(mVkFuncs);
     mExtensions.init(mVkFuncs);
-    
+
     #ifndef NDEBUG
         const bool bTryEnableValidationLayers = (
             mExtensions.hasExtension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME) &&
@@ -131,7 +131,7 @@ bool VulkanInstance::init(SDL_Window* const pSdlWindow) noexcept {
         return false;
 
     mVkFuncs.loadInstanceFuncs(mVkInstance);
-    
+
     // Enable validation layer reporting if we can in debug builds so we can get messages about invalid API usage
     if (bTryEnableValidationLayers && mVkFuncs.vkCreateDebugReportCallbackEXT) {
         enableValidationLayerReporting();
@@ -257,7 +257,7 @@ void VulkanInstance::enableValidationLayerReporting() noexcept {
     // If we already have a validation layer callback do nothing else, our work is already done:
     if (mValidationLayerCallback)
         return;
-    
+
     // Fill in the details about the debug report callback to be created and register the callback
     VkDebugReportCallbackCreateInfoEXT createInfo = getDebugReportCallbackCreateInfo();
     mVkFuncs.vkCreateDebugReportCallbackEXT(mVkInstance, &createInfo, nullptr, &mValidationLayerCallback);

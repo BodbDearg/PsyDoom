@@ -46,7 +46,7 @@ static void flushGpuCmds() noexcept {
         // Not sure what situation is would occur in...
         if (!isCpuToGpuDmaEnabled())
             break;
-        
+
         // Read the tag for this primitive and the next primitive's offset
         const uint32_t tag = ((uint32_t*) gpGpuPrimsBeg)[0];
         const uint32_t nextPrimOffset = tag & 0x00FFFFFF;
@@ -80,7 +80,7 @@ void I_AddPrim(const void* const pPrim) noexcept {
             // If there's already enough room for the primitive then we are done:
             if (gpGpuPrimsEnd + primSize < gGpuCmdsBufferEnd)
                 break;
-            
+
             // Okay, there's not enough room for the primitive.
             // Need to insert a dummy primitive/tag to link back to the start of the command buffer, and then wraparound the queue.
             // Note: There should be room for a 32-bit integer, due to the way the size checks are done!

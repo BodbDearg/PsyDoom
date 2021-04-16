@@ -14,12 +14,12 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
     // If no attributes were given or none are being set then just exit now - nothing to do
     if (!pPlayAttribs)
         return;
-    
+
     const uint32_t attribsMask = pPlayAttribs->attribs_mask;
 
     if (attribsMask == 0)
         return;
-    
+
     // Set all of the specified attributes, issuing sequencer commands where required to perform the change
     if (attribsMask & TRIGGER_VOLUME) {
         trackStat.volume_cntrl = pPlayAttribs->volume_cntrl;
@@ -36,7 +36,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 
         // Issue a sequencer command to to update the volume levels: change the track command stream temporarily also to do this
         uint8_t* const pPrevCmd = trackStat.pcur_cmd;
-        
+
         uint8_t cmdBytes[8];
         cmdBytes[0] = VolumeMod;
         cmdBytes[1] = trackStat.volume_cntrl;
@@ -52,7 +52,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 
             // Issue a sequencer command to to update the volume: change the track command stream temporarily also to do this
             uint8_t* const pPrevCmd = trackStat.pcur_cmd;
-            
+
             uint8_t cmdBytes[8];
             cmdBytes[0] = VolumeMod;
             cmdBytes[1] = trackStat.volume_cntrl;
@@ -67,7 +67,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 
             // Issue a sequencer command to to update the pan: change the track command stream temporarily also to do this
             uint8_t* const pPrevCmd = trackStat.pcur_cmd;
-            
+
             uint8_t cmdBytes[8];
             cmdBytes[0] = PanMod;
             cmdBytes[1] = trackStat.pan_cntrl;
@@ -88,7 +88,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 
         // Issue a sequencer command to update the patch: change the track command stream temporarily also to do this
         uint8_t* const pPrevCmd = trackStat.pcur_cmd;
-        
+
         uint8_t cmdBytes[8];
         cmdBytes[0] = PitchMod;
         cmdBytes[1] = (uint8_t)((uint16_t) trackStat.pitch_cntrl >> 0);
@@ -176,7 +176,7 @@ void wess_seq_update_type_special(const uintptr_t seqType, const TriggerPlayAttr
 
                     if (trackStatIdx == 0xFF)
                         continue;
-                    
+
                     // Only bother with this call if there are actually attributes to set.
                     // This check should have probably been done on function entry? This is somewhat wasteful doing it here:
                     if (pPlayAttribs) {
@@ -229,7 +229,7 @@ void wess_seq_stoptype(const uintptr_t seqType) noexcept {
 
             if (!seqStat.active)
                 continue;
-            
+
             if (seqStat.type == seqType) {
                 // This is the sequence type we want to stop: run through all its active tracks and stop them all
                 uint8_t numActiveTracksToVisit = seqStat.num_tracks_active;
@@ -253,7 +253,7 @@ void wess_seq_stoptype(const uintptr_t seqType) noexcept {
                         break;
                 }
             }
-            
+
             // If there are no more active sequences to visit then we are done
             numActiveSeqsToVisit--;
 

@@ -14,7 +14,7 @@
 template <uint32_t Shift, class T>
 static inline constexpr T d_lshift(const T val) noexcept {
     static_assert(std::is_integral_v<T>);
-    
+
     // Signed or unsigned type?
     if constexpr (std::is_unsigned_v<T>) {
         return val << Shift;

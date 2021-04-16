@@ -139,7 +139,7 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.snext) {
             thing.snext->sprev = thing.sprev;
         }
-        
+
         if (thing.sprev) {
             thing.sprev->snext = thing.snext;
         } else {
@@ -153,7 +153,7 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.bnext) {
             thing.bnext->bprev = thing.bprev;
         }
-        
+
         if (thing.bprev) {
             thing.bprev->bnext = thing.bnext;
         } else {
@@ -192,7 +192,7 @@ void P_SetThingPosition(mobj_t& mobj) noexcept {
         sector_t& sec = *pSubsec->sector;
         mobj.sprev = nullptr;
         mobj.snext = sec.thinglist;
-    
+
         if (sec.thinglist) {
             sec.thinglist->sprev = &mobj;
         }
@@ -232,7 +232,7 @@ bool P_BlockLinesIterator(const int32_t x, const int32_t y, bool (*pFunc)(line_t
     // If the blockmap block is out of range then there is nothing to do
     if ((x < 0) || (y < 0) || (x >= gBlockmapWidth) || (y >= gBlockmapHeight))
         return true;
-    
+
     // Get the line list offset for this blockmap cell in the blockmap lump.
     // Note that the offset to the line list is in terms of 16-bit words, not bytes.
     const uint16_t lineListOffset = gpBlockmap[x + y * gBlockmapWidth];
@@ -267,17 +267,17 @@ bool P_BlockThingsIterator(const int32_t x, const int32_t y, bool (*pFunc)(mobj_
     // If the blockmap block is out of range then there is nothing to do
     if ((x < 0) || (y < 0) || (x >= gBlockmapWidth) || (y >= gBlockmapHeight))
         return true;
-    
+
     // Visit all of the things in this blockmap cell unless the callee asks to quit
     mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth];
-    
+
     while (pmobj) {
         // Call the function and stop if requested
         if (!pFunc(*pmobj))
             return false;
-        
+
         pmobj = pmobj->bnext;
     }
-    
+
     return true;
 }

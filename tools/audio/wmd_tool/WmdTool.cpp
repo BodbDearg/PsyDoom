@@ -141,7 +141,7 @@ static bool readModuleFile(const char* const filePath, bool& bIsJsonModule, Modu
     // Is it probably a JSON file?
     const bool bGuessIsJsonFile = ((filePathUpper.length() >= 5) && (filePathUpper.rfind(".JSON") == filePathUpper.length() - 5));
     bIsJsonModule = bGuessIsJsonFile;
-    
+
     // Do the reading of the module file, starting with the guessed format
     std::string readAsWmdErrorMsg;
     std::string readAsJsonErrorMsg;
@@ -371,7 +371,7 @@ static bool copyPatchesOrSequences(
             return false;
         }
     }
-    
+
     // All good if we got to here, print the details for the stuff copied
     std::printf("Changes saved successfully to '%s'!\n", dstModuleFilePath);
 
@@ -478,7 +478,7 @@ int main(int argc, const char* const argv[]) noexcept {
         if (argc >= 4) {
             // Get the indexes of the elements to copy
             std::set<uint16_t> elemIndexesToCopy;
-            
+
             for (int i = 4; i < argc; ++i) {
                 try {
                     const int elemIdx = std::stoi(argv[i]);

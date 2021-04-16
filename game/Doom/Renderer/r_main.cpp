@@ -116,7 +116,7 @@ void R_RenderPlayerView() noexcept {
     // Store view parameters before drawing
     player_t& player = gPlayers[gCurPlayerIndex];
     gpViewPlayer = &player;
-    
+
     // PsyDoom: use interpolation to update the actual view if doing an uncapped framerate
     #if PSYDOOM_MODS
         const bool bInterpolateFrame = Config::gbUncapFramerate;
@@ -143,7 +143,7 @@ void R_RenderPlayerView() noexcept {
         gViewX = R_LerpCoord(gOldViewX, newViewX, lerp) & (~FRACMASK);
         gViewY = R_LerpCoord(gOldViewY, newViewY, lerp) & (~FRACMASK);
         gViewZ = R_LerpCoord(gOldViewZ, newViewZ, lerp) & (~FRACMASK);
-        
+
         // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped
         if (gbDemoPlayback) {
             gViewAngle = R_LerpAngle(gOldViewAngle, newViewAngle, lerp);
@@ -167,7 +167,7 @@ void R_RenderPlayerView() noexcept {
 
     gViewCos = gFineCosine[gViewAngle >> ANGLETOFINESHIFT];
     gViewSin = gFineSine[gViewAngle >> ANGLETOFINESHIFT];
-    
+
     // Set the draw matrix and upload to the GTE
     gDrawMatrix.m[0][0] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>( gViewSin);
     gDrawMatrix.m[0][2] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>(-gViewCos);
@@ -177,7 +177,7 @@ void R_RenderPlayerView() noexcept {
 
     // Traverse the BSP tree to determine what needs to be drawn and in what order.
     R_BSP();
-    
+
     // Stat tracking: how many subsectors will we draw?
     // PsyDoom: if doing limit removing then we already have this count in the std::vector.
     #if !PSYDOOM_LIMIT_REMOVING
@@ -237,7 +237,7 @@ void R_RenderPlayerView() noexcept {
                 if (gCurLightValB > 255) { gCurLightValB = 255; }
             }
         }
-        
+
         R_DrawSubsector(subsec);
     }
 
@@ -297,7 +297,7 @@ angle_t R_PointToAngle2(const fixed_t x1, const fixed_t y1, const fixed_t x2, co
             }
         } else {
             dy = -dy;
-            
+
             if (dx > dy) {
                 return -gTanToAngle[R_SlopeDiv(dy, dx)];                // Octant 8
             } else {
@@ -366,11 +366,11 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
     if (gNumBspNodes == 0) {
         return gpSubsectors;
     }
-    
+
     // Traverse the BSP tree starting at the root node, using the given position to decide which half-spaces to visit.
     // Once we reach a subsector stop and return it.
     int32_t nodeNum = gNumBspNodes - 1;
-    
+
     while ((nodeNum & NF_SUBSECTOR) == 0) {
         node_t& node = gpBspNodes[nodeNum];
         const int32_t side = R_PointOnSide(x, y, node);

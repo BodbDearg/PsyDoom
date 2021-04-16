@@ -184,7 +184,7 @@ void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
     // Create the strobe thinker and populate it's settings
     strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone, sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
-    
+
     strobe.thinker.function = (think_t) &T_StrobeFlash;
     strobe.sector = &sector;
     strobe.darktime = 1;
@@ -192,7 +192,7 @@ void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
     strobe.minlight = 10;
     strobe.maxlight = sector.lightlevel;
     strobe.count = 1;
-    
+
     // If the min value is the same as the sector light level then flash to zero
     if (strobe.minlight == strobe.maxlight) {
         strobe.minlight = 0;
@@ -222,7 +222,7 @@ void EV_StartLightStrobing(line_t& line) noexcept {
 void EV_TurnTagLightsOff(line_t& line) noexcept {
     // Turn 'off' the light for all sectors with a matching tag
     sector_t* const pSectors = gpSectors;
-    
+
     for (int32_t sectorIdx = 0; sectorIdx < gNumSectors; ++sectorIdx) {
         sector_t& sector = pSectors[sectorIdx];
 
@@ -268,7 +268,7 @@ void EV_LightTurnOn(line_t& line, const int32_t onLightLevel) noexcept {
 
             for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
                 sector_t* const pNextSector = getNextSector(pLines[lineIdx], sector);
-                
+
                 if (pNextSector) {
                     newLightLevel = std::max(newLightLevel, (int32_t) pNextSector->lightlevel);
                 }
@@ -316,7 +316,7 @@ void P_SpawnGlowingLight(sector_t& sector, const glowtype_e glowType) noexcept {
     // Configure the glow settings depending on the type
     glow.thinker.function = (think_t) &T_Glow;
     glow.sector = &sector;
-    
+
     switch (glowType) {
         case glowtolower:
             glow.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel);

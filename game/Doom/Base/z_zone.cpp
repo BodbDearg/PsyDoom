@@ -121,7 +121,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, void** co
     // If there are enough free bytes following the allocation then make a new memory block
     // and add it into the linked list of blocks:
     const int32_t numUnusedBytes = pBase->size - allocSize;
-    
+
     if (numUnusedBytes > MINFRAGMENT) {
         std::byte* const pUnusedBytes = (std::byte*) pBase + allocSize;
 
@@ -154,7 +154,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, void** co
         // Non purgable blocks without any owner are assigned a pointer value of '1'
         pBase->user = (void**) 1;
     }
-    
+
     // Set the tag and id for the block
     pBase->tag = tag;
     pBase->id = ZONEID;
@@ -176,7 +176,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, void**
     #else
         const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
     #endif
-    
+
     // Start at the very last block in the list, since we want to alloc at the end of the heap
     memblock_t* pBase = &zone.blocklist;
 
@@ -241,7 +241,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, void**
         pBase->size = allocSize;
         pBase->prev = &freeBlock;
         pBase->next = freeBlock.next;
-        
+
         if (freeBlock.next) {
             freeBlock.next->prev = pBase;
         }
@@ -261,7 +261,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, void**
         if (tag >= PU_PURGELEVEL) {
             I_Error("Z_Malloc: an owner is required for purgable blocks");
         }
-        
+
         // Non purgable blocks without any owner are assigned a pointer value of '1'
         pBase->user = (void**) 1;
     }
@@ -335,7 +335,7 @@ void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept {
             #if PSYDOOM_MODS
                 }
             #endif
-            
+
             // Move back one block, because we need to examine the next block of the current block again
             pNextBlock = pBlock;
         }

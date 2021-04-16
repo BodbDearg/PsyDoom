@@ -93,10 +93,10 @@ static void RV_DrawPlane(
     float triFanCenterX;
     float triFanCenterZ;
     RV_CalcSubsecTriFanCenter(pLeafEdges, triFanCenterX, triFanCenterZ);
-    
+
     // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
     const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Flats : VLightDimMode::None;
- 
+
     // Ensure we have the correct draw pipeline set
     VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
 

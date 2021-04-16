@@ -509,7 +509,7 @@ template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawLine& lin
 template <DrawMode DrawMode, TexFmt TexFmt>
 static void draw(Core& core, const DrawTriangle& triangle) noexcept {
     sanityCheckGpuDrawState(core);
-    
+
     // Apply the draw offset to the triangle points
     const int16_t drawOffsetX = core.drawOffsetX;
     const int16_t drawOffsetY = core.drawOffsetY;
@@ -628,7 +628,7 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
 
                 if ((fgColor.bits == 0) && bEnableMasking)
                     continue;
-                
+
                 fgColor = colorMul(fgColor, triangleColor);
             }
 
@@ -703,7 +703,7 @@ void draw(Core& core, const DrawFloorRow& row) noexcept {
     const int32_t xrange = maxX - minX;
     const int32_t lx = std::max((int32_t) core.drawAreaLx, minX);
     const int32_t rx = std::min((int32_t) core.drawAreaRx, maxX - 1);
-    
+
     // Compute the step in 't', the percentage along the line (used for interpolation of the uvs)
     const float tStep = 1.0f / (float) xrange;
 

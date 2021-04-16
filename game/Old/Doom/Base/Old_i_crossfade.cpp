@@ -15,7 +15,7 @@ void I_CrossFadeFrameBuffers() noexcept {
     // Note that these will occupy some of the VRAM space normally used by the texture cache.
     DRAWENV drawEnvs[2];
     DISPENV dispEnvs[2];
-    
+
     LIBGPU_SetDefDrawEnv(drawEnvs[0], 512, 256, 256, 240);
     drawEnvs[0].isbg = true;
     drawEnvs[0].dtd = false;
@@ -28,7 +28,7 @@ void I_CrossFadeFrameBuffers() noexcept {
 
     LIBGPU_SetDefDispEnv(dispEnvs[0], 768, 256, 256, 240);
     LIBGPU_SetDefDispEnv(dispEnvs[1], 512, 256, 256, 240);
-    
+
     // Copy the current framebuffer to the 1st fade framebuffer, that will be initially displayed
     LIBGPU_MoveImage(gDispEnvs[gCurDispBufferIdx].disp, 768, 256);
     LIBGPU_DrawSync(0);
@@ -47,7 +47,7 @@ void I_CrossFadeFrameBuffers() noexcept {
     POLY_FT4 polyPrim2;
 
     LIBGPU_SetPolyFT4(polyPrim1);
-    
+
     LIBGPU_setXY4(polyPrim1,
         0,              0,
         SCREEN_W - 1,   0,
@@ -61,10 +61,10 @@ void I_CrossFadeFrameBuffers() noexcept {
         0,              SCREEN_H - 1,
         SCREEN_W - 1,   SCREEN_H - 1
     );
-    
+
     polyPrim1.clut = 0;
     polyPrim1.tpage = tpage1;
-  
+
     LIBGPU_SetPolyFT4(polyPrim2);
     LIBGPU_SetSemiTrans(&polyPrim2, true);
 
@@ -87,7 +87,7 @@ void I_CrossFadeFrameBuffers() noexcept {
 
     // Run the cross fade until completion
     uint32_t framebufferIdx = 0;
-    
+
     for (int32_t fade = 255; fade >= 0; fade -= 5) {
         // Set the color for the 2 polygon primitves and submit
         LIBGPU_setRGB0(polyPrim1, (uint8_t)  fade, (uint8_t)  fade, (uint8_t)  fade);
@@ -101,12 +101,12 @@ void I_CrossFadeFrameBuffers() noexcept {
 
         I_SubmitGpuCmds();
         LIBGPU_DrawSync(0);
-        
+
         LIBETC_VSync(0);
         LIBGPU_PutDrawEnv(drawEnvs[framebufferIdx]);
         LIBGPU_PutDispEnv(dispEnvs[framebufferIdx]);
     }
-    
+
     I_SubmitGpuCmds();
     I_DrawPresent();
 }

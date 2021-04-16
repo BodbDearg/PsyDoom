@@ -21,7 +21,7 @@ void P_LoadBlocks(const CdFileId file) noexcept {
         }
 
         ++numLoadAttempts;
-        
+
         // Open the blocks file and get it's size
         const int32_t openFileIdx = OpenFile(file);
         fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
@@ -32,7 +32,7 @@ void P_LoadBlocks(const CdFileId file) noexcept {
         std::byte* const pAlloc = (std::byte*) Z_Malloc(*gpMainMemZone, fileSize - sizeof(fileblock_t), PU_STATIC, nullptr);
         initialAllocHeader = ((memblock_t*) pAlloc)[-1];
         pBlockData = (std::byte*) &((fileblock_t*) pAlloc)[-1];
-        
+
         // Read the file contents
         SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
         ReadFile(openFileIdx, pBlockData, fileSize);
@@ -47,12 +47,12 @@ void P_LoadBlocks(const CdFileId file) noexcept {
         do {
             // Verify the block has a valid zoneid
             fileblock_t& fileBlock = *(fileblock_t*) pCurBlockData;
-            
+
             if (fileBlock.id != ZONEID) {
                 bLoadedOk = false;
                 break;
             }
-            
+
             // Verify the lump number is valid
             if (fileBlock.lumpNum >= gNumLumps) {
                 bLoadedOk = false;
@@ -70,7 +70,7 @@ void P_LoadBlocks(const CdFileId file) noexcept {
                 // Get the decompressed size of the data following the file block header and make sure it is what we expect
                 const uint32_t inflatedSize = getDecodedSize(&(&fileBlock)[1]);
                 const lumpinfo_t& lump = gpLumpInfo[fileBlock.lumpNum];
-                
+
                 if (inflatedSize != lump.size) {
                     bLoadedOk = false;
                     break;
@@ -80,12 +80,12 @@ void P_LoadBlocks(const CdFileId file) noexcept {
             // Advance onto the next block and make sure we haven't gone past the end of the data
             const int32_t blockSize = fileBlock.size;
             bytesLeft -= blockSize;
-            
+
             if (bytesLeft < 0) {
                 bLoadedOk = false;
                 break;
             }
-            
+
             pCurBlockData += blockSize;
         } while (bytesLeft != 0);
 
@@ -102,7 +102,7 @@ void P_LoadBlocks(const CdFileId file) noexcept {
         ((memblock_t*) pBlockData)[0] = initialAllocHeader;
         Z_Free2(*gpMainMemZone, pAlloc);
     }
-    
+
     // Once all the blocks are loaded and verified then setup all of the block links.
     // Also mark blocks for lumps that are already loaded as freeable.
     std::byte* pCurBlockData = pBlockData;
@@ -113,10 +113,10 @@ void P_LoadBlocks(const CdFileId file) noexcept {
         // same memory using different struct types. The original code did not do that but this should be functionally the same.
         fileblock_t fileblock = *(fileblock_t*) pCurBlockData;
         memblock_t& memblock = *(memblock_t*) pCurBlockData;
-        
+
         // Check if this lump is already loaded
         void*& lumpCacheEntry = gpLumpCache[fileblock.lumpNum];
-        
+
         if (lumpCacheEntry) {
             // If the lump is already loaded then mark this memory block as freeable
             memblock.user = nullptr;
@@ -129,34 +129,34 @@ void P_LoadBlocks(const CdFileId file) noexcept {
             lumpCacheEntry = &memblock + 1;
             gpbIsUncompressedLump[fileblock.lumpNum] = fileblock.isUncompressed;
         }
-        
+
         // Is this the last loaded block in the file?
         // If it is then set the size based on where the next block in the heap starts, otherwise just use the size defined in the file.
         bytesLeft -= fileblock.size;
-        
+
         if (bytesLeft != 0) {
             memblock_t* const pNextMemblock = (memblock_t*)(pCurBlockData + fileblock.size);
             memblock.next = pNextMemblock;
         } else {
             const uint32_t blockSize = (uint32_t)((std::byte*) initialAllocHeader.next - pCurBlockData);
-            
+
             if (initialAllocHeader.next) {
                 memblock.size = blockSize;
             }
-            
+
             memblock.next = initialAllocHeader.next;
         }
-        
+
         // Set backlinks for the next block
         if (memblock.next) {
             memblock.next->prev = &memblock;
         }
-        
+
         // Move onto the next block loaded
         pCurBlockData = (std::byte*) memblock.next;
-        
+
     } while (bytesLeft != 0);
-    
+
     // After all that is done, make sure the heap is valid
     Z_CheckHeap(*gpMainMemZone);
 }

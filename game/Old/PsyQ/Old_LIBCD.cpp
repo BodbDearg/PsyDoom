@@ -138,7 +138,7 @@ static bool handleCdCmd(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t re
 
     // Handle the command
     fifo<uint8_t, 16>& cdparams = cdrom.CDROM_params;
-    
+
     switch (cmd) {
         case CdlPause:
             cdrom.handleCommand(cmd);
@@ -207,7 +207,7 @@ static bool handleCdCmd(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t re
                 cdrom.seekSector = sector + (second * 75) + (minute * 60 * 75);
                 cdrom.readSector = cdrom.seekSector;
             }
-            
+
             return true;
 
         case CdlPlay:
@@ -373,7 +373,7 @@ bool LIBCD_CdMix(const CdlATV& vol) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBCD_CdGetSector(void* const pDst, const int32_t readSizeInWords) noexcept {
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
-    
+
     // Figure out the size in bytes we want (request is for words)
     const int32_t readSizeInBytes = readSizeInWords * sizeof(uint32_t);
     uint8_t* const pDstBytes = (uint8_t*) pDst;
@@ -492,7 +492,7 @@ void LIBCD_CD_initvol() noexcept {
         spu.mainVolume.left = 0x3FFF;
         spu.mainVolume.right = 0x3FFF;
     }
-    
+
     spu.cdVolume.left = 0x3FFF;
     spu.cdVolume.right = 0x3FFF;
 
@@ -521,14 +521,14 @@ int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept {
 
     if (!pDisc)
         return 0;
-    
+
     // Retrieve the info for each track.
     // Note that if the 'empty' disc is being used then the count will be '0', which is regarded as an error when returned.
     const int32_t numTracks = (int32_t) pDisc->getTrackCount();
 
     for (int32_t trackIdx = 0; trackIdx < numTracks; ++trackIdx) {
         const disc::Position discPos = pDisc->getTrackStart(trackIdx);
-        
+
         // N.B: the original PsyQ SDK did not provide a sector number here (was always '0') but I am providing that in order to
         // work around issues with determining a track number from an absolute sector number. That stuff was causing problems
         // for cd audio playback for me...
@@ -536,7 +536,7 @@ int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept {
         loc.minute = bcd::toBcd((uint8_t) discPos.mm);
         loc.second = bcd::toBcd((uint8_t) discPos.ss);
         loc.sector = bcd::toBcd((uint8_t) discPos.ff);
-        
+
         loc.track = 0;  // Should always be '0' in this PsyQ version - unused!
     }
 

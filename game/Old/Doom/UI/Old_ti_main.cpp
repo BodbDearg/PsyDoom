@@ -56,7 +56,7 @@ void DRAW_Title() noexcept {
 
     LIBGPU_SetPolyFT4(polyPrim);
     LIBGPU_setRGB0(polyPrim, 128, 128, 128);
-    
+
     const uint8_t texU = skytex.texPageCoordX;
     const uint8_t texV = skytex.texPageCoordY;
     constexpr uint8_t SKY_W = 63;

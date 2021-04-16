@@ -80,7 +80,7 @@ void VkFuncs::loadGlobalFuncs() noexcept {
     LOAD_GLOBAL_FUNC(vkCreateInstance);
     LOAD_GLOBAL_FUNC(vkEnumerateInstanceExtensionProperties);
     LOAD_GLOBAL_FUNC(vkEnumerateInstanceLayerProperties);
-    
+
     #undef LOAD_GLOBAL_FUNC
 }
 

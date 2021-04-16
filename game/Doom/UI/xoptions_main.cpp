@@ -102,7 +102,7 @@ gameaction_t XOptions_Update() noexcept {
         S_StartSound(nullptr, sfx_pistol);
         return ga_exit;
     }
-       
+
     // Check for up/down movement
     if (!bMenuMove) {
         // If there are no direction buttons pressed then the next move is allowed instantly
@@ -113,7 +113,7 @@ gameaction_t XOptions_Update() noexcept {
 
         if (gVBlanksUntilMenuMove[playerIdx] <= 0) {
             gVBlanksUntilMenuMove[playerIdx] = 15;
-            
+
             if (bMenuDown) {
                 gCursorPos[playerIdx]++;
 
@@ -142,7 +142,7 @@ gameaction_t XOptions_Update() noexcept {
             // Only process audio updates for this player
             if (bMenuRight) {
                 PlayerPrefs::gTurnSpeedMult100++;
-                
+
                 if (PlayerPrefs::gTurnSpeedMult100 > PlayerPrefs::TURN_SPEED_MULT_MAX) {
                     PlayerPrefs::gTurnSpeedMult100 = PlayerPrefs::TURN_SPEED_MULT_MAX;
                 } else {
@@ -154,7 +154,7 @@ gameaction_t XOptions_Update() noexcept {
             else if (bMenuLeft) {
                 if (PlayerPrefs::gTurnSpeedMult100 > PlayerPrefs::TURN_SPEED_MULT_MIN) {
                     PlayerPrefs::gTurnSpeedMult100--;;
-                    
+
                     if ((PlayerPrefs::gTurnSpeedMult100 / 4) & 1) {
                         S_StartSound(nullptr, sfx_stnmov);
                     }

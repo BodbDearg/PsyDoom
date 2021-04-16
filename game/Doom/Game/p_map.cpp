@@ -187,7 +187,7 @@ void P_UseLines(player_t& player) noexcept {
         gUseBBox[BOXLEFT] = useline.x + useline.dx;
         gUseBBox[BOXRIGHT] = useline.x;
     }
-    
+
     if (useline.dy > 0) {
         gUseBBox[BOXTOP] = useline.y + useline.dy;
         gUseBBox[BOXBOTTOM] = useline.y;
@@ -195,7 +195,7 @@ void P_UseLines(player_t& player) noexcept {
         gUseBBox[BOXTOP] = useline.y;
         gUseBBox[BOXBOTTOM] = useline.y + useline.dy;
     }
-    
+
     // Initially no wall is hit and the closest thing is at fraction 1.0 (end of the line)
     gCloseDist = FRACUNIT;
     gpCloseLine = nullptr;
@@ -235,7 +235,7 @@ void P_UseLines(player_t& player) noexcept {
 
     if (!pClosestLine)
         return;
-    
+
     if (pClosestLine->special) {
         P_UseSpecialLine(mobj, *pClosestLine);
     } else {
@@ -258,7 +258,7 @@ static bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
 
     // Get a distance estimate to the source of the blast
     mobj_t& bombSpot = *gpBombSpot;
-    
+
     const fixed_t dx = std::abs(mobj.x - bombSpot.x);
     const fixed_t dy = std::abs(mobj.y - bombSpot.y);
     const int32_t approxDist = std::max(dx, dy);

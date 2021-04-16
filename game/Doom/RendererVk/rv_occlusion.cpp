@@ -82,7 +82,7 @@ static void RV_GrowOccRangeTo(OccRangeIter rangeIter, const float newXMax) noexc
             range.xMax = newXMax;
             break;
         }
-        
+
         // Merge this range into the next range since it falls within it or touches it
         ASSERT(range.xMin < nextRange.xMin);
         ASSERT(range.xMax < nextRange.xMax);

@@ -152,7 +152,7 @@ bool BaseTexture::initInternal(
     ASSERT(numMipLevels >= 1);
     ASSERT(numSamples >= 1);
     ASSERT_LOG((depth == 1) || (numLayers == 1), "Can't specify array layers for a 3D texture!");
-    
+
     // Verify valid alpha mode
     ASSERT(
         (alphaMode == AlphaMode::UNSPECIFIED) ||
@@ -184,7 +184,7 @@ bool BaseTexture::initInternal(
     mbIsCubemap = bIsCubemap;
     mAlphaMode = alphaMode;
     mpDevice = &device;
-    
+
     // Get the image aspect flags for the texture format
     const VkImageAspectFlags vkImageAspectFlags = VkFormatUtils::getVkImageAspectFlags(textureFormat);
 
@@ -215,7 +215,7 @@ bool BaseTexture::initInternal(
         if (!createImageView(vkImageViewType, textureFormat, vkImageAspectFlags))
             return false;
     }
-    
+
     // Success if we get to here!
     mbIsValid = true;
     return true;

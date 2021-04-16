@@ -86,7 +86,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
     while ((xleft != 0) || (yleft != 0)) {
         xleft -= xuse;
         yleft -= yuse;
-        
+
         // Try to do this move step
         if (!PB_TryMove(mobj.x + xuse, mobj.y + yuse)) {
             // Move failed: if it's a skull flying then do the skull bash
@@ -126,15 +126,15 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
     // Missiles and lost souls do not have friction
     if (mobj.flags & (MF_MISSILE | MF_SKULLFLY))
         return;
-    
+
     // No friction when airborne
     if (mobj.z > mobj.floorz)
         return;
-    
+
     // Don't stop corpses sliding until they hit the floor
     if ((mobj.flags & MF_CORPSE) && (mobj.floorz != mobj.subsector->sector->floorheight))
         return;
-    
+
     // Stop the thing fully if it's now slow enough, otherwise apply friction
     if ((std::abs(mobj.momx) < STOPSPEED) && (std::abs(mobj.momy) < STOPSPEED)) {
         mobj.momx = 0;
@@ -157,7 +157,7 @@ static void P_FloatChange(mobj_t& mobj) noexcept {
     // Get the height difference to the target and multiply by 3 for an apparent fudge factor. Not sure why the fudge was added in...
     // I'm wondering also should this have been getting the (vertical) center to center height difference instead?
     const fixed_t dz = (d_rshift<1>(mobj.height) + target.z - mobj.z) * 3;
-    
+
     if (dz < 0) {
         if (approxDist < -dz) {     // N.B: 'dz' is signed difference and negative here, need to adjust
             mobj.z -= FLOATSPEED;
@@ -205,14 +205,14 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
             mobj.momz -= P_GetGravity() / 2;
         }
     }
-    
+
     // Check for a collision against the ceiling
     if (mobj.z + mobj.height > mobj.ceilingz) {
         // Hitting the ceiling: stop all upwards momentum
         if (mobj.momz > 0) {
             mobj.momz = 0;
         }
-        
+
         // Clamp to the ceiling and if we're a missile, explode:
         mobj.z = mobj.ceilingz - mobj.height;
 
@@ -248,11 +248,11 @@ void P_MobjThinker(mobj_t& mobj) noexcept {
     // Do state advancement if this state does not last forever (-1 tics duration)
     if (mobj.tics != -1) {
         mobj.tics--;
-        
+
         // Is it time to change to the next state?
         if (mobj.tics <= 0) {
             const statenum_t nextStateNum = mobj.state->nextstate;
-            
+
             // Is there a next state?
             if (nextStateNum != S_NULL) {
                 // There is a next state: setup the map object's sprite, pending action and remaining state tics for this state
@@ -292,7 +292,7 @@ static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
     // If the thing is too high up in the air to pass under the upper wall then the move cannot happen
     if (gTestCeilingz - baseThing.z < baseThing.height)
         return false;
-    
+
     // If the step up is too big for a step then the move cannot happen
     if (gTestFloorZ - baseThing.z > 24 * FRACUNIT)
         return false;
@@ -330,7 +330,7 @@ static void PB_UnsetThingPosition(mobj_t& thing) noexcept {
     if (thing.snext) {
         thing.snext->sprev = thing.sprev;
     }
-    
+
     if (thing.sprev) {
         thing.sprev->snext = thing.snext;
     } else {
@@ -379,11 +379,11 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
     mobj.subsector = &subsec;
     mobj.sprev = nullptr;
     mobj.snext = sec.thinglist;
-    
+
     if (sec.thinglist) {
         sec.thinglist->sprev = &mobj;
     }
-    
+
     sec.thinglist = &mobj;
 
     // Add the thing into the blockmap unless the thing flags specify otherwise (inert things)
@@ -391,12 +391,12 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
         // Compute the blockmap cell and see if it's in range for the blockmap
         const int32_t bmapX = d_rshift<MAPBLOCKSHIFT>(mobj.x - gBlockmapOriginX);
         const int32_t bmapY = d_rshift<MAPBLOCKSHIFT>(mobj.y - gBlockmapOriginY);
-        
+
         if ((bmapX >= 0) && (bmapY >= 0) && (bmapX < gBlockmapWidth) && (bmapY < gBlockmapHeight)) {
             // In range: link the thing into the blockmap list for this blockmap cell
             mobj_t*& blockmapList = gppBlockLinks[bmapX + bmapY * gBlockmapWidth];
             mobj_t* const pPrevListHead = blockmapList;
-            
+
             mobj.bprev = nullptr;
             mobj.bnext = pPrevListHead;
 
@@ -473,7 +473,7 @@ static bool PB_CheckPosition() noexcept {
             // Test against lines first then things
             if (!PB_BlockLinesIterator(x, y))
                 return false;
-            
+
             if (!PB_BlockThingsIterator(x, y))
                 return false;
         }
@@ -503,7 +503,7 @@ static bool PB_BoxCrossLine(line_t& line) noexcept {
     // Some lines for instance might run at 45 degrees and be parallel to the opposite box diagonal...
     fixed_t x1;
     fixed_t x2;
-    
+
     if (line.slopetype == ST_POSITIVE) {
         x1 = gTestBBox[BOXLEFT];
         x2 = gTestBBox[BOXRIGHT];
@@ -587,18 +587,18 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
     // If the thing is not solid you can't collide against it
     if ((mobj.flags & MF_SOLID) == 0)
         return true;
-    
+
     // Get the thing which is doing the collision test and see if it is close enough to this thing.
     // If it isn't then we can early out here and return 'true' for no collision:
     mobj_t& baseThing = *gpBaseThing;
     const fixed_t totalRadius = mobj.radius + baseThing.radius;
-    
+
     const fixed_t dx = std::abs(mobj.x - gTestX);
     const fixed_t dy = std::abs(mobj.y - gTestY);
 
     if ((dx >= totalRadius) || (dy >= totalRadius))
         return true;
-    
+
     // The thing can't collide with itself
     if (&mobj == &baseThing)
         return true;
@@ -617,7 +617,7 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
         // Is the missile flying over this thing?
         if (baseThing.z > mobj.z + mobj.height)
             return true;
-        
+
         // Is the missile flying under this thing?
         if (baseThing.z + baseThing.height < mobj.z)
             return true;
@@ -629,13 +629,13 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
             // Colliding with the same species type: don't explode the missile if it's hitting the shooter of the missile
             if (&mobj == baseThing.target)
                 return true;
-            
+
             // If it's hitting anything other than the player, explode the missile but do no damage (set no 'hit' thing).
             // Players can still damage each other with missiles however, hence the exception.
             if (sourceObjType != MT_PLAYER)
                 return false;
         }
-        
+
         // So long as the thing is shootable then the missile can hit it
         if (mobj.flags & MF_SHOOTABLE) {
             gpHitThing = &mobj;
@@ -655,7 +655,7 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
 static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
     // Get the line list for this blockmap cell
     const int16_t* pLineNum = (int16_t*)(gpBlockmapLump + gpBlockmap[y * gBlockmapWidth + x]);
-    
+
     // Visit all lines in the cell, checking for intersection and potential collision.
     // Stop when there is a definite collision.
     line_t* const pLines = gpLines;
