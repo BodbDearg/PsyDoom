@@ -20,7 +20,11 @@ struct vissprite_t {
 
 // This is the maximum number of vissprites that can be drawn per subsector.
 // Any more than this will simply be ignored.
-static constexpr int32_t MAXVISSPRITES = 64;
+#if PSYDOOM_LIMIT_REMOVING
+    static constexpr int32_t MAXVISSPRITES = 4096;
+#else
+    static constexpr int32_t MAXVISSPRITES = 64;
+#endif
 
 // The linked list of draw sprites (sorted back to front) for the current subsector and head of the draw list.
 // The head is a dummy vissprite which is not actually drawn and vorks in a similar fashion to the head of the map objects list.
