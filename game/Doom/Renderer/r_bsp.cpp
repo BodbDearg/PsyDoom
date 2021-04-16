@@ -38,7 +38,14 @@ void R_BSP() noexcept {
     D_memset(gbSolidCols, std::byte(0), sizeof(gbSolidCols));
 
     // The subsector draw list is also initially empty and the sky not visible
-    gppEndDrawSubsector = gpDrawSubsectors;
+    #if PSYDOOM_LIMIT_REMOVING
+        gpDrawSubsectors.clear();
+        gpCurDrawSector = nullptr;
+        gppEndDrawSubsector = nullptr;
+    #else
+        gppEndDrawSubsector = gpDrawSubsectors;
+    #endif
+
     gbIsSkyVisible = false;
 
     // Traverse the BSP tree to generate the list of subsectors to draw
@@ -326,15 +333,23 @@ void R_Subsector(const int32_t subsecNum) noexcept {
         I_Error("R_Subsector: ss %i with numss = %i", subsecNum, gNumSubsectors);
     }
     
-    // If we've hit the limit for the number of subsectors that can be drawn then stop emitting.
-    // Otherwise add the subsector to the draw list.
-    if (gppEndDrawSubsector - gpDrawSubsectors >= MAX_DRAW_SUBSECTORS)
-        return;
-    
+    // If we've hit the limit for the number of subsectors that can be drawn then stop emitting, otherwise add the subsector to the draw list.
+    // PsyDoom: with the limit removing engine we can now kill this check.
+    #if !PSYDOOM_LIMIT_REMOVING
+        if (gppEndDrawSubsector - gpDrawSubsectors >= MAX_DRAW_SUBSECTORS)
+            return;
+    #endif
+
+    // Save the draw subsector in the subsectors list
     subsector_t& subsec = gpSubsectors[subsecNum];
     gpCurDrawSector = subsec.sector;
-    *gppEndDrawSubsector = &subsec;
-    gppEndDrawSubsector++;
+
+    #if PSYDOOM_LIMIT_REMOVING
+        gpDrawSubsectors.push_back(&subsec);
+    #else
+        *gppEndDrawSubsector = &subsec;
+        gppEndDrawSubsector++;
+    #endif
     
     // Do draw preparation on all of the segs in the subsector.
     // This figures out what areas of the screen they occlude, updates transformed vertex positions, and more...

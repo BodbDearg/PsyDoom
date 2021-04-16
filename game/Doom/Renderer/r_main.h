@@ -2,14 +2,20 @@
 
 #include "Doom/doomdef.h"
 
+#include <vector>
+
 // GTE rotation constants: 1.0 and the shift to go from 16.16 to 4.12.
 // The GTE stores rotation matrix entries as 4.12 fixed point numbers!
 static constexpr int16_t    GTE_ROTFRAC_UNIT    = 4096;
 static constexpr uint16_t   GTE_ROTFRAC_SHIFT   = 4;
 
-// Renderer general constants
-static constexpr uint32_t   MAX_DRAW_SUBSECTORS = 192;
-static constexpr int32_t    NEAR_CLIP_DIST      = 2;        // Clip geometry at this depth
+// Renderer constant: maximum number of subsectors that can be drawn in the original engine
+#if !PSYDOOM_LIMIT_REMOVING
+    static constexpr uint32_t MAX_DRAW_SUBSECTORS = 192;
+#endif
+
+// Renderer constant: clip geometry at this depth
+static constexpr int32_t NEAR_CLIP_DIST = 2;
 
 struct light_t;
 struct MATRIX;
@@ -31,10 +37,17 @@ extern const light_t*   gpCurLight;
 extern uint32_t         gCurLightValR;
 extern uint32_t         gCurLightValG;
 extern uint32_t         gCurLightValB;
-extern subsector_t*     gpDrawSubsectors[MAX_DRAW_SUBSECTORS];
-extern subsector_t**    gppEndDrawSubsector;
+
+// PsyDoom: the number of draw subsectors is now unlimited
+#if PSYDOOM_LIMIT_REMOVING
+    extern std::vector<subsector_t*> gpDrawSubsectors;
+#else
+    extern subsector_t*     gpDrawSubsectors[MAX_DRAW_SUBSECTORS];
+    extern int32_t          gNumDrawSubsectors;
+#endif
+
 extern sector_t*        gpCurDrawSector;
-extern int32_t          gNumDrawSubsectors;
+extern subsector_t**    gppEndDrawSubsector;
 
 #if PSYDOOM_MODS
     extern fixed_t      gOldViewX;

@@ -43,14 +43,18 @@ uint32_t        gCurLightValR;
 uint32_t        gCurLightValG;
 uint32_t        gCurLightValB;
 
-// The list of subsectors to draw and current position in the list.
-// The draw subsector count does not appear to be used for anything however... Maybe used in debug builds for stat tracking?
-subsector_t*    gpDrawSubsectors[MAX_DRAW_SUBSECTORS];
-subsector_t**   gppEndDrawSubsector;
-int32_t         gNumDrawSubsectors;
+// PsyDoom: the number of draw subsectors is now unlimited
+#if PSYDOOM_LIMIT_REMOVING
+    std::vector<subsector_t*> gpDrawSubsectors;
+#else
+    // The list of subsectors to draw and current position in the list.
+    // The draw subsector count does not appear to be used for anything however... Maybe used in debug builds for stat tracking?
+    subsector_t*    gpDrawSubsectors[MAX_DRAW_SUBSECTORS];
+    int32_t         gNumDrawSubsectors;
+#endif
 
-// What sector is currently being drawn
-sector_t* gpCurDrawSector;
+sector_t*       gpCurDrawSector;        // What sector is currently being drawn
+subsector_t**   gppEndDrawSubsector;    // Used to point to the last draw subsector in the list and iterate backwards
 
 // PsyDoom: used for interpolation for uncapped framerates 
 #if PSYDOOM_MODS
@@ -73,6 +77,11 @@ sector_t* gpCurDrawSector;
 void R_Init() noexcept {
     // Initialize texture lists, palettes etc.
     R_InitData();
+
+    // PsyDoom: reserve plenty of room in this list ahead of time
+    #if PSYDOOM_LIMIT_REMOVING
+        gpDrawSubsectors.reserve(1024 * 8);
+    #endif
 
     // Initialize the transform matrix used for drawing and upload it to the GTE
     gDrawMatrix.t[0] = 0;
@@ -170,7 +179,10 @@ void R_RenderPlayerView() noexcept {
     R_BSP();
     
     // Stat tracking: how many subsectors will we draw?
-    gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
+    // PsyDoom: if doing limit removing then we already have this count in the std::vector.
+    #if !PSYDOOM_LIMIT_REMOVING
+        gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
+    #endif
 
     // Finish up the previous draw before we continue and draw the sky if currently visible.
     // PsyDoom: moved this to the end of 'P_Drawer' instead - needed for the new Vulkan renderer integration.
@@ -181,10 +193,22 @@ void R_RenderPlayerView() noexcept {
     if (gbIsSkyVisible) {
         R_DrawSky();
     }
-    
+
     // Draw all subsectors emitted during BSP traversal.
     // Draw them in back to front order.
-    while (gppEndDrawSubsector > gpDrawSubsectors) {
+    #if PSYDOOM_LIMIT_REMOVING
+        gppEndDrawSubsector = gpDrawSubsectors.data() + gpDrawSubsectors.size();
+    #endif
+
+    while (true) {
+        #if PSYDOOM_LIMIT_REMOVING
+            if (gppEndDrawSubsector <= gpDrawSubsectors.data())
+                break;
+        #else
+            if (gppEndDrawSubsector <= gpDrawSubsectors)
+                break;
+        #endif
+
         --gppEndDrawSubsector;
 
         // Set the current draw sector
