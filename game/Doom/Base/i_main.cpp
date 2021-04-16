@@ -952,6 +952,13 @@ void I_PurgeTexCache() noexcept {
 // This code was still compiled into the retail binary however, but was inaccessible outside of memory hacks.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_VramViewerDraw(const int32_t texPageNum) noexcept {
+    // PsyDoom: adjust the bottom edge of the VRAM view to account for overscan of 8-pixels
+    #if PSYDOOM_MODS
+        const int16_t BY = 232;
+    #else
+        const int16_t BY = 240;
+    #endif
+
     // Draw a sprite covering the screen which covers the entire vram page
     {
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
@@ -980,13 +987,6 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
             0,      BUV,
             RUV,    BUV
         );
-
-        // PsyDoom: adjust the bottom edge of the VRAM view to account for overscan of 8-pixels
-        #if PSYDOOM_MODS
-            const int16_t BY = 232;
-        #else
-            const int16_t BY = 240;
-        #endif
 
         LIBGPU_setXY4(polyPrim,
             0,      0,
@@ -1032,8 +1032,14 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
         // Figure out the y position and height for the texture cache entry.
         // Have to rescale in using a 24.8 fixed point format because the screen is 240 pixels high, and the texture cache is 256 pixels high.
         // I'm not sure why there is negative checks here however, texcoords are never negative?
-        int16_t y = (int16_t)(((int32_t) d_lshift<8>(pTex->texPageCoordY)) * SCREEN_H / TCACHE_PAGE_SIZE);
-        int16_t h = (int16_t)(((int32_t) d_lshift<8>(pTex->height))        * SCREEN_H / TCACHE_PAGE_SIZE);
+        #if PSYDOOM_MODS
+            // PsyDoom: need to adjust based on overscan adjustments above
+            int32_t y = (d_lshift<8>((int32_t) pTex->texPageCoordY)) * BY / TCACHE_PAGE_SIZE;
+            int32_t h = (d_lshift<8>((int32_t) pTex->height))        * BY / TCACHE_PAGE_SIZE;
+        #else
+            int32_t y = (d_lshift<8>((int32_t) pTex->texPageCoordY)) * SCREEN_H / TCACHE_PAGE_SIZE;
+            int32_t h = (d_lshift<8>((int32_t) pTex->height))        * SCREEN_H / TCACHE_PAGE_SIZE;
+        #endif
 
         if (y < 0) { y += 255; }
         if (h < 0) { h += 255; }
@@ -1045,16 +1051,16 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
         const int16_t w = pTex->width;
 
         // Draw all the box lines for the cache entry
-        LIBGPU_setXY2(linePrim, x, y, x + w, y);                // Top
+        LIBGPU_setXY2(linePrim, x, (int16_t) y, x + w, (int16_t) y);            // Top
         I_AddPrim(linePrim);
 
-        LIBGPU_setXY2(linePrim, x + w, y, x + w, y + h);        // Right
+        LIBGPU_setXY2(linePrim, x + w, (int16_t) y, x + w, (int16_t)(y + h));   // Right
         I_AddPrim(linePrim);
 
-        LIBGPU_setXY2(linePrim, x + w, y + h, x, y + h);        // Bottom
+        LIBGPU_setXY2(linePrim, x + w, (int16_t)(y + h), x, (int16_t)(y + h));  // Bottom
         I_AddPrim(linePrim);
 
-        LIBGPU_setXY2(linePrim, x, y + h, x, y);                // Left
+        LIBGPU_setXY2(linePrim, x, (int16_t)(y + h), x, (int16_t) y);           // Left
         I_AddPrim(linePrim);
     }
 }
