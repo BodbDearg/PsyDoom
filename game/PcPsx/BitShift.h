@@ -6,6 +6,9 @@
 // Left and right shifts of negative numbers are undefined in the C++ standard and could behave differently depending on architecture.
 // These helpers allow us to create well defined behavior in the case of negative numbers to avoid these problems.
 // An optimizing compiler will likely re-convert these operations back to normal shifts with little overhead, architecture allowing...
+// 
+// Note: this module can probably go away if C++ 20 becomes the minimum language target for PsyDoom.
+// In C++ 20 the language now defines the integer format as two's complement, thus the behavior of signed shifts become well defined.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include <cstdint>
 #include <limits>
@@ -19,7 +22,7 @@ static inline constexpr T d_lshift(const T val) noexcept {
     if constexpr (std::is_unsigned_v<T>) {
         return val << Shift;
     } else {
-        // Right shifts of signed integers are just done with a simple logical shift, even for negative numbers
+        // Left shifts of signed integers are just done with a simple logical shift, even for negative numbers
         typedef std::make_unsigned_t<T> TUnsigned;
         return (T)((TUnsigned) val << Shift);
     }
