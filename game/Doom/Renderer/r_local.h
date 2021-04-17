@@ -7,6 +7,8 @@
 
 #include "Doom/doomdef.h"
 
+#include <vector>
+
 struct line_t;
 
 // Texture coordinates in PSX DOOM cannot be higher than '255' due to hardware limitations. All texture coordinates on the PS1 are
@@ -157,9 +159,16 @@ struct leafedge_t {
 
 // Runtime render structure used for rendering leafs.
 // This is cached in scratchpad memory of the PSX, hence the small limits here.
-static constexpr int32_t MAX_LEAF_EDGES = 20;
+// PsyDoom: this is no longer the case and I've now removed all limits for the number of edges.
+#if !PSYDOOM_LIMIT_REMOVING
+    static constexpr int32_t MAX_LEAF_EDGES = 20;
+#endif
 
 struct leaf_t {
-    int32_t     numEdges;                       // How many edges are actually in use for the leaf
-    leafedge_t  edges[MAX_LEAF_EDGES + 1];      // +1 so we store the first edge at the end of the list and avoid bound checking
+    #if PSYDOOM_LIMIT_REMOVING
+        std::vector<leafedge_t> edges;
+    #else
+        int32_t     numEdges;                   // How many edges are actually in use for the leaf
+        leafedge_t  edges[MAX_LEAF_EDGES + 1];  // +1 so we store the first edge at the end of the list and avoid bound checking
+    #endif
 };

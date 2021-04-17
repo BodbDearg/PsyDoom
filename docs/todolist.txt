@@ -9,7 +9,6 @@
     - No texture cache overflow
     - Expanded VRAM
     - Greatly enlargened heap
-    - Remove geometry clipping limits where possible
     - 256x256 max size textures, and other texture size variants less than this 
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.

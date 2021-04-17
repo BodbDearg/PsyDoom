@@ -78,9 +78,9 @@ void R_Init() noexcept {
     // Initialize texture lists, palettes etc.
     R_InitData();
 
-    // PsyDoom: reserve plenty of room in this list ahead of time
+    // PsyDoom: preallocating memory for certain dynamic buffers ahead of time
     #if PSYDOOM_LIMIT_REMOVING
-        gpDrawSubsectors.reserve(1024 * 8);
+        R_InitDrawBuffers();
     #endif
 
     // Initialize the transform matrix used for drawing and upload it to the GTE

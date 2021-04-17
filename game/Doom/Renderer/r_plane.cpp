@@ -116,11 +116,12 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
 // Draw the horizontal flat spans for the specified subsector's leaf
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& tex) noexcept {
-    // PsyDoom: if the leaf exceeds the maximum number of edges allowed then skip it.
-    // TODO: in limit removing work, remove this limit and make it compile time configurable.
+    // PsyDoom: if the leaf exceeds the maximum number of edges allowed in a non limit removing build then skip it
     #if PSYDOOM_MODS
-        if (leaf.numEdges > MAX_LEAF_EDGES)
-            return;
+        #if !PSYDOOM_LIMIT_REMOVING
+            if (leaf.numEdges > MAX_LEAF_EDGES)
+                return;
+        #endif
     #endif
 
     // Compute the screen x and y values for each leaf vertex and save to scratchpad memory for fast access.
@@ -130,9 +131,15 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
         gLeafScreenVerts.reserve(256);
 
         {
-            leafedge_t* pEdge = leaf.edges;
+            #if PSYDOOM_LIMIT_REMOVING
+                leafedge_t* pEdge = leaf.edges.data();
+                const int32_t numEdges = (int32_t) leaf.edges.size() - 1;   // N.B: last edge is a dummy one for fast wraparound!
+            #else
+                leafedge_t* pEdge = leaf.edges;
+                const int32_t numEdges = leaf.numEdges;
+            #endif
 
-            for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pEdge) {
+            for (int32_t edgeIdx = 0; edgeIdx < numEdges; ++edgeIdx, ++pEdge) {
                 const vertex_t& vert = *pEdge->vertex;
 
                 // PsyDoom: fix a numerical overflow and view corruption issue that could occur here with tall cliffs of 1024 units or more in height.
@@ -183,14 +190,20 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
             const int32_t* pVertScreenY = pVerticesScreenY;
         #endif
 
-        for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx) {
+        #if PSYDOOM_LIMIT_REMOVING
+            const int32_t numEdges = (int32_t) leaf.edges.size() - 1;   // N.B: last edge is a dummy one for fast wraparound!
+        #else
+            const int32_t numEdges = leaf.numEdges;
+        #endif
+
+        for (int32_t edgeIdx = 0; edgeIdx < numEdges; ++edgeIdx) {
             #if !PSYDOOM_MODS
                 ++pVertScreenY;
             #endif
 
             int32_t nextEdgeIdx = edgeIdx + 1;
 
-            if (edgeIdx == leaf.numEdges - 1) {
+            if (edgeIdx == numEdges - 1) {
                 nextEdgeIdx = 0;
             }
 
