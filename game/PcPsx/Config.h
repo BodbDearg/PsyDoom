@@ -11,6 +11,7 @@ BEGIN_NAMESPACE(Config)
 //------------------------------------------------------------------------------------------------------------------------------------------
 const char*     getCueFilePath() noexcept;
 extern bool     gbUncapFramerate;
+extern int32_t  gMainMemoryHeapSize;
 extern bool     gbUseFastLoading;
 extern bool     gbEnableSinglePlayerLevelTimer;
 extern int32_t  gUsePalTimings;

@@ -8,7 +8,6 @@
 - Investigate engine limits and try to remove/expand where possible
     - No texture cache overflow
     - Expanded VRAM
-    - Greatly enlargened heap
     - 256x256 max size textures, and other texture size variants less than this 
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.

@@ -1,8 +1,9 @@
 #include "z_zone.h"
 
 #include "Doom/psx_main.h"
-#include "i_main.h"
 #include "EngineLimits.h"
+#include "i_main.h"
+#include "PcPsx/Config.h"
 
 #include <cstring>
 #include <memory>
@@ -26,9 +27,15 @@ memzone_t* gpMainMemZone;
 // PsyDoom: this function has been rewritten and now just does a simple fixed size allocation for the entire heap.
 // Some of the old logic is preserved in the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Z_Init() noexcept {    
-    gZoneHeap.reset(new std::byte[Z_HEAP_SIZE]);                    // Allocate the native heap for the application
-    gpMainMemZone = Z_InitZone(gZoneHeap.get(), Z_HEAP_SIZE);       // Setup and save the main memory zone (the only zone)
+void Z_Init() noexcept {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t heapSize = (Config::gMainMemoryHeapSize <= 0) ? Z_HEAP_DEFAULT_SIZE : Config::gMainMemoryHeapSize;
+    #else
+        const int32_t heapSize = Z_HEAP_SIZE;
+    #endif
+
+    gZoneHeap.reset(new std::byte[heapSize]);                   // Allocate the native heap for the application
+    gpMainMemZone = Z_InitZone(gZoneHeap.get(), heapSize);      // Setup and save the main memory zone (the only zone)
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

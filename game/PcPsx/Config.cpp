@@ -383,6 +383,7 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
 
 static std::string      gCueFilePath;
 bool                    gbUncapFramerate;
+int32_t                 gMainMemoryHeapSize;
 bool                    gbUseFastLoading;
 bool                    gbEnableSinglePlayerLevelTimer;
 int32_t                 gUsePalTimings;
@@ -431,6 +432,21 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },
         []() { gbUncapFramerate = true; }
+    },
+    {
+        "MainMemoryHeapSize",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# How much system RAM is available to Doom's 'Zone Memory' heap allocator.\n"
+        "# Many memory allocations in the game are serviced by this system so in effect this setting defines\n"
+        "# one of the main memory limits for the game. If the value of this setting is <= 0 then PsyDoom will\n"
+        "# reserve a default amount of memory - presently 64 MiB. This should be enough for even the most\n"
+        "# demanding user maps. For reference, the original PSX Doom had about 1.3 MiB of heap space\n"
+        "# available, though it also used less RAM in general being a 32-bit program instead of 64-bit.\n"
+        "# WARNING: setting this value too low may result in the game crashing with an out of memory error!\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "-1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gMainMemoryHeapSize = iniEntry.getIntValue(-1); },
+        []() { gMainMemoryHeapSize = -1; }
     },
     {
         "UseFastLoading",
