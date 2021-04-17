@@ -31,7 +31,7 @@ uint16_t LIBSPU__spu_note2pitch(
     const int32_t offsetNoteFrac
 ) noexcept;
 
-#if PSYDOOM_MODS
+#if PSYDOOM_LIMIT_REMOVING
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: computes the reverb base address (divided by 8) for potentially extended PSX sound ram given a reverb base address in
 // terms of the original 512 KB available (and divided by 8). The address returned will be at the end of the extended RAM area, if extended.
@@ -50,7 +50,7 @@ static uint32_t LIBSPU_GetExtReverbBaseAddr(const uint16_t origPsxReverbBaseAddr
     extBaseAddr8 += origPsxReverbBaseAddr8;
     return extBaseAddr8;
 }
-#endif  // #if PSYDOOM_MODS
+#endif  // #if PSYDOOM_LIMIT_REMOVING
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set one or more (or all) properties on a voice or voices using the information in the given struct
