@@ -87,7 +87,7 @@ void G_DoLoadLevel() noexcept {
     // PsyDoom: no startup warning initially and ensure all playing stuff is stopped
     #if PSYDOOM_MODS
         wess_seq_stopall();
-        gLevelStartupWarning = nullptr;
+        std::memset(gLevelStartupWarning, 0, sizeof(gLevelStartupWarning));
     #endif
 
     // Loading sound and music

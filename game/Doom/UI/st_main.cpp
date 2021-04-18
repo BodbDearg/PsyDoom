@@ -158,7 +158,7 @@ void ST_InitEveryLevel() noexcept {
 
     // PsyDoom: if there is a level startup warning then issue it now
     #if PSYDOOM_MODS
-        if (gLevelStartupWarning) {
+        if (gLevelStartupWarning[0]) {
             gStatusBar.message = gLevelStartupWarning;
             gStatusBar.messageTicsLeft = 150;
         }

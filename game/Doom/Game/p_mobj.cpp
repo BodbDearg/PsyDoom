@@ -333,7 +333,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     // This wouldn't be in any official maps but I've seen it in some new levels - not sure why because it's not a valid DoomEd number...
     #if PSYDOOM_MODS
         if (mapthing.type == 0) {
-            gLevelStartupWarning = "W:skipped things with type '0'!";
+            std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:skipped things of type '0'!");
             return;
         }
     #endif

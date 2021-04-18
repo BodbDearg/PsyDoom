@@ -44,7 +44,7 @@ extern mapthing_t       gDeathmatchStarts[MAX_DEATHMATCH_STARTS];
 extern mapthing_t*      gpDeathmatchP;
 
 #if PSYDOOM_MODS
-    extern const char*  gLevelStartupWarning;
+    extern char gLevelStartupWarning[64];
 #endif
 
 extern void (*gUpdateFireSkyFunc)(texture_t& skyTex);

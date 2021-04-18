@@ -71,7 +71,7 @@ mapthing_t*     gpDeathmatchP;                                  // Points past t
 // PsyDoom: if not null then issue this warning after the level has started.
 // Can be used to issue non-fatal warnings about bad map conditions to WAD authors.
 #if PSYDOOM_MODS
-    const char* gLevelStartupWarning;
+    char gLevelStartupWarning[64];
 #endif
 
 // Is the map being loaded a Final Doom format map?
@@ -1029,6 +1029,8 @@ static void P_Init() noexcept {
         side_t* pSide = gpSides;
 
         for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
+            // These are the original checks: they just see if a side has an intentional '-1' texture (no-texture or 'don't care') and
+            // assign the side a default texture to avoid the engine crashing when we try to access it.
             if (pSide->toptexture == -1) {
                 pSide->toptexture = 0;
             }
@@ -1040,6 +1042,25 @@ static void P_Init() noexcept {
             if (pSide->bottomtexture == -1) {
                 pSide->bottomtexture = 0;
             }
+
+            // PsyDoom: handle ALL possible other invalid texture numbers - I've seen these pop up in some new maps.
+            // These missing textures are likely NOT intentional, so issue a warning when we find them.
+            #if PSYDOOM_MODS
+                if ((pSide->toptexture < 0) || (pSide->toptexture >= gNumTexLumps)) {
+                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad u-tex for side %d!", sideIdx);
+                    pSide->toptexture = 0;
+                }
+
+                if ((pSide->midtexture < 0) || (pSide->midtexture >= gNumTexLumps)) {
+                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad m-tex for side %d!", sideIdx);
+                    pSide->midtexture = 0;
+                }
+
+                if ((pSide->bottomtexture < 0) || (pSide->bottomtexture >= gNumTexLumps)) {
+                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad l-tex for side %d!", sideIdx);
+                    pSide->bottomtexture = 0;
+                }
+            #endif
         }
     }
 

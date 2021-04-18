@@ -159,7 +159,7 @@ int32_t wess_dig_lcd_data_read(
 
             if (bInsufficientSpuRam) {
                 #if PSYDOOM_MODS
-                    gLevelStartupWarning = "W: not enough sound RAM!";
+                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:not enough sound RAM!");
                 #endif
 
                 gWess_lcd_load_soundBytesLeft = 0;
