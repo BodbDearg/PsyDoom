@@ -267,10 +267,10 @@ void* W_OpenMapWad(const CdFileId discFile) noexcept {
     const wadinfo_t& wadinfo = *(wadinfo_t*) gpMapWadFileData;
 
     const bool bIsValidWad = (
-        #if PSYDOOM_MODS
-            D_strncasecmp(wadinfo.fileid, "PWAD", sizeof(wadinfo.fileid) != 0) ||
-        #endif
-            D_strncasecmp(wadinfo.fileid, "IWAD", sizeof(wadinfo.fileid) != 0)
+    #if PSYDOOM_MODS
+        (D_strncasecmp(wadinfo.fileid, "PWAD", sizeof(wadinfo.fileid)) == 0) ||
+    #endif
+        (D_strncasecmp(wadinfo.fileid, "IWAD", sizeof(wadinfo.fileid)) == 0)
     );
 
     if (!bIsValidWad) {
