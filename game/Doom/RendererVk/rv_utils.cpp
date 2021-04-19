@@ -108,10 +108,10 @@ void RV_TexPageIdToTexParams(
     uint16_t& texPageY,
     Gpu::BlendMode& blendMode
 ) noexcept {
-    texFmt = (Gpu::TexFmt)((texPageId >> 7) & 0x0003u);
-    texPageX = ((texPageId & 0x000Fu) >> 0) * 64u;
-    texPageY = ((texPageId & 0x0010u) >> 4) * 256u;
-    blendMode = (Gpu::BlendMode)((texPageId >> 5) & 0x0003u);
+    texFmt = (Gpu::TexFmt)(texPageId & 0x3u);
+    blendMode = (Gpu::BlendMode)((texPageId >> 2) & 0x3u);
+    texPageX = ((texPageId >> 4) & 0x7Fu) * 64u;
+    texPageY = ((texPageId >> 11) & 0x1Fu) * 256u;
 
     // Convert the texture page coords from 16-bpp coordinates to format native coords
     switch (texFmt) {
@@ -141,8 +141,8 @@ void RV_TexPageIdToTexParams(
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_GetTexWinXyWh(const texture_t& tex, uint16_t& texWinX, uint16_t& texWinY, uint16_t& texWinW, uint16_t& texWinH) noexcept {
     const uint16_t texPageId = tex.texPageId;
-    const uint16_t texPageX = ((texPageId & 0x000Fu) >> 0) * 64u;
-    const uint16_t texPageY = ((texPageId & 0x0010u) >> 4) * 256u;
+    const uint16_t texPageX = ((texPageId >> 4) & 0x7Fu) * 64u;
+    const uint16_t texPageY = ((texPageId >> 11) & 0x1Fu) * 256u;
 
     // Note: multiply 'texPageX' by 2 because it is in 16bpp coords and we are dealing with an 8bpp format here
     texWinX = texPageX * 2 + tex.texPageCoordX;

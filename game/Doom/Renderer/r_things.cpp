@@ -190,7 +190,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 
         // Apply the desired semi transparency mode and discard the 'MF_BLEND_ON' bit since it is not defining a blend mode.
         // Note: this is encoded/packed into the texture page id.
-        polyPrim.tpage = tex.texPageId | LIBGPU_getTPage(0, blendFlags >> 1, 0, 0);
+        polyPrim.tpage = tex.texPageId | LIBGPU_GetTPageSemiTransBits(blendFlags >> 1);
 
         // Set draw color
         if (thing.frame & FF_FULLBRIGHT) {
@@ -309,7 +309,7 @@ void R_DrawWeapon() noexcept {
         {
             RECT texWin = { 0, 0, 0, 0 };
             bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_FLAGS) != 0);    // Minor logic bug? Should be testing against 'MF_BLEND_ON' instead?
-            const uint16_t texPageId = tex.texPageId | LIBGPU_getTPage(0, (bIsTransparent) ? 1 : 0, 0, 0);
+            const uint16_t texPageId = tex.texPageId | LIBGPU_GetTPageSemiTransBits((bIsTransparent) ? 1 : 0);
 
             // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
             #if PSYDOOM_MODS

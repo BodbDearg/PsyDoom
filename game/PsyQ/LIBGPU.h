@@ -497,36 +497,16 @@ inline constexpr void LIBGPU_setRECT(RECT& rect, const int16_t x, const int16_t 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Computes the 'tpage' (texture page) member of a drawing primitive.
-// Note: the texture page address is limited to a multiple of 64 in the X direction and a multiple of 256 in the Y direction.
-//
-// Inputs:
-//  (1) bitDepth : What format the texture is in.
-//          0 = 4 bit indexed (uses CLUT)
-//          1 = 8 bit indexed (uses CLUT)
-//          2 = 16 bit raw/direct
-//  (2) semiTransRate : Semi transparency rate.
-//      Controls the blend equation, how much of the 'src' (new pixel) and 'dst' (previous pixel) to use.
-//          0 = 0.5 * dst + 0.5 * src   (50% alpha blend)
-//          1 = 1.0 * dst + 1.0 * src   (additive blend)
-//          2 = 1.0 * dst - 1.0 * src   (subtractive blend)
-//          3 = 1.0 * dst + 0.25 * src  (additive 25% blend)
-//  (3) tpageX : texture page address (x, must be multiple of 64)
-//  (4) tpageY : texture page address (y, must be multiple of 256)
+// PsyDoom addition: computes only the semi-transparency (i.e blend mode) bits for a texture page id.
+// Split this out so this part could be precomputed at compile time.
 //------------------------------------------------------------------------------------------------------------------------------------------
-inline constexpr uint16_t LIBGPU_getTPage(
-    const int32_t bitDepth,
-    const int32_t semiTransRate,
-    const int32_t tpageX,
-    const int32_t tpageY
-) noexcept {
-     return (uint16_t)(
-        ((bitDepth & 0x3) << 7)|
-        ((semiTransRate & 0x3) << 5)|
-        ((tpageY & 0x100) >> 4)|
-        ((tpageX & 0x3ff) >> 6)|
-        ((tpageY & 0x200) << 2)
-    );
+inline constexpr uint16_t LIBGPU_GetTPageSemiTransBits(const int32_t semiTransRate) noexcept {
+    // PsyDoom: changing the encoding of texture page ids to allow for VRAM sizes of up to 8192x8192
+    #if PSYDOOM_MODS
+        return (uint16_t)((semiTransRate & 0x3) << 2);
+    #else
+        return (uint16_t)((semiTransRate & 0x3) << 5);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -364,13 +364,13 @@ void R_InitPalette() noexcept {
 RECT getTextureVramRect(const texture_t& tex) noexcept {
     const int16_t texPageCoordX = (int16_t)(uint16_t) tex.texPageCoordX;    // N.B: make sure to zero extend!
     const int16_t texPageCoordY = (int16_t)(uint16_t) tex.texPageCoordY;
-    const int16_t texPageId = (int16_t) tex.texPageId;
+    const uint16_t texPageId = tex.texPageId;
 
     // Note: all x dimension coordinates get divided by 2 because 'RECT' coords are for 16-bit mode.
     // This function assumes all textures are 8 bits per pixel.
     RECT rect;
-    rect.x = texPageCoordX / 2 + (texPageId & 0xF) * 64;
-    rect.y = (texPageId & 0x10) * 16 + texPageCoordY;
+    rect.x = texPageCoordX / 2 + ((texPageId >> 4) & 0x7Fu) * 64u;
+    rect.y = texPageCoordY + ((texPageId >> 11) & 0x1Fu) * 256u;
     rect.w = tex.width / 2;
     rect.h = tex.height;
 

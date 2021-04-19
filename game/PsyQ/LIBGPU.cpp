@@ -67,6 +67,55 @@ static void clearDrawingArea(const uint8_t r, const uint8_t g, const uint8_t b) 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Computes the 'tpage' (texture page) member of a drawing primitive.
+// Note: the texture page address is limited to a multiple of 64 in the X direction and a multiple of 256 in the Y direction.
+//
+// Inputs:
+//  (1) bitDepth : What format the texture is in.
+//          0 = 4 bit indexed (uses CLUT)
+//          1 = 8 bit indexed (uses CLUT)
+//          2 = 16 bit raw/direct
+//  (2) semiTransRate : Semi transparency rate.
+//      Controls the blend equation, how much of the 'src' (new pixel) and 'dst' (previous pixel) to use.
+//          0 = 0.5 * dst + 0.5 * src   (50% alpha blend)
+//          1 = 1.0 * dst + 1.0 * src   (additive blend)
+//          2 = 1.0 * dst - 1.0 * src   (subtractive blend)
+//          3 = 1.0 * dst + 0.25 * src  (additive 25% blend)
+//  (3) tpageX : texture page address (x, must be multiple of 64)
+//  (4) tpageY : texture page address (y, must be multiple of 256)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static uint16_t LIBGPU_getTPage(
+    const int32_t bitDepth,
+    const int32_t semiTransRate,
+    const int32_t tpageX,
+    const int32_t tpageY
+) noexcept {
+    // PsyDoom: changing the encoding of texture page ids to allow for VRAM sizes of up to 8192x8192
+    // Also add logic to wrap the coordinate to within VRAM bounds since its size might vary at runtime.
+    #if PSYDOOM_MODS
+        const uint16_t vramW = PsxVm::gGpu.ramPixelW;
+        const uint16_t vramH = PsxVm::gGpu.ramPixelH;
+        const uint16_t tpageXBits = ((tpageX % vramW) >> 6) & 0x7F;     // tpageX consumes 7 bits
+        const uint16_t tpageYBits = ((tpageY % vramH) >> 8) & 0x1F;     // tpageY consumes 5 bits
+
+        return (uint16_t)(
+            (bitDepth & 0x3) |
+            LIBGPU_GetTPageSemiTransBits(semiTransRate) |
+            (tpageXBits << 4) |
+            (tpageYBits << 11)
+        );
+    #else
+        return (uint16_t)(
+            ((bitDepth & 0x3) << 7) |
+            LIBGPU_GetTPageSemiTransBits(semiTransRate) |
+            ((tpageY & 0x100) >> 4) |
+            ((tpageX & 0x3FF) >> 6) |
+            ((tpageY & 0x200) << 2)
+        );
+    #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Resets the GPU to the default state.
 // This is unimplemented for this cut down version of LIBGPU.
 //
@@ -327,11 +376,19 @@ uint32_t LIBGPU_SYS_get_mode(
     // They may be different values required for special development GPUs or arcade boards, I'm not sure...
     constexpr uint32_t CMD_HEADER = 0xE1000000;
 
-    const uint32_t ditherBits = (bDitheringOn != 0) ? 0x200 : 0x0;
-    const uint32_t texPageIdBits = texPageId & 0x9FF;
-    const uint32_t drawInDisplayAreaBits = (bCanDrawInDisplayArea != 0) ? 0x400 : 0x0;
+    // PsyDoom: the encoding of texture page ids was changed to allow for VRAM sizes up to 8192x8192.
+    // As a result the texture page id needs its entire 16-bits to be encoded.
+    #if PSYDOOM_MODS
+        const uint32_t texPageIdBits = texPageId & 0xFFFF;
+        const uint32_t ditherBits = (bDitheringOn != 0) ? 0x10000 : 0x0;
+        const uint32_t drawInDisplayAreaBits = (bCanDrawInDisplayArea != 0) ? 0x20000 : 0x0;
+    #else
+        const uint32_t texPageIdBits = texPageId & 0x9FF;
+        const uint32_t ditherBits = (bDitheringOn != 0) ? 0x200 : 0x0;
+        const uint32_t drawInDisplayAreaBits = (bCanDrawInDisplayArea != 0) ? 0x400 : 0x0;
+    #endif
 
-    return CMD_HEADER | ditherBits | texPageIdBits | drawInDisplayAreaBits;
+    return CMD_HEADER | drawInDisplayAreaBits | ditherBits | texPageIdBits;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -369,7 +426,7 @@ uint16_t LIBGPU_GetTPage(
     const int32_t tpageX,
     const int32_t tpageY
 ) noexcept {
-    // This is just an alias for 'LIBGPU_getTPage' (macro  'getTPage') in this PSYQ SDK re-implementation
+    // This is just an alias for 'LIBGPU_getTPage' (macro 'getTPage') in this PSYQ SDK re-implementation
     return LIBGPU_getTPage(texFmt, semiTransRate, tpageX, tpageY);
 }
 

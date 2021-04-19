@@ -67,27 +67,27 @@ void setGpuTexPageId(const uint16_t texPageId) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
 
     // Set texture format
-    switch ((texPageId >> 7) & 0x3) {
+    switch (texPageId & 0x3) {
         case 0: gpu.texFmt = Gpu::TexFmt::Bpp4;     break;
         case 1: gpu.texFmt = Gpu::TexFmt::Bpp8;     break;
         case 2: gpu.texFmt = Gpu::TexFmt::Bpp16;    break;
         default: break;
     }
 
-    // Set texture page position and size (256x256 pixels)
-    gpu.texPageX = ((texPageId & 0x0F) >> 0) * 64;
-    gpu.texPageY = ((texPageId & 0x10) >> 4) * 256;
-    gpu.texPageXMask = 0xFF;
-    gpu.texPageYMask = 0xFF;
-
     // Set blend/semi-transparency mode
-    switch ((texPageId >> 5) & 0x3) {
+    switch ((texPageId >> 2) & 0x3) {
         case 0: gpu.blendMode = Gpu::BlendMode::Alpha50;    break;
         case 1: gpu.blendMode = Gpu::BlendMode::Add;        break;
         case 2: gpu.blendMode = Gpu::BlendMode::Subtract;   break;
         case 3: gpu.blendMode = Gpu::BlendMode::Add25;      break;
         default: break;
     }
+
+    // Set texture page position and size (256x256 pixels)
+    gpu.texPageX = ((texPageId >> 4) & 0x7Fu) * 64u;
+    gpu.texPageY = ((texPageId >> 11) & 0x1Fu) * 256u;
+    gpu.texPageXMask = 0xFF;
+    gpu.texPageYMask = 0xFF;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ void setGpuMaskingMode(const PrimT& prim) noexcept {
 // PsyDoom's new PSX GPU implementation, so we ignore those aspects of the command.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void submit(const DR_MODE& drawMode) noexcept {
-    const uint16_t texPageId = drawMode.code[0] & 0x9FF;
+    const uint16_t texPageId = drawMode.code[0] & 0xFFFF;
     setGpuTexPageId(texPageId);
     setGpuTexWin(drawMode.code[1]);
 }
