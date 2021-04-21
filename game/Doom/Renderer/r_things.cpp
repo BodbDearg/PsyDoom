@@ -19,10 +19,10 @@ struct vissprite_t {
     vissprite_t*    next;       // Next in the list of sprites
 };
 
-// This is the maximum number of vissprites that can be drawn per subsector.
-// Any more than this will simply be ignored.
+// This is the maximum number of vissprites that can be drawn per subsector - any more than this will simply be ignored.
+// Should be enough for even the most extreme situations; if we go much higher then sprite sorting times would become super slow!
 #if PSYDOOM_LIMIT_REMOVING
-    static constexpr int32_t MAXVISSPRITES = 4096;
+    static constexpr int32_t MAXVISSPRITES = 8192;
 #else
     static constexpr int32_t MAXVISSPRITES = 64;
 #endif
