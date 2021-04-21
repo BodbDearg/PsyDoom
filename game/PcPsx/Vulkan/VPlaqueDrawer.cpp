@@ -10,6 +10,7 @@
 #include "DescriptorPool.h"
 #include "DescriptorSet.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/i_texcache.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/RendererVk/rv_utils.h"
 #include "Gpu.h"

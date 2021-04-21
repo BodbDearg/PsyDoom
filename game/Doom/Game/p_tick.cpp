@@ -2,6 +2,7 @@
 
 #include "Asserts.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/i_texcache.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
@@ -423,8 +424,14 @@ void P_CheckCheats() noexcept {
         else if (bJustPressedMenuRight) {
             gVramViewerTexPage++;
 
-            if (gVramViewerTexPage > 10) {
-                gVramViewerTexPage = 10;
+            #if PSYDOOM_MODS
+                const int32_t numTexPages = I_GetNumTexCachePages();
+            #else
+                const int32_t numTexPages = 10;
+            #endif
+
+            if (gVramViewerTexPage > numTexPages) {
+                gVramViewerTexPage = numTexPages;
             }
         }
 

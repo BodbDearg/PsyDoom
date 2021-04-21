@@ -3,6 +3,7 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
+#include "Doom/Base/i_texcache.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
@@ -114,24 +115,41 @@ static spclface_e               gSpclFaceType;          // Which special face to
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ST_Init() noexcept {
     // Expect no use of the texture cache at this point
-    if (gTCacheFillPage != 0) {
-        I_Error("ST_Init: initial texture cache foulup\n");
-    }
+    #if PSYDOOM_MODS
+        if (I_GetCurTexCacheFillPage() != 0) {
+            I_Error("ST_Init: initial texture cache foulup\n");
+        }
+    #else
+        if (gTCacheFillPage != 0) {
+            I_Error("ST_Init: initial texture cache foulup\n");
+        }
+    #endif
 
     // Load this into the first texture cache page and expect it to be resident there
     I_LoadAndCacheTexLump(gTex_STATUS, "STATUS", 0);
 
-    if (gTCacheFillPage != 0) {
-        I_Error("ST_Init: final texture cache foulup\n");
-    }
+    #if PSYDOOM_MODS
+        if (I_GetCurTexCacheFillPage() != 0) {
+            I_Error("ST_Init: final texture cache foulup\n");
+        }
+    #else
+        if (gTCacheFillPage != 0) {
+            I_Error("ST_Init: final texture cache foulup\n");
+        }
+    #endif
 
     // Lock down the first texture cache page (keep in VRAM at all times) and move the next fill location to the next page after
-    gLockedTexPagesMask |= 1;
+    #if PSYDOOM_MODS
+        I_LockTexCachePage(0);
+        I_SetTexCacheFillPage(1);
+    #else
+        gLockedTexPagesMask |= 1;
 
-    gTCacheFillPage = 1;
-    gTCacheFillCellX = 0;
-    gTCacheFillCellY = 0;
-    gTCacheFillRowCellH = 0;
+        gTCacheFillPage = 1;
+        gTCacheFillCellX = 0;
+        gTCacheFillCellY = 0;
+        gTCacheFillRowCellH = 0;
+    #endif
 
     // The STATUS texture can now be evicted from memory since it will always be in VRAM
     Z_FreeTags(*gpMainMemZone, PU_CACHE);

@@ -1,6 +1,7 @@
 #include "g_game.h"
 
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/i_texcache.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
@@ -284,7 +285,15 @@ void G_CompleteLevel() noexcept {
 void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept {
     // Resetting memory management related stuff and RNGs
     gbIsLevelBeingRestarted = false;
-    gLockedTexPagesMask &= 1;
+
+    #if PSYDOOM_MODS
+        // Unlock everything except the texture page containing UI assets
+        I_UnlockAllTexCachePages();
+        I_LockTexCachePage(0);
+    #else
+        gLockedTexPagesMask &= 1;
+    #endif
+
     I_PurgeTexCache();
 
     Z_FreeTags(*gpMainMemZone, PU_CACHE | PU_ANIMATION | PU_LEVSPEC | PU_LEVEL);
@@ -414,7 +423,14 @@ void G_RunGame() noexcept {
         }
 
         // Cleanup after the level is done
-        gLockedTexPagesMask &= 1;
+        #if PSYDOOM_MODS
+            // Unlock everything except the texture page containing UI assets
+            I_UnlockAllTexCachePages();
+            I_LockTexCachePage(0);
+        #else
+            gLockedTexPagesMask &= 1;
+        #endif
+
         Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
 
         if (gGameAction == ga_exitdemo)
@@ -568,7 +584,14 @@ gameaction_t G_PlayDemoPtr() noexcept {
     D_memcpy(gCtrlBindings, prevCtrlBindings, sizeof(prevCtrlBindings));
     gPsxMouseSensitivity = oldPsxMouseSensitivity;
 
-    gLockedTexPagesMask &= 1;
+    #if PSYDOOM_MODS
+        // Unlock everything except the texture page containing UI assets
+        I_UnlockAllTexCachePages();
+        I_LockTexCachePage(0);
+    #else
+        gLockedTexPagesMask &= 1;
+    #endif
+
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 
     // PsyDoom: cleanup the demo pointer when we're done and restore the previous game settings.

@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_file.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/i_texcache.h"
 #include "Doom/Base/m_bbox.h"
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Base/m_random.h"
@@ -995,11 +996,16 @@ static void P_Init() noexcept {
     //      be evicted by any wall texture loads below - since we forced the fill location to the start of the 3rd page.
     //
     // So if you want to support more than 16 flats or do a more flexible VRAM arrangement, this is the place to look..
-    gLockedTexPagesMask |= 0b0000'0000'0010;
-    gTCacheFillPage = 2;
-    gTCacheFillCellX = 0;
-    gTCacheFillCellY = 0;
-    gTCacheFillRowCellH = 0;
+    #if PSYDOOM_MODS
+        I_LockTexCachePage(1);
+        I_SetTexCacheFillPage(2);
+    #else
+        gLockedTexPagesMask |= 0b0000'0000'0010;
+        gTCacheFillPage = 2;
+        gTCacheFillCellX = 0;
+        gTCacheFillCellY = 0;
+        gTCacheFillRowCellH = 0;
+    #endif
 
     // Initialize the sky texture, palette and do some more specialized setup if it's the fire sky
     gUpdateFireSkyFunc = nullptr;
@@ -1092,11 +1098,18 @@ static void P_Init() noexcept {
     // Basically only the 3rd, 4th and 5th texture pages can be used for wall textures.
     // This gives a maximum wall texture area of 768x256 - everything else after that is reserved for sprites.
     // Even if the code above fills in more textures, they will eventually be evicted from the cache in favor of sprites.
-    gLockedTexPagesMask |= 0b0000'0001'1100;
-    gTCacheFillPage = 5;
-    gTCacheFillCellX = 0;
-    gTCacheFillCellY = 0;
-    gTCacheFillRowCellH = 0;
+    #if PSYDOOM_MODS
+        I_LockTexCachePage(2);
+        I_LockTexCachePage(3);
+        I_LockTexCachePage(4);
+        I_SetTexCacheFillPage(5);
+    #else
+        gLockedTexPagesMask |= 0b0000'0001'1100;
+        gTCacheFillPage = 5;
+        gTCacheFillCellX = 0;
+        gTCacheFillCellY = 0;
+        gTCacheFillRowCellH = 0;
+    #endif
 
     // Clear out any floor or wall textures we had temporarily in RAM from the above caching.
     //
@@ -1119,7 +1132,14 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     Z_FreeTags(*gpMainMemZone, PU_CACHE | PU_LEVSPEC| PU_LEVEL);
 
     if (!gbIsLevelBeingRestarted) {
-        gLockedTexPagesMask &= 1;
+        #if PSYDOOM_MODS
+            // Unlock everything except the texture page containing UI assets
+            I_UnlockAllTexCachePages();
+            I_LockTexCachePage(0);
+        #else
+            gLockedTexPagesMask &= 1;
+        #endif
+
         Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
     }
 
@@ -1400,12 +1420,15 @@ static void P_CacheSprite(const spritedef_t& sprdef) noexcept {
 static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
     // Round the current fill position in the texture cache up to the nearest multiple of the given texture width.
     // This ensures that for instance 64 pixel textures are on 64 pixel boundaries on the x dimension.
+    // PsyDoom: don't see any reason to do this anymore with the new texture cache management code, leave it out.
+    #if !PSYDOOM_MODS
     {
         const int32_t cellX = gTCacheFillCellX;
         const int32_t cellW = ((width >= 0) ? width : width + 15) / TCACHE_CELL_SIZE;   // This is a signed floor() operation
         const int32_t cellXRnd = (cellX + (cellW - 1)) & (-cellW);                      // Note: '&(-cellW)' chops off the unwanted lower bits from the result
         gTCacheFillCellX = cellXRnd;
     }
+    #endif
 
     // Run through all the sides in the map and cache textures with the specified width
     side_t* pSide = gpSides;

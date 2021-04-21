@@ -7,6 +7,7 @@
 #include "Doom/UI/in_main.h"
 #include "i_drawcmds.h"
 #include "i_main.h"
+#include "i_texcache.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Video.h"
 #include "PcPsx/Vulkan/VDrawing.h"

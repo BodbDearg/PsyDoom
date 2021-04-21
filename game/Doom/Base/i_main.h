@@ -9,15 +9,6 @@ struct DISPENV;
 struct DRAWENV;
 struct texture_t;
 
-// Texture cache related constants
-static constexpr uint32_t NUM_TCACHE_PAGES      = 11;
-static constexpr uint32_t TCACHE_PAGE_SIZE      = 256;  // Square size: 256x256 pixels
-static constexpr uint32_t TCACHE_CELL_SIZE      = 16;
-static constexpr uint32_t TCACHE_CELLS_X        = TCACHE_PAGE_SIZE / TCACHE_CELL_SIZE;
-static constexpr uint32_t TCACHE_CELLS_Y        = TCACHE_PAGE_SIZE / TCACHE_CELL_SIZE;
-static constexpr uint32_t NUM_TCACHE_PAGE_CELLS = TCACHE_CELLS_X * TCACHE_CELLS_Y;
-static constexpr uint32_t ALL_TPAGES_MASK       = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
-
 // Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB.
 // PsyDoom: small adjustment of +8 so that the textures for the 'legals' UI (and other large textures) can load without overflow.
 // PsyDoom: get rid of this constant if limit removing, since buffer size is now unlimited.
@@ -66,11 +57,6 @@ enum : int32_t {
 // Certain bits correspond to certain buttons on the PSX digital controller.
 typedef uint32_t padbuttons_t;
 
-extern uint32_t             gTCacheFillPage;
-extern uint32_t             gTCacheFillCellX;
-extern uint32_t             gTCacheFillCellY;
-extern uint32_t             gTCacheFillRowCellH;
-extern uint32_t             gLockedTexPagesMask;
 extern uint32_t             gTotalVBlanks;
 extern uint32_t             gLastTotalVBlanks;
 extern uint32_t             gElapsedVBlanks;
@@ -137,10 +123,6 @@ void I_IncDrawnFrameCount() noexcept;
 void I_DrawPresent() noexcept;
 void I_VsyncCallback() noexcept;
 void I_Init() noexcept;
-void I_CacheTex(texture_t& tex) noexcept;
-void I_RemoveTexCacheEntry(texture_t& tex) noexcept;
-void I_PurgeTexCache() noexcept;
-void I_VramViewerDraw(const int32_t texPageNum) noexcept;
 void I_NetSetup() noexcept;
 bool I_NetUpdate() noexcept;
 void I_NetHandshake() noexcept;

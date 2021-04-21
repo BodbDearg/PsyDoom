@@ -37,6 +37,8 @@ set(SOURCE_FILES
     "Doom/Base/i_main.h"
     "Doom/Base/i_misc.cpp"
     "Doom/Base/i_misc.h"
+    "Doom/Base/i_texcache.cpp"
+    "Doom/Base/i_texcache.h"
     "Doom/Base/m_bbox.cpp"
     "Doom/Base/m_bbox.h"
     "Doom/Base/m_fixed.cpp"

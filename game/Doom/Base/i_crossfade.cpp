@@ -2,6 +2,7 @@
 
 #include "i_drawcmds.h"
 #include "i_main.h"
+#include "i_texcache.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/Utils.h"

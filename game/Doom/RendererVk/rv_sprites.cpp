@@ -6,7 +6,7 @@
 
 #include "rv_sprites.h"
 
-#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_texcache.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/sprinfo.h"
