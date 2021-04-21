@@ -279,7 +279,7 @@ static texdata_t TC_CacheTexData(const texture_t& tex) {
                 }
             #endif
 
-            decode(pTexData, gTmpBuffer);
+            decode(pTexBytes, gTmpBuffer);
             pTexBytes = gTmpBuffer;
         #endif
 
@@ -345,11 +345,12 @@ void I_InitTexCache() noexcept {
     // The pages are really 256x256 pixels at 8 bpp but in terms of 16 bpp coords that is 128x256.
     // Note: we skip the region 0,0 - 511,255 (4 pages) since it is reserved for the PSX framebuffer.
     gTCachePages.clear();
-    gTCachePages.reserve(1020);
 
     const Gpu::Core& gpu = PsxVm::gGpu;
     const uint16_t vramW = gpu.ramPixelW;
     const uint16_t vramH = gpu.ramPixelH;
+
+    gTCachePages.reserve((vramW / 128) * (vramH / 256));
 
     for (uint16_t vramY = 0; vramY < vramH; vramY += 256) {
         for (uint16_t vramX = 0; vramX < vramW; vramX += 128) {

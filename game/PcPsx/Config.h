@@ -48,6 +48,7 @@ extern int32_t  gBottomOverscanPixels;
 extern bool     gbFloorRenderGapFix;
 extern bool     gbSkyLeakFix;
 extern bool     gbUseVulkan32BitShading;
+extern int32_t  gVramSizeInMegabytes;
 const char*     getVulkanPreferredDevicesRegex() noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------

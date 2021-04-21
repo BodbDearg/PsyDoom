@@ -76,6 +76,7 @@ int32_t         gBottomOverscanPixels;
 bool            gbFloorRenderGapFix;
 bool            gbSkyLeakFix;
 bool            gbUseVulkan32BitShading;
+int32_t         gVramSizeInMegabytes;
 std::string     gVulkanPreferredDevicesRegex;
 
 const char* getVulkanPreferredDevicesRegex() noexcept { return gVulkanPreferredDevicesRegex.c_str(); }
@@ -308,6 +309,21 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbSkyLeakFix = iniEntry.getBoolValue(true); },
         []() { gbSkyLeakFix = true; }
+    },
+    {
+        "VramSizeInMegabytes",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Specifies how many megabytes of video RAM are available to hold sprites and textures in the game.\n"
+        "# The PlayStation originally had 1 MiB of VRAM, expanding this allows for much more complex user\n"
+        "# maps to be supported and helps eliminate the 'Texture Cache Overflow' warning on busy maps with\n"
+        "# huge amounts of enemies onscreen.\n"
+        "#\n"
+        "# Acceptable values are 1, 2, 4, 8, 16, 32, 64 and 128. Values in-between will be rounded up.\n"
+        "# If <= 0 is specified then the default value will be used, which is presently 128 MiB.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "-1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gVramSizeInMegabytes = iniEntry.getIntValue(); },
+        []() { gVramSizeInMegabytes = -1; }
     },
     {
         "VulkanPreferredDevicesRegex",

@@ -73,11 +73,47 @@ static void SdlAudioCallback([[maybe_unused]] void* userData, Uint8* pOutput, in
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Determine the VRAM size to use from user config
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void getVramSize(uint16_t& vramW, uint16_t& vramH) noexcept {
+    const int32_t vramSize = Config::gVramSizeInMegabytes;
+
+    #if PSYDOOM_LIMIT_REMOVING
+        if (vramSize > 64) {
+            vramW = 8192; vramH = 8192;     // 128 MiB
+        } else if (vramSize > 32) {
+            vramW = 4096; vramH = 8192;     // 64 MiB
+        } else if (vramSize > 16) {
+            vramW = 4096; vramH = 4096;     // 32 MiB
+        } else if (vramSize > 8) {
+            vramW = 2048; vramH = 4096;     // 16 MiB
+        } else if (vramSize > 4) {
+            vramW = 2048; vramH = 2048;     // 8 MiB
+        } else if (vramSize > 2) {
+            vramW = 1024; vramH = 2048;     // 4 MiB
+        } else if (vramSize == 2) {
+            vramW = 1024; vramH = 1024;     // 2 MiB
+        } else if (vramSize == 1) {
+            vramW = 1024; vramH = 512;      // 1 MiB
+        } else {
+            vramW = 8192; vramH = 8192;     // Default: 128 MiB
+        }
+    #else
+         vramW = 1024; vramH = 512;         // 1 MiB
+    #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize emulated PlayStation system components and use the given .cue file for the game disc
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool init(const char* const doomCdCuePath) noexcept {
     // Init the GPU core
-    Gpu::initCore(gGpu, Gpu::PS1_VRAM_W, Gpu::PS1_VRAM_H);
+    {
+        uint16_t vramW = {};
+        uint16_t vramH = {};
+        getVramSize(vramW, vramH);
+        Gpu::initCore(gGpu, vramW, vramH);
+    }
 
     // Init the SPU core and use extended hardware voice counts (64 max) and an expanded RAM size (defaulted to 16 MiB) if the build is limit removing.
     // Note: don't allow  SPU RAM to be smaller than the original 512 KiB for compatibility reasons.
