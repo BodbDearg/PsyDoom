@@ -12,7 +12,6 @@
     - 256x256 max size textures, and other texture size variants less than this.
     - MAXCEILINGS
     - MAXBUTTONS
-    - MAX_CROSS_LINES??
     - MAXPLATS
     - WMD_MEM_SIZE
         - Add checks to see if size exceeded

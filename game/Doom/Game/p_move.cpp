@@ -15,7 +15,13 @@
 
 #include <algorithm>
 
-static constexpr int32_t MAX_CROSS_LINES = 8;
+// PsyDoom: raise the maximum number of line specials that can be triggered per tick to support more complex levels
+#if PSYDOOM_MODS
+    static constexpr int32_t ORIG_MAX_CROSS_LINES = 8;
+    static constexpr int32_t MAX_CROSS_LINES = 64;
+#else
+    static constexpr int32_t MAX_CROSS_LINES = 8;
+#endif
 
 bool        gbTryMove2;             // Whether the move attempt by 'P_TryMove2' was successful or not ('true' if move allowed)
 mobj_t*     gpMoveThing;            // The thing collided with (for code doing interactions with the thing)
@@ -445,7 +451,13 @@ static bool PIT_CheckLine(line_t& line) noexcept {
     // PSX new addition: if the line has a special then save it for later testing to determine if the thing has crossed it and thus should trigger it.
     // This was added so that monsters could use teleporters again, since that ability was lost in the Jaguar version of the game.
     if (line.special) {
-        if (gNumCrossCheckLines < MAX_CROSS_LINES) {
+        #if PSYDOOM_MODS
+            const int32_t maxCrossLines = (Game::gSettings.bUseNewMaxCrossLinesLimit) ? MAX_CROSS_LINES : ORIG_MAX_CROSS_LINES;
+        #else
+            const int32_t maxCrossLines = MAX_CROSS_LINES;
+        #endif
+
+        if (gNumCrossCheckLines < maxCrossLines) {
             gpCrossCheckLines[gNumCrossCheckLines] = &line;
             gNumCrossCheckLines++;
         }
