@@ -2,6 +2,8 @@
 
 #include "Doom/doomdef.h"
 
+#include <vector>
+
 struct line_t;
 
 // Moving platform type
@@ -37,10 +39,13 @@ struct plat_t {
     plattype_e      type;           // What type of behavior the moving platform has
 };
 
-// Maximum number of platforms there can be active at once
-static constexpr int32_t MAXPLATS = 30;
-
-extern plat_t* gpActivePlats[MAXPLATS];
+// PsyDoom: removing limits on the number of moving floors
+#if PSYDOOM_LIMIT_REMOVING
+    extern std::vector<plat_t*> gpActivePlats;
+#else
+    static constexpr int32_t MAXPLATS = 30;     // Maximum number of platforms there can be active at once
+    extern plat_t* gpActivePlats[MAXPLATS];
+#endif
 
 bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount) noexcept;
 void P_ActivateInStasis(const int32_t tag) noexcept;

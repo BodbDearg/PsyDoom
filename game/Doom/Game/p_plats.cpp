@@ -19,7 +19,11 @@ static constexpr int32_t PLATWAIT   = 3;                // Number of seconds for
 static constexpr int32_t PLATSPEED  = 2 * FRACUNIT;     // Standard platform speed (some platforms are slower or faster)
 
 // Contains all of the active platforms in the level (some slots may be empty)
-plat_t* gpActivePlats[MAXPLATS];
+#if PSYDOOM_LIMIT_REMOVING
+    std::vector<plat_t*> gpActivePlats;
+#else
+    plat_t* gpActivePlats[MAXPLATS];
+#endif
 
 // Not required externally: making private to this module
 static void P_AddActivePlat(plat_t& plat) noexcept;
@@ -211,7 +215,13 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 // Reactivates moving platforms that were paused which match the given sector tag
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_ActivateInStasis(const int32_t tag) noexcept {
-    for (int32_t i = 0; i < MAXPLATS; ++i) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numPlats = (int32_t) gpActivePlats.size();
+    #else
+        const int32_t numPlats = MAXPLATS;
+    #endif
+
+    for (int32_t i = 0; i < numPlats; ++i) {
         plat_t* pPlat = gpActivePlats[i];
 
         if (pPlat && (pPlat->tag == tag) && (pPlat->status == in_stasis)) {
@@ -225,7 +235,13 @@ void P_ActivateInStasis(const int32_t tag) noexcept {
 // Stops moving platforms that are moving that have a sector tag matching the given line's tag
 //------------------------------------------------------------------------------------------------------------------------------------------
 void EV_StopPlat(line_t& line) noexcept {
-    for (int32_t i = 0; i < MAXPLATS; ++i) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numPlats = (int32_t) gpActivePlats.size();
+    #else
+        const int32_t numPlats = MAXPLATS;
+    #endif
+
+    for (int32_t i = 0; i < numPlats; ++i) {
         plat_t* const pPlat = gpActivePlats[i];
 
         if (pPlat && (pPlat->status != in_stasis) && (pPlat->tag == line.tag)) {
@@ -241,25 +257,50 @@ void EV_StopPlat(line_t& line) noexcept {
 // Add the given moving platform to a free slot in the 'active platforms' list
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_AddActivePlat(plat_t& plat) noexcept {
-    for (int32_t i = 0; i < MAXPLATS; ++i) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numPlats = (int32_t) gpActivePlats.size();
+    #else
+        const int32_t numPlats = MAXPLATS;
+    #endif
+
+    for (int32_t i = 0; i < numPlats; ++i) {
         if (!gpActivePlats[i]) {
             gpActivePlats[i] = &plat;
             return;
         }
     }
 
-    I_Error("P_AddActivePlat: no more plats!");
+    #if PSYDOOM_LIMIT_REMOVING
+        // No room in the array: make a new slot
+        gpActivePlats.push_back(&plat);
+    #else
+        I_Error("P_AddActivePlat: no more plats!");
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Remove the given moving platform from the active platforms list; also dissociates it with it's sector and deallocs it's thinker
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_RemoveActivePlat(plat_t& plat) noexcept {
-    for (int32_t i = 0; i < MAXPLATS; ++i) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numPlats = (int32_t) gpActivePlats.size();
+    #else
+        const int32_t numPlats = MAXPLATS;
+    #endif
+
+    for (int32_t i = 0; i < numPlats; ++i) {
         if (gpActivePlats[i] == &plat) {
             plat.sector->specialdata = nullptr;
             P_RemoveThinker(plat.thinker);
             gpActivePlats[i] = nullptr;
+
+            // PsyDoom: compact the array if it's the last element
+            #if PSYDOOM_LIMIT_REMOVING
+                if (i + 1 >= numPlats) {
+                    gpActivePlats.pop_back();
+                }
+            #endif
+
             return;
         }
     }
