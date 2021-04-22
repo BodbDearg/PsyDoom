@@ -18,7 +18,7 @@
 // PsyDoom: raise the maximum number of line specials that can be triggered per tick to support more complex levels
 #if PSYDOOM_MODS
     static constexpr int32_t ORIG_MAX_CROSS_LINES = 8;
-    static constexpr int32_t MAX_CROSS_LINES = 64;
+    static constexpr int32_t MAX_CROSS_LINES = 128;
 #else
     static constexpr int32_t MAX_CROSS_LINES = 8;
 #endif
