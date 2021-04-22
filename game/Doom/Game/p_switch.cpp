@@ -159,7 +159,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
 
         // Note: for all these cases the button should have a 'NULL' sound origin set because it's struct has been zero intialized.
         // Therefore the initial switch sound will not play positionally, and will always be at full volume.
-        // I wonder is this odd for deathmatch though? 3DO DOOM appears to use sector that the switch is in for the sound origin...
+        // I wonder is this odd for deathmatch though? 3DO DOOM appears to use the sector that the switch is in for the sound origin...
         if (switchTex == side.toptexture) {
             S_StartSound(gButtonList[0].soundorg, soundId);
             side.toptexture = gSwitchList[switchListIdx ^ 1];

@@ -35,7 +35,7 @@ struct GameSettings {
     uint8_t     bPistolStart;                   // Is the '-pistolstart' command line switch specified?
     uint8_t     bTurboMode;                     // Is the '-turbo' command line cheat specified?
     uint8_t     bUseLostSoulSpawnFix;           // If true then apply a fix to prevent Lost Souls from spawning outside of the level
-    uint8_t     bUseNewMaxCrossLinesLimit;      // If true then use the PsyDoom extended limit on 'MAX_CROSS_LINES'
+    uint8_t     bRemoveMaxCrossLinesLimit;      // If true then the player can cross an unlimited number of line specials per tick rather than '8'
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength
 };

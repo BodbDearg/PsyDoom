@@ -137,9 +137,9 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     // Note: not worth making this one a config option, just bake the choice into the binary based on whether limit removing is enabled or not.
     // In a multiplayer game or for demos however this setting will still be synchronized.
     #if PSYDOOM_LIMIT_REMOVING
-        settings.bUseNewMaxCrossLinesLimit = true;
+        settings.bRemoveMaxCrossLinesLimit = true;
     #else
-        settings.bUseNewMaxCrossLinesLimit = false;
+        settings.bRemoveMaxCrossLinesLimit = false;
     #endif
 
     if (Config::gLostSoulSpawnLimit == 0) {
@@ -171,7 +171,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bPistolStart                   = false;
     settings.bTurboMode                     = false;
     settings.bUseLostSoulSpawnFix           = false;
-    settings.bUseNewMaxCrossLinesLimit      = false;
+    settings.bRemoveMaxCrossLinesLimit      = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
 }

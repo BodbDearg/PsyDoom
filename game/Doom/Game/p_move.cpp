@@ -15,29 +15,34 @@
 
 #include <algorithm>
 
-// PsyDoom: raise the maximum number of line specials that can be triggered per tick to support more complex levels
+// PsyDoom: allow the limit on the number of line specials crossed per tick to be removed at runtime
 #if PSYDOOM_MODS
     static constexpr int32_t ORIG_MAX_CROSS_LINES = 8;
-    static constexpr int32_t MAX_CROSS_LINES = 128;
 #else
     static constexpr int32_t MAX_CROSS_LINES = 8;
 #endif
 
-bool        gbTryMove2;             // Whether the move attempt by 'P_TryMove2' was successful or not ('true' if move allowed)
-mobj_t*     gpMoveThing;            // The thing collided with (for code doing interactions with the thing)
-line_t*     gpBlockLine;            // The line collided with
-fixed_t     gTmFloorZ;              // The Z value for the highest floor the collider is in contact with
-fixed_t     gTmCeilingZ;            // The Z value for the lowest ceiling the collider is in contact with
-fixed_t     gTmDropoffZ;            // The Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
-int32_t     gNumCrossCheckLines;    // How many lines to test for whether the thing crossed them or not: for determining when to trigger line specials
-bool        gbFloatOk;              // P_TryMove2: if 'true' the up/down movement by floating monsters is allowed (there is vertical space to move)
+bool        gbTryMove2;     // Whether the move attempt by 'P_TryMove2' was successful or not ('true' if move allowed)
+mobj_t*     gpMoveThing;    // The thing collided with (for code doing interactions with the thing)
+line_t*     gpBlockLine;    // The line collided with
+fixed_t     gTmFloorZ;      // The Z value for the highest floor the collider is in contact with
+fixed_t     gTmCeilingZ;    // The Z value for the lowest ceiling the collider is in contact with
+fixed_t     gTmDropoffZ;    // The Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
+bool        gbFloatOk;      // P_TryMove2: if 'true' the up/down movement by floating monsters is allowed (there is vertical space to move)
 
-static subsector_t*     gpNewSubsec;                            // Destination subsector for the current move: set by 'PM_CheckPosition'
-static uint32_t         gTmFlags;                               // Flags for the thing being moved
-static fixed_t          gTestTmBBox[4];                         // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
-static line_t*          gpCrossCheckLines[MAX_CROSS_LINES];     // Lines to test for whether the thing crossed them or not: for determining when to trigger line specials
-static fixed_t          gOldX;                                  // P_TryMove2: position of the thing before it was moved: x
-static fixed_t          gOldY;                                  // P_TryMove2: position of the thing before it was moved: y
+// PsyDoom: allow the limit on the number of line specials crossed per tick to be removed at runtime
+#if PSYDOOM_MODS
+    std::vector<line_t*> gpCrossCheckLines;
+#else
+    int32_t         gNumCrossCheckLines;                    // How many lines to test for whether the thing crossed them or not: for determining when to trigger line specials
+    static line_t*  gpCrossCheckLines[MAX_CROSS_LINES];     // Lines to test for whether the thing crossed them or not: for determining when to trigger line specials
+#endif
+
+static subsector_t*     gpNewSubsec;        // Destination subsector for the current move: set by 'PM_CheckPosition'
+static uint32_t         gTmFlags;           // Flags for the thing being moved
+static fixed_t          gTestTmBBox[4];     // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
+static fixed_t          gOldX;              // P_TryMove2: position of the thing before it was moved: x
+static fixed_t          gOldY;              // P_TryMove2: position of the thing before it was moved: y
 
 // Not required externally: making private to this module
 static void PM_UnsetThingPosition(mobj_t& thing) noexcept;
@@ -129,9 +134,20 @@ void P_TryMove2() noexcept {
     // Do line special triggering for monsters if they are not noclipping or teleporting
     if ((!tryMoveThing.player) && ((tryMoveThing.flags & (MF_NOCLIP | MF_TELEPORT)) == 0)) {
         // Process however many lines the thing crossed
-        while (gNumCrossCheckLines > 0) {
-            gNumCrossCheckLines--;
-            line_t& line = *gpCrossCheckLines[gNumCrossCheckLines];
+        while (true) {
+            #if PSYDOOM_MODS
+                if (gpCrossCheckLines.empty())
+                    break;
+
+                line_t& line = *gpCrossCheckLines.back();
+                gpCrossCheckLines.pop_back();
+            #else
+                if (gNumCrossCheckLines <= 0)
+                    break;
+
+                gNumCrossCheckLines--;
+                line_t& line = *gpCrossCheckLines[gNumCrossCheckLines];
+            #endif
 
             // If the thing crossed this line then try to trigger its special
             const int32_t newLineSide = P_PointOnLineSide(tryMoveThing.x, tryMoveThing.y, line);
@@ -299,7 +315,13 @@ static void PM_CheckPosition() noexcept {
     gTmFloorZ = newSector.floorheight;          // Initial value: lowered as collision testing touches lines
     gTmCeilingZ = newSector.ceilingheight;      // Initial value: raised as collision testing touches lines
     gTmDropoffZ = newSector.floorheight;        // Initial value: Lowered as collision testing touches lines
-    gNumCrossCheckLines = 0;
+
+    #if PSYDOOM_MODS
+        gpCrossCheckLines.clear();
+        gpCrossCheckLines.reserve(32);
+    #else
+        gNumCrossCheckLines = 0;
+    #endif
 
     // Prep for new collision tests: increment this marker
     gValidCount++;
@@ -452,14 +474,18 @@ static bool PIT_CheckLine(line_t& line) noexcept {
     // This was added so that monsters could use teleporters again, since that ability was lost in the Jaguar version of the game.
     if (line.special) {
         #if PSYDOOM_MODS
-            const int32_t maxCrossLines = (Game::gSettings.bUseNewMaxCrossLinesLimit) ? MAX_CROSS_LINES : ORIG_MAX_CROSS_LINES;
+            const bool bCanAddLine = (Game::gSettings.bRemoveMaxCrossLinesLimit) ? true : (gpCrossCheckLines.size() < ORIG_MAX_CROSS_LINES);
         #else
-            const int32_t maxCrossLines = MAX_CROSS_LINES;
+            const bool bCanAddLine = (gNumCrossCheckLines < MAX_CROSS_LINES);
         #endif
 
-        if (gNumCrossCheckLines < maxCrossLines) {
-            gpCrossCheckLines[gNumCrossCheckLines] = &line;
-            gNumCrossCheckLines++;
+        if (bCanAddLine) {
+            #if PSYDOOM_MODS
+                gpCrossCheckLines.push_back(&line);
+            #else
+                gpCrossCheckLines[gNumCrossCheckLines] = &line;
+                gNumCrossCheckLines++;
+            #endif
         }
     }
 
