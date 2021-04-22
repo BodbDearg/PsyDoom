@@ -626,7 +626,7 @@ void RV_DrawSubsecSpriteFrags(const int32_t drawSubsecIdx) noexcept {
     }
 
     // Sort all of the sprite fragments back to front
-    std::sort(
+    std::stable_sort(
         gRvSortedFrags.begin(),
         gRvSortedFrags.end(),
         [](const SpriteFrag* const pFrag1, const SpriteFrag* const pFrag2) noexcept {
