@@ -27,6 +27,8 @@
 #include "p_tick.h"
 #include "PcPsx/Game.h"
 
+#include <vector>
+
 // Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
 typedef void (*delayed_actionfn_t)() noexcept;
 
@@ -74,18 +76,25 @@ static const animdef_t gAnimDefs[MAXANIMS_FDOOM] = {
     { 1, "WFALL1",   "WFALL4",   3 },
 };
 
-static constexpr int32_t MAXLINEANIMS   = 32;           // Maximum number of line animations allowed
-static constexpr int32_t SCROLLMASK     = 0xFF7F0000;   // Mask applied to offsets for scrolling walls (wrap every 128 units)
+static constexpr int32_t SCROLLMASK = 0xFF7F0000;   // Mask applied to offsets for scrolling walls (wrap every 128 units)
 
 card_t      gMapBlueKeyType;        // What type of blue key the map uses (if map has a blue key)
 card_t      gMapRedKeyType;         // What type of red key the map uses (if map has a red key)
 card_t      gMapYellowKeyType;      // What type of yellow key the map uses (if map has a yellow key)
 int32_t     gMapBossSpecialFlags;   // PSX addition: What types of boss specials (triggers) are active on the current map
 
-static anim_t       gAnims[MAXANIMS_FDOOM];             // The list of animated textures
-static anim_t*      gpLastAnim;                         // Points to the end of the list of animated textures
-static line_t*      gpLineSpecialList[MAXLINEANIMS];    // A list of scrolling lines for the level
-static int32_t      gNumLinespecials;                   // The number of scrolling lines in the level
+static anim_t   gAnims[MAXANIMS_FDOOM];     // The list of animated textures
+static anim_t*  gpLastAnim;                 // Points to the end of the list of animated textures
+
+// PsyDoom: can now have as many scrolling lines as we want
+#if PSYDOOM_LIMIT_REMOVING
+    static std::vector<line_t*> gpLineSpecialList;      // A list of scrolling lines for the level
+#else
+    static constexpr int32_t MAXLINEANIMS = 32;         // Maximum number of line animations allowed
+
+    static line_t*  gpLineSpecialList[MAXLINEANIMS];    // A list of scrolling lines for the level
+    static int32_t  gNumLinespecials;                   // The number of scrolling lines in the level
+#endif
 
 static void T_DelayedAction(delayaction_t& action) noexcept;
 
@@ -998,7 +1007,13 @@ void P_UpdateSpecials() noexcept {
     }
 
     // Animate line specials (scrolling walls)
-    for (int32_t specialIdx = 0; specialIdx < gNumLinespecials; ++specialIdx) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numLineSpecials = (int32_t) gpLineSpecialList.size();
+    #else
+        const int32_t numLineSpecials = gNumLinespecials;
+    #endif
+
+    for (int32_t specialIdx = 0; specialIdx < numLineSpecials; ++specialIdx) {
         line_t& line = *gpLineSpecialList[specialIdx];
         side_t& side = gpSides[line.sidenum[0]];
 
@@ -1225,7 +1240,12 @@ void P_SpawnSpecials() noexcept {
     }
 
     // Save scrolling line specials to their own list (for quick updating)
-    gNumLinespecials = 0;
+    #if PSYDOOM_LIMIT_REMOVING
+        gpLineSpecialList.clear();
+        gpLineSpecialList.reserve(256);
+    #else
+        gNumLinespecials = 0;
+    #endif
 
     for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
         line_t& line = gpLines[lineIdx];
@@ -1236,10 +1256,14 @@ void P_SpawnSpecials() noexcept {
             case 202:   // Effect: scroll up
             case 203:   // Effect: scroll down
             {
-                if (gNumLinespecials < MAXLINEANIMS) {
-                    gpLineSpecialList[gNumLinespecials] = &line;
-                    gNumLinespecials++;
-                }
+                #if PSYDOOM_LIMIT_REMOVING
+                    gpLineSpecialList.push_back(&line);
+                #else
+                    if (gNumLinespecials < MAXLINEANIMS) {
+                        gpLineSpecialList[gNumLinespecials] = &line;
+                        gNumLinespecials++;
+                    }
+                #endif
             }   break;
 
             default:

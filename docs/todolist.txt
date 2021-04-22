@@ -1,4 +1,6 @@
 0.8 - Limit extending and modding?
+- Fix case sensitivity for file overrides mechanism.
+- Fix bullet puffs not appearing in outdoor areas bug.
 - Add map patching mechanism for a few select map bugs
     - Fix house of pain door bug
     - Fix Ballystix altar not being see through with new vk renderer (need to mark as 'void' ceiling)
@@ -9,10 +11,11 @@
     - More than 16 flats, more than 3 texture pages for walls.
     - 256x256 max size textures, and other texture size variants less than this.
     - MAXCEILINGS
+    - MAXBUTTONS
     - MAX_CROSS_LINES??
     - MAXPLATS
-    - MAXLINEANIMS
     - WMD_MEM_SIZE
+        - Add checks to see if size exceeded
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
 
