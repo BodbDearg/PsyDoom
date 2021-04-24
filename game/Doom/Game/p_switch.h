@@ -2,6 +2,8 @@
 
 #include "Doom/doomdef.h"
 
+#include <vector>
+
 struct line_t;
 
 // Identifies which part of a line/wall has a button texture on it (top / middle / bottom)
@@ -21,11 +23,15 @@ struct button_t {
     mobj_t*     soundorg;       // When playing a sound to switch back, play it at this location
 };
 
-// How many buttons can be active at a time (to be switched back to their original state).
-// This limit was inherited from PC DOOM where the thinking was that 4x buttons for 4x players was more than enough.
-static constexpr int32_t MAXBUTTONS = 16;
+#if PSYDOOM_LIMIT_REMOVING
+    extern std::vector<button_t> gButtonList;
+#else
+    // How many buttons can be active at a time (to be switched back to their original state).
+    // This limit was inherited from PC DOOM where the thinking was that 4x buttons for 4x players was more than enough.
+    static constexpr int32_t MAXBUTTONS = 16;
 
-extern button_t gButtonList[MAXBUTTONS];
+    extern button_t gButtonList[MAXBUTTONS];
+#endif
 
 void P_InitSwitchList() noexcept;
 void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept;

@@ -1045,7 +1045,13 @@ void P_UpdateSpecials() noexcept {
     }
 
     // Update active switches/buttons and switch their wall textures back if it is time
-    for (int32_t buttonIdx = 0; buttonIdx < MAXBUTTONS; ++buttonIdx) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numButtons = (int32_t) gButtonList.size();
+    #else
+        const int32_t numButtons = MAXBUTTONS;
+    #endif
+
+    for (int32_t buttonIdx = 0; buttonIdx < numButtons; ++buttonIdx) {
         // Ignore this button if it is not active
         button_t& button = gButtonList[buttonIdx];
 
@@ -1071,6 +1077,13 @@ void P_UpdateSpecials() noexcept {
         // Play a sound for the button switching back and reset the state of this active button slot (now free for use again)
         S_StartSound(button.soundorg, sfx_swtchn);
         D_memset(&button, std::byte(0), sizeof(button_t));
+
+        // PsyDoom limit removing: if it's the last button in the list then compact the list
+        #if PSYDOOM_LIMIT_REMOVING
+            if (buttonIdx + 1 >= numButtons) {
+                gButtonList.pop_back();
+            }
+        #endif
     }
 
     // New for PSX: update the fire sky if the level has a fire sky and the sky is visible
@@ -1313,10 +1326,11 @@ void P_SpawnSpecials() noexcept {
         gpActivePlats.clear();
         gpActiveCeilings.reserve(128);
         gpActivePlats.reserve(128);
+        gButtonList.clear();
+        gButtonList.reserve(16);
     #else
         D_memset(gpActiveCeilings, std::byte(0), MAXCEILINGS * sizeof(gpActiveCeilings[0]));
         D_memset(gpActivePlats, std::byte(0), MAXPLATS * sizeof(gpActivePlats[0]));
+        D_memset(gButtonList, std::byte(0), MAXBUTTONS * sizeof(gButtonList[0]));
     #endif
-
-    D_memset(gButtonList, std::byte(0), MAXBUTTONS * sizeof(gButtonList[0]));
 }

@@ -5,6 +5,7 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
 #include "Macros.h"
 #include "p_ceiling.h"
@@ -77,8 +78,13 @@ static const switchlist_t gAlphSwitchList[] = {
 static constexpr int32_t NUM_SWITCHES   = C_ARRAY_SIZE(gAlphSwitchList);    // Number of switch types in the game
 static constexpr int32_t BUTTONTIME     = 1 * TICRATE;                      // How long it takes for a switch to go back to it's original state (1 second)
 
-// The list of currently active buttons/switches
-button_t gButtonList[MAXBUTTONS];
+// The list of currently active buttons/switches.
+// PsyDoom limit removing: std::vector all the things! :D
+#if PSYDOOM_LIMIT_REMOVING
+    std::vector<button_t> gButtonList;
+#else
+    button_t gButtonList[MAXBUTTONS];
+#endif
 
 // The 2 lumps for each switch texture in the game
 static int32_t gSwitchList[NUM_SWITCHES * 2];
@@ -119,8 +125,14 @@ void P_InitSwitchList() noexcept {
 // Used to implement buttons that switch back after a while.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_StartButton(line_t& line, const bwhere_e where, const int32_t texture, const int32_t countdownTime) noexcept {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numButtons = (int32_t) gButtonList.size();
+    #else
+        const int32_t numButtons = MAXBUTTONS;
+    #endif
+
     // Try to find a slot to save the state of the button in
-    for (int32_t btnIdx = 0; btnIdx < MAXBUTTONS; ++btnIdx) {
+    for (int32_t btnIdx = 0; btnIdx < numButtons; ++btnIdx) {
         button_t& button = gButtonList[btnIdx];
 
         if (button.btimer == 0) {
@@ -133,6 +145,16 @@ static void P_StartButton(line_t& line, const bwhere_e where, const int32_t text
             return;
         }
     }
+
+    // PsyDoom limit removing: if there isn't enough room in the array make a new slot
+    #if PSYDOOM_LIMIT_REMOVING
+        button_t& button = gButtonList.emplace_back();
+        button.line = &line;
+        button.where = where;
+        button.btexture = texture;
+        button.btimer = countdownTime;
+        button.soundorg = (mobj_t*) &line.frontsector->soundorg;
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -160,8 +182,24 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
         // Note: for all these cases the button should have a 'NULL' sound origin set because it's struct has been zero intialized.
         // Therefore the initial switch sound will not play positionally, and will always be at full volume.
         // I wonder is this odd for deathmatch though? 3DO DOOM appears to use the sector that the switch is in for the sound origin...
+        //
+        // PsyDoom: changing this behavior to play sounds at the center position of the switch.
+        // Should mean the volume will be lower for listeners further away.
+        // This also covers us for limit removing builds since 'gButtonList[0]' might not exist in the std::vector (we compact it constantly).
+        #if PSYDOOM_MODS
+            degenmobj_t soundOrigin = {};
+            soundOrigin.x = (line.vertex1->x + line.vertex2->x) / 2;    // Note: don't care about 'z' since it doesn't matter for sound
+            soundOrigin.y = (line.vertex1->y + line.vertex2->y) / 2;
+            soundOrigin.subsector = R_PointInSubsector(soundOrigin.x, soundOrigin.y);
+        #endif
+
         if (switchTex == side.toptexture) {
-            S_StartSound(gButtonList[0].soundorg, soundId);
+            #if PSYDOOM_MODS
+                S_StartSound((mobj_t*) &soundOrigin, soundId);
+            #else
+                S_StartSound(gButtonList[0].soundorg, soundId);
+            #endif
+
             side.toptexture = gSwitchList[switchListIdx ^ 1];
 
             if (bUseAgain) {
@@ -172,7 +210,12 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
         }
 
         if (switchTex == side.midtexture) {
-            S_StartSound(gButtonList[0].soundorg, soundId);
+            #if PSYDOOM_MODS
+                S_StartSound((mobj_t*) &soundOrigin, soundId);
+            #else
+                S_StartSound(gButtonList[0].soundorg, soundId);
+            #endif
+
             side.midtexture = gSwitchList[switchListIdx ^ 1];
 
             if (bUseAgain) {
@@ -183,7 +226,12 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
         }
 
         if (switchTex == side.bottomtexture) {
-            S_StartSound(gButtonList[0].soundorg, soundId);
+            #if PSYDOOM_MODS
+                S_StartSound((mobj_t*) &soundOrigin, soundId);
+            #else
+                S_StartSound(gButtonList[0].soundorg, soundId);
+            #endif
+
             side.bottomtexture = gSwitchList[switchListIdx ^ 1];
 
             if (bUseAgain) {
