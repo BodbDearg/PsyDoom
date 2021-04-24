@@ -9,9 +9,8 @@
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate engine limits and try to remove/expand where possible
     - More than 16 flats, more than 3 texture pages for walls.
+    - Flats larger than 64x64
     - 256x256 max size textures, and other texture size variants less than this.
-    - WMD_MEM_SIZE
-        - Add checks to see if size exceeded
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
 

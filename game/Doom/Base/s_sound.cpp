@@ -24,6 +24,7 @@
 #include "Wess/wessarc.h"
 
 #include <algorithm>
+#include <memory>
 
 // Sound settings for the WESS PSX sound driver
 static const int32_t gSound_PSXSettings[SNDHW_TAG_MAX * 2] = {
@@ -253,9 +254,14 @@ static constexpr int32_t S_ATTENUATOR = d_fixed_to_int(S_CLIPPING_DIST - S_CLOSE
 // Current volume cd music is played back at
 int32_t gCdMusicVol = PSXSPU_MAX_CD_VOL;
 
-// The buffer used to hold the master status structure created by loading the .WMD file.
-// Also holds sequence data for current level music.
-static uint8_t gSound_WmdMem[WMD_MEM_SIZE];
+// The buffer used to hold the master status structure created by loading the .WMD file. Also holds sequence data for current level music.
+// PsyDoom limit removing: we now dynamically make this bigger if needed, based on the size of the .WMD file.
+#if PSYDOOM_LIMIT_REMOVING
+    static std::unique_ptr<uint8_t[]>   gSound_WmdMem;
+    static uint32_t                     gSound_WmdMemSize;
+#else
+    static uint8_t                      gSound_WmdMem[WMD_MEM_SIZE];
+#endif
 
 // The start pointer within 'gSound_WmdMem' where map music sequences can be loaded to.
 // Anything at this address or after in the buffer can be used for that purpose.
@@ -599,14 +605,15 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     PsxCd_File* const pFile = psxcd_open(CdFileId::DOOMSND_WMD);
 
     #if PSYDOOM_MODS
-        if (!pFile) {
+        if ((!pFile) || (pFile->size <= 0)) {
             FatalErrors::raise("Failed to open DOOMSFX.WMD!");
         }
     #endif
 
     // PsyDoom: the 'PsxCd_File' struct has changed layout & contents
     #if PSYDOOM_MODS
-        psxcd_read(pTmpWmdLoadBuffer, pFile->size, *pFile);
+        const int32_t wmdFileSize = pFile->size;
+        psxcd_read(pTmpWmdLoadBuffer, wmdFileSize, *pFile);
     #else
         psxcd_read(pTmpWmdLoadBuffer, pFile->file.size, *pFile);
     #endif
@@ -619,7 +626,18 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
 
     // Load the main module (.WMD) file.
     // This initializes common stuff used for all music and sounds played in the game.
-    wess_load_module(pTmpWmdLoadBuffer, gSound_WmdMem, WMD_MEM_SIZE, gSound_SettingsLists);
+    //
+    // PsyDoom limit removing: dynamically size the available amount of WMD memory based on the .WMD file size.
+    // Use a very conservative 2x factor for this, the original game had about 1/3 of the .WMD file size reserved (Final Doom, the largest .WMD).
+    // This should allow memory to grow if custom mods have very complex music tracks that consume lots of memory.
+    #if PSYDOOM_LIMIT_REMOVING
+        gSound_WmdMemSize = std::max<uint32_t>(WMD_MIN_MEM_SIZE, wmdFileSize * 2);
+        gSound_WmdMem.reset(new uint8_t[gSound_WmdMemSize]);
+
+        wess_load_module(pTmpWmdLoadBuffer, gSound_WmdMem.get(), gSound_WmdMemSize, gSound_SettingsLists);
+    #else
+        wess_load_module(pTmpWmdLoadBuffer, gSound_WmdMem, WMD_MEM_SIZE, gSound_SettingsLists);
+    #endif
 
     // Initialize the music sequence and LCD (samples file) loaders
     master_status_structure& mstat = *wess_get_master_status();

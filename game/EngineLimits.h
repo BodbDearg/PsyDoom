@@ -32,11 +32,18 @@ static constexpr bool IS_64_BIT_BUILD = (sizeof(void*) > 4);
     static constexpr uint32_t Z_HEAP_SIZE = 1368380 * (IS_64_BIT_BUILD ? 2 : 1);
 #endif
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// How much memory is available to hold the load .WMD (Williams Module File) for the game and also any currently loaded music sequences.
-//
-// The size of this memory chunk is as follows for the original games:
-//  - Doom          : 26,000 bytes
-//  - Final Doom    : 36,000 bytes
-//------------------------------------------------------------------------------------------------------------------------------------------
-static constexpr uint32_t WMD_MEM_SIZE = 36000 * (IS_64_BIT_BUILD ? 2 : 1);
+// Limit removing: we now dynamically size the WMD memory amount based on the .WMD file size.
+// We always allocate a base minimum amount however.
+#if !PSYDOOM_LIMIT_REMOVING
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // How much memory is available to hold the load .WMD (Williams Module File) for the game and also any currently loaded music sequences.
+    //
+    // The size of this memory chunk is as follows for the original games:
+    //  - Doom          : 26,000 bytes
+    //  - Final Doom    : 36,000 bytes
+    //------------------------------------------------------------------------------------------------------------------------------------------
+    static constexpr uint32_t WMD_MEM_SIZE = 36000 * (IS_64_BIT_BUILD ? 2 : 1);
+#else 
+    static constexpr uint32_t WMD_MIN_MEM_SIZE = 256 * 1024;    // 256 KiB minimum
+#endif
+
