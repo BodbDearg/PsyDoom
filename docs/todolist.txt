@@ -10,7 +10,6 @@
 - Investigate engine limits and try to remove/expand where possible
     - More than 16 flats, more than 3 texture pages for walls.
     - 256x256 max size textures, and other texture size variants less than this.
-    - MAXCEILINGS
     - MAXBUTTONS
     - WMD_MEM_SIZE
         - Add checks to see if size exceeded

@@ -1308,12 +1308,13 @@ void P_SpawnSpecials() noexcept {
     }
 
     // Clear these lists
-    D_memset(gpActiveCeilings, std::byte(0), MAXCEILINGS * sizeof(gpActiveCeilings[0]));
-
     #if PSYDOOM_LIMIT_REMOVING
+        gpActiveCeilings.clear();
         gpActivePlats.clear();
+        gpActiveCeilings.reserve(128);
         gpActivePlats.reserve(128);
     #else
+        D_memset(gpActiveCeilings, std::byte(0), MAXCEILINGS * sizeof(gpActiveCeilings[0]));
         D_memset(gpActivePlats, std::byte(0), MAXPLATS * sizeof(gpActivePlats[0]));
     #endif
 

@@ -13,8 +13,12 @@
 // Normal move speed for ceilings/crushers
 static constexpr fixed_t CEILSPEED = FRACUNIT * 2;
 
-// The list of currently active ceilings
-ceiling_t* gpActiveCeilings[MAXCEILINGS];
+// The list of currently active ceilings (some slots may be empty)
+#if PSYDOOM_LIMIT_REMOVING
+    std::vector<ceiling_t*> gpActiveCeilings;
+#else
+    ceiling_t* gpActiveCeilings[MAXCEILINGS];
+#endif
 
 // Not required externally: making private to this module
 static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept;
@@ -207,23 +211,48 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
 // Note: does NOT get added if there are no free slots.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept {
-    for (int32_t i = 0; i < MAXCEILINGS; ++i) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numCeilings = (int32_t) gpActiveCeilings.size();
+    #else
+        const int32_t numCeilings = MAXCEILINGS;
+    #endif
+
+    for (int32_t i = 0; i < numCeilings; ++i) {
         if (!gpActiveCeilings[i]) {
             gpActiveCeilings[i] = &ceiling;
             return;
         }
     }
+
+    #if PSYDOOM_LIMIT_REMOVING
+        // No room in the array: make a new slot
+        gpActiveCeilings.push_back(&ceiling);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Remove the given ceiling from the active ceilings list; also dissociates it with it's sector and deallocs it's thinker
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
-    for (int32_t i = 0; i < MAXCEILINGS; ++i) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numCeilings = (int32_t) gpActiveCeilings.size();
+    #else
+        const int32_t numCeilings = MAXCEILINGS;
+    #endif
+
+    for (int32_t i = 0; i < numCeilings; ++i) {
         if (gpActiveCeilings[i] == &ceiling) {
             ceiling.sector->specialdata = nullptr;
             P_RemoveThinker(ceiling.thinker);
             gpActiveCeilings[i] = nullptr;
+
+            // PsyDoom: compact the array if it's the last element
+            #if PSYDOOM_LIMIT_REMOVING
+                if (i + 1 >= numCeilings) {
+                    gpActiveCeilings.pop_back();
+                }
+            #endif
+
             return;
         }
     }
@@ -233,7 +262,13 @@ static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
 // Unpauses ceiling movers which have the same tag as the given line and which are in stasis (paused)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_ActivateInStasisCeiling(line_t& line) noexcept {
-    for (int32_t i = 0; i < MAXCEILINGS; ++i) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numCeilings = (int32_t) gpActiveCeilings.size();
+    #else
+        const int32_t numCeilings = MAXCEILINGS;
+    #endif
+
+    for (int32_t i = 0; i < numCeilings; ++i) {
         ceiling_t* const pCeiling = gpActiveCeilings[i];
 
         if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction == 0)) {    // Direction 0 = in stasis
@@ -247,9 +282,15 @@ static void P_ActivateInStasisCeiling(line_t& line) noexcept {
 // Pauses active ceiling movers (crushers) with the same sector tag as the given line's tag
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool EV_CeilingCrushStop(line_t& line) noexcept {
+    #if PSYDOOM_LIMIT_REMOVING
+        const int32_t numCeilings = (int32_t) gpActiveCeilings.size();
+    #else
+        const int32_t numCeilings = MAXCEILINGS;
+    #endif
+
     bool bPausedACrusher = false;
 
-    for (int32_t i = 0; i < MAXCEILINGS; ++i) {
+    for (int32_t i = 0; i < numCeilings; ++i) {
         ceiling_t* const pCeiling = gpActiveCeilings[i];
 
         if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction != 0)) {

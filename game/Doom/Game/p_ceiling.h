@@ -2,6 +2,8 @@
 
 #include "Doom/doomdef.h"
 
+#include <vector>
+
 struct line_t;
 
 // Type for a ceiling
@@ -28,10 +30,12 @@ struct ceiling_t {
     int32_t     olddirection;       // In-stasis ceilings: which way the ceiling was moving before it was paused
 };
 
-// Maximum number of ceiling movers there can be active at once
-static constexpr int32_t MAXCEILINGS = 30;
-
-extern ceiling_t* gpActiveCeilings[MAXCEILINGS];
+#if PSYDOOM_LIMIT_REMOVING
+    extern std::vector<ceiling_t*> gpActiveCeilings;
+#else
+    static constexpr int32_t MAXCEILINGS = 30;          // Maximum number of ceiling movers there can be active at once
+    extern ceiling_t* gpActiveCeilings[MAXCEILINGS];
+#endif
 
 bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept;
 bool EV_CeilingCrushStop(line_t& line) noexcept;
