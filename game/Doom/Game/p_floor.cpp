@@ -243,6 +243,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
 
             case raiseFloorCrush:
                 floor.crush = true;     // Note: intentional fallthrough
+                [[fallthrough]];
             case raiseFloor: {
                 floor.direction = 1;
                 floor.sector = &sector;

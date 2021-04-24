@@ -166,7 +166,7 @@ void wess_seq_update_type_special(const uintptr_t seqType, const TriggerPlayAttr
                 continue;
 
             if (seqStat.type == seqType) {
-                // This is the sequence type we want: tun through all of the active tracks in the sequence and update them all
+                // This is the sequence type we want: run through all of the active tracks in the sequence and update them all
                 uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
                 uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 

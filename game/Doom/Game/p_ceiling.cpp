@@ -95,8 +95,10 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
                 switch (ceiling.type) {
                     case silentCrushAndRaise:
                         S_StartSound((mobj_t*) &ceilingSector.soundorg, sfx_pstop);
+                        [[fallthrough]];
                     case crushAndRaise:
                         ceiling.speed = CEILSPEED;
+                        [[fallthrough]];
                     case fastCrushAndRaise:
                         ceiling.direction = 1;
                         break;
@@ -178,7 +180,9 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
             case silentCrushAndRaise:
                 ceiling.crush = true;
                 ceiling.topheight = sector.ceilingheight;
+                [[fallthrough]];
             case lowerToFloor:
+                [[fallthrough]];
             case lowerAndCrush:
                 ceiling.bottomheight = sector.floorheight;
 
