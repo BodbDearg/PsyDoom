@@ -39,7 +39,9 @@ static void RV_GetSkyTexParams(
     RV_TexPageIdToTexParams(skytex.texPageId, texFmt, texWinX, texWinY, blendMode);
     ASSERT(texFmt == Gpu::TexFmt::Bpp8);
 
-    // Set the texture window size
+    // Set the texture window size and position
+    texWinX += skytex.texPageCoordX;
+    texWinY += skytex.texPageCoordY;
     texWinW = skytex.width;
     texWinH = skytex.height;
 
