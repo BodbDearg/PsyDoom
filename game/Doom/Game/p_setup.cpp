@@ -25,6 +25,7 @@
 #include "p_tick.h"
 #include "PcPsx/MobjSpritePrecacher.h"
 
+#include <algorithm>
 #include <cstring>
 
 // How much heap space is required after loading the map in order to run the game (48 KiB in Doom, 32 KiB in Final Doom).
@@ -75,6 +76,16 @@ mapthing_t*     gpDeathmatchP;                                  // Points past t
     char gLevelStartupWarning[64];
 #endif
 
+// PsyDoom: sets of texture and flat texture indexes to indicate what walls and flats are to be loaded & cached during level setup.
+// The new flexible texture mangement code first flags all the resources needed using these sets before actually sorting and loading the resources.
+#if PSYDOOM_LIMIT_REMOVING
+    FixedIndexSet gCacheTextureSet;
+    FixedIndexSet gCacheFlatTextureSet;
+
+    // A sorted list of textures to be loaded, produced from the indexes: re-use to avoid reallocations
+    static std::vector<texture_t*> gLoadTextureList;
+#endif
+
 // Is the map being loaded a Final Doom format map?
 static bool gbLoadingFinalDoomMap;
 
@@ -82,12 +93,14 @@ static bool gbLoadingFinalDoomMap;
 // Set when the map has a fire sky, otherwise null.
 void (*gUpdateFireSkyFunc)(texture_t& skyTex) = nullptr;
 
-// Functions iternal to this module:
-#if !PSYDOOM_LIMIT_REMOVING
+// Functions internal to this module
+#if PSYDOOM_LIMIT_REMOVING
+    static void P_FlagMapTexturesForLoading() noexcept;
+    static void P_LoadMapTextures() noexcept;
+#else
     static void P_LoadBlocks(const CdFileId file) noexcept;
+    static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept;
 #endif
-
-static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept;
 
 #if !PSYDOOM_MODS
     static void P_CacheSprite(const spritedef_t& sprdef) noexcept;  // PsyDoom: not used, so compiling out
@@ -654,6 +667,28 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
                 pDstSide->toptexture = R_TextureNumForName(pSrcSide->toptexture);
                 pDstSide->midtexture = R_TextureNumForName(pSrcSide->midtexture);
                 pDstSide->bottomtexture = R_TextureNumForName(pSrcSide->bottomtexture);
+
+                // PsyDoom: level startup warnings if textures are defined but not found.
+                // Note: disabling these warnings by default because they trigger on original maps.
+                // For creating new maps however it might be useful to remove the '&& false' and enable them.
+                #if PSYDOOM_MODS && false
+                    constexpr auto isTexNameDefined = [](const char name[8]) noexcept -> bool {
+                        // Valid name if not empty string or '-' string
+                        return (name[0] && ((name[0] != '-') || name[1]));
+                    };
+
+                    if (isTexNameDefined(pSrcSide->toptexture) && (pDstSide->toptexture < 0) || (pDstSide->toptexture >= gNumTexLumps)) {
+                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad u-tex for side %d!", sideIdx);
+                    }
+
+                    if (isTexNameDefined(pSrcSide->midtexture) && (pDstSide->midtexture < 0) || (pDstSide->midtexture >= gNumTexLumps)) {
+                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad m-tex for side %d!", sideIdx);
+                    }
+
+                    if (isTexNameDefined(pSrcSide->bottomtexture) && (pDstSide->bottomtexture < 0) || (pDstSide->bottomtexture >= gNumTexLumps)) {
+                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad l-tex for side %d!", sideIdx);
+                    }
+                #endif
             }
 
             ++pSrcSide;
@@ -963,25 +998,38 @@ static void P_Init() noexcept {
         P_SetAnimsToBasePic();
     #endif
 
-    // Load sector flats into VRAM if not already there
+    // Load sector flats into VRAM if not already there.
+    // PsyDoom limit removing: this code is now just flagging resources for later loading.
     {
         const sector_t* pSec = gpSectors;
 
         for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx, ++pSec) {
             // Note: ceiling might not have a texture (sky)
             if (pSec->ceilingpic != -1) {
-                texture_t& ceilTex = gpFlatTextures[pSec->ceilingpic];
+                #if PSYDOOM_LIMIT_REMOVING
+                    if ((pSec->ceilingpic >= 0) && (pSec->ceilingpic < gNumFlatLumps)) {
+                        gCacheFlatTextureSet.add(pSec->ceilingpic);
+                    }
+                #else
+                    texture_t& ceilTex = gpFlatTextures[pSec->ceilingpic];
 
-                if (ceilTex.texPageId == 0) {
-                    I_CacheTex(ceilTex);
+                    if (ceilTex.texPageId == 0) {
+                        I_CacheTex(ceilTex);
+                    }
+                #endif
+            }
+
+            #if PSYDOOM_LIMIT_REMOVING
+                if ((pSec->floorpic >= 0) && (pSec->floorpic < gNumFlatLumps)) {
+                    gCacheFlatTextureSet.add(pSec->floorpic);
                 }
-            }
+            #else
+                texture_t& floorTex = gpFlatTextures[pSec->floorpic];
 
-            texture_t& floorTex = gpFlatTextures[pSec->floorpic];
-
-            if (floorTex.texPageId == 0) {
-                I_CacheTex(floorTex);
-            }
+                if (floorTex.texPageId == 0) {
+                    I_CacheTex(floorTex);
+                }
+            #endif
         }
     }
 
@@ -995,10 +1043,13 @@ static void P_Init() noexcept {
     //      This therefore restricts the maximum number of flats to 16 because even if we add more, they will
     //      be evicted by any wall texture loads below - since we forced the fill location to the start of the 3rd page.
     //
-    // So if you want to support more than 16 flats or do a more flexible VRAM arrangement, this is the place to look..
+    // So if you want to support more than 16 flats or do a more flexible VRAM arrangement, this is the place to look.   
     #if PSYDOOM_MODS
-        I_LockTexCachePage(1);
-        I_SetTexCacheFillPage(2);
+        // PsyDoom limit removing: we don't lock these texture pages yet under the new texture management code
+        #if !PSYDOOM_LIMIT_REMOVING
+            I_LockTexCachePage(1);
+            I_SetTexCacheFillPage(2);
+        #endif
     #else
         gLockedTexPagesMask |= 0b0000'0000'0010;
         gTCacheFillPage = 2;
@@ -1040,16 +1091,31 @@ static void P_Init() noexcept {
             }
         }
 
-        // Ensure the sky texture is in VRAM
-        I_CacheTex(skyTex);
+        // Ensure the sky texture is in VRAM.
+        // PsyDoom limit removing: this code is now just flagging the texture for later loading rather than loading directly.
+        #if PSYDOOM_LIMIT_REMOVING
+            const uint32_t skyTextureIdx = (uint32_t)(gpSkyTexture - gpTextures);
+            gCacheTextureSet.add(skyTextureIdx);
+        #else
+            I_CacheTex(skyTex);
+        #endif
     }
 
     // Load wall and switch textures into VRAM.
     // Note that switches are assumed to be 64 pixels wide, hence cached just before the 128 pixel textures.
-    P_CacheMapTexturesWithWidth(16);
-    P_CacheMapTexturesWithWidth(64);
+    // PsyDoom limit removing: just flagging required textures here now, will sort and load later.
+    #if PSYDOOM_LIMIT_REMOVING
+        P_FlagMapTexturesForLoading();
+    #else
+        P_CacheMapTexturesWithWidth(16);
+        P_CacheMapTexturesWithWidth(64);
+    #endif
+
     P_InitSwitchList();
-    P_CacheMapTexturesWithWidth(128);
+
+    #if !PSYDOOM_LIMIT_REMOVING
+        P_CacheMapTexturesWithWidth(128);
+    #endif
 
     // Give all sides without textures a default one.
     // Maybe done so constant validity checks don't have to be done elsewhere in the game to avoid crashing?
@@ -1099,16 +1165,25 @@ static void P_Init() noexcept {
     // This gives a maximum wall texture area of 768x256 - everything else after that is reserved for sprites.
     // Even if the code above fills in more textures, they will eventually be evicted from the cache in favor of sprites.
     #if PSYDOOM_MODS
-        I_LockTexCachePage(2);
-        I_LockTexCachePage(3);
-        I_LockTexCachePage(4);
-        I_SetTexCacheFillPage(5);
+        // PsyDoom limit removing: we don't lock these texture pages yet with the new texture management logic
+        #if !PSYDOOM_LIMIT_REMOVING
+            I_LockTexCachePage(2);
+            I_LockTexCachePage(3);
+            I_LockTexCachePage(4);
+            I_SetTexCacheFillPage(5);
+        #endif
     #else
         gLockedTexPagesMask |= 0b0000'0001'1100;
         gTCacheFillPage = 5;
         gTCacheFillCellX = 0;
         gTCacheFillCellY = 0;
         gTCacheFillRowCellH = 0;
+    #endif
+
+    // PsyDoom: new limit removing texture management code.
+    // Load all of the wall and flat textures that were previously flagged to be loaded.
+    #if PSYDOOM_LIMIT_REMOVING
+        P_LoadMapTextures();
     #endif
 
     // Clear out any floor or wall textures we had temporarily in RAM from the above caching.
@@ -1146,6 +1221,12 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     I_PurgeTexCache();
     Z_CheckHeap(*gpMainMemZone);
     M_ClearRandom();
+
+    // PsyDoom limit removing: init the sets of wall and flat textures to be loaded
+    #if PSYDOOM_LIMIT_REMOVING
+        gCacheTextureSet.init(gNumTexLumps);
+        gCacheFlatTextureSet.init(gNumFlatLumps);
+    #endif
 
     // Init player stats for the map
     gTotalKills = 0;
@@ -1413,9 +1494,124 @@ static void P_CacheSprite(const spritedef_t& sprdef) noexcept {
 }
 #endif  // #if !PSYDOOM_MODS
 
+#if PSYDOOM_LIMIT_REMOVING
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom limit removing addition: flags all textures in the map for loading
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_FlagMapTexturesForLoading() noexcept {
+    // Run through all the sides in the map and flag all their textures for loading
+    side_t* pSide = gpSides;
+
+    for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
+        const int32_t topTexture = pSide->toptexture;
+        const int32_t midTexture = pSide->midtexture;
+        const int32_t botTexture = pSide->bottomtexture;
+
+        if ((topTexture >= 0) && (topTexture < gNumTexLumps)) {
+            gCacheTextureSet.add(topTexture);
+        }
+
+        if ((midTexture >= 0) && (midTexture < gNumTexLumps)) {
+            gCacheTextureSet.add(midTexture);
+        }
+
+        if ((botTexture >= 0) && (botTexture < gNumTexLumps)) {
+            gCacheTextureSet.add(botTexture);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom limit removing addition: caches and decompresses the lump for the specified texture.
+// Once done, saves the size info for the texture to the texture object.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_CacheAndUpdateTexSizeInfo(texture_t& tex, const int32_t lumpNum) noexcept {
+    // Sanity check
+    if (W_LumpLength(lumpNum) < sizeof(texlump_header_t)) {
+        I_Error("P_CacheAndUpdateTexSizeInfo: Bad tex lump %d! Not enough data!", lumpNum);
+    }
+
+    // Cache the texture data and get the header from the first bytes
+    const texlump_header_t texHdr = *(texlump_header_t*) W_CacheLumpNum(lumpNum, PU_CACHE, true);
+
+    // Save the texture size info.
+    // Note: the header 'offset' field is deliberately ignored for textures (only used for sprites).
+    tex.offsetX = {};
+    tex.offsetY = {};
+    tex.width = Endian::littleToHost(texHdr.width);
+    tex.height = Endian::littleToHost(texHdr.height);
+    tex.width16 = (uint16_t)((tex.width + 15u) / 16u);
+    tex.height16 = (uint16_t)((tex.height + 15u) / 16u);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom limit removing addition: loads previously all requested map textures.
+// The textures are sorted and loaded based on their height, with the tallest textures going first.
+// Any texture size for wall and flat textures up to 256x256 is allowed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadMapTextures() noexcept {
+    // Gather pointers to all the textures to be loaded, for both flats and walls.
+    //
+    // While doing this, also refresh the size info we have for each texture by loading the header bytes from it's corresponding lump.
+    // PsyDoom doesn't require modders to add new textures to the 'TEXTURE1' info lump (for ease of modding) and flats are now no longer
+    // assumed to be always 64x64. Because of this, retrieving (on-demand) the size info by caching the texture's lump is required.
+    // Hopefully with PsyDoom's larger heap this data will not be evicted before we go to actually cache the texture into VRAM, so it won't
+    // be a duplicated loading operation.
+    gLoadTextureList.clear();
+    gLoadTextureList.reserve((size_t)(gCacheFlatTextureSet.size() + gCacheTextureSet.size()));
+
+    gCacheTextureSet.forEachIndex(
+        [](const uint64_t idx) noexcept {
+            texture_t& tex = gpTextures[idx];
+            gLoadTextureList.push_back(&tex);
+            P_CacheAndUpdateTexSizeInfo(tex, (int32_t)(gFirstTexLumpNum + idx));
+        }
+    );
+
+    gCacheFlatTextureSet.forEachIndex(
+        [](const uint64_t idx) noexcept {
+            texture_t& tex = gpFlatTextures[idx];
+            gLoadTextureList.push_back(&tex);
+            P_CacheAndUpdateTexSizeInfo(tex, (int32_t)(gFirstFlatLumpNum + idx));
+        }
+    );
+
+    // Sort the textures in ascending order of height
+    std::sort(
+        gLoadTextureList.begin(),
+        gLoadTextureList.end(),
+        [](texture_t* pTex1, texture_t* pTex2) noexcept {
+            // Sort based on texture cache cell height since this is what affects packing.
+            // If the height is equal prefer thinner textures first.
+            if (pTex1->height16 == pTex2->height16)
+                return (pTex1->width16 < pTex2->width16);
+
+            return (pTex1->height16 < pTex2->height16);
+        }
+    );
+
+    // Cache all of the textures, starting after the UI reserved 1st texture page
+    I_SetTexCacheFillPage(1);
+    uint32_t maxTexturePage = 1;
+
+    for (texture_t* pTex : gLoadTextureList) {
+        I_CacheTex(*pTex);
+        maxTexturePage = std::max(maxTexturePage, I_GetCurTexCacheFillPage());
+    }
+
+    // Ensure all texture pages we filled are locked.
+    // All of the pages following will be leftover for sprites.
+    for (uint32_t pageIdx = 1; pageIdx <= maxTexturePage; ++pageIdx) {
+        I_LockTexCachePage(pageIdx);
+    }
+}
+#endif  //  #if PSYDOOM_LIMIT_REMOVING
+
+#if !PSYDOOM_LIMIT_REMOVING
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cache map textures with the given width into VRAM.
 // Textures are cached in groups according to their width in order to try and make more efficient use of VRAM space.
+// PsyDoom limit removing: this function is no longer needed because of the new (more flexible) texture management logic.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
     // Round the current fill position in the texture cache up to the nearest multiple of the given texture width.
@@ -1459,3 +1655,4 @@ static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
         }
     }
 }
+#endif  // #if !PSYDOOM_LIMIT_REMOVING

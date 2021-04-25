@@ -197,6 +197,7 @@ set(SOURCE_FILES
     "PcPsx/DiscInfo.h"
     "PcPsx/DiscReader.cpp"
     "PcPsx/DiscReader.h"
+    "PcPsx/FixedIndexSet.h"
     "PcPsx/Game.cpp"
     "PcPsx/Game.h"
     "PcPsx/GamepadInput.cpp"

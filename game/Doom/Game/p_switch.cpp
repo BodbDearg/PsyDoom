@@ -101,17 +101,25 @@ void P_InitSwitchList() noexcept {
         const int32_t tex1Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name1);
         const int32_t tex2Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name2);
 
-        texture_t& tex1 = gpTextures[tex1Lump];
-        texture_t& tex2 = gpTextures[tex2Lump];
+        // Cache the other switch texture if one of the switch textures is loaded.
+        // PsyDoom limit removing: request the other texture to load if one of the textures is requested (we haven't actually loaded yet at this point).
+        #if PSYDOOM_LIMIT_REMOVING
+            if (gCacheTextureSet.isAdded(tex1Lump) || gCacheTextureSet.isAdded(tex2Lump)) {
+                gCacheTextureSet.add(tex1Lump);
+                gCacheTextureSet.add(tex2Lump);
+            }
+        #else
+            texture_t& tex1 = gpTextures[tex1Lump];
+            texture_t& tex2 = gpTextures[tex2Lump];
 
-        // Cache the other switch texture if one of the switch textures is loaded
-        if ((tex1.texPageId) != 0 && (tex2.texPageId == 0)) {
-            I_CacheTex(tex2);
-        }
+            if ((tex1.texPageId) != 0 && (tex2.texPageId == 0)) {
+                I_CacheTex(tex2);
+            }
 
-        if ((tex2.texPageId != 0) && (tex1.texPageId == 0)) {
-            I_CacheTex(tex1);
-        }
+            if ((tex2.texPageId != 0) && (tex1.texPageId == 0)) {
+                I_CacheTex(tex1);
+            }
+        #endif
 
         // Save what lumps the switch uses
         pSwitchLump[0] = tex1Lump;

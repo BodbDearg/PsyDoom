@@ -1,6 +1,10 @@
 0.8 - Limit extending and modding?
-- Fix case sensitivity for file overrides mechanism.
+- Fix case sensitivity for file overrides mechanism (make case insensitive).
 - Fix bullet puffs not appearing in outdoor areas bug.
+- Fix 'Rocket Blast Fix' issues: sprites not rendering (blast, bfg etc.) and blast forces being odd.
+    - Exploding the missile at exactly the player position is causing issues.
+- Fix room light not going out fully in Final Doom Level 8 (Minos) after picking up SSG.
+- Fix Final Doom (after MAP30 'Onslaught') ending Revenant sound playing.
 - Add map patching mechanism for a few select map bugs
     - Fix house of pain door bug
     - Fix Ballystix altar not being see through with new vk renderer (need to mark as 'void' ceiling)
@@ -8,9 +12,7 @@
     - Any ceiling pic < -1 should be considered a 'void' (render nothing) ceiling.
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate engine limits and try to remove/expand where possible
-    - More than 16 flats, more than 3 texture pages for walls.
     - Flats larger than 64x64
-    - 256x256 max size textures, and other texture size variants less than this.
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
 

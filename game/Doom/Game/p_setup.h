@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Doom/doomdef.h"
 #include "Doom/cdmaptbl.h"
+#include "Doom/doomdef.h"
+#include "PcPsx/FixedIndexSet.h"
 
 struct leafedge_t;
 struct line_t;
@@ -45,6 +46,11 @@ extern mapthing_t*      gpDeathmatchP;
 
 #if PSYDOOM_MODS
     extern char gLevelStartupWarning[64];
+#endif
+
+#if PSYDOOM_LIMIT_REMOVING
+    extern FixedIndexSet gCacheTextureSet;
+    extern FixedIndexSet gCacheFlatTextureSet;
 #endif
 
 extern void (*gUpdateFireSkyFunc)(texture_t& skyTex);
