@@ -54,12 +54,17 @@
 #include "Gpu.h"
 #include "i_drawcmds.h"
 #include "i_main.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/PsxVm.h"
+#include "PcPsx/Video.h"
+#include "PcPsx/Vulkan/VDrawing.h"
+#include "PcPsx/Vulkan/VPipelines.h"
 #include "PsyQ/LIBGPU.h"
 #include "w_wad.h"
 #include "z_zone.h"
 
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 #if PSYDOOM_MODS
@@ -643,8 +648,8 @@ void I_VramViewerDraw(const uint32_t texPageIdx) noexcept {
     ASSERT(texPageIdx < gTCachePages.size());
     const tcachepage_t& texPage = gTCachePages[texPageIdx];
 
-    // PsyDoom: adjust the bottom edge of the VRAM view to account for overscan of 8-pixels (was '240')
-    const int16_t BY = 232;
+    // PsyDoom: adjust the bottom edge of the VRAM view to account for overscan pixels
+    const int16_t by = (int16_t)(240 - Config::gBottomOverscanPixels);
 
     // Draw a sprite covering the screen which covers the entire vram page
     {
@@ -672,8 +677,8 @@ void I_VramViewerDraw(const uint32_t texPageIdx) noexcept {
         LIBGPU_setXY4(polyPrim,
             0,      0,
             256,    0,
-            0,      BY,
-            256,    BY
+            0,      by,
+            256,    by
         );
 
         polyPrim.clut = gPaletteClutIds[MAINPAL];
@@ -696,31 +701,46 @@ void I_VramViewerDraw(const uint32_t texPageIdx) noexcept {
         LIBGPU_SetLineF2(linePrim);
         LIBGPU_setRGB0(linePrim, 255, 0, 0);
 
-        // Figure out the y position and height for the texture cache entry.
-        // Have to rescale in using a 24.8 fixed point format because the screen is 240 pixels high, and the texture cache is a logical 256 pixels high (originally).
-        // Note: given the increased texture cache size in limit removing builds, also have to scale the coordinates to account for that too.
-        constexpr uint32_t TCACHE_X_SCALE = TCACHE_PAGE_W / 256;
-        constexpr uint32_t TCACHE_Y_SCALE = TCACHE_PAGE_H / 256;
+        // Figure out the min and max x and y coordinates to draw a bounding box around this VRAM texture.
+        // Rescale the coordinates as needed to account for user added overscan and the size of texture pages in VRAM.
+        // Texture page size varies depending on if limit removing is used or not.
+        const float xScale = ((float) 256.0f / (float) TCACHE_PAGE_W);
+        const float yScale = ((float) by / 256.0f) * ((float) 256.0f / (float) TCACHE_PAGE_H);
 
-        uint32_t y = (d_lshift<8>((uint32_t) pTex->texPageCoordY)) * BY / 256 / TCACHE_Y_SCALE;
-        uint32_t h = (d_lshift<8>((uint32_t) pTex->height))        * BY / 256 / TCACHE_Y_SCALE;
-        y = d_rshift<8>(y);
-        h = d_rshift<8>(h);
+        const float texLxf = (float)(pTex->texPageCoordX) * xScale;
+        const float texRxf = (float)(pTex->texPageCoordX + pTex->width16 * 16) * xScale;
+        const float texTyf = (float)(pTex->texPageCoordY) * yScale;
+        const float texByf = (float)(pTex->texPageCoordY + pTex->height16 * 16) * yScale;
 
-        const uint16_t x = pTex->texPageCoordX / TCACHE_X_SCALE;
-        const uint16_t w = pTex->width / TCACHE_X_SCALE;
+        const int16_t texLx = (int16_t) texLxf;
+        const int16_t texRx = (int16_t) texRxf;
+        const int16_t texTy = (int16_t) texTyf;
+        const int16_t texBy = (int16_t) texByf;
 
-        // Draw all the box lines for the cache entry
-        LIBGPU_setXY2(linePrim, x, (int16_t) y, x + w, (int16_t) y);            // Top
+        // If using the Vulkan renderer pass these lines to it directly in floating point format.
+        // Otherwise at high resolution the bounding boxes can be inaccurate due to precision loss caused by the above scaling.
+        #if PSYDOOM_VULKAN_RENDERER
+            if (Video::isUsingVulkanRenderPath()) {
+                VDrawing::setDrawPipeline(VPipelineType::Lines);
+                VDrawing::addUILine(texLxf, texTyf, texRxf, texTyf, 255, 0, 0);
+                VDrawing::addUILine(texRxf, texTyf, texRxf, texByf, 255, 0, 0);
+                VDrawing::addUILine(texRxf, texByf, texLxf, texByf, 255, 0, 0);
+                VDrawing::addUILine(texLxf, texByf, texLxf, texTyf, 255, 0, 0);
+                continue;
+            }
+        #endif
+
+        // Draw all the box lines for the cache entry (top, right, bottom and left)
+        LIBGPU_setXY2(linePrim, texLx, texTy, texRx, texTy);
         I_AddPrim(linePrim);
 
-        LIBGPU_setXY2(linePrim, x + w, (int16_t) y, x + w, (int16_t)(y + h));   // Right
+        LIBGPU_setXY2(linePrim, texRx, texTy, texRx, texBy);
         I_AddPrim(linePrim);
 
-        LIBGPU_setXY2(linePrim, x + w, (int16_t)(y + h), x, (int16_t)(y + h));  // Bottom
+        LIBGPU_setXY2(linePrim, texRx, texBy, texLx, texBy);
         I_AddPrim(linePrim);
 
-        LIBGPU_setXY2(linePrim, x, (int16_t)(y + h), x, (int16_t) y);           // Left
+        LIBGPU_setXY2(linePrim, texLx, texBy, texLx, texTy);
         I_AddPrim(linePrim);
     }
 }
