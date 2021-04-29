@@ -238,7 +238,7 @@ void DRAW_Title() noexcept {
 
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Figure out where the texture is in VRAM coords and upload it
-        const RECT vramRect = getTextureVramRect(skytex);
+        const SRECT vramRect = getTextureVramRect(skytex);
         const std::byte* const pSkyTexData = (const std::byte*) gpLumpCache[skytex.lumpNum];
         LIBGPU_LoadImage(vramRect, (const uint16_t*)(pSkyTexData + sizeof(texlump_header_t)));
 
@@ -252,8 +252,8 @@ void DRAW_Title() noexcept {
         constexpr uint8_t SKY_W = 64;       // PsyDoom: fix a 4 pixel gap at the right side of the screen with the fire ('64' rather than than the original '63')
         constexpr uint8_t SKY_H = 128;
 
-        const uint8_t texU = skytex.texPageCoordX;
-        const uint8_t texV = skytex.texPageCoordY;
+        const auto texU = skytex.texPageCoordX;
+        const auto texV = skytex.texPageCoordY;
 
         int16_t x = 0;
         const int16_t y = (Game::isFinalDoom()) ? 112 : 116;

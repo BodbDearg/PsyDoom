@@ -85,20 +85,29 @@ void R_InitTextures() noexcept {
 
         for (int32_t lumpNum = gFirstTexLumpNum; lumpNum <= gLastTexLumpNum; ++lumpNum, ++pMapTex, ++pTex) {
             pTex->lumpNum = (uint16_t) lumpNum;
+
+            #if PSYDOOM_MODS
+                pTex->bIsCached = false;
+
+                #if PSYDOOM_LIMIT_REMOVING
+                    pTex->bIsLocked = false;
+                #endif
+            #endif
+
             pTex->texPageId = 0;
             pTex->width = Endian::littleToHost(pMapTex->width);
             pTex->height = Endian::littleToHost(pMapTex->height);
 
             if (pTex->width + 15 >= 0) {
-                pTex->width16 = (pTex->width + 15) / 16;
+                pTex->width16 = (uint8_t)((pTex->width + 15) / 16);
             } else {
-                pTex->width16 = (pTex->width + 30) / 16;    // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
+                pTex->width16 = (uint8_t)((pTex->width + 30) / 16);     // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
             }
 
             if (pTex->height + 15 >= 0) {
-                pTex->height16 = (pTex->height + 15) / 16;
+                pTex->height16 = (uint8_t)((pTex->height + 15) / 16);
             } else {
-                pTex->height16 = (pTex->height + 30) / 16;  // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
+                pTex->height16 = (uint8_t)((pTex->height + 30) / 16);   // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
             }
         }
 
@@ -152,6 +161,15 @@ void R_InitFlats() noexcept {
         for (int32_t lumpNum = gFirstFlatLumpNum; lumpNum <= gLastFlatLumpNum; ++lumpNum, ++pTex) {
             pTex->lumpNum = (uint16_t) lumpNum;
             pTex->texPageId = 0;
+
+            #if PSYDOOM_MODS
+                pTex->bIsCached = false;
+
+                #if PSYDOOM_LIMIT_REMOVING
+                    pTex->bIsLocked = false;
+                #endif
+            #endif
+
             pTex->width = FLAT_TEX_SIZE;
             pTex->height = FLAT_TEX_SIZE;
             pTex->width16 = FLAT_TEX_SIZE / 16;
@@ -194,15 +212,15 @@ void R_InitSprites() noexcept {
         pTex->height = Endian::littleToHost(pMapTex->height);
 
         if (pTex->width + 15 >= 0) {
-            pTex->width16 = (pTex->width + 15) / 16;
+            pTex->width16 = (uint8_t)((pTex->width + 15) / 16);
         } else {
-            pTex->width16 = (pTex->width + 30) / 16;        // This case is never hit. Not sure why sprite sizes would be negative? What does that mean?
+            pTex->width16 = (uint8_t)((pTex->width + 30) / 16);     // This case is never hit. Not sure why sprite sizes would be negative? What does that mean?
         }
 
         if (pTex->height + 15 >= 0) {
-            pTex->height16 = (pTex->height + 15) / 16;
+            pTex->height16 = (uint8_t)((pTex->height + 15) / 16);
         } else {
-            pTex->height16 = (pTex->height + 30) / 16;      // This case is never hit. Not sure why sprite sizes would be negative? What does that mean?
+            pTex->height16 = (uint8_t)((pTex->height + 30) / 16);   // This case is never hit. Not sure why sprite sizes would be negative? What does that mean?
         }
     }
 
@@ -316,7 +334,7 @@ void R_InitPalette() noexcept {
 
     // Upload all the palettes into VRAM
     {
-        RECT dstVramRect;
+        SRECT dstVramRect = {};
         dstVramRect.w = 256;
         dstVramRect.h = 1;
 
@@ -355,20 +373,20 @@ void R_InitPalette() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: helper that consolidates some commonly used graphics logic in one function.
 //
-// Given the specified texture object which is assumed to be 8-bits per pixel (i.e color indexed), returns the 'RECT' in VRAM where the
+// Given the specified texture object which is assumed to be 8-bits per pixel (i.e color indexed), returns the 'SRECT' in VRAM where the
 // texture would be placed. Useful for getting the texture's VRAM position prior to uploading to the GPU.
 //
 // I decided to make this a helper rather than duplicate the same code everywhere.
 // Produces the same result as the original inline logic, but cleaner.
 //------------------------------------------------------------------------------------------------------------------------------------------
-RECT getTextureVramRect(const texture_t& tex) noexcept {
+SRECT getTextureVramRect(const texture_t& tex) noexcept {
     const int16_t texPageCoordX = (int16_t)(uint16_t) tex.texPageCoordX;    // N.B: make sure to zero extend!
     const int16_t texPageCoordY = (int16_t)(uint16_t) tex.texPageCoordY;
     const uint16_t texPageId = tex.texPageId;
 
-    // Note: all x dimension coordinates get divided by 2 because 'RECT' coords are for 16-bit mode.
+    // Note: all x dimension coordinates get divided by 2 because 'SRECT' coords are for 16-bit mode.
     // This function assumes all textures are 8 bits per pixel.
-    RECT rect;
+    SRECT rect = {};
     rect.x = texPageCoordX / 2 + ((texPageId >> 4) & 0x7Fu) * 64u;
     rect.y = texPageCoordY + ((texPageId >> 11) & 0x1Fu) * 256u;
     rect.w = tex.width / 2;

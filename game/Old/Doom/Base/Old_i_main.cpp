@@ -239,7 +239,7 @@ void I_CacheTex(texture_t& tex) noexcept {
         const uint16_t tpageU = TEX_PAGE_VRAM_TEXCOORDS[gTCacheFillPage][0];
         const uint16_t tpageV = TEX_PAGE_VRAM_TEXCOORDS[gTCacheFillPage][1];
 
-        RECT dstVramRect;
+        SRECT dstVramRect;
         LIBGPU_setRECT(
             dstVramRect,
             (int16_t)(tpageU + gTCacheFillCellX * TCACHE_CELL_SIZE / 2),

@@ -203,7 +203,7 @@ gameaction_t RunTitle() noexcept {
 gameaction_t RunDemo(const CdFileId file) noexcept {
     // PsyDoom: ensure this required graphic is loaded before starting the demo
     #if PSYDOOM_MODS
-        if (gTex_LOADING.texPageId == 0) {
+        if (!gTex_LOADING.bIsCached) {
             I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
         }
     #endif
@@ -247,8 +247,9 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
 // PsyDoom: load and run the specified demo file at the specified path on the host machine
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
-    // Ensure this required graphic is loaded before starting the demo
-    if (gTex_LOADING.texPageId == 0) {
+    // Ensure this required graphic is loaded before starting the demo.
+    // PsyDoom: the meaning of 'texPageId' has changed slightly, '0' is now the 1st page and 'bIsCached' is used check cache residency.
+    if (!gTex_LOADING.bIsCached) {
         I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
     }
 
@@ -299,7 +300,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS
             DR_MODE drawModePrim = {};
-            RECT texWindow = { 0, 0, 0, 0 };
+            const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
             DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);

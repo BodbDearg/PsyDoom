@@ -286,10 +286,16 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     // Resetting memory management related stuff and RNGs
     gbIsLevelBeingRestarted = false;
 
+    // Texture cache: unlock everything except UI assets and other reserved areas of VRAM.
+    // In limit removing mode also ensure we are using tight packing of VRAM.
     #if PSYDOOM_MODS
-        // Unlock everything except the texture page containing UI assets
-        I_UnlockAllTexCachePages();
-        I_LockTexCachePage(0);
+        #if PSYDOOM_LIMIT_REMOVING
+            I_LockAllWallAndFloorTextures(false);
+            I_TexCacheUseLoosePacking(false);
+        #else
+            I_UnlockAllTexCachePages();
+            I_LockTexCachePage(0);
+        #endif
     #else
         gLockedTexPagesMask &= 1;
     #endif
@@ -422,11 +428,17 @@ void G_RunGame() noexcept {
             continue;
         }
 
-        // Cleanup after the level is done
+        // Cleanup after the level is done.
+        // Texture cache: unlock everything except UI assets and other reserved areas of VRAM.
+        // In limit removing mode also ensure we are using tight packing of VRAM.
         #if PSYDOOM_MODS
-            // Unlock everything except the texture page containing UI assets
-            I_UnlockAllTexCachePages();
-            I_LockTexCachePage(0);
+            #if PSYDOOM_LIMIT_REMOVING
+                I_LockAllWallAndFloorTextures(false);
+                I_TexCacheUseLoosePacking(false);
+            #else
+                I_UnlockAllTexCachePages();
+                I_LockTexCachePage(0);
+            #endif
         #else
             gLockedTexPagesMask &= 1;
         #endif
@@ -584,10 +596,16 @@ gameaction_t G_PlayDemoPtr() noexcept {
     D_memcpy(gCtrlBindings, prevCtrlBindings, sizeof(prevCtrlBindings));
     gPsxMouseSensitivity = oldPsxMouseSensitivity;
 
+    // Texture cache: unlock everything except UI assets and other reserved areas of VRAM.
+    // In limit removing mode also ensure we are using tight packing of VRAM.
     #if PSYDOOM_MODS
-        // Unlock everything except the texture page containing UI assets
-        I_UnlockAllTexCachePages();
-        I_LockTexCachePage(0);
+        #if PSYDOOM_LIMIT_REMOVING
+            I_LockAllWallAndFloorTextures(false);
+            I_TexCacheUseLoosePacking(false);
+        #else
+            I_UnlockAllTexCachePages();
+            I_LockTexCachePage(0);
+        #endif
     #else
         gLockedTexPagesMask &= 1;
     #endif

@@ -754,7 +754,7 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     gBlockmapOriginY = d_int_to_fixed(blockmapHeader.originy);
 
     // Alloc and null initialize the list of map objects for each block
-    const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(gppBlockLinks[0]);
+    const int32_t blockLinksSize = blockmapHeader.width * blockmapHeader.height * (int32_t) sizeof(gppBlockLinks[0]);
     gppBlockLinks = (mobj_t**) Z_Malloc(*gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
     D_memset(gppBlockLinks, std::byte(0), blockLinksSize);
 }
@@ -908,6 +908,7 @@ static void P_GroupLines() noexcept {
     line_t** pLineRef = pLineRefBuffer;
 
     // Build the list of lines for each sector, also bounding boxes and the 'sound origin' point
+    ASSERT(gpSectors);
     sector_t* pSec = gpSectors;
 
     for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
@@ -925,7 +926,7 @@ static void P_GroupLines() noexcept {
             for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
                 // Does this line belong to this sector?
                 // If so save the line reference in the sector line list and add to the sector bounding box.
-                if (pLine->frontsector == pSec || pLine->backsector == pSec) {
+                if ((pLine->frontsector == pSec) || (pLine->backsector == pSec)) {
                     *pLineRef = pLine;
                     ++pLineRef;
 
@@ -993,9 +994,14 @@ static void P_GroupLines() noexcept {
 // For animated textures the first frame will be put into VRAM and the rest of the animation cached in main RAM.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_Init() noexcept {
-    // PsyDoom: make sure all animated textures and flats use the base picture - the engine expects this:
+    // PsyDoom: make sure all animated textures and flats use the base picture - the engine expects this
     #if PSYDOOM_MODS
         P_SetAnimsToBasePic();
+    #endif
+
+    // PsyDoom limit removing: start filling from the beginning of VRAM
+    #if PSYDOOM_LIMIT_REMOVING
+        I_SetTexCacheFillPage(0);
     #endif
 
     // Load sector flats into VRAM if not already there.
@@ -1033,24 +1039,29 @@ static void P_Init() noexcept {
         }
     }
 
-    // Lock the texture page (2nd page) used exclusively by flat textures.
-    // Also force the fill location in VRAM to the 3rd page after we add flats.
-    //
-    // This code makes the following assumptions:
-    //  (1) The 2nd page can ONLY contain flat textures.
-    //      Even if not completely full it's put off limits and 'locked' before we can use it for other stuff.
-    //  (2) Flats will NEVER use more than one texture page.
-    //      This therefore restricts the maximum number of flats to 16 because even if we add more, they will
-    //      be evicted by any wall texture loads below - since we forced the fill location to the start of the 3rd page.
-    //
-    // So if you want to support more than 16 flats or do a more flexible VRAM arrangement, this is the place to look.   
     #if PSYDOOM_MODS
-        // PsyDoom limit removing: we don't lock these texture pages yet under the new texture management code
+        // PsyDoom: if not limit removing restrict flats to 1 texture page (flats should be on page '1') and start filling from page 2 onwards.
+        // Also lock the texture page used by flats.
         #if !PSYDOOM_LIMIT_REMOVING
+            for (uint32_t pageIdx = 2; pageIdx < I_GetNumTexCachePages(); ++pageIdx) {
+                I_PurgeTexCachePage(pageIdx);
+            }
+
             I_LockTexCachePage(1);
             I_SetTexCacheFillPage(2);
         #endif
     #else
+        // Lock the texture page (2nd page) used exclusively by flat textures.
+        // Also force the fill location in VRAM to the 3rd page after we add flats.
+        //
+        // This code makes the following assumptions:
+        //  (1) The 2nd page can ONLY contain flat textures.
+        //      Even if not completely full it's put off limits and 'locked' before we can use it for other stuff.
+        //  (2) Flats will NEVER use more than one texture page.
+        //      This therefore restricts the maximum number of flats to 16 because even if we add more, they will
+        //      be evicted by any wall texture loads below - since we forced the fill location to the start of the 3rd page.
+        //
+        // So if you want to support more than 16 flats or do a more flexible VRAM arrangement, this is the place to look.
         gLockedTexPagesMask |= 0b0000'0000'0010;
         gTCacheFillPage = 2;
         gTCacheFillCellX = 0;
@@ -1165,12 +1176,16 @@ static void P_Init() noexcept {
     // This gives a maximum wall texture area of 768x256 - everything else after that is reserved for sprites.
     // Even if the code above fills in more textures, they will eventually be evicted from the cache in favor of sprites.
     #if PSYDOOM_MODS
-        // PsyDoom limit removing: we don't lock these texture pages yet with the new texture management logic
+        // PsyDoom, non limit removing: lock the pages reserved for wall textures and purge all other cache pages (those are for sprites)
         #if !PSYDOOM_LIMIT_REMOVING
             I_LockTexCachePage(2);
             I_LockTexCachePage(3);
             I_LockTexCachePage(4);
             I_SetTexCacheFillPage(5);
+
+            for (uint32_t pageIdx = 5; pageIdx < I_GetNumTexCachePages(); ++pageIdx) {
+                I_PurgeTexCachePage(pageIdx);
+            }
         #endif
     #else
         gLockedTexPagesMask |= 0b0000'0001'1100;
@@ -1182,8 +1197,10 @@ static void P_Init() noexcept {
 
     // PsyDoom: new limit removing texture management code.
     // Load all of the wall and flat textures that were previously flagged to be loaded.
+    // Switch to using loose packing for in-game sprites also after all textures and flats are loaded.
     #if PSYDOOM_LIMIT_REMOVING
         P_LoadMapTextures();
+        I_TexCacheUseLoosePacking(true);
     #endif
 
     // Clear out any floor or wall textures we had temporarily in RAM from the above caching.
@@ -1207,10 +1224,16 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     Z_FreeTags(*gpMainMemZone, PU_CACHE | PU_LEVSPEC| PU_LEVEL);
 
     if (!gbIsLevelBeingRestarted) {
+        // Texture cache: unlock everything except UI assets and other reserved areas of VRAM.
+        // In limit removing mode also ensure we are using tight packing of VRAM.
         #if PSYDOOM_MODS
-            // Unlock everything except the texture page containing UI assets
-            I_UnlockAllTexCachePages();
-            I_LockTexCachePage(0);
+            #if PSYDOOM_LIMIT_REMOVING
+                I_LockAllWallAndFloorTextures(false);
+                I_TexCacheUseLoosePacking(false);
+            #else
+                I_UnlockAllTexCachePages();
+                I_LockTexCachePage(0);
+            #endif
         #else
             gLockedTexPagesMask &= 1;
         #endif
@@ -1540,8 +1563,8 @@ static void P_CacheAndUpdateTexSizeInfo(texture_t& tex, const int32_t lumpNum) n
     tex.offsetY = {};
     tex.width = Endian::littleToHost(texHdr.width);
     tex.height = Endian::littleToHost(texHdr.height);
-    tex.width16 = (uint16_t)((tex.width + 15u) / 16u);
-    tex.height16 = (uint16_t)((tex.height + 15u) / 16u);
+    tex.width16 = (uint8_t)((tex.width + 15u) / 16u);
+    tex.height16 = (uint8_t)((tex.height + 15u) / 16u);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1582,16 +1605,16 @@ static void P_LoadMapTextures() noexcept {
         gLoadTextureList.end(),
         [](texture_t* pTex1, texture_t* pTex2) noexcept {
             // Sort based on texture cache cell height since this is what affects packing.
-            // If the height is equal prefer thinner textures first.
+            // If the height is equal prefer fatter textures first.
             if (pTex1->height16 == pTex2->height16)
-                return (pTex1->width16 < pTex2->width16);
+                return (pTex1->width16 > pTex2->width16);
 
-            return (pTex1->height16 < pTex2->height16);
+            return (pTex1->height16 > pTex2->height16);
         }
     );
 
-    // Cache all of the textures, starting after the UI reserved 1st texture page
-    I_SetTexCacheFillPage(1);
+    // Cache all of the textures, starting at the beginning of available VRAM
+    I_SetTexCacheFillPage(0);
     uint32_t maxTexturePage = 1;
 
     for (texture_t* pTex : gLoadTextureList) {
@@ -1599,11 +1622,9 @@ static void P_LoadMapTextures() noexcept {
         maxTexturePage = std::max(maxTexturePage, I_GetCurTexCacheFillPage());
     }
 
-    // Ensure all texture pages we filled are locked.
-    // All of the pages following will be leftover for sprites.
-    for (uint32_t pageIdx = 1; pageIdx <= maxTexturePage; ++pageIdx) {
-        I_LockTexCachePage(pageIdx);
-    }
+    // Ensure all wall and floor textures are locked.
+    // Only sprites can be unloaded from VRAM during gameplay.
+    I_LockAllWallAndFloorTextures(true);
 }
 #endif  //  #if PSYDOOM_LIMIT_REMOVING
 

@@ -73,7 +73,7 @@ void RV_CacheSkyTex() noexcept {
     // Need to upload the texture to VRAM, do that now:
     const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
     const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
-    RECT vramRect = getTextureVramRect(skytex);
+    SRECT vramRect = getTextureVramRect(skytex);
 
     LIBGPU_LoadImage(vramRect, pTexData);
     skytex.uploadFrameNum = gNumFramesDrawn;

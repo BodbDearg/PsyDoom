@@ -427,11 +427,11 @@ void P_CheckCheats() noexcept {
             #if PSYDOOM_MODS
                 const int32_t numTexPages = I_GetNumTexCachePages();
             #else
-                const int32_t numTexPages = 10;
+                const int32_t numTexPages = 11;
             #endif
 
-            if (gVramViewerTexPage > numTexPages) {
-                gVramViewerTexPage = numTexPages;
+            if (gVramViewerTexPage >= numTexPages) {
+                gVramViewerTexPage = numTexPages - 1;
             }
         }
 

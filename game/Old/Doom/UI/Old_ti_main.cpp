@@ -43,7 +43,7 @@ void DRAW_Title() noexcept {
 
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Figure out where the texture is in VRAM coords and upload it
-        const RECT vramRect = getTextureVramRect(skytex);
+        const SRECT vramRect = getTextureVramRect(skytex);
         const std::byte* const pSkyTexData = (const std::byte*) gpLumpCache[skytex.lumpNum];
         LIBGPU_LoadImage(vramRect, (const uint16_t*)(pSkyTexData + sizeof(texlump_header_t)));
 

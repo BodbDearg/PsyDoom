@@ -76,7 +76,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
         }
 
         // Load the decompressed texture to the required part of VRAM and mark as loaded
-        const RECT vramRect = getTextureVramRect(tex);
+        const SRECT vramRect = getTextureVramRect(tex);
         LIBGPU_LoadImage(vramRect, (uint16_t*)(pLumpData + sizeof(texlump_header_t)));
         tex.uploadFrameNum = gNumFramesDrawn;
     }
@@ -85,7 +85,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     // Note: the PSX version hardcoded the flat size here to 64x64 - but I will use the actual texture size instead.
     // The behavior should be the same but this way is more flexible for potential modding.
     {
-        RECT texWinRect;
+        SRECT texWinRect;
         LIBGPU_setRECT(texWinRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state

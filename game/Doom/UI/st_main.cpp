@@ -138,11 +138,17 @@ void ST_Init() noexcept {
         }
     #endif
 
-    // Lock down the first texture cache page (keep in VRAM at all times) and move the next fill location to the next page after
+    // Make sure the UI sprite atlas never gets evicted from the texture cache.
+    // In limit removing builds lock the texture and in non limit removing lock the page that it is on.
     #if PSYDOOM_MODS
-        I_LockTexCachePage(0);
-        I_SetTexCacheFillPage(1);
+        #if PSYDOOM_LIMIT_REMOVING
+            gTex_STATUS.bIsLocked = true;
+        #else
+            I_LockTexCachePage(0);
+            I_SetTexCacheFillPage(1);
+        #endif
     #else
+        // Lock down the first texture cache page (keep in VRAM at all times) and move the next fill location to the next page after
         gLockedTexPagesMask |= 1;
 
         gTCacheFillPage = 1;
@@ -326,7 +332,7 @@ void ST_Drawer() noexcept {
     {
         #if PSYDOOM_MODS
             DR_MODE drawModePrim = {};
-            RECT texWindow = { 0, 0, 0, 0 };
+            const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
             DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
@@ -391,7 +397,7 @@ void ST_Drawer() noexcept {
 
     // PsyDoom: draw extensions to the status bar for the Vulkan renderer in widescreen mode.
     // Use the panel containing the weapon numbers as filler.
-    #if PSYDOOM_MODS
+    #if PSYDOOM_VULKAN_RENDERER
         if (Video::isUsingVulkanRenderPath() && Config::gbVulkanWidescreenEnabled && Config::gbVulkanDrawExtendedStatusBar) {
             // Note: adjusting the calculation slightly by 1 pixel to account for the adjustment by 1 pixel below (left status bar drawing)
             constexpr int16_t EXT_PIECE_WIDTH = 62;

@@ -410,6 +410,23 @@ void Z_ChangeTag(void* const ptr, const int16_t tagBits) noexcept {
     block.tag = (int16_t) tagBits;
 }
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: clear or set the 'user' field for an already allocated memory block.
+// Useful for detaching a block from the lump cache for instance, or for transferring memory ownership.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Z_SetUser(void* const ptr, void** const ppUser) noexcept {
+    memblock_t& block = ((memblock_t*) ptr)[-1];
+
+    // Sanity check the zoneid for the block
+    if (block.id != ZONEID) {
+        I_Error("Z_SetUser: pointer has incorrect ZONEID");
+    }
+
+    block.user = ppUser;
+}
+#endif  // #if PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Counts and returns the number of free bytes in the given memory zone
 //------------------------------------------------------------------------------------------------------------------------------------------

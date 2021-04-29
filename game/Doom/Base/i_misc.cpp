@@ -107,7 +107,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         {
             // Set the draw mode to disable wrapping (zero sized text window) and texture page to the STATUS graphic
             DR_MODE drawModePrim = {};
-            const RECT texWindow = { 0, 0, 0, 0 };
+            const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
             I_AddPrim(drawModePrim);
         }
@@ -457,7 +457,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS
             DR_MODE drawModePrim = {};
-            const RECT texWindow = { 0, 0, 0, 0 };
+            const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
             DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);

@@ -127,7 +127,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 
     // Clear the texture window to disable wrapping
     {
-        RECT texWinRect;
+        SRECT texWinRect;
         LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
 
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
@@ -308,7 +308,7 @@ void R_DrawWeapon() noexcept {
         bool bIsTransparent;
 
         {
-            RECT texWin = { 0, 0, 0, 0 };
+            SRECT texWin = { 0, 0, 0, 0 };
             bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_FLAGS) != 0);    // Minor logic bug? Should be testing against 'MF_BLEND_ON' instead?
             const uint16_t texPageId = tex.texPageId | LIBGPU_GetTPageSemiTransBits((bIsTransparent) ? 1 : 0);
 

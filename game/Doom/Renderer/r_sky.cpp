@@ -38,7 +38,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     texture_t& skytex = *gpSkyTexture;
 
     {
-        RECT texWindow = { skytex.texPageCoordX, skytex.texPageCoordY, skytex.width, skytex.height };
+        SRECT texWindow = { (int16_t) skytex.texPageCoordX, (int16_t) skytex.texPageCoordY, skytex.width, skytex.height };
         DR_MODE drawModePrim = {};
         LIBGPU_SetDrawMode(drawModePrim, false, false, skytex.texPageId, &texWindow);
         I_AddPrim(drawModePrim);
@@ -118,7 +118,7 @@ void R_DrawSky() noexcept {
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
         const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
-        RECT vramRect = getTextureVramRect(skytex);
+        SRECT vramRect = getTextureVramRect(skytex);
 
         LIBGPU_LoadImage(vramRect, pTexData);
         skytex.uploadFrameNum = gNumFramesDrawn;
@@ -126,7 +126,7 @@ void R_DrawSky() noexcept {
 
     // Set the draw mode firstly
     {
-        RECT texWindow = { skytex.texPageCoordX, skytex.texPageCoordY, skytex.width, skytex.height };
+        SRECT texWindow = { (int16_t) skytex.texPageCoordX, (int16_t) skytex.texPageCoordY, skytex.width, skytex.height };
 
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS

@@ -495,7 +495,7 @@ void addUISprite(
 // 
 // Notes:
 //  (1) The texture format is assumed to be 8 bits per pixel always.
-//  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
+//  (2) All texture coordinates and texture sizes are in terms of 8-bit pixels (not VRAM 16-bit pixels).
 //  (3) The alpha component is only used if alpha blending is being used.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void addWorldTriangle(
@@ -565,7 +565,7 @@ void addWorldTriangle(
 // 
 // Notes:
 //  (1) The texture format is assumed to be 8 bits per pixel always.
-//  (2) All texture coordinates and texture sizes are in terms of 16-bit VRAM pixels.
+//  (2) All texture coordinates and texture sizes are in terms of 8-bit pixels (not VRAM 16-bit pixels).
 //  (3) The alpha component is only used if alpha blending is being used.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void addWorldQuad(

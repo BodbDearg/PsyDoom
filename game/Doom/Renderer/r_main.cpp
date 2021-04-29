@@ -248,7 +248,7 @@ void R_RenderPlayerView() noexcept {
     // Not sure what the reason is for this, but everything seems to work fine without doing this.
     // I'll leave the code as-is for now though until I have a better understanding of this, just in case something breaks.
     {
-        RECT texWinRect;
+        SRECT texWinRect;
         LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
 
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state

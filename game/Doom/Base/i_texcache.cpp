@@ -1,8 +1,13 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // A module implementing all VRAM memory management and texture caching (uploading to VRAM) functionality.
 // 
-// This code was originally in 'i_main.cpp' but it has since been extensively modified and changed to support VRAM sizes of up to 8192x8192
-// with 1020 individual usable texture 'pages', among other features. As a result the new code now lives separately in this module.
+// This code was originally in 'i_main.cpp' but it has since been extensively modified and changed to the following:
+//  (1) VRAM sizes of up to 8192x8192, instead of 1024x512.
+//  (2) Texture sizes of up to 1024x512 instead of 256x256.
+//  (3) Texture page sizes of 1024x512 instead of 256x256.
+//  (4) The ability to lock/unlock individual textures rather than entire texture pages. Allows finer control over what stays in the cache.
+//  (5) A more agressive packing scheme that allows larger and smaller textures to be mixed on the same texture page with less waste.
+//
 // For the original version of this code, see the 'Old' code folder.
 // 
 // For reference, VRAM for PSX Doom was originally managed as follows:
@@ -67,24 +72,47 @@ struct texdata_t {
 
 // Holds info for a single page in the texture cache.
 // Describes the pixel location in VRAM where the page is located (in 16-bit pixel coords) and the occupying textures for each cell.
-// Also has a boolean variable indicating whether the page is 'locked' for modification.
+// Also has a boolean variable indicating whether the page is 'locked' for modification in on limit removing builds (classic way of marking VRAM areas as unusable).
 struct tcachepage_t {
-    bool        bIsLocked;
+    #if !PSYDOOM_LIMIT_REMOVING
+        bool bIsLocked;
+    #endif
+
     uint16_t    vramX;
     uint16_t    vramY;
     texture_t*  cells[TCACHE_CELLS_Y][TCACHE_CELLS_X];
 };
 
-// All of the texture pages available to use.
-// Pages reserved for the framebuffer are NOT included in this list.
+// All of the texture pages available to use
 static std::vector<tcachepage_t> gTCachePages;
 
+#if PSYDOOM_LIMIT_REMOVING
+    // A dummy texture which reserves the portion of VRAM used for the PSX framebuffer and CLUTs (palettes).
+    // We are never allowed to upload textures to this area.
+    static texture_t gReservedVramDummyTex;
+#endif
+
 // Texture cache fill variables.
-// Describes where we are filling in the cache next and the current maximum height of the row being filled (in cells).
+// Describes where we are filling in the cache next.
 static uint32_t gTCacheFillPage;
 static uint32_t gTCacheFillCellX;
 static uint32_t gTCacheFillCellY;
-static uint32_t gTCacheFillRowCellH;
+
+// Whether the 'loose' texture packing mode is currently allowed.
+// When using loose packing and moving onto a new texture cache row, the cache will skip past the maximum height of all textures placed on
+// the current row. This may create gaps when some textures are large and others are small but it also ensures that recently added textures
+// don't get overwritten. We use this mode for sprites during gameplay and fall back to using tighter (more exhaustive) packing if the cache
+// has to try and search through multiple texture pages for available space.
+//
+// Loose packing was how the texture cache always functioned in the original game, PsyDoom adds support for tighter packing to try and make
+// better use of VRAM in some situations and pack textures more tightly.
+#if PSYDOOM_LIMIT_REMOVING
+    static bool gbAllowLoosePacking = false;
+#endif
+
+// Current row height (in cells) when using the 'loose' texture packing mode.
+// If loose packing is used, when we reach the end of the current texture cache row we skip past this height and don't try to fill in any gaps.
+static uint32_t gTCacheLoosePackRowH;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Checks to see if the texture can be placed on the given page at the current fill location.
@@ -107,21 +135,37 @@ static bool TC_PrepFillLocationCells(tcachepage_t& texPage, const texture_t& tex
     for (uint16_t y = yBeg; y < yEnd; ++y) {
         for (uint16_t x = xBeg; x < xEnd; ++x) {
             // If the cell is empty then all is good, skip over
-            texture_t* const pTex = texPage.cells[y][x];
+            texture_t* const pOccupyTex = texPage.cells[y][x];
 
-            if (!pTex)
+            if (!pOccupyTex)
                 continue;
 
-            // Cell is not empty! If the texture in the cell is in use for this frame then we can't evict it.
-            // In this case skip past the texture and adjust/expand the current fill row height accordingly:
-            if (pTex->uploadFrameNum == gNumFramesDrawn) {
-                gTCacheFillCellX += pTex->width16;
-                gTCacheFillRowCellH = std::max<uint32_t>(gTCacheFillRowCellH, pTex->height16);
+            // Cell is not empty! If the texture in the cell is in use for this frame or is locked then we can't evict it.
+            // In that case skip past the texture:
+            #if PSYDOOM_LIMIT_REMOVING
+                const bool bIsOccupyTexLocked = pOccupyTex->bIsLocked;
+            #else
+                constexpr bool bIsOccupyTexLocked = false;
+            #endif
+
+            const bool bCantEvictTex = ((pOccupyTex->uploadFrameNum == gNumFramesDrawn) || bIsOccupyTexLocked);
+            
+            if (bCantEvictTex) {
+                gTCacheFillCellX += pOccupyTex->width16;
+
+                // Adjust the current loose packing row height to account for the texture we encountered.
+                // If we are using loose packing we want to skip past the rows that this texture lies on.
+                const int32_t occupyBegCellY = pOccupyTex->texPageCoordY / TCACHE_CELL_SIZE;
+                const int32_t occupyMaxCellY = occupyBegCellY + pOccupyTex->height16;
+                const int32_t loosePackMaxY = gTCacheFillCellY + gTCacheLoosePackRowH;
+                const int32_t occupyTexCellsHigher = std::max(occupyMaxCellY - loosePackMaxY, 0);
+                gTCacheLoosePackRowH += occupyTexCellsHigher;
+
                 return false;
             }
 
             // The cell is not empty but we can evict the texture, do that now:
-            I_RemoveTexCacheEntry(*pTex);
+            I_RemoveTexCacheEntry(*pOccupyTex);
         }
     }
 
@@ -133,15 +177,11 @@ static bool TC_PrepFillLocationCells(tcachepage_t& texPage, const texture_t& tex
 // Tries to move to a valid fill location in the current texture page for the specified texture.
 // Returns 'false' on failure to find a valid fill location.
 // May evict stale textures (not for the current frame) along the way.
+// Loose packing can optionally be used, which affects how many rows of cells are skipped when we reach the end of the current row.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool TC_MoveToPageFillLocation(const texture_t& tex) noexcept {
-    // If the texture page is locked then no location on the page is valid
+static bool TC_MoveToPageFillLocation(const texture_t& tex, const bool bLoosePack) noexcept {
+    // Try to find a valid location on the page to place the texture at until we reach the end
     tcachepage_t& texPage = gTCachePages[gTCacheFillPage];
-
-    if (texPage.bIsLocked)
-        return false;
-
-    // Continue trying to find a valid location on the page to place the texture at until we reach the end
     const uint16_t texW16 = tex.width16;
     const uint16_t texH16 = tex.height16;
 
@@ -152,8 +192,8 @@ static bool TC_MoveToPageFillLocation(const texture_t& tex) noexcept {
 
         if (gTCacheFillCellX + texW16 > TCACHE_CELLS_X) {
             gTCacheFillCellX = 0;
-            gTCacheFillCellY += gTCacheFillRowCellH;
-            gTCacheFillRowCellH = 0;
+            gTCacheFillCellY += (bLoosePack) ? std::max(gTCacheLoosePackRowH, 1u) : 1u;     // std::max with '1' just to be safe, always skip at least 1 row
+            gTCacheLoosePackRowH = 0;                                                       // Don't know what lies on the next row yet
         }
 
         // Have we reached the end of the page? Abort the search for a valid fill location if so:
@@ -162,8 +202,10 @@ static bool TC_MoveToPageFillLocation(const texture_t& tex) noexcept {
 
         // Check to see if the cells occupied are OK and evict any stale textures.
         // If this succeeds then we are done, otherwise we loop around and try again until we reach the end of the page.
-        if (TC_PrepFillLocationCells(texPage, tex))
+        if (TC_PrepFillLocationCells(texPage, tex)) {
+            gTCacheLoosePackRowH = std::max<uint32_t>(gTCacheLoosePackRowH, tex.height16);      // This texture may increase the loose packing row height
             return true;
+        }
     }
 
     // Failed to find a valid fill location on this page if we reached here
@@ -180,13 +222,36 @@ static bool TC_MoveToFillLocation(const texture_t& tex) noexcept {
     ASSERT(gTCachePages.size() > 0);
 
     // Try to place the current texture on every single page, including the current one rewound to the very beginning.
-    // If all that fails then simply give up.
+    // If all that fails then give up...
+    //
+    // Note that a looser form of packing can be used for the initial page so that recent additions to the
+    // cache are not overwritten but if we find ourselves looking for room we switch to tighter (more exhaustive) packing for later pages.
     const uint32_t numTCachePages = (uint32_t) gTCachePages.size();
 
+    #if PSYDOOM_LIMIT_REMOVING
+        bool bUseLoosePacking = gbAllowLoosePacking;
+    #else
+        constexpr bool bUseLoosePacking = true;     // Always active in non limit removing builds
+    #endif
+
     for (uint32_t numAttempts = numTCachePages + 1; numAttempts != 0; --numAttempts) {
-        // Try move to a valid fill location in the current page, otherwise try the next one
-        if (TC_MoveToPageFillLocation(tex))
-            return true;
+        // In non limit removing builds the entire page can be locked too (classic VRAM management technique)
+        #if PSYDOOM_LIMIT_REMOVING
+            constexpr bool bPageLocked = false;
+        #else
+            const bool bPageLocked = gTCachePages[gTCacheFillPage].bIsLocked;
+        #endif
+
+        // Try move to a valid fill location in the current page (if not locked), otherwise try the next one
+        if (!bPageLocked) {
+            if (TC_MoveToPageFillLocation(tex, bUseLoosePacking))
+                return true;
+        }
+
+        // Limit removing: use tight packing for subsequent texture pages
+        #if PSYDOOM_LIMIT_REMOVING
+            bUseLoosePacking = false;
+        #endif
 
         I_SetTexCacheFillPage((gTCacheFillPage + 1) % numTCachePages);
     }
@@ -200,12 +265,18 @@ static bool TC_MoveToFillLocation(const texture_t& tex) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Frees a rectangular area of texture cache cells in the given texture page.
+// Purges a rectangular area of texture cache cells in the given texture page, removing any textures which are not locked.
 // Assumes all coordinates are in bounds.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void TC_FreePageCells(const tcachepage_t& texPage, const uint32_t x, const uint32_t y, const uint32_t w, const uint32_t h) noexcept {
+static void TC_PurgePageCells(const tcachepage_t& texPage, const uint32_t x, const uint32_t y, const uint32_t w, const uint32_t h) noexcept {
     ASSERT(x + w <= TCACHE_CELLS_X);
     ASSERT(y + h <= TCACHE_CELLS_Y);
+
+    // Ignore the call if the entire page is locked (non limit removing builds)
+    #if !PSYDOOM_LIMIT_REMOVING
+        if (texPage.bIsLocked)
+            return;
+    #endif
 
     const uint32_t xEnd = x + w;
     const uint32_t yEnd = y + h;
@@ -214,7 +285,16 @@ static void TC_FreePageCells(const tcachepage_t& texPage, const uint32_t x, cons
         for (uint32_t xCur = x; xCur < xEnd; ++xCur) {
             texture_t* const pTex = texPage.cells[yCur][xCur];
 
-            if (pTex) {
+            if (!pTex)
+                continue;
+
+            #if PSYDOOM_LIMIT_REMOVING
+                const bool bIsTexLocked = pTex->bIsLocked;
+            #else
+                constexpr bool bIsTexLocked = false;
+            #endif
+
+            if (!bIsTexLocked) {
                 I_RemoveTexCacheEntry(*pTex);
             }
         }
@@ -222,10 +302,10 @@ static void TC_FreePageCells(const tcachepage_t& texPage, const uint32_t x, cons
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Frees all cells in the given texture page
+// Purges all cells in the given texture page, removing any textures which are not locked
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void TC_FreePageCells(const tcachepage_t& texPage) noexcept {
-    TC_FreePageCells(texPage, 0, 0, TCACHE_CELLS_X, TCACHE_CELLS_Y);
+static void TC_PurgePageCells(const tcachepage_t& texPage) noexcept {
+    TC_PurgePageCells(texPage, 0, 0, TCACHE_CELLS_X, TCACHE_CELLS_Y);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -309,7 +389,7 @@ static void TC_UploadTexToVram(texture_t& tex, const texlump_header_t& texInfo, 
 
     if (texData.size >= expectedTexSize) {
         // Upload the texture to VRAM at the current fill location
-        RECT dstVramRect;
+        SRECT dstVramRect;
         LIBGPU_setRECT(
             dstVramRect,
             (int16_t)(tpageU + gTCacheFillCellX * TCACHE_CELL_SIZE / 2),
@@ -329,8 +409,13 @@ static void TC_UploadTexToVram(texture_t& tex, const texlump_header_t& texInfo, 
     }
 
     // Save the texture's page coordinate
-    tex.texPageCoordX = (uint8_t)(gTCacheFillCellX * TCACHE_CELL_SIZE);
-    tex.texPageCoordY = (uint8_t)(gTCacheFillCellY * TCACHE_CELL_SIZE);
+    #if PSYDOOM_LIMIT_REMOVING
+        tex.texPageCoordX = (uint16_t)(gTCacheFillCellX * TCACHE_CELL_SIZE);
+        tex.texPageCoordY = (uint16_t)(gTCacheFillCellY * TCACHE_CELL_SIZE);
+    #else
+        tex.texPageCoordX = (uint8_t)(gTCacheFillCellX * TCACHE_CELL_SIZE);
+        tex.texPageCoordY = (uint8_t)(gTCacheFillCellY * TCACHE_CELL_SIZE);
+    #endif
 
     // Get and save the texture page id.
     // Note that format '1' = '8 bpp (indexed)' and that transparency bits are added later during rendering.
@@ -343,20 +428,25 @@ static void TC_UploadTexToVram(texture_t& tex, const texlump_header_t& texInfo, 
 void I_InitTexCache() noexcept {
     // Create texture cache pages for every 128x256 pixel region.
     // The pages are really 256x256 pixels at 8 bpp but in terms of 16 bpp coords that is 128x256.
-    // Note: we skip the region 0,0 - 511,255 (4 pages) since it is reserved for the PSX framebuffer.
+    // PsyDoom limit removing: the pages are now 512x512 (1024x512 @ 8 bpp).
     gTCachePages.clear();
 
     const Gpu::Core& gpu = PsxVm::gGpu;
     const uint16_t vramW = gpu.ramPixelW;
     const uint16_t vramH = gpu.ramPixelH;
 
-    gTCachePages.reserve((vramW / 128) * (vramH / 256));
+    constexpr uint32_t PAGE_VRAM_W = TCACHE_PAGE_W / 2;
+    constexpr uint32_t PAGE_VRAM_H = TCACHE_PAGE_H;
 
-    for (uint16_t vramY = 0; vramY < vramH; vramY += 256) {
-        for (uint16_t vramX = 0; vramX < vramW; vramX += 128) {
-            // Skip PSX framebuffer reserved regions
-            if ((vramY == 0) && (vramX < 512))
-                continue;
+    gTCachePages.reserve((vramW / PAGE_VRAM_W) * (vramH / PAGE_VRAM_H));
+
+    for (uint16_t vramY = 0; vramY < vramH; vramY += PAGE_VRAM_H) {
+        for (uint16_t vramX = 0; vramX < vramW; vramX += PAGE_VRAM_W) {
+            // In non limit removing builds the region used for the PSX framebuffer is invisible and not included in the texture page list
+            #if !PSYDOOM_LIMIT_REMOVING
+                if ((vramY == 0) && (vramX < 512))
+                    continue;
+            #endif
 
             // Init this texture page
             tcachepage_t& texPage = gTCachePages.emplace_back();
@@ -367,8 +457,24 @@ void I_InitTexCache() noexcept {
 
     ASSERT(gTCachePages.size() > 0);
 
-    // Initially fill from page 0
+    // Initially fill from page 0 and disallow loose packing (limit removing builds)
+    #if PSYDOOM_LIMIT_REMOVING
+        gbAllowLoosePacking = false;
+    #endif
+
     I_SetTexCacheFillPage(0);
+
+    // Limit removing: reserve the first 1024x256 (8 bpp) pixels for the PSX framebuffer and CLUTs
+    #if PSYDOOM_LIMIT_REMOVING
+        gReservedVramDummyTex = {};
+        gReservedVramDummyTex.width = 1024;
+        gReservedVramDummyTex.height = 256;
+        gReservedVramDummyTex.width16 = 64;
+        gReservedVramDummyTex.height16 = 16;
+        gReservedVramDummyTex.bIsLocked = true;
+
+        TC_FillCacheCells(gTCachePages[0], gReservedVramDummyTex);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -394,11 +500,51 @@ void I_SetTexCacheFillPage(const uint32_t pageIdx) noexcept {
     gTCacheFillPage = pageIdx;
     gTCacheFillCellX = 0;
     gTCacheFillCellY = 0;
-    gTCacheFillRowCellH = 0;
+    gTCacheLoosePackRowH = 0;   // Don't know what's on the current row yet...
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Evicts all textures in the cache which are not locked, for a specific page index
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_PurgeTexCachePage(const uint32_t pageIdx) noexcept {
+    ASSERT(pageIdx < gTCachePages.size());
+    TC_PurgePageCells(gTCachePages[pageIdx]);
+}
+
+#if PSYDOOM_LIMIT_REMOVING
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Allows or disallows the 'loose' texture packing mode
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_TexCacheUseLoosePacking(const bool bUseLoosePacking) noexcept {
+    gbAllowLoosePacking = bUseLoosePacking;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Locks or unlocks all wall and floor textures.
+// If the textures are locked then they cannot be evicted from the cache.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_LockAllWallAndFloorTextures(const bool bLock) noexcept {
+    texture_t* const pWallTextures = gpTextures;
+    const int32_t numWallTextures = gNumTexLumps;
+
+    for (int32_t i = 0; i < numWallTextures; ++i) {
+        pWallTextures[i].bIsLocked = bLock;
+    }
+
+    texture_t* const pFloorTextures = gpFlatTextures;
+    const int32_t numFloorTextures = gNumFlatLumps;
+
+    for (int32_t i = 0; i < numFloorTextures; ++i) {
+        pFloorTextures[i].bIsLocked = bLock;
+    }
+}
+#endif  // #if PSYDOOM_LIMIT_REMOVING
+
+#if !PSYDOOM_LIMIT_REMOVING
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Locks the specified texture cache page
+// Locks or unlocks all wall and floor textures.
+// If the textures are locked then they cannot be evicted from the cache.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_LockTexCachePage(const uint32_t pageIdx) noexcept {
     ASSERT(pageIdx < gTCachePages.size());
@@ -413,6 +559,7 @@ void I_UnlockAllTexCachePages() noexcept {
         page.bIsLocked = false;
     }
 }
+#endif  // #if !PSYDOOM_LIMIT_REMOVING
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Removes the given texture from the cache and frees any cells that it is using.
@@ -440,6 +587,7 @@ void I_RemoveTexCacheEntry(texture_t& tex) noexcept {
     tex.texPageCoordX = 0;
     tex.texPageCoordY = 0;
     tex.texPageId = 0;
+    tex.bIsCached = false;
     tex.ppTexCacheEntries = nullptr;
 }
 
@@ -452,7 +600,7 @@ void I_CacheTex(texture_t& tex) noexcept {
     tex.uploadFrameNum = gNumFramesDrawn;
 
     // If the texture is already in the cache then there is nothing else to do
-    if (tex.texPageId != 0)
+    if (tex.bIsCached)
         return;
 
     // Move to a valid fill location for the texture and abort if failed.
@@ -460,7 +608,10 @@ void I_CacheTex(texture_t& tex) noexcept {
     if (!TC_MoveToFillLocation(tex))
         return;
 
-    // Fill the cells that this texture will occupy with references to the texture
+    // Found a place to upload the texture!
+    // Mark the texture as cached and fill the cells that this texture will occupy with references to the texture.
+    tex.bIsCached = true;
+
     tcachepage_t& texPage = gTCachePages[gTCacheFillPage];
     TC_FillCacheCells(texPage, tex);
 
@@ -468,24 +619,18 @@ void I_CacheTex(texture_t& tex) noexcept {
     const texdata_t texData = TC_CacheTexData(tex);
     const texlump_header_t texInfo = *(const texlump_header_t*) texData.pBytes;
 
-    // Upload the texture to vram
+    // Upload the texture to vram and advance the fill position in the texture cache
     TC_UploadTexToVram(tex, texInfo, texData, texPage);
-
-    // Advance the fill position in the texture cache.
-    // Also expand the fill row height if this texture is taller than the current height.
     gTCacheFillCellX += tex.width16;
-    gTCacheFillRowCellH = std::max<uint32_t>(gTCacheFillRowCellH, tex.height16);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Evicts all textures in non-locked pages in the texture cache.
+// Evicts all textures in the texture cache which are not locked.
 // Also resets the next position that we will populate the cache at.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_PurgeTexCache() noexcept {
     for (tcachepage_t& page : gTCachePages) {
-        if (!page.bIsLocked) {
-            TC_FreePageCells(page);
-        }
+        TC_PurgePageCells(page);
     }
 
     I_SetTexCacheFillPage(0);
@@ -510,8 +655,8 @@ void I_VramViewerDraw(const uint32_t texPageIdx) noexcept {
         // PsyDoom: fix these right and bottom UVs now that we can do 16-bit coordinates.
         // This fixes slight pixel stretching issues in the VRAM viewer.
         #if PSYDOOM_LIMIT_REMOVING
-            constexpr LibGpuUV BUV = 256;
-            constexpr LibGpuUV RUV = 256;
+            constexpr LibGpuUV BUV = TCACHE_PAGE_H;
+            constexpr LibGpuUV RUV = TCACHE_PAGE_W;
         #else
             constexpr LibGpuUV BUV = 255;
             constexpr LibGpuUV RUV = 255;
@@ -552,14 +697,18 @@ void I_VramViewerDraw(const uint32_t texPageIdx) noexcept {
         LIBGPU_setRGB0(linePrim, 255, 0, 0);
 
         // Figure out the y position and height for the texture cache entry.
-        // Have to rescale in using a 24.8 fixed point format because the screen is 240 pixels high, and the texture cache is 256 pixels high.
-        uint32_t y = (d_lshift<8>((uint32_t) pTex->texPageCoordY)) * BY / TCACHE_PAGE_SIZE;
-        uint32_t h = (d_lshift<8>((uint32_t) pTex->height))        * BY / TCACHE_PAGE_SIZE;
+        // Have to rescale in using a 24.8 fixed point format because the screen is 240 pixels high, and the texture cache is a logical 256 pixels high (originally).
+        // Note: given the increased texture cache size in limit removing builds, also have to scale the coordinates to account for that too.
+        constexpr uint32_t TCACHE_X_SCALE = TCACHE_PAGE_W / 256;
+        constexpr uint32_t TCACHE_Y_SCALE = TCACHE_PAGE_H / 256;
+
+        uint32_t y = (d_lshift<8>((uint32_t) pTex->texPageCoordY)) * BY / 256 / TCACHE_Y_SCALE;
+        uint32_t h = (d_lshift<8>((uint32_t) pTex->height))        * BY / 256 / TCACHE_Y_SCALE;
         y = d_rshift<8>(y);
         h = d_rshift<8>(h);
 
-        const uint16_t x = pTex->texPageCoordX;
-        const uint16_t w = pTex->width;
+        const uint16_t x = pTex->texPageCoordX / TCACHE_X_SCALE;
+        const uint16_t w = pTex->width / TCACHE_X_SCALE;
 
         // Draw all the box lines for the cache entry
         LIBGPU_setXY2(linePrim, x, (int16_t) y, x + w, (int16_t) y);            // Top

@@ -23,8 +23,12 @@
 
 // Represents a rectangular area of the framebuffer.
 // The coordinates assume 16-bit color values, for other modes coords will need to be scaled accordingly.
-// Note: negative values or values exceeding the 1024x512 (16-bit) framebuffer are NOT allowed!
-struct RECT {
+// 
+// Notes:
+//  (1) Negative values or values exceeding the 1024x512 (16-bit) framebuffer are NOT allowed!
+//  (2) This struct was originally called 'RECT' but I renamed it to 'SRECT' (RECT of type 'short') to avoid conflicts with the Windows SDK 'RECT'.
+//
+struct SRECT {
     int16_t     x;      // Position in VRAM
     int16_t     y;
     int16_t     w;      // Size in VRAM
@@ -208,8 +212,8 @@ struct DR_TWIN {
 
 // Settings for the front buffer (buffer being displayed)
 struct DISPENV {
-    RECT        disp;           // What to to display from the frame buffer. Width can be: 256, 320, 384, 512, or 640. Height can be: 240 or 480.
-    RECT        screen;         // Output screen display area. 0,0 top left of monitor, 256, 240 is lower right.
+    SRECT       disp;           // What to to display from the frame buffer. Width can be: 256, 320, 384, 512, or 640. Height can be: 240 or 480.
+    SRECT       screen;         // Output screen display area. 0,0 top left of monitor, 256, 240 is lower right.
     uint8_t     isinter;        // If '1' the display is interlaced
     uint8_t     isrgb24;        // If '1' the display is RGB24
     uint8_t     _pad[2];        // Unused/reserved
@@ -223,9 +227,9 @@ struct DR_ENV {
 
 // Settings for the back buffer (buffer being drawn to)
 struct DRAWENV {
-     RECT       clip;           // Rectangular area to restrict drawing to. Must be between 0,0 to 1023,511 (inclusive).
+     SRECT      clip;           // Rectangular area to restrict drawing to. Must be between 0,0 to 1023,511 (inclusive).
      int16_t    ofs[2];         // Pixel offsets added to primitives before drawing
-     RECT       tw;             // Specify what part of VRAM to wrap within
+     SRECT      tw;             // Specify what part of VRAM to wrap within
      uint16_t   tpage;          // Starting/initial value of for the current texture page
      uint8_t    dtd;            // If '1' dithering is enabled
      uint8_t    dfe;            // If '1' drawing to the display area is allowed
@@ -240,19 +244,19 @@ void LIBGPU_SetDispMask(const int32_t mask) noexcept;
 
 int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
 
-void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept;
-int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept;
+void LIBGPU_LoadImage(const SRECT& dstRect, const uint16_t* const pImageData) noexcept;
+int32_t LIBGPU_MoveImage(const SRECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept;
 DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept;
 DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept;
 
-void LIBGPU_SetTexWindow(DR_TWIN& prim, const RECT& texWin) noexcept;
+void LIBGPU_SetTexWindow(DR_TWIN& prim, const SRECT& texWin) noexcept;
 
 void LIBGPU_SetDrawMode(
     DR_MODE& modePrim,
     const bool bCanDrawInDisplayArea,
     const bool bDitheringOn,
     const uint16_t texPageId,
-    const RECT* const pNewTexWindow
+    const SRECT* const pNewTexWindow
 ) noexcept;
 
 uint32_t LIBGPU_SYS_get_mode(
@@ -261,7 +265,7 @@ uint32_t LIBGPU_SYS_get_mode(
     const uint16_t texPageId
 ) noexcept;
 
-uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
+uint32_t LIBGPU_SYS_get_tw(const SRECT* const pRect) noexcept;
 
 uint16_t LIBGPU_GetTPage(
     const int32_t texFmt,
@@ -489,7 +493,7 @@ inline constexpr void LIBGPU_setlen(T& prim, const uint8_t len) noexcept {
 }
 
 // Set the bounds of a RECT
-inline constexpr void LIBGPU_setRECT(RECT& rect, const int16_t x, const int16_t y, const int16_t w, const int16_t h) noexcept {
+inline constexpr void LIBGPU_setRECT(SRECT& rect, const int16_t x, const int16_t y, const int16_t w, const int16_t h) noexcept {
     rect.x = x;
     rect.y = y;
     rect.w = w;

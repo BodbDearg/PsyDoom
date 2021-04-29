@@ -353,18 +353,22 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     tex.height = patchH;
 
     if (patchW + 15 >= 0) {
-        tex.width16 = (patchW + 15) / 16;
+        tex.width16 = (uint8_t)((patchW + 15) / 16);
     } else {
-        tex.width16 = (patchW + 30) / 16;   // Not sure why texture sizes would be negative? What does that mean?
+        tex.width16 = (uint8_t)((patchW + 30) / 16);    // Not sure why texture sizes would be negative? What does that mean?
     }
 
     if (patchH + 15 >= 0) {
-        tex.height16 = (patchH + 15) / 16;
+        tex.height16 = (uint8_t)((patchH + 15) / 16);
     } else {
-        tex.height16 = (patchH + 30) / 16;  // Not sure why texture sizes would be negative? What does that mean?
+        tex.height16 = (uint8_t)((patchH + 30) / 16);   // Not sure why texture sizes would be negative? What does that mean?
     }
 
-    tex.texPageId = 0;
+    // PsyDoom: don't wipe this field, if it's already in the cache leave it there...
+    #if !PSYDOOM_MODS
+        tex.texPageId = 0;
+    #endif
+
     tex.lumpNum = (uint16_t) lumpNum;
     I_CacheTex(tex);
 }
@@ -387,8 +391,8 @@ void I_DrawSprite(
     const int16_t clutId,
     const int16_t xpos,
     const int16_t ypos,
-    const uint8_t texU,
-    const uint8_t texV,
+    const LibGpuUV texU,
+    const LibGpuUV texV,
     const uint16_t texW,
     const uint16_t texH
 ) noexcept {
@@ -433,8 +437,8 @@ void I_DrawColoredSprite(
     const int16_t clutId,
     const int16_t xpos,
     const int16_t ypos,
-    const uint8_t texU,
-    const uint8_t texV,
+    const LibGpuUV texU,
+    const LibGpuUV texV,
     const uint16_t texW,
     const uint16_t texH,
     const uint8_t r,

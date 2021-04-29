@@ -167,7 +167,7 @@ int32_t LIBGPU_DrawSync([[maybe_unused]] const int32_t mode) noexcept {
 // Upload the given image data to the given area in VRAM.
 // The image format is assumed to be 16-bit.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept {
+void LIBGPU_LoadImage(const SRECT& dstRect, const uint16_t* const pImageData) noexcept {
     // Sanity checks
     Gpu::Core& gpu = PsxVm::gGpu;
 
@@ -231,7 +231,7 @@ void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noe
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Copy one part of VRAM to another part of VRAM
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept {
+int32_t LIBGPU_MoveImage(const SRECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept {
     // Sanity checks
     Gpu::Core& gpu = PsxVm::gGpu;
 
@@ -325,9 +325,9 @@ DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize a draw primitive that sets the current texture window.
-// Use the specified RECT as the window.
+// Use the specified SRECT as the window.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBGPU_SetTexWindow(DR_TWIN& prim, const RECT& texWin) noexcept {
+void LIBGPU_SetTexWindow(DR_TWIN& prim, const SRECT& texWin) noexcept {
     LIBGPU_setlen(prim, 2);
     prim.code[0] = LIBGPU_SYS_get_tw(&texWin);
     prim.code[1] = 0;
@@ -342,7 +342,7 @@ void LIBGPU_SetDrawMode(
     const bool bCanDrawInDisplayArea,
     const bool bDitheringOn,
     const uint16_t texPageId,
-    const RECT* const pNewTexWindow
+    const SRECT* const pNewTexWindow
 ) noexcept {
     // Set primitive size
     modePrim.tag &= 0x00FFFFFF;
@@ -397,20 +397,31 @@ uint32_t LIBGPU_SYS_get_mode(
 // For more details see "GP0(E2h) - Texture Window setting":
 //      https://problemkaputt.de/psx-spx.htm#gpudisplaycontrolcommandsgp1
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept {
+uint32_t LIBGPU_SYS_get_tw(const SRECT* const pRect) noexcept {
     // If no rect then return an invalid encoding
     if (!pRect)
         return 0;
 
-    // Encode the texture window using 5 bits for each piece of info
-    constexpr uint32_t CMD_HEADER = 0xE2000000;
+    // PsyDoom: changing the encoding of this setting to allow for a new maximum texture (and texture page size) of 1024x512
+    #if PSYDOOM_LIMIT_REMOVING
+        // Note: 'CMD_HEADER' is not required anymore, reclaim those bits...
+        const uint32_t twOffsetX = (uint16_t)(pRect->x & 0x3FFu) >> 1;
+        const uint32_t twOffsetY = (uint16_t)(pRect->y & 0x1FFu) >> 2;
+        const uint32_t twSizeX = (uint16_t)(pRect->w & 0x3FFu) >> 1;
+        const uint32_t twSizeY = (uint16_t)(pRect->h & 0x1FFu) >> 2;
 
-    const uint32_t twOffsetX = (uint16_t)(pRect->x & 0xFF) >> 3;
-    const uint32_t twOffsetY = (uint16_t)(pRect->y & 0xFF) >> 3;
-    const uint32_t twMaskX = (uint16_t)(-pRect->w & 0xFF) >> 3;
-    const uint32_t twMaskY = (uint16_t)(-pRect->h & 0xFF) >> 3;
+        return (twSizeY << 25) | (twSizeX << 16) | (twOffsetY << 9) | twOffsetX;
+    #else
+        // Encode the texture window using 5 bits for each piece of info
+        constexpr uint32_t CMD_HEADER = 0xE2000000;
 
-    return (CMD_HEADER | (twOffsetY << 15) | (twOffsetX << 10) | (twMaskY << 5) | twMaskX);
+        const uint32_t twOffsetX = (uint16_t)(pRect->x & 0xFF) >> 3;
+        const uint32_t twOffsetY = (uint16_t)(pRect->y & 0xFF) >> 3;
+        const uint32_t twMaskX = (uint16_t)(-pRect->w & 0xFF) >> 3;
+        const uint32_t twMaskY = (uint16_t)(-pRect->h & 0xFF) >> 3;
+
+        return (CMD_HEADER | (twOffsetY << 15) | (twOffsetX << 10) | (twMaskY << 5) | twMaskX);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -530,7 +541,7 @@ void LIBGPU_FntLoad(const int32_t dstX, const int32_t dstY) noexcept {
 // The id of the opened print stream is returned.
 //
 // Params:
-//  dispX, dispY:   Top left position of the screen RECT to output the debug text to.
+//  dispX, dispY:   Top left position of the screen rectangle to output the debug text to.
 //  dispW, dispH:   Bounds of the area to output debug text to.
 //  bClearBg:       If true then the background is cleared to 0,0,0 when 'flushing' (displaying) debug text.
 //                  (This field is IGNORED for this re-implementation of LIBGPU)
@@ -672,7 +683,7 @@ void LIBGPU_FntPrint([[maybe_unused]] const int32_t printStreamId, const char* c
 //  (1) pImageData:     The image data.
 //  (2) bitDepth:       Image bit depth: 0 = 4 bit; 1 = 8 bit; 2 = 16 bit
 //  (3) semiTransRate:  Semi transparency rate: see 'LIBGPU_getTPage' for more details.
-//  (4) dstX, dstY,     Bounds of the destination RECT in vram.
+//  (4) dstX, dstY,     Bounds of the destination rectangle in vram.
 //      imgW, imgH:     Note: these coordinates are in terms of the image format (4/8/16 bpp), and will be divided accordingly
 //                      to obtain the address in VRAM when the pixels are interpreted as 16-bit.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -685,8 +696,8 @@ uint16_t LIBGPU_LoadTPage(
     const int32_t imgW,
     const int32_t imgH
 ) noexcept {
-    // Figure out the destination RECT in VRAM in terms of 16-bit pixels
-    RECT dstRect;
+    // Figure out the destination SRECT in VRAM in terms of 16-bit pixels
+    SRECT dstRect = {};
     dstRect.x = (int16_t) dstX;
     dstRect.y = (int16_t) dstY;
     dstRect.h = (int16_t) imgH;
@@ -709,7 +720,7 @@ uint16_t LIBGPU_LoadTPage(
 // Returns the Clut ID for the uploaded CLUT.
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t LIBGPU_LoadClut(const uint16_t* pColors, const int32_t x, const int32_t y) noexcept {
-    RECT dstRect;
+    SRECT dstRect = {};
     dstRect.x = (int16_t) x;
     dstRect.y = (int16_t) y;
     dstRect.w = 256;

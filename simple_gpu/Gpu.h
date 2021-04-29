@@ -194,10 +194,10 @@ struct Core {
     uint16_t        texPageY;           // Location of the area used for texturing (top left Y, in terms of 16-bit pixels)
     uint16_t        texPageXMask;       // Mask used to wrap X coordinates to be within the texture page (e.g 0xFF for 256 pixel wrap, in terms of 16-bit pixels)
     uint16_t        texPageYMask;       // Mask used to wrap Y coordinates to be within the texture page (e.g 0xFF for 256 pixel wrap, in terms of 16-bit pixels)
-    uint16_t        texWinX;            // Location of a window within the texture page to use for texturing (top left X, in terms of 16-bit pixels)
-    uint16_t        texWinY;            // Location of a window within the texture page to use for texturing (top left Y, in terms of 16-bit pixels)
-    uint16_t        texWinXMask;        // Masks X coordinates to be within the texture window (e.g 0xF for 16 pixel wrap, in terms of 16-bit pixels)
-    uint16_t        texWinYMask;        // Masks Y coordinates to be within the texture window (e.g 0xF for 16 pixel wrap, in terms of 16-bit pixels)
+    uint16_t        texWinX;            // Location of a window within the texture page to use for texturing (top left X, in terms of current format pixels)
+    uint16_t        texWinY;            // Location of a window within the texture page to use for texturing (top left Y, in terms of current format pixels)
+    uint16_t        texWinXMask;        // Masks X coordinates to be within the texture window (e.g 0xF for 16 pixel wrap, in terms of current format pixels)
+    uint16_t        texWinYMask;        // Masks Y coordinates to be within the texture window (e.g 0xF for 16 pixel wrap, in terms of current format pixels)
     BlendMode       blendMode;          // Blend mode for blended/semi-transparent geometry
     TexFmt          texFmt;             // Current texture format in use
     uint16_t        clutX;              // X position of the current CLUT/color-index table in 16-bit VRAM pixels (CLUT is arranged in a row at this location)

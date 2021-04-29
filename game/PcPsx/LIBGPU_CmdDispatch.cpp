@@ -15,10 +15,10 @@ BEGIN_NAMESPACE(LIBGPU_CmdDispatch)
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper function which binds a Vulkan pipeline to use for drawing LIBGPU textured primitives.
 // Examines the current PSX GPU texture format and blend mode, and sets the draw pipeline accordingly.
-// Also makes adjustments to the texture window based on the texture format, so that it's a format native coord and a 16-bit pixel coord.
+// Also adjusts the texture page 'x' coordinate based on the texture format, so that it's a format native coord and not a 16-bit VRAM coord.
 // Also sets the alpha that the primitive should be drawn with, based on the blend mode.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void doSetupForVkRendererTexturedDraw(const bool bBlendPrimitive, uint16_t& outTexWinX, uint8_t& outDrawAlpha) noexcept {
+static void doSetupForVkRendererTexturedDraw(const bool bBlendPrimitive, uint16_t& outTexPageX, uint8_t& outDrawAlpha) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
 
     // Note: we only only support a subset of possible blend mode and t
@@ -29,12 +29,12 @@ static void doSetupForVkRendererTexturedDraw(const bool bBlendPrimitive, uint16_
         switch (gpu.texFmt) {
             case Gpu::TexFmt::Bpp4:
                 VDrawing::setDrawPipeline(VPipelineType::UI_4bpp);
-                outTexWinX *= 4;
+                outTexPageX *= 4;
                 break;
 
             case Gpu::TexFmt::Bpp8:
                 VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
-                outTexWinX *= 2;
+                outTexPageX *= 2;
                 break;
 
             case Gpu::TexFmt::Bpp16:
@@ -53,7 +53,7 @@ static void doSetupForVkRendererTexturedDraw(const bool bBlendPrimitive, uint16_
         ASSERT_LOG(gpu.texFmt == Gpu::TexFmt::Bpp8, "Unsupported blend mode and texture format combo!");
 
         VDrawing::setDrawPipeline(VPipelineType::UI_8bpp_Add);
-        outTexWinX *= 2;
+        outTexPageX *= 2;
         outDrawAlpha = 128;
     }
 }
@@ -83,11 +83,18 @@ void setGpuTexPageId(const uint16_t texPageId) noexcept {
         default: break;
     }
 
-    // Set texture page position and size (256x256 pixels)
+    // Set the texture page position and size.
+    // The size will 1024x512 pixels if limit removing, or 256x256 under the original limits.
     gpu.texPageX = ((texPageId >> 4) & 0x7Fu) * 64u;
     gpu.texPageY = ((texPageId >> 11) & 0x1Fu) * 256u;
-    gpu.texPageXMask = 0xFF;
-    gpu.texPageYMask = 0xFF;
+
+    #if PSYDOOM_LIMIT_REMOVING
+        gpu.texPageXMask = 0x3FF;
+        gpu.texPageYMask = 0x1FF;
+    #else
+        gpu.texPageXMask = 0xFF;
+        gpu.texPageYMask = 0xFF;
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -108,28 +115,59 @@ void setGpuTexWin(const uint32_t texWin) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
 
     // Note: all offsets are in multiples of 8 units.
-    // The masks are also always for power of two textures.
+    // The masks also only allow for power of two textures.
     // Both these restrictions are required by the PsyQ SDK when encoding a texture window.
-    const uint8_t twOffsetX = (texWin >> 10) & 0x1Fu;
-    const uint8_t twOffsetY = (texWin >> 15) & 0x1Fu;
-    const uint8_t twMaskX = (texWin >> 0) & 0x1Fu;
-    const uint8_t twMaskY = (texWin >> 5) & 0x1Fu;
+    //
+    // PsyDoom limit removing: offsets are now in multiples of either 2 or 4 units.
+    // The maximum texture size is now also extended to 1024x512.
+    #if PSYDOOM_LIMIT_REMOVING
+        const uint16_t twOffsetX = ((texWin >> 0) & 0x1FFu) << 1;
+        const uint16_t twOffsetY = ((texWin >> 9) & 0x7Fu) << 2;
+        const uint16_t twSizeX = ((texWin >> 16) & 0x1FFu) << 1;
+        const uint16_t twSizeY = ((texWin >> 25) & 0x7Fu) << 2;
 
-    gpu.texWinX = twOffsetX * 8;
-    gpu.texWinY = twOffsetY * 8;
+        gpu.texWinX = twOffsetX;
+        gpu.texWinY = twOffsetY;
+    #else
+        const uint8_t twOffsetX = (texWin >> 10) & 0x1Fu;
+        const uint8_t twOffsetY = (texWin >> 15) & 0x1Fu;
+        const uint8_t twSizeX = (texWin >> 0) & 0x1Fu;
+        const uint8_t twSizeY = (texWin >> 5) & 0x1Fu;
 
-    if (twMaskX != 0) {
-        const uint8_t texW = (uint8_t) -(int8_t)(twMaskX << 3);
+        gpu.texWinX = twOffsetX * 8;
+        gpu.texWinY = twOffsetY * 8;
+    #endif
+
+    if (twSizeX != 0) {
+        #if PSYDOOM_LIMIT_REMOVING
+            const uint16_t texW = twSizeX;
+        #else
+            const uint8_t texW = (uint8_t) -(int8_t)(twSizeX << 3);
+        #endif
+
         gpu.texWinXMask = texW - 1;
     } else {
-        gpu.texWinXMask = 0xFFu;    // 256 pixel range
+        #if PSYDOOM_LIMIT_REMOVING
+            gpu.texWinXMask = 0x3FFu;   // 1024 pixel range
+        #else        
+            gpu.texWinXMask = 0xFFu;    // 256 pixel range
+        #endif
     }
 
-    if (twMaskY != 0) {
-        const uint8_t texH = (uint8_t) -(int8_t)(twMaskY << 3);
+    if (twSizeY != 0) {
+        #if PSYDOOM_LIMIT_REMOVING
+            const uint16_t texH = twSizeY;
+        #else
+            const uint8_t texH = (uint8_t) -(int8_t)(twSizeY << 3);
+        #endif
+
         gpu.texWinYMask = texH - 1;
     } else {
-        gpu.texWinYMask = 0xFFu;    // 256 pixel range
+        #if PSYDOOM_LIMIT_REMOVING
+            gpu.texWinYMask = 0x1FFu;   // 512 pixel range
+        #else
+            gpu.texWinYMask = 0xFFu;    // 256 pixel range
+        #endif
     }
 }
 
@@ -188,13 +226,16 @@ void submit(const SPRT& sprite) noexcept {
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::isUsingVulkanRenderPath()) {
-            uint16_t texWinX = gpu.texPageX + gpu.texWinX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
-            uint16_t texWinY = gpu.texPageY + gpu.texWinY;
+            uint16_t texPageX = gpu.texPageX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
+            uint16_t texPageY = gpu.texPageY;
 
             if (VRenderer::isRendering()) {
                 // Determine the draw alpha, correct the 'texWinX' coord to be in terms of the sprite's pixel format and set the correct draw pipeline
                 uint8_t drawAlpha = {};
-                doSetupForVkRendererTexturedDraw(bBlendSprite, texWinX, drawAlpha);
+                doSetupForVkRendererTexturedDraw(bBlendSprite, texPageX, drawAlpha);
+
+                const uint16_t texWinX = texPageX + gpu.texWinX;
+                const uint16_t texWinY = texPageY + gpu.texWinY;
 
                 // Draw the sprite and restrict the texture window to cover the exact area of VRAM occupied by the sprite.
                 // Ignoring the gpu texture window/page settings in this way and restricting to the exact pixels used by the
@@ -465,15 +506,18 @@ void submit(const POLY_FT4& poly) noexcept {
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
     #if PSYDOOM_VULKAN_RENDERER
         if (Video::isUsingVulkanRenderPath()) {
-            uint16_t texWinW = gpu.texWinXMask + 1;             // This calculation should work because the mask should always be for POW2 texture wrapping
-            uint16_t texWinH = gpu.texWinYMask + 1;
-            uint16_t texWinX = gpu.texPageX + gpu.texWinX;      // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
-            uint16_t texWinY = gpu.texPageY + gpu.texWinY;
+            uint16_t texPageX = gpu.texPageX;       // Note: needs to be adjusted from 16bpp coords to coords for whatever format we are using (see below)
+            uint16_t texPageY = gpu.texPageY;
 
             if (VRenderer::isRendering()) {
                 // Determine the draw alpha, set the correct pipeline then add the quad to be drawn
                 uint8_t drawAlpha = {};
-                doSetupForVkRendererTexturedDraw(bBlendPoly, texWinX, drawAlpha);
+                doSetupForVkRendererTexturedDraw(bBlendPoly, texPageX, drawAlpha);
+
+                const uint16_t texWinX = texPageX + gpu.texWinX;
+                const uint16_t texWinY = texPageY + gpu.texWinY;
+                const uint16_t texWinW = gpu.texWinXMask + 1;       // This calculation should work because the mask should always be for POW2 texture wrapping
+                const uint16_t texWinH = gpu.texWinYMask + 1;
 
                 VDrawing::addWorldQuad(
                     poly.x0, poly.y0, 0.0f, poly.u0, poly.v0,

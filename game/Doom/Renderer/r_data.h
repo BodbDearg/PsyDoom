@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-struct RECT;
+struct SRECT;
 
 // Constant for an invalid or undefined (not yet set) upload frame number for a texture
 static constexpr uint32_t TEX_INVALID_UPLOAD_FRAME_NUM = UINT32_MAX;
@@ -34,20 +34,52 @@ static constexpr uint32_t SKYPAL5               = 25;   // PSX Final Doom: addit
 
 // Stores information about a texture, including it's dimensions, lump info and texture cache info
 struct texture_t {
-    int16_t         offsetX;                // Used for anchoring/offsetting in some UIs
-    int16_t         offsetY;                // Used for anchoring/offsetting in some UIs
-    int16_t         width;                  // Pixel width of texture
-    int16_t         height;                 // Pixel height of texture
-    uint8_t         texPageCoordX;          // Texture coordinate (X/U) inside the current texture page
-    uint8_t         texPageCoordY;          // Texture coordinate (Y/V) inside the current texture page
-    uint16_t        texPageId;              // Hardware specific field corresonding to the texture page in VRAM where the texture is held. '0' when not resident in VRAM.
-    uint16_t        width16;                // Width of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
-    uint16_t        height16;               // Height of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
-    uint16_t        lumpNum;                // Which WAD lump this texture was loaded from
-    uint16_t        _pad1;                  // Unused
-    texture_t**     ppTexCacheEntries;      // Points to the top left cell in the texture cache where this texture is placed.
-    uint32_t        _pad2;                  // Unused
-    uint32_t        uploadFrameNum;         // What frame the texture was added to the texture cache, used to detect texture cache overflows
+    int16_t     offsetX;    // Used for anchoring/offsetting in some UIs
+    int16_t     offsetY;    // Used for anchoring/offsetting in some UIs
+    int16_t     width;      // Pixel width of texture
+    int16_t     height;     // Pixel height of texture
+
+    // PsyDoom: use 16-bit uvs if limit removing; allows for textures larger than 256x256.
+    #if PSYDOOM_LIMIT_REMOVING
+        uint16_t    texPageCoordX;      // Texture coordinate (X/U) inside the current texture page
+        uint16_t    texPageCoordY;      // Texture coordinate (Y/V) inside the current texture page
+    #else                               
+        uint8_t     texPageCoordX;      // Texture coordinate (X/U) inside the current texture page
+        uint8_t     texPageCoordY;      // Texture coordinate (Y/V) inside the current texture page
+    #endif
+
+    // Hardware specific field corresponding to the texture page in VRAM where the texture is located.
+    // Originally this was '0' when the texture was not resident in VRAM but now 'bIsCached' is used for that purpose and '0' now means the 1st texture page.
+    uint16_t texPageId;
+
+    // PsyDoom: adding the 'evictable' flag needed by the new texture cache management code
+    #if PSYDOOM_MODS
+        uint8_t     bIsCached;      // If 'true' then the texture is loaded into the texture cache
+        uint8_t     width16;        // Width of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
+        uint8_t     height16;       // Height of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
+
+        // Individual texture locking is a limit removing feature.
+        // If 'false' then the texture can be evicted from the texture cache.
+        #if PSYDOOM_LIMIT_REMOVING
+            uint8_t bIsLocked;
+        #endif
+    #else
+        uint16_t    width16;        // Width of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
+        uint16_t    height16;       // Height of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
+    #endif
+
+    uint16_t lumpNum;   // Which WAD lump this texture was loaded from
+
+    // PsyDoom: struct layout improvements
+    #if PSYDOOM_MODS
+        uint32_t        uploadFrameNum;         // What frame the texture was added to the texture cache, used to detect texture cache overflows
+        texture_t**     ppTexCacheEntries;      // Points to the top left cell in the texture cache where this texture is placed.
+    #else
+        uint16_t        _pad1;                  // Unused
+        texture_t**     ppTexCacheEntries;      // Points to the top left cell in the texture cache where this texture is placed.
+        uint32_t        _pad2;                  // Unused
+        uint32_t        uploadFrameNum;         // What frame the texture was added to the texture cache, used to detect texture cache overflows
+    #endif
 };
 
 // Stores info about the size and anchor point (offsetting) for a texture in WAD lump
@@ -95,4 +127,4 @@ int32_t R_FlatNumForName(const char* const name) noexcept;
 void R_InitPalette() noexcept;
 
 // PsyDoom: helper to reduce some redundancy
-RECT getTextureVramRect(const texture_t& tex) noexcept;
+SRECT getTextureVramRect(const texture_t& tex) noexcept;

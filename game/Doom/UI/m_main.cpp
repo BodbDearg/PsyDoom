@@ -492,8 +492,14 @@ void M_Drawer() noexcept {
         gPaletteClutIds[UIPAL],
         50,
         gMenuYPos[gCursorPos[0]] - 2,
-        M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
-        M_SKULL_TEX_V,
+        // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        #if PSYDOOM_MODS
+            (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
+            (int16_t)(gTex_STATUS.texPageCoordY + M_SKULL_TEX_V),
+        #else
+            M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
+            M_SKULL_TEX_V,
+        #endif
         M_SKULL_W,
         M_SKULL_H
     );

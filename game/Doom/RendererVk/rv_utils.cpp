@@ -185,7 +185,7 @@ void RV_UploadDirtyTex(texture_t& tex) noexcept {
     }
 
     // Load the decompressed texture to the required part of VRAM and mark as loaded
-    const RECT vramRect = getTextureVramRect(tex);
+    const SRECT vramRect = getTextureVramRect(tex);
     LIBGPU_LoadImage(vramRect, (uint16_t*)(pLumpData + sizeof(texlump_header_t)));
     tex.uploadFrameNum = gNumFramesDrawn;
 }

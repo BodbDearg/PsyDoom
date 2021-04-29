@@ -43,8 +43,14 @@ static void DrawCursor(const int16_t cursorX, const int16_t cursorY) noexcept {
         gPaletteClutIds[UIPAL],
         (int16_t) cursorX - 24,
         (int16_t) cursorY - 2,
-        M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
-        M_SKULL_TEX_V,
+        // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        #if PSYDOOM_MODS
+            (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
+            (int16_t)(gTex_STATUS.texPageCoordY + M_SKULL_TEX_V),
+        #else
+            M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
+            M_SKULL_TEX_V,
+        #endif
         M_SKULL_W,
         M_SKULL_H
     );
@@ -270,12 +276,19 @@ void XOptions_Draw() noexcept {
                 gPaletteClutIds[UIPAL],
                 (int16_t)(menuItemX + 13),
                 (int16_t)(menuItemY + 20),
-                0,
-                184,
+                // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+                #if PSYDOOM_MODS
+                    (int16_t)(gTex_STATUS.texPageCoordX + 0),
+                    (int16_t)(gTex_STATUS.texPageCoordY + 184),
+                #else
+                    0,
+                    184,
+                #endif
                 108,
                 11
             );
 
+            // Draw the slider handle
             const int16_t sliderVal = (int16_t)(PlayerPrefs::gTurnSpeedMult100 / 5);
 
             I_DrawSprite(
@@ -283,8 +296,14 @@ void XOptions_Draw() noexcept {
                 gPaletteClutIds[UIPAL],
                 (int16_t)(menuItemX + 14 + sliderVal),
                 (int16_t)(menuItemY + 20),
-                108,
-                184,
+                // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+                #if PSYDOOM_MODS
+                    (int16_t)(gTex_STATUS.texPageCoordX + 108),
+                    (int16_t)(gTex_STATUS.texPageCoordY + 184),
+                #else
+                    108,
+                    184,
+                #endif
                 6,
                 11
             );

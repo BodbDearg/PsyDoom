@@ -46,5 +46,10 @@ void Z_Free2(memzone_t& zone, void* const ptr) noexcept;
 void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept;
 void Z_CheckHeap(const memzone_t& zone) noexcept;
 void Z_ChangeTag(void* const ptr, const int16_t tagBits) noexcept;
+
+#if PSYDOOM_MODS
+    void Z_SetUser(void* const ptr, void** const ppUser) noexcept;
+#endif
+
 int32_t Z_FreeMemory(memzone_t& zone) noexcept;
 void Z_DumpHeap() noexcept;

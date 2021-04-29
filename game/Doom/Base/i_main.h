@@ -2,6 +2,7 @@
 
 #include "Doom/doomdef.h"
 #include "PcPsx/Buffer.h"
+#include "PsyQ/LIBGPU.h"
 
 #include <cstddef>
 
@@ -95,8 +96,8 @@ void I_DrawSprite(
     const int16_t clutId,
     const int16_t xpos,
     const int16_t ypos,
-    const uint8_t texU,
-    const uint8_t texV,
+    const LibGpuUV texU,
+    const LibGpuUV texV,
     const uint16_t texW,
     const uint16_t texH
 ) noexcept;
@@ -107,8 +108,8 @@ void I_DrawSprite(
         const int16_t clutId,
         const int16_t xpos,
         const int16_t ypos,
-        const uint8_t texU,
-        const uint8_t texV,
+        const LibGpuUV texU,
+        const LibGpuUV texV,
         const uint16_t texW,
         const uint16_t texH,
         const uint8_t r,

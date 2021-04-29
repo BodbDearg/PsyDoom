@@ -498,8 +498,14 @@ void IN_CoopDrawer() noexcept {
         gPaletteClutIds[UIPAL],
         139,
         20,
-        gFaceSprites[0].texU,
-        gFaceSprites[0].texV,
+        // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        #if PSYDOOM_MODS
+            (int16_t)(gTex_STATUS.texPageCoordX + gFaceSprites[0].texU),
+            (int16_t)(gTex_STATUS.texPageCoordY + gFaceSprites[0].texV),
+        #else
+            gFaceSprites[0].texU,
+            gFaceSprites[0].texV,
+        #endif
         gFaceSprites[0].w,
         gFaceSprites[0].h
     );
@@ -511,8 +517,14 @@ void IN_CoopDrawer() noexcept {
         gPaletteClutIds[UIPAL],
         213,
         20,
-        gFaceSprites[0].texU,
-        gFaceSprites[0].texV,
+        // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        #if PSYDOOM_MODS
+            (int16_t)(gTex_STATUS.texPageCoordX + gFaceSprites[0].texU),
+            (int16_t)(gTex_STATUS.texPageCoordY + gFaceSprites[0].texV),
+        #else
+            gFaceSprites[0].texU,
+            gFaceSprites[0].texV,
+        #endif
         gFaceSprites[0].w,
         gFaceSprites[0].h
     );
@@ -603,8 +615,14 @@ void IN_DeathmatchDrawer() noexcept {
         gPaletteClutIds[UIPAL],
         127,
         70,
-        pFaceSpriteP1->texU,
-        pFaceSpriteP1->texV,
+        // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        #if PSYDOOM_MODS
+            (int16_t)(gTex_STATUS.texPageCoordX + pFaceSpriteP1->texU),
+            (int16_t)(gTex_STATUS.texPageCoordY + pFaceSpriteP1->texV),
+        #else
+            pFaceSpriteP1->texU,
+            pFaceSpriteP1->texV,
+        #endif
         pFaceSpriteP1->w,
         pFaceSpriteP1->h
     );
@@ -616,8 +634,14 @@ void IN_DeathmatchDrawer() noexcept {
         gPaletteClutIds[UIPAL],
         200,
         70,
-        pFaceSpriteP2->texU,
-        pFaceSpriteP2->texV,
+        // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        #if PSYDOOM_MODS
+            (int16_t)(gTex_STATUS.texPageCoordX + pFaceSpriteP2->texU),
+            (int16_t)(gTex_STATUS.texPageCoordY + pFaceSpriteP2->texV),
+        #else
+            pFaceSpriteP2->texU,
+            pFaceSpriteP2->texV,
+        #endif
         pFaceSpriteP2->w,
         pFaceSpriteP2->h
     );

@@ -171,8 +171,14 @@ void P_InitPicAnims() noexcept {
             // Ignore this animation if it's not used in the level
             texture_t& basetex = gpTextures[lastanim.basepic];
 
-            if (basetex.texPageId == 0)
-                continue;
+            // PsyDoom: the meaning of 'texPageId' has changed slightly, '0' is now the 1st page and 'bIsCached' is used check cache residency
+            #if PSYDOOM_MODS
+                if (!basetex.bIsCached)
+                    continue;
+            #else
+                if (basetex.texPageId == 0)
+                    continue;
+            #endif
 
             // For all frames in the animation, cache the lump in RAM and make it occupy the same VRAM spot as the base texture
             for (int32_t picNum = lastanim.basepic; picNum <= lastanim.picnum; ++picNum) {
@@ -193,8 +199,14 @@ void P_InitPicAnims() noexcept {
             // Ignore this animation if it's not used in the level
             texture_t& basetex = gpFlatTextures[lastanim.basepic];
 
-            if (basetex.texPageId == 0)
-                continue;
+            // PsyDoom: the meaning of 'texPageId' has changed slightly, '0' is now the 1st page and 'bIsCached' is used check cache residency
+            #if PSYDOOM_MODS
+                if (!basetex.bIsCached)
+                    continue;
+            #else
+                if (basetex.texPageId == 0)
+                    continue;
+            #endif
 
             // For all frames in the animation, cache the lump in RAM and make it occupy the same VRAM spot as the base texture
             for (int32_t picNum = lastanim.basepic; picNum <= lastanim.picnum; ++picNum) {

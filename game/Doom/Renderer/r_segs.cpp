@@ -239,14 +239,14 @@ void R_DrawWallPiece(
         #endif
 
         // Upload to the GPU and mark the texture as loaded this frame
-        const RECT texRect = getTextureVramRect(tex);
+        const SRECT texRect = getTextureVramRect(tex);
         LIBGPU_LoadImage(texRect, pTexData);
         tex.uploadFrameNum = gNumFramesDrawn;
     }
 
     // Set the texture window - the area of VRAM used for texturing
     {
-        RECT texRect;
+        SRECT texRect;
         LIBGPU_setRECT(texRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state

@@ -275,7 +275,7 @@ void DRAW_PasswordScreen() noexcept {
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS
             DR_MODE drawModePrim = {};
-            RECT texWindow = { 0, 0, 0, 0 };
+            const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
             DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);

@@ -1,5 +1,6 @@
 #include "w_wad.h"
 
+#include "Asserts.h"
 #include "Doom/cdmaptbl.h"
 #include "Doom/d_main.h"
 #include "i_file.h"
@@ -196,6 +197,24 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
 
     // If the lump is already loaded then we don't need to do anything
     void*& lumpCacheEntry = gpLumpCache[lumpNum];
+
+    #if PSYDOOM_MODS
+        // PsyDoom bugfix: handle the situation where the caller wanted it uncompressed when it's already loaded and compressed.
+        // In this scenario decompress the currently loaded lump and have it replace the previously compressed version of the lump.
+        // The original game did not trigger this case but now with PsyDoom it's possible, so we must fix.
+        if (lumpCacheEntry && bDecompress && (!gpbIsUncompressedLump[lumpNum])) {
+            void* const pCompressedLump = lumpCacheEntry;
+            const int32_t inflatedSize = getDecodedSize(pCompressedLump);
+
+            Z_SetUser(pCompressedLump, nullptr); // N.B: No longer the lump cache entry (don't wipe the cache entry on 'Z_Free')
+            Z_Malloc(*gpMainMemZone, inflatedSize, allocTag, &lumpCacheEntry);
+            decode(pCompressedLump, lumpCacheEntry);
+            Z_Free2(*gpMainMemZone, pCompressedLump);
+
+            gpbIsUncompressedLump[lumpNum] = true;
+            return lumpCacheEntry;
+        }
+    #endif
 
     if (!lumpCacheEntry) {
         // If the level loading is done then we should NOT be loading lumps during gameplay.
