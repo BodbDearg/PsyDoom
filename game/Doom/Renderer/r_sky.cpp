@@ -38,7 +38,9 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     texture_t& skytex = *gpSkyTexture;
 
     {
-        SRECT texWindow = { (int16_t) skytex.texPageCoordX, (int16_t) skytex.texPageCoordY, skytex.width, skytex.height };
+        // Note: only require the sky texture width to be a power of two.
+        // Set the texture window height to be the maximum allowed (no wrapping restrictions) by using a window height of '0'.
+        SRECT texWindow = { (int16_t) skytex.texPageCoordX, (int16_t) skytex.texPageCoordY, skytex.width, 0 };
         DR_MODE drawModePrim = {};
         LIBGPU_SetDrawMode(drawModePrim, false, false, skytex.texPageId, &texWindow);
         I_AddPrim(drawModePrim);
@@ -50,7 +52,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     LIBGPU_setRGB0(drawPrim, (uint8_t) 128, (uint8_t) 128, (uint8_t) 128);
     LIBGPU_SetDisableMasking(drawPrim, true);
 
-    drawPrim.clut =  gPaletteClutId_CurMapSky;
+    drawPrim.clut = gPaletteClutId_CurMapSky;
     drawPrim.y0 = 0;
     drawPrim.v0 = 0;
     drawPrim.w = 1;
@@ -126,7 +128,9 @@ void R_DrawSky() noexcept {
 
     // Set the draw mode firstly
     {
-        SRECT texWindow = { (int16_t) skytex.texPageCoordX, (int16_t) skytex.texPageCoordY, skytex.width, skytex.height };
+        // Note: only require the sky texture width to be a power of two.
+        // Set the texture window height to be the maximum allowed (no wrapping restrictions) by using a window height of '0'.
+        SRECT texWindow = { (int16_t) skytex.texPageCoordX, (int16_t) skytex.texPageCoordY, skytex.width, 0 };
 
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS
@@ -155,7 +159,7 @@ void R_DrawSky() noexcept {
     #if PSYDOOM_MODS
         // PsyDoom: I think the original UV calculations were not correct, because we've already set a texture window - coords should be relative to that.
         // It probably just always happened to work correctly in spite of this due to where the sky texture was located in VRAM.
-        LIBGPU_setUV0(spr, (uint8_t)(-(gViewAngle >> ANGLETOSKYSHIFT)), 0);
+        LIBGPU_setUV0(spr, (LibGpuUV)(-(gViewAngle >> ANGLETOSKYSHIFT)), 0);
 
         // PsyDoom: also disable masking for this sprite, skies should always be fully opaque.
         // This is required for the 'sky leak fix' to work correctly in some instances with the fire sky...

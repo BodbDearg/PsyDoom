@@ -55,7 +55,8 @@ static void RV_GetSkyTexParams(
 static float RV_GetSkyUCoordOffset() noexcept {
     // One full revolution is equal to 1024 texel units.
     // When the sky texture is 256 pixels wide, this means 4 wrappings.
-    const float rotatePercent = -gViewAnglef * (1.0f / RV_2PI<float>);
+    // Note: have to add back on 90 degrees because the float viewing angle is adjusted to -90 degrees of the fixed point angle.
+    const float rotatePercent = -(gViewAnglef + RV_PI_2<float>) * (1.0f / RV_2PI<float>);
     return rotatePercent * 1024;
 }
 
