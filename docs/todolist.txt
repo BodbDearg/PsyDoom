@@ -11,8 +11,6 @@
 - Classic renderer: add support for 'void' ceiling type that the new VK renderer is starting to formalize.
     - Any ceiling pic < -1 should be considered a 'void' (render nothing) ceiling.
 - Investigate a MAPINFO format for naming maps, choosing music etc.
-- Investigate engine limits and try to remove/expand where possible
-    - Flats larger than 64x64
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
 

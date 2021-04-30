@@ -393,24 +393,32 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
 
         // Wrap the uv coordinates to 64x64 using the smallest u or v coordinate as the basis for wrapping.
         // Note: if we wanted to support textures > 64x64 then this code would need to change!
-        constexpr int32_t WRAP_ADJUST_MASK_64 = ~63;
+        //
+        // PsyDoom limit removing: can now support floor sizes other than 64x64, but the dimensions must still be powers of two!
+        #if PSYDOOM_LIMIT_REMOVING
+            const int32_t WRAP_ADJUST_MASK_U = ~((int32_t) tex.width - 1);
+            const int32_t WRAP_ADJUST_MASK_V = ~((int32_t) tex.height - 1);
+        #else
+            constexpr int32_t WRAP_ADJUST_MASK_U = ~63;
+            constexpr int32_t WRAP_ADJUST_MASK_V = ~63
+        #endif
 
         if (spanUL < spanUR) {
-            const int32_t uadjust = spanUL & WRAP_ADJUST_MASK_64;
+            const int32_t uadjust = spanUL & WRAP_ADJUST_MASK_U;
             spanUL -= uadjust;
             spanUR -= uadjust;
         } else {
-            const int32_t uadjust = spanUR & WRAP_ADJUST_MASK_64;
+            const int32_t uadjust = spanUR & WRAP_ADJUST_MASK_U;
             spanUR -= uadjust;
             spanUL -= uadjust;
         }
 
         if (spanVL < spanVR) {
-            const int32_t vadjust = spanVL & WRAP_ADJUST_MASK_64;
+            const int32_t vadjust = spanVL & WRAP_ADJUST_MASK_V;
             spanVL -= vadjust;
             spanVR -= vadjust;
         } else {
-            const int32_t vadjust = spanVR & WRAP_ADJUST_MASK_64;
+            const int32_t vadjust = spanVR & WRAP_ADJUST_MASK_V;
             spanVR -= vadjust;
             spanVL -= vadjust;
         }
