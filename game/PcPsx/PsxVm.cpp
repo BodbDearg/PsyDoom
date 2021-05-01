@@ -136,7 +136,7 @@ bool init(const char* const doomCdCuePath) noexcept {
             gAudioCompState,
             -22.0f,             // thresholdDB
             10.0f,              // kneeWidthDB
-            3.0f,               // compressionRatio
+            2.0f,               // compressionRatio
             8.0f,               // postGainDB
             0.150f,             // lpfResponseTime
             0.002f,             // attackTime
