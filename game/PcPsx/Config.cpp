@@ -415,6 +415,7 @@ bool                    gbFixViewBobStrength;
 bool                    gbFixGravityStrength;
 int32_t                 gLostSoulSpawnLimit;
 bool                    gbUseLostSoulSpawnFix;
+bool                    gbUseLineOfSightOverflowFix;
 float                   gViewBobbingStrength;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -687,6 +688,18 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseLostSoulSpawnFix = iniEntry.getBoolValue(true); },
         []() { gbUseLostSoulSpawnFix = true; }
+    },
+    {
+        "UseLineOfSightOverflowFix",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then apply a fix to the original game logic to prevent numeric overflows from\n"
+        "# occurring in the enemy 'line of sight' code. These errors make monsters unable to see the player\n"
+        "# sometimes, usually when there are large differences between sector floor and ceiling heights.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseLineOfSightOverflowFix = iniEntry.getBoolValue(true); },
+        []() { gbUseLineOfSightOverflowFix = true; }
     },
     {
         "ViewBobbingStrength",

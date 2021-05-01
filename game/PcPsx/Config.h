@@ -27,6 +27,7 @@ extern bool     gbFixViewBobStrength;
 extern bool     gbFixGravityStrength;
 extern int32_t  gLostSoulSpawnLimit;
 extern bool     gbUseLostSoulSpawnFix;
+extern bool     gbUseLineOfSightOverflowFix;
 extern float    gViewBobbingStrength;
 
 //------------------------------------------------------------------------------------------------------------------------------------------

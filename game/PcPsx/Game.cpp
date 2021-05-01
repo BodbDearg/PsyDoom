@@ -133,6 +133,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bPistolStart = ProgArgs::gbPistolStart;
     settings.bTurboMode = ProgArgs::gbTurboMode;
     settings.bUseLostSoulSpawnFix = Config::gbUseLostSoulSpawnFix;
+    settings.bUseLineOfSightOverflowFix = Config::gbUseLineOfSightOverflowFix;
 
     // Note: not worth making this one a config option, just bake the choice into the binary based on whether limit removing is enabled or not.
     // In a multiplayer game or for demos however this setting will still be synchronized.
@@ -171,6 +172,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bPistolStart                   = false;
     settings.bTurboMode                     = false;
     settings.bUseLostSoulSpawnFix           = false;
+    settings.bUseLineOfSightOverflowFix     = false;
     settings.bRemoveMaxCrossLinesLimit      = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;

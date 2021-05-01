@@ -8,6 +8,7 @@
 #include "p_setup.h"
 #include "p_shoot.h"
 #include "p_tick.h"
+#include "PcPsx/Game.h"
 
 #include <algorithm>
 
@@ -194,10 +195,25 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         if (lowestCeil <= highestFloor)
             return false;
 
+        #if PSYDOOM_MODS
+            const bool bUseLineOfSightOverflowFix = Game::gSettings.bUseLineOfSightOverflowFix;
+        #else
+            constexpr bool bUseLineOfSightOverflowFix = false;
+        #endif
+
         // Narrow the allowed vertical sight range: against bottom wall
         if (fsec.floorheight != bsec.floorheight) {
             const fixed_t dz = highestFloor - gSightZStart;
-            const int32_t slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));
+
+            // PsyDoom: use 64-bit ops to avoid overflows in the line of sight calculations, if enabled
+            int32_t slope;
+
+            if (bUseLineOfSightOverflowFix) {
+                const int64_t slope64 = d_lshift<16>((int64_t) dz) / intersectFrac;
+                slope = (int32_t) std::clamp<int64_t>(slope64, INT32_MIN, INT32_MAX);
+            } else {
+                slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));
+            }
 
             if (slope > gBottomSlope) {
                 gBottomSlope = slope;
@@ -207,7 +223,16 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         // Narrow the allowed vertical sight range: against top wall
         if (fsec.ceilingheight != bsec.ceilingheight) {
             const fixed_t dz = lowestCeil - gSightZStart;
-            const int32_t slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));
+
+            // PsyDoom: use 64-bit ops to avoid overflows in the line of sight calculations, if enabled
+            int32_t slope;
+
+            if (bUseLineOfSightOverflowFix) {
+                const int64_t slope64 = d_lshift<16>((int64_t) dz) / intersectFrac;
+                slope = (int32_t) std::clamp<int64_t>(slope64, INT32_MIN, INT32_MAX);
+            } else {
+                slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));
+            }
 
             if (slope < gTopSlope) {
                 gTopSlope = slope;
