@@ -197,7 +197,7 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         // Narrow the allowed vertical sight range: against bottom wall
         if (fsec.floorheight != bsec.floorheight) {
             const fixed_t dz = highestFloor - gSightZStart;
-            const int32_t slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));   // Note: chops off the low 8 bits of computed intersect slope
+            const int32_t slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));
 
             if (slope > gBottomSlope) {
                 gBottomSlope = slope;
@@ -207,7 +207,7 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         // Narrow the allowed vertical sight range: against top wall
         if (fsec.ceilingheight != bsec.ceilingheight) {
             const fixed_t dz = lowestCeil - gSightZStart;
-            const int32_t slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));   // Note: chops off the low 8 bits of computed intersect slope
+            const int32_t slope = d_lshift<8>(d_lshift<6>(dz) / d_rshift<2>(intersectFrac));
 
             if (slope < gTopSlope) {
                 gTopSlope = slope;
