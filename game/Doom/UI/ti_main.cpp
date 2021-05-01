@@ -229,7 +229,22 @@ void DRAW_Title() noexcept {
     // Final Doom: this is drawn on top of everything (at the end) instead.
     if (!Game::isFinalDoom()) {
         const int16_t titleY = (int16_t) gTitleScreenSpriteY;
-        I_DrawSprite(gTex_TITLE.texPageId, gPaletteClutIds[TITLEPAL], 0, titleY, 0, 0, SCREEN_W, SCREEN_H);
+
+        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        #if PSYDOOM_MODS
+            I_DrawSprite(
+                gTex_TITLE.texPageId,
+                gPaletteClutIds[TITLEPAL],
+                0,
+                titleY,
+                gTex_TITLE.texPageCoordX,
+                gTex_TITLE.texPageCoordY,
+                SCREEN_W,
+                SCREEN_H
+            );
+        #else
+            I_DrawSprite(gTex_TITLE.texPageId, gPaletteClutIds[TITLEPAL], 0, titleY, 0, 0, SCREEN_W, SCREEN_H);
+        #endif
     }
 
     // Upload the firesky texture if VRAM if required.
@@ -267,7 +282,26 @@ void DRAW_Title() noexcept {
     // Draw the title logo for Final Doom (on top of everything):
     if (Game::isFinalDoom()) {
         const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
-        I_DrawColoredSprite(gTex_TITLE.texPageId, gPaletteClutIds[TITLEPAL], 0, 0, 0, 0, SCREEN_W, SCREEN_H, rgb, rgb, rgb, false);
+
+        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        #if PSYDOOM_MODS
+            I_DrawColoredSprite(
+                gTex_TITLE.texPageId,
+                gPaletteClutIds[TITLEPAL],
+                0,
+                0,
+                gTex_TITLE.texPageCoordX,
+                gTex_TITLE.texPageCoordY,
+                SCREEN_W,
+                SCREEN_H,
+                rgb,
+                rgb,
+                rgb,
+                false
+            );
+        #else
+            I_DrawColoredSprite(gTex_TITLE.texPageId, gPaletteClutIds[TITLEPAL], 0, 0, 0, 0, SCREEN_W, SCREEN_H, rgb, rgb, rgb, false);
+        #endif
     }
 
     I_SubmitGpuCmds();
