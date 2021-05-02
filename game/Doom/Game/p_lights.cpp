@@ -231,10 +231,10 @@ void EV_TurnTagLightsOff(line_t& line) noexcept {
 
         // Tag matches: find the lowest light level of surrounding sectors and use that as the new light level
         int16_t minLightLevel = sector.lightlevel;
-        line_t* const pLines = *sector.lines;
+        line_t* const* const ppLines = sector.lines;
 
         for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-            sector_t* const pNextSector = getNextSector(pLines[lineIdx], sector);
+            sector_t* const pNextSector = getNextSector(*ppLines[lineIdx], sector);
 
             if (pNextSector) {
                 minLightLevel = std::min(minLightLevel, pNextSector->lightlevel);
@@ -264,10 +264,10 @@ void EV_LightTurnOn(line_t& line, const int32_t onLightLevel) noexcept {
         int32_t newLightLevel = onLightLevel;
 
         if (onLightLevel == 0) {
-            line_t* const pLines = *sector.lines;
+            line_t* const* const ppLines = sector.lines;
 
             for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-                sector_t* const pNextSector = getNextSector(pLines[lineIdx], sector);
+                sector_t* const pNextSector = getNextSector(*ppLines[lineIdx], sector);
 
                 if (pNextSector) {
                     newLightLevel = std::max(newLightLevel, (int32_t) pNextSector->lightlevel);
