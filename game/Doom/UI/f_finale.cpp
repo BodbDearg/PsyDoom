@@ -18,6 +18,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/RendererVk/rv_utils.h"
 #include "m_main.h"
+#include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/PsxPadButtons.h"
@@ -26,6 +27,7 @@
 #include "PcPsx/Vulkan/VDrawing.h"
 #include "PcPsx/Vulkan/VTypes.h"
 #include "PsyQ/LIBGPU.h"
+#include "Wess/wessapi.h"
 
 // Win text for Doom 1 and 2, and Final Doom.
 // Note that this is all in the Final Doom format, which is an unbounded C-String.
@@ -357,6 +359,19 @@ void F2_Start() noexcept {
     gbCastDeath = false;
     gCastFrames = 0;
     gCastOnMelee = 0;
+
+    // PsyDoom: wait for the pistol and barrel explode menu sounds to stop playing, then kill all sounds.
+    // Fixes an odd bug where a Revenant sound can sometimes be heard when skipping the intermission quickly to get to this screen.
+    // The bug is caused by loading in new sounds while waveform data is still in use.
+    // Note: the wait for sounds to stop is skipped if 'fast loading' is enabled.
+    #if PSYDOOM_MODS
+        if (!Config::gbUseFastLoading) {
+            Utils::waitUntilSeqExitedStatus(sfx_barexp, SequenceStatus::SEQUENCE_PLAYING);
+            Utils::waitUntilSeqExitedStatus(sfx_pistol, SequenceStatus::SEQUENCE_PLAYING);
+        }
+
+        S_StopAll();
+    #endif
 
     // Load sound for the finale
     S_LoadMapSoundAndMusic(Game::getNumMaps() + 1);
