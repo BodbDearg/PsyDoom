@@ -416,6 +416,7 @@ bool                    gbFixGravityStrength;
 int32_t                 gLostSoulSpawnLimit;
 bool                    gbUseLostSoulSpawnFix;
 bool                    gbUseLineOfSightOverflowFix;
+bool                    gbFixOutdoorBulletPuffs;
 float                   gViewBobbingStrength;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -700,6 +701,17 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseLineOfSightOverflowFix = iniEntry.getBoolValue(true); },
         []() { gbUseLineOfSightOverflowFix = true; }
+    },
+    {
+        "FixOutdoorBulletPuffs",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then fix a Doom engine bug where bullet puffs don't appear sometimes when\n"
+        "# shooting certain walls outdoors.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbFixOutdoorBulletPuffs = iniEntry.getBoolValue(true); },
+        []() { gbFixOutdoorBulletPuffs = true; }
     },
     {
         "ViewBobbingStrength",

@@ -143,6 +143,8 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.bRemoveMaxCrossLinesLimit = false;
     #endif
 
+    settings.bFixOutdoorBulletPuffs = Config::gbFixOutdoorBulletPuffs;
+
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // Auto set the spawn limit based on the game
     } else {
@@ -174,6 +176,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUseLostSoulSpawnFix           = false;
     settings.bUseLineOfSightOverflowFix     = false;
     settings.bRemoveMaxCrossLinesLimit      = false;
+    settings.bFixOutdoorBulletPuffs         = false;
     settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
 }

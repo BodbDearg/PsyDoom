@@ -17,6 +17,7 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_switch.h"
+#include "PcPsx/Game.h"
 
 #include <algorithm>
 
@@ -394,11 +395,24 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
         sector_t& sector = *pShootLine->frontsector;
 
         if (sector.ceilingpic == -1) {
+            // Not allowed to shoot the sky ceiling!
             if (shootZ > sector.ceilingheight)
-                return;     // Not allowed to shoot the sky ceiling!
+                return;
 
-            if (pShootLine->backsector && (pShootLine->backsector->ceilingpic == -1))
-                return;     // Shooting a sky upper/lower wall!
+            // Shooting a sky upper/lower wall?
+            sector_t* const pBackSector = pShootLine->backsector;
+
+            if (pBackSector && (pBackSector->ceilingpic == -1)) {
+                #if PSYDOOM_MODS
+                    // PsyDoom: fix bullet puffs not being spawned when shooting two sided walls outdoors (if the fix is enabled)
+                    const bool bHitTheSky = ((!Game::gSettings.bFixOutdoorBulletPuffs) || (shootZ > pBackSector->ceilingheight));
+
+                    if (bHitTheSky)
+                        return;
+                #else
+                    return;
+                #endif
+            }
         }
 
         P_SpawnPuff(shootX, shootY, shootZ);

@@ -1,6 +1,5 @@
 0.8 - Limit extending and modding?
 - Fix case sensitivity for file overrides mechanism (make case insensitive).
-- Fix bullet puffs not appearing in outdoor areas bug.
 - Fix 'Rocket Blast Fix' issues: sprites not rendering (blast, bfg etc.) and blast forces being odd.
     - Exploding the missile at exactly the player position is causing issues.
 - Fix Final Doom (after MAP30 'Onslaught') ending Revenant sound playing.
