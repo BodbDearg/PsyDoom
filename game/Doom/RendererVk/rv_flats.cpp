@@ -161,7 +161,7 @@ static void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const 
         }
     }
     else {
-        // Draw the ceiling plane if the view is below it and if it's a normal ceiling and not a sky or void ceiling
+        // Draw the ceiling plane if the view is below it and if it's a normal ceiling and not a sky ceiling
         const float ceilH = RV_FixedToFloat(sector.ceilingheight);
 
         if (gViewZf < ceilH) {
@@ -267,17 +267,12 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
         if (RV_SubsecHasVisibleMaskedOrBlendedMidWalls(nextSubsec))
             break;
 
-        // Also break the batch if there is a change in sky or void ceiling status.
+        // Also break the batch if there is a change in sky ceiling status.
         // If we don't do this then sky walls can sometimes bleed through to other neighboring ceilings:
         const bool bIsSkyCeil = (sector.ceilingpic == -1);
         const bool bIsNextSkyCeil = (nextSector.ceilingpic == -1);
-        const bool bIsVoidCeil = (sector.ceilingpic < -1);
-        const bool bIsNextVoidCeil = (nextSector.ceilingpic < -1);
 
         if (bIsSkyCeil != bIsNextSkyCeil)
-            break;
-
-        if (bIsVoidCeil != bIsNextVoidCeil)
             break;
     }
 }

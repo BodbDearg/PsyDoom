@@ -46,8 +46,8 @@ static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) n
     if (midBy >= fty)
         return true;
 
-    // If the upper wall is a normal wall then it occludes
-    if (backSector.ceilingpic >= 0)
+    // If the upper wall is not a sky wall then it occludes
+    if (backSector.ceilingpic != -1)
         return true;
 
     // Otherwise if the upper wall is sky or void, only make it occlude if there is no lower wall
@@ -148,7 +148,7 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
     subsec.vkDrawSubsecIdx = (int32_t) gRvDrawSubsecs.size();
     gRvDrawSubsecs.push_back(&subsec);
 
-    if (frontSector.ceilingpic < 0) {
+    if (frontSector.ceilingpic == -1) {
         gbIsSkyVisible = true;
     }
 }

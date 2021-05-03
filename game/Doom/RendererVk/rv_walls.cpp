@@ -147,13 +147,13 @@ static void RV_DrawSegSolid(
         midTy = std::min(midTy, bty);
         midBy = std::max(midBy, bby);
 
-        // Figure out whether there is upper and lower walls and whether the upper wall should be treated as a sky/void wall
-        const bool bIsSkyOrVoidWall = (backSec.ceilingpic < 0);
+        // Figure out whether there are upper and lower walls and whether the upper wall should be treated as a sky wall
+        const bool bIsSkyWall = (backSec.ceilingpic == -1);
         const bool bHasUpperWall = (bty < fty);
         const bool bHasLowerWall = (bby > fby);
 
-        // Draw the upper wall if existing not a sky or void wall
-        if (bHasUpperWall && (!bIsSkyOrVoidWall)) {
+        // Draw the upper wall if existing not a sky wall
+        if (bHasUpperWall && (!bIsSkyWall)) {
             // Compute the top and bottom v coordinate and then draw
             const float wallBy = std::max(bty, fby);
             const float unclippedWallH = fty - bty;         // Upper wall may be clipped against the floor, but some texcoords are easier to calculate from unclipped height
@@ -371,9 +371,9 @@ static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec)
 
         if (bBackSecHasCeil || bHasNoOpening) {
             // Special effect hack: treat the sky wall as a void (not to be rendered) to allow floating ceiling effects in certain situations.
-            // If there is a higher surrounding sky or void ceiling then take that as an indication that this is not the true sky level and treat as a void.
+            // If there is a higher surrounding sky ceiling then take that as an indication that this is not the true sky level and treat as a void.
             // In the "GEC Master Edition" this can be used to create things like floating cubes.
-            const bool bTreatAsVoidWall = R_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
+            const bool bTreatAsVoidWall = R_HasHigherSurroundingSkyCeiling(frontSec);
 
             if (!bTreatAsVoidWall) {
                 RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);

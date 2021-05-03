@@ -221,9 +221,9 @@ void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
 
         if (bBackSecHasCeil || bHasNoOpening) {
             // Special effect hack: treat the sky wall as a void (not to be rendered) to allow floating ceiling effects in certain situations.
-            // If there is a higher surrounding sky or void ceiling then take that as an indication that this is not the true sky level and treat as a void.
+            // If there is a higher surrounding sky ceiling then take that as an indication that this is not the true sky level and treat as a void.
             // In the "GEC Master Edition" this can be used to create things like floating cubes.
-            const bool bTreatAsVoidWall = R_HasHigherSurroundingSkyOrVoidCeiling(frontSec);
+            const bool bTreatAsVoidWall = R_HasHigherSurroundingSkyCeiling(frontSec);
 
             if (!bTreatAsVoidWall) {
                 R_AddFrontFacingInfiniteSkyWall(edge, ftz);
