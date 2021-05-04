@@ -266,6 +266,13 @@ void M_Stop(const gameaction_t exitAction) noexcept {
 
     // Play the pistol sound and stop the current cd music track
     S_StartSound(nullptr, sfx_pistol);
+
+    #if PSYDOOM_MODS
+        // PsyDoom: update sounds so that the barrel explosion plays while the music fades out.
+        // Need to do this now since sounds don't play immediately and are queued.
+        S_UpdateSounds();
+    #endif
+
     psxcd_stop();
 
     // Single player: adjust the start map for the episode that was selected

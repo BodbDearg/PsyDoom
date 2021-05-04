@@ -24,7 +24,9 @@
 #include "Wess/wessarc.h"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
+#include <vector>
 
 // Sound settings for the WESS PSX sound driver
 static const int32_t gSound_PSXSettings[SNDHW_TAG_MAX * 2] = {
@@ -60,6 +62,24 @@ struct musicseq_t {
     int16_t         reverbDepthL;       // Reverb depth: left
     int16_t         reverbDepthR;       // Reverb depth: right
 };
+
+#if PSYDOOM_MODS
+    // PsyDoom: a sound queued and waiting to be played when the tick ends.
+    // PsyDoom queues sounds and only plays them at the end of a tick in order to avoid duplicate sounds.
+    struct queued_sound_t {
+        mobj_t*     pOrigin;    // The origin of the sound (nullptr if not triggered by a source in the world)
+        sfxenum_t   soundId;    // Which sound to play
+        uint8_t     volume;     // Volume level (0-127)
+        uint8_t     pan;        // Pan amount (WESS_PAN_CENTER is the center)
+        uint8_t     reverb;     // How much reverb to apply (0-127)
+    };
+
+    // A list of sounds queued to be played on the next call to 'S_UpdateSounds'
+    static std::vector<queued_sound_t> gQueuedSounds;
+    
+    // Type for an iterator to a queued sound
+    typedef decltype(gQueuedSounds.begin()) queued_sound_iter;
+#endif
 
 // Definitions for all of the available music sequences in the game: Doom and Final Doom.
 // Note that not all of these are unique songs, some of the tracks are simply with different reverb settings.
@@ -288,8 +308,11 @@ static bool gbDidLoadDoomSfxLcd;
 // Used to save the state of voices when pausing
 static SavedVoiceList gPausedMusVoiceState;
 
-// Unused tick count for how many sound 'updates' ticks were done
-static uint32_t gNumSoundTics;
+// Unused tick count for how many sound 'updates' ticks were done.
+// PsyDoom: don't need this - remove.
+#if !PSYDOOM_MODS
+    static uint32_t gNumSoundTics;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom Helper: converts from a DOOM volume level (0-100) to a WESS API volume level (0-127)
@@ -486,18 +509,32 @@ void S_StopAll() noexcept {
     wess_seq_stopall();
 }
 
+#if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Platform implementation for starting a sound.
-//
-// Note: this function originally took 3 parameters, but since the 3rd param was completely unused we cannnot infer what it was.
-// I've just removed this unknown 3rd param here for this reimplementation, since it serves no purpose.
+// PsyDoom: This is a complete rewrite of the original 'I_StartSound' and only starts a previously queued sound.
+// For the original implementation, see the 'old' code folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
-    // PsyDoom: ignore this command in headless mode
-    #if PSYDOOM_MODS
-        if (ProgArgs::gbHeadlessMode)
-            return;
-    #endif
+static void I_StartSound(const queued_sound_t& sound) noexcept {
+    TriggerPlayAttr sndAttribs = {};
+
+    sndAttribs.attribs_mask = TRIGGER_VOLUME | TRIGGER_PAN | TRIGGER_REVERB;
+    sndAttribs.volume_cntrl = sound.volume;
+    sndAttribs.pan_cntrl = sound.pan;
+    sndAttribs.reverb = sound.reverb;
+
+    wess_seq_trigger_type_special(sound.soundId, (uintptr_t) sound.pOrigin, &sndAttribs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// New for PsyDoom: queue a sound to play later.
+// This is an adaption of the orginal 'I_StartSound' (found in the 'old' code folder) but queues the sound instead of playing.
+// Queuing allows us to de-duplicate the same sound playing on the same frame multiple times.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void I_QueueSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
+    // Ignore this command in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
 
     // Ignore the request if the sound sequence number is invalid
     if (soundId >= NUMSFX)
@@ -508,12 +545,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
     int32_t vol = WESS_MAX_MASTER_VOL;
     int32_t pan = WESS_PAN_CENTER;
 
-    #if PSYDOOM_MODS
-        // PsyDoom: adding an extra safety check here
-        const bool bAttenuateSound = (pOrigin && pListener && (pOrigin != pListener));
-    #else
-        const bool bAttenuateSound = (pOrigin && (pOrigin != pListener));
-    #endif
+    const bool bAttenuateSound = (pOrigin && pListener && (pOrigin != pListener));
 
     if (bAttenuateSound) {
         // Figure out the approximate distance to the sound source and don't play if too far away
@@ -558,38 +590,146 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
     }
 
     // Disable reverb if the origin is in a sector that forbids it
-    TriggerPlayAttr sndAttribs;
+    int32_t reverb;
 
     if (pOrigin && (pOrigin->subsector->sector->flags & SF_NO_REVERB)) {
-        sndAttribs.reverb = 0;
+        reverb = 0;
     } else {
-        sndAttribs.reverb = WESS_MAX_REVERB_DEPTH;
+        reverb = WESS_MAX_REVERB_DEPTH;
     }
 
-    // Set the other sound attributes and play the sound.
-    // Note that the original code also wrote volume and pan to unused globals here but I've omitted that code since it is useless:
-    sndAttribs.attribs_mask = TRIGGER_VOLUME | TRIGGER_PAN | TRIGGER_REVERB;
-    sndAttribs.volume_cntrl = (uint8_t) vol;
-    sndAttribs.pan_cntrl = (uint8_t) pan;
+    // Queue the sound
+    queued_sound_t& sound = gQueuedSounds.emplace_back();
+    sound.pOrigin = pOrigin;
+    sound.soundId = soundId;
+    sound.volume = (uint8_t) std::min<int32_t>(vol, WESS_MAX_MASTER_VOL);
+    sound.pan = (uint8_t) std::clamp<int32_t>(pan, WESS_PAN_LEFT, WESS_PAN_RIGHT);
+    sound.reverb = (uint8_t) std::clamp<int32_t>(reverb, 0, WESS_MAX_REVERB_DEPTH);
+}
 
-    wess_seq_trigger_type_special(soundId, (uintptr_t) pOrigin, &sndAttribs);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sorts the queued sounds by sound id
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void I_SortQueuedSounds() noexcept {
+    std::sort(
+        gQueuedSounds.begin(),
+        gQueuedSounds.end(),
+        [](const queued_sound_t& s1, const queued_sound_t& s2) noexcept {
+            return (s1.soundId < s2.soundId);
+        }
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: plays a single sound type from the currently queued sounds list.
+// Takes an iterator to the sound to play and returns the iterator to the next sound to play.
+// Merges the same sounds together so that duplicates are not played and assumes the sound list is sorted by sound id.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static queued_sound_iter I_PlayQueuedSound(queued_sound_iter curIter) noexcept {
+    // No more sounds to play?
+    if (curIter == gQueuedSounds.end())
+        return curIter;
+
+    // Initially just playing the first sound pointed to.
+    // Note that reverb and pan levels are weighted based on sound volume.
+    const sfxenum_t soundId = curIter->soundId;
+    double vol = curIter->volume;
+    double avgPan = curIter->pan * vol;
+    double avgReverb = curIter->reverb * vol;
+
+    // We score the sounds in order to decide which pointer to the sound origin to use.
+    // Prefer louder sounds that have less panning.
+    auto scoreSound = [](const queued_sound_t& sound) noexcept {
+        const int32_t volumeScore = sound.volume * sound.volume;
+        const int32_t centeredPan = (int32_t) sound.pan - (int32_t) WESS_PAN_CENTER;
+        const int32_t panScore = -(centeredPan * centeredPan);
+        return volumeScore + panScore;
+    };
+
+    int32_t bestSoundScore = scoreSound(*curIter);
+    mobj_t* pSoundOrigin = curIter->pOrigin;
+
+    // Merge all other sounds with the same id
+    ++curIter;
+
+    while (curIter != gQueuedSounds.end()) {
+        // Different sound?
+        if (curIter->soundId != soundId)
+            break;
+
+        // Accumulate this sound so it will be merged and weight pan/reverb by volume level
+        const double curSoundVol = curIter->volume;
+        vol += curSoundVol;
+        avgPan += curIter->pan * curSoundVol;
+        avgReverb += curIter->reverb * curSoundVol;
+
+        // If this sound is preferred then use it's origin as the merged origin
+        const int32_t soundScore = scoreSound(*curIter);
+
+        if (soundScore > bestSoundScore) {
+            pSoundOrigin = curIter->pOrigin;
+            bestSoundScore = soundScore;
+        }
+
+        ++curIter;
+    }
+
+    avgPan /= vol;
+    avgPan = std::clamp(avgPan, (double) WESS_PAN_LEFT, (double) WESS_PAN_RIGHT);
+    avgReverb /= vol;
+    avgReverb = std::min(avgReverb, (double) WESS_MAX_REVERB_DEPTH);
+
+    vol = std::min(vol, (double) WESS_MAX_MASTER_VOL);
+
+    // Play the merged sound
+    queued_sound_t mergedSound = {};
+    mergedSound.pOrigin = pSoundOrigin;
+    mergedSound.soundId = soundId;
+    mergedSound.volume = (uint8_t) vol;
+    mergedSound.pan = (uint8_t) std::round(avgPan);
+    mergedSound.reverb = (uint8_t) std::round(avgReverb);
+
+    I_StartSound(mergedSound);
+
+    // Return the iterator to the next sound to play
+    return curIter;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Play the sound effect with the given id.
 // The origin parameter is optional and helps determine panning/attenuation.
+// PsyDoom: this is a complete rewrite of the original 'S_StartSound', for the original implementation, see the 'old' code folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
-    I_StartSound(pOrigin, soundId);
+    I_QueueSound(pOrigin, soundId);
 }
 
+#endif  // #if PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Placeholder where sound update logic per tick can be done
+// Placeholder where sound update logic per tick can be done.
+// This didn't do anything for PSX DOOM other than incrementing this global sound tick counter.
+// Updates to the sequencer system were instead driven by hardware timer interrupts, firing approximately 120 times a second.
+// 
+// PsyDoom: it now has a purpose, playing previously queued sounds!
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_UpdateSounds() noexcept {
-    // This didn't do anything for PSX DOOM other than incrementing this global sound tick counter.
-    // Updates to the sequencer system were instead driven by hardware timer interrupts, firing approximately 120 times a second.
-    gNumSoundTics++;
+    // PsyDoom: removed this tick counter as it was not needed
+    #if !PSYDOOM_MODS
+        gNumSoundTics++;
+    #endif
+
+    // PsyDoom: play all previously queued sounds and clear the queue.
+    // Prior to playing, sort the queue so that the same sounds played multiple times can be merged.
+    #if PSYDOOM_MODS
+        I_SortQueuedSounds();
+
+        for (queued_sound_iter iter = gQueuedSounds.begin(); iter != gQueuedSounds.end();) {
+            iter = I_PlayQueuedSound(iter);
+        }
+
+        gQueuedSounds.clear();
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -660,6 +800,11 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     gbDidLoadDoomSfxLcd = false;
     gSound_MapLcdSpuStartAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdFileId::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
     gbDidLoadDoomSfxLcd = true;
+
+    // PsyDoom: reserve memory in the queued sounds list
+    #if PSYDOOM_MODS
+        gQueuedSounds.reserve(128);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

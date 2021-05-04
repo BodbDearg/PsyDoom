@@ -512,6 +512,11 @@ gameaction_t MiniLoop(
     // Run startup logic for this game loop beginning
     pStart();
 
+    // PsyDoom: sound update in case the start action played something
+    #if PSYDOOM_MODS
+        S_UpdateSounds();
+    #endif
+
     // Update the video refresh timers.
     // PsyDoom: use 'I_GetTotalVBlanks' because it can adjust time in networked games.
     #if PSYDOOM_MODS
@@ -712,16 +717,31 @@ gameaction_t MiniLoop(
         pDrawer();
 
         // Do we need to update sound? (sound updates at 15 Hz)
-        if (gGameTic > gPrevGameTic) {
+        // PsyDoom: allow updates at any rate so sounds start as soon as possible.
+        #if PSYDOOM_MODS
             S_UpdateSounds();
-        }
+        #else
+            if (gGameTic > gPrevGameTic) {
+                S_UpdateSounds();
+            }
+        #endif
 
         gPrevGameTic = gGameTic;
         gbIsFirstTick = false;
     }
 
+    // PsyDoom: one last sound update before we exit
+    #if PSYDOOM_MODS
+        S_UpdateSounds();
+    #endif
+
     // Run cleanup logic for this game loop ending
     pStop(exitAction);
+
+    // PsyDoom: sound update in case the stop action played something
+    #if PSYDOOM_MODS
+        S_UpdateSounds();
+    #endif
 
     // Current inputs become the old ones
     #if PSYDOOM_MODS

@@ -134,7 +134,7 @@ bool init(const char* const doomCdCuePath) noexcept {
     #if SIMPLE_SPU_FLOAT_SPU
         AudioCompressor::init(
             gAudioCompState,
-            -22.0f,             // thresholdDB
+            -15.0f,             // thresholdDB
             10.0f,              // kneeWidthDB
             2.0f,               // compressionRatio
             8.0f,               // postGainDB
