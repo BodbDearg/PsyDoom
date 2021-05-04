@@ -519,6 +519,11 @@ void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
             gbCheckPosOnly = true;
 
             if (!P_TryMove(mobj, mobj.x + d_rshift<1>(mobj.momx), mobj.y + d_rshift<1>(mobj.momy))) {
+                // Before exploding, move the rocket little bit forward so the player can see the explosion and get proper directional forces
+                mobj.x += d_rshift<4>(mobj.momx);
+                mobj.y += d_rshift<4>(mobj.momy);
+                mobj.z += d_rshift<4>(mobj.momz);
+
                 P_ExplodeMissile(mobj);
                 return;
             }

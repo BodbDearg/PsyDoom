@@ -1,8 +1,7 @@
 0.8 - Limit extending and modding?
 - Add a linedef flag for 'No Sky Wall' to prevent sky walls from being rendered and allow voids.
+- Lower the volume of duplicated sounds and decrease compression threshold.
 - Fix case sensitivity for file overrides mechanism (make case insensitive).
-- Fix 'Rocket Blast Fix' issues: sprites not rendering (blast, bfg etc.) and blast forces being odd.
-    - Exploding the missile at exactly the player position is causing issues.
 - Add map patching mechanism for a few select map bugs
     - Fix house of pain door bug
     - Fix Ballystix altar not being see through with new vk renderer (need to mark as 'void' ceiling)
