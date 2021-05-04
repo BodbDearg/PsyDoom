@@ -17,6 +17,7 @@
 #include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_move.h"
 #include "p_password.h"
 #include "p_pspr.h"
 #include "p_setup.h"
@@ -516,9 +517,16 @@ void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
         if (Game::gSettings.bUsePlayerRocketBlastFix) {
             // Just do this as a collision check: don't actually move yet (that's done below).
             // If the missile has spawned in a position where it would be blocked then explode it immediately.
+            // Note that we have to do vertical checks manually here since 'P_TryMove' will only do those if actually moving...
             gbCheckPosOnly = true;
 
-            if (!P_TryMove(mobj, mobj.x + d_rshift<1>(mobj.momx), mobj.y + d_rshift<1>(mobj.momy))) {
+            const bool bXYMoveAllowed = P_TryMove(mobj, mobj.x + d_rshift<1>(mobj.momx), mobj.y + d_rshift<1>(mobj.momy));
+            const bool bCanFitVertically = (gTmFloorZ + mobj.height <= gTmCeilingZ);
+            const bool bCanStepUp = (mobj.z + 24 * FRACUNIT >= gTmFloorZ);
+            const bool bZMoveAllowed = (bCanFitVertically && bCanStepUp);
+            const bool bMoveAllowed = (bXYMoveAllowed && bZMoveAllowed);
+
+            if (!bMoveAllowed) {
                 // Before exploding, move the rocket little bit forward so the player can see the explosion and get proper directional forces
                 mobj.x += d_rshift<4>(mobj.momx);
                 mobj.y += d_rshift<4>(mobj.momy);
