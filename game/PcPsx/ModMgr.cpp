@@ -7,6 +7,7 @@
 #include "FileUtils.h"
 #include "ProgArgs.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <map>
 #include <vector>
@@ -28,6 +29,18 @@ static std::vector<bool> gbFileHasOverrides;
 // A list of currently open files.
 // Only a certain amount are allowed at a time:
 static std::FILE* gOpenFileSlots[MAX_OPEN_FILES] = {};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Uppercases the specified string
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void makeUppercase(std::string& str) noexcept {
+    std::transform(
+        str.begin(),
+        str.end(),
+        str.begin(),
+        [](char c) noexcept { return (char) ::toupper(c); }
+    );
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Determines what files in the game are overriden with files in a user supplied 'data directory', if any.
@@ -62,8 +75,11 @@ static void determineFileOverridesInUserDataDir() noexcept {
             errno = 0;
 
             while (dirent* const pDirEnt = readdir(pDir)) {
-                // Try to match this file against game files and flag as an override if matching
-                auto nameToFileIndexIter = nameToFileIndex.find(pDirEnt->d_name);
+                // Try to match this file against game files and flag as an override if matching.
+                // Match case insensitive by uppercasing the file name.
+                std::string filename = pDirEnt->d_name;
+                makeUppercase(filename);
+                auto nameToFileIndexIter = nameToFileIndex.find(filename);
 
                 if (nameToFileIndexIter != nameToFileIndex.end()) {
                     const uint32_t fileIdx = nameToFileIndexIter->second;
@@ -87,8 +103,10 @@ static void determineFileOverridesInUserDataDir() noexcept {
             const DirIter dirEndIter;
 
             while (dirIter != dirEndIter) {
-                // Try to match this file against game files and flag as an override if matching
+                // Try to match this file against game files and flag as an override if matching.
+                // Match case insensitive by uppercasing the file name.
                 std::string filename = dirIter->path().filename().string();
+                makeUppercase(filename);
                 auto nameToFileIndexIter = nameToFileIndex.find(filename);
 
                 if (nameToFileIndexIter != nameToFileIndex.end()) {
