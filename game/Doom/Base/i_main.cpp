@@ -119,8 +119,8 @@ texture_t gTex_CONNECT;
     static constexpr int32_t MAX_PACKET_DELAY_MS = 15;
 
     // The current network protocol version.
-    // Should be incremented whenever the data format being transmitted changes.
-    static constexpr int32_t NET_PROTOCOL_VERSION = 9;
+    // Should be incremented whenever the data format being transmitted changes, or when updates might cause differences in game behavior.
+    static constexpr int32_t NET_PROTOCOL_VERSION = 10;
 
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;

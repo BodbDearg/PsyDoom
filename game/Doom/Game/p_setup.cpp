@@ -23,6 +23,7 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
+#include "PcPsx/MapPatcher.h"
 #include "PcPsx/MobjSpritePrecacher.h"
 
 #include <algorithm>
@@ -412,6 +413,11 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     } else {
         gpSkyTexture = nullptr;
     }
+
+    // PsyDoom: if fixes/patches are defined for this map then apply them
+    #if PSYDOOM_MODS
+        MapPatcher::applyPatches(ML_SECTORS, pTmpBufferBytes, lumpSize);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -610,6 +616,11 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
         ++pSrcLine;
         ++pDstLine;
     }
+
+    // PsyDoom: if fixes/patches are defined for this map then apply them
+    #if PSYDOOM_MODS
+        MapPatcher::applyPatches(ML_LINEDEFS, pTmpBufferBytes, lumpSize);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -702,6 +713,11 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     } else {
         processWadSidedefs((mapsidedef_t*) pTmpBufferBytes);
     }
+
+    // PsyDoom: if fixes/patches are defined for this map then apply them
+    #if PSYDOOM_MODS
+        MapPatcher::applyPatches(ML_SIDEDEFS, pTmpBufferBytes, lumpSize);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
