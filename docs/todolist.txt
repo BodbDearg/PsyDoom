@@ -1,9 +1,8 @@
 0.8 - Limit extending and modding?
 - Add a linedef flag for 'No Sky Wall' to prevent sky walls from being rendered and allow voids.
-- Fix strange sound bug on returning to main menu from finale.
 - Add map patching mechanism for a few select map bugs
     - Fix house of pain door bug
-    - Fix Ballystix altar not being see through with new vk renderer (need to mark as 'void' ceiling)
+    - Fix Ballystix altar not being see through with new vk renderer
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.

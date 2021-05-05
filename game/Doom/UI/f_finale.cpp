@@ -404,6 +404,15 @@ void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 
     gbGamePaused = false;
     psxcd_stop();
+
+    // PsyDoom: wait for barrel and pistol sounds to stop in addition to cd music and draw a loading plaque while we wait.
+    // Also kill all sounds before exiting back to the main menu - fixes a bug where a strange sound plays on returning to the main menu.
+    #if PSYDOOM_MODS
+        I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
+        Utils::waitUntilSeqExitedStatus(sfx_barexp, SequenceStatus::SEQUENCE_PLAYING);
+        Utils::waitUntilSeqExitedStatus(sfx_pistol, SequenceStatus::SEQUENCE_PLAYING);
+        S_StopAll();
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
