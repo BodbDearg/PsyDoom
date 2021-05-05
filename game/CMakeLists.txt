@@ -383,6 +383,7 @@ include_directories(${INCLUDE_PATHS})
 target_link_libraries(${GAME_TGT_NAME}
     ${ASIO_TGT_NAME}
     ${BASELIB_TGT_NAME}
+    ${HASH_LIBRARY_TGT_NAME}
     ${LIBSDL_TGT_NAME}
     ${SIMPLE_GPU_TGT_NAME}
     ${SIMPLE_SPU_TGT_NAME}

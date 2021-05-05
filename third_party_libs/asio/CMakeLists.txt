@@ -10,6 +10,9 @@ set(SOURCE_FILES
     "${SRC_DIR}/asio.cpp"
 )
 
+set(OTHER_FILES
+)
+
 add_library(${ASIO_TGT_NAME} ${SOURCE_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
