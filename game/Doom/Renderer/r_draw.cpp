@@ -253,10 +253,17 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
         }
     }
 
-    // Draw the floor if above it
+    // Draw the floor if above it.
+    // PsyDoom limit removing: floors can now have skies too.
     sector_t& drawsec = *gpCurDrawSector;
 
-    if (gViewZ > drawsec.floorheight) {
+    #if PSYDOOM_LIMIT_REMOVING
+        const bool bHasSkyFloor = (drawsec.floorpic == -1);
+    #else
+        constexpr bool bHasSkyFloor = false;
+    #endif
+
+    if ((!bHasSkyFloor) && (gViewZ > drawsec.floorheight)) {
         R_DrawSubsectorFlat(drawleaf, false);
     }
 

@@ -312,6 +312,23 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
         sector_t* pDstSec = gpSectors;
 
         for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
+            // PsyDoom helper: ensures a floor or ceiling texture is in range and issues a warning if not.
+            // These are new safety checks which were originally not run.
+            const auto ensureValidFlatPic = [&](int32_t& flatPicNum) noexcept {
+                #if PSYDOOM_MODS
+                    if ((flatPicNum < 0) || (flatPicNum >= gNumFlatLumps)) {
+                        flatPicNum = 0;
+
+                        std::snprintf(
+                            gLevelStartupWarning,
+                            C_ARRAY_SIZE(gLevelStartupWarning),
+                            (&flatPicNum == &pDstSec->floorpic) ? "W:bad f-tex for sector %d!" : "W:bad c-tex for sector %d!",
+                            secIdx
+                        );
+                    }
+                #endif
+            };
+
             // Save basic properties
             pDstSec->floorheight = d_int_to_fixed(Endian::littleToHost(pSrcSec->floorheight));
             pDstSec->ceilingheight = d_int_to_fixed(Endian::littleToHost(pSrcSec->ceilingheight));
@@ -325,19 +342,12 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
             if constexpr (bFinalDoom) {
                 // Final Doom specific stuff: we have the actual floor and ceiling texture indexes in this case: no lookup needed!
                 const int32_t ceilingPic = Endian::littleToHost(pSrcSec->ceilingpic);
+                const int32_t floorPic = Endian::littleToHost(pSrcSec->floorpic);
 
-                pDstSec->floorpic = Endian::littleToHost(pSrcSec->floorpic);
+                pDstSec->floorpic = floorPic;
                 pDstSec->ceilingpic = ceilingPic;
 
-                #if PSYDOOM_MODS
-                    // PsyDoom: if the floor texture is invalid issue a descriptive warning and assign a default rather than crashing later
-                    if ((pDstSec->floorpic < 0) || (pDstSec->floorpic >= gNumFlatLumps)) {
-                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad f-tex for sector %d!", secIdx);
-                        pDstSec->floorpic = 0;
-                    }
-                #endif
-
-                // Note: if the ceiling has a sky then remove it's texture figure out the sky lump name for it - will load the sky lump later on
+                // Note: if the ceiling has a sky then remove it's texture and figure out the sky lump name for it - will load the sky lump later on
                 if (ceilingPic >= firstSkyTexPic) {
                     pDstSec->ceilingpic = -1;
 
@@ -350,28 +360,43 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                         skyLumpName[4] = '1' + (char)(ceilingPic - firstSkyTexPic);     // Note: only supports up to 9 sky variants!
                     #endif
                 } else {
-                    #if PSYDOOM_MODS
-                        // PsyDoom: if the ceiling texture is invalid issue a descriptive warning and assign a default rather than crashing later
-                        if ((pDstSec->ceilingpic < 0) || (pDstSec->ceilingpic >= gNumFlatLumps)) {
-                            std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad c-tex for sector %d!", secIdx);
-                            pDstSec->ceilingpic = 0;
-                        }
-                    #endif
+                    ensureValidFlatPic(pDstSec->ceilingpic);
                 }
-            } else {
-                // Original PSX Doom specific stuff, have to lookup flat numbers from names.
-                // First, figure out the floor texture number:
-                pDstSec->floorpic = R_FlatNumForName(pSrcSec->floorpic);
 
-                #if PSYDOOM_MODS
-                    // PsyDoom: if the floor texture is invalid issue a descriptive warning and assign a default rather than crashing later
-                    if ((pDstSec->floorpic < 0) || (pDstSec->floorpic >= gNumFlatLumps)) {
-                        pDstSec->floorpic = 0;
-                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad f-tex for sector %d!", secIdx);
+                // PsyDoom limit removing: add support for floor skies too
+                #if PSYDOOM_LIMIT_REMOVING
+                    if (floorPic >= firstSkyTexPic) {
+                        pDstSec->floorpic = -1;
+                        skyLumpName[3] = '0' + (char)((floorPic - firstSkyTexPic) / 10);
+                        skyLumpName[4] = '1' + (char)((floorPic - firstSkyTexPic) % 10);
+                    } else {
+                        ensureValidFlatPic(pDstSec->floorpic);
                     }
+                #else
+                    ensureValidFlatPic(pDstSec->floorpic);
+                #endif
+            } else {
+                // Original PSX Doom specific stuff: have to lookup flat numbers from names. First, figure out the floor texture number.
+                // PsyDoom limit removing: add support for floor skies too.
+                #if PSYDOOM_LIMIT_REMOVING
+                    const bool bFloorHasSky = (D_strncasecmp(pSrcSec->floorpic, SKY_LUMP_NAME, SKY_LUMP_NAME_LEN) == 0);
+
+                    if (bFloorHasSky) {
+                        // No floor texture: extract and save the 2 digits for the sky number ('01', '02' etc.)
+                        pDstSec->floorpic = -1;
+                        skyLumpName[3] = pSrcSec->floorpic[5];
+                        skyLumpName[4] = pSrcSec->floorpic[6];
+                    } else {
+                        // Normal case: floor has a texture, save it's number
+                        pDstSec->floorpic = R_FlatNumForName(pSrcSec->floorpic);
+                        ensureValidFlatPic(pDstSec->floorpic);
+                    }
+                #else
+                    pDstSec->floorpic = R_FlatNumForName(pSrcSec->floorpic);
+                    ensureValidFlatPic(pDstSec->floorpic);
                 #endif
 
-                // Figure out ceiling texture numebr.
+                // Figure out ceiling texture number.
                 // Note: if the ceiling has a sky then figure out the sky lump name for it instead - will load the sky lump later on.
                 const bool bCeilHasSky = (D_strncasecmp(pSrcSec->ceilingpic, SKY_LUMP_NAME, SKY_LUMP_NAME_LEN) == 0);
 
@@ -383,14 +408,7 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                 } else {
                     // Normal case: ceiling has a texture, save it's number
                     pDstSec->ceilingpic = R_FlatNumForName(pSrcSec->ceilingpic);
-
-                    #if PSYDOOM_MODS
-                        // PsyDoom: if the ceiling texture was invalid issue a descriptive warning and assign a default
-                        if ((pDstSec->ceilingpic < 0) || (pDstSec->ceilingpic >= gNumFlatLumps)) {
-                            pDstSec->ceilingpic = 0;
-                            std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad c-tex for sector %d!", secIdx);
-                        }
-                    #endif
+                    ensureValidFlatPic(pDstSec->ceilingpic);
                 }
             }
 

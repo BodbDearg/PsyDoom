@@ -156,8 +156,17 @@ static void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const 
         const float floorH = RV_FixedToFloat(sector.floorheight);
 
         if (gViewZf > floorH) {
-            texture_t& floorTex = gpFlatTextures[gpFlatTranslation[sector.floorpic]];
-            RV_DrawPlane<true>(subsec, floorH, colR, colG, colB, floorTex);
+            // PsyDoom limit removing: floors can now have skies too
+            #if PSYDOOM_LIMIT_REMOVING
+                const bool bHasSkyFloor = (sector.floorpic == -1);
+            #else
+                constexpr bool bHasSkyFloor = false;
+            #endif
+
+            if (!bHasSkyFloor) {
+                texture_t& floorTex = gpFlatTextures[gpFlatTranslation[sector.floorpic]];
+                RV_DrawPlane<true>(subsec, floorH, colR, colG, colB, floorTex);
+            }
         }
     }
     else {

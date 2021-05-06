@@ -525,6 +525,13 @@ void R_AddLine(seg_t& seg) noexcept {
         gbIsSkyVisible = true;
     }
 
+    #if PSYDOOM_LIMIT_REMOVING
+        // PsyDoom: floors can have skies too if limit removing
+        if (gpCurDrawSector->floorpic == -1) {
+            gbIsSkyVisible = true;
+        }
+    #endif
+
     // Clamp the x values to the screen range
     if (begX < 0) {
         begX = 0;

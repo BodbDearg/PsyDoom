@@ -155,6 +155,13 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
     if (frontSector.ceilingpic == -1) {
         gbIsSkyVisible = true;
     }
+
+    #if PSYDOOM_LIMIT_REMOVING
+        // Floors can have skies too if limit removing
+        if (frontSector.floorpic == -1) {
+            gbIsSkyVisible = true;
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
