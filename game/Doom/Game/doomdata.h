@@ -23,19 +23,21 @@ enum : int32_t {
 };
 
 // Linedef flags
-static constexpr int16_t ML_BLOCKING        = 0x1;      // The line blocks all movement
-static constexpr int16_t ML_BLOCKMONSTERS   = 0x2;      // The line blocks monsters
-static constexpr int16_t ML_TWOSIDED        = 0x4;      // Unset for single sided lines
-static constexpr int16_t ML_DONTPEGTOP      = 0x8;      // If unset then upper texture is anchored to the ceiling rather than bottom edge
-static constexpr int16_t ML_DONTPEGBOTTOM   = 0x10;     // If unset then lower texture is anchored to the floor rather than top edge
-static constexpr int16_t ML_SECRET          = 0x20;     // Don't show as two sided in the automap, because it's a secret
-static constexpr int16_t ML_SOUNDBLOCK      = 0x40;     // Stops sound propagation
-static constexpr int16_t ML_DONTDRAW        = 0x80;     // Hide on the automap
-static constexpr int16_t ML_MAPPED          = 0x100;    // Set when the line is to be shown on the automap
-static constexpr int16_t ML_MIDMASKED       = 0x200;    // PSX DOOM: Middle texture has translucent or alpha blended pixels
-static constexpr int16_t ML_MIDTRANSLUCENT  = 0x400;    // PSX DOOM: Middle texture drawn with alpha blending
-static constexpr int16_t ML_BLOCKPRJECTILE  = 0x800;    // PSX DOOM: Line stops projectiles
-static constexpr int16_t ML_MIDHEIGHT_128   = 0x1000;   // PSX FINAL DOOM: forces the middle part of a wall to be a fixed 128 units in height. Used for fences and such in Final Doom, so they don't repeat vertically.
+static constexpr int32_t ML_BLOCKING            = 0x1;          // The line blocks all movement
+static constexpr int32_t ML_BLOCKMONSTERS       = 0x2;          // The line blocks monsters
+static constexpr int32_t ML_TWOSIDED            = 0x4;          // Unset for single sided lines
+static constexpr int32_t ML_DONTPEGTOP          = 0x8;          // If unset then upper texture is anchored to the ceiling rather than bottom edge
+static constexpr int32_t ML_DONTPEGBOTTOM       = 0x10;         // If unset then lower texture is anchored to the floor rather than top edge
+static constexpr int32_t ML_SECRET              = 0x20;         // Don't show as two sided in the automap, because it's a secret
+static constexpr int32_t ML_SOUNDBLOCK          = 0x40;         // Stops sound propagation
+static constexpr int32_t ML_DONTDRAW            = 0x80;         // Hide on the automap
+static constexpr int32_t ML_MAPPED              = 0x100;        // Set when the line is to be shown on the automap
+static constexpr int32_t ML_MIDMASKED           = 0x200;        // PSX DOOM: Middle texture has translucent or alpha blended pixels
+static constexpr int32_t ML_MIDTRANSLUCENT      = 0x400;        // PSX DOOM: Middle texture drawn with alpha blending
+static constexpr int32_t ML_BLOCKPRJECTILE      = 0x800;        // PSX DOOM: Line stops projectiles
+static constexpr int32_t ML_MIDHEIGHT_128       = 0x1000;       // PSX FINAL DOOM: forces the middle part of a wall to be a fixed 128 units in height. Used for fences and such in Final Doom, so they don't repeat vertically.
+static constexpr int32_t ML_NO_SKY_WALL_HINT    = 0x4000;       // PsyDoom specific: hint that no 'sky wall' should be drawn above the upper wall of a 2-sided linedef with a sky ceiling. If conflicting flag 'ML_SKY_WALL_HINT' is specified then both flags are ignored.
+static constexpr int32_t ML_ADD_SKY_WALL_HINT   = 0x8000;       // PsyDoom specific: hint that a 'sky wall' should be added above the upper wall of a 2-sided linedef with a sky ceiling. If conflicting flag 'ML_NO_SKY_WALL_HINT' is specified then both flags are ignored.
 
 // Map thing flags
 static constexpr int16_t MTF_EASY               = 0x1;      // Difficulty flags, determines which difficulties the thing appears at

@@ -1,5 +1,4 @@
 0.8 - Limit extending and modding?
-- Add a linedef flag for 'No Sky Wall' to prevent sky walls from being rendered and allow voids.
 - Fix Ballystix altar not being see through with new vk renderer
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate being able to add override/new lumps via map wads.

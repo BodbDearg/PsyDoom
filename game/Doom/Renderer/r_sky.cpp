@@ -220,12 +220,28 @@ void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
         const bool bHasNoOpening = (midTz <= midBz);
 
         if (bBackSecHasCeil || bHasNoOpening) {
-            // Special effect hack: treat the sky wall as a void (not to be rendered) to allow floating ceiling effects in certain situations.
-            // If there is a higher surrounding sky ceiling then take that as an indication that this is not the true sky level and treat as a void.
-            // In the "GEC Master Edition" this can be used to create things like floating cubes.
-            const bool bTreatAsVoidWall = R_HasHigherSurroundingSkyCeiling(frontSec);
+            // New PsyDoom added line flags can explicitly specify whether sky walls should render or not - grab those now.
+            // These can allow certain problem cases to be fixed when the default rules for when to add a sky wall are not good enough.
+            // Note: if the explicit flags contradict then just ignore them both and do the default behavior (check for 'floating platforms' hack).
+            const int32_t lineFlags = seg.linedef->flags;
+            const bool bAddSkyWallHint = (lineFlags & ML_ADD_SKY_WALL_HINT);
+            const bool bNoSkyWallHint = (lineFlags & ML_NO_SKY_WALL_HINT);
 
-            if (!bTreatAsVoidWall) {
+            // Allow line flags a say in whether this is a void or sky wall, provided they are both set and don't contradict
+            bool bRenderSkyWall;
+
+            if (bAddSkyWallHint != bNoSkyWallHint) {
+                // Whether to render a sky or not has been explicitly specified, use the mapper's instruction:
+                bRenderSkyWall = bAddSkyWallHint;
+            } else {
+                // Default behavior - check for the special 'floating platforms' hack.
+                // In certain situations treat the sky wall as a void (not to be rendered) to allow floating ceiling effects.
+                // If there is a higher surrounding sky ceiling then take that as an indication that this is not the true sky level and treat as a void.
+                // In the "GEC Master Edition" for example this has been used to create things like floating cubes.
+                bRenderSkyWall = (!R_HasHigherSurroundingSkyCeiling(frontSec));
+            }
+
+            if (bRenderSkyWall) {
                 R_AddFrontFacingInfiniteSkyWall(edge, ftz);
             }
         }
