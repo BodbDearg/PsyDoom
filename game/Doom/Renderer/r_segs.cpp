@@ -221,11 +221,17 @@ void R_DrawWallPiece(
     // This code gets invoked constantly for animated textures like the blood or slime fall textures.
     // Only one frame of the animated texture stays in VRAM at a time!
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        // Decompress and get a pointer to the texture data
+        // Decompress (PsyDoom: if required) and get a pointer to the texture data
         #if PSYDOOM_LIMIT_REMOVING
-            gTmpBuffer.ensureSize(getDecodedSize(gpLumpCache[tex.lumpNum]));
-            decode(gpLumpCache[tex.lumpNum], gTmpBuffer.bytes());
-            const uint16_t* const pTexData = (uint16_t*)(gTmpBuffer.bytes() + sizeof(texlump_header_t));
+            const std::byte* pLumpData;
+
+            if (gpbIsUncompressedLump[tex.lumpNum]) {
+                pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
+            } else {
+                gTmpBuffer.ensureSize(getDecodedSize(gpLumpCache[tex.lumpNum]));
+                decode(gpLumpCache[tex.lumpNum], gTmpBuffer.bytes());
+                pLumpData = gTmpBuffer.bytes();
+            }
         #else
             // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
             #if PSYDOOM_MODS
@@ -235,12 +241,12 @@ void R_DrawWallPiece(
             #endif
 
             decode(gpLumpCache[tex.lumpNum], gTmpBuffer);
-            const uint16_t* const pTexData = (uint16_t*)(gTmpBuffer + sizeof(texlump_header_t));
+            pLumpData = gTmpBuffer;
         #endif
 
         // Upload to the GPU and mark the texture as loaded this frame
         const SRECT texRect = getTextureVramRect(tex);
-        LIBGPU_LoadImage(texRect, pTexData);
+        LIBGPU_LoadImage(texRect, (const uint16_t*)(pLumpData + sizeof(texlump_header_t)));
         tex.uploadFrameNum = gNumFramesDrawn;
     }
 

@@ -77,7 +77,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
 
         // Load the decompressed texture to the required part of VRAM and mark as loaded
         const SRECT vramRect = getTextureVramRect(tex);
-        LIBGPU_LoadImage(vramRect, (uint16_t*)(pLumpData + sizeof(texlump_header_t)));
+        LIBGPU_LoadImage(vramRect, (const uint16_t*)(pLumpData + sizeof(texlump_header_t)));
         tex.uploadFrameNum = gNumFramesDrawn;
     }
 
