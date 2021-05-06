@@ -24,6 +24,10 @@ std::vector<subsector_t*> gRvDrawSubsecs;
 // Occluding segs should mark out areas of the screen that they cover, so that nothing behind draws.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) noexcept {
+    // If the linedef specifies the 'ML_UPPER_VOID' flag then ignore it for occlusion
+    if (seg.linedef->flags & ML_UPPER_VOID)
+        return false;
+
     // One sided lines are always occluding
     if (!seg.backsector)
         return true;

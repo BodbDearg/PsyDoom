@@ -578,8 +578,17 @@ void R_AddLine(seg_t& seg) noexcept {
     }
 
     // Mark any columns that this seg fully occludes as 'solid'.
-    // Only do this however if the seg is not drawn with translucent parts or transparency:
-    if ((seg.linedef->flags & ML_MIDMASKED) == 0) {
+    // Only do this however if the seg is not drawn with translucent parts or transparency.
+    // PsyDoom: also skip occluding if the new 'ML_UPPER_VOID' flag is set.
+    const int32_t lineFlags = seg.linedef->flags;
+
+    #if PSYDOOM_MODS
+        const bool bLineCanOcclude = ((lineFlags & (ML_UPPER_VOID | ML_MIDMASKED)) == 0);
+    #else
+        const bool bLineCanOcclude = ((lineFlags & ML_MIDMASKED) == 0);
+    #endif
+
+    if (bLineCanOcclude) {
         const sector_t& frontSec = *gpCurDrawSector;
         const sector_t* const pBackSec = seg.backsector;
 
