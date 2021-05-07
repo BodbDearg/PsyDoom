@@ -35,18 +35,48 @@ struct PatchDef {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Utility function: apply a transformation to a number of linedefs
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class ModFuncT>
+static void modifyLinedefs([[maybe_unused]] const ModFuncT & func) noexcept {}
+
+template <class ModFuncT, class ...Int32List> 
+static void modifyLinedefs(const ModFuncT & func, const int32_t linedefIdx, Int32List... linedefIndexes) noexcept {
+    ASSERT(linedefIdx < gNumLines);
+    func(gpLines[linedefIdx]);
+    modifyLinedefs(func, linedefIndexes...);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix a bug in Doom with the House Of Pain where an unintended door linedef causes one of the ceilings to collapse permanently.
 // Removes the line action which causes the bug.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void FixHouseOfPainDoorBug() noexcept {
+static void fixHouseOfPainDoorBug() noexcept {
     gpLines[435].special = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix various issues in MAP23, Ballistyx for Final Doom
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void fixBallistyxIssues() noexcept {
+    // Make various linedefs not render sky walls or be see through for occlusion purposes
+    modifyLinedefs(
+        [](line_t& line) { line.flags |= ML_UPPER_VOID; },
+        // Altar hole: don't draw sky walls
+        1212, 1211, 1215, 1210, 1214, 1213,
+        // Altar pillars: don't occlude and prevent geometry behind from rendering (needed for floating platform hack)
+        1216, 1291, 1290, 1207, 1209, 1292, 1293, 1199,
+        // Yellow key cage area: the outer wall floors sometimes don't render due to occluding sky walls; make them not occlude:
+        1525,1064,1526,1052,371,1053,374,1509,373,1054,1524,1055
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // All of the map fixes to apply
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatches[] = {
-    { 19, GameType::Doom, ML_LINEDEFS, 8610, 0x417CD93948684803, 0xB43273CA53916561, FixHouseOfPainDoorBug }
+    { 19, GameType::Doom,      ML_LINEDEFS, 8610,  0x417CD93948684803, 0xB43273CA53916561, fixHouseOfPainDoorBug },
+    { 23, GameType::FinalDoom, ML_LINEDEFS, 21392, 0xCADEBB9043C70D3F, 0x4061F4281078EC52, fixBallistyxIssues }
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
