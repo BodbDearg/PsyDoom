@@ -153,7 +153,7 @@ static void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const 
 
     if (bDrawFloor) {
         // Draw the floor plane if the view is above it
-        const float floorH = RV_FixedToFloat(sector.floorheight);
+        const float floorH = RV_FixedToFloat(sector.floorDrawHeight);
 
         if (gViewZf > floorH) {
             // PsyDoom limit removing: floors can now have skies too
@@ -225,7 +225,7 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         const subsector_t& nextSubsec = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx];
         const sector_t& nextSector = *nextSubsec.sector;
 
-        if (nextSector.floorheight != sector.floorheight)
+        if (nextSector.floorDrawHeight != sector.floorDrawHeight)
             break;
 
         // Break the batch if the next subsector has visible masked or blended mid walls.

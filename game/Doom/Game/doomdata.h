@@ -39,6 +39,13 @@ static constexpr int32_t ML_MIDHEIGHT_128       = 0x1000;       // PSX FINAL DOO
 static constexpr int32_t ML_UPPER_VOID          = 0x4000;       // PsyDoom specific: flags a line as 'see through' for occlusion culling (on the basis that it has a see-through upper void) and prohibits sky walls from being rendered
 static constexpr int32_t ML_ADD_SKY_WALL_HINT   = 0x8000;       // PsyDoom specific: hint that a 'sky wall' should be added above the upper wall of a 2-sided linedef with a sky ceiling. If 'ML_UPPER_VOID' is specified then this is ignored.
 
+// Sector flags
+static constexpr uint32_t SF_NO_REVERB = 0x1;           // Disables reverb on a sector
+
+#if PSYDOOM_MODS
+    static constexpr uint32_t SF_GHOSTPLAT = 0x2;       // Render the sector at the lowest floor height surrounding it, creating an 'invisible platform' effect
+#endif
+
 // Map thing flags
 static constexpr int16_t MTF_EASY               = 0x1;      // Difficulty flags, determines which difficulties the thing appears at
 static constexpr int16_t MTF_NORMAL             = 0x2;

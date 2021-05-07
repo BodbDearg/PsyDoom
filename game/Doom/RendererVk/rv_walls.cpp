@@ -113,7 +113,7 @@ static void RV_DrawSegSolid(
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
     const sector_t& frontSec = *subsec.sector;
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
-    const float fby = RV_FixedToFloat(frontSec.floorheight);
+    const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
 
     // Get the upper/mid/lower textures for the seg.
     // Note that these array indexes are always guaranteed to be in range by the level setup code.
@@ -141,7 +141,7 @@ static void RV_DrawSegSolid(
         // Get the bottom and top y values of the back sector
         const sector_t& backSec = *seg.backsector;
         const float bty = RV_FixedToFloat(backSec.ceilingheight);
-        const float bby = RV_FixedToFloat(backSec.floorheight);
+        const float bby = RV_FixedToFloat(backSec.floorDrawHeight);
 
         // Adjust mid wall size so that it only occupies the gap between the upper and lower walls
         midTy = std::min(midTy, bty);
@@ -268,7 +268,7 @@ static void RV_DrawSegBlended(
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
     const sector_t& frontSec = *subsec.sector;
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
-    const float fby = RV_FixedToFloat(frontSec.floorheight);
+    const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
 
     // Get the mid texture for the seg.
     // Note that this array index is always guaranteed to be in range by the level setup code.
@@ -284,7 +284,7 @@ static void RV_DrawSegBlended(
     // Get the floor and ceiling heights for the back sector
     const sector_t& backSec = *seg.backsector;
     const float bty = RV_FixedToFloat(backSec.ceilingheight);
-    const float bby = RV_FixedToFloat(backSec.floorheight);
+    const float bby = RV_FixedToFloat(backSec.floorDrawHeight);
 
     // These are the y values for the top and bottom of the mid wall.
     // It occupies the gap between the front and back sectors.
@@ -358,14 +358,14 @@ static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec)
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
     const sector_t& frontSec = *subsec.sector;
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
-    const float fby = RV_FixedToFloat(frontSec.floorheight);
+    const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
 
     // See if the seg's line is two sided or not, may need to draw upper sky walls if two-sided
     if (seg.backsector) {
         // Get the bottom and top y values of the back sector
         const sector_t& backSec = *seg.backsector;
         const float bty = RV_FixedToFloat(backSec.ceilingheight);
-        const float bby = RV_FixedToFloat(backSec.floorheight);
+        const float bby = RV_FixedToFloat(backSec.floorDrawHeight);
 
         // Get the mid wall size so that it only occupies the gap between the upper and lower walls
         const float midTy = std::min(fty, bty);

@@ -1,7 +1,6 @@
 0.8 - Limit extending and modding?
 - Add lower sky wall rendering and rename VOID and ADD_SKY flags to reflect more general use
 - Add in-place map reload dev cheat
-- Support the new see-through platform flag
 - Provide PsyDoom Doom Builder config
 - Experiment with Doom 64 two colored lighting
 - Investigate a MAPINFO format for naming maps, choosing music etc.

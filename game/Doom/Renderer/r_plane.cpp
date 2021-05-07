@@ -105,7 +105,12 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     if (bIsCeiling) {
         planeZ = drawsec.ceilingheight - gViewZ;
     } else {
-        planeZ = drawsec.floorheight - gViewZ;
+        // PsyDoom: floor might be drawn at a different height to it's real height ('ghost platform' effects)
+        #if PSYDOOM_MODS
+            planeZ = drawsec.floorDrawHeight - gViewZ;
+        #else
+            planeZ = drawsec.floorheight - gViewZ;
+        #endif
     }
 
     // Draw the horizontal spans of the leaf

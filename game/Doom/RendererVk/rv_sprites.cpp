@@ -307,8 +307,8 @@ static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine&
             // In all other cases allow a split to take place across this seg, even if the split test line crosses it.
             const sector_t& frontSector = *seg.frontsector;
 
-            const float fby = RV_FixedToFloat(frontSector.floorheight);
-            const float bby = RV_FixedToFloat(pBackSector->floorheight);
+            const float fby = RV_FixedToFloat(frontSector.floorDrawHeight);
+            const float bby = RV_FixedToFloat(pBackSector->floorDrawHeight);
             const float midBy = std::max(fby, bby);
             const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingheight, pBackSector->ceilingheight));
 

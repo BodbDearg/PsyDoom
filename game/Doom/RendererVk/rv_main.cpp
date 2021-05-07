@@ -138,6 +138,9 @@ void RV_RenderPlayerView() noexcept {
     if (!VRenderer::isRendering())
         return;
 
+    // Increment the marker used to determine when to update the 'draw height' for each sector
+    gValidCount++;
+
     // Determine various draw settings and clear x-axis occlusion info to start with.
     // Then traverse the BSP tree to determine what needs to be drawn and in what order
     RV_DetermineDrawParams();

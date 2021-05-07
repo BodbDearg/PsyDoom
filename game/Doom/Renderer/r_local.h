@@ -35,9 +35,6 @@ struct vertex_t {
     uint32_t    frameUpdated;       // Render var: When (in game frames) the vertex was last transformed: used to avoid unnecessary transforms
 };
 
-// PSX sector flags: just 1 defined - to disable reverb on a sector
-static constexpr uint32_t SF_NO_REVERB = 0x1;
-
 // Describes a sector or collection of lines and subsectors
 struct sector_t {
     fixed_t         floorheight;        // Current floor height for the sector
@@ -52,6 +49,9 @@ struct sector_t {
     mobj_t*         soundtarget;        // The thing that last made a noise in the sector to alert monsters
     uint32_t        flags;              // Sector flags (new addition for PSX)
     int32_t         blockbox[4];        // Bounding box for the sector in blockmap units
+#if PSYDOOM_MODS
+    fixed_t         floorDrawHeight;    // PsyDoom: height to render the floor at. Might be different to actual floor height (ghost/invisible platform effects)
+#endif
     degenmobj_t     soundorg;           // A partial 'mobj_t' which defines where sounds come from in the sector, for sectors that make noises
     int32_t         validcount;         // A marker used to avoid re-doing certain checks
     mobj_t*         thinglist;          // The list of things in the sector; each thing stores next/previous sector thing links

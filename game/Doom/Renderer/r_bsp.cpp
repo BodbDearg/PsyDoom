@@ -351,6 +351,11 @@ void R_Subsector(const int32_t subsecNum) noexcept {
         gppEndDrawSubsector++;
     #endif
 
+    // PsyDoom: update the height that the floor is to be rendered at
+    #if PSYDOOM_MODS
+        R_UpdateFloorDrawHeight(*subsec.sector);
+    #endif
+
     // Do draw preparation on all of the segs in the subsector.
     // This figures out what areas of the screen they occlude, updates transformed vertex positions, and more...
     seg_t* pSeg = &gpSegs[subsec.firstseg];
@@ -596,21 +601,37 @@ void R_AddLine(seg_t& seg) noexcept {
     #endif
 
     if (bLineCanOcclude) {
-        const sector_t& frontSec = *gpCurDrawSector;
-        const sector_t* const pBackSec = seg.backsector;
+        sector_t& frontSec = *gpCurDrawSector;
+        sector_t* const pBackSec = seg.backsector;
 
         // Is this seg something that fully occludes stuff behind it?
         // This will be the case if the seg is one sided (no back sector) or if there is no height gap between sectors.
-        if ((!pBackSec) ||
-            (frontSec.floorheight >= pBackSec->ceilingheight) ||
-            (pBackSec->floorheight >= frontSec.ceilingheight)
-        ) {
-            // This seg occludes, mark all of it's columns as occluders.
-            //
-            // Note: a minor optimization was also missed here in the original code, we could have just set the
-            // previously determined visible x range to be occluded, rather than the entire seg x range.
-            // Probably doesn't make a huge difference in reality though..
-            //
+        bool bSegFullyOccludes;
+
+        if (pBackSec) {
+            // PsyDoom: update the back sector floor draw height before we compare.
+            // Also compare using floor draw height rather than actual height.
+            #if PSYDOOM_MODS
+                R_UpdateFloorDrawHeight(*pBackSec);
+                const fixed_t frontFloorH = frontSec.floorDrawHeight;
+                const fixed_t backFloorH = pBackSec->floorDrawHeight;
+            #else
+                const fixed_t frontFloorH = frontSec.floorheight;
+                const fixed_t backFloorH = pBackSec->floorheight;
+            #endif
+
+            bSegFullyOccludes = ((frontFloorH >= pBackSec->ceilingheight) || (backFloorH >= frontSec.ceilingheight));
+        } else {
+            bSegFullyOccludes = true;
+        }
+
+        // If this seg occludes, mark all of it's columns as occluders.
+        //
+        // Note: a minor optimization was also missed here in the original code, we could have just set the
+        // previously determined visible x range to be occluded, rather than the entire seg x range.
+        // Probably doesn't make a huge difference in reality though..
+        //
+        if (bSegFullyOccludes) {
             bool* pbIsSolidCol = &gbSolidCols[begX];
 
             for (int32_t x = begX; x < endX; ++x, ++pbIsSolidCol) {

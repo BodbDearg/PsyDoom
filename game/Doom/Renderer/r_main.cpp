@@ -7,6 +7,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_user.h"
+#include "Doom/Game/p_spec.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
 #include "PsyQ/LIBGPU.h"
@@ -175,7 +176,12 @@ void R_RenderPlayerView() noexcept {
     gDrawMatrix.m[2][2] = (int16_t) d_rshift<GTE_ROTFRAC_SHIFT>( gViewSin);
     LIBGTE_SetRotMatrix(gDrawMatrix);
 
-    // Traverse the BSP tree to determine what needs to be drawn and in what order.
+    // PsyDoom: increment the marker used to determine when to update the 'draw height' for each sector
+    #if PSYDOOM_MODS
+        gValidCount++;
+    #endif
+
+    // Traverse the BSP tree to determine what needs to be drawn and in what order
     R_BSP();
 
     // Stat tracking: how many subsectors will we draw?
@@ -468,6 +474,26 @@ bool R_HasHigherSurroundingSkyCeiling(const sector_t& sector) noexcept {
     }
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: updates the height that the sector's floor is to be rendered at, if required.
+// It might be rendered at a different height to it's real (physical) height to achieve invisible platform effects.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_UpdateFloorDrawHeight(sector_t& sector) noexcept {
+    const bool bIsInvisiblePlatform = (sector.flags & SF_GHOSTPLAT);
+
+    if (!bIsInvisiblePlatform) {
+        sector.floorDrawHeight = sector.floorheight;
+    } else {
+        // Finding the lowest floor surrounding a sector might be slightly expensive if done often, so skip it if we can:
+        const int32_t validCount = gValidCount;
+
+        if (sector.validcount != validCount) {
+            sector.floorDrawHeight = P_FindLowestFloorSurrounding(sector);
+            sector.validcount = validCount;
+        }
+    }
 }
 
 #endif  // PSYDOOM_MODS

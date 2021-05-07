@@ -1,6 +1,7 @@
 #include "s_sound.h"
 
 #include "Doom/cdmaptbl.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"

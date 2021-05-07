@@ -173,7 +173,6 @@ void R_DrawSky() noexcept {
 }
 
 #if PSYDOOM_LIMIT_REMOVING
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // New for PsyDoom: draw 'sky wall' columns for the specified leaf edge that is contained in a sky sector and which also has a seg.
 // These sky columns extend up from the top of the subsector to the top of the screen and are used to fix rooms beyond the sky sometimes
@@ -208,14 +207,14 @@ void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
     // Get the top and bottom z values of the front sector
     const sector_t& frontSec = *subsec.sector;
     const fixed_t ftz = frontSec.ceilingheight;
-    const fixed_t fbz = frontSec.floorheight;
+    const fixed_t fbz = frontSec.floorDrawHeight;
 
     // See if the seg's line is two sided or not, may need to draw upper sky walls if two-sided
     if (seg.backsector) {
         // Get the bottom and top z values of the back sector
         const sector_t& backSec = *seg.backsector;
         const fixed_t btz = backSec.ceilingheight;
-        const fixed_t bbz = backSec.floorheight;
+        const fixed_t bbz = backSec.floorDrawHeight;
 
         // Get the mid wall size so that it only occupies the gap between the upper and lower walls
         const fixed_t midTz = std::min(ftz, btz);
@@ -242,5 +241,4 @@ void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
         R_AddFrontFacingInfiniteSkyWall(edge, ftz);
     }
 }
-
 #endif  // #if PSYDOOM_LIMIT_REMOVING

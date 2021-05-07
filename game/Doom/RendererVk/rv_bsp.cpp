@@ -32,13 +32,15 @@ static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) n
     if (!seg.backsector)
         return true;
 
-    // Get the mid-wall gap between the front and back sectors
+    // Get the mid-wall gap between the front and back sectors.
+    // Also update the height that the back sector floor is to be drawn at, before we compare.
     sector_t& backSector = *seg.backsector;
+    R_UpdateFloorDrawHeight(backSector);
 
     const fixed_t fty = frontSector.ceilingheight;
-    const fixed_t fby = frontSector.floorheight;
+    const fixed_t fby = frontSector.floorDrawHeight;
     const fixed_t bty = backSector.ceilingheight;
-    const fixed_t bby = backSector.floorheight;
+    const fixed_t bby = backSector.floorDrawHeight;
     const fixed_t midTy = std::min(fty, bty);
     const fixed_t midBy = std::max(fby, bby);
 
@@ -95,11 +97,13 @@ static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
 // Adds it to the list of subsectors to be drawn, and marks the areas that its fully solid walls occlude.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
-    // Run through all of the segs for the subsector and mark out areas of the screen that they fully occlude.
-    // Also determine whether each seg is visible and backfacing while we are at it.
+    // Update the height that the sector floor is to be rendered at
     subsector_t& subsec = gpSubsectors[subsecIdx];
     sector_t& frontSector = *subsec.sector;
+    R_UpdateFloorDrawHeight(frontSector);
 
+    // Run through all of the segs for the subsector and mark out areas of the screen that they fully occlude.
+    // Also determine whether each seg is visible and backfacing while we are at it.
     rvseg_t* const pSegs = gpRvSegs.get() + subsec.firstseg;
     const uint32_t numSegs = subsec.numsegs;
 

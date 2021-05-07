@@ -26,8 +26,16 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     // Compute the top and bottom y values for the front sector in texture space, relative to the viewpoint.
     // Note: texture space y coords run in the opposite direction to viewspace z, hence this calculation is
     // inverted from what it would normally be in viewspace.
+    // 
+    // PsyDoom: floor might be drawn at a different height to it's real height ('ghost platform' effects).
+    #if PSYDOOM_MODS 
+        const fixed_t frontFloorH = frontSec.floorDrawHeight;
+    #else
+        const fixed_t frontFloorH = frontSec.floorheight;
+    #endif
+
     const int32_t fsec_ty = d_fixed_to_int(gViewZ - frontSec.ceilingheight);
-    const int32_t fsec_by = d_fixed_to_int(gViewZ - frontSec.floorheight);
+    const int32_t fsec_by = d_fixed_to_int(gViewZ - frontFloorH);
 
     // Initially the mid wall texture space y coords are that of the sector.
     // Adjust as we go along if we are drawing a two sided line:
@@ -38,9 +46,16 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     sector_t* const pBackSec = seg.backsector;
 
     if (pBackSec) {
-        // Get the top and bottom y values for the back sector in texture space
+        // Get the top and bottom y values for the back sector in texture space.
+        // PsyDoom: floor might be drawn at a different height to it's real height ('ghost platform' effects).
+        #if PSYDOOM_MODS
+            const fixed_t backFloorH = pBackSec->floorDrawHeight;
+        #else
+            const fixed_t backFloorH = pBackSec->floorheight;
+        #endif
+
         const int32_t bsec_ty = d_fixed_to_int(gViewZ - pBackSec->ceilingheight);
-        const int32_t bsec_by = d_fixed_to_int(gViewZ - pBackSec->floorheight);
+        const int32_t bsec_by = d_fixed_to_int(gViewZ - backFloorH);
 
         // Do we need to render the upper wall?
         // Do so if the ceiling lowers, and if the following texture is not sky:
@@ -77,7 +92,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
         }
 
         // Do we need to render the lower wall? Do so if the floor raises...
-        if (frontSec.floorheight < pBackSec->floorheight) {
+        if (frontFloorH < backFloorH) {
             // Update mid texture lower bound: anything below this is lower wall
             mid_by = bsec_by;
 
