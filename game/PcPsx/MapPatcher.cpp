@@ -56,6 +56,16 @@ static void fixHouseOfPainDoorBug() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fixes the starting hut for MAP47, The Citadel for Doom. Makes it so you can see past it, since it is shorter than buildings around it
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void fixTheCitadelStartingHut() noexcept {
+    modifyLinedefs(
+        [](line_t& line) { line.flags |= ML_UPPER_VOID; },
+        170, 171, 172, 173, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix various issues in MAP23, Ballistyx for Final Doom
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void fixBallistyxIssues() noexcept {
@@ -67,7 +77,7 @@ static void fixBallistyxIssues() noexcept {
         // Altar pillars: don't occlude and prevent geometry behind from rendering (needed for floating platform hack)
         1216, 1291, 1290, 1207, 1209, 1292, 1293, 1199,
         // Yellow key cage area: the outer wall floors sometimes don't render due to occluding sky walls; make them not occlude:
-        1525,1064,1526,1052,371,1053,374,1509,373,1054,1524,1055
+        1525, 1064, 1526, 1052, 371, 1053, 374, 1509, 373, 1054, 1524, 1055
     );
 }
 
@@ -76,6 +86,7 @@ static void fixBallistyxIssues() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatches[] = {
     { 19, GameType::Doom,      ML_LINEDEFS, 8610,  0x417CD93948684803, 0xB43273CA53916561, fixHouseOfPainDoorBug },
+    { 47, GameType::Doom,      ML_LINEDEFS, 17626, 0xF64A150D7F4D40A5, 0xE92E10C8CD886A7D, fixTheCitadelStartingHut },
     { 23, GameType::FinalDoom, ML_LINEDEFS, 21392, 0xCADEBB9043C70D3F, 0x4061F4281078EC52, fixBallistyxIssues }
 };
 
