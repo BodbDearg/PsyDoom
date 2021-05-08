@@ -1033,6 +1033,8 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
 // Cheat settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool gbEnableDevCheatShortcuts;
+bool gbEnableDevInPlaceReloadFunctionKey;
+
 CheatKeySequence gCheatKeys_GodMode;
 CheatKeySequence gCheatKeys_NoClip;
 CheatKeySequence gCheatKeys_LevelWarp;
@@ -1099,6 +1101,19 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbEnableDevCheatShortcuts = iniEntry.getBoolValue(); },
         []() { gbEnableDevCheatShortcuts = false; }
+    },
+    {
+        "EnableDevInPlaceReloadFunctionKey",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Set to '1' to enable a developer feature where the 'F11' key will do an 'in-place' reload of the\n"
+        "# current map. An 'in-place' reload does a normal map reload but restores the player's position and\n"
+        "# orientation to what they were prior to the reload. Using this feature allows the map to be\n"
+        "# 'refreshed' quickly and edits to be viewed in-engine quickly, enabling faster map iteration.\n"
+        "# Note: this function is disallowed in multiplayer games.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableDevInPlaceReloadFunctionKey = iniEntry.getBoolValue(); },
+        []() { gbEnableDevInPlaceReloadFunctionKey = false; }
     },
     {
         "CheatKeySequence_GodMode",

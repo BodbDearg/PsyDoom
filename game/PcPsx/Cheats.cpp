@@ -321,6 +321,10 @@ void update() noexcept {
         checkDevCheat(SDL_SCANCODE_F7, doToggleAllMapLinesCheat);
         checkDevCheat(SDL_SCANCODE_F8, doToggleVramViewerCheat);
         checkDevCheat(SDL_SCANCODE_F9, doToggleNoTargetCheat);
+
+        if (Config::gbEnableDevInPlaceReloadFunctionKey) {
+            checkDevCheat(SDL_SCANCODE_F11, doInPlaceReloadCheat);
+        }
     }
 
     // If we did a cheat then consume all inputs to try and prevent input conflicts
@@ -331,6 +335,29 @@ void update() noexcept {
         tickInputs = {};
         tickInputs.directSwitchToWeapon = wp_nochange;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the 'in-place' level reload cheat which reloads the map but preserves the player's position and angle.
+// This cheat is useful for quickly previewing map changes and fast iteration.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void doInPlaceReloadCheat() noexcept {
+    // Request the level be reloaded
+    gGameAction = ga_warped;
+    gStartMapOrEpisode = gGameMap;
+
+    // Close the warp menu and VRAM viewer if open
+    player_t& player = gPlayers[gCurPlayerIndex];
+    player.cheats &= ~(CF_WARPMENU | CF_VRAMVIEWER);
+
+    // Request an 'in-place' level reload and remember the player position and angle
+    gbDoInPlaceLevelReload = true;
+
+    const mobj_t& playerMobj = *player.mo;
+    gInPlaceReloadPlayerX = playerMobj.x;
+    gInPlaceReloadPlayerY = playerMobj.y;
+    gInPlaceReloadPlayerZ = playerMobj.z;
+    gInPlaceReloadPlayerAng = playerMobj.angle;
 }
 
 END_NAMESPACE(Cheats)

@@ -55,9 +55,14 @@ gametype_t  gStartGameType      = gt_single;
 bool gbDidAbortGame = false;
 
 #if PSYDOOM_MODS
-    bool        gbIsFirstTick;          // Set to 'true' for the very first tick only, 'false' thereafter
-    bool        gbKeepInputEvents;      // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
-    uint32_t*   gpDemoBufferEnd;        // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
+    bool        gbIsFirstTick;              // Set to 'true' for the very first tick only, 'false' thereafter
+    bool        gbKeepInputEvents;          // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
+    uint32_t*   gpDemoBufferEnd;            // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
+    bool        gbDoInPlaceLevelReload;     // PsyDoom developer feature: reload the map but preserve player position and orientation? Allows for fast preview of changes.
+    fixed_t     gInPlaceReloadPlayerX;      // Where to position the player after doing the 'in place' level reload (x)
+    fixed_t     gInPlaceReloadPlayerY;      // Where to position the player after doing the 'in place' level reload (y)
+    fixed_t     gInPlaceReloadPlayerZ;      // Where to position the player after doing the 'in place' level reload (z)
+    angle_t     gInPlaceReloadPlayerAng;    // Angle of the player when doing an 'in place' level releoad
 #endif
 
 // Debug draw string position

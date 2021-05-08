@@ -24,6 +24,11 @@ extern bool         gbDidAbortGame;
     extern bool         gbIsFirstTick;
     extern bool         gbKeepInputEvents;
     extern uint32_t*    gpDemoBufferEnd;
+    extern bool         gbDoInPlaceLevelReload;
+    extern fixed_t      gInPlaceReloadPlayerX;
+    extern fixed_t      gInPlaceReloadPlayerY;
+    extern fixed_t      gInPlaceReloadPlayerZ;
+    extern angle_t      gInPlaceReloadPlayerAng;
 #endif
 
 void D_DoomMain() noexcept;

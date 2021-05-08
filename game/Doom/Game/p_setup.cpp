@@ -19,6 +19,7 @@
 #include "p_firesky.h"
 #include "p_inter.h"
 #include "p_local.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_spec.h"
 #include "p_switch.h"
@@ -1425,6 +1426,31 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     }
     else {
         P_SpawnPlayer(gPlayerStarts[0]);
+
+        // PsyDoom: if the 'in-place' level reload cheat is active then position the player to where we were before the reload
+        #if PSYDOOM_MODS
+            if (gbDoInPlaceLevelReload) {
+                gbDoInPlaceLevelReload = false;
+
+                // Move the player on the xy axes
+                player_t& player = gPlayers[gCurPlayerIndex];
+                mobj_t& playerMobj = *player.mo;
+                P_UnsetThingPosition(playerMobj);
+                playerMobj.x = gInPlaceReloadPlayerX;
+                playerMobj.y = gInPlaceReloadPlayerY;
+                P_SetThingPosition(playerMobj);
+
+                // Set player z position, view height and angle
+                const sector_t& newSector = *playerMobj.subsector->sector;
+                playerMobj.angle = gInPlaceReloadPlayerAng;
+                playerMobj.floorz = newSector.floorheight;
+                playerMobj.ceilingz = newSector.ceilingheight;
+                playerMobj.z = std::max(gInPlaceReloadPlayerZ, newSector.floorheight);
+                player.viewz = playerMobj.z + VIEWHEIGHT;
+                player.viewheight = VIEWHEIGHT;
+                player.deltaviewheight = 0;
+            }
+        #endif
     }
 }
 

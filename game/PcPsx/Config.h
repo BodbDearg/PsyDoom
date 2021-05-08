@@ -73,9 +73,8 @@ extern float    gAnalogToDigitalThreshold;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cheat settings
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-// If true then enable the convenience developer single cheat keys on the pause menu (keys F1-F8)
-extern bool gbEnableDevCheatShortcuts;
+extern bool gbEnableDevCheatShortcuts;              // If true then enable the convenience developer single cheat keys on the pause menu (keys F1-F8)
+extern bool gbEnableDevInPlaceReloadFunctionKey;    // If true then enable the development 'in-place map reload' function. This is activated with key F11.
 
 // Cheat key sequences for various cheats: an array of up to 16 SDL scan codes.
 // Unused key slots in the sequence will be set to '0'.
