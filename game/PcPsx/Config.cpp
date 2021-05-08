@@ -1034,6 +1034,7 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool gbEnableDevCheatShortcuts;
 bool gbEnableDevInPlaceReloadFunctionKey;
+bool gbEnableDevMapAutoReload;
 
 CheatKeySequence gCheatKeys_GodMode;
 CheatKeySequence gCheatKeys_NoClip;
@@ -1114,6 +1115,18 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbEnableDevInPlaceReloadFunctionKey = iniEntry.getBoolValue(); },
         []() { gbEnableDevInPlaceReloadFunctionKey = false; }
+    },
+    {
+        "EnableDevMapAutoReload",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Set to '1' to enable a developer feature where the game will automatically do an 'in-place' reload\n"
+        "# of the current map if it has changed on-disk. Useful for instantly viewing map edits in-engine.\n"
+        "# This feature only works for files overridden via the file overrides mechanism, only in single\n"
+        "# player mode and only on Windows.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableDevMapAutoReload = iniEntry.getBoolValue(); },
+        []() { gbEnableDevMapAutoReload = false; }
     },
     {
         "CheatKeySequence_GodMode",

@@ -24,6 +24,7 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
+#include "PcPsx/DevMapAutoReloader.h"
 #include "PcPsx/MapPatcher.h"
 #include "PcPsx/MobjSpritePrecacher.h"
 
@@ -1452,6 +1453,11 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
             }
         #endif
     }
+
+    // PsyDoom: monitor the current map file for changes if appropriate
+    #if PSYDOOM_MODS
+        DevMapAutoReloader::init(mapWadFile);
+    #endif
 }
 
 // PsyDoom limit removing: loading .IMG files for maps (e.g  MAPSPR01.IMG and MAPTEX01.IMG) is no longer done to make modding easier.

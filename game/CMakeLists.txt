@@ -193,6 +193,8 @@ set(SOURCE_FILES
     "PcPsx/Controls.h"
     "PcPsx/DemoResult.cpp"
     "PcPsx/DemoResult.h"
+    "PcPsx/DevMapAutoReloader.cpp"
+    "PcPsx/DevMapAutoReloader.h"
     "PcPsx/DiscInfo.cpp"
     "PcPsx/DiscInfo.h"
     "PcPsx/DiscReader.cpp"

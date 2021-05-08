@@ -27,6 +27,7 @@
 #include "PcPsx/Config.h"
 #include "PcPsx/Controls.h"
 #include "PcPsx/DemoResult.h"
+#include "PcPsx/DevMapAutoReloader.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/ProgArgs.h"
@@ -637,6 +638,11 @@ gameaction_t P_Ticker() noexcept {
         P_UpdateSpecials();
         P_RespawnSpecials();
         ST_Ticker();
+
+        // PsyDoom: allow the developer map auto-reloader to do it's thing and trigger a map reload if required
+        #if PSYDOOM_MODS
+            DevMapAutoReloader::update();
+        #endif
     }
 
     // Run player logic
@@ -805,9 +811,10 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
         }
     }
 
-    // PsyDoom: free data-structures for the Vulkan renderer
+    // PsyDoom: free data-structures for the Vulkan renderer and shutdown the developer auto map reloader
     #if PSYDOOM_VULKAN_RENDERER
         RV_FreeLevelData();
+        DevMapAutoReloader::shutdown();
     #endif
 }
 
