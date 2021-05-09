@@ -1,0 +1,125 @@
+This is a hack which patches PsyDoom at commit 'a97a1ccb446269f9ee5d6ca7959b9090e26c37c0' with temporary changes to help visualize some
+mysterious PSX specific sector flags found in Doom and Final Doom. The visualizations flat shade affected sectors in the Vulkan renderer to
+show where the unknown sector flags are being used. The flags, which range from '0x2' to '0x8000', can be found in many maps in Doom and
+Final Doom, typically near keys and key doors.
+============================================================================================================================================
+
+diff --git a/game/Doom/Game/doomdata.h b/game/Doom/Game/doomdata.h
+index 2a295223..96df5458 100644
+--- a/game/Doom/Game/doomdata.h
++++ b/game/Doom/Game/doomdata.h
+@@ -43,7 +43,7 @@ static constexpr int32_t ML_ADD_SKY_WALL_HINT   = 0x8000;       // PsyDoom speci
+ static constexpr uint32_t SF_NO_REVERB = 0x1;           // Disables reverb on a sector
+ 
+ #if PSYDOOM_MODS
+-    static constexpr uint32_t SF_GHOSTPLAT = 0x2;       // Render the sector at the lowest floor height surrounding it, creating an 'invisible platform' effect
++    static constexpr uint32_t SF_GHOSTPLAT = 0x200000;       // Render the sector at the lowest floor height surrounding it, creating an 'invisible platform' effect
+ #endif
+ 
+ // Map thing flags
+diff --git a/game/Doom/RendererVk/rv_flats.cpp b/game/Doom/RendererVk/rv_flats.cpp
+index c0561b67..8ab442a4 100644
+--- a/game/Doom/RendererVk/rv_flats.cpp
++++ b/game/Doom/RendererVk/rv_flats.cpp
+@@ -72,9 +72,9 @@ static void RV_DrawPlane(
+     const subsector_t& subsec,
+     const float planeH,
+     // Texture and shading details
+-    const uint8_t colR,
+-    const uint8_t colG,
+-    const uint8_t colB,
++    uint8_t colR,
++    uint8_t colG,
++    uint8_t colB,
+     texture_t& tex
+ ) noexcept {
+     // Upload the texture to VRAM if required
+@@ -98,7 +98,17 @@ static void RV_DrawPlane(
+     const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Flats : VLightDimMode::None;
+ 
+     // Ensure we have the correct draw pipeline set
+-    VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
++    sector_t& sector = *subsec.sector;
++
++    if (sector.flags & 0xFFFE) {
++        VDrawing::setDrawPipeline(VPipelineType::Colored);
++        colR = (((sector.flags >> 1) & 0x1F) << 2)  + 1;
++        colG = (((sector.flags >> 6) & 0x1F) << 2)  + 1;
++        colB = (((sector.flags >> 11) & 0x1F) << 2)  + 1;
++    }
++    else {
++        VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
++    }
+ 
+     // Do all the triangles for the plane.
+     // Note that all draw calls assume that the correct pipeline has already been set beforehand.
+diff --git a/game/Doom/RendererVk/rv_walls.cpp b/game/Doom/RendererVk/rv_walls.cpp
+index d8bf786a..12fcd437 100644
+--- a/game/Doom/RendererVk/rv_walls.cpp
++++ b/game/Doom/RendererVk/rv_walls.cpp
+@@ -83,9 +83,9 @@ static void RV_DrawWall(
+ static void RV_DrawSegSolid(
+     const rvseg_t& seg,
+     const subsector_t& subsec,
+-    const uint8_t colR,
+-    const uint8_t colG,
+-    const uint8_t colB
++    uint8_t colR,
++    uint8_t colG,
++    uint8_t colB
+ ) noexcept {
+     // Skip the line segment if it's not front facing or visible
+     if (seg.flags & SGF_BACKFACING)
+@@ -137,6 +137,18 @@ static void RV_DrawSegSolid(
+     // See if the seg's line is two sided or not, may need to draw upper/lower walls if two-sided
+     const bool bTwoSidedWall = seg.backsector;
+ 
++    // Ensure we have the correct draw pipeline set
++    sector_t& sector = *subsec.sector;
++    bool bIsSpecial = false;
++
++    if (sector.flags & 0xFFFE) {
++        VDrawing::setDrawPipeline(VPipelineType::Colored);
++        colR = (((sector.flags >> 1) & 0x1F) << 2)  + 1;
++        colG = (((sector.flags >> 6) & 0x1F) << 2)  + 1;
++        colB = (((sector.flags >> 11) & 0x1F) << 2)  + 1;
++        bIsSpecial = true;
++    }
++
+     if (bTwoSidedWall) {
+         // Get the bottom and top y values of the back sector
+         const sector_t& backSec = *seg.backsector;
+@@ -172,7 +184,9 @@ static void RV_DrawSegSolid(
+                 vb = vt + clippedWallH;
+             }
+ 
+-            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
++            if (!bIsSpecial) {
++                VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
++            }
+             RV_DrawWall(x1, z1, x2, z2, fty, wallBy, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
+         }
+ 
+@@ -196,7 +210,9 @@ static void RV_DrawSegSolid(
+                 vt = vb - clippedWallH;
+             }
+ 
+-            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
++            if (!bIsSpecial) {
++                VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
++            }
+             RV_DrawWall(x1, z1, x2, z2, wallTy, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
+         }
+     }
+@@ -223,7 +239,10 @@ static void RV_DrawSegSolid(
+         }
+ 
+         // Draw the wall
+-        VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
++        if (!bIsSpecial) {
++            VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
++        }
++
+         RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
+     }
+ }
