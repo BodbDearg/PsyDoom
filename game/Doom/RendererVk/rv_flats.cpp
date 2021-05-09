@@ -152,25 +152,19 @@ static void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const 
     const sector_t& sector = *subsec.sector;
 
     if (bDrawFloor) {
-        // Draw the floor plane if the view is above it
+        // Draw the floor plane if the view is above it and if it's a normal floor (not a sky floor).
+        // Note that sky floors are new engine feature added by PsyDoom.
         const float floorH = RV_FixedToFloat(sector.floorDrawHeight);
 
         if (gViewZf > floorH) {
-            // PsyDoom limit removing: floors can now have skies too
-            #if PSYDOOM_LIMIT_REMOVING
-                const bool bHasSkyFloor = (sector.floorpic == -1);
-            #else
-                constexpr bool bHasSkyFloor = false;
-            #endif
-
-            if (!bHasSkyFloor) {
+            if (sector.floorpic >= 0) {
                 texture_t& floorTex = gpFlatTextures[gpFlatTranslation[sector.floorpic]];
                 RV_DrawPlane<true>(subsec, floorH, colR, colG, colB, floorTex);
             }
         }
     }
     else {
-        // Draw the ceiling plane if the view is below it and if it's a normal ceiling and not a sky ceiling
+        // Draw the ceiling plane if the view is below it and if it's a normal ceiling (not a sky ceiling).
         const float ceilH = RV_FixedToFloat(sector.ceilingheight);
 
         if (gViewZf < ceilH) {
@@ -231,6 +225,14 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         // Break the batch if the next subsector has visible masked or blended mid walls.
         // We can't batch across those without causing ordering issues for sprites behind them, which should be occluded by stuff in front:
         if (RV_SubsecHasVisibleMaskedOrBlendedMidWalls(nextSubsec))
+            break;
+
+        // Also break the batch if there is a change in sky floor status.
+        // If we don't do this then sky walls can sometimes bleed through to other neighboring floors:
+        const bool bIsSkyFloor = (sector.floorpic == -1);
+        const bool bIsNextSkyFloor = (nextSector.floorpic == -1);
+
+        if (bIsSkyFloor != bIsNextSkyFloor)
             break;
     }
 }

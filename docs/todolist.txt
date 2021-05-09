@@ -1,5 +1,4 @@
 0.8 - Limit extending and modding?
-- Add lower sky wall rendering and rename VOID and ADD_SKY flags to reflect more general use
 - Provide PsyDoom Doom Builder config
 - Experiment with Doom 64 two colored lighting
 - Fix interpolation bug when falling while platform underneath is moving

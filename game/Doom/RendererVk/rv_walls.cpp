@@ -147,13 +147,14 @@ static void RV_DrawSegSolid(
         midTy = std::min(midTy, bty);
         midBy = std::max(midBy, bby);
 
-        // Figure out whether there are upper and lower walls and whether the upper wall should be treated as a sky wall
-        const bool bIsSkyWall = (backSec.ceilingpic == -1);
+        // Figure out whether there are upper and lower walls and whether the upper and lower walls should be treated as a sky walls
+        const bool bIsUpperSkyWall = (backSec.ceilingpic == -1);
+        const bool bIsLowerSkyWall = (backSec.floorpic == -1);
         const bool bHasUpperWall = (bty < fty);
         const bool bHasLowerWall = (bby > fby);
 
         // Draw the upper wall if existing not a sky wall
-        if (bHasUpperWall && (!bIsSkyWall)) {
+        if (bHasUpperWall && (!bIsUpperSkyWall)) {
             // Compute the top and bottom v coordinate and then draw
             const float wallBy = std::max(bty, fby);
             const float unclippedWallH = fty - bty;         // Upper wall may be clipped against the floor, but some texcoords are easier to calculate from unclipped height
@@ -175,8 +176,8 @@ static void RV_DrawSegSolid(
             RV_DrawWall(x1, z1, x2, z2, fty, wallBy, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
-        // Draw the lower wall if it exists
-        if (bHasLowerWall) {
+        // Draw the lower wall if existing not a sky wall
+        if (bHasLowerWall && (!bIsLowerSkyWall)) {
             // Compute the top and bottom v coordinate and then draw
             const float heightToLower = fty - bby;
             const float wallTy = std::min(bby, fty);
@@ -326,12 +327,10 @@ static void RV_DrawSegBlended(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draws any 'infinite' sky walls for the specified seg which is assumed to be in a sky sector
+// Draws any 'infinite' sky walls for the specified seg.
+// These include both upper and lower sky walls.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec) noexcept {
-    // This must only be called if the seg is in a sky sector!
-    ASSERT(subsec.sector->ceilingpic == -1);
-
+static void RV_DrawSegSkyWalls(const rvseg_t& seg, const subsector_t& subsec) noexcept {
     // Skip the line segment if it's not visible at all or if it's back facing
     if ((seg.flags & SGF_VISIBLE_COLS) == 0)
         return;
@@ -339,10 +338,18 @@ static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec)
     if (seg.flags & SGF_BACKFACING)
         return;
 
-    // Don't draw sky walls for the line segment if it's marked as having an upper see-through void
+    // Don't draw sky walls for the line segment if it's marked as having see-through voids:
     const int32_t lineFlags = seg.linedef->flags;
 
-    if (lineFlags & ML_UPPER_VOID)
+    if (lineFlags & ML_VOID)
+        return;
+
+    // Does the floor or ceiling have a sky? Must have one or the other to render sky walls:
+    const sector_t& frontSec = *subsec.sector;
+    const bool bFrontSecHasSkyFloor = (frontSec.floorpic == -1);
+    const bool bFrontSecHasSkyCeil = (frontSec.ceilingpic == -1);
+
+    if ((!bFrontSecHasSkyFloor) && (!bFrontSecHasSkyCeil))
         return;
 
     // Get the xz positions of the seg endpoints
@@ -356,11 +363,10 @@ static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec)
     // Note: use the subsector passed into this function rather than the seg's reference to it - the subsector passed in is more reliable.
     // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
-    const sector_t& frontSec = *subsec.sector;
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
 
-    // See if the seg's line is two sided or not, may need to draw upper sky walls if two-sided
+    // See if the seg's line is two sided or not, have to check the back sector sky status if two sided
     if (seg.backsector) {
         // Get the bottom and top y values of the back sector
         const sector_t& backSec = *seg.backsector;
@@ -370,26 +376,52 @@ static void RV_DrawSkySegSkyWalls(const rvseg_t& seg, const subsector_t& subsec)
         // Get the mid wall size so that it only occupies the gap between the upper and lower walls
         const float midTy = std::min(fty, bty);
         const float midBy = std::max(fby, bby);
-
-        // Draw a sky wall if the back sector has a normal ceiling or if there is no opening
-        const bool bBackSecHasCeil = (backSec.ceilingpic >= 0);
         const bool bHasNoOpening = (midTy <= midBy);
 
-        if (bBackSecHasCeil || bHasNoOpening) {
-            // In certain situations treat the sky wall as a void (not to be rendered) to allow floating ceiling effects.
-            // If there is a higher surrounding sky ceiling then take that as an indication that this is not the true sky level and treat as a void.
-            // In the "GEC Master Edition" for example this has been used to create effects like floating cubes.
-            // Only do this however if the map is not explicit about wanting a sky wall...
-            const bool bRenderSkyWall = (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasHigherSurroundingSkyCeiling(frontSec));
+        // See if the back sector has a non-sky floor or ceiling
+        const bool bBackSecHasFloor = (backSec.floorpic != -1);
+        const bool bBackSecHasCeil = (backSec.ceilingpic != -1);
+
+        // Can only draw an upper sky wall if there is a sky ceiling
+        if (bFrontSecHasSkyCeil) {
+            // Only draw a sky wall if there is a change in sky status for the back sector, or if there is no opening (treat as 1-sided line then)
+            if (bBackSecHasCeil || bHasNoOpening) {
+                // In certain situations treat the sky wall as a void (not to be rendered) to allow floating ceiling effects.
+                // If there is a higher surrounding sky ceiling then take that as an indication that this is not the true sky level and treat as a void.
+                // In the "GEC Master Edition" for example this has been used to create effects like floating cubes.
+                // Only do this however if the map is not explicit about wanting a sky wall...
+                const bool bRenderSkyWall = (bHasNoOpening || (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasHigherSurroundingSkyCeiling(frontSec)));
             
-            if (bRenderSkyWall) {
-                RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);
+                if (bRenderSkyWall) {
+                    RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty, true);
+                }
+            }
+        }
+
+        // Can only draw a lower sky wall if there is a sky floor
+        if (bFrontSecHasSkyFloor) {
+            // Only draw a sky wall if there is a change in sky status for the back sector, or if there is no opening (treat as 1-sided line then)
+            if (bBackSecHasFloor || bHasNoOpening) {
+                // In certain situations treat the sky wall as a void (not to be rendered) to allow floating ceiling effects.
+                // If there is a lower surrounding sky floor then take that as an indication that this is not the true sky level and treat as a void.
+                // Only do this however if the map is not explicit about wanting a sky wall...
+                const bool bRenderSkyWall = (bHasNoOpening || (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasLowerSurroundingSkyFloor(frontSec)));
+
+                if (bRenderSkyWall) {
+                    RV_AddInfiniteSkyWall(x1, z1, x2, z2, fby, false);
+                }
             }
         }
     }
     else {
-        // One sided line with a sky ceiling: just draw it
-        RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty);
+        // One sided line: always draw any required sky ceilings or floors
+        if (bFrontSecHasSkyCeil) {
+            RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty, true);
+        }
+
+        if (bFrontSecHasSkyFloor) {
+            RV_AddInfiniteSkyWall(x1, z1, x2, z2, fby, false);
+        }
     }
 }
 
@@ -440,17 +472,16 @@ void RV_DrawSubsecSkyWalls(const int32_t fromDrawSubsecIdx) noexcept {
         return;
 
     while (true) {
-        // Draw the sky walls for all segs in this subsector, if it's a sky sector
+        // Draw any sky walls required for all segs in this subsector
         const subsector_t& subsec = *gRvDrawSubsecs[gNextSkyWallDrawSubsecIdx];
         const sector_t& sector = *subsec.sector;
-        const bool bIsSkySector = (sector.ceilingpic == -1);
 
-        if (bIsSkySector) {
+        {
             const rvseg_t* const pBegSeg = gpRvSegs.get() + subsec.firstseg;
             const rvseg_t* const pEndSeg = pBegSeg + subsec.numsegs;
 
             for (const rvseg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
-                RV_DrawSkySegSkyWalls(*pSeg, subsec);
+                RV_DrawSegSkyWalls(*pSeg, subsec);
             }
         }
 
@@ -461,12 +492,19 @@ void RV_DrawSubsecSkyWalls(const int32_t fromDrawSubsecIdx) noexcept {
             break;
 
         const sector_t& nextSector = *gRvDrawSubsecs[gNextSkyWallDrawSubsecIdx]->sector;
-        const bool bIsNextSkySector = (nextSector.ceilingpic == -1);
 
         if (nextSector.ceilingheight != sector.ceilingheight)
             break;
 
-        if (bIsSkySector != bIsNextSkySector)
+        const bool bHasSkyCeil = (sector.ceilingpic == -1);
+        const bool bHasSkyFloor = (sector.floorpic == -1);
+        const bool bNextHasSkyCeil = (nextSector.ceilingpic == -1);
+        const bool bNextHasSkyFloor = (nextSector.floorpic == -1);
+
+        if (bHasSkyCeil != bNextHasSkyCeil)
+            break;
+
+        if (bHasSkyFloor != bNextHasSkyFloor)
             break;
     }
 }

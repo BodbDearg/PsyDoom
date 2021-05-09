@@ -365,8 +365,8 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                     ensureValidFlatPic(pDstSec->ceilingpic);
                 }
 
-                // PsyDoom limit removing: add support for floor skies too
-                #if PSYDOOM_LIMIT_REMOVING
+                // PsyDoom: add support for floor skies too
+                #if PSYDOOM_MODS
                     if (floorPic >= firstSkyTexPic) {
                         pDstSec->floorpic = -1;
                         skyLumpName[3] = '0' + (char)((floorPic - firstSkyTexPic) / 10);
@@ -379,8 +379,8 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                 #endif
             } else {
                 // Original PSX Doom specific stuff: have to lookup flat numbers from names. First, figure out the floor texture number.
-                // PsyDoom limit removing: add support for floor skies too.
-                #if PSYDOOM_LIMIT_REMOVING
+                // PsyDoom: add support for floor skies too.
+                #if PSYDOOM_MODS
                     const bool bFloorHasSky = (D_strncasecmp(pSrcSec->floorpic, SKY_LUMP_NAME, SKY_LUMP_NAME_LEN) == 0);
 
                     if (bFloorHasSky) {

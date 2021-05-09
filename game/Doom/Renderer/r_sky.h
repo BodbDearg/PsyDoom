@@ -13,5 +13,5 @@ extern uint16_t gPaletteClutId_CurMapSky;
 void R_DrawSky() noexcept;
 
 #if PSYDOOM_LIMIT_REMOVING
-    void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexcept;
+    void R_DrawSegSkyWalls(const subsector_t& subsec, const leafedge_t& edge) noexcept;
 #endif

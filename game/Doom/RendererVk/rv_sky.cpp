@@ -120,17 +120,16 @@ void RV_DrawBackgroundSky() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Add a vertical wall for where the sky should be rendered, stretched past the top of the screen.
-// The xz endpoints of the wall are simply specified, as well as the bottom y coordinate.
-//
-// Note: also providing the option to preserve existing underlying stuff already drawn - useful for certain 'void' or 'no-render' hacks.
+// Add a vertical wall for where the sky should be rendered, stretched past the top or bottom of the screen. The xz endpoints of the wall
+// are specified along with the y coordinate for where the sky starts, and whether the wall is an upper or lower sky wall.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_AddInfiniteSkyWall(
     const float x1,
     const float z1,
     const float x2,
     const float z2,
-    const float yb
+    const float y,
+    const bool bIsUpperSkyWall
 ) noexcept {
     // Get the basic texture params for the sky
     uint16_t texWinX, texWinY;
@@ -143,7 +142,7 @@ void RV_AddInfiniteSkyWall(
 
     // Ensure the correct draw pipeline is set and add the wall
     VDrawing::setDrawPipeline(VPipelineType::World_Sky);
-    VDrawing::addWorldInfiniteSkyWall(x1, z1, x2, z2, yb, uOffset, clutX, clutY, texWinX, texWinY, texWinW, texWinH);
+    VDrawing::addWorldInfiniteSkyWall(x1, z1, x2, z2, y, bIsUpperSkyWall, uOffset, clutX, clutY, texWinX, texWinY, texWinW, texWinH);
 }
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

@@ -24,8 +24,8 @@ std::vector<subsector_t*> gRvDrawSubsecs;
 // Occluding segs should mark out areas of the screen that they cover, so that nothing behind draws.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) noexcept {
-    // If the linedef specifies the 'ML_UPPER_VOID' flag then ignore it for occlusion
-    if (seg.linedef->flags & ML_UPPER_VOID)
+    // If the linedef specifies the 'ML_VOID' flag (has see through 'void' parts) then ignore it for occlusion
+    if (seg.linedef->flags & ML_VOID)
         return false;
 
     // One sided lines are always occluding
@@ -48,16 +48,19 @@ static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) n
     if (midTy > midBy)
         return false;
 
-    // The seg is occluding if there is no upper wall, since lower walls are always opaque
-    if (midBy >= fty)
+    // Are there lower or upper walls?
+    // If there is just a lower or just an upper wall (1 wall) then the seg always occludes, even the wall is sky.
+    const bool bHasLowerWall = (midBy > fby);
+    const bool bHasUpperWall = (midTy < fty);
+
+    if (bHasUpperWall != bHasLowerWall)
         return true;
 
-    // If the upper wall is not a sky wall then it occludes
-    if (backSector.ceilingpic != -1)
-        return true;
-
-    // Otherwise if the upper wall is sky or void, only make it occlude if there is no lower wall
-    return (midBy <= fby);
+    // Does the back sector have sky ceilings or floors?
+    // The seg occludes if it's all sky walls or all solid walls.
+    const bool bBackSkyFloor = (backSector.floorpic == -1);
+    const bool bBackSkyCeil = (backSector.ceilingpic == -1);
+    return (bBackSkyFloor == bBackSkyCeil);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -152,7 +155,7 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
     }
 
     // Add the subsector to the draw list and set it's draw index.
-    // If the sector has a sky then also mark the sky as visible.
+    // If the sector has a sky ceiling or floor (new engine feature) then also mark the sky as visible.
     subsec.vkDrawSubsecIdx = (int32_t) gRvDrawSubsecs.size();
     gRvDrawSubsecs.push_back(&subsec);
 
@@ -160,12 +163,9 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
         gbIsSkyVisible = true;
     }
 
-    #if PSYDOOM_LIMIT_REMOVING
-        // Floors can have skies too if limit removing
-        if (frontSector.floorpic == -1) {
-            gbIsSkyVisible = true;
-        }
-    #endif
+    if (frontSector.floorpic == -1) {
+        gbIsSkyVisible = true;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

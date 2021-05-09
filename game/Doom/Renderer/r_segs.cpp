@@ -91,8 +91,15 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             R_DrawWallPiece(edge, tex, fsec_ty, bsec_ty, vt, vb, false);
         }
 
-        // Do we need to render the lower wall? Do so if the floor raises...
-        if (frontFloorH < backFloorH) {
+        // Do we need to render the lower wall? Do so if the floor raises.
+        // PsyDoom: also require that the lower wall not be a sky wall, since floors can now be skies too.
+        #if PSYDOOM_MODS
+            const bool bIsLowerSkyWall = (pBackSec->floorpic == -1);
+        #else
+            constexpr bool bIsLowerSkyWall = false;
+        #endif
+
+        if ((frontFloorH < backFloorH) && (!bIsLowerSkyWall)) {
             // Update mid texture lower bound: anything below this is lower wall
             mid_by = bsec_by;
 

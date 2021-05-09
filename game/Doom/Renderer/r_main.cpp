@@ -456,8 +456,9 @@ angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // New for PsyDoom: check for a sector surrounding the given sector that has a sky ceiling which also happens to be higher.
-// This is used by the Vulkan and limit extending Classic renderer to tell when to treat the upper walls around a sky sector as a void
-// where nothing will render. Voids can be used to do floating platform type effects in certain situations.
+// 
+// This is used by the Vulkan and limit extending Classic renderer to tell when to treat the area past a sky ceiling as a void where nothing
+// will render. Voids can be used to do floating platform type effects in certain situations.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool R_HasHigherSurroundingSkyCeiling(const sector_t& sector) noexcept {
     const int32_t numLines = sector.linecount;
@@ -469,6 +470,30 @@ bool R_HasHigherSurroundingSkyCeiling(const sector_t& sector) noexcept {
 
         if (pNextSector && (pNextSector->ceilingpic == -1)) {
             if (pNextSector->ceilingheight > sector.ceilingheight)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// New for PsyDoom: check for a sector surrounding the given sector that has a sky floor which also happens to be lower.
+// Note: Uses the 'render' height of the floor, rather than the actual height.
+// 
+// This is used by the Vulkan and limit extending Classic renderer to tell when to treat the area past the floor of a sky sector
+// as a void where nothing will render. Voids can be used to do floating platform type effects in certain situations.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool R_HasLowerSurroundingSkyFloor(const sector_t& sector) noexcept {
+    const int32_t numLines = sector.linecount;
+    const line_t* const* const pLines = sector.lines;
+
+    for (int32_t lineIdx = 0; lineIdx < numLines; ++lineIdx) {
+        const line_t& line = *pLines[lineIdx];
+        const sector_t* pNextSector = (line.frontsector == &sector) ? line.backsector : line.frontsector;
+
+        if (pNextSector && (pNextSector->floorpic == -1)) {
+            if (pNextSector->floorDrawHeight < sector.floorDrawHeight)
                 return true;
         }
     }

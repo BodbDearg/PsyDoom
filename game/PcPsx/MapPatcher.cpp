@@ -60,7 +60,7 @@ static void fixHouseOfPainDoorBug() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void fixTheCitadelStartingHut() noexcept {
     modifyLinedefs(
-        [](line_t& line) { line.flags |= ML_UPPER_VOID; },
+        [](line_t& line) { line.flags |= ML_VOID; },
         170, 171, 172, 173, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
     );
 }
@@ -71,7 +71,7 @@ static void fixTheCitadelStartingHut() noexcept {
 static void fixBallistyxIssues() noexcept {
     // Make various linedefs not render sky walls or be see through for occlusion purposes
     modifyLinedefs(
-        [](line_t& line) { line.flags |= ML_UPPER_VOID; },
+        [](line_t& line) { line.flags |= ML_VOID; },
         // Altar hole: don't draw sky walls
         1212, 1211, 1215, 1210, 1214, 1213,
         // Altar pillars: don't occlude and prevent geometry behind from rendering (needed for floating platform hack)

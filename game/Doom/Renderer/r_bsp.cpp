@@ -530,8 +530,8 @@ void R_AddLine(seg_t& seg) noexcept {
         gbIsSkyVisible = true;
     }
 
-    #if PSYDOOM_LIMIT_REMOVING
-        // PsyDoom: floors can have skies too if limit removing
+    // PsyDoom: floors can now have skies too
+    #if PSYDOOM_MODS
         if (gpCurDrawSector->floorpic == -1) {
             gbIsSkyVisible = true;
         }
@@ -591,11 +591,11 @@ void R_AddLine(seg_t& seg) noexcept {
 
     // Mark any columns that this seg fully occludes as 'solid'.
     // Only do this however if the seg is not drawn with translucent parts or transparency.
-    // PsyDoom: also skip occluding if the new 'ML_UPPER_VOID' flag is set.
+    // PsyDoom: also skip occluding if the new 'ML_VOID' flag is set, which states that the line has 'see through' or 'void' parts.
     const int32_t lineFlags = seg.linedef->flags;
 
     #if PSYDOOM_MODS
-        const bool bLineCanOcclude = ((lineFlags & (ML_UPPER_VOID | ML_MIDMASKED)) == 0);
+        const bool bLineCanOcclude = ((lineFlags & (ML_VOID | ML_MIDMASKED)) == 0);
     #else
         const bool bLineCanOcclude = ((lineFlags & ML_MIDMASKED) == 0);
     #endif

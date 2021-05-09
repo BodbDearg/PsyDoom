@@ -643,14 +643,16 @@ void addWorldQuad(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a vertical quad for the sky to the 'draw' subpass.
-// The bottom y coordinate and 2 endpoints are specified only and it is stretched past the end of the screen.
+// The y coordinate where the sky starts and the 2 endpoints are specified only, along with whether it is an upper or lower sky wall.
+// The sky wall is stretched past the top or bottom of the screen.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void addWorldInfiniteSkyWall(
     const float x1,
     const float z1,
     const float x2,
     const float z2,
-    const float yb,
+    const float y,
+    const bool bIsUpperSkyWall,
     const float skyUOffset,
     const uint16_t clutX,
     const uint16_t clutY,
@@ -665,7 +667,7 @@ void addWorldInfiniteSkyWall(
 
     for (uint32_t i = 0; i < 6; ++i) {
         VVertex_Draw& vert = pVerts[i];
-        vert.y = yb;
+        vert.y = y;
         vert.r = 128;
         vert.g = 128;
         vert.b = 128;
@@ -684,14 +686,29 @@ void addWorldInfiniteSkyWall(
     }
 
     // Note: the 'v' coordinate is used to determine whether the vertex is for the bottom or the top of the sky wall.
-    // If the 'v' coord is 1 then it means the vertex is for the top of the sky.
-    // The top of the sky is always stretched past the top of the screen.
-    pVerts[0].x = x1;   pVerts[0].z = z1;   pVerts[0].v = 0;
-    pVerts[1].x = x2;   pVerts[1].z = z2;   pVerts[1].v = 1;
-    pVerts[2].x = x2;   pVerts[2].z = z2;   pVerts[2].v = 0;
-    pVerts[3].x = x2;   pVerts[3].z = z2;   pVerts[3].v = 1;
-    pVerts[4].x = x1;   pVerts[4].z = z1;   pVerts[4].v = 0;
-    pVerts[5].x = x1;   pVerts[5].z = z1;   pVerts[5].v = 1;
+    // If the 'v' coord is '-1' or '+1' then it means the vertex should be stretched past the top (+1) or bottom (-1) of the screen.
+    pVerts[0].x = x1;   pVerts[0].z = z1;
+    pVerts[1].x = x2;   pVerts[1].z = z2;
+    pVerts[2].x = x2;   pVerts[2].z = z2;
+    pVerts[3].x = x2;   pVerts[3].z = z2;
+    pVerts[4].x = x1;   pVerts[4].z = z1;
+    pVerts[5].x = x1;   pVerts[5].z = z1;
+
+    if (bIsUpperSkyWall) {
+        pVerts[0].v = 0.0f;
+        pVerts[1].v = 1.0f;
+        pVerts[2].v = 0.0f;
+        pVerts[3].v = 1.0f;
+        pVerts[4].v = 0.0f;
+        pVerts[5].v = 1.0f;
+    } else {
+        pVerts[0].v = -1.0f;
+        pVerts[1].v = 0.0f;
+        pVerts[2].v = -1.0f;
+        pVerts[3].v = 0.0f;
+        pVerts[4].v = -1.0f;
+        pVerts[5].v = 0.0f;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

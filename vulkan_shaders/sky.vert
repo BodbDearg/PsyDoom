@@ -20,6 +20,7 @@ void main() {
     //
     // If this is the top vertex of the sky wall then it will be marked as such with the 'v' coordinate being '1.0'.
     // If this is the case then stretch it upwards based on the depth from the viewer.
+    // The opposite stretch (downwards, for lower sky walls) is applied if the 'v' coordinate is '-1.0'.
     // We stretch based on depth to try and extend as little as possible and avoid precision issues.
     // Initially I extended sky walls by a fixed (large) amount and this caused occasional stitching artifacts, due to precision loss.
     gl_Position = uniforms.mvpMatrix * vec4(in_pos, 1);

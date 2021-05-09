@@ -10,7 +10,8 @@ void RV_AddInfiniteSkyWall(
     const float z1,
     const float x2,
     const float z2,
-    const float yb
+    const float y,
+    const bool bIsUpperSkyWall
 ) noexcept;
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

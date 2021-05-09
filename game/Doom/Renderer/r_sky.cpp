@@ -16,12 +16,11 @@
 uint16_t gPaletteClutId_CurMapSky;
 
 #if PSYDOOM_LIMIT_REMOVING
-
 //------------------------------------------------------------------------------------------------------------------------------------------
-// New for PsyDoom: draws sky wall columns for the given leaf edge starting from the specified world space z value to the top of the screen.
-// The leaf edge is assumed to be front facing.
+// New for PsyDoom: draws sky wall columns for the given leaf edge starting from the specified world space z value.
+// The sky is drawn to either the top or bottom of the screen. The leaf edge is assumed to be front facing.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_t zb) noexcept {
+static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_t z, const bool bUpperSkyWall) noexcept {
     // Firstly determine the x size of the leaf edge onscreen.
     // Note: assuming the sky wall is not back facing because we've already done that check in 'R_DrawSkyEdgeWalls'.
     const leafedge_t& nextEdge = (&edge)[1];
@@ -62,13 +61,13 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     const uint16_t uOffset = static_cast<uint16_t>(-(int16_t)(gViewAngle >> ANGLETOSKYSHIFT));
     const uint16_t uWrapMask = skytex.width - 1;
 
-    // Compute the bottom y coordinate step per sky wall column in screenspace, after transforming to inverted viewspace
-    const int32_t iviewZb = -d_fixed_to_int(zb - gViewZ);
-    const fixed_t dyb = (iviewZb * vert2.scale) - (iviewZb * vert1.scale);
-    const fixed_t ybStep = dyb / dx;
+    // Compute the y coordinate step per sky wall column in screenspace, after transforming to inverted viewspace
+    const int32_t iviewZ = -d_fixed_to_int(z - gViewZ);
+    const fixed_t dy = (iviewZ * vert2.scale) - (iviewZ * vert1.scale);
+    const fixed_t yStep = dy / dx;
 
-    // Compute the start bottom y value and bring into screenspace
-    fixed_t ybCur_frac = iviewZb * vert1.scale + HALF_VIEW_3D_H * FRACUNIT;
+    // Compute the start y value and bring into screenspace
+    fixed_t yCur_frac = iviewZ * vert1.scale + HALF_VIEW_3D_H * FRACUNIT;
 
     // Adjust the starting column if the beginning of the seg is obscured: skip past the not visible columns
     const seg_t& seg = *edge.seg;
@@ -77,34 +76,62 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     if (seg.visibleBegX > x1) {
         const int32_t numColsToSkip = seg.visibleBegX - x1;
         xCur = seg.visibleBegX;
-        ybCur_frac += numColsToSkip * ybStep;
+        yCur_frac += numColsToSkip * yStep;
     }
 
     // Adjust the end column if the end of the seg is obscured: stop before the not visible columns
     const int32_t xEnd = std::min(x2, (int32_t) seg.visibleEndX);
 
-    // Draw all of the visible sky wall columns
-    while (xCur < xEnd) {
-        // Get the bottom 'y' value for this sky wall column
-        const int16_t ybCur = (int16_t) d_fixed_to_int(ybCur_frac);
+    // Draw all of the visible sky wall columns.
+    // Logic is slightly different depending on whether we are doing an upper or lower sky wall.
+    if (bUpperSkyWall) {
+        while (xCur < xEnd) {
+            // Get the start 'y' value for this sky wall column
+            const int16_t yCur = (int16_t) d_fixed_to_int(yCur_frac);
 
-        // Ignore the column if it is completely offscreen
-        if (ybCur >= 0) {
-            // Set the location and height of the column to draw.
-            // Clip the height so it doesn't exceed the height of the sky texture also.
-            drawPrim.x0 = (int16_t) xCur;
-            drawPrim.h = (int16_t) std::min(ybCur + 1, (int32_t) skytex.height);
+            // Ignore the column if it is completely offscreen
+            if (yCur >= 0) {
+                // Set the location and height of the column to draw.
+                // Clip the height so it doesn't exceed the height of the sky texture also.
+                drawPrim.x0 = (int16_t) xCur;
+                drawPrim.h = (int16_t) std::min(yCur + 1, (int32_t) skytex.height);
 
-            // Set the 'U' texture coordinate for the column and submit
-            drawPrim.u0 = (LibGpuUV)((xCur + uOffset) & uWrapMask);
-            I_AddPrim(drawPrim);
+                // Set the 'U' texture coordinate for the column and submit
+                drawPrim.u0 = (LibGpuUV)((xCur + uOffset) & uWrapMask);
+                I_AddPrim(drawPrim);
+            }
+
+            ++xCur;
+            yCur_frac += yStep;
         }
+    }
+    else {
+        // Drawing a lower sky wall.
+        // This is the maximum y value (exclusive): can't exceed the screen or sky texture bounds
+        const int16_t endY = std::min<int16_t>(skytex.height, SCREEN_H);
 
-        ++xCur;
-        ybCur_frac += ybStep;
+        while (xCur < xEnd) {
+            // Get the start 'y' value for this sky wall column
+            const int16_t yCur = (int16_t) d_fixed_to_int(yCur_frac);
+
+            // Ignore the column if it is completely offscreen or past the end of the sky texture
+            if (yCur < endY) {
+                // Set the location and height of the column to draw
+                drawPrim.x0 = (int16_t) xCur;
+                drawPrim.y0 = yCur;
+                drawPrim.h = (int16_t)(endY - yCur);
+
+                // Set the texture coordinates for the column and submit
+                drawPrim.u0 = (LibGpuUV)((xCur + uOffset) & uWrapMask);
+                drawPrim.v0 = (LibGpuUV) yCur;
+                I_AddPrim(drawPrim);
+            }
+
+            ++xCur;
+            yCur_frac += yStep;
+        }
     }
 }
-
 #endif  // #if PSYDOOM_LIMIT_REMOVING
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -179,21 +206,12 @@ void R_DrawSky() noexcept {
 // poking through when the ceiling in the room beyond is higher than the sky.
 // This is considered an engine limit removing feature and the logic here largely mirrors 'RV_DrawSkySegSkyWalls' in the Vulkan renderer.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexcept {
-    // This must only be called if the leaf edge is in a sky sector, and also only if the leaf edge has a seg!
-    ASSERT(subsec.sector->ceilingpic == -1);
-    ASSERT(edge.seg);
-
+void R_DrawSegSkyWalls(const subsector_t& subsec, const leafedge_t& edge) noexcept {
     // If the seg for this leaf edge has no visible columns then just ignore
+    ASSERT(edge.seg);
     const seg_t& seg = *edge.seg;
 
     if ((seg.flags & SGF_VISIBLE_COLS) == 0)
-        return;
-
-    // Don't draw sky walls for the line segment if it's marked as having an upper see-through void
-    const int32_t lineFlags = seg.linedef->flags;
-
-    if (lineFlags & ML_UPPER_VOID)
         return;
 
     // If the leaf edge is back facing then don't draw sky walls; use the screenspace delta between the vertices to detect this
@@ -204,12 +222,25 @@ void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
     if (v2.screenx - v1.screenx <= 0)
         return;
 
-    // Get the top and bottom z values of the front sector
+    // Don't draw sky walls for the line segment if it's marked as having see-through voids:
+    const int32_t lineFlags = seg.linedef->flags;
+
+    if (lineFlags & ML_VOID)
+        return;
+
+    // Does the floor or ceiling have a sky? Must have one or the other to render sky walls:
     const sector_t& frontSec = *subsec.sector;
+    const bool bFrontSecHasSkyFloor = (frontSec.floorpic == -1);
+    const bool bFrontSecHasSkyCeil = (frontSec.ceilingpic == -1);
+
+    if ((!bFrontSecHasSkyFloor) && (!bFrontSecHasSkyCeil))
+        return;
+
+    // Get the top and bottom z values of the front sector
     const fixed_t ftz = frontSec.ceilingheight;
     const fixed_t fbz = frontSec.floorDrawHeight;
 
-    // See if the seg's line is two sided or not, may need to draw upper sky walls if two-sided
+    // See if the seg's line is two sided or not, have to check the back sector sky status if two sided
     if (seg.backsector) {
         // Get the bottom and top z values of the back sector
         const sector_t& backSec = *seg.backsector;
@@ -219,26 +250,52 @@ void R_DrawSkySegWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
         // Get the mid wall size so that it only occupies the gap between the upper and lower walls
         const fixed_t midTz = std::min(ftz, btz);
         const fixed_t midBz = std::max(fbz, bbz);
-
-        // Draw a sky wall if the back sector has a normal ceiling or if there is no opening
-        const bool bBackSecHasCeil = (backSec.ceilingpic >= 0);
         const bool bHasNoOpening = (midTz <= midBz);
 
-        if (bBackSecHasCeil || bHasNoOpening) {
-            // In certain situations treat the sky wall as a void (not to be rendered) to allow floating ceiling effects.
-            // If there is a higher surrounding sky ceiling then take that as an indication that this is not the true sky level and treat as a void.
-            // In the "GEC Master Edition" for example this has been used to create effects like floating cubes.
-            // Only do this however if the map is not explicit about wanting a sky wall...
-            const bool bRenderSkyWall = (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasHigherSurroundingSkyCeiling(frontSec));
+        // See if the back sector has a non-sky floor or ceiling
+        const bool bBackSecHasFloor = (backSec.floorpic != -1);
+        const bool bBackSecHasCeil = (backSec.ceilingpic != -1);
 
-            if (bRenderSkyWall) {
-                R_AddFrontFacingInfiniteSkyWall(edge, ftz);
+        // Can only draw an upper sky wall if there is a sky ceiling
+        if (bFrontSecHasSkyCeil) {
+            // Only draw a sky wall if there is a change in sky status for the back sector, or if there is no opening (treat as 1-sided line then)
+            if (bBackSecHasCeil || bHasNoOpening) {
+                // In certain situations treat the sky wall as a void (not to be rendered) to allow floating ceiling effects.
+                // If there is a higher surrounding sky ceiling then take that as an indication that this is not the true sky level and treat as a void.
+                // In the "GEC Master Edition" for example this has been used to create effects like floating cubes.
+                // Only do this however if the map is not explicit about wanting a sky wall...
+                const bool bRenderSkyWall = (bHasNoOpening || (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasHigherSurroundingSkyCeiling(frontSec)));
+
+                if (bRenderSkyWall) {
+                    R_AddFrontFacingInfiniteSkyWall(edge, ftz, true);
+                }
+            }
+        }
+
+        // Can only draw a lower sky wall if there is a sky floor
+        if (bFrontSecHasSkyFloor) {
+            // Only draw a sky wall if there is a change in sky status for the back sector, or if there is no opening (treat as 1-sided line then)
+            if (bBackSecHasFloor || bHasNoOpening) {
+                // In certain situations treat the sky wall as a void (not to be rendered) to allow floating ceiling effects.
+                // If there is a lower surrounding sky floor then take that as an indication that this is not the true sky level and treat as a void.
+                // Only do this however if the map is not explicit about wanting a sky wall...
+                const bool bRenderSkyWall = (bHasNoOpening || (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasLowerSurroundingSkyFloor(frontSec)));
+
+                if (bRenderSkyWall) {
+                    R_AddFrontFacingInfiniteSkyWall(edge, fbz, false);
+                }
             }
         }
     }
     else {
-        // One sided line with a sky ceiling: just draw it
-        R_AddFrontFacingInfiniteSkyWall(edge, ftz);
+        // One sided line: always draw any required sky ceilings or floors
+        if (bFrontSecHasSkyCeil) {
+            R_AddFrontFacingInfiniteSkyWall(edge, ftz, true);
+        }
+
+        if (bFrontSecHasSkyFloor) {
+            R_AddFrontFacingInfiniteSkyWall(edge, fbz, false);
+        }
     }
 }
 #endif  // #if PSYDOOM_LIMIT_REMOVING

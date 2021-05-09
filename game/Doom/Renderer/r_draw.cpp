@@ -217,9 +217,9 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     #endif
 
     // PsyDoom limit removing Classic renderer extension.
-    // Draw sky walls for leaf edges with associated segs if the ceiling is sky and the 'sky leak fix' is enabled.
+    // Draw sky walls for leaf edges with associated segs where appropriate if the 'sky leak fix' is enabled.
     #if PSYDOOM_LIMIT_REMOVING
-        if ((subsec.sector->ceilingpic == -1) && Config::gbSkyLeakFix) {
+        if (Config::gbSkyLeakFix) {
             leafedge_t* pEdge = drawleaf.edges.data();
             const int32_t numEdges = (int32_t) drawleaf.edges.size() - 1;   // N.B: last edge is a dummy one for fast wraparound!
 
@@ -227,7 +227,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
                 seg_t* const pSeg = pEdge->seg;
 
                 if (pSeg) {
-                    R_DrawSkySegWalls(subsec, *pEdge);
+                    R_DrawSegSkyWalls(subsec, *pEdge);
                 }
             }
         }
@@ -254,18 +254,14 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     }
 
     // Draw the floor if above it.
-    // PsyDoom, plus PsyDoom limit removing: floors can now have skies and draw floor height might be different to real height.
+    // PsyDoom: floors can now have skies and draw floor height might be different to real height.
     sector_t& drawsec = *gpCurDrawSector;
 
-    #if PSYDOOM_LIMIT_REMOVING
-        const bool bHasSkyFloor = (drawsec.floorpic == -1);
-    #else
-        constexpr bool bHasSkyFloor = false;
-    #endif
-
     #if PSYDOOM_MODS
+        const bool bHasSkyFloor = (drawsec.floorpic == -1);
         const fixed_t drawSecFloorH = drawsec.floorDrawHeight;
     #else
+        constexpr bool bHasSkyFloor = false;
         const fixed_t drawSecFloorH = drawsec.floorheight;
     #endif
 
