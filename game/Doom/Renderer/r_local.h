@@ -106,6 +106,7 @@ struct subsector_t {
     int16_t     firstLeafEdge;      // Index of the first leaf edge for the subsector, in the global list of leaf edges
 #if PSYDOOM_MODS
     int32_t     vkDrawSubsecIdx;    // PsyDoom: repurpose unused fields to hold the draw subsector index for the new Vulkan renderer. Will be '-1' if not drawn.
+    bool        bVkCanBatchFlats;   // PsyDoom: a flag set to 'true' if the subsector's flats can be batched/merged with other flats by the Vulkan renderer.
 #else
     int16_t     _unknown1;          // Unused field: can't infer purpose because it is not used
     int16_t     _unknown2;          // Unused field: can't infer purpose because it is not used

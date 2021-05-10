@@ -105,6 +105,9 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
     sector_t& frontSector = *subsec.sector;
     R_UpdateFloorDrawHeight(frontSector);
 
+    // Assume the subsector can have its flats batched initially
+    subsec.bVkCanBatchFlats = true;
+
     // Run through all of the segs for the subsector and mark out areas of the screen that they fully occlude.
     // Also determine whether each seg is visible and backfacing while we are at it.
     rvseg_t* const pSegs = gpRvSegs.get() + subsec.firstseg;
@@ -151,6 +154,21 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
 
         if (bMakeSegOcclude) {
             RV_OccludeRange(segLx, segRx);
+        }
+
+        // Check to see if the seg has a situation which might cause this subsector's flats to not be batchable with other flats.
+        // If the upper wall goes past the floor height or the lower wall goes past the ceiling height then the subsector flat MUST
+        // be drawn immediately after it's walls are rendered for correct layering. Because of this strict ordering requirement, the
+        // subsector's flats would not be batchable with other flats in that scenario.
+        const sector_t* const pBackSec = seg.backsector;
+
+        if (pBackSec) {
+            const bool bLowerWallBreaksBatches = (pBackSec->floorDrawHeight > frontSector.ceilingheight);
+            const bool bUpperWallBreaksBatches = (pBackSec->ceilingheight < frontSector.floorDrawHeight);
+
+            if (bLowerWallBreaksBatches || bUpperWallBreaksBatches) {
+                subsec.bVkCanBatchFlats = false;
+            }
         }
     }
 

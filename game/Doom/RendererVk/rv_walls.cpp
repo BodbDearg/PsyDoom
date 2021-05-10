@@ -156,48 +156,44 @@ static void RV_DrawSegSolid(
         // Draw the upper wall if existing not a sky wall
         if (bHasUpperWall && (!bIsUpperSkyWall)) {
             // Compute the top and bottom v coordinate and then draw
-            const float wallBy = std::max(bty, fby);
-            const float unclippedWallH = fty - bty;         // Upper wall may be clipped against the floor, but some texcoords are easier to calculate from unclipped height
-            const float clippedWallH = fty - wallBy;
+            const float wallH = fty - bty;
             float vt;
             float vb;
 
             if (line.flags & ML_DONTPEGTOP) {
                 // Top of texture is at top of upper wall
                 vt = vOffset;
-                vb = vOffset + clippedWallH;
+                vb = vOffset + wallH;
             } else {
                 // Bottom of texture is at bottom of upper wall
-                vt = vOffset - unclippedWallH;
-                vb = vt + clippedWallH;
+                vt = vOffset - wallH;
+                vb = vt + wallH;
             }
 
             VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
-            RV_DrawWall(x1, z1, x2, z2, fty, wallBy, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
+            RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
         // Draw the lower wall if existing not a sky wall
         if (bHasLowerWall && (!bIsLowerSkyWall)) {
             // Compute the top and bottom v coordinate and then draw
             const float heightToLower = fty - bby;
-            const float wallTy = std::min(bby, fty);
-            const float unclippedWallH = bby - fby;     // Lower wall may be clipped against the ceiling, but some texcoords are easier to calculate from unclipped height
-            const float clippedWallH = wallTy - fby;
+            const float wallH = bby - fby;
             float vt;
             float vb;
 
             if (line.flags & ML_DONTPEGBOTTOM) {
                 // Don't anchor lower wall texture to the floor
-                vb = vOffset + heightToLower + unclippedWallH;
-                vt = vb - clippedWallH;
+                vb = vOffset + heightToLower + wallH;
+                vt = vb - wallH;
             } else {
                 // Anchor lower wall texture to the floor
-                vb = vOffset + unclippedWallH;
-                vt = vb - clippedWallH;
+                vb = vOffset + wallH;
+                vt = vb - wallH;
             }
 
             VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
-            RV_DrawWall(x1, z1, x2, z2, wallTy, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
+            RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
         }
     }
 
