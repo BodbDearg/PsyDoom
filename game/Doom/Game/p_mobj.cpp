@@ -25,6 +25,7 @@
 #include "PcPsx/Game.h"
 
 #include <algorithm>
+#include <cstdio>
 
 // Item respawn queue
 static constexpr int32_t ITEMQUESIZE = 64;

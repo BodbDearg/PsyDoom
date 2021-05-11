@@ -65,6 +65,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <vector>
 
 #if PSYDOOM_MODS

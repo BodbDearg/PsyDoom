@@ -6,10 +6,12 @@
 
 #include "md5.h"
 
-#ifndef _MSC_VER
-#include <endian.h>
+// PsyDoom: disabling this as it is causing build errors on MacOS and doesn't seem needed?
+#if 0
+    #ifndef _MSC_VER
+        #include <endian.h>
+    #endif
 #endif
-
 
 /// same as reset()
 MD5::MD5()

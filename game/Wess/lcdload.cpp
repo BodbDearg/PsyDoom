@@ -14,6 +14,7 @@
 #include "wessapi.h"
 #include "wessarc.h"
 
+#include <cstdio>
 #include <cstring>
 
 // Maximum number of sounds that can be in an LCD file

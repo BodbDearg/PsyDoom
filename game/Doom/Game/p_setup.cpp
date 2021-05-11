@@ -29,6 +29,7 @@
 #include "PcPsx/MobjSpritePrecacher.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 
 // How much heap space is required after loading the map in order to run the game (48 KiB in Doom, 32 KiB in Final Doom).
