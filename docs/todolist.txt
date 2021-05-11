@@ -1,7 +1,6 @@
 0.8 - Limit extending and modding?
 - Provide PsyDoom Doom Builder config
 - Experiment with Doom 64 two colored lighting
-- Fix interpolation bug when falling while platform underneath is moving
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.
