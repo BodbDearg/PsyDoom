@@ -202,6 +202,8 @@ set(SOURCE_FILES
     "PcPsx/FixedIndexSet.h"
     "PcPsx/Game.cpp"
     "PcPsx/Game.h"
+    "PcPsx/GameFileReader.cpp"
+    "PcPsx/GameFileReader.h"
     "PcPsx/GamepadInput.cpp"
     "PcPsx/GamepadInput.h"
     "PcPsx/Input.cpp"
