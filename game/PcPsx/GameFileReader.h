@@ -17,6 +17,7 @@ struct PsxCd_File;
 class GameFileReader {
 public:
     GameFileReader() noexcept;
+    GameFileReader(GameFileReader&& other) noexcept;
     ~GameFileReader() noexcept;
     
     bool isOpen() noexcept;
@@ -27,7 +28,15 @@ public:
     void seekAbsolute(const int32_t offset) noexcept;
     void read(void* const pBuffer, const int32_t numBytes) noexcept;
 
+    // Convenience overload
+    template <class T>
+    void read(T& value) noexcept { read(&value, sizeof(T)); }
+
 private:
+    GameFileReader(const GameFileReader& other) = delete;
+    GameFileReader& operator = (const GameFileReader& other) = delete;
+    GameFileReader& operator = (GameFileReader&& other) = delete;
+
     PsxCd_File*     mpCdFile;   // If reading from a file on-disk, this is the index of the file slot open in the 'psxcd' library
     FILE*           mpFile;     // If reading from a real file, this is the file being read
 };

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Macros.h"
-
 #include <cstdint>
 #include <string>
 #include <vector>

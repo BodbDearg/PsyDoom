@@ -21,6 +21,17 @@ GameFileReader::~GameFileReader() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Move the reader's resources from one object to another
+//------------------------------------------------------------------------------------------------------------------------------------------
+GameFileReader::GameFileReader(GameFileReader&& other) noexcept
+    : mpCdFile(other.mpCdFile)
+    , mpFile(other.mpFile)
+{
+    other.mpCdFile = nullptr;
+    other.mpFile = nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if a file is currently open for reading
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool GameFileReader::isOpen() noexcept {
