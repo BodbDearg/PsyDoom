@@ -163,12 +163,14 @@ void RV_UploadDirtyTex(texture_t& tex) noexcept {
 
     // Decompress the lump data to the temporary buffer if required
     const std::byte* pLumpData;
-    const bool bIsUncompressedLump = gpbIsUncompressedLump[tex.lumpNum];
+
+    const WadLump& texLump = W_GetLump(tex.lumpNum);
+    const bool bIsUncompressedLump = texLump.bIsUncompressed;
 
     if (bIsUncompressedLump) {
-        pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
+        pLumpData = (const std::byte*) texLump.pCachedData;
     } else {
-        const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
+        const void* pCompressedLumpData = texLump.pCachedData;
 
         #if PSYDOOM_LIMIT_REMOVING
             gTmpBuffer.ensureSize(getDecodedSize(pCompressedLumpData));

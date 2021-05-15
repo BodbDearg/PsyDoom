@@ -23,8 +23,15 @@ void P_UpdateFireSky(texture_t& skyTex) noexcept {
         ASSERT(skyTex.height == FIRESKY_H);
     #endif
 
-    // Grab the lump data for the fire sky and the 1st (top) row of fire
-    uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
+    // Grab the lump data for the fire sky and the 1st (top) row of fire.
+    // PsyDoom: made updates here to work with the new WAD management code.
+    #if PSYDOOM_MODS
+        const WadLump& skyTexLump = W_GetLump(skyTex.lumpNum);
+        uint8_t* const pLumpData = (uint8_t*) skyTexLump.pCachedData;
+    #else
+        uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
+    #endif
+
     uint8_t* const pRow0 = pLumpData + sizeof(texlump_header_t);
 
     // Fire propagates up, so we always sample from a row below the destination

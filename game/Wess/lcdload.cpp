@@ -205,6 +205,7 @@ int32_t wess_dig_lcd_data_read(
 // The goal of the rewrite is to enable modding of the game with new .LCD files for custom maps, since the 'psxcd' I/O functions support
 // replacing original game files with alternate versions on the user's computer.
 //------------------------------------------------------------------------------------------------------------------------------------------
+#if PSYDOOM_MODS
 int32_t wess_dig_lcd_load(
     const CdFileId lcdFileToLoad,
     const uint32_t destSpuAddr,
@@ -275,3 +276,4 @@ int32_t wess_dig_lcd_load(
 
     return numSpuBytesWritten;
 }
+#endif  // #if PSYDOOM_MODS

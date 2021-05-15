@@ -49,14 +49,29 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     // This case will be triggered for animated flats like water & slime - only one frame will be in VRAM at a time.
     // Most normal flats however will already be uploaded to VRAM on level start.
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        // Decompress the lump data to the temporary buffer if required
+        // Decompress the lump data to the temporary buffer if required.
+        // PsyDoom: making some updates here to work with the new WAD management code.
         const std::byte* pLumpData;
-        const bool bIsUncompressedLump = gpbIsUncompressedLump[tex.lumpNum];
+
+        #if PSYDOOM_MODS
+            const WadLump& flatLump = W_GetLump(tex.lumpNum);
+            const bool bIsUncompressedLump = flatLump.bIsUncompressed;
+        #else
+            const bool bIsUncompressedLump = gpbIsUncompressedLump[tex.lumpNum];
+        #endif
 
         if (bIsUncompressedLump) {
-            pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
+            #if PSYDOOM_MODS
+                pLumpData = (const std::byte*) flatLump.pCachedData;
+            #else
+                pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
+            #endif
         } else {
-            const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
+            #if PSYDOOM_MODS
+                const void* pCompressedLumpData = flatLump.pCachedData;
+            #else
+                const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
+            #endif
 
             #if PSYDOOM_LIMIT_REMOVING
                 gTmpBuffer.ensureSize(getDecodedSize(pCompressedLumpData));
@@ -120,7 +135,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the horizontal flat spans for the specified subsector's leaf
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& tex) noexcept {
+static void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& tex) noexcept {
     // PsyDoom: if the leaf exceeds the maximum number of edges allowed in a non limit removing build then skip it
     #if PSYDOOM_MODS
         #if !PSYDOOM_LIMIT_REMOVING
@@ -405,7 +420,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const texture_t& te
             const int32_t WRAP_ADJUST_MASK_V = ~((int32_t) tex.height - 1);
         #else
             constexpr int32_t WRAP_ADJUST_MASK_U = ~63;
-            constexpr int32_t WRAP_ADJUST_MASK_V = ~63
+            constexpr int32_t WRAP_ADJUST_MASK_V = ~63;
         #endif
 
         if (spanUL < spanUR) {

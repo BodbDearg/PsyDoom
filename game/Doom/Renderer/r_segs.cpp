@@ -243,32 +243,40 @@ void R_DrawWallPiece(
     // This code gets invoked constantly for animated textures like the blood or slime fall textures.
     // Only one frame of the animated texture stays in VRAM at a time!
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        // Decompress (PsyDoom: if required) and get a pointer to the texture data
-        #if PSYDOOM_LIMIT_REMOVING
-            const std::byte* pLumpData;
+        // Decompress (PsyDoom: if required) and get a pointer to the texture data.
+        // PsyDoom: also made updates here to work with the new WAD management code.
+        #if PSYDOOM_MODS
+            const WadLump& texLump = W_GetLump(tex.lumpNum);
+            const void* const pLumpData = texLump.pCachedData;
+        #else
+            const void* const pLumpData = gpLumpCache[tex.lumpNum];
+        #endif
 
-            if (gpbIsUncompressedLump[tex.lumpNum]) {
-                pLumpData = (const std::byte*) gpLumpCache[tex.lumpNum];
+        const std::byte* pTexData;
+
+        #if PSYDOOM_LIMIT_REMOVING
+            if (texLump.bIsUncompressed) {
+                pTexData = (const std::byte*) pLumpData;
             } else {
-                gTmpBuffer.ensureSize(getDecodedSize(gpLumpCache[tex.lumpNum]));
-                decode(gpLumpCache[tex.lumpNum], gTmpBuffer.bytes());
-                pLumpData = gTmpBuffer.bytes();
+                gTmpBuffer.ensureSize(texLump.uncompressedSize);
+                decode(pLumpData, gTmpBuffer.bytes());
+                pTexData = gTmpBuffer.bytes();
             }
         #else
             // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
             #if PSYDOOM_MODS
-                if (getDecodedSize(gpLumpCache[tex.lumpNum]) > TMP_BUFFER_SIZE) {
+                if (getDecodedSize(pLumpData) > TMP_BUFFER_SIZE) {
                     I_Error("R_DrawWallPiece: lump %d size > 64 KiB!", tex.lumpNum);
                 }
             #endif
 
-            decode(gpLumpCache[tex.lumpNum], gTmpBuffer);
-            pLumpData = gTmpBuffer;
+            decode(pLumpData, gTmpBuffer);
+            pTexData = gTmpBuffer;
         #endif
 
         // Upload to the GPU and mark the texture as loaded this frame
         const SRECT texRect = getTextureVramRect(tex);
-        LIBGPU_LoadImage(texRect, (const uint16_t*)(pLumpData + sizeof(texlump_header_t)));
+        LIBGPU_LoadImage(texRect, (const uint16_t*)(pTexData + sizeof(texlump_header_t)));
         tex.uploadFrameNum = gNumFramesDrawn;
     }
 

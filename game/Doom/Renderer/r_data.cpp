@@ -34,14 +34,14 @@ uint16_t    gPaletteClutIds[MAXPALETTES];       // CLUT ids for all of the game'
 uint16_t    g3dViewPaletteClutId;               // Currently active in-game palette. Changes as effects are applied in the game.
 
 // Lump number ranges
-int32_t     gFirstTexLumpNum;
-int32_t     gLastTexLumpNum;
+int32_t     gFirstTexLumpNum;       // TODO: remove first and last lump number once texture lists from multiple WADs are supported
+int32_t     gLastTexLumpNum;        // TODO: remove first and last lump number once texture lists from multiple WADs are supported
 int32_t     gNumTexLumps;
-int32_t     gFirstFlatLumpNum;
-int32_t     gLastFlatLumpNum;
+int32_t     gFirstFlatLumpNum;      // TODO: remove first and last lump number once texture lists from multiple WADs are supported
+int32_t     gLastFlatLumpNum;       // TODO: remove first and last lump number once texture lists from multiple WADs are supported
 int32_t     gNumFlatLumps;
-int32_t     gFirstSpriteLumpNum;
-int32_t     gLastSpriteLumpNum;
+int32_t     gFirstSpriteLumpNum;    // TODO: remove first and last lump number once texture lists from multiple WADs are supported
+int32_t     gLastSpriteLumpNum;     // TODO: remove first and last lump number once texture lists from multiple WADs are supported
 int32_t     gNumSpriteLumps;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,7 +59,8 @@ void R_InitData() noexcept {
 // Also initialize the texture translation table for animated wall textures.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitTextures() noexcept {
-    // Determine basic texture list stats
+    // Determine basic texture list stats.
+    // TODO: update this to support texture lists in multiple WAD files.
     gFirstTexLumpNum = W_GetNumForName("T_START") + 1;
     gLastTexLumpNum = W_GetNumForName("T_END") - 1;
     gNumTexLumps = gLastTexLumpNum - gFirstTexLumpNum + 1;
@@ -77,9 +78,16 @@ void R_InitTextures() noexcept {
         gpTextureTranslation = (int32_t*)(pAlloc + gNumTexLumps * sizeof(texture_t));
     }
 
-    // Load the texture metadata lump and process each associated texture entry with the loaded size info
+    // Load the texture metadata lump and process each associated texture entry with the loaded size info.
+    // PsyDoom: added updates here to work with the new WAD management code.
     {
-        maptexture_t* const pMapTextures = (maptexture_t*) W_CacheLumpName("TEXTURE1", PU_CACHE, true);
+        #if PSYDOOM_MODS
+            const WadLump& texture1Lump = W_CacheLumpName("TEXTURE1", PU_CACHE, true);
+            maptexture_t* const pMapTextures = (maptexture_t*) texture1Lump.pCachedData;
+        #else
+            maptexture_t* const pMapTextures = (maptexture_t*) W_CacheLumpName("TEXTURE1", PU_CACHE, true);
+        #endif
+
         maptexture_t* pMapTex = pMapTextures;
         texture_t* pTex = gpTextures;
 
@@ -132,7 +140,8 @@ void R_InitTextures() noexcept {
 // Also initialize the flat texture translation table used for animation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitFlats() noexcept {
-    // Determine basic flat texture list stats
+    // Determine basic flat texture list stats.
+    // TODO: update this to support texture lists in multiple WAD files.
     gFirstFlatLumpNum = W_GetNumForName("F_START") + 1;
     gLastFlatLumpNum = W_GetNumForName("F_END") - 1;
     gNumFlatLumps = gLastFlatLumpNum - gFirstFlatLumpNum + 1;
@@ -151,7 +160,7 @@ void R_InitFlats() noexcept {
     }
 
     // The hardcoded assumed/size for flats.
-    // If you wanted to support variable sized flat textures then the code which follows would need to change.
+    // Note: PsyDoom now allows flats to be differently sized to this, it checks the actual texture size upon loading.
     constexpr uint32_t FLAT_TEX_SIZE = 64;
 
     // Setup the texture structs for each flat
@@ -199,7 +208,14 @@ void R_InitSprites() noexcept {
 
     // Load the sprite metadata lump and process each associated sprite texture entry.
     // The metadata gives us the size and offsetting for each sprite.
-    maptexture_t* const pMapSpriteTextures = (maptexture_t*) W_CacheLumpName("SPRITE1", PU_CACHE, true);
+    // PsyDoom: added updates here to work with the new WAD management code.
+    #if PSYDOOM_MODS
+        const WadLump& sprite1Lump = W_CacheLumpName("SPRITE1", PU_CACHE, true);
+        maptexture_t* const pMapSpriteTextures = (maptexture_t*) sprite1Lump.pCachedData;
+    #else
+        maptexture_t* const pMapSpriteTextures = (maptexture_t*) W_CacheLumpName("SPRITE1", PU_CACHE, true);
+    #endif
+
     maptexture_t* pMapTex = pMapSpriteTextures;
     texture_t* pTex = gpSpriteTextures;
 
@@ -230,35 +246,24 @@ void R_InitSprites() noexcept {
     Z_FreeTags(*gpMainMemZone, PU_CACHE);
 }
 
+#if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Given a lump name (case insensitive) for a wall texture, returns the texture index among wall texture lumps.
 // Returns '-1' if the name was not found.
+// PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t R_TextureNumForName(const char* const name) noexcept {
-    // Chunk up the name for faster comparisons and also make case insensitive (uppercase).
-    // Note: using a union here to try and avoid strict aliasing violations.
-    lumpname_t nameUpper = {};
+    const WadLumpName searchLumpName = WadUtils::makeUppercaseLumpName(name);
+    
+    const texture_t* const pTextures = gpTextures;
+    const int32_t numTextures = gNumTexLumps;
 
-    for (int32_t i = 0; (i < 8) && name[i]; ++i) {
-        char c = name[i];
+    for (int32_t texIdx = 0; texIdx < numTextures; ++texIdx) {
+        const int32_t texLumpIdx = pTextures[texIdx].lumpNum;
+        const WadLumpName texLumpName = W_GetLumpName(texLumpIdx);
 
-        if (c >= 'a' && c <= 'z') {
-            c -= 'a' - 'A';
-        }
-
-        nameUpper.chars[i] = c;
-    }
-
-    // Search for the specified lump name and return the index if found
-    const lumpinfo_t* pLumpInfo = &gpLumpInfo[gFirstTexLumpNum];
-
-    for (int32_t lumpIdx = 0; lumpIdx < gNumTexLumps; ++lumpIdx, ++pLumpInfo) {
-        if (pLumpInfo->name.words[1] == nameUpper.words[1]) {
-            if ((pLumpInfo->name.words[0] & NAME_WORD_MASK) == nameUpper.words[0]) {
-                // Found the requested lump name!
-                return lumpIdx;
-            }
-        }
+        if ((texLumpName.word & WAD_LUMPNAME_MASK) == searchLumpName.word)
+            return texIdx;
     }
 
     return -1;
@@ -266,61 +271,56 @@ int32_t R_TextureNumForName(const char* const name) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Given a lump name (case insensitive) for a flat texture, returns the texture index among flat texture lumps.
-// PsyDoom: Returns '-1' if the name was not found. Originally returned '0'.
+// PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t R_FlatNumForName(const char* const name) noexcept {
-    // Chunk up the name for faster comparisons and also make case insensitive (uppercase).
-    // Note: using a union here to try and avoid strict aliasing violations.
-    lumpname_t nameUpper = {};
+    const WadLumpName searchLumpName = WadUtils::makeUppercaseLumpName(name);
 
-    for (int32_t i = 0; (i < 8) && name[i]; ++i) {
-        char c = name[i];
+    const texture_t* const pFlatTextures = gpFlatTextures;
+    const int32_t numFlatTextures = gNumFlatLumps;
 
-        if (c >= 'a' && c <= 'z') {
-            c -= 'a' - 'A';
-        }
+    for (int32_t flatIdx = 0; flatIdx < numFlatTextures; ++flatIdx) {
+        const int32_t flatLumpIdx = pFlatTextures[flatIdx].lumpNum;
+        const WadLumpName flatLumpName = W_GetLumpName(flatLumpIdx);
 
-        nameUpper.chars[i] = c;
+        if ((flatLumpName.word & WAD_LUMPNAME_MASK) == searchLumpName.word)
+            return flatIdx;
     }
 
-    // Search for the specified lump name and return the index if found
-    const lumpinfo_t* pLumpInfo = &gpLumpInfo[gFirstFlatLumpNum];
-
-    for (int32_t lumpIdx = 0; lumpIdx < gNumTexLumps; ++lumpIdx, ++pLumpInfo) {
-        if (pLumpInfo->name.words[1] == nameUpper.words[1]) {
-            if ((pLumpInfo->name.words[0] & NAME_WORD_MASK) == nameUpper.words[0]) {
-                // Found the requested lump name!
-                return lumpIdx;
-            }
-        }
-    }
-
-    // PsyDoom: Returning '0' means we return a valid index even if not found.
-    // Fix this and change the return to '-1' if not found.
-    #if PSYDOOM_MODS
-        return -1;
-    #else
-        return 0;
-    #endif
+    return -1;
 }
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Loads all of the game's palettes into VRAM.
 // Also loads the 'LIGHTS' lump which gives the color multipliers for various sector colors.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitPalette() noexcept {
-    // Load the colored light multipliers lump and force the first entry to be fullbright
-    gpLightsLump = (light_t*) W_CacheLumpName("LIGHTS", PU_STATIC, true);
+    // Load the colored light multipliers lump and force the first entry to be fullbright.
+    // PsyDoom: added updates here to work with the new WAD management code.
+    #if PSYDOOM_MODS
+        const WadLump& lightsWadLump = W_CacheLumpName("LIGHTS", PU_STATIC, true);
+        gpLightsLump = (light_t*) lightsWadLump.pCachedData;
+    #else
+        gpLightsLump = (light_t*) W_CacheLumpName("LIGHTS", PU_STATIC, true);
+    #endif
 
     light_t& firstLight = *gpLightsLump;
     firstLight.r = 255;
     firstLight.g = 255;
     firstLight.b = 255;
 
-    // Load the palettes lump and sanity check its size.
-    // Accept either the Doom or Final Doom palette count.
+    // Load the palettes lump and sanity check its size; accept either the Doom or Final Doom palette count.
+    // PsyDoom: added updates here to work with the new WAD management code.
     const int32_t playpalLumpNum = W_GetNumForName("PLAYPAL");
-    const palette_t* const pGamePalettes = (const palette_t*) W_CacheLumpNum(playpalLumpNum, PU_CACHE, true);
+
+    #if PSYDOOM_MODS
+        const WadLump& playPalWadLump = W_CacheLumpNum(playpalLumpNum, PU_CACHE, true);
+        const palette_t* const pGamePalettes = (const palette_t*) playPalWadLump.pCachedData;
+    #else
+        const palette_t* const pGamePalettes = (const palette_t*) W_CacheLumpNum(playpalLumpNum, PU_CACHE, true);
+    #endif
+
     const int32_t numPalettes = W_LumpLength(playpalLumpNum) / sizeof(palette_t);
 
     if ((numPalettes != NUMPALETTES_DOOM) && (numPalettes != NUMPALETTES_FINAL_DOOM)) {

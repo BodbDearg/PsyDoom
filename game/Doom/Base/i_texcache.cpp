@@ -343,11 +343,12 @@ static void TC_FillCacheCells(tcachepage_t& texPage, texture_t& tex) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static texdata_t TC_CacheTexData(const texture_t& tex) {
     // Make sure the texture's lump is loaded and get the bytes
-    const std::byte* pTexBytes = (const std::byte*) W_CacheLumpNum(tex.lumpNum, PU_CACHE, false);
+    const WadLump& texLump = W_CacheLumpNum(tex.lumpNum, PU_CACHE, false);
+    const std::byte* pTexBytes = (const std::byte*) texLump.pCachedData;
     ASSERT(pTexBytes);
 
     // Do we need to decompress the texture first?
-    const bool bIsTexCompressed = (!gpbIsUncompressedLump[tex.lumpNum]);
+    const bool bIsTexCompressed = (!texLump.bIsUncompressed);
 
     if (bIsTexCompressed) {
         // Compressed texture, must decompress to the temporary buffer first
@@ -359,11 +360,9 @@ static texdata_t TC_CacheTexData(const texture_t& tex) {
             pTexBytes = gTmpBuffer.bytes();
         #else
             // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
-            #if PSYDOOM_MODS
-                if (texSize > TMP_BUFFER_SIZE) {
-                    I_Error("I_CacheTex: lump %d size > 64 KiB!", tex.lumpNum);
-                }
-            #endif
+            if (texSize > TMP_BUFFER_SIZE) {
+                I_Error("I_CacheTex: lump %d size > 64 KiB!", tex.lumpNum);
+            }
 
             decode(pTexBytes, gTmpBuffer);
             pTexBytes = gTmpBuffer;
@@ -408,7 +407,7 @@ static void TC_UploadTexToVram(texture_t& tex, const texlump_header_t& texInfo, 
     }
     else {
         // Not enough data in the lump to load the texture, issue a warning.
-        // Hack: use the level startup warning buffer for this purpose (it's always around).
+        // Quick hack: use the level startup warning buffer for this purpose (it's always around).
         std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad tex data for lump %d!", tex.lumpNum);
         gStatusBar.message = gLevelStartupWarning;
         gStatusBar.messageTicsLeft = 60;

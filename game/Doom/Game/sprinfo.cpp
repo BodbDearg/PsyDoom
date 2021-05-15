@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "sprinfo.h"
 
+// TODO: this needs to be revisited to work with edited WAD files or multiple wad files
 static const spriteframe_t gSpriteFrames[] = {
     { true,  { 857,  858,  859,  860,  861,  860,  859,  858  }, { 0, 0, 0, 0, 0, 1, 1, 1 } },  // SPR_TROO_0
     { true,  { 862,  863,  864,  865,  866,  865,  864,  863  }, { 0, 0, 0, 0, 0, 1, 1, 1 } },  // SPR_TROO_1

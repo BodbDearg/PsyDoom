@@ -66,18 +66,19 @@ static float RV_GetSkyUCoordOffset() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_CacheSkyTex() noexcept {
     // Texture already up to date in VRAM?
-    texture_t& skytex = *gpSkyTexture;
+    texture_t& skyTex = *gpSkyTexture;
 
-    if (skytex.uploadFrameNum != TEX_INVALID_UPLOAD_FRAME_NUM)
+    if (skyTex.uploadFrameNum != TEX_INVALID_UPLOAD_FRAME_NUM)
         return;
 
-    // Need to upload the texture to VRAM, do that now:
-    const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
+    // Need to upload the texture to VRAM, do that now
+    const WadLump& skyTexLump = W_GetLump(skyTex.lumpNum);
+    const std::byte* const pLumpData = (const std::byte*) skyTexLump.pCachedData;
     const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
-    SRECT vramRect = getTextureVramRect(skytex);
+    SRECT vramRect = getTextureVramRect(skyTex);
 
     LIBGPU_LoadImage(vramRect, pTexData);
-    skytex.uploadFrameNum = gNumFramesDrawn;
+    skyTex.uploadFrameNum = gNumFramesDrawn;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

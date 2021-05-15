@@ -9,13 +9,14 @@ set(SOURCE_FILES
     "FileOutputStream.h"
     "FileUtils.cpp"
     "FileUtils.h"
+    "Finally.h"
     "IniUtils.cpp"
     "IniUtils.h"
     "InputStream.h"
     "JsonUtils.h"
     "Macros.h"
-    "OutputStream.h"
     "Matrix4.h"
+    "OutputStream.h"
 )
 
 set(OTHER_FILES

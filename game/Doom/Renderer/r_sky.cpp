@@ -145,7 +145,14 @@ void R_DrawSky() noexcept {
     texture_t& skytex = *gpSkyTexture;
 
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
+        // PsyDoom: updates to work with the new WAD management code
+        #if PSYDOOM_MODS
+            const WadLump& wadLump = W_GetLump(skytex.lumpNum);
+            const std::byte* const pLumpData = (const std::byte*) wadLump.pCachedData;
+        #else
+            const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
+        #endif
+
         const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
         SRECT vramRect = getTextureVramRect(skytex);
 

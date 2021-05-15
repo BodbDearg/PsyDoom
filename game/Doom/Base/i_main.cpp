@@ -320,13 +320,21 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
         lumpNum = W_GetNumForName(name);
     }
 
-    // Ensure the lump data is loaded and decompress if required
-    const void* pLumpData = W_CacheLumpNum(lumpNum, PU_CACHE, false);
-    const bool bIsCompressed = (!gpbIsUncompressedLump[lumpNum]);
+    // Ensure the lump data is loaded and decompress if required.
+    // PsyDoom: updates to work with the new WAD management code.
+    #if PSYDOOM_MODS
+        const WadLump& lump = W_CacheLumpNum(lumpNum, PU_CACHE, false);
+        const void* pLumpData = lump.pCachedData;
+        const bool bIsCompressed = (!lump.bIsUncompressed);
+    #else
+        const void* pLumpData = W_CacheLumpNum(lumpNum, PU_CACHE, false);
+        const bool bIsCompressed = (!gpbIsUncompressedLump[lumpNum]);
+    #endif
 
     if (bIsCompressed) {
         #if PSYDOOM_LIMIT_REMOVING
-            gTmpBuffer.ensureSize(getDecodedSize(pLumpData));
+            // PsyDoom limit removing: temporary buffer can be any size now
+            gTmpBuffer.ensureSize(lump.uncompressedSize);
             decode(pLumpData, gTmpBuffer.bytes());
             pLumpData = gTmpBuffer.bytes();
         #else
@@ -355,13 +363,13 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     if (patchW + 15 >= 0) {
         tex.width16 = (uint8_t)((patchW + 15) / 16);
     } else {
-        tex.width16 = (uint8_t)((patchW + 30) / 16);    // Not sure why texture sizes would be negative? What does that mean?
+        tex.width16 = (uint8_t)((patchW + 30) / 16);    // Weird code added by the original compiler - to handle a negative case that would never happen?
     }
 
     if (patchH + 15 >= 0) {
         tex.height16 = (uint8_t)((patchH + 15) / 16);
     } else {
-        tex.height16 = (uint8_t)((patchH + 30) / 16);   // Not sure why texture sizes would be negative? What does that mean?
+        tex.height16 = (uint8_t)((patchH + 30) / 16);   // Weird code added by the original compiler - to handle a negative case that would never happen?
     }
 
     // PsyDoom: don't wipe this field, if it's already in the cache leave it there...

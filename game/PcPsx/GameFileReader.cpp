@@ -8,7 +8,7 @@
 // Initializes the file reader with no file open
 //------------------------------------------------------------------------------------------------------------------------------------------
 GameFileReader::GameFileReader() noexcept
-    : mpCdFile(nullptr)
+    : mCdFile()
     , mpFile(nullptr)
 {
 }
@@ -24,10 +24,10 @@ GameFileReader::~GameFileReader() noexcept {
 // Move the reader's resources from one object to another
 //------------------------------------------------------------------------------------------------------------------------------------------
 GameFileReader::GameFileReader(GameFileReader&& other) noexcept
-    : mpCdFile(other.mpCdFile)
+    : mCdFile(other.mCdFile)
     , mpFile(other.mpFile)
 {
-    other.mpCdFile = nullptr;
+    other.mCdFile = {};
     other.mpFile = nullptr;
 }
 
@@ -35,19 +35,19 @@ GameFileReader::GameFileReader(GameFileReader&& other) noexcept
 // Tells if a file is currently open for reading
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool GameFileReader::isOpen() noexcept {
-    return (mpCdFile || mpFile);
+    return ((mCdFile.fileHandle > 0) || (mCdFile.overrideFileHandle > 0) || mpFile);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Closes the file currently being read
 //------------------------------------------------------------------------------------------------------------------------------------------
 void GameFileReader::close() noexcept {
-    if (mpCdFile) {
-        psxcd_close(*mpCdFile);
-        mpCdFile = nullptr;
-    } else if (mpFile) {
+    if (mpFile) {
         std::fclose(mpFile);
         mpFile = nullptr;
+    } else {
+        psxcd_close(mCdFile);
+        mCdFile = {};
     }
 }
 
@@ -70,7 +70,7 @@ void GameFileReader::open(const char* const filePath) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void GameFileReader::open(const CdFileId fileId) noexcept {
     ASSERT(!isOpen());
-    mpCdFile = psxcd_open(fileId);
+    mCdFile = *psxcd_open(fileId);      // Note: will always return a valid pointer or fail with a fatal error!
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,12 +80,12 @@ void GameFileReader::open(const CdFileId fileId) noexcept {
 void GameFileReader::seekRelative(const int32_t offset) noexcept {
     ASSERT(isOpen());
 
-    if (mpCdFile) {
-        if (psxcd_seek(*mpCdFile, offset, PsxCd_SeekMode::CUR) != 0) {
+    if (mpFile) {
+        if (std::fseek(mpFile, offset, SEEK_CUR) != 0) {
             FatalErrors::raiseF("GameFileReader::seek: operation failed - IO error!");
         }
     } else {
-        if (std::fseek(mpFile, offset, SEEK_CUR) != 0) {
+        if (psxcd_seek(mCdFile, offset, PsxCd_SeekMode::CUR) != 0) {
             FatalErrors::raiseF("GameFileReader::seek: operation failed - IO error!");
         }
     }
@@ -98,12 +98,12 @@ void GameFileReader::seekRelative(const int32_t offset) noexcept {
 void GameFileReader::seekAbsolute(const int32_t offset) noexcept {
     ASSERT(isOpen());
 
-    if (mpCdFile) {
-        if (psxcd_seek(*mpCdFile, offset, PsxCd_SeekMode::SET) != 0) {
+    if (mpFile) {
+        if (std::fseek(mpFile, offset, SEEK_SET) != 0) {
             FatalErrors::raiseF("GameFileReader::seek: operation failed - IO error!");
         }
     } else {
-        if (std::fseek(mpFile, offset, SEEK_SET) != 0) {
+        if (psxcd_seek(mCdFile, offset, PsxCd_SeekMode::SET) != 0) {
             FatalErrors::raiseF("GameFileReader::seek: operation failed - IO error!");
         }
     }
@@ -121,12 +121,12 @@ void GameFileReader::read(void* const pBuffer, const int32_t numBytes) noexcept 
     if (numBytes <= 0)
         return;
 
-    if (mpCdFile) {
-        if (psxcd_read(pBuffer, numBytes, *mpCdFile) != numBytes) {
+    if (mpFile) {
+        if (std::fread(pBuffer, (uint32_t) numBytes, 1, mpFile) != 1) {
             FatalErrors::raiseF("GameFileReader::read: operation failed - IO error!");
         }
     } else {
-        if (std::fread(pBuffer, (uint32_t) numBytes, 1, mpFile) != 1) {
+        if (psxcd_read(pBuffer, numBytes, mCdFile) != numBytes) {
             FatalErrors::raiseF("GameFileReader::read: operation failed - IO error!");
         }
     }

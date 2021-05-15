@@ -1114,9 +1114,16 @@ static void P_Init() noexcept {
         // If the lump name for the sky follows the format 'xxxx9' then assume it is a fire sky.
         // That needs to have it's lump cached, palette & update function set and initial few updates done...
         texture_t& skyTex = *gpSkyTexture;
-        const lumpinfo_t& skyTexLump = gpLumpInfo[skyTex.lumpNum];
 
-        if (skyTexLump.name.chars[4] == '9') {
+        // PsyDoom: updates to work with the new WAD management code
+        #if PSYDOOM_MODS
+            const WadLumpName skyTexName = W_GetLumpName(skyTex.lumpNum);
+        #else
+            const lumpinfo_t& skyTexLump = gpLumpInfo[skyTex.lumpNum];
+            const lumpname_t& skyTexName = skyTexLump.name;
+        #endif
+
+        if (skyTexName.chars[4] == '9') {
             W_CacheLumpNum(skyTex.lumpNum, PU_ANIMATION, true);
             gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
             gUpdateFireSkyFunc = P_UpdateFireSky;
@@ -1130,7 +1137,7 @@ static void P_Init() noexcept {
 
         // Final Doom: if the last digit in 'SKYXX' matches one of these digits, then use whatever palette is for that sky:
         if (gbLoadingFinalDoomMap) {
-            switch (skyTexLump.name.chars[4]) {
+            switch (skyTexName.chars[4]) {
                 case '2':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL1];    break;
                 case '3':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL2];    break;
                 case '4':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL3];    break;
@@ -1329,8 +1336,13 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
     const CdFileId mapWadFile = (gbLoadingFinalDoomMap) ? mapWadFile_finalDoom : mapWadFile_doom;
 
-    // Open the map wad
-    void* const pMapWadFileData = W_OpenMapWad(mapWadFile);
+    // Open the map wad.
+    // PsyDoom: this no longer returns a data pointer with the new WAD code.
+    #if PSYDOOM_MODS
+        W_OpenMapWad(mapWadFile);
+    #else
+        void* const pMapWadFileData = W_OpenMapWad(mapWadFile);
+    #endif
 
     // Figure out the name of the map start lump marker
     char mapLumpName[8] = {};
@@ -1345,7 +1357,8 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         mapLumpName[4] = '0' + digit2;
     }
 
-    // Get the lump index for the map start lump
+    // Get the lump index for the map start lump.
+    // TODO: make this code lookup map lump names properly and fail if not found.
     const uint32_t mapStartLump = W_MapCheckNumForName(mapLumpName);
 
     if (mapStartLump == -1) {
@@ -1371,17 +1384,24 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     gpDeathmatchP = &gDeathmatchStarts[0];
     P_LoadThings(mapStartLump + ML_THINGS);
 
-    // Spawn special thinkers such as light flashes etc. and free up the loaded WAD data
+    // Spawn special thinkers such as light flashes etc. and free up the loaded WAD data.
+    // PsyDoom: the WAD manager is now responsible for freeing up resources used by the map WAD.
     P_SpawnSpecials();
-    Z_Free2(*gpMainMemZone, pMapWadFileData);
+
+    #if PSYDOOM_MODS
+        W_CloseMapWad();
+    #else
+        Z_Free2(*gpMainMemZone, pMapWadFileData);
+    #endif
 
     // Loading map textures and sprites.
     //
-    // PsyDoom limit removing: loading .IMG files for maps (e.g  MAPSPR01.IMG and MAPTEX01.IMG) is no longer done to make modding easier.
+    // PsyDoom: loading .IMG files for maps (e.g  MAPSPR01.IMG and MAPTEX01.IMG) is no longer done to make modding easier.
     // Instead, all graphical resources will be loaded from WAD files. The .IMG files no longer need to be produced for PsyDoom and we can
     // add new texture etc. lumps to the main IWAD without worrying about invalidating lump number references in existing .IMG files.
+    // Note also that 'P_LoadBlocks' was removed from this module as part of this change. It can be found in the 'Old' code folder if required.
     if (!gbIsLevelBeingRestarted) {
-        #if !PSYDOOM_LIMIT_REMOVING
+        #if !PSYDOOM_MODS
             const CdFileId mapTexFile = (CdFileId)((int32_t) CdFileId::MAPTEX01_IMG + mapIdxInFolder + mapFolderOffset);
             const CdFileId mapSprFile = (CdFileId)((int32_t) CdFileId::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
             P_LoadBlocks(mapTexFile);
@@ -1389,7 +1409,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
         P_Init();
 
-        #if !PSYDOOM_LIMIT_REMOVING
+        #if !PSYDOOM_MODS
             P_LoadBlocks(mapSprFile);
         #endif
     }
@@ -1461,129 +1481,6 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     #endif
 }
 
-// PsyDoom limit removing: loading .IMG files for maps (e.g  MAPSPR01.IMG and MAPTEX01.IMG) is no longer done to make modding easier.
-// Instead, all graphical resources will be loaded from WAD files. The .IMG files no longer need to be produced for PsyDoom and we can
-// add new texture etc. lumps to the main IWAD without worrying about invalidating lump number references in existing .IMG files.
-#if !PSYDOOM_LIMIT_REMOVING
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Loads a list of memory blocks containing WAD lumps from the given file.
-//
-// PsyDoom: this function had to be completely rewritten since 'sizeof(memblock_t)' is no longer equal to 'sizeof(fileblock_t)'.
-// This is due to pointers being larger in 64-bit mode. See the 'Old' folder for the original version of this function.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void P_LoadBlocks(const CdFileId file) noexcept {
-    // Open the blocks file and get it's size
-    const int32_t openFileIdx = OpenFile(file);
-    const int32_t fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
-    SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
-
-    // Keep reading the memory blocks in the file until we are done
-    int32_t bytesLeft = fileSize;
-
-    while (bytesLeft > 0) {
-        // Read the header for this block and verify all of it's properties.
-        // Note that the size of the block also includes the block header.
-        fileblock_t blockHeader = {};
-        ReadFile(openFileIdx, &blockHeader, sizeof(fileblock_t));
-        bytesLeft -= sizeof(fileblock_t);
-
-        if (blockHeader.id != ZONEID) {
-            I_Error("P_LoadBlocks: bad zoneid!");
-        }
-
-        if (blockHeader.lumpNum >= gNumLumps) {
-            I_Error("P_LoadBlocks: bad lumpnum!");
-        }
-
-        if (blockHeader.isUncompressed >= 2) {
-            I_Error("P_LoadBlocks: bad c-mode!");
-        }
-
-        const int32_t blockDataSize = blockHeader.size - sizeof(fileblock_t);
-
-        if ((blockDataSize > bytesLeft) || (blockDataSize <= 0)) {
-            I_Error("P_LoadBlocks: bad size!");
-        }
-
-        // If this lump is already loaded then we can skip past reading the data for this block
-        void*& lumpCacheEntry = gpLumpCache[blockHeader.lumpNum];
-
-        if (lumpCacheEntry) {
-            SeekAndTellFile(openFileIdx, blockDataSize, PsxCd_SeekMode::CUR);
-            bytesLeft -= blockDataSize;
-            continue;
-        }
-
-        // Alloc a memory block for this memory block on disk and read the data.
-        // Set the user of the memory block to the lump cache entry for this lump (this also populates the lump cache entry):
-        uint8_t* const pBlockData = (uint8_t*) Z_Malloc(*gpMainMemZone, blockDataSize, blockHeader.tag, &lumpCacheEntry);
-        ReadFile(openFileIdx, pBlockData, blockDataSize);
-        bytesLeft -= blockDataSize;
-
-        // Verify the decompressed size is valid if the block was compressed
-        if (blockHeader.isUncompressed == 0) {
-            // Get the decompressed size of the data following the file block header and make sure it is what we expect
-            const uint32_t inflatedSize = getDecodedSize(pBlockData);
-            const lumpinfo_t& lump = gpLumpInfo[blockHeader.lumpNum];
-
-            if (inflatedSize != lump.size) {
-                // Uh-oh, the data in the lumps file is not what we expect! Get the null terminated lump name and print out the problem:
-                char lumpName[MAXLUMPNAME + 1];
-                std::memcpy(lumpName, lump.name.chars, MAXLUMPNAME);
-                lumpName[MAXLUMPNAME] = 0;
-
-                I_Error(
-                    "P_LoadBlocks: bad decompressed size for lump %d (%s)!\n"
-                    "The master WAD says it should be %d bytes.\n"
-                    "In lump file '%s' it decompresses to %d bytes.",
-                    (int) blockHeader.lumpNum,
-                    lumpName,
-                    (int) lump.size,
-                    gCdMapTblFileNames[(size_t) file],
-                    (int) inflatedSize
-                );
-            }
-        }
-
-        // Save whether the lump is compressed or not
-        gpbIsUncompressedLump[blockHeader.lumpNum] = blockHeader.isUncompressed;
-    }
-
-    // After all that is done close up the file and check the heap is still in a good state
-    CloseFile(openFileIdx);
-    Z_CheckHeap(*gpMainMemZone);
-}
-#endif  // #if !PSYDOOM_LIMIT_REMOVING
-
-#if !PSYDOOM_MODS
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Caches into RAM all frames for a sprite.
-// This function appears to be unused in the retail version of the game.
-// PsyDoom: don't bother compiling this function in, since it is unused.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void P_CacheSprite(const spritedef_t& sprdef) noexcept {
-    // Cache all frames in the sprite
-    for (int32_t frameIdx = 0; frameIdx < sprdef.numframes; ++frameIdx) {
-        const spriteframe_t& spriteFrame = sprdef.spriteframes[frameIdx];
-
-        // Cache all directions for the frame
-        for (int32_t dirIdx = 0; dirIdx < 8; ++dirIdx) {
-            const int32_t lumpNum = spriteFrame.lump[dirIdx];
-
-            if ((lumpNum < gFirstSpriteLumpNum) || (lumpNum > gLastSpriteLumpNum)) {
-                I_Error("CacheSprite: invalid sprite lump %d", lumpNum);
-            }
-
-            W_CacheLumpNum(lumpNum, PU_ANIMATION, false);
-
-            // If there are no more rotations for this sprite then stop here
-            if (!spriteFrame.rotate)
-                break;
-        }
-    }
-}
-#endif  // #if !PSYDOOM_MODS
-
 #if PSYDOOM_LIMIT_REMOVING
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom limit removing addition: flags all textures in the map for loading
@@ -1621,8 +1518,14 @@ static void P_CacheAndUpdateTexSizeInfo(texture_t& tex, const int32_t lumpNum) n
         I_Error("P_CacheAndUpdateTexSizeInfo: Bad tex lump %d! Not enough data!", lumpNum);
     }
 
-    // Cache the texture data and get the header from the first bytes
-    const texlump_header_t texHdr = *(texlump_header_t*) W_CacheLumpNum(lumpNum, PU_CACHE, true);
+    // Cache the texture data and get the header from the first bytes.
+    // PsyDoom: updates to work with the new WAD management code.
+    #if PSYDOOM_MODS
+        const WadLump& wadLump = W_CacheLumpNum(lumpNum, PU_CACHE, true);
+        const texlump_header_t texHdr = *(texlump_header_t*) wadLump.pCachedData;
+    #else
+        const texlump_header_t texHdr = *(texlump_header_t*) W_CacheLumpNum(lumpNum, PU_CACHE, true);
+    #endif
 
     // Save the texture size info.
     // Note: the header 'offset' field is deliberately ignored for textures (only used for sprites).
@@ -1654,7 +1557,7 @@ static void P_LoadMapTextures() noexcept {
         [](const uint64_t idx) noexcept {
             texture_t& tex = gpTextures[idx];
             gLoadTextureList.push_back(&tex);
-            P_CacheAndUpdateTexSizeInfo(tex, (int32_t)(gFirstTexLumpNum + idx));
+            P_CacheAndUpdateTexSizeInfo(tex, tex.lumpNum);
         }
     );
 
@@ -1662,7 +1565,7 @@ static void P_LoadMapTextures() noexcept {
         [](const uint64_t idx) noexcept {
             texture_t& tex = gpFlatTextures[idx];
             gLoadTextureList.push_back(&tex);
-            P_CacheAndUpdateTexSizeInfo(tex, (int32_t)(gFirstFlatLumpNum + idx));
+            P_CacheAndUpdateTexSizeInfo(tex, tex.lumpNum);
         }
     );
 

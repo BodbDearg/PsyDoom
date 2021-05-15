@@ -79,7 +79,7 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
         if (Video::gBackendType != Video::BackendType::Vulkan) {
             Video::displayFramebuffer();
         } else {
-            // Hack for the Vulkan renderer, in case the user resizes the screen while we are connecting - redraw everything...
+            // Quick hack for the Vulkan renderer, in case the user resizes the screen while we are connecting - redraw everything...
             M_DrawNetworkConnectDisplay();
         }
 

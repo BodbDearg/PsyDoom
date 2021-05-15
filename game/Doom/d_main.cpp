@@ -10,6 +10,7 @@
 #include "cdmaptbl.h"
 #include "FatalErrors.h"
 #include "FileUtils.h"
+#include "Finally.h"
 #include "Game/g_game.h"
 #include "Game/p_tick.h"
 #include "PcPsx/Game.h"
@@ -100,6 +101,13 @@ void D_DoomMain() noexcept {
     W_Init();
     R_Init();
     ST_Init();
+
+    // PsyDoom: new cleanup logic before we exit
+    #if PSYDOOM_MODS
+        const auto dmainCleanup = finally([]() noexcept {
+            W_Shutdown();
+        });
+    #endif
 
     // Clearing some global tick counters and inputs
     gPrevGameTic = 0;

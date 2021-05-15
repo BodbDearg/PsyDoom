@@ -181,9 +181,17 @@ gameaction_t TIC_Title() noexcept {
             // Do this for every even y position that the title screen sprite is at.
             // Eventually it will settle at position '0' so we will do this all the time then and completely put out the fire.
             if ((gTitleScreenSpriteY < 50) && ((gTitleScreenSpriteY & 1) == 0)) {
-                // Get the pixels for the last row in the fire sky
+                // Get the pixels for the last row in the fire sky.
+                // PsyDoom: added updates here to work with the new WAD management code.
                 texture_t& skyTex = *gpSkyTexture;
-                uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
+
+                #if PSYDOOM_MODS
+                    const WadLump& fireSkyLump = W_GetLump(skyTex.lumpNum);
+                    uint8_t* const pLumpData = (uint8_t*) fireSkyLump.pCachedData;
+                #else
+                    uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
+                #endif
+
                 uint8_t* const pFSkyRows = pLumpData + sizeof(texlump_header_t);
                 uint8_t* const pFSkyLastRow = pFSkyRows + FIRESKY_W * (FIRESKY_H - 1);
 
@@ -256,16 +264,24 @@ void DRAW_Title() noexcept {
 
     // Upload the firesky texture if VRAM if required.
     // This will happen constantly for the duration of the title screen, as the fire is constantly changing.
-    texture_t& skytex = *gpSkyTexture;
+    texture_t& skyTex = *gpSkyTexture;
 
-    if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        // Figure out where the texture is in VRAM coords and upload it
-        const SRECT vramRect = getTextureVramRect(skytex);
-        const std::byte* const pSkyTexData = (const std::byte*) gpLumpCache[skytex.lumpNum];
+    if (skyTex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
+        // Figure out where the texture is in VRAM coords and upload it.
+        // PsyDoom: added updates here to work with the new WAD management code.
+        const SRECT vramRect = getTextureVramRect(skyTex);
+
+        #if PSYDOOM_MODS
+            const WadLump& fireSkyLump = W_GetLump(skyTex.lumpNum);
+            const std::byte* const pSkyTexData = (const std::byte*) fireSkyLump.pCachedData;
+        #else
+            const std::byte* const pSkyTexData = (const std::byte*) gpLumpCache[skytex.lumpNum];
+        #endif
+
         LIBGPU_LoadImage(vramRect, (const uint16_t*)(pSkyTexData + sizeof(texlump_header_t)));
 
         // Mark this as uploaded now
-        skytex.uploadFrameNum = gNumFramesDrawn;
+        skyTex.uploadFrameNum = gNumFramesDrawn;
     }
 
     // Draw the fire sky pieces.
@@ -274,14 +290,14 @@ void DRAW_Title() noexcept {
         constexpr uint8_t SKY_W = 64;       // PsyDoom: fix a 4 pixel gap at the right side of the screen with the fire ('64' rather than than the original '63')
         constexpr uint8_t SKY_H = 128;
 
-        const auto texU = skytex.texPageCoordX;
-        const auto texV = skytex.texPageCoordY;
+        const auto texU = skyTex.texPageCoordX;
+        const auto texV = skyTex.texPageCoordY;
 
         int16_t x = 0;
         const int16_t y = (Game::isFinalDoom()) ? 112 : 116;
 
         for (int32_t i = 0; i < 4; ++i) {
-            I_DrawSprite(skytex.texPageId, gPaletteClutId_CurMapSky, x, y, texU, texV, SKY_W, SKY_H);
+            I_DrawSprite(skyTex.texPageId, gPaletteClutId_CurMapSky, x, y, texU, texV, SKY_W, SKY_H);
             x += SKY_W;
         }
     }

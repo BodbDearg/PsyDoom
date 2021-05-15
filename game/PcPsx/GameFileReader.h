@@ -1,10 +1,8 @@
 #pragma once
 
-#include <cstdint>
-#include <cstdio>
+#include "Wess/psxcd.h"
 
-enum class CdFileId : int32_t;
-struct PsxCd_File;
+#include <cstdio>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Provides a consistent interface to read from a game file from several possible sources:
@@ -37,6 +35,6 @@ private:
     GameFileReader& operator = (const GameFileReader& other) = delete;
     GameFileReader& operator = (GameFileReader&& other) = delete;
 
-    PsxCd_File*     mpCdFile;   // If reading from a file on-disk, this is the index of the file slot open in the 'psxcd' library
+    PsxCd_File      mCdFile;    // If reading from a file on-disk, this is the index of the file slot open in the 'psxcd' library
     FILE*           mpFile;     // If reading from a real file, this is the file being read
 };
