@@ -64,6 +64,12 @@ static void T_PlatRaise(plat_t& plat) noexcept {
                 switch (plat.type) {
                     case downWaitUpStay:
                     case raiseAndChange:
+                // PsyDoom: fix a bug where certain 'raise platform' actions would not fully finish when the target floor height was reached.
+                // This bug would prevent further specials from being executed on sectors, because their floor movers were still regarded as 'active'.
+                // The bug is present in the Jaguar and PSX versions of Doom, but does not appear to be in the PC/Linux sources.
+                #if PSYDOOM_MODS
+                    case raiseToNearestAndChange:
+                #endif
                     case blazeDWUS:
                         P_RemoveActivePlat(plat);
                         break;
