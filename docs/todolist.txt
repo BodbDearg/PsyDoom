@@ -12,7 +12,6 @@
 - Add support for the arch-vile.
 - Add support for wolf-ss.
 - Add support for icon of sin head and skulls.
-- Sprite precacher: support more than just the built-in sprites.
 - Add very basic Lua scripting with similar capabilities to DOOM64 MACROs
     - Mostly to trigger line specials in more flexible ways
 - Investigate a MAPINFO format for naming maps, choosing music etc.

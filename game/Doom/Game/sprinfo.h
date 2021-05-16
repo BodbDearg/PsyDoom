@@ -23,7 +23,8 @@ struct spritedef_t {
 // The list of sprite sequences.
 // PsyDoom: the size of this list is now determined at runtime, and can expand depending on WADs loaded.
 #if PSYDOOM_MODS
-    extern const spritedef_t* gSprites;
+    extern const spritedef_t*   gSprites;
+    extern int32_t              gNumSprites;
 #else
     extern const spritedef_t gSprites[BASE_NUM_SPRITES];
 #endif

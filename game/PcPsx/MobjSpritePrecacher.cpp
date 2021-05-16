@@ -17,17 +17,20 @@
 #include "Doom/Renderer/r_data.h"
 
 #include <cstring>
+#include <vector>
 
 BEGIN_NAMESPACE(MobjSpritePrecacher)
 
-static bool gbCacheSprite[BASE_NUM_SPRITES];    // Whether to precache each sprite in the game
-static bool gbCachedMobjType[NUMMOBJTYPES];     // Whether sprites were precached for each 'mobjtype_t'
+static std::vector<bool>    gbCacheSprite;                      // Whether to precache each sprite in the game
+static bool                 gbCachedMobjType[NUMMOBJTYPES];     // Whether sprites were precached for each 'mobjtype_t'
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Clears the set of sprites to be precached and the set of map objects marked as precached
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void clearPrecacheInfo() noexcept {
-    std::memset(gbCacheSprite, 0, sizeof(gbCacheSprite));
+    gbCacheSprite.clear();
+    gbCacheSprite.resize(gNumSprites);
+
     std::memset(gbCachedMobjType, 0, sizeof(gbCachedMobjType));
 }
 
@@ -167,8 +170,9 @@ static void precacheSprites() noexcept {
     // How many sprite lumps are there?
     const int32_t firstSpriteLumpNum = gFirstSpriteLumpNum;
     const int32_t lastSpriteLumpNum = gLastSpriteLumpNum;
+    const int32_t numSprites = gNumSprites;
 
-    for (int32_t sprIdx = 0; sprIdx < BASE_NUM_SPRITES; ++sprIdx) {
+    for (int32_t sprIdx = 0; sprIdx < numSprites; ++sprIdx) {
         // Ignore if this sprite was not flagged to be precached
         if (!gbCacheSprite[sprIdx])
             continue;

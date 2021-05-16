@@ -16,8 +16,8 @@
 #include <unordered_map>
 #include <vector>
 
-// Externally visible list of sprites in the game: just points to 'gSpriteDefs'
-const spritedef_t* gSprites;
+const spritedef_t*  gSprites;       // Externally visible list of sprites in the game: just points to 'gSpriteDefs'
+int32_t             gNumSprites;    // Externally visible list of sprites in the game: gives the number of sprites in 'gSpriteDefs'
 
 static std::vector<spriteframe_t>                   gSpriteFrames;
 static std::vector<spritedef_t>                     gSpriteDefs;
@@ -156,6 +156,7 @@ static void buildSpriteNameToDefLUT() noexcept {
 // Assumes that the list of sprite frames has already been allocated.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void buildSpriteDefList(const std::unordered_map<uint32_t, uint32_t>& spriteFrameCounts) noexcept {
+    // Build the list of sprite definitions
     gSpriteDefs.clear();
     gSpriteDefs.reserve(spriteFrameCounts.size());
 
@@ -173,6 +174,10 @@ static void buildSpriteDefList(const std::unordered_map<uint32_t, uint32_t>& spr
         pSpriteFrames += frameCount;
         ASSERT(pSpriteFrames <= gSpriteFrames.data() + gSpriteFrames.size());
     }
+
+    // Populate the external view of this list
+    gSprites = gSpriteDefs.data();
+    gNumSprites = (int32_t) gSpriteDefs.size();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -255,9 +260,6 @@ static void populateSpriteFrameList() noexcept {
 
         frame.rotate = (!bAllLumpsTheSame);
     }
-
-    // Finally, set a pointer to the sprite list
-    gSprites = gSpriteDefs.data();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
