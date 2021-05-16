@@ -159,7 +159,7 @@ enum spritenum_t : int32_t {
     SPR_POB1,
     SPR_POB2,
     SPR_BRS1,
-    NUMSPRITES
+    BASE_NUM_SPRITES    // PsyDoom: renamed this from 'NUMSPRITES' to 'BASE_NUM_SPRITES' because it's now just a count of the number of built-in sprites
 };
 
 // Indexes into the array of states
@@ -1122,7 +1122,43 @@ struct mobjinfo_t {
     uint32_t        flags;
 };
 
-// The arrays of sprite names, state definitions and map object definitions
-extern const char*  gSprNames[NUMSPRITES];
+// PsyDoom: sprite names are now represented as a single 32-bit integer for easier and faster comparison
+#if PSYDOOM_MODS
+    union sprname_t {
+        uint32_t    word;
+        char        chars[4];
+
+        // Default construct and construct from a word
+        inline constexpr sprname_t() noexcept : word(0) {}
+        inline constexpr sprname_t(const uint32_t word) noexcept : word(word) {}
+
+        // Convert a string (first 4 characters only) into a 'sprname_t'.
+        // The first characters are encoded into the lower bytes of the word.
+        inline constexpr sprname_t(const char* const name) noexcept : word(0) {
+            for (uint32_t i = 0; i < 4; ++i) {
+                const uint8_t byte = (uint8_t) name[i];
+
+                if (!byte)
+                    break;
+
+                word |= byte << i * 8u;
+            }
+        }
+
+        // Construct from 4 characters
+        inline constexpr sprname_t(const char c1, const char c2, const char c3, const char c4) noexcept : word(0) {
+            word |= (uint32_t)((uint8_t) c1) << 0;
+            word |= (uint32_t)((uint8_t) c2) << 8;
+            word |= (uint32_t)((uint8_t) c3) << 16;
+            word |= (uint32_t)((uint8_t) c4) << 24;
+        }
+    };
+#else
+    typedef const char* sprname_t;
+#endif
+
+// The arrays of sprite names, state definitions and map object definitions.
+// PsyDoom: renamed and added the 'base' prefix here to the arrays to signify that these are just the built-in lists.
+extern sprname_t    gBaseSprNames[BASE_NUM_SPRITES];
 extern state_t      gStates[NUMSTATES];
 extern mobjinfo_t   gMObjInfo[NUMMOBJTYPES];

@@ -13,6 +13,7 @@
 #include "Finally.h"
 #include "Game/g_game.h"
 #include "Game/p_tick.h"
+#include "Game/sprinfo.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
 #include "PcPsx/PlayerPrefs.h"
@@ -100,6 +101,11 @@ void D_DoomMain() noexcept {
     I_Init();
     W_Init();
     R_Init();
+
+    #if PSYDOOM_MODS
+        P_InitSprites();    // PsyDoom: need to build a list of sprites in the main WAD(s)
+    #endif
+
     ST_Init();
 
     // PsyDoom: new cleanup logic before we exit

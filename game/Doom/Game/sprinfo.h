@@ -11,9 +11,23 @@ struct spriteframe_t {
 
 // Holds information for a sequence of sprite frames
 struct spritedef_t {
-    int32_t                 numframes;          // How many frames in the sequence
-    const spriteframe_t*    spriteframes;       // The list of frames in the sequence
+    // PsyDoom: define a name so we can search for sprite entries by name
+    #if PSYDOOM_MODS
+        sprname_t name;
+    #endif
+
+    int32_t         numframes;      // How many frames in the sequence
+    spriteframe_t*  spriteframes;   // The list of frames in the sequence
 };
 
-// The list of sprite sequences
-extern const spritedef_t gSprites[NUMSPRITES];
+// The list of sprite sequences.
+// PsyDoom: the size of this list is now determined at runtime, and can expand depending on WADs loaded.
+#if PSYDOOM_MODS
+    extern const spritedef_t* gSprites;
+#else
+    extern const spritedef_t gSprites[BASE_NUM_SPRITES];
+#endif
+
+void P_InitSprites() noexcept;
+int32_t P_SpriteCheckNumForName(const sprname_t name) noexcept;
+int32_t P_SpriteGetNumForName(const sprname_t name) noexcept;

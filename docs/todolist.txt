@@ -3,8 +3,18 @@
 - Fix bug with sound sometimes not working on launch (due to NaNs in audio compression code).
 - Fix bug with switch on Deimos Lab not working at certain positions and angles (will need overhaul of switch collision code)
 - Allow .WAD map overrides to be used with Final Doom.
+- Use a combined MD5 of all map lumps to decide whether to apply map patches or not.
 - Provide PsyDoom Doom Builder config
 - Experiment with Doom 64 two colored lighting
+- Simple DECORATE format for new decorations.
+    - One definition per line
+    - <DOOMEDNUM> <SPRITENAME> <FRAMES> [SOLID]
+- Add support for the arch-vile.
+- Add support for wolf-ss.
+- Add support for icon of sin head and skulls.
+- Sprite precacher: support more than just the built-in sprites.
+- Add very basic Lua scripting with similar capabilities to DOOM64 MACROs
+    - Mostly to trigger line specials in more flexible ways
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Investigate being able to add override/new lumps via map wads.
 - Investigate being able to add override/new lumps via custom user wads.

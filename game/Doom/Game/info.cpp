@@ -4,7 +4,7 @@
 #include "p_enemy.h"
 #include "p_pspr.h"
 
-const char* gSprNames[NUMSPRITES] = {
+sprname_t gBaseSprNames[BASE_NUM_SPRITES] = {
     "TROO", "SHTG", "PUNG", "PISG", "PISF", "SHTF", "SHT2", "CHGG",     // 000 - 007
     "CHGF", "MISG", "MISF", "SAWG", "PLSG", "PLSF", "BFGG", "BFGF",     // 008 - 015
     "BLUD", "PUFF", "BAL1", "BAL2", "BAL7", "PLSS", "PLSE", "MISL",     // 016 - 023

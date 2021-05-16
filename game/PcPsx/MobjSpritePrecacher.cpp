@@ -20,7 +20,7 @@
 
 BEGIN_NAMESPACE(MobjSpritePrecacher)
 
-static bool gbCacheSprite[NUMSPRITES];          // Whether to precache each sprite in the game
+static bool gbCacheSprite[BASE_NUM_SPRITES];    // Whether to precache each sprite in the game
 static bool gbCachedMobjType[NUMMOBJTYPES];     // Whether sprites were precached for each 'mobjtype_t'
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -168,7 +168,7 @@ static void precacheSprites() noexcept {
     const int32_t firstSpriteLumpNum = gFirstSpriteLumpNum;
     const int32_t lastSpriteLumpNum = gLastSpriteLumpNum;
 
-    for (int32_t sprIdx = 0; sprIdx < NUMSPRITES; ++sprIdx) {
+    for (int32_t sprIdx = 0; sprIdx < BASE_NUM_SPRITES; ++sprIdx) {
         // Ignore if this sprite was not flagged to be precached
         if (!gbCacheSprite[sprIdx])
             continue;
