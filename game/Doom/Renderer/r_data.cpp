@@ -54,9 +54,11 @@ void R_InitData() noexcept {
     R_InitSprites();
 }
 
+#if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the global wall textures list and load texture size metadata.
 // Also initialize the texture translation table for animated wall textures.
+// PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitTextures() noexcept {
     // Determine basic texture list stats.
@@ -65,79 +67,31 @@ void R_InitTextures() noexcept {
     gLastTexLumpNum = W_GetNumForName("T_END") - 1;
     gNumTexLumps = gLastTexLumpNum - gFirstTexLumpNum + 1;
 
-    // Alloc the list of textures and the texture translation table
+    // Alloc and zero init the list of textures and the texture translation table
     {
-        std::byte* const pAlloc = (std::byte*) Z_Malloc(
-            *gpMainMemZone,
-            gNumTexLumps * (sizeof(texture_t) + sizeof(int32_t)),
-            PU_STATIC,
-            nullptr
-        );
+        const int32_t allocSize = gNumTexLumps * (int32_t)(sizeof(texture_t) + sizeof(int32_t));
+        std::byte* const pAlloc = (std::byte*) Z_Malloc(*gpMainMemZone, allocSize, PU_STATIC, nullptr);
+        std::memset(pAlloc, 0, allocSize);
 
         gpTextures = (texture_t*) pAlloc;
         gpTextureTranslation = (int32_t*)(pAlloc + gNumTexLumps * sizeof(texture_t));
     }
 
-    // Load the texture metadata lump and process each associated texture entry with the loaded size info.
-    // PsyDoom: added updates here to work with the new WAD management code.
-    {
-        #if PSYDOOM_MODS
-            const WadLump& texture1Lump = W_CacheLumpName("TEXTURE1", PU_CACHE, true);
-            maptexture_t* const pMapTextures = (maptexture_t*) texture1Lump.pCachedData;
-        #else
-            maptexture_t* const pMapTextures = (maptexture_t*) W_CacheLumpName("TEXTURE1", PU_CACHE, true);
-        #endif
-
-        maptexture_t* pMapTex = pMapTextures;
-        texture_t* pTex = gpTextures;
-
-        for (int32_t lumpNum = gFirstTexLumpNum; lumpNum <= gLastTexLumpNum; ++lumpNum, ++pMapTex, ++pTex) {
-            pTex->lumpNum = (uint16_t) lumpNum;
-
-            #if PSYDOOM_MODS
-                pTex->bIsCached = false;
-
-                #if PSYDOOM_LIMIT_REMOVING
-                    pTex->bIsLocked = false;
-                #endif
-            #endif
-
-            pTex->texPageId = 0;
-            pTex->width = Endian::littleToHost(pMapTex->width);
-            pTex->height = Endian::littleToHost(pMapTex->height);
-
-            if (pTex->width + 15 >= 0) {
-                pTex->width16 = (uint8_t)((pTex->width + 15) / 16);
-            } else {
-                pTex->width16 = (uint8_t)((pTex->width + 30) / 16);     // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
-            }
-
-            if (pTex->height + 15 >= 0) {
-                pTex->height16 = (uint8_t)((pTex->height + 15) / 16);
-            } else {
-                pTex->height16 = (uint8_t)((pTex->height + 30) / 16);   // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
-            }
-        }
-
-        // Cleanup this after we are done
-        Z_Free2(*gpMainMemZone, pMapTextures);
+    // Set the lump numbers for all the textures
+    for (int32_t texIdx = 0; texIdx < gNumTexLumps; ++texIdx) {
+        gpTextures[texIdx].lumpNum = (uint16_t)(gFirstTexLumpNum + texIdx);
     }
 
     // Init the texture translation table: initially all textures translate to themselves
-    int32_t* const pTexTranslation = gpTextureTranslation;
-
     for (int32_t texIdx = 0; texIdx < gNumTexLumps; ++texIdx) {
-        pTexTranslation[texIdx] = texIdx;
+        gpTextureTranslation[texIdx] = texIdx;
     }
-
-    // Clear out any blocks marked as 'cache' which can be evicted.
-    // This call is here probably to try and avoid spikes in memory load.
-    Z_FreeTags(*gpMainMemZone, PU_CACHE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the global flat textures list.
 // Also initialize the flat texture translation table used for animation.
+// PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitFlats() noexcept {
     // Determine basic flat texture list stats.
@@ -146,107 +100,53 @@ void R_InitFlats() noexcept {
     gLastFlatLumpNum = W_GetNumForName("F_END") - 1;
     gNumFlatLumps = gLastFlatLumpNum - gFirstFlatLumpNum + 1;
 
-    // Alloc the list of flat textures and the flat texture translation table
+    // Alloc and zero init the list of flat textures and the flat texture translation table
     {
-        std::byte* const pAlloc = (std::byte*) Z_Malloc(
-            *gpMainMemZone,
-            gNumFlatLumps * (sizeof(texture_t) + sizeof(int32_t)),
-            PU_STATIC,
-            nullptr
-        );
+        const int32_t allocSize = gNumFlatLumps * (int32_t)(sizeof(texture_t) + sizeof(int32_t));
+        std::byte* const pAlloc = (std::byte*) Z_Malloc(*gpMainMemZone, allocSize, PU_STATIC, nullptr);
+        std::memset(pAlloc, 0, allocSize);
 
         gpFlatTextures = (texture_t*) pAlloc;
         gpFlatTranslation = (int32_t*)(pAlloc + gNumFlatLumps * sizeof(texture_t));
     }
 
-    // The hardcoded assumed/size for flats.
-    // Note: PsyDoom now allows flats to be differently sized to this, it checks the actual texture size upon loading.
-    constexpr uint32_t FLAT_TEX_SIZE = 64;
-
-    // Setup the texture structs for each flat
-    {
-        texture_t* pTex = gpFlatTextures;
-
-        for (int32_t lumpNum = gFirstFlatLumpNum; lumpNum <= gLastFlatLumpNum; ++lumpNum, ++pTex) {
-            pTex->lumpNum = (uint16_t) lumpNum;
-            pTex->texPageId = 0;
-
-            #if PSYDOOM_MODS
-                pTex->bIsCached = false;
-
-                #if PSYDOOM_LIMIT_REMOVING
-                    pTex->bIsLocked = false;
-                #endif
-            #endif
-
-            pTex->width = FLAT_TEX_SIZE;
-            pTex->height = FLAT_TEX_SIZE;
-            pTex->width16 = FLAT_TEX_SIZE / 16;
-            pTex->height16 = FLAT_TEX_SIZE / 16;
-        }
+    // Set the lump numbers for all the flats
+    for (int32_t flatIdx = 0; flatIdx < gNumFlatLumps; ++flatIdx) {
+        gpFlatTextures[flatIdx].lumpNum = (uint16_t)(gFirstFlatLumpNum + flatIdx);
     }
 
     // Init the flat translation table: initially all flats translate to themselves
-    int32_t* const pFlatTranslation = gpFlatTranslation;
-
     for (int32_t texIdx = 0; texIdx < gNumFlatLumps; ++texIdx) {
-        pFlatTranslation[texIdx] = texIdx;
+        gpFlatTranslation[texIdx] = texIdx;
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initialize the global sprite textures list and load sprite size and offset metadata
+// Initialize the global sprite textures list and load sprite size and offset metadata.
+// PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitSprites() noexcept {
     // Determine basic sprite texture list stats
+    // TODO: update this to support sprite lists in multiple WAD files.
     gFirstSpriteLumpNum = W_GetNumForName("S_START") + 1;
     gLastSpriteLumpNum = W_GetNumForName("S_END") - 1;
     gNumSpriteLumps = gLastSpriteLumpNum - gFirstSpriteLumpNum + 1;
 
-    // Alloc the list of sprite textures
-    gpSpriteTextures = (texture_t*) Z_Malloc(*gpMainMemZone, gNumSpriteLumps * sizeof(texture_t), PU_STATIC, nullptr);
+    // Alloc and zero init the list of sprite textures
+    {
+        const int32_t allocSize = gNumSpriteLumps * sizeof(texture_t);
+        std::byte* const pAlloc = (std::byte*) Z_Malloc(*gpMainMemZone, allocSize, PU_STATIC, nullptr);
+        std::memset(pAlloc, 0, allocSize);
 
-    // Load the sprite metadata lump and process each associated sprite texture entry.
-    // The metadata gives us the size and offsetting for each sprite.
-    // PsyDoom: added updates here to work with the new WAD management code.
-    #if PSYDOOM_MODS
-        const WadLump& sprite1Lump = W_CacheLumpName("SPRITE1", PU_CACHE, true);
-        maptexture_t* const pMapSpriteTextures = (maptexture_t*) sprite1Lump.pCachedData;
-    #else
-        maptexture_t* const pMapSpriteTextures = (maptexture_t*) W_CacheLumpName("SPRITE1", PU_CACHE, true);
-    #endif
-
-    maptexture_t* pMapTex = pMapSpriteTextures;
-    texture_t* pTex = gpSpriteTextures;
-
-    for (int32_t lumpNum = gFirstSpriteLumpNum; lumpNum <= gLastSpriteLumpNum; ++lumpNum, ++pTex, ++pMapTex) {
-        pTex->lumpNum = (uint16_t) lumpNum;
-        pTex->texPageId = 0;
-        pTex->offsetX = Endian::littleToHost(pMapTex->offsetX);
-        pTex->offsetY = Endian::littleToHost(pMapTex->offsetY);
-        pTex->width = Endian::littleToHost(pMapTex->width);
-        pTex->height = Endian::littleToHost(pMapTex->height);
-
-        if (pTex->width + 15 >= 0) {
-            pTex->width16 = (uint8_t)((pTex->width + 15) / 16);
-        } else {
-            pTex->width16 = (uint8_t)((pTex->width + 30) / 16);     // This case is never hit. Not sure why sprite sizes would be negative? What does that mean?
-        }
-
-        if (pTex->height + 15 >= 0) {
-            pTex->height16 = (uint8_t)((pTex->height + 15) / 16);
-        } else {
-            pTex->height16 = (uint8_t)((pTex->height + 30) / 16);   // This case is never hit. Not sure why sprite sizes would be negative? What does that mean?
-        }
+        gpSpriteTextures = (texture_t*) pAlloc;
     }
 
-    // Cleanup this after we are done and clear out any blocks marked as 'cache' - those can be evicted.
-    // This call is here probably to try and avoid spikes in memory load.
-    Z_Free2(*gpMainMemZone, pMapSpriteTextures);
-    Z_FreeTags(*gpMainMemZone, PU_CACHE);
+    // Set the lump numbers for all the sprite textures
+    for (int32_t spriteIdx = 0; spriteIdx < gNumSpriteLumps; ++spriteIdx) {
+        gpSpriteTextures[spriteIdx].lumpNum = (uint16_t)(gFirstSpriteLumpNum + spriteIdx);
+    }
 }
 
-#if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Given a lump name (case insensitive) for a wall texture, returns the texture index among wall texture lumps.
 // Returns '-1' if the name was not found.
@@ -394,3 +294,28 @@ SRECT getTextureVramRect(const texture_t& tex) noexcept {
 
     return rect;
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: sets the size and offset fields of the texture from the header found at the start of it's data in the WAD.
+// This should be called whenever a new texture is loaded from a WAD and should ONLY be called with the uncompressed texture data.
+// 
+// For PsyDoom we no longer use the texture/sprite size information found in 'SPRITE1' and 'TEXTURE1', in order to make modding easier.
+// Instead, the engine will simply source this information from the texture itself whenever a new texture is loaded.
+// This means that the 'SPRITE1' and 'TEXTURE1' lumps can be ignored for PsyDoom when adding new textures and sprites.
+//-----------------------------------------------------------------------------------------------------------------------------------------
+void R_UpdateTexMetricsFromData(texture_t& tex, const void* const pTexData, const int32_t texDataSize) noexcept {
+    if (texDataSize <= sizeof(texlump_header_t)) {
+        I_Error("R_UpdateTexMetricsFromData: invalid tex data size!");
+    }
+
+    const texlump_header_t& texInfo = *(const texlump_header_t*) pTexData;
+
+    tex.offsetX = Endian::littleToHost(texInfo.offsetX);
+    tex.offsetY = Endian::littleToHost(texInfo.offsetY);
+    tex.width = Endian::littleToHost(texInfo.width);
+    tex.height = Endian::littleToHost(texInfo.height);
+    tex.width16 = (uint8_t)((tex.width + 15) / 16);
+    tex.height16 = (uint8_t)((tex.height + 15) / 16);
+}
+#endif

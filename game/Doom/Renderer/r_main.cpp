@@ -6,8 +6,8 @@
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
-#include "Doom/Game/p_user.h"
 #include "Doom/Game/p_spec.h"
+#include "Doom/Game/p_user.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
 #include "PsyQ/LIBGPU.h"
@@ -388,7 +388,6 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
 }
 
 #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: update the 'previous' values used in interpolation to their current (actual) values.
 // Used before simulating an actual game tick, or when we want to snap immediately to the actual values - like when teleporting.
@@ -520,5 +519,4 @@ void R_UpdateFloorDrawHeight(sector_t& sector) noexcept {
         }
     }
 }
-
 #endif  // PSYDOOM_MODS

@@ -90,7 +90,12 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
             #endif
         }
 
-        // Load the decompressed texture to the required part of VRAM and mark as loaded
+        // Load the decompressed texture to the required part of VRAM and mark as loaded.
+        // PsyDoom: also ensure texture metrics are up-to-date.
+        #if PSYDOOM_MODS
+            R_UpdateTexMetricsFromData(tex, pLumpData, flatLump.uncompressedSize);
+        #endif
+
         const SRECT vramRect = getTextureVramRect(tex);
         LIBGPU_LoadImage(vramRect, (const uint16_t*)(pLumpData + sizeof(texlump_header_t)));
         tex.uploadFrameNum = gNumFramesDrawn;

@@ -71,12 +71,14 @@ void RV_CacheSkyTex() noexcept {
     if (skyTex.uploadFrameNum != TEX_INVALID_UPLOAD_FRAME_NUM)
         return;
 
-    // Need to upload the texture to VRAM, do that now
+    // Need to upload the texture to VRAM, do that now and also ensure texture metrics are up-to-date
     const WadLump& skyTexLump = W_GetLump(skyTex.lumpNum);
     const std::byte* const pLumpData = (const std::byte*) skyTexLump.pCachedData;
     const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
-    SRECT vramRect = getTextureVramRect(skyTex);
 
+    R_UpdateTexMetricsFromData(skyTex, pLumpData, skyTexLump.uncompressedSize);
+
+    SRECT vramRect = getTextureVramRect(skyTex);
     LIBGPU_LoadImage(vramRect, pTexData);
     skyTex.uploadFrameNum = gNumFramesDrawn;
 }

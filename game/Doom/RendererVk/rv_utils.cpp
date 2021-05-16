@@ -186,7 +186,10 @@ void RV_UploadDirtyTex(texture_t& tex) noexcept {
         #endif
     }
 
-    // Load the decompressed texture to the required part of VRAM and mark as loaded
+    // Ensure the texture metrics are up-to-date
+    R_UpdateTexMetricsFromData(tex, pLumpData, texLump.uncompressedSize);
+
+    // Load the decompressed texture to the required part of VRAM and mark as loaded.
     const SRECT vramRect = getTextureVramRect(tex);
     LIBGPU_LoadImage(vramRect, (uint16_t*)(pLumpData + sizeof(texlump_header_t)));
     tex.uploadFrameNum = gNumFramesDrawn;

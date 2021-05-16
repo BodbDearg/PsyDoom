@@ -128,3 +128,7 @@ void R_InitPalette() noexcept;
 
 // PsyDoom: helper to reduce some redundancy
 SRECT getTextureVramRect(const texture_t& tex) noexcept;
+
+#if PSYDOOM_MODS
+    void R_UpdateTexMetricsFromData(texture_t& tex, const void* const pTexData, const int32_t texDataSize) noexcept;
+#endif

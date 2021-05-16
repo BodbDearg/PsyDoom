@@ -380,14 +380,14 @@ static texdata_t TC_CacheTexData(const texture_t& tex) {
 // Uploads the texture to VRAM and saves the details of where it is located.
 // The texture is uploaded to the specified page at the current fill location.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void TC_UploadTexToVram(texture_t& tex, const texlump_header_t& texInfo, const texdata_t& texData, const tcachepage_t& texPage) {
+static void TC_UploadTexToVram(texture_t& tex, const texdata_t& texData, const tcachepage_t& texPage) {
     // How big is the texture data expected to be from the dimensions?
     // If the data stream is too small then do not upload and issue a warning.
     // 
     // Note: we can only upload 16-bit pixels at a time, so the width dimension must be halved.
     // This means that odd dimensioned sprites will be truncated by 1 pixel. I checked the PSX graphics however and most
     // sprites with odd dimensions seem to have at least 1px of empty space padding around them, so not an issue in practice?
-    const uint32_t expectedTexSize = sizeof(texlump_header_t) + (texInfo.width / 2) * texInfo.height * sizeof(uint16_t);
+    const uint32_t expectedTexSize = sizeof(texlump_header_t) + (tex.width / 2) * tex.height * sizeof(uint16_t);
 
     const uint16_t tpageU = texPage.vramX;
     const uint16_t tpageV = texPage.vramY;
@@ -608,6 +608,10 @@ void I_CacheTex(texture_t& tex) noexcept {
     if (tex.bIsCached)
         return;
 
+    // Load the texture data and update the dimensions of the texture from the data header
+    const texdata_t texData = TC_CacheTexData(tex);
+    R_UpdateTexMetricsFromData(tex, texData.pBytes, (int32_t) texData.size);
+
     // Move to a valid fill location for the texture and abort if failed.
     // This will also evict textures from previous frames along the way.
     if (!TC_MoveToFillLocation(tex))
@@ -616,16 +620,11 @@ void I_CacheTex(texture_t& tex) noexcept {
     // Found a place to upload the texture!
     // Mark the texture as cached and fill the cells that this texture will occupy with references to the texture.
     tex.bIsCached = true;
-
     tcachepage_t& texPage = gTCachePages[gTCacheFillPage];
     TC_FillCacheCells(texPage, tex);
 
-    // Load the texture data and get the dimensions of the texture from the data
-    const texdata_t texData = TC_CacheTexData(tex);
-    const texlump_header_t texInfo = *(const texlump_header_t*) texData.pBytes;
-
     // Upload the texture to vram and advance the fill position in the texture cache
-    TC_UploadTexToVram(tex, texInfo, texData, texPage);
+    TC_UploadTexToVram(tex, texData, texPage);
     gTCacheFillCellX += tex.width16;
 }
 

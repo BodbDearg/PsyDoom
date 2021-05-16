@@ -34,14 +34,14 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     ASSERT_LOG(dx > 0, "Edge must be front facing and not zero sized!");
 
     // Setup the texture window and texture page for drawing the sky
-    texture_t& skytex = *gpSkyTexture;
+    texture_t& skyTex = *gpSkyTexture;
 
     {
         // Note: only require the sky texture width to be a power of two.
         // Set the texture window height to be the maximum allowed (no wrapping restrictions) by using a window height of '0'.
-        SRECT texWindow = { (int16_t) skytex.texPageCoordX, (int16_t) skytex.texPageCoordY, skytex.width, 0 };
+        SRECT texWindow = { (int16_t) skyTex.texPageCoordX, (int16_t) skyTex.texPageCoordY, skyTex.width, 0 };
         DR_MODE drawModePrim = {};
-        LIBGPU_SetDrawMode(drawModePrim, false, false, skytex.texPageId, &texWindow);
+        LIBGPU_SetDrawMode(drawModePrim, false, false, skyTex.texPageId, &texWindow);
         I_AddPrim(drawModePrim);
     }
 
@@ -59,7 +59,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     // Compute the 'U' texture coordinate offset based on the view angle.
     // Also get a mask to wrap to the texture boundaries (assumes the dimensions are powers of 2):
     const uint16_t uOffset = static_cast<uint16_t>(-(int16_t)(gViewAngle >> ANGLETOSKYSHIFT));
-    const uint16_t uWrapMask = skytex.width - 1;
+    const uint16_t uWrapMask = skyTex.width - 1;
 
     // Compute the y coordinate step per sky wall column in screenspace, after transforming to inverted viewspace
     const int32_t iviewZ = -d_fixed_to_int(z - gViewZ);
@@ -94,7 +94,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
                 // Set the location and height of the column to draw.
                 // Clip the height so it doesn't exceed the height of the sky texture also.
                 drawPrim.x0 = (int16_t) xCur;
-                drawPrim.h = (int16_t) std::min(yCur + 1, (int32_t) skytex.height);
+                drawPrim.h = (int16_t) std::min(yCur + 1, (int32_t) skyTex.height);
 
                 // Set the 'U' texture coordinate for the column and submit
                 drawPrim.u0 = (LibGpuUV)((xCur + uOffset) & uWrapMask);
@@ -108,7 +108,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     else {
         // Drawing a lower sky wall.
         // This is the maximum y value (exclusive): can't exceed the screen or sky texture bounds
-        const int16_t endY = std::min<int16_t>(skytex.height, SCREEN_H);
+        const int16_t endY = std::min<int16_t>(skyTex.height, SCREEN_H);
 
         while (xCur < xEnd) {
             // Get the start 'y' value for this sky wall column
@@ -142,29 +142,30 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
 void R_DrawSky() noexcept {
     // Do we need to upload the fire sky texture? If so then upload it...
     // This code only executes for the fire sky - the regular sky is already in VRAM at this point.
-    texture_t& skytex = *gpSkyTexture;
+    texture_t& skyTex = *gpSkyTexture;
 
-    if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        // PsyDoom: updates to work with the new WAD management code
+    if (skyTex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
+        // PsyDoom: updates to work with the new WAD management code and to ensure texture metrics are up-to-date
         #if PSYDOOM_MODS
-            const WadLump& wadLump = W_GetLump(skytex.lumpNum);
+            const WadLump& wadLump = W_GetLump(skyTex.lumpNum);
             const std::byte* const pLumpData = (const std::byte*) wadLump.pCachedData;
+            R_UpdateTexMetricsFromData(skyTex, pLumpData, wadLump.uncompressedSize);
         #else
-            const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skytex.lumpNum];
+            const std::byte* const pLumpData = (const std::byte*) gpLumpCache[skyTex.lumpNum];
         #endif
 
         const uint16_t* const pTexData = (const std::uint16_t*)(pLumpData + sizeof(texlump_header_t));
-        SRECT vramRect = getTextureVramRect(skytex);
+        SRECT vramRect = getTextureVramRect(skyTex);
 
         LIBGPU_LoadImage(vramRect, pTexData);
-        skytex.uploadFrameNum = gNumFramesDrawn;
+        skyTex.uploadFrameNum = gNumFramesDrawn;
     }
 
     // Set the draw mode firstly
     {
         // Note: only require the sky texture width to be a power of two.
         // Set the texture window height to be the maximum allowed (no wrapping restrictions) by using a window height of '0'.
-        SRECT texWindow = { (int16_t) skytex.texPageCoordX, (int16_t) skytex.texPageCoordY, skytex.width, 0 };
+        SRECT texWindow = { (int16_t) skyTex.texPageCoordX, (int16_t) skyTex.texPageCoordY, skyTex.width, 0 };
 
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
         #if PSYDOOM_MODS
@@ -173,7 +174,7 @@ void R_DrawSky() noexcept {
             DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
         #endif
 
-        LIBGPU_SetDrawMode(drawMode, false, false, skytex.texPageId, &texWindow);
+        LIBGPU_SetDrawMode(drawMode, false, false, skyTex.texPageId, &texWindow);
         I_AddPrim(drawMode);
     }
 
@@ -188,7 +189,7 @@ void R_DrawSky() noexcept {
     LIBGPU_SetSprt(spr);
     LIBGPU_SetShadeTex(spr, true);
     LIBGPU_setXY0(spr, 0, 0);
-    LIBGPU_setWH(spr, SCREEN_W, skytex.height);
+    LIBGPU_setWH(spr, SCREEN_W, skyTex.height);
 
     #if PSYDOOM_MODS
         // PsyDoom: I think the original UV calculations were not correct, because we've already set a texture window - coords should be relative to that.
@@ -199,7 +200,7 @@ void R_DrawSky() noexcept {
         // This is required for the 'sky leak fix' to work correctly in some instances with the fire sky...
         LIBGPU_SetDisableMasking(spr, true);
     #else
-        LIBGPU_setUV0(spr, (uint8_t)(skytex.texPageCoordX - (gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
+        LIBGPU_setUV0(spr, (uint8_t)(skyTex.texPageCoordX - (gViewAngle >> ANGLETOSKYSHIFT)), skyTex.texPageCoordY);
     #endif
 
     spr.clut = gPaletteClutId_CurMapSky;

@@ -268,12 +268,13 @@ void DRAW_Title() noexcept {
 
     if (skyTex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Figure out where the texture is in VRAM coords and upload it.
-        // PsyDoom: added updates here to work with the new WAD management code.
+        // PsyDoom: added updates here to work with the new WAD management code and to ensure texture metrics are up-to-date.
         const SRECT vramRect = getTextureVramRect(skyTex);
 
         #if PSYDOOM_MODS
             const WadLump& fireSkyLump = W_GetLump(skyTex.lumpNum);
             const std::byte* const pSkyTexData = (const std::byte*) fireSkyLump.pCachedData;
+            R_UpdateTexMetricsFromData(skyTex, pSkyTexData, fireSkyLump.uncompressedSize);
         #else
             const std::byte* const pSkyTexData = (const std::byte*) gpLumpCache[skytex.lumpNum];
         #endif

@@ -274,7 +274,12 @@ void R_DrawWallPiece(
             pTexData = gTmpBuffer;
         #endif
 
-        // Upload to the GPU and mark the texture as loaded this frame
+        // Upload to the GPU and mark the texture as loaded this frame.
+        // PsyDoom: also ensure texture metrics are up-to-date.
+        #if PSYDOOM_MODS
+            R_UpdateTexMetricsFromData(tex, pTexData, texLump.uncompressedSize);
+        #endif
+
         const SRECT texRect = getTextureVramRect(tex);
         LIBGPU_LoadImage(texRect, (const uint16_t*)(pTexData + sizeof(texlump_header_t)));
         tex.uploadFrameNum = gNumFramesDrawn;
