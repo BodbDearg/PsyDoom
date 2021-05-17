@@ -191,10 +191,16 @@ void P_InitPicAnims() noexcept {
 
             // For all frames in the animation, cache the lump in RAM and make it occupy the same VRAM spot as the base texture
             for (int32_t picNum = lastanim.basepic; picNum <= lastanim.picnum; ++picNum) {
-                // Ensure the lump is cached in RAM for runtime (will need to be backed in RAM in case it's evicted from VRAM)
-                W_CacheLumpNum(gFirstTexLumpNum + picNum, PU_ANIMATION, false);
-
+                // Ensure the lump is cached in RAM for runtime (will need to be backed in RAM in case it's evicted from VRAM).
+                // PsyDoom: tweak the code slightly because the texture list might no longer be a contiguous set of lumps.
                 texture_t& dstTex = gpTextures[picNum];
+
+                #if PSYDOOM_MODS
+                    W_CacheLumpNum(dstTex.lumpNum, PU_ANIMATION, false);
+                #else
+                    W_CacheLumpNum(gFirstTexLumpNum + picNum, PU_ANIMATION, false);
+                #endif
+
                 dstTex.texPageCoordX = basetex.texPageCoordX;
                 dstTex.texPageCoordY = basetex.texPageCoordY;
                 dstTex.texPageId = basetex.texPageId;
@@ -219,10 +225,16 @@ void P_InitPicAnims() noexcept {
 
             // For all frames in the animation, cache the lump in RAM and make it occupy the same VRAM spot as the base texture
             for (int32_t picNum = lastanim.basepic; picNum <= lastanim.picnum; ++picNum) {
-                // Ensure the lump is cached in RAM for runtime (will need to be backed in RAM in case it's evicted from VRAM)
-                W_CacheLumpNum(gFirstFlatLumpNum + picNum, PU_ANIMATION, false);
-
+                // Ensure the lump is cached in RAM for runtime (will need to be backed in RAM in case it's evicted from VRAM).
+                // PsyDoom: tweak the code slightly because the flat list might no longer be a contiguous set of lumps.
                 texture_t& dstTex = gpFlatTextures[picNum];
+
+                #if PSYDOOM_MODS
+                    W_CacheLumpNum(dstTex.lumpNum, PU_ANIMATION, false);
+                #else
+                    W_CacheLumpNum(gFirstFlatLumpNum + picNum, PU_ANIMATION, false);
+                #endif
+
                 dstTex.texPageCoordX = basetex.texPageCoordX;
                 dstTex.texPageCoordY = basetex.texPageCoordY;
                 dstTex.texPageId = basetex.texPageId;

@@ -33,16 +33,20 @@ light_t*    gpLightsLump;
 uint16_t    gPaletteClutIds[MAXPALETTES];       // CLUT ids for all of the game's palettes. These are all held in VRAM.
 uint16_t    g3dViewPaletteClutId;               // Currently active in-game palette. Changes as effects are applied in the game.
 
-// Lump number ranges
-int32_t     gFirstTexLumpNum;       // TODO: remove first and last lump number once texture lists from multiple WADs are supported
-int32_t     gLastTexLumpNum;        // TODO: remove first and last lump number once texture lists from multiple WADs are supported
+// Lump counts
 int32_t     gNumTexLumps;
-int32_t     gFirstFlatLumpNum;      // TODO: remove first and last lump number once texture lists from multiple WADs are supported
-int32_t     gLastFlatLumpNum;       // TODO: remove first and last lump number once texture lists from multiple WADs are supported
 int32_t     gNumFlatLumps;
 int32_t     gFirstSpriteLumpNum;    // TODO: remove first and last lump number once texture lists from multiple WADs are supported
 int32_t     gLastSpriteLumpNum;     // TODO: remove first and last lump number once texture lists from multiple WADs are supported
 int32_t     gNumSpriteLumps;
+
+// PsyDoom: texture, flat and sprite lists might no longer be a contiguous set of lumps
+#if !PSYDOOM_MODS
+    int32_t     gFirstTexLumpNum;
+    int32_t     gLastTexLumpNum;
+    int32_t     gFirstFlatLumpNum;
+    int32_t     gLastFlatLumpNum;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the palette and asset management for various draw assets
@@ -56,16 +60,64 @@ void R_InitData() noexcept {
 
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: iterates through lists of lumps delimited by the specified markers.
+// Iterates through the items in each list sequentially in forward order, but iterates through the set of item lists in backwards order.
+// This is to allow the original game IWAD to create it's texture entries first, since it will always be the last main IWAD in the WAD list.
+// This is important for Final Doom compatibility since Final Doom format sectors and sides refer to texture indexes rather than lump names.
+// Therefore we must not upset the texture indexes for Final Doom.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void forEachLumpList(
+    const WadLumpName listStartMarker,
+    const WadLumpName listEndMarker,
+    const T& callback,
+    const int32_t searchStartLumpIdx = 0
+) noexcept {
+    // Are there any more of these lists?
+    const int32_t listStartIdx = W_CheckNumForName(listStartMarker, searchStartLumpIdx);
+
+    if (listStartIdx < 0)
+        return;
+
+    // Require a closing end of list marker if a start marker is found
+    const int32_t listEndIdx = W_CheckNumForName(listEndMarker, listStartIdx + 1);
+
+    if (listEndIdx < 0) {
+        I_Error(
+            "R_Data: no '%c%c%c%c' found in WAD for '%c%c%c%c'!",
+            listEndMarker.chars[0], listEndMarker.chars[1], listEndMarker.chars[2], listEndMarker.chars[3],
+            listStartMarker.chars[0], listStartMarker.chars[1], listStartMarker.chars[2], listStartMarker.chars[3]
+        );
+    }
+
+    // Handle later lists first
+    forEachLumpList(listStartMarker, listEndMarker, callback, listEndIdx + 1);
+
+    // Process this list
+    for (int lumpIdx = listStartIdx + 1; lumpIdx < listEndIdx; ++lumpIdx) {
+        callback(lumpIdx);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the global wall textures list and load texture size metadata.
 // Also initialize the texture translation table for animated wall textures.
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitTextures() noexcept {
-    // Determine basic texture list stats.
-    // TODO: update this to support texture lists in multiple WAD files.
-    gFirstTexLumpNum = W_GetNumForName("T_START") + 1;
-    gLastTexLumpNum = W_GetNumForName("T_END") - 1;
-    gNumTexLumps = gLastTexLumpNum - gFirstTexLumpNum + 1;
+    // Count the number of textures overall in the game.
+    // Note: could write specialized code to do this more efficiently but not it's not worth the effort, just re-use the 'for each' helper.
+    constexpr WadLumpName ln_T_START = WadUtils::makeUppercaseLumpName("T_START");
+    constexpr WadLumpName ln_T_END = WadUtils::makeUppercaseLumpName("T_END");
+    gNumTexLumps = 0;
+
+    forEachLumpList(
+        ln_T_START,
+        ln_T_END,
+        []([[maybe_unused]] const int32_t lumpIdx) noexcept {
+            gNumTexLumps++;
+        }
+    );
 
     // Alloc and zero init the list of textures and the texture translation table
     {
@@ -77,9 +129,18 @@ void R_InitTextures() noexcept {
         gpTextureTranslation = (int32_t*)(pAlloc + gNumTexLumps * sizeof(texture_t));
     }
 
-    // Set the lump numbers for all the textures
-    for (int32_t texIdx = 0; texIdx < gNumTexLumps; ++texIdx) {
-        gpTextures[texIdx].lumpNum = (uint16_t)(gFirstTexLumpNum + texIdx);
+    // Set the lump numbers for all textures
+    {
+        int32_t texIdx = 0;
+
+        forEachLumpList(
+            ln_T_START,
+            ln_T_END,
+            [&](const int32_t lumpIdx) noexcept {
+                gpTextures[texIdx].lumpNum = (uint16_t) lumpIdx;
+                ++texIdx;
+            }
+        );
     }
 
     // Init the texture translation table: initially all textures translate to themselves
@@ -94,11 +155,19 @@ void R_InitTextures() noexcept {
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitFlats() noexcept {
-    // Determine basic flat texture list stats.
-    // TODO: update this to support texture lists in multiple WAD files.
-    gFirstFlatLumpNum = W_GetNumForName("F_START") + 1;
-    gLastFlatLumpNum = W_GetNumForName("F_END") - 1;
-    gNumFlatLumps = gLastFlatLumpNum - gFirstFlatLumpNum + 1;
+    // Count the number of flats overall in the game.
+    // Note: could write specialized code to do this more efficiently but not it's not worth the effort, just re-use the 'for each' helper.
+    constexpr WadLumpName ln_F_START = WadUtils::makeUppercaseLumpName("F_START");
+    constexpr WadLumpName ln_F_END = WadUtils::makeUppercaseLumpName("F_END");
+    gNumFlatLumps = 0;
+
+    forEachLumpList(
+        ln_F_START,
+        ln_F_END,
+        []([[maybe_unused]] const int32_t lumpIdx) noexcept {
+            gNumFlatLumps++;
+        }
+    );
 
     // Alloc and zero init the list of flat textures and the flat texture translation table
     {
@@ -110,14 +179,23 @@ void R_InitFlats() noexcept {
         gpFlatTranslation = (int32_t*)(pAlloc + gNumFlatLumps * sizeof(texture_t));
     }
 
-    // Set the lump numbers for all the flats
-    for (int32_t flatIdx = 0; flatIdx < gNumFlatLumps; ++flatIdx) {
-        gpFlatTextures[flatIdx].lumpNum = (uint16_t)(gFirstFlatLumpNum + flatIdx);
+    // Set the lump numbers for all flats
+    {
+        int32_t flatIdx = 0;
+
+        forEachLumpList(
+            ln_F_START,
+            ln_F_END,
+            [&](const int32_t lumpIdx) noexcept {
+                gpFlatTextures[flatIdx].lumpNum = (uint16_t) lumpIdx;
+                ++flatIdx;
+            }
+        );
     }
 
     // Init the flat translation table: initially all flats translate to themselves
-    for (int32_t texIdx = 0; texIdx < gNumFlatLumps; ++texIdx) {
-        gpFlatTranslation[texIdx] = texIdx;
+    for (int32_t flatIdx = 0; flatIdx < gNumFlatLumps; ++flatIdx) {
+        gpFlatTranslation[flatIdx] = flatIdx;
     }
 }
 

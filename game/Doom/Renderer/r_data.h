@@ -108,15 +108,19 @@ extern int32_t*     gpFlatTranslation;
 extern light_t*     gpLightsLump;
 extern uint16_t     gPaletteClutIds[MAXPALETTES];
 extern uint16_t     g3dViewPaletteClutId;
-extern int32_t      gFirstTexLumpNum;
-extern int32_t      gLastTexLumpNum;
 extern int32_t      gNumTexLumps;
-extern int32_t      gFirstFlatLumpNum;
-extern int32_t      gLastFlatLumpNum;
 extern int32_t      gNumFlatLumps;
 extern int32_t      gFirstSpriteLumpNum;
 extern int32_t      gLastSpriteLumpNum;
 extern int32_t      gNumSpriteLumps;
+
+// PsyDoom: texture, flat and sprite lists might no longer be a contiguous set of lumps
+#if !PSYDOOM_MODS
+    extern int32_t  gFirstTexLumpNum;
+    extern int32_t  gLastTexLumpNum;
+    extern int32_t  gFirstFlatLumpNum;
+    extern int32_t  gLastFlatLumpNum;
+#endif
 
 void R_InitData() noexcept;
 void R_InitTextures() noexcept;

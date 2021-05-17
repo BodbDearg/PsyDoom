@@ -78,7 +78,7 @@ int32_t W_GetNumForName(const WadLumpName lumpName) noexcept {
     // Otherwise issue an error for the missing lump name.
     // Note that the string might not be null terminated, so have to ensure that here.
     char lumpNameCStr[MAX_WAD_LUMPNAME + 1];
-    std::memcpy(lumpNameCStr, lumpName.chars, MAX_WAD_LUMPNAME);
+    std::memcpy(lumpNameCStr, &lumpName.chars, MAX_WAD_LUMPNAME);
     lumpNameCStr[MAX_WAD_LUMPNAME] = 0;
 
     I_Error("W_GetNumForName: %s not found!", lumpNameCStr);

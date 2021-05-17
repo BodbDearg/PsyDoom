@@ -13,20 +13,22 @@ int32_t getDecompressedLumpSize(const void* const pSrc) noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 inline constexpr WadLumpName makeUppercaseLumpName(const char* const name) noexcept {
     // Get up to 8 characters of the name in uppercase
-    WadLumpName lumpName = {};
+    WadLumpName lumpName = WadLumpName(0, 0, 0, 0, 0, 0, 0, 0);
 
-    for (int i = 0; i < MAX_WAD_LUMPNAME; ++i) {
-        const char c = name[i];
+    constexpr auto ucase = [](const char c) noexcept {
+        return (c >= 'a' && c <= 'z') ? (char)(c - 32) : c;
+    };
 
-        if (c == 0)
-            break;
-
-        if (c >= 'a' && c <= 'z') {
-            lumpName.chars[i] = c - 32;
-        } else {
-            lumpName.chars[i] = c;
-        }
-    }
+    do {
+        const char c0 = name[0];    if (c0) { lumpName.chars.c0 = ucase(c0); } else { break; }
+        const char c1 = name[1];    if (c1) { lumpName.chars.c1 = ucase(c1); } else { break; }
+        const char c2 = name[2];    if (c2) { lumpName.chars.c2 = ucase(c2); } else { break; }
+        const char c3 = name[3];    if (c3) { lumpName.chars.c3 = ucase(c3); } else { break; }
+        const char c4 = name[4];    if (c4) { lumpName.chars.c4 = ucase(c4); } else { break; }
+        const char c5 = name[5];    if (c5) { lumpName.chars.c5 = ucase(c5); } else { break; }
+        const char c6 = name[6];    if (c6) { lumpName.chars.c6 = ucase(c6); } else { break; }
+        const char c7 = name[7];    if (c7) { lumpName.chars.c7 = ucase(c7); } else { break; }
+    } while (false);
 
     return lumpName;
 }

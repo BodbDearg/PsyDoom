@@ -110,6 +110,27 @@ void (*gUpdateFireSkyFunc)(texture_t& skyTex) = nullptr;
     static void P_CacheSprite(const spritedef_t& sprdef) noexcept;  // PsyDoom: not used, so compiling out
 #endif
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: tell if a flat texture index is a sky texture
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool isSkyFlatPic(const int32_t picNum) noexcept {
+    if ((picNum >= 0) && (picNum < gNumFlatLumps)) {
+        const texture_t& tex = gpFlatTextures[picNum];
+        const WadLumpName lumpName = W_GetLumpName(tex.lumpNum);
+        return (
+            ((lumpName.chars[0] & 0x7F) == 'F') &&  // N.B: must mask to remove the 'compressed' flag from the character
+            (lumpName.chars[1] == '_') &&
+            (lumpName.chars[2] == 'S') &&
+            (lumpName.chars[3] == 'K') &&
+            (lumpName.chars[4] == 'Y')
+        );
+    }
+
+    return false;
+}
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -307,8 +328,12 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
         typedef std::remove_reference_t<decltype(*pWadSectors)> wadsector_t;
         constexpr bool bFinalDoom = std::is_same_v<wadsector_t, mapsector_final_t>;
 
-        // This is required for the Final Doom case
-        const int32_t firstSkyTexPic = W_GetNumForName("F_SKY01") - gFirstFlatLumpNum;
+        // This is required for the Final Doom case.
+        // PsyDoom: this won't work anymore because texture lumps are not guaranteed to be contiguous if we are loading WADs other than the original IWAD.
+        // Instead, an alternative method will be used below to determine when a flat is using a sky.
+        #if !PSYDOOM_MODS
+            const int32_t firstSkyTexPic = W_GetNumForName("F_SKY01") - gFirstFlatLumpNum;
+        #endif
 
         // Process the sectors
         const wadsector_t* pSrcSec = pWadSectors;
@@ -350,14 +375,22 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                 pDstSec->floorpic = floorPic;
                 pDstSec->ceilingpic = ceilingPic;
 
-                // Note: if the ceiling has a sky then remove it's texture and figure out the sky lump name for it - will load the sky lump later on
-                if (ceilingPic >= firstSkyTexPic) {
+                // Note: if the ceiling has a sky then remove its texture and figure out the sky lump name for it - will load the sky lump later on.
+                // PsyDoom: use an alternative method to detect skies since texture lump numbers are no longer guaranteed to be contiguous if user mods are used.
+                #if PSYDOOM_MODS
+                    const bool bIsSkyCeilingPic = isSkyFlatPic(ceilingPic);
+                #else
+                    const bool bIsSkyCeilingPic = (ceilingPic >= firstSkyTexPic);
+                #endif
+
+                if (bIsSkyCeilingPic) {
                     pDstSec->ceilingpic = -1;
 
-                    // PsyDoom: add support for more than 9 sky variants (up to 99)
+                    // PsyDoom: add support for more than 9 sky variants (up to 99) and adjust for texture management differences
                     #if PSYDOOM_MODS
-                        skyLumpName[3] = '0' + (char)((ceilingPic - firstSkyTexPic) / 10);
-                        skyLumpName[4] = '1' + (char)((ceilingPic - firstSkyTexPic) % 10);
+                        const WadLumpName lumpName = W_GetLumpName(gpFlatTextures[ceilingPic].lumpNum);
+                        skyLumpName[3] = lumpName.chars[5];
+                        skyLumpName[4] = lumpName.chars[6];
                     #else
                         skyLumpName[3] = '0';
                         skyLumpName[4] = '1' + (char)(ceilingPic - firstSkyTexPic);     // Note: only supports up to 9 sky variants!
@@ -368,10 +401,12 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 
                 // PsyDoom: add support for floor skies too
                 #if PSYDOOM_MODS
-                    if (floorPic >= firstSkyTexPic) {
+                    if (isSkyFlatPic(floorPic)) {
                         pDstSec->floorpic = -1;
-                        skyLumpName[3] = '0' + (char)((floorPic - firstSkyTexPic) / 10);
-                        skyLumpName[4] = '1' + (char)((floorPic - firstSkyTexPic) % 10);
+
+                        const WadLumpName lumpName = W_GetLumpName(gpFlatTextures[floorPic].lumpNum);
+                        skyLumpName[3] = lumpName.chars[5];
+                        skyLumpName[4] = lumpName.chars[6];
                     } else {
                         ensureValidFlatPic(pDstSec->floorpic);
                     }
