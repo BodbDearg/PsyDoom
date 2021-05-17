@@ -122,8 +122,15 @@ void R_InitData() noexcept;
 void R_InitTextures() noexcept;
 void R_InitFlats() noexcept;
 void R_InitSprites() noexcept;
-int32_t R_TextureNumForName(const char* const name) noexcept;
-int32_t R_FlatNumForName(const char* const name) noexcept;
+
+#if PSYDOOM_MODS
+    int32_t R_TextureNumForName(const char* const name, const bool bMustExist = false) noexcept;
+    int32_t R_FlatNumForName(const char* const name, const bool bMustExist = false) noexcept;
+#else
+    int32_t R_TextureNumForName(const char* const name) noexcept;
+    int32_t R_FlatNumForName(const char* const name) noexcept;
+#endif
+
 void R_InitPalette() noexcept;
 
 // PsyDoom: helper to reduce some redundancy

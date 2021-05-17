@@ -115,12 +115,6 @@ static void RV_DrawSegSolid(
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
 
-    // Get the upper/mid/lower textures for the seg.
-    // Note that these array indexes are always guaranteed to be in range by the level setup code.
-    texture_t& tex_u = gpTextures[gpTextureTranslation[side.toptexture]];
-    texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
-    texture_t& tex_l = gpTextures[gpTextureTranslation[side.bottomtexture]];
-
     // Get u and v offsets for the seg and the u1/u2 coordinates
     const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
     const float vOffset = RV_FixedToFloat(side.rowoffset);
@@ -150,8 +144,8 @@ static void RV_DrawSegSolid(
         // Figure out whether there are upper and lower walls and whether the upper and lower walls should be treated as a sky walls
         const bool bIsUpperSkyWall = (backSec.ceilingpic == -1);
         const bool bIsLowerSkyWall = (backSec.floorpic == -1);
-        const bool bHasUpperWall = (bty < fty);
-        const bool bHasLowerWall = (bby > fby);
+        const bool bHasUpperWall = ((bty < fty) && (side.toptexture >= 0));
+        const bool bHasLowerWall = ((bby > fby) && (side.bottomtexture >= 0));
 
         // Draw the upper wall if existing not a sky wall
         if (bHasUpperWall && (!bIsUpperSkyWall)) {
@@ -171,6 +165,7 @@ static void RV_DrawSegSolid(
             }
 
             VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
+            texture_t& tex_u = gpTextures[gpTextureTranslation[side.toptexture]];
             RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
         }
 
@@ -193,12 +188,13 @@ static void RV_DrawSegSolid(
             }
 
             VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
+            texture_t& tex_l = gpTextures[gpTextureTranslation[side.bottomtexture]];
             RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
         }
     }
 
-    // Draw the mid wall if the line is one sided
-    if (!bTwoSidedWall) {
+    // Draw the mid wall if the line is one sided and has a texture
+    if ((!bTwoSidedWall) && (side.midtexture >= 0)) {
         // Compute the top and bottom v coordinate
         const float wallH = midTy - midBy;
         float vt;
@@ -220,6 +216,7 @@ static void RV_DrawSegSolid(
 
         // Draw the wall
         VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
+        texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
         RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
     }
 }
@@ -267,9 +264,13 @@ static void RV_DrawSegBlended(
     const float fty = RV_FixedToFloat(frontSec.ceilingheight);
     const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
 
-    // Get the mid texture for the seg.
-    // Note that this array index is always guaranteed to be in range by the level setup code.
+    // Get the mid texture for the seg; if it doesn't exist then don't draw
     const side_t& side = *seg.sidedef;
+    const int32_t midTexIdx = side.midtexture;
+
+    if (midTexIdx < 0)
+        return;
+
     texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
 
     // Get u and v offsets for the seg and the u1/u2 coordinates

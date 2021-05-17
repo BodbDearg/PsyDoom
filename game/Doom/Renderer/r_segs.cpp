@@ -48,18 +48,21 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     if (pBackSec) {
         // Get the top and bottom y values for the back sector in texture space.
         // PsyDoom: floor might be drawn at a different height to it's real height ('ghost platform' effects).
+        // PsyDoom: texture indexes can now be '-1' to indicate a wall has no texture (and therefore is not drawn).
         #if PSYDOOM_MODS
             const fixed_t backFloorH = pBackSec->floorDrawHeight;
+            const bool bUpperWallHasTex = (side.toptexture >= 0);
         #else
             const fixed_t backFloorH = pBackSec->floorheight;
+            constexpr bool bUpperWallHasTex = true;
         #endif
 
         const int32_t bsec_ty = d_fixed_to_int(gViewZ - pBackSec->ceilingheight);
         const int32_t bsec_by = d_fixed_to_int(gViewZ - backFloorH);
 
         // Do we need to render the upper wall?
-        // Do so if the ceiling lowers, and if the following texture is not sky:
-        if ((frontSec.ceilingheight > pBackSec->ceilingheight) && (pBackSec->ceilingpic != -1)) {
+        // Do so if the ceiling lowers, and if the following texture is not sky and there is an upper wall texture (PsyDoom):
+        if ((frontSec.ceilingheight > pBackSec->ceilingheight) && (pBackSec->ceilingpic != -1) && bUpperWallHasTex) {
             // Update mid texture top bound: anything above this is upper wall
             mid_ty = bsec_ty;
 
@@ -93,13 +96,16 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
         // Do we need to render the lower wall? Do so if the floor raises.
         // PsyDoom: also require that the lower wall not be a sky wall, since floors can now be skies too.
+        // PsyDoom: texture indexes can now be '-1' to indicate a wall has no texture (and therefore is not drawn).
         #if PSYDOOM_MODS
             const bool bIsLowerSkyWall = (pBackSec->floorpic == -1);
+            const bool bLowerWallHasTex = (side.bottomtexture >= 0);
         #else
             constexpr bool bIsLowerSkyWall = false;
+            constexpr bool bLowerWallHasTex = true;
         #endif
 
-        if ((frontFloorH < backFloorH) && (!bIsLowerSkyWall)) {
+        if ((frontFloorH < backFloorH) && (!bIsLowerSkyWall) && bLowerWallHasTex) {
             // Update mid texture lower bound: anything below this is lower wall
             mid_by = bsec_by;
 
@@ -173,8 +179,15 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
         }
     }
 
-    // Drawing the mid wall
-    {
+    // Drawing the mid wall.
+    // PsyDoom: texture indexes can now be '-1' to indicate a wall has no texture (and therefore is not drawn).
+    #if PSYDOOM_MODS
+        const bool bMidWallHasTex = (side.midtexture >= 0);
+    #else
+        constexpr bool bMidWallHasTex = true;
+    #endif
+
+    if (bMidWallHasTex) {
         // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way.
         // PsyDoom: removed this restriction because 16-bit UV coord support has been added to the GPU; this allows us to do tall walls greater than 256 units.
         int32_t tex_h = mid_by - mid_ty;

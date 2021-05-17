@@ -1180,34 +1180,41 @@ static void P_Init() noexcept {
         for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
             // These are the original checks: they just see if a side has an intentional '-1' texture (no-texture or 'don't care') and
             // assign the side a default texture to avoid the engine crashing when we try to access it.
-            if (pSide->toptexture == -1) {
-                pSide->toptexture = 0;
-            }
+            //
+            // PsyDoom: remove this code, so that we are preserving the concept of 'no texture' being defined for a side.
+            // Otherwise this may have unintended consequences for some gameplay code, for example floor movers of the 'raiseToTexture' type.
+            // We don't want some dummy texture or the WAD layout (whatever is the 1st texture) affecting the behavior of that mover type.
+            // When a texture is undefined, it should be ignored by special actions that vary their behavior depending on texture.
+            #if !PSYDOOM_MODS
+                if (pSide->toptexture == -1) {
+                    pSide->toptexture = 0;
+                }
 
-            if (pSide->midtexture == -1) {
-                pSide->midtexture = 0;
-            }
+                if (pSide->midtexture == -1) {
+                    pSide->midtexture = 0;
+                }
 
-            if (pSide->bottomtexture == -1) {
-                pSide->bottomtexture = 0;
-            }
+                if (pSide->bottomtexture == -1) {
+                    pSide->bottomtexture = 0;
+                }
+            #endif
 
             // PsyDoom: handle ALL possible other invalid texture numbers - I've seen these pop up in some new maps.
             // These missing textures are likely NOT intentional, so issue a warning when we find them.
             #if PSYDOOM_MODS
-                if ((pSide->toptexture < 0) || (pSide->toptexture >= gNumTexLumps)) {
+                if ((pSide->toptexture < -1) || (pSide->toptexture >= gNumTexLumps)) {
                     std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad u-tex for side %d!", sideIdx);
-                    pSide->toptexture = 0;
+                    pSide->toptexture = -1;
                 }
 
-                if ((pSide->midtexture < 0) || (pSide->midtexture >= gNumTexLumps)) {
+                if ((pSide->midtexture < -1) || (pSide->midtexture >= gNumTexLumps)) {
                     std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad m-tex for side %d!", sideIdx);
-                    pSide->midtexture = 0;
+                    pSide->midtexture = -1;
                 }
 
-                if ((pSide->bottomtexture < 0) || (pSide->bottomtexture >= gNumTexLumps)) {
+                if ((pSide->bottomtexture < -1) || (pSide->bottomtexture >= gNumTexLumps)) {
                     std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad l-tex for side %d!", sideIdx);
-                    pSide->bottomtexture = 0;
+                    pSide->bottomtexture = -1;
                 }
             #endif
         }

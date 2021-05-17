@@ -65,8 +65,8 @@ void START_Title() noexcept {
 
     // Cache the fire sky texture used in the title screen and save it's reference
     {
-        const int32_t skyTexLumpNum = R_TextureNumForName("SKY09");
-        texture_t& skyTex = gpTextures[skyTexLumpNum];
+        const int32_t skyTexIdx = R_TextureNumForName("SKY09");
+        texture_t& skyTex = gpTextures[skyTexIdx];
 
         gpSkyTexture = &skyTex;
         gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
