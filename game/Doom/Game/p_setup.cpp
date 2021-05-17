@@ -429,7 +429,13 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 
     // Set the sky texture pointer
     if (skyLumpName[3] != 0) {
-        const int32_t skyTexIdx = R_TextureNumForName(skyLumpName);
+        // PsyDoom: the sky texture MUST exist, otherwise issue a fatal error
+        #if PSYDOOM_MODS
+            const int32_t skyTexIdx = R_TextureNumForName(skyLumpName, true);
+        #else
+            const int32_t skyTexIdx = R_TextureNumForName(skyLumpName);
+        #endif
+
         gpSkyTexture = &gpTextures[skyTexIdx];
     } else {
         gpSkyTexture = nullptr;

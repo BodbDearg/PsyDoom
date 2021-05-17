@@ -113,8 +113,9 @@ void P_SetAnimsToBasePic() noexcept {
         const animdef_t& animdef = gAnimDefs[animIdx];
 
         if (animdef.istexture) {
-            const int32_t startPic = R_TextureNumForName(animdef.startname);
-            const int32_t endPic = R_TextureNumForName(animdef.endname);
+            // Note: these textures MUST exist or otherwise a fatal error will be issued
+            const int32_t startPic = R_TextureNumForName(animdef.startname, true);
+            const int32_t endPic = R_TextureNumForName(animdef.endname, true);
 
             for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx) {
                 side_t& side = gpSides[sideIdx];
@@ -132,8 +133,9 @@ void P_SetAnimsToBasePic() noexcept {
                 }
             }
         } else {
-            const int32_t startPic = R_FlatNumForName(animdef.startname);
-            const int32_t endPic = R_FlatNumForName(animdef.endname);
+            // Note: these textures MUST exist or otherwise a fatal error will be issued
+            const int32_t startPic = R_FlatNumForName(animdef.startname, true);
+            const int32_t endPic = R_FlatNumForName(animdef.endname, true);
 
             for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
                 sector_t& sector = gpSectors[secIdx];
@@ -163,10 +165,17 @@ void P_InitPicAnims() noexcept {
         const animdef_t& animdef = gAnimDefs[animIdx];
         anim_t& lastanim = *gpLastAnim;
 
+        // PsyDoom: all anim textures MUST exist, otherwise issue a fatal error
+        #if PSYDOOM_MODS
+            constexpr bool bAnimTexturesMustExist = true;
+        #else
+            constexpr bool bAnimTexturesMustExist = false;
+        #endif
+
         if (animdef.istexture) {
             // Determine the lump range for the animation
-            lastanim.basepic = R_TextureNumForName(animdef.startname);
-            lastanim.picnum = R_TextureNumForName(animdef.endname);
+            lastanim.basepic = R_TextureNumForName(animdef.startname, bAnimTexturesMustExist);
+            lastanim.picnum = R_TextureNumForName(animdef.endname, bAnimTexturesMustExist);
 
             // Ignore this animation if it's not used in the level
             texture_t& basetex = gpTextures[lastanim.basepic];
@@ -193,8 +202,8 @@ void P_InitPicAnims() noexcept {
             }
         } else {
             // Determine the lump range for the animation
-            lastanim.basepic = R_FlatNumForName(animdef.startname);
-            lastanim.picnum = R_FlatNumForName(animdef.endname);
+            lastanim.basepic = R_FlatNumForName(animdef.startname, bAnimTexturesMustExist);
+            lastanim.picnum = R_FlatNumForName(animdef.endname, bAnimTexturesMustExist);
 
             // Ignore this animation if it's not used in the level
             texture_t& basetex = gpFlatTextures[lastanim.basepic];

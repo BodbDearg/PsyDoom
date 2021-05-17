@@ -65,9 +65,14 @@ void START_Title() noexcept {
 
     // Cache the fire sky texture used in the title screen and save it's reference
     {
-        const int32_t skyTexIdx = R_TextureNumForName("SKY09");
-        texture_t& skyTex = gpTextures[skyTexIdx];
+        // PsyDoom: this texture MUST exist, otherwise issue a fatal error
+        #if PSYDOOM_MODS
+            const int32_t skyTexIdx = R_TextureNumForName("SKY09", true);
+        #else
+            const int32_t skyTexIdx = R_TextureNumForName("SKY09");
+        #endif
 
+        texture_t& skyTex = gpTextures[skyTexIdx];
         gpSkyTexture = &skyTex;
         gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
 

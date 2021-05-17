@@ -97,9 +97,16 @@ void P_InitSwitchList() noexcept {
     int32_t* pSwitchLump = gSwitchList;
 
     for (int32_t switchIdx = 0; switchIdx < NUM_SWITCHES; ++switchIdx) {
-        // Get both textures for the switch
-        const int32_t tex1Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name1);
-        const int32_t tex2Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name2);
+        // Get both textures for the switch.
+        // PsyDoom: these textures MUST exist, otherwise issue a fatal error.
+        #if PSYDOOM_MODS
+            constexpr bool bSwitchTexturesMustExist = true;
+        #else
+            constexpr bool bSwitchTexturesMustExist = false;
+        #endif
+
+        const int32_t tex1Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name1, bSwitchTexturesMustExist);
+        const int32_t tex2Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name2, bSwitchTexturesMustExist);
 
         // Cache the other switch texture if one of the switch textures is loaded.
         // PsyDoom limit removing: request the other texture to load if one of the textures is requested (we haven't actually loaded yet at this point).

@@ -152,7 +152,7 @@ void R_InitSprites() noexcept {
 // Returns '-1' if the name was not found.
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t R_TextureNumForName(const char* const name) noexcept {
+int32_t R_TextureNumForName(const char* const name, const bool bMustExist) noexcept {
     const WadLumpName searchLumpName = WadUtils::makeUppercaseLumpName(name);
     
     const texture_t* const pTextures = gpTextures;
@@ -166,6 +166,10 @@ int32_t R_TextureNumForName(const char* const name) noexcept {
             return texIdx;
     }
 
+    if (bMustExist) {
+        I_Error("R_TextureNumForName: not found '%s'!", name);
+    }
+
     return -1;
 }
 
@@ -173,7 +177,7 @@ int32_t R_TextureNumForName(const char* const name) noexcept {
 // Given a lump name (case insensitive) for a flat texture, returns the texture index among flat texture lumps.
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t R_FlatNumForName(const char* const name) noexcept {
+int32_t R_FlatNumForName(const char* const name, const bool bMustExist) noexcept {
     const WadLumpName searchLumpName = WadUtils::makeUppercaseLumpName(name);
 
     const texture_t* const pFlatTextures = gpFlatTextures;
@@ -185,6 +189,10 @@ int32_t R_FlatNumForName(const char* const name) noexcept {
 
         if ((flatLumpName.word & WAD_LUMPNAME_MASK) == searchLumpName.word)
             return flatIdx;
+    }
+
+    if (bMustExist) {
+        I_Error("R_FlatNumForName: not found '%s'!", name);
     }
 
     return -1;
