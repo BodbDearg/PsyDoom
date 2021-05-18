@@ -36,9 +36,13 @@ uint16_t    g3dViewPaletteClutId;               // Currently active in-game pale
 // Lump counts
 int32_t     gNumTexLumps;
 int32_t     gNumFlatLumps;
-int32_t     gFirstSpriteLumpNum;    // TODO: remove first and last lump number once texture lists from multiple WADs are supported
-int32_t     gLastSpriteLumpNum;     // TODO: remove first and last lump number once texture lists from multiple WADs are supported
 int32_t     gNumSpriteLumps;
+
+// PsyDoom: maps from main WAD lump indexes to a wall, flat or sprite texture
+#if PSYDOOM_MODS
+    static std::unique_ptr<texture_t*[]>    gpLumpToTex;
+    static int32_t                          gLumpToTexListSize;
+#endif
 
 // PsyDoom: texture, flat and sprite lists might no longer be a contiguous set of lumps
 #if !PSYDOOM_MODS
@@ -46,12 +50,25 @@ int32_t     gNumSpriteLumps;
     int32_t     gLastTexLumpNum;
     int32_t     gFirstFlatLumpNum;
     int32_t     gLastFlatLumpNum;
+    int32_t     gFirstSpriteLumpNum;
+    int32_t     gLastSpriteLumpNum;
 #endif
+
+// These functions are private/internal to this module
+static void R_AllocLumpToTexList() noexcept;
+static void R_InitTextures() noexcept;
+static void R_InitFlats() noexcept;
+static void R_InitSprites() noexcept;
+static void R_InitPalette() noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the palette and asset management for various draw assets
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitData() noexcept {
+    #if PSYDOOM_MODS
+        R_AllocLumpToTexList();
+    #endif
+
     R_InitPalette();
     R_InitTextures();
     R_InitFlats();
@@ -59,6 +76,17 @@ void R_InitData() noexcept {
 }
 
 #if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Allocates the 'lump to texture' list used to map from lump indexes to wall, floor or sprite textures.
+// Every entry is assigned a null sprite pointer initially.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void R_AllocLumpToTexList() noexcept {
+    const int32_t numLumps = W_NumLumps();
+    gLumpToTexListSize = numLumps;
+    gpLumpToTex.reset(new texture_t*[numLumps]);
+    std::memset(gpLumpToTex.get(), 0, sizeof(texture_t*) * numLumps);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper: iterates through lists of lumps delimited by the specified markers.
 // Iterates through the items in each list sequentially in forward order, but iterates through the set of item lists in backwards order.
@@ -104,7 +132,7 @@ static void forEachLumpList(
 // Also initialize the texture translation table for animated wall textures.
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_InitTextures() noexcept {
+static void R_InitTextures() noexcept {
     // Count the number of textures overall in the game.
     // Note: could write specialized code to do this more efficiently but not it's not worth the effort, just re-use the 'for each' helper.
     constexpr WadLumpName ln_T_START = WadUtils::makeUppercaseLumpName("T_START");
@@ -129,7 +157,7 @@ void R_InitTextures() noexcept {
         gpTextureTranslation = (int32_t*)(pAlloc + gNumTexLumps * sizeof(texture_t));
     }
 
-    // Set the lump numbers for all textures
+    // Set the lump numbers for all textures and populate 'lump to texture' list entries
     {
         int32_t texIdx = 0;
 
@@ -137,7 +165,9 @@ void R_InitTextures() noexcept {
             ln_T_START,
             ln_T_END,
             [&](const int32_t lumpIdx) noexcept {
-                gpTextures[texIdx].lumpNum = (uint16_t) lumpIdx;
+                texture_t& tex = gpTextures[texIdx];
+                tex.lumpNum = (uint16_t) lumpIdx;
+                gpLumpToTex[lumpIdx] = &tex;
                 ++texIdx;
             }
         );
@@ -154,7 +184,7 @@ void R_InitTextures() noexcept {
 // Also initialize the flat texture translation table used for animation.
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_InitFlats() noexcept {
+static void R_InitFlats() noexcept {
     // Count the number of flats overall in the game.
     // Note: could write specialized code to do this more efficiently but not it's not worth the effort, just re-use the 'for each' helper.
     constexpr WadLumpName ln_F_START = WadUtils::makeUppercaseLumpName("F_START");
@@ -179,7 +209,7 @@ void R_InitFlats() noexcept {
         gpFlatTranslation = (int32_t*)(pAlloc + gNumFlatLumps * sizeof(texture_t));
     }
 
-    // Set the lump numbers for all flats
+    // Set the lump numbers for all flats and populate 'lump to texture' list entries
     {
         int32_t flatIdx = 0;
 
@@ -187,7 +217,9 @@ void R_InitFlats() noexcept {
             ln_F_START,
             ln_F_END,
             [&](const int32_t lumpIdx) noexcept {
-                gpFlatTextures[flatIdx].lumpNum = (uint16_t) lumpIdx;
+                texture_t& tex = gpFlatTextures[flatIdx];
+                tex.lumpNum = (uint16_t) lumpIdx;
+                gpLumpToTex[lumpIdx] = &tex;
                 ++flatIdx;
             }
         );
@@ -203,12 +235,20 @@ void R_InitFlats() noexcept {
 // Initialize the global sprite textures list and load sprite size and offset metadata.
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_InitSprites() noexcept {
-    // Determine basic sprite texture list stats
-    // TODO: update this to support sprite lists in multiple WAD files.
-    gFirstSpriteLumpNum = W_GetNumForName("S_START") + 1;
-    gLastSpriteLumpNum = W_GetNumForName("S_END") - 1;
-    gNumSpriteLumps = gLastSpriteLumpNum - gFirstSpriteLumpNum + 1;
+static void R_InitSprites() noexcept {
+    // Count the number of sprite lumps overall in the game.
+    // Note: could write specialized code to do this more efficiently but not it's not worth the effort, just re-use the 'for each' helper.
+    constexpr WadLumpName ln_S_START = WadUtils::makeUppercaseLumpName("S_START");
+    constexpr WadLumpName ln_S_END = WadUtils::makeUppercaseLumpName("S_END");
+    gNumSpriteLumps = 0;
+
+    forEachLumpList(
+        ln_S_START,
+        ln_S_END,
+        []([[maybe_unused]] const int32_t lumpIdx) noexcept {
+            gNumSpriteLumps++;
+        }
+    );
 
     // Alloc and zero init the list of sprite textures
     {
@@ -219,9 +259,20 @@ void R_InitSprites() noexcept {
         gpSpriteTextures = (texture_t*) pAlloc;
     }
 
-    // Set the lump numbers for all the sprite textures
-    for (int32_t spriteIdx = 0; spriteIdx < gNumSpriteLumps; ++spriteIdx) {
-        gpSpriteTextures[spriteIdx].lumpNum = (uint16_t)(gFirstSpriteLumpNum + spriteIdx);
+    // Set the lump numbers for all the sprite textures and populate 'lump to texture' list entries
+    {
+        int32_t spriteIdx = 0;
+
+        forEachLumpList(
+            ln_S_START,
+            ln_S_END,
+            [&](const int32_t lumpIdx) noexcept {
+                texture_t& tex = gpSpriteTextures[spriteIdx];
+                tex.lumpNum = (uint16_t) lumpIdx;
+                gpLumpToTex[lumpIdx] = &tex;
+                ++spriteIdx;
+            }
+        );
     }
 }
 
@@ -275,13 +326,31 @@ int32_t R_FlatNumForName(const char* const name, const bool bMustExist) noexcept
 
     return -1;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A new PsyDoom addition that returns a sprite, wall or flat texture for the specified lump number.
+// If the lump index does not correspond to one of these texture types then a fatal error will be issued.
+//------------------------------------------------------------------------------------------------------------------------------------------
+texture_t& R_GetTexForLump(const int32_t lumpIdx) noexcept {
+    if ((lumpIdx < 0) || (lumpIdx >= gLumpToTexListSize)) {
+        I_Error("R_GetTexForLump: bad index '%d'!", lumpIdx);
+    }
+
+    texture_t* const pTex = gpLumpToTex[lumpIdx];
+
+    if (!pTex) {
+        I_Error("R_GetTexForLump: no wall/floor/sprite texture for lump '%d'!", lumpIdx);
+    }
+
+    return *pTex;
+}
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Loads all of the game's palettes into VRAM.
 // Also loads the 'LIGHTS' lump which gives the color multipliers for various sector colors.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_InitPalette() noexcept {
+static void R_InitPalette() noexcept {
     // Load the colored light multipliers lump and force the first entry to be fullbright.
     // PsyDoom: added updates here to work with the new WAD management code.
     #if PSYDOOM_MODS

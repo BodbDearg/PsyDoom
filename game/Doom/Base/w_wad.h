@@ -16,6 +16,11 @@ extern bool gbIsLevelDataCached;
 
 void W_Init() noexcept;
 void W_Shutdown() noexcept;
+
+#if PSYDOOM_MODS
+    int32_t W_NumLumps() noexcept;
+#endif
+
 const WadLump& W_GetLump(const int32_t lumpIdx) noexcept;
 const WadLumpName W_GetLumpName(const int32_t lumpIdx) noexcept;
 int32_t W_CheckNumForName(const WadLumpName lumpName, const int32_t searchStartIdx = 0) noexcept;

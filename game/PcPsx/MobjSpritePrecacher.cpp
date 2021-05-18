@@ -168,8 +168,6 @@ static void flagSpritesToPrecache() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void precacheSprites() noexcept {
     // How many sprite lumps are there?
-    const int32_t firstSpriteLumpNum = gFirstSpriteLumpNum;
-    const int32_t lastSpriteLumpNum = gLastSpriteLumpNum;
     const int32_t numSprites = gNumSprites;
 
     for (int32_t sprIdx = 0; sprIdx < numSprites; ++sprIdx) {
@@ -183,13 +181,13 @@ static void precacheSprites() noexcept {
         const spriteframe_t* const pEndFrame = pBegFrame + spriteDef.numframes;
 
         for (const spriteframe_t* pFrame = pBegFrame; pFrame < pEndFrame; ++pFrame) {
-            for (int32_t sprLumpNum : pFrame->lump) {
+            for (int32_t sprLumpIdx : pFrame->lump) {
                 // Die with an error if the lump number is invalid, otherwise cache the sprite
-                if ((sprLumpNum < firstSpriteLumpNum) || (sprLumpNum > lastSpriteLumpNum)) {
-                    I_Error("SprCache: bad lump num %d!", sprLumpNum);
+                if ((sprLumpIdx < 0) || (sprLumpIdx >= W_NumLumps())) {
+                    I_Error("SprCache: bad lump num %d!", sprLumpIdx);
                 }
 
-                W_CacheLumpNum(sprLumpNum, PU_CACHE, false);
+                W_CacheLumpNum(sprLumpIdx, PU_CACHE, false);
             }
         }
     }

@@ -647,7 +647,13 @@ void F2_Drawer() noexcept {
         const spritedef_t& spriteDef = gSprites[state.sprite];
         const spriteframe_t& spriteFrame = spriteDef.spriteframes[state.frame & FF_FRAMEMASK];
 
-        texture_t& spriteTex = gpSpriteTextures[spriteFrame.lump[0] - gFirstSpriteLumpNum];
+        // PsyDoom: updates for changes to how textures are managed (changes that help support user modding)
+        #if PSYDOOM_MODS
+            texture_t& spriteTex = R_GetTexForLump(spriteFrame.lump[0]);
+        #else
+            texture_t& spriteTex = gpSpriteTextures[spriteFrame.lump[0] - gFirstSpriteLumpNum];
+        #endif
+
         I_CacheTex(spriteTex);
 
         // Setup and draw the sprite for the cast character

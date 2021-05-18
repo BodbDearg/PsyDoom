@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 struct SRECT;
 
@@ -110,8 +111,6 @@ extern uint16_t     gPaletteClutIds[MAXPALETTES];
 extern uint16_t     g3dViewPaletteClutId;
 extern int32_t      gNumTexLumps;
 extern int32_t      gNumFlatLumps;
-extern int32_t      gFirstSpriteLumpNum;
-extern int32_t      gLastSpriteLumpNum;
 extern int32_t      gNumSpriteLumps;
 
 // PsyDoom: texture, flat and sprite lists might no longer be a contiguous set of lumps
@@ -120,22 +119,20 @@ extern int32_t      gNumSpriteLumps;
     extern int32_t  gLastTexLumpNum;
     extern int32_t  gFirstFlatLumpNum;
     extern int32_t  gLastFlatLumpNum;
+    extern int32_t  gFirstSpriteLumpNum;
+    extern int32_t  gLastSpriteLumpNum;
 #endif
 
 void R_InitData() noexcept;
-void R_InitTextures() noexcept;
-void R_InitFlats() noexcept;
-void R_InitSprites() noexcept;
 
 #if PSYDOOM_MODS
     int32_t R_TextureNumForName(const char* const name, const bool bMustExist = false) noexcept;
     int32_t R_FlatNumForName(const char* const name, const bool bMustExist = false) noexcept;
+    texture_t& R_GetTexForLump(const int32_t lumpIdx) noexcept;
 #else
     int32_t R_TextureNumForName(const char* const name) noexcept;
     int32_t R_FlatNumForName(const char* const name) noexcept;
 #endif
-
-void R_InitPalette() noexcept;
 
 // PsyDoom: helper to reduce some redundancy
 SRECT getTextureVramRect(const texture_t& tex) noexcept;

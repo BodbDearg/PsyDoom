@@ -73,22 +73,21 @@ static float gSpriteFragThingPos[3];
 static texture_t& RV_CacheThingSpriteFrame(const mobj_t& thing, const spriteframe_t& frame, bool& bFlipSrite) noexcept {
     // Decide on which sprite lump to use and whether the sprite is flipped.
     // If the frame supports rotations then decide on the exact orientation to use, otherwise use the default.
-    int32_t lumpNum;
+    int32_t lumpIdx;
 
     if (frame.rotate) {
         const angle_t angToThing = R_PointToAngle2(gViewX, gViewY, thing.x, thing.y);
         const uint32_t dirIdx = (angToThing - thing.angle + (ANG45 / 2) * 9) >> 29;     // Note: same calculation as PC Doom
 
-        lumpNum = frame.lump[dirIdx];
+        lumpIdx = frame.lump[dirIdx];
         bFlipSrite = frame.flip[dirIdx];
     } else {
-        lumpNum = frame.lump[0];
+        lumpIdx = frame.lump[0];
         bFlipSrite = frame.flip[0];
     }
 
     // Upload the sprite texture to VRAM if not already uploaded and return the texture to use
-    const int32_t sprIndex = lumpNum - gFirstSpriteLumpNum;
-    texture_t& tex = gpSpriteTextures[sprIndex];
+    texture_t& tex = R_GetTexForLump(lumpIdx);
     I_CacheTex(tex);
     return tex;
 }

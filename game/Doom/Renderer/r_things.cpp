@@ -161,23 +161,29 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 
         // Decide on which sprite lump to use and whether the sprite is flipped.
         // If the frame supports rotations then decide on the exact orientation to use, otherwise use the default.
-        int32_t lumpNum;
+        int32_t lumpIdx;
         bool bFlipSpr;
 
         if (frame.rotate) {
             const angle_t angToThing = R_PointToAngle2(gViewX, gViewY, thing.x, thing.y);
             const uint32_t dirIdx = (angToThing - thing.angle + (ANG45 / 2) * 9) >> 29;     // Note: same calculation as PC Doom
 
-            lumpNum = frame.lump[dirIdx];
+            lumpIdx = frame.lump[dirIdx];
             bFlipSpr = frame.flip[dirIdx];
         } else {
-            lumpNum = frame.lump[0];
+            lumpIdx = frame.lump[0];
             bFlipSpr = frame.flip[0];
         }
 
-        // Upload the sprite texture to VRAM if not already uploaded
-        const int32_t sprIndex = lumpNum - gFirstSpriteLumpNum;
-        texture_t& tex = gpSpriteTextures[sprIndex];
+        // Upload the sprite texture to VRAM if not already uploaded.
+        // PsyDoom: updates for changes to how textures are managed (changes that help support user modding).
+        #if PSYDOOM_MODS
+            texture_t& tex = R_GetTexForLump(lumpIdx);
+        #else
+            const int32_t sprIndex = lumpIdx - gFirstSpriteLumpNum;
+            texture_t& tex = gpSpriteTextures[sprIndex];
+        #endif
+
         I_CacheTex(tex);
 
         // Get the 3 blending flags and set whether the sprite is semi transparent
@@ -294,13 +300,19 @@ void R_DrawWeapon() noexcept {
             continue;
 
         // Get the texture for the sprite and upload to VRAM if required
+        // PsyDoom: made updates for changes to how textures are managed (changes that help support user modding).
         const state_t& state = *pSprite->state;
         const spritedef_t& spriteDef = gSprites[state.sprite];
         const int32_t frameNum = state.frame & FF_FRAMEMASK;
         const spriteframe_t& frame = spriteDef.spriteframes[frameNum];
-        const int32_t texNum = frame.lump[0] - gFirstSpriteLumpNum;
 
-        texture_t& tex = gpSpriteTextures[texNum];
+        #if PSYDOOM_MODS
+            texture_t& tex = R_GetTexForLump(frame.lump[0]);
+        #else
+            const int32_t texNum = frame.lump[0] - gFirstSpriteLumpNum;
+            texture_t& tex = gpSpriteTextures[texNum];
+        #endif
+
         I_CacheTex(tex);
 
         // Setup the default drawing mode to disable wrapping (remove texture window).
