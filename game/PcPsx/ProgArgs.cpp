@@ -3,8 +3,11 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "ProgArgs.h"
 
+#include "WadList.h"
+
 #include <cstring>
 #include <string>
+#include <vector>
 
 BEGIN_NAMESPACE(ProgArgs)
 
@@ -43,6 +46,11 @@ bool gbTurboMode = false;
 
 // Host that the client connects to: private so we don't expose std::string everywhere
 static std::string gServerHost;
+
+// A list of main IWAD files added by the user, in left to right order.
+// These can be used to modify/override lumps in the existing PSXDOOM.WAD without entirely replacing it.
+// Note that the '-datadir' option must be used to actually play new map files; map data in any main IWAD files added will be ignored.
+static std::vector<std::string> gUserWadFiles;
 
 // Format for a function that parses an argument.
 // Takes in the current arguments list pointer and the number of arguments left, which is always expected to be at least '1'.
@@ -198,6 +206,15 @@ static int parseArg_client([[maybe_unused]] const int argc, const char** const a
     return 0;
 }
 
+static int parseArg_file(const int argc, const char** const argv) {
+    if ((argc >= 2) && (std::strcmp(argv[0], "-file") == 0)) {
+        gUserWadFiles.push_back(argv[1]);
+        return 2;
+    }
+
+    return 0;
+}
+
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_cue,
@@ -211,6 +228,7 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_turbo,
     parseArg_server,
     parseArg_client,
+    parseArg_file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -263,10 +281,21 @@ void shutdown() noexcept {
     gbNoMonsters = false;
     gbPistolStart = false;
     gbTurboMode = false;
+    gUserWadFiles.clear();
 }
 
 const char* getServerHost() noexcept {
     return gServerHost.c_str();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds user WADs specified via the program argument list to the specified WAD list
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addWadArgsToList(WadList& wadList) noexcept {
+    // Add in backwards order so WADs added on the right side of the argument list have higher precedence
+    for (int32_t i = (int32_t) gUserWadFiles.size() - 1; i >= 0; --i) {
+        wadList.add(gUserWadFiles[i].c_str());
+    }
 }
 
 END_NAMESPACE(ProgArgs)

@@ -17,7 +17,6 @@
 - Add very basic Lua scripting with similar capabilities to DOOM64 MACROs
     - Mostly to trigger line specials in more flexible ways
 - Investigate a MAPINFO format for naming maps, choosing music etc.
-- Investigate being able to add override/new lumps via custom user wads.
 
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.

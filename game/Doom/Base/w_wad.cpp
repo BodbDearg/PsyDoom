@@ -8,6 +8,7 @@
 
 #include "Doom/cdmaptbl.h"
 #include "i_main.h"
+#include "PcPsx/ModMgr.h"
 #include "PcPsx/WadList.h"
 
 // A flag set to true once data for the current map has been loaded.
@@ -29,7 +30,8 @@ static WadFile gMapWad;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void W_Init() noexcept {
     // Open all main WAD files and finalize the list.
-    // TODO: support user WAD files here.
+    // Add user WADs first so they take precedence and can override lumps in the original WAD.
+    ModMgr::addUserWads(gMainWadList);
     gMainWadList.add(CdFileId::PSXDOOM_WAD);
     gMainWadList.finalize();
 }

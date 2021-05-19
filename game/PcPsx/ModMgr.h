@@ -4,10 +4,13 @@
 #include "Macros.h"
 #include "Wess/psxcd.h"
 
+class WadList;
+
 BEGIN_NAMESPACE(ModMgr)
 
 void init() noexcept;
 void shutdown() noexcept;
+void addUserWads(WadList& wadList) noexcept;
 
 // File overrides mechanism
 bool areOverridesAvailableForFile(const CdFileId discFile) noexcept;

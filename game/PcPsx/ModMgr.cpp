@@ -6,15 +6,17 @@
 #include "Asserts.h"
 #include "FileUtils.h"
 #include "ProgArgs.h"
+#include "WadList.h"
 
 #include <algorithm>
-#include <filesystem>
 #include <map>
 #include <vector>
 
 // MacOS: some POSIX stuff needed due to <filesystem> workaround
 #if __APPLE__
     #include <dirent.h>
+#else
+    #include <filesystem>
 #endif
 
 BEGIN_NAMESPACE(ModMgr)
@@ -29,6 +31,23 @@ static std::vector<bool> gbFileHasOverrides;
 // A list of currently open files.
 // Only a certain amount are allowed at a time:
 static std::FILE* gOpenFileSlots[MAX_OPEN_FILES] = {};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the path to a file in the data dir.
+// Assumes that the data dir has actually specified by the user.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static std::string getDataDirFilePath(const char* const fileName) noexcept {
+    std::string filePath;
+    filePath.reserve(512);
+    filePath += ProgArgs::gDataDirPath;
+    
+    if ((filePath.back() != '\\') && (filePath.back() != '/')) {
+        filePath += '/';
+    }
+
+    filePath += fileName;
+    return filePath;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Uppercases the specified string
@@ -180,6 +199,27 @@ void shutdown() noexcept {
     // Clear all data
     gbFileHasOverrides.clear();
     gbFileHasOverrides.shrink_to_fit();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the 'PSXDOOM_EXT.WAD' extension IWAD in the user data dir plus other main IWADs specified by the '-file' command to the wad list.
+// Note that unlike PC the IWADs are NOT used to load map data and any maps inside them will be ignored.
+// Instead, map data must be packaged in special 'map' WADS like 'MAP01.WAD' which are enabled by pointing the game to a mod directory
+// via the '-datadir' command line argument.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addUserWads(WadList& wadList) noexcept {
+    // Add wads specified from the command line first, as they are higher precedence
+    ProgArgs::addWadArgsToList(wadList);
+
+    // Add 'PSXDOOM_EXT.WAD' if it's found in the user data dir and the data dir is specified.
+    // This WAD enables mods to add new resources to the game and expand upon the original 'PSXDOOM.WAD'.
+    if (ProgArgs::gDataDirPath[0]) {
+        std::string extWadPath = getDataDirFilePath("PSXDOOM_EXT.WAD");
+
+        if (FileUtils::fileExists(extWadPath.c_str())) {
+            wadList.add(extWadPath.c_str());
+        }
+    }
 }
 
 bool areOverridesAvailableForFile(const CdFileId discFile) noexcept {

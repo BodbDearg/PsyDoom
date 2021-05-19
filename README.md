@@ -80,11 +80,16 @@ The original goal of this project was to have a complete replacement for the ori
         - `-client [SERVER_HOST_NAME_AND_PORT]` 
     - If you need to specify a server port other than the default `666`, use the following format:
         - `-client 192.168.0.2:12345`
-- File override modding system.
-    - You can override any game files by supplying the game with a directory containing those overrides.
-    - Specify the directory using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
+- Modding system: file overrides and extension WADs
+    - You can override any of the game's files by supplying a directory containing those overrides. This mechanism can also be used to play new map sets created for PsyDoom that have been packaged up into a mod directory.
+    - Specify this user mod directory using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
     - Put files in this folder (note: not in any child folders!) that you wish to override, e.g 'MAP01.WAD'.
     - If the game goes to load a file such as 'MAP01.WAD' and it is present in the overrides dir, then the on-disk version will be used instead.
+    - Additionally, if the directory specified contains a file called `PSXDOOM_EXT.WAD` then this will be used as an extension to the main IWAD. It can override lumps in the original `PSXDOOM.WAD` or add new ones. This can be used for instance to add new textures for custom maps.
+    - Additional IWADs can also be specified 1 at a time via the `-file <WAD_FILE_PATH>` command line argument. These take precedence over the regular game IWAD and the `PSXDOOM_EXT.WAD` extension IWAD. Later arguments have most precedence.
+        - This could be used for instance to add a custom status bar while playing a new map set.
+    - Note that new maps cannot be added via the IWADs and any map data contained within them will be ignored.
+        - Map wads must be used to do that separately, and they must be named after the level number, like `MAP12.WAD` for example.
 - Other miscellaneous command line arguments
     - The .cue file used can be manually specified on launch via `-cue <CUE_FILE_PATH>`.
     - For a 'no monsters' cheat similar to PC Doom use the `-nomonsters` switch.
