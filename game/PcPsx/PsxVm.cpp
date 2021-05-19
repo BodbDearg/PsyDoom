@@ -137,7 +137,7 @@ bool init(const char* const doomCdCuePath) noexcept {
             -12.0f,             // thresholdDB
             10.0f,              // kneeWidthDB
             2.0f,               // compressionRatio
-            8.0f,               // postGainDB
+            4.0f,               // postGainDB
             0.150f,             // lpfResponseTime
             0.002f,             // attackTime
             0.005f              // releaseTime
