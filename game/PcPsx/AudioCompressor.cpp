@@ -71,7 +71,7 @@ void compress(State& state, float& sampleL, float& sampleR) noexcept {
 
     // Compute the signal power in decibels.
     // Note: normally the formula to convert is 'dB = 20 * log10(amplitude)' but we've already squared the signal so instead the multiply is by '10' instead.
-    const float signalPowerDB = 10.0f * std::log10(smoothedSignalPower);
+    const float signalPowerDB = std::clamp(10.0f * std::log10(smoothedSignalPower), -100.0f, +100.0f);
 
     // Compute the instantaneous/non-smoothed gain in decibels.
     // Don't allow a positive gain, only negative!
@@ -80,7 +80,7 @@ void compress(State& state, float& sampleL, float& sampleR) noexcept {
     const float kneeWidthDB = state.kneeWidthDB;
     const float compressionStrength = std::clamp((kneeWidthDB > 0) ? aboveThresholdDB / kneeWidthDB : 1.0f, 0.0f, 1.0f);
     const float smoothedGoalAboveThresholdDB = goalAboveThresholdDB * compressionStrength + (1.0f - compressionStrength) * aboveThresholdDB;
-    const float instantGainDB = std::min(smoothedGoalAboveThresholdDB - aboveThresholdDB, 0.0f);
+    const float instantGainDB = std::clamp(smoothedGoalAboveThresholdDB - aboveThresholdDB, -100.0f, 0.0f);
 
     // Compute the smoothed gain in decibels and save as the new smoothed sample
     const float prevGainDB = state.prevSampleGainDB;

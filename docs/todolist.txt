@@ -1,6 +1,5 @@
 0.8 - Limit extending and modding?
 - Investigate report of MAP04 (Doom) music samples being lower pitched than they should.
-- Fix bug with sound sometimes not working on launch (due to NaNs in audio compression code).
 - Fix bug with switch on Deimos Lab not working at certain positions and angles (will need overhaul of switch collision code)
 - Allow .WAD map overrides to be used with Final Doom.
 - Use a combined MD5 of all map lumps to decide whether to apply map patches or not.
