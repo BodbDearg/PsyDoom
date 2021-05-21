@@ -3,7 +3,6 @@
 - Fix bug with switch on Deimos Lab not working at certain positions and angles (will need overhaul of switch collision code)
 - Provide PsyDoom Doom Builder config
 - Experiment with Doom 64 two colored lighting
-- Add the ability to add new animated textures and flats
 - Add the ability to define new switch texture pairs
 - Simple DECORATE format for new decorations.
     - One definition per line

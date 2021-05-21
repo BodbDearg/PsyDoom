@@ -26,7 +26,11 @@
 #include "p_telept.h"
 #include "p_tick.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/ParserTokenizer.h"
 
+#include <cstdlib>
+#include <memory>
+#include <string>
 #include <vector>
 
 // Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
@@ -47,12 +51,16 @@ struct delayaction_t {
     delayed_actionfn_t  actionfunc;     // The action to perform after the delay
 };
 
-// The number of animated floor/texture types in the game for Doom and Final Doom
-static constexpr int32_t MAXANIMS_DOOM = 16;
-static constexpr int32_t MAXANIMS_FDOOM = 18;
+// Mask applied to offsets for scrolling walls (wrap every 128 units)
+static constexpr int32_t SCROLLMASK = 0xFF7F0000;
 
-// Definitions for all flat and texture animations in the game
-static const animdef_t gAnimDefs[MAXANIMS_FDOOM] = {
+// The base number of animated floor/texture types in the game for Doom and Final Doom.
+// The true number can be extended by user mods.
+static constexpr int32_t BASE_NUM_ANIMS_DOOM = 16;
+static constexpr int32_t BASE_NUM_ANIMS_FDOOM = 18;
+
+// Definitions for all flat and texture animations built into the game
+static const animdef_t gBaseAnimDefs[BASE_NUM_ANIMS_FDOOM] = {
     { 0, "BLOOD1",   "BLOOD3",   3 },
     { 0, "BSLIME01", "BSLIME04", 3 },
     { 0, "CSLIME01", "CSLIME04", 3 },
@@ -76,15 +84,29 @@ static const animdef_t gAnimDefs[MAXANIMS_FDOOM] = {
     { 1, "WFALL1",   "WFALL4",   3 },
 };
 
-static constexpr int32_t SCROLLMASK = 0xFF7F0000;   // Mask applied to offsets for scrolling walls (wrap every 128 units)
+// PsyDoom: anim definitions for the current game and user mod.
+// The list is now built dynamically at runtime.
+#if PSYDOOM_MODS
+    static std::vector<animdef_t> gAnimDefs;
+#else
+    #define gAnimDefs gBaseAnimDefs
+#endif
 
 card_t      gMapBlueKeyType;        // What type of blue key the map uses (if map has a blue key)
 card_t      gMapRedKeyType;         // What type of red key the map uses (if map has a red key)
 card_t      gMapYellowKeyType;      // What type of yellow key the map uses (if map has a yellow key)
 int32_t     gMapBossSpecialFlags;   // PSX addition: What types of boss specials (triggers) are active on the current map
 
-static anim_t   gAnims[MAXANIMS_FDOOM];     // The list of animated textures
-static anim_t*  gpLastAnim;                 // Points to the end of the list of animated textures
+// The list of animated textures.
+// PsyDoom: this list is now allocated dynamically at runtime.
+#if PSYDOOM_MODS
+    static std::vector<anim_t> gAnims;
+#else
+    static anim_t gAnims[BASE_NUM_ANIMS_FDOOM];
+#endif
+
+// Points to the end of the list of animated textures
+static anim_t* gpLastAnim;
 
 // PsyDoom: can now have as many scrolling lines as we want
 #if PSYDOOM_LIMIT_REMOVING
@@ -100,15 +122,97 @@ static void T_DelayedAction(delayaction_t& action) noexcept;
 
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: try to read a list of (wall or floor) animation definitions from the named text lump.
+// 
+// Grammar for these definitions:
+//      BEGIN_TEX END_TEX TICMASK
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_ReadUserAnimDefs(const char* const lumpName, const bool bWallAnims) noexcept {
+    // Does the user anim def lump exist?
+    const int32_t lumpIdx = W_CheckNumForName(lumpName);
+
+    if (lumpIdx < 0)
+        return;
+
+    // Read the lump entirely and null terminate the text data
+    const int32_t lumpSize = W_LumpLength(lumpIdx);
+    std::unique_ptr<char[]> lumpChars(new char[lumpSize + 1]);
+    W_ReadLump(lumpIdx, lumpChars.get(), true);
+    lumpChars[lumpSize] = 0;
+
+    // Parse the anim def
+    int32_t curLineIdx = 0;
+
+    ParserTokenizer::visitAllLineTokens(
+        lumpChars.get(),
+        lumpChars.get() + lumpSize,
+        [&](const int32_t lineIdx) noexcept {
+            // New definition lies ahead
+            curLineIdx = lineIdx;
+            animdef_t& animDef = gAnimDefs.emplace_back();
+            animDef.istexture = bWallAnims;
+        },
+        [&](const int32_t tokenIdx, const char* const token, const size_t tokenLen) noexcept {
+            // Too many tokens?
+            if ((tokenIdx < 0) || (tokenIdx >= 3)) {
+                I_Error("P_ReadUserAnimDefs: LUMP '%s' line %d has invalid syntax!\nExpected: BEGIN_TEX END_TEX TICMASK", lumpName, curLineIdx);
+            }
+
+            // Parse each token
+            animdef_t& animDef = gAnimDefs.back();
+            const bool bIsTexNameToken = ((tokenIdx == 0) || (tokenIdx == 1));
+
+            if (bIsTexNameToken && (tokenLen > MAX_WAD_LUMPNAME)) {
+                I_Error("P_ReadUserAnimDefs: LUMP '%s' line %d - texture name is too long!", lumpName, curLineIdx);
+            }
+
+            if (tokenIdx == 0) {
+                // Start name
+                std::memcpy(animDef.startname, token, tokenLen);
+                animDef.startname[tokenLen] = 0;
+            } else if (tokenIdx == 1) {
+                // End time
+                std::memcpy(animDef.endname, token, tokenLen);
+                animDef.endname[tokenLen] = 0;
+            } else if (tokenIdx == 2) {
+               // Tic mask (integer)
+               String16 numberStr = token;
+               numberStr.chars[std::min<size_t>(String16::MAX_LEN - 1, tokenLen)] = 0;
+               animDef.ticmask = std::atoi(numberStr.chars);
+            }
+        }
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: initializes the dynamically populated list of anim defs.
+// Uses the list of base animations appropriate to the game being played, plus any anims defined in user mods.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_InitAnimDefs() noexcept {
+    // Add base animation definitions
+    gAnimDefs.clear();
+    gAnimDefs.reserve(128);
+    const int32_t numBaseAnims = (Game::isFinalDoom()) ? BASE_NUM_ANIMS_FDOOM : BASE_NUM_ANIMS_DOOM;
+
+    for (int32_t i = 0; i < numBaseAnims; ++i) {
+        gAnimDefs.push_back(gBaseAnimDefs[i]);
+    }
+
+    // Read user animation definitions
+    P_ReadUserAnimDefs("PSYTANIM", true);
+    P_ReadUserAnimDefs("PSYFANIM", false);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: sets animated textures and flats to use the first frame number.
 // Fixes cases where WAD authors might use the 2nd frame of an animation (e.g SLIME02) instead of the 1st.
 // The engine requires an animation to be referred to by it's first frame in order to work...
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SetAnimsToBasePic() noexcept {
-    const int32_t maxAnims = (Game::isFinalDoom()) ? MAXANIMS_FDOOM : MAXANIMS_DOOM;
-
     // This trawls through the sector or side list for every animation.
     // Not the most efficient method but it's only done once on startup for not too many animations, and this way avoids allocations...
+    const int32_t maxAnims = (int32_t) gAnimDefs.size();
+
     for (int32_t animIdx = 0; animIdx < maxAnims; ++animIdx) {
         const animdef_t& animdef = gAnimDefs[animIdx];
 
@@ -158,7 +262,18 @@ void P_SetAnimsToBasePic() noexcept {
 // Also sets up the spot in VRAM where these animations will go - they occupy the same spot as the base animation frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitPicAnims() noexcept {
-    const int32_t maxAnims = (Game::isFinalDoom()) ? MAXANIMS_FDOOM : MAXANIMS_DOOM;
+    // PsyDoom: the list of anims and anim defs is now dynamic amd must be built on startup
+    #if PSYDOOM_MODS
+        P_InitAnimDefs();
+
+        // Init the anim list - 1 slot per anim def
+        gAnims.clear();
+        gAnims.resize(gAnimDefs.size());
+        const int32_t maxAnims = (int32_t) gAnims.size();
+    #else
+        const int32_t maxAnims = (Game::isFinalDoom()) ? BASE_NUM_ANIMS_FDOOM : BASE_NUM_ANIMS_DOOM;
+    #endif
+
     gpLastAnim = &gAnims[0];
 
     for (int32_t animIdx = 0; animIdx < maxAnims; ++animIdx) {
@@ -1016,7 +1131,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_UpdateSpecials() noexcept {
     // Animate flats and wall textures
-    for (anim_t* pAnim = gAnims; pAnim < gpLastAnim; ++pAnim) {
+    for (anim_t* pAnim = &gAnims[0]; pAnim < gpLastAnim; ++pAnim) {
         // Skip over this entry if it isn't time to advance the animation
         if (gGameTic & pAnim->ticmask)
             continue;

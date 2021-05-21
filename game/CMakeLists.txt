@@ -226,6 +226,8 @@ set(SOURCE_FILES
     "PcPsx/NetPacketWriter.h"
     "PcPsx/Network.cpp"
     "PcPsx/Network.h"
+    "PcPsx/ParserTokenizer.cpp"
+    "PcPsx/ParserTokenizer.h"
     "PcPsx/PlayerPrefs.cpp"
     "PcPsx/PlayerPrefs.h"
     "PcPsx/ProgArgs.cpp"
