@@ -4,7 +4,13 @@
 
 #include <cstddef>
 
-enum class CdFileId : int32_t;
+// PsyDoom: 'CdFileId' has changed in format
+#if PSYDOOM_MODS
+    union String16;
+    typedef String16 CdFileId;
+#else 
+    typedef int32_t CdFileId;
+#endif
 
 extern int32_t      gTicCon;
 extern int32_t      gPlayersElapsedVBlanks[MAXPLAYERS];

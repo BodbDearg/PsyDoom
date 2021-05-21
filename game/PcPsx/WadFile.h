@@ -3,6 +3,7 @@
 #include "Asserts.h"
 #include "Endian.h"
 #include "GameFileReader.h"
+#include "String8_16.h"
 
 #include <memory>
 
@@ -17,39 +18,10 @@ struct WadLump {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Format for the name of a lump in a WAD file, as stored on disk.
-// Note: use a union so we can access as a 64-bit word or individual chars in certain places without causing strict aliasing violations.
+// Format for the name of a lump in a WAD file, as stored on disk
 //------------------------------------------------------------------------------------------------------------------------------------------
-static constexpr int32_t MAX_WAD_LUMPNAME = 8;
-
-union WadLumpName {
-    uint64_t word;
-
-    // This structure is a workaround for the fact that we can't initialize an array at compile time in a constexpr context
-    struct {
-        char c0, c1, c2, c3, c4, c5, c6, c7;
-
-        inline constexpr char& operator[](const size_t i) noexcept { return (&c0)[i]; }
-        inline constexpr const char& operator[](const size_t i) const noexcept { return (&c0)[i]; }
-    } chars;
-
-    inline constexpr WadLumpName() noexcept : word(0) {}
-    inline constexpr WadLumpName(const uint64_t word) noexcept : word(word) {}
-
-    inline constexpr WadLumpName(const char c0, const char c1, const char c2, const char c3, const char c4, const char c5, const char c6, const char c7) noexcept
-        : chars{}
-    {
-        chars.c0 = c0;
-        chars.c1 = c1;
-        chars.c2 = c2;
-        chars.c3 = c3;
-        chars.c4 = c4;
-        chars.c5 = c5;
-        chars.c6 = c6;
-        chars.c7 = c7;
-    }
-};
-
+static constexpr int32_t MAX_WAD_LUMPNAME = String8::MAX_LEN;
+typedef String8 WadLumpName;
 static_assert(sizeof(WadLumpName) == 8);
 
 //------------------------------------------------------------------------------------------------------------------------------------------

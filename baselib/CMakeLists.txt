@@ -17,6 +17,7 @@ set(SOURCE_FILES
     "Macros.h"
     "Matrix4.h"
     "OutputStream.h"
+    "String8_16.h"
 )
 
 set(OTHER_FILES

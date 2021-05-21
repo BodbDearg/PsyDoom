@@ -11,7 +11,13 @@
 
 #include <cstdint>
 
-enum class CdFileId : int32_t;
+// PsyDoom: 'CdFileId' has changed in format
+#if PSYDOOM_MODS
+    union String16;
+    typedef String16 CdFileId;
+#else 
+    typedef int32_t CdFileId;
+#endif
 
 // Number of bytes in a CD-ROM data sector, assuming MODE1 is used (includes error detection payload)
 static constexpr int32_t CDROM_SECTOR_SIZE = 2048;
@@ -39,6 +45,14 @@ enum class PsxCd_SeekMode : int32_t {
 struct PsxCd_MapTblEntry {
     int32_t     startSector;    // PsyDoom: if this is '0' then it means the file is not present on the disc
     int32_t     size;
+
+    inline bool operator == (const PsxCd_MapTblEntry& other) const noexcept {
+        return ((startSector == other.startSector) && (size == other.size));
+    }
+
+    inline bool operator != (const PsxCd_MapTblEntry& other) const noexcept {
+        return ((startSector != other.startSector) || (size != other.size));
+    }
 };
 
 void psxcd_init() noexcept;

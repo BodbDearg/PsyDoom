@@ -68,8 +68,9 @@ void init([[maybe_unused]] const CdFileId mapWadFile) noexcept {
             return;
 
         // Make up the path to the overriden file
+        const auto mapWadFileName = mapWadFile.c_str();
         gMapFilePath = ProgArgs::gDataDirPath;
-        gMapFilePath.append(gCdMapTblFileNames[(uint32_t) mapWadFile]);
+        gMapFilePath.append(mapWadFileName.data());
 
         // Get the current modified timestamp
         gLastMapFileModifiedTime = queryMapFileModifiedTime();

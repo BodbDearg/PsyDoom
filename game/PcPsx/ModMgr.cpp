@@ -5,11 +5,15 @@
 
 #include "Asserts.h"
 #include "FileUtils.h"
+#include "IsoFileSys.h"
 #include "ProgArgs.h"
+#include "PsxVm.h"
 #include "WadList.h"
 
 #include <algorithm>
+#include <functional>
 #include <map>
+#include <unordered_set>
 #include <vector>
 
 // MacOS: some POSIX stuff needed due to <filesystem> workaround
@@ -19,14 +23,23 @@
     #include <filesystem>
 #endif
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Provides a hash for a CD file ID, required so we can put it in a set
+//------------------------------------------------------------------------------------------------------------------------------------------
+template<> struct std::hash<CdFileId> {
+    inline std::size_t operator()(const CdFileId& fileId) const noexcept {
+        return fileId.words[0] ^ fileId.words[1];
+    }
+};
+
 BEGIN_NAMESPACE(ModMgr)
 
 // Maximum number of files that can be open at once by the mod manager
 static constexpr uint8_t MAX_OPEN_FILES = 16;
 
-// A list of booleans indicating whether each file in the game can be overriden by a file in the user given 'datadir'.
-// The list is indexed by a 'CdFileId' value.
-static std::vector<bool> gbFileHasOverrides;
+// A set of filenames in the game that are overriden by a file in the user specified 'datadir'.
+// The names in this set are uppercased for case insensitive comparison.
+static std::unordered_set<CdFileId> gOverridenFileNames;
 
 // A list of currently open files.
 // Only a certain amount are allowed at a time:
@@ -52,32 +65,23 @@ static std::string getDataDirFilePath(const char* const fileName) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Uppercases the specified string
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeUppercase(std::string& str) noexcept {
-    std::transform(
-        str.begin(),
-        str.end(),
-        str.begin(),
-        [](char c) noexcept { return (char) ::toupper(c); }
-    );
+static void makeUppercase(char* const pStr, const size_t len) noexcept {
+    std::transform(pStr, pStr + len, pStr, [](char c) noexcept { return (char) ::toupper(c); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Determines what files in the game are overriden with files in a user supplied 'data directory', if any.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void determineFileOverridesInUserDataDir() noexcept {
-    // If there is no data dir then there is no overrides
-    gbFileHasOverrides.clear();
-    gbFileHasOverrides.resize((uint32_t) CdFileId::END);
+    // If there is no data dir then there are no overrides
+    gOverridenFileNames.clear();
 
     if (!ProgArgs::gDataDirPath[0])
         return;
 
-    // Build a map from filename to file index
-    std::map<std::string, uint32_t> nameToFileIndex;
-
-    for (uint32_t i = 0; i < (uint32_t) CdFileId::END; ++i) {
-        nameToFileIndex[gCdMapTblFileNames[i]] = i;
-    }
+    // Prealloc memory for the overriden filenames set
+    const IsoFileSys& fileSys = PsxVm::gIsoFileSys;
+    gOverridenFileNames.reserve(fileSys.entries.size() * 8);
 
     // MacOS: the C++ 17 '<filesystem>' header requires MacOS Catalina as a minimum target.
     // That's a bit too much for now, so use standard POSIX stuff instead as a workaround.
@@ -94,16 +98,13 @@ static void determineFileOverridesInUserDataDir() noexcept {
             errno = 0;
 
             while (dirent* const pDirEnt = readdir(pDir)) {
-                // Try to match this file against game files and flag as an override if matching.
-                // Match case insensitive by uppercasing the file name.
-                std::string filename = pDirEnt->d_name;
-                makeUppercase(filename);
-                auto nameToFileIndexIter = nameToFileIndex.find(filename);
-
-                if (nameToFileIndexIter != nameToFileIndex.end()) {
-                    const uint32_t fileIdx = nameToFileIndexIter->second;
-                    gbFileHasOverrides[fileIdx] = true;
-                }
+                // Mark this file as overridden. Note that we don't bother checking if the file originally existed on the game disc since this
+                // allows us to add new files to variants of the game that might not have originally had them. An example of this would be
+                // allowing 'MAP01.WAD' (Doom format map) to override 'MAP01.ROM' (Final Doom format map) when the Final Doom game is loaded.
+                // This functionality is desirable since the Doom format is more modding friendly and doesn't contain baked-in texture numbers.
+                CdFileId fileId = pDirEnt->d_name;
+                makeUppercase(fileId.chars, CdFileId::MAX_LEN);
+                gOverridenFileNames.insert(fileId);
             }
 
             closedir(pDir);
@@ -122,16 +123,13 @@ static void determineFileOverridesInUserDataDir() noexcept {
             const DirIter dirEndIter;
 
             while (dirIter != dirEndIter) {
-                // Try to match this file against game files and flag as an override if matching.
-                // Match case insensitive by uppercasing the file name.
-                std::string filename = dirIter->path().filename().string();
-                makeUppercase(filename);
-                auto nameToFileIndexIter = nameToFileIndex.find(filename);
-
-                if (nameToFileIndexIter != nameToFileIndex.end()) {
-                    const uint32_t fileIdx = nameToFileIndexIter->second;
-                    gbFileHasOverrides[fileIdx] = true;
-                }
+                // Mark this file as overridden. Note that we don't bother checking if the file originally existed on the game disc since this
+                // allows us to add new files to variants of the game that might not have originally had them. An example of this would be
+                // allowing 'MAP01.WAD' (Doom format map) to override 'MAP01.ROM' (Final Doom format map) when the Final Doom game is loaded.
+                // This functionality is desirable since the Doom format is more modding friendly and doesn't contain baked-in texture numbers.
+                CdFileId fileId = dirIter->path().filename().u8string().c_str();
+                makeUppercase(fileId.chars, CdFileId::MAX_LEN);
+                gOverridenFileNames.insert(fileId);
 
                 ++dirIter;
             }
@@ -172,13 +170,11 @@ static bool isValidOverridenFile(const PsxCd_File& file) noexcept {
 // Get the path to an overriden file
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::string getOverridenFilePath(const CdFileId discFile) noexcept {
-    const char* const filename = gCdMapTblFileNames[(uint32_t) discFile];
-
     std::string filePath;
     filePath.reserve(255);
     filePath = ProgArgs::gDataDirPath;
     filePath.push_back('/');
-    filePath += filename;
+    filePath += discFile.c_str().data();
 
     return filePath;
 }
@@ -196,9 +192,8 @@ void shutdown() noexcept {
         }
     }
 
-    // Clear all data
-    gbFileHasOverrides.clear();
-    gbFileHasOverrides.shrink_to_fit();
+    // Clear all overrides
+    gOverridenFileNames.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -223,8 +218,9 @@ void addUserWads(WadList& wadList) noexcept {
 }
 
 bool areOverridesAvailableForFile(const CdFileId discFile) noexcept {
-    const uint32_t fileIdx = (uint32_t) discFile;
-    return (fileIdx < gbFileHasOverrides.size() && gbFileHasOverrides[fileIdx]);
+    CdFileId ucaseDiscFile = discFile;
+    makeUppercase(ucaseDiscFile.chars, CdFileId::MAX_LEN);
+    return (gOverridenFileNames.count(ucaseDiscFile) > 0);
 }
 
 bool isFileOverriden(const PsxCd_File& file) noexcept {
@@ -236,7 +232,7 @@ bool openOverridenFile(const CdFileId discFile, PsxCd_File& fileOut) noexcept {
     const uint8_t fileSlotIdx = findFreeOpenFileSlotIndex();
 
     // Figure out the path for the file
-    if (discFile >= CdFileId::END) {
+    if (discFile == CdFileId{}) {
         FatalErrors::raise("ModMgr::openOverridenFile: invalid file specified!");
     }
 
@@ -322,7 +318,7 @@ int32_t tellForOverridenFile(const PsxCd_File& file) noexcept {
 }
 
 int32_t getOverridenFileSize(const CdFileId discFile) noexcept {
-    if (discFile >= CdFileId::END) {
+    if (discFile == CdFileId{}) {
         FatalErrors::raise("ModMgr::getOverridenFileSize: invalid file specified!");
     }
 

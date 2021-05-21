@@ -2,7 +2,14 @@
 
 #include <cstdint>
 
-enum class CdFileId : int32_t;
+// PsyDoom: 'CdFileId' has changed in format
+#if PSYDOOM_MODS
+    union String16;
+    typedef String16 CdFileId;
+#else 
+    typedef int32_t CdFileId;
+#endif
+
 struct master_status_structure;
 
 // Types of sequence loader errors

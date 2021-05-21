@@ -324,6 +324,7 @@ if (PSYDOOM_INCLUDE_OLD_CODE)
         "Old/Doom/UI/Old_cn_main.h"
         "Old/Doom/UI/Old_ti_main.cpp"
         "Old/Old_cdmaptbl.cpp"
+        "Old/Old_cdmaptbl.h"
         "Old/PsyQ/Old_LIBAPI.cpp"
         "Old/PsyQ/Old_LIBAPI.h"
         "Old/PsyQ/Old_LIBCD.cpp"

@@ -32,7 +32,7 @@ void W_Init() noexcept {
     // Open all main WAD files and finalize the list.
     // Add user WADs first so they take precedence and can override lumps in the original WAD.
     ModMgr::addUserWads(gMainWadList);
-    gMainWadList.add(CdFileId::PSXDOOM_WAD);
+    gMainWadList.add(CdFile::PSXDOOM_WAD);
     gMainWadList.finalize();
 }
 

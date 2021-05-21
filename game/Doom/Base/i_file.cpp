@@ -1,6 +1,7 @@
 #include "i_file.h"
 
 #include "i_main.h"
+#include "String8_16.h"
 
 static constexpr int32_t MAX_OPEN_FILES = 4;
 
@@ -31,7 +32,13 @@ int32_t OpenFile(const CdFileId discFile) noexcept {
     const PsxCd_File* const pOpenedFile = psxcd_open(discFile);
 
     if (!pOpenedFile) {
-        I_Error("Cannot open %u", (uint32_t) discFile);
+        // PsyDoom: the file id is now a fixed size string
+        #if PSYDOOM_MODS
+            const auto fileName = discFile.c_str();
+            I_Error("Cannot open %s!", fileName.data());
+        #else
+            I_Error("Cannot open %u", (uint32_t) discFile);
+        #endif
     }
 
     // Search for a free cd file slot and abort with an error if not found

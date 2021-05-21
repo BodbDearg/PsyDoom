@@ -4,7 +4,8 @@
 
 #include <cstdint>
 
-enum class CdFileId : int32_t;
+union String16;
+typedef String16 CdFileId;
 
 BEGIN_NAMESPACE(DevMapAutoReloader)
 

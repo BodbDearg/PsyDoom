@@ -8,7 +8,13 @@
 
 #include "PcPsx/WadUtils.h"
 
-enum class CdFileId : int32_t;
+// PsyDoom: 'CdFileId' has changed in format
+#if PSYDOOM_MODS
+    union String16;
+    typedef String16 CdFileId;
+#else 
+    typedef int32_t CdFileId;
+#endif
 
 class WadFile;
 

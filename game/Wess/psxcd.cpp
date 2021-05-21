@@ -164,16 +164,21 @@ void psxcd_exit() noexcept {
 // Open a specified CD file for reading
 //------------------------------------------------------------------------------------------------------------------------------------------
 PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
-    // Zero init the temporary file structure and sanity check the file is valid!
+    // Zero init the temporary file structure
     gPSXCD_cdfile = {};
 
-    if (((int32_t) discFile < 0) || (discFile >= CdFileId::END)) {
-        FatalErrors::raise("psxcd_open: invalid file specified!");
-    }
-
-    // Modding mechanism: allow files to be overriden with user files in a specified directory.
+    // Modding mechanism: allow files to be overridden with user files in a specified directory.
+    // Note that we do this check BEFORE validating if the file exists on-disc because PsyDoom now allows Doom format maps (.WAD)
+    // to override maps in Final Doom (.ROM files). The .WAD map files of course won't exist on-disc in the case of Final Doom.
     if (ModMgr::areOverridesAvailableForFile(discFile))
         return (ModMgr::openOverridenFile(discFile, gPSXCD_cdfile)) ? &gPSXCD_cdfile : nullptr;
+
+    // Figure out where the file is on disc and sanity check the file is valid
+    const PsxCd_MapTblEntry fileTableEntry = CdMapTbl_GetEntry(discFile);
+
+    if (fileTableEntry == PsxCd_MapTblEntry{}) {
+        FatalErrors::raise("psxcd_open: invalid file specified!");
+    }
 
     // Find a free disc reader slot to accomodate this file
     int32_t discReaderIdx = -1;
@@ -189,8 +194,7 @@ PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
         FatalErrors::raise("psxcd_open: out of file handles!");
     }
 
-    // Figure out where the file is on disc, open up the disc reader for it and save it's details
-    const PsxCd_MapTblEntry& fileTableEntry = gCdMapTbl[(uint32_t) discFile];
+    // Open up the disc reader for it and save it's details
     DiscReader& discReader = gFileDiscReaders[discReaderIdx];
 
     if (!discReader.setTrackNum(1)) {
@@ -528,5 +532,5 @@ int32_t psxcd_get_file_size(const CdFileId discFile) noexcept {
     if (ModMgr::areOverridesAvailableForFile(discFile))
         return ModMgr::getOverridenFileSize(discFile);
 
-    return gCdMapTbl[(int32_t) discFile].size;
+    return CdMapTbl_GetEntry(discFile).size;
 }

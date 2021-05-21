@@ -88,7 +88,7 @@ void D_DoomMain() noexcept {
         // PsyDoom: allocate a buffer big enough to hold the WMD file (as it is on disk) temporarily.
         // The original PSX Doom used the 64 KiB static 'temp' buffer for this purpose; Final Doom did a temp 'Z_EndMalloc' of 122,880 bytes
         // because it's WMD file was much bigger. This method is more flexible and will allow for practically any sized WMD.
-        const int32_t wmdFileSize = psxcd_get_file_size(CdFileId::DOOMSND_WMD);
+        const int32_t wmdFileSize = psxcd_get_file_size(CdFile::DOOMSND_WMD);
         std::unique_ptr<std::byte[]> wmdFileBuffer(new std::byte[wmdFileSize]);
         PsxSoundInit(doomToWessVol(gOptionsSndVol), doomToWessVol(gOptionsMusVol), wmdFileBuffer.get());
     }
@@ -176,9 +176,9 @@ void D_DoomMain() noexcept {
         };
 
         if (!didExit(RunTitle())) {
-            if (!didExit(RunDemo(CdFileId::DEMO1_LMP))) {
+            if (!didExit(RunDemo(CdFile::DEMO1_LMP))) {
                 if (!didExit(RunCredits())) {
-                    if (!didExit(RunDemo(CdFileId::DEMO2_LMP)))
+                    if (!didExit(RunDemo(CdFile::DEMO2_LMP)))
                         continue;
                 }
             }

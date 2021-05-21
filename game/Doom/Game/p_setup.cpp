@@ -8,6 +8,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/cdmaptbl.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
@@ -27,6 +28,7 @@
 #include "PcPsx/DevMapAutoReloader.h"
 #include "PcPsx/MapPatcher.h"
 #include "PcPsx/MobjSpritePrecacher.h"
+#include "PcPsx/ModMgr.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -37,9 +39,12 @@
 // Need to be able to support various small allocs throughout gameplay for particles and so forth.
 static constexpr int32_t MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY = 1024 * 32;
 
-// How many maps are in a map folder and the number of files per maps folder etc.
-static constexpr int32_t LEVELS_PER_MAP_FOLDER = (uint32_t) CdFileId::MAPSPR01_IMG - (uint32_t) CdFileId::MAP01_WAD;
-static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
+// How many maps are in a map folder and the number of files per maps folder.
+// PsyDoom: file ids are no longer simple integers, so these numbers are now no longer applicable.
+#if !PSYDOOM_MODS
+    static constexpr int32_t LEVELS_PER_MAP_FOLDER = (uint32_t) CdFileId::MAPSPR01_IMG - (uint32_t) CdFileId::MAP01_WAD;
+    static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
+#endif
 
 // Sky stuff
 static constexpr const char* SKY_LUMP_NAME = "F_SKY";
@@ -1371,16 +1376,32 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
     // Figure out which file to open for the map WAD.
     //
-    // Note: for Final Doom I've added logic to allow for MAPXX.WAD or MAPXX.ROM, with a preference for the .WAD file.
+    // Note: for Final Doom I've added logic to allow for MAPXX.WAD or MAPXX.ROM, with a preference for the .WAD file format.
     // Also, if the file for the map has the .ROM extension then it is assumed the map data is in Final Doom format.
-    const int32_t mapIndex = mapNum - 1;
-    const int32_t mapFolderIdx = mapIndex / LEVELS_PER_MAP_FOLDER;
-    const int32_t mapIdxInFolder = mapIndex - mapFolderIdx * LEVELS_PER_MAP_FOLDER;
-    const int32_t mapFolderOffset = mapFolderIdx * NUM_FILES_PER_LEVEL * LEVELS_PER_MAP_FOLDER;
+    // 
+    // PsyDoom: this logic is now changed to account for the fact that file ids are no longer simple integers.
+    // I'm also allowing a .WAD file override to be used even if the there is a .ROM on disk (Final Doom).
+    #if PSYDOOM_MODS
+        constexpr auto makeMapFileId = [](const int32_t mapNum, const char* const extension) noexcept {
+            char name[64];
+            std::sprintf(name, "MAP%02d.%s", mapNum, extension);
+            return CdFileId(name);
+        };
 
-    const CdFileId mapWadFile_doom = (CdFileId)((int32_t) CdFileId::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
-    const CdFileId mapWadFile_finalDoom = (CdFileId)((int32_t) CdFileId::MAP01_ROM + mapIndex);
-    gbLoadingFinalDoomMap = (!gCdMapTbl[(int32_t) mapWadFile_doom].startSector);
+        const CdFileId mapWadFile_doom = makeMapFileId(mapNum, "WAD");
+        const CdFileId mapWadFile_finalDoom = makeMapFileId(mapNum, "ROM");
+        gbLoadingFinalDoomMap = ((CdMapTbl_GetEntry(mapWadFile_doom) == PsxCd_MapTblEntry{}) && (!ModMgr::areOverridesAvailableForFile(mapWadFile_doom)));
+    #else
+        const int32_t mapIndex = mapNum - 1;
+        const int32_t mapFolderIdx = mapIndex / LEVELS_PER_MAP_FOLDER;
+        const int32_t mapIdxInFolder = mapIndex - mapFolderIdx * LEVELS_PER_MAP_FOLDER;
+        const int32_t mapFolderOffset = mapFolderIdx * NUM_FILES_PER_LEVEL * LEVELS_PER_MAP_FOLDER;
+
+        const CdFileId mapWadFile_doom = (CdFileId)((int32_t) CdFileId::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
+        const CdFileId mapWadFile_finalDoom = (CdFileId)((int32_t) CdFileId::MAP01_ROM + mapIndex);
+
+        gbLoadingFinalDoomMap = (!gCdMapTbl[(int32_t) mapWadFile_doom].startSector);
+    #endif
 
     const CdFileId mapWadFile = (gbLoadingFinalDoomMap) ? mapWadFile_finalDoom : mapWadFile_doom;
 

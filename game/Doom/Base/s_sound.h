@@ -44,7 +44,7 @@ void S_StopMusic() noexcept;
 void S_StartMusic() noexcept;
 void S_InitSampleBlock(SampleBlock& block) noexcept;
 void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept;
-void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept;
+void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept;
 void S_Pause() noexcept;
 void S_Resume() noexcept;
 void S_StopSound(const mobj_t* pOrigin) noexcept;
