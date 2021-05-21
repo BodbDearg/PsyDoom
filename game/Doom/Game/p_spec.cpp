@@ -140,7 +140,7 @@ static void P_ReadUserAnimDefs(const char* const lumpName, const bool bWallAnims
     W_ReadLump(lumpIdx, lumpChars.get(), true);
     lumpChars[lumpSize] = 0;
 
-    // Parse the anim def
+    // Parse the anim defs
     int32_t curLineIdx = 0;
 
     ParserTokenizer::visitAllLineTokens(

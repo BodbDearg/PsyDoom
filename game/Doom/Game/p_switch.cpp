@@ -1,8 +1,10 @@
 #include "p_switch.h"
 
+#include "Doom/Base/i_main.h"
 #include "Doom/Base/i_texcache.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
+#include "Doom/Base/w_wad.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
@@ -15,6 +17,9 @@
 #include "p_plats.h"
 #include "p_setup.h"
 #include "p_spec.h"
+#include "PcPsx/ParserTokenizer.h"
+
+#include <vector>
 
 // Defines the two textures used by a switch
 struct switchlist_t {
@@ -22,8 +27,8 @@ struct switchlist_t {
     char    name2[9];
 };
 
-// All of the switch textures in the game
-static const switchlist_t gAlphSwitchList[] = {
+// Definitions for all of the switch textures built into the game
+static const switchlist_t gBaseAlphSwitchList[] = {
     { "SW1BMET",  "SW2BMET"  },
     { "SW1BRICK", "SW2BRICK" },
     { "SW1BRNZ",  "SW2BRNZ"  },
@@ -75,8 +80,19 @@ static const switchlist_t gAlphSwitchList[] = {
     { "SW1STEEL", "SW2STEEL" },
 };
 
-static constexpr int32_t NUM_SWITCHES   = C_ARRAY_SIZE(gAlphSwitchList);    // Number of switch types in the game
-static constexpr int32_t BUTTONTIME     = 1 * TICRATE;                      // How long it takes for a switch to go back to it's original state (1 second)
+// Number of switch types built ino the game
+static constexpr int32_t BASE_NUM_SWITCHES = C_ARRAY_SIZE(gBaseAlphSwitchList);
+
+// PsyDoom: switch definitions for the current game and user mod.
+// The list is now built dynamically at runtime.
+#if PSYDOOM_MODS
+    static std::vector<switchlist_t> gAlphSwitchList;
+#else
+    #define gAlphSwitchList gBaseAlphSwitchList
+#endif
+
+// How long it takes for a switch to go back to it's original state (1 second)
+static constexpr int32_t BUTTONTIME = 1 * TICRATE;
 
 // The list of currently active buttons/switches.
 // PsyDoom limit removing: std::vector all the things! :D
@@ -86,17 +102,109 @@ static constexpr int32_t BUTTONTIME     = 1 * TICRATE;                      // H
     button_t gButtonList[MAXBUTTONS];
 #endif
 
-// The 2 lumps for each switch texture in the game
-static int32_t gSwitchList[NUM_SWITCHES * 2];
+// The 2 lumps for each switch texture in the game.
+// PsyDoom: this list is now built dynamically based on built-in and user switch definitions.
+#if PSYDOOM_MODS
+    static std::vector<int32_t> gSwitchList;
+#else
+    static int32_t gSwitchList[BASE_NUM_SWITCHES * 2];
+#endif
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: try to read a list of switch definitions from the named text lump.
+// 
+// Grammar for these definitions:
+//      OFFTEX ONTEX
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_ReadUserSwitchDefs(const char* const lumpName) noexcept {
+    // Does the user switch def lump exist?
+    const int32_t lumpIdx = W_CheckNumForName(lumpName);
+
+    if (lumpIdx < 0)
+        return;
+
+    // Read the lump entirely and null terminate the text data
+    const int32_t lumpSize = W_LumpLength(lumpIdx);
+    std::unique_ptr<char[]> lumpChars(new char[lumpSize + 1]);
+    W_ReadLump(lumpIdx, lumpChars.get(), true);
+    lumpChars[lumpSize] = 0;
+
+    // Parse the switch defs
+    int32_t curLineIdx = 0;
+
+    ParserTokenizer::visitAllLineTokens(
+        lumpChars.get(),
+        lumpChars.get() + lumpSize,
+        [&](const int32_t lineIdx) noexcept {
+            // New definition lies ahead
+            curLineIdx = lineIdx;
+            gAlphSwitchList.emplace_back();
+        },
+        [&](const int32_t tokenIdx, const char* const token, const size_t tokenLen) noexcept {
+            // Too many tokens?
+            if ((tokenIdx < 0) || (tokenIdx >= 2)) {
+                I_Error("P_ReadUserSwitchDefs: LUMP '%s' line %d has invalid syntax!\nExpected: OFFTEX ONTEX", lumpName, curLineIdx);
+            }
+
+            // Parse each token
+            switchlist_t& switchDef = gAlphSwitchList.back();
+
+            if (tokenLen > MAX_WAD_LUMPNAME) {
+                I_Error("P_ReadUserSwitchDefs: LUMP '%s' line %d - texture name is too long!", lumpName, curLineIdx);
+            }
+
+            if (tokenIdx == 0) {
+                // Off texture
+                std::memcpy(switchDef.name1, token, tokenLen);
+                switchDef.name1[tokenLen] = 0;
+            } else if (tokenIdx == 1) {
+                // On texture
+                std::memcpy(switchDef.name2, token, tokenLen);
+                switchDef.name2[tokenLen] = 0;
+            }
+        }
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: initializes the dynamically populated list of switch defs.
+// Uses the list of base switches, plus any switches defined in user mods.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_InitSwitchDefs() noexcept {
+    // Add base switch definitions
+    gAlphSwitchList.clear();
+    gAlphSwitchList.reserve(128);
+
+    for (int32_t i = 0; i < BASE_NUM_SWITCHES; ++i) {
+        gAlphSwitchList.push_back(gBaseAlphSwitchList[i]);
+    }
+
+    // Read user switch definitions
+    P_ReadUserSwitchDefs("PSYSWTEX");
+}
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches textures for all active switches in the level.
 // Must be done after 64 pixel wide wall textures have been cached in order to work.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitSwitchList() noexcept {
-    int32_t* pSwitchLump = gSwitchList;
+    // PsyDoom: the list of switches and switch defs is now dynamic amd must be built on startup
+    #if PSYDOOM_MODS
+        P_InitSwitchDefs();
 
-    for (int32_t switchIdx = 0; switchIdx < NUM_SWITCHES; ++switchIdx) {
+        // Init the anim list - 1 slot per anim def
+        gSwitchList.clear();
+        gSwitchList.resize(gAlphSwitchList.size() * 2);
+        const int32_t numSwitches = (int32_t) gAlphSwitchList.size();
+    #else
+        const int32_t numSwitches = BASE_NUM_SWITCHES;
+    #endif
+
+    int32_t* pSwitchLump = &gSwitchList[0];
+
+    for (int32_t switchIdx = 0; switchIdx < numSwitches; ++switchIdx) {
         // Get both textures for the switch.
         // PsyDoom: these textures MUST exist, otherwise issue a fatal error.
         #if PSYDOOM_MODS
@@ -191,7 +299,13 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
     // If the switch is usable again, switch it back after a while.
     side_t& side = gpSides[line.sidenum[0]];
 
-    for (int32_t switchListIdx = 0; switchListIdx < NUM_SWITCHES * 2; ++switchListIdx) {
+    #if PSYDOOM_MODS
+        const int32_t numSwitchStates = (int32_t) gSwitchList.size();   // PsyDoom: the switch state list is now dynamically sized
+    #else
+        const int32_t numSwitchStates = NUM_SWITCHES * 2;
+    #endif
+
+    for (int32_t switchListIdx = 0; switchListIdx < numSwitchStates; ++switchListIdx) {
         const int32_t switchTex = gSwitchList[switchListIdx];
 
         // Note: for all these cases the button should have a 'NULL' sound origin set because it's struct has been zero intialized.
