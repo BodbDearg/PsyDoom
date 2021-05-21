@@ -1,5 +1,7 @@
 #include "AudioCompressor.h"
 
+#include "Asserts.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -67,11 +69,14 @@ void compress(State& state, float& sampleL, float& sampleR) noexcept {
     // Note: prevent smoothed signal power from dropping below -100 dBFS to prevent negative infinity when calculating signal power.
     const float lpfLerp = state.lpfLerpFactor;
     const float smoothedSignalPower = std::max(signalPower * lpfLerp + state.lpfPrevSignalPower * (1.0f - lpfLerp), 1.0e-10f);
+    ASSERT((!std::isnan(smoothedSignalPower)) && (!std::isinf(smoothedSignalPower)));
+
     state.lpfPrevSignalPower = smoothedSignalPower;
 
     // Compute the signal power in decibels.
     // Note: normally the formula to convert is 'dB = 20 * log10(amplitude)' but we've already squared the signal so instead the multiply is by '10' instead.
     const float signalPowerDB = std::clamp(10.0f * std::log10(smoothedSignalPower), -100.0f, +100.0f);
+    ASSERT((!std::isnan(signalPowerDB)) && (!std::isinf(signalPowerDB)));
 
     // Compute the instantaneous/non-smoothed gain in decibels.
     // Don't allow a positive gain, only negative!
@@ -79,6 +84,8 @@ void compress(State& state, float& sampleL, float& sampleR) noexcept {
     const float goalAboveThresholdDB = aboveThresholdDB * state.compressionRatio;
     const float kneeWidthDB = state.kneeWidthDB;
     const float compressionStrength = std::clamp((kneeWidthDB > 0) ? aboveThresholdDB / kneeWidthDB : 1.0f, 0.0f, 1.0f);
+    ASSERT((!std::isnan(compressionStrength)) && (!std::isinf(compressionStrength)));
+
     const float smoothedGoalAboveThresholdDB = goalAboveThresholdDB * compressionStrength + (1.0f - compressionStrength) * aboveThresholdDB;
     const float instantGainDB = std::clamp(smoothedGoalAboveThresholdDB - aboveThresholdDB, -100.0f, 0.0f);
 
