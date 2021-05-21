@@ -3,24 +3,26 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Game data structures which are read from WAD files
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 #include "Doom/doomdef.h"
 
-// Map lump offsets, relative to the 'MAPXX' marker
-enum : int32_t {
-    ML_LABEL,           // The 'MAPXX' marker lump
-    ML_THINGS,
-    ML_LINEDEFS,
-    ML_SIDEDEFS,
-    ML_VERTEXES,
-    ML_SEGS,
-    ML_SSECTORS,
-    ML_NODES,
-    ML_SECTORS,
-    ML_REJECT,
-    ML_BLOCKMAP,
-    ML_LEAFS
-};
+// Map lump offsets, relative to the 'MAPXX' marker.
+// PsyDoom: these fixed offsets are no longer used anymore, map lumps can be in any order.
+#if !PSYDOOM_MODS
+    enum : int32_t {
+        ML_LABEL,           // The 'MAPXX' marker lump
+        ML_THINGS,
+        ML_LINEDEFS,
+        ML_SIDEDEFS,
+        ML_VERTEXES,
+        ML_SEGS,
+        ML_SSECTORS,
+        ML_NODES,
+        ML_SECTORS,
+        ML_REJECT,
+        ML_BLOCKMAP,
+        ML_LEAFS
+    };
+#endif
 
 // Linedef flags
 static constexpr int32_t ML_BLOCKING            = 0x1;          // The line blocks all movement

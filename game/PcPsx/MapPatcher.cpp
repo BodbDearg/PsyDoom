@@ -10,8 +10,7 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Renderer/r_local.h"
 #include "Game.h"
-
-#include <md5.h>
+#include "MapHash.h"
 
 BEGIN_NAMESPACE(MapPatcher)
 
@@ -25,12 +24,11 @@ typedef void (*PatcherFunc)();
 // Defines when the patch is applied and the function that will apply the patch.
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct PatchDef {
-    int32_t         mapNumber;      // Which map number the patch applies to
-    GameType        gameType;       // What game type the patch applies to
-    int32_t         mapLumpIndex;   // Which map lump index the patch applies to, e.g 'ML_SECTORS' or 'ML_LINEDEFS'
-    int32_t         lumpSize;       // The size of the lump that should be patched, if mismatching the patch is not applied
-    uint64_t        md5Word1;       // The MD5 for the lump that should be patched (bytes 0-7), if mismatching the patch is not applied.
-    uint64_t        md5Word2;       // The MD5 for the lump that should be patched (bytes 8-15), if mismatching the patch is not applied.
+    int32_t         mapNumber;      // Filter: map number
+    GameType        gameType;       // Filter: game type
+    int32_t         mapSize;        // Filter: combined size (in bytes) of all the lumps for the map
+    uint64_t        md5Word1;       // Filter: The MD5 for the combined map lump data (bytes 0-7)
+    uint64_t        md5Word2;       // Filter: The MD5 for the combined map lump data (bytes 8-15)
     PatcherFunc     patcherFunc;    // The function that does the work of patching
 };
 
@@ -85,18 +83,21 @@ static void fixBallistyxIssues() noexcept {
 // All of the map fixes to apply
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatches[] = {
-    { 19, GameType::Doom,      ML_LINEDEFS, 8610,  0x417CD93948684803, 0xB43273CA53916561, fixHouseOfPainDoorBug },
-    { 47, GameType::Doom,      ML_LINEDEFS, 17626, 0xF64A150D7F4D40A5, 0xE92E10C8CD886A7D, fixTheCitadelStartingHut },
-    { 23, GameType::FinalDoom, ML_LINEDEFS, 21392, 0xCADEBB9043C70D3F, 0x4061F4281078EC52, fixBallistyxIssues }
+    { 19, GameType::Doom,       75515, 0x2A4A41FE016B71FE, 0x97F66D95A1AFA7A3, fixHouseOfPainDoorBug },
+    { 47, GameType::Doom,      186755, 0xD51FE28AF00EE173, 0xCAD32CFE67F41581, fixTheCitadelStartingHut },
+    { 23, GameType::FinalDoom, 167847, 0xB3062D0C57E6C33B, 0x86BE982C0D6B7518, fixBallistyxIssues }
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Try to find a patch for the specified map lump in the map currently being loaded
+// Try to apply patches for the current map
 //------------------------------------------------------------------------------------------------------------------------------------------
-void applyPatches(const int32_t mapLumpIndex, const std::byte* const pLumpBytes, const int32_t lumpSize) noexcept {
+void applyPatches() noexcept {
     // Cache these globals locally since they will be compared a lot
     const int32_t mapNum = gGameMap;
     const GameType gameType = Game::gGameType;
+    const int32_t mapSize = MapHash::gDataSize;
+    const uint64_t md5Word1 = MapHash::gWord1;
+    const uint64_t md5Word2 = MapHash::gWord2;
 
     // Check to see which patch applies (if any)
     for (const PatchDef& patch : gPatches) {
@@ -110,36 +111,15 @@ void applyPatches(const int32_t mapLumpIndex, const std::byte* const pLumpBytes,
         if (gameType != patch.gameType)
             continue;
 
-        // Wrong map lump type?
-        if (mapLumpIndex != patch.mapLumpIndex)
+        // Wrong map data size?
+        if (mapSize != patch.mapSize)
             continue;
 
-        // Wrong map lump size?
-        if (lumpSize != patch.lumpSize)
+        // Wrong MD5 hash for all the map data?
+        if ((md5Word1 != patch.md5Word1) || (md5Word2 != patch.md5Word2))
             continue;
 
-        // All checks have passed, need to do an MD5 of the data to see if it is to be patched
-        const uint64_t md5W1 = patch.md5Word1;
-        const uint64_t md5W2 = patch.md5Word2;
-
-        const uint8_t expectedMD5[16] = {
-            (uint8_t)(md5W1 >>  0), (uint8_t)(md5W1 >>  8), (uint8_t)(md5W1 >> 16), (uint8_t)(md5W1 >> 24),
-            (uint8_t)(md5W1 >> 32), (uint8_t)(md5W1 >> 40), (uint8_t)(md5W1 >> 48), (uint8_t)(md5W1 >> 56),
-            (uint8_t)(md5W2 >>  0), (uint8_t)(md5W2 >>  8), (uint8_t)(md5W2 >> 16), (uint8_t)(md5W2 >> 24),
-            (uint8_t)(md5W2 >> 32), (uint8_t)(md5W2 >> 40), (uint8_t)(md5W2 >> 48), (uint8_t)(md5W2 >> 56),
-        };
-
-        MD5 md5;
-        md5.add(pLumpBytes, (size_t) lumpSize);
-
-        uint8_t actualMD5[16] = {};
-        md5.getHash(actualMD5);
-
-        // Does the MD5 hash match?
-        if (std::memcmp(expectedMD5, actualMD5, sizeof(expectedMD5)) != 0)
-            continue;
-
-        // Match, apply the patch and abort search:
+        // Match, apply the patch and abort the search
         patch.patcherFunc();
         break;
     }

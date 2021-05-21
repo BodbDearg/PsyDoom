@@ -26,6 +26,7 @@
 #include "p_switch.h"
 #include "p_tick.h"
 #include "PcPsx/DevMapAutoReloader.h"
+#include "PcPsx/MapHash.h"
 #include "PcPsx/MapPatcher.h"
 #include "PcPsx/MobjSpritePrecacher.h"
 #include "PcPsx/ModMgr.h"
@@ -162,6 +163,11 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     // Read the WAD vertexes into the temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
+
     // Convert the vertexes to the renderer runtime format
     const mapvertex_t* pSrcVertex = (const mapvertex_t*) pTmpBufferBytes;
     vertex_t* pDstVertex = gpVertexes;
@@ -201,6 +207,11 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
 
     // Read the map lump containing the segs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
 
     // Process the WAD segs and convert them into runtime segs
     const mapseg_t* pSrcSeg = (const mapseg_t*) pTmpBufferBytes;
@@ -269,6 +280,11 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     // Read the map lump containing the subsectors into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
+
     // Process the WAD subsectors and convert them into runtime subsectors
     const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) pTmpBufferBytes;
     subsector_t* pDstSubsec = gpSubsectors;
@@ -326,6 +342,11 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 
     // Read the map lump containing the sectors into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
 
     // Process the WAD sectors and convert them into runtime sectors
     auto processWadSectors = [&](auto pWadSectors) noexcept {
@@ -480,11 +501,6 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     } else {
         gpSkyTexture = nullptr;
     }
-
-    // PsyDoom: if fixes/patches are defined for this map then apply them
-    #if PSYDOOM_MODS
-        MapPatcher::applyPatches(ML_SECTORS, pTmpBufferBytes, lumpSize);
-    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -512,6 +528,11 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
 
     // Read the map lump containing the nodes into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
 
     // Process the WAD nodes and convert them into runtime nodes.
     // The format for nodes on the PSX appears identical to PC.
@@ -560,6 +581,11 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
     // Determine how many things there are to spawn and read the lump from the WAD
     const int32_t numThings = lumpSize / sizeof(mapthing_t);
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
 
     // Spawn the map things
     mapthing_t* pSrcThing = (mapthing_t*) pTmpBufferBytes;
@@ -610,6 +636,11 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
 
     // Process the WAD linedefs and convert them into runtime linedefs
     const maplinedef_t* pSrcLine = (maplinedef_t*) pTmpBufferBytes;
@@ -683,11 +714,6 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
         ++pSrcLine;
         ++pDstLine;
     }
-
-    // PsyDoom: if fixes/patches are defined for this map then apply them
-    #if PSYDOOM_MODS
-        MapPatcher::applyPatches(ML_LINEDEFS, pTmpBufferBytes, lumpSize);
-    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -717,10 +743,15 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     }
 
     gpSides = (side_t*) Z_Malloc(*gpMainMemZone, gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
-    D_memset(gpSides, std::byte(0), gNumSides  * sizeof(side_t));
+    D_memset(gpSides, std::byte(0), gNumSides * sizeof(side_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
 
     // Process the WAD sidedefs and convert them into runtime sidedefs
     auto processWadSidedefs = [&](auto pWadSidedefs) noexcept {
@@ -780,11 +811,6 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     } else {
         processWadSidedefs((mapsidedef_t*) pTmpBufferBytes);
     }
-
-    // PsyDoom: if fixes/patches are defined for this map then apply them
-    #if PSYDOOM_MODS
-        MapPatcher::applyPatches(ML_SIDEDEFS, pTmpBufferBytes, lumpSize);
-    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -796,6 +822,11 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     gpBlockmapLump = (uint16_t*) Z_Malloc(*gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
     W_ReadMapLump(lumpNum, gpBlockmapLump, true);
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(gpBlockmapLump, lumpSize);
+    #endif
 
     // The first 8 bytes of the blockmap are it's header
     struct blockmap_hdr_t {
@@ -849,6 +880,11 @@ static void P_LoadRejectMap(const int32_t lumpNum) noexcept {
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     gpRejectMatrix = (uint8_t*) Z_Malloc(*gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
     W_ReadMapLump(lumpNum, gpRejectMatrix, true);
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(gpRejectMatrix, lumpSize);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -874,6 +910,11 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
     const std::byte* const pLumpBeg = pTmpBufferBytes;
     const std::byte* const pLumpEnd = pTmpBufferBytes + lumpSize;
+
+    // PsyDoom: add to the hash for the map
+    #if PSYDOOM_MODS
+        MapHash::addData(pTmpBufferBytes, lumpSize);
+    #endif
 
     // Determine the number of leafs in the lump.
     // The number of leafs MUST equal the number of subsectors, and they must be in the same order as their subsectors.
@@ -1427,31 +1468,59 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     }
 
     // Get the lump index for the map start lump.
-    // TODO: make this code lookup map lump names properly and fail if not found.
-    const uint32_t mapStartLump = W_MapCheckNumForName(mapLumpName);
+    // PsyDoom: don't use this lump relative indexing anymore, just search for the lump names we want.
+    // This also allows more flexibility where the 'MAP01' etc. markers in the map WAD can just be ignored - map files can be renamed more easily.
+    #if !PSYDOOM_MODS
+        const uint32_t mapStartLump = W_MapCheckNumForName(mapLumpName);
 
-    if (mapStartLump == -1) {
-        I_Error("P_SetupLevel: %s not found", mapLumpName);
-    }
+        if (mapStartLump == -1) {
+            I_Error("P_SetupLevel: %s not found", mapLumpName);
+        }
+    #endif
 
-    // Loading various map lumps
-    P_LoadBlockMap(mapStartLump + ML_BLOCKMAP);
-    P_LoadVertexes(mapStartLump + ML_VERTEXES);
-    P_LoadSectors(mapStartLump + ML_SECTORS);
-    P_LoadSideDefs(mapStartLump + ML_SIDEDEFS);
-    P_LoadLineDefs(mapStartLump + ML_LINEDEFS);
-    P_LoadSubSectors(mapStartLump + ML_SSECTORS);
-    P_LoadNodes(mapStartLump + ML_NODES);
-    P_LoadSegs(mapStartLump + ML_SEGS);
-    P_LoadLeafs(mapStartLump + ML_LEAFS);
-    P_LoadRejectMap(mapStartLump + ML_REJECT);
+    // Loading various map lumps.
+    // PsyDoom: not using relative indexing anymore to load map lumps, search for the lump names instead.
+    // PsyDoom: clear the map hash before starting to load level lumps that will add to the hash.
+    #if PSYDOOM_MODS
+        MapHash::clear();
+        P_LoadBlockMap(W_MapGetNumForName("BLOCKMAP"));
+        P_LoadVertexes(W_MapGetNumForName("VERTEXES"));
+        P_LoadSectors(W_MapGetNumForName("SECTORS"));
+        P_LoadSideDefs(W_MapGetNumForName("SIDEDEFS"));
+        P_LoadLineDefs(W_MapGetNumForName("LINEDEFS"));
+        P_LoadSubSectors(W_MapGetNumForName("SSECTORS"));
+        P_LoadNodes(W_MapGetNumForName("NODES"));
+        P_LoadSegs(W_MapGetNumForName("SEGS"));
+        P_LoadLeafs(W_MapGetNumForName("LEAFS"));
+        P_LoadRejectMap(W_MapGetNumForName("REJECT"));
+    #else
+        P_LoadBlockMap(mapStartLump + ML_BLOCKMAP);
+        P_LoadVertexes(mapStartLump + ML_VERTEXES);
+        P_LoadSectors(mapStartLump + ML_SECTORS);
+        P_LoadSideDefs(mapStartLump + ML_SIDEDEFS);
+        P_LoadLineDefs(mapStartLump + ML_LINEDEFS);
+        P_LoadSubSectors(mapStartLump + ML_SSECTORS);
+        P_LoadNodes(mapStartLump + ML_NODES);
+        P_LoadSegs(mapStartLump + ML_SEGS);
+        P_LoadLeafs(mapStartLump + ML_LEAFS);
+        P_LoadRejectMap(mapStartLump + ML_REJECT);
+    #endif
 
     // Build sector line lists etc.
     P_GroupLines();
 
     // Load and spawn map things. Also initialize the next deathmatch start.
+    // PsyDoom: not using relative indexing anymore to load map lumps, search for the lump names instead.
+    // PsyDoom: compute the final map hash and apply any patches to original map data that are relevant at this point, once things have been loaded.
     gpDeathmatchP = &gDeathmatchStarts[0];
-    P_LoadThings(mapStartLump + ML_THINGS);
+
+    #if PSYDOOM_MODS
+        P_LoadThings(W_MapGetNumForName("THINGS"));
+        MapHash::finalize();
+        MapPatcher::applyPatches();
+    #else
+        P_LoadThings(mapStartLump + ML_THINGS);
+    #endif
 
     // Spawn special thinkers such as light flashes etc. and free up the loaded WAD data.
     // PsyDoom: the WAD manager is now responsible for freeing up resources used by the map WAD.

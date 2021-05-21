@@ -15,6 +15,7 @@
 #include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/Input.h"
+#include "PcPsx/MapHash.h"
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
@@ -120,7 +121,7 @@ texture_t gTex_CONNECT;
 
     // The current network protocol version.
     // Should be incremented whenever the data format being transmitted changes, or when updates might cause differences in game behavior.
-    static constexpr int32_t NET_PROTOCOL_VERSION = 10;
+    static constexpr int32_t NET_PROTOCOL_VERSION = 11;
 
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
@@ -784,6 +785,7 @@ bool I_NetUpdate() noexcept {
             errorCheck ^= mobj.y;
             errorCheck ^= mobj.z;
             errorCheck ^= mobj.angle;
+            errorCheck ^= (uint32_t) MapHash::gWord1;   // Check both players are playing the same map
         }
     }
 

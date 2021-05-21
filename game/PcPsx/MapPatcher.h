@@ -7,6 +7,8 @@
 
 BEGIN_NAMESPACE(MapPatcher)
 
-void applyPatches(const int32_t mapLumpIndex, const std::byte* const pLumpBytes, const int32_t lumpSize) noexcept;
+void clearMapHash() noexcept;
+void addToMapHash(const std::byte* const pMapData, const int32_t dataSize) noexcept;
+void applyPatches() noexcept;
 
 END_NAMESPACE(MapPatcher)

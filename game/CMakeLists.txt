@@ -213,6 +213,8 @@ set(SOURCE_FILES
     "PcPsx/IVideoBackend.h"
     "PcPsx/LIBGPU_CmdDispatch.cpp"
     "PcPsx/LIBGPU_CmdDispatch.h"
+    "PcPsx/MapHash.cpp"
+    "PcPsx/MapHash.h"
     "PcPsx/MapPatcher.cpp"
     "PcPsx/MapPatcher.h"
     "PcPsx/MobjSpritePrecacher.cpp"

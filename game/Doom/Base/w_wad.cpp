@@ -86,19 +86,13 @@ int32_t W_GetNumForName(const WadLumpName lumpName) noexcept {
     if (lumpIdx >= 0)
         return lumpIdx;
 
-    // Otherwise issue an error for the missing lump name.
-    // Note that the string might not be null terminated, so have to ensure that here.
-    char lumpNameCStr[MAX_WAD_LUMPNAME + 1];
-    std::memcpy(lumpNameCStr, &lumpName.chars, MAX_WAD_LUMPNAME);
-    lumpNameCStr[MAX_WAD_LUMPNAME] = 0;
-
-    I_Error("W_GetNumForName: %s not found!", lumpNameCStr);
+    // Otherwise issue an error for the missing lump name
+    I_Error("W_GetNumForName: %s not found!", lumpName.c_str().data());
     return -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Gives the decompressed size (in bytes) of the given main WAD lump (specified by lump index).
-// Issues a fatal error if the lump index is invalid.
+// Gives the decompressed size (in bytes) of the given main WAD lump (specified by lump index)
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t W_LumpLength(const int32_t lumpIdx) noexcept {
     const WadLump& lump = gMainWadList.getLump(lumpIdx);
@@ -145,19 +139,33 @@ void W_CloseMapWad() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Give the decompressed size in bytes of the specified lump index from the currently loaded map WAD.
-// Issues a fatal error if the lump is not found.
-//------------------------------------------------------------------------------------------------------------------------------------------
-int32_t W_MapLumpLength(const int32_t lumpIdx) noexcept {
-    const WadLump& lump = gMapWad.getLump(lumpIdx);
-    return lump.uncompressedSize;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Return the lump index for the given map lump name or -1 if not found
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t W_MapCheckNumForName(const WadLumpName lumpName) noexcept {
     return gMapWad.findLumpIdx(lumpName);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the lump index for the given map lump name or fail with a fatal error if not found
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_MapGetNumForName(const WadLumpName lumpName) noexcept {
+    // Search for the lump name and return it if found
+    const int32_t lumpIdx = W_MapCheckNumForName(lumpName);
+
+    if (lumpIdx >= 0)
+        return lumpIdx;
+
+    // Otherwise issue an error for the missing lump name
+    I_Error("W_MapGetNumForName: %s not found!", lumpName.c_str().data());
+    return -1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Give the decompressed size in bytes of the specified lump index from the currently loaded map WAD
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_MapLumpLength(const int32_t lumpIdx) noexcept {
+    const WadLump& lump = gMapWad.getLump(lumpIdx);
+    return lump.uncompressedSize;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

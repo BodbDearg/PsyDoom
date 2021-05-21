@@ -37,8 +37,9 @@ const WadLump& W_CacheLumpNum(const int32_t lumpIdx, const int16_t allocTag, con
 const WadLump& W_CacheLumpName(const WadLumpName lumpName, const int16_t allocTag, const bool bDecompress) noexcept;
 void W_OpenMapWad(const CdFileId fileId) noexcept;
 void W_CloseMapWad() noexcept;
-int32_t W_MapLumpLength(const int32_t lumpIdx) noexcept;
 int32_t W_MapCheckNumForName(const WadLumpName lumpName) noexcept;
+int32_t W_MapGetNumForName(const WadLumpName lumpName) noexcept;
+int32_t W_MapLumpLength(const int32_t lumpIdx) noexcept;
 void W_ReadMapLump(const int32_t lumpIdx, void* const pDest, const bool bDecompress) noexcept;
 void decode(const void* pSrc, void* pDst) noexcept;
 uint32_t getDecodedSize(const void* const pSrc) noexcept;
@@ -65,6 +66,11 @@ inline const WadLump& W_CacheLumpName(const char* const name, const int16_t allo
 inline int32_t W_MapCheckNumForName(const char* const name) noexcept {
     const WadLumpName ucaseName = WadUtils::makeUppercaseLumpName(name);
     return W_MapCheckNumForName(ucaseName);
+}
+
+inline int32_t W_MapGetNumForName(const char* const name) noexcept {
+    const WadLumpName ucaseName = WadUtils::makeUppercaseLumpName(name);
+    return W_MapGetNumForName(ucaseName);
 }
 
 #endif  // #if PSYDOOM_MODS
