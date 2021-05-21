@@ -251,9 +251,6 @@ void WadFile::readLump(const int32_t lumpIdx, void* const pDest, const bool bDec
         // No decompression needed, can just read straight into the output buffer
         mFileReader.seekAbsolute(lump.wadFileOffset);
         mFileReader.read(pDest, sizeToRead);
-
-        // Sanity check the WAD data in debug mode
-        ASSERT((!bIsLumpCompressed) || WadUtils::getDecompressedLumpSize(pDest) == lump.uncompressedSize);
     }
 }
 
