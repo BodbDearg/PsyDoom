@@ -3,7 +3,7 @@
 #include "Asserts.h"
 #include "Endian.h"
 #include "GameFileReader.h"
-#include "String8_16.h"
+#include "SmallString.h"
 
 #include <memory>
 

@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "seqload.h"
 
-#include "String8_16.h"
+#include "SmallString.h"
 #include "wessapi.h"
 #include "wessarc.h"
 

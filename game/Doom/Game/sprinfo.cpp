@@ -11,6 +11,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
+#include "SmallString.h"
 
 #include <algorithm>
 #include <unordered_map>

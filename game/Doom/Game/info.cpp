@@ -3,6 +3,7 @@
 #include "Doom/Base/sounds.h"
 #include "p_enemy.h"
 #include "p_pspr.h"
+#include "SmallString.h"
 
 sprname_t gBaseSprNames[BASE_NUM_SPRITES] = {
     "TROO", "SHTG", "PUNG", "PISG", "PISF", "SHTF", "SHT2", "CHGG",     // 000 - 007

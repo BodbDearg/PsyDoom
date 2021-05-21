@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_MODS
 
-#include "String8_16.h"
+#include "SmallString.h"
 #include "Wess/psxcd.h"
 
 // Allow a file name on disc to be up to 16-characters.

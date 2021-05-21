@@ -2,7 +2,7 @@
 
 #include "Asserts.h"
 #include "FatalErrors.h"
-#include "String8_16.h"
+#include "SmallString.h"
 #include "Wess/psxcd.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------

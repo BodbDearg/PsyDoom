@@ -7,7 +7,7 @@
 #include "psxspu.h"
 #include "PsyQ/LIBAPI.h"
 #include "PsyQ/LIBSPU.h"
-#include "String8_16.h"
+#include "SmallString.h"
 #include "wessseq.h"
 
 const WessDriverFunc* const gWess_CmdFuncArr[10] = {
