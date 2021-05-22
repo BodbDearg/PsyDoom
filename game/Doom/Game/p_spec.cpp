@@ -124,7 +124,7 @@ static void T_DelayedAction(delayaction_t& action) noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: try to read a list of (wall or floor) animation definitions from the named text lump.
 // 
-// Grammar for these definitions:
+// Grammar for these definitions (one per line):
 //      BEGIN_TEX END_TEX TICMASK
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_ReadUserAnimDefs(const char* const lumpName, const bool bWallAnims) noexcept {

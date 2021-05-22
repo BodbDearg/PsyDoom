@@ -12,6 +12,7 @@
 #include "FileUtils.h"
 #include "Finally.h"
 #include "Game/g_game.h"
+#include "Game/p_info.h"
 #include "Game/p_tick.h"
 #include "Game/sprinfo.h"
 #include "PcPsx/Game.h"
@@ -102,8 +103,11 @@ void D_DoomMain() noexcept {
     W_Init();
     R_Init();
 
+    // PsyDoom: the build (now) dynamically generated lists of sprites, map objects, animated textures and switches for the game.
+    // User mods can add new entries to any of these lists.
     #if PSYDOOM_MODS
-        P_InitSprites();    // PsyDoom: need to build a list of sprites in the main WAD(s)
+        P_InitSprites();
+        P_InitMobjInfo();
     #endif
 
     ST_Init();

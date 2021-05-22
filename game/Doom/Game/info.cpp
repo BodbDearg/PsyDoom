@@ -5,7 +5,7 @@
 #include "p_pspr.h"
 #include "SmallString.h"
 
-sprname_t gBaseSprNames[BASE_NUM_SPRITES] = {
+const sprname_t gBaseSprNames[BASE_NUM_SPRITES] = {
     "TROO", "SHTG", "PUNG", "PISG", "PISF", "SHTF", "SHT2", "CHGG",     // 000 - 007
     "CHGF", "MISG", "MISF", "SAWG", "PLSG", "PLSF", "BFGG", "BFGF",     // 008 - 015
     "BLUD", "PUFF", "BAL1", "BAL2", "BAL7", "PLSS", "PLSE", "MISL",     // 016 - 023
@@ -26,7 +26,7 @@ sprname_t gBaseSprNames[BASE_NUM_SPRITES] = {
     "HDB5", "HDB6", "POB1", "POB2", "BRS1"                              // 136 - 140
 };
 
-state_t gStates[NUMSTATES] = {
+const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_TROO,  0,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_NULL
     { SPR_SHTG,  4,                   0,   A_Light0,         S_NULL,           0,  0 },  // S_LIGHTDONE
     { SPR_PUNG,  0,                   1,   A_WeaponReady,    S_PUNCH,          0,  0 },  // S_PUNCH
@@ -785,7 +785,7 @@ state_t gStates[NUMSTATES] = {
     { SPR_BRS1,  0,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_BRAINSTEM
 };
 
-mobjinfo_t gMObjInfo[NUMMOBJTYPES] = {
+const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
     // MT_PLAYER
     {
         -1,                         // doomednum
@@ -4351,3 +4351,11 @@ mobjinfo_t gMObjInfo[NUMMOBJTYPES] = {
     },
 #endif
 };
+
+// Note: these are populated in 'p_info.cpp'
+#if PSYDOOM_MODS
+    state_t*        gStates;
+    int32_t         gNumStates;
+    mobjinfo_t*     gMObjInfo;
+    int32_t         gNumMObjInfo;
+#endif

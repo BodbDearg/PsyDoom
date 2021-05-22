@@ -920,7 +920,7 @@ enum statenum_t : int32_t {
     S_COLONGIBS,
     S_SMALLPOOL,
     S_BRAINSTEM,
-    NUMSTATES
+    BASE_NUM_STATES     // PsyDoom: renamed this from 'NUMSTATES' to 'BASE_NUM_STATES' because it's now just a count of the number of built-in states
 };
 
 // Indexes into the array of map object info structs
@@ -1056,7 +1056,7 @@ enum mobjtype_t : int32_t {
 #if PSYDOOM_MODS
     MT_MISC87,
 #endif
-    NUMMOBJTYPES
+    BASE_NUM_MOBJ_TYPES     // PsyDoom: renamed this from 'NUMMOBJTYPES' to 'BASE_NUM_MOBJ_TYPES' because it's now just a count of the number of built-in map object types
 };
 
 // PsyDoom helper: represents a state action function.
@@ -1130,7 +1130,18 @@ struct mobjinfo_t {
 #endif
 
 // The arrays of sprite names, state definitions and map object definitions.
-// PsyDoom: renamed and added the 'base' prefix here to the arrays to signify that these are just the built-in lists.
-extern sprname_t    gBaseSprNames[BASE_NUM_SPRITES];
-extern state_t      gStates[NUMSTATES];
-extern mobjinfo_t   gMObjInfo[NUMMOBJTYPES];
+// PsyDoom: renamed, made const and added the 'base' prefix here to the arrays to signify that these are just the built-in lists; also adding non hardcoded counts.
+extern const sprname_t      gBaseSprNames[BASE_NUM_SPRITES];
+extern const state_t        gBaseStates[BASE_NUM_STATES];
+extern const mobjinfo_t     gBaseMObjInfo[BASE_NUM_MOBJ_TYPES];
+
+#if PSYDOOM_MODS
+    extern state_t*     gStates;
+    extern int32_t      gNumStates;
+    extern mobjinfo_t*  gMObjInfo;
+    extern int32_t      gNumMObjInfo;
+#else
+    #define gSprNames   gBaseSprNames
+    #define gStates     gBaseStates
+    #define gMObjInfo   gBaseMObjInfo
+#endif

@@ -109,9 +109,15 @@ void P_RespawnSpecials() noexcept {
     }
 
     // Try to find the type enum for the thing to be spawned
+    #if PSYDOOM_MODS
+        const int32_t numMObjTypes = gNumMObjInfo;
+    #else
+        const int32_t numMObjTypes = BASE_NUM_MOBJ_TYPES;
+    #endif
+
     int32_t mobjTypeIdx = 0;
 
-    for (; mobjTypeIdx < NUMMOBJTYPES; mobjTypeIdx++) {
+    for (; mobjTypeIdx < numMObjTypes; mobjTypeIdx++) {
         if (mapthing.type == gMObjInfo[mobjTypeIdx].doomednum)  // Is this the mobj definition we want?
             break;
     }
@@ -377,16 +383,22 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 
     // Try to figure out the thing type using the DoomEd num.
     // If that fails then issue a fatal error.
-    mobjtype_t thingType = NUMMOBJTYPES;
+    #if PSYDOOM_MODS
+        const int32_t numMObjTypes = gNumMObjInfo;
+    #else
+        const int32_t numMObjTypes = BASE_NUM_MOBJ_TYPES;
+    #endif
 
-    for (int32_t thingTypeIdx = 0; thingTypeIdx < NUMMOBJTYPES; ++thingTypeIdx) {
+    mobjtype_t thingType = (mobjtype_t) numMObjTypes;
+
+    for (int32_t thingTypeIdx = 0; thingTypeIdx < numMObjTypes; ++thingTypeIdx) {
         if (gMObjInfo[thingTypeIdx].doomednum == mapthing.type) {
             thingType = (mobjtype_t) thingTypeIdx;
             break;
         }
     }
 
-    if (thingType == NUMMOBJTYPES) {
+    if (thingType == numMObjTypes) {
         I_Error("P_SpawnMapThing: Unknown doomednum %d at (%d, %d)", (int) mapthing.type, (int) mapthing.x, (int) mapthing.y);
         return;
     }

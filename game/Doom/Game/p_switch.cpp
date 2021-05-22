@@ -114,7 +114,7 @@ static constexpr int32_t BUTTONTIME = 1 * TICRATE;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: try to read a list of switch definitions from the named text lump.
 // 
-// Grammar for these definitions:
+// Grammar for these definitions (one per line):
 //      OFFTEX ONTEX
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_ReadUserSwitchDefs(const char* const lumpName) noexcept {

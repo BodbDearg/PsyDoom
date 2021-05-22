@@ -78,6 +78,8 @@ set(SOURCE_FILES
     "Doom/Game/p_firesky.h"
     "Doom/Game/p_floor.cpp"
     "Doom/Game/p_floor.h"
+    "Doom/Game/p_info.cpp"
+    "Doom/Game/p_info.h"
     "Doom/Game/p_inter.cpp"
     "Doom/Game/p_inter.h"
     "Doom/Game/p_lights.cpp"
