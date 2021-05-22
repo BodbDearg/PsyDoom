@@ -21,8 +21,8 @@
 
 BEGIN_NAMESPACE(MobjSpritePrecacher)
 
-static std::vector<bool>    gbCacheSprite;                              // Whether to precache each sprite in the game
-static bool                 gbCachedMobjType[BASE_NUM_MOBJ_TYPES];      // Whether sprites were precached for each 'mobjtype_t'
+static std::vector<bool>    gbCacheSprite;          // Whether to precache each sprite in the game
+static std::vector<bool>    gbCachedMobjType;       // Whether sprites were precached for each 'mobjtype_t'
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Clears the set of sprites to be precached and the set of map objects marked as precached
@@ -30,8 +30,8 @@ static bool                 gbCachedMobjType[BASE_NUM_MOBJ_TYPES];      // Wheth
 static void clearPrecacheInfo() noexcept {
     gbCacheSprite.clear();
     gbCacheSprite.resize(gNumSprites);
-
-    std::memset(gbCachedMobjType, 0, sizeof(gbCachedMobjType));
+    gbCachedMobjType.clear();
+    gbCachedMobjType.resize(gNumMObjInfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -140,6 +140,7 @@ static void flagAllThingSpritesToPrecache() noexcept {
     for (const mobj_t* pMobj = gMObjHead.next; pMobj != &gMObjHead; pMobj = pMobj->next) {
         // Ignore this type if we already cached it
         const mobjtype_t type = pMobj->type;
+        ASSERT((size_t) type < gbCachedMobjType.size());
 
         if (gbCachedMobjType[type])
             continue;
