@@ -185,10 +185,10 @@ static void P_ReadUserAnimDefs(const char* const lumpName, const bool bWallAnims
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom addition: initializes the dynamically populated list of anim defs.
+// PsyDoom addition: initializes the dynamically populated list of anim definitions, and also allocates the list of animations.
 // Uses the list of base animations appropriate to the game being played, plus any anims defined in user mods.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_InitAnimDefs() noexcept {
+void P_InitAnimDefs() noexcept {
     // Add base animation definitions
     gAnimDefs.clear();
     gAnimDefs.reserve(128);
@@ -201,6 +201,10 @@ static void P_InitAnimDefs() noexcept {
     // Read user animation definitions
     P_ReadUserAnimDefs("PSYTANIM", true);
     P_ReadUserAnimDefs("PSYFANIM", false);
+
+    // Init the animation list - 1 slot per anim definition
+    gAnims.clear();
+    gAnims.resize(gAnimDefs.size());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -262,13 +266,8 @@ void P_SetAnimsToBasePic() noexcept {
 // Also sets up the spot in VRAM where these animations will go - they occupy the same spot as the base animation frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitPicAnims() noexcept {
-    // PsyDoom: the list of anims and anim defs is now dynamic amd must be built on startup
+    // PsyDoom: the list of anims and anim defs is now dynamic
     #if PSYDOOM_MODS
-        P_InitAnimDefs();
-
-        // Init the anim list - 1 slot per anim def
-        gAnims.clear();
-        gAnims.resize(gAnimDefs.size());
         const int32_t maxAnims = (int32_t) gAnims.size();
     #else
         const int32_t maxAnims = (Game::isFinalDoom()) ? BASE_NUM_ANIMS_FDOOM : BASE_NUM_ANIMS_DOOM;

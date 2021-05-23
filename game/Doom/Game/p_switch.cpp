@@ -168,10 +168,11 @@ static void P_ReadUserSwitchDefs(const char* const lumpName) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom addition: initializes the dynamically populated list of switch defs.
-// Uses the list of base switches, plus any switches defined in user mods.
+// PsyDoom addition: initializes the dynamically populated list of switch definitions, and then creates a defaulted switch list from this.
+// Uses the list of base switch definitions, plus any definitions added by user mods.
+// This is called once on startup.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_InitSwitchDefs() noexcept {
+void P_InitSwitchDefs() noexcept {
     // Add base switch definitions
     gAlphSwitchList.clear();
     gAlphSwitchList.reserve(128);
@@ -182,6 +183,10 @@ static void P_InitSwitchDefs() noexcept {
 
     // Read user switch definitions
     P_ReadUserSwitchDefs("PSYSWTEX");
+
+    // Init the switch list - 1 slot definition
+    gSwitchList.clear();
+    gSwitchList.resize(gAlphSwitchList.size() * 2);
 }
 #endif
 
@@ -190,13 +195,8 @@ static void P_InitSwitchDefs() noexcept {
 // Must be done after 64 pixel wide wall textures have been cached in order to work.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitSwitchList() noexcept {
-    // PsyDoom: the list of switches and switch defs is now dynamic amd must be built on startup
+    // PsyDoom: the list of switches and switch defs is now dynamic
     #if PSYDOOM_MODS
-        P_InitSwitchDefs();
-
-        // Init the anim list - 1 slot per anim def
-        gSwitchList.clear();
-        gSwitchList.resize(gAlphSwitchList.size() * 2);
         const int32_t numSwitches = (int32_t) gAlphSwitchList.size();
     #else
         const int32_t numSwitches = BASE_NUM_SWITCHES;

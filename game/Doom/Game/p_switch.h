@@ -33,6 +33,10 @@ struct button_t {
     extern button_t gButtonList[MAXBUTTONS];
 #endif
 
+#if PSYDOOM_MODS
+    void P_InitSwitchDefs() noexcept;
+#endif
+
 void P_InitSwitchList() noexcept;
 void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept;
 bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept;

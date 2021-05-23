@@ -3,7 +3,6 @@
 - Fix bug with switch on Deimos Lab not working at certain positions and angles (will need overhaul of switch collision code)
 - Provide PsyDoom Doom Builder config
 - Experiment with Doom 64 two colored lighting
-- Make switch and anim init be once on startup
 - Add support for the arch-vile.
 - Add support for wolf-ss.
 - Add support for icon of sin head and skulls.

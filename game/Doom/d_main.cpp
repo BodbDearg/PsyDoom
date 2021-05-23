@@ -13,6 +13,8 @@
 #include "Finally.h"
 #include "Game/g_game.h"
 #include "Game/p_info.h"
+#include "Game/p_spec.h"
+#include "Game/p_switch.h"
 #include "Game/p_tick.h"
 #include "Game/sprinfo.h"
 #include "PcPsx/Game.h"
@@ -108,6 +110,8 @@ void D_DoomMain() noexcept {
     #if PSYDOOM_MODS
         P_InitSprites();
         P_InitMobjInfo();
+        P_InitAnimDefs();
+        P_InitSwitchDefs();
     #endif
 
     ST_Init();

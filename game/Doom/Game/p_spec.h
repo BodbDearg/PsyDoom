@@ -22,6 +22,7 @@ extern card_t   gMapYellowKeyType;
 extern int32_t  gMapBossSpecialFlags;
 
 #if PSYDOOM_MODS
+    void P_InitAnimDefs() noexcept;
     void P_SetAnimsToBasePic() noexcept;
 #endif
 
