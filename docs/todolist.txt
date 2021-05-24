@@ -1,5 +1,4 @@
 0.8 - Limit extending and modding?
-- Investiage monster pain sounds being too short in MAP28 of Final Doom (Baron's Lair)
 - Fix bug with switch on Deimos Lab not working at certain positions and angles (will need overhaul of switch collision code)
 - Provide PsyDoom Doom Builder config
 - Experiment with Doom 64 two colored lighting
