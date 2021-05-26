@@ -959,6 +959,43 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_FIRE, 7 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE29,         0,  0 },  // S_FIRE28
     { SPR_FIRE, 6 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE30,         0,  0 },  // S_FIRE29
     { SPR_FIRE, 7 | FF_FULLBRIGHT,    1,   A_Fire,           S_NULL,           0,  0 },  // S_FIRE30
+    { SPR_SSWV, 0,                    5,   A_Look,           S_SSWV_STND2,     0,  0 },  // S_SSWV_STND
+    { SPR_SSWV, 1,                    5,   A_Look,           S_SSWV_STND,      0,  0 },  // S_SSWV_STND2
+    { SPR_SSWV, 0,                    2,   A_Chase,          S_SSWV_RUN2,      0,  0 },  // S_SSWV_RUN1
+    { SPR_SSWV, 0,                    1,   A_Chase,          S_SSWV_RUN3,      0,  0 },  // S_SSWV_RUN2
+    { SPR_SSWV, 1,                    2,   A_Chase,          S_SSWV_RUN4,      0,  0 },  // S_SSWV_RUN3
+    { SPR_SSWV, 1,                    1,   A_Chase,          S_SSWV_RUN5,      0,  0 },  // S_SSWV_RUN4
+    { SPR_SSWV, 2,                    2,   A_Chase,          S_SSWV_RUN6,      0,  0 },  // S_SSWV_RUN5
+    { SPR_SSWV, 2,                    1,   A_Chase,          S_SSWV_RUN7,      0,  0 },  // S_SSWV_RUN6
+    { SPR_SSWV, 3,                    2,   A_Chase,          S_SSWV_RUN8,      0,  0 },  // S_SSWV_RUN7
+    { SPR_SSWV, 3,                    1,   A_Chase,          S_SSWV_RUN1,      0,  0 },  // S_SSWV_RUN8
+    { SPR_SSWV, 4,                    4,   A_FaceTarget,     S_SSWV_ATK2,      0,  0 },  // S_SSWV_ATK1
+    { SPR_SSWV, 5,                    4,   A_FaceTarget,     S_SSWV_ATK3,      0,  0 },  // S_SSWV_ATK2
+    { SPR_SSWV, 6 | FF_FULLBRIGHT,    2,   A_CPosAttack,     S_SSWV_ATK4,      0,  0 },  // S_SSWV_ATK3
+    { SPR_SSWV, 5,                    3,   A_FaceTarget,     S_SSWV_ATK5,      0,  0 },  // S_SSWV_ATK4
+    { SPR_SSWV, 6 | FF_FULLBRIGHT,    2,   A_CPosAttack,     S_SSWV_ATK6,      0,  0 },  // S_SSWV_ATK5
+    { SPR_SSWV, 5,                    1,   A_CPosRefire,     S_SSWV_ATK2,      0,  0 },  // S_SSWV_ATK6
+    { SPR_SSWV, 7,                    1,   nullptr,          S_SSWV_PAIN2,     0,  0 },  // S_SSWV_PAIN
+    { SPR_SSWV, 7,                    2,   A_Pain,           S_SSWV_RUN1,      0,  0 },  // S_SSWV_PAIN2
+    { SPR_SSWV, 8,                    2,   nullptr,          S_SSWV_DIE2,      0,  0 },  // S_SSWV_DIE1
+    { SPR_SSWV, 9,                    2,   A_Scream,         S_SSWV_DIE3,      0,  0 },  // S_SSWV_DIE2
+    { SPR_SSWV, 10,                   2,   A_Fall,           S_SSWV_DIE4,      0,  0 },  // S_SSWV_DIE3
+    { SPR_SSWV, 11,                   3,   nullptr,          S_SSWV_DIE5,      0,  0 },  // S_SSWV_DIE4
+    { SPR_SSWV, 12,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_SSWV_DIE5
+    { SPR_SSWV, 13,                   3,   nullptr,          S_SSWV_XDIE2,     0,  0 },  // S_SSWV_XDIE1
+    { SPR_SSWV, 14,                   2,   A_XScream,        S_SSWV_XDIE3,     0,  0 },  // S_SSWV_XDIE2
+    { SPR_SSWV, 15,                   2,   A_Fall,           S_SSWV_XDIE4,     0,  0 },  // S_SSWV_XDIE3
+    { SPR_SSWV, 16,                   2,   nullptr,          S_SSWV_XDIE5,     0,  0 },  // S_SSWV_XDIE4
+    { SPR_SSWV, 17,                   2,   nullptr,          S_SSWV_XDIE6,     0,  0 },  // S_SSWV_XDIE5
+    { SPR_SSWV, 18,                   2,   nullptr,          S_SSWV_XDIE7,     0,  0 },  // S_SSWV_XDIE6
+    { SPR_SSWV, 19,                   2,   nullptr,          S_SSWV_XDIE8,     0,  0 },  // S_SSWV_XDIE7
+    { SPR_SSWV, 20,                   2,   nullptr,          S_SSWV_XDIE9,     0,  0 },  // S_SSWV_XDIE8
+    { SPR_SSWV, 21,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_SSWV_XDIE9
+    { SPR_SSWV, 12,                   2,   nullptr,          S_SSWV_RAISE2,    0,  0 },  // S_SSWV_RAISE1
+    { SPR_SSWV, 11,                   3,   nullptr,          S_SSWV_RAISE3,    0,  0 },  // S_SSWV_RAISE2
+    { SPR_SSWV, 10,                   2,   nullptr,          S_SSWV_RAISE4,    0,  0 },  // S_SSWV_RAISE3
+    { SPR_SSWV, 9,                    2,   nullptr,          S_SSWV_RAISE5,    0,  0 },  // S_SSWV_RAISE4
+    { SPR_SSWV, 8,                    2,   nullptr,          S_SSWV_RUN1,      0,  0 },  // S_SSWV_RAISE5
 #endif
 };
 
@@ -4627,6 +4664,36 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_NOBLOCKMAP |
             MF_NOGRAVITY
         )
+    },
+    // MT_WOLFSS
+    {
+        84,                         // doomednum
+        S_SSWV_STND,                // spawnstate
+        50,                         // spawnhealth
+        S_SSWV_RUN1,                // seestate
+        sfx_sssit,                  // seesound
+        8,                          // reactiontime
+        sfx_None,                   // attacksound
+        S_SSWV_PAIN,                // painstate
+        170,                        // painchance
+        sfx_popain,                 // painsound
+        S_NULL,                     // meleestate
+        S_SSWV_ATK1,                // missilestate
+        S_SSWV_DIE1,                // deathstate
+        S_SSWV_XDIE1,               // xdeathstate
+        sfx_ssdth,                  // deathsound
+        8,                          // speed
+        20 * FRACUNIT,              // radius
+        56 * FRACUNIT,              // height
+        100,                        // mass
+        0,                          // damage
+        sfx_posact,                 // activesound
+        (                           // flags
+            MF_SOLID |
+            MF_SHOOTABLE |
+            MF_COUNTKILL
+        ),
+        S_SSWV_RAISE1               // raisestate
     },
 #endif
 };

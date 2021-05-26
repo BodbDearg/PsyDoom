@@ -1102,6 +1102,43 @@ enum statenum_t : int32_t {
     S_FIRE28,
     S_FIRE29,
     S_FIRE30,
+    S_SSWV_STND,
+    S_SSWV_STND2,
+    S_SSWV_RUN1,
+    S_SSWV_RUN2,
+    S_SSWV_RUN3,
+    S_SSWV_RUN4,
+    S_SSWV_RUN5,
+    S_SSWV_RUN6,
+    S_SSWV_RUN7,
+    S_SSWV_RUN8,
+    S_SSWV_ATK1,
+    S_SSWV_ATK2,
+    S_SSWV_ATK3,
+    S_SSWV_ATK4,
+    S_SSWV_ATK5,
+    S_SSWV_ATK6,
+    S_SSWV_PAIN,
+    S_SSWV_PAIN2,
+    S_SSWV_DIE1,
+    S_SSWV_DIE2,
+    S_SSWV_DIE3,
+    S_SSWV_DIE4,
+    S_SSWV_DIE5,
+    S_SSWV_XDIE1,
+    S_SSWV_XDIE2,
+    S_SSWV_XDIE3,
+    S_SSWV_XDIE4,
+    S_SSWV_XDIE5,
+    S_SSWV_XDIE6,
+    S_SSWV_XDIE7,
+    S_SSWV_XDIE8,
+    S_SSWV_XDIE9,
+    S_SSWV_RAISE1,
+    S_SSWV_RAISE2,
+    S_SSWV_RAISE3,
+    S_SSWV_RAISE4,
+    S_SSWV_RAISE5,
 #endif
     BASE_NUM_STATES     // PsyDoom: renamed this from 'NUMSTATES' to 'BASE_NUM_STATES' because it's now just a count of the number of built-in states
 };
@@ -1241,6 +1278,7 @@ enum mobjtype_t : int32_t {
     MT_MISC87,      // Unused hanging lamp sprite
     MT_VILE,        // Arch-vile
     MT_FIRE,        // Arch-vile's flame
+    MT_WOLFSS,      // Wolfenstein SS officer
 #endif
     BASE_NUM_MOBJ_TYPES     // PsyDoom: renamed this from 'NUMMOBJTYPES' to 'BASE_NUM_MOBJ_TYPES' because it's now just a count of the number of built-in map object types
 };

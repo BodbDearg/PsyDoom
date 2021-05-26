@@ -104,6 +104,9 @@ enum sfxenum_t : int32_t {
     sfx_vilatk = sfx_skeatk,
     sfx_flamst = sfx_manatk,
     sfx_flame  = sfx_manatk,
+    // TODO: replace these Wolfenstein SS sounds with real ones
+    sfx_sssit  = sfx_posit1,
+    sfx_ssdth  = sfx_podth1,
 #endif
     NUMSFX
 };
