@@ -245,6 +245,11 @@ void LIBGPU_SetDispMask(const int32_t mask) noexcept;
 int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
 
 void LIBGPU_LoadImage(const SRECT& dstRect, const uint16_t* const pImageData) noexcept;
+
+#if PSYDOOM_LIMIT_REMOVING
+    void LIBGPU_LoadImage8(const SRECT& dstRect, const void* const pImageData) noexcept;
+#endif
+
 int32_t LIBGPU_MoveImage(const SRECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept;
 DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept;
 DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept;

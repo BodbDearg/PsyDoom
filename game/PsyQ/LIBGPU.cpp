@@ -17,6 +17,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 // The CLUT and texture page for the debug font
 static uint16_t gDFontClutId;
@@ -35,6 +36,11 @@ static char gDbgMsgBuf[DBG_MSG_BUF_SIZE];
 
 // Current print position in the debug message buffer
 static int32_t gDbgMsgBufPos;
+
+#if PSYDOOM_LIMIT_REMOVING
+    // PsyDoom: a temporary buffer used by 'LIBGPU_LoadImage8' if the image provided needs to have it's width padded to an even number
+    static std::vector<uint16_t> gLoadImage8TmpBuffer;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper function that clears the current drawing area to the specified color
@@ -125,8 +131,12 @@ static uint16_t LIBGPU_getTPage(
 //  3 = Initialize draw environment but preserve display environment.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBGPU_ResetGraph([[maybe_unused]] const int32_t resetMode) noexcept {
-    // This doesn't need to do anything in this emulated environment for PSX DOOM.
+    // This doesn't really need to do much in this emulated environment for PSX DOOM.
     // When PsyDoom previously used the Avocado PSX emulator I verified it doesn't result in GPU state changes when it is called...
+    // I'll use this opportunity however to preallocate a temporary buffer used by 'LIBGPU_LoadImage8'.
+    #if PSYDOOM_LIMIT_REMOVING
+        gLoadImage8TmpBuffer.resize(128 * 128);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,6 +237,60 @@ void LIBGPU_LoadImage(const SRECT& dstRect, const uint16_t* const pImageData) no
         }
     #endif  // #if PSYDOOM_VULKAN_RENDERER
 }
+
+#if PSYDOOM_LIMIT_REMOVING
+//------------------------------------------------------------------------------------------------------------------------------------------
+// The same as 'LIBGPU_LoadImage' except the assumed texture format is 8-bits per pixel and the dimensions specified are in that format.
+// Automatically converts textures with an odd width to have an even width, by adding an extra transparent pixel at the end of each row.
+// Normally such textures with an odd width would display corrupted on the PSX and would upload to VRAM incorrectly.
+// Note: any extra padding pixels added are set to color index '0', which is assumed to be transparent.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_LoadImage8(const SRECT& dstRect, const void* const pImageData) noexcept {
+    // If we don't need to pad then just call the original 'LoadImage' after converting the coordinates to 16-bit
+    if ((dstRect.w & 1) == 0) {
+        SRECT dstRect16 = dstRect;
+        dstRect16.x /= 2;
+        dstRect16.w /= 2;
+        LIBGPU_LoadImage(dstRect16, (const uint16_t*) pImageData);
+        return;
+    }
+
+    // Otherwise ensure we have enough room in the temporary buffer for the image to be padded
+    const uint16_t origW8 = (uint16_t) dstRect.w;
+    const uint16_t origW16 = origW8 / 2;
+    const uint16_t origH = (uint16_t) dstRect.h;
+    const uint32_t paddedW16 = origW16 + 1u;
+    const uint32_t numPixels = paddedW16 * origH;
+
+    if (numPixels > gLoadImage8TmpBuffer.size()) {
+        gLoadImage8TmpBuffer.resize(numPixels);
+    }
+
+    // Copy each row of the image data and pad at the end of each row
+    const std::byte* pSrcImgData8 = (const std::byte*) pImageData;
+    uint16_t* pDstImgData16 = gLoadImage8TmpBuffer.data();
+
+    for (uint32_t rowIdx = 0; rowIdx < origH; ++rowIdx) {
+        // Copy all of the 2-pixel pairs in the row
+        std::memcpy(pDstImgData16, pSrcImgData8, origW16 * sizeof(uint16_t));
+        pSrcImgData8 += origW16 * 2;
+        pDstImgData16 += origW16;
+
+        // Copy the odd pixel at the end of the row and implicitly let the pixel after that (high 8-bits) be '0'.
+        // The color index '0' should be the transparent color in the palette.
+        const uint16_t padded2Pixels = (uint16_t) *pSrcImgData8;
+        *pDstImgData16 = padded2Pixels;
+        ++pSrcImgData8;
+        ++pDstImgData16;
+    }
+
+    // Load the image with the padded data
+    SRECT dstRect16 = dstRect;
+    dstRect16.x /= 2;
+    dstRect16.w = (int16_t) paddedW16;
+    LIBGPU_LoadImage(dstRect16, gLoadImage8TmpBuffer.data());
+}
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Copy one part of VRAM to another part of VRAM

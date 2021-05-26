@@ -1,10 +1,16 @@
 0.8 - Limit extending and modding?
 - Fix bug with switch on Deimos Lab not working at certain positions and angles (will need overhaul of switch collision code)
 - Provide PsyDoom Doom Builder config
+- Make the engine load an optional WAD containing missing Doom II enemies
+- Provide and use an 'ALLMAPS.LCD' file or something similar that contains all map SFX
+- Fix NaNs coming from sound engine into audio compressor and investigate source
+- Update the PlayStation VSTs with the fixed sample rate calculation logic
 - Experiment with Doom 64 two colored lighting
 - Add support for the arch-vile.
 - Add support for wolf-ss.
 - Add support for icon of sin head and skulls.
+- Add support for Commander Keen easter egg.
+- Add in proper sounds for the Doom II enemies which were reintroduced
 - Add very basic Lua scripting with similar capabilities to DOOM64 MACROs
     - Mostly to trigger line specials in more flexible ways
 - Investigate a MAPINFO format for naming maps, choosing music etc.

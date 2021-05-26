@@ -393,17 +393,32 @@ static void TC_UploadTexToVram(texture_t& tex, const texdata_t& texData, const t
     const uint16_t tpageV = texPage.vramY;
 
     if (texData.size >= expectedTexSize) {
-        // Upload the texture to VRAM at the current fill location
-        SRECT dstVramRect;
-        LIBGPU_setRECT(
-            dstVramRect,
-            (int16_t)(tpageU + gTCacheFillCellX * TCACHE_CELL_SIZE / 2),
-            (int16_t)(tpageV + gTCacheFillCellY * TCACHE_CELL_SIZE),
-            tex.width / 2,
-            tex.height
-        );
+        // Upload the texture to VRAM at the current fill location.
+        // PsyDoom limit removing: allow for sprites with an non-even width to be uploaded using a new variant of 'LoadImage'.
+        // The new variant automatically pads the sprite to be an even width by inserting a transparent pixel at the end of each row.
+        #if PSYDOOM_LIMIT_REMOVING
+            SRECT dstVramRect;
+            LIBGPU_setRECT(
+                dstVramRect,
+                (int16_t)(tpageU * 2u + gTCacheFillCellX * TCACHE_CELL_SIZE),
+                (int16_t)(tpageV + gTCacheFillCellY * TCACHE_CELL_SIZE),
+                tex.width,
+                tex.height
+            );
 
-        LIBGPU_LoadImage(dstVramRect, (uint16_t*)(texData.pBytes + sizeof(texlump_header_t)));
+            LIBGPU_LoadImage8(dstVramRect, texData.pBytes + sizeof(texlump_header_t));
+        #else
+            SRECT dstVramRect;
+            LIBGPU_setRECT(
+                dstVramRect,
+                (int16_t)(tpageU + gTCacheFillCellX * TCACHE_CELL_SIZE / 2),
+                (int16_t)(tpageV + gTCacheFillCellY * TCACHE_CELL_SIZE),
+                tex.width / 2,
+                tex.height
+            );
+
+            LIBGPU_LoadImage(dstVramRect, (uint16_t*)(texData.pBytes + sizeof(texlump_header_t)));
+        #endif
     }
     else {
         // Not enough data in the lump to load the texture, issue a warning.
