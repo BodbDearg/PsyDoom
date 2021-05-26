@@ -23,7 +23,11 @@ const sprname_t gBaseSprNames[BASE_NUM_SPRITES] = {
     "HANC", "BLCH", "HANL", "DED1", "DED2", "DED3", "DED4", "DED5",     // 112 - 119
     "DED6", "TLMP", "TLP2", "COL5", "CEYE", "TBLU", "TGRN", "TRED",     // 120 - 127
     "GOR1", "POL3", "POL6", "TRE2", "HDB1", "HDB2", "HDB3", "HDB4",     // 128 - 135
-    "HDB5", "HDB6", "POB1", "POB2", "BRS1"                              // 136 - 140
+    "HDB5", "HDB6", "POB1", "POB2", "BRS1",                             // 136 - 140
+// PsyDoom: adding missing PC DOOM II sprites back in
+#if PSYDOOM_MODS
+    "BBRN", "BOSF", "FIRE", "KEEN", "SSWV", "VILE",                     // 141 - 146
+#endif
 };
 
 const state_t gBaseStates[BASE_NUM_STATES] = {

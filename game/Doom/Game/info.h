@@ -159,6 +159,15 @@ enum spritenum_t : int32_t {
     SPR_POB1,
     SPR_POB2,
     SPR_BRS1,
+// PsyDoom: adding missing PC DOOM II sprites back in
+#if PSYDOOM_MODS
+    SPR_BBRN,       // The 'Icon Of Sin'
+    SPR_BOSF,       // Icon Of Sin spawner box
+    SPR_FIRE,       // Arch-vile fire
+    SPR_KEEN,       // Hanging Commander Keen
+    SPR_SSWV,       // Wolfstein SS
+    SPR_VILE,       // This one needs no introduction...
+#endif
     BASE_NUM_SPRITES    // PsyDoom: renamed this from 'NUMSPRITES' to 'BASE_NUM_SPRITES' because it's now just a count of the number of built-in sprites
 };
 
