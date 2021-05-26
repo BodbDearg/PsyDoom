@@ -929,36 +929,36 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_VILE, 23,                   3,   nullptr,          S_VILE_DIE9,      0,  0 },  // S_VILE_DIE8
     { SPR_VILE, 24,                   3,   nullptr,          S_VILE_DIE10,     0,  0 },  // S_VILE_DIE9
     { SPR_VILE, 25,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_VILE_DIE10
-    { SPR_FIRE, 32768,                1,   A_StartFire,      S_FIRE2,          0,  0 },  // S_FIRE1
-    { SPR_FIRE, 32769,                1,   A_Fire,           S_FIRE3,          0,  0 },  // S_FIRE2
-    { SPR_FIRE, 32768,                1,   A_Fire,           S_FIRE4,          0,  0 },  // S_FIRE3
-    { SPR_FIRE, 32769,                1,   A_Fire,           S_FIRE5,          0,  0 },  // S_FIRE4
-    { SPR_FIRE, 32770,                1,   A_FireCrackle,    S_FIRE6,          0,  0 },  // S_FIRE5
-    { SPR_FIRE, 32769,                1,   A_Fire,           S_FIRE7,          0,  0 },  // S_FIRE6
-    { SPR_FIRE, 32770,                1,   A_Fire,           S_FIRE8,          0,  0 },  // S_FIRE7
-    { SPR_FIRE, 32769,                1,   A_Fire,           S_FIRE9,          0,  0 },  // S_FIRE8
-    { SPR_FIRE, 32770,                1,   A_Fire,           S_FIRE10,         0,  0 },  // S_FIRE9
-    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE11,         0,  0 },  // S_FIRE10
-    { SPR_FIRE, 32770,                1,   A_Fire,           S_FIRE12,         0,  0 },  // S_FIRE11
-    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE13,         0,  0 },  // S_FIRE12
-    { SPR_FIRE, 32770,                1,   A_Fire,           S_FIRE14,         0,  0 },  // S_FIRE13
-    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE15,         0,  0 },  // S_FIRE14
-    { SPR_FIRE, 32772,                1,   A_Fire,           S_FIRE16,         0,  0 },  // S_FIRE15
-    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE17,         0,  0 },  // S_FIRE16
-    { SPR_FIRE, 32772,                1,   A_Fire,           S_FIRE18,         0,  0 },  // S_FIRE17
-    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE19,         0,  0 },  // S_FIRE18
-    { SPR_FIRE, 32772,                1,   A_FireCrackle,    S_FIRE20,         0,  0 },  // S_FIRE19
-    { SPR_FIRE, 32773,                1,   A_Fire,           S_FIRE21,         0,  0 },  // S_FIRE20
-    { SPR_FIRE, 32772,                1,   A_Fire,           S_FIRE22,         0,  0 },  // S_FIRE21
-    { SPR_FIRE, 32773,                1,   A_Fire,           S_FIRE23,         0,  0 },  // S_FIRE22
-    { SPR_FIRE, 32772,                1,   A_Fire,           S_FIRE24,         0,  0 },  // S_FIRE23
-    { SPR_FIRE, 32773,                1,   A_Fire,           S_FIRE25,         0,  0 },  // S_FIRE24
-    { SPR_FIRE, 32774,                1,   A_Fire,           S_FIRE26,         0,  0 },  // S_FIRE25
-    { SPR_FIRE, 32775,                1,   A_Fire,           S_FIRE27,         0,  0 },  // S_FIRE26
-    { SPR_FIRE, 32774,                1,   A_Fire,           S_FIRE28,         0,  0 },  // S_FIRE27
-    { SPR_FIRE, 32775,                1,   A_Fire,           S_FIRE29,         0,  0 },  // S_FIRE28
-    { SPR_FIRE, 32774,                1,   A_Fire,           S_FIRE30,         0,  0 },  // S_FIRE29
-    { SPR_FIRE, 32775,                1,   A_Fire,           S_NULL,           0,  0 },  // S_FIRE30
+    { SPR_FIRE, 0 | FF_FULLBRIGHT,    1,   A_StartFire,      S_FIRE2,          0,  0 },  // S_FIRE1
+    { SPR_FIRE, 1 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE3,          0,  0 },  // S_FIRE2
+    { SPR_FIRE, 0 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE4,          0,  0 },  // S_FIRE3
+    { SPR_FIRE, 1 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE5,          0,  0 },  // S_FIRE4
+    { SPR_FIRE, 2 | FF_FULLBRIGHT,    1,   A_FireCrackle,    S_FIRE6,          0,  0 },  // S_FIRE5
+    { SPR_FIRE, 1 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE7,          0,  0 },  // S_FIRE6
+    { SPR_FIRE, 2 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE8,          0,  0 },  // S_FIRE7
+    { SPR_FIRE, 1 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE9,          0,  0 },  // S_FIRE8
+    { SPR_FIRE, 2 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE10,         0,  0 },  // S_FIRE9
+    { SPR_FIRE, 3 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE11,         0,  0 },  // S_FIRE10
+    { SPR_FIRE, 2 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE12,         0,  0 },  // S_FIRE11
+    { SPR_FIRE, 3 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE13,         0,  0 },  // S_FIRE12
+    { SPR_FIRE, 2 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE14,         0,  0 },  // S_FIRE13
+    { SPR_FIRE, 3 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE15,         0,  0 },  // S_FIRE14
+    { SPR_FIRE, 4 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE16,         0,  0 },  // S_FIRE15
+    { SPR_FIRE, 3 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE17,         0,  0 },  // S_FIRE16
+    { SPR_FIRE, 4 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE18,         0,  0 },  // S_FIRE17
+    { SPR_FIRE, 3 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE19,         0,  0 },  // S_FIRE18
+    { SPR_FIRE, 4 | FF_FULLBRIGHT,    1,   A_FireCrackle,    S_FIRE20,         0,  0 },  // S_FIRE19
+    { SPR_FIRE, 5 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE21,         0,  0 },  // S_FIRE20
+    { SPR_FIRE, 4 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE22,         0,  0 },  // S_FIRE21
+    { SPR_FIRE, 5 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE23,         0,  0 },  // S_FIRE22
+    { SPR_FIRE, 4 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE24,         0,  0 },  // S_FIRE23
+    { SPR_FIRE, 5 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE25,         0,  0 },  // S_FIRE24
+    { SPR_FIRE, 6 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE26,         0,  0 },  // S_FIRE25
+    { SPR_FIRE, 7 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE27,         0,  0 },  // S_FIRE26
+    { SPR_FIRE, 6 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE28,         0,  0 },  // S_FIRE27
+    { SPR_FIRE, 7 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE29,         0,  0 },  // S_FIRE28
+    { SPR_FIRE, 6 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE30,         0,  0 },  // S_FIRE29
+    { SPR_FIRE, 7 | FF_FULLBRIGHT,    1,   A_Fire,           S_NULL,           0,  0 },  // S_FIRE30
 #endif
 };
 
