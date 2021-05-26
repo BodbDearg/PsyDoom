@@ -239,6 +239,13 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_POSS,  18,                  2,   nullptr,          S_POSS_XDIE8,     0,  0 },  // S_POSS_XDIE7
     { SPR_POSS,  19,                  3,   nullptr,          S_POSS_XDIE9,     0,  0 },  // S_POSS_XDIE8
     { SPR_POSS,  20,                 -1,   nullptr,          S_NULL,           0,  0 },  // S_POSS_XDIE9
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_POSS,  10,                  3,   nullptr,          S_POSS_RAISE2,    0,  0 },  // S_POSS_RAISE1
+    { SPR_POSS,  9,                   2,   nullptr,          S_POSS_RAISE3,    0,  0 },  // S_POSS_RAISE2
+    { SPR_POSS,  8,                   3,   nullptr,          S_POSS_RAISE4,    0,  0 },  // S_POSS_RAISE3
+    { SPR_POSS,  7,                   2,   nullptr,          S_POSS_RUN1,      0,  0 },  // S_POSS_RAISE4
+#endif
     { SPR_SPOS,  0,                   5,   A_Look,           S_SPOS_STND2,     0,  0 },  // S_SPOS_STND
     { SPR_SPOS,  1,                   5,   A_Look,           S_SPOS_STND,      0,  0 },  // S_SPOS_STND2
     { SPR_SPOS,  0,                   1,   A_Chase,          S_SPOS_RUN2,      0,  0 },  // S_SPOS_RUN1
@@ -268,6 +275,14 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_SPOS,  18,                  2,   nullptr,          S_SPOS_XDIE8,     0,  0 },  // S_SPOS_XDIE7
     { SPR_SPOS,  19,                  3,   nullptr,          S_SPOS_XDIE9,     0,  0 },  // S_SPOS_XDIE8
     { SPR_SPOS,  20,                 -1,   nullptr,          S_NULL,           0,  0 },  // S_SPOS_XDIE9
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_SPOS,  11,                  2,   nullptr,          S_SPOS_RAISE2,    0,  0 },  // S_SPOS_RAISE1
+    { SPR_SPOS,  10,                  3,   nullptr,          S_SPOS_RAISE3,    0,  0 },  // S_SPOS_RAISE2
+    { SPR_SPOS,  9,                   2,   nullptr,          S_SPOS_RAISE4,    0,  0 },  // S_SPOS_RAISE3
+    { SPR_SPOS,  8,                   3,   nullptr,          S_SPOS_RAISE5,    0,  0 },  // S_SPOS_RAISE4
+    { SPR_SPOS,  7,                   2,   nullptr,          S_SPOS_RUN1,      0,  0 },  // S_SPOS_RAISE5
+#endif
     { SPR_PUFF,  1,                   2,   nullptr,          S_SMOKE2,         0,  0 },  // S_SMOKE1
     { SPR_PUFF,  2,                   2,   nullptr,          S_SMOKE3,         0,  0 },  // S_SMOKE2
     { SPR_PUFF,  1,                   2,   nullptr,          S_SMOKE4,         0,  0 },  // S_SMOKE3
@@ -308,6 +323,15 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_SKEL,  14,                  3,   A_Fall,           S_SKEL_DIE5,      0,  0 },  // S_SKEL_DIE4
     { SPR_SKEL,  15,                  3,   nullptr,          S_SKEL_DIE6,      0,  0 },  // S_SKEL_DIE5
     { SPR_SKEL,  16,                 -1,   nullptr,          S_NULL,           0,  0 },  // S_SKEL_DIE6
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_SKEL,  16,                  3,   nullptr,          S_SKEL_RAISE2,    0,  0 },  // S_SKEL_RAISE1
+    { SPR_SKEL,  15,                  3,   nullptr,          S_SKEL_RAISE3,    0,  0 },  // S_SKEL_RAISE2
+    { SPR_SKEL,  14,                  3,   nullptr,          S_SKEL_RAISE4,    0,  0 },  // S_SKEL_RAISE3
+    { SPR_SKEL,  13,                  3,   nullptr,          S_SKEL_RAISE5,    0,  0 },  // S_SKEL_RAISE4
+    { SPR_SKEL,  12,                  3,   nullptr,          S_SKEL_RAISE6,    0,  0 },  // S_SKEL_RAISE5
+    { SPR_SKEL,  11,                  3,   nullptr,          S_SKEL_RUN1,      0,  0 },  // S_SKEL_RAISE6
+#endif
     { SPR_MANF,  0 | FF_FULLBRIGHT,   2,   nullptr,          S_FATSHOT2,       0,  0 },  // S_FATSHOT1
     { SPR_MANF,  1 | FF_FULLBRIGHT,   2,   nullptr,          S_FATSHOT1,       0,  0 },  // S_FATSHOT2
     { SPR_MISL,  1 | FF_FULLBRIGHT,   4,   nullptr,          S_FATSHOTX2,      0,  0 },  // S_FATSHOTX1
@@ -349,6 +373,16 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_FATT,  17,                  2,   nullptr,          S_FATT_DIE9,      0,  0 },  // S_FATT_DIE8
     { SPR_FATT,  18,                  2,   nullptr,          S_FATT_DIE10,     0,  0 },  // S_FATT_DIE9
     { SPR_FATT,  19,                 -1,   A_BossDeath,      S_NULL,           0,  0 },  // S_FATT_DIE10
+#if PSYDOOM_MODS
+    { SPR_FATT,  17,                  2,   nullptr,          S_FATT_RAISE2,    0,  0 },  // S_FATT_RAISE1
+    { SPR_FATT,  16,                  2,   nullptr,          S_FATT_RAISE3,    0,  0 },  // S_FATT_RAISE2
+    { SPR_FATT,  15,                  2,   nullptr,          S_FATT_RAISE4,    0,  0 },  // S_FATT_RAISE3
+    { SPR_FATT,  14,                  2,   nullptr,          S_FATT_RAISE5,    0,  0 },  // S_FATT_RAISE4
+    { SPR_FATT,  13,                  2,   nullptr,          S_FATT_RAISE6,    0,  0 },  // S_FATT_RAISE5
+    { SPR_FATT,  12,                  2,   nullptr,          S_FATT_RAISE7,    0,  0 },  // S_FATT_RAISE6
+    { SPR_FATT,  11,                  2,   nullptr,          S_FATT_RAISE8,    0,  0 },  // S_FATT_RAISE7
+    { SPR_FATT,  10,                  2,   nullptr,          S_FATT_RUN1,      0,  0 },  // S_FATT_RAISE8
+#endif
     { SPR_CPOS,  0,                   5,   A_Look,           S_CPOS_STND2,     0,  0 },  // S_CPOS_STND
     { SPR_CPOS,  1,                   5,   A_Look,           S_CPOS_STND,      0,  0 },  // S_CPOS_STND2
     { SPR_CPOS,  0,                   2,   A_Chase,          S_CPOS_RUN2,      0,  0 },  // S_CPOS_RUN1
@@ -378,6 +412,16 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_CPOS,  17,                  2,   nullptr,          S_CPOS_XDIE5,     0,  0 },  // S_CPOS_XDIE4
     { SPR_CPOS,  18,                  2,   nullptr,          S_CPOS_XDIE6,     0,  0 },  // S_CPOS_XDIE5
     { SPR_CPOS,  19,                 -1,   nullptr,          S_NULL,           0,  0 },  // S_CPOS_XDIE6
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_CPOS,  13,                  2,   nullptr,          S_CPOS_RAISE2,    0,  0 },  // S_CPOS_RAISE1
+    { SPR_CPOS,  12,                  2,   nullptr,          S_CPOS_RAISE3,    0,  0 },  // S_CPOS_RAISE2
+    { SPR_CPOS,  11,                  2,   nullptr,          S_CPOS_RAISE4,    0,  0 },  // S_CPOS_RAISE3
+    { SPR_CPOS,  10,                  2,   nullptr,          S_CPOS_RAISE5,    0,  0 },  // S_CPOS_RAISE4
+    { SPR_CPOS,  9,                   2,   nullptr,          S_CPOS_RAISE6,    0,  0 },  // S_CPOS_RAISE5
+    { SPR_CPOS,  8,                   2,   nullptr,          S_CPOS_RAISE7,    0,  0 },  // S_CPOS_RAISE6
+    { SPR_CPOS,  7,                   2,   nullptr,          S_CPOS_RUN1,      0,  0 },  // S_CPOS_RAISE7
+#endif
     { SPR_TROO,  0,                   5,   A_Look,           S_TROO_STND2,     0,  0 },  // S_TROO_STND
     { SPR_TROO,  1,                   5,   A_Look,           S_TROO_STND,      0,  0 },  // S_TROO_STND2
     { SPR_TROO,  0,                   1,   A_Chase,          S_TROO_RUN2,      0,  0 },  // S_TROO_RUN1
@@ -406,6 +450,14 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_TROO,  18,                  3,   nullptr,          S_TROO_XDIE7,     0,  0 },  // S_TROO_XDIE6
     { SPR_TROO,  19,                  2,   nullptr,          S_TROO_XDIE8,     0,  0 },  // S_TROO_XDIE7
     { SPR_TROO,  20,                 -1,   nullptr,          S_NULL,           0,  0 },  // S_TROO_XDIE8
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_TROO,  12,                  4,   nullptr,          S_TROO_RAISE2,    0,  0 },  // S_TROO_RAISE1
+    { SPR_TROO,  11,                  4,   nullptr,          S_TROO_RAISE3,    0,  0 },  // S_TROO_RAISE2
+    { SPR_TROO,  10,                  3,   nullptr,          S_TROO_RAISE4,    0,  0 },  // S_TROO_RAISE3
+    { SPR_TROO,  9,                   3,   nullptr,          S_TROO_RAISE5,    0,  0 },  // S_TROO_RAISE4
+    { SPR_TROO,  8,                   3,   nullptr,          S_TROO_RUN1,      0,  0 },  // S_TROO_RAISE5
+#endif
     { SPR_SARG,  0,                   5,   A_Look,           S_SARG_STND2,     0,  0 },  // S_SARG_STND
     { SPR_SARG,  1,                   5,   A_Look,           S_SARG_STND,      0,  0 },  // S_SARG_STND2
     { SPR_SARG,  0,                   1,   A_Chase,          S_SARG_RUN2,      0,  0 },  // S_SARG_RUN1
@@ -427,6 +479,15 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_SARG,  11,                  2,   A_Fall,           S_SARG_DIE5,      0,  0 },  // S_SARG_DIE4
     { SPR_SARG,  12,                  2,   nullptr,          S_SARG_DIE6,      0,  0 },  // S_SARG_DIE5
     { SPR_SARG,  13,                 -1,   nullptr,          S_NULL,           0,  0 },  // S_SARG_DIE6
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_SARG,  13,                  2,   nullptr,          S_SARG_RAISE2,    0,  0 },  // S_SARG_RAISE1
+    { SPR_SARG,  12,                  2,   nullptr,          S_SARG_RAISE3,    0,  0 },  // S_SARG_RAISE2
+    { SPR_SARG,  11,                  2,   nullptr,          S_SARG_RAISE4,    0,  0 },  // S_SARG_RAISE3
+    { SPR_SARG,  10,                  2,   nullptr,          S_SARG_RAISE5,    0,  0 },  // S_SARG_RAISE4
+    { SPR_SARG,  9,                   2,   nullptr,          S_SARG_RAISE6,    0,  0 },  // S_SARG_RAISE5
+    { SPR_SARG,  8,                   2,   nullptr,          S_SARG_RUN1,      0,  0 },  // S_SARG_RAISE6
+#endif
     { SPR_HEAD,  0,                   5,   A_Look,           S_HEAD_STND,      0,  0 },  // S_HEAD_STND
     { SPR_HEAD,  0,                   2,   A_Chase,          S_HEAD_RUN1,      0,  0 },  // S_HEAD_RUN1
     { SPR_HEAD,  1,                   3,   A_FaceTarget,     S_HEAD_ATK2,      0,  0 },  // S_HEAD_ATK1
@@ -441,6 +502,15 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_HEAD,  9,                   4,   nullptr,          S_HEAD_DIE5,      0,  0 },  // S_HEAD_DIE4
     { SPR_HEAD,  10,                  4,   A_Fall,           S_HEAD_DIE6,      0,  0 },  // S_HEAD_DIE5
     { SPR_HEAD,  11,                 -1,   nullptr,          S_NULL,           0,  0 },  // S_HEAD_DIE6
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_HEAD,  11,                  4,   nullptr,          S_HEAD_RAISE2,    0,  0 },  // S_HEAD_RAISE1
+    { SPR_HEAD,  10,                  4,   nullptr,          S_HEAD_RAISE3,    0,  0 },  // S_HEAD_RAISE2
+    { SPR_HEAD,  9,                   4,   nullptr,          S_HEAD_RAISE4,    0,  0 },  // S_HEAD_RAISE3
+    { SPR_HEAD,  8,                   4,   nullptr,          S_HEAD_RAISE5,    0,  0 },  // S_HEAD_RAISE4
+    { SPR_HEAD,  7,                   4,   nullptr,          S_HEAD_RAISE6,    0,  0 },  // S_HEAD_RAISE5
+    { SPR_HEAD,  6,                   4,   nullptr,          S_HEAD_RUN1,      0,  0 },  // S_HEAD_RAISE6
+#endif
     { SPR_BOSS,  0,                   5,   A_Look,           S_BOSS_STND2,     0,  0 },  // S_BOSS_STND
     { SPR_BOSS,  1,                   5,   A_Look,           S_BOSS_STND,      0,  0 },  // S_BOSS_STND2
     { SPR_BOSS,  0,                   1,   A_Chase,          S_BOSS_RUN2,      0,  0 },  // S_BOSS_RUN1
@@ -463,6 +533,16 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_BOSS,  12,                  4,   nullptr,          S_BOSS_DIE6,      0,  0 },  // S_BOSS_DIE5
     { SPR_BOSS,  13,                  4,   nullptr,          S_BOSS_DIE7,      0,  0 },  // S_BOSS_DIE6
     { SPR_BOSS,  14,                 -1,   A_BossDeath,      S_NULL,           0,  0 },  // S_BOSS_DIE7
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_BOSS,  14,                  4,   nullptr,          S_BOSS_RAISE2,    0,  0 },  // S_BOSS_RAISE1
+    { SPR_BOSS,  13,                  4,   nullptr,          S_BOSS_RAISE3,    0,  0 },  // S_BOSS_RAISE2
+    { SPR_BOSS,  12,                  4,   nullptr,          S_BOSS_RAISE4,    0,  0 },  // S_BOSS_RAISE3
+    { SPR_BOSS,  11,                  4,   nullptr,          S_BOSS_RAISE5,    0,  0 },  // S_BOSS_RAISE4
+    { SPR_BOSS,  10,                  4,   nullptr,          S_BOSS_RAISE6,    0,  0 },  // S_BOSS_RAISE5
+    { SPR_BOSS,  9,                   4,   nullptr,          S_BOSS_RAISE7,    0,  0 },  // S_BOSS_RAISE6
+    { SPR_BOSS,  8,                   4,   nullptr,          S_BOSS_RUN1,      0,  0 },  // S_BOSS_RAISE7
+#endif
     { SPR_BOS2,  0,                   5,   A_Look,           S_BOS2_STND2,     0,  0 },  // S_BOS2_STND
     { SPR_BOS2,  1,                   5,   A_Look,           S_BOS2_STND,      0,  0 },  // S_BOS2_STND2
     { SPR_BOS2,  0,                   2,   A_Chase,          S_BOS2_RUN2,      0,  0 },  // S_BOS2_RUN1
@@ -485,6 +565,16 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_BOS2,  12,                  4,   nullptr,          S_BOS2_DIE6,      0,  0 },  // S_BOS2_DIE5
     { SPR_BOS2,  13,                  4,   nullptr,          S_BOS2_DIE7,      0,  0 },  // S_BOS2_DIE6
     { SPR_BOS2,  14,                 -1,   A_BossDeath,      S_NULL,           0,  0 },  // S_BOS2_DIE7
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_BOS2,  14,                  4,   nullptr,          S_BOS2_RAISE2,    0,  0 },  // S_BOS2_RAISE1
+    { SPR_BOS2,  13,                  4,   nullptr,          S_BOS2_RAISE3,    0,  0 },  // S_BOS2_RAISE2
+    { SPR_BOS2,  12,                  4,   nullptr,          S_BOS2_RAISE4,    0,  0 },  // S_BOS2_RAISE3
+    { SPR_BOS2,  11,                  4,   nullptr,          S_BOS2_RAISE5,    0,  0 },  // S_BOS2_RAISE4
+    { SPR_BOS2,  10,                  4,   nullptr,          S_BOS2_RAISE6,    0,  0 },  // S_BOS2_RAISE5
+    { SPR_BOS2,  9,                   4,   nullptr,          S_BOS2_RAISE7,    0,  0 },  // S_BOS2_RAISE6
+    { SPR_BOS2,  8,                   4,   nullptr,          S_BOS2_RUN1,      0,  0 },  // S_BOS2_RAISE7
+#endif
     { SPR_SKUL,  0 | FF_FULLBRIGHT,   5,   A_Look,           S_SKULL_STND2,    0,  0 },  // S_SKULL_STND
     { SPR_SKUL,  1 | FF_FULLBRIGHT,   5,   A_Look,           S_SKULL_STND,     0,  0 },  // S_SKULL_STND2
     { SPR_SKUL,  0 | FF_FULLBRIGHT,   3,   A_Chase,          S_SKULL_RUN2,     0,  0 },  // S_SKULL_RUN1
@@ -560,6 +650,16 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_BSPI,  13,                  3,   nullptr,          S_BSPI_DIE6,      0,  0 },  // S_BSPI_DIE5
     { SPR_BSPI,  14,                  3,   nullptr,          S_BSPI_DIE7,      0,  0 },  // S_BSPI_DIE6
     { SPR_BSPI,  15,                 -1,   A_BossDeath,      S_NULL,           0,  0 },  // S_BSPI_DIE7
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    { SPR_BSPI,  15,                  3,   nullptr,          S_BSPI_RAISE2,    0,  0 },  // S_BSPI_RAISE1
+    { SPR_BSPI,  14,                  3,   nullptr,          S_BSPI_RAISE3,    0,  0 },  // S_BSPI_RAISE2
+    { SPR_BSPI,  13,                  3,   nullptr,          S_BSPI_RAISE4,    0,  0 },  // S_BSPI_RAISE3
+    { SPR_BSPI,  12,                  3,   nullptr,          S_BSPI_RAISE5,    0,  0 },  // S_BSPI_RAISE4
+    { SPR_BSPI,  11,                  3,   nullptr,          S_BSPI_RAISE6,    0,  0 },  // S_BSPI_RAISE5
+    { SPR_BSPI,  10,                  3,   nullptr,          S_BSPI_RAISE7,    0,  0 },  // S_BSPI_RAISE6
+    { SPR_BSPI,  9,                   3,   nullptr,          S_BSPI_RUN1,      0,  0 },  // S_BSPI_RAISE7
+#endif
     { SPR_APLS,  0 | FF_FULLBRIGHT,   2,   nullptr,          S_ARACH_PLAZ2,    0,  0 },  // S_ARACH_PLAZ
     { SPR_APLS,  1 | FF_FULLBRIGHT,   2,   nullptr,          S_ARACH_PLAZ,     0,  0 },  // S_ARACH_PLAZ2
     { SPR_APBX,  0 | FF_FULLBRIGHT,   2,   nullptr,          S_ARACH_PLEX2,    0,  0 },  // S_ARACH_PLEX
@@ -787,6 +887,79 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_POB1,  0,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_COLONGIBS
     { SPR_POB2,  0,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_SMALLPOOL
     { SPR_BRS1,  0,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_BRAINSTEM
+// PsyDoom: adding support for missing PC Doom II actors
+#if PSYDOOM_MODS
+    { SPR_VILE, 0,                    5,   A_Look,           S_VILE_STND2,     0,  0 },  // S_VILE_STND
+    { SPR_VILE, 1,                    5,   A_Look,           S_VILE_STND,      0,  0 },  // S_VILE_STND2
+    { SPR_VILE, 0,                    1,   A_VileChase,      S_VILE_RUN2,      0,  0 },  // S_VILE_RUN1
+    { SPR_VILE, 0,                    1,   A_VileChase,      S_VILE_RUN3,      0,  0 },  // S_VILE_RUN2
+    { SPR_VILE, 1,                    1,   A_VileChase,      S_VILE_RUN4,      0,  0 },  // S_VILE_RUN3
+    { SPR_VILE, 1,                    1,   A_VileChase,      S_VILE_RUN5,      0,  0 },  // S_VILE_RUN4
+    { SPR_VILE, 2,                    1,   A_VileChase,      S_VILE_RUN6,      0,  0 },  // S_VILE_RUN5
+    { SPR_VILE, 2,                    1,   A_VileChase,      S_VILE_RUN7,      0,  0 },  // S_VILE_RUN6
+    { SPR_VILE, 3,                    1,   A_VileChase,      S_VILE_RUN8,      0,  0 },  // S_VILE_RUN7
+    { SPR_VILE, 3,                    1,   A_VileChase,      S_VILE_RUN9,      0,  0 },  // S_VILE_RUN8
+    { SPR_VILE, 4,                    1,   A_VileChase,      S_VILE_RUN10,     0,  0 },  // S_VILE_RUN9
+    { SPR_VILE, 4,                    1,   A_VileChase,      S_VILE_RUN11,     0,  0 },  // S_VILE_RUN10
+    { SPR_VILE, 5,                    1,   A_VileChase,      S_VILE_RUN12,     0,  0 },  // S_VILE_RUN11
+    { SPR_VILE, 5,                    1,   A_VileChase,      S_VILE_RUN1,      0,  0 },  // S_VILE_RUN12
+    { SPR_VILE, 6 | FF_FULLBRIGHT,    0,   A_VileStart,      S_VILE_ATK2,      0,  0 },  // S_VILE_ATK1
+    { SPR_VILE, 6 | FF_FULLBRIGHT,    4,   A_FaceTarget,     S_VILE_ATK3,      0,  0 },  // S_VILE_ATK2
+    { SPR_VILE, 7 | FF_FULLBRIGHT,    3,   A_VileTarget,     S_VILE_ATK4,      0,  0 },  // S_VILE_ATK3
+    { SPR_VILE, 8 | FF_FULLBRIGHT,    4,   A_FaceTarget,     S_VILE_ATK5,      0,  0 },  // S_VILE_ATK4
+    { SPR_VILE, 9 | FF_FULLBRIGHT,    3,   A_FaceTarget,     S_VILE_ATK6,      0,  0 },  // S_VILE_ATK5
+    { SPR_VILE, 10 | FF_FULLBRIGHT,   4,   A_FaceTarget,     S_VILE_ATK7,      0,  0 },  // S_VILE_ATK6
+    { SPR_VILE, 11 | FF_FULLBRIGHT,   3,   A_FaceTarget,     S_VILE_ATK8,      0,  0 },  // S_VILE_ATK7
+    { SPR_VILE, 12 | FF_FULLBRIGHT,   4,   A_FaceTarget,     S_VILE_ATK9,      0,  0 },  // S_VILE_ATK8
+    { SPR_VILE, 13 | FF_FULLBRIGHT,   3,   A_FaceTarget,     S_VILE_ATK10,     0,  0 },  // S_VILE_ATK9
+    { SPR_VILE, 14 | FF_FULLBRIGHT,   4,   A_VileAttack,     S_VILE_ATK11,     0,  0 },  // S_VILE_ATK10
+    { SPR_VILE, 15 | FF_FULLBRIGHT,   9,   nullptr,          S_VILE_RUN1,      0,  0 },  // S_VILE_ATK11
+    { SPR_VILE, 26 | FF_FULLBRIGHT,   4,   nullptr,          S_VILE_HEAL2,     0,  0 },  // S_VILE_HEAL1
+    { SPR_VILE, 27 | FF_FULLBRIGHT,   5,   nullptr,          S_VILE_HEAL3,     0,  0 },  // S_VILE_HEAL2
+    { SPR_VILE, 28 | FF_FULLBRIGHT,   4,   nullptr,          S_VILE_RUN1,      0,  0 },  // S_VILE_HEAL3
+    { SPR_VILE, 16,                   2,   nullptr,          S_VILE_PAIN2,     0,  0 },  // S_VILE_PAIN
+    { SPR_VILE, 16,                   3,   A_Pain,           S_VILE_RUN1,      0,  0 },  // S_VILE_PAIN2
+    { SPR_VILE, 16,                   2,   nullptr,          S_VILE_DIE2,      0,  0 },  // S_VILE_DIE1
+    { SPR_VILE, 17,                   3,   A_Scream,         S_VILE_DIE3,      0,  0 },  // S_VILE_DIE2
+    { SPR_VILE, 18,                   3,   A_Fall,           S_VILE_DIE4,      0,  0 },  // S_VILE_DIE3
+    { SPR_VILE, 19,                   2,   nullptr,          S_VILE_DIE5,      0,  0 },  // S_VILE_DIE4
+    { SPR_VILE, 20,                   3,   nullptr,          S_VILE_DIE6,      0,  0 },  // S_VILE_DIE5
+    { SPR_VILE, 21,                   3,   nullptr,          S_VILE_DIE7,      0,  0 },  // S_VILE_DIE6
+    { SPR_VILE, 22,                   2,   nullptr,          S_VILE_DIE8,      0,  0 },  // S_VILE_DIE7
+    { SPR_VILE, 23,                   3,   nullptr,          S_VILE_DIE9,      0,  0 },  // S_VILE_DIE8
+    { SPR_VILE, 24,                   3,   nullptr,          S_VILE_DIE10,     0,  0 },  // S_VILE_DIE9
+    { SPR_VILE, 25,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_VILE_DIE10
+    { SPR_FIRE, 32768,                1,   A_StartFire,      S_FIRE2,          0,  0 },  // S_FIRE1
+    { SPR_FIRE, 32769,                1,   A_Fire,           S_FIRE3,          0,  0 },  // S_FIRE2
+    { SPR_FIRE, 32768,                1,   A_Fire,           S_FIRE4,          0,  0 },  // S_FIRE3
+    { SPR_FIRE, 32769,                1,   A_Fire,           S_FIRE5,          0,  0 },  // S_FIRE4
+    { SPR_FIRE, 32770,                1,   A_FireCrackle,    S_FIRE6,          0,  0 },  // S_FIRE5
+    { SPR_FIRE, 32769,                1,   A_Fire,           S_FIRE7,          0,  0 },  // S_FIRE6
+    { SPR_FIRE, 32770,                1,   A_Fire,           S_FIRE8,          0,  0 },  // S_FIRE7
+    { SPR_FIRE, 32769,                1,   A_Fire,           S_FIRE9,          0,  0 },  // S_FIRE8
+    { SPR_FIRE, 32770,                1,   A_Fire,           S_FIRE10,         0,  0 },  // S_FIRE9
+    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE11,         0,  0 },  // S_FIRE10
+    { SPR_FIRE, 32770,                1,   A_Fire,           S_FIRE12,         0,  0 },  // S_FIRE11
+    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE13,         0,  0 },  // S_FIRE12
+    { SPR_FIRE, 32770,                1,   A_Fire,           S_FIRE14,         0,  0 },  // S_FIRE13
+    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE15,         0,  0 },  // S_FIRE14
+    { SPR_FIRE, 32772,                1,   A_Fire,           S_FIRE16,         0,  0 },  // S_FIRE15
+    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE17,         0,  0 },  // S_FIRE16
+    { SPR_FIRE, 32772,                1,   A_Fire,           S_FIRE18,         0,  0 },  // S_FIRE17
+    { SPR_FIRE, 32771,                1,   A_Fire,           S_FIRE19,         0,  0 },  // S_FIRE18
+    { SPR_FIRE, 32772,                1,   A_FireCrackle,    S_FIRE20,         0,  0 },  // S_FIRE19
+    { SPR_FIRE, 32773,                1,   A_Fire,           S_FIRE21,         0,  0 },  // S_FIRE20
+    { SPR_FIRE, 32772,                1,   A_Fire,           S_FIRE22,         0,  0 },  // S_FIRE21
+    { SPR_FIRE, 32773,                1,   A_Fire,           S_FIRE23,         0,  0 },  // S_FIRE22
+    { SPR_FIRE, 32772,                1,   A_Fire,           S_FIRE24,         0,  0 },  // S_FIRE23
+    { SPR_FIRE, 32773,                1,   A_Fire,           S_FIRE25,         0,  0 },  // S_FIRE24
+    { SPR_FIRE, 32774,                1,   A_Fire,           S_FIRE26,         0,  0 },  // S_FIRE25
+    { SPR_FIRE, 32775,                1,   A_Fire,           S_FIRE27,         0,  0 },  // S_FIRE26
+    { SPR_FIRE, 32774,                1,   A_Fire,           S_FIRE28,         0,  0 },  // S_FIRE27
+    { SPR_FIRE, 32775,                1,   A_Fire,           S_FIRE29,         0,  0 },  // S_FIRE28
+    { SPR_FIRE, 32774,                1,   A_Fire,           S_FIRE30,         0,  0 },  // S_FIRE29
+    { SPR_FIRE, 32775,                1,   A_Fire,           S_NULL,           0,  0 },  // S_FIRE30
+#endif
 };
 
 const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
@@ -848,7 +1021,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_POSS_RAISE1
+        #endif
     },
     // MT_SHOTGUY
     {
@@ -877,7 +1054,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_SPOS_RAISE1
+        #endif
     },
     // MT_UNDEAD
     {
@@ -906,7 +1087,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_SKEL_RAISE1
+        #endif
     },
     // MT_TRACER
     {
@@ -993,7 +1178,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_FATT_RAISE1
+        #endif
     },
     // MT_FATSHOT
     {
@@ -1052,7 +1241,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_CPOS_RAISE1
+        #endif
     },
     // MT_TROOP
     {
@@ -1081,7 +1274,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_TROO_RAISE1
+        #endif
     },
     // MT_SERGEANT
     {
@@ -1110,7 +1307,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_SARG_RAISE1
+        #endif
     },
     // MT_HEAD
     {
@@ -1141,7 +1342,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_NOGRAVITY |
             MF_FLOAT |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_HEAD_RAISE1
+        #endif
     },
     // MT_BRUISER
     {
@@ -1170,7 +1375,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_BOSS_RAISE1
+        #endif
     },
     // MT_KNIGHT
     {
@@ -1199,7 +1408,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_BOS2_RAISE1
+        #endif
     },
     // MT_SKULL
     {
@@ -1288,7 +1501,11 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_SOLID |
             MF_SHOOTABLE |
             MF_COUNTKILL
-        )
+        ),
+        // PsyDoom: reintroducing the Arch-vile (resurrection states)
+        #if PSYDOOM_MODS
+            S_BSPI_RAISE1
+        #endif
     },
     // MT_CYBORG
     {
@@ -4323,7 +4540,8 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_NOBLOCKMAP
         )
     },
-// PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition
+// PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition.
+// Also adding support for some actors from PC Doom II which were missing from the PlayStation version.
 #if PSYDOOM_MODS
     // MT_MISC87
     {
@@ -4350,6 +4568,63 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
         sfx_None,                   // activesound
         (                           // flags
             MF_SPAWNCEILING |
+            MF_NOGRAVITY
+        )
+    },
+    // MT_VILE
+    {
+        91,                         // doomednum (N.B: was '64' on PC but on PSX that is the bloody hook chain)
+        S_VILE_STND,                // spawnstate
+        700,                        // spawnhealth
+        S_VILE_RUN1,                // seestate
+        sfx_vilsit,                 // seesound
+        4,                          // reactiontime
+        sfx_None,                   // attacksound
+        S_VILE_PAIN,                // painstate
+        10,                         // painchance
+        sfx_vipain,                 // painsound
+        S_NULL,                     // meleestate
+        S_VILE_ATK1,                // missilestate
+        S_VILE_DIE1,                // deathstate
+        S_NULL,                     // xdeathstate
+        sfx_vildth,                 // deathsound
+        15,                         // speed
+        20 * FRACUNIT,              // radius
+        56 * FRACUNIT,              // height
+        500,                        // mass
+        0,                          // damage
+        sfx_vilact,                 // activesound
+        (                           // flags
+            MF_SOLID |
+            MF_SHOOTABLE |
+            MF_COUNTKILL
+        )
+    },
+    // MT_FIRE
+    {
+        -1,                         // doomednum
+        S_FIRE1,                    // spawnstate
+        1000,                       // spawnhealth
+        S_NULL,                     // seestate
+        sfx_None,                   // seesound
+        8,                          // reactiontime
+        sfx_None,                   // attacksound
+        S_NULL,                     // painstate
+        0,                          // painchance
+        sfx_None,                   // painsound
+        S_NULL,                     // meleestate
+        S_NULL,                     // missilestate
+        S_NULL,                     // deathstate
+        S_NULL,                     // xdeathstate
+        sfx_None,                   // deathsound
+        0,                          // speed
+        20 * FRACUNIT,              // radius
+        16 * FRACUNIT,              // height
+        100,                        // mass
+        0,                          // damage
+        sfx_None,                   // activesound
+        (                           // flags
+            MF_NOBLOCKMAP |
             MF_NOGRAVITY
         )
     },

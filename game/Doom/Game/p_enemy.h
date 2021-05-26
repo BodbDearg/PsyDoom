@@ -45,3 +45,14 @@ void A_Metal(mobj_t& actor) noexcept;
 void A_BabyMetal(mobj_t& actor) noexcept;
 void L_MissileHit(mobj_t& missile) noexcept;
 void L_SkullBash(mobj_t& actor) noexcept;
+
+// PsyDoom: adding support for missing PC Doom II actors
+#if PSYDOOM_MODS
+    void A_VileChase(mobj_t& actor) noexcept;
+    void A_VileStart(mobj_t& actor) noexcept;
+    void A_VileTarget(mobj_t& actor) noexcept;
+    void A_VileAttack(mobj_t& actor) noexcept;
+    void A_Fire(mobj_t& actor) noexcept;
+    void A_StartFire(mobj_t& actor) noexcept;
+    void A_FireCrackle(mobj_t& actor) noexcept;
+#endif

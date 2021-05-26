@@ -94,5 +94,16 @@ enum sfxenum_t : int32_t {
     sfx_bdopn,
     sfx_bdcls,
     sfx_getpow,
+// PsyDoom: sounds for PC Doom II actors which have been added back into the game
+#if PSYDOOM_MODS
+    // TODO: replace these placeholder Arch-vile sounds with real ones
+    sfx_vilsit = sfx_skesit,
+    sfx_vipain = sfx_popain,
+    sfx_vildth = sfx_skedth,
+    sfx_vilact = sfx_skeact,
+    sfx_vilatk = sfx_skeatk,
+    sfx_flamst = sfx_manatk,
+    sfx_flame  = sfx_manatk,
+#endif
     NUMSFX
 };

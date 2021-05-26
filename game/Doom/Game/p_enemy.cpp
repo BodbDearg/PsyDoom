@@ -18,6 +18,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_move.h"
+#include "p_setup.h"
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_switch.h"
@@ -25,6 +26,7 @@
 #include "PcPsx/Game.h"
 
 #include <algorithm>
+#include <cmath>
 
 static constexpr angle_t TRACEANGLE = 0xC000000;        // How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)
 static constexpr angle_t FATSPREAD  = ANG90 / 8;        // Angle adjustment increment for the Mancubus when attacking; varies it's shoot direction in multiples of this constant
@@ -54,6 +56,16 @@ constexpr static dirtype_t gDiagonalDirs[4] = {
     DI_SOUTHWEST,
     DI_SOUTHEAST
 };
+
+// PsyDoom: Arch-vile related globals
+#if PSYDOOM_MODS
+    // The origin point from which the Arch-vile searches for nearby corpses: x
+    static fixed_t gVileTryX;
+    static fixed_t gVileTryY;
+
+    // The current corpse found which can be raised by the Arch-vile
+    static mobj_t* gpVileCorpse;
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // For the given attacker, checks to see if it's target is within melee range and returns 'true' if so
@@ -1291,3 +1303,219 @@ void L_SkullBash(mobj_t& actor) noexcept {
     actor.flags &= ~MF_SKULLFLY;
     P_SetMObjState(actor, actor.info->spawnstate);
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Arch-vile blockmap iterator function: checks to see if the specified thing can be raised/resurrected.
+// If it can be raised 'false' will be returned and the thing will be remembered as a global.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool PIT_VileCheck(mobj_t& thing) noexcept {
+    // Must be a dead monster
+    if ((thing.flags & MF_CORPSE) == 0)
+        return true;
+
+    // Must be completely still
+    if (thing.tics != -1)
+        return true;
+
+    // Must be raisable (have a raise state defined)
+    if (thing.info->raisestate == S_NULL)
+        return true;
+
+    // If the thing is too far away then don't raise
+    const fixed_t maxDist = thing.info->radius + gMObjInfo[MT_VILE].radius;
+    const fixed_t xDist = std::abs(thing.x - gVileTryX);
+    const fixed_t yDist = std::abs(thing.y - gVileTryY);
+
+    if ((xDist > maxDist) || (yDist > maxDist))
+        return true;
+
+    // Kill any momentum this corpse has and remember it as a potential resurrect corpse
+    gpVileCorpse = &thing;
+    thing.momx = 0;
+    thing.momy = 0;
+
+    // Check to make sure the enemy fits here if resurrected.
+    // Need to expand it's height x4 also, since it is reduced that much on death, and will be expanded that much again on resurrection.
+    thing.height = d_lshift<4>(thing.height);
+    const bool bCorpseFits = P_CheckPosition(thing, thing.x, thing.y);
+    thing.height = d_rshift<4>(thing.height);
+
+    // Continue the search if the corpse doesn't fit, otherwise stop it
+    return (!bCorpseFits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Arch-vile movement and resurrect search code.
+// Moves the Arch-vile around and searches for nearby corpses that can be resurrected.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_VileChase(mobj_t& actor) noexcept {
+    // If moving around check nearby blockmap cells for dead monsters to raise
+    if (actor.movedir != DI_NODIR) {
+        // Set the origin point from which the Arch-vile starts searching for resurrect targets
+        gVileTryX = actor.x + actor.info->speed * gMoveXSpeed[actor.movedir];
+        gVileTryY = actor.y + actor.info->speed * gMoveYSpeed[actor.movedir];
+
+        // Determine the blockmap extents (left/right, top/bottom) to be checked (for corpses) and clamp to a valid range
+        const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gVileTryX - gBlockmapOriginX - MAXRADIUS * 2), 0);
+        const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gVileTryX - gBlockmapOriginX + MAXRADIUS * 2), gBlockmapWidth - 1);
+        const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(gVileTryY - gBlockmapOriginY + MAXRADIUS * 2), gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(gVileTryY - gBlockmapOriginY - MAXRADIUS * 2), 0);
+
+        // Search nearby blockmap cells for raisable corpses
+        for (int32_t blockX = bmapLx; blockX <= bmapRx; ++blockX) {
+            for (int32_t blockY = bmapBy; blockY <= bmapTy; ++blockY) {
+                // Scan all things in this blockmap cell to see if any can be raised
+                const bool bCanRaise = (!P_BlockThingsIterator(blockX, blockY, PIT_VileCheck));
+
+                if (!bCanRaise)
+                    continue;
+
+                // Have a corpse that can be resurrected, make the Arch-Vile face that corpse
+                ASSERT(gpVileCorpse);
+                mobj_t& raiseMobj = *gpVileCorpse;
+
+                {
+                    mobj_t* const pVileTarget = actor.target;
+                    actor.target = &raiseMobj;
+                    A_FaceTarget(actor);
+                    actor.target = pVileTarget;
+                }
+
+                // Arch-vile goes into the healing state and plays the slop sound for resurrection (at the corpse location)
+                P_SetMObjState(actor, S_VILE_HEAL1);
+                S_StartSound(&raiseMobj, sfx_slop);
+
+                // Put the thing being raised into the raising state, make taller again, restore health, flags and clear target
+                mobjinfo_t& raiseObjInfo = *raiseMobj.info;
+                P_SetMObjState(raiseMobj, raiseObjInfo.raisestate);
+
+                raiseMobj.height = d_lshift<2>(raiseMobj.height);
+                raiseMobj.flags = raiseObjInfo.flags;
+                raiseMobj.health = raiseObjInfo.spawnhealth;
+                raiseMobj.target = nullptr;
+
+                // Done! Don't do any chasing while raising...
+                return;
+            }
+        }
+    }
+
+    // Do normal chase logic if not raising
+    A_Chase(actor);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Plays the attack start sound for the Arch-vile
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_VileStart(mobj_t& actor) noexcept {
+    S_StartSound(&actor, sfx_vilatk);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawns Arch-vile's fire and makes it face the target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_VileTarget(mobj_t& actor) noexcept {
+    // Don't do anything if there is no target, otherwise face it
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+
+    // Spawn the fire
+    ASSERT(actor.target);
+    mobj_t& target = *actor.target;
+    mobj_t& fire = *P_SpawnMobj(target.x, target.x, target.z, MT_FIRE);
+
+    // Make the Arch-vile remember the fire, and the fire remember the Arch-vile and it's target
+    actor.tracer = &fire;
+    fire.target = &actor;
+    fire.tracer = &target;
+
+    // Move the fire to follow the Arch-vile's target
+    A_Fire(fire);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the line of sight attack for the Arch-vile
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_VileAttack(mobj_t& actor) noexcept {
+    // Don't do anything if there is no target, otherwise face it
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+
+    // If there is no line of sight now to the target then don't do the attack
+    ASSERT(actor.target);
+    mobj_t& target = *actor.target;
+
+    if (!P_CheckSight(actor, target))
+        return;
+
+    // Play the attack sound, damage the target and make the target hop upwards
+    S_StartSound(&actor, sfx_barexp);
+    P_DamageMObj(target, &actor, &actor, 20);
+    target.momz = (1000 * FRACUNIT) / target.info->mass;
+    
+    // Don't do splash damage unless there is fire
+    mobj_t* const pFire = actor.tracer;
+
+    if (!pFire)
+        return;
+
+    // Make sure the fire is in front of the target
+    const uint32_t angleIdx = actor.angle >> ANGLETOFINESHIFT;
+    pFire->x = target.x - FixedMul(24 * FRACUNIT, gFineCosine[angleIdx]);
+    pFire->y = target.y - FixedMul(24 * FRACUNIT, gFineSine[angleIdx]);
+
+    // Do the splash damage at the fire location
+    P_RadiusAttack(*pFire, &actor, 70);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Moves the Arch-vile's fire to be in front of the target, if the target is in sight of the Arch-vile
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Fire(mobj_t& actor) noexcept {
+    // Sanity check: should have a reference to the Arch-vile that spawned it!
+    ASSERT(actor.target);
+
+    // Don't do anything if the fire doesn't have a target inherited from the Arch-vile    
+    mobj_t* const pVileTgt = actor.tracer;
+
+    if (!pVileTgt)
+        return;
+
+    // Don't move the fire if there is no line of sight between it and it's target
+    mobj_t& vileMobj = *actor.target;
+
+    if (!P_CheckSight(vileMobj, *pVileTgt))
+        return;
+
+    // Place the fire in front of the Arch-vile's target
+    const uint32_t angleIdx = pVileTgt->angle >> ANGLETOFINESHIFT;
+
+    P_UnsetThingPosition(actor);
+    actor.x = pVileTgt->x + FixedMul(24 * FRACUNIT, gFineCosine[angleIdx]);
+    actor.y = pVileTgt->y + FixedMul(24 * FRACUNIT, gFineSine[angleIdx]);
+    actor.z = pVileTgt->z;
+    P_SetThingPosition(actor);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play the start fire sound for the Arch-vile's flame and position in front of the target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_StartFire(mobj_t& actor) noexcept {
+    S_StartSound(&actor, sfx_flamst);
+    A_Fire(actor);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play the periodic fire sound for the Arch-vile's flame and position in front of the target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FireCrackle(mobj_t& actor) noexcept {
+    S_StartSound(&actor, sfx_flame);
+    A_Fire(actor);
+}
+
+#endif  // #if PSYDOOM_MODS

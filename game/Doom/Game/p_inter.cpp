@@ -1001,8 +1001,22 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
         // Monster is fully awake now
         target.reactiontime = 0;
 
-        // If not intent on another player target this attacking one
-        if ((target.threshold == 0) && pSource) {
+        // If not intent on another player target this attacking one.
+        // 
+        // PsyDoom additions for the Arch-vile: never target Arch-viles (even if they cause splash damage), and update the Arch-vile's
+        // target immediately. Note that the PC version also checked for self targetting here (&target != pSource), but that breaks demo
+        // compatibility with the PSX version so I've excluded that check.
+        #if PSYDOOM_MODS
+            const bool bUpdateTarget = (
+                ((target.threshold == 0) || (target.type == MT_VILE)) &&    // Arch-viles can change targets immediately
+                pSource &&
+                (pSource->type != MT_VILE)
+            );
+        #else
+            const bool bUpdateTarget = ((target.threshold == 0) && pSource);
+        #endif
+
+        if (bUpdateTarget) {
             target.target = pSource;
             target.threshold = BASETHRESHOLD;
 

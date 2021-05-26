@@ -381,6 +381,13 @@ enum statenum_t : int32_t {
     S_POSS_XDIE7,
     S_POSS_XDIE8,
     S_POSS_XDIE9,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_POSS_RAISE1,
+    S_POSS_RAISE2,
+    S_POSS_RAISE3,
+    S_POSS_RAISE4,
+#endif
     S_SPOS_STND,
     S_SPOS_STND2,
     S_SPOS_RUN1,
@@ -410,6 +417,14 @@ enum statenum_t : int32_t {
     S_SPOS_XDIE7,
     S_SPOS_XDIE8,
     S_SPOS_XDIE9,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_SPOS_RAISE1,
+    S_SPOS_RAISE2,
+    S_SPOS_RAISE3,
+    S_SPOS_RAISE4,
+    S_SPOS_RAISE5,
+#endif
     S_SMOKE1,
     S_SMOKE2,
     S_SMOKE3,
@@ -450,6 +465,15 @@ enum statenum_t : int32_t {
     S_SKEL_DIE4,
     S_SKEL_DIE5,
     S_SKEL_DIE6,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_SKEL_RAISE1,
+    S_SKEL_RAISE2,
+    S_SKEL_RAISE3,
+    S_SKEL_RAISE4,
+    S_SKEL_RAISE5,
+    S_SKEL_RAISE6,
+#endif
     S_FATSHOT1,
     S_FATSHOT2,
     S_FATSHOTX1,
@@ -491,6 +515,17 @@ enum statenum_t : int32_t {
     S_FATT_DIE8,
     S_FATT_DIE9,
     S_FATT_DIE10,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_FATT_RAISE1,
+    S_FATT_RAISE2,
+    S_FATT_RAISE3,
+    S_FATT_RAISE4,
+    S_FATT_RAISE5,
+    S_FATT_RAISE6,
+    S_FATT_RAISE7,
+    S_FATT_RAISE8,
+#endif
     S_CPOS_STND,
     S_CPOS_STND2,
     S_CPOS_RUN1,
@@ -520,6 +555,16 @@ enum statenum_t : int32_t {
     S_CPOS_XDIE4,
     S_CPOS_XDIE5,
     S_CPOS_XDIE6,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_CPOS_RAISE1,
+    S_CPOS_RAISE2,
+    S_CPOS_RAISE3,
+    S_CPOS_RAISE4,
+    S_CPOS_RAISE5,
+    S_CPOS_RAISE6,
+    S_CPOS_RAISE7,
+#endif
     S_TROO_STND,
     S_TROO_STND2,
     S_TROO_RUN1,
@@ -548,6 +593,14 @@ enum statenum_t : int32_t {
     S_TROO_XDIE6,
     S_TROO_XDIE7,
     S_TROO_XDIE8,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_TROO_RAISE1,
+    S_TROO_RAISE2,
+    S_TROO_RAISE3,
+    S_TROO_RAISE4,
+    S_TROO_RAISE5,
+#endif
     S_SARG_STND,
     S_SARG_STND2,
     S_SARG_RUN1,
@@ -569,6 +622,15 @@ enum statenum_t : int32_t {
     S_SARG_DIE4,
     S_SARG_DIE5,
     S_SARG_DIE6,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_SARG_RAISE1,
+    S_SARG_RAISE2,
+    S_SARG_RAISE3,
+    S_SARG_RAISE4,
+    S_SARG_RAISE5,
+    S_SARG_RAISE6,
+#endif
     S_HEAD_STND,
     S_HEAD_RUN1,
     S_HEAD_ATK1,
@@ -583,6 +645,15 @@ enum statenum_t : int32_t {
     S_HEAD_DIE4,
     S_HEAD_DIE5,
     S_HEAD_DIE6,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_HEAD_RAISE1,
+    S_HEAD_RAISE2,
+    S_HEAD_RAISE3,
+    S_HEAD_RAISE4,
+    S_HEAD_RAISE5,
+    S_HEAD_RAISE6,
+#endif
     S_BOSS_STND,
     S_BOSS_STND2,
     S_BOSS_RUN1,
@@ -605,6 +676,16 @@ enum statenum_t : int32_t {
     S_BOSS_DIE5,
     S_BOSS_DIE6,
     S_BOSS_DIE7,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_BOSS_RAISE1,
+    S_BOSS_RAISE2,
+    S_BOSS_RAISE3,
+    S_BOSS_RAISE4,
+    S_BOSS_RAISE5,
+    S_BOSS_RAISE6,
+    S_BOSS_RAISE7,
+#endif
     S_BOS2_STND,
     S_BOS2_STND2,
     S_BOS2_RUN1,
@@ -627,6 +708,16 @@ enum statenum_t : int32_t {
     S_BOS2_DIE5,
     S_BOS2_DIE6,
     S_BOS2_DIE7,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_BOS2_RAISE1,
+    S_BOS2_RAISE2,
+    S_BOS2_RAISE3,
+    S_BOS2_RAISE4,
+    S_BOS2_RAISE5,
+    S_BOS2_RAISE6,
+    S_BOS2_RAISE7,
+#endif
     S_SKULL_STND,
     S_SKULL_STND2,
     S_SKULL_RUN1,
@@ -702,6 +793,16 @@ enum statenum_t : int32_t {
     S_BSPI_DIE5,
     S_BSPI_DIE6,
     S_BSPI_DIE7,
+// PsyDoom: reintroducing the Arch-vile (resurrection states)
+#if PSYDOOM_MODS
+    S_BSPI_RAISE1,
+    S_BSPI_RAISE2,
+    S_BSPI_RAISE3,
+    S_BSPI_RAISE4,
+    S_BSPI_RAISE5,
+    S_BSPI_RAISE6,
+    S_BSPI_RAISE7,
+#endif
     S_ARACH_PLAZ,
     S_ARACH_PLAZ2,
     S_ARACH_PLEX,
@@ -929,6 +1030,79 @@ enum statenum_t : int32_t {
     S_COLONGIBS,
     S_SMALLPOOL,
     S_BRAINSTEM,
+// PsyDoom: adding support for missing PC Doom II actors
+#if PSYDOOM_MODS
+    S_VILE_STND,
+    S_VILE_STND2,
+    S_VILE_RUN1,
+    S_VILE_RUN2,
+    S_VILE_RUN3,
+    S_VILE_RUN4,
+    S_VILE_RUN5,
+    S_VILE_RUN6,
+    S_VILE_RUN7,
+    S_VILE_RUN8,
+    S_VILE_RUN9,
+    S_VILE_RUN10,
+    S_VILE_RUN11,
+    S_VILE_RUN12,
+    S_VILE_ATK1,
+    S_VILE_ATK2,
+    S_VILE_ATK3,
+    S_VILE_ATK4,
+    S_VILE_ATK5,
+    S_VILE_ATK6,
+    S_VILE_ATK7,
+    S_VILE_ATK8,
+    S_VILE_ATK9,
+    S_VILE_ATK10,
+    S_VILE_ATK11,
+    S_VILE_HEAL1,
+    S_VILE_HEAL2,
+    S_VILE_HEAL3,
+    S_VILE_PAIN,
+    S_VILE_PAIN2,
+    S_VILE_DIE1,
+    S_VILE_DIE2,
+    S_VILE_DIE3,
+    S_VILE_DIE4,
+    S_VILE_DIE5,
+    S_VILE_DIE6,
+    S_VILE_DIE7,
+    S_VILE_DIE8,
+    S_VILE_DIE9,
+    S_VILE_DIE10,
+    S_FIRE1,
+    S_FIRE2,
+    S_FIRE3,
+    S_FIRE4,
+    S_FIRE5,
+    S_FIRE6,
+    S_FIRE7,
+    S_FIRE8,
+    S_FIRE9,
+    S_FIRE10,
+    S_FIRE11,
+    S_FIRE12,
+    S_FIRE13,
+    S_FIRE14,
+    S_FIRE15,
+    S_FIRE16,
+    S_FIRE17,
+    S_FIRE18,
+    S_FIRE19,
+    S_FIRE20,
+    S_FIRE21,
+    S_FIRE22,
+    S_FIRE23,
+    S_FIRE24,
+    S_FIRE25,
+    S_FIRE26,
+    S_FIRE27,
+    S_FIRE28,
+    S_FIRE29,
+    S_FIRE30,
+#endif
     BASE_NUM_STATES     // PsyDoom: renamed this from 'NUMSTATES' to 'BASE_NUM_STATES' because it's now just a count of the number of built-in states
 };
 
@@ -1061,9 +1235,12 @@ enum mobjtype_t : int32_t {
     MT_MISC84,
     MT_MISC85,
     MT_MISC86,
-// PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition
+// PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition.
+// Also adding support for some actors from PC Doom II which were missing from the PlayStation version.
 #if PSYDOOM_MODS
-    MT_MISC87,
+    MT_MISC87,      // Unused hanging lamp sprite
+    MT_VILE,        // Arch-vile
+    MT_FIRE,        // Arch-vile's flame
 #endif
     BASE_NUM_MOBJ_TYPES     // PsyDoom: renamed this from 'NUMMOBJTYPES' to 'BASE_NUM_MOBJ_TYPES' because it's now just a count of the number of built-in map object types
 };
@@ -1129,6 +1306,10 @@ struct mobjinfo_t {
     int32_t         damage;
     sfxenum_t       activesound;
     uint32_t        flags;
+// PsyDoom: adding back in the 'raise' state used by the Arch-vile when resurrecting enemies
+#if PSYDOOM_MODS
+    statenum_t      raisestate;
+#endif
 };
 
 // PsyDoom: sprite names are now represented as a single 32-bit integer for easier and faster comparison
