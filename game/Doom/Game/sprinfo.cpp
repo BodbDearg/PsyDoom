@@ -102,6 +102,17 @@ static std::unordered_map<uint32_t, uint32_t> determineSpriteFrameCounts() noexc
         }
     });
 
+    // Ensure built-in sprites always have an entry in the map even if not found in the WAD file.
+    // The ordering for built-in sprites is important relative to other built-in sprites, even if they don't have a graphic resource.
+    // This allows PC Doom II enemies (re-introduced by PsyDoom) to be placed in user WADs only if they are needed for a level.
+    for (int32_t i = 0; i < BASE_NUM_SPRITES; ++i) {
+        const sprname_t sprName = gBaseSprNames[i];
+
+        if (spriteFrames.count(sprName.word) <= 0) {
+            spriteFrames[sprName.word] = 0;
+        }
+    }
+
     // Verify that the list of frame numbers for all sprites is contiguous (no gaps) and convert from a bit set to a frame count
     {
         const auto endIter = spriteFrames.end();
