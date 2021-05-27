@@ -4630,7 +4630,7 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
         700,                        // spawnhealth
         S_VILE_RUN1,                // seestate
         sfx_vilsit,                 // seesound
-        4,                          // reactiontime
+        8,                          // reactiontime
         sfx_None,                   // attacksound
         S_VILE_PAIN,                // painstate
         10,                         // painchance
