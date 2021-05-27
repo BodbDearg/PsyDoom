@@ -1518,4 +1518,32 @@ void A_FireCrackle(mobj_t& actor) noexcept {
     A_Fire(actor);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called when Commander Keen dies.
+// Opens a door for sectors tagged '666' if all instances of Commander Keen are dead.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_KeenDie(mobj_t& actor) noexcept {
+    // Can now walk over the Keen's corpse
+    A_Fall(actor);
+
+    // If there any other instances of Keen left alive then don't open the door
+    const mobjtype_t actorType = actor.type;
+
+    for (mobj_t* pMobj = gMObjHead.next; pMobj != &gMObjHead; pMobj = pMobj->next) {
+        const bool bIsAnotherLiveKeen = (
+            (pMobj != &actor) &&
+            (pMobj->type == actorType) &&
+            (pMobj->health > 0)
+        );
+
+        if (bIsAnotherLiveKeen)
+            return;
+    }
+
+    // Open the door for sectors tagged '666'
+    line_t fakeLine = {};
+    fakeLine.tag = 666;
+    EV_DoDoor(fakeLine, Open);
+}
+
 #endif  // #if PSYDOOM_MODS

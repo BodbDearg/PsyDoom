@@ -996,6 +996,21 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_SSWV, 10,                   2,   nullptr,          S_SSWV_RAISE4,    0,  0 },  // S_SSWV_RAISE3
     { SPR_SSWV, 9,                    2,   nullptr,          S_SSWV_RAISE5,    0,  0 },  // S_SSWV_RAISE4
     { SPR_SSWV, 8,                    2,   nullptr,          S_SSWV_RUN1,      0,  0 },  // S_SSWV_RAISE5
+    { SPR_KEEN, 0,                   -1,   nullptr,          S_KEENSTND,       0,  0 },  // S_KEENSTND
+    { SPR_KEEN, 0,                    3,   nullptr,          S_COMMKEEN2,      0,  0 },  // S_COMMKEEN
+    { SPR_KEEN, 1,                    3,   nullptr,          S_COMMKEEN3,      0,  0 },  // S_COMMKEEN2
+    { SPR_KEEN, 2,                    3,   A_Scream,         S_COMMKEEN4,      0,  0 },  // S_COMMKEEN3
+    { SPR_KEEN, 3,                    3,   nullptr,          S_COMMKEEN5,      0,  0 },  // S_COMMKEEN4
+    { SPR_KEEN, 4,                    3,   nullptr,          S_COMMKEEN6,      0,  0 },  // S_COMMKEEN5
+    { SPR_KEEN, 5,                    3,   nullptr,          S_COMMKEEN7,      0,  0 },  // S_COMMKEEN6
+    { SPR_KEEN, 6,                    3,   nullptr,          S_COMMKEEN8,      0,  0 },  // S_COMMKEEN7
+    { SPR_KEEN, 7,                    3,   nullptr,          S_COMMKEEN9,      0,  0 },  // S_COMMKEEN8
+    { SPR_KEEN, 8,                    3,   nullptr,          S_COMMKEEN10,     0,  0 },  // S_COMMKEEN9
+    { SPR_KEEN, 9,                    3,   nullptr,          S_COMMKEEN11,     0,  0 },  // S_COMMKEEN10
+    { SPR_KEEN, 10,                   3,   A_KeenDie,        S_COMMKEEN12,     0,  0 },  // S_COMMKEEN11
+    { SPR_KEEN, 11,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_COMMKEEN12
+    { SPR_KEEN, 12,                   2,   nullptr,          S_KEENPAIN2,      0,  0 },  // S_KEENPAIN
+    { SPR_KEEN, 12,                   4,   A_Pain,           S_KEENSTND,       0,  0 },  // S_KEENPAIN2
 #endif
 };
 
@@ -4694,6 +4709,37 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_COUNTKILL
         ),
         S_SSWV_RAISE1               // raisestate
+    },
+    // MT_KEEN
+    {
+        72,                         // doomednum
+        S_KEENSTND,                 // spawnstate
+        100,                        // spawnhealth
+        S_NULL,                     // seestate
+        sfx_None,                   // seesound
+        8,                          // reactiontime
+        sfx_None,                   // attacksound
+        S_KEENPAIN,                 // painstate
+        256,                        // painchance
+        sfx_keenpn,                 // painsound
+        S_NULL,                     // meleestate
+        S_NULL,                     // missilestate
+        S_COMMKEEN,                 // deathstate
+        S_NULL,                     // xdeathstate
+        sfx_keendt,                 // deathsound
+        0,                          // speed
+        16 * FRACUNIT,              // radius
+        72 * FRACUNIT,              // height
+        10000000,                   // mass
+        0,                          // damage
+        sfx_None,                   // activesound
+        (                           // flags
+            MF_SOLID |
+            MF_SPAWNCEILING |
+            MF_NOGRAVITY |
+            MF_SHOOTABLE |
+            MF_COUNTKILL
+        ),
     },
 #endif
 };

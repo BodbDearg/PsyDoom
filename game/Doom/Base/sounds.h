@@ -107,6 +107,9 @@ enum sfxenum_t : int32_t {
     // TODO: replace these Wolfenstein SS sounds with real ones
     sfx_sssit  = sfx_posit1,
     sfx_ssdth  = sfx_podth1,
+    // TODO: replace these Commander Keen sounds with real ones
+    sfx_keenpn = sfx_popain,
+    sfx_keendt = sfx_podth1,
 #endif
     NUMSFX
 };

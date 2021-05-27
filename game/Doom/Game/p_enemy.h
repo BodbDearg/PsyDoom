@@ -55,4 +55,5 @@ void L_SkullBash(mobj_t& actor) noexcept;
     void A_Fire(mobj_t& actor) noexcept;
     void A_StartFire(mobj_t& actor) noexcept;
     void A_FireCrackle(mobj_t& actor) noexcept;
+    void A_KeenDie(mobj_t& actor) noexcept;
 #endif

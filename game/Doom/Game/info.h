@@ -1139,6 +1139,21 @@ enum statenum_t : int32_t {
     S_SSWV_RAISE3,
     S_SSWV_RAISE4,
     S_SSWV_RAISE5,
+    S_KEENSTND,
+    S_COMMKEEN,
+    S_COMMKEEN2,
+    S_COMMKEEN3,
+    S_COMMKEEN4,
+    S_COMMKEEN5,
+    S_COMMKEEN6,
+    S_COMMKEEN7,
+    S_COMMKEEN8,
+    S_COMMKEEN9,
+    S_COMMKEEN10,
+    S_COMMKEEN11,
+    S_COMMKEEN12,
+    S_KEENPAIN,
+    S_KEENPAIN2,
 #endif
     BASE_NUM_STATES     // PsyDoom: renamed this from 'NUMSTATES' to 'BASE_NUM_STATES' because it's now just a count of the number of built-in states
 };
@@ -1279,6 +1294,7 @@ enum mobjtype_t : int32_t {
     MT_VILE,        // Arch-vile
     MT_FIRE,        // Arch-vile's flame
     MT_WOLFSS,      // Wolfenstein SS officer
+    MT_KEEN,        // Commander Keen easter egg
 #endif
     BASE_NUM_MOBJ_TYPES     // PsyDoom: renamed this from 'NUMMOBJTYPES' to 'BASE_NUM_MOBJ_TYPES' because it's now just a count of the number of built-in map object types
 };
