@@ -980,6 +980,28 @@ void A_SkullAttack(mobj_t& actor) noexcept {
     actor.momz = zDelta / travelTime;
 }
 
+// 
+// 7dog123: A_PsychicAttack()
+// more fitting name insead of
+// A_BetaSkullAttack
+//
+
+#if PSYDOOM_MODS
+void A_PsychicAttack (mobj_t& actor) noexcept {
+	if (!actor.target || actor.target->type == MT_SKULL)
+		return;
+
+	S_StartSound(&actor, actor.info->attacksound);
+	A_FaceTarget(actor);
+	const int32_t damage = actor.info->damage = (P_Random(MT_SKULLFLY) % 8 + 1) actor.info->damage;
+	P_DamageMobj(*actor.target, &actor, &actor, damage);
+}
+
+void A_Stop(mobj_t& actor) noexcept {
+	actor.momx = actor.momy = actor.momz = 0;
+}
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Spawn a skull (Lost Soul) from the given Pain Elemental actor at the given angle away from the parent.
 // If the skull is spawned in a wall, then it is immediately killed.

@@ -167,6 +167,8 @@ enum spritenum_t : int32_t {
     SPR_KEEN,       // Hanging Commander Keen
     SPR_SSWV,       // Wolfstein SS
     SPR_VILE,       // This one needs no introduction...
+// 7dog123: adding Beta Lost Soul
+	SPR_BSKL,       // Beta Lost Soul
 #endif
     BASE_NUM_SPRITES    // PsyDoom: renamed this from 'NUMSPRITES' to 'BASE_NUM_SPRITES' because it's now just a count of the number of built-in sprites
 };
@@ -734,6 +736,28 @@ enum statenum_t : int32_t {
     S_SKULL_DIE4,
     S_SKULL_DIE5,
     S_SKULL_DIE6,
+// 7dog123: introducing Beta Lost Soul
+#if PSYDOOM_MODS
+    S_BSKL_STND,
+    S_BSKL_RUN1,
+	S_BSKL_RUN2,
+	S_BSKL_RUN3,
+    S_BSKL_RUN4,
+    S_BSKL_ATK1,
+    S_BSKL_ATK2,
+    S_BSKL_ATK3,
+    S_BSKL_PAIN,
+    S_BSKL_PAIN2,
+	S_BSKL_PAIN3,
+    S_BSKL_DIE1,
+    S_BSKL_DIE2,
+    S_BSKL_DIE3,
+    S_BSKL_DIE4,
+    S_BSKL_DIE5,
+    S_BSKL_DIE6,
+	S_BSKL_DIE7,	
+	S_BSKL_DIE8,
+#endif
     S_SPID_STND,
     S_SPID_STND2,
     S_SPID_RUN1,

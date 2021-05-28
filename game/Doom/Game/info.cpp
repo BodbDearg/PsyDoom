@@ -27,6 +27,8 @@ const sprname_t gBaseSprNames[BASE_NUM_SPRITES] = {
 // PsyDoom: adding missing PC DOOM II sprites back in
 #if PSYDOOM_MODS
     "BBRN", "BOSF", "FIRE", "KEEN", "SSWV", "VILE",                     // 141 - 146
+// 7dog123: adding Beta Lost Soul
+	"BSKL",                                                             // 147
 #endif
 };
 
@@ -591,6 +593,28 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_SKUL,  8 | FF_FULLBRIGHT,   3,   A_Fall,           S_SKULL_DIE5,     0,  0 },  // S_SKULL_DIE4
     { SPR_SKUL,  9,                   3,   nullptr,          S_SKULL_DIE6,     0,  0 },  // S_SKULL_DIE5
     { SPR_SKUL,  10,                  3,   nullptr,          S_NULL,           0,  0 },  // S_SKULL_DIE6
+// 7dog123: introducing Beta Lost Soul
+#if PSYDOOM_MODS
+    { SPR_BSKL,  1,                   10,  A_Look,           S_BSKL_STND,     0,  0 },  // S_BSKL_STND
+    { SPR_BSKL,  1,                   5,   A_Chase,          S_BSKL_RUN2,     0,  0 },  // S_BSKL_RUN1
+	{ SPR_BSKL,  2,                   5,   A_Chase,          S_BSKL_RUN3,     0,  0 },  // S_BSKL_RUN2
+	{ SPR_BSKL,  3,                   5,   A_Chase,          S_BSKL_RUN4,     0,  0 },  // S_BSKL_RUN3
+    { SPR_BSKL,  0,                   5,   A_Chase,          S_BSKL_RUN1,     0,  0 },  // S_BSKL_RUN4
+    { SPR_BSKL,  4,                   4,   A_FaceTarget,     S_BSKL_ATK2,     0,  0 },  // S_BSKL_ATK1
+    { SPR_BSKL,  5,                   5,   A_PsychicAttack,  S_BSKL_ATK3,     0,  0 },  // S_BSKL_ATK2
+    { SPR_BSKL,  5,                   4,   nullptr,          S_BSKL_ATK1,     0,  0 },  // S_BSKL_ATK3
+    { SPR_BSKL,  6,                   4,   nullptr,          S_BSKL_PAIN2,    0,  0 },  // S_BSKL_PAIN
+    { SPR_BSKL,  7,                   2,   nullptr,          S_BSKL_PAIN3,    0,  0 },  // S_BSKL_PAIN2
+	{ SPR_BSKL,  8,                   4,   nullptr,          S_BSKL_PAIN1,    0,  0 },  // S_BSKL_PAIN3
+    { SPR_BSKL,  9,                   5,   nullptr,          S_BSKL_DIE2,     0,  0 },  // S_BSKL_DIE1
+    { SPR_BSKL,  10,                  5,   nullptr,          S_BSKL_DIE3,     0,  0 },  // S_BSKL_DIE2
+    { SPR_BSKL,  11,                  5,   nullptr,          S_BSKL_DIE4,     0,  0 },  // S_BSKL_DIE3
+    { SPR_BSKL,  12,                  5,   nullptr,          S_BSKL_DIE5,     0,  0 },  // S_BSKL_DIE4
+    { SPR_BSKL,  13,                  5,   A_Scream,         S_BSKL_DIE6,     0,  0 },  // S_BSKL_DIE5
+    { SPR_BSKL,  14,                  5,   nullptr,          S_BSKL_DIE7,     0,  0 },  // S_BSKL_DIE6
+	{ SPR_BSKL,  15,                  5,   A_Fall,           S_BSKL_DIE8,     0,  0 },  // S_BSKL_DIE6
+	{ SPR_BSKL,  16,                  5,   A_Stop,           S_BSKL_DIE1,     0,  0 },  // S_BSKL_DIE6
+#endif
     { SPR_SPID,  0,                   5,   A_Look,           S_SPID_STND2,     0,  0 },  // S_SPID_STND
     { SPR_SPID,  1,                   5,   A_Look,           S_SPID_STND,      0,  0 },  // S_SPID_STND2
     { SPR_SPID,  0,                   2,   A_Metal,          S_SPID_RUN2,      0,  0 },  // S_SPID_RUN1
@@ -1497,6 +1521,40 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_COUNTKILL
         )
     },
+	// 7dog123: Beta Lost Soul
+#if PSYDOOM_MODS
+	// MT_BSKUL
+	{
+		23006,                      // doomednum
+        S_BSKUL_STND,               // spawnstate
+        60,                         // spawnhealth
+        S_BSKUL_RUN1,               // seestate
+        sfx_None,                   // seesound
+        8,                          // reactiontime
+        sfx_sklatk,                 // attacksound
+        S_BSKUL_PAIN,               // painstate
+        256,                        // painchance
+        sfx_dmpain,                 // painsound
+        S_NULL,                     // meleestate
+        S_BSKUL_ATK1,               // missilestate
+        S_BSKUL_DIE1,               // deathstate
+        S_NULL,                     // xdeathstate
+        sfx_firxpl,                 // deathsound
+        8,                          // speed
+        16 * FRACUNIT,              // radius
+        56 * FRACUNIT,              // height
+        50,                         // mass
+        3,                          // damage
+        sfx_dmact,                  // activesound
+        (                           // flags
+            MF_SOLID |
+            MF_SHOOTABLE |
+            MF_NOGRAVITY |
+            MF_FLOAT |
+            MF_COUNTKILL
+        )
+	},
+#endif
     // MT_SPIDER
     {
         7,                          // doomednum
