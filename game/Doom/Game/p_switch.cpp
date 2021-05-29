@@ -571,6 +571,16 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             }
         }   break;
 
+        // PsyDoom: adding support for missing line specials from PC
+        #if PSYDOOM_MODS
+            case 132: {
+                // Raise Floor Turbo
+                if (EV_DoFloor(line, raiseFloorTurbo)) {
+                    P_ChangeSwitchTexture(line, true);
+                }
+            }   break;
+        #endif
+
         // Light turn on
         case 138: {
             EV_LightTurnOn(line, 255);
@@ -753,15 +763,22 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             }
         }   break;
 
-    // PsyDoom: adding support for the 'Raise Floor 512' special
-    #if PSYDOOM_MODS
-        // Raise Floor 512
-        case 140: {
-            if (EV_DoFloor(line, raiseFloor512)) {
-                P_ChangeSwitchTexture(line, false);
-            }
-        } break;
-    #endif
+        // PsyDoom: adding support for missing line specials from PC
+        #if PSYDOOM_MODS
+            // Raise Floor Turbo
+            case 131: {
+                if (EV_DoFloor(line, raiseFloorTurbo)) {
+                    P_ChangeSwitchTexture(line, false);
+                }
+            }   break;
+
+            // Raise Floor 512
+            case 140: {
+                if (EV_DoFloor(line, raiseFloor512)) {
+                    P_ChangeSwitchTexture(line, false);
+                }
+            }   break;
+        #endif
 
         default:
             break;

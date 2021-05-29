@@ -25,9 +25,10 @@ enum floor_e : int32_t {
     raiseFloorCrush         = 9,
     donutRaise              = 10,
 
-    // PsyDoom: adding missing floor types from PC
+    // PsyDoom: adding support for missing line specials from PC
     #if PSYDOOM_MODS
-        raiseFloor512 = 12,
+        raiseFloorTurbo = 11,
+        raiseFloor512   = 12,
     #endif
 };
 
