@@ -1031,6 +1031,11 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
 
         // PsyDoom: adding support for missing line specials from PC
         #if PSYDOOM_MODS
+            // Raise To Nearest Floor
+            case 128:
+                EV_DoFloor(line, raiseFloorToNearest);
+                break;
+
             // Raise Floor Turbo
             case 129:
                 EV_DoFloor(line, raiseFloorTurbo);
