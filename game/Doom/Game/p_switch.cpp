@@ -753,6 +753,16 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             }
         }   break;
 
+    // PsyDoom: adding support for the 'Raise Floor 512' special
+    #if PSYDOOM_MODS
+        // Raise Floor 512
+        case 140: {
+            if (EV_DoFloor(line, raiseFloor512)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        } break;
+    #endif
+
         default:
             break;
     }

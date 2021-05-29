@@ -270,6 +270,16 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
                 floor.floordestheight = sector.floorheight + 24 * FRACUNIT;
             }   break;
 
+        // PsyDoom: adding support for the 'Raise Floor 512' special
+        #if PSYDOOM_MODS
+            case raiseFloor512: {
+                floor.direction = 1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                floor.floordestheight = sector.floorheight + 512 * FRACUNIT;
+            }   break;
+        #endif
+
             case raiseFloor24AndChange: {
                 floor.direction = 1;
                 floor.sector = &sector;

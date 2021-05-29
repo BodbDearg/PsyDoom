@@ -23,7 +23,12 @@ enum floor_e : int32_t {
     raiseFloor24            = 7,
     raiseFloor24AndChange   = 8,
     raiseFloorCrush         = 9,
-    donutRaise              = 10
+    donutRaise              = 10,
+
+    // PsyDoom: adding missing floor types from PC
+    #if PSYDOOM_MODS
+        raiseFloor512 = 12,
+    #endif
 };
 
 // What type of stair building to do when building stairs
