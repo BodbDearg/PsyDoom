@@ -56,4 +56,12 @@ void L_SkullBash(mobj_t& actor) noexcept;
     void A_StartFire(mobj_t& actor) noexcept;
     void A_FireCrackle(mobj_t& actor) noexcept;
     void A_KeenDie(mobj_t& actor) noexcept;
+    void A_BrainAwake(mobj_t& actor) noexcept;
+    void A_BrainPain(mobj_t& actor) noexcept;
+    void A_BrainScream(mobj_t& actor) noexcept;
+    void A_BrainExplode(mobj_t& actor) noexcept;
+    void A_BrainDie(mobj_t& actor) noexcept;
+    void A_BrainSpit(mobj_t& actor) noexcept;
+    void A_SpawnSound(mobj_t& actor) noexcept;
+    void A_SpawnFly(mobj_t& actor) noexcept;
 #endif

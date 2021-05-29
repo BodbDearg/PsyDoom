@@ -177,6 +177,14 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
     // Advance Z position by current Z motion
     mobj.z += mobj.momz;
 
+    #if PSYDOOM_MODS
+        // PsyDoom: allow things to 'noclip' in addition to the player.
+        // This is required for the "Icon Of Sin" spawner boxes to work properly.
+        const bool bNoClip = (mobj.flags & MF_NOCLIP);
+    #else
+        constexpr bool bNoClip = false;
+    #endif
+
     // Do floating up and down to meet the target for floating monsters
     if ((mobj.flags & MF_FLOAT) && mobj.target) {
         P_FloatChange(mobj);
@@ -189,10 +197,10 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
             mobj.momz = 0;
         }
 
-        // Clamp to the floor and if we're a missile, explode:
+        // Clamp to the floor and explode missiles (unless noclipping)
         mobj.z = mobj.floorz;
 
-        if (mobj.flags & MF_MISSILE) {
+        if ((mobj.flags & MF_MISSILE) && (!bNoClip)) {
             mobj.latecall = &P_ExplodeMissile;  // BOOM!
             return;
         }
@@ -213,10 +221,10 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
             mobj.momz = 0;
         }
 
-        // Clamp to the ceiling and if we're a missile, explode:
+        // Clamp to the ceiling and explode missiles (unless noclipping)
         mobj.z = mobj.ceilingz - mobj.height;
 
-        if (mobj.flags & MF_MISSILE) {
+        if ((mobj.flags & MF_MISSILE) && (!bNoClip)) {
             mobj.latecall = &P_ExplodeMissile;
         }
     }
@@ -286,23 +294,33 @@ static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
     // If the floor/ceiling height gap is too small to move through then the move cannot happen
     mobj_t& baseThing = *gpBaseThing;
 
-    if (gTestCeilingz - gTestFloorZ < baseThing.height)
-        return false;
+    #if PSYDOOM_MODS
+        // PsyDoom: allow things to 'noclip' in addition to the player.
+        // This is required for the "Icon Of Sin" spawner boxes to work properly.
+        const bool bDoHeightChecks = ((baseThing.flags & MF_NOCLIP) == 0);
+    #else
+        constexpr bool bDoHeightChecks = true;
+    #endif
 
-    // If the thing is too high up in the air to pass under the upper wall then the move cannot happen
-    if (gTestCeilingz - baseThing.z < baseThing.height)
-        return false;
-
-    // If the step up is too big for a step then the move cannot happen
-    if (gTestFloorZ - baseThing.z > 24 * FRACUNIT)
-        return false;
-
-    // See if the fall is too large (monsters).
-    // Only do this test for things that don't float and which care about falling off cliffs.
-    if ((gTestFlags & (MF_DROPOFF | MF_FLOAT)) == 0) {
-        if (gTestFloorZ - gTestDropoffZ > 24 * FRACUNIT) {
-            // Drop is too large for this thing!
+    if (bDoHeightChecks) {
+        if (gTestCeilingz - gTestFloorZ < baseThing.height)
             return false;
+
+        // If the thing is too high up in the air to pass under the upper wall then the move cannot happen
+        if (gTestCeilingz - baseThing.z < baseThing.height)
+            return false;
+
+        // If the step up is too big for a step then the move cannot happen
+        if (gTestFloorZ - baseThing.z > 24 * FRACUNIT)
+            return false;
+
+        // See if the fall is too large (monsters).
+        // Only do this test for things that don't float and which care about falling off cliffs.
+        if ((gTestFlags & (MF_DROPOFF | MF_FLOAT)) == 0) {
+            if (gTestFloorZ - gTestDropoffZ > 24 * FRACUNIT) {
+                // Drop is too large for this thing!
+                return false;
+            }
         }
     }
 
@@ -456,6 +474,13 @@ static bool PB_CheckPosition() noexcept {
     gTestFloorZ = testSec.floorheight;
     gTestDropoffZ = testSec.floorheight;
     gTestCeilingz = testSec.ceilingheight;
+
+    #if PSYDOOM_MODS
+        // PsyDoom: allow things to 'noclip' in addition to the player.
+        // This is required for the "Icon Of Sin" spawner boxes to work properly.
+        if (baseThing.flags & MF_NOCLIP)
+            return true;
+    #endif
 
     // Determine the blockmap extents (left/right, top/bottom) to be tested against for collision and clamp to a valid range
     const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gTestBBox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS), 0);

@@ -1154,6 +1154,30 @@ enum statenum_t : int32_t {
     S_COMMKEEN12,
     S_KEENPAIN,
     S_KEENPAIN2,
+    S_BRAIN,
+    S_BRAIN_PAIN,
+    S_BRAIN_DIE1,
+    S_BRAIN_DIE2,
+    S_BRAIN_DIE3,
+    S_BRAIN_DIE4,
+    S_BRAINEYE,
+    S_BRAINEYESEE,
+    S_BRAINEYE1,
+    S_SPAWN1,
+    S_SPAWN2,
+    S_SPAWN3,
+    S_SPAWN4,
+    S_SPAWNFIRE1,
+    S_SPAWNFIRE2,
+    S_SPAWNFIRE3,
+    S_SPAWNFIRE4,
+    S_SPAWNFIRE5,
+    S_SPAWNFIRE6,
+    S_SPAWNFIRE7,
+    S_SPAWNFIRE8,
+    S_BRAINEXPLODE1,
+    S_BRAINEXPLODE2,
+    S_BRAINEXPLODE3,
 #endif
     BASE_NUM_STATES     // PsyDoom: renamed this from 'NUMSTATES' to 'BASE_NUM_STATES' because it's now just a count of the number of built-in states
 };
@@ -1290,11 +1314,16 @@ enum mobjtype_t : int32_t {
 // PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition.
 // Also adding support for some actors from PC Doom II which were missing from the PlayStation version.
 #if PSYDOOM_MODS
-    MT_MISC87,      // Unused hanging lamp sprite
-    MT_VILE,        // Arch-vile
-    MT_FIRE,        // Arch-vile's flame
-    MT_WOLFSS,      // Wolfenstein SS officer
-    MT_KEEN,        // Commander Keen easter egg
+    MT_MISC87,          // Unused hanging lamp sprite
+    MT_VILE,            // Arch-vile
+    MT_FIRE,            // Arch-vile's flame
+    MT_WOLFSS,          // Wolfenstein SS officer
+    MT_KEEN,            // Commander Keen easter egg
+    MT_BOSSBRAIN,       // Icon Of Sin head on a stick
+    MT_BOSSSPIT,        // Icon Of Sin box shooter
+    MT_BOSSTARGET,      // Icon Of Sin box target
+    MT_SPAWNSHOT,       // Icon Of Sin box
+    MT_SPAWNFIRE,       // Icon Of Sin spawn fire
 #endif
     BASE_NUM_MOBJ_TYPES     // PsyDoom: renamed this from 'NUMMOBJTYPES' to 'BASE_NUM_MOBJ_TYPES' because it's now just a count of the number of built-in map object types
 };

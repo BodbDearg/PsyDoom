@@ -5,6 +5,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "info.h"
 #include "p_setup.h"
 #include "p_shoot.h"
 #include "p_tick.h"
@@ -28,8 +29,17 @@ static int32_t      gT2ys;              // Sight line end, whole coords: y
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckSights() noexcept {
     for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
-        // Must be killable (enemy) to do sight checking
-        if ((pmobj->flags & MF_COUNTKILL) == 0)
+        // Must be killable (enemy) to do sight checking.
+        //
+        // PsyDoom: extend the sight check to types that include a 'see state' in order to allow the reimplemented 'Icon Of Sin' boss to spot the player.
+        // This doesn't cause any demo de-sync against original game demos so I've made this update non-optional.
+        #if PSYDOOM_MODS
+            const bool bCheckSight = ((pmobj->flags & MF_COUNTKILL) || pmobj->info->seestate);
+        #else
+            const bool bCheckSight = (pmobj->flags & MF_COUNTKILL);
+        #endif
+
+        if (!bCheckSight)
             continue;
 
         // Must be about to change states for up-to-date sight info to be useful

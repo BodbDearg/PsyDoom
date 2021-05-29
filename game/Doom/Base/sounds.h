@@ -110,6 +110,15 @@ enum sfxenum_t : int32_t {
     // TODO: replace these Commander Keen sounds with real ones
     sfx_keenpn = sfx_popain,
     sfx_keendt = sfx_podth1,
-#endif
+    // TODO: replace these Icon Of Sin sounds with real ones
+    sfx_bossit = sfx_posit1,
+    sfx_bospit = sfx_plasma,
+    sfx_bospn  = sfx_popain,
+    sfx_bosdth = sfx_podth1,
+    sfx_boscub = sfx_pstop,
+    // TODO: update this once the sfx list is finalized
+    NUMSFX = 90
+#else
     NUMSFX
+#endif
 };

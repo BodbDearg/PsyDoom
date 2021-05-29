@@ -22,6 +22,7 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_switch.h"
+#include "p_telept.h"
 #include "p_tick.h"
 #include "PcPsx/Game.h"
 
@@ -66,6 +67,58 @@ constexpr static dirtype_t gDiagonalDirs[4] = {
     // The current corpse found which can be raised by the Arch-vile
     static mobj_t* gpVileCorpse;
 #endif
+
+// PsyDoom: Icon Of Sin related globals
+#if PSYDOOM_MODS
+    static constexpr int32_t MAX_BRAIN_TARGETS = 64;        // Note: this is double the PC limit, should be more than enough...
+
+    static mobj_t*  gpBrainTargets[MAX_BRAIN_TARGETS];      // Target points for the Icon Of Sin spawner
+    static int32_t  gNumBrainTargets;                       // How many target points there are for the Icon Of Sin spawner
+#endif
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: gathers a list of spawner cube targets for the Icon Of Sin
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_GatherBrainTargets() noexcept {
+    gNumBrainTargets = 0;
+
+    for (mobj_t* pMobj = gMObjHead.next; pMobj != &gMObjHead; pMobj = pMobj->next) {
+        if (gNumBrainTargets >= MAX_BRAIN_TARGETS)
+            break;
+
+        if (pMobj->type == MT_BOSSTARGET) {
+            gpBrainTargets[gNumBrainTargets] = pMobj;
+            gNumBrainTargets++;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: pick one of the spawner cube targets to use for the Icon Of Sin
+//------------------------------------------------------------------------------------------------------------------------------------------
+static mobj_t* P_PickBrainTarget() noexcept {
+    // If there are no brain targets then we can't pick one
+    if (gNumBrainTargets <= 0)
+        return nullptr;
+
+    // Find the first unused brain target (use 'threshold == 0' to signify this) and return it
+    for (int32_t i = 0; i < gNumBrainTargets; ++i) {
+        ASSERT(gpBrainTargets[i]);
+        mobj_t& target = *gpBrainTargets[i];
+
+        if (target.threshold == 0)
+            return &target;
+    }
+
+    // If no brain targets are unused reset the 'used' marker for all of them and return the first
+    for (int32_t i = 0; i < gNumBrainTargets; ++i) {
+        gpBrainTargets[i]->threshold = 0;
+    }
+
+    return gpBrainTargets[0];
+}
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // For the given attacker, checks to see if it's target is within melee range and returns 'true' if so
@@ -1477,16 +1530,14 @@ void A_VileAttack(mobj_t& actor) noexcept {
 // Moves the Arch-vile's fire to be in front of the target, if the target is in sight of the Arch-vile
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_Fire(mobj_t& actor) noexcept {
-    // Sanity check: should have a reference to the Arch-vile that spawned it!
-    ASSERT(actor.target);
-
-    // Don't do anything if the fire doesn't have a target inherited from the Arch-vile    
+    // Don't do anything if the fire doesn't have a target inherited from the Arch-vile
     mobj_t* const pVileTgt = actor.tracer;
 
     if (!pVileTgt)
         return;
 
     // Don't move the fire if there is no line of sight between it and it's target
+    ASSERT(actor.target);
     mobj_t& vileMobj = *actor.target;
 
     if (!P_CheckSight(vileMobj, *pVileTgt))
@@ -1546,4 +1597,171 @@ void A_KeenDie(mobj_t& actor) noexcept {
     EV_DoDoor(fakeLine, Open);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called when the Icon Of Sin awakes
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BrainAwake([[maybe_unused]] mobj_t& actor) noexcept {
+    // Play the sight sound. Note that originally (on PC) this function also gathered all of the target points for the spawner
+    // but we now do that dynamically to avoid save/serialization issues.
+    S_StartSound(nullptr, sfx_bossit);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Plays the pain sound for the Icon Of Sin
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BrainPain([[maybe_unused]] mobj_t& actor) noexcept {
+    S_StartSound(nullptr, sfx_bospn);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called at the start of the Icon Of Sin's death sequence.
+// Starts spawning a bunch of different explosions and plays the Icon Of Sin's death sound.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BrainScream(mobj_t& actor) noexcept {
+    // Spawn a bunch of explosions
+    for (fixed_t x = actor.x - 196 * FRACUNIT; x < actor.x + 320 * FRACUNIT; x += FRACUNIT * 8) {
+        // Decide where to explode
+        const fixed_t y = actor.y - 320 * FRACUNIT;
+        const fixed_t z = 128 + P_Random() * 2 * FRACUNIT;
+
+        // Spawn the rocket, give it upward momentum and put it into the special boss explosion state
+        mobj_t& explosion = *P_SpawnMobj(x, y, z, MT_ROCKET);
+        explosion.momz = P_Random() * 512;
+        P_SetMObjState(explosion, S_BRAINEXPLODE1);
+
+        // Randomize duration
+        explosion.tics -= P_Random() & 7;
+        explosion.tics = std::max(explosion.tics, 1);
+    }
+
+    // Play the Icon Of Sin death sound
+    S_StartSound(nullptr, sfx_bosdth);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called when one of the explosions in the Icon Of Sin's death sequence is finished.
+// Spawns another explosion.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BrainExplode(mobj_t& actor) noexcept {
+    // Decide where to place the new explosion
+    const fixed_t x = actor.x + P_SubRandom() * 2048;
+    const fixed_t y = actor.y;
+    const fixed_t z = 128 + P_Random() * 2 * FRACUNIT;
+
+    // Spawn the rocket, give it upward momentum and put it into the special boss explosion state
+    mobj_t& explosion = *P_SpawnMobj(x, y, z, MT_ROCKET);
+    explosion.momz = P_Random() * 512;
+    P_SetMObjState(explosion, S_BRAINEXPLODE1);
+
+    // Randomize duration
+    explosion.tics -= P_Random() & 7;
+    explosion.tics = std::max(explosion.tics, 1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Invoked at the end of the Icon Of Sin's death sequence; ends the level
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BrainDie([[maybe_unused]] mobj_t& actor) noexcept {
+    G_ExitLevel();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spits out a spawner cube for the Icon Of Sin
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BrainSpit(mobj_t& actor) noexcept {
+    // On easy mode or under allow a 50% chance for a spawn not to happen.
+    // Note: originally (on PC) a static local was used to achieve this with a simple bit flip, but that has serialization/demo issues.
+    if (gGameSkill <= sk_easy) {
+        if (P_Random() & 1)
+            return;
+    }
+
+    // Update the list of spawner targets and pick one
+    P_GatherBrainTargets();
+    mobj_t* const pTarget = P_PickBrainTarget();
+
+    if (!pTarget)
+        return;
+
+    // Don't use this spawner again until we've exhausted all the other ones
+    pTarget->threshold = 1;
+
+    // Spawn the spawner cube and send it towards the target
+    mobj_t& spawnCube = *P_SpawnMissile(actor, *pTarget, MT_SPAWNSHOT);
+    spawnCube.target = pTarget;
+
+    // Spawn in this many tics
+    {
+        const fixed_t travelFracTics = FixedDiv(pTarget->y - actor.y, spawnCube.momy * spawnCube.state->tics);
+        const int32_t travelTics = d_fixed_to_int(travelFracTics + FRACUNIT - 1);
+        spawnCube.reactiontime = travelTics;
+    }
+
+    // Play the spawn sound
+    S_StartSound(NULL, sfx_bospit);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Plays the Icon Of Sin spawner cube spawn sound and flies it towards the target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_SpawnSound(mobj_t& actor) noexcept {
+    S_StartSound(&actor, sfx_boscub);
+    A_SpawnFly(actor);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Flies the Icon Of Sin spawn cube towards it's target and spawns an enemy upon reaching it
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_SpawnFly(mobj_t& actor) noexcept {
+    // Is the cube still flying?
+    if (--actor.reactiontime > 0)
+        return;
+
+    // Do the spawn fire effect (re-uses Arch-vile fire)
+    ASSERT(actor.target);
+    mobj_t& target = *actor.target;
+
+    {
+        mobj_t& fireFx = *P_SpawnMobj(target.x, target.y, target.z, MT_SPAWNFIRE);
+        S_StartSound(&fireFx, sfx_telept);
+    }
+
+    // Randomly decide which enemy to spawn.
+    // Lower level enemies are generally weighted higher in terms of probability.
+    const int32_t randNum = P_Random();
+    mobjtype_t spawnType;
+
+    if (randNum < 50) {
+        spawnType = MT_TROOP;
+    } else if (randNum < 120) {
+        spawnType = MT_SERGEANT;
+    } else if (randNum < 130) {
+        spawnType = MT_PAIN;
+    } else if (randNum < 160) {
+        spawnType = MT_HEAD;
+    } else if (randNum < 162) {
+        spawnType = MT_VILE;
+    } else if (randNum < 172) {
+        spawnType = MT_UNDEAD;
+    } else if (randNum < 192) {
+        spawnType = MT_BABY;
+    } else if (randNum < 222) {
+        spawnType = MT_FATSO;
+    } else if (randNum < 246) {
+        spawnType = MT_KNIGHT;
+    } else {
+        spawnType = MT_BRUISER;
+    }
+
+    // Spawn the enemy and alert it immediately
+    mobj_t& spawned = *P_SpawnMobj(target.x, target.y, target.z, spawnType);
+
+    if (P_LookForPlayers(spawned, true)) {
+        P_SetMObjState(spawned, spawned.info->seestate);
+    }
+
+    // Telefrag anything where the enemy spawned and remove the cube
+    P_Telefrag(spawned, spawned.x, spawned.y);
+    P_RemoveMobj(actor);
+}
 #endif  // #if PSYDOOM_MODS
