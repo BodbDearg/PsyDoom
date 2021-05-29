@@ -851,6 +851,15 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             }
         }   break;
 
+        // PsyDoom: adding support for missing line specials from PC
+        #if PSYDOOM_MODS
+            // Raise Floor Turbo
+            case 130:
+                EV_DoFloor(line, raiseFloorTurbo);
+                line.special = 0;
+                break;
+        #endif
+
         // Silent ceiling crush & raise
         case 141:
             EV_DoCeiling(line, silentCrushAndRaise);
@@ -1019,6 +1028,14 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
                 EV_Teleport(line, mobj);
             }
         }   break;
+
+        // PsyDoom: adding support for missing line specials from PC
+        #if PSYDOOM_MODS
+            // Raise Floor Turbo
+            case 129:
+                EV_DoFloor(line, raiseFloorTurbo);
+                break;
+        #endif
 
         default:
             break;
