@@ -44,6 +44,8 @@ PsyDoom contributors (sorted alphabetically)
             https://github.com/Erick194/PSXDOOM-RE/commit/7d1a37385c32c5c8f3026c3d8164647c8e67ff00
         * Support for extended password map numbers (0-255, instead of 0-63):
             https://github.com/Erick194/PSXDOOM-RE/commit/2a5b73503db5479131702ee29dc946056bcf026a
+        * Clarified some telefrag behavior:
+            https://github.com/BodbDearg/PsyDoom/commit/7c92be7dd2a5a34f0efa066c4d26384115b3546a#r51501054
 
 * **[fenderc01](https://github.com/fenderc01)**
 

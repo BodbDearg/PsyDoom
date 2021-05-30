@@ -20,16 +20,22 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Telefrags map objects (that can be shot) around the given object when placed at the specified position
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_Telefrag(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
+void P_Telefrag(
+    // PsyDoom: allow self-telefragging to be disabled (required for the 'Icon Of Sin' spawner boxes)
+    #if PSYDOOM_MODS
+        mobj_t& mobj, const fixed_t x, const fixed_t y, const bool bCanSelfTelefrag = true
+    #else
+        mobj_t& mobj, const fixed_t x, const fixed_t y
+    #endif
+) noexcept {
     for (mobj_t* pTarget = gMObjHead.next; pTarget != &gMObjHead; pTarget = pTarget->next) {
         // Can't telefrag the object if it's not shootable
         if ((pTarget->flags & MF_SHOOTABLE) == 0)
             continue;
 
-        // PsyDoom: can't self telefrag.
-        // This shouldn't affect original PSX Doom maps but the check is needed for the "Icon Of Sin" boss reimplementation.
+        // PsyDoom: allow self-telefragging to be disabled (required for the 'Icon Of Sin' spawner boxes)
         #if PSYDOOM_MODS
-            if (pTarget == &mobj)
+            if ((pTarget == &mobj) && (!bCanSelfTelefrag))
                 continue;
         #endif
 

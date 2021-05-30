@@ -1760,8 +1760,9 @@ void A_SpawnFly(mobj_t& actor) noexcept {
         P_SetMObjState(spawned, spawned.info->seestate);
     }
 
-    // Telefrag anything where the enemy spawned and remove the cube
-    P_Telefrag(spawned, spawned.x, spawned.y);
+    // Telefrag anything where the enemy spawned and remove the cube.
+    // Note: do not allow self-telefragging!
+    P_Telefrag(spawned, spawned.x, spawned.y, false);
     P_RemoveMobj(actor);
 }
 #endif  // #if PSYDOOM_MODS
