@@ -77,10 +77,10 @@ static Spu::StereoSample SpuAudioCallback([[maybe_unused]] void* pUserData) noex
 
     DiscReader& disc = gCdPlayer.discReader;
 
-    if (gCdPlayer.bufferOffset >= NUM_BUFFER_SAMPLES) {
-        // Get the size of the track and were we are at in it
-        const DiscTrack* const pTrack = disc.getOpenTrack();
-        const int32_t trackSize = pTrack->trackPayloadSize;
+    if (gCdPlayer.bufferOffset + 1 >= NUM_BUFFER_SAMPLES) {
+        // Get the size of the track and where we are at in it
+        const DiscTrack* pTrack = disc.getOpenTrack();
+        int32_t trackSize = pTrack->trackPayloadSize;
         int32_t trackOffset = disc.tell();
 
         // See if there is any data left in the track to read
@@ -91,6 +91,10 @@ static Spu::StereoSample SpuAudioCallback([[maybe_unused]] void* pUserData) noex
                 // Change tracks also if we need to.
                 if (disc.getTrackNum() != gCdPlayer.loopTrack) {
                     disc.setTrackNum(gCdPlayer.loopTrack);
+
+                    // Need to re-fetch this info when changing tracks
+                    pTrack = disc.getOpenTrack();
+                    trackSize = pTrack->trackPayloadSize;
                 }
 
                 if (gCdPlayer.loopSectorOffset > 0) {
@@ -114,7 +118,7 @@ static Spu::StereoSample SpuAudioCallback([[maybe_unused]] void* pUserData) noex
         disc.read(gCdPlayer.buffer, samplesToRead * SAMPLE_SIZE);
 
         if (samplesToZero > 0) {
-            std::memset(gCdPlayer.buffer + samplesToRead * SAMPLE_SIZE, 0, samplesToZero * SAMPLE_SIZE);
+            std::memset(gCdPlayer.buffer + samplesToRead * SAMPLE_SIZE, 0, (size_t) samplesToZero * SAMPLE_SIZE);
         }
 
         gCdPlayer.bufferOffset = 0;
