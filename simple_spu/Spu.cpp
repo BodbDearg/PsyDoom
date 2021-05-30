@@ -705,6 +705,7 @@ void doMasterMix(
         ASSERT(numReverbRamSamples > 0);
         core.pReverbRam = new float[numReverbRamSamples];
         core.numReverbRamSamples = numReverbRamSamples;
+        std::memset(core.pReverbRam, 0, numReverbRamSamples * sizeof(float));
     #endif
 }
 

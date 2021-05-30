@@ -61,9 +61,13 @@ void init(
 //      https://github.com/chipaudette/OpenAudio_ArduinoLibrary/blob/81492cc5aca290d95cd6b681729302148cb7e109/AudioEffectCompressor_F32.h
 //------------------------------------------------------------------------------------------------------------------------------------------
 void compress(State& state, float& sampleL, float& sampleR) noexcept {
+    // Safety check: recover from input NaN values
+    sampleL = (!std::isnan(sampleL)) ? sampleL : 0.0f;
+    sampleR = (!std::isnan(sampleR)) ? sampleR : 0.0f;
+
     // Compute the instantaneous signal power of the current sample by squaring the signal (Ohm's law).
-    // Take the max power of both channels:
-    const float signalPower = std::max(sampleL * sampleL, sampleR * sampleR);
+    // Take the max power of both channels and clamp to within a reasonable range:
+    const float signalPower = std::min(std::max(sampleL * sampleL, sampleR * sampleR), 1000000.0f);
 
     // Smooth this power with the previous sample and save as the new smoothed sample.
     // Note: prevent smoothed signal power from dropping below -100 dBFS to prevent negative infinity when calculating signal power.

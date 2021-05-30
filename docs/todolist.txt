@@ -3,7 +3,6 @@
 - Provide PsyDoom Doom Builder config
 - Make the engine load an optional WAD containing missing Doom II enemies
 - Provide and use an 'ALLMAPS.LCD' file or something similar that contains all map SFX
-- Fix NaNs coming from sound engine into audio compressor and investigate source
 - Update the PlayStation VSTs with the fixed sample rate calculation logic
 - Experiment with Doom 64 two colored lighting
 - Add in proper sounds for the Doom II enemies which were reintroduced
