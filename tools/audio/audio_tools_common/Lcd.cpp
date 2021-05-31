@@ -85,6 +85,8 @@ bool Lcd::readFromLcdFile(const char* const filePath, const PsxPatchGroup& patch
 // Requires the patch group from the game's module file in order to tell the size of each sample.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Lcd::writeToLcdFile(OutputStream& out, const PsxPatchGroup& patchGroup, std::string& errorMsgOut) const noexcept {
+    char errorMsgBuf[256];
+
     try {
         // Can't write the LCD file if there are too many sounds
         if (samples.size() > MAX_LCD_FILE_SAMPLES)
@@ -102,12 +104,32 @@ bool Lcd::writeToLcdFile(OutputStream& out, const PsxPatchGroup& patchGroup, std
 
         // Write the ADPCM data for all the samples
         for (const LcdSample& sample : samples) {
-            // Validate the sample is valid for that is in the module file first, before writing the data
-            if (sample.patchSampleIdx >= patchGroup.patchSamples.size())
-                throw "Failed to write the .LCD file because one or more of the patch sample indexes are out of range for the .WMD file!";
+            // Validate the sample is valid for that is in the module file first, before writing the data            
+            if (sample.patchSampleIdx >= patchGroup.patchSamples.size()) {
+                std::snprintf(
+                    errorMsgBuf,
+                    C_ARRAY_SIZE(errorMsgBuf),
+                    "Failed to write the .LCD file because one or more of the patch sample indexes are out of range for the .WMD file!\n"
+                    "The patch sample index '%d' is >= to the number of patch samples in the .WMD file (%d)!",
+                    (int32_t) sample.patchSampleIdx,
+                    (int32_t) patchGroup.patchSamples.size()
+                );
 
-            if (sample.adpcmData.size() != patchGroup.patchSamples[sample.patchSampleIdx].size)
-                throw "Failed to write the .LCD file because the ADPCM data size for one or more samples does not match the sample size specified by the .WMD file!";
+                throw errorMsgBuf;
+            }
+
+            if (sample.adpcmData.size() != patchGroup.patchSamples[sample.patchSampleIdx].size) {
+                std::snprintf(
+                    errorMsgBuf,
+                    C_ARRAY_SIZE(errorMsgBuf),
+                    "Failed to write the .LCD file because the ADPCM data size for one or more samples does not match the sample size specified by the .WMD file!\n"
+                    "Expected the sample data size to be '%d' (as per the WMD) but it was '%d' instead!",
+                    (int32_t) patchGroup.patchSamples[sample.patchSampleIdx].size,
+                    (int32_t) sample.adpcmData.size()
+                );
+
+                throw errorMsgBuf;
+            }
 
             out.writeBytes(sample.adpcmData.data(), sample.adpcmData.size());
         }
