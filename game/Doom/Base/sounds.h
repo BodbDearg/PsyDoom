@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-// Identifiers for all sfx in the game
+// Sequence identifiers for all sfx and original music tracks in the game
 enum sfxenum_t : int32_t {
     sfx_None,
     sfx_sgcock,
@@ -94,30 +94,69 @@ enum sfxenum_t : int32_t {
     sfx_bdopn,
     sfx_bdcls,
     sfx_getpow,
-// PsyDoom: sounds for PC Doom II actors which have been added back into the game
+// PsyDoom: sounds for PC Doom II actors which have been added back into the game.
+// Also need to preserve sequence numbers for original game music - creating explicit entries for those tracks here.
 #if PSYDOOM_MODS
-    // TODO: replace these placeholder Arch-vile sounds with real ones
-    sfx_vilsit = sfx_skesit,
-    sfx_vipain = sfx_popain,
-    sfx_vildth = sfx_skedth,
-    sfx_vilact = sfx_skeact,
-    sfx_vilatk = sfx_skeatk,
-    sfx_flamst = sfx_manatk,
-    sfx_flame  = sfx_manatk,
-    // TODO: replace these Wolfenstein SS sounds with real ones
-    sfx_sssit  = sfx_posit1,
-    sfx_ssdth  = sfx_podth1,
-    // TODO: replace these Commander Keen sounds with real ones
-    sfx_keenpn = sfx_popain,
-    sfx_keendt = sfx_podth1,
-    // TODO: replace these Icon Of Sin sounds with real ones
-    sfx_bossit = sfx_posit1,
-    sfx_bospit = sfx_plasma,
-    sfx_bospn  = sfx_popain,
-    sfx_bosdth = sfx_podth1,
-    sfx_boscub = sfx_pstop,
-    // TODO: update this once the sfx list is finalized
-    NUMSFX = 90
+    music_01,
+    music_02,
+    music_03,
+    music_04,
+    music_05,
+    music_06,
+    music_07,
+    music_08,
+    music_09,
+    music_10,
+    music_11,
+    music_12,
+    music_13,
+    music_14,
+    music_15,
+    music_16,
+    music_17,
+    music_18,
+    music_19,
+    music_20,
+    music_21,
+    music_22,
+    music_23,
+    music_24,
+    music_25,
+    music_26,
+    music_27,
+    music_28,
+    music_29,
+    music_30,
+    // PsyDoom: reimplemented Arch-vile
+    sfx_vilsit,
+    sfx_vipain,
+    sfx_vildth,
+    sfx_vilact,
+    sfx_vilatk,
+    sfx_flamst,
+    sfx_flame,
+    // PsyDoom: reimplemented Wolf SS
+    sfx_sssit,
+    sfx_ssdth,
+    // PsyDoom: reimplemented Commander Keen
+    sfx_keenpn,
+    sfx_keendt,
+    // PsyDoom: reimplemented Icon Of Sin
+    sfx_bossit,
+    sfx_bospit,
+    sfx_bospn,
+    sfx_bosdth,
+    sfx_boscub,
+
+    // PsyDoom: NOTE: new user music tracks could use sequence ids following the above ones...
+    // So a new user track 'music_31' could start at sequence index '136' and so on.
+
+    // PsyDoom: 'NUMSFX' is not sufficient to describe the range of sound effects anymore.
+    // There are now two separate sequence id ranges for sound effects, describe them here.
+    SFX_RANGE1_BEG = sfx_None,
+    SFX_RANGE1_END = sfx_getpow + 1,
+    SFX_RANGE2_BEG = sfx_vilsit,
+    SFX_RANGE2_END = sfx_boscub + 1,
 #else
     NUMSFX
 #endif

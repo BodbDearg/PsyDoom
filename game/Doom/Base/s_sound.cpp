@@ -504,7 +504,14 @@ static void I_QueueSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
         return;
 
     // Ignore the request if the sound sequence number is invalid
-    if (soundId >= NUMSFX)
+    const bool bValidSound = (
+        (soundId != sfx_None) && (
+            ((soundId >= SFX_RANGE1_BEG) && (soundId < SFX_RANGE1_END)) ||
+            ((soundId >= SFX_RANGE2_BEG) && (soundId < SFX_RANGE2_END))
+        )
+    );
+
+    if (!bValidSound)
         return;
 
     // Grab the listener (player) and default the pan/volume for now
@@ -753,7 +760,22 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
 
     // Load all of the very simple 'music sequences' for sound effects in the game.
     // These are kept loaded at all times since they are small.
-    const int32_t sfxSequenceBytes = wess_seq_range_load(0, NUMSFX, wess_get_wmd_end());
+    // PsyDoom: there are now two separate ranges of SFX sequence ids, handle those here.
+    #if PSYDOOM_MODS
+        int32_t sfxSequenceBytes = wess_seq_range_load(
+            SFX_RANGE1_BEG,
+            SFX_RANGE1_END - SFX_RANGE1_BEG,
+            wess_get_wmd_end()
+        );
+
+        sfxSequenceBytes += wess_seq_range_load(
+            SFX_RANGE2_BEG,
+            SFX_RANGE2_END - SFX_RANGE2_BEG,
+            wess_get_wmd_end() + sfxSequenceBytes
+        );
+    #else
+        const int32_t sfxSequenceBytes = wess_seq_range_load(0, NUMSFX, wess_get_wmd_end());
+    #endif
 
     // We load map music sequences to the start of the remaining bytes in WMD memory buffer
     gpSound_MusicSeqData = wess_get_wmd_end() + sfxSequenceBytes;
