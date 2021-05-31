@@ -1,6 +1,5 @@
 0.8 - Limit extending and modding?
 - Fix bug with switch on Deimos Lab not working at certain positions and angles (will need overhaul of switch collision code)
-- Make the engine load an optional WAD containing missing Doom II enemies
 - Update the PlayStation VSTs with the fixed sample rate calculation logic
 - Experiment with Doom 64 two colored lighting
 - Provide and use an 'ALLMAPS.LCD' file or something similar that contains all map SFX

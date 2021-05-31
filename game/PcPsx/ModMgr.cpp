@@ -206,13 +206,21 @@ void addUserWads(WadList& wadList) noexcept {
     // Add wads specified from the command line first, as they are higher precedence
     ProgArgs::addWadArgsToList(wadList);
 
-    // Add 'PSXDOOM_EXT.WAD' if it's found in the user data dir and the data dir is specified.
-    // This WAD enables mods to add new resources to the game and expand upon the original 'PSXDOOM.WAD'.
+    // Load certain special wads from the user data dir (if specified) and if the files exist
     if (ProgArgs::gDataDirPath[0]) {
+        // Add 'PSXDOOM_EXT.WAD' if found: this WAD enables user mods to add new resources to the game and expand upon the original 'PSXDOOM.WAD'
         std::string extWadPath = getDataDirFilePath("PSXDOOM_EXT.WAD");
 
         if (FileUtils::fileExists(extWadPath.c_str())) {
             wadList.add(extWadPath.c_str());
+        }
+
+        // Add 'PSX_MISSING_ENEMIES.WAD' if found: this does the same thing as 'PSXDOOM_EXT.WAD' but with lower precedence.
+        // It's intended to be redistributable WAD containing a few missing enemies from PC Doom II.
+        std::string missingEnemiesWadPath = getDataDirFilePath("PSX_MISSING_ENEMIES.WAD");
+
+        if (FileUtils::fileExists(missingEnemiesWadPath.c_str())) {
+            wadList.add(missingEnemiesWadPath.c_str());
         }
     }
 }
