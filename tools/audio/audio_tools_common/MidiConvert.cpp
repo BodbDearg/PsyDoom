@@ -29,10 +29,10 @@ void sequenceToMidi(const Sequence& sequence, MidiFile& midiFile) noexcept {
     midiFile.tracks.clear();
 
     // Determine the tempo: just use the tempo from the first track
-    for (const Track& track : sequence.tracks) {
+    if (sequence.tracks.size() > 0) {
+        const Track& track = sequence.tracks[0];
         midiFile.bpm = track.initQpm;
         midiFile.ppq = track.initPpq;
-        break;
     }
 
     // Create a single meta track and add a command there to set the tempo
