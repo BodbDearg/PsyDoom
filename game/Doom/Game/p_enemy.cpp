@@ -1239,6 +1239,12 @@ void A_BossDeath(mobj_t& actor) noexcept {
     else if ((bossSpecialFlags & 0x20) && (actorType == MT_BRUISER)) {
         triggerTag = 671;
     }
+// PsyDoom: adding a special action for when all Commander Keens die (re-implemented actor type from PC)
+#if PSYDOOM_MODS
+    else if ((bossSpecialFlags & 0x40) && (actorType == MT_KEEN)) {
+        triggerTag = 672;
+    }
+#endif
     else {
         return;     // No active boss special on this map for this boss type: nothing to trigger!
     }
@@ -1292,6 +1298,14 @@ void A_BossDeath(mobj_t& actor) noexcept {
             gMapBossSpecialFlags &= ~0x20;
             EV_DoFloor(dummyLine, lowerFloorToLowest);
             break;
+
+        // PsyDoom: adding a special action for when all Commander Keens die (re-implemented actor type from PC)
+        #if PSYDOOM_MODS
+            case 672:
+                gMapBossSpecialFlags &= ~0x40;
+                EV_DoDoor(dummyLine, Open);
+                break;
+        #endif
 
         default:
             break;
@@ -1571,30 +1585,12 @@ void A_FireCrackle(mobj_t& actor) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Called when Commander Keen dies.
-// Opens a door for sectors tagged '666' if all instances of Commander Keen are dead.
+// Opens a door for sectors tagged '672' (note: originally '666' on PC) if all instances of Commander Keen are dead.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_KeenDie(mobj_t& actor) noexcept {
-    // Can now walk over the Keen's corpse
+    // Can now walk over the Keen's corpse and trigger the special action (Open Door, sector tag '672') if all Keens are dead
     A_Fall(actor);
-
-    // If there any other instances of Keen left alive then don't open the door
-    const mobjtype_t actorType = actor.type;
-
-    for (mobj_t* pMobj = gMObjHead.next; pMobj != &gMObjHead; pMobj = pMobj->next) {
-        const bool bIsAnotherLiveKeen = (
-            (pMobj != &actor) &&
-            (pMobj->type == actorType) &&
-            (pMobj->health > 0)
-        );
-
-        if (bIsAnotherLiveKeen)
-            return;
-    }
-
-    // Open the door for sectors tagged '666'
-    line_t fakeLine = {};
-    fakeLine.tag = 666;
-    EV_DoDoor(fakeLine, Open);
+    A_BossDeath(actor);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

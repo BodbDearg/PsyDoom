@@ -1468,6 +1468,11 @@ void P_SpawnSpecials() noexcept {
             case 670:   gMapBossSpecialFlags |= 0x10;  break;   // Kill all 'MT_CYBORG' to activate this 'Open' door
             case 671:   gMapBossSpecialFlags |= 0x20;  break;   // Kill all 'MT_BRUISER' to activate this 'lowerFloorToLowest' floor
 
+            // PsyDoom: adding a special action for when all Commander Keens die (re-implemented actor type from PC)
+            #if PSYDOOM_MODS
+                case 672: gMapBossSpecialFlags |= 0x40; break;  // Kill all 'MT_KEEN' to activate this 'Open' door
+            #endif
+
             default:
                 break;
         }
