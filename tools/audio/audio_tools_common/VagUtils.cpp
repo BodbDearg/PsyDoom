@@ -4,6 +4,7 @@
 #include "Endian.h"
 #include "FileInputStream.h"
 #include "FileOutputStream.h"
+#include "FileUtils.h"
 
 #include <algorithm>
 
@@ -70,7 +71,7 @@ bool VagFileHdr::validate() noexcept {
     return (
         (fileId == VAG_FILE_ID) &&
         (version == VAG_FILE_VERSION) &&
-        (adpcmDataSize >= VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE) &&
+        (adpcmDataSize > 0) &&
         (sampleRate > 0)
     );
 }
@@ -80,6 +81,7 @@ bool VagFileHdr::validate() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool readVagFile(
     InputStream& in,
+    const size_t fileSize,
     std::vector<std::byte>& adpcmDataOut,
     uint32_t& sampleRate,
     std::string& errorMsgOut
@@ -105,8 +107,8 @@ bool readVagFile(
                 throw "The .vag file version is not recognized! The only supported version is '3'.";
         #endif
 
-        // Verify the size in the header file: it must include the required number of implicit blocks and be block size aligned
-        if (hdr.adpcmDataSize < VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE)
+        // Verify the size in the header file: it must be greater than '0' and be block size aligned
+        if (hdr.adpcmDataSize <= 0)
             throw "Invalid size specified in the .vag file header!";
 
         if (hdr.adpcmDataSize % ADPCM_BLOCK_SIZE != 0)
@@ -118,10 +120,16 @@ bool readVagFile(
 
         sampleRate = hdr.sampleRate;
 
-        // Read the adpcm data for the VAG file
-        const uint32_t adpcmDataSizeInFile = hdr.adpcmDataSize - VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE;
-        adpcmDataOut.resize(adpcmDataSizeInFile);
-        in.readBytes(adpcmDataOut.data(), adpcmDataSizeInFile);
+        // Read the adpcm data for the VAG file.
+        //
+        // Note: some of the ADPCM data might be implicit (all zeros) since the header can specify more data than what is in the file.
+        // Handle this by zeroing the implicit ADPCM data which isn't actually present in the file.
+        adpcmDataOut.resize(hdr.adpcmDataSize);
+        const int64_t adpcmDataSizeInFile = std::min<int64_t>((int64_t) fileSize - sizeof(VagFileHdr), hdr.adpcmDataSize);
+
+        if (adpcmDataSizeInFile > 0) {
+            in.readBytes(adpcmDataOut.data(), (size_t) adpcmDataSizeInFile);
+        }
 
         // All good if we get to here
         bReadOk = true;
@@ -146,11 +154,22 @@ bool readVagFile(
     uint32_t& sampleRate,
     std::string& errorMsgOut
 ) noexcept {
+    // Determine the file size firstly (needed to read the VAG)
+    const int64_t fileSize = FileUtils::getFileSize(filePath);
+
+    if (fileSize < 0) {
+        errorMsgOut = "Failed to determine the size of VAG format file '";
+        errorMsgOut += filePath;
+        errorMsgOut += "'!";
+        return false;
+    }
+
+    // Read the VAG file itself
     bool bReadFileOk = false;
 
     try {
         FileInputStream in(filePath);
-        bReadFileOk = readVagFile(in, adpcmDataOut, sampleRate, errorMsgOut);
+        bReadFileOk = readVagFile(in, (size_t) fileSize, adpcmDataOut, sampleRate, errorMsgOut);
 
         // If reading failed add the file name as additional context
         if (!bReadFileOk) {
@@ -289,7 +308,7 @@ bool writePsxAdpcmSoundToVagFile(
         VagFileHdr vagHdr = {};
         vagHdr.fileId = VagUtils::VAG_FILE_ID;
         vagHdr.version = VagUtils::VAG_FILE_VERSION;
-        vagHdr.adpcmDataSize = adpcmDataSize + VAG_NUM_IMPLICIT_ADPCM_BLOCKS * ADPCM_BLOCK_SIZE;
+        vagHdr.adpcmDataSize = adpcmDataSize;
         vagHdr.sampleRate = sampleRate;
         vagHdr.endianCorrect();
 

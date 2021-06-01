@@ -19,11 +19,6 @@ BEGIN_NAMESPACE(VagUtils)
 static constexpr uint32_t VAG_FILE_ID       = 0x70474156;   // VAG file id
 static constexpr uint32_t VAG_FILE_VERSION  = 0x03;         // VAG file version field
 
-// How many implicit ADPCM blocks are included in the count for the 'adpcmDataSize' field of a VAG file.
-// These blocks are not actually stored in the .VAG file itself, and I guess it's expected that the application define & initialize them
-// with silence and make them loop indefinitely or something, since PlayStation SPU voices never actually stop playing...
-static constexpr uint32_t VAG_NUM_IMPLICIT_ADPCM_BLOCKS = 2;
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PlayStation ADPCM format constants
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,6 +60,7 @@ static_assert(sizeof(VagFileHdr) == 64);
 
 bool readVagFile(
     InputStream& in,
+    const size_t fileSize,
     std::vector<std::byte>& adpcmDataOut,
     uint32_t& sampleRate,
     std::string& errorMsgOut
