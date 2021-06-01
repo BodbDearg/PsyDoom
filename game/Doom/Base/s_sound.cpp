@@ -11,6 +11,7 @@
 #include "m_fixed.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
 #include "sounds.h"
@@ -379,8 +380,9 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
 
     // Either load or unload the main Doom SFX LCD
     const int32_t finaleMapNum = Game::getNumMaps() + 1;
+    const bool bIsFinale = (mapNum == finaleMapNum);
 
-    if (mapNum == finaleMapNum) {
+    if (bIsFinale) {
         // For the finale unload this LCD to free up SPU RAM, since a lot will be needed to hold all monster sounds
         S_UnloadSampleBlock(gDoomSndBlock);
         gbDidLoadDoomSfxLcd = false;
@@ -435,16 +437,33 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
 
     // Load the sound LCD file for the map.
     // Note that if we are doing the finale then load LCD number max(60, numMaps) because Final Doom still uses '60' for the finale LCD.
-    CdFileId mapSoundLcdFileId = {};
+    //
+    // PsyDoom: if 'ALLMAPS.LCD' is present in the user data dir (and we are not doing the finale) then load that instead with the expectation
+    // that it will contain all enemy sounds in the game. We can just blank load everything and provide a master LCD with all enemy sounds
+    // because of PsyDoom's greatly expanded sound RAM.
+    #if PSYDOOM_MODS
+        bool bLoadedMapSounds = false;
 
-    if (mapNum > Game::getNumMaps()) {
-        mapSoundLcdFileId = getSoundLcdFileId(std::max(60, Game::getNumMaps() + 1));    // Finale LCD
-    } else if (mapNum > 0) {
-        mapSoundLcdFileId = getSoundLcdFileId(mapNum);  // Normal map LCD
-    }
+        if ((!bIsFinale) && ModMgr::areOverridesAvailableForFile("ALLMAPS.LCD")) {
+            wess_dig_lcd_load("ALLMAPS.LCD", destSpuAddr, &gMapSndBlock, false);
+            bLoadedMapSounds = true;
+        }
+    #else
+        constexpr bool bLoadedMapSounds = false;
+    #endif
 
-    if (mapSoundLcdFileId != CdFileId{}) {
-        wess_dig_lcd_load(mapSoundLcdFileId, destSpuAddr, &gMapSndBlock, false);
+    if (!bLoadedMapSounds) {
+        CdFileId mapSoundLcdFileId = {};
+
+        if (mapNum > Game::getNumMaps()) {
+            mapSoundLcdFileId = getSoundLcdFileId(std::max(60, Game::getNumMaps() + 1));    // Finale LCD
+        } else if (mapNum > 0) {
+            mapSoundLcdFileId = getSoundLcdFileId(mapNum);  // Normal map LCD
+        }
+
+        if (mapSoundLcdFileId != CdFileId{}) {
+            wess_dig_lcd_load(mapSoundLcdFileId, destSpuAddr, &gMapSndBlock, false);
+        }
     }
 }
 

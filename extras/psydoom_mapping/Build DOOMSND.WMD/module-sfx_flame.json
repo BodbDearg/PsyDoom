@@ -1,0 +1,73 @@
+{
+	"psxPatchGroup" : {
+		"patchSamples" : [
+			{
+				"size" : 6432
+			}
+		],
+		"patchVoices" : [
+			{
+				"sampleIdx" : 0,
+				"volume" : 70,
+				"pan" : 64,
+				"reverb" : 0,
+				"baseNote" : 82,
+				"baseNoteFrac" : 0,
+				"noteMin" : 0,
+				"noteMax" : 127,
+				"pitchstepDown" : 0,
+				"pitchstepUp" : 0,
+				"priority" : 100,
+				"adsr_sustainLevel" : 15,
+				"adsr_decayShift" : 15,
+				"adsr_attackStep" : 0,
+				"adsr_attackShift" : 0,
+				"adsr_attackExponential" : false,
+				"adsr_releaseShift" : 10,
+				"adsr_releaseExponential" : false,
+				"adsr_sustainStep" : 3,
+				"adsr_sustainShift" : 31,
+				"adsr_sustainDecrease" : false,
+				"adsr_sustainExponential" : false
+			}
+		],
+		"patches" : [
+			{
+				"firstVoiceIdx" : 0,
+				"numVoices" : 1
+			}
+		]
+	},
+	"sequences" : [
+		{
+			"tracks" : [
+				{
+					"driverId" : "PSX",
+					"soundClass" : "SNDFX",
+					"initPpq" : 120,
+					"initQpm" : 120,
+					"initPatchIdx" : 0,
+					"initVolumeCntrl" : 127,
+					"priority" : 100,
+					"cmds" : [
+						{
+							"type" : "NoteOn",
+							"delayQnp" : 0,
+							"arg1" : 58,
+							"arg2" : 127
+						},
+						{
+							"type" : "NoteOff",
+							"delayQnp" : 244,
+							"arg1" : 58
+						},
+						{
+							"type" : "TrkEnd",
+							"delayQnp" : 0
+						}
+					]
+				}
+			]
+		}
+	]
+}
