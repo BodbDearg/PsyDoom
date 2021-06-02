@@ -2,13 +2,13 @@
 	"psxPatchGroup" : {
 		"patchSamples" : [
 			{
-				"size" : 4976
+				"size" : 4944
 			}
 		],
 		"patchVoices" : [
 			{
 				"sampleIdx" : 0,
-				"volume" : 70,
+				"volume" : 75,
 				"pan" : 64,
 				"reverb" : 0,
 				"baseNote" : 82,

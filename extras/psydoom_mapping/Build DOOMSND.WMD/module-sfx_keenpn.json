@@ -2,13 +2,13 @@
 	"psxPatchGroup" : {
 		"patchSamples" : [
 			{
-				"size" : 2512
+				"size" : 2496
 			}
 		],
 		"patchVoices" : [
 			{
 				"sampleIdx" : 0,
-				"volume" : 70,
+				"volume" : 75,
 				"pan" : 64,
 				"reverb" : 0,
 				"baseNote" : 82,
@@ -58,7 +58,7 @@
 						},
 						{
 							"type" : "NoteOff",
-							"delayQnp" : 95,
+							"delayQnp" : 94,
 							"arg1" : 58
 						},
 						{

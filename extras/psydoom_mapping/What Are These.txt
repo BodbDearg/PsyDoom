@@ -18,7 +18,7 @@ ALLMAPS.LCD
 ---------------------------------------
 This is an audio bank that contains ADPCM encoded sounds for all possible enemies in the game, including enemies re-implemented from PC Doom II such as the Arch-vile. If PsyDoom detects this file in a user map directory then it will load this LCD file for all maps instead of the usual 'MAP01.LCD', 'MAP02.LCD' etc. files. The purpose of this LCD is to eliminate the requirement to build individual LCD files for user maps, based on what enemies appear; thus, this file help can simplify modding. Since PsyDoom has greatly expanded sound RAM it can afford to just load all possible enemy sounds instead of using per-level banks that have been trimmed down to just the enemies that appear.
 
-IMPORTANT: this audio bank contains some sounds imported from PC Doom II. I'm providing these on the basis of 'fair use' and that they will be helpful to the Doom modding community and promote interest in the series. These sounds should not be used in commercial projects of any kind.
+CREDITS: The GEC team behind the "PlayStation Doom: Master Edition" project has kindly donated the new sounds for the reimplemented Doom II enemies. If using this audio bank you should give credit to Team GEC in your README. For more on the "PlayStation Doom: Master Edition" project, see the Doomworld thread: https://www.doomworld.com/forum/topic/101161-gec-master-edition-psx-doom-for-the-playstation-1102019-beta-3-release-now-are-you-ready-for-more-action/
 
 ---------------------------------------
 Build DOOMSND.WMD
