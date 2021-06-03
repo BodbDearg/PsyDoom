@@ -1,6 +1,5 @@
 0.8 - Limit extending and modding?
 - Fix bug with switch on Deimos Lab not working at certain positions and angles (will need overhaul of switch collision code)
-- Update the PlayStation VSTs with the fixed sample rate calculation logic
 - Experiment with Doom 64 two colored lighting
 - Add very basic Lua scripting with similar capabilities to DOOM64 MACROs
     - Mostly to trigger line specials in more flexible ways
