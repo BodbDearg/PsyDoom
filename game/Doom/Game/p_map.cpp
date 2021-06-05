@@ -150,11 +150,10 @@ static bool PIT_UseLines(line_t& line) noexcept {
     if (intersectFrac > gCloseDist)
         return true;
 
-    // If the line is not usable then try to narrow the vertical range for the use line
+    // If the line is not usable then only make this the 'use' line if it's a solid wall or there is no opening
     if (!line.special) {
         P_LineOpening(line);
 
-        // If the vertical range for the use line is now shut then bail
         if (gOpenRange > 0)
             return true;
     }
