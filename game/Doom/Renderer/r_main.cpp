@@ -519,4 +519,106 @@ void R_UpdateFloorDrawHeight(sector_t& sector) noexcept {
         }
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: updates sector parameters relating to 2-colored lighting.
+// If the sector does not use two colored lighting then the parameters are defaulted.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_UpdateShadingParams(sector_t& sector) noexcept {
+    // If the lower and upper colors are the same then just skip all this
+    if (sector.colorid == sector.ceilColorid)
+        return;
+
+    // Only do it if needed: use the valid count field to avoid recomputing if we can
+    const int32_t validCount = gValidCount;
+
+    if (validCount == sector.validcount)
+        return;
+
+    // Initially the z values at which to apply the floor and ceiling colors are just the floor and ceiling heights respectively
+    fixed_t lowerColorZ = sector.floorheight;
+    fixed_t upperColorZ = sector.ceilingheight;
+
+    // Adjust the floor/ceiling z values for the purposes of shading (if adjustments are specified)
+    const uint32_t sflags = sector.flags;
+    const fixed_t sectorH = upperColorZ - lowerColorZ;
+    const uint8_t floorAdjust = (sflags & SF_GRAD_FLOOR_PLUS_1 ? 1 : 0) + (sflags & SF_GRAD_FLOOR_PLUS_2 ? 2 : 0);
+    const uint8_t ceilAdjust = (sflags & SF_GRAD_CEIL_PLUS_1 ? 1 : 0) + (sflags & SF_GRAD_CEIL_PLUS_2 ? 2 : 0);
+
+    if (sflags & SF_GRAD_CONTRACT) {
+        // Contracting the sector shading height
+        switch (floorAdjust) {
+            case 1: lowerColorZ += sectorH >> 2;        break;  // Floor Z +25% of sector height
+            case 2: lowerColorZ += sectorH >> 1;        break;  // Floor Z +50% of sector height
+            case 3: lowerColorZ += (sectorH * 3) >> 4;  break;  // Floor Z +75% of sector height
+        }
+
+        switch (ceilAdjust) {
+            case 1: upperColorZ -= sectorH >> 2;        break;  // Ceiling Z -25% of sector height
+            case 2: upperColorZ -= sectorH >> 1;        break;  // Ceiling Z -50% of sector height
+            case 3: upperColorZ -= (sectorH * 3) >> 4;  break;  // Ceiling Z -75% of sector height
+        }
+    }
+    else
+    {
+        // Expanding the sector shading height
+        switch (floorAdjust) {
+            case 1: lowerColorZ -= sectorH >> 1;    break;  // Floor Z -50%  of sector height
+            case 2: lowerColorZ -= sectorH;         break;  // Floor Z -100% of sector height
+            case 3: lowerColorZ -= sectorH << 1;    break;  // Floor Z -200% of sector height
+        }
+
+        switch (ceilAdjust) {
+            case 1: upperColorZ += sectorH >> 1;    break;  // Ceiling Z +50%  of sector height
+            case 2: upperColorZ += sectorH;         break;  // Ceiling Z +100% of sector height
+            case 3: upperColorZ += sectorH << 1;    break;  // Ceiling Z +200% of sector height
+        }
+    }
+
+    sector.lowerColorZ = lowerColorZ;
+    sector.upperColorZ = upperColorZ;
+
+    // Compute the divisor for sector shading; compute approximately '1.0 / sectorH'
+    const int32_t sectorShadeH = (upperColorZ - lowerColorZ) >> FRACBITS;
+
+    if (sectorShadeH > 0) {
+        sector.shadeHeightDiv = FRACUNIT / sectorShadeH;
+    } else {
+        sector.shadeHeightDiv = FRACUNIT;
+    }
+
+    // Don't compute this again unless we need to
+    sector.validcount = validCount;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: computes the color to use at the given z height for the specified sector.
+// Assumes 'R_UpdateShadingParams' has already been called on the sector for the current frame.
+//------------------------------------------------------------------------------------------------------------------------------------------
+light_t R_GetZColor(const sector_t& sector, const fixed_t z) noexcept {
+    // If the floor and ceiling color are the same then just early out and return that - no point in interpolating
+    const light_t* const pLights = gpLightsLump;
+    const int16_t lowerColorIdx = sector.colorid;
+    const int16_t upperColorIdx = sector.ceilColorid;
+    const light_t lowerColor = pLights[lowerColorIdx];
+
+    if (lowerColorIdx == upperColorIdx)
+        return lowerColor;
+
+    // Otherwise use linear interpolation to figure out the color
+    const light_t upperColor = pLights[upperColorIdx];
+
+    const fixed_t t = std::min((std::max(z - sector.lowerColorZ, 0) >> FRACBITS) * sector.shadeHeightDiv, FRACUNIT);
+    const fixed_t tInv = FRACUNIT - t;
+
+    const uint32_t r = (lowerColor.r * tInv + upperColor.r * t) >> FRACBITS;
+    const uint32_t g = (lowerColor.g * tInv + upperColor.g * t) >> FRACBITS;
+    const uint32_t b = (lowerColor.b * tInv + upperColor.b * t) >> FRACBITS;
+
+    return {
+        (uint8_t) std::clamp(r, 0u, 255u),
+        (uint8_t) std::clamp(g, 0u, 255u),
+        (uint8_t) std::clamp(b, 0u, 255u),
+    };
+}
 #endif  // PSYDOOM_MODS

@@ -31,17 +31,15 @@ static void RV_DrawWall(
     const float z1,
     const float x2,
     const float z2,
-    const float yt,
-    const float yb,
+    const fixed_t yt,
+    const fixed_t yb,
     // Texture UV coords
     const float u1,
     const float u2,
     const float vt,
     const float vb,
-    // Texture and shading details
-    const uint8_t colR,
-    const uint8_t colG,
-    const uint8_t colB,
+    // Sector, texture and shading details
+    const sector_t& sector,
     texture_t& tex,
     const bool bBlend
 ) noexcept {
@@ -56,16 +54,25 @@ static void RV_DrawWall(
     // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
     const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Walls : VLightDimMode::None;
 
+    // Get the floating point top and bottom y values
+    const float ytF = RV_FixedToFloat(yt);
+    const float ybF = RV_FixedToFloat(yb);
+
+    // Compute the color to shade the top and bottom of the wall with
+    uint8_t colR_t, colG_t, colB_t;
+    uint8_t colR_b, colG_b, colB_b;
+    RV_GetSectorColor(sector, yt, colR_t, colG_t, colB_t);
+    RV_GetSectorColor(sector, yb, colR_b, colG_b, colB_b);
+
     // Draw the wall triangles.
     // Note: assuming the correct draw pipeline has been already set.
     const uint8_t alpha = (bBlend) ? 64 : 128;
 
     VDrawing::addWorldQuad(
-        x1, yb, z1, u1, vb,
-        x1, yt, z1, u1, vt,
-        x2, yt, z2, u2, vt,
-        x2, yb, z2, u2, vb,
-        colR, colG, colB,
+        { x1, ybF, z1, u1, vb, colR_b, colG_b, colB_b },
+        { x1, ytF, z1, u1, vt, colR_t, colG_t, colB_t },
+        { x2, ytF, z2, u2, vt, colR_t, colG_t, colB_t },
+        { x2, ybF, z2, u2, vb, colR_b, colG_b, colB_b },
         gClutX, gClutY,
         texWinX, texWinY, texWinW, texWinH,
         lightDimMode,
@@ -80,13 +87,7 @@ static void RV_DrawWall(
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSegSolid(
-    const rvseg_t& seg,
-    const subsector_t& subsec,
-    const uint8_t colR,
-    const uint8_t colG,
-    const uint8_t colB
-) noexcept {
+static void RV_DrawSegSolid(const rvseg_t& seg, const subsector_t& subsec) noexcept {
     // Skip the line segment if it's not front facing or visible
     if (seg.flags & SGF_BACKFACING)
         return;
@@ -112,8 +113,8 @@ static void RV_DrawSegSolid(
     // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
     const sector_t& frontSec = *subsec.sector;
-    const float fty = RV_FixedToFloat(frontSec.ceilingheight);
-    const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
+    const fixed_t fty = frontSec.ceilingheight;
+    const fixed_t fby = frontSec.floorDrawHeight;
 
     // Get u and v offsets for the seg and the u1/u2 coordinates
     const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
@@ -122,8 +123,8 @@ static void RV_DrawSegSolid(
     const float u2 = uOffset + segLen;
 
     // These are the y values for the top and bottom of the mid wall
-    float midTy = fty;
-    float midBy = fby;
+    fixed_t midTy = fty;
+    fixed_t midBy = fby;
 
     // Do we draw these walls transparent? (x-ray cheat)
     const bool bDrawTransparent = (gpViewPlayer->cheats & CF_XRAYVISION);
@@ -134,8 +135,8 @@ static void RV_DrawSegSolid(
     if (bTwoSidedWall) {
         // Get the bottom and top y values of the back sector
         const sector_t& backSec = *seg.backsector;
-        const float bty = RV_FixedToFloat(backSec.ceilingheight);
-        const float bby = RV_FixedToFloat(backSec.floorDrawHeight);
+        const fixed_t bty = backSec.ceilingheight;
+        const fixed_t bby = backSec.floorDrawHeight;
 
         // Adjust mid wall size so that it only occupies the gap between the upper and lower walls
         midTy = std::min(midTy, bty);
@@ -150,7 +151,7 @@ static void RV_DrawSegSolid(
         // Draw the upper wall if existing not a sky wall
         if (bHasUpperWall && (!bIsUpperSkyWall)) {
             // Compute the top and bottom v coordinate and then draw
-            const float wallH = fty - bty;
+            const float wallH = RV_FixedToFloat(fty - bty);
             float vt;
             float vb;
 
@@ -166,14 +167,14 @@ static void RV_DrawSegSolid(
 
             VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
             texture_t& tex_u = gpTextures[gpTextureTranslation[side.toptexture]];
-            RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, colR, colG, colB, tex_u, bDrawTransparent);
+            RV_DrawWall(x1, z1, x2, z2, fty, bty, u1, u2, vt, vb, frontSec, tex_u, bDrawTransparent);
         }
 
         // Draw the lower wall if existing not a sky wall
         if (bHasLowerWall && (!bIsLowerSkyWall)) {
             // Compute the top and bottom v coordinate and then draw
-            const float heightToLower = fty - bby;
-            const float wallH = bby - fby;
+            const float heightToLower = RV_FixedToFloat(fty - bby);
+            const float wallH = RV_FixedToFloat(bby - fby);
             float vt;
             float vb;
 
@@ -189,14 +190,14 @@ static void RV_DrawSegSolid(
 
             VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
             texture_t& tex_l = gpTextures[gpTextureTranslation[side.bottomtexture]];
-            RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, colR, colG, colB, tex_l, bDrawTransparent);
+            RV_DrawWall(x1, z1, x2, z2, bby, fby, u1, u2, vt, vb, frontSec, tex_l, bDrawTransparent);
         }
     }
 
     // Draw the mid wall if the line is one sided and has a texture
     if ((!bTwoSidedWall) && (side.midtexture >= 0)) {
         // Compute the top and bottom v coordinate
-        const float wallH = midTy - midBy;
+        const float wallH = RV_FixedToFloat(midTy - midBy);
         float vt;
         float vb;
 
@@ -217,7 +218,7 @@ static void RV_DrawSegSolid(
         // Draw the wall
         VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
         texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
-        RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bDrawTransparent);
+        RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, frontSec, tex_m, bDrawTransparent);
     }
 }
 
@@ -227,13 +228,7 @@ static void RV_DrawSegSolid(
 // Note: unlike the original PSX renderer 'R_DrawWalls' there is no height limitation placed on wall textures here.
 // Therefore no stretching will occur when uv coords exceed 256 pixel limit, and this may result in rendering differences in a few places.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void RV_DrawSegBlended(
-    const rvseg_t& seg,
-    const subsector_t& subsec,
-    const uint8_t colR,
-    const uint8_t colG,
-    const uint8_t colB
-) noexcept {
+static void RV_DrawSegBlended(const rvseg_t& seg, const subsector_t& subsec) noexcept {
     // Skip the line segment if it's backfacing or not visible
     if (seg.flags & SGF_BACKFACING)
         return;
@@ -261,8 +256,8 @@ static void RV_DrawSegBlended(
     // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
     const sector_t& frontSec = *subsec.sector;
-    const float fty = RV_FixedToFloat(frontSec.ceilingheight);
-    const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
+    const fixed_t fty = frontSec.ceilingheight;
+    const fixed_t fby = frontSec.floorDrawHeight;
 
     // Get the mid texture for the seg; if it doesn't exist then don't draw
     const side_t& side = *seg.sidedef;
@@ -281,23 +276,23 @@ static void RV_DrawSegBlended(
 
     // Get the floor and ceiling heights for the back sector
     const sector_t& backSec = *seg.backsector;
-    const float bty = RV_FixedToFloat(backSec.ceilingheight);
-    const float bby = RV_FixedToFloat(backSec.floorDrawHeight);
+    const fixed_t bty = backSec.ceilingheight;
+    const fixed_t bby = backSec.floorDrawHeight;
 
     // These are the y values for the top and bottom of the mid wall.
     // It occupies the gap between the front and back sectors.
-    float midTy = std::min(fty, bty);
-    float midBy = std::max(fby, bby);
+    fixed_t midTy = std::min(fty, bty);
+    fixed_t midBy = std::max(fby, bby);
 
     // Final Doom: force the mid wall to be 128 units in height if this flag is specified.
     // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
     // Note for PsyDoom this is restricted to two sided linedefs only, for more on that see 'R_DrawWalls' in the original renderer.
     if (line.flags & ML_MIDHEIGHT_128) {
-        midTy = midBy + 128.0f;
+        midTy = midBy + 128 * FRACUNIT;
     }
 
     // Compute the top and bottom v coordinate
-    const float wallH = midTy - midBy;
+    const float wallH = RV_FixedToFloat(midTy - midBy);
     float vt;
     float vb;
 
@@ -320,7 +315,7 @@ static void RV_DrawSegBlended(
 
     // Draw the wall and make sure we are on the correct alpha blended pipeline before we draw
     VDrawing::setDrawPipeline(VPipelineType::World_GeomAlpha);
-    RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, colR, colG, colB, tex_m, bBlend);
+    RV_DrawWall(x1, z1, x2, z2, midTy, midBy, u1, u2, vt, vb, frontSec, tex_m, bBlend);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -433,26 +428,26 @@ void RV_InitNextDrawSkyWalls() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw all fully opaque upper, lower and mid walls for the given subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawSubsecOpaqueWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
+void RV_DrawSubsecOpaqueWalls(subsector_t& subsec) noexcept {
     // Draw all opaque segs in the subsector
     const rvseg_t* const pBegSeg = gpRvSegs.get() + subsec.firstseg;
     const rvseg_t* const pEndSeg = pBegSeg + subsec.numsegs;
 
     for (const rvseg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
-        RV_DrawSegSolid(*pSeg, subsec, secR, secG, secB);
+        RV_DrawSegSolid(*pSeg, subsec);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws all blended and masked mid walls for the specified subsector
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_DrawSubsecBlendedWalls(subsector_t& subsec, const uint8_t secR, const uint8_t secG, const uint8_t secB) noexcept {
+void RV_DrawSubsecBlendedWalls(subsector_t& subsec) noexcept {
     // Draw all blended and masked segs in the subsector
     const rvseg_t* const pBegSeg = gpRvSegs.get() + subsec.firstseg;
     const rvseg_t* const pEndSeg = pBegSeg + subsec.numsegs;
 
     for (const rvseg_t* pSeg = pBegSeg; pSeg < pEndSeg; ++pSeg) {
-        RV_DrawSegBlended(*pSeg, subsec, secR, secG, secB);
+        RV_DrawSegBlended(*pSeg, subsec);
     }
 }
 

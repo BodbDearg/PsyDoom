@@ -45,7 +45,31 @@ static constexpr int32_t ML_ADD_SKY_WALL_HINT   = 0x8000;       // PsyDoom speci
 static constexpr uint32_t SF_NO_REVERB = 0x1;           // Disables reverb on a sector
 
 #if PSYDOOM_MODS
-    static constexpr uint32_t SF_GHOSTPLAT = 0x2;       // Render the sector at the lowest floor height surrounding it, creating an 'invisible platform' effect
+    // Render the sector at the lowest floor height surrounding it, creating an 'invisible platform' effect
+    static constexpr uint32_t SF_GHOSTPLAT = 0x2;
+
+    //------------------------------------------------------------------------------------------------------------------
+    // These flags allow the sector height to be expanded or contracted for shading purposes.
+    // They offer a little control over the gradient with dual colored lighting.
+    //
+    // The adjustments are in multiples of the sector height (ceil - floor). Floors are normally adjusted downwards
+    // and ceilings are adjusted upwards (gradient expand mode), unless the gradient 'contract' flag is being used.
+    //
+    // Adjustment amounts (gradient expand):
+    //  +1  +0.5x sector shading height
+    //  +2  +1.0x sector shading height
+    //  +3  +2.0x sector shading height
+    //
+    // Adjustment amounts (gradient contract):
+    //  +1  -0.25x sector shading height
+    //  +2  -0.5x  sector shading height
+    //  +3  -0.75x sector shading height
+    //------------------------------------------------------------------------------------------------------------------
+    static constexpr uint32_t SF_GRAD_CONTRACT      = 0x04;
+    static constexpr uint32_t SF_GRAD_FLOOR_PLUS_1  = 0x08;
+    static constexpr uint32_t SF_GRAD_FLOOR_PLUS_2  = 0x10;
+    static constexpr uint32_t SF_GRAD_CEIL_PLUS_1   = 0x20;
+    static constexpr uint32_t SF_GRAD_CEIL_PLUS_2   = 0x40;
 #endif
 
 // Map thing flags
@@ -106,7 +130,15 @@ struct mapsector_t {
     uint8_t     colorid;                // Which of the sector light colors to use for the sector
     int16_t     special;                // Special action for the sector: damage, secret, light flicker etc.
     int16_t     tag;                    // Tag for the sector for use in targetted actions (triggered by switches, line crossings etc.)
-    uint16_t    flags;                  // New for PSX - sector flags: just 'SF_NO_REVERB' (0x1) is the only flag possible.
+
+    // PsyDoom: contract the 'flags' field to 8-bits to make room for 'ceilColorid' (repurpose the unused high 8-bits).
+    // This change is to help support Doom 64 style 2-colored lighting.
+    #if PSYDOOM_MODS
+        uint8_t     flags;          // New for PSX - sector flags
+        uint8_t     ceilColorid;    // PsyDoom addition: the ceiling color (for 2-color lighting) or '0' to just use the floor color.
+    #else
+        uint16_t    flags;          // New for PSX - sector flags
+    #endif
 };
 
 static_assert(sizeof(mapsector_t) == 28);
@@ -122,7 +154,15 @@ struct mapsector_final_t {
     uint8_t     colorid;            // Which of the sector light colors to use for the sector
     int16_t     special;            // Special action for the sector: damage, secret, light flicker etc.
     int16_t     tag;                // Tag for the sector for use in targetted actions (triggered by switches, line crossings etc.)
-    uint16_t    flags;              // New for PSX - sector flags: just 'SF_NO_REVERB' (0x1) is the only flag possible.
+
+    // PsyDoom: contract the 'flags' field to 8-bits to make room for 'ceilColorid' (repurpose the unused high 8-bits).
+    // This change is to help support Doom 64 style 2-colored lighting.
+    #if PSYDOOM_MODS
+        uint8_t     flags;          // New for PSX - sector flags
+        uint8_t     ceilColorid;    // PsyDoom addition: the ceiling color (for 2-color lighting) or '0' to just use the floor color.
+    #else
+        uint16_t    flags;          // New for PSX - sector flags
+    #endif
 };
 
 static_assert(sizeof(mapsector_final_t) == 16);

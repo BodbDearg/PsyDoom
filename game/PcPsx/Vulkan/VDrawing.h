@@ -27,6 +27,13 @@ struct VShaderUniforms_Draw;
 
 BEGIN_NAMESPACE(VDrawing)
 
+// Attributes which are specified uniquely per vertex for 'addWorldQuad'
+struct AddWorldQuadVert {
+    float       x, y, z;
+    float       u, v;
+    uint8_t     r, g, b;
+};
+
 void init(vgl::LogicalDevice& device, vgl::BaseTexture& vramTex) noexcept;
 void shutdown() noexcept;
 void beginFrame(const uint32_t ringbufferIdx) noexcept;
@@ -132,29 +139,10 @@ void addWorldTriangle(
 ) noexcept;
 
 void addWorldQuad(
-    const float x1,
-    const float y1,
-    const float z1,
-    const float u1,
-    const float v1,
-    const float x2,
-    const float y2,
-    const float z2,
-    const float u2,
-    const float v2,
-    const float x3,
-    const float y3,
-    const float z3,
-    const float u3,
-    const float v3,
-    const float x4,
-    const float y4,
-    const float z4,
-    const float u4,
-    const float v4,
-    const uint8_t r,
-    const uint8_t g,
-    const uint8_t b,
+    const AddWorldQuadVert& v1,
+    const AddWorldQuadVert& v2,
+    const AddWorldQuadVert& v3,
+    const AddWorldQuadVert& v4,
     const uint16_t clutX,
     const uint16_t clutY,
     const uint16_t texWinX,

@@ -168,26 +168,25 @@ void RV_RenderPlayerView() noexcept {
     VDrawing::setDrawPipeline(gOpaqueGeomPipeline);
     RV_SetShaderUniformsFor3D();
 
+    // Increment the marker used to determine when to update the shading params for each sector
+    gValidCount++;
+
     // Draw all of the subsectors back to front
     const int32_t numDrawSubsecs = (int32_t) gRvDrawSubsecs.size();
 
     for (int32_t drawSubsecIdx = numDrawSubsecs - 1; drawSubsecIdx >= 0; --drawSubsecIdx) {
-        // Get the light/color value for the sector
+        // Make sure the shading params for the sector are up to date
         subsector_t& subsec = *gRvDrawSubsecs[drawSubsecIdx];
         sector_t& sector = *subsec.sector;
-
-        uint8_t secR;
-        uint8_t secG;
-        uint8_t secB;
-        RV_GetSectorColor(sector, secR, secG, secB);
+        R_UpdateShadingParams(sector);
 
         // Draw all subsector sky walls, blended and masked walls
         RV_DrawSubsecSkyWalls(drawSubsecIdx);
-        RV_DrawSubsecBlendedWalls(subsec, secR, secG, secB);
+        RV_DrawSubsecBlendedWalls(subsec);
 
         // Draw all subsector opaque elements and then sprites on top of that.
         // Most of the time these should all be on the same draw pipeline, so we can do batching.
-        RV_DrawSubsecOpaqueWalls(subsec, secR, secG, secB);
+        RV_DrawSubsecOpaqueWalls(subsec);
         RV_DrawSubsecFloors(drawSubsecIdx);
         RV_DrawSubsecCeilings(drawSubsecIdx);
         RV_DrawSubsecSpriteFrags(drawSubsecIdx);
@@ -205,14 +204,15 @@ void RV_RenderPlayerView() noexcept {
     // TODO: remove this when weapon drawing is implemented natively for Vulkan.
     if (gbDoViewLighting) {
         // Normal lighting case: set the light used firstly
-        const sector_t& playerSector = *gpViewPlayer->mo->subsector->sector;
+        const mobj_t& playerMobj = *gpViewPlayer->mo;
+        const sector_t& playerSector = *playerMobj.subsector->sector;
         gpCurLight = &gpLightsLump[playerSector.colorid];
 
         // Set the current light value
         uint8_t sectorR;
         uint8_t sectorG;
         uint8_t sectorB;
-        RV_GetSectorColor(playerSector, sectorR, sectorG, sectorB);
+        RV_GetSectorColor(playerSector, playerMobj.z, sectorR, sectorG, sectorB);
 
         gCurLightValR = sectorR;
         gCurLightValG = sectorG;

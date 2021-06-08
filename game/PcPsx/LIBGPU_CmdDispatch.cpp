@@ -520,13 +520,10 @@ void submit(const POLY_FT4& poly) noexcept {
                 const uint16_t texWinH = gpu.texWinYMask + 1;
 
                 VDrawing::addWorldQuad(
-                    poly.x0, poly.y0, 0.0f, poly.u0, poly.v0,
-                    poly.x1, poly.y1, 0.0f, poly.u1, poly.v1,
-                    poly.x3, poly.y3, 0.0f, poly.u3, poly.v3,
-                    poly.x2, poly.y2, 0.0f, poly.u2, poly.v2,
-                    r,
-                    g,
-                    b,
+                    { (float) poly.x0, (float) poly.y0, 0.0f, (float) poly.u0, (float) poly.v0, r, g, b },
+                    { (float) poly.x1, (float) poly.y1, 0.0f, (float) poly.u1, (float) poly.v1, r, g, b },
+                    { (float) poly.x3, (float) poly.y3, 0.0f, (float) poly.u3, (float) poly.v3, r, g, b },
+                    { (float) poly.x2, (float) poly.y2, 0.0f, (float) poly.u2, (float) poly.v2, r, g, b },
                     gpu.clutX,
                     gpu.clutY,
                     texWinX,

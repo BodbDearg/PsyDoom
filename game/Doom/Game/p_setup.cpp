@@ -393,6 +393,11 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
             pDstSec->tag = Endian::littleToHost(pSrcSec->tag);
             pDstSec->flags = Endian::littleToHost(pSrcSec->flags);
 
+            #if PSYDOOM_MODS
+                pDstSec->ceilColorid = Endian::littleToHost(pSrcSec->ceilColorid);
+                pDstSec->ceilColorid = (pDstSec->ceilColorid == 0) ? pDstSec->colorid : pDstSec->ceilColorid;   // N.B: use the floor color if ceiling color is '0' (undefined)
+            #endif
+
             if constexpr (bFinalDoom) {
                 // Final Doom specific stuff: we have the actual floor and ceiling texture indexes in this case: no lookup needed!
                 const int32_t ceilingPic = Endian::littleToHost(pSrcSec->ceilingpic);

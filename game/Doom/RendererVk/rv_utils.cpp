@@ -57,25 +57,26 @@ angle_t RV_FloatToAngle(const float angle) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the RGB color value to apply to shade the sector.
+// Get the RGB color value to apply to shade the sector at the given Z height.
 // A value of '128' for a component means full brightness, and values over that are over-bright.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RV_GetSectorColor(const sector_t& sec, uint8_t& r, uint8_t& g, uint8_t& b) noexcept {
+void RV_GetSectorColor(const sector_t& sector, const fixed_t z, uint8_t& r, uint8_t& g, uint8_t& b) noexcept {
     if (gbDoViewLighting) {
-        // Compute basic light values
-        const light_t& light = gpLightsLump[sec.colorid];
-        uint32_t r32 = ((uint32_t) sec.lightlevel * (uint32_t) light.r) >> 8;
-        uint32_t g32 = ((uint32_t) sec.lightlevel * (uint32_t) light.g) >> 8;
-        uint32_t b32 = ((uint32_t) sec.lightlevel * (uint32_t) light.b) >> 8;
+        // Compute the basic light color
+        const light_t lightColor = R_GetZColor(sector, z);
+        const uint16_t lightLevel = sector.lightlevel;
 
-        // Contribute the player muzzle flash to the light
+        uint32_t r32 = (lightLevel * lightColor.r) >> 8;
+        uint32_t g32 = (lightLevel * lightColor.g) >> 8;
+        uint32_t b32 = (lightLevel * lightColor.b) >> 8;
+
+        // Contribute player muzzle flash to the light
         player_t& player = gPlayers[gCurPlayerIndex];
+        const uint32_t extraLight = player.extralight;
 
-        if (player.extralight != 0) {
-            r32 += player.extralight;
-            g32 += player.extralight;
-            b32 += player.extralight;
-        }
+        r32 += extraLight;
+        g32 += extraLight;
+        b32 += extraLight;
 
         // Return the saturated light value
         r = (uint8_t) std::min(r32, 255u);

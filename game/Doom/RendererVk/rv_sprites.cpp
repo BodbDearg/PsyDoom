@@ -255,12 +255,16 @@ static void RV_InitSpriteFrag(
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawSpriteFrag(const SpriteFrag& sprFrag) noexcept {
     VDrawing::setDrawPipeline(sprFrag.drawPipeline);
+
+    const uint8_t colR = sprFrag.colR;
+    const uint8_t colG = sprFrag.colG;
+    const uint8_t colB = sprFrag.colB;
+
     VDrawing::addWorldQuad(
-        sprFrag.x1, sprFrag.yb, sprFrag.z1, sprFrag.ul, sprFrag.vb,
-        sprFrag.x1, sprFrag.yt, sprFrag.z1, sprFrag.ul, sprFrag.vt,
-        sprFrag.x2, sprFrag.yt, sprFrag.z2, sprFrag.ur, sprFrag.vt,
-        sprFrag.x2, sprFrag.yb, sprFrag.z2, sprFrag.ur, sprFrag.vb,
-        sprFrag.colR, sprFrag.colG, sprFrag.colB,
+        { sprFrag.x1, sprFrag.yb, sprFrag.z1, sprFrag.ul, sprFrag.vb, colR, colG, colB },
+        { sprFrag.x1, sprFrag.yt, sprFrag.z1, sprFrag.ul, sprFrag.vt, colR, colG, colB },
+        { sprFrag.x2, sprFrag.yt, sprFrag.z2, sprFrag.ur, sprFrag.vt, colR, colG, colB },
+        { sprFrag.x2, sprFrag.yb, sprFrag.z2, sprFrag.ur, sprFrag.vb, colR, colG, colB },
         gClutX, gClutY,
         sprFrag.texWinX, sprFrag.texWinY,
         sprFrag.texWinW, sprFrag.texWinH,
@@ -554,12 +558,6 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
     if (!sector.thinglist)
         return;
 
-    // Get the light/color value for the sector
-    uint8_t secR;
-    uint8_t secG;
-    uint8_t secB;
-    RV_GetSectorColor(*subsec.sector, secR, secG, secB);
-
     // Build all fragments for this subsector
     for (mobj_t* pThing = sector.thinglist; pThing; pThing = pThing->snext) {
         // Ignore the thing if not in this subsector
@@ -569,6 +567,12 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
         // Ignore this thing if it's the player
         if (pThing->player == gpViewPlayer)
             continue;
+
+        // Get the light/color value for the thing at it's z-height
+        uint8_t secR;
+        uint8_t secG;
+        uint8_t secB;
+        RV_GetSectorColor(*subsec.sector, pThing->z, secR, secG, secB);
 
         // Allocate and initialize a full sprite fragment for the thing
         SpriteFrag sprFrag;

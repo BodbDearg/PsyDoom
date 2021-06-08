@@ -569,29 +569,10 @@ void addWorldTriangle(
 //  (3) The alpha component is only used if alpha blending is being used.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void addWorldQuad(
-    const float x1,
-    const float y1,
-    const float z1,
-    const float u1,
-    const float v1,
-    const float x2,
-    const float y2,
-    const float z2,
-    const float u2,
-    const float v2,
-    const float x3,
-    const float y3,
-    const float z3,
-    const float u3,
-    const float v3,
-    const float x4,
-    const float y4,
-    const float z4,
-    const float u4,
-    const float v4,
-    const uint8_t r,
-    const uint8_t g,
-    const uint8_t b,
+    const AddWorldQuadVert& v1,
+    const AddWorldQuadVert& v2,
+    const AddWorldQuadVert& v3,
+    const AddWorldQuadVert& v4,
     const uint16_t clutX,
     const uint16_t clutY,
     const uint16_t texWinX,
@@ -604,14 +585,11 @@ void addWorldQuad(
     const uint8_t stMulB,
     const uint8_t stMulA
 ) noexcept {
-    // Fill in the vertices, starting first with common parameters
+    // Fill in the vertices, starting first with the parameters that are the same for all vertices
     VVertex_Draw* const pVerts = gVertexBuffers_Draw.allocVerts<VVertex_Draw>(6);
 
     for (uint32_t i = 0; i < 6; ++i) {
         VVertex_Draw& vert = pVerts[i];
-        vert.r = r;
-        vert.g = g;
-        vert.b = b;
         vert.texWinX = texWinX;
         vert.texWinY = texWinY;
         vert.texWinW = texWinW;
@@ -625,20 +603,24 @@ void addWorldQuad(
         vert.lightDimMode = lightDimMode;
     }
 
-    // Fill in verts xy and uv positions
-    pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
-    pVerts[1].x = x2;   pVerts[1].y = y2;   pVerts[1].z = z2;
-    pVerts[2].x = x3;   pVerts[2].y = y3;   pVerts[2].z = z3;
-    pVerts[3].x = x3;   pVerts[3].y = y3;   pVerts[3].z = z3;
-    pVerts[4].x = x4;   pVerts[4].y = y4;   pVerts[4].z = z4;
-    pVerts[5].x = x1;   pVerts[5].y = y1;   pVerts[5].z = z1;
+    // Fill in the unique vertex attributes
+    constexpr auto assignVertexUniqueAttribs = [](VVertex_Draw& dst, const AddWorldQuadVert& src) noexcept {
+        dst.x = src.x;
+        dst.y = src.y;
+        dst.z = src.z;
+        dst.u = src.u;
+        dst.v = src.v;
+        dst.r = src.r;
+        dst.g = src.g;
+        dst.b = src.b;
+    };
 
-    pVerts[0].u = u1;   pVerts[0].v = v1;
-    pVerts[1].u = u2;   pVerts[1].v = v2;
-    pVerts[2].u = u3;   pVerts[2].v = v3;
-    pVerts[3].u = u3;   pVerts[3].v = v3;
-    pVerts[4].u = u4;   pVerts[4].v = v4;
-    pVerts[5].u = u1;   pVerts[5].v = v1;
+    assignVertexUniqueAttribs(pVerts[0], v1);
+    assignVertexUniqueAttribs(pVerts[1], v2);
+    assignVertexUniqueAttribs(pVerts[2], v3);
+    assignVertexUniqueAttribs(pVerts[3], v3);
+    assignVertexUniqueAttribs(pVerts[4], v4);
+    assignVertexUniqueAttribs(pVerts[5], v1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

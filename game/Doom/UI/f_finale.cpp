@@ -704,11 +704,10 @@ void F2_Drawer() noexcept {
 
                     // Draw the sprite and skip the classic draw code
                     VDrawing::addWorldQuad(
-                        xl, yt, 0.0f, ul, vt,
-                        xr, yt, 0.0f, ur, vt,
-                        xr, yb, 0.0f, ur, vb,
-                        xl, yb, 0.0f, ul, vb,
-                        128, 128, 128,
+                        { xl, yt, 0.0f, ul, vt, 128, 128, 128 },
+                        { xr, yt, 0.0f, ur, vt, 128, 128, 128 },
+                        { xr, yb, 0.0f, ur, vb, 128, 128, 128 },
+                        { xl, yb, 0.0f, ul, vb, 128, 128, 128 },
                         clutX, clutY,
                         texWinX, texWinY, texWinW, texWinH,
                         VLightDimMode::None, 128, 128, 128, 128

@@ -76,4 +76,6 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept;
     bool R_HasHigherSurroundingSkyCeiling(const sector_t& sector) noexcept;
     bool R_HasLowerSurroundingSkyFloor(const sector_t& sector) noexcept;
     void R_UpdateFloorDrawHeight(sector_t& sector) noexcept;
+    void R_UpdateShadingParams(sector_t& sector) noexcept;
+    light_t R_GetZColor(const sector_t& sector, const fixed_t z) noexcept;
 #endif
