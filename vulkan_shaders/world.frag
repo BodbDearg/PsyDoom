@@ -44,11 +44,16 @@ float getLightDiminishingMultiplier(float z, vec3 lightDimModeStrength) {
         floorDimIntensity * lightDimModeStrength.z
     );
 
-    // Clamp the intensity to the min/max allowed amounts (0.5x to 1.25x in normalized coords) and add a little bias to
-    // fix precision issues and flipping back and forth between values when the calculations are close:
-    intensity = trunc(clamp(intensity, 64, 160) + 0.0001);
-
-    // Scale the diminish intensity back to normalized color coords rather than 0-128
+    // Clamp the intensity to the min/max allowed amounts (0.5x to 1.25x in normalized coords).
+    // Then scale the diminish intensity back to normalized color coords rather than 0-128.
+    //
+    // Note: prior to normalization here I originally truncated the intensity to an integer to try and mimic the classic
+    // renderer's calculations more closely. I'm finding now however this now causes blocky artifacts when dual colored
+    // lighting is mixed with this light diminishing effect - the mixing of the two gradients is not smooth and block
+    // artifacts appear. Leaving the intensity in unquantized format instead makes the banding smoother, curved, and less
+    // noticeable. It also doesn't appear to cause any (visible) extra difference between the classic and Vulkan renderers.
+    //
+    intensity = clamp(intensity, 64, 160);
     return intensity / 128.0;
 }
 
