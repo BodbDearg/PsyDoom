@@ -10,6 +10,8 @@
 #include "r_local.h"
 #include "r_main.h"
 
+#include <algorithm>
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the upper, lower and middle walls for the given leaf edge
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -318,8 +320,8 @@ void R_DrawWallPiece(
     #if PSYDOOM_MODS
         // PsyDoom: switched this to the new 'wall column' drawing primitive supported by PsyDoom's enhanced GPU - this performs better and with similar results.
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state.
-        WALLCOL_FT drawPrim = {};
-        LIBGPU_SetWallColFT(drawPrim);
+        WALLCOL_GT drawPrim = {};
+        LIBGPU_SetWallColGT(drawPrim);
     #else
         POLY_FT3& drawPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
         LIBGPU_SetPolyFT3(drawPrim);
@@ -331,6 +333,20 @@ void R_DrawWallPiece(
 
     drawPrim.clut = g3dViewPaletteClutId;
     drawPrim.tpage = tex.texPageId;
+
+    // PsyDoom: figure out the top and bottom colors for the wall, accounting for dual colored lighting.
+    // Note that these calculations might look odd because the coordinates have been inverted from worldspace at this point.
+    // Getting back to worldspace Z values involves jumping through a few hoops...
+    #if PSYDOOM_MODS
+        uint8_t wtColR, wtColG, wtColB;
+        uint8_t wbColR, wbColG, wbColB;
+
+        const fixed_t viewZ = gViewZ;
+        const sector_t& sector = *gpCurDrawSector;
+
+        R_GetSectorDrawColor(sector, ((-yt) << FRACBITS) + viewZ, wtColR, wtColG, wtColB);
+        R_GetSectorDrawColor(sector, ((-yb) << FRACBITS) + viewZ, wbColR, wbColG, wbColB);
+    #endif
 
     // Compute scale and y coordinate step per wall column
     const fixed_t dscale = vert2.scale - vert1.scale;
@@ -463,18 +479,42 @@ void R_DrawWallPiece(
             //
             const int32_t colHeight = ybCur - ytCur;
 
+            #if PSYDOOM_MODS
+                // PsyDoom: if clipping then we also need to adjust the dual colored lighting parameters
+                uint8_t clipWtColR = wtColR;    uint8_t clipWbColR = wbColR;
+                uint8_t clipWtColG = wtColG;    uint8_t clipWbColG = wbColG;
+                uint8_t clipWtColB = wtColB;    uint8_t clipWbColB = wbColB;
+            #endif
+
             int32_t vtCur = vt;
             int32_t vbCur = vb;
 
             if (colHeight >= 510) {
-                // Compute the amount of 'v' coordinate from the top of the column to the center of the screen
+                // Compute the amount of 'v' coordinate from the top of the column to the center of the screen.
+                // PsyDoom: extend this to do similar clipping and calculations on the two wall column colors also (for dual color lighting).
                 const int32_t vHeight = vbCur - vtCur;
-                const fixed_t vTopToCenterFrac = d_int_to_fixed(HALF_VIEW_3D_H - ytCur) / colHeight;
-                const int32_t vTopToCenter = d_fixed_to_int(vTopToCenterFrac * vHeight);
+                const fixed_t yAboveCenterPercent = d_int_to_fixed(HALF_VIEW_3D_H - ytCur) / colHeight;
+                const int32_t vTopToCenter = d_fixed_to_int(yAboveCenterPercent * vHeight);
 
-                // Compute the amount of 'v' coordinate for half of the screen
-                const fixed_t vHalfScreenFrac = d_int_to_fixed(HALF_VIEW_3D_H) / colHeight;
-                const int32_t vHalfScreen = d_fixed_to_int(vHalfScreenFrac * vHeight);
+                #if PSYDOOM_MODS
+                    const int32_t dColR = wbColR - wtColR;
+                    const int32_t dColG = wbColG - wtColG;
+                    const int32_t dColB = wbColB - wtColB;
+                    const int32_t rTopToCenter = d_fixed_to_int(yAboveCenterPercent * dColR);
+                    const int32_t gTopToCenter = d_fixed_to_int(yAboveCenterPercent * dColG);
+                    const int32_t bTopToCenter = d_fixed_to_int(yAboveCenterPercent * dColB);
+                #endif
+
+                // Compute the amount of 'v' coordinate for half of the screen.
+                // PsyDoom: extend this to do similar clipping and calculations on the two wall column colors also (for dual color lighting).
+                const fixed_t halfScreenFrac = d_int_to_fixed(HALF_VIEW_3D_H) / colHeight;
+                const int32_t vHalfScreen = d_fixed_to_int(halfScreenFrac * vHeight);
+
+                #if PSYDOOM_MODS
+                    const fixed_t rHalfScreen = d_fixed_to_int(halfScreenFrac * dColR);
+                    const fixed_t gHalfScreen = d_fixed_to_int(halfScreenFrac * dColG);
+                    const fixed_t bHalfScreen = d_fixed_to_int(halfScreenFrac * dColB);
+                #endif
 
                 // Clamp the render coordinates to the top and bottom of the screen if required
                 const int32_t vtOrig = vtCur;
@@ -483,17 +523,35 @@ void R_DrawWallPiece(
                     // Offscreen to the top: advance the v coordinate by the amount offscreen
                     ytCur = 0;
                     vtCur += vTopToCenter - vHalfScreen;
+
+                    #if PSYDOOM_MODS
+                        clipWtColR += rTopToCenter - rHalfScreen;
+                        clipWtColG += gTopToCenter - gHalfScreen;
+                        clipWtColB += bTopToCenter - bHalfScreen;
+                    #endif
                 }
 
                 if (ybCur > VIEW_3D_H) {
                     // Offscreen to the bottom: stop the v coordinate at the bottom of the screen
                     ybCur = VIEW_3D_H;
                     vbCur = vtOrig + vTopToCenter + vHalfScreen;
+
+                    #if PSYDOOM_MODS
+                        clipWbColR = wtColR + rTopToCenter + rHalfScreen;
+                        clipWbColG = wtColG + gTopToCenter + gHalfScreen;
+                        clipWbColB = wtColB + bTopToCenter + bHalfScreen;
+                    #endif
                 }
             }
 
-            // Decide on rgb color values to render the column with
-            int32_t r, g, b;
+            // Decide on rgb color values to render the column with.
+            // PsyDoom: added changes here to account for dual colored lighting.
+            #if PSYDOOM_MODS
+                int32_t topR, topG, topB;
+                int32_t botR, botG, botB;
+            #else
+                int32_t r, g, b;
+            #endif
 
             if (gbDoViewLighting) {
                 int32_t lightIntensity = d_rshift<8>(scaleCur);
@@ -505,22 +563,48 @@ void R_DrawWallPiece(
                     lightIntensity = LIGHT_INTENSTIY_MAX;
                 }
 
-                r = ((uint32_t) lightIntensity * gCurLightValR) >> 7;
-                g = ((uint32_t) lightIntensity * gCurLightValG) >> 7;
-                b = ((uint32_t) lightIntensity * gCurLightValB) >> 7;
-                if (r > 255) { r = 255; }
-                if (g > 255) { g = 255; }
-                if (b > 255) { b = 255; }
+                // PsyDoom: changes to account for dual colored lighting
+                #if PSYDOOM_MODS
+                    topR = ((uint32_t) lightIntensity * clipWtColR) >> 7;
+                    topG = ((uint32_t) lightIntensity * clipWtColG) >> 7;
+                    topB = ((uint32_t) lightIntensity * clipWtColB) >> 7;
+                    botR = ((uint32_t) lightIntensity * clipWbColR) >> 7;
+                    botG = ((uint32_t) lightIntensity * clipWbColG) >> 7;
+                    botB = ((uint32_t) lightIntensity * clipWbColB) >> 7;
+                    topR = std::min(topR, 255);
+                    topG = std::min(topG, 255);
+                    topB = std::min(topB, 255);
+                    botR = std::min(botR, 255);
+                    botG = std::min(botG, 255);
+                    botB = std::min(botB, 255);
+                #else
+                    r = ((uint32_t) lightIntensity * gCurLightValR) >> 7;
+                    g = ((uint32_t) lightIntensity * gCurLightValG) >> 7;
+                    b = ((uint32_t) lightIntensity * gCurLightValB) >> 7;
+                    if (r > 255) { r = 255; }
+                    if (g > 255) { g = 255; }
+                    if (b > 255) { b = 255; }
+                #endif
             } else {
-                r = gCurLightValR;
-                g = gCurLightValG;
-                b = gCurLightValB;
+                // PsyDoom: changes to account for dual colored lighting
+                #if PSYDOOM_MODS
+                    topR = clipWtColR;
+                    topG = clipWtColG;
+                    topB = clipWtColB;
+                    botR = clipWbColR;
+                    botG = clipWbColG;
+                    botB = clipWbColB;
+                #else
+                    r = gCurLightValR;
+                    g = gCurLightValG;
+                    b = gCurLightValB;
+                #endif
             }
 
             // Finally populate the triangle for the wall column and draw.
+            //
             // PsyDoom: now drawing this with the new GPU 'wall column' primitive instead of a polygon for better performance.
-            LIBGPU_setRGB0(drawPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
-
+            // This new primitive also supports gouraud shading if we are using dual colored lighting.
             #if PSYDOOM_MODS
                 drawPrim.u0 = (LibGpuUV) uCur;
                 drawPrim.v0 = (LibGpuUV) vtCur;
@@ -528,7 +612,14 @@ void R_DrawWallPiece(
                 drawPrim.x0 = (int16_t)(xCur);
                 drawPrim.y0 = (int16_t)(ytCur - 1);
                 drawPrim.y1 = (int16_t)(ybCur + 1);
+                drawPrim.r0 = (uint8_t) topR;
+                drawPrim.g0 = (uint8_t) topG;
+                drawPrim.b0 = (uint8_t) topB;
+                drawPrim.r1 = (uint8_t) botR;
+                drawPrim.g1 = (uint8_t) botG;
+                drawPrim.b1 = (uint8_t) botB;
             #else
+                LIBGPU_setRGB0(drawPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
                 LIBGPU_setUV3(drawPrim,
                     (LibGpuUV) uCur, (LibGpuUV) vtCur,
                     (LibGpuUV) uCur, (LibGpuUV) vbCur,

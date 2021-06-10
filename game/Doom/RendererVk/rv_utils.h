@@ -24,7 +24,6 @@ float RV_FixedToFloat(const fixed_t num) noexcept;
 fixed_t RV_FloatToFixed(const float num) noexcept;
 float RV_AngleToFloat(const angle_t angle) noexcept;
 angle_t RV_FloatToAngle(const float angle) noexcept;
-void RV_GetSectorColor(const sector_t& sector, const fixed_t z, uint8_t& r, uint8_t& g, uint8_t& b) noexcept;
 void RV_ClutIdToClutXy(const uint16_t clutId, uint16_t& clutX, uint16_t& clutY) noexcept;
 
 void RV_TexPageIdToTexParams(

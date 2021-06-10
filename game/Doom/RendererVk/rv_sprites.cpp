@@ -572,7 +572,7 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
         uint8_t secR;
         uint8_t secG;
         uint8_t secB;
-        RV_GetSectorColor(*subsec.sector, pThing->z, secR, secG, secB);
+        R_GetSectorDrawColor(*subsec.sector, pThing->z, secR, secG, secB);
 
         // Allocate and initialize a full sprite fragment for the thing
         SpriteFrag sprFrag;

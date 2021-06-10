@@ -61,8 +61,8 @@ static void RV_DrawWall(
     // Compute the color to shade the top and bottom of the wall with
     uint8_t colR_t, colG_t, colB_t;
     uint8_t colR_b, colG_b, colB_b;
-    RV_GetSectorColor(sector, yt, colR_t, colG_t, colB_t);
-    RV_GetSectorColor(sector, yb, colR_b, colG_b, colB_b);
+    R_GetSectorDrawColor(sector, yt, colR_t, colG_t, colB_t);
+    R_GetSectorDrawColor(sector, yb, colR_b, colG_b, colB_b);
 
     // Draw the wall triangles.
     // Note: assuming the correct draw pipeline has been already set.

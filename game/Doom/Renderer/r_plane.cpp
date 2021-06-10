@@ -448,7 +448,13 @@ static void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const textur
             spanVL -= vadjust;
         }
 
-        // Determine the light color multiplier to use for the span and set on the draw primitive
+        // Determine the light color multiplier to use for the span and set on the draw primitive.
+        // PsyDoom: added adjustments here to account for dual colored lighting.
+        #if PSYDOOM_MODS
+            uint8_t sectorR, sectorG, sectorB;
+            R_GetSectorDrawColor(*gpCurDrawSector, (planeViewZ << FRACBITS) + gViewZ, sectorR, sectorG, sectorB);
+        #endif
+
         {
             int32_t r, g, b;
 
@@ -462,16 +468,31 @@ static void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const textur
                     lightIntensity = LIGHT_INTENSTIY_MAX;
                 }
 
-                r = ((uint32_t) lightIntensity * gCurLightValR) >> 7;
-                g = ((uint32_t) lightIntensity * gCurLightValG) >> 7;
-                b = ((uint32_t) lightIntensity * gCurLightValB) >> 7;
+                // PsyDoom: changes to account for dual colored lighting
+                #if PSYDOOM_MODS
+                    r = ((uint32_t) lightIntensity * sectorR) >> 7;
+                    g = ((uint32_t) lightIntensity * sectorG) >> 7;
+                    b = ((uint32_t) lightIntensity * sectorB) >> 7;
+                #else
+                    r = ((uint32_t) lightIntensity * gCurLightValR) >> 7;
+                    g = ((uint32_t) lightIntensity * gCurLightValG) >> 7;
+                    b = ((uint32_t) lightIntensity * gCurLightValB) >> 7;
+                #endif
+
                 if (r > 255) { r = 255; }
                 if (g > 255) { g = 255; }
                 if (b > 255) { b = 255; }
             } else {
-                r = gCurLightValR;
-                g = gCurLightValG;
-                b = gCurLightValB;
+                // PsyDoom: changes to account for dual colored lighting
+                #if PSYDOOM_MODS
+                    r = sectorR;
+                    g = sectorG;
+                    b = sectorB;
+                #else
+                    r = gCurLightValR;
+                    g = gCurLightValG;
+                    b = gCurLightValB;
+                #endif
             }
 
             LIBGPU_setRGB0(drawPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);

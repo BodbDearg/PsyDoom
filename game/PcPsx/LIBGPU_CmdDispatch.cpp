@@ -590,7 +590,7 @@ void submit(const FLOORROW_FT& row) noexcept {
 // Handle a command to draw a textured column of Doom wall pixels.
 // Note: this function does not support pass-through to the Vulkan renderer; it's not needed since it's just ussed by the Classic renderer.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void submit(const WALLCOL_FT& col) noexcept {
+void submit(const WALLCOL_GT& col) noexcept {
     Gpu::Core& gpu = PsxVm::gGpu;
 
     // Set texture page and format, the CLUT to use and masking mode
@@ -598,25 +598,60 @@ void submit(const WALLCOL_FT& col) noexcept {
     setGpuClutId(col.clut);
     setGpuMaskingMode(col);
 
-    // Setup the column to be drawn then submit to the GPU
+    // Setup the column to be drawn then submit to the GPU.
+    // Optimization: submit as a flat shaded column unless it has two different colors.
     const bool bColorCol = ((col.code & 0x1) == 0);
     const bool bBlendCol = (col.code & 0x2);
+    const bool bColorsDiffer = ((col.r0 != col.r1) || (col.g0 != col.g1) || (col.b0 != col.b1));
+    const bool bIsFlatColored = ((!bColorCol) || (!bColorsDiffer));
 
-    Gpu::DrawWallCol drawCol = {};
-    drawCol.y1 = col.y0;
-    drawCol.y2 = col.y1;
-    drawCol.x = col.x0;
-    drawCol.u = col.u0;
-    drawCol.v1 = col.v0;
-    drawCol.v2 = col.v1;
-    drawCol.color.comp.r = (bColorCol) ? col.r0 : 128;   // Note: '128' is '1.0' or full strength color if we don't want to modulate
-    drawCol.color.comp.g = (bColorCol) ? col.g0 : 128;
-    drawCol.color.comp.b = (bColorCol) ? col.b0 : 128;
+    if (bIsFlatColored) {
+        // Usual case in original PSX doom levels: just submit a flat colored textured wall column
+        Gpu::DrawWallCol drawCol = {};
+        drawCol.y1 = col.y0;
+        drawCol.y2 = col.y1;
+        drawCol.x = col.x0;
+        drawCol.u = col.u0;
+        drawCol.v1 = col.v0;
+        drawCol.v2 = col.v1;
 
-    if (bBlendCol) {
-        Gpu::draw<Gpu::DrawMode::TexturedBlended>(gpu, drawCol);
+        if (bColorCol) {
+            drawCol.color.comp.r = col.r0;
+            drawCol.color.comp.g = col.g0;
+            drawCol.color.comp.b = col.b0;
+        } else {
+            // Note: '128' is '1.0' or full strength color if we don't want to modulate
+            drawCol.color.comp.r = 128;
+            drawCol.color.comp.g = 128;
+            drawCol.color.comp.b = 128;
+        }
+
+        if (bBlendCol) {
+            Gpu::draw<Gpu::DrawMode::TexturedBlended>(gpu, drawCol);
+        } else {
+            Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawCol);
+        }
     } else {
-        Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawCol);
+        // Wall column is using dual colored lighting: submit as a gouraud shaded wall column
+        Gpu::DrawWallColGouraud drawCol = {};
+        drawCol.y1 = col.y0;
+        drawCol.y2 = col.y1;
+        drawCol.x = col.x0;
+        drawCol.u = col.u0;
+        drawCol.v1 = col.v0;
+        drawCol.v2 = col.v1;
+        drawCol.color1.comp.r = col.r0;
+        drawCol.color1.comp.g = col.g0;
+        drawCol.color1.comp.b = col.b0;
+        drawCol.color2.comp.r = col.r1;
+        drawCol.color2.comp.g = col.g1;
+        drawCol.color2.comp.b = col.b1;
+
+        if (bBlendCol) {
+            Gpu::draw<Gpu::DrawMode::TexturedBlended>(gpu, drawCol);
+        } else {
+            Gpu::draw<Gpu::DrawMode::Textured>(gpu, drawCol);
+        }
     }
 }
 

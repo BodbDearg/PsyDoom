@@ -43,6 +43,6 @@ inline void I_AddPrim(const FLOORROW_FT& row) noexcept {
     LIBGPU_CmdDispatch::submit(row);
 }
 
-inline void I_AddPrim(const WALLCOL_FT& col) noexcept {
+inline void I_AddPrim(const WALLCOL_GT& col) noexcept {
     LIBGPU_CmdDispatch::submit(col);
 }

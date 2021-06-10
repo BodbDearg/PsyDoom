@@ -25,6 +25,6 @@ void submit(const POLY_FT3& poly) noexcept;
 void submit(const POLY_F4& poly) noexcept;
 void submit(const POLY_FT4& poly) noexcept;
 void submit(const FLOORROW_FT& row) noexcept;
-void submit(const WALLCOL_FT& col) noexcept;
+void submit(const WALLCOL_GT& col) noexcept;
 
 END_NAMESPACE(LIBGPU_CmdDispatch)

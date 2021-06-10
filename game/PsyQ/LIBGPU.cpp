@@ -571,9 +571,9 @@ void LIBGPU_SetFloorRowFT(FLOORROW_FT& row) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initialize the specified primitive as a flat shaded and textured Doom wall column
+// Initialize the specified primitive as a gouraud shaded and textured Doom wall column
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBGPU_SetWallColFT(WALLCOL_FT& col) noexcept {
+void LIBGPU_SetWallColGT(WALLCOL_GT& col) noexcept {
     // Note: don't care about the 'primitive id' element of the code here, just want to disable blending and enable coloring by default.
     // This is because draw primitives are no longer saved in buffers, they get dispatched simply based on their C++ type which is known beforehand at compile time.
     col.code = 0;

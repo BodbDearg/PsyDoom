@@ -38,11 +38,16 @@ bool        gbIsSkyVisible;
 MATRIX      gDrawMatrix;
 
 // Light properties
-bool            gbDoViewLighting;
-const light_t*  gpCurLight;
-uint32_t        gCurLightValR;
-uint32_t        gCurLightValG;
-uint32_t        gCurLightValB;
+bool gbDoViewLighting;
+
+#if !PSYDOOM_MODS
+    // PsyDoom: these are not used anymore with dual colored lighting.
+    // They were only usable when sectors were guaranteed to have a single color.
+    const light_t*  gpCurLight;
+    uint32_t        gCurLightValR;
+    uint32_t        gCurLightValG;
+    uint32_t        gCurLightValB;
+#endif
 
 // PsyDoom: the number of draw subsectors is now unlimited
 #if PSYDOOM_LIMIT_REMOVING
@@ -106,13 +111,16 @@ void R_Init() noexcept {
 // Render the 3D view and also player weapons
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_RenderPlayerView() noexcept {
-    // If currently in fullbright mode (no lighting) then setup the light params now
-    if (!gbDoViewLighting) {
-        gCurLightValR = 128;
-        gCurLightValG = 128;
-        gCurLightValB = 128;
-        gpCurLight = &gpLightsLump[0];
-    }
+    // If currently in fullbright mode (no lighting) then setup the light params now.
+    // PsyDoom: we don't compute these globals anymore now that dual colored lighting can be used.
+    #if !PSYDOOM_MODS
+        if (!gbDoViewLighting) {
+            gCurLightValR = 128;
+            gCurLightValG = 128;
+            gCurLightValB = 128;
+            gpCurLight = &gpLightsLump[0];
+        }
+    #endif
 
     // Store view parameters before drawing
     player_t& player = gPlayers[gCurPlayerIndex];
@@ -200,6 +208,11 @@ void R_RenderPlayerView() noexcept {
         R_DrawSky();
     }
 
+    // PsyDoom: increment the marker used to determine when to update the shading params for each sector
+    #if PSYDOOM_MODS
+        gValidCount++;
+    #endif
+
     // Draw all subsectors emitted during BSP traversal.
     // Draw them in back to front order.
     #if PSYDOOM_LIMIT_REMOVING
@@ -222,27 +235,35 @@ void R_RenderPlayerView() noexcept {
         sector_t& sec = *subsec.sector;
         gpCurDrawSector = &sec;
 
-        // Setup the lighting values to use for the sector
-        if (gbDoViewLighting) {
-            // Compute basic light values
-            const light_t& light = gpLightsLump[sec.colorid];
+        // PsyDoom: make sure the shading params for the sector are up to date
+        #if PSYDOOM_MODS
+            R_UpdateShadingParams(sec);
+        #endif
 
-            gpCurLight = &light;
-            gCurLightValR = ((uint32_t) sec.lightlevel * (uint32_t) light.r) >> 8;
-            gCurLightValG = ((uint32_t) sec.lightlevel * (uint32_t) light.g) >> 8;
-            gCurLightValB = ((uint32_t) sec.lightlevel * (uint32_t) light.b) >> 8;
+        // Setup the lighting values to use for the sector.
+        // PsyDoom: we don't compute these globals anymore now that dual colored lighting can be used.
+        #if !PSYDOOM_MODS
+            if (gbDoViewLighting) {
+                // Compute basic light values
+                const light_t& light = gpLightsLump[sec.colorid];
 
-            // Contribute the player muzzle flash to the light and saturate
-            if (player.extralight != 0) {
-                gCurLightValR += player.extralight;
-                gCurLightValG += player.extralight;
-                gCurLightValB += player.extralight;
+                gpCurLight = &light;
+                gCurLightValR = ((uint32_t) sec.lightlevel * (uint32_t) light.r) >> 8;
+                gCurLightValG = ((uint32_t) sec.lightlevel * (uint32_t) light.g) >> 8;
+                gCurLightValB = ((uint32_t) sec.lightlevel * (uint32_t) light.b) >> 8;
 
-                if (gCurLightValR > 255) { gCurLightValR = 255; }
-                if (gCurLightValG > 255) { gCurLightValG = 255; }
-                if (gCurLightValB > 255) { gCurLightValB = 255; }
+                // Contribute the player muzzle flash to the light and saturate
+                if (player.extralight != 0) {
+                    gCurLightValR += player.extralight;
+                    gCurLightValG += player.extralight;
+                    gCurLightValB += player.extralight;
+
+                    if (gCurLightValR > 255) { gCurLightValR = 255; }
+                    if (gCurLightValG > 255) { gCurLightValG = 255; }
+                    if (gCurLightValB > 255) { gCurLightValB = 255; }
+                }
             }
-        }
+        #endif
 
         R_DrawSubsector(subsec);
     }
@@ -592,10 +613,10 @@ void R_UpdateShadingParams(sector_t& sector) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom: computes the color to use at the given z height for the specified sector.
+// PsyDoom: computes the light color to use at the given z height for the specified sector.
 // Assumes 'R_UpdateShadingParams' has already been called on the sector for the current frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
-light_t R_GetZColor(const sector_t& sector, const fixed_t z) noexcept {
+light_t R_GetSectorLightColor(const sector_t& sector, const fixed_t z) noexcept {
     // If the floor and ceiling color are the same then just early out and return that - no point in interpolating
     const light_t* const pLights = gpLightsLump;
     const int16_t lowerColorIdx = sector.colorid;
@@ -620,5 +641,40 @@ light_t R_GetZColor(const sector_t& sector, const fixed_t z) noexcept {
         (uint8_t) std::clamp(g, 0u, 255u),
         (uint8_t) std::clamp(b, 0u, 255u),
     };
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the RGB color value to apply to shade the sector at the given Z height, accounting for light color and sector brightness etc.
+// A value of '128' for a component means full brightness, and values over that are over-bright.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_GetSectorDrawColor(const sector_t& sector, const fixed_t z, uint8_t& r, uint8_t& g, uint8_t& b) noexcept {
+    if (gbDoViewLighting) {
+        // Compute the basic light color at this z value
+        const light_t lightColor = R_GetSectorLightColor(sector, z);
+
+        // Modulate by the light level
+        const uint16_t lightLevel = sector.lightlevel;
+        uint32_t r32 = (lightLevel * lightColor.r) >> 8;
+        uint32_t g32 = (lightLevel * lightColor.g) >> 8;
+        uint32_t b32 = (lightLevel * lightColor.b) >> 8;
+
+        // Contribute player muzzle flash to the light
+        player_t& player = gPlayers[gCurPlayerIndex];
+        const uint32_t extraLight = player.extralight;
+
+        r32 += extraLight;
+        g32 += extraLight;
+        b32 += extraLight;
+
+        // Return the saturated light value
+        r = (uint8_t) std::min(r32, 255u);
+        g = (uint8_t) std::min(g32, 255u);
+        b = (uint8_t) std::min(b32, 255u);
+    } else {
+        // No lighting - render full bright!
+        r = 128;
+        g = 128;
+        b = 128;
+    }
 }
 #endif  // PSYDOOM_MODS

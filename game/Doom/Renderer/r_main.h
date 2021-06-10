@@ -33,10 +33,15 @@ extern fixed_t          gViewSin;
 extern bool             gbIsSkyVisible;
 extern MATRIX           gDrawMatrix;
 extern bool             gbDoViewLighting;
-extern const light_t*   gpCurLight;
-extern uint32_t         gCurLightValR;
-extern uint32_t         gCurLightValG;
-extern uint32_t         gCurLightValB;
+
+// PsyDoom: these are not used anymore with dual colored lighting.
+// They were only usable when sectors were guaranteed to have a single color.
+#if !PSYDOOM_MODS
+    extern const light_t*   gpCurLight;
+    extern uint32_t         gCurLightValR;
+    extern uint32_t         gCurLightValG;
+    extern uint32_t         gCurLightValB;
+#endif
 
 // PsyDoom: the number of draw subsectors is now unlimited
 #if PSYDOOM_LIMIT_REMOVING
@@ -77,5 +82,6 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept;
     bool R_HasLowerSurroundingSkyFloor(const sector_t& sector) noexcept;
     void R_UpdateFloorDrawHeight(sector_t& sector) noexcept;
     void R_UpdateShadingParams(sector_t& sector) noexcept;
-    light_t R_GetZColor(const sector_t& sector, const fixed_t z) noexcept;
+    light_t R_GetSectorLightColor(const sector_t& sector, const fixed_t z) noexcept;
+    void R_GetSectorDrawColor(const sector_t& sector, const fixed_t z, uint8_t& r, uint8_t& g, uint8_t& b) noexcept;
 #endif

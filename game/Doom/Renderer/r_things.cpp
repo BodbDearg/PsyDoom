@@ -203,7 +203,14 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         if (thing.frame & FF_FULLBRIGHT) {
             LIBGPU_setRGB0(polyPrim, LIGHT_INTENSTIY_MAX, LIGHT_INTENSTIY_MAX, LIGHT_INTENSTIY_MAX);
         } else {
-            LIBGPU_setRGB0(polyPrim, (uint8_t) gCurLightValR, (uint8_t) gCurLightValG, (uint8_t) gCurLightValB);
+            // PsyDoom: need to account for dual colored lighting now when setting the thing color
+            #if PSYDOOM_MODS
+                uint8_t sectorR, sectorG, sectorB;
+                R_GetSectorDrawColor(sector, thing.z, sectorR, sectorG, sectorB);
+                LIBGPU_setRGB0(polyPrim, sectorR, sectorG, sectorB);
+            #else
+                LIBGPU_setRGB0(polyPrim, (uint8_t) gCurLightValR, (uint8_t) gCurLightValG, (uint8_t) gCurLightValB);
+            #endif
         }
 
         // Figure out the y position and width + height for the sprite.
@@ -359,10 +366,21 @@ void R_DrawWeapon() noexcept {
         LIBGPU_setUV0(spr, tex.texPageCoordX, tex.texPageCoordY);
         spr.clut = g3dViewPaletteClutId;
 
+        // PsyDoom: changes to account for dual colored lighting
+        #if PSYDOOM_MODS
+            const mobj_t& playerMobj = *player.mo;
+            const sector_t& sector = *playerMobj.subsector->sector;
+        #endif
+
         if (state.frame & FF_FULLBRIGHT) {
             // Note: these magic 5/8 multipliers correspond VERY closely to 'LIGHT_INTENSTIY_MAX / 255'.
             // The resulting values are sometimes not quite the same however.
-            const light_t& light = *gpCurLight;
+            // PsyDoom: added changes here to account for dual colored lighting.
+            #if PSYDOOM_MODS
+                const light_t light = R_GetSectorLightColor(sector, playerMobj.z);
+            #else
+                const light_t& light = *gpCurLight;
+            #endif
 
             LIBGPU_setRGB0(spr,
                 (uint8_t)(((uint32_t) light.r * 5) / 8),
@@ -370,11 +388,14 @@ void R_DrawWeapon() noexcept {
                 (uint8_t)(((uint32_t) light.b * 5) / 8)
             );
         } else {
-            LIBGPU_setRGB0(spr,
-                (uint8_t) gCurLightValR,
-                (uint8_t) gCurLightValG,
-                (uint8_t) gCurLightValB
-            );
+            // PsyDoom: changes to account for dual colored lighting
+            #if PSYDOOM_MODS
+                uint8_t sectorR, sectorG, sectorB;
+                R_GetSectorDrawColor(sector, playerMobj.z, sectorR, sectorG, sectorB);
+                LIBGPU_setRGB0(spr, sectorR, sectorG, sectorB);
+            #else
+                LIBGPU_setRGB0(spr, (uint8_t) gCurLightValR, (uint8_t) gCurLightValG, (uint8_t) gCurLightValB);
+            #endif
         }
 
         I_AddPrim(spr);

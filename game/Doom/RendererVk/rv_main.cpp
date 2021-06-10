@@ -199,32 +199,6 @@ void RV_RenderPlayerView() noexcept {
     Utils::onBeginUIDrawing();
     RV_DrawWidescreenStatusBarLetterbox();
 
-    // Set the global current light value.
-    // In the old renderer this was written to constantly but here we'll just set it once for the player gun, based on the player's sector.
-    // TODO: remove this when weapon drawing is implemented natively for Vulkan.
-    if (gbDoViewLighting) {
-        // Normal lighting case: set the light used firstly
-        const mobj_t& playerMobj = *gpViewPlayer->mo;
-        const sector_t& playerSector = *playerMobj.subsector->sector;
-        gpCurLight = &gpLightsLump[playerSector.colorid];
-
-        // Set the current light value
-        uint8_t sectorR;
-        uint8_t sectorG;
-        uint8_t sectorB;
-        RV_GetSectorColor(playerSector, playerMobj.z, sectorR, sectorG, sectorB);
-
-        gCurLightValR = sectorR;
-        gCurLightValG = sectorG;
-        gCurLightValB = sectorB;
-    } else {
-        // Light amplification visor or some other similar effect active
-        gpCurLight = &gpLightsLump[0];
-        gCurLightValR = 128;
-        gCurLightValG = 128;
-        gCurLightValB = 128;
-    }
-
     // TODO: implement this natively eventually for Vulkan so we can interpolate at a higher precision
     R_DrawWeapon();
 }

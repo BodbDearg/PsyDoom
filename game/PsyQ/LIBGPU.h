@@ -180,10 +180,10 @@ struct SPRT_8 {
         LibGpuUV    v1;
     };
 
-    // New for PsyDoom: a flat shaded textured column of Doom wall pixels.
+    // New for PsyDoom: a gouraud shaded textured column of Doom wall pixels.
     // This is used to accelerate the classic renderer and simplify the operations the GPU has to perform.
-    struct WALLCOL_FT {
-        uint8_t     r0;         // Color to shade the primitive with
+    struct WALLCOL_GT {
+        uint8_t     r0;         // Color 1 to shade the primitive with
         uint8_t     g0;
         uint8_t     b0;
         uint8_t     code;       // Type info for the hardware
@@ -195,6 +195,9 @@ struct SPRT_8 {
         LibGpuUV    u0;         // Constant 'u' texture coord and 'v' texture coords for vertex 1 and 2
         LibGpuUV    v0;
         LibGpuUV    v1;
+        uint8_t     r1;         // Color 2 to shade the primitive with
+        uint8_t     g1;
+        uint8_t     b1;
     };
 #endif
 
@@ -290,7 +293,7 @@ void LIBGPU_SetLineF2(LINE_F2& line) noexcept;
 
 #if PSYDOOM_MODS
     void LIBGPU_SetFloorRowFT(FLOORROW_FT& row) noexcept;
-    void LIBGPU_SetWallColFT(WALLCOL_FT& col) noexcept;
+    void LIBGPU_SetWallColGT(WALLCOL_GT& col) noexcept;
 #endif
 
 void LIBGPU_SetDumpFnt(const int32_t printStreamId) noexcept;

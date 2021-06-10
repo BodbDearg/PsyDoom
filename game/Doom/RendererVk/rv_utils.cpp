@@ -57,40 +57,6 @@ angle_t RV_FloatToAngle(const float angle) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the RGB color value to apply to shade the sector at the given Z height.
-// A value of '128' for a component means full brightness, and values over that are over-bright.
-//------------------------------------------------------------------------------------------------------------------------------------------
-void RV_GetSectorColor(const sector_t& sector, const fixed_t z, uint8_t& r, uint8_t& g, uint8_t& b) noexcept {
-    if (gbDoViewLighting) {
-        // Compute the basic light color
-        const light_t lightColor = R_GetZColor(sector, z);
-        const uint16_t lightLevel = sector.lightlevel;
-
-        uint32_t r32 = (lightLevel * lightColor.r) >> 8;
-        uint32_t g32 = (lightLevel * lightColor.g) >> 8;
-        uint32_t b32 = (lightLevel * lightColor.b) >> 8;
-
-        // Contribute player muzzle flash to the light
-        player_t& player = gPlayers[gCurPlayerIndex];
-        const uint32_t extraLight = player.extralight;
-
-        r32 += extraLight;
-        g32 += extraLight;
-        b32 += extraLight;
-
-        // Return the saturated light value
-        r = (uint8_t) std::min(r32, 255u);
-        g = (uint8_t) std::min(g32, 255u);
-        b = (uint8_t) std::min(b32, 255u);
-    } else {
-        // No lighting - render full bright!
-        r = 128;
-        g = 128;
-        b = 128;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Unpack a CLUT 'id' into an x, y coordinate for the CLUT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_ClutIdToClutXy(const uint16_t clutId, uint16_t& clutX, uint16_t& clutY) noexcept {

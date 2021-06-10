@@ -206,7 +206,7 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         uint8_t secR;
         uint8_t secG;
         uint8_t secB;
-        RV_GetSectorColor(sector, sector.floorheight, secR, secG, secB);
+        R_GetSectorDrawColor(sector, sector.floorheight, secR, secG, secB);
 
         // Draw the floor
         RV_DrawFlat(subsec, true, secR, secG, secB);
@@ -261,7 +261,7 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
         uint8_t secR;
         uint8_t secG;
         uint8_t secB;
-        RV_GetSectorColor(sector, sector.ceilingheight, secR, secG, secB);
+        R_GetSectorDrawColor(sector, sector.ceilingheight, secR, secG, secB);
 
         // Draw the ceiling
         RV_DrawFlat(subsec, false, secR, secG, secB);
