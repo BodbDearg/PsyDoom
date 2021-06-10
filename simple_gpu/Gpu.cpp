@@ -350,7 +350,7 @@ static void draw(Core& core, const DrawRect& rect) noexcept {
     const Color24F rectColor = rect.color;
     Color16 fgColor;
 
-    if constexpr ((DrawMode == DrawMode::FlatColored) || (DrawMode == DrawMode::FlatColoredBlended)) {
+    if constexpr ((DrawMode == DrawMode::Colored) || (DrawMode == DrawMode::ColoredBlended)) {
         fgColor = color24FTo16(rectColor);
     }
 
@@ -374,7 +374,7 @@ static void draw(Core& core, const DrawRect& rect) noexcept {
             }
 
             // Do blending with the background if that is enabled
-            if constexpr ((DrawMode == DrawMode::FlatColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
+            if constexpr ((DrawMode == DrawMode::ColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
                 const Color16 bgColor = vramReadU16(core, x, y);
                 fgColor = colorBlend(bgColor, fgColor, core.blendMode);
             }
@@ -401,8 +401,8 @@ void draw(Core& core, const DrawRect& rect) noexcept {
 }
 
 // Instantiate the variants of this function
-template void draw<DrawMode::FlatColored>(Core& core, const DrawRect& rect) noexcept;
-template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawRect& rect) noexcept;
+template void draw<DrawMode::Colored>(Core& core, const DrawRect& rect) noexcept;
+template void draw<DrawMode::ColoredBlended>(Core& core, const DrawRect& rect) noexcept;
 template void draw<DrawMode::Textured>(Core& core, const DrawRect& rect) noexcept;
 template void draw<DrawMode::TexturedBlended>(Core& core, const DrawRect& rect) noexcept;
 
@@ -472,7 +472,7 @@ void draw(Core& core, const DrawLine& line) noexcept {
 
     // Plot pixels: this loop could be optimized more and clipping could be employed but Doom doesn't render lines too much.
     // It's probably not worth the effort going crazy on this...
-    constexpr bool bBlend = (DrawMode == DrawMode::FlatColoredBlended);
+    constexpr bool bBlend = (DrawMode == DrawMode::ColoredBlended);
     const BlendMode blendMode = core.blendMode;
 
     for (int32_t a = a1; a <= a2; ++a) {
@@ -495,8 +495,8 @@ void draw(Core& core, const DrawLine& line) noexcept {
 }
 
 // Instantiate the variants of this function
-template void draw<DrawMode::FlatColored>(Core& core, const DrawLine& line) noexcept;
-template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawLine& line) noexcept;
+template void draw<DrawMode::Colored>(Core& core, const DrawLine& line) noexcept;
+template void draw<DrawMode::ColoredBlended>(Core& core, const DrawLine& line) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Drawing a triangle - internal implementation tailored to each texture format.
@@ -560,7 +560,7 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
     const Color24F triangleColor = triangle.color;
     Color16 fgColor;
 
-    if constexpr ((DrawMode == DrawMode::FlatColored) || (DrawMode == DrawMode::FlatColoredBlended)) {
+    if constexpr ((DrawMode == DrawMode::Colored) || (DrawMode == DrawMode::ColoredBlended)) {
         fgColor = color24FTo16(triangleColor);
     }
 
@@ -633,7 +633,7 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
             }
 
             // Do blending with the background if that is enabled
-            if constexpr ((DrawMode == DrawMode::FlatColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
+            if constexpr ((DrawMode == DrawMode::ColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
                 const Color16 bgColor = pDstPixelRow[x];
                 fgColor = colorBlend(bgColor, fgColor, core.blendMode);
             }
@@ -665,10 +665,203 @@ void draw(Core& core, const DrawTriangle& triangle) noexcept {
 }
 
 // Instantiate the variants of this function
-template void draw<DrawMode::FlatColored>(Core& core, const DrawTriangle& triangle) noexcept;
-template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawTriangle& triangle) noexcept;
+template void draw<DrawMode::Colored>(Core& core, const DrawTriangle& triangle) noexcept;
+template void draw<DrawMode::ColoredBlended>(Core& core, const DrawTriangle& triangle) noexcept;
 template void draw<DrawMode::Textured>(Core& core, const DrawTriangle& triangle) noexcept;
 template void draw<DrawMode::TexturedBlended>(Core& core, const DrawTriangle& triangle) noexcept;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Drawing a gouraud shaded triangle - internal implementation tailored to each texture format.
+// This is largely copied from the non-gouraud shaded triangle drawing function.
+// 
+// Sources for the general technique and optimizations:
+//  https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
+//  https://fgiesen.wordpress.com/2013/02/06/the-barycentric-conspirac/
+//  https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
+//  https://fgiesen.wordpress.com/2013/02/10/optimizing-the-basic-rasterizer/
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <DrawMode DrawMode, TexFmt TexFmt>
+static void draw(Core& core, const DrawTriangleGouraud& triangle) noexcept {
+    sanityCheckGpuDrawState(core);
+
+    // Apply the draw offset to the triangle points
+    const int16_t drawOffsetX = core.drawOffsetX;
+    const int16_t drawOffsetY = core.drawOffsetY;
+    const int32_t p1x = triangle.x1 + drawOffsetX;
+    const int32_t p1y = triangle.y1 + drawOffsetY;
+    const int32_t p2x = triangle.x2 + drawOffsetX;
+    const int32_t p2y = triangle.y2 + drawOffsetY;
+    const int32_t p3x = triangle.x3 + drawOffsetX;
+    const int32_t p3y = triangle.y3 + drawOffsetY;
+
+    // Compute the rectangular area of the triangle to be rasterized.
+    // Note that according to the No$PSX specs the right and bottom coordinates in polygons are NOT included.
+    // Also, the triangle is skipped if the distances between the vertices exceed 1023x511 in the x and y dimensions.
+    const int32_t minX = std::min(std::min(p1x, p2x), p3x);
+    const int32_t minY = std::min(std::min(p1y, p2y), p3y);
+    const int32_t maxX = std::max(std::max(p1x, p2x), p3x);
+    const int32_t maxY = std::max(std::max(p1y, p2y), p3y);
+    const int32_t xrange = maxX - minX;
+    const int32_t yrange = maxY - minY;
+    const int32_t lx = std::max((int32_t) core.drawAreaLx, minX);
+    const int32_t rx = std::min((int32_t) core.drawAreaRx, maxX - 1);
+    const int32_t ty = std::max((int32_t) core.drawAreaTy, minY);
+    const int32_t by = std::min((int32_t) core.drawAreaBy, maxY - 1);
+
+    if ((xrange >= 1024) || (yrange >= 512))
+        return;
+
+    // If we're going to draw textured and with a CLUT make sure it is up to date
+    if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+        if constexpr ((TexFmt == TexFmt::Bpp4) || (TexFmt == TexFmt::Bpp8)) {
+            updateClutCache(core);
+        }
+    }
+
+    // Precompute the edge deltas used in the edge functions
+    const float p1xf = (float) p1x;     const float p1yf = (float) p1y;
+    const float p2xf = (float) p2x;     const float p2yf = (float) p2y;
+    const float p3xf = (float) p3x;     const float p3yf = (float) p3y;
+
+    const float e1dx = p2xf - p1xf;
+    const float e1dy = p2yf - p1yf;
+    const float e2dx = p3xf - p2xf;
+    const float e2dy = p3yf - p2yf;
+    const float e3dx = p1xf - p3xf;
+    const float e3dy = p1yf - p3yf;
+
+    // Get the color for all 3 triangle points in floating point format
+    const float color1R = triangle.color1.comp.r;
+    const float color1G = triangle.color1.comp.g;
+    const float color1B = triangle.color1.comp.b;
+    const float color2R = triangle.color2.comp.r;
+    const float color2G = triangle.color2.comp.g;
+    const float color2B = triangle.color2.comp.b;
+    const float color3R = triangle.color3.comp.r;
+    const float color3G = triangle.color3.comp.g;
+    const float color3B = triangle.color3.comp.b;
+
+    // Cache the uv coords
+    const float u1 = triangle.u1;    const float v1 = triangle.v1;
+    const float u2 = triangle.u2;    const float v2 = triangle.v2;
+    const float u3 = triangle.u3;    const float v3 = triangle.v3;
+
+    // Compute the 'edge function' or the magnitude of the cross product between an edge and a vector.
+    // We start by computing the edge function for the top left point checked by the rasterizer and step from there.
+    // This function for all 3 edges tells us whether a point is inside the triangle, and also lets us compute barycentric coordinates.
+    float row_ef1 = ((float) lx - p1xf) * e1dy - ((float) ty - p1yf) * e1dx;
+    float row_ef2 = ((float) lx - p2xf) * e2dy - ((float) ty - p2yf) * e2dx;
+    float row_ef3 = ((float) lx - p3xf) * e3dy - ((float) ty - p3yf) * e3dx;
+
+    // Compute the bias for each edge function to use when texture mapping; sample as if we were 0.5x pixels in.
+    // Note: have to go in the opposite direction for 'y' since the top row of the screen is at y = 0.
+    const float ef1_bias = (e1dy - e1dx) * 0.5f;
+    const float ef2_bias = (e2dy - e2dx) * 0.5f;
+    const float ef3_bias = (e3dy - e3dx) * 0.5f;
+
+    // Compute the total signed triangle area (x6) and from that a multiplier to normalize the barycentric vertex weights
+    const float triArea = row_ef1 + row_ef2 + row_ef3;
+    const float weightNormalize = 1.0f / triArea;
+
+    // Process each pixel in the rectangular region being rasterized
+    uint16_t* pDstPixelRow = core.pRam + ty * core.ramPixelW;
+    const bool bEnableMasking = (!core.bDisableMasking);
+
+    for (int32_t y = ty; y <= by; ++y, pDstPixelRow += core.ramPixelW) {
+        // The edge function for the current column starts off as the edge function for the row
+        float col_ef1 = row_ef1;
+        float col_ef2 = row_ef2;
+        float col_ef3 = row_ef3;
+
+        for (int32_t x = lx; x <= rx; ++x) {
+            // Get the sign of each edge function
+            const bool bSign1 = (col_ef1 <= 0);
+            const bool bSign2 = (col_ef2 <= 0);
+            const bool bSign3 = (col_ef3 <= 0);
+
+            // Compute the vertex weights
+            const float w1 = (col_ef2 + ef2_bias) * weightNormalize;
+            const float w2 = (col_ef3 + ef3_bias) * weightNormalize;
+            const float w3 = (col_ef1 + ef1_bias) * weightNormalize;
+
+            // Step the edge function to the next column
+            col_ef1 += e1dy;
+            col_ef2 += e2dy;
+            col_ef3 += e3dy;
+
+            // The point is inside the triangle if the sign of all edge functions matches.
+            // This handles triangles that are wound the opposite way.
+            if ((bSign1 != bSign2) || (bSign2 != bSign3))
+                continue;
+
+            // Compute the texture coordinate to use and nudge slightly if it's close to the next integer coord (to account for float inprecision and prevent 'fuzzyness')
+            const uint16_t u = (uint16_t)(u1 * w1 + u2 * w2 + u3 * w3 + 1.0f / 8192.0f);
+            const uint16_t v = (uint16_t)(v1 * w1 + v2 * w2 + v3 * w3 - 1.0f / 8192.0f);
+
+            // Compute the triangle gouraud color at this pixel using the weights
+            const uint8_t gColorR = (uint8_t) std::clamp(color1R * w1 + color2R * w2 + color3R * w3 + 0.5f, 0.0f, 255.0f);
+            const uint8_t gColorG = (uint8_t) std::clamp(color1G * w1 + color2G * w2 + color3G * w3 + 0.5f, 0.0f, 255.0f);
+            const uint8_t gColorB = (uint8_t) std::clamp(color1B * w1 + color2B * w2 + color3B * w3 + 0.5f, 0.0f, 255.0f);
+
+            // Figure out the foreground color for the pixel for the current draw mode.
+            // If the pixel is transparent and masking is enabled then also skip it, otherwise modulate it by the primitive color...
+            Color16 fgColor;
+
+            if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+                // Doing texture mapping in addition to gouraud shading
+                fgColor = readTexel<TexFmt>(core, u, v);
+
+                if ((fgColor.bits == 0) && bEnableMasking)
+                    continue;
+
+                const Color24F triangleColor = Color24F{ gColorR, gColorG, gColorB };
+                fgColor = colorMul(fgColor, triangleColor);
+            }
+            else {
+                // Not doing texture mapping: foreground color is just the interpolated color
+                fgColor.comp.r = std::min<uint16_t>(((uint16_t) gColorR + 4) >> 3, 31u);
+                fgColor.comp.g = std::min<uint16_t>(((uint16_t) gColorG + 4) >> 3, 31u);
+                fgColor.comp.b = std::min<uint16_t>(((uint16_t) gColorB + 4) >> 3, 31u);
+                fgColor.comp.t = 0;
+            }
+
+            // Do blending with the background if that is enabled
+            if constexpr ((DrawMode == DrawMode::ColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
+                const Color16 bgColor = pDstPixelRow[x];
+                fgColor = colorBlend(bgColor, fgColor, core.blendMode);
+            }
+
+            // Save the output pixel
+            pDstPixelRow[x] = fgColor;
+        }
+
+        // Step the edge function onto the next row
+        row_ef1 -= e1dx;
+        row_ef2 -= e2dx;
+        row_ef3 -= e3dx;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Drawing a gouraud shaded triangle - external interface
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <DrawMode DrawMode>
+void draw(Core& core, const DrawTriangleGouraud& triangle) noexcept {
+    if (core.texFmt == TexFmt::Bpp4) {
+        draw<DrawMode, TexFmt::Bpp4>(core, triangle);
+    } else if (core.texFmt == TexFmt::Bpp8) {
+        draw<DrawMode, TexFmt::Bpp8>(core, triangle);
+    } else {
+        ASSERT(core.texFmt == TexFmt::Bpp16);
+        draw<DrawMode, TexFmt::Bpp16>(core, triangle);
+    }
+}
+
+// Instantiate the variants of this function
+template void draw<DrawMode::Colored>(Core& core, const DrawTriangleGouraud& triangle) noexcept;
+template void draw<DrawMode::ColoredBlended>(Core& core, const DrawTriangleGouraud& triangle) noexcept;
+template void draw<DrawMode::Textured>(Core& core, const DrawTriangleGouraud& triangle) noexcept;
+template void draw<DrawMode::TexturedBlended>(Core& core, const DrawTriangleGouraud& triangle) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws a single row of Doom floor pixels; texture format is assumed to be 8bpp.
@@ -721,7 +914,7 @@ void draw(Core& core, const DrawFloorRow& row) noexcept {
     const Color24F rowColor = row.color;
     Color16 fgColor;
 
-    if constexpr ((DrawMode == DrawMode::FlatColored) || (DrawMode == DrawMode::FlatColoredBlended)) {
+    if constexpr ((DrawMode == DrawMode::Colored) || (DrawMode == DrawMode::ColoredBlended)) {
         fgColor = color24FTo16(rowColor);
     }
 
@@ -775,7 +968,7 @@ void draw(Core& core, const DrawFloorRow& row) noexcept {
         // Do blending with the background if that is enabled
         uint16_t& dstPixel = pDstPixelRow[x];
 
-        if constexpr ((DrawMode == DrawMode::FlatColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
+        if constexpr ((DrawMode == DrawMode::ColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
             const Color16 bgColor = dstPixel;
             fgColor = colorBlend(bgColor, fgColor, core.blendMode);
         }
@@ -786,8 +979,8 @@ void draw(Core& core, const DrawFloorRow& row) noexcept {
 }
 
 // Instantiate the variants of this function
-template void draw<DrawMode::FlatColored>(Core& core, const DrawFloorRow& row) noexcept;
-template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawFloorRow& row) noexcept;
+template void draw<DrawMode::Colored>(Core& core, const DrawFloorRow& row) noexcept;
+template void draw<DrawMode::ColoredBlended>(Core& core, const DrawFloorRow& row) noexcept;
 template void draw<DrawMode::Textured>(Core& core, const DrawFloorRow& row) noexcept;
 template void draw<DrawMode::TexturedBlended>(Core& core, const DrawFloorRow& row) noexcept;
 
@@ -840,7 +1033,7 @@ void draw(Core& core, const DrawWallCol& col) noexcept {
     const Color24F colColor = col.color;
     Color16 fgColor;
 
-    if constexpr ((DrawMode == DrawMode::FlatColored) || (DrawMode == DrawMode::FlatColoredBlended)) {
+    if constexpr ((DrawMode == DrawMode::Colored) || (DrawMode == DrawMode::ColoredBlended)) {
         fgColor = color24FTo16(colColor);
     }
 
@@ -900,7 +1093,7 @@ void draw(Core& core, const DrawWallCol& col) noexcept {
         // Do blending with the background if that is enabled
         uint16_t& dstPixel = pDstPixelCol[y * vramPixelW];
 
-        if constexpr ((DrawMode == DrawMode::FlatColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
+        if constexpr ((DrawMode == DrawMode::ColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
             const Color16 bgColor = dstPixel;
             fgColor = colorBlend(bgColor, fgColor, core.blendMode);
         }
@@ -911,9 +1104,151 @@ void draw(Core& core, const DrawWallCol& col) noexcept {
 }
 
 // Instantiate the variants of this function
-template void draw<DrawMode::FlatColored>(Core& core, const DrawWallCol& col) noexcept;
-template void draw<DrawMode::FlatColoredBlended>(Core& core, const DrawWallCol& col) noexcept;
+template void draw<DrawMode::Colored>(Core& core, const DrawWallCol& col) noexcept;
+template void draw<DrawMode::ColoredBlended>(Core& core, const DrawWallCol& col) noexcept;
 template void draw<DrawMode::Textured>(Core& core, const DrawWallCol& col) noexcept;
 template void draw<DrawMode::TexturedBlended>(Core& core, const DrawWallCol& col) noexcept;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws a single gouraud shaded column of Doom wall pixels; texture format is assumed to be 8bpp.
+// This is a new primitive added to help accelerate the classic renderer for PsyDoom.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <DrawMode DrawMode>
+void draw(Core& core, const DrawWallColGouraud& col) noexcept {
+    sanityCheckGpuDrawState(core);
+
+    // Apply the draw offset to the column coordinates
+    const int16_t drawOffsetX = core.drawOffsetX;
+    const int16_t drawOffsetY = core.drawOffsetY;
+    const int32_t px = col.x + drawOffsetX;
+    const int32_t p1y = col.y1 + drawOffsetY;
+    const int32_t p2y = col.y2 + drawOffsetY;
+
+    // Get the minimum and maximum values of the column, and the swap the uvs if required
+    float v1, v2;
+    float r1, g1, b1;
+    float r2, g2, b2;
+
+    int32_t minY, maxY;
+
+    if (p1y < p2y) {
+        minY = p1y;                 maxY = p2y;
+        v1 = col.v1;                v2 = col.v2;
+        r1 = col.color1.comp.r;     r2 = col.color2.comp.r;
+        g1 = col.color1.comp.g;     g2 = col.color2.comp.g;
+        b1 = col.color1.comp.b;     b2 = col.color2.comp.b;
+    } else {
+        minY = p2y;                 maxY = p1y;
+        v1 = col.v2;                v2 = col.v1;
+        r1 = col.color2.comp.r;     r2 = col.color1.comp.r;
+        g1 = col.color2.comp.g;     g2 = col.color1.comp.g;
+        b1 = col.color2.comp.b;     b2 = col.color1.comp.b;
+    }
+
+    // Compute how much of the column will be rasterized; similar to triangles the last row is NOT drawn
+    const int32_t yrange = maxY - minY;
+    const int32_t ty = std::max((int32_t) core.drawAreaTy, minY);
+    const int32_t by = std::min((int32_t) core.drawAreaBy, maxY - 1);
+
+    // Compute the step in 't', the percentage along the line (used for interpolation of the uvs)
+    const float tStep = 1.0f / (float) yrange;
+
+    // Also similar to triangles, skip the column if the distances between the vertices exceed 511 on the y dimension.
+    // Also skip if the column itself is outside the draw area.
+    if ((yrange >= 512) || (px < core.drawAreaLx) || (px > core.drawAreaRx))
+        return;
+
+    // If we're going to draw textured and with a CLUT make sure it is up to date
+    if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+        updateClutCache(core);
+    }
+
+    // Cache some GPU RAM related params
+    const uint16_t vramPixelW = core.ramPixelW;
+    uint16_t* const pVram = core.pRam;
+
+    // Pre-compute the 'x' coordinate in VRAM to read for the texture since 'u' is constant
+    const uint32_t u = col.u;
+    uint16_t texVramX;
+
+    if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+        texVramX = col.u & core.texWinXMask;
+        texVramX += core.texWinX;
+        texVramX /= 2;
+        texVramX &= core.texPageXMask;
+        texVramX += core.texPageX;
+        texVramX &= core.ramXMask;
+    }
+
+    // Process each pixel in the line being rasterized
+    float t = (0.5f + (float) ty - minY) * tStep;
+    float tInv = 1.0f - t;
+
+    uint16_t* pDstPixelCol = core.pRam + px;
+    const bool bEnableMasking = (!core.bDisableMasking);
+
+    for (int32_t y = ty; y <= by; ++y) {
+        // Compute the 'v' texture coordinate to use
+        const uint16_t v = (uint16_t)(v1 * tInv + v2 * t);
+
+        // Compute the triangle gouraud shaded color at this pixel.
+        // Note that we could clamp to 0-255 here but it's probably not neccessary - not expecting imprecision to get that bad.
+        const uint8_t gColorR = (uint8_t)(r1 * tInv + r2 * t + 0.5f);
+        const uint8_t gColorG = (uint8_t)(g1 * tInv + g2 * t + 0.5f);
+        const uint8_t gColorB = (uint8_t)(b1 * tInv + b2 * t + 0.5f);
+
+        // Step these to the next pixel
+        t += tStep;
+        tInv -= tStep;
+
+        // Figure out the foreground color for the pixel for the current draw mode.
+        // If the pixel is transparent and masking is enabled then also skip it, otherwise modulate it by the primitive color...
+        Color16 fgColor;
+
+        if constexpr ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended)) {
+            // Doing texture mapping in addition to gouraud shading.
+            // Figure out the VRAM coordinates to read the VRAM pixel from.
+            uint16_t vramY = v & core.texWinYMask;
+            vramY += core.texWinY;
+            vramY &= core.texPageYMask;
+            vramY += core.texPageY;
+            vramY &= core.ramYMask;
+
+            // Read the VRAM pixel and lookup the actual texel using the clut index
+            const uint16_t vramPixel = pVram[vramY * vramPixelW + texVramX];
+            const uint16_t clutIdx = (vramPixel >> ((u & 1) * 8)) & 0xFF;
+            fgColor = core.clutCache[clutIdx];
+
+            if ((fgColor.bits == 0) && bEnableMasking)
+                continue;
+
+            const Color24F colColor = Color24F{ gColorR, gColorG, gColorB };
+            fgColor = colorMul(fgColor, colColor);
+        } else {
+            // Not doing texture mapping: foreground color is just the interpolated color
+            fgColor.comp.r = std::min<uint16_t>(((uint16_t) gColorR + 4) >> 3, 31u);
+            fgColor.comp.g = std::min<uint16_t>(((uint16_t) gColorG + 4) >> 3, 31u);
+            fgColor.comp.b = std::min<uint16_t>(((uint16_t) gColorB + 4) >> 3, 31u);
+            fgColor.comp.t = 0;
+        }
+
+        // Do blending with the background if that is enabled
+        uint16_t& dstPixel = pDstPixelCol[y * vramPixelW];
+
+        if constexpr ((DrawMode == DrawMode::ColoredBlended) || (DrawMode == DrawMode::TexturedBlended)) {
+            const Color16 bgColor = dstPixel;
+            fgColor = colorBlend(bgColor, fgColor, core.blendMode);
+        }
+
+        // Save the output pixel and step to the next pixel
+        dstPixel = fgColor;
+    }
+}
+
+// Instantiate the variants of this function
+template void draw<DrawMode::Colored>(Core& core, const DrawWallColGouraud& col) noexcept;
+template void draw<DrawMode::ColoredBlended>(Core& core, const DrawWallColGouraud& col) noexcept;
+template void draw<DrawMode::Textured>(Core& core, const DrawWallColGouraud& col) noexcept;
+template void draw<DrawMode::TexturedBlended>(Core& core, const DrawWallColGouraud& col) noexcept;
 
 END_NAMESPACE(Gpu)

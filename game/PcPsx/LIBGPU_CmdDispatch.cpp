@@ -336,7 +336,7 @@ void submit(const LINE_F2& line) noexcept {
         }
     #endif
 
-    Gpu::draw<Gpu::DrawMode::FlatColored>(gpu, drawLine);
+    Gpu::draw<Gpu::DrawMode::Colored>(gpu, drawLine);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -440,11 +440,11 @@ void submit(const POLY_F4& poly) noexcept {
     #endif  // #if PSYDOOM_VULKAN_RENDERER
 
     if (bBlendPoly) {
-        Gpu::draw<Gpu::DrawMode::FlatColoredBlended>(gpu, drawTri1);
-        Gpu::draw<Gpu::DrawMode::FlatColoredBlended>(gpu, drawTri2);
+        Gpu::draw<Gpu::DrawMode::ColoredBlended>(gpu, drawTri1);
+        Gpu::draw<Gpu::DrawMode::ColoredBlended>(gpu, drawTri2);
     } else {
-        Gpu::draw<Gpu::DrawMode::FlatColored>(gpu, drawTri1);
-        Gpu::draw<Gpu::DrawMode::FlatColored>(gpu, drawTri2);
+        Gpu::draw<Gpu::DrawMode::Colored>(gpu, drawTri1);
+        Gpu::draw<Gpu::DrawMode::Colored>(gpu, drawTri2);
     }
 }
 

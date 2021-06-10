@@ -15,16 +15,16 @@
 //  (3) This GPU does not concern itself with output format or video timings (PAL vs NTSC) - it just stores the VRAM region being displayed.
 //  (4) The output display format is assumed to be 15-bit color, 24-bit color is not supported.
 //  (5) Dithering is not supported, since Doom did not use this at all.
-//  (6) Gouraud shaded primitives are not supported, Doom did not use these.
-//  (7) Drawing primitives are always modulated by the primitive color, there is no mode where this does not happen.
-//  (8) The GPU 'mask bit' for masking pixels is not supported, Doom did not use this.
-//  (9) X and Y flipping textures is not supported; original PS1 models did not have this anyway so games could not use it.
-//  (10) All rendering/command primitives are fed directly to the GPU and handled immediately - command buffers are not supported.
-//  (11) Only rectangles, lines and triangle primitives are supported. Quads must be decomposed externally into triangles.
-//  (12) The full range of draw primitives exposed by the original LIBGPU is NOT provided, only the ones that Doom uses.
-//  (13) Various not that useful bits of GPU state have been removed, for example the 'display enable' flag (originally in the status reg)
-//  (14) The drawing and display areas must not wrap around in VRAM, it is assumed they do not.
-//  (15) CLUTs are not allowed to wrap around in VRAM, it is assumed they do not.
+//  (6) Drawing primitives are always modulated by the primitive color, there is no mode where this does not happen.
+//  (7) The GPU 'mask bit' for masking pixels is not supported, Doom did not use this.
+//  (8) X and Y flipping textures is not supported; original PS1 models did not have this anyway so games could not use it.
+//  (9) All rendering/command primitives are fed directly to the GPU and handled immediately - command buffers are not supported.
+//  (10) Only rectangles, lines, triangles, and a few (newly added) Doom specific primitives are supported.
+//       Quads must be decomposed externally into triangles.
+//  (11) The full range of draw primitives exposed by the original LIBGPU is NOT provided, only the ones that Doom uses.
+//  (12) Various not that useful bits of GPU state have been removed, for example the 'display enable' flag (originally in the status reg)
+//  (13) The drawing and display areas must not wrap around in VRAM, it is assumed they do not.
+//  (14) CLUTs are not allowed to wrap around in VRAM, it is assumed they do not.
 //
 // There are some improvements over an original PS1 GPU also, which can allow extended capabilities:
 //  (1) The texture window and page can exceed 256x256 units.
@@ -54,9 +54,16 @@ union Color24F {
     // The full 32-bits of the color (8-bits are padding)
     uint32_t bits;
 
-    inline Color24F() noexcept : bits(0) {}
-    inline Color24F(const uint32_t bits) noexcept : bits(bits) {}
-    inline operator uint32_t() const noexcept { return bits; }
+    inline constexpr Color24F() noexcept : bits(0) {}
+    inline constexpr Color24F(const uint32_t bits) noexcept : bits(bits) {}
+
+    inline constexpr Color24F(const uint8_t r, const uint8_t g, const uint8_t b) noexcept : comp{} {
+        comp.r = r;
+        comp.g = g;
+        comp.b = b;
+    }
+    
+    inline constexpr operator uint32_t() const noexcept { return bits; }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -75,9 +82,9 @@ union Color16 {
     // The full 16-bits of the color
     uint16_t bits;
 
-    inline Color16() noexcept : bits(0) {}
-    inline Color16(const uint16_t bits) noexcept : bits(bits) {}
-    inline operator uint16_t() const noexcept { return bits; }
+    inline constexpr Color16() noexcept : bits(0) {}
+    inline constexpr Color16(const uint16_t bits) noexcept : bits(bits) {}
+    inline constexpr operator uint16_t() const noexcept { return bits; }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -103,10 +110,10 @@ enum class TexFmt : uint8_t {
 // What type of drawing to do
 //----------------------------------------------------------------------------------------------------------------------
 enum class DrawMode : uint8_t {
-    FlatColored,            // Draw the geometry in a single color with no blending
-    FlatColoredBlended,     // Draw the geometry with a single color and blending
-    Textured,               // Draw the geometry textured with color modulation by a single color (no blending)
-    TexturedBlended,        // Draw the geometry textured with color modulation by a single color (blending enabled)
+    Colored,            // Draw the geometry colored only (no texture mapping) and without blending
+    ColoredBlended,     // Draw the geometry colored only (no texture mapping) and with blending
+    Textured,           // Draw the geometry textured with color modulation (no blending)
+    TexturedBlended,    // Draw the geometry textured with color modulation (blending enabled)
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -148,7 +155,25 @@ struct DrawTriangle {
     Color24F    color;      // Color to draw the triangle with
 };
 
-// New Doom specific primitive
+struct DrawTriangleGouraud {
+    int16_t     x1;         // Triangle point 1: x
+    int16_t     y1;         // Triangle point 1: y
+    int16_t     u1;         // Triangle point 1: u texcoord
+    int16_t     v1;         // Triangle point 1: v texcoord
+    int16_t     x2;         // Triangle point 2: x
+    int16_t     y2;         // Triangle point 2: y
+    int16_t     u2;         // Triangle point 2: u texcoord
+    int16_t     v2;         // Triangle point 2: v texcoord
+    int16_t     x3;         // Triangle point 3: x
+    int16_t     y3;         // Triangle point 3: y
+    int16_t     u3;         // Triangle point 3: u texcoord
+    int16_t     v3;         // Triangle point 3: v texcoord
+    Color24F    color1;     // Triangle point 1: color
+    Color24F    color2;     // Triangle point 1: color
+    Color24F    color3;     // Triangle point 1: color
+};
+
+// New Doom specific primitive (textured floor row)
 struct DrawFloorRow {
     int16_t     y;          // Row y value
     int16_t     x1;         // Row point 1: x
@@ -160,7 +185,7 @@ struct DrawFloorRow {
     Color24F    color;      // Color to draw the row with
 };
 
-// New Doom specific primitive with a constant 'u' value
+// New Doom specific primitive with a constant 'u' value (textured wall column)
 struct DrawWallCol {
     int16_t     x;          // Column x value
     int16_t     u;          // Column u texcoord
@@ -169,6 +194,18 @@ struct DrawWallCol {
     int16_t     y2;         // Column point 2: y
     int16_t     v2;         // Column point 2: v texcoord
     Color24F    color;      // Color to draw the column with
+};
+
+// New Doom specific primitive with a constant 'u' value (textured and gouraud shaded wall column)
+struct DrawWallColGouraud {
+    int16_t     x;          // Column x value
+    int16_t     u;          // Column u texcoord
+    int16_t     y1;         // Column point 1: y
+    int16_t     v1;         // Column point 1: v texcoord
+    int16_t     y2;         // Column point 2: y
+    int16_t     v2;         // Column point 2: v texcoord
+    Color24F    color1;     // Column point 1: color
+    Color24F    color2;     // Column point 2: color
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -241,9 +278,15 @@ template <DrawMode DrawMode>
 void draw(Core& core, const DrawTriangle& triangle) noexcept;
 
 template <DrawMode DrawMode>
+void draw(Core& core, const DrawTriangleGouraud& triangle) noexcept;
+
+template <DrawMode DrawMode>
 void draw(Core& core, const DrawFloorRow& row) noexcept;
 
 template <DrawMode DrawMode>
 void draw(Core& core, const DrawWallCol& col) noexcept;
+
+template <DrawMode DrawMode>
+void draw(Core& core, const DrawWallColGouraud& col) noexcept;
 
 END_NAMESPACE(Gpu)
