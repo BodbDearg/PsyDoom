@@ -148,7 +148,15 @@ int32_t wess_dig_lcd_data_read(
             patch_sample& nextPatchSample = pPatchSamples[nextPatchSampleIdx];
 
             gWess_lcd_load_soundBytesLeft = nextPatchSample.size;
-            gWess_lcd_load_samplePos = destSpuAddr + sndDataOffset;
+
+            // PsyDoom: fix samples being uploaded to the wrong SPU address in some cases if other sounds in the LCD are already loaded and skipped over.
+            // There was a slight mishandling of SPU addresses when skipping uploading samples to the SPU. This bug can cause sounds to be cut short
+            // sometimes and is observable in 'Final Doom' on MAP28 (Baron's Lair) with the Revenant's pain sound being too short.
+            #if PSYDOOM_MODS
+                gWess_lcd_load_samplePos = destSpuAddr + bytesWritten;
+            #else
+                gWess_lcd_load_samplePos = destSpuAddr + sndDataOffset;
+            #endif
 
             // If uploading this sound would cause us to go beyond the bounds of SPU ram then do not try to upload this sound
             #if PSYDOOM_MODS
@@ -182,7 +190,16 @@ int32_t wess_dig_lcd_data_read(
 
         if ((patchSample.spu_addr == 0) || bOverride) {
             LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-            LIBSPU_SpuSetTransferStartAddr(destSpuAddr + sndDataOffset);
+
+            // PsyDoom: fix samples being uploaded to the wrong SPU address in some cases if other sounds in the LCD are already loaded and skipped over.
+            // There was a slight mishandling of SPU addresses when skipping uploading samples to the SPU. This bug can cause sounds to be cut short
+            // sometimes and is observable in 'Final Doom' on MAP28 (Baron's Lair) with the Revenant's pain sound being too short.
+            #if PSYDOOM_MODS
+                LIBSPU_SpuSetTransferStartAddr(destSpuAddr + bytesWritten);
+            #else
+                LIBSPU_SpuSetTransferStartAddr(destSpuAddr + sndDataOffset);
+            #endif
+
             LIBSPU_SpuWrite(pSectorData + sndDataOffset, writeSize);
             bytesWritten += writeSize;
         }
