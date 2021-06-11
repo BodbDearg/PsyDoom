@@ -525,9 +525,9 @@ void R_DrawWallPiece(
                     vtCur += vTopToCenter - vHalfScreen;
 
                     #if PSYDOOM_MODS
-                        clipWtColR += rTopToCenter - rHalfScreen;
-                        clipWtColG += gTopToCenter - gHalfScreen;
-                        clipWtColB += bTopToCenter - bHalfScreen;
+                        clipWtColR += (uint8_t)(rTopToCenter - rHalfScreen);
+                        clipWtColG += (uint8_t)(gTopToCenter - gHalfScreen);
+                        clipWtColB += (uint8_t)(bTopToCenter - bHalfScreen);
                     #endif
                 }
 
@@ -537,9 +537,9 @@ void R_DrawWallPiece(
                     vbCur = vtOrig + vTopToCenter + vHalfScreen;
 
                     #if PSYDOOM_MODS
-                        clipWbColR = wtColR + rTopToCenter + rHalfScreen;
-                        clipWbColG = wtColG + gTopToCenter + gHalfScreen;
-                        clipWbColB = wtColB + bTopToCenter + bHalfScreen;
+                        clipWbColR = (uint8_t)(wtColR + rTopToCenter + rHalfScreen);
+                        clipWbColG = (uint8_t)(wtColG + gTopToCenter + gHalfScreen);
+                        clipWbColB = (uint8_t)(wtColB + bTopToCenter + bHalfScreen);
                     #endif
                 }
             }
