@@ -61,13 +61,14 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     const uint16_t uOffset = static_cast<uint16_t>(-(int16_t)(gViewAngle >> ANGLETOSKYSHIFT));
     const uint16_t uWrapMask = skyTex.width - 1;
 
-    // Compute the y coordinate step per sky wall column in screenspace, after transforming to inverted viewspace
+    // Compute the y coordinate step per sky wall column in screenspace, after transforming to inverted viewspace.
+    // Note: using a 24.8 format here instead of 16.16 to fix tricky overflow issues in some cases. 24.8 should be sufficient precision for most cases.
     const int32_t iviewZ = -d_fixed_to_int(z - gViewZ);
-    const fixed_t dy = (iviewZ * vert2.scale) - (iviewZ * vert1.scale);
+    const fixed_t dy = (iviewZ * (vert2.scale >> 8)) - (iviewZ * (vert1.scale >> 8));
     const fixed_t yStep = dy / dx;
 
     // Compute the start y value and bring into screenspace
-    fixed_t yCur_frac = iviewZ * vert1.scale + HALF_VIEW_3D_H * FRACUNIT;
+    fixed_t yCur_frac = iviewZ * (vert1.scale >> 8) + (HALF_VIEW_3D_H << 8);
 
     // Adjust the starting column if the beginning of the seg is obscured: skip past the not visible columns
     const seg_t& seg = *edge.seg;
@@ -87,7 +88,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     if (bUpperSkyWall) {
         while (xCur < xEnd) {
             // Get the start 'y' value for this sky wall column
-            const int16_t yCur = (int16_t) d_fixed_to_int(yCur_frac);
+            const int32_t yCur = yCur_frac >> 8;
 
             // Ignore the column if it is completely offscreen
             if (yCur >= 0) {
@@ -112,13 +113,13 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
 
         while (xCur < xEnd) {
             // Get the start 'y' value for this sky wall column
-            const int16_t yCur = (int16_t) d_fixed_to_int(yCur_frac);
+            const int32_t yCur = std::max(yCur_frac >> 8, 0);
 
             // Ignore the column if it is completely offscreen or past the end of the sky texture
             if (yCur < endY) {
                 // Set the location and height of the column to draw
                 drawPrim.x0 = (int16_t) xCur;
-                drawPrim.y0 = yCur;
+                drawPrim.y0 = (int16_t) yCur;
                 drawPrim.h = (int16_t)(endY - yCur);
 
                 // Set the texture coordinates for the column and submit
