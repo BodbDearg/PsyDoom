@@ -62,13 +62,13 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     const uint16_t uWrapMask = skyTex.width - 1;
 
     // Compute the y coordinate step per sky wall column in screenspace, after transforming to inverted viewspace.
-    // Note: using a 24.8 format here instead of 16.16 to fix tricky overflow issues in some cases. 24.8 should be sufficient precision for most cases.
+    // Note: using a 20.12 format here instead of 16.16 to fix tricky overflow issues in some cases. 20.12 should be sufficient precision for most cases.
     const int32_t iviewZ = -d_fixed_to_int(z - gViewZ);
-    const fixed_t dy = (iviewZ * (vert2.scale >> 8)) - (iviewZ * (vert1.scale >> 8));
+    const fixed_t dy = (iviewZ * (vert2.scale >> 4)) - (iviewZ * (vert1.scale >> 4));
     const fixed_t yStep = dy / dx;
 
     // Compute the start y value and bring into screenspace
-    fixed_t yCur_frac = iviewZ * (vert1.scale >> 8) + (HALF_VIEW_3D_H << 8);
+    fixed_t yCur_frac = iviewZ * (vert1.scale >> 4) + (HALF_VIEW_3D_H << 12);
 
     // Adjust the starting column if the beginning of the seg is obscured: skip past the not visible columns
     const seg_t& seg = *edge.seg;
@@ -88,7 +88,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     if (bUpperSkyWall) {
         while (xCur < xEnd) {
             // Get the start 'y' value for this sky wall column
-            const int32_t yCur = yCur_frac >> 8;
+            const int32_t yCur = yCur_frac >> 12;
 
             // Ignore the column if it is completely offscreen
             if (yCur >= 0) {
@@ -113,7 +113,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
 
         while (xCur < xEnd) {
             // Get the start 'y' value for this sky wall column
-            const int32_t yCur = std::max(yCur_frac >> 8, 0);
+            const int32_t yCur = std::max(yCur_frac >> 12, 0);
 
             // Ignore the column if it is completely offscreen or past the end of the sky texture
             if (yCur < endY) {
