@@ -617,8 +617,13 @@ void R_UpdateShadingParams(sector_t& sector) noexcept {
 // Assumes 'R_UpdateShadingParams' has already been called on the sector for the current frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
 light_t R_GetSectorLightColor(const sector_t& sector, const fixed_t z) noexcept {
-    // If the floor and ceiling color are the same then just early out and return that - no point in interpolating
+    // If lighting is disabled (light amp visor) then we just return the identity light color (full white, 1st color entry)
     const light_t* const pLights = gpLightsLump;
+
+    if (!gbDoViewLighting)
+        return pLights[0];
+
+    // If the floor and ceiling color are the same then just early out and return that - no point in interpolating
     const int16_t lowerColorIdx = sector.colorid;
     const int16_t upperColorIdx = sector.ceilColorid;
     const light_t lowerColor = pLights[lowerColorIdx];

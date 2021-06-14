@@ -46,6 +46,8 @@ PsyDoom contributors (sorted alphabetically)
             https://github.com/Erick194/PSXDOOM-RE/commit/2a5b73503db5479131702ee29dc946056bcf026a
         * Clarified some telefrag behavior:
             https://github.com/BodbDearg/PsyDoom/commit/7c92be7dd2a5a34f0efa066c4d26384115b3546a#r51501054
+        * Pointed out bug with light color when using the Light Amp Visor:
+            https://github.com/BodbDearg/PsyDoom/commit/7e97c311acd4b8528737d219c35ef8ad36608a34#commitcomment-52113983
 
 * **[fenderc01](https://github.com/fenderc01)**
 
