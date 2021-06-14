@@ -247,6 +247,25 @@ void R_DrawWallPiece(
     if (dx <= 0)
         return;
 
+    // PsyDoom: chuck out walls that are completely offscreen to the top or bottom to avoid numeric overflows in some cases.
+    // Use 64-bit arithmetic as well to do these calculations, to avoid overflows.
+    #if PSYDOOM_MODS
+    {
+        const int64_t v1ty = ((int64_t) yt * (int64_t) vert1.scale) >> FRACBITS;
+        const int64_t v1by = ((int64_t) yb * (int64_t) vert1.scale) >> FRACBITS;
+        const int64_t v2ty = ((int64_t) yt * (int64_t) vert2.scale) >> FRACBITS;
+        const int64_t v2by = ((int64_t) yb * (int64_t) vert2.scale) >> FRACBITS;
+
+        // Completely offscreen at the top?
+        if ((v1by < -HALF_VIEW_3D_H) && (v2by < -HALF_VIEW_3D_H))
+            return;
+
+        // Completely offscreen at the bottom?
+        if ((v1ty >= HALF_VIEW_3D_H) && (v2ty >= HALF_VIEW_3D_H))
+            return;
+    }
+    #endif
+
     // Force the wall to be transparent if the X-Ray vision cheat is on
     player_t& player = *gpViewPlayer;
 

@@ -33,6 +33,29 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
 
     ASSERT_LOG(dx > 0, "Edge must be front facing and not zero sized!");
 
+    // Transform the z-coordinate at which to start rendering the sky into inverted viewspace (a step towards screenspace)
+    const int32_t iviewZ = -d_fixed_to_int(z - gViewZ);
+
+    // PsyDoom: chuck out sky walls that are completely offscreen to avoid numeric overflows in some cases
+    // Use 64-bit arithmetic as well to do these calculations to be safe and avoid overflows.
+    #if PSYDOOM_MODS
+    {
+        const int64_t v1y = ((int64_t) iviewZ * (int64_t) vert1.scale) >> FRACBITS;
+        const int64_t v2y = ((int64_t) iviewZ * (int64_t) vert2.scale) >> FRACBITS;
+
+        if (bUpperSkyWall) {
+            // Completely offscreen at the top?
+            if ((v1y < -HALF_VIEW_3D_H) && (v2y < -HALF_VIEW_3D_H))
+                return;
+        }
+        else {
+            // Completely offscreen at the bottom?
+            if ((v1y >= HALF_VIEW_3D_H) && (v2y >= HALF_VIEW_3D_H))
+                return;
+        }
+    }
+    #endif
+
     // Setup the texture window and texture page for drawing the sky
     texture_t& skyTex = *gpSkyTexture;
 
@@ -61,14 +84,12 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     const uint16_t uOffset = static_cast<uint16_t>(-(int16_t)(gViewAngle >> ANGLETOSKYSHIFT));
     const uint16_t uWrapMask = skyTex.width - 1;
 
-    // Compute the y coordinate step per sky wall column in screenspace, after transforming to inverted viewspace.
-    // Note: using a 20.12 format here instead of 16.16 to fix tricky overflow issues in some cases. 20.12 should be sufficient precision for most cases.
-    const int32_t iviewZ = -d_fixed_to_int(z - gViewZ);
-    const fixed_t dy = (iviewZ * (vert2.scale >> 4)) - (iviewZ * (vert1.scale >> 4));
+    // Compute the y coordinate step per sky wall column in screenspace
+    const fixed_t dy = (iviewZ * vert2.scale) - (iviewZ * vert1.scale);
     const fixed_t yStep = dy / dx;
 
     // Compute the start y value and bring into screenspace
-    fixed_t yCur_frac = iviewZ * (vert1.scale >> 4) + (HALF_VIEW_3D_H << 12);
+    fixed_t yCur_frac = iviewZ * vert1.scale + HALF_VIEW_3D_H * FRACUNIT;
 
     // Adjust the starting column if the beginning of the seg is obscured: skip past the not visible columns
     const seg_t& seg = *edge.seg;
@@ -88,7 +109,7 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
     if (bUpperSkyWall) {
         while (xCur < xEnd) {
             // Get the start 'y' value for this sky wall column
-            const int32_t yCur = yCur_frac >> 12;
+            const int16_t yCur = (int16_t) d_fixed_to_int(yCur_frac);
 
             // Ignore the column if it is completely offscreen
             if (yCur >= 0) {
@@ -113,13 +134,13 @@ static void R_AddFrontFacingInfiniteSkyWall(const leafedge_t& edge, const fixed_
 
         while (xCur < xEnd) {
             // Get the start 'y' value for this sky wall column
-            const int32_t yCur = std::max(yCur_frac >> 12, 0);
+            const int16_t yCur = (int16_t) d_fixed_to_int(yCur_frac);
 
             // Ignore the column if it is completely offscreen or past the end of the sky texture
             if (yCur < endY) {
                 // Set the location and height of the column to draw
                 drawPrim.x0 = (int16_t) xCur;
-                drawPrim.y0 = (int16_t) yCur;
+                drawPrim.y0 = yCur;
                 drawPrim.h = (int16_t)(endY - yCur);
 
                 // Set the texture coordinates for the column and submit

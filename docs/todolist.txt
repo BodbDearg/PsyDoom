@@ -1,5 +1,4 @@
 0.8 - Limit extending and modding?
-- Investigate classic renderer overflow issues in test map
 - Add very basic Lua scripting with similar capabilities to DOOM64 MACROs
     - Mostly to trigger line specials in more flexible ways
 - Investigate a MAPINFO format for naming maps, choosing music etc.
