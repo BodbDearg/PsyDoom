@@ -1,0 +1,6 @@
+Note: I have stripped out some stuff which is not needed to use this library.
+The full version is available at the link below.
+
+Commit:
+    https://github.com/ThePhD/sol2/tree/v3.2.3
+    (Oct 14, 2020)
