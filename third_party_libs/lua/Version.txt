@@ -1,0 +1,6 @@
+Note: I have stripped out some stuff which is not needed to use this library.
+The full version is available at the link below.
+
+Version 5.4.3:
+    http://www.lua.org/ftp/lua-5.4.3.tar.gz
+    http://www.lua.org/download.html
