@@ -237,6 +237,8 @@ set(SOURCE_FILES
     "PcPsx/PsxPadButtons.h"
     "PcPsx/PsxVm.cpp"
     "PcPsx/PsxVm.h"
+    "PcPsx/ScriptingEngine.cpp"
+    "PcPsx/ScriptingEngine.h"
     "PcPsx/Utils.cpp"
     "PcPsx/Utils.h"
     "PcPsx/Video.cpp"

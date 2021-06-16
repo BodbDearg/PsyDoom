@@ -30,6 +30,7 @@
 #include "PcPsx/MapPatcher.h"
 #include "PcPsx/MobjSpritePrecacher.h"
 #include "PcPsx/ModMgr.h"
+#include "PcPsx/ScriptingEngine.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -1514,15 +1515,14 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     // Build sector line lists etc.
     P_GroupLines();
 
-    // Load and spawn map things. Also initialize the next deathmatch start.
-    // PsyDoom: not using relative indexing anymore to load map lumps, search for the lump names instead.
-    // PsyDoom: compute the final map hash and apply any patches to original map data that are relevant at this point, once things have been loaded.
+    // Load and spawn map things; also initialize the next deathmatch start
     gpDeathmatchP = &gDeathmatchStarts[0];
 
     #if PSYDOOM_MODS
-        P_LoadThings(W_MapGetNumForName("THINGS"));
-        MapHash::finalize();
-        MapPatcher::applyPatches();
+        P_LoadThings(W_MapGetNumForName("THINGS"));     // PsyDoom: not using relative indexing anymore to load map lumps, search for the lump names instead
+        ScriptingEngine::init();                        // PsyDoom: initialize the scripting engine if the map has Lua scripted actions
+        MapHash::finalize();                            // PsyDoom: compute the final map hash
+        MapPatcher::applyPatches();                     // PsyDoom: apply any patches to original map data that are relevant at this point, once all things have been loaded
     #else
         P_LoadThings(mapStartLump + ML_THINGS);
     #endif

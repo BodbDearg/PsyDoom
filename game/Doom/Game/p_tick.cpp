@@ -32,6 +32,7 @@
 #include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/PsxPadButtons.h"
+#include "PcPsx/ScriptingEngine.h"
 #include "PcPsx/Video.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -811,9 +812,10 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
         }
     }
 
-    // PsyDoom: free data-structures for the Vulkan renderer and shutdown the developer auto map reloader
+    // PsyDoom: free data-structures for the Vulkan renderer, shutdown the scripting engine and developer auto map reloader
     #if PSYDOOM_VULKAN_RENDERER
         RV_FreeLevelData();
+        ScriptingEngine::shutdown();
         DevMapAutoReloader::shutdown();
     #endif
 }
