@@ -22,6 +22,15 @@ static std::unordered_map<int32_t, sol::function> gScriptActions;
 
 BEGIN_NAMESPACE(ScriptingEngine)
 
+// Context for the current script action being executed.
+// Which linedef and thing triggered the action, both of which are optional.
+line_t* gpCurTriggeringLine;
+mobj_t* gpCurTriggeringMobj;
+
+// This flag can be set to 'false' by scripts to indicate action is not currently available/allowed.
+// It affects the behavior of switches and whether they can change texture and make a noise or not.
+bool gbCurActionAllowed;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Issues a user facing error message relating to scripting, which is shown on the in-game status bar.
 // These messages must be short since there is not much space on the HUD, more detailed messages must be logged to standard out.
@@ -36,7 +45,7 @@ static void showStatusBarError(const char* const formatStr, Args&&... args) noex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the the script for the current map (if any) and returns the string containing the entire script.
-// Note: the script data contributes towards the has for the map also, so a slight change in the script might invalidate the hash.
+// Note: the script data contributes towards the hash for the map also, so a slight change in the script might invalidate the hash.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::unique_ptr<char[]> readCurrentMapScript() noexcept {
     // See if there is a scripts lump available for the current map; if there is none then don't bother initializing the scripting engine
@@ -162,14 +171,24 @@ void init() noexcept {
 // Tears down the scripting engine for the current level
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
+    gbCurActionAllowed = false;
     gScriptActions.clear();
     gpLuaState.reset();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Executes the specified script action number
+// Executes the specified script action number.
+// The line and map object which triggered the script action (both optional) are passed in as additional context for scripts.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void doAction(const int32_t actionNum) noexcept {
+void doAction(const int32_t actionNum, line_t* const pTrigLine, mobj_t* const pTrigMobj) noexcept {
+    // Set context for scripts
+    gpCurTriggeringLine = pTrigLine;
+    gpCurTriggeringMobj = pTrigMobj;
+
+    // Assume the current action is allowed until scripts indicate otherwise
+    gbCurActionAllowed = true;
+
+    // Try and execute the action
     const auto actionIter = gScriptActions.find(actionNum);
 
     if (actionIter != gScriptActions.end()) {
@@ -184,6 +203,10 @@ void doAction(const int32_t actionNum) noexcept {
         showStatusBarError("No script action #%d!", actionNum);
         std::printf("PsyDoom: no scripting action #%d is available to execute!\n", actionNum);
     }
+
+    // Clear script context
+    gpCurTriggeringLine = nullptr;
+    gpCurTriggeringMobj = nullptr;
 }
 
 END_NAMESPACE(ScriptingEngine)

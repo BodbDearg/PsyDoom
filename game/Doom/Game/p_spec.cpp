@@ -27,6 +27,7 @@
 #include "p_tick.h"
 #include "PcPsx/Game.h"
 #include "PcPsx/ParserTokenizer.h"
+#include "PcPsx/ScriptingEngine.h"
 
 #include <cstdlib>
 #include <memory>
@@ -605,8 +606,16 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             case 97:    // Multi: Teleport (regular, everyone)
             case 125:   // Once:  Teleport (monsters ONLY!)
             case 126:   // Multi: Teleport (monsters ONLY!)
+        #if PSYDOOM_MODS
+            // PsyDoom: new line specials for triggering scripted actions
+            case 301:   // Once: Do Script Action (Monsters only)
+            case 302:   // Once: Do Script Action (Player + Monsters)
+            case 311:   // Multi: Do Script Action (Monsters only)
+            case 312:   // Multi: Do Script Action (Player + Monsters)
+        #endif
+            {
                 bCanTrigger = true;
-                break;
+            }   break;
 
             default:
                 break;
@@ -614,6 +623,15 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
 
         if (!bCanTrigger)
             return;
+    } else {
+        // PsyDoom: skip new PsyDoom monster-only line specials that are forbidden to the player
+        #if PSYDOOM_MODS
+            switch (line.special) {
+                case 301:   // Once: Do Script Action (Monsters only)
+                case 311:   // Multi: Do Script Action (Monsters only)
+                    return;
+            }
+        #endif
     }
 
     switch (line.special) {
@@ -873,6 +891,16 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             line.special = 0;
             break;
 
+        // PsyDoom: new line specials for triggering scripted actions
+        #if PSYDOOM_MODS
+            case 300:   // Once: Do Script Action (Player only)
+            case 301:   // Once: Do Script Action (Monsters only)
+            case 302:   // Once: Do Script Action (Player + Monsters)
+                line.special = 0;
+                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                break;
+        #endif
+
         //----------------------------------------------------------------------------------------------------------------------------------
         // Repeatable triggers
         //----------------------------------------------------------------------------------------------------------------------------------
@@ -1042,6 +1070,15 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
                 break;
         #endif
 
+        // PsyDoom: new line specials for triggering scripted actions
+        #if PSYDOOM_MODS
+            case 310:   // Multi: Do Script Action (Player only)
+            case 311:   // Multi: Do Script Action (Monsters only)
+            case 312:   // Multi: Do Script Action (Player + Monsters)
+                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                break;
+        #endif
+
         default:
             break;
     }
@@ -1057,9 +1094,27 @@ void P_ShootSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             case 46:    // Open door
                 break;
 
+            // PsyDoom: new line specials for triggering scripted actions
+            #if PSYDOOM_MODS
+                case 341:   // Once: Do Script Action (Monsters only)
+                case 342:   // Once: Do Script Action (Player + Monsters)
+                case 351:   // Multi: Do Script Action (Monsters only)
+                case 352:   // Multi: Do Script Action (Player + Monsters)
+                    break;
+            #endif
+
             default:    // NOT allowed!
                 return;
         }
+    } else {
+        // PsyDoom: skip new PsyDoom monster-only line specials that are forbidden to the player
+        #if PSYDOOM_MODS
+            switch (line.special) {
+                case 341:   // Once: Do Script Action (Monsters only)
+                case 351:   // Multi: Do Script Action (Monsters only)
+                    return;
+            }
+        #endif
     }
 
     // Activate the line special
@@ -1084,6 +1139,20 @@ void P_ShootSpecialLine(mobj_t& mobj, line_t& line) noexcept {
                 P_ChangeSwitchTexture(line, false);
             }
         }   break;
+
+        // PsyDoom: new line specials for triggering scripted actions
+        #if PSYDOOM_MODS
+            case 340:   // Once: Do Script Action (Player only)
+            case 341:   // Once: Do Script Action (Monsters only)
+            case 342:   // Once: Do Script Action (Player + Monsters)
+                line.special = 0;
+                [[fallthrough]];
+            case 350:   // Multi: Do Script Action (Player only)
+            case 351:   // Multi: Do Script Action (Monsters only)
+            case 352:   // Multi: Do Script Action (Player + Monsters)
+                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                break;
+        #endif
     }
 }
 

@@ -18,6 +18,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "PcPsx/ParserTokenizer.h"
+#include "PcPsx/ScriptingEngine.h"
 
 #include <vector>
 
@@ -389,9 +390,27 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             case 1:     // Manual door raise
                 break;
 
+        #if PSYDOOM_MODS
+            // PsyDoom: new line specials for triggering scripted actions
+            case 361:   // Once: Scripted Door (Monsters only)
+            case 362:   // Once: Scripted Door (Player + Monsters)
+            case 371:   // Multi: Scripted Door (Monsters only)
+            case 372:   // Multi: Scripted Door (Player + Monsters)
+                break;
+        #endif
+
             default:    // NOT allowed!
                 return false;
         }
+    } else {
+        // PsyDoom: skip new PsyDoom monster-only line specials that are forbidden to the player
+        #if PSYDOOM_MODS
+            switch (line.special) {
+                case 361:   // Once: Scripted Door (Monsters only)
+                case 371:   // Multi: Scripted Door (Monsters only)
+                    return false;
+            }
+        #endif
     }
 
     // Try to activate the line's special
@@ -440,6 +459,22 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
                 }
             }
         }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // PsyDoom: scripted doors
+        //----------------------------------------------------------------------------------------------------------------------------------
+        #if PSYDOOM_MODS
+            case 360:   // Once: Scripted Door (Player only)
+            case 361:   // Once: Scripted Door (Monsters only)
+            case 362:   // Once: Scripted Door (Player + Monsters)
+                line.special = 0;
+                [[fallthrough]];
+            case 370:   // Multi: Scripted Door (Player only)
+            case 371:   // Multi: Scripted Door (Monsters only)
+            case 372:   // Multi: Scripted Door (Player + Monsters)
+                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                break;
+        #endif
 
         //----------------------------------------------------------------------------------------------------------------------------------
         // Repeatable switches
@@ -592,6 +627,18 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             EV_LightTurnOn(line, 35);
             P_ChangeSwitchTexture(line, true);
         }   break;
+
+        // PsyDoom: new line specials for triggering scripted actions
+        #if PSYDOOM_MODS
+            // Multi: Do Script Action (Player only)
+            case 330: {
+                ScriptingEngine::doAction(line.tag, &line, &mobj);
+
+                if (ScriptingEngine::gbCurActionAllowed) {
+                    P_ChangeSwitchTexture(line, true);
+                }
+            }   break;
+        #endif
 
         //----------------------------------------------------------------------------------------------------------------------------------
         // Once-only switches
@@ -775,6 +822,18 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             // Raise Floor 512
             case 140: {
                 if (EV_DoFloor(line, raiseFloor512)) {
+                    P_ChangeSwitchTexture(line, false);
+                }
+            }   break;
+        #endif
+
+        // PsyDoom: new line specials for triggering scripted actions
+        #if PSYDOOM_MODS
+            // Once: Do Script Action (Player only)
+            case 320: {
+                ScriptingEngine::doAction(line.tag, &line, &mobj);
+
+                if (ScriptingEngine::gbCurActionAllowed) {
                     P_ChangeSwitchTexture(line, false);
                 }
             }   break;
