@@ -23,9 +23,11 @@ static std::unordered_map<int32_t, sol::function> gScriptActions;
 BEGIN_NAMESPACE(ScriptingEngine)
 
 // Context for the current script action being executed.
-// Which linedef and thing triggered the action, both of which are optional.
-line_t* gpCurTriggeringLine;
-mobj_t* gpCurTriggeringMobj;
+// Which linedef, sector and thing triggered the action, all of which are optional.
+// All, some or none of these might be specified depending on the context in which the script action is executed.
+line_t*     gpCurTriggeringLine;
+sector_t*   gpCurTriggeringSector;
+mobj_t*     gpCurTriggeringMobj;
 
 // This flag can be set to 'false' by scripts to indicate action is not currently available/allowed.
 // It affects the behavior of switches and whether they can change texture and make a noise or not.
@@ -180,9 +182,15 @@ void shutdown() noexcept {
 // Executes the specified script action number.
 // The line and map object which triggered the script action (both optional) are passed in as additional context for scripts.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void doAction(const int32_t actionNum, line_t* const pTrigLine, mobj_t* const pTrigMobj) noexcept {
+void doAction(
+    const int32_t actionNum,
+    line_t* const pTrigLine,
+    sector_t* const pTrigSector,
+    mobj_t* const pTrigMobj
+) noexcept {
     // Set context for scripts
     gpCurTriggeringLine = pTrigLine;
+    gpCurTriggeringSector = pTrigSector;
     gpCurTriggeringMobj = pTrigMobj;
 
     // Assume the current action is allowed until scripts indicate otherwise
@@ -206,6 +214,7 @@ void doAction(const int32_t actionNum, line_t* const pTrigLine, mobj_t* const pT
 
     // Clear script context
     gpCurTriggeringLine = nullptr;
+    gpCurTriggeringSector = nullptr;
     gpCurTriggeringMobj = nullptr;
 }
 

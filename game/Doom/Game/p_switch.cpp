@@ -472,7 +472,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             case 370:   // Multi: Scripted Door (Player only)
             case 371:   // Multi: Scripted Door (Monsters only)
             case 372:   // Multi: Scripted Door (Player + Monsters)
-                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
                 break;
         #endif
 
@@ -632,7 +632,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         #if PSYDOOM_MODS
             // Multi: Do Script Action (Player only)
             case 330: {
-                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
 
                 if (ScriptingEngine::gbCurActionAllowed) {
                     P_ChangeSwitchTexture(line, true);
@@ -831,7 +831,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         #if PSYDOOM_MODS
             // Once: Do Script Action (Player only)
             case 320: {
-                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
 
                 if (ScriptingEngine::gbCurActionAllowed) {
                     P_ChangeSwitchTexture(line, false);

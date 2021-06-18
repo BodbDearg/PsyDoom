@@ -897,7 +897,7 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             case 301:   // Once: Do Script Action (Monsters only)
             case 302:   // Once: Do Script Action (Player + Monsters)
                 line.special = 0;
-                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
                 break;
         #endif
 
@@ -1075,7 +1075,7 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             case 310:   // Multi: Do Script Action (Player only)
             case 311:   // Multi: Do Script Action (Monsters only)
             case 312:   // Multi: Do Script Action (Player + Monsters)
-                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
                 break;
         #endif
 
@@ -1150,7 +1150,7 @@ void P_ShootSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             case 350:   // Multi: Do Script Action (Player only)
             case 351:   // Multi: Do Script Action (Monsters only)
             case 352:   // Multi: Do Script Action (Player + Monsters)
-                ScriptingEngine::doAction(line.tag, &line, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
                 break;
         #endif
     }
@@ -1208,6 +1208,13 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             player.secretcount += 1;
             sector.special = 0;         // Consume the special so it's only counted once!
         }   break;
+
+        // PsyDoom: scripted player in special sector action
+        #if PSYDOOM_MODS
+            case 301: {
+                ScriptingEngine::doAction(sector.tag, nullptr, &sector, player.mo);
+            }   break;
+        #endif
 
         default:
             I_Error("P_PlayerInSpecialSector: unknown special %i", sector.special);
@@ -1486,6 +1493,15 @@ void P_SpawnSpecials() noexcept {
             case 201:   P_SpawnGlowingLight(sector, glowto255);         break;  // Glow to bright
             case 202:   P_SpawnRapidStrobeFlash(sector);                break;  // Rapid strobe flash (PSX addition)
             case 204:   P_SpawnStrobeFlash(sector, TURBODARK, false);   break;  // Strobe flash
+
+            // PsyDoom: scripted sector special spawn
+            #if PSYDOOM_MODS
+                case 300: {
+                    sector.special = 0;
+                    ScriptingEngine::doAction(sector.tag, nullptr, &sector, nullptr);
+                }   break;
+            #endif
+
             default:    break;
         }
     }
@@ -1516,6 +1532,14 @@ void P_SpawnSpecials() noexcept {
                     }
                 #endif
             }   break;
+
+            // PsyDoom: scripted spawn line special
+            #if PSYDOOM_MODS
+                case 380: {
+                    line.special = 0;
+                    ScriptingEngine::doAction(line.tag, &line, line.frontsector, nullptr);
+                } break;
+            #endif
 
             default:
                 break;
