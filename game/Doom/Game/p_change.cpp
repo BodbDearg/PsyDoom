@@ -63,7 +63,7 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
 
     // Turn bodies into gibs
     if (mobj.health <= 0) {
-        P_SetMObjState(mobj, S_GIBS);
+        P_SetMobjState(mobj, S_GIBS);
         S_StartSound(&mobj, sfx_slop);
 
         mobj.height = 0;    // This prevents the height clip test from failing again and triggering more crushing
@@ -93,7 +93,7 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
 
     // If the sector crushes and it's every 4th tic then do some damage to the thing
     if (gbCrushChange && ((gGameTic & 3) == 0)) {
-        P_DamageMObj(mobj, nullptr, nullptr, 10);
+        P_DamageMobj(mobj, nullptr, nullptr, 10);
 
         // Spawn some blood and randomly send it off in different directions
         mobj_t& blood = *P_SpawnMobj(mobj.x, mobj.y, mobj.height / 2 + mobj.z, MT_BLOOD);

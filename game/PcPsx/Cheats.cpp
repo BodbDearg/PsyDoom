@@ -169,8 +169,8 @@ static void doWeaponsKeysAndArmorCheat() noexcept {
     // Run through the list of keys that are sitting around and give to the player...
     player_t& player = gPlayers[gCurPlayerIndex];
 
-    for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
-        switch (pMObj->type) {
+    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
+        switch (pMobj->type) {
             case MT_MISC4: player.cards[it_bluecard]    = true; break;
             case MT_MISC5: player.cards[it_redcard]     = true; break;
             case MT_MISC6: player.cards[it_yellowcard]  = true; break;

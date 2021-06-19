@@ -1038,7 +1038,7 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
 #endif
 };
 
-const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
+const mobjinfo_t gBaseMobjInfo[BASE_NUM_MOBJ_TYPES] = {
     // MT_PLAYER
     {
         -1,                         // doomednum
@@ -4915,6 +4915,6 @@ const mobjinfo_t gBaseMObjInfo[BASE_NUM_MOBJ_TYPES] = {
 #if PSYDOOM_MODS
     state_t*        gStates;
     int32_t         gNumStates;
-    mobjinfo_t*     gMObjInfo;
-    int32_t         gNumMObjInfo;
+    mobjinfo_t*     gMobjInfo;
+    int32_t         gNumMobjInfo;
 #endif

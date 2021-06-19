@@ -110,21 +110,21 @@ void P_RespawnSpecials() noexcept {
 
     // Try to find the type enum for the thing to be spawned
     #if PSYDOOM_MODS
-        const int32_t numMObjTypes = gNumMObjInfo;
+        const int32_t numMobjTypes = gNumMobjInfo;
     #else
-        const int32_t numMObjTypes = BASE_NUM_MOBJ_TYPES;
+        const int32_t numMobjTypes = BASE_NUM_MOBJ_TYPES;
     #endif
 
     int32_t mobjTypeIdx = 0;
 
-    for (; mobjTypeIdx < numMObjTypes; mobjTypeIdx++) {
-        if (mapthing.type == gMObjInfo[mobjTypeIdx].doomednum)  // Is this the mobj definition we want?
+    for (; mobjTypeIdx < numMobjTypes; mobjTypeIdx++) {
+        if (mapthing.type == gMobjInfo[mobjTypeIdx].doomednum)  // Is this the mobj definition we want?
             break;
     }
 
     // Decide on the z position for the thing being spawned, either spawn it on the floor or ceiling
     const mobjtype_t mobjType = (mobjtype_t) mobjTypeIdx;
-    const mobjinfo_t& mobjinfo = gMObjInfo[mobjType];
+    const mobjinfo_t& mobjinfo = gMobjInfo[mobjType];
     const fixed_t z = (mobjinfo.flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
 
     // Spawn the item itself
@@ -143,7 +143,7 @@ void P_RespawnSpecials() noexcept {
 // Sets the state for the given map object.
 // Returns 'true' if the map object is still present and hasn't been removed - it's removed if the state switch is to 'S_NULL'.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept {
+bool P_SetMobjState(mobj_t& mobj, const statenum_t stateNum) noexcept {
     // Remove the map object if the state is null
     if (stateNum == S_NULL) {
         mobj.state = nullptr;
@@ -178,7 +178,7 @@ void P_ExplodeMissile(mobj_t& mobj) noexcept {
     mobj.momz = 0;
 
     mobjinfo_t& mobjInfo = *mobj.info;
-    P_SetMObjState(mobj, mobjInfo.deathstate);
+    P_SetMobjState(mobj, mobjInfo.deathstate);
 
     // Some random state tic variation and make no longer a missile
     mobj.tics = std::max(mobj.tics - (P_Random() & 1), 1);
@@ -208,7 +208,7 @@ mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mob
     D_memset(&mobj, std::byte(0), sizeof(mobj_t));
 
     // Fill in basic fields
-    mobjinfo_t& info = gMObjInfo[type];
+    mobjinfo_t& info = gMobjInfo[type];
     mobj.type = type;
     mobj.info = &info;
     mobj.x = x;
@@ -244,10 +244,10 @@ mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mob
     }
 
     // Add into the linked list of things
-    gMObjHead.prev->next = &mobj;
-    mobj.next = &gMObjHead;
-    mobj.prev = gMObjHead.prev;
-    gMObjHead.prev = &mobj;
+    gMobjHead.prev->next = &mobj;
+    mobj.next = &gMobjHead;
+    mobj.prev = gMobjHead.prev;
+    gMobjHead.prev = &mobj;
     return &mobj;
 }
 
@@ -384,27 +384,27 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     // Try to figure out the thing type using the DoomEd num.
     // If that fails then issue a fatal error.
     #if PSYDOOM_MODS
-        const int32_t numMObjTypes = gNumMObjInfo;
+        const int32_t numMobjTypes = gNumMobjInfo;
     #else
-        const int32_t numMObjTypes = BASE_NUM_MOBJ_TYPES;
+        const int32_t numMobjTypes = BASE_NUM_MOBJ_TYPES;
     #endif
 
-    mobjtype_t thingType = (mobjtype_t) numMObjTypes;
+    mobjtype_t thingType = (mobjtype_t) numMobjTypes;
 
-    for (int32_t thingTypeIdx = 0; thingTypeIdx < numMObjTypes; ++thingTypeIdx) {
-        if (gMObjInfo[thingTypeIdx].doomednum == mapthing.type) {
+    for (int32_t thingTypeIdx = 0; thingTypeIdx < numMobjTypes; ++thingTypeIdx) {
+        if (gMobjInfo[thingTypeIdx].doomednum == mapthing.type) {
             thingType = (mobjtype_t) thingTypeIdx;
             break;
         }
     }
 
-    if (thingType == numMObjTypes) {
+    if (thingType == numMobjTypes) {
         I_Error("P_SpawnMapThing: Unknown doomednum %d at (%d, %d)", (int) mapthing.type, (int) mapthing.x, (int) mapthing.y);
         return;
     }
 
     // Do not spawn monsters and keycards in deathmatch
-    const mobjinfo_t& info = gMObjInfo[thingType];
+    const mobjinfo_t& info = gMobjInfo[thingType];
 
     if ((gNetGame == gt_deathmatch) && info.flags & (MF_NOTDMATCH|MF_COUNTKILL))
         return;
@@ -480,7 +480,7 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
 
     // Don't do sparks if punching the wall
     if (gAttackRange == MELEERANGE) {
-        P_SetMObjState(mobj, S_PUFF3);
+        P_SetMobjState(mobj, S_PUFF3);
     }
 }
 
@@ -502,9 +502,9 @@ void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32
 
     // Adjust the type of blood, based on the damage amount
     if ((damage >= 9) && (damage <= 12)) {
-        P_SetMObjState(mobj, S_BLOOD2);
+        P_SetMobjState(mobj, S_BLOOD2);
     } else if (damage < 9) {
-        P_SetMObjState(mobj, S_BLOOD3);
+        P_SetMobjState(mobj, S_BLOOD3);
     }
 }
 

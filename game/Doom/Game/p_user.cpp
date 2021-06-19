@@ -504,7 +504,7 @@ static void P_BuildMove(player_t& player) noexcept {
         );
 
         if (bIsInRunState) {
-            P_SetMObjState(mobj, S_PLAY);
+            P_SetMobjState(mobj, S_PLAY);
         }
     }
 }
@@ -663,7 +663,7 @@ static void P_MovePlayer(player_t& player) noexcept {
     const bool bIsMoving = ((player.forwardmove != 0) || (player.sidemove != 0));
 
     if (bIsMoving && (mobj.state == &gStates[S_PLAY])) {
-        P_SetMObjState(mobj, S_PLAY_RUN1);
+        P_SetMobjState(mobj, S_PLAY_RUN1);
     }
 }
 
@@ -905,7 +905,7 @@ void P_PlayerThink(player_t& player) noexcept {
 
             // Go into the attack state and update the status bar for this player if fire is pressed for a long time on certain weapons
             if (bAttack) {
-                P_SetMObjState(playerMobj, S_PLAY_ATK1);
+                P_SetMobjState(playerMobj, S_PLAY_ATK1);
                 player.attackdown++;
 
                 // Should we do the grimmace face after fire has been pressed a long time?

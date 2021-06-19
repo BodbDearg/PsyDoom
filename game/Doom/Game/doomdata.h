@@ -25,21 +25,21 @@
 #endif
 
 // Linedef flags
-static constexpr int32_t ML_BLOCKING            = 0x1;          // The line blocks all movement
-static constexpr int32_t ML_BLOCKMONSTERS       = 0x2;          // The line blocks monsters
-static constexpr int32_t ML_TWOSIDED            = 0x4;          // Unset for single sided lines
-static constexpr int32_t ML_DONTPEGTOP          = 0x8;          // If unset then upper texture is anchored to the ceiling rather than bottom edge
-static constexpr int32_t ML_DONTPEGBOTTOM       = 0x10;         // If unset then lower texture is anchored to the floor rather than top edge
-static constexpr int32_t ML_SECRET              = 0x20;         // Don't show as two sided in the automap, because it's a secret
-static constexpr int32_t ML_SOUNDBLOCK          = 0x40;         // Stops sound propagation
-static constexpr int32_t ML_DONTDRAW            = 0x80;         // Hide on the automap
-static constexpr int32_t ML_MAPPED              = 0x100;        // Set when the line is to be shown on the automap
-static constexpr int32_t ML_MIDMASKED           = 0x200;        // PSX DOOM: Middle texture has translucent or alpha blended pixels
-static constexpr int32_t ML_MIDTRANSLUCENT      = 0x400;        // PSX DOOM: Middle texture drawn with alpha blending
-static constexpr int32_t ML_BLOCKPRJECTILE      = 0x800;        // PSX DOOM: Line stops projectiles
-static constexpr int32_t ML_MIDHEIGHT_128       = 0x1000;       // PSX FINAL DOOM: forces the middle part of a wall to be a fixed 128 units in height. Used for fences and such in Final Doom, so they don't repeat vertically.
-static constexpr int32_t ML_VOID                = 0x4000;       // PsyDoom specific: flags a line as 'see through' in parts for occlusion culling (on the basis that it has see-through upper or lower voids) and prohibits sky walls from being rendered for the line
-static constexpr int32_t ML_ADD_SKY_WALL_HINT   = 0x8000;       // PsyDoom specific: hints that a 'sky wall' should be added for 2 sided lines with a sky ceiling or floors. Note: if 'ML_VOID' is specified then this is ignored.
+static constexpr uint32_t ML_BLOCKING            = 0x1;         // The line blocks all movement
+static constexpr uint32_t ML_BLOCKMONSTERS       = 0x2;         // The line blocks monsters
+static constexpr uint32_t ML_TWOSIDED            = 0x4;         // Unset for single sided lines
+static constexpr uint32_t ML_DONTPEGTOP          = 0x8;         // If unset then upper texture is anchored to the ceiling rather than bottom edge
+static constexpr uint32_t ML_DONTPEGBOTTOM       = 0x10;        // If unset then lower texture is anchored to the floor rather than top edge
+static constexpr uint32_t ML_SECRET              = 0x20;        // Don't show as two sided in the automap, because it's a secret
+static constexpr uint32_t ML_SOUNDBLOCK          = 0x40;        // Stops sound propagation
+static constexpr uint32_t ML_DONTDRAW            = 0x80;        // Hide on the automap
+static constexpr uint32_t ML_MAPPED              = 0x100;       // Set when the line is to be shown on the automap
+static constexpr uint32_t ML_MIDMASKED           = 0x200;       // PSX DOOM: Middle texture has translucent or alpha blended pixels
+static constexpr uint32_t ML_MIDTRANSLUCENT      = 0x400;       // PSX DOOM: Middle texture drawn with alpha blending
+static constexpr uint32_t ML_BLOCKPRJECTILE      = 0x800;       // PSX DOOM: Line stops projectiles
+static constexpr uint32_t ML_MIDHEIGHT_128       = 0x1000;      // PSX FINAL DOOM: forces the middle part of a wall to be a fixed 128 units in height. Used for fences and such in Final Doom, so they don't repeat vertically.
+static constexpr uint32_t ML_VOID                = 0x4000;      // PsyDoom specific: flags a line as 'see through' in parts for occlusion culling (on the basis that it has see-through upper or lower voids) and prohibits sky walls from being rendered for the line
+static constexpr uint32_t ML_ADD_SKY_WALL_HINT   = 0x8000;      // PsyDoom specific: hints that a 'sky wall' should be added for 2 sided lines with a sky ceiling or floors. Note: if 'ML_VOID' is specified then this is ignored.
 
 // Sector flags
 static constexpr uint32_t SF_NO_REVERB = 0x1;           // Disables reverb on a sector

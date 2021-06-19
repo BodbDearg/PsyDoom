@@ -63,7 +63,7 @@ bool gbIsLevelBeingRestarted;
 
 // An empty map object initially assigned to players during network game setup, for net consistency checks.
 // This is all zeroed out initially.
-static mobj_t gEmptyMObj;
+static mobj_t gEmptyMobj;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Displays a loading message then loads the current map
@@ -339,9 +339,9 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
 
     // Clear the empty map object and assign to both players initially.
     // This is used for network consistency checks:
-    D_memset(&gEmptyMObj, std::byte(0), sizeof(mobj_t));
-    gPlayers[0].mo = &gEmptyMObj;
-    gPlayers[1].mo = &gEmptyMObj;
+    D_memset(&gEmptyMobj, std::byte(0), sizeof(mobj_t));
+    gPlayers[0].mo = &gEmptyMobj;
+    gPlayers[1].mo = &gEmptyMobj;
 
     // Set some player status flags and controls stuff
     gbPlayerInGame[0] = true;
@@ -368,18 +368,18 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
         gStates[S_SARG_ATK1].tics = 2;
         gStates[S_SARG_ATK2].tics = 2;
         gStates[S_SARG_ATK3].tics = 2;
-        gMObjInfo[MT_SERGEANT].speed = 15;
-        gMObjInfo[MT_BRUISERSHOT].speed = 40 * FRACUNIT;
-        gMObjInfo[MT_HEADSHOT].speed = 40 * FRACUNIT;
-        gMObjInfo[MT_TROOPSHOT].speed = 40 * FRACUNIT;
+        gMobjInfo[MT_SERGEANT].speed = 15;
+        gMobjInfo[MT_BRUISERSHOT].speed = 40 * FRACUNIT;
+        gMobjInfo[MT_HEADSHOT].speed = 40 * FRACUNIT;
+        gMobjInfo[MT_TROOPSHOT].speed = 40 * FRACUNIT;
     } else {
         gStates[S_SARG_ATK1].tics = 4;
         gStates[S_SARG_ATK2].tics = 4;
         gStates[S_SARG_ATK3].tics = 4;
-        gMObjInfo[MT_SERGEANT].speed = 10;
-        gMObjInfo[MT_BRUISERSHOT].speed = 30 * FRACUNIT;
-        gMObjInfo[MT_HEADSHOT].speed = 20 * FRACUNIT;
-        gMObjInfo[MT_TROOPSHOT].speed = 20 * FRACUNIT;
+        gMobjInfo[MT_SERGEANT].speed = 10;
+        gMobjInfo[MT_BRUISERSHOT].speed = 30 * FRACUNIT;
+        gMobjInfo[MT_HEADSHOT].speed = 20 * FRACUNIT;
+        gMobjInfo[MT_TROOPSHOT].speed = 20 * FRACUNIT;
     }
 
     // PsyDoom: apply the Super Shotgun delay tweak if enabled, or otherwise undo it

@@ -90,7 +90,7 @@ struct line_t {
     vertex_t*       vertex2;        // 2nd vertex of the line
     fixed_t         dx;             // Precomputed 'v2 - v1': x direction
     fixed_t         dy;             // Precomputed 'v2 - v1': y direction
-    int32_t         flags;          // ML_XXX line flags
+    uint32_t        flags;          // ML_XXX line flags
     int32_t         special;        // What special action (switch, trigger etc.) the line does
     int32_t         tag;            // Tag for the action: what to affect in some cases, in terms of sectors
     int32_t         sidenum[2];     // If sidenum[1] is '-1' then the line is one sided

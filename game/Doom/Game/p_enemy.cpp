@@ -83,7 +83,7 @@ constexpr static dirtype_t gDiagonalDirs[4] = {
 static void P_GatherBrainTargets() noexcept {
     gNumBrainTargets = 0;
 
-    for (mobj_t* pMobj = gMObjHead.next; pMobj != &gMObjHead; pMobj = pMobj->next) {
+    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
         if (gNumBrainTargets >= MAX_BRAIN_TARGETS)
             break;
 
@@ -474,7 +474,7 @@ void A_Look(mobj_t& actor) noexcept {
     }
 
     // Go into the see/chase state
-    P_SetMObjState(actor, actor.info->seestate);
+    P_SetMobjState(actor, actor.info->seestate);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -512,7 +512,7 @@ void A_Chase(mobj_t& actor) noexcept {
     if ((!pTarget) || ((pTarget->flags & MF_SHOOTABLE) == 0)) {
         // If no target can be found then go into the spawn/idle state
         if (!P_LookForPlayers(actor, true)) {
-            P_SetMObjState(actor, actor.info->spawnstate);
+            P_SetMobjState(actor, actor.info->spawnstate);
         }
 
         // Can't chase if no target: or if we have a new one we need to wait a little
@@ -534,7 +534,7 @@ void A_Chase(mobj_t& actor) noexcept {
             S_StartSound(&actor, actorInfo.attacksound);
         }
 
-        P_SetMObjState(actor, actorInfo.meleestate);
+        P_SetMobjState(actor, actorInfo.meleestate);
         return;
     }
 
@@ -544,7 +544,7 @@ void A_Chase(mobj_t& actor) noexcept {
 
     if ((actorInfo.missilestate != S_NULL) && bMissileAttackAllowed) {
         if (P_CheckMissileRange(actor)) {
-            P_SetMObjState(actor, actorInfo.missilestate);
+            P_SetMobjState(actor, actorInfo.missilestate);
 
             // Don't attack again for a bit unless on nightmare
             if (gGameSkill != sk_nightmare) {
@@ -660,7 +660,7 @@ void A_CPosRefire(mobj_t& actor) noexcept {
     );
 
     if (bTargetLost) {
-        P_SetMObjState(actor, actor.info->seestate);
+        P_SetMobjState(actor, actor.info->seestate);
     }
 }
 
@@ -703,7 +703,7 @@ void A_SpidRefire(mobj_t& actor) noexcept {
     );
 
     if (bTargetLost) {
-        P_SetMObjState(actor, actor.info->seestate);
+        P_SetMobjState(actor, actor.info->seestate);
     }
 }
 
@@ -731,7 +731,7 @@ void A_TroopAttack(mobj_t& actor) noexcept {
     if (P_CheckMeleeRange(actor)) {
         S_StartSound(&actor, sfx_claw);
         const int32_t damage = ((P_Random() & 7) + 1) * 3;      // 3-24 damage
-        P_DamageMObj(*actor.target, &actor, &actor, damage);
+        P_DamageMobj(*actor.target, &actor, &actor, damage);
     } else {
         P_SpawnMissile(actor, *actor.target, MT_TROOPSHOT);
     }
@@ -761,7 +761,7 @@ void A_HeadAttack(mobj_t& actor) noexcept {
     // Do a melee attack if possible, otherwise spawn a fireball
     if (P_CheckMeleeRange(actor)) {
         const int32_t damage = ((P_Random() & 7) + 1) * 8;      // 8-64 damage
-        P_DamageMObj(*actor.target, &actor, &actor, damage);
+        P_DamageMobj(*actor.target, &actor, &actor, damage);
     } else {
         P_SpawnMissile(actor, *actor.target, MT_HEADSHOT);
     }
@@ -790,7 +790,7 @@ void A_BruisAttack(mobj_t& actor) noexcept {
     if (P_CheckMeleeRange(actor)) {
         S_StartSound(&actor, sfx_claw);
         const int32_t damage = ((P_Random() & 7) + 1) * 11;     // 11-88 damage
-        P_DamageMObj(target, &actor, &actor, damage);
+        P_DamageMobj(target, &actor, &actor, damage);
     } else {
         P_SpawnMissile(actor, target, MT_BRUISERSHOT);
     }
@@ -904,7 +904,7 @@ void A_SkelFist(mobj_t& actor) noexcept {
     if (P_CheckMeleeRange(actor)) {
         S_StartSound(&actor, sfx_skepch);
         const int32_t damage = (P_Random() % 10 + 1) * 6;       // 6-60 damage
-        P_DamageMObj(*actor.target, &actor, &actor, damage);
+        P_DamageMobj(*actor.target, &actor, &actor, damage);
     }
 }
 
@@ -1079,7 +1079,7 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     if (skullLimit > 0) {
         int32_t numSkulls = 0;
 
-        for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
+        for (mobj_t* pmobj = gMobjHead.next; pmobj != &gMobjHead; pmobj = pmobj->next) {
             if (pmobj->type == MT_SKULL) {
                 numSkulls++;
 
@@ -1090,7 +1090,7 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     }
 
     // Figure out where to spawn the skull
-    const fixed_t spawnDist = gMObjInfo[MT_SKULL].radius + actor.info->radius + 4 * FRACUNIT;
+    const fixed_t spawnDist = gMobjInfo[MT_SKULL].radius + actor.info->radius + 4 * FRACUNIT;
 
     const fixed_t spawnX = actor.x + FixedMul(spawnDist, gFineCosine[angle >> ANGLETOFINESHIFT]);
     const fixed_t spawnY = actor.y + FixedMul(spawnDist, gFineSine[angle >> ANGLETOFINESHIFT]);
@@ -1101,7 +1101,7 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     const bool bSpawnedInWall = (!P_TryMove(skull, skull.x, skull.y));
 
     if (bSpawnedInWall) {
-        P_DamageMObj(skull, &actor, &actor, 10000);
+        P_DamageMobj(skull, &actor, &actor, 10000);
         return;
     }
 
@@ -1113,7 +1113,7 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
         const bool bSpawnedPastWall = (!P_CheckSight(actor, skull));
 
         if (bSpawnedPastWall) {
-            P_DamageMObj(skull, &actor, &actor, 10000);
+            P_DamageMobj(skull, &actor, &actor, 10000);
             return;
         }
     }
@@ -1251,7 +1251,7 @@ void A_BossDeath(mobj_t& actor) noexcept {
 
     // If all map objects of the given actor type are dead then we can trigger the special for the boss death.
     // Otherwise if we find one that is alive, then we can't:
-    for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
+    for (mobj_t* pmobj = gMobjHead.next; pmobj != &gMobjHead; pmobj = pmobj->next) {
         if ((pmobj != &actor) && (pmobj->type == actorType) && (pmobj->health > 0))
             return;
     }
@@ -1345,7 +1345,7 @@ void L_MissileHit(mobj_t& missile) noexcept {
     if (pHitThing) {
         const int32_t damage = missile.info->damage * ((P_Random() & 7) + 1);   // 1-8x damage
         mobj_t* const pFirer = missile.target;
-        P_DamageMObj(*pHitThing, &missile, pFirer, damage);
+        P_DamageMobj(*pHitThing, &missile, pFirer, damage);
     }
 
     P_ExplodeMissile(missile);
@@ -1360,7 +1360,7 @@ void L_SkullBash(mobj_t& actor) noexcept {
 
     if (pHitThing) {
         const int32_t damage = actor.info->damage * ((P_Random() & 7) + 1);     // Info damage x1-x8
-        P_DamageMObj(*pHitThing, &actor, &actor, damage);
+        P_DamageMobj(*pHitThing, &actor, &actor, damage);
     }
 
     // Kill all velocity of the lost soul, stop it flying and put back into the regular active state
@@ -1368,7 +1368,7 @@ void L_SkullBash(mobj_t& actor) noexcept {
     actor.momy = 0;
     actor.momx = 0;
     actor.flags &= ~MF_SKULLFLY;
-    P_SetMObjState(actor, actor.info->spawnstate);
+    P_SetMobjState(actor, actor.info->spawnstate);
 }
 
 #if PSYDOOM_MODS
@@ -1390,7 +1390,7 @@ static bool PIT_VileCheck(mobj_t& thing) noexcept {
         return true;
 
     // If the thing is too far away then don't raise
-    const fixed_t maxDist = thing.info->radius + gMObjInfo[MT_VILE].radius;
+    const fixed_t maxDist = thing.info->radius + gMobjInfo[MT_VILE].radius;
     const fixed_t xDist = std::abs(thing.x - gVileTryX);
     const fixed_t yDist = std::abs(thing.y - gVileTryY);
 
@@ -1450,12 +1450,12 @@ void A_VileChase(mobj_t& actor) noexcept {
                 }
 
                 // Arch-vile goes into the healing state and plays the slop sound for resurrection (at the corpse location)
-                P_SetMObjState(actor, S_VILE_HEAL1);
+                P_SetMobjState(actor, S_VILE_HEAL1);
                 S_StartSound(&raiseMobj, sfx_slop);
 
                 // Put the thing being raised into the raising state, make taller again, restore health, flags and clear target
                 mobjinfo_t& raiseObjInfo = *raiseMobj.info;
-                P_SetMObjState(raiseMobj, raiseObjInfo.raisestate);
+                P_SetMobjState(raiseMobj, raiseObjInfo.raisestate);
 
                 raiseMobj.height = d_lshift<2>(raiseMobj.height);
                 raiseMobj.flags = raiseObjInfo.flags;
@@ -1522,7 +1522,7 @@ void A_VileAttack(mobj_t& actor) noexcept {
 
     // Play the attack sound, damage the target and make the target hop upwards
     S_StartSound(&actor, sfx_barexp);
-    P_DamageMObj(target, &actor, &actor, 20);
+    P_DamageMobj(target, &actor, &actor, 20);
     target.momz = (1000 * FRACUNIT) / target.info->mass;
     
     // Don't do splash damage unless there is fire
@@ -1623,7 +1623,7 @@ void A_BrainScream(mobj_t& actor) noexcept {
         // Spawn the rocket, give it upward momentum and put it into the special boss explosion state
         mobj_t& explosion = *P_SpawnMobj(x, y, z, MT_ROCKET);
         explosion.momz = P_Random() * 512;
-        P_SetMObjState(explosion, S_BRAINEXPLODE1);
+        P_SetMobjState(explosion, S_BRAINEXPLODE1);
 
         // Randomize duration
         explosion.tics -= P_Random() & 7;
@@ -1647,7 +1647,7 @@ void A_BrainExplode(mobj_t& actor) noexcept {
     // Spawn the rocket, give it upward momentum and put it into the special boss explosion state
     mobj_t& explosion = *P_SpawnMobj(x, y, z, MT_ROCKET);
     explosion.momz = P_Random() * 512;
-    P_SetMObjState(explosion, S_BRAINEXPLODE1);
+    P_SetMobjState(explosion, S_BRAINEXPLODE1);
 
     // Randomize duration
     explosion.tics -= P_Random() & 7;
@@ -1753,7 +1753,7 @@ void A_SpawnFly(mobj_t& actor) noexcept {
     mobj_t& spawned = *P_SpawnMobj(target.x, target.y, target.z, spawnType);
 
     if (P_LookForPlayers(spawned, true)) {
-        P_SetMObjState(spawned, spawned.info->seestate);
+        P_SetMobjState(spawned, spawned.info->seestate);
     }
 
     // Telefrag anything where the enemy spawned and remove the cube.

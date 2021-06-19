@@ -299,7 +299,7 @@ void P_FireWeapon(player_t& player) noexcept {
         return;
 
     // Player is now in the attacking state
-    P_SetMObjState(*player.mo, S_PLAY_ATK1);
+    P_SetMobjState(*player.mo, S_PLAY_ATK1);
 
     // Switch the player sprite into the attacking state and ensure the weapon sprite offset is correct
     pspdef_t& weaponSprite = player.psprites[ps_weapon];
@@ -638,7 +638,7 @@ void A_FireShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcep
     // Play the double barrel shotgun sound and set the player thing into the 'attack 2' state
     mobj_t& playerMobj = *player.mo;
     S_StartSound(&playerMobj, sfx_dshtgn);
-    P_SetMObjState(playerMobj, S_PLAY_ATK2);
+    P_SetMobjState(playerMobj, S_PLAY_ATK2);
 
     // Decrement ammo amount and do the muzzle flash
     const weaponinfo_t& weaponInfo = gWeaponInfo[player.readyweapon];
@@ -736,7 +736,7 @@ void A_BFGSpray(mobj_t& mobj) noexcept {
             damageAmt += (P_Random() & 7) + 1;
         }
 
-        P_DamageMObj(*pLineTarget, &target, &target, damageAmt);
+        P_DamageMobj(*pLineTarget, &target, &target, damageAmt);
     }
 }
 

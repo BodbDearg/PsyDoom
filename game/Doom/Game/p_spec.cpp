@@ -1174,7 +1174,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
                 gStatusBar.specialFace = f_mowdown;
 
                 if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
-                    P_DamageMObj(*player.mo, nullptr, nullptr, 10);
+                    P_DamageMobj(*player.mo, nullptr, nullptr, 10);
                 }
             }
         }   break;
@@ -1185,7 +1185,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
                 gStatusBar.specialFace = f_mowdown;
 
                 if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
-                    P_DamageMObj(*player.mo, nullptr, nullptr, 5);
+                    P_DamageMobj(*player.mo, nullptr, nullptr, 5);
                 }
             }
         }   break;
@@ -1198,7 +1198,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
                 gStatusBar.specialFace = f_mowdown;
 
                 if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
-                    P_DamageMObj(*player.mo, nullptr, nullptr, 20);
+                    P_DamageMobj(*player.mo, nullptr, nullptr, 20);
                 }
             }
         }   break;
@@ -1577,7 +1577,7 @@ void P_SpawnSpecials() noexcept {
     gMapBlueKeyType = it_bluecard;
     gMapYellowKeyType = it_yellowcard;
 
-    for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
+    for (mobj_t* pmobj = gMobjHead.next; pmobj != &gMobjHead; pmobj = pmobj->next) {
         switch (pmobj->type) {
             case MT_MISC7:  gMapYellowKeyType   = it_yellowskull;   break;
             case MT_MISC8:  gMapRedKeyType      = it_redskull;      break;

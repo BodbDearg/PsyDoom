@@ -8,6 +8,7 @@
 #include "g_game.h"
 #include "info.h"
 #include "p_inter.h"
+#include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
@@ -28,7 +29,7 @@ void P_Telefrag(
         mobj_t& mobj, const fixed_t x, const fixed_t y
     #endif
 ) noexcept {
-    for (mobj_t* pTarget = gMObjHead.next; pTarget != &gMObjHead; pTarget = pTarget->next) {
+    for (mobj_t* pTarget = gMobjHead.next; pTarget != &gMobjHead; pTarget = pTarget->next) {
         // Can't telefrag the object if it's not shootable
         if ((pTarget->flags & MF_SHOOTABLE) == 0)
             continue;
@@ -45,7 +46,7 @@ void P_Telefrag(
         const fixed_t minDist = pTarget->radius + mobj.radius + 4 * FRACUNIT;
 
         if ((dx <= minDist) && (dy <= minDist)) {
-            P_DamageMObj(*pTarget, &mobj, &mobj, 10000);    // Damage by a very large amount to kill
+            P_DamageMobj(*pTarget, &mobj, &mobj, 10000);    // Damage by a very large amount to kill
             pTarget->flags &= ~(MF_SOLID | MF_SHOOTABLE);   // Now dead (hopefully?!)
         }
     }
@@ -76,7 +77,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             continue;
 
         // Try to find a teleport destination that is in the target sector
-        for (mobj_t* pDstMarker = gMObjHead.next; pDstMarker != &gMObjHead; pDstMarker = pDstMarker->next) {
+        for (mobj_t* pDstMarker = gMobjHead.next; pDstMarker != &gMobjHead; pDstMarker = pDstMarker->next) {
             // Ignore if the marker is not a teleport marker or not in this sector
             if (pDstMarker->type != MT_TELEPORTMAN)
                 continue;
@@ -86,7 +87,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             if (destSectorIdx != sectorIdx)
                 continue;
 
-            // Reset the number of lines to check for being crossed (to trigger specials) and remember the pre-teleport pos for fx
+            // Reset the number of lines to check for being crossed (to trigger specials) and remember the pre-teleport position for FX
             #if PSYDOOM_MODS
                 gpCrossCheckLines.clear();
                 gpCrossCheckLines.reserve(32);
@@ -154,3 +155,102 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
 
     return false;
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A teleport function meant to be invoked via scripting on non-player objects or for silent player teleporting.
+// Allows for greater customization of the teleporting, 
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_TeleportTo(
+    mobj_t& mobj,
+    const fixed_t dstX,
+    const fixed_t dstY,
+    const angle_t dstAngle,
+    const bool bTelefrag,
+    const bool bPreserveMomentum,
+    const mobjtype_t fogMobjType,
+    const sfxenum_t fogSoundId
+) noexcept {
+    // Reset the number of lines to check for being crossed (to trigger specials) and remember the pre-teleport position for FX
+    gpCrossCheckLines.clear();
+    gpCrossCheckLines.reserve(32);
+
+    const fixed_t oldX = mobj.x;
+    const fixed_t oldY = mobj.y;
+    const fixed_t oldZ = mobj.z;
+
+    // Mark the object as currently teleporting and telefrag if specified
+    mobj.flags |= MF_TELEPORT;
+
+    if (bTelefrag) {
+        P_Telefrag(mobj, dstX, dstY);
+    }
+
+    // See if the teleport move can be made and abort if not
+    const bool bCanMove = P_TryMove(mobj, dstX, dstY);
+    mobj.flags &= ~MF_TELEPORT;
+
+    if (!bCanMove)
+        return false;
+
+    // Ground the thing being teleported
+    mobj.z = mobj.floorz;
+
+    // Spawn teleport fog at both the source and destination, if a valid fog type is defined.
+    // Also play the teleport fog sound if defined.
+    const bool bFogTypeValid = ((fogMobjType != 0) && ((uint32_t) fogMobjType < (uint32_t) gNumMobjInfo));
+
+    if (bFogTypeValid) {
+        mobj_t& srcFog = *P_SpawnMobj(oldX, oldY, oldZ, fogMobjType);
+
+        if (fogSoundId != sfx_None) {
+            S_StartSound(&srcFog, fogSoundId);
+        }
+
+        mobj_t& dstFog = *P_SpawnMobj(dstX, dstY, mobj.z, MT_TFOG);
+
+        if (fogSoundId != sfx_None) {
+            S_StartSound(&dstFog, fogSoundId);
+        }
+    } else {
+        if (fogSoundId != sfx_None) {
+            degenmobj_t oldMobjPos = {};
+            oldMobjPos.x = oldX;
+            oldMobjPos.y = oldY;
+            oldMobjPos.z = oldZ;
+            oldMobjPos.subsector = R_PointInSubsector(oldX, oldY);
+
+            S_StartSound((mobj_t*) &oldMobjPos, fogSoundId);
+            S_StartSound(&mobj, fogSoundId);
+        }
+    }
+
+    // Kill momentum (if specified) and set exit angle
+    if (!bPreserveMomentum) {
+        mobj.momx = 0;
+        mobj.momy = 0;
+        mobj.momz = 0;
+    }
+
+    mobj.angle = dstAngle;
+
+    // PsyDoom: if it's player adjust the current xy interpolation to account for the teleportation.
+    // This is done so we can do a smooth silent teleport to another location.
+    #if PSYDOOM_MODS
+        if (mobj.player == &gPlayers[gCurPlayerIndex]) {
+            if (oldZ != mobj.z) {
+                R_SnapViewZInterpolation();
+            }
+
+            const fixed_t dx = oldX - gOldViewX;
+            const fixed_t dy = oldY - gOldViewY;
+            gOldViewX = mobj.x - dx;
+            gOldViewY = mobj.y - dy;
+            gOldViewAngle = mobj.angle;
+        }
+    #endif
+
+    // Teleportation was a success!
+    return true;
+}
+#endif

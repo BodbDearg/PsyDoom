@@ -18,5 +18,5 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept;
     bool P_CanTouchSpecialThing(const mobj_t& special, const mobj_t& toucher) noexcept;
 #endif
 
-void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept;
-void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSource, const int32_t baseDamageAmt) noexcept;
+void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept;
+void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSource, const int32_t baseDamageAmt) noexcept;

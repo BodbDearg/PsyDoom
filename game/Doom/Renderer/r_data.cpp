@@ -282,6 +282,7 @@ static void R_InitSprites() noexcept {
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t R_TextureNumForName(const char* const name, const bool bMustExist) noexcept {
+    ASSERT(name);
     const WadLumpName searchLumpName = WadUtils::makeUppercaseLumpName(name);
     
     const texture_t* const pTextures = gpTextures;
@@ -307,6 +308,7 @@ int32_t R_TextureNumForName(const char* const name, const bool bMustExist) noexc
 // PsyDoom: this function has been re-written, see the 'Old' code folder for the original version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t R_FlatNumForName(const char* const name, const bool bMustExist) noexcept {
+    ASSERT(name);
     const WadLumpName searchLumpName = WadUtils::makeUppercaseLumpName(name);
 
     const texture_t* const pFlatTextures = gpFlatTextures;

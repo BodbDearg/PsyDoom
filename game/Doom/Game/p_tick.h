@@ -44,7 +44,7 @@ extern int32_t      gPlayerNum;
 extern int32_t      gMapNumToCheatWarpTo;
 extern int32_t      gVramViewerTexPage;
 extern thinker_t    gThinkerCap;
-extern mobj_t       gMObjHead;
+extern mobj_t       gMobjHead;
 extern int32_t      gCurCheatBtnSequenceIdx;
 extern int32_t      gTicConOnPause;
 

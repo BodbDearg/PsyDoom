@@ -10,7 +10,7 @@ extern int32_t  gItemRespawnQueueTail;
 
 void P_RemoveMobj(mobj_t& mobj) noexcept;
 void P_RespawnSpecials() noexcept;
-bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept;
+bool P_SetMobjState(mobj_t& mobj, const statenum_t stateNum) noexcept;
 void P_ExplodeMissile(mobj_t& mobj) noexcept;
 mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mobjtype_t type) noexcept;
 void P_SpawnPlayer(const mapthing_t& mapThing) noexcept;

@@ -336,7 +336,7 @@ void F2_Start() noexcept {
     #endif
 
     // Initialize the finale text
-    const mobjinfo_t& mobjInfo = gMObjInfo[gCastOrder[0].type];
+    const mobjinfo_t& mobjInfo = gMobjInfo[gCastOrder[0].type];
     const state_t& state = gStates[mobjInfo.seestate];
 
     gFinaleStage = F_STAGE_TEXT;
@@ -486,7 +486,7 @@ gameaction_t F2_Ticker() noexcept {
             S_StartSound(nullptr, sfx_shotgn);
 
             // Play enemy death sound if it has it
-            const mobjinfo_t& mobjinfo = gMObjInfo[gCastOrder[gCastNum].type];
+            const mobjinfo_t& mobjinfo = gMobjInfo[gCastOrder[gCastNum].type];
 
             if (mobjinfo.deathsound != 0) {
                 S_StartSound(nullptr, mobjinfo.deathsound);
@@ -515,7 +515,7 @@ gameaction_t F2_Ticker() noexcept {
 
                 // Initialize frame count, set state to the 'see' state and make a noise if there is a 'see' sound
                 const castinfo_t& castinfo = gCastOrder[gCastNum];
-                const mobjinfo_t& mobjinfo = gMObjInfo[castinfo.type];
+                const mobjinfo_t& mobjinfo = gMobjInfo[castinfo.type];
 
                 gCastFrames = 0;
                 gpCastState = &gStates[mobjinfo.seestate];
@@ -574,7 +574,7 @@ gameaction_t F2_Ticker() noexcept {
             gCastFrames++;
 
             const castinfo_t& castinfo = gCastOrder[gCastNum];
-            const mobjinfo_t& mobjinfo = gMObjInfo[castinfo.type];
+            const mobjinfo_t& mobjinfo = gMobjInfo[castinfo.type];
 
             // Every 12 frames make the enemy attack.
             // Alternate between melee and ranged attacks where possible.

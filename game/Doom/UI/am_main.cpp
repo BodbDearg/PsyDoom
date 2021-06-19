@@ -334,15 +334,15 @@ void AM_Drawer() noexcept {
 
     // Show all map things cheat: display a little wireframe triangle for for all things
     if (curPlayer.cheats & CF_ALLMOBJ) {
-        for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
+        for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
             // Ignore the player for this particular draw
-            if (pMObj == curPlayer.mo)
+            if (pMobj == curPlayer.mo)
                 continue;
 
             // Compute the the sine and cosines for the angles of the 3 points in the triangle
-            const uint32_t fineAng1 = (pMObj->angle                ) >> ANGLETOFINESHIFT;
-            const uint32_t fineAng2 = (pMObj->angle - ANG90 - ANG45) >> ANGLETOFINESHIFT;
-            const uint32_t fineAng3 = (pMObj->angle + ANG90 + ANG45) >> ANGLETOFINESHIFT;
+            const uint32_t fineAng1 = (pMobj->angle                ) >> ANGLETOFINESHIFT;
+            const uint32_t fineAng2 = (pMobj->angle - ANG90 - ANG45) >> ANGLETOFINESHIFT;
+            const uint32_t fineAng3 = (pMobj->angle + ANG90 + ANG45) >> ANGLETOFINESHIFT;
 
             const fixed_t cos1 = gFineCosine[fineAng1];
             const fixed_t cos2 = gFineCosine[fineAng2];
@@ -354,8 +354,8 @@ void AM_Drawer() noexcept {
 
             // Compute the line points.
             // PsyDoom: scale is now a fixed point number due to framerate uncapped automap movement.
-            const fixed_t vx = pMObj->x - ox;
-            const fixed_t vy = pMObj->y - oy;
+            const fixed_t vx = pMobj->x - ox;
+            const fixed_t vy = pMobj->y - oy;
 
             #if PSYDOOM_MODS
                 const int32_t x1 = d_fixed_to_int(FixedMul((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W, scale));

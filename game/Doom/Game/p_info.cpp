@@ -14,13 +14,13 @@
 #include <vector>
 
 static std::vector<state_t>     gStateVec;          // All of the states defined by the game
-static std::vector<mobjinfo_t>  gMObjInfoVec;       // All of the map objects defined by the game
+static std::vector<mobjinfo_t>  gMobjInfoVec;       // All of the map objects defined by the game
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Checks to see if the specified DoomEd num is in use already
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool P_IsDoomEdNumUsed(const int32_t doomEdNum) noexcept {
-    for (const mobjinfo_t& mobjInfo : gMObjInfoVec) {
+    for (const mobjinfo_t& mobjInfo : gMobjInfoVec) {
         if (mobjInfo.doomednum == doomEdNum)
             return true;
     }
@@ -167,7 +167,7 @@ static void P_ReadDecorateLump(const char* const lumpName) noexcept {
             // A new decor definition lies ahead: initialize its basic properties
             curLineIdx = lineIdx;
 
-            mobjinfo_t& mobjInfo = gMObjInfoVec.emplace_back();
+            mobjinfo_t& mobjInfo = gMobjInfoVec.emplace_back();
             mobjInfo.spawnhealth = 1000;
             mobjInfo.radius = 16 * FRACUNIT;
             mobjInfo.height = 64 * FRACUNIT;
@@ -180,7 +180,7 @@ static void P_ReadDecorateLump(const char* const lumpName) noexcept {
             std::transform(tmpStr.begin(), tmpStr.end(), tmpStr.begin(), [](const char c) noexcept { return (char) std::toupper(c); });
 
             // Parse each token
-            mobjinfo_t& mobjInfo = gMObjInfoVec.back();
+            mobjinfo_t& mobjInfo = gMobjInfoVec.back();
 
             if (tokenIdx == 0) {
                 // DoomEd number
@@ -227,9 +227,9 @@ void P_InitMobjInfo() noexcept {
     gStateVec.insert(gStateVec.begin(), gBaseStates, gBaseStates + BASE_NUM_STATES);
 
     // Add base map objects to the vector
-    gMObjInfoVec.clear();
-    gMObjInfoVec.reserve(512);
-    gMObjInfoVec.insert(gMObjInfoVec.begin(), gBaseMObjInfo, gBaseMObjInfo + BASE_NUM_MOBJ_TYPES);
+    gMobjInfoVec.clear();
+    gMobjInfoVec.reserve(512);
+    gMobjInfoVec.insert(gMobjInfoVec.begin(), gBaseMobjInfo, gBaseMobjInfo + BASE_NUM_MOBJ_TYPES);
 
     // Read new states and map objects defined by the PsyDoom format 'decorate' lump
     P_ReadDecorateLump("PSYDECOR");
@@ -237,8 +237,8 @@ void P_InitMobjInfo() noexcept {
     // Setup the global lists of states and map objects used by the game
     gStates = gStateVec.data();
     gNumStates = (int32_t) gStateVec.size();
-    gMObjInfo = gMObjInfoVec.data();
-    gNumMObjInfo = (int32_t) gMObjInfoVec.size();
+    gMobjInfo = gMobjInfoVec.data();
+    gNumMobjInfo = (int32_t) gMobjInfoVec.size();
 }
 
 #endif  // #if PSYDOOM_MODS

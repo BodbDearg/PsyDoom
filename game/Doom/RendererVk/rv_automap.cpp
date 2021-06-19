@@ -172,15 +172,15 @@ static void RV_DrawMapLines() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawAutomapShowAllThingsCheat() noexcept {
     const player_t& curPlayer = gPlayers[gCurPlayerIndex];
-    const mobj_t& playerMObj = *curPlayer.mo;
+    const mobj_t& playerMobj = *curPlayer.mo;
 
-    for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
+    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
         // Ignore the player for this particular draw
-        if (pMObj == &playerMObj)
+        if (pMobj == &playerMobj)
             continue;
 
         // Compute the the sine and cosines for the angles of the 3 points in the triangle
-        mobj_t& mobj = *pMObj;
+        mobj_t& mobj = *pMobj;
 
         const float ang1 = RV_AngleToFloat(mobj.angle);
         const float ang2 = RV_AngleToFloat(mobj.angle - ANG90 - ANG45);

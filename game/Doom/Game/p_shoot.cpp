@@ -17,7 +17,7 @@ struct thingline_t {
     vertex_t    p2;
 };
 
-mobj_t*     gpShootMObj;        // The thing that is being shot (if hit a thing)
+mobj_t*     gpShootMobj;        // The thing that is being shot (if hit a thing)
 line_t*     gpShootLine;        // The line that is being shot (if hit a line)
 fixed_t     gShootSlope;        // The Z slope for the line from the shooter origin to the hit point
 fixed_t     gShootX;            // The point in space (X) that was hit when shooting (used for puff, blood spawn)
@@ -79,19 +79,19 @@ void P_Shoot2() noexcept {
 
     // Initially nothing is hit
     gpShootLine = nullptr;
-    gpShootMObj = nullptr;
+    gpShootMobj = nullptr;
     gOldFrac = 0;
 
     // Test against all lines and things in the BSP tree
     PA_CrossBSPNode(gNumBspNodes - 1);
 
     // If we didn't hit a thing then try check against the saved previous closest thing (if any)
-    if (!gpShootMObj) {
+    if (!gpShootMobj) {
         PA_DoIntercept(nullptr, false, FRACUNIT);
     }
 
     // If we hit a wall then adjust the hit spot slightly so the puff isn't in the wall - move it out
-    if ((!gpShootMObj) && gpShootLine) {
+    if ((!gpShootMobj) && gpShootLine) {
         const fixed_t hitFracAdjust = FixedDiv(4 * FRACUNIT, gAttackRange);
         gFirstLineFrac -= hitFracAdjust;
 
@@ -241,7 +241,7 @@ bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
     // Shoot the thing midway along the visible parts of it and remember what is being shot.
     // N.B: division by '2' must be used here versus the original 'sra' (shift right arithmetic) instruction for demo compatible behavior.
     gShootSlope = (thingTopSlope + thingBottomSlope) / 2;
-    gpShootMObj = &thing;
+    gpShootMobj = &thing;
 
     // Adjust the hit point so it is a little closer - move away from thing center by 10.0 units.
     // Done so blood drops are spawned in front of the thing.

@@ -31,7 +31,7 @@ static void clearPrecacheInfo() noexcept {
     gbCacheSprite.clear();
     gbCacheSprite.resize(gNumSprites);
     gbCachedMobjType.clear();
-    gbCachedMobjType.resize(gNumMObjInfo);
+    gbCachedMobjType.resize(gNumMobjInfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ static void flagSpritesForPrecache(const mobjinfo_t& info) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class ...Types> 
 static void flagSpritesForPrecache(const mobjtype_t& type, Types... types) noexcept {
-    flagSpritesForPrecache(gMObjInfo[type]);
+    flagSpritesForPrecache(gMobjInfo[type]);
     flagSpritesForPrecache(types...);
 }
 
@@ -137,7 +137,7 @@ static void flagGeneralSpritesToPrecache() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void flagAllThingSpritesToPrecache() noexcept {
     // Run through all things in the map and precache their sprites
-    for (const mobj_t* pMobj = gMObjHead.next; pMobj != &gMObjHead; pMobj = pMobj->next) {
+    for (const mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
         // Ignore this type if we already cached it
         const mobjtype_t type = pMobj->type;
         ASSERT((size_t) type < gbCachedMobjType.size());

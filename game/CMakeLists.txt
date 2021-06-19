@@ -237,6 +237,8 @@ set(SOURCE_FILES
     "PcPsx/PsxPadButtons.h"
     "PcPsx/PsxVm.cpp"
     "PcPsx/PsxVm.h"
+    "PcPsx/ScriptBindings.cpp"
+    "PcPsx/ScriptBindings.h"
     "PcPsx/ScriptingEngine.cpp"
     "PcPsx/ScriptingEngine.h"
     "PcPsx/Utils.cpp"
@@ -374,7 +376,8 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 target_compile_definitions(${GAME_TGT_NAME} PRIVATE
     -DGAME_VERSION_STR="${GAME_VERSION_STR}"    # Game version string - set in main CMakeLists.txt
     -DPSYDOOM_MODS=1                            # Defined to mark areas where we changed the code from the PSX version
-)
+    -DSOL_ALL_SAFETIES_ON=1                     # Lua scripting: full error checking of function params etc. (don't just crash)
+) 
 
 # Various tweaks that can be applied
 if (PSYDOOM_INCLUDE_VULKAN_RENDERER)

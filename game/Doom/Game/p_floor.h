@@ -8,7 +8,7 @@ struct line_t;
 enum result_e : int32_t {
     ok          = 0,    // Movement for the floor/ceiling was fully OK
     crushed     = 1,    // The floor/ceiling is crushing things and may not have moved because of this
-    pastdest    = 2     // Plane has reached its destination or very close to it (sometimes stops just before if crushing things)
+    pastdest    = 2     // Floor/ceiling has reached its destination or very close to it (sometimes stops just before if crushing things)
 };
 
 // Enum for a moving floor type

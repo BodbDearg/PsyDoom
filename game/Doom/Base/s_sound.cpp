@@ -526,7 +526,7 @@ static void I_QueueSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
     const bool bValidSound = (
         (soundId != sfx_None) && (
             ((soundId >= SFX_RANGE1_BEG) && (soundId < SFX_RANGE1_END)) ||
-            ((soundId >= SFX_RANGE2_BEG) && (soundId < SFX_RANGE2_END))
+            (soundId >= SFX_RANGE2_BEG) // Note: don't restrict past the end of this range to allow for user SFX
         )
     );
 

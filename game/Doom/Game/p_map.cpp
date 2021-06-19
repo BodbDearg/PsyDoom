@@ -73,12 +73,12 @@ bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
         if (mobj.flags & MF_MISSILE) {
             // This thing being moved is a missile bashing into something: damage the thing hit
             const int32_t damage = ((P_Random() & 7) + 1) * mobj.info->damage;
-            P_DamageMObj(*pCollideThing, &mobj, mobj.target, damage);
+            P_DamageMobj(*pCollideThing, &mobj, mobj.target, damage);
         }
         else if (mobj.flags & MF_SKULLFLY) {
             // This thing being moved is a skull which has based into something: damage the thing hit
             const int32_t damage = ((P_Random() & 7) + 1) * mobj.info->damage;
-            P_DamageMObj(*pCollideThing, &mobj, &mobj, damage);
+            P_DamageMobj(*pCollideThing, &mobj, &mobj, damage);
 
             // Kill the skull velocity and stop it flying
             mobj.momz = 0;
@@ -87,7 +87,7 @@ bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
             mobj.flags &= ~MF_SKULLFLY;
 
             // Skull goes back to it's idle state on hitting something
-            P_SetMObjState(mobj, mobj.info->spawnstate);
+            P_SetMobjState(mobj, mobj.info->spawnstate);
         }
         else {
             // In all other cases try to pickup the item collided with if possible.
@@ -271,7 +271,7 @@ static bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
     mobj_t* pBombSource = gpBombSource;
 
     if ((bombBaseDamage > damageFade) && P_CheckSight(mobj, bombSpot)) {
-        P_DamageMObj(mobj, &bombSpot, pBombSource, bombBaseDamage - damageFade);
+        P_DamageMobj(mobj, &bombSpot, pBombSource, bombBaseDamage - damageFade);
     }
 
     return true;
@@ -334,8 +334,8 @@ fixed_t P_AimLineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxD
 
     // Save what thing is being targeted and return the computed slope.
     // If we hit a thing then use the slope to the thing, otherwise shoot level ahead (slope 0).
-    gpLineTarget = gpShootMObj;
-    return (gpShootMObj) ? gShootSlope : 0;
+    gpLineTarget = gpShootMobj;
+    return (gpShootMobj) ? gShootSlope : 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
     const fixed_t shootY = gShootY;
     const fixed_t shootZ = gShootZ;
     line_t* const pShootLine = gpShootLine;
-    mobj_t* const pShootMobj = gpShootMObj;
+    mobj_t* const pShootMobj = gpShootMobj;
 
     // Save what thing was hit globally
     gpLineTarget = pShootMobj;
@@ -379,7 +379,7 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
             P_SpawnBlood(shootX, shootY, gShootZ, damage);
         }
 
-        P_DamageMObj(*pShootMobj, &shooter, &shooter, damage);
+        P_DamageMobj(*pShootMobj, &shooter, &shooter, damage);
         return;
     }
 

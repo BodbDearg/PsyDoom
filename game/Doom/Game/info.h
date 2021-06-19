@@ -1184,147 +1184,149 @@ enum statenum_t : int32_t {
 
 // Indexes into the array of map object info structs
 enum mobjtype_t : int32_t {
-    MT_PLAYER,
-    MT_POSSESSED,
-    MT_SHOTGUY,
-    MT_UNDEAD,
-    MT_TRACER,
-    MT_SMOKE,
-    MT_FATSO,
-    MT_FATSHOT,
-    MT_CHAINGUY,
-    MT_TROOP,
-    MT_SERGEANT,
-    MT_HEAD,
-    MT_BRUISER,
-    MT_KNIGHT,
-    MT_SKULL,
-    MT_SPIDER,
-    MT_BABY,
-    MT_CYBORG,
-    MT_PAIN,
-    MT_BARREL,
-    MT_TROOPSHOT,
-    MT_HEADSHOT,
-    MT_BRUISERSHOT,
-    MT_ROCKET,
-    MT_PLASMA,
-    MT_BFG,
-    MT_ARACHPLAZ,
-    MT_PUFF,
-    MT_BLOOD,
-    MT_TFOG,
-    MT_IFOG,
-    MT_TELEPORTMAN,
-    MT_EXTRABFG,
-    MT_MISC0,
-    MT_MISC1,
-    MT_MISC2,
-    MT_MISC3,
-    MT_MISC4,                   // Blue keycard
-    MT_MISC5,                   // Red keycard
-    MT_MISC6,                   // Yellow keycard
-    MT_MISC7,                   // Yellow skull key
-    MT_MISC8,                   // Red skull key
-    MT_MISC9,                   // Blue skull key
-    MT_MISC10,
-    MT_MISC11,
-    MT_MISC12,
-    MT_INV,
-    MT_MISC13,
-    MT_INS,
-    MT_MISC14,
-    MT_MISC15,
-    MT_MISC16,
-    MT_MEGA,
-    MT_CLIP,
-    MT_MISC17,
-    MT_MISC18,
-    MT_MISC19,
-    MT_MISC20,
-    MT_MISC21,
-    MT_MISC22,
-    MT_MISC23,
-    MT_MISC24,
-    MT_MISC25,
-    MT_CHAINGUN,
-    MT_MISC26,
-    MT_MISC27,
-    MT_MISC28,
-    MT_SHOTGUN,
-    MT_SUPERSHOTGUN,
-    MT_MISC29,
-    MT_MISC30,
-    MT_MISC31,
-    MT_MISC32,
-    MT_MISC33,
-    MT_MISC34,
-    MT_MISC35,
-    MT_MISC36,
-    MT_MISC37,
-    MT_MISC38,
-    MT_MISC39,
-    MT_MISC40,
-    MT_MISC41,
-    MT_MISC42,
-    MT_MISC43,
-    MT_MISC44,
-    MT_MISC45,
-    MT_MISC46,
-    MT_MISC47,
-    MT_MISC48,
-    MT_MISC49,
-    MT_MISC50,
-    MT_MISC51,
-    MT_MISC52,
-    MT_MISC53,
-    MT_MISC54,
-    MT_MISC56,
-    MT_MISC57,
-    MT_MISC58,
-    MT_MISC55,
-    MT_MISC59,
-    MT_MISC60,
-    MT_MISC_BLOODHOOK,
-    MT_MISC_HANG_LAMP,
-    MT_MISC61,
-    MT_MISC63,
-    MT_MISC64,
-    MT_MISC66,
-    MT_MISC67,
-    MT_MISC68,
-    MT_MISC69,
-    MT_MISC70,
-    MT_MISC73,
-    MT_MISC71,
-    MT_MISC72,
-    MT_MISC74,
-    MT_MISC75,
-    MT_MISC76,
-    MT_MISC77,
-    MT_MISC78,
-    MT_MISC79,
-    MT_MISC80,
-    MT_MISC81,
-    MT_MISC82,
-    MT_MISC83,
-    MT_MISC84,
-    MT_MISC85,
-    MT_MISC86,
+    MT_PLAYER,              // Player
+    MT_POSSESSED,           // Former Human
+    MT_SHOTGUY,             // Former Sergeant
+    MT_UNDEAD,              // Revenant
+    MT_TRACER,              // Revenant homing missile
+    MT_SMOKE,               // Smoke from Revenant missile
+    MT_FATSO,               // Mancubus
+    MT_FATSHOT,             // Mancubus fireball
+    MT_CHAINGUY,            // Chaingunner
+    MT_TROOP,               // Imp
+    MT_SERGEANT,            // Demon
+    MT_HEAD,                // Cacodemon
+    MT_BRUISER,             // Baron of Hell
+    MT_KNIGHT,              // Hell Knight
+    MT_SKULL,               // Lost Soul
+    MT_SPIDER,              // Spider Mastermind
+    MT_BABY,                // Arachnotron
+    MT_CYBORG,              // Cyberdemon
+    MT_PAIN,                // Pain Elemental
+    MT_BARREL,              // Barrel
+    MT_TROOPSHOT,           // Imp fireball
+    MT_HEADSHOT,            // Cacodemon fireball
+    MT_BRUISERSHOT,         // Baron/Knight fireball
+    MT_ROCKET,              // Rocket (in flight)
+    MT_PLASMA,              // Plasma fireball
+    MT_BFG,                 // BFG main blast
+    MT_ARACHPLAZ,           // Arachnotron plasma ball
+    MT_PUFF,                // Smoke puff
+    MT_BLOOD,               // Blood puff
+    MT_TFOG,                // Teleport fog
+    MT_IFOG,                // Item respawn fog
+    MT_TELEPORTMAN,         // Teleport destination marker
+    MT_EXTRABFG,            // Smaller BFG explosion on enemies
+    MT_MISC0,               // Green armor
+    MT_MISC1,               // Blue armor
+    MT_MISC2,               // Health bonus
+    MT_MISC3,               // Armor bonus
+    MT_MISC4,               // Blue keycard
+    MT_MISC5,               // Red keycard
+    MT_MISC6,               // Yellow keycard
+    MT_MISC7,               // Yellow skull key
+    MT_MISC8,               // Red skull key
+    MT_MISC9,               // Blue skull key
+    MT_MISC10,              // Stimpack
+    MT_MISC11,              // Medikit
+    MT_MISC12,              // Soulsphere
+    MT_INV,                 // Invulnerability
+    MT_MISC13,              // Berserk
+    MT_INS,                 // Invisibility
+    MT_MISC14,              // Radiation Suit
+    MT_MISC15,              // Computer Map
+    MT_MISC16,              // Light Amplification Goggles
+    MT_MEGA,                // Megasphere
+    MT_CLIP,                // Ammo clip
+    MT_MISC17,              // Box of Ammo
+    MT_MISC18,              // Rocket
+    MT_MISC19,              // Box of Rockets
+    MT_MISC20,              // Cell Charge
+    MT_MISC21,              // Cell Charge Pack
+    MT_MISC22,              // Shotgun shells
+    MT_MISC23,              // Box of Shells
+    MT_MISC24,              // Backpack
+    MT_MISC25,              // BFG9000
+    MT_CHAINGUN,            // Chaingun
+    MT_MISC26,              // Chainsaw
+    MT_MISC27,              // Rocket Launcher
+    MT_MISC28,              // Plasma Gun
+    MT_SHOTGUN,             // Shotgun
+    MT_SUPERSHOTGUN,        // Super Shotgun
+    MT_MISC29,              // Tall techno floor lamp
+    MT_MISC30,              // Short techno floor lamp
+    MT_MISC31,              // Floor lamp
+    MT_MISC32,              // Tall green pillar
+    MT_MISC33,              // Short green pillar
+    MT_MISC34,              // Tall red pillar
+    MT_MISC35,              // Short red pillar
+    MT_MISC36,              // Short red pillar (skull)
+    MT_MISC37,              // Short green pillar (beating heart)
+    MT_MISC38,              // Evil Eye
+    MT_MISC39,              // Floating skull rock
+    MT_MISC40,              // Gray tree
+    MT_MISC41,              // Tall blue firestick
+    MT_MISC42,              // Tall green firestick
+    MT_MISC43,              // Tall red firestick
+    MT_MISC44,              // Short blue firestick
+    MT_MISC45,              // Short green firestick
+    MT_MISC46,              // Short red firestick
+    MT_MISC47,              // Stalagmite
+    MT_MISC48,              // Tall techno pillar
+    MT_MISC49,              // Candle
+    MT_MISC50,              // Candelabra
+    MT_MISC51,              // Hanging victim, twitching (blocking)
+    MT_MISC52,              // Hanging victim, arms out (blocking)
+    MT_MISC53,              // Hanging victim, 1-legged (blocking)
+    MT_MISC54,              // Hanging pair of legs (blocking)
+    MT_MISC56,              // Hanging victim, arms out
+    MT_MISC57,              // Hanging pair of legs
+    MT_MISC58,              // Hanging victim, 1-legged
+    MT_MISC55,              // Hanging leg (blocking)
+    MT_MISC59,              // Hanging leg
+    MT_MISC60,              // Hook Chain
+    MT_MISC_BLOODHOOK,      // Chain Hook With Blood
+    MT_MISC_HANG_LAMP,      // UNUSED: points to hanging lamp sprite, but DoomEd number is Chaingunner... 
+    MT_MISC61,              // Dead cacodemon
+    MT_MISC63,              // Dead former human
+    MT_MISC64,              // Dead demon
+    MT_MISC66,              // Dead imp
+    MT_MISC67,              // Dead former sergeant
+    MT_MISC68,              // Bloody mess 1
+    MT_MISC69,              // Bloody mess 2
+    MT_MISC70,              // 5 skulls shish kebob
+    MT_MISC73,              // Pile of skulls and candles
+    MT_MISC71,              // Pool of blood and bones
+    MT_MISC72,              // Skull on a pole
+    MT_MISC74,              // Impaled human
+    MT_MISC75,              // Twitching impaled human
+    MT_MISC76,              // Large brown tree
+    MT_MISC77,              // Burning barrel
+    MT_MISC78,              // Hanging victim, guts removed
+    MT_MISC79,              // Hanging victim, guts and brain removed
+    MT_MISC80,              // Hanging torso, looking down
+    MT_MISC81,              // Hanging torso, open skull
+    MT_MISC82,              // Hanging torso, looking up
+    MT_MISC83,              // Hanging torso, brain removed
+    MT_MISC84,              // Pool of blood and guts
+    MT_MISC85,              // Pool of blood
+    MT_MISC86,              // Pool of brains
+
 // PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition.
 // Also adding support for some actors from PC Doom II which were missing from the PlayStation version.
 #if PSYDOOM_MODS
-    MT_MISC87,          // Unused hanging lamp sprite
-    MT_VILE,            // Arch-vile
-    MT_FIRE,            // Arch-vile's flame
-    MT_WOLFSS,          // Wolfenstein SS officer
-    MT_KEEN,            // Commander Keen easter egg
-    MT_BOSSBRAIN,       // Icon Of Sin head on a stick
-    MT_BOSSSPIT,        // Icon Of Sin box shooter
-    MT_BOSSTARGET,      // Icon Of Sin box target
-    MT_SPAWNSHOT,       // Icon Of Sin box
-    MT_SPAWNFIRE,       // Icon Of Sin spawn fire
+    MT_MISC87,              // Unused hanging lamp sprite
+    MT_VILE,                // Arch-vile
+    MT_FIRE,                // Arch-vile's flame
+    MT_WOLFSS,              // Wolfenstein SS officer
+    MT_KEEN,                // Commander Keen easter egg
+    MT_BOSSBRAIN,           // Icon Of Sin head on a stick
+    MT_BOSSSPIT,            // Icon Of Sin box shooter
+    MT_BOSSTARGET,          // Icon Of Sin box target
+    MT_SPAWNSHOT,           // Icon Of Sin box
+    MT_SPAWNFIRE,           // Icon Of Sin spawn fire
 #endif
+
     BASE_NUM_MOBJ_TYPES     // PsyDoom: renamed this from 'NUMMOBJTYPES' to 'BASE_NUM_MOBJ_TYPES' because it's now just a count of the number of built-in map object types
 };
 
@@ -1406,15 +1408,15 @@ struct mobjinfo_t {
 // PsyDoom: renamed, made const and added the 'base' prefix here to the arrays to signify that these are just the built-in lists; also adding non hardcoded counts.
 extern const sprname_t      gBaseSprNames[BASE_NUM_SPRITES];
 extern const state_t        gBaseStates[BASE_NUM_STATES];
-extern const mobjinfo_t     gBaseMObjInfo[BASE_NUM_MOBJ_TYPES];
+extern const mobjinfo_t     gBaseMobjInfo[BASE_NUM_MOBJ_TYPES];
 
 #if PSYDOOM_MODS
     extern state_t*     gStates;
     extern int32_t      gNumStates;
-    extern mobjinfo_t*  gMObjInfo;
-    extern int32_t      gNumMObjInfo;
+    extern mobjinfo_t*  gMobjInfo;
+    extern int32_t      gNumMobjInfo;
 #else
     #define gSprNames   gBaseSprNames
     #define gStates     gBaseStates
-    #define gMObjInfo   gBaseMObjInfo
+    #define gMobjInfo   gBaseMobjInfo
 #endif

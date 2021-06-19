@@ -767,7 +767,7 @@ bool P_CanTouchSpecialThing(const mobj_t& special, const mobj_t& toucher) noexce
 // Kill the specified map object and put it into the dead/gibbed state.
 // Optionally a killer can be specified, for frag and kill stat tracking purposes.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
+void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept {
     // Target can no longer be shot, float or fly
     target.flags &= ~(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY);
 
@@ -846,7 +846,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
     // Switch to the next map object state (dead, or gibbed) and randomly vary the tics in the state
     const bool bUseGibState = (bDoGibbing && (target.info->xdeathstate != S_NULL));
     const statenum_t nextStateNum = (bUseGibState) ? target.info->xdeathstate : target.info->deathstate;
-    P_SetMObjState(target, nextStateNum);
+    P_SetMobjState(target, nextStateNum);
 
     target.tics = std::max(target.tics - (P_Random() & 1), 1);
 
@@ -872,7 +872,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
 // Try to damage the specified map object by the given amount.
 // Inflictor is the map object where the damage is coming from, the source is the player etc. that is responsible.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSource, const int32_t baseDamageAmt) noexcept {
+void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSource, const int32_t baseDamageAmt) noexcept {
     // Ignore if the target is not shootable (shouldn't hit this case in practice)
     if ((target.flags & MF_SHOOTABLE) == 0)
         return;
@@ -989,13 +989,13 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
 
     if (target.health <= 0) {
         // Map object is now dead - kill it
-        P_KillMObj(pSource, target);
+        P_KillMobj(pSource, target);
     } else {
         // Map object still alive: do the pain state for the thing randomly
         if ((target.info->painchance > P_Random()) && ((target.flags & MF_SKULLFLY) == 0)) {
             // Doing pain: make the monster fight back and go into the pain state
             target.flags |= MF_JUSTHIT;
-            P_SetMObjState(target, target.info->painstate);
+            P_SetMobjState(target, target.info->painstate);
         }
 
         // Monster is fully awake now
@@ -1022,7 +1022,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
 
             // Go into the see state if just woken
             if ((target.state == &gStates[target.info->spawnstate]) && (target.info->seestate != S_NULL)) {
-                P_SetMObjState(target, target.info->seestate);
+                P_SetMobjState(target, target.info->seestate);
             }
         }
     }

@@ -8,6 +8,7 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/UI/st_main.h"
 #include "MapHash.h"
+#include "ScriptBindings.h"
 
 #include <cstdio>
 #include <memory>
@@ -90,17 +91,15 @@ static void makeTableReadOnly(sol::table_core<TopLevel> table) noexcept {
 static void setupActionRegisterLuaEnv() noexcept {
     // Initialize the Lua VM and load required libraries
     gpLuaState.reset(new sol::state());
-    sol::state& luaState = *gpLuaState;
-    luaState.open_libraries(sol::lib::base, sol::lib::math);
+    sol::state& lua = *gpLuaState;
+    lua.open_libraries(sol::lib::base, sol::lib::math);
 
     // Remove unwanted functions from the 'base' library.
     // Available functions after this pruning are (as of Lua 5.4):
     //  
+    //  ipairs      select
     //  tonumber    tostring
     //  print       error
-    //  pairs       ipairs
-    //  next        select
-    //  pcall       xpcall
     //  type
     //
     constexpr const char* const UNWANTED_BASE_FUNCS[] = {
@@ -108,27 +107,32 @@ static void setupActionRegisterLuaEnv() noexcept {
         "load", "dofile", "loadfile",
         "rawequal", "rawget", "rawset", "rawlen",
         "setmetatable", "getmetatable",
+        "pairs", "next",
+        "pcall", "xpcall",
         "collectgarbage",
         "_VERSION",
     };
 
     for (const char* unwantedFuncName : UNWANTED_BASE_FUNCS) {
-        luaState[unwantedFuncName] = nullptr;
+        lua[unwantedFuncName] = nullptr;
     }
 
     // Make the 'math' library table read-only to prevent globals being written to this table
-    if (auto tbl = luaState.get<std::optional<sol::table>>("math"); tbl) {
+    if (auto tbl = lua.get<std::optional<sol::table>>("math"); tbl) {
         makeTableReadOnly(tbl.value());
     }
 
     // Provide a function to register script actions with
-    luaState["SetAction"] = [](const int32_t actionNumber, const sol::function func) noexcept {
+    lua["SetAction"] = [](const int32_t actionNumber, const sol::function func) noexcept {
         gScriptActions[actionNumber] = func;
     };
 
+    // Register all scripting bindings
+    ScriptBindings::registerAll(lua);
+
     // Make the global table read-only.
     // In order to ensure correct serialization, scripts should NOT set any globals!
-    makeTableReadOnly(luaState.globals());
+    makeTableReadOnly(lua.globals());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,11 +140,11 @@ static void setupActionRegisterLuaEnv() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void setupActionExecuteLuaEnv() noexcept {
     // Unregister the 'SetAction' script function
-    sol::state& luaState = *gpLuaState;
-    luaState["SetAction"] = nullptr;
+    sol::state& lua = *gpLuaState;
+    lua["SetAction"] = nullptr;
 
     // Do garbage collection at this point to clean up, scripts should only be using locals variables after this
-    luaState.collect_gc();
+    lua.collect_gc();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

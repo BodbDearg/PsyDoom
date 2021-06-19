@@ -77,7 +77,7 @@ int32_t     gPlayerNum;                             // Current player number bei
 int32_t     gMapNumToCheatWarpTo;                   // What map the player currently has selected for cheat warp
 int32_t     gVramViewerTexPage;                     // What page of texture memory to display in the VRAM viewer
 thinker_t   gThinkerCap;                            // Dummy thinker which serves as both the head and tail of the thinkers list.
-mobj_t      gMObjHead;                              // Dummy map object which serves as both the head and tail of the map objects linked list.
+mobj_t      gMobjHead;                              // Dummy map object which serves as both the head and tail of the map objects linked list.
 int32_t     gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
 int32_t     gTicConOnPause;                         // What 1 vblank tick we paused on, used to discount paused time on unpause
 
@@ -142,9 +142,9 @@ void P_RunThinkers() noexcept {
 // Execute the 'late call' update function for all map objects
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunMobjLate() noexcept {
-    for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
-        if (pMObj->latecall) {
-            pMObj->latecall(*pMObj);
+    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
+        if (pMobj->latecall) {
+            pMobj->latecall(*pMobj);
         }
     }
 }
@@ -510,8 +510,8 @@ void P_CheckCheats() noexcept {
                 case CHT_SEQ_WEAPONS_AND_AMMO: {
                     // Grant any keys that are present in the level.
                     // Run through the list of keys that are sitting around and give to the player...
-                    for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
-                        switch (pMObj->type) {
+                    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
+                        switch (pMobj->type) {
                             case MT_MISC4: player.cards[it_bluecard]    = true; break;
                             case MT_MISC5: player.cards[it_redcard]     = true; break;
                             case MT_MISC6: player.cards[it_yellowcard]  = true; break;

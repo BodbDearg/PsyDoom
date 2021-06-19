@@ -28,7 +28,7 @@ static int32_t      gT2ys;              // Sight line end, whole coords: y
 // Updates target visibility checking for all map objects that are due an update
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckSights() noexcept {
-    for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
+    for (mobj_t* pmobj = gMobjHead.next; pmobj != &gMobjHead; pmobj = pmobj->next) {
         // Must be killable (enemy) to do sight checking.
         //
         // PsyDoom: extend the sight check to types that include a 'see state' in order to allow the reimplemented 'Icon Of Sin' boss to spot the player.

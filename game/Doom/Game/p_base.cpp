@@ -47,10 +47,10 @@ static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
 // Does movement and state ticking for all map objects except players
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunMobjBase() noexcept {
-    gpBaseThing = gMObjHead.next;
+    gpBaseThing = gMobjHead.next;
 
     // Run through all the map objects
-    while (gpBaseThing != &gMObjHead) {
+    while (gpBaseThing != &gMobjHead) {
         mobj_t& mobj = *gpBaseThing;
 
         // Only run the think logic if it's not the player.

@@ -5,7 +5,7 @@
 struct divline_t;
 struct line_t;
 
-extern mobj_t*      gpShootMObj;
+extern mobj_t*      gpShootMobj;
 extern line_t*      gpShootLine;
 extern fixed_t      gShootSlope;
 extern fixed_t      gShootX;
