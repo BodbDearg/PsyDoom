@@ -423,8 +423,12 @@ if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
     target_link_libraries(${GAME_TGT_NAME} ${VULKAN_GL_TGT_NAME})
 endif()
 
-# MSVC use a lower warning level for this project temporarily
+# MSVC specific stuff
 if (COMPILER_MSVC)
+    # Need this flag to prevent the linker hitting object file limits on some modules
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /bigobj)
+
+    # Warnings
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4102)     # No unreferenced label warnings
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)     # Negating unsigned integer
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4245)     # Conversion from signed to unsigned

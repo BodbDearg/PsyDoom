@@ -5,7 +5,9 @@
 #include "ScriptingEngine.h"
 
 #include "Doom/Base/w_wad.h"
+#include "Doom/Game/p_mobj.h"
 #include "Doom/Game/p_setup.h"
+#include "Doom/Game/p_tick.h"
 #include "Doom/UI/st_main.h"
 #include "MapHash.h"
 #include "ScriptBindings.h"
@@ -19,7 +21,11 @@ static std::unique_ptr<sol::state> gpLuaState;
 
 // A table of actions registered with the scripting engine.
 // Each action has an integer identifier associated with it that is referenced by line tags.
-static std::unordered_map<int32_t, sol::function> gScriptActions;
+static std::unordered_map<int32_t, sol::protected_function> gScriptActions;
+
+// How many 'doAction' calls are currently active?
+// Scripts might invoke other scripts, so the 'doAction' calls can be nested.
+static int32_t gNumExecutingScripts = 0;
 
 BEGIN_NAMESPACE(ScriptingEngine)
 
@@ -33,6 +39,10 @@ mobj_t*     gpCurTriggeringMobj;
 // This flag can be set to 'false' by scripts to indicate action is not currently available/allowed.
 // It affects the behavior of switches and whether they can change texture and make a noise or not.
 bool gbCurActionAllowed;
+
+// A flag set to true if we need to delete things after the current script has finished executing.
+// This will be triggered if scripts do a call to 'P_RemoveMobj()'.
+bool gbNeedMobjGC;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Issues a user facing error message relating to scripting, which is shown on the in-game status bar.
@@ -123,7 +133,7 @@ static void setupActionRegisterLuaEnv() noexcept {
     }
 
     // Provide a function to register script actions with
-    lua["SetAction"] = [](const int32_t actionNumber, const sol::function func) noexcept {
+    lua["SetAction"] = [](const int32_t actionNumber, const sol::protected_function func) noexcept {
         gScriptActions[actionNumber] = func;
     };
 
@@ -148,10 +158,35 @@ static void setupActionExecuteLuaEnv() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Deletes/frees any map objects that have been marked for deletion.
+// This action will be triggered by scripts calling 'P_RemoveMobj'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void doMobjGC() noexcept {
+    if (!gbNeedMobjGC) 
+        return;
+
+    gbNeedMobjGC = false;
+
+    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead;) {
+        mobj_t* const pNextMobj = pMobj->next;
+        const latecall_t lateCall = pMobj->latecall;
+
+        // N.B: only run the 'P_RemoveMobj' late call - leave other late calls alone
+        if (lateCall && (lateCall == P_RemoveMobj)) {
+            lateCall(*pMobj);
+        }
+
+        pMobj = pNextMobj;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the scripting engine for the current level.
 // Loads and compiles the script lump for the level, if any is present.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
+    ASSERT(gNumExecutingScripts == 0);
+
     // Read the current map script (if any)
     std::unique_ptr<char[]> mapScript = readCurrentMapScript();
 
@@ -177,6 +212,8 @@ void init() noexcept {
 // Tears down the scripting engine for the current level
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
+    ASSERT_LOG(gNumExecutingScripts == 0, "Shutdown should only be done when no scripts are executing!");
+    
     gbCurActionAllowed = false;
     gScriptActions.clear();
     gpLuaState.reset();
@@ -193,6 +230,8 @@ void doAction(
     mobj_t* const pTrigMobj
 ) noexcept {
     // Set context for scripts
+    gNumExecutingScripts++;
+
     gpCurTriggeringLine = pTrigLine;
     gpCurTriggeringSector = pTrigSector;
     gpCurTriggeringMobj = pTrigMobj;
@@ -205,7 +244,13 @@ void doAction(
 
     if (actionIter != gScriptActions.end()) {
         try {
-            actionIter->second();
+            const sol::protected_function_result result = actionIter->second();
+
+            if (!result.valid()) {
+                const sol::error error = result;
+                showStatusBarError("Script #%d error! See stdout.", actionNum);
+                std::printf("PsyDoom: error executing map script action #%d! Details follow:\n%s\n", actionNum, error.what());
+            }
         }
         catch (const std::exception& e) {
             showStatusBarError("Script #%d error! See stdout.", actionNum);
@@ -220,6 +265,12 @@ void doAction(
     gpCurTriggeringLine = nullptr;
     gpCurTriggeringSector = nullptr;
     gpCurTriggeringMobj = nullptr;
+    gNumExecutingScripts--;
+
+    // Delete any things that are pending for delete if this is the last script in the stack
+    if (gNumExecutingScripts == 0) {
+        doMobjGC();
+    }
 }
 
 END_NAMESPACE(ScriptingEngine)

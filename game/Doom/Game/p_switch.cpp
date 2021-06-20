@@ -424,7 +424,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         case 32:    // Blue door open
         case 33:    // Red door open
         case 34:    // Yellow door open
-        {      
+        {
             if (P_CheckKeyLock(line, mobj)) {
                 EV_VerticalDoor(line, mobj);
             }
@@ -434,14 +434,14 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         case 31:    // Manual door open
         case 117:   // Blazing door raise
         case 118:   // Blazing door open
-        {     
+        {
             EV_VerticalDoor(line, mobj);
         }   break;
 
         case 99:    // Blue blazing door open
         case 134:   // Red blazing door open
         case 136:   // Yellow blazing door open
-        {     
+        {
             if (P_CheckKeyLock(line, mobj)) {
                 if (EV_DoDoor(line, BlazeOpen)) {
                     P_ChangeSwitchTexture(line, true);

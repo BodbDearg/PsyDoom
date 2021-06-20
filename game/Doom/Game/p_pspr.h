@@ -7,6 +7,10 @@ struct mobj_t;
 struct player_t;
 struct pspdef_t;
 
+#if PSYDOOM_MODS
+    void P_NoiseAlertToMobj(mobj_t& noiseMaker) noexcept;
+#endif
+
 void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t stateNum) noexcept;
 void P_FireWeapon(player_t& player) noexcept;
 void P_DropWeapon(player_t& player) noexcept;

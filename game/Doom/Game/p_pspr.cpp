@@ -173,6 +173,18 @@ static void P_NoiseAlert(player_t& player) noexcept {
     P_RecursiveSound(curSector, false);
 }
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: does a noise alert with the specified noise maker being the target of monsters awakened by the noise.
+// Intended to be called from scripts, can be used to do scripted monster alerting.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_NoiseAlertToMobj(mobj_t& noiseMaker) noexcept {
+    gValidCount++;
+    gpSoundTarget = &noiseMaker;
+    P_RecursiveSound(*noiseMaker.subsector->sector, false);
+}
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the specified player sprite to the given state and invoke the state action.
 // Note that if the state is over in an instant, multiple states might be transitioned to.

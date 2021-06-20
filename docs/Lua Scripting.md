@@ -77,7 +77,7 @@ type
 ## Types
 Below is a list of all types exposed to Lua scripts. Note that all types are passed by reference in scripts, so changes to the object will always affect the underlying engine object.
 ### sector_t
-```
+```lua
 # Represents a sector in the game; only a useful subset of the datastructure is exposed
 sector_t {
     int32  index    # Index of the sector in the list of sectors for the level (ZERO BASED!)(readonly)
@@ -103,7 +103,7 @@ sector_t {
     
     GetLine(int32 index) -> line_t      # Get a specific line in the sector or 'nil' if the index is out of range
     ForEachLine(function f)             # Call function 'f' for each line in the sector, passing in a 'line_t' as a parameter
-    ForEachThing(function f)            # Call function 'f' for each thing in the sector, passing in a 'mobj_t' as a parameter
+    ForEachMobj(function f)             # Call function 'f' for each thing in the sector, passing in a 'mobj_t' as a parameter
     
     # Iterates through all the 2 sided lines in the sector, calling the function 'f' with a single parameter of type 'sector_t'.
     # The parameter contains the sector on the opposite side of the line to the current sector.
@@ -111,7 +111,7 @@ sector_t {
 }
 ```
 ### line_t
-```
+```lua
 # Represents a line in level (one or two sided)
 line_t {
     int32       index           # Index of the line in the list of lines for the level (ZERO BASED!)(readonly)
@@ -130,7 +130,7 @@ line_t {
 }
 ```
 ### side_t
-```
+```lua
 # Represents one side of a line
 side_t {
     int32       index                   # Index of the side in the list of sides for the level (ZERO BASED!)(readonly)
@@ -145,7 +145,7 @@ side_t {
 }
 ```
 ### mobj_t
-```
+```lua
 # Represents a thing/actor in the level
 mobj_t {
     float       x           # Position: x (readonly)
@@ -161,16 +161,36 @@ mobj_t {
     uint32      height      # Height (readonly)
     uint32      health      # Health (readonly)
     sector_t    sector      # Which sector the thing is currently in (readonly)
-    mobj_t      target      # Target for enemies, firing object for missiles (readonly)
-    mobj_t      tracer      # For homing missiles the target being tracked (readonly)
+    mobj_t      target      # Target for enemies, firing object for missiles
+    mobj_t      tracer      # For homing missiles the target being tracked
     player_t    player      # The player associated with this thing (nil if none)(readonly)
 }
 ```
-## Functions
+### player_t
+```lua
+player_t {
+    mobj_t  mo                  # The player's thing/map-object (readonly)
+    int32   health              # Player health (as displayed)(readonly)
+    int32   armorpoints         # Armor points (readonly)
+    int32   armortype           # Type of armor: 0 = no armor, 1 = regular armor, 2 = mega armor (readonly)
+    bool    backpack            # 'true' if the player picked up the backpack (readonly)
+    int32   frags               # Frag count for a deathmatch game (readonly)
+    int32   killcount           # Intermission stats: monster kill count (readonly)
+    int32   itemcount           # Intermission stats: number of items picked up (readonly)
+    int32   secretcount         # Intermission stats: number of secrets found (readonly)
+    uint32  readyweapon         # The currently equipped weapon (readonly)
+    uint32  pendingweapon       # The weapon to equip next or 'wp_nochange' if no weapon change is pending (readonly)
+    
+    GetPowerTicsLeft(int32 powerType) -> int32      # Get how many remaining game tics the specified power will be active for
+    HasCard(int32 cardType) -> bool                 # Returns 'true' if the player has the specified card type
+    IsWeaponOwned(int32 weaponType) -> bool         # Returns 'true' if the specified weapon is owned
+    GetAmmo(int32 ammoType) -> int32                # Return the amount of the specified ammo type the player has
+    GetMaxAmmo(int32 ammoType) -> int32             # Return the maximum amount of the specified ammo type the player can pickup
+}
 ```
-#-------------------------------------------------------------------------------------------------------------------------------------------
-# Miscellaneous
-#-------------------------------------------------------------------------------------------------------------------------------------------
+## Functions
+### Miscellaneous
+```lua
 FixedToFloat(fixed v) -> float              # Convert an integer 16.16 fixed point number to a floating point number.
 FloatToFixed(float v) -> int32              # Convert a floating point number to a 16.16 fixed point number.
 P_Random() -> int32                         # Return a random number from 0-255
@@ -178,52 +198,63 @@ R_TextureNumForName(string name) -> int32   # Lookup the texture number for a pa
 R_FlatNumForName(string name) -> int32      # Lookup the flat number for a particular texture name (returns -1 if not found)
 G_ExitLevel()                               # Exit to the next map
 G_SecretExitLevel(int32t nextMap)           # Exit to the specified map
-P_StatusMessage(string msg)                 # Show a status bar message, similar to the ones for item pickups
+StatusMessage(string msg)                   # Show a status bar message, similar to the ones for item pickups
+KeyFlash_Red(player_t player)               # Do a 'red key needed' status bar flash for the specified player
+KeyFlash_Blue(player_t player)              # Do a 'blue key needed' status bar flash for the specified player
+KeyFlash_Yellow(player_t player)            # Do a 'yellow key needed' status bar flash for the specified player
 
-#-------------------------------------------------------------------------------------------------------------------------------------------
-# Sectors
-#-------------------------------------------------------------------------------------------------------------------------------------------
-GetNumSectors() -> int32                        # Returns the number of sectors in the level.
-GetSector(int32 index) -> sector_t              # Gets a specific sector in the level via a ZERO BASED index. If the index is out of range 'nil' is returned.
-FindSectorWithTag(int32 tag) -> sector_t        # Returns the first sector with the specified tag or 'nil' if not found.
-ForEachSector(function f)                       # Iterates over all sectors in the game. The function is called for each sector, passing in the 'sector_t' as a parameter.
-ForEachSectorWithTag(int32 tag, function f)     # For each sector that has the given tag, call function 'f' passing in the 'sector_t' as a parameter.
-
-#-------------------------------------------------------------------------------------------------------------------------------------------
-# Lines
-#-------------------------------------------------------------------------------------------------------------------------------------------
+ApproxLength(float dx, float dy) -> float                           # Using Doom's portable 'approximate' length estimation, return the length of the specified vector
+ApproxDistance(float x1, float y1, float x2, float y2) -> float     # Using Doom's portable 'approximate' length estimation, return the distance between the two points
+AngleToPoint(float x1, float y1, float x2, float y2) -> float       # Using Doom's lookup tables, compute the angle from one point to another (from p1 to p2)
+```
+### Sectors
+```lua
+GetNumSectors() -> int32                            # Returns the number of sectors in the level.
+GetSector(int32 index) -> sector_t                  # Gets a specific sector in the level via a ZERO BASED index. If the index is out of range 'nil' is returned.
+FindSectorWithTag(int32 tag) -> sector_t            # Returns the first sector with the specified tag or 'nil' if not found.
+ForEachSector(function f)                           # Iterates over all sectors in the game. The function is called for each sector, passing in the 'sector_t' as a parameter.
+ForEachSectorWithTag(int32 tag, function f)         # For each sector that has the given tag, call function 'f' passing in the 'sector_t' as a parameter.
+SectorAtPosition(float x, float y) -> sector_t      # Returns the sector at the specified position, or the closest one to it (should always return something)
+```
+### Lines
+```lua
 GetNumLines() -> int32                      # Returns the number of lines in the level.
 GetLine(int32 index) -> line_t              # Gets a specific line in the level via a ZERO BASED index. If the index is out of range 'nil' is returned.
 FindLineWithTag(int32 tag) -> line_t        # Returns the first line with the specified tag or 'nil' if not found.
 ForEachLine(function f)                     # Iterates over all lines in the game. The function is called for each line, passing in the 'line_t' as a parameter.
 ForEachLineWithTag(int32 tag, function f)   # For each line that has the given tag, call function 'f' passing in the 'line_t' as a parameter
 
+# Tells what side of the specified line the point is on.
+# Returns '0' if on the front side, or otherwise '1' if on the back side.
+P_PointOnLineSide(float x, float y, line_t line) -> int32
+
 # Try to trigger the line special for crossing the specified line (if it has a walk-over special) using the specified thing.
 # If the thing is not allowed to trigger the line or there is no special, then this call does nothing.
 # If the thing is not specified then it defaults to the first player in the game.
-P_CrossSpecialLine(line_t line, mobj_t crossingThing)
+P_CrossSpecialLine(line_t line, mobj_t crossingMobj)
 
 # Similar to 'P_CrossSpecialLine' except it triggers line specials that must be shot.
 # Again, if the thing is not specified then it will default to the first player.
-P_ShootSpecialLine(line_t line, mobj_t shootingThing)
+P_ShootSpecialLine(line_t line, mobj_t shootingMobj)
 
 # Similar to 'P_CrossSpecialLine' except it triggers line specials that must be activated via a switch and also doors.
 # Again, if the thing is not specified then it will default to the first player.
-P_UseSpecialLine(line_t line, mobj_t usingThing)
+P_UseSpecialLine(line_t line, mobj_t usingMobj)
 
-#-------------------------------------------------------------------------------------------------------------------------------------------
-# Sides
-#-------------------------------------------------------------------------------------------------------------------------------------------
+# Flips the switch texture for the given line to the opposite switch texture.
+# If the switch is usable again, schedule it to switch back after a while or otherwise mark it unusable.
+P_ChangeSwitchTexture(line_t line, bool bUseAgain)
+```
+### Sides
+```lua
 GetNumSides() -> int32              # Returns the number of sides in the level.
 GetSide(int32 index) -> side_t      # Gets a specific side in the level by a ZERO BASED index. If the index is out of range 'nil' is returned.
 ForEachSide(function f)             # Iterates over all sides in the game. The function is called for each side, passing in the 'side_t' as a parameter.
-
-#-------------------------------------------------------------------------------------------------------------------------------------------
-# Things
-#-------------------------------------------------------------------------------------------------------------------------------------------
-
+```
+### Things
+```lua
 # Iterates over all things in the game. The function is called for each thing, passing in the 'mobj_t' as a parameter.
-ForEachThing(function f)
+ForEachMobj(function f)
 
 # Returns the thing type for the specified DoomEd number, or -1 if no matching thing type is found.
 # The thing type is used for spawning and thing identification at runtime.
@@ -240,6 +271,10 @@ P_SpawnMissile(mobj_t& src, mobj_t& dst, uint32_t type) -> mobj_t
 # The source is optional and affects blame for the attack.
 P_DamageMobj(mobj_t target, mobj_t inflictor, mobj_t source, int32 baseDamageAmt)
 
+# Schedules the thing to be deleted and removed from the game once the script finishes executing.
+# The thing is immediately put into the S_NULL state also to deactivate it.
+P_RemoveMobj(mobj_t target)
+
 # Teleport the specified thing to the specified point, optionally preserving momentum and telefragging things at the destination.
 # Fog and sound are optional, pass '0' to have neither. If the teleport is not possible then 'false' is returned.
 EV_TeleportTo(
@@ -253,25 +288,39 @@ EV_TeleportTo(
     uint32 fogSoundId           # Optional, '0' for none
 ) -> bool
 
-#-------------------------------------------------------------------------------------------------------------------------------------------
-# Script execution context
-#-------------------------------------------------------------------------------------------------------------------------------------------
+# Do a noise alert to awaken monsters using the specified noise maker.
+# The noise maker must be a player, if it's a monster then this call will have no effect.
+P_NoiseAlert(mobj_t noiseMaker)
+
+# Check to see if there is a line of sight between the two things and returns 'true' if that is the case
+P_CheckSight(mobj_t m1, mobj_t m2)
+
+# Test if a position can be moved to for the specified thing and return 'true' if the move is allowed
+P_CheckPosition(mobj_t mobj, float x, float y) -> bool
+```
+### Players
+```lua
+GetNumPlayers() -> int32                # Return the number of players in the game
+GetCurPlayer() -> player_t              # Return this user's player object
+GetPlayer(int32 index) -> player_t      # Return a player specified by a ZERO BASED index. Returns 'nil' if the index is invalid.
+```
+### Script execution context
+```lua
 GetTriggeringLine() -> line_t           # The line that triggered the current script action (nil if none)
 GetTriggeringSector() -> sector_t       # The sector that triggered the current script action (nil if none)
-GetTriggeringThing() -> mobj_t          # The thing that triggered the current script action (nil if none)
+GetTriggeringMobj() -> mobj_t           # The thing that triggered the current script action (nil if none)
 SetLineActionAllowed(bool allowed)      # If called with 'false' indicates that the script action is not allowed. Can prevent switches from changing state.
-
-#-------------------------------------------------------------------------------------------------------------------------------------------
+```
+### Floor/ceiling manual move
+```lua
 # Move a floor or ceiling towards a destination height, potentially altering the height of things inside the sector or crushing them.
 # The speed is always specified as a positive quantity. The result is one of the T_MOVEPLANE_XXX constants.
-#-------------------------------------------------------------------------------------------------------------------------------------------
 T_MoveFloor(sector_t sector, float speed, float destHeight, bool bCrush) -> uint32
 T_MoveCeiling(sector_t sector, float speed, float destHeight, bool bCrush) -> uint32
-
-#-------------------------------------------------------------------------------------------------------------------------------------------
-# Sounds
-#-------------------------------------------------------------------------------------------------------------------------------------------
-S_PlaySoundAtThing(mobj_t origin, uint32 soundId)           # Play a sound at the thing's position (note: no attenutation if thing not specified)
+```
+### Sounds
+```lua
+S_PlaySoundAtMobj(mobj_t origin, uint32 soundId)            # Play a sound at the thing's position (note: no attenutation if thing not specified)
 S_PlaySoundAtSector(sector_t origin, uint32 soundId)        # Play a sound at the sector center (note: no attenutation if sector not specified)
 S_PlaySoundAtPosition(float x, float y, uint32 soundId)     # Play a sound at the specified world position
 ```
@@ -279,13 +328,51 @@ S_PlaySoundAtPosition(float x, float y, uint32 soundId)     # Play a sound at th
 *Note: unless specified otherwise, all these values are of type `uint32`*
 
 ### Return values for `T_MoveFloor` and `T_MoveCeiling`
-```
+```lua
 T_MOVEPLANE_OK           # Movement for the floor/ceiling was fully OK
 T_MOVEPLANE_CRUSHED      # The floor/ceiling is crushing things and may not have moved because of this
 T_MOVEPLANE_PASTDEST     # Floor/ceiling has reached its destination or very close to it (sometimes stops just before if crushing things)
 ```
-### Sector flags
+### Power types
+```lua
+pw_invulnerability      # Invulnerability powerup
+pw_strength             # Berserk powerup
+pw_invisibility         # Partial invisibility powerup
+pw_ironfeet             # Radiation suit powerup
+pw_allmap               # Computer area map powerup
+pw_infrared             # Light amplification visor (fullbright) powerup
 ```
+### Card types
+```lua
+it_redcard
+it_bluecard
+it_yellowcard
+it_redskull
+it_blueskull
+it_yellowskull
+```
+## Weapon types
+```lua
+wp_fist
+wp_pistol
+wp_shotgun
+wp_supershotgun
+wp_chaingun
+wp_missile          # Rocket launcher
+wp_plasma
+wp_bfg
+wp_chainsaw
+wp_nochange         # Used to represent no weapon change for the 'pendingweapon'
+```
+### Ammo types
+```
+am_clip         # Bullets
+am_shell
+am_cell
+am_misl         # Rockets
+```
+### Sector flags
+```lua
 SF_NO_REVERB    # Disables reverb on a sector
 SF_GHOSTPLAT    # Render the sector at the lowest floor height surrounding it, creating an 'invisible platform' effect
 
@@ -313,7 +400,7 @@ SF_GRAD_CEIL_PLUS_1
 SF_GRAD_CEIL_PLUS_2
 ```
 ### Line flags
-```
+```lua
 ML_BLOCKING             # The line blocks all movement
 ML_BLOCKMONSTERS        # The line blocks monsters
 ML_TWOSIDED             # Unset for single sided lines
@@ -364,7 +451,7 @@ MF_BLEND_MODE_BIT1      # PSX DOOM: 1 of 2 bits determining blend mode if blendi
 MF_BLEND_MODE_BIT2      # PSX DOOM: 1 of 2 bits determining blend mode if blending is enabled
 ```
 ### Thing types (built-in)
-```
+```lua
 MT_PLAYER               # Player
 MT_POSSESSED            # Former Human
 MT_SHOTGUY              # Former Sergeant
@@ -504,7 +591,7 @@ MT_SPAWNSHOT            # Icon Of Sin box
 MT_SPAWNFIRE            # Icon Of Sin spawn fire
 ```
 ### Sound ids (built-in)
-```
+```lua
 sfx_sgcock
 sfx_punch
 sfx_itmbk

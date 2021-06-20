@@ -12,6 +12,7 @@ extern line_t*      gpCurTriggeringLine;
 extern sector_t*    gpCurTriggeringSector;
 extern mobj_t*      gpCurTriggeringMobj;
 extern bool         gbCurActionAllowed;
+extern bool         gbNeedMobjGC;
 
 void init() noexcept;
 void shutdown() noexcept;

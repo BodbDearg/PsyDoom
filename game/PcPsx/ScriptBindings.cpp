@@ -9,8 +9,12 @@
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_floor.h"
 #include "Doom/Game/p_inter.h"
+#include "Doom/Game/p_map.h"
+#include "Doom/Game/p_maputl.h"
 #include "Doom/Game/p_mobj.h"
+#include "Doom/Game/p_pspr.h"
 #include "Doom/Game/p_setup.h"
+#include "Doom/Game/p_sight.h"
 #include "Doom/Game/p_spec.h"
 #include "Doom/Game/p_switch.h"
 #include "Doom/Game/p_telept.h"
@@ -18,6 +22,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/st_main.h"
 #include "ScriptingEngine.h"
 
 #include <algorithm>
@@ -25,6 +30,16 @@
 #include <sol/sol.hpp>
 
 BEGIN_NAMESPACE(ScriptBindings)
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: makes a lua type's table readonly as much as possible
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void makeTypeReadOnly(sol::usertype<T>& typeTable) noexcept {
+    typeTable[sol::meta_function::new_index] = [](lua_State* const L) -> int {
+        return luaL_error(L, "Value is read only!");
+    };
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Utilities to convert back and forth between Doom angles and degrees
@@ -39,6 +54,19 @@ static angle_t DegreesToAngle(const float degrees) noexcept {
     const double normalized = (range360 < 0.0) ? (range360 + 360.0) / 360.0 : range360 / 360.0;
     const double intRange = normalized * (double(UINT32_MAX) + 1.0);
     return (angle_t) intRange;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: does a 'key needed' status bar flash for the specified player.
+// N.B: the specified message string must exist for the lifetime of the flash.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void doKeyFlash(player_t& player, const card_t keyType, const char* const msg) noexcept {
+    player_t& curPlayer = gPlayers[gCurPlayerIndex];
+    player.message = msg;
+
+    if (&player == &curPlayer) {
+        gStatusBar.tryopen[keyType] = true;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -60,11 +88,47 @@ static int32_t Script_R_FlatNumForName(const char* const name) noexcept {
     return (name) ? R_FlatNumForName(name, false) : -1;
 }
 
-static void P_StatusMessage(const char* const message) noexcept {
+static void StatusMessage(const char* const message) noexcept {
     // Use the level startup warning buffer since it's always around
     std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "%s", message);
     player_t& player = gPlayers[gCurPlayerIndex];
     player.message = gLevelStartupWarning;
+}
+
+static void KeyFlash_Red(player_t& player) noexcept {
+    doKeyFlash(player, gMapRedKeyType, "You need a red key.");
+}
+
+static void KeyFlash_Blue(player_t& player) noexcept {
+    doKeyFlash(player, gMapBlueKeyType, "You need a blue key.");
+}
+
+static void KeyFlash_Yellow(player_t& player) noexcept {
+    doKeyFlash(player, gMapYellowKeyType, "You need a yellow key.");
+}
+
+static float ApproxLength(const float dx, const float dy) noexcept {
+    const fixed_t dxFrac = FloatToFixed(dx);
+    const fixed_t dyFrac = FloatToFixed(dy);
+    return FixedToFloat(P_AproxDistance(dxFrac, dyFrac));
+}
+
+static float ApproxDistance(const float x1, const float y1, const float x2, const float y2) noexcept {
+    const fixed_t x1Frac = FloatToFixed(x1);
+    const fixed_t y1Frac = FloatToFixed(y1);
+    const fixed_t x2Frac = FloatToFixed(x2);
+    const fixed_t y2Frac = FloatToFixed(y2);
+    const fixed_t dxFrac = x2Frac - x1Frac;
+    const fixed_t dyFrac = y2Frac - y1Frac;
+    return FixedToFloat(P_AproxDistance(dxFrac, dyFrac));
+}
+
+static float AngleToPoint(const float x1, const float y1, const float x2, const float y2) noexcept {
+    const fixed_t x1Frac = FloatToFixed(x1);
+    const fixed_t y1Frac = FloatToFixed(y1);
+    const fixed_t x2Frac = FloatToFixed(x2);
+    const fixed_t y2Frac = FloatToFixed(y2);
+    return AngleToDegrees(R_PointToAngle2(x1Frac, y1Frac, x2Frac, y2Frac));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,12 +200,14 @@ static void ForEachLineInSector(sector_t& sector, const std::function<void (line
     }
 }
 
-static void ForEachThingInSector(sector_t& sector, const std::function<void (mobj_t& mo)>& callback) noexcept {
+static void ForEachMobjInSector(sector_t& sector, const std::function<void (mobj_t& mo)>& callback) noexcept {
     if (!callback)
         return;
 
-    for (mobj_t* pMobj = sector.thinglist; pMobj; pMobj = pMobj->snext) {
+    for (mobj_t* pMobj = sector.thinglist; pMobj;) {
+        mobj_t* const pNextMobj = pMobj->snext;     // Just to be a bit safer...
         callback(*pMobj);
+        pMobj = pNextMobj;
     }
 }
 
@@ -160,6 +226,10 @@ static void ForEachSurroundingSector(sector_t& sector, const std::function<void 
             callback(*pNextSector);
         }
     }
+}
+
+static sector_t* SectorAtPosition(const float x, const float y) noexcept {
+    return R_PointInSubsector(FloatToFixed(x), FloatToFixed(y))->sector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -215,6 +285,10 @@ static void ForEachLineWithTag(const int32_t tag, const std::function<void (line
     }
 }
 
+int32_t Script_P_PointOnLineSide(const float x, const float y, const line_t& line) noexcept {
+    return P_PointOnLineSide(FloatToFixed(x), FloatToFixed(y), line);
+}
+
 static void Script_P_CrossSpecialLine(line_t& line, mobj_t* const pActivator) noexcept {
     P_CrossSpecialLine(line, (pActivator) ? *pActivator : *gPlayers[0].mo);
 }
@@ -253,12 +327,14 @@ static void ForEachSide(const std::function<void (side_t& sector)>& callback) no
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Script API: Things
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void ForEachThing(const std::function<void (mobj_t& mo)>& callback) noexcept {
+static void ForEachMobj(const std::function<void (mobj_t& mo)>& callback) noexcept {
     if (!callback)
         return;
 
-    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
+    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead;) {
+        mobj_t* const pNextMobj = pMobj->next;      // Just to be a bit safer...
         callback(*pMobj);
+        pMobj = pNextMobj;
     }
 }
 
@@ -289,6 +365,20 @@ mobj_t* Script_P_SpawnMissile(mobj_t& src, mobj_t& dst, const uint32_t type) noe
     return (type < (uint32_t) gNumMobjInfo) ? P_SpawnMissile(src, dst, (mobjtype_t) type) : nullptr;
 }
 
+void Script_P_RemoveMobj(mobj_t& mobj) noexcept {
+    // Put the thing into the S_NULL state and schedule it to be deleted later (don't delete immediately)
+    state_t& nullState = gStates[S_NULL];
+
+    mobj.state = &nullState;
+    mobj.tics = nullState.tics;
+    mobj.sprite = nullState.sprite;
+    mobj.frame = nullState.frame;
+    mobj.latecall = P_RemoveMobj;
+
+    // Tell the scripting engine that it needs to clean up some things
+    ScriptingEngine::gbNeedMobjGC = true;
+}
+
 bool Script_EV_TeleportTo(
     mobj_t& mobj,
     const float dstX,
@@ -311,12 +401,51 @@ bool Script_EV_TeleportTo(
     );
 }
 
+static bool Script_P_CheckPosition(mobj_t& mobj, const float x, const float y) noexcept {
+    return P_CheckPosition(mobj, FloatToFixed(x), FloatToFixed(y));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Script API: Players
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t GetNumPlayers() noexcept {
+    return (gNetGame == gt_single) ? 1 : 2;
+}
+
+static player_t& GetCurPlayer() noexcept {
+    return gPlayers[gCurPlayerIndex];
+}
+
+static player_t* GetPlayer(const int32_t index) {
+    return ((index >= 0) && (index < GetNumPlayers())) ? &gPlayers[index] : nullptr;
+}
+
+static int32_t Player_GetPowerTicsLeft(player_t& player, const int32_t powerIdx) noexcept {
+    return ((powerIdx >= 0) && (powerIdx < NUMPOWERS)) ? player.powers[powerIdx] : 0;
+}
+
+static bool Player_HasCard(player_t& player, const int32_t cardIdx) noexcept {
+    return ((cardIdx >= 0) && (cardIdx < NUMCARDS)) ? player.cards[cardIdx] : false;
+}
+
+static bool Player_IsWeaponOwned(player_t& player, const int32_t weaponIdx) noexcept {
+    return ((weaponIdx >= 0) && (weaponIdx < NUMWEAPONS)) ? player.weaponowned[weaponIdx] : false;
+}
+
+static int32_t Player_GetAmmo(player_t& player, const int32_t ammoTypeIdx) noexcept {
+    return ((ammoTypeIdx >= 0) && (ammoTypeIdx < NUMAMMO)) ? player.ammo[ammoTypeIdx] : 0;
+}
+
+static int32_t Player_GetMaxAmmo(player_t& player, const int32_t ammoTypeIdx) noexcept {
+    return ((ammoTypeIdx >= 0) && (ammoTypeIdx < NUMAMMO)) ? player.maxammo[ammoTypeIdx] : 0;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Script API: Script execution context
 //------------------------------------------------------------------------------------------------------------------------------------------
 static line_t* GetTriggeringLine() noexcept { return ScriptingEngine::gpCurTriggeringLine; }
 static sector_t* GetTriggeringSector() noexcept { return ScriptingEngine::gpCurTriggeringSector; }
-static mobj_t* GetTriggeringThing() noexcept { return ScriptingEngine::gpCurTriggeringMobj; }
+static mobj_t* GetTriggeringMobj() noexcept { return ScriptingEngine::gpCurTriggeringMobj; }
 static void SetLineActionAllowed(const bool bAllowed) noexcept { ScriptingEngine::gbCurActionAllowed = bAllowed; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -337,7 +466,7 @@ static uint32_t T_MoveCeiling(sector_t& sector, const float speed, const float d
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Script API: sound
 //------------------------------------------------------------------------------------------------------------------------------------------
-void S_PlaySoundAtThing(mobj_t* const pOrigin, const uint32_t soundId) noexcept {
+void S_PlaySoundAtMobj(mobj_t* const pOrigin, const uint32_t soundId) noexcept {
     S_StartSound(pOrigin, (sfxenum_t) soundId);
 }
 
@@ -400,8 +529,10 @@ static void registerType_sector_t(sol::state& lua) noexcept {
     type["numlines"] = sol::readonly(&sector_t::linecount);
     type.set_function("GetLine", GetLineInSector);
     type.set_function("ForEachLine", ForEachLineInSector);
-    type.set_function("ForEachThing", ForEachThingInSector);
+    type.set_function("ForEachMobj", ForEachMobjInSector);
     type.set_function("ForEachSurroundingSector", ForEachSurroundingSector);
+
+    makeTypeReadOnly(type);
 }
 
 static void registerType_line_t(sol::state& lua) noexcept {
@@ -420,6 +551,8 @@ static void registerType_line_t(sol::state& lua) noexcept {
     type["backside"] = sol::readonly_property([](const line_t& line) noexcept { return GetSide(line.sidenum[1]); });
     type["frontsector"] = sol::readonly(&line_t::frontsector);
     type["backsector"] = sol::readonly(&line_t::backsector);
+
+    makeTypeReadOnly(type);
 }
 
 static void registerType_side_t(sol::state& lua) noexcept {
@@ -434,6 +567,8 @@ static void registerType_side_t(sol::state& lua) noexcept {
     type["bottomtexture"] = &side_t::bottomtexture;
     type["midtexture"] = &side_t::midtexture;
     type["sector"] = sol::readonly(&side_t::sector);
+
+    makeTypeReadOnly(type);
 }
 
 static void registerType_mobj_t(sol::state& lua) noexcept {
@@ -455,9 +590,35 @@ static void registerType_mobj_t(sol::state& lua) noexcept {
     type["height"] = SOL_READONLY_FIXED_PROPERTY_AS_FLOAT(mobj_t, height);
     type["health"] = sol::readonly(&mobj_t::health);
     type["sector"] = sol::readonly_property([](const mobj_t& mo) noexcept { return mo.subsector->sector; });
-    type["target"] = sol::readonly(&mobj_t::target);
-    type["tracer"] = sol::readonly(&mobj_t::tracer);
+    type["target"] = &mobj_t::target;
+    type["tracer"] = &mobj_t::tracer;
     type["player"] = sol::readonly(&mobj_t::player);
+
+    makeTypeReadOnly(type);
+}
+
+static void registerType_player_t(sol::state& lua) noexcept {
+    sol::usertype<player_t> type = lua.new_usertype<player_t>("player_t", sol::no_constructor);
+
+    type["mo"] = sol::readonly(&player_t::mo);
+    type["health"] = sol::readonly(&player_t::health);
+    type["armorpoints"] = sol::readonly(&player_t::armorpoints);
+    type["armortype"] = sol::readonly(&player_t::armortype);
+    type["backpack"] = sol::readonly(&player_t::backpack);
+    type["frags"] = sol::readonly(&player_t::frags);
+    type["killcount"] = sol::readonly(&player_t::killcount);
+    type["itemcount"] = sol::readonly(&player_t::itemcount);
+    type["secretcount"] = sol::readonly(&player_t::secretcount);
+    type["readyweapon"] = sol::readonly_property([](const player_t& p) noexcept { return (uint32_t) p.readyweapon; });
+    type["pendingweapon"] = sol::readonly_property([](const player_t& p) noexcept { return (uint32_t) p.pendingweapon; });
+
+    type.set_function("GetPowerTicsLeft", Player_GetPowerTicsLeft);
+    type.set_function("HasCard", Player_HasCard);
+    type.set_function("IsWeaponOwned", Player_IsWeaponOwned);
+    type.set_function("GetAmmo", Player_GetAmmo);
+    type.set_function("GetMaxAmmo", Player_GetMaxAmmo);
+
+    makeTypeReadOnly(type);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -468,6 +629,7 @@ static void registerLuaTypes(sol::state& lua) noexcept {
     registerType_line_t(lua);
     registerType_side_t(lua);
     registerType_mobj_t(lua);
+    registerType_player_t(lua);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -481,43 +643,60 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["R_FlatNumForName"] = Script_R_FlatNumForName;
     lua["G_ExitLevel"] = G_ExitLevel;
     lua["G_SecretExitLevel"] = G_SecretExitLevel;
-    lua["P_StatusMessage"] = P_StatusMessage;
+    lua["StatusMessage"] = StatusMessage;
+    lua["KeyFlash_Red"] = KeyFlash_Red;
+    lua["KeyFlash_Blue"] = KeyFlash_Blue;
+    lua["KeyFlash_Yellow"] = KeyFlash_Yellow;
+    lua["ApproxLength"] = ApproxLength;
+    lua["ApproxDistance"] = ApproxDistance;
+    lua["AngleToPoint"] = AngleToPoint;
 
     lua["GetNumSectors"] = GetNumSectors;
     lua["GetSector"] = GetSector;
     lua["FindSectorWithTag"] = FindSectorWithTag;
     lua["ForEachSector"] = ForEachSector;
     lua["ForEachSectorWithTag"] = ForEachSectorWithTag;
+    lua["SectorAtPosition"] = SectorAtPosition;
     
     lua["GetNumLines"] = GetNumLines;
     lua["GetLine"] = GetLine;
     lua["FindLineWithTag"] = FindLineWithTag;
     lua["ForEachLine"] = ForEachLine;
     lua["ForEachLineWithTag"] = ForEachLineWithTag;
+    lua["P_PointOnLineSide"] = Script_P_PointOnLineSide;
     lua["P_CrossSpecialLine"] = Script_P_CrossSpecialLine;
     lua["P_ShootSpecialLine"] = Script_P_ShootSpecialLine;
     lua["P_UseSpecialLine"] = Script_P_UseSpecialLine;
-    
+    lua["P_ChangeSwitchTexture"] = P_ChangeSwitchTexture;
+
+    lua["GetNumPlayers"] = GetNumPlayers;
+    lua["GetCurPlayer"] = GetCurPlayer;
+    lua["GetPlayer"] = GetPlayer;
+
     lua["GetNumSides"] = GetNumSides;
     lua["GetSide"] = GetSide;
     lua["ForEachSide"] = ForEachSide;
 
-    lua["ForEachThing"] = ForEachThing;
+    lua["ForEachMobj"] = ForEachMobj;
     lua["FindMobjTypeForDoomEdNum"] = FindMobjTypeForDoomEdNum;
     lua["P_SpawnMobj"] = Script_P_SpawnMobj;
     lua["P_SpawnMissile"] = Script_P_SpawnMissile;
     lua["P_DamageMobj"] = P_DamageMobj;
+    lua["P_RemoveMobj"] = Script_P_RemoveMobj;
     lua["EV_TeleportTo"] = Script_EV_TeleportTo;
+    lua["P_NoiseAlert"] = P_NoiseAlertToMobj;
+    lua["P_CheckSight"] = P_CheckSight;
+    lua["P_CheckPosition"] = Script_P_CheckPosition;
 
     lua["GetTriggeringLine"] = GetTriggeringLine;
     lua["GetTriggeringSector"] = GetTriggeringSector;
-    lua["GetTriggeringThing"] = GetTriggeringThing;
+    lua["GetTriggeringMobj"] = GetTriggeringMobj;
     lua["SetLineActionAllowed"] = SetLineActionAllowed;
     
     lua["T_MoveFloor"] = T_MoveFloor;
     lua["T_MoveCeiling"] = T_MoveCeiling;
 
-    lua["S_PlaySoundAtThing"] = S_PlaySoundAtThing;
+    lua["S_PlaySoundAtMobj"] = S_PlaySoundAtMobj;
     lua["S_PlaySoundAtSector"] = S_PlaySoundAtSector;
     lua["S_PlaySoundAtPosition"] = S_PlaySoundAtPosition;
 }
@@ -529,6 +708,36 @@ static void registerLuaConstants(sol::state& lua) noexcept {
     lua["T_MOVEPLANE_OK"] = (uint32_t) result_e::ok;
     lua["T_MOVEPLANE_CRUSHED"] = (uint32_t) result_e::crushed;
     lua["T_MOVEPLANE_PASTDEST"] = (uint32_t) result_e::pastdest;
+
+    lua["pw_invulnerability"] = (uint32_t) pw_invulnerability;
+    lua["pw_strength"] = (uint32_t) pw_strength;
+    lua["pw_invisibility"] = (uint32_t) pw_invisibility;
+    lua["pw_ironfeet"] = (uint32_t) pw_ironfeet;
+    lua["pw_allmap"] = (uint32_t) pw_allmap;
+    lua["pw_infrared"] = (uint32_t) pw_infrared;
+
+    lua["it_redcard"] = (uint32_t) it_redcard;
+    lua["it_bluecard"] = (uint32_t) it_bluecard;
+    lua["it_yellowcard"] = (uint32_t) it_yellowcard;
+    lua["it_redskull"] = (uint32_t) it_redskull;
+    lua["it_blueskull"] = (uint32_t) it_blueskull;
+    lua["it_yellowskull"] = (uint32_t) it_yellowskull;
+
+    lua["wp_fist"] = (uint32_t) wp_fist;
+    lua["wp_pistol"] = (uint32_t) wp_pistol;
+    lua["wp_shotgun"] = (uint32_t) wp_shotgun;
+    lua["wp_supershotgun"] = (uint32_t) wp_supershotgun;
+    lua["wp_chaingun"] = (uint32_t) wp_chaingun;
+    lua["wp_missile"] = (uint32_t) wp_missile;
+    lua["wp_plasma"] = (uint32_t) wp_plasma;
+    lua["wp_bfg"] = (uint32_t) wp_bfg;
+    lua["wp_chainsaw"] = (uint32_t) wp_chainsaw;
+    lua["wp_nochange"] = (uint32_t) wp_nochange;
+
+    lua["am_clip"] = (uint32_t) am_clip;
+    lua["am_shell"] = (uint32_t) am_shell;
+    lua["am_cell"] = (uint32_t) am_cell;
+    lua["am_misl"] = (uint32_t) am_misl;
 
     lua["SF_NO_REVERB"] = SF_NO_REVERB;
     lua["SF_GHOSTPLAT"] = SF_GHOSTPLAT;
