@@ -632,6 +632,11 @@ gameaction_t P_Ticker() noexcept {
 
     // Run map entities and do status bar logic, if it's time
     if ((!gbGamePaused) && (gGameTic > gPrevGameTic)) {
+        // PsyDoom: execute any scheduled script actions
+        #if PSYDOOM_MODS
+            ScriptingEngine::runScheduledActions();
+        #endif
+
         P_RunThinkers();
         P_CheckSights();
         P_RunMobjBase();

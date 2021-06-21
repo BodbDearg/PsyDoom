@@ -9,6 +9,7 @@
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_floor.h"
 #include "Doom/Game/p_inter.h"
+#include "Doom/Game/p_local.h"
 #include "Doom/Game/p_map.h"
 #include "Doom/Game/p_maputl.h"
 #include "Doom/Game/p_mobj.h"
@@ -338,6 +339,44 @@ static void ForEachMobj(const std::function<void (mobj_t& mo)>& callback) noexce
     }
 }
 
+static void ForEachMobjInArea(
+    const float x1,
+    const float y1,
+    const float x2,
+    const float y2,
+    const std::function<void (mobj_t& mo)>& callback
+) noexcept {
+    if (!callback)
+        return;
+
+    // Figure out what cells in the blockmap we will cover
+    const fixed_t xmin = FloatToFixed(std::min(x1, x2));
+    const fixed_t xmax = FloatToFixed(std::max(x1, x2));
+    const fixed_t ymin = FloatToFixed(std::min(y1, y2));
+    const fixed_t ymax = FloatToFixed(std::max(y1, y2));
+
+    const int32_t bmapW = gBlockmapWidth;
+    const int32_t bmapH = gBlockmapHeight;
+
+    const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(ymax - gBlockmapOriginY), bmapH - 1);
+    const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(ymin - gBlockmapOriginY), 0);
+    const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(xmin - gBlockmapOriginX), 0);
+    const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(xmax - gBlockmapOriginX), bmapW - 1);
+
+    // Go through all of the blockmap cells of interest, calling the callback on each thing found
+    for (int32_t bmapY = bmapBy; bmapY <= bmapTy; ++bmapY) {
+        for (int32_t bmapX = bmapLx; bmapX <= bmapRx; ++bmapX) {
+            mobj_t* pmobj = gppBlockLinks[bmapX + bmapY * bmapW];
+
+            while (pmobj) {
+                mobj_t* const pNextMobj = pmobj->bnext;     // Just to be safe
+                callback(*pmobj);
+                pmobj = pNextMobj;
+            }
+        }
+    }
+}
+
 static int32_t FindMobjTypeForDoomEdNum(const int32_t doomEdNum) noexcept {
     const int32_t numMobjTypes = gNumMobjInfo;
     const mobjinfo_t* const pMobjInfo = gMobjInfo;
@@ -446,6 +485,8 @@ static int32_t Player_GetMaxAmmo(player_t& player, const int32_t ammoTypeIdx) no
 static line_t* GetTriggeringLine() noexcept { return ScriptingEngine::gpCurTriggeringLine; }
 static sector_t* GetTriggeringSector() noexcept { return ScriptingEngine::gpCurTriggeringSector; }
 static mobj_t* GetTriggeringMobj() noexcept { return ScriptingEngine::gpCurTriggeringMobj; }
+static int32_t GetCurActionTag() noexcept { return ScriptingEngine::gCurActionTag; }
+static int32_t GetCurActionUserdata() noexcept { return ScriptingEngine::gCurActionUserdata; }
 static void SetLineActionAllowed(const bool bAllowed) noexcept { ScriptingEngine::gbCurActionAllowed = bAllowed; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -577,6 +618,7 @@ static void registerType_mobj_t(sol::state& lua) noexcept {
     type["x"] = SOL_READONLY_FIXED_PROPERTY_AS_FLOAT(mobj_t, x);
     type["y"] = SOL_READONLY_FIXED_PROPERTY_AS_FLOAT(mobj_t, y);
     type["z"] = SOL_READONLY_FIXED_PROPERTY_AS_FLOAT(mobj_t, z);
+    type["tag"] = &mobj_t::tag;
     type["angle"] = sol::property(
         [](const mobj_t& mo) noexcept { return AngleToDegrees(mo.angle); },
         [](mobj_t& mo, const float value) noexcept { mo.angle = DegreesToAngle(value); }
@@ -651,6 +693,14 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["ApproxDistance"] = ApproxDistance;
     lua["AngleToPoint"] = AngleToPoint;
 
+    lua["ScheduleAction"] = ScriptingEngine::scheduleAction;
+    lua["ScheduleRepeatingAction"] = ScriptingEngine::scheduleRepeatingAction;
+    lua["StopAllScheduledActions"] = ScriptingEngine::stopAllScheduledActions;
+    lua["StopScheduledActionsWithTag"] = ScriptingEngine::stopScheduledActionsWithTag;
+    lua["PauseAllScheduledActions"] = ScriptingEngine::pauseAllScheduledActions;
+    lua["PauseScheduledActionsWithTag"] = ScriptingEngine::pauseScheduledActionsWithTag;
+    lua["GetNumScheduledActionsWithTag"] = ScriptingEngine::getNumScheduledActionsWithTag;
+
     lua["GetNumSectors"] = GetNumSectors;
     lua["GetSector"] = GetSector;
     lua["FindSectorWithTag"] = FindSectorWithTag;
@@ -678,6 +728,7 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["ForEachSide"] = ForEachSide;
 
     lua["ForEachMobj"] = ForEachMobj;
+    lua["ForEachMobjInArea"] = ForEachMobjInArea;
     lua["FindMobjTypeForDoomEdNum"] = FindMobjTypeForDoomEdNum;
     lua["P_SpawnMobj"] = Script_P_SpawnMobj;
     lua["P_SpawnMissile"] = Script_P_SpawnMissile;
@@ -691,6 +742,8 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["GetTriggeringLine"] = GetTriggeringLine;
     lua["GetTriggeringSector"] = GetTriggeringSector;
     lua["GetTriggeringMobj"] = GetTriggeringMobj;
+    lua["GetCurActionTag"] = GetCurActionTag;
+    lua["GetCurActionUserdata"] = GetCurActionUserdata;
     lua["SetLineActionAllowed"] = SetLineActionAllowed;
     
     lua["T_MoveFloor"] = T_MoveFloor;

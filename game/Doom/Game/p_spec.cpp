@@ -897,7 +897,7 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             case 301:   // Once: Do Script Action (Monsters only)
             case 302:   // Once: Do Script Action (Player + Monsters)
                 line.special = 0;
-                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj, 0, 0);
                 break;
         #endif
 
@@ -1075,7 +1075,7 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             case 310:   // Multi: Do Script Action (Player only)
             case 311:   // Multi: Do Script Action (Monsters only)
             case 312:   // Multi: Do Script Action (Player + Monsters)
-                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj, 0, 0);
                 break;
         #endif
 
@@ -1150,7 +1150,7 @@ void P_ShootSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             case 350:   // Multi: Do Script Action (Player only)
             case 351:   // Multi: Do Script Action (Monsters only)
             case 352:   // Multi: Do Script Action (Player + Monsters)
-                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj);
+                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj, 0, 0);
                 break;
         #endif
     }
@@ -1212,7 +1212,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
         // PsyDoom: scripted player in special sector action
         #if PSYDOOM_MODS
             case 301: {
-                ScriptingEngine::doAction(sector.tag, nullptr, &sector, player.mo);
+                ScriptingEngine::doAction(sector.tag, nullptr, &sector, player.mo, 0, 0);
             }   break;
         #endif
 
@@ -1498,7 +1498,7 @@ void P_SpawnSpecials() noexcept {
             #if PSYDOOM_MODS
                 case 300: {
                     sector.special = 0;
-                    ScriptingEngine::doAction(sector.tag, nullptr, &sector, nullptr);
+                    ScriptingEngine::doAction(sector.tag, nullptr, &sector, nullptr, 0, 0);
                 }   break;
             #endif
 
@@ -1537,7 +1537,7 @@ void P_SpawnSpecials() noexcept {
             #if PSYDOOM_MODS
                 case 380: {
                     line.special = 0;
-                    ScriptingEngine::doAction(line.tag, &line, line.frontsector, nullptr);
+                    ScriptingEngine::doAction(line.tag, &line, line.frontsector, nullptr, 0, 0);
                 } break;
             #endif
 

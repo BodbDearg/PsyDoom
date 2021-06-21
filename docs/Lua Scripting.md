@@ -156,6 +156,7 @@ mobj_t {
     float       momy        # Velocity: y
     float       momz        # Velocity: z
     uint32      type        # Thing type (readonly)
+    int32       tag         # Script defined thing tag (can be used to tag and identify things)
     uint32      flags       # Flags (readonly)
     uint32      radius      # Radius (readonly)
     uint32      height      # Height (readonly)
@@ -207,6 +208,40 @@ ApproxLength(float dx, float dy) -> float                           # Using Doom
 ApproxDistance(float x1, float y1, float x2, float y2) -> float     # Using Doom's portable 'approximate' length estimation, return the distance between the two points
 AngleToPoint(float x1, float y1, float x2, float y2) -> float       # Using Doom's lookup tables, compute the angle from one point to another (from p1 to p2)
 ```
+### Delayed and repeating action scheduling
+```lua
+
+# Schedule the specified action number to occur at least 1 tic in the future, plus the number of delay tics.
+# The tag specified is used to identify the delayed action, and userdata can be used for any purposes.
+ScheduleAction(int32 actionNum, int32 delayTics, int32 tag, int32 userdata)
+
+# Schedule the specified action number to occur at least 1 tic in the future, plus the number of initial delay tics.
+# The action executes once plus the number of repeats specified. If repeats is <= '-1' then the action will repeat forever.
+# The tag specified is used to identify the delayed action, and userdata can be used for any purposes.
+ScheduleRepeatingAction(
+    int32 actionNum,
+    int32 initialDelayTics,
+    int32 numRepeats,
+    int32 repeatDelay,
+    int32 tag,
+    int32 userdata
+)
+
+StopAllScheduledActions()                   # Stops all actions that are scheduled
+StopScheduledActionsWithTag(int32 tag)      # Stops all scheduled actions which have the specified tag
+
+# Pause or unpause all scheduled actions.
+# Note: if unpausing then the actions will not execute until the next frame at the very least.
+PauseAllScheduledActions(bool bPause) 
+
+# Pause or unpause scheduled actions with the specified tag.
+# Note: if unpausing then the actions will not execute until the next frame at the very least.
+PauseScheduledActionsWithTag(int32 tag, bool bPause)
+
+# Returns the number actions scheduled with the specified tag.
+# This includes any actions that are paused but NOT actions that have been stopped.
+GetNumScheduledActionsWithTag(int32 tag) -> int32
+```
 ### Sectors
 ```lua
 GetNumSectors() -> int32                            # Returns the number of sectors in the level.
@@ -255,6 +290,10 @@ ForEachSide(function f)             # Iterates over all sides in the game. The f
 ```lua
 # Iterates over all things in the game. The function is called for each thing, passing in the 'mobj_t' as a parameter.
 ForEachMobj(function f)
+
+# Iterate over all things approximately in the rectangular area enclosing the two specified points.
+# The specified function is invoked with a 'mobj_t' parameter for each thing found.
+ForEachMobjInArea(float x1, float y1, float x2, float y2, function f)
 
 # Returns the thing type for the specified DoomEd number, or -1 if no matching thing type is found.
 # The thing type is used for spawning and thing identification at runtime.
@@ -309,6 +348,8 @@ GetPlayer(int32 index) -> player_t      # Return a player specified by a ZERO BA
 GetTriggeringLine() -> line_t           # The line that triggered the current script action (nil if none)
 GetTriggeringSector() -> sector_t       # The sector that triggered the current script action (nil if none)
 GetTriggeringMobj() -> mobj_t           # The thing that triggered the current script action (nil if none)
+GetCurActionTag() -> int32              # Get the tag associated with the current executing script action (Will only be defined for delayed actions, otherwise '0')
+GetCurActionUserdata() -> int32         # Get the userdata associated with the current executing script action (Will only be defined for delayed actions, otherwise '0')
 SetLineActionAllowed(bool allowed)      # If called with 'false' indicates that the script action is not allowed. Can prevent switches from changing state.
 ```
 ### Floor/ceiling manual move

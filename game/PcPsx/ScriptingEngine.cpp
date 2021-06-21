@@ -16,6 +16,21 @@
 #include <memory>
 #include <sol/sol.hpp>
 
+BEGIN_NAMESPACE(ScriptingEngine)
+
+// Holds details on an action which is scheduled to run later.
+// Note that delayed actions have no triggering line, sector or thing associated with them.
+struct ScheduledAction {
+    int32_t     actionNum;          // Which action function to execute with
+    int32_t     delayTics;          // Game tics left until the action executes
+    int32_t     executionsLeft;     // The number of action executions left; '0' if the action will not execute again, or '-1' if infinitely repeating.
+    int32_t     repeatDelay;        // The delay in tics between repeats ('0' means execute every tic)
+    int32_t     tag;                // User defined tag associated with the action
+    int32_t     userdata;           // User defined data associated with the action
+    bool        bPaused;            // If 'true' then the action is paused, otherwise it's unpaused
+    bool        bPendingExecute;    // If 'true' then the action is pending execution this frame
+};
+
 // The main Lua VM, managed and wrapped by the 'Sol2' library
 static std::unique_ptr<sol::state> gpLuaState;
 
@@ -23,11 +38,13 @@ static std::unique_ptr<sol::state> gpLuaState;
 // Each action has an integer identifier associated with it that is referenced by line tags.
 static std::unordered_map<int32_t, sol::protected_function> gScriptActions;
 
+// The list of actions scheduled to execute later. This list may contain 'holes' or actions that are done executing.
+// This is so we preserve the relative order of actions scheduled to occur on the same tic - they should happen in the same order they were scheduled in.
+static std::vector<ScheduledAction> gScheduledActions;
+
 // How many 'doAction' calls are currently active?
 // Scripts might invoke other scripts, so the 'doAction' calls can be nested.
 static int32_t gNumExecutingScripts = 0;
-
-BEGIN_NAMESPACE(ScriptingEngine)
 
 // Context for the current script action being executed.
 // Which linedef, sector and thing triggered the action, all of which are optional.
@@ -35,6 +52,11 @@ BEGIN_NAMESPACE(ScriptingEngine)
 line_t*     gpCurTriggeringLine;
 sector_t*   gpCurTriggeringSector;
 mobj_t*     gpCurTriggeringMobj;
+
+// Extra context for the current script action being executed, which is only non-zero for scheduled action.
+// The user/script defined tag for the action and userdata for the action.
+int32_t     gCurActionTag;
+int32_t     gCurActionUserdata;
 
 // This flag can be set to 'false' by scripts to indicate action is not currently available/allowed.
 // It affects the behavior of switches and whether they can change texture and make a noise or not.
@@ -181,6 +203,38 @@ static void doMobjGC() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Allocates and zero initializes a 'ScheduledAction' structure.
+// Tries to find a free one in the list first, otherwise adds a new one to the end of the list.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static ScheduledAction& allocScheduledAction() noexcept {
+    for (ScheduledAction& action : gScheduledActions) {
+        // If there are no more executions left then it is free
+        if (action.executionsLeft == 0) {
+            action = {};
+            return action;
+        }
+    }
+
+    return gScheduledActions.emplace_back();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tries to reduce the size of the scheduled actions list by popping elements off the end.
+// Leaves alone elements in the middle, in order to preserve relative action order.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void compactScheduledActionList() noexcept {
+    while (!gScheduledActions.empty()) {
+        const ScheduledAction& last = gScheduledActions.back();
+
+        if (last.executionsLeft == 0) {
+            gScheduledActions.pop_back();
+        } else {
+            break;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the scripting engine for the current level.
 // Loads and compiles the script lump for the level, if any is present.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -192,6 +246,9 @@ void init() noexcept {
 
     if (!mapScript)
         return;
+
+    // Prealloc some memory
+    gScheduledActions.reserve(64);
 
     // If a script exists then setup a Lua environment for registering script actions and then execute the map script to register them
     setupActionRegisterLuaEnv();
@@ -213,10 +270,59 @@ void init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
     ASSERT_LOG(gNumExecutingScripts == 0, "Shutdown should only be done when no scripts are executing!");
-    
-    gbCurActionAllowed = false;
+
+    gScheduledActions.clear();
     gScriptActions.clear();
     gpLuaState.reset();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Runs all actions that are scheduled for execution
+//------------------------------------------------------------------------------------------------------------------------------------------
+void runScheduledActions() noexcept {
+    // Flag which actions are pending execution for this frame.
+    // If any actions schedule any other actions then they will be delayed by 1 frame at least.
+    const int32_t numActions = (int32_t) gScheduledActions.size();
+
+    for (int32_t i = 0; i < numActions; ++i) {
+        // Skip the action if paused or if there are no more executions left (stopped)
+        ScheduledAction& action = gScheduledActions[i];
+
+        if (action.bPaused || (action.executionsLeft == 0))
+            continue;
+
+        // Reduce the time until the action executes or schedule it to execute if executing now
+        const int32_t delayTics = action.delayTics;
+
+        if (delayTics > 0) {
+            action.delayTics = delayTics - 1;
+        } else {
+            action.bPendingExecute = true;
+        }
+    }
+
+    // Execute all pending actions and ignore any new ones that have been added
+    for (int32_t i = 0; i < numActions; ++i) {
+        // Only execute the action if it's pending execution
+        ScheduledAction& action = gScheduledActions[i];
+
+        if (!action.bPendingExecute)
+            continue;
+
+        // Otherwise setup the next repeat (if any) and execute the action
+        const int32_t executionsLeft = action.executionsLeft;
+
+        if (executionsLeft > 0) {
+            action.executionsLeft = executionsLeft - 1;     // Finite number of repeats
+        }
+
+        action.delayTics = action.repeatDelay;
+        action.bPendingExecute = false;
+        doAction(action.actionNum, nullptr, nullptr, nullptr, action.tag, action.userdata);
+    }
+
+    // Compact the actions list as much as possible if there's stuff on the end that can be removed
+    compactScheduledActionList();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,7 +333,9 @@ void doAction(
     const int32_t actionNum,
     line_t* const pTrigLine,
     sector_t* const pTrigSector,
-    mobj_t* const pTrigMobj
+    mobj_t* const pTrigMobj,
+    const int32_t actionTag,
+    const int32_t actionUserdata
 ) noexcept {
     // Set context for scripts
     gNumExecutingScripts++;
@@ -235,6 +343,8 @@ void doAction(
     gpCurTriggeringLine = pTrigLine;
     gpCurTriggeringSector = pTrigSector;
     gpCurTriggeringMobj = pTrigMobj;
+    gCurActionTag = actionTag;
+    gCurActionUserdata = actionUserdata;
 
     // Assume the current action is allowed until scripts indicate otherwise
     gbCurActionAllowed = true;
@@ -265,12 +375,119 @@ void doAction(
     gpCurTriggeringLine = nullptr;
     gpCurTriggeringSector = nullptr;
     gpCurTriggeringMobj = nullptr;
+    gCurActionTag = 0;
+    gCurActionUserdata = 0;
+    gbCurActionAllowed = false;
+
     gNumExecutingScripts--;
 
     // Delete any things that are pending for delete if this is the last script in the stack
     if (gNumExecutingScripts == 0) {
         doMobjGC();
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Schedule a single delayed action to execute.
+// The action is guaranteed to execute at least 1 frame later.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void scheduleAction(
+    const int32_t actionNum,
+    const int32_t delayTics,
+    const int32_t tag,
+    const int32_t userdata
+) noexcept {
+    ScheduledAction& action = allocScheduledAction();
+    action.actionNum = actionNum;
+    action.delayTics = std::max(delayTics, 0);
+    action.executionsLeft = 1;
+    action.tag = tag;
+    action.userdata = userdata;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Schedule a potentially repeating action to execute.
+// The action is guaranteed to execute at least 1 frame later if the number of repeats is valid (not zero).
+//------------------------------------------------------------------------------------------------------------------------------------------
+void scheduleRepeatingAction(
+    const int32_t actionNum,
+    const int32_t initialDelayTics,
+    const int32_t numRepeats,
+    const int32_t repeatDelay,
+    const int32_t tag,
+    const int32_t userdata
+) noexcept {
+    ScheduledAction& action = allocScheduledAction();
+    action.actionNum = actionNum;
+    action.delayTics = std::max(initialDelayTics, 0);
+    action.executionsLeft = (numRepeats < 0) ? -1 : numRepeats + 1;    // Note: use '-1' always for infinite
+    action.repeatDelay = std::max(repeatDelay, 0);
+    action.tag = tag;
+    action.userdata = userdata;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Cancels/stops all scheduled actions
+//------------------------------------------------------------------------------------------------------------------------------------------
+void stopAllScheduledActions() noexcept {
+    // Note: this can be called while executing and iterating through the scheduled action list.
+    // Therefore just flag the action as stopped rather than trying to cleanup or compact the list.
+    for (ScheduledAction& action : gScheduledActions) {
+        action.executionsLeft = 0;
+        action.bPendingExecute = false;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Cancels/stops all scheduled actions with the specified tag
+//------------------------------------------------------------------------------------------------------------------------------------------
+void stopScheduledActionsWithTag(const int32_t tag) noexcept {
+    // Note: this can be called while executing and iterating through the scheduled action list.
+    // Therefore just flag the action as stopped rather than trying to cleanup or compact the list.
+    for (ScheduledAction& action : gScheduledActions) {
+        if (action.tag == tag) {
+            action.executionsLeft = 0;
+            action.bPendingExecute = false;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Pauses or unpaused all scheduled actions
+//------------------------------------------------------------------------------------------------------------------------------------------
+void pauseAllScheduledActions(const bool bPause) noexcept {
+    for (ScheduledAction& action : gScheduledActions) {
+        action.bPaused = bPause;
+        action.bPendingExecute = false;     // Action must wait another frame if it is unpaused
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Pauses or unpaused all scheduled actions with the specified tag
+//------------------------------------------------------------------------------------------------------------------------------------------
+void pauseScheduledActionsWithTag(const int32_t tag, const bool bPause) noexcept {
+    for (ScheduledAction& action : gScheduledActions) {
+        if (action.tag == tag) {
+            action.bPaused = bPause;
+            action.bPendingExecute = false;     // Action must wait another frame if it is unpaused
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gets the number of actions that are pending execution with the specified tag.
+// This count includes any actions that have been paused, but not actions that are stopped/finished.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t getNumScheduledActionsWithTag(const int32_t tag) noexcept {
+    int32_t actionCount = 0;
+
+    for (ScheduledAction& action : gScheduledActions) {
+        if ((action.tag == tag) && (action.executionsLeft != 0)) {
+            actionCount++;
+        }
+    }
+
+    return actionCount;
 }
 
 END_NAMESPACE(ScriptingEngine)

@@ -206,6 +206,9 @@ struct mobj_t {
     fixed_t         x;                  // Global position in the world, in 16.16 format
     fixed_t         y;
     fixed_t         z;
+#if PSYDOOM_MODS
+    int32_t         tag;                // PsyDoom: a tag that can be assigned via scripting, for identification purposes
+#endif
     subsector_t*    subsector;          // What subsector the map object is currently in (and by extension, what sector)
     mobj_t*         prev;               // Intrusive fields for the global linked list of things
     mobj_t*         next;
