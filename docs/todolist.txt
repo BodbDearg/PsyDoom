@@ -2,7 +2,6 @@
 - Add very basic Lua scripting with similar capabilities to DOOM64 MACROs
     - Mostly to trigger line specials in more flexible ways
 - Investigate a MAPINFO format for naming maps, choosing music etc.
-- Add the ability to tag things at runtime
 - Secret and monster counter for the HUD
 - Implement marker things
 - Implement sprite precaching for the arch-vile

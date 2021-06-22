@@ -7,6 +7,7 @@
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/info.h"
+#include "Doom/Game/p_ceiling.h"
 #include "Doom/Game/p_floor.h"
 #include "Doom/Game/p_inter.h"
 #include "Doom/Game/p_local.h"
@@ -935,6 +936,10 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["T_MoveFloor"] = T_MoveFloor;
     lua["T_MoveCeiling"] = T_MoveCeiling;
     lua["EV_DoCustomFloor"] = Script_EV_DoCustomFloor;
+    lua["P_ActivateInStasisCeilingsForTag"] = P_ActivateInStasisCeilingsForTag;
+    lua["P_ActivateInStasisCeilingForSector"] = P_ActivateInStasisCeilingForSector;
+    lua["EV_CeilingCrushStopForTag"] = EV_CeilingCrushStopForTag;
+    lua["EV_CeilingCrushStopForSector"] = EV_CeilingCrushStopForSector;
 
     lua["S_PlaySoundAtMobj"] = S_PlaySoundAtMobj;
     lua["S_PlaySoundAtSector"] = S_PlaySoundAtSector;

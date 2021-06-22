@@ -262,30 +262,54 @@ static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
     }
 }
 
+#if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unpauses ceiling movers which have the same tag as the given line and which are in stasis (paused)
+// PsyDoom: activate paused ceiling movers (crushers) matching the specified generic condition
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_ActivateInStasisCeiling(line_t& line) noexcept {
+template <class CeilFilterT>
+static bool P_ActivateMatchingInStasisCeilings(const CeilFilterT& ceilFilter) noexcept {
     #if PSYDOOM_LIMIT_REMOVING
         const int32_t numCeilings = (int32_t) gpActiveCeilings.size();
     #else
         const int32_t numCeilings = MAXCEILINGS;
     #endif
 
+    bool bUnpausedACrusher = false;
+
     for (int32_t i = 0; i < numCeilings; ++i) {
         ceiling_t* const pCeiling = gpActiveCeilings[i];
 
-        if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction == 0)) {    // Direction 0 = in stasis
+        if (pCeiling && (pCeiling->direction == 0) && ceilFilter(*pCeiling)) {  // Direction 0 = in stasis
             pCeiling->direction = pCeiling->olddirection;
             pCeiling->thinker.function = (think_t) &T_MoveCeiling;
+            bUnpausedACrusher = true;
         }
     }
+
+    return bUnpausedACrusher;
+}
+
+bool P_ActivateInStasisCeilingsForTag(const int32_t tag) noexcept {
+    return P_ActivateMatchingInStasisCeilings([&](const ceiling_t& c) noexcept { return (c.tag == tag); });
+}
+
+bool P_ActivateInStasisCeilingForSector(const sector_t& sector) noexcept {
+    return P_ActivateMatchingInStasisCeilings([&](const ceiling_t& c) noexcept { return (c.sector == &sector); });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Pauses active ceiling movers (crushers) with the same sector tag as the given line's tag
+// Unpauses ceiling movers (crushers) which have the same tag as the given line and which are in stasis (paused).
+// PsyDoom: this function has been rewritten. For the original version see the 'Old' code folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool EV_CeilingCrushStop(line_t& line) noexcept {
+static void P_ActivateInStasisCeiling(line_t& line) noexcept {
+    P_ActivateInStasisCeilingsForTag(line.tag);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: pauses active ceiling movers (crushers) matching the specified condition
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class CeilFilterT>
+static bool EV_MatchingCeilingCrushStop(const CeilFilterT& ceilFilter) noexcept {
     #if PSYDOOM_LIMIT_REMOVING
         const int32_t numCeilings = (int32_t) gpActiveCeilings.size();
     #else
@@ -297,13 +321,30 @@ bool EV_CeilingCrushStop(line_t& line) noexcept {
     for (int32_t i = 0; i < numCeilings; ++i) {
         ceiling_t* const pCeiling = gpActiveCeilings[i];
 
-        if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction != 0)) {
-            pCeiling->olddirection = pCeiling->direction;       // Remember which direction it was moving in for unpause
-            pCeiling->direction = 0;                            // Now in stasis
-            pCeiling->thinker.function = nullptr;               // Remove the thinker function until unpaused
+        if (pCeiling && (pCeiling->direction != 0) && ceilFilter(*pCeiling)) {
+            pCeiling->olddirection = pCeiling->direction;   // Remember which direction it was moving in for unpause
+            pCeiling->direction = 0;                        // Now in stasis
+            pCeiling->thinker.function = nullptr;           // Remove the thinker function until unpaused
             bPausedACrusher = true;
         }
     }
 
     return bPausedACrusher;
 }
+
+bool EV_CeilingCrushStopForTag(const int32_t tag) noexcept {
+    return EV_MatchingCeilingCrushStop([&](const ceiling_t& c) noexcept { return (c.tag == tag); }); 
+}
+
+bool EV_CeilingCrushStopForSector(const sector_t& sector) noexcept {
+    return EV_MatchingCeilingCrushStop([&](const ceiling_t& c) noexcept { return (c.sector == &sector); });
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Pauses active ceiling movers (crushers) with the same sector tag as the given line's tag.
+// PsyDoom: this function has been rewritten. For the original version see the 'Old' code folder.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_CeilingCrushStop(line_t& line) noexcept {
+    return EV_CeilingCrushStopForTag(line.tag);
+}
+#endif  // #if PSYDOOM_MODS

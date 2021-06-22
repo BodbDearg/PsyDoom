@@ -38,4 +38,12 @@ struct ceiling_t {
 #endif
 
 bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept;
+
+#if PSYDOOM_MODS
+    bool P_ActivateInStasisCeilingsForTag(const int32_t tag) noexcept;
+    bool P_ActivateInStasisCeilingForSector(const sector_t& sector) noexcept;
+    bool EV_CeilingCrushStopForTag(const int32_t tag) noexcept;
+    bool EV_CeilingCrushStopForSector(const sector_t& sector) noexcept;
+#endif
+
 bool EV_CeilingCrushStop(line_t& line) noexcept;
