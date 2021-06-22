@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <optional>
 #include <sol/sol.hpp>
 
 BEGIN_NAMESPACE(ScriptBindings)
@@ -40,6 +41,122 @@ static void makeTypeReadOnly(sol::usertype<T>& typeTable) noexcept {
     typeTable[sol::meta_function::new_index] = [](lua_State* const L) -> int {
         return luaL_error(L, "Value is read only!");
     };
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: visits sectors surrounding a specified sector, invoking the specified lambda on each one
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void visitSurroundingSectors(sector_t& sector, const T& callback) noexcept {
+    const int32_t numLines = sector.linecount;
+    line_t** const ppLines = sector.lines;
+
+    for (int32_t lineIdx = 0; lineIdx < numLines; ++lineIdx) {
+        line_t& line = *ppLines[lineIdx];
+        sector_t* const pNextSector = getNextSector(line, sector);
+
+        if (pNextSector) {
+            callback(*pNextSector);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: gets the return type of a sector 'value getter' function
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <typename GetFnT>
+using SectorGetterRetT = decltype(std::declval<GetFnT>()(sector_t{}));
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper function: visits sectors surrounding a given sector and extracts a value for each sector.
+// The value is filtered using the specified filter/predicate and multiple values are combined using the specified reduce function.
+// Can be used to search for minimum or maximum values in surrounding sectors.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <typename GetFnT, typename FilterFnT, typename ReduceFnT>
+static std::optional<SectorGetterRetT<GetFnT>> surroundingSectorsFilterAndReduceValue(
+    sector_t& sector,
+    const GetFnT getValue,
+    const FilterFnT& filterValue,
+    const ReduceFnT& reduceTwoValues
+) noexcept {
+    typedef SectorGetterRetT<GetFnT> ValT;
+    std::optional<ValT> result;
+
+    visitSurroundingSectors(
+        sector,
+        [&](const sector_t& surroundingSector) noexcept {
+            const ValT value = getValue(surroundingSector);
+
+            if (filterValue(value)) {
+                if (result.has_value()) {
+                    result = reduceTwoValues(result.value(), value);
+                } else {
+                    result = value;
+                }
+            }
+        }
+    );
+
+    return result;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helpers: get the minimum, maximum, next lowest, or next highest value of a sector property from sectors surrounding a sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <typename GetFnT>
+static std::optional<SectorGetterRetT<GetFnT>> getSurroundingSectorsMinValue(sector_t& sector, const GetFnT& getValue) noexcept {
+    typedef SectorGetterRetT<GetFnT> ValT;
+
+    return surroundingSectorsFilterAndReduceValue(
+        sector,
+        getValue,
+        []([[maybe_unused]] const ValT v) noexcept { return true; },
+        [](const ValT v1, const ValT v2) noexcept { return std::min(v1, v2); }
+    );
+}
+
+template <typename GetFnT>
+static std::optional<SectorGetterRetT<GetFnT>> getSurroundingSectorsMaxValue(sector_t& sector, const GetFnT& getValue) noexcept {
+    typedef SectorGetterRetT<GetFnT> ValT;
+
+    return surroundingSectorsFilterAndReduceValue(
+        sector,
+        getValue,
+        []([[maybe_unused]] const ValT v) noexcept { return true; },
+        [](const ValT v1, const ValT v2) noexcept { return std::max(v1, v2); }
+    );
+}
+
+template <typename GetFnT>
+static std::optional<SectorGetterRetT<GetFnT>> getSurroundingSectorsNextLowestValue(
+    sector_t& sector,
+    const GetFnT& getValue,
+    const SectorGetterRetT<GetFnT> lowerThanValue
+) noexcept {
+    typedef SectorGetterRetT<GetFnT> ValT;
+
+    return surroundingSectorsFilterAndReduceValue(
+        sector,
+        getValue,
+        [=](const ValT v) noexcept { return (v < lowerThanValue); },
+        [](const ValT v1, const ValT v2) noexcept { return std::max(v1, v2); }
+    );
+}
+
+template <typename GetFnT>
+static std::optional<SectorGetterRetT<GetFnT>> getSurroundingSectorsNextHighestValue(
+    sector_t& sector,
+    const GetFnT& getValue,
+    const SectorGetterRetT<GetFnT> higherThanValue
+) noexcept {
+    typedef SectorGetterRetT<GetFnT> ValT;
+
+    return surroundingSectorsFilterAndReduceValue(
+        sector,
+        getValue,
+        [=](const ValT v) noexcept { return (v > higherThanValue); },
+        [](const ValT v1, const ValT v2) noexcept { return std::min(v1, v2); }
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -133,6 +250,13 @@ static float AngleToPoint(const float x1, const float y1, const float x2, const 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helpers: extract the floor or ceiling height (float format) or the light level of a sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+static float getSectorFloorH(const sector_t& sector) noexcept { return FixedToFloat(sector.floorheight); }
+static float getSectorCeilingH(const sector_t& sector) noexcept { return FixedToFloat(sector.ceilingheight); }
+static int32_t getSectorLightLevel(const sector_t& sector) noexcept { return sector.lightlevel; }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Script API: Sectors
 //------------------------------------------------------------------------------------------------------------------------------------------
 static int32_t GetNumSectors() noexcept {
@@ -213,20 +337,57 @@ static void ForEachMobjInSector(sector_t& sector, const std::function<void (mobj
 }
 
 static void ForEachSurroundingSector(sector_t& sector, const std::function<void (sector_t& sector)>& callback) noexcept {
-    if (!callback)
-        return;
-
-    const int32_t numLines = sector.linecount;
-    line_t** const ppLines = sector.lines;
-
-    for (int32_t lineIdx = 0; lineIdx < numLines; ++lineIdx) {
-        line_t& line = *ppLines[lineIdx];
-        sector_t* const pNextSector = getNextSector(line, sector);
-
-        if (pNextSector) {
-            callback(*pNextSector);
-        }
+    if (callback) {
+        visitSurroundingSectors(sector, callback);
     }
+}
+
+static float GetLowestSurroundingFloor(sector_t& sector, const float defaultValue) noexcept {
+    return getSurroundingSectorsMinValue(sector, getSectorFloorH).value_or(defaultValue);
+}
+
+static float GetLowestSurroundingCeiling(sector_t& sector, const float defaultValue) noexcept {
+    return getSurroundingSectorsMinValue(sector, getSectorCeilingH).value_or(defaultValue);
+}
+
+static int32_t GetLowestSurroundingLightLevel(sector_t& sector, const int32_t defaultValue) noexcept {
+    return getSurroundingSectorsMinValue(sector, getSectorLightLevel).value_or(defaultValue);
+}
+
+static float GetHighestSurroundingFloor(sector_t& sector, const float defaultValue) noexcept {
+    return getSurroundingSectorsMaxValue(sector, getSectorFloorH).value_or(defaultValue);
+}
+
+static float GetHighestSurroundingCeiling(sector_t& sector, const float defaultValue) noexcept {
+    return getSurroundingSectorsMaxValue(sector, getSectorCeilingH).value_or(defaultValue);
+}
+
+static int32_t GetHighestSurroundingLightLevel(sector_t& sector, const int32_t defaultValue) noexcept {
+    return getSurroundingSectorsMaxValue(sector, getSectorLightLevel).value_or(defaultValue);
+}
+
+static float GetNextLowestSurroundingFloor(sector_t& sector, const float lowerThanValue, const float defaultValue) noexcept {
+    return getSurroundingSectorsNextLowestValue(sector, getSectorFloorH, lowerThanValue).value_or(defaultValue);
+}
+
+static float GetNextLowestSurroundingCeiling(sector_t& sector, const float lowerThanValue, const float defaultValue) noexcept {
+    return getSurroundingSectorsNextLowestValue(sector, getSectorCeilingH, lowerThanValue).value_or(defaultValue);
+}
+
+static int32_t GetNextLowestSurroundingLightLevel(sector_t& sector, const int32_t lowerThanValue, const int32_t defaultValue) noexcept {
+    return getSurroundingSectorsNextLowestValue(sector, getSectorLightLevel, lowerThanValue).value_or(defaultValue);
+}
+
+static float GetNextHighestSurroundingFloor(sector_t& sector, const float higherThanValue, const float defaultValue) noexcept {
+    return getSurroundingSectorsNextHighestValue(sector, getSectorFloorH, higherThanValue).value_or(defaultValue);
+}
+
+static float GetNextHighestSurroundingCeiling(sector_t& sector, const float higherThanValue, const float defaultValue) noexcept {
+    return getSurroundingSectorsNextHighestValue(sector, getSectorCeilingH, higherThanValue).value_or(defaultValue);
+}
+
+static int32_t GetNextHighestSurroundingLightLevel(sector_t& sector, const int32_t higherThanValue, const int32_t defaultValue) noexcept {
+    return getSurroundingSectorsNextHighestValue(sector, getSectorLightLevel, higherThanValue).value_or(defaultValue);
 }
 
 static sector_t* SectorAtPosition(const float x, const float y) noexcept {
@@ -490,7 +651,7 @@ static int32_t GetCurActionUserdata() noexcept { return ScriptingEngine::gCurAct
 static void SetLineActionAllowed(const bool bAllowed) noexcept { ScriptingEngine::gbCurActionAllowed = bAllowed; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Script API: moving a floor or ceiling (simplified slightly)
+// Script API: moving floors, ceilings and platforms
 //------------------------------------------------------------------------------------------------------------------------------------------
 static uint32_t T_MoveFloor(sector_t& sector, const float speed, const float destHeight, const bool bCrush) noexcept {
     const fixed_t speedFixed = FloatToFixed(speed);
@@ -502,6 +663,18 @@ static uint32_t T_MoveCeiling(sector_t& sector, const float speed, const float d
     const fixed_t speedFixed = FloatToFixed(speed);
     const fixed_t destHeightFixed = FloatToFixed(destHeight);
     return (uint32_t) T_MovePlane(sector, speedFixed, destHeightFixed, bCrush, 1, (destHeightFixed >= sector.ceilingheight) ? +1 : -1);
+}
+
+static bool Script_EV_DoCustomFloor(
+    sector_t& sector,
+    const float destHeight,
+    const float speed,
+    const bool bCrush,
+    const bool bDoScriptActionOnFinish,
+    const int32_t finishScriptActionNum,
+    const int32_t finishScriptUserdata
+) noexcept {
+    return EV_DoCustomFloor(sector, FloatToFixed(destHeight), FloatToFixed(speed), bCrush, bDoScriptActionOnFinish, finishScriptActionNum, finishScriptUserdata);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -568,10 +741,23 @@ static void registerType_sector_t(sol::state& lua) noexcept {
     type["flags"] = &sector_t::flags;
     type["ceil_colorid"] = SOL_BYTE_PROPERTY(sector_t, ceilColorid);
     type["numlines"] = sol::readonly(&sector_t::linecount);
+    type["hasthinker"] = sol::readonly_property([](const sector_t& sector){ return (sector.specialdata != nullptr); });
     type.set_function("GetLine", GetLineInSector);
     type.set_function("ForEachLine", ForEachLineInSector);
     type.set_function("ForEachMobj", ForEachMobjInSector);
     type.set_function("ForEachSurroundingSector", ForEachSurroundingSector);
+    type.set_function("GetLowestSurroundingFloor", GetLowestSurroundingFloor);
+    type.set_function("GetLowestSurroundingCeiling", GetLowestSurroundingCeiling);
+    type.set_function("GetLowestSurroundingLightLevel", GetLowestSurroundingLightLevel);
+    type.set_function("GetHighestSurroundingFloor", GetHighestSurroundingFloor);
+    type.set_function("GetHighestSurroundingCeiling", GetHighestSurroundingCeiling);
+    type.set_function("GetHighestSurroundingLightLevel", GetHighestSurroundingLightLevel);
+    type.set_function("GetNextLowestSurroundingFloor", GetNextLowestSurroundingFloor);
+    type.set_function("GetNextLowestSurroundingCeiling", GetNextLowestSurroundingCeiling);
+    type.set_function("GetNextLowestSurroundingLightLevel", GetNextLowestSurroundingLightLevel);
+    type.set_function("GetNextHighestSurroundingFloor", GetNextHighestSurroundingFloor);
+    type.set_function("GetNextHighestSurroundingCeiling", GetNextHighestSurroundingCeiling);
+    type.set_function("GetNextHighestSurroundingLightLevel", GetNextHighestSurroundingLightLevel);
 
     makeTypeReadOnly(type);
 }
@@ -748,6 +934,7 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     
     lua["T_MoveFloor"] = T_MoveFloor;
     lua["T_MoveCeiling"] = T_MoveCeiling;
+    lua["EV_DoCustomFloor"] = Script_EV_DoCustomFloor;
 
     lua["S_PlaySoundAtMobj"] = S_PlaySoundAtMobj;
     lua["S_PlaySoundAtSector"] = S_PlaySoundAtSector;

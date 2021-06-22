@@ -100,6 +100,7 @@ sector_t {
     uint32  flags           # Sector bit flags
     uint8   ceil_colorid    # Sector ceiling light color (PsyDoom extension, if '0' use normal sector light color)
     int32   numlines        # Number of lines in the sector
+    bool    hasthinker      # If 'true' then there is an effect (floor mover etc.) operating exclusively on the sector (readonly)
     
     GetLine(int32 index) -> line_t      # Get a specific line in the sector or 'nil' if the index is out of range
     ForEachLine(function f)             # Call function 'f' for each line in the sector, passing in a 'line_t' as a parameter
@@ -108,6 +109,23 @@ sector_t {
     # Iterates through all the 2 sided lines in the sector, calling the function 'f' with a single parameter of type 'sector_t'.
     # The parameter contains the sector on the opposite side of the line to the current sector.
     ForEachSurroundingSector(function f)
+    
+    # Get the minimum or maximum floor, ceiling or light level in surrounding sectors; if there are no surrounding sectors return 'defaultValue'
+    GetLowestSurroundingFloor(sector_t sector, float defaultValue) -> float
+    GetLowestSurroundingCeiling(sector_t sector, float defaultValue) -> float
+    GetLowestSurroundingLightLevel(sector_t sector, int32 defaultValue) -> int32
+    GetHighestSurroundingFloor(sector_t sector, float defaultValue) -> float
+    GetHighestSurroundingCeiling(sector_t sector, float defaultValue) -> float
+    GetHighestSurroundingLightLevel(sector_t sector, int32 defaultValue) -> int32
+    
+    # Get the next floor, ceiling or light level in surrounding sectors which is lower or higher than the specified value.
+    # If no such value exists, return 'defaultValue'.
+    GetNextLowestSurroundingFloor(sector_t sector, float lowerThanValue, float defaultValue) -> float
+    GetNextLowestSurroundingCeiling(sector_t sector, float lowerThanValue, float defaultValue) -> float
+    GetNextLowestSurroundingLightLevel(sector_t sector, int32 lowerThanValue, int32 defaultValue) -> int32
+    GetNextHighestSurroundingFloor(sector_t sector, float higherThanValue, float defaultValue) -> float
+    GetNextHighestSurroundingCeiling(sector_t sector, float higherThanValue, float defaultValue) -> float
+    GetNextHighestSurroundingLightLevel(sector_t sector, int32 higherThanValue, int32 defaultValue) -> int32    
 }
 ```
 ### line_t
@@ -352,12 +370,30 @@ GetCurActionTag() -> int32              # Get the tag associated with the curren
 GetCurActionUserdata() -> int32         # Get the userdata associated with the current executing script action (Will only be defined for delayed actions, otherwise '0')
 SetLineActionAllowed(bool allowed)      # If called with 'false' indicates that the script action is not allowed. Can prevent switches from changing state.
 ```
-### Floor/ceiling manual move
+## Moving floors, ceilings and platforms
 ```lua
-# Move a floor or ceiling towards a destination height, potentially altering the height of things inside the sector or crushing them.
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# Manually move a floor or ceiling towards a destination height, possibly altering the height of things inside the sector or crushing them.
 # The speed is always specified as a positive quantity. The result is one of the T_MOVEPLANE_XXX constants.
+# These functions must be called continually in order to reach the destination height.
+#-------------------------------------------------------------------------------------------------------------------------------------------
 T_MoveFloor(sector_t sector, float speed, float destHeight, bool bCrush) -> uint32
 T_MoveCeiling(sector_t sector, float speed, float destHeight, bool bCrush) -> uint32
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# Start a custom floor mover process on the specified sector.
+# Returns 'true' if the mover was started, or 'false' if some other thinker (ceiling etc.) is already operating on the sector.
+# Optionally, a script action can be made to execute when the floor finishes moving.
+#-------------------------------------------------------------------------------------------------------------------------------------------
+EV_DoCustomFloor(
+    sector_t& sector,
+    float destHeight,               # Target height to reach
+    float speed,                    # Step per tic (should be positive)
+    bool bCrush,                    # If true then things may be crushed by the action
+    bool bDoScriptActionOnFinish,   # Specify 'true' to execute a script action on finish
+    int32 finishScriptActionNum,    # Which script action to execute on finish
+    int32 finishScriptUserdata      # This userdata will be passed to the script action executed on finish
+) -> bool
 ```
 ### Sounds
 ```lua

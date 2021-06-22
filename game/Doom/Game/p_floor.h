@@ -30,6 +30,9 @@ enum floor_e : int32_t {
         raiseFloorTurbo = 11,
         raiseFloor512   = 12,
     #endif
+
+    // PsyDoom: adding new a 'custom' floor type
+    customFloor = 13
 };
 
 // What type of stair building to do when building stairs
@@ -43,12 +46,24 @@ struct floormove_t {
     thinker_t   thinker;            // Basic thinker properties
     floor_e     type;               // What type of behavior the floor mover has
     bool        crush;              // Does the floor movement cause crushing when things don't fit?
+
+    #if PSYDOOM_MODS
+        bool    bDoFinishScript;    // PsyDoom: if 'type' is 'customFloor' then this can be 'true' to execute a script action on finish
+    #endif
+
     sector_t*   sector;             // The sector affected
     int32_t     direction;          // 1 = up, -1 = down
     int32_t     newspecial;         // For certain floor mover types, a special to assign to the sector when the movement is done
     int16_t     texture;            // For certain floor mover types, a texture to assign to the sector when the movement is done
     fixed_t     floordestheight;    // Destination height for the floor mover
     fixed_t     speed;              // Speed that the floor moves at
+
+    // PsyDoom: if 'type' is 'customFloor' the script action to execute on finish, if enabled.
+    // Also a userdata field which will be sent along to the finish action.
+    #if PSYDOOM_MODS
+        int32_t finishScriptActionNum;
+        int32_t finishScriptUserdata;
+    #endif
 };
 
 // Standard speed for floors moving up and down
@@ -66,3 +81,15 @@ result_e T_MovePlane(
 void T_MoveFloor(floormove_t& floor) noexcept;
 bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept;
 bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept;
+
+#if PSYDOOM_MODS
+    bool EV_DoCustomFloor(
+        sector_t& sector,
+        const fixed_t destHeight,
+        const fixed_t speed,
+        const bool bCrush,
+        const bool bDoScriptActionOnFinish,
+        const int32_t finishScriptActionNum,
+        const int32_t finishScriptUserdata
+    ) noexcept;
+#endif

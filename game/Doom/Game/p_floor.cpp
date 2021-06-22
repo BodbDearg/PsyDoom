@@ -12,6 +12,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/ScriptingEngine.h"
 
 #include <algorithm>
 
@@ -186,6 +187,13 @@ void T_MoveFloor(floormove_t& floor) noexcept {
         // Remove the floor thinker and it's link to the sector, this movement is now done
         floorSec.specialdata = nullptr;
         P_RemoveThinker(floor.thinker);
+
+        // PsyDoom: if it's a custom floor then execute the finish script action, if one was specified
+        #if PSYDOOM_MODS
+            if ((floor.type == customFloor) && floor.bDoFinishScript) {
+                ScriptingEngine::doAction(floor.finishScriptActionNum, nullptr, &floorSec, nullptr, 0, floor.finishScriptUserdata);
+            }
+        #endif
     }
 }
 
@@ -213,6 +221,12 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
         floor.thinker.function = (think_t) &T_MoveFloor;
         floor.type = floorType;
         floor.crush = false;
+
+        #if PSYDOOM_MODS
+            floor.bDoFinishScript = false;      // PsyDoom: initialize these for good measure
+            floor.finishScriptActionNum = 0;
+            floor.finishScriptUserdata = 0;
+        #endif
 
         // Setup for specific floor types
         switch (floorType) {
@@ -385,6 +399,12 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
         firstFloor.direction = 1;
         firstFloor.sector = &firstSector;
 
+        #if PSYDOOM_MODS
+            firstFloor.bDoFinishScript = false;     // PsyDoom: initialize these for good measure
+            firstFloor.finishScriptActionNum = 0;
+            firstFloor.finishScriptUserdata = 0;
+        #endif
+
         fixed_t moveSpeed = FLOORSPEED;     // Note: these were previously un-initialized in the PSX code if the stair type was not known
         fixed_t stepHeight = 8 * FRACUNIT;
 
@@ -448,6 +468,12 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
                 floor.speed = moveSpeed;
                 floor.floordestheight = height;
 
+                #if PSYDOOM_MODS
+                    floor.bDoFinishScript = false;      // PsyDoom: initialize these for good measure
+                    floor.finishScriptActionNum = 0;
+                    floor.finishScriptUserdata = 0;
+                #endif
+
                 // Search for the next step to make from the one we just did
                 sectorIdx = (int32_t)(&bsec - gpSectors);
 
@@ -464,3 +490,43 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
 
     return bActivatedAMover;
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: does a custom type of floor mover for the specified sector.
+// Optionally, a script action can be set to execute upon the mover completing.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_DoCustomFloor(
+    sector_t& sector,
+    const fixed_t destHeight,
+    const fixed_t speed,
+    const bool bCrush,
+    const bool bDoScriptActionOnFinish,
+    const int32_t finishScriptActionNum,
+    const int32_t finishScriptUserdata
+) noexcept {
+    // Can't do a floor mover if the sector already has some other special happening
+    if (sector.specialdata)
+        return false;
+
+    // Allocate the floor mover, zero initialize and set as the sector thinker
+    floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
+    floor = {};
+    sector.specialdata = &floor;
+
+    // Setup the floor thinker and return 'true' for success
+    P_AddThinker(floor.thinker);
+    floor.thinker.function = (think_t) &T_MoveFloor;
+    floor.type = customFloor;
+    floor.crush = bCrush;
+    floor.bDoFinishScript = bDoScriptActionOnFinish;
+    floor.sector = &sector;
+    floor.direction = (destHeight >= sector.floorheight) ? +1 : -1;
+    floor.floordestheight = destHeight;
+    floor.speed = std::abs(speed);
+    floor.finishScriptActionNum = finishScriptActionNum;
+    floor.finishScriptUserdata = finishScriptUserdata;
+
+    return true;
+}
+#endif  // #if PSYDOOM_MODS
