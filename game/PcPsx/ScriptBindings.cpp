@@ -850,6 +850,28 @@ static void registerType_player_t(sol::state& lua) noexcept {
     makeTypeReadOnly(type);
 }
 
+static void registerType_CustomCeilingDef(sol::state& lua) noexcept {
+    sol::usertype<CustomCeilingDef> type = lua.new_usertype<CustomCeilingDef>("CustomCeilingDef", sol::default_constructor);
+
+    type["crushing"] = &CustomCeilingDef::bCrushing;
+    type["dofinishscript"] = &CustomCeilingDef::bDoFinishScript;
+    type["minheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomCeilingDef, minHeight);
+    type["maxheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomCeilingDef, maxHeight);
+    type["startdir"] = &CustomCeilingDef::startDir;
+    type["normalspeed"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomCeilingDef, normalSpeed);
+    type["crushspeed"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomCeilingDef, crushSpeed);
+    type["numdirchanges"] = &CustomCeilingDef::numDirChanges;
+    type["startsound"] = &CustomCeilingDef::startSound;
+    type["movesound"] = &CustomCeilingDef::moveSound;
+    type["movesoundfreq"] = &CustomCeilingDef::moveSoundFreq;
+    type["changedirsound"] = &CustomCeilingDef::changeDirSound;
+    type["stopsound"] = &CustomCeilingDef::stopSound;
+    type["finishscript_actionnum"] = &CustomCeilingDef::finishScriptActionNum;
+    type["finishscript_userdata"] = &CustomCeilingDef::finishScriptUserdata;
+
+    makeTypeReadOnly(type);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Registers all Lua scripting types
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -859,6 +881,7 @@ static void registerLuaTypes(sol::state& lua) noexcept {
     registerType_side_t(lua);
     registerType_mobj_t(lua);
     registerType_player_t(lua);
+    registerType_CustomCeilingDef(lua);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -936,6 +959,7 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["T_MoveFloor"] = T_MoveFloor;
     lua["T_MoveCeiling"] = T_MoveCeiling;
     lua["EV_DoCustomFloor"] = Script_EV_DoCustomFloor;
+    lua["EV_DoCustomCeiling"] = EV_DoCustomCeiling;
     lua["P_ActivateInStasisCeilingsForTag"] = P_ActivateInStasisCeilingsForTag;
     lua["P_ActivateInStasisCeilingForSector"] = P_ActivateInStasisCeilingForSector;
     lua["EV_CeilingCrushStopForTag"] = EV_CeilingCrushStopForTag;

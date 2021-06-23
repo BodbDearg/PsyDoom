@@ -201,6 +201,10 @@ void T_MoveFloor(floormove_t& floor) noexcept {
 // Trigger the given floor mover for sectors with the same tag as the given line
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
+    #if PSYDOOM_MODS
+        ASSERT_LOG(floorType != customFloor, "Custom floors must be created via 'EV_DoCustomFloor'!");
+    #endif
+
     bool bActivatedAMover = false;
 
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {

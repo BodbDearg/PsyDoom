@@ -32,7 +32,9 @@ enum floor_e : int32_t {
     #endif
 
     // PsyDoom: adding new a 'custom' floor type
-    customFloor = 13
+    #if PSYDOOM_MODS
+        customFloor = 13
+    #endif
 };
 
 // What type of stair building to do when building stairs

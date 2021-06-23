@@ -207,6 +207,30 @@ player_t {
     GetMaxAmmo(int32 ammoType) -> int32             # Return the maximum amount of the specified ammo type the player can pickup
 }
 ```
+### CustomCeilingDef
+```
+# Settings for a custom ceiling.
+# These all default to reasonable values, however 'minHeight' and 'maxHeight' should ALWAYS be specified.
+CustomCeilingDef {
+    new()                               # Create a new custom ceiling definition with default values
+
+    bool    crushing                    # Is the ceiling crushing?
+    bool    dofinishscript              # Call the finish script action when completed moving?
+    float   minheight                   # Minimum ceiling height the crusher reaches
+    float   maxheight                   # Maximum ceiling height the crusher reaches
+    int32   startdir                    # 1 = up, 0 = paused, -1 = down
+    float   normalspeed                 # Speed normally when moving
+    float   crushspeed                  # Speed when crushing something (usually 1/8 of normal speed)
+    int32   numdirchanges               # How many times the crusher can change direction before stopping (if '-1' then no limit)
+    uint32  startsound                  # Sound to make when starting ('0' if none)
+    uint32  movesound                   # Sound to make when moving ('0' if none)
+    uint32  movesoundfreq               # How many tics between instances of the move sound playing
+    uint32  changedirsound              # Sound to make when changing direction ('0' if none)
+    uint32  stopsound                   # Sound to make when stopping ('0' if none)
+    int32   finishscript_actionnum      # If enabled, a script action to execute when the ceiling has come to a complete stop/finished
+    int32   finishscript_userdata       # Userdata to pass to the 'finish' script action
+};
+```
 ## Functions
 ### Miscellaneous
 ```lua
@@ -394,6 +418,25 @@ EV_DoCustomFloor(
     int32 finishScriptActionNum,    # Which script action to execute on finish
     int32 finishScriptUserdata      # This userdata will be passed to the script action executed on finish
 ) -> bool
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# Do a custom ceiling/crusher on the specified sector using the specified settings.
+# Returns 'true' if the ceiling was created, or 'false' if some other thinker (ceiling etc.) is already operating on the sector.
+#-------------------------------------------------------------------------------------------------------------------------------------------
+EV_DoCustomCeiling(sector_t sector, CustomCeilingDef ceilDef) -> bool
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# Pause a ceiling crusher for a specific sector, or sectors with the specified tag; 'true' is returned if any sectors were affected
+#-------------------------------------------------------------------------------------------------------------------------------------------
+EV_CeilingCrushStopForSector(const sector_t& sector) -> bool
+EV_CeilingCrushStopForTag(const int32_t tag) -> bool
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# Unpause a ceiling crusher for a specific sector, or sectors with the specified tag; 'true' is returned if any sectors were affected
+#-------------------------------------------------------------------------------------------------------------------------------------------
+P_ActivateInStasisCeilingForSector(sector_t sector) -> bool
+P_ActivateInStasisCeilingsForTag(int32 tag) -> bool
+
 ```
 ### Sounds
 ```lua

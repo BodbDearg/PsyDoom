@@ -9,6 +9,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "PcPsx/ScriptingEngine.h"
 
 // Normal move speed for ceilings/crushers
 static constexpr fixed_t CEILSPEED = FRACUNIT * 2;
@@ -26,10 +27,100 @@ static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept;
 static void P_ActivateInStasisCeiling(line_t& line) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: default custom ceiling settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+#if PSYDOOM_MODS
+CustomCeilingDef::CustomCeilingDef() noexcept
+    : bCrushing(true)
+    , bDoFinishScript(false)
+    , minHeight(0)
+    , maxHeight(0)
+    , startDir(-1)
+    , normalSpeed(CEILSPEED)
+    , crushSpeed(CEILSPEED / 8)
+    , numDirChanges(-1)
+    , startSound(sfx_None)
+    , moveSound(sfx_stnmov)
+    , moveSoundFreq(8)
+    , changeDirSound(sfx_pstop)
+    , stopSound(sfx_None)
+    , finishScriptActionNum(0)
+    , finishScriptUserdata(0)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: do moving sounds for custom ceilings
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void doCustomCeilingMoveSounds(const ceiling_t& ceiling, sector_t& ceilingSector) noexcept {
+    const sfxenum_t moveSound = ceiling.moveSound;
+
+    if (moveSound != sfx_None) {
+        const uint32_t moveSoundFreq = ceiling.moveSoundFreq;
+
+        if ((moveSoundFreq <= 1) || ((gGameTic % moveSoundFreq) == 0)) {
+            S_StartSound((mobj_t*) &ceilingSector.soundorg, moveSound);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: do logic for when a custom ceiling reaches a destination height
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void onCustomCeilingDestHeightReached(ceiling_t& ceiling, sector_t& ceilingSector) noexcept {
+    // Stop the and remove ceiling if it's got no more direction changes left
+    const int32_t dirChangesLeft = ceiling.dirChangesLeft;
+
+    if (dirChangesLeft == 0) {
+        P_RemoveActiveCeiling(ceiling);
+
+        // Play the stop sound (if any)
+        const sfxenum_t stopSound = ceiling.stopSound;
+
+        if (stopSound != sfx_None) {
+            S_StartSound((mobj_t*) &ceilingSector.soundorg, stopSound);
+        }
+
+        // Execute the 'finished' script action (if any)
+        if (ceiling.bDoFinishScript) {
+            ScriptingEngine::doAction(ceiling.finishScriptActionNum, nullptr, &ceilingSector, nullptr, 0, ceiling.finishScriptUserdata);
+        }
+
+        // Done with this ceiling
+        return;
+    }
+
+    // Is the ceiling on a finite series of direction changes? (there is now one less)
+    if (dirChangesLeft > 0) {
+        ceiling.dirChangesLeft = dirChangesLeft - 1;
+    }
+
+    // Play the direction change sound (if any)
+    const sfxenum_t changeDirSound = ceiling.changeDirSound;
+
+    if (changeDirSound != sfx_None) {
+        S_StartSound((mobj_t*) &ceilingSector.soundorg, changeDirSound);
+    }
+
+    // Finally, change the ceiling direction itself
+    ceiling.direction = (ceiling.direction < 0) ? +1 : -1;
+}
+
+#endif  // #if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a moving ceiling or crusher: moves the ceiling, does state transitions and sounds etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
     sector_t& ceilingSector = *ceiling.sector;
+    const ceiling_e ceilingType = ceiling.type;
+
+    // PsyDoom: custom ceilings use a different speed when crushing something last frame
+    #if PSYDOOM_MODS
+        const fixed_t moveSpeed = ((ceilingType == customCeiling) && ceiling.bIsCrushing) ? ceiling.crushSpeed : ceiling.speed;
+    #else
+        const fixed_t moveSpeed = ceiling.speed;
+    #endif
 
     switch (ceiling.direction) {
         // In stasis
@@ -38,11 +129,19 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
 
         // Moving up
         case 1: {
-            const result_e moveResult = T_MovePlane(ceilingSector, ceiling.speed, ceiling.topheight, false, 1, ceiling.direction);
+            const result_e moveResult = T_MovePlane(ceilingSector, moveSpeed, ceiling.topheight, false, 1, ceiling.direction);
+
+            // PsyDoom: remember if the ceiling was crushing something for the next frame
+            #if PSYDOOM_MODS
+                ceiling.bIsCrushing = (moveResult == crushed);
+            #endif
 
             // Do moving sounds
             if ((gGameTic & 7) == 0) {
-                switch (ceiling.type) {
+                switch (ceilingType) {
+                #if PSYDOOM_MODS
+                    case customCeiling:
+                #endif
                     case silentCrushAndRaise:
                         break;
 
@@ -52,9 +151,15 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
                 }
             }
 
+            #if PSYDOOM_MODS
+                if (ceilingType == customCeiling) {
+                    doCustomCeilingMoveSounds(ceiling, ceilingSector);
+                }
+            #endif
+
             // Reached the destination?
             if (moveResult == pastdest) {
-                switch (ceiling.type) {
+                switch (ceilingType) {
                     case raiseToHighest:
                         P_RemoveActiveCeiling(ceiling);
                         break;
@@ -69,6 +174,12 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
                         ceiling.direction = -1;
                         break;
 
+                #if PSYDOOM_MODS
+                    case customCeiling:
+                        onCustomCeilingDestHeightReached(ceiling, ceilingSector);
+                        break;
+                #endif
+
                     default:
                         break;
                 }
@@ -77,10 +188,19 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
 
         // Moving down
         case -1: {
-            const result_e moveResult = T_MovePlane(ceilingSector, ceiling.speed, ceiling.bottomheight, ceiling.crush, 1, ceiling.direction);
+            const result_e moveResult = T_MovePlane(ceilingSector, moveSpeed, ceiling.bottomheight, ceiling.crush, 1, ceiling.direction);
 
+            // PsyDoom: remember if the ceiling was crushing something for the next frame
+            #if PSYDOOM_MODS
+                ceiling.bIsCrushing = (moveResult == crushed);
+            #endif
+
+            // Do moving sounds
             if ((gGameTic & 7) == 0) {
-                switch (ceiling.type) {
+                switch (ceilingType) {
+                #if PSYDOOM_MODS
+                    case customCeiling:
+                #endif
                     case silentCrushAndRaise:
                         break;
 
@@ -90,9 +210,16 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
                 }
             }
 
+            #if PSYDOOM_MODS
+                if (ceilingType == customCeiling) {
+                    doCustomCeilingMoveSounds(ceiling, ceilingSector);
+                }
+            #endif
+
+            // Reached the destination or crushing something?
             if (moveResult == pastdest) {
                 // Reached the destination
-                switch (ceiling.type) {
+                switch (ceilingType) {
                     case silentCrushAndRaise:
                         S_StartSound((mobj_t*) &ceilingSector.soundorg, sfx_pstop);
                         [[fallthrough]];
@@ -108,13 +235,19 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
                         P_RemoveActiveCeiling(ceiling);
                         break;
 
+                #if PSYDOOM_MODS
+                    case customCeiling:
+                        onCustomCeilingDestHeightReached(ceiling, ceilingSector);
+                        break;
+                #endif
+
                     default:
                         break;
                 }
             }
             else if (moveResult == crushed) {
                 // Crushing/hitting something
-                switch (ceiling.type) {
+                switch (ceilingType) {
                     case lowerAndCrush:
                     case crushAndRaise:
                     case silentCrushAndRaise:
@@ -133,6 +266,10 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
 // Trigger a ceiling (mover/crusher) special of the given type for sectors matching the given line's tag
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
+    #if PSYDOOM_MODS
+        ASSERT_LOG(ceilingType != customCeiling, "Custom ceilings must be created via 'EV_DoCustomCeiling'!");
+    #endif
+
     // Try re-activate ceilings that are in stasis for certain ceiling types
     switch (ceilingType) {
         case crushAndRaise:
@@ -157,8 +294,12 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
 
         // Create the door thinker, link to it's sector and populate its state/settings
         bActivatedACeiling = true;
-
         ceiling_t& ceiling = *(ceiling_t*) Z_Malloc(*gpMainMemZone, sizeof(ceiling_t), PU_LEVSPEC, nullptr);
+
+        #if PSYDOOM_MODS
+            ceiling = {};   // PsyDoom: zero-init all fields, including ones unused by this function
+        #endif
+
         P_AddThinker(ceiling.thinker);
         sector.specialdata = &ceiling;
 
@@ -209,6 +350,54 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
 
     return bActivatedACeiling;
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: add the ability to trigger a customized crusher on a sector via scripts
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_DoCustomCeiling(sector_t& sector, const CustomCeilingDef& ceilDef) noexcept {
+    // Can't do a crusher on the sector if it already has a special!
+    if (sector.specialdata)
+        return false;
+
+    // Alloc the crusher, zero-init and set it up as a thinker for the sector
+    ceiling_t& ceiling = *(ceiling_t*) Z_Malloc(*gpMainMemZone, sizeof(ceiling_t), PU_LEVSPEC, nullptr);
+    ceiling = {};
+    P_AddThinker(ceiling.thinker);
+    sector.specialdata = &ceiling;
+    ceiling.thinker.function = (think_t) &T_MoveCeiling;
+
+    // Init all other crusher fields
+    ceiling.type = customCeiling;
+    ceiling.sector = &sector;
+    ceiling.bottomheight = ceilDef.minHeight;
+    ceiling.topheight = ceilDef.maxHeight;
+    ceiling.speed = ceilDef.normalSpeed;
+    ceiling.crush = ceilDef.bCrushing;
+    ceiling.bDoFinishScript = ceilDef.bDoFinishScript;
+    ceiling.direction = ceilDef.startDir;
+    ceiling.tag = sector.tag;
+    ceiling.crushSpeed = ceilDef.crushSpeed;
+    ceiling.dirChangesLeft = ceilDef.numDirChanges;
+    ceiling.moveSound = ceilDef.moveSound;
+    ceiling.moveSoundFreq = ceilDef.moveSoundFreq;
+    ceiling.changeDirSound = ceilDef.changeDirSound;
+    ceiling.stopSound = ceilDef.stopSound;
+    ceiling.finishScriptActionNum = ceilDef.finishScriptActionNum;
+    ceiling.finishScriptUserdata = ceilDef.finishScriptUserdata;
+
+    // Add to the active ceilings list and play the start sound, if any
+    P_AddActiveCeiling(ceiling);
+    const sfxenum_t startSound = ceilDef.startSound;
+
+    if (startSound != sfx_None) {
+        S_StartSound((mobj_t*) &sector.soundorg, startSound);
+    }
+
+    // This operation was successful
+    return true;
+}
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add the given ceiling mover to a free slot in the 'active ceilings' list.
