@@ -31,7 +31,7 @@ static void P_ActivateInStasisCeiling(line_t& line) noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_MODS
 CustomCeilingDef::CustomCeilingDef() noexcept
-    : bCrushing(true)
+    : bCrush(true)
     , bDoFinishScript(false)
     , minHeight(0)
     , maxHeight(0)
@@ -372,12 +372,12 @@ bool EV_DoCustomCeiling(sector_t& sector, const CustomCeilingDef& ceilDef) noexc
     ceiling.sector = &sector;
     ceiling.bottomheight = ceilDef.minHeight;
     ceiling.topheight = ceilDef.maxHeight;
-    ceiling.speed = ceilDef.normalSpeed;
-    ceiling.crush = ceilDef.bCrushing;
+    ceiling.speed = std::abs(ceilDef.normalSpeed);
+    ceiling.crush = ceilDef.bCrush;
     ceiling.bDoFinishScript = ceilDef.bDoFinishScript;
-    ceiling.direction = ceilDef.startDir;
+    ceiling.direction = (ceilDef.startDir < 0) ? -1 : +1;
     ceiling.tag = sector.tag;
-    ceiling.crushSpeed = ceilDef.crushSpeed;
+    ceiling.crushSpeed = std::abs(ceilDef.crushSpeed);
     ceiling.dirChangesLeft = ceilDef.numDirChanges;
     ceiling.moveSound = ceilDef.moveSound;
     ceiling.moveSoundFreq = ceilDef.moveSoundFreq;

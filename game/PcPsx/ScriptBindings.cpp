@@ -666,18 +666,6 @@ static uint32_t T_MoveCeiling(sector_t& sector, const float speed, const float d
     return (uint32_t) T_MovePlane(sector, speedFixed, destHeightFixed, bCrush, 1, (destHeightFixed >= sector.ceilingheight) ? +1 : -1);
 }
 
-static bool Script_EV_DoCustomFloor(
-    sector_t& sector,
-    const float destHeight,
-    const float speed,
-    const bool bCrush,
-    const bool bDoScriptActionOnFinish,
-    const int32_t finishScriptActionNum,
-    const int32_t finishScriptUserdata
-) noexcept {
-    return EV_DoCustomFloor(sector, FloatToFixed(destHeight), FloatToFixed(speed), bCrush, bDoScriptActionOnFinish, finishScriptActionNum, finishScriptUserdata);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Script API: sound
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -850,10 +838,27 @@ static void registerType_player_t(sol::state& lua) noexcept {
     makeTypeReadOnly(type);
 }
 
+static void registerType_CustomFloorDef(sol::state& lua) noexcept {
+    sol::usertype<CustomFloorDef> type = lua.new_usertype<CustomFloorDef>("CustomFloorDef", sol::default_constructor);
+
+    type["crush"] = &CustomFloorDef::bCrush;
+    type["dofinishscript"] = &CustomFloorDef::bDoFinishScript;
+    type["destheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomFloorDef, destHeight);
+    type["speed"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomFloorDef, speed);
+    type["startsound"] = &CustomFloorDef::startSound;
+    type["movesound"] = &CustomFloorDef::moveSound;
+    type["movesoundfreq"] = &CustomFloorDef::moveSoundFreq;
+    type["stopsound"] = &CustomFloorDef::stopSound;
+    type["finishscript_actionnum"] = &CustomFloorDef::finishScriptActionNum;
+    type["finishscript_userdata"] = &CustomFloorDef::finishScriptUserdata;
+
+    makeTypeReadOnly(type);
+}
+
 static void registerType_CustomCeilingDef(sol::state& lua) noexcept {
     sol::usertype<CustomCeilingDef> type = lua.new_usertype<CustomCeilingDef>("CustomCeilingDef", sol::default_constructor);
 
-    type["crushing"] = &CustomCeilingDef::bCrushing;
+    type["crush"] = &CustomCeilingDef::bCrush;
     type["dofinishscript"] = &CustomCeilingDef::bDoFinishScript;
     type["minheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomCeilingDef, minHeight);
     type["maxheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomCeilingDef, maxHeight);
@@ -881,6 +886,7 @@ static void registerLuaTypes(sol::state& lua) noexcept {
     registerType_side_t(lua);
     registerType_mobj_t(lua);
     registerType_player_t(lua);
+    registerType_CustomFloorDef(lua);
     registerType_CustomCeilingDef(lua);
 }
 
@@ -958,7 +964,7 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     
     lua["T_MoveFloor"] = T_MoveFloor;
     lua["T_MoveCeiling"] = T_MoveCeiling;
-    lua["EV_DoCustomFloor"] = Script_EV_DoCustomFloor;
+    lua["EV_DoCustomFloor"] = EV_DoCustomFloor;
     lua["EV_DoCustomCeiling"] = EV_DoCustomCeiling;
     lua["P_ActivateInStasisCeilingsForTag"] = P_ActivateInStasisCeilingsForTag;
     lua["P_ActivateInStasisCeilingForSector"] = P_ActivateInStasisCeilingForSector;

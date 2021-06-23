@@ -17,6 +17,25 @@
 #include <algorithm>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: default custom floor settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+#if PSYDOOM_MODS
+CustomFloorDef::CustomFloorDef() noexcept
+    : bCrush(false)
+    , bDoFinishScript(false)
+    , destHeight(0)
+    , speed(FLOORSPEED)
+    , startSound(sfx_None)
+    , moveSound(sfx_stnmov)
+    , moveSoundFreq(4)
+    , stopSound(sfx_None)
+    , finishScriptActionNum(0)
+    , finishScriptUserdata(0)
+{
+}
+#endif  // #if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to move a floor or ceiling up or down, potentially crushing things contained within.
 // Returns the high level result of the movement.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -163,10 +182,31 @@ void T_MoveFloor(floormove_t& floor) noexcept {
     sector_t& floorSec = *floor.sector;
     const result_e moveResult = T_MovePlane(floorSec, floor.speed, floor.floordestheight, floor.crush, 0, floor.direction);
 
-    // Every so often do a floor movement sound (every 4 tics)
-    if ((gGameTic & 3) == 0) {
-        S_StartSound((mobj_t*) &floorSec.soundorg, sfx_stnmov);
-    }
+    // Every so often do a floor movement sound (every 4 tics).
+    // PsyDoom: custom floors might now have a different sound frequency and id.
+    const floor_e floorType = floor.type;
+
+    #if PSYDOOM_MODS
+        if (floorType != customFloor) {
+            // Regular floor type, do the original floor mover sounds
+            if ((gGameTic & 3) == 0) {
+                S_StartSound((mobj_t*) &floorSec.soundorg, sfx_stnmov);
+            }
+        } else {
+            // Custom floor type: do the mover sounds according to the settings for the floor
+            if (floor.moveSound != sfx_None) {
+                const uint32_t moveSoundFreq = floor.moveSoundFreq;
+
+                if ((moveSoundFreq <= 1) || ((gGameTic % moveSoundFreq) == 0)) {
+                    S_StartSound((mobj_t*) &floorSec.soundorg, floor.moveSound);
+                }
+            }
+        }
+    #else
+        if ((gGameTic & 3) == 0) {
+            S_StartSound((mobj_t*) &floorSec.soundorg, sfx_stnmov);
+        }
+    #endif
 
     // Has the floor reached it's intended position?
     if (moveResult == pastdest) {
@@ -188,10 +228,16 @@ void T_MoveFloor(floormove_t& floor) noexcept {
         floorSec.specialdata = nullptr;
         P_RemoveThinker(floor.thinker);
 
-        // PsyDoom: if it's a custom floor then execute the finish script action, if one was specified
+        // PsyDoom: custom floor sounds and actions on finish
         #if PSYDOOM_MODS
-            if ((floor.type == customFloor) && floor.bDoFinishScript) {
-                ScriptingEngine::doAction(floor.finishScriptActionNum, nullptr, &floorSec, nullptr, 0, floor.finishScriptUserdata);
+            if (floorType == customFloor) {
+                if (floor.stopSound != sfx_None) {
+                    S_StartSound((mobj_t*) &floorSec.soundorg, floor.stopSound);
+                }
+
+                if (floor.bDoFinishScript) {
+                    ScriptingEngine::doAction(floor.finishScriptActionNum, nullptr, &floorSec, nullptr, 0, floor.finishScriptUserdata);
+                }
             }
         #endif
     }
@@ -216,8 +262,12 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
 
         // Found a sector which will be affected by this floor special: create a thinker and link to the sector
         bActivatedAMover = true;
-
         floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
+
+        #if PSYDOOM_MODS
+            floor = {};   // PsyDoom: zero-init all fields, including ones unused by this function
+        #endif
+
         P_AddThinker(floor.thinker);
         sector.specialdata = &floor;
 
@@ -225,12 +275,6 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
         floor.thinker.function = (think_t) &T_MoveFloor;
         floor.type = floorType;
         floor.crush = false;
-
-        #if PSYDOOM_MODS
-            floor.bDoFinishScript = false;      // PsyDoom: initialize these for good measure
-            floor.finishScriptActionNum = 0;
-            floor.finishScriptUserdata = 0;
-        #endif
 
         // Setup for specific floor types
         switch (floorType) {
@@ -393,8 +437,12 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
 
         // Found a stairs sector which will be affected by this floor special: create a thinker for the first step and link to the sector
         bActivatedAMover = true;
-
         floormove_t& firstFloor = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
+
+        #if PSYDOOM_MODS
+            firstFloor = {};   // PsyDoom: zero-init all fields, including ones unused by this function
+        #endif
+
         P_AddThinker(firstFloor.thinker);
         firstSector.specialdata = &firstFloor;
 
@@ -402,12 +450,6 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
         firstFloor.thinker.function = (think_t) &T_MoveFloor;
         firstFloor.direction = 1;
         firstFloor.sector = &firstSector;
-
-        #if PSYDOOM_MODS
-            firstFloor.bDoFinishScript = false;     // PsyDoom: initialize these for good measure
-            firstFloor.finishScriptActionNum = 0;
-            firstFloor.finishScriptUserdata = 0;
-        #endif
 
         fixed_t moveSpeed = FLOORSPEED;     // Note: these were previously un-initialized in the PSX code if the stair type was not known
         fixed_t stepHeight = 8 * FRACUNIT;
@@ -463,6 +505,11 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
 
                 // Create a thinker for this step's floor mover, link to the sector and populate it's settings
                 floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
+
+                #if PSYDOOM_MODS
+                    floor = {};   // PsyDoom: zero-init all fields, including ones unused by this function
+                #endif
+
                 P_AddThinker(floor.thinker);
                 bsec.specialdata = &floor;
 
@@ -471,12 +518,6 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
                 floor.sector = &bsec;
                 floor.speed = moveSpeed;
                 floor.floordestheight = height;
-
-                #if PSYDOOM_MODS
-                    floor.bDoFinishScript = false;      // PsyDoom: initialize these for good measure
-                    floor.finishScriptActionNum = 0;
-                    floor.finishScriptUserdata = 0;
-                #endif
 
                 // Search for the next step to make from the one we just did
                 sectorIdx = (int32_t)(&bsec - gpSectors);
@@ -500,15 +541,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
 // PsyDoom addition: does a custom type of floor mover for the specified sector.
 // Optionally, a script action can be set to execute upon the mover completing.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool EV_DoCustomFloor(
-    sector_t& sector,
-    const fixed_t destHeight,
-    const fixed_t speed,
-    const bool bCrush,
-    const bool bDoScriptActionOnFinish,
-    const int32_t finishScriptActionNum,
-    const int32_t finishScriptUserdata
-) noexcept {
+bool EV_DoCustomFloor(sector_t& sector, const CustomFloorDef& floorDef) noexcept {
     // Can't do a floor mover if the sector already has some other special happening
     if (sector.specialdata)
         return false;
@@ -522,15 +555,26 @@ bool EV_DoCustomFloor(
     P_AddThinker(floor.thinker);
     floor.thinker.function = (think_t) &T_MoveFloor;
     floor.type = customFloor;
-    floor.crush = bCrush;
-    floor.bDoFinishScript = bDoScriptActionOnFinish;
+    floor.crush = floorDef.bCrush;
+    floor.bDoFinishScript = floorDef.bDoFinishScript;
     floor.sector = &sector;
-    floor.direction = (destHeight >= sector.floorheight) ? +1 : -1;
-    floor.floordestheight = destHeight;
-    floor.speed = std::abs(speed);
-    floor.finishScriptActionNum = finishScriptActionNum;
-    floor.finishScriptUserdata = finishScriptUserdata;
+    floor.direction = (floorDef.destHeight >= sector.floorheight) ? +1 : -1;
+    floor.floordestheight = floorDef.destHeight;
+    floor.speed = std::abs(floorDef.speed);
+    floor.moveSound = floorDef.moveSound;
+    floor.moveSoundFreq = floorDef.moveSoundFreq;
+    floor.stopSound = floorDef.stopSound;
+    floor.finishScriptActionNum = floorDef.finishScriptActionNum;
+    floor.finishScriptUserdata = floorDef.finishScriptUserdata;
 
+    // Play the start sound, if any
+    const sfxenum_t startSound = floorDef.startSound;
+
+    if (startSound != sfx_None) {
+        S_StartSound((mobj_t*) &sector.soundorg, startSound);
+    }
+
+    // This operation was successful
     return true;
 }
 #endif  // #if PSYDOOM_MODS

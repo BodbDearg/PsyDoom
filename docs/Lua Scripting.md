@@ -207,14 +207,34 @@ player_t {
     GetMaxAmmo(int32 ammoType) -> int32             # Return the maximum amount of the specified ammo type the player can pickup
 }
 ```
-### CustomCeilingDef
+### CustomFloorDef
+```lua
+# Settings for a custom floor.
+# These all default to reasonable values, however 'destheight' should ALWAYS be specified.
+CustomFloorDef {
+    new()
+
+    bool    crush                       # Is the floor crushing?
+    bool    dofinishscript              # Call the finish script action when completed moving?
+    float   destheight                  # Destination height for the floor
+    float   speed                       # Speed that the floor moves at
+    uint32  startsound                  # Sound to make when starting ('0' if none)
+    uint32  movesound                   # Sound to make when moving ('0' if none)
+    uint32  movesoundfreq               # How many tics between instances of the move sound playing
+    uint32  stopsound                   # Sound to make when stopping ('0' if none)
+    int32   finishscript_actionnum      # If enabled, a script action to execute when the floor has come to a complete stop/finished
+    int32   finishscript_userdata       # Userdata to pass to the 'finish' script action
+}
+
 ```
+### CustomCeilingDef
+```lua
 # Settings for a custom ceiling.
 # These all default to reasonable values, however 'minHeight' and 'maxHeight' should ALWAYS be specified.
 CustomCeilingDef {
     new()                               # Create a new custom ceiling definition with default values
 
-    bool    crushing                    # Is the ceiling crushing?
+    bool    crush                       # Is the ceiling crushing?
     bool    dofinishscript              # Call the finish script action when completed moving?
     float   minheight                   # Minimum ceiling height the crusher reaches
     float   maxheight                   # Maximum ceiling height the crusher reaches
@@ -405,19 +425,10 @@ T_MoveFloor(sector_t sector, float speed, float destHeight, bool bCrush) -> uint
 T_MoveCeiling(sector_t sector, float speed, float destHeight, bool bCrush) -> uint32
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-# Start a custom floor mover process on the specified sector.
+# Do a custom floor mover on the specified sector using the specified settings.
 # Returns 'true' if the mover was started, or 'false' if some other thinker (ceiling etc.) is already operating on the sector.
-# Optionally, a script action can be made to execute when the floor finishes moving.
 #-------------------------------------------------------------------------------------------------------------------------------------------
-EV_DoCustomFloor(
-    sector_t& sector,
-    float destHeight,               # Target height to reach
-    float speed,                    # Step per tic (should be positive)
-    bool bCrush,                    # If true then things may be crushed by the action
-    bool bDoScriptActionOnFinish,   # Specify 'true' to execute a script action on finish
-    int32 finishScriptActionNum,    # Which script action to execute on finish
-    int32 finishScriptUserdata      # This userdata will be passed to the script action executed on finish
-) -> bool
+EV_DoCustomFloor(sector_t sector, CustomFloorDef) -> bool
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Do a custom ceiling/crusher on the specified sector using the specified settings.
@@ -485,7 +496,7 @@ wp_chainsaw
 wp_nochange         # Used to represent no weapon change for the 'pendingweapon'
 ```
 ### Ammo types
-```
+```lua
 am_clip         # Bullets
 am_shell
 am_cell
@@ -538,7 +549,7 @@ ML_VOID                 # PsyDoom specific: flag a line as 'see through' for occ
 ML_ADD_SKY_WALL_HINT    # PsyDoom specific: hints that a 'sky wall' should be added for 2 sided lines with a sky ceiling or floors
 ```
 ### Thing flags
-```
+```lua
 MF_SPECIAL              # Thing is an item which can be picked up
 MF_SOLID                # Thing is collidable and blocks movement
 MF_SHOOTABLE            # Thing is targetable (can be hit) and can take damage

@@ -61,13 +61,13 @@ struct ceiling_t {
     extern ceiling_t* gpActiveCeilings[MAXCEILINGS];
 #endif
 
-// PsyDoom: definition for a custom ceiling.
+// PsyDoom: definition for a custom ceiling/crusher.
 // The constructor tries to construct with reasonable default settings.
 #if PSYDOOM_MODS
     struct CustomCeilingDef {
         CustomCeilingDef() noexcept;
 
-        bool        bCrushing;                  // Is the ceiling crushing?
+        bool        bCrush;                     // Is the ceiling crushing?
         bool        bDoFinishScript;            // Call the finish script action when completed moving?
         fixed_t     minHeight;                  // Minimum ceiling height the crusher reaches
         fixed_t     maxHeight;                  // Maximum ceiling height the crusher reaches

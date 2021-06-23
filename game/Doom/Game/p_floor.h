@@ -2,6 +2,7 @@
 
 #include "Doom/doomdef.h"
 
+enum sfxenum_t : int32_t;
 struct line_t;
 
 // Represents the result of moving a floor/ceiling
@@ -60,16 +61,37 @@ struct floormove_t {
     fixed_t     floordestheight;    // Destination height for the floor mover
     fixed_t     speed;              // Speed that the floor moves at
 
-    // PsyDoom: if 'type' is 'customFloor' the script action to execute on finish, if enabled.
-    // Also a userdata field which will be sent along to the finish action.
+    // PsyDoom: new fields used by custom floors
     #if PSYDOOM_MODS
-        int32_t finishScriptActionNum;
-        int32_t finishScriptUserdata;
+        sfxenum_t   moveSound;                  // Sound to make when moving ('sfx_None' if none)
+        uint32_t    moveSoundFreq;              // How many tics between instances of the move sound playing
+        sfxenum_t   stopSound;                  // Sound to make when stopping ('sfx_None' if none)
+        int32_t     finishScriptActionNum;      // If enabled, the script action number to execute when the floor is done moving
+        int32_t     finishScriptUserdata;       // A userdata field which will be sent along to the finish action when it executes
     #endif
 };
 
 // Standard speed for floors moving up and down
 static constexpr fixed_t FLOORSPEED = FRACUNIT * 3;
+
+// PsyDoom: definition for a custom floor mover.
+// The constructor tries to construct with reasonable default settings.
+#if PSYDOOM_MODS
+    struct CustomFloorDef {
+        CustomFloorDef() noexcept;
+
+        bool        bCrush;                     // Is the floor crushing?
+        bool        bDoFinishScript;            // Call the finish script action when completed moving?
+        fixed_t     destHeight;                 // Destination height for the floor
+        fixed_t     speed;                      // Speed that the floor moves at
+        sfxenum_t   startSound;                 // Sound to make when starting ('sfx_None' if none)
+        sfxenum_t   moveSound;                  // Sound to make when moving ('sfx_None' if none)
+        uint32_t    moveSoundFreq;              // How many tics between instances of the move sound playing
+        sfxenum_t   stopSound;                  // Sound to make when stopping ('sfx_None' if none)
+        int32_t     finishScriptActionNum;      // If enabled, a script action to execute when the floor has come to a complete stop/finished
+        int32_t     finishScriptUserdata;       // Userdata to pass to the 'finish' script action
+    };
+#endif
 
 result_e T_MovePlane(
     sector_t& sector,
@@ -85,13 +107,5 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept;
 bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept;
 
 #if PSYDOOM_MODS
-    bool EV_DoCustomFloor(
-        sector_t& sector,
-        const fixed_t destHeight,
-        const fixed_t speed,
-        const bool bCrush,
-        const bool bDoScriptActionOnFinish,
-        const int32_t finishScriptActionNum,
-        const int32_t finishScriptUserdata
-    ) noexcept;
+    bool EV_DoCustomFloor(sector_t& sector, const CustomFloorDef& floorDef) noexcept;
 #endif
