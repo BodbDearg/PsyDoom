@@ -328,6 +328,7 @@ if (PSYDOOM_INCLUDE_OLD_CODE)
         "Old/Doom/Base/Old_w_wad.h"
         "Old/Doom/Base/Old_z_zone.cpp"
         "Old/Doom/Game/Old_p_ceiling.cpp"
+        "Old/Doom/Game/Old_p_plats.cpp"
         "Old/Doom/Game/Old_p_setup.cpp"
         "Old/Doom/Game/Old_sprinfo.cpp"
         "Old/Doom/Renderer/Old_r_data.cpp"

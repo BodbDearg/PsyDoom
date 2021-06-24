@@ -14,6 +14,7 @@
 #include "Doom/Game/p_map.h"
 #include "Doom/Game/p_maputl.h"
 #include "Doom/Game/p_mobj.h"
+#include "Doom/Game/p_plats.h"
 #include "Doom/Game/p_pspr.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_sight.h"
@@ -855,6 +856,27 @@ static void registerType_CustomFloorDef(sol::state& lua) noexcept {
     makeTypeReadOnly(type);
 }
 
+static void registerType_CustomPlatDef(sol::state& lua) noexcept {
+    sol::usertype<CustomPlatDef> type = lua.new_usertype<CustomPlatDef>("CustomPlatDef", sol::default_constructor);
+
+    type["crush"] = &CustomPlatDef::bCrush;
+    type["dofinishscript"] = &CustomPlatDef::bDoFinishScript;
+    type["startstate"] = &CustomPlatDef::startState;
+    type["finishstate"] = &CustomPlatDef::finishState;
+    type["minheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomPlatDef, minHeight);
+    type["maxheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomPlatDef, maxHeight);
+    type["speed"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomPlatDef, speed);
+    type["waittime"] = &CustomPlatDef::waitTime;
+    type["startsound"] = &CustomPlatDef::startSound;
+    type["movesound"] = &CustomPlatDef::moveSound;
+    type["movesoundfreq"] = &CustomPlatDef::moveSoundFreq;
+    type["stopsound"] = &CustomPlatDef::stopSound;
+    type["finishscript_actionnum"] = &CustomPlatDef::finishScriptActionNum;
+    type["finishscript_userdata"] = &CustomPlatDef::finishScriptUserdata;
+
+    makeTypeReadOnly(type);
+}
+
 static void registerType_CustomCeilingDef(sol::state& lua) noexcept {
     sol::usertype<CustomCeilingDef> type = lua.new_usertype<CustomCeilingDef>("CustomCeilingDef", sol::default_constructor);
 
@@ -887,6 +909,7 @@ static void registerLuaTypes(sol::state& lua) noexcept {
     registerType_mobj_t(lua);
     registerType_player_t(lua);
     registerType_CustomFloorDef(lua);
+    registerType_CustomPlatDef(lua);
     registerType_CustomCeilingDef(lua);
 }
 
@@ -965,7 +988,12 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["T_MoveFloor"] = T_MoveFloor;
     lua["T_MoveCeiling"] = T_MoveCeiling;
     lua["EV_DoCustomFloor"] = EV_DoCustomFloor;
+    lua["EV_DoCustomPlat"] = EV_DoCustomPlat;
     lua["EV_DoCustomCeiling"] = EV_DoCustomCeiling;
+    lua["P_ActivateInStasisPlatForTag"] = P_ActivateInStasisPlatForTag;
+    lua["P_ActivateInStasisPlatForSector"] = P_ActivateInStasisPlatForSector;
+    lua["EV_StopPlatForTag"] = EV_StopPlatForTag;
+    lua["EV_StopPlatForSector"] = EV_StopPlatForSector;
     lua["P_ActivateInStasisCeilingsForTag"] = P_ActivateInStasisCeilingsForTag;
     lua["P_ActivateInStasisCeilingForSector"] = P_ActivateInStasisCeilingForSector;
     lua["EV_CeilingCrushStopForTag"] = EV_CeilingCrushStopForTag;

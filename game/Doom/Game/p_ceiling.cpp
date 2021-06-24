@@ -370,8 +370,8 @@ bool EV_DoCustomCeiling(sector_t& sector, const CustomCeilingDef& ceilDef) noexc
     // Init all other crusher fields
     ceiling.type = customCeiling;
     ceiling.sector = &sector;
-    ceiling.bottomheight = ceilDef.minHeight;
-    ceiling.topheight = ceilDef.maxHeight;
+    ceiling.bottomheight = std::min(ceilDef.minHeight, ceilDef.maxHeight);
+    ceiling.topheight = std::max(ceilDef.minHeight,  ceilDef.maxHeight);
     ceiling.speed = std::abs(ceilDef.normalSpeed);
     ceiling.crush = ceilDef.bCrush;
     ceiling.bDoFinishScript = ceilDef.bDoFinishScript;
@@ -478,6 +478,9 @@ static bool P_ActivateMatchingInStasisCeilings(const CeilFilterT& ceilFilter) no
     return bUnpausedACrusher;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: functions to activate in-stasis ceilings matching a sector tag or sector (exposed via Lua scripting)
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool P_ActivateInStasisCeilingsForTag(const int32_t tag) noexcept {
     return P_ActivateMatchingInStasisCeilings([&](const ceiling_t& c) noexcept { return (c.tag == tag); });
 }
@@ -521,6 +524,9 @@ static bool EV_MatchingCeilingCrushStop(const CeilFilterT& ceilFilter) noexcept 
     return bPausedACrusher;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: functions to stop ceilings matching a sector tag or sector (exposed via Lua scripting)
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool EV_CeilingCrushStopForTag(const int32_t tag) noexcept {
     return EV_MatchingCeilingCrushStop([&](const ceiling_t& c) noexcept { return (c.tag == tag); }); 
 }

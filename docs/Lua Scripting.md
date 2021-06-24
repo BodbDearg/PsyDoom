@@ -225,12 +225,34 @@ CustomFloorDef {
     int32   finishscript_actionnum      # If enabled, a script action to execute when the floor has come to a complete stop/finished
     int32   finishscript_userdata       # Userdata to pass to the 'finish' script action
 }
+```
+### CustomPlatDef
+```lua
+# Settings for a custom platform.
+# These all default to reasonable values, however 'minheight', 'maxheight', 'startstate' and 'finishstate' should ALWAYS be specified.
+CustomPlatDef {
+    new()
 
+    bool    crush                       # Is the platform crushing?
+    bool    dofinishscript              # Call the finish script action when completed moving?
+    int32   startstate                  # -1 = down, 0 = wait, 1 = up
+    int32   finishstate                 # -1 = down, 0 = wait, 1 = up (stop the platform after this state is done)    
+    float   minheight                   # Minimum platform floor height
+    float   maxheight                   # Maximum platform floor height
+    float   speed                       # Speed that the platform moves at
+    int32   waittime                    # How many game tics the platform waits for when in the 'waiting' state
+    uint32  startsound                  # Sound to make when starting ('0' if none)
+    uint32  movesound                   # Sound to make when moving ('0' if none)
+    uint32  movesoundfreq               # How many tics between instances of the move sound playing
+    uint32  stopsound                   # Sound to make when stopping ('0' if none)
+    int32   finishscript_actionnum      # If enabled, a script action to execute when the platform has come to a complete stop/finished
+    int32   finishscript_userdata       # Userdata to pass to the 'finish' script action
+}
 ```
 ### CustomCeilingDef
 ```lua
 # Settings for a custom ceiling.
-# These all default to reasonable values, however 'minHeight' and 'maxHeight' should ALWAYS be specified.
+# These all default to reasonable values, however 'minheight' and 'maxheight' should ALWAYS be specified.
 CustomCeilingDef {
     new()                               # Create a new custom ceiling definition with default values
 
@@ -366,7 +388,7 @@ P_SpawnMobj(float x, float y, float z, uint32 type) -> mobj_t
 
 # Spawn a missile of the specified type from 'src' (firer) to 'dst'; on successful spawn the thing is returned, otherwise 'nil'.
 # IMPORTANT: the 'src' and 'dst' things MUST be specified for this work properly.
-P_SpawnMissile(mobj_t& src, mobj_t& dst, uint32_t type) -> mobj_t
+P_SpawnMissile(mobj_t& src, mobj_t& dst, uint32 type) -> mobj_t
 
 # Damages the given target by the specified integer amount. The inflictor is optional and affects force calculations.
 # The source is optional and affects blame for the attack.
@@ -425,22 +447,30 @@ T_MoveFloor(sector_t sector, float speed, float destHeight, bool bCrush) -> uint
 T_MoveCeiling(sector_t sector, float speed, float destHeight, bool bCrush) -> uint32
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-# Do a custom floor mover on the specified sector using the specified settings.
-# Returns 'true' if the mover was started, or 'false' if some other thinker (ceiling etc.) is already operating on the sector.
+# Do a custom floor mover, platform/elevator, or ceiling/crusher on the specified sector using the specified settings.
+# Returns 'true' if the special was started, or 'false' if some other thinker (ceiling etc.) is already operating on the sector.
 #-------------------------------------------------------------------------------------------------------------------------------------------
 EV_DoCustomFloor(sector_t sector, CustomFloorDef) -> bool
+EV_DoCustomPlat(sector_t sector, CustomPlatDef platDef) -> bool
+EV_DoCustomCeiling(sector_t sector, CustomCeilingDef ceilDef) -> bool
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-# Do a custom ceiling/crusher on the specified sector using the specified settings.
-# Returns 'true' if the ceiling was created, or 'false' if some other thinker (ceiling etc.) is already operating on the sector.
+# Pause a platform/elevator for a specific sector, or sectors with the specified tag; 'true' is returned if any sectors were affected
 #-------------------------------------------------------------------------------------------------------------------------------------------
-EV_DoCustomCeiling(sector_t sector, CustomCeilingDef ceilDef) -> bool
+EV_StopPlatForSector(sector sector) -> bool
+EV_StopPlatForTag(int32 tag) -> bool
+
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# Unpause a platform/elevator for a specific sector, or sectors with the specified tag; 'true' is returned if any sectors were affected
+#-------------------------------------------------------------------------------------------------------------------------------------------
+P_ActivateInStasisPlatForSector(sector_t sector) -> bool
+P_ActivateInStasisPlatForTag(int32 tag) -> bool
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Pause a ceiling crusher for a specific sector, or sectors with the specified tag; 'true' is returned if any sectors were affected
 #-------------------------------------------------------------------------------------------------------------------------------------------
-EV_CeilingCrushStopForSector(const sector_t& sector) -> bool
-EV_CeilingCrushStopForTag(const int32_t tag) -> bool
+EV_CeilingCrushStopForSector(const sector_t sector) -> bool
+EV_CeilingCrushStopForTag(const int32 tag) -> bool
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Unpause a ceiling crusher for a specific sector, or sectors with the specified tag; 'true' is returned if any sectors were affected
