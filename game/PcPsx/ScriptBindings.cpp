@@ -8,6 +8,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_ceiling.h"
+#include "Doom/Game/p_doors.h"
 #include "Doom/Game/p_floor.h"
 #include "Doom/Game/p_inter.h"
 #include "Doom/Game/p_local.h"
@@ -899,6 +900,25 @@ static void registerType_CustomCeilingDef(sol::state& lua) noexcept {
     makeTypeReadOnly(type);
 }
 
+static void registerType_CustomDoorDef(sol::state& lua) noexcept {
+    sol::usertype<CustomDoorDef> type = lua.new_usertype<CustomDoorDef>("CustomDoorDef", sol::default_constructor);
+
+    type["open"] = &CustomDoorDef::bOpen;
+    type["doreturn"] = &CustomDoorDef::bDoReturn;
+    type["blockable"] = &CustomDoorDef::bBlockable;
+    type["dofinishscript"] = &CustomDoorDef::bDoFinishScript;
+    type["minheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomDoorDef, minHeight);
+    type["maxheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomDoorDef, maxHeight);
+    type["speed"] = SOL_FIXED_PROPERTY_AS_FLOAT(CustomDoorDef, speed);
+    type["waittime"] = &CustomDoorDef::waitTime;
+    type["opensound"] = &CustomDoorDef::openSound;
+    type["closesound"] = &CustomDoorDef::closeSound;
+    type["finishscript_actionnum"] = &CustomDoorDef::finishScriptActionNum;
+    type["finishscript_userdata"] = &CustomDoorDef::finishScriptUserdata;
+
+    makeTypeReadOnly(type);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Registers all Lua scripting types
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -911,6 +931,7 @@ static void registerLuaTypes(sol::state& lua) noexcept {
     registerType_CustomFloorDef(lua);
     registerType_CustomPlatDef(lua);
     registerType_CustomCeilingDef(lua);
+    registerType_CustomDoorDef(lua);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -990,6 +1011,7 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["EV_DoCustomFloor"] = EV_DoCustomFloor;
     lua["EV_DoCustomPlat"] = EV_DoCustomPlat;
     lua["EV_DoCustomCeiling"] = EV_DoCustomCeiling;
+    lua["EV_DoCustomDoor"] = EV_DoCustomDoor;
     lua["P_ActivateInStasisPlatForTag"] = P_ActivateInStasisPlatForTag;
     lua["P_ActivateInStasisPlatForSector"] = P_ActivateInStasisPlatForSector;
     lua["EV_StopPlatForTag"] = EV_StopPlatForTag;

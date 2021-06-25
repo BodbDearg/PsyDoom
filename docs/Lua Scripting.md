@@ -212,7 +212,7 @@ player_t {
 # Settings for a custom floor.
 # These all default to reasonable values, however 'destheight' should ALWAYS be specified.
 CustomFloorDef {
-    new()
+    new()                               # Create a new custom floor definition with default values
 
     bool    crush                       # Is the floor crushing?
     bool    dofinishscript              # Call the finish script action when completed moving?
@@ -231,7 +231,7 @@ CustomFloorDef {
 # Settings for a custom platform.
 # These all default to reasonable values, however 'minheight', 'maxheight', 'startstate' and 'finishstate' should ALWAYS be specified.
 CustomPlatDef {
-    new()
+    new()                               # Create a new custom platform definition with default values
 
     bool    crush                       # Is the platform crushing?
     bool    dofinishscript              # Call the finish script action when completed moving?
@@ -273,6 +273,27 @@ CustomCeilingDef {
     int32   finishscript_userdata       # Userdata to pass to the 'finish' script action
 };
 ```
+### CustomDoorDef
+```lua
+# Settings for a custom door.
+# These all default to reasonable values, however 'minheight' and 'maxheight' should ALWAYS be specified.
+CustomDoorDef {
+    new()                               # Create a new custom door definition with default values
+
+    bool    open                        # Does the door open ('true') or close ('false') initially?
+    bool    doreturn                    # If 'true' then return the door to it's prior open/closed state before the door is done
+    bool    dofinishscript              # Call the finish script action when the door is done?
+    bool    blockable                   # If 'true' then the door goes back up if closing and something is underneath it
+    float   minheight                   # Minimum (closed) ceiling height for the door
+    float   maxheight                   # Maximum (open) ceiling height for the door
+    float   speed                       # Speed of the door
+    int32   waittime                    # How long the door waits (in tics) before trying to return to it's previous state (if returning at all)
+    uint32  opensound                   # Sound to make when opening ('sfx_None' if none)
+    uint32  closesound                  # Sound to make when closing ('sfx_None' if none)
+    int32   finishscript_actionnum      # If enabled, a script action to execute when the door has finished up completely
+    int32   finishscript_userdata       # Userdata to pass to the 'finish' script action
+}
+```
 ## Functions
 ### Miscellaneous
 ```lua
@@ -294,7 +315,6 @@ AngleToPoint(float x1, float y1, float x2, float y2) -> float       # Using Doom
 ```
 ### Delayed and repeating action scheduling
 ```lua
-
 # Schedule the specified action number to occur at least 1 tic in the future, plus the number of delay tics.
 # The tag specified is used to identify the delayed action, and userdata can be used for any purposes.
 ScheduleAction(int32 actionNum, int32 delayTics, int32 tag, int32 userdata)
@@ -447,12 +467,13 @@ T_MoveFloor(sector_t sector, float speed, float destHeight, bool bCrush) -> uint
 T_MoveCeiling(sector_t sector, float speed, float destHeight, bool bCrush) -> uint32
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-# Do a custom floor mover, platform/elevator, or ceiling/crusher on the specified sector using the specified settings.
+# Do a custom floor mover, platform/elevator, ceiling/crusher or on the specified sector using the specified settings.
 # Returns 'true' if the special was started, or 'false' if some other thinker (ceiling etc.) is already operating on the sector.
 #-------------------------------------------------------------------------------------------------------------------------------------------
 EV_DoCustomFloor(sector_t sector, CustomFloorDef) -> bool
 EV_DoCustomPlat(sector_t sector, CustomPlatDef platDef) -> bool
 EV_DoCustomCeiling(sector_t sector, CustomCeilingDef ceilDef) -> bool
+EV_DoCustomDoor(sector_t sector, CustomDoorDef ceilDef) -> bool
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Pause a platform/elevator for a specific sector, or sectors with the specified tag; 'true' is returned if any sectors were affected
@@ -753,109 +774,109 @@ MT_SPAWNFIRE            # Icon Of Sin spawn fire
 ```
 ### Sound ids (built-in)
 ```lua
-sfx_sgcock
-sfx_punch
-sfx_itmbk
-sfx_firsht2
-sfx_barexp
-sfx_firxpl
-sfx_pistol
-sfx_shotgn
-sfx_plasma
-sfx_bfg
-sfx_sawup
-sfx_sawidl
-sfx_sawful
-sfx_sawhit
-sfx_rlaunc
-sfx_rxplod
-sfx_pstart
-sfx_pstop
-sfx_doropn
-sfx_dorcls
-sfx_stnmov
-sfx_swtchn
-sfx_swtchx
-sfx_itemup
-sfx_wpnup
-sfx_oof
-sfx_telept
-sfx_noway
-sfx_dshtgn
-sfx_dbopn
-sfx_dbload
-sfx_dbcls
-sfx_plpain
-sfx_pldeth
-sfx_slop
-sfx_posit1
-sfx_posit2
-sfx_posit3
-sfx_podth1
-sfx_podth2
-sfx_podth3
-sfx_posact
-sfx_popain
-sfx_dmpain
-sfx_dmact
-sfx_claw
-sfx_bgsit1
-sfx_bgsit2
-sfx_bgdth1
-sfx_bgdth2
-sfx_bgact
-sfx_sgtsit
-sfx_sgtatk
-sfx_sgtdth
-sfx_brssit
-sfx_brsdth
-sfx_cacsit
-sfx_cacdth
-sfx_sklatk
-sfx_skldth
-sfx_kntsit
-sfx_kntdth
-sfx_pesit
-sfx_pepain
-sfx_pedth
-sfx_bspsit
-sfx_bspdth
-sfx_bspact
-sfx_bspwlk
-sfx_manatk
-sfx_mansit
-sfx_mnpain
-sfx_mandth
-sfx_firsht
-sfx_skesit
-sfx_skedth
-sfx_skeact
-sfx_skeatk
-sfx_skeswg
-sfx_skepch
-sfx_cybsit
-sfx_cybdth
-sfx_hoof
-sfx_metal
-sfx_spisit
-sfx_spidth
-sfx_bdopn
-sfx_bdcls
-sfx_getpow
-sfx_vilsit
-sfx_vipain
-sfx_vildth
-sfx_vilact
-sfx_vilatk
-sfx_flamst
-sfx_flame
-sfx_sssit
-sfx_ssdth
-sfx_keenpn
-sfx_keendt
-sfx_bossit
-sfx_bospit
-sfx_bospn
-sfx_bosdth
-sfx_boscub
+sfx_sgcock              # Weapon pickup sound
+sfx_punch               # Punch hit
+sfx_itmbk               # Deathmatch item respawn
+sfx_firsht2             # Demon/Baron/Cacodemon etc. fireball sound
+sfx_barexp              # Barrel/rocket explode
+sfx_firxpl              # Demon fireball hit
+sfx_pistol              # Pistol fire
+sfx_shotgn              # Shotgun fire
+sfx_plasma              # Plasma rifle fire
+sfx_bfg                 # BFG start firing
+sfx_sawup               # Chainsaw being started up
+sfx_sawidl              # Chainsaw idle loop
+sfx_sawful              # Chainsaw saw
+sfx_sawhit              # Chainsaw hit
+sfx_rlaunc              # Rocket fire sound
+sfx_rxplod              # BFG explosion sound
+sfx_pstart              # Elevator start
+sfx_pstop               # Elevator/mover stop (also menu up/down sound)
+sfx_doropn              # Regular/slow door open
+sfx_dorcls              # Regular/slow door close
+sfx_stnmov              # Floor/crusher move sound
+sfx_swtchn              # Switch activate
+sfx_swtchx              # Exit switch activate
+sfx_itemup              # Bonus pickup
+sfx_wpnup               # Weapon pickup sound
+sfx_oof                 # Ooof sound after falling hard, or when trying to use unusable wall
+sfx_telept              # Teleport sound
+sfx_noway               # Ooof sound after falling hard, or when trying to use unusable wall
+sfx_dshtgn              # Super shotgun fire
+sfx_dbopn               # SSG open barrel
+sfx_dbload              # SSG load shells
+sfx_dbcls               # SSG close barrel
+sfx_plpain              # Player pain sound
+sfx_pldeth              # Player death sound
+sfx_slop                # Gib/squelch sound
+sfx_posit1              # Former human sight: 1
+sfx_posit2              # Former human sight: 2
+sfx_posit3              # Former human sight: 3 (unused)
+sfx_podth1              # Former human death: 1
+sfx_podth2              # Former human death: 2
+sfx_podth3              # Former human death: 3 (unused)
+sfx_posact              # Former human idle
+sfx_popain              # Former human pain
+sfx_dmpain              # Demon pain
+sfx_dmact               # Demon idle/growl
+sfx_claw                # Imp/Baron etc. melee claw
+sfx_bgsit1              # Imp sight: 1
+sfx_bgsit2              # Imp sight: 2
+sfx_bgdth1              # Imp death: 1
+sfx_bgdth2              # Imp death: 2
+sfx_bgact               # Imp idle
+sfx_sgtsit              # Demon sight
+sfx_sgtatk              # Demon attack
+sfx_sgtdth              # Demon death
+sfx_brssit              # Baron sight
+sfx_brsdth              # Baron death
+sfx_cacsit              # Cacodemon sight
+sfx_cacdth              # Cacodemon death
+sfx_sklatk              # Lost Soul attack
+sfx_skldth              # (Unused) Intended for Lost Soul death?
+sfx_kntsit              # Knight sight
+sfx_kntdth              # Knight death
+sfx_pesit               # Pain Elemental sight
+sfx_pepain              # Pain Elemental pain
+sfx_pedth               # Pain Elemental death
+sfx_bspsit              # Arachnotron sight
+sfx_bspdth              # Arachnotron death
+sfx_bspact              # Arachnotron idle
+sfx_bspwlk              # Arachnotron hoof
+sfx_manatk              # Mancubus attack
+sfx_mansit              # Mancubus sight
+sfx_mnpain              # Mancubus pain
+sfx_mandth              # Mancubus death
+sfx_firsht              # Demon/Baron/Cacodemon etc. fireball sound
+sfx_skesit              # Revenant sight
+sfx_skedth              # Revenant death
+sfx_skeact              # Revenant idle
+sfx_skeatk              # Revenant missile fire
+sfx_skeswg              # Revenant throw punch
+sfx_skepch              # Revenant punch land
+sfx_cybsit              # Cyberdemon sight
+sfx_cybdth              # Cyberdemon death
+sfx_hoof                # Cyberdemon hoof up
+sfx_metal               # Cyberdemon thud down (metal)
+sfx_spisit              # Spider Mastermind sight
+sfx_spidth              # Spider Mastermind death
+sfx_bdopn               # Fast/blaze door open
+sfx_bdcls               # Fast/blaze door close
+sfx_getpow              # Powerup pickup
+sfx_vilsit              # Arch-vile sight
+sfx_vipain              # Arch-vile pain
+sfx_vildth              # Arch-vile death
+sfx_vilact              # Arch-vile idle
+sfx_vilatk              # Arch-vile attack
+sfx_flamst              # Arch-vile flames (start)
+sfx_flame               # Arch-vile flames burn
+sfx_sssit               # Wolfenstein-SS sight
+sfx_ssdth               # Wolfenstein-SS death
+sfx_keenpn              # Commander Keen pain
+sfx_keendt              # Commander Keen death
+sfx_bossit              # Icon of Sin sight
+sfx_bospit              # Icon of Sin cube spit
+sfx_bospn               # Icon of Sin pain
+sfx_bosdth              # Icon of Sin death
+sfx_boscub              # Icon of Sin spawn cube fly
 ```
