@@ -632,9 +632,13 @@ gameaction_t P_Ticker() noexcept {
 
     // Run map entities and do status bar logic, if it's time
     if ((!gbGamePaused) && (gGameTic > gPrevGameTic)) {
-        // PsyDoom: execute any scheduled script actions
+        // PsyDoom: execute any scheduled script actions and tick the external camera (if it's active)
         #if PSYDOOM_MODS
             ScriptingEngine::runScheduledActions();
+
+            if (gExtCameraTicsLeft > 0) {
+                gExtCameraTicsLeft--;
+            }
         #endif
 
         P_RunThinkers();
@@ -691,8 +695,15 @@ void P_Drawer() noexcept {
 
     I_IncDrawnFrameCount();
 
-    // Draw either the automap or 3d view, depending on whether the automap is active or not
-    if (gPlayers[gCurPlayerIndex].automapflags & AF_ACTIVE) {
+    // Draw either the automap or 3d view, depending on whether the automap is active or not.
+    // PsyDoom: force the automap off if doing a camera.
+    #if PSYDOOM_MODS
+        const bool bShowAutomap = ((gPlayers[gCurPlayerIndex].automapflags & AF_ACTIVE) && (gExtCameraTicsLeft <= 0));
+    #else
+        const bool bShowAutomap = (gPlayers[gCurPlayerIndex].automapflags & AF_ACTIVE);
+    #endif
+
+    if (bShowAutomap) {
         AM_Drawer();
     } else {
         #if PSYDOOM_VULKAN_RENDERER

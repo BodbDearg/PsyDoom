@@ -19,6 +19,14 @@ extern bool             gbDemoPlayback;
 extern bool             gbDemoRecording;
 extern bool             gbIsLevelBeingRestarted;
 
+#if PSYDOOM_MODS
+    extern uint32_t     gExtCameraTicsLeft;
+    extern fixed_t      gExtCameraX;
+    extern fixed_t      gExtCameraY;
+    extern fixed_t      gExtCameraZ;
+    extern angle_t      gExtCameraAngle;
+#endif
+
 void G_DoLoadLevel() noexcept;
 void G_PlayerFinishLevel(int32_t playerIdx) noexcept;
 void G_PlayerReborn(const int32_t playerIdx) noexcept;

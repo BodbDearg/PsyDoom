@@ -51,9 +51,9 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
             if (pThing->subsector != &subsec)
                 continue;
 
-            // PsyDoom: don't draw this player's thing
+            // PsyDoom: don't draw this player's thing (exception: allow if the external camera is active)
             #if PSYDOOM_MODS
-                if (pThing->player && (pThing->player == &gPlayers[gCurPlayerIndex]))
+                if (pThing->player && (pThing->player == &gPlayers[gCurPlayerIndex]) && (gExtCameraTicsLeft <= 0))
                     continue;
             #endif
 

@@ -61,6 +61,16 @@ bool gbDemoRecording;
 // Is the level being restarted?
 bool gbIsLevelBeingRestarted;
 
+// PsyDoom: external camera for cutscenes showing doors opening etc.
+// How many tics it has left, the camera position and angle.
+#if PSYDOOM_MODS
+    uint32_t    gExtCameraTicsLeft;
+    fixed_t     gExtCameraX;
+    fixed_t     gExtCameraY;
+    fixed_t     gExtCameraZ;
+    angle_t     gExtCameraAngle;
+#endif
+
 // An empty map object initially assigned to players during network game setup, for net consistency checks.
 // This is all zeroed out initially.
 static mobj_t gEmptyMobj;
@@ -108,6 +118,15 @@ void G_DoLoadLevel() noexcept {
             }
         }
     }
+
+    // PsyDoom: init the new external camera fields
+    #if PSYDOOM_MODS
+        gExtCameraTicsLeft = 0;
+        gExtCameraX = 0;
+        gExtCameraY = 0;
+        gExtCameraZ = 0;
+        gExtCameraAngle = 0;
+    #endif
 
     // And and setup the level, then verify the heap after all that is done
     P_SetupLevel(gGameMap, gGameSkill);

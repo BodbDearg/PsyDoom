@@ -8,6 +8,7 @@
 
 #include "Doom/Base/i_texcache.h"
 #include "Doom/Game/doomdata.h"
+#include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/sprinfo.h"
 #include "Doom/Renderer/r_data.h"
@@ -564,8 +565,8 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
         if (pThing->subsector != &subsec)
             continue;
 
-        // Ignore this thing if it's the player
-        if (pThing->player == gpViewPlayer)
+        // Ignore this thing if it's the player and we are not using the external camera
+        if ((pThing->player == gpViewPlayer) && (gExtCameraTicsLeft <= 0))
             continue;
 
         // Get the light/color value for the thing at it's z-height

@@ -259,9 +259,16 @@ void P_NewChaseDir(mobj_t& actor) noexcept {
     const dirtype_t oldMoveDir = actor.movedir;
     const dirtype_t turnaroundDir = gOppositeDir[oldMoveDir];
 
-    // Figure out the horizontal and vertical directions to the target and the distances
-    const fixed_t tgtDistX = actor.target->x - actor.x;
-    const fixed_t tgtDistY = actor.target->y - actor.y;
+    // Figure out the horizontal and vertical directions to the target and the distances.
+    // PsyDoom: if the external camera is active then make monsters walk away from their targets, to give the player time to react after the camera ends.
+    #if PSYDOOM_MODS
+        const int32_t tgtDistFlip = (gExtCameraTicsLeft > 0) ? -1 : 1;
+        const fixed_t tgtDistX = (actor.target->x - actor.x) * tgtDistFlip;
+        const fixed_t tgtDistY = (actor.target->y - actor.y) * tgtDistFlip;
+    #else
+        const fixed_t tgtDistX = actor.target->x - actor.x;
+        const fixed_t tgtDistY = actor.target->y - actor.y;
+    #endif
 
     dirtype_t hdirToTgt;
 

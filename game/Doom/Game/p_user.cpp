@@ -735,6 +735,17 @@ static void P_DeathThink(player_t& player) noexcept {
 // This is called 30 times a second for the NTSC version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerThink(player_t& player) noexcept {
+    // PsyDoom: don't tick the player if the external camera is active, but kill all momentum
+    #if PSYDOOM_MODS
+        if (gExtCameraTicsLeft > 0) {
+            mobj_t& mobj = *player.mo;
+            mobj.momx = 0;
+            mobj.momy = 0;
+            mobj.momz = 0;
+            return;
+        }
+    #endif
+
     // Grab the current and previous inputs
     #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gPlayerNum];

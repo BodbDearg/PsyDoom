@@ -87,6 +87,14 @@ void AM_Control(player_t& player) noexcept {
     if (gbGamePaused)
         return;
 
+    // PsyDoom: if the external camera is active do nothing and clear the current automap flags
+    #if PSYDOOM_MODS
+        if (gExtCameraTicsLeft > 0) {
+            player.automapflags &= ~AF_ACTIVE;
+            return;
+        }
+    #endif
+
     // Toggle the automap on and off if select has just been pressed
     #if PSYDOOM_MODS
         TickInputs& inputs = gTickInputs[gPlayerNum];

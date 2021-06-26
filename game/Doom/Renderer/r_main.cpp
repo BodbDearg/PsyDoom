@@ -174,6 +174,16 @@ void R_RenderPlayerView() noexcept {
         gViewAngle = playerMobj.angle;
     }
 
+    // PsyDoom: if the external camera is active the override the player's camera
+    #if PSYDOOM_MODS
+        if (gExtCameraTicsLeft > 0) {
+            gViewX = gExtCameraX & (~FRACMASK);
+            gViewY = gExtCameraY & (~FRACMASK);
+            gViewZ = gExtCameraZ & (~FRACMASK);
+            gViewAngle = gExtCameraAngle;
+        }
+    #endif
+
     gViewCos = gFineCosine[gViewAngle >> ANGLETOFINESHIFT];
     gViewSin = gFineSine[gViewAngle >> ANGLETOFINESHIFT];
 
@@ -268,8 +278,15 @@ void R_RenderPlayerView() noexcept {
         R_DrawSubsector(subsec);
     }
 
-    // Draw any player sprites/weapons
-    R_DrawWeapon();
+    // Draw any player sprites/weapons.
+    // PsyDoom: skip if we're using the external camera.
+    #if PSYDOOM_MODS
+        if (gExtCameraTicsLeft <= 0) {
+            R_DrawWeapon();
+        }
+    #else
+        R_DrawWeapon();
+    #endif
 
     // Clearing the texture window: this is probably not required?
     // Not sure what the reason is for this, but everything seems to work fine without doing this.

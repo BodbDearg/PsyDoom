@@ -216,14 +216,6 @@ static void StatusMessage(const char* const message) noexcept {
     player.message = gLevelStartupWarning;
 }
 
-static void AlertMessage(const char* const message, const uint32_t numTics, const uint32_t soundId) noexcept {
-    ST_AlertMessage(message, numTics);
-
-    if (soundId != 0) {
-        S_StartSound(nullptr, (sfxenum_t) soundId);
-    }
-}
-
 static void KeyFlash_Red(player_t& player) noexcept {
     doKeyFlash(player, gMapRedKeyType, "You need a red key.");
 }
@@ -258,6 +250,26 @@ static float AngleToPoint(const float x1, const float y1, const float x2, const 
     const fixed_t x2Frac = FloatToFixed(x2);
     const fixed_t y2Frac = FloatToFixed(y2);
     return AngleToDegrees(R_PointToAngle2(x1Frac, y1Frac, x2Frac, y2Frac));
+}
+
+static void AlertMessage(const char* const message, const uint32_t numTics, const uint32_t soundId) noexcept {
+    ST_AlertMessage(message, numTics);
+
+    if (soundId != 0) {
+        S_StartSound(nullptr, (sfxenum_t) soundId);
+    }
+}
+
+static void DoCamera(const float x, const float y, const float z, const float angle, const uint32_t numTics) noexcept {
+    gExtCameraX = FloatToFixed(x);
+    gExtCameraY = FloatToFixed(y);
+    gExtCameraZ = FloatToFixed(z);
+    gExtCameraAngle = DegreesToAngle(angle);
+    gExtCameraTicsLeft = numTics;
+}
+
+static void StopCamera() noexcept {
+    gExtCameraTicsLeft = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -953,7 +965,6 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["R_FlatNumForName"] = Script_R_FlatNumForName;
     lua["G_ExitLevel"] = G_ExitLevel;
     lua["G_SecretExitLevel"] = G_SecretExitLevel;
-    lua["StatusMessage"] = StatusMessage;
     lua["AlertMessage"] = AlertMessage;
     lua["KeyFlash_Red"] = KeyFlash_Red;
     lua["KeyFlash_Blue"] = KeyFlash_Blue;
@@ -961,6 +972,12 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["ApproxLength"] = ApproxLength;
     lua["ApproxDistance"] = ApproxDistance;
     lua["AngleToPoint"] = AngleToPoint;
+    lua["IsSinglePlayerGame"] = []{ return (gNetGame == gt_single); };
+    lua["IsCoopGame"] = []{ return (gNetGame == gt_coop); };
+    lua["IsDeathmatchGame"] = []{ return (gNetGame == gt_deathmatch); };
+    lua["StatusMessage"] = StatusMessage;
+    lua["DoCamera"] = DoCamera;
+    lua["StopCamera"] = StopCamera;
 
     lua["ScheduleAction"] = ScriptingEngine::scheduleAction;
     lua["ScheduleRepeatingAction"] = ScriptingEngine::scheduleRepeatingAction;

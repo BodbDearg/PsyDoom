@@ -947,6 +947,12 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
         if ((pTargetPlayer->cheats & CF_GODMODE) || pTargetPlayer->powers[pw_invulnerability])
             return;
 
+        // PsyDoom: if the external camera is active then don't allow players to be damaged
+        #if PSYDOOM_MODS
+            if (gExtCameraTicsLeft > 0)
+                return;
+        #endif
+
         // Make the player face look towards the direction of damage
         if (pTargetPlayer == &curPlayer) {
             const angle_t angleToAttacker = forceAngle - target.angle;

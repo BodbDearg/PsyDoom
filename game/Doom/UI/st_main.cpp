@@ -372,14 +372,21 @@ void ST_Drawer() noexcept {
     player_t& player = gPlayers[gCurPlayerIndex];
 
     if (gStatusBar.messageTicsLeft > 0) {
-        // PsyDooom: have to explicitly specify sprite shading parameters now for 'draw string' rather than relying on global state
+        // PsyDoom: have to explicitly specify sprite shading parameters now for 'draw string' rather than relying on global state
         #if PSYDOOM_MODS
             I_DrawStringSmall(7, 193, gStatusBar.message, uiPaletteClutId, 128, 128, 128, false, true);
         #else
             I_DrawStringSmall(7, 193, gStatusBar.message);
         #endif
     } else {
-        if (player.automapflags & AF_ACTIVE) {
+        // PsyDoom: the automap is hidden temporarily if there is a camera active
+        #if PSYDOOM_MODS
+            const bool bShowAutomap = ((player.automapflags & AF_ACTIVE) && (gExtCameraTicsLeft <= 0));
+        #else
+            const bool bShowAutomap = (player.automapflags & AF_ACTIVE);
+        #endif
+
+        if (bShowAutomap) {
             constexpr const char* const MAP_TITLE_FMT = "LEVEL %d:%s";
             char mapTitle[64];
 
@@ -408,12 +415,26 @@ void ST_Drawer() noexcept {
         }
     #endif
 
+    // PsyDoom: if using the external camera draw the status bar black, to use it as a letter box of sorts
+    #if PSYDOOM_MODS
+        if (gExtCameraTicsLeft > 0) {
+            LIBGPU_setRGB0(spritePrim, 0, 0, 0);
+            LIBGPU_SetShadeTex(spritePrim, false);
+        }
+    #endif
+
     // Draw the background for the status bar
     LIBGPU_setXY0(spritePrim, 0, 200);
     LIBGPU_setUV0(spritePrim, 0, 0);
     LIBGPU_setWH(spritePrim, 256, 40);
 
     I_AddPrim(spritePrim);
+
+    // PsyDoom: only allow messages to be drawn if using the external camera
+    #if PSYDOOM_MODS
+        if (gExtCameraTicsLeft > 0)
+            return;
+    #endif
 
     // PsyDoom: draw extensions to the status bar for the Vulkan renderer in widescreen mode.
     // Use the panel containing the weapon numbers as filler.

@@ -5,6 +5,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "g_game.h"
 #include "info.h"
 #include "p_setup.h"
 #include "p_shoot.h"
@@ -59,9 +60,15 @@ void P_CheckSights() noexcept {
 // Tells if 'mobj1' can see 'mobj2'. Returns 'true' if that is the case.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
-    // PsyDoom: if the target is a player and has the 'notarget' cheat on then it cannot be seen
-    if (mobj2.player && (mobj2.player->cheats & CF_NOTARGET))
-        return false;
+    // PsyDoom: if the target is a player and has the 'notarget' cheat on then it cannot be seen.
+    // PsyDoom: if the external camera is active then don't allow anything to be sighted.
+    #if PSYDOOM_MODS
+        if (mobj2.player && (mobj2.player->cheats & CF_NOTARGET))
+            return false;
+
+        if (gExtCameraTicsLeft > 0)
+            return false;
+    #endif
 
     // Figure out the reject matrix entry to lookup
     const int32_t secnum1 = (int32_t)(mobj1.subsector->sector - gpSectors);

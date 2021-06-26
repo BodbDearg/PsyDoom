@@ -89,6 +89,14 @@ static void RV_DetermineDrawParams() noexcept {
         gViewAngle = playerMobj.angle;
     }
 
+    // PsyDoom: if the external camera is active the override the player's camera
+    if (gExtCameraTicsLeft > 0) {
+        gViewX = gExtCameraX;
+        gViewY = gExtCameraY;
+        gViewZ = gExtCameraZ;
+        gViewAngle = gExtCameraAngle;
+    }
+
     // Determine view angle sine and cosine
     gViewCos = gFineCosine[gViewAngle >> ANGLETOFINESHIFT];
     gViewSin = gFineSine[gViewAngle >> ANGLETOFINESHIFT];
@@ -200,7 +208,9 @@ void RV_RenderPlayerView() noexcept {
     RV_DrawWidescreenStatusBarLetterbox();
 
     // TODO: implement this natively eventually for Vulkan so we can interpolate at a higher precision
-    R_DrawWeapon();
+    if (gExtCameraTicsLeft <= 0) {
+        R_DrawWeapon();
+    }
 }
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER
