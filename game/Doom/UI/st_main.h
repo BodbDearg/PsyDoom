@@ -36,6 +36,10 @@ struct stbar_t {
     int32_t         gibframeTicsLeft;       // How many game ticks left in the current gib animation frame
     const char*     message;                // The current message to show on the status bar (string must be valid at all times)
     int32_t         messageTicsLeft;        // How many game ticks left to show the status bar message for
+#if PSYDOOM_MODS
+    char            alertMessage[32];       // PsyDoom: a message displayed near the center of the screen which is not interrupted by pickups
+    int32_t         alertMessageTicsLeft;   // PsyDoom: how many tics left before the alert message is done displaying
+#endif
 };
 
 // The number of face sprite definitions there are
@@ -57,3 +61,7 @@ void ST_Init() noexcept;
 void ST_InitEveryLevel() noexcept;
 void ST_Ticker() noexcept;
 void ST_Drawer() noexcept;
+
+#if PSYDOOM_MODS
+    void ST_AlertMessage(const char* const msg, const uint32_t numTics) noexcept;
+#endif

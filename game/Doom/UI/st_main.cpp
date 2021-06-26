@@ -169,6 +169,11 @@ void ST_InitEveryLevel() noexcept {
     gStatusBar.specialFace = f_none;
     gStatusBar.messageTicsLeft = 0;
 
+    #if PSYDOOM_MODS
+        std::memset(gStatusBar.alertMessage, 0, sizeof(gStatusBar.alertMessage));   // PsyDoom: init the alert message status
+        gStatusBar.alertMessageTicsLeft = 0;
+    #endif
+
     gbDrawSBFace = true;
     gFaceTics = 0;
     gpCurSBFaceSprite = &gFaceSprites[0];
@@ -253,6 +258,12 @@ void ST_Ticker() noexcept {
     if (gStatusBar.messageTicsLeft != 0) {
         gStatusBar.messageTicsLeft--;
     }
+
+    #if PSYDOOM_MODS
+        if (gStatusBar.alertMessageTicsLeft > 0) {    // PsyDoom: do the new 'alert' message too
+            gStatusBar.alertMessageTicsLeft--;
+        }
+    #endif
 
     // Update the keycard flash for all keys
     for (int32_t cardIdx = 0; cardIdx < NUMCARDS; ++cardIdx) {
@@ -387,6 +398,15 @@ void ST_Drawer() noexcept {
             #endif
         }
     }
+
+    // PsyDoom: draw the new alert message centered (in the small 8x8 px font) if active
+    #if PSYDOOM_MODS
+        if (gStatusBar.alertMessageTicsLeft > 0) {
+            const int32_t msgLen = (int32_t) std::strlen(gStatusBar.alertMessage);
+            const int32_t msgPixelW = msgLen * 8;
+            I_DrawStringSmall((SCREEN_W - msgPixelW) / 2, 96, gStatusBar.alertMessage, uiPaletteClutId, 128, 128, 128, false, true);
+        }
+    #endif
 
     // Draw the background for the status bar
     LIBGPU_setXY0(spritePrim, 0, 200);
@@ -529,3 +549,15 @@ void ST_Drawer() noexcept {
         I_DrawPausedOverlay();
     }
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: show a status bar style message, centered near the middle of the screen for the specified number of tics.
+// If the message is too long then it is truncated.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void ST_AlertMessage(const char* const msg, const uint32_t numTics) noexcept {
+    std::strncpy(gStatusBar.alertMessage, msg, C_ARRAY_SIZE(gStatusBar.alertMessage) - 1);
+    gStatusBar.alertMessage[C_ARRAY_SIZE(gStatusBar.alertMessage) - 1] = 0;
+    gStatusBar.alertMessageTicsLeft = numTics;
+}
+#endif  // #if PSYDOOM_MODS

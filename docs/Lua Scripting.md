@@ -312,6 +312,11 @@ KeyFlash_Yellow(player_t player)            # Do a 'yellow key needed' status ba
 ApproxLength(float dx, float dy) -> float                           # Using Doom's portable 'approximate' length estimation, return the length of the specified vector
 ApproxDistance(float x1, float y1, float x2, float y2) -> float     # Using Doom's portable 'approximate' length estimation, return the distance between the two points
 AngleToPoint(float x1, float y1, float x2, float y2) -> float       # Using Doom's lookup tables, compute the angle from one point to another (from p1 to p2)
+
+# PsyDoom: show a status bar style message (31 characters max) near the center of the screen for the specified number of tics.
+# Optionally play the specified sound when showing the message; specify '0' if no sound is desired.
+# This feature can be used for status bar style messages which are not interrupted by item pickups.
+AlertMessage(string msg, uint32 numTics, uint32 soundId)
 ```
 ### Delayed and repeating action scheduling
 ```lua

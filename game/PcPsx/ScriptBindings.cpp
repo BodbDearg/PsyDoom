@@ -216,6 +216,14 @@ static void StatusMessage(const char* const message) noexcept {
     player.message = gLevelStartupWarning;
 }
 
+static void AlertMessage(const char* const message, const uint32_t numTics, const uint32_t soundId) noexcept {
+    ST_AlertMessage(message, numTics);
+
+    if (soundId != 0) {
+        S_StartSound(nullptr, (sfxenum_t) soundId);
+    }
+}
+
 static void KeyFlash_Red(player_t& player) noexcept {
     doKeyFlash(player, gMapRedKeyType, "You need a red key.");
 }
@@ -946,6 +954,7 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["G_ExitLevel"] = G_ExitLevel;
     lua["G_SecretExitLevel"] = G_SecretExitLevel;
     lua["StatusMessage"] = StatusMessage;
+    lua["AlertMessage"] = AlertMessage;
     lua["KeyFlash_Red"] = KeyFlash_Red;
     lua["KeyFlash_Blue"] = KeyFlash_Blue;
     lua["KeyFlash_Yellow"] = KeyFlash_Yellow;
