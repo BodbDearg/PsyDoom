@@ -96,6 +96,30 @@ static void flagIndirectDependenciesForPrecache(const mobjtype_t& type) noexcept
         case MT_SHOTGUY:    flagSpritesForPrecache(MT_SHOTGUN);             break;
         case MT_TROOP:      flagSpritesForPrecache(MT_TROOPSHOT);           break;
         case MT_UNDEAD:     flagSpritesForPrecache(MT_TRACER, MT_SMOKE);    break;
+        case MT_VILE:       flagSpritesForPrecache(MT_FIRE);                break;
+
+        // The Icon Of Sin requires us to precache a lot of thing types
+        case MT_BOSSSPIT: {
+            const mobjtype_t IOS_PRECACHE_TYPES[] = {
+                MT_SPAWNSHOT,
+                MT_SPAWNFIRE,
+                MT_TROOP,
+                MT_SERGEANT,
+                MT_PAIN,
+                MT_HEAD,
+                MT_VILE,
+                MT_UNDEAD,
+                MT_BABY,
+                MT_FATSO,
+                MT_KNIGHT,
+                MT_BRUISER
+            };
+
+            for (mobjtype_t mobjType : IOS_PRECACHE_TYPES) {
+                flagSpritesForPrecache(mobjType);
+                flagIndirectDependenciesForPrecache(mobjType);
+            }
+        }   break;
 
         default: break;
     }
@@ -116,7 +140,8 @@ static void flagSpritesForPrecache(const weaponinfo_t& weaponInfo) noexcept {
 // Flag sprites in general that need precaching, regardless of things in the map
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void flagGeneralSpritesToPrecache() noexcept {
-    flagSpritesForPrecache(MT_PUFF, MT_BLOOD, MT_TFOG);     // General particle fx 
+    flagSpritesForPrecache(MT_PLAYER);                      // The player, just in case the map uses PsyDoom's new external camera feature
+    flagSpritesForPrecache(MT_PUFF, MT_BLOOD, MT_TFOG);     // General particle fx
     flagSpritesForPrecache(MT_TELEPORTMAN);                 // Just in case it's modified to show something
     flagSpritesForPrecache(SPR_POL5);                       // The gib sprite
 
