@@ -359,6 +359,15 @@ static void ForEachMobjInSector(sector_t& sector, const std::function<void (mobj
     }
 }
 
+static mobj_t* FindMobjWithType(sector_t& sector, const uint32_t type) noexcept {
+    for (mobj_t* pMobj = sector.thinglist; pMobj; pMobj = pMobj->snext) {
+        if (pMobj->type == (mobjtype_t) type)
+            return pMobj;
+    }
+
+    return nullptr;
+}
+
 static void ForEachSurroundingSector(sector_t& sector, const std::function<void (sector_t& sector)>& callback) noexcept {
     if (callback) {
         visitSurroundingSectors(sector, callback);
@@ -756,6 +765,7 @@ static void registerType_sector_t(sol::state& lua) noexcept {
     type.set_function("GetLine", GetLineInSector);
     type.set_function("ForEachLine", ForEachLineInSector);
     type.set_function("ForEachMobj", ForEachMobjInSector);
+    type.set_function("FindMobjWithType", FindMobjWithType);
     type.set_function("ForEachSurroundingSector", ForEachSurroundingSector);
     type.set_function("GetLowestSurroundingFloor", GetLowestSurroundingFloor);
     type.set_function("GetLowestSurroundingCeiling", GetLowestSurroundingCeiling);
@@ -824,6 +834,7 @@ static void registerType_mobj_t(sol::state& lua) noexcept {
     type["momy"] = SOL_FIXED_PROPERTY_AS_FLOAT(mobj_t, momy);
     type["momz"] = SOL_FIXED_PROPERTY_AS_FLOAT(mobj_t, momz);
     type["type"] = sol::readonly(&mobj_t::type);
+    type["doomednum"] = sol::readonly_property([](const mobj_t& mo) noexcept { return mo.info->doomednum; });
     type["flags"] = sol::readonly(&mobj_t::flags);
     type["radius"] = SOL_READONLY_FIXED_PROPERTY_AS_FLOAT(mobj_t, radius);
     type["height"] = SOL_READONLY_FIXED_PROPERTY_AS_FLOAT(mobj_t, height);
@@ -1251,6 +1262,22 @@ static void registerLuaConstants(sol::state& lua) noexcept {
     lua["MT_BOSSTARGET"] = MT_BOSSTARGET;
     lua["MT_SPAWNSHOT"] = MT_SPAWNSHOT;
     lua["MT_SPAWNFIRE"] = MT_SPAWNFIRE;
+    lua["MT_MARKER1"] = MT_MARKER1;
+    lua["MT_MARKER2"] = MT_MARKER2;
+    lua["MT_MARKER3"] = MT_MARKER3;
+    lua["MT_MARKER4"] = MT_MARKER4;
+    lua["MT_MARKER5"] = MT_MARKER5;
+    lua["MT_MARKER6"] = MT_MARKER6;
+    lua["MT_MARKER7"] = MT_MARKER7;
+    lua["MT_MARKER8"] = MT_MARKER8;
+    lua["MT_MARKER9"] = MT_MARKER9;
+    lua["MT_MARKER10"] = MT_MARKER10;
+    lua["MT_MARKER11"] = MT_MARKER11;
+    lua["MT_MARKER12"] = MT_MARKER12;
+    lua["MT_MARKER13"] = MT_MARKER13;
+    lua["MT_MARKER14"] = MT_MARKER14;
+    lua["MT_MARKER15"] = MT_MARKER15;
+    lua["MT_MARKER16"] = MT_MARKER16;
 
     lua["sfx_sgcock"] = sfx_sgcock;
     lua["sfx_punch"] = sfx_punch;

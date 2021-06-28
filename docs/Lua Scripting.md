@@ -105,6 +105,9 @@ sector_t {
     GetLine(int32 index) -> line_t      # Get a specific line in the sector or 'nil' if the index is out of range
     ForEachLine(function f)             # Call function 'f' for each line in the sector, passing in a 'line_t' as a parameter
     ForEachMobj(function f)             # Call function 'f' for each thing in the sector, passing in a 'mobj_t' as a parameter
+
+    # Return the first thing found with the specified type, or 'nil' if none found
+    FindMobjWithType(uint32 type) -> mobj_t
     
     # Iterates through all the 2 sided lines in the sector, calling the function 'f' with a single parameter of type 'sector_t'.
     # The parameter contains the sector on the opposite side of the line to the current sector.
@@ -174,6 +177,7 @@ mobj_t {
     float       momy        # Velocity: y
     float       momz        # Velocity: z
     uint32      type        # Thing type (readonly)
+    int32       doomednum   # Thing Doom Editor Number; may be '-1' for non-editor placed things (readonly)
     int32       tag         # Script defined thing tag (can be used to tag and identify things)
     uint32      flags       # Flags (readonly)
     uint32      radius      # Radius (readonly)
@@ -790,6 +794,22 @@ MT_BOSSSPIT             # Icon Of Sin box shooter
 MT_BOSSTARGET           # Icon Of Sin box target
 MT_SPAWNSHOT            # Icon Of Sin box
 MT_SPAWNFIRE            # Icon Of Sin spawn fire
+MT_MARKER1              # PsyDoom generic marker (type 1)
+MT_MARKER2              # PsyDoom generic marker (type 2)
+MT_MARKER3              # PsyDoom generic marker (type 3)
+MT_MARKER4              # PsyDoom generic marker (type 4)
+MT_MARKER5              # PsyDoom generic marker (type 5)
+MT_MARKER6              # PsyDoom generic marker (type 6)
+MT_MARKER7              # PsyDoom generic marker (type 7)
+MT_MARKER8              # PsyDoom generic marker (type 8)
+MT_MARKER9              # PsyDoom generic marker (type 9)
+MT_MARKER10             # PsyDoom generic marker (type 10)
+MT_MARKER11             # PsyDoom generic marker (type 11)
+MT_MARKER12             # PsyDoom generic marker (type 12)
+MT_MARKER13             # PsyDoom generic marker (type 13)
+MT_MARKER14             # PsyDoom generic marker (type 14)
+MT_MARKER15             # PsyDoom generic marker (type 15)
+MT_MARKER16             # PsyDoom generic marker (type 16)
 ```
 ### Sound ids (built-in)
 ```lua

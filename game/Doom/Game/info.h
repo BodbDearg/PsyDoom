@@ -1327,6 +1327,27 @@ enum mobjtype_t : int32_t {
     MT_SPAWNFIRE,           // Icon Of Sin spawn fire
 #endif
 
+// PsyDoom: new generic 'markers' which are intended to be used in scripts.
+// They can be used for various purposes.
+#if PSYDOOM_MODS
+    MT_MARKER1,
+    MT_MARKER2,
+    MT_MARKER3,
+    MT_MARKER4,
+    MT_MARKER5,
+    MT_MARKER6,
+    MT_MARKER7,
+    MT_MARKER8,
+    MT_MARKER9,
+    MT_MARKER10,
+    MT_MARKER11,
+    MT_MARKER12,
+    MT_MARKER13,
+    MT_MARKER14,
+    MT_MARKER15,
+    MT_MARKER16,
+#endif
+
     BASE_NUM_MOBJ_TYPES     // PsyDoom: renamed this from 'NUMMOBJTYPES' to 'BASE_NUM_MOBJ_TYPES' because it's now just a count of the number of built-in map object types
 };
 

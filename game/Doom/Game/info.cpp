@@ -4616,6 +4616,7 @@ const mobjinfo_t gBaseMobjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_NOBLOCKMAP
         )
     },
+
 // PsyDoom: adding support for the unused hanging lamp sprite which is used in the GEC Master Edition.
 // Also adding support for some actors from PC Doom II which were missing from the PlayStation version.
 #if PSYDOOM_MODS
@@ -4908,6 +4909,53 @@ const mobjinfo_t gBaseMobjInfo[BASE_NUM_MOBJ_TYPES] = {
             MF_NOGRAVITY
         ),
     },
+#endif
+
+// PsyDoom: new generic 'markers' which are intended to be used in scripts.
+// They can be used for various purposes.
+#if PSYDOOM_MODS
+    #define DECLARE_MT_MARKER(DoomEdNum)\
+    {\
+        DoomEdNum,                  /* doomednum */\
+        S_NULL,                     /* spawnstate */\
+        1000,                       /* spawnhealth */\
+        S_NULL,                     /* seestate */\
+        sfx_None,                   /* seesound */\
+        0,                          /* reactiontime */\
+        sfx_None,                   /* attacksound */\
+        S_NULL,                     /* painstate */\
+        0,                          /* painchance */\
+        sfx_None,                   /* painsound */\
+        S_NULL,                     /* meleestate */\
+        S_NULL,                     /* missilestate */\
+        S_NULL,                     /* deathstate */\
+        S_NULL,                     /* xdeathstate */\
+        sfx_None,                   /* deathsound */\
+        0,                          /* speed */\
+        16 * FRACUNIT,              /* radius */\
+        16 * FRACUNIT,              /* height */\
+        100,                        /* mass */\
+        0,                          /* damage */\
+        sfx_None,                   /* activesound */\
+        MF_NOBLOCKMAP,              /* flags */\
+    }
+
+    DECLARE_MT_MARKER(4000),        // MT_MARKER1
+    DECLARE_MT_MARKER(4001),        // MT_MARKER2
+    DECLARE_MT_MARKER(4002),        // MT_MARKER3
+    DECLARE_MT_MARKER(4003),        // MT_MARKER4
+    DECLARE_MT_MARKER(4004),        // MT_MARKER5
+    DECLARE_MT_MARKER(4005),        // MT_MARKER6
+    DECLARE_MT_MARKER(4006),        // MT_MARKER7
+    DECLARE_MT_MARKER(4007),        // MT_MARKER8
+    DECLARE_MT_MARKER(4008),        // MT_MARKER9
+    DECLARE_MT_MARKER(4009),        // MT_MARKER10
+    DECLARE_MT_MARKER(4010),        // MT_MARKER11
+    DECLARE_MT_MARKER(4011),        // MT_MARKER12
+    DECLARE_MT_MARKER(4012),        // MT_MARKER13
+    DECLARE_MT_MARKER(4013),        // MT_MARKER14
+    DECLARE_MT_MARKER(4014),        // MT_MARKER15
+    DECLARE_MT_MARKER(4015),        // MT_MARKER16
 #endif
 };
 
