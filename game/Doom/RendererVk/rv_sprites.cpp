@@ -565,6 +565,10 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
         if (pThing->subsector != &subsec)
             continue;
 
+        // Ignore the thing if in state 'S_NULL' (needed to avoid rendering PsyDoom's new 'marker' things)
+        if (pThing->state == &gStates[S_NULL])
+            continue;
+
         // Ignore this thing if it's the player and we are not using the external camera
         if ((pThing->player == gpViewPlayer) && (gExtCameraTicsLeft <= 0))
             continue;

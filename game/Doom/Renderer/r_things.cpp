@@ -4,6 +4,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_texcache.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/info.h"
 #include "Doom/Game/sprinfo.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -50,6 +51,12 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
             // Only draw the thing if it's in the subsector we are interested in
             if (pThing->subsector != &subsec)
                 continue;
+
+            // Psydoom: ignore the thing if in state 'S_NULL' (needed to avoid rendering PsyDoom's new 'marker' things)
+            #if PSYDOOM_MODS
+                if (pThing->state == &gStates[S_NULL])
+                    continue;
+            #endif
 
             // PsyDoom: don't draw this player's thing (exception: allow if the external camera is active)
             #if PSYDOOM_MODS
