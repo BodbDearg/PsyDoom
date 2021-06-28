@@ -668,3 +668,15 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
     // If the missile is already in collision with something then explode it
     P_CheckMissileSpawn(missile);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: spawn a missile that explodes immediately.
+// Can be used to create explosions from rockets (MT_ROCKET) for example.
+//------------------------------------------------------------------------------------------------------------------------------------------
+#if PSYDOOM_MODS
+mobj_t* P_SpawnMissileExplosion(const fixed_t x, const fixed_t y, const fixed_t z, const mobjtype_t type) noexcept {
+    mobj_t& missile = *P_SpawnMobj(x, y, z, type);
+    P_ExplodeMissile(missile);
+    return &missile;
+}
+#endif

@@ -20,3 +20,7 @@ void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32
 void P_CheckMissileSpawn(mobj_t& mobj) noexcept;
 mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noexcept;
 void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept;
+
+#if PSYDOOM_MODS
+    mobj_t* P_SpawnMissileExplosion(const fixed_t x, const fixed_t y, const fixed_t z, const mobjtype_t type) noexcept;
+#endif

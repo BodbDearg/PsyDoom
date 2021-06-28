@@ -427,11 +427,15 @@ ForEachMobjInArea(float x1, float y1, float x2, float y2, function f)
 FindMobjTypeForDoomEdNum(int32 doomEdNum) -> int32
 
 # Spawn a thing at the specified position of the specified type; on successful spawn the thing is returned, otherwise 'nil'
-P_SpawnMobj(float x, float y, float z, uint32 type) -> mobj_t
+P_SpawnMobj(float x, float y, float z, uint32 mobjType) -> mobj_t
 
 # Spawn a missile of the specified type from 'src' (firer) to 'dst'; on successful spawn the thing is returned, otherwise 'nil'.
 # IMPORTANT: the 'src' and 'dst' things MUST be specified for this work properly.
-P_SpawnMissile(mobj_t& src, mobj_t& dst, uint32 type) -> mobj_t
+P_SpawnMissile(mobj_t& src, mobj_t& dst, uint32 mobjType) -> mobj_t
+
+# Spawn a missile of a specified type which explodes immediately.
+# Useful for creating explosions from rockets, for example, at a specified position.
+P_SpawnMissileExplosion(float x, float y, float z, uint32 mobjType)
 
 # Damages the given target by the specified integer amount. The inflictor is optional and affects force calculations.
 # The source is optional and affects blame for the attack.

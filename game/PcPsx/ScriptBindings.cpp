@@ -597,6 +597,13 @@ mobj_t* Script_P_SpawnMissile(mobj_t& src, mobj_t& dst, const uint32_t type) noe
     return (type < (uint32_t) gNumMobjInfo) ? P_SpawnMissile(src, dst, (mobjtype_t) type) : nullptr;
 }
 
+mobj_t* Script_P_SpawnMissileExplosion(const float x, const float y, const float z, const uint32_t type) noexcept {
+    const fixed_t xf = FloatToFixed(x);
+    const fixed_t yf = FloatToFixed(y);
+    const fixed_t zf = FloatToFixed(z);
+    return (type < (uint32_t) gNumMobjInfo) ? P_SpawnMissileExplosion(xf, yf, zf, (mobjtype_t) type) : nullptr;
+}
+
 void Script_P_RemoveMobj(mobj_t& mobj) noexcept {
     // Put the thing into the S_NULL state and schedule it to be deleted later (don't delete immediately)
     state_t& nullState = gStates[S_NULL];
@@ -1029,6 +1036,7 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["FindMobjTypeForDoomEdNum"] = FindMobjTypeForDoomEdNum;
     lua["P_SpawnMobj"] = Script_P_SpawnMobj;
     lua["P_SpawnMissile"] = Script_P_SpawnMissile;
+    lua["P_SpawnMissileExplosion"] = Script_P_SpawnMissileExplosion;
     lua["P_DamageMobj"] = P_DamageMobj;
     lua["P_RemoveMobj"] = Script_P_RemoveMobj;
     lua["EV_TeleportTo"] = Script_EV_TeleportTo;
