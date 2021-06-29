@@ -29,6 +29,7 @@
 enum MenuItem : uint32_t {
     menu_turn_speed,
     menu_always_run,
+    menu_stat_display,
     menu_renderer,
     menu_exit,
     num_menu_items
@@ -182,6 +183,18 @@ gameaction_t XOptions_Update() noexcept {
             }
         }   break;
 
+        // Stat display setting
+        case menu_stat_display: {
+            if (bMenuLeft && (!oldInputs.bMenuLeft) && (PlayerPrefs::gStatDisplayMode > StatDisplayMode::None)) {
+                PlayerPrefs::gStatDisplayMode = (StatDisplayMode)((int32_t) PlayerPrefs::gStatDisplayMode - 1);
+                S_StartSound(nullptr, sfx_swtchx);
+            }
+            else if (bMenuRight && (!oldInputs.bMenuRight) && (PlayerPrefs::gStatDisplayMode < StatDisplayMode::KillsSecretsAndItems)) {
+                PlayerPrefs::gStatDisplayMode = (StatDisplayMode)((int32_t) PlayerPrefs::gStatDisplayMode + 1);
+                S_StartSound(nullptr, sfx_swtchx);
+            }
+        }   break;
+
         // Renderer toggle
         case menu_renderer: {
             const bool bCanSwitchRenderers = (Video::gBackendType == Video::BackendType::Vulkan);
@@ -228,10 +241,7 @@ gameaction_t XOptions_Update() noexcept {
 void XOptions_Draw() noexcept {
     // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
-
-    #if PSYDOOM_MODS
-        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
-    #endif
+    Utils::onBeginUIDrawing();      // PsyDoom: UI drawing setup for the new Vulkan renderer
 
     {
         const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();
@@ -250,12 +260,12 @@ void XOptions_Draw() noexcept {
 
         // Draw the turn speed slider
         int16_t cursorX = 62;
-        int16_t cursorY = 65;
+        int16_t cursorY = 50;
 
         {
             // Draw the label for the slider
             const int16_t menuItemX = 62;
-            const int16_t menuItemY = 65;
+            const int16_t menuItemY = 50;
 
             int32_t turnSpeed = PlayerPrefs::gTurnSpeedMult100;
             char turnSpeedLabel[32];
@@ -310,25 +320,42 @@ void XOptions_Draw() noexcept {
         }
 
         // Draw the always run option
-        I_DrawString(62, 105, (PlayerPrefs::gbAlwaysRun) ? "Always Run On" : "Always Run Off");
+        I_DrawString(62, 90, (PlayerPrefs::gbAlwaysRun) ? "Always Run On" : "Always Run Off");
 
         if (gCursorPos[gCurPlayerIndex] == menu_always_run) {
-            cursorY = 105;
+            cursorY = 90;
+        }
+
+        // Draw the stats display option
+        const char* statDisplayStr = "Stat Display Off";
+
+        if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsSecretsAndItems) {
+            statDisplayStr = "Stat Display KSI";
+        } else if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsAndSecrets) {
+            statDisplayStr = "Stat Display KS";
+        } else if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::Kills) {
+            statDisplayStr = "Stat Display K";
+        }
+
+        I_DrawString(62, 115, statDisplayStr);
+
+        if (gCursorPos[gCurPlayerIndex] == menu_stat_display) {
+            cursorY = 115;
         }
 
         // Draw the renderer option
         const bool bIsUsingVulkan = Video::isUsingVulkanRenderPath();
-        I_DrawString(62, 130, (bIsUsingVulkan) ? "Vulkan Renderer" : "Classic Renderer");
+        I_DrawString(62, 140, (bIsUsingVulkan) ? "Vulkan Renderer" : "Classic Renderer");
 
         if (gCursorPos[gCurPlayerIndex] == menu_renderer) {
-            cursorY = 130;
+            cursorY = 140;
         }
 
         // Draw the exit option
-        I_DrawString(62, 200, "Exit");
+        I_DrawString(62, 205, "Exit");
 
         if (gCursorPos[gCurPlayerIndex] == menu_exit) {
-            cursorY = 200;
+            cursorY = 205;
         }
 
         // Draw the skull cursor

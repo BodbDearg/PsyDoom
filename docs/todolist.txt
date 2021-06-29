@@ -1,6 +1,5 @@
 0.8 - Limit extending and modding?
 - Investigate a MAPINFO format for naming maps, choosing music etc.
-- Secret and monster counter for the HUD
 
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.

@@ -4,6 +4,14 @@
 
 #include <cstdint>
 
+// Stat display modes
+enum class StatDisplayMode : int32_t {
+    None = 0,
+    Kills = 1,
+    KillsAndSecrets = 2,
+    KillsSecretsAndItems = 3
+};
+
 BEGIN_NAMESPACE(PlayerPrefs)
 
 // Length of PSX Doom passwords
@@ -17,8 +25,9 @@ constexpr int32_t VOLUME_MAX = 100;
 constexpr int32_t TURN_SPEED_MULT_MIN = 1;
 constexpr int32_t TURN_SPEED_MULT_MAX = 500;
 
-extern int32_t  gTurnSpeedMult100;
-extern bool     gbAlwaysRun;
+extern int32_t          gTurnSpeedMult100;
+extern bool             gbAlwaysRun;
+extern StatDisplayMode  gStatDisplayMode;
 
 void setToDefaults() noexcept;
 void load() noexcept;

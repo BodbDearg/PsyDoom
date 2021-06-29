@@ -38,8 +38,9 @@ struct Password {
 static_assert(C_ARRAY_SIZE(gPasswordCharBuffer) == C_ARRAY_SIZE(Password::pwChars));    // Sanity check!
 
 // Globally exposed settings
-int32_t     gTurnSpeedMult100;      // In-game tweakable turn speed multiplier expressed in integer percentage points (0-500)
-bool        gbAlwaysRun;            // If set then the player runs by default and the run action causes slower walking
+int32_t             gTurnSpeedMult100;      // In-game tweakable turn speed multiplier expressed in integer percentage points (0-500)
+bool                gbAlwaysRun;            // If set then the player runs by default and the run action causes slower walking
+StatDisplayMode     gStatDisplayMode;       // Which stats should be displayed
 
 // Internally kept settings
 static int32_t      gSoundVol;                      // Option for sound volume
@@ -143,6 +144,10 @@ static void loadPrefsFileIniEntry(const IniUtils::Entry& entry) noexcept {
     else if (entry.key == "alwaysRun") {
         gbAlwaysRun = entry.getBoolValue(gbAlwaysRun);
     }
+    else if (entry.key == "statDisplayMode") {
+        gStatDisplayMode = (StatDisplayMode) entry.getIntValue((int32_t) gStatDisplayMode);
+        gStatDisplayMode = std::clamp(gStatDisplayMode, StatDisplayMode::None, StatDisplayMode::KillsSecretsAndItems);  // Ensure it's in range
+    }
     else if (entry.key == "startupWithVulkanRenderer") {
         gbStartupWithVulkanRenderer = entry.getBoolValue(gbStartupWithVulkanRenderer);
     }
@@ -160,9 +165,10 @@ void setToDefaults() noexcept {
     std::memset(&gLastPassword_Doom, 0, sizeof(gLastPassword_Doom));
     std::memset(&gLastPassword_FDoom, 0, sizeof(gLastPassword_FDoom));
 
-    // Turn speed is normal by default and auto-run off
+    // Turn speed is normal by default, auto-run off and no stat display
     gTurnSpeedMult100 = 100;
     gbAlwaysRun = false;
+    gStatDisplayMode = StatDisplayMode::None;
 
     // Prefer the Vulkan renderer by default
     gbStartupWithVulkanRenderer = true;
@@ -207,6 +213,7 @@ void save() noexcept {
     std::fprintf(pFile, "lastPassword_FinalDoom = %s\n", gLastPassword_FDoom.getString().c_str());
     std::fprintf(pFile, "turnSpeedPercentMultiplier = %d\n", gTurnSpeedMult100);
     std::fprintf(pFile, "alwaysRun = %d\n", (int) gbAlwaysRun);
+    std::fprintf(pFile, "statDisplayMode = %d\n", (int) gStatDisplayMode);
     std::fprintf(pFile, "startupWithVulkanRenderer = %d\n", (int) Video::isUsingVulkanRenderPath());
 
     // Flush and close to finish up

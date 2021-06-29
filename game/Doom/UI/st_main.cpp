@@ -16,6 +16,7 @@
 #include "Macros.h"
 #include "PcPsx/Config.h"
 #include "PcPsx/Game.h"
+#include "PcPsx/PlayerPrefs.h"
 #include "PcPsx/Video.h"
 #include "PcPsx/Vulkan/VRenderer.h"
 #include "PsyQ/LIBGPU.h"
@@ -108,6 +109,21 @@ static bool                     gbGibDraw;              // Are we animating the 
 static bool                     gbDoSpclFace;           // Should we do a special face next?
 static int32_t                  gNewFace;               // Which normal face to use next
 static spclface_e               gSpclFaceType;          // Which special face to use next
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: draws a single stat in small text (8x8 pixel font), right aligned at the side of the screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void ST_DrawRightAlignedStat(const int32_t xMargin, const int32_t y, const char statChar, const int32_t statAmt, const int32_t statTotal) noexcept {
+    // Make up the string to draw
+    char strBuffer[32];
+    std::snprintf(strBuffer, C_ARRAY_SIZE(strBuffer), "%c:%d/%d", statChar, statAmt, statTotal);
+
+    // Figure out the x position to right align the string (taking into account the margin) and then draw
+    const int32_t x = SCREEN_W - ((int32_t) std::strlen(strBuffer) * 8) - xMargin;
+    I_DrawStringSmall(x, y, strBuffer, gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+}
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // 'Status bar' one time initialization.
@@ -564,6 +580,32 @@ void ST_Drawer() noexcept {
 
         I_AddPrim(spritePrim);
     }
+
+    // PsyDoom: draw level stats, if enabled
+    #if PSYDOOM_MODS
+        if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::Kills) {
+            // If using the Vulkan renderer, draw then as far as possible to the right, being widescreen aware
+            int32_t widescreenAdjust = 0;
+
+            if (Video::isUsingVulkanRenderPath()) {
+                // Compute the extra space/padding at the left and right sides of the screen (in PSX coords) due to widescreen.
+                // This is the same calculation used by the Vulkan renderer in 'VDrawing::computeTransformMatrixForUI'.
+                // Note: need to invert the adjustment for 'ST_DrawRightAlignedStat' since the margin is subtracted.
+                const float xPadding = (VRenderer::gPsxCoordsFbX / VRenderer::gPsxCoordsFbW) * (float) SCREEN_W;
+                widescreenAdjust = (int32_t) -xPadding;
+            }
+
+            ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'K', player.killcount, gTotalKills);
+
+            if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsAndSecrets) {
+                ST_DrawRightAlignedStat(2 + widescreenAdjust, 10, 'S', player.secretcount, gTotalSecret);
+            }
+
+            if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsSecretsAndItems) {
+                ST_DrawRightAlignedStat(2 + widescreenAdjust, 18, 'I', player.itemcount, gTotalItems);
+            }
+        }
+    #endif  // #if PSYDOOM_MODS
 
     // Draw the paused overlay, level warp and vram viewer
     if (gbGamePaused) {
