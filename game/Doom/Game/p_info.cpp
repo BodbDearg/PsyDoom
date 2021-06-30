@@ -5,7 +5,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "info.h"
-#include "PcPsx/ParserTokenizer.h"
+#include "PsyDoom/ParserTokenizer.h"
 #include "sprinfo.h"
 
 #include <algorithm>

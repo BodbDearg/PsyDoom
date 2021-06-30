@@ -5,7 +5,7 @@
 #include "LIBSPU.h"
 
 #include "Asserts.h"
-#include "PcPsx/PsxVm.h"
+#include "PsyDoom/PsxVm.h"
 #include "Spu.h"
 
 #include <cmath>

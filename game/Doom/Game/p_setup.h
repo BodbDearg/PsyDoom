@@ -2,7 +2,7 @@
 
 #include "Doom/cdmaptbl.h"
 #include "Doom/doomdef.h"
-#include "PcPsx/FixedIndexSet.h"
+#include "PsyDoom/FixedIndexSet.h"
 
 struct leafedge_t;
 struct line_t;

@@ -21,10 +21,10 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_tick.h"
-#include "PcPsx/Config.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/Input.h"
-#include "PcPsx/Utils.h"
+#include "PsyDoom/Config.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/Input.h"
+#include "PsyDoom/Utils.h"
 #include "Wess/wessapi.h"
 
 // Helper global holding the result of executing a gameloop via 'MiniLoop'.

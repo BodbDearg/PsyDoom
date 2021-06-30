@@ -25,13 +25,13 @@
 #include "p_slide.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "PcPsx/Config.h"
-#include "PcPsx/Controls.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/Input.h"
-#include "PcPsx/PlayerPrefs.h"
-#include "PcPsx/PsxPadButtons.h"
-#include "PcPsx/Utils.h"
+#include "PsyDoom/Config.h"
+#include "PsyDoom/Controls.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/Input.h"
+#include "PsyDoom/PlayerPrefs.h"
+#include "PsyDoom/PsxPadButtons.h"
+#include "PsyDoom/Utils.h"
 
 #include <algorithm>
 #include <chrono>

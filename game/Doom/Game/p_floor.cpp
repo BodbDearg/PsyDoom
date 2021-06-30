@@ -11,8 +11,8 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/ScriptingEngine.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/ScriptingEngine.h"
 
 #include <algorithm>
 

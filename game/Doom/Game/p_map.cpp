@@ -17,7 +17,7 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_switch.h"
-#include "PcPsx/Game.h"
+#include "PsyDoom/Game.h"
 
 #include <algorithm>
 

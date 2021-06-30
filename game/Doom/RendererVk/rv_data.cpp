@@ -12,7 +12,7 @@
 #include "Asserts.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Renderer/r_local.h"
-#include "PcPsx/Video.h"
+#include "PsyDoom/Video.h"
 #include "rv_utils.h"
 
 #include <cmath>

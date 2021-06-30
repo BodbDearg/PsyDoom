@@ -1,6 +1,6 @@
 #include "LIBETC.h"
 
-#include "PcPsx/Controls.h"
+#include "PsyDoom/Controls.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize system callbacks and interrupt handlers: doesn't need to do anything for PsyDoom!

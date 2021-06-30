@@ -17,7 +17,7 @@
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_tick.h"
-#include "PcPsx/Game.h"
+#include "PsyDoom/Game.h"
 
 const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
     {   // Fist

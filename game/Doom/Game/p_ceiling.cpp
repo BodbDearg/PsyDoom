@@ -9,7 +9,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "PcPsx/ScriptingEngine.h"
+#include "PsyDoom/ScriptingEngine.h"
 
 // Normal move speed for ceilings/crushers
 static constexpr fixed_t CEILSPEED = FRACUNIT * 2;

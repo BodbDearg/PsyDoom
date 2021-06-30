@@ -24,7 +24,7 @@
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
-#include "PcPsx/Game.h"
+#include "PsyDoom/Game.h"
 
 #include <algorithm>
 #include <cmath>

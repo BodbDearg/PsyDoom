@@ -16,11 +16,11 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/am_main.h"
 #include "Matrix4.h"
-#include "PcPsx/Config.h"
-#include "PcPsx/Utils.h"
-#include "PcPsx/Vulkan/VDrawing.h"
-#include "PcPsx/Vulkan/VRenderer.h"
-#include "PcPsx/Vulkan/VTypes.h"
+#include "PsyDoom/Config.h"
+#include "PsyDoom/Utils.h"
+#include "PsyDoom/Vulkan/VDrawing.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
+#include "PsyDoom/Vulkan/VTypes.h"
 #include "rv_utils.h"
 
 #include <cmath>

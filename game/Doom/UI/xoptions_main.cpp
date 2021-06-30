@@ -17,11 +17,11 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "o_main.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/PlayerPrefs.h"
-#include "PcPsx/Utils.h"
-#include "PcPsx/Video.h"
-#include "PcPsx/Vulkan/VRenderer.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/PlayerPrefs.h"
+#include "PsyDoom/Utils.h"
+#include "PsyDoom/Video.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
 
 #include <cstdio>
 

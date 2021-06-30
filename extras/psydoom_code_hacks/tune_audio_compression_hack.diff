@@ -4,10 +4,10 @@ audio dynamic range compressor settings. Keeping this around in case I want to t
 It introduces temporary keyboard controls to tweak the settings and disables compression when the classic renderer is used (for comparison).
 ============================================================================================================================================
 
-diff --git a/game/PcPsx/PsxVm.cpp b/game/PcPsx/PsxVm.cpp
+diff --git a/game/PsyDoom/PsxVm.cpp b/game/PsyDoom/PsxVm.cpp
 index 0d7c2321..d5daf417 100644
---- a/game/PcPsx/PsxVm.cpp
-+++ b/game/PcPsx/PsxVm.cpp
+--- a/game/PsyDoom/PsxVm.cpp
++++ b/game/PsyDoom/PsxVm.cpp
 @@ -13,6 +13,7 @@
  #include "IsoFileSys.h"
  #include "ProgArgs.h"
@@ -111,10 +111,10 @@ index 0d7c2321..d5daf417 100644
  //------------------------------------------------------------------------------------------------------------------------------------------
  // Initialize emulated PlayStation system components and use the given .cue file for the game disc
  //------------------------------------------------------------------------------------------------------------------------------------------
-diff --git a/game/PcPsx/PsxVm.h b/game/PcPsx/PsxVm.h
+diff --git a/game/PsyDoom/PsxVm.h b/game/PsyDoom/PsxVm.h
 index 57a00ac8..a92584db 100644
---- a/game/PcPsx/PsxVm.h
-+++ b/game/PcPsx/PsxVm.h
+--- a/game/PsyDoom/PsxVm.h
++++ b/game/PsyDoom/PsxVm.h
 @@ -28,6 +28,8 @@ extern Spu::Core    gSpu;
  bool init(const char* const doomCdCuePath) noexcept;
  void shutdown() noexcept;
@@ -124,10 +124,10 @@ index 57a00ac8..a92584db 100644
  // Fire timer (root counter) related events if appropriate.
  // Note: this is implemented in LIBAPI, where timers are handled.
  void generateTimerEvents() noexcept;
-diff --git a/game/PcPsx/Utils.cpp b/game/PcPsx/Utils.cpp
+diff --git a/game/PsyDoom/Utils.cpp b/game/PsyDoom/Utils.cpp
 index 681f735e..4506d9fe 100644
---- a/game/PcPsx/Utils.cpp
-+++ b/game/PcPsx/Utils.cpp
+--- a/game/PsyDoom/Utils.cpp
++++ b/game/PsyDoom/Utils.cpp
 @@ -99,6 +99,8 @@ void doPlatformUpdates() noexcept {
      
      if (now - gLastPlatformUpdateTime < std::chrono::milliseconds(4))

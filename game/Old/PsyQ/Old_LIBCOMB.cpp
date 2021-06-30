@@ -6,8 +6,8 @@
 
 #if !PSYDOOM_MODS
 
-#include "PcPsx/Network.h"
-#include "PcPsx/ProgArgs.h"
+#include "PsyDoom/Network.h"
+#include "PsyDoom/ProgArgs.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Install the serial link driver for the PlayStation: doesn't need to do anything in PsyDoom!

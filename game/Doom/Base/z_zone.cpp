@@ -3,7 +3,7 @@
 #include "Doom/psx_main.h"
 #include "EngineLimits.h"
 #include "i_main.h"
-#include "PcPsx/Config.h"
+#include "PsyDoom/Config.h"
 
 #include <cstring>
 #include <memory>

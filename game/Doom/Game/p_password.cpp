@@ -4,7 +4,7 @@
 #include "Doom/d_main.h"
 #include "g_game.h"
 #include "p_inter.h"
-#include "PcPsx/Game.h"
+#include "PsyDoom/Game.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper to make the encoding logic byte bit cleaner and remove some redundancy.

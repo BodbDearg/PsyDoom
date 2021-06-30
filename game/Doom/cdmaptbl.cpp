@@ -2,9 +2,9 @@
 
 #if PSYDOOM_MODS
 
-#include "PcPsx/Game.h"
-#include "PcPsx/IsoFileSys.h"
-#include "PcPsx/PsxVm.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/IsoFileSys.h"
+#include "PsyDoom/PsxVm.h"
 
 #include <vector>
 

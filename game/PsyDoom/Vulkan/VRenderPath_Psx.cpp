@@ -6,10 +6,10 @@
 #include "CmdBufferRecorder.h"
 #include "Gpu.h"
 #include "LogicalDevice.h"
-#include "PcPsx/PsxVm.h"
-#include "PcPsx/Video.h"
-#include "PcPsx/Vulkan/VRenderer.h"
+#include "PsyDoom/PsxVm.h"
+#include "PsyDoom/Video.h"
 #include "Swapchain.h"
+#include "VRenderer.h"
 
 #include <algorithm>
 

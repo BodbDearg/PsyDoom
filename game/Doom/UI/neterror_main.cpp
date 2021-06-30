@@ -16,10 +16,10 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "o_main.h"
-#include "PcPsx/Controls.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/Input.h"
-#include "PcPsx/Utils.h"
+#include "PsyDoom/Controls.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/Input.h"
+#include "PsyDoom/Utils.h"
 
 #include <sstream>
 #include <string>

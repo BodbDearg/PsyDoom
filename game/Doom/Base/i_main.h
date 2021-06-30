@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Doom/doomdef.h"
-#include "PcPsx/Buffer.h"
+#include "PsyDoom/Buffer.h"
 #include "PsyQ/LIBGPU.h"
 
 #include <cstddef>

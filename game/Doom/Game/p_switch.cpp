@@ -17,8 +17,8 @@
 #include "p_plats.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "PcPsx/ParserTokenizer.h"
-#include "PcPsx/ScriptingEngine.h"
+#include "PsyDoom/ParserTokenizer.h"
+#include "PsyDoom/ScriptingEngine.h"
 
 #include <vector>
 

@@ -15,11 +15,11 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/Input.h"
-#include "PcPsx/PlayerPrefs.h"
-#include "PcPsx/PsxPadButtons.h"
-#include "PcPsx/Utils.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/Input.h"
+#include "PsyDoom/PlayerPrefs.h"
+#include "PsyDoom/PsxPadButtons.h"
+#include "PsyDoom/Utils.h"
 #include "PsyQ/LIBGPU.h"
 
 #include <algorithm>

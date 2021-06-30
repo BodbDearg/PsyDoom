@@ -8,8 +8,8 @@
 
 #include "Doom/Game/p_setup.h"
 #include "Finally.h"
-#include "PcPsx/ProgArgs.h"
 #include "psxspu.h"
+#include "PsyDoom/ProgArgs.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessapi.h"
 #include "wessarc.h"

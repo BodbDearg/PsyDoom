@@ -25,12 +25,12 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
-#include "PcPsx/DevMapAutoReloader.h"
-#include "PcPsx/MapHash.h"
-#include "PcPsx/MapPatcher.h"
-#include "PcPsx/MobjSpritePrecacher.h"
-#include "PcPsx/ModMgr.h"
-#include "PcPsx/ScriptingEngine.h"
+#include "PsyDoom/DevMapAutoReloader.h"
+#include "PsyDoom/MapHash.h"
+#include "PsyDoom/MapPatcher.h"
+#include "PsyDoom/MobjSpritePrecacher.h"
+#include "PsyDoom/ModMgr.h"
+#include "PsyDoom/ScriptingEngine.h"
 
 #include <algorithm>
 #include <cstdio>

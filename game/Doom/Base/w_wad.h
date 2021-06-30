@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_MODS
 
-#include "PcPsx/WadUtils.h"
+#include "PsyDoom/WadUtils.h"
 
 // PsyDoom: 'CdFileId' has changed in format
 #if PSYDOOM_MODS

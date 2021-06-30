@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PcPsx/BitShift.h"
+#include "PsyDoom/BitShift.h"
 
 struct mobj_t;
 struct mobjinfo_t;

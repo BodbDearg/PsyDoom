@@ -1,8 +1,8 @@
 #include "LIBAPI.h"
 
 #include "Asserts.h"
-#include "PcPsx/ProgArgs.h"
-#include "PcPsx/PsxVm.h"
+#include "PsyDoom/ProgArgs.h"
+#include "PsyDoom/PsxVm.h"
 
 #include <algorithm>
 #include <chrono>

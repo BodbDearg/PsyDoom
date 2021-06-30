@@ -6,9 +6,9 @@
 
 #if !PSYDOOM_MODS
 
-#include "PcPsx/Assert.h"
-#include "PcPsx/Finally.h"
-#include "PcPsx/PsxVm.h"
+#include "PsyDoom/Assert.h"
+#include "PsyDoom/Finally.h"
+#include "PsyDoom/PsxVm.h"
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <device/cdrom/cdrom.h>

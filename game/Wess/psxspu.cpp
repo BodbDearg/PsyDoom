@@ -4,9 +4,9 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxspu.h"
 
-#include "PcPsx/BitShift.h"
-#include "PcPsx/ProgArgs.h"
-#include "PcPsx/PsxVm.h"
+#include "PsyDoom/BitShift.h"
+#include "PsyDoom/ProgArgs.h"
+#include "PsyDoom/PsxVm.h"
 #include "PsyQ/LIBSPU.h"
 #include "Spu.h"
 #include "wessarc.h"

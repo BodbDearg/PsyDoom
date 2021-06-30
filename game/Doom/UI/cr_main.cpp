@@ -5,9 +5,9 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/Input.h"
-#include "PcPsx/Utils.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/Input.h"
+#include "PsyDoom/Utils.h"
 #include "ti_main.h"
 #include "Wess/psxcd.h"
 

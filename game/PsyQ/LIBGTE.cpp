@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBGTE.h"
 
-#include "PcPsx/BitShift.h"
+#include "PsyDoom/BitShift.h"
 
 static int16_t gGteRotMatrix[3][3];     // Emulated Geometry Transform Engine (GTE): current rotation matrix
 static int32_t gGteTransVec[3];         // Emulated Geometry Transform Engine (GTE): current translation vector

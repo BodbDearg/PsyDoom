@@ -14,11 +14,11 @@
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"
 #include "Macros.h"
-#include "PcPsx/Config.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/PlayerPrefs.h"
-#include "PcPsx/Video.h"
-#include "PcPsx/Vulkan/VRenderer.h"
+#include "PsyDoom/Config.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/PlayerPrefs.h"
+#include "PsyDoom/Video.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
 #include "PsyQ/LIBGPU.h"
 
 #include <cmath>

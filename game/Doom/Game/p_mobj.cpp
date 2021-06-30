@@ -22,7 +22,7 @@
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_tick.h"
-#include "PcPsx/Game.h"
+#include "PsyDoom/Game.h"
 
 #include <algorithm>
 #include <cstdio>

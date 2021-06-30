@@ -11,7 +11,7 @@
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "PcPsx/Game.h"
+#include "PsyDoom/Game.h"
 
 #include <algorithm>
 

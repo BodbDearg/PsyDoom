@@ -9,13 +9,13 @@
 
 #include "Asserts.h"
 #include "FatalErrors.h"
-#include "PcPsx/DiscInfo.h"
-#include "PcPsx/DiscReader.h"
-#include "PcPsx/ModMgr.h"
-#include "PcPsx/ProgArgs.h"
-#include "PcPsx/PsxVm.h"
-#include "PcPsx/Utils.h"
 #include "psxspu.h"
+#include "PsyDoom/DiscInfo.h"
+#include "PsyDoom/DiscReader.h"
+#include "PsyDoom/ModMgr.h"
+#include "PsyDoom/ProgArgs.h"
+#include "PsyDoom/PsxVm.h"
+#include "PsyDoom/Utils.h"
 #include "Spu.h"
 
 #include <mutex>

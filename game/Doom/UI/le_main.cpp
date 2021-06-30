@@ -13,8 +13,8 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
-#include "PcPsx/Input.h"
-#include "PcPsx/Utils.h"
+#include "PsyDoom/Input.h"
+#include "PsyDoom/Utils.h"
 #include "ti_main.h"
 
 // Texture for the legals screen text

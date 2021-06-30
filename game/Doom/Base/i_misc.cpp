@@ -8,9 +8,9 @@
 #include "i_drawcmds.h"
 #include "i_main.h"
 #include "i_texcache.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/Video.h"
-#include "PcPsx/Vulkan/VDrawing.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/Video.h"
+#include "PsyDoom/Vulkan/VDrawing.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 

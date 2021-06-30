@@ -7,12 +7,12 @@
 #include "Asserts.h"
 #include "Gpu.h"
 #include "LIBETC.h"
-#include "PcPsx/BitShift.h"
-#include "PcPsx/LIBGPU_CmdDispatch.h"
-#include "PcPsx/PsxVm.h"
-#include "PcPsx/Video.h"
-#include "PcPsx/Vulkan/VRenderer.h"
-#include "PcPsx/Vulkan/VRenderPath_Psx.h"
+#include "PsyDoom/BitShift.h"
+#include "PsyDoom/LIBGPU_CmdDispatch.h"
+#include "PsyDoom/PsxVm.h"
+#include "PsyDoom/Video.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
+#include "PsyDoom/Vulkan/VRenderPath_Psx.h"
 
 #include <cstdarg>
 #include <cstdio>

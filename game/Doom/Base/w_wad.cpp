@@ -8,8 +8,8 @@
 
 #include "Doom/cdmaptbl.h"
 #include "i_main.h"
-#include "PcPsx/ModMgr.h"
-#include "PcPsx/WadList.h"
+#include "PsyDoom/ModMgr.h"
+#include "PsyDoom/WadList.h"
 
 // A flag set to true once data for the current map has been loaded.
 // Has very little purpose anymore in PsyDoom; was originally used to ensure the game was not loading resources on-the-fly off the CD-ROM.

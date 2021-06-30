@@ -15,9 +15,9 @@
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
 #include "o_main.h"
-#include "PcPsx/Game.h"
-#include "PcPsx/Input.h"
-#include "PcPsx/Utils.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/Input.h"
+#include "PsyDoom/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
