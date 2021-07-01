@@ -19,6 +19,7 @@
 #include "Game/sprinfo.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxPadButtons.h"
@@ -105,13 +106,14 @@ void D_DoomMain() noexcept {
     W_Init();
     R_Init();
 
-    // PsyDoom: the build (now) dynamically generated lists of sprites, map objects, animated textures and switches for the game.
-    // User mods can add new entries to any of these lists.
+    // PsyDoom: build the (now) dynamically generated lists of sprites, map objects, animated textures and switches for the game.
+    // User mods can add new entries to any of these lists. Also initialize MAPINFO.
     #if PSYDOOM_MODS
         P_InitSprites();
         P_InitMobjInfo();
         P_InitAnimDefs();
         P_InitSwitchDefs();
+        MapInfo::init();
     #endif
 
     ST_Init();
@@ -119,6 +121,7 @@ void D_DoomMain() noexcept {
     // PsyDoom: new cleanup logic before we exit
     #if PSYDOOM_MODS
         const auto dmainCleanup = finally([]() noexcept {
+            MapInfo::shutdown();
             W_Shutdown();
         });
     #endif
