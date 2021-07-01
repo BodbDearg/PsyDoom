@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Macros.h"
 
 BEGIN_NAMESPACE(AudioCompressor)

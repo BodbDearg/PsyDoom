@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A helper module which does the bulk of the work for tokenizing a couple of new text format data lumps added by PsyDoom.
+// These new lumps can define custom decorations, animated flats and textures, as well as switches.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "ParserTokenizer.h"
 
 #include "Asserts.h"

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Macros.h"
 
 #include <functional>
@@ -18,7 +20,7 @@ bool getNextLine(const char* const pStr, const char* const pStrEnd, const char*&
 bool getNextToken(const char* const pStr, const char* const pStrEnd, const char*& pBeg, const char*& pEnd) noexcept;
 
 void visitAllLineTokens(
-const char* const pStrBeg,
+    const char* const pStrBeg,
     const char* const pStrEnd,
     const VisitLineFunc& onNewLine,
     const VisitTokenFunc& onToken
