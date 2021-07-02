@@ -2,6 +2,7 @@
 
 #include "FatalErrors.h"
 #include "Macros.h"
+#include "SmallString.h"
 
 #include <cctype>
 #include <cstdint>
@@ -192,6 +193,10 @@ struct Block {
         return getRequiredHeaderToken(index, TokenType::Number).token.number;
     }
 
+    int32_t getRequiredHeaderInt(const int32_t index) const noexcept {
+        return (int32_t) getRequiredHeaderNumber(index);
+    }
+
     // Helper: gets a mandatory header string and issues a fatal error if not existing
     std::string_view getRequiredHeaderString(const int32_t index) const noexcept {
         return getRequiredHeaderToken(index, TokenType::String).token.text();
@@ -218,13 +223,25 @@ struct Block {
         return (pDataToken && (pDataToken->token.type == TokenType::Number)) ? pDataToken->token.number : defaultValue;
     }
 
-    // Gets a single string value with the specified name; name comparison rules are case insensitive.
+    // Helper: get a a single integer value specifically
+    int32_t getSingleIntValue(const char* const name, const int32_t defaultValue) const noexcept {
+        return (int32_t) getSingleNumberValue(name, (float) defaultValue);
+    }
+
+    // Gets a single small string value with the specified name; name comparison rules are case insensitive.
     // Returns a default value if not found or if the wrong type.
     // Note: if the value is a list then all entries except the 1st are ignored.
-    std::string_view getSingleStringValue(const char* const name, const std::string_view defaultValue) const noexcept {
+    template <class SmallStrT>
+    SmallStrT getSingleString32Value(const char* const name, const SmallStrT& defaultValue) const noexcept {
         const LinkedToken* pToken = getValue(name);
         const LinkedToken* pDataToken = (pToken) ? pToken->pNextData : nullptr;
-        return (pDataToken) ? pDataToken->token.text() : defaultValue;
+
+        if (pDataToken) {
+            const std::string_view text = pDataToken->token.text();
+            return SmallStrT(text.data(), (uint32_t) text.size());
+        } else {
+            return defaultValue;
+        }
     }
 };
 
@@ -236,8 +253,6 @@ struct MapInfo {
     std::vector<Block>          blocks;
 };
 
-MapInfo parseMapInfo(const char* const mapInfoStr) noexcept;
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // An overload of 'error' that issues an error at the start of the specified block
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -245,5 +260,7 @@ template <class ...FmtStrArgs>
 [[noreturn]] inline void error(const Block& block, const char* const errorFmtStr, FmtStrArgs... fmtStrArgs) noexcept {
     error(block.pType->token.begin, errorFmtStr, fmtStrArgs...);
 }
+
+MapInfo parseMapInfo(const char* const mapInfoStr) noexcept;
 
 END_NAMESPACE(MapInfo)

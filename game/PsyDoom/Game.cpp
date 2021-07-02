@@ -8,6 +8,7 @@
 #include "Doom/UI/in_main.h"
 #include "FatalErrors.h"
 #include "IsoFileSys.h"
+#include "MapInfo.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
 
@@ -28,17 +29,8 @@ static constexpr uint32_t NUM_REGULAR_MAPS_FINAL_DOOM = 30;
 static constexpr uint32_t SOUL_LIMIT_DOOM = -1;
 static constexpr uint32_t SOUL_LIMIT_FINAL_DOOM = 16;
 
-// Episode names for Doom and Final Doom
-static const char* const gEpisodeNames_Doom[] = {
-    "Ultimate Doom",
-    "Doom II"
-};
-
-static const char* const gEpisodeNames_FinalDoom[] = {
-    "Master Levels",
-    "TNT",
-    "Plutonia"
-};
+// The an unknown episode name
+static constexpr String32 UNKNOWN_EPISODE_NAME = "Unknown Episode";
 
 GameType        gGameType;
 GameVariant     gGameVariant;
@@ -216,44 +208,23 @@ const char* getMapName(const int32_t mapNum) noexcept {
 // Gets the number of episodes in the game
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t getNumEpisodes() noexcept {
-    return (gGameType == GameType::FinalDoom) ? 3 : 2;
+    return MapInfo::getNumEpisodes();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Gets the name of the specified episode
 //------------------------------------------------------------------------------------------------------------------------------------------
-const char* getEpisodeName(const int32_t episodeNum) noexcept {
-    if (gGameType == GameType::Doom) {
-        if ((episodeNum >= 1) && (episodeNum <= 2)) {
-            return gEpisodeNames_Doom[episodeNum - 1];
-        }
-    } else if (gGameType == GameType::FinalDoom) {
-        if ((episodeNum >= 1) && (episodeNum <= 3)) {
-            return gEpisodeNames_FinalDoom[episodeNum - 1];
-        }
-    }
-
-    return "Unknown Episode";
+const String32& getEpisodeName(const int32_t episodeNum) noexcept {
+    const MapInfo::Episode* pEpisode = MapInfo::getEpisode(episodeNum);
+    return (pEpisode) ? pEpisode->name : UNKNOWN_EPISODE_NAME;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the starting map for the specified episode
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t getEpisodeStartMap(const int32_t episodeNum) noexcept {
-    if (gGameType == GameType::Doom) {
-        switch (episodeNum) {
-            case 1: return 1;
-            case 2: return 31;
-        }
-    } else if (gGameType == GameType::FinalDoom) {
-        switch (episodeNum) {
-            case 1: return 1;
-            case 2: return 14;
-            case 3: return 25;
-        }
-    }
-
-    return 1;
+    const MapInfo::Episode* pEpisode = MapInfo::getEpisode(episodeNum);
+    return (pEpisode) ? pEpisode->startMap : 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -101,7 +101,7 @@ int32_t WadFile::findLumpIdx(const WadLumpName lumpName, const int32_t searchSta
     const WadLumpName* const pLumpNames = mLumpNames.get();
 
     for (int32_t i = searchStartIdx; i < numLumps; ++i) {
-        if ((pLumpNames[i].word & WAD_LUMPNAME_MASK) == lumpName.word)
+        if ((pLumpNames[i].word() & WAD_LUMPNAME_MASK) == lumpName.word())
             return i;
     }
 

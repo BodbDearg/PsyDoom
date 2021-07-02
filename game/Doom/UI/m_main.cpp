@@ -17,6 +17,7 @@
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
 #include "PsyQ/LIBGPU.h"
+#include "SmallString.h"
 #include "Wess/psxcd.h"
 
 #include <algorithm>
@@ -516,7 +517,7 @@ void M_Drawer() noexcept {
     I_DrawString(90, gMenuYPos[gamemode] + 20, gGameTypeNames[gStartGameType]);
 
     if (gStartGameType == gt_single) {
-        I_DrawString(74, gMenuYPos[level], Game::getEpisodeName(gStartMapOrEpisode));
+        I_DrawString(74, gMenuYPos[level], Game::getEpisodeName(gStartMapOrEpisode).c_str().data());
     } else {
         // Coop or deathmatch game, draw the level number rather than episode
         I_DrawString(74, gMenuYPos[level], "Level");

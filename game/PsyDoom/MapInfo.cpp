@@ -9,6 +9,7 @@
 #include "MapInfo.h"
 
 #include "Doom/Base/w_wad.h"
+#include "Game.h"
 #include "MapInfo_Parse.h"
 
 #include <algorithm>
@@ -24,6 +25,37 @@ struct CachedSearchResult {
 };
 
 static std::vector<MusicTrack>  gMusicTracks;
+static std::vector<Episode>     gEpisodes;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Find a specified data structure in a list by an integer field
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class DataT, class ListT>
+static const DataT* findStructByIntKey(const int32_t key, const ListT& list, int32_t DataT::* const keyField) noexcept {
+    for (const DataT& obj : list) {
+        if (obj.*keyField == key)
+            return &obj;
+    }
+
+    return nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get an existing struct with the specfied integer key or create a new one
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class DataT, class ListT>
+static DataT& getOrCreateStructWithIntKey(const int32_t key, ListT& list, int32_t DataT::* const keyField) noexcept {
+    // Try to find an existing structure with this key
+    for (DataT& obj : list) {
+        if (obj.*keyField == key)
+            return obj;
+    }
+
+    // If not found then create a new one and assign it the key
+    DataT& obj = list.emplace_back();
+    obj.*keyField = key;
+    return obj;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads a music track from the specicified value block
@@ -31,21 +63,40 @@ static std::vector<MusicTrack>  gMusicTracks;
 static void readMusicTrack(const Block& block) noexcept {
     // Read and validate the track header
     block.ensureHeaderTokenCount(1);
-    const int32_t trackNum = (int32_t) block.getRequiredHeaderNumber(0);
+    const int32_t trackNum = block.getRequiredHeaderInt(0);
 
     if ((trackNum < 1) || (trackNum > 1024)) {
         error(block, "MusicTrack: track number must be between 1 and 1024!");
     }
 
-    // Get the existing track or make a new one
-    MusicTrack* const pExistingTrack = const_cast<MusicTrack*>(getMusicTrack(trackNum));
-    MusicTrack& track = (pExistingTrack) ? *pExistingTrack : gMusicTracks.emplace_back(trackNum);
-
     // Read and validate track properties
-    track.sequenceNum = (int32_t) block.getSingleNumberValue("Sequence", (float) track.sequenceNum);
+    MusicTrack& track = getOrCreateStructWithIntKey(trackNum, gMusicTracks, &MusicTrack::trackNum);
+    track.sequenceNum = block.getSingleIntValue("Sequence", track.sequenceNum);
 
     if ((track.sequenceNum < 0) || (track.sequenceNum > 16384)) {
         error(block, "MusicTrack: 'Sequence' must be specified and be between 0 and 16384!");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads an episode from the specicified value block
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readEpisode(const Block& block) noexcept {
+    // Read and validate the episode header
+    block.ensureHeaderTokenCount(1);
+    const int32_t episodeNum = block.getRequiredHeaderInt(0);
+
+    if ((episodeNum < 1) || (episodeNum > 255)) {
+        error(block, "Episode: episode number must be between 1 and 255!");
+    }
+
+    // Read and validate the episode properties
+    Episode& episode = getOrCreateStructWithIntKey(episodeNum, gEpisodes, &Episode::episodeNum);
+    episode.name = block.getSingleString32Value("Name", episode.name);
+    episode.startMap = block.getSingleIntValue("StartMap", episode.startMap);
+
+    if ((episode.startMap < 1) || (episode.startMap > 255)) {
+        error(block, "Episode: 'StartMap' must be specified and be between 1 and 255!");
     }
 }
 
@@ -85,6 +136,7 @@ static void readMapInfoFromIWAD() noexcept {
     };
 
     constexpr BlockReader BLOCK_READERS[] = {
+        { "Episode", readEpisode },
         { "MusicTrack", readMusicTrack },
     };
 
@@ -100,15 +152,28 @@ static void readMapInfoFromIWAD() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes MAPINFO using built-in MAPINFO appropriate to the current game ('Doom' or 'Final Doom')
+// Initializes MAPINFO to the defaults appropriate for the current game ('Doom' or 'Final Doom')
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void initDefaultMapInfo() noexcept {
+static void setMapInfoToDefaults() noexcept {
     // Default music tracks, including track '0' (the invalid/null track).
     // There are 30 of these in Final Doom (a superset of Doom's music) and they begin at sequence '90' for track '1'.
+    gMusicTracks.clear();
     gMusicTracks.push_back(MusicTrack{ 0, 0 });
 
     for (int32_t trackNum = 1; trackNum <= 30; ++trackNum) {
         gMusicTracks.push_back(MusicTrack{ trackNum, 89 + trackNum });
+    }
+
+    // Default episodes
+    gEpisodes.clear();
+
+    if (Game::isFinalDoom()) {
+        gEpisodes.push_back(Episode{ 1, 1,  "Master Levels" });
+        gEpisodes.push_back(Episode{ 2, 14, "TNT" });
+        gEpisodes.push_back(Episode{ 3, 25, "Plutonia" });
+    } else {
+        gEpisodes.push_back(Episode{ 1, 1,  "Ultimate Doom" });
+        gEpisodes.push_back(Episode{ 2, 31, "Doom II" });
     }
 }
 
@@ -117,7 +182,7 @@ static void initDefaultMapInfo() noexcept {
 // Otherwise initializes MAPINFO to the appropriate settings for the current game (Doom or Final Doom).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
-    initDefaultMapInfo();
+    setMapInfoToDefaults();
     readMapInfoFromIWAD();
 }
 
@@ -129,25 +194,39 @@ void shutdown() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Finds a 'MusicTrack' structure by track number
+// Find a 'MusicTrack' structure by track number or return all music tracks
 //------------------------------------------------------------------------------------------------------------------------------------------
 const MusicTrack* getMusicTrack(const int32_t trackNum) noexcept {
-    const uint32_t numTracks = (uint32_t) gMusicTracks.size();
-    const MusicTrack* const pTracks = gMusicTracks.data();
+    return findStructByIntKey(trackNum, gMusicTracks, &MusicTrack::trackNum);
+}
 
-    for (uint32_t i = 0; i < numTracks; ++i) {
-        if (pTracks[i].trackNum == trackNum)
-            return &pTracks[i];
-    }
-
-    return nullptr;
+const std::vector<MusicTrack>& allMusicTracks() noexcept {
+    return gMusicTracks;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Returns a list of all music tracks in the game
+// Find an 'Episode' structure by episode number or return all episodes
 //------------------------------------------------------------------------------------------------------------------------------------------
-const std::vector<MusicTrack>& allMusicTracks() noexcept {
-    return gMusicTracks;
+const Episode* getEpisode(const int32_t episodeNum) noexcept {
+    return findStructByIntKey(episodeNum, gEpisodes, &Episode::episodeNum);
+}
+
+const std::vector<Episode>& allEpisodes() noexcept {
+    return gEpisodes;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the maximum episode number that can be played
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t getNumEpisodes() noexcept {
+    // Determine the maximum episode number in the episode list
+    int32_t maxEpisodeNum = 1;
+
+    for (const Episode& episode : gEpisodes) {
+        maxEpisodeNum = std::max(maxEpisodeNum, episode.episodeNum);
+    }
+
+    return maxEpisodeNum;
 }
 
 END_NAMESPACE(MapInfo)

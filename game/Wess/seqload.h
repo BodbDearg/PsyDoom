@@ -4,7 +4,7 @@
 
 // PsyDoom: 'CdFileId' has changed in format
 #if PSYDOOM_MODS
-    union String16;
+    struct String16;
     typedef String16 CdFileId;
 #else 
     typedef int32_t CdFileId;

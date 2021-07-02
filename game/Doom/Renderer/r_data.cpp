@@ -292,7 +292,7 @@ int32_t R_TextureNumForName(const char* const name, const bool bMustExist) noexc
         const int32_t texLumpIdx = pTextures[texIdx].lumpNum;
         const WadLumpName texLumpName = W_GetLumpName(texLumpIdx);
 
-        if ((texLumpName.word & WAD_LUMPNAME_MASK) == searchLumpName.word)
+        if ((texLumpName.word() & WAD_LUMPNAME_MASK) == searchLumpName.word())
             return texIdx;
     }
 
@@ -318,7 +318,7 @@ int32_t R_FlatNumForName(const char* const name, const bool bMustExist) noexcept
         const int32_t flatLumpIdx = pFlatTextures[flatIdx].lumpNum;
         const WadLumpName flatLumpName = W_GetLumpName(flatLumpIdx);
 
-        if ((flatLumpName.word & WAD_LUMPNAME_MASK) == searchLumpName.word)
+        if ((flatLumpName.word() & WAD_LUMPNAME_MASK) == searchLumpName.word())
             return flatIdx;
     }
 

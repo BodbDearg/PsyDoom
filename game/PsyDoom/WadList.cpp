@@ -56,7 +56,7 @@ void WadList::finalize() noexcept {
 
         for (int32_t lumpIdx = 0; lumpIdx < numWadLumps; ++lumpIdx) {
             const WadLumpName lumpName = wadFile.getLumpName(lumpIdx);
-            mLumpHandles.push_back({ wadFileIndex, lumpIdx, lumpName.word & WAD_LUMPNAME_MASK });   // Note: remove the special 'compressed' flag bit to make later search a bit faster
+            mLumpHandles.push_back({ wadFileIndex, lumpIdx, lumpName.word() & WAD_LUMPNAME_MASK });     // Note: remove the special 'compressed' flag bit to make later search a bit faster
         }
     }
 }
@@ -79,7 +79,7 @@ int32_t WadList::findLumpIdx(const WadLumpName lumpName, const int32_t searchSta
     const LumpHandle* const pLumpHandles = mLumpHandles.data();
 
     for (int32_t i = searchStartIdx; i < numLumps; ++i) {
-        if (pLumpHandles[i].name.word == lumpName.word)
+        if (pLumpHandles[i].name.word() == lumpName.word())
             return i;
     }
 

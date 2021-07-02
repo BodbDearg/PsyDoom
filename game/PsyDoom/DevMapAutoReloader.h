@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-union String16;
+struct String16;
 typedef String16 CdFileId;
 
 BEGIN_NAMESPACE(DevMapAutoReloader)

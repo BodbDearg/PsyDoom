@@ -80,7 +80,7 @@ static std::unordered_map<uint32_t, uint32_t> determineSpriteFrameCounts() noexc
     forEachSpriteLump([&]([[maybe_unused]] const int32_t lumpIdx, const WadLumpName lumpName) noexcept {
         // Get which frames are currently defined for this sprite
         const sprname_t sprName = getSpriteName(lumpName);
-        uint32_t& definedFrames = spriteFrames[sprName.word];
+        uint32_t& definedFrames = spriteFrames[sprName.word()];
 
         // Get the normal and flipped sprite number from the lump name and incorporate them into the bit set if they are valid.
         // Up to 31 sprite frames can be defined starting from ASCII 'A', ignore any others.
@@ -108,8 +108,8 @@ static std::unordered_map<uint32_t, uint32_t> determineSpriteFrameCounts() noexc
     for (int32_t i = 0; i < BASE_NUM_SPRITES; ++i) {
         const sprname_t sprName = gBaseSprNames[i];
 
-        if (spriteFrames.count(sprName.word) <= 0) {
-            spriteFrames[sprName.word] = 0;
+        if (spriteFrames.count(sprName.word()) <= 0) {
+            spriteFrames[sprName.word()] = 0;
         }
     }
 
@@ -159,7 +159,7 @@ static void buildSpriteNameToDefLUT() noexcept {
     gSprNameToDef.reserve(gSpriteDefs.size() * 8);
 
     for (spritedef_t& spriteDef : gSpriteDefs) {
-        gSprNameToDef[spriteDef.name.word] = &spriteDef;
+        gSprNameToDef[spriteDef.name.word()] = &spriteDef;
     }
 }
 
@@ -201,8 +201,8 @@ static void populateSpriteFrameList() noexcept {
     forEachSpriteLump([&]([[maybe_unused]] const int32_t lumpIdx, const WadLumpName lumpName) noexcept {
         // Get the sprite associated with this lump (should exist at this point)
         const sprname_t sprName = getSpriteName(lumpName);
-        ASSERT(gSprNameToDef[sprName.word]);
-        spritedef_t& spriteDef = *gSprNameToDef[sprName.word];
+        ASSERT(gSprNameToDef[sprName.word()]);
+        spritedef_t& spriteDef = *gSprNameToDef[sprName.word()];
 
         // Get the normal and flipped sprite number and direction from the lump name.
         // Note that the flipped sprite number might not be defined.
@@ -284,7 +284,7 @@ static void sortSpriteDefs() noexcept {
     spriteOrder.reserve(BASE_NUM_SPRITES * 8);
 
     for (int32_t i = 0; i < BASE_NUM_SPRITES; ++i) {
-        spriteOrder[gBaseSprNames[i].word] = i;
+        spriteOrder[gBaseSprNames[i].word()] = i;
     }
 
     // Sort the sprite list by order first, then name
@@ -293,8 +293,8 @@ static void sortSpriteDefs() noexcept {
         gSpriteDefs.end(),
         [&](const spritedef_t & s1, const spritedef_t & s2) noexcept {
             // Compare by order
-            const auto orderIter1 = spriteOrder.find(s1.name.word);
-            const auto orderIter2 = spriteOrder.find(s2.name.word);
+            const auto orderIter1 = spriteOrder.find(s1.name.word());
+            const auto orderIter2 = spriteOrder.find(s2.name.word());
             const int32_t order1 = (orderIter1 != spriteOrder.end()) ? orderIter1->second : INT32_MAX;
             const int32_t order2 = (orderIter2 != spriteOrder.end()) ? orderIter2->second : INT32_MAX;
 
@@ -302,7 +302,7 @@ static void sortSpriteDefs() noexcept {
                 return (order1 < order2);
 
             // Failing that compare by name
-            return (s1.name.word < s2.name.word);
+            return (s1.name.word() < s2.name.word());
         }
     );
 
@@ -333,7 +333,7 @@ void P_InitSprites() noexcept {
 // Returns the index of the sprite for the specified name, or '-1' if not found
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t P_SpriteCheckNumForName(const sprname_t name) noexcept {
-    const auto iter = gSprNameToDef.find(name.word);
+    const auto iter = gSprNameToDef.find(name.word());
     return (iter != gSprNameToDef.end()) ? (int32_t)(iter->second - gSpriteDefs.data()) : -1;
 }
 

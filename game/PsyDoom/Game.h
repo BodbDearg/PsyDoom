@@ -42,6 +42,8 @@ struct GameSettings {
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength
 };
 
+struct String32;
+
 BEGIN_NAMESPACE(Game)
 
 extern GameType         gGameType;
@@ -57,7 +59,7 @@ int32_t getNumMaps() noexcept;
 int32_t getNumRegularMaps() noexcept;
 const char* getMapName(const int32_t mapNum) noexcept;
 int32_t getNumEpisodes() noexcept;
-const char* getEpisodeName(const int32_t episodeNum) noexcept;
+const String32& getEpisodeName(const int32_t episodeNum) noexcept;
 int32_t getEpisodeStartMap(const int32_t episodeNum) noexcept;
 int32_t getMapEpisode(const int32_t mapNum) noexcept;
 uint16_t getTexPalette_BACK() noexcept;
