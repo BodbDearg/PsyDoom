@@ -11,6 +11,7 @@
 #include "m_fixed.h"
 #include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/ModMgr.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/Utils.h"
@@ -67,20 +68,6 @@ const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
         SpuReverbMode   reverbMode;     // What type of reverb to use
         int16_t         reverbDepth;    // Reverb depth: left and right
     };
-
-    // The sequence numbers (in the module file) for all of the music tracks in Final Doom (and Doom).
-    // Note that the LCD file name is now derived automatically from the track number.
-    static const int32_t gMusicSeqNums[] = {
-        0,                              // Invalid track num
-        90,    91,   92,   93,   94,    // 01 - 05
-        95,    96,   97,   98,   99,    // 06 - 10
-        100,  101,  102,  103,  104,    // 11 - 15
-        105,  106,  107,  108,  109,    // 16 - 20
-        110,  111,  112,  113,  114,    // 21 - 25
-        115,  116,  117,  118,  119,    // 26 - 30
-    };
-
-    static constexpr int32_t NUM_MUSIC_TRACKS = C_ARRAY_SIZE(gMusicSeqNums) - 1;
 
     // What music track and reverb setting to use for all maps in the game: Doom
     static const mapmusic_t gMapMusic_Doom[] = {
@@ -370,8 +357,10 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
             }
 
             // Free all music tracks
-            for (int32_t trackNum = 1; trackNum <= NUM_MUSIC_TRACKS; ++trackNum) {
-                wess_seq_free(gMusicSeqNums[trackNum]);
+            for (const MapInfo::MusicTrack& track : MapInfo::allMusicTracks()) {
+                if (track.sequenceNum != 0) {
+                    wess_seq_free(track.sequenceNum);
+                }
             }
         }
 
@@ -410,7 +399,8 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
 
     // Load the music sequence and lcd file for the map music.
     // Also initialize the reverb mode depending on the music.
-    gCurMusicSeqIdx = gMusicSeqNums[mapMusic.trackIdx];
+    const MapInfo::MusicTrack* const pMusicTrack = MapInfo::getMusicTrack(mapMusic.trackIdx);
+    gCurMusicSeqIdx = (pMusicTrack) ? pMusicTrack->sequenceNum : 0;
     uint32_t destSpuAddr = gSound_MapLcdSpuStartAddr;
 
     if (gCurMusicSeqIdx == 0) {
