@@ -24,6 +24,7 @@
 #include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/Utils.h"
 #include "Wess/wessapi.h"
 
@@ -413,10 +414,12 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     #endif
 }
 
+#if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Run the actual in-game (3d) portions of the game.
 // Also do intermission and finale screens following a level.
 // This is used to run the game for non-demo gameplay.
+// PsyDoom: this function has been rewritten. For the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_RunGame() noexcept {
     while (true) {
@@ -425,10 +428,8 @@ void G_RunGame() noexcept {
         MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
 
         // PsyDoom: if app quit was requested then exit immediately
-        #if PSYDOOM_MODS
-            if (Input::isQuitRequested())
-                break;
-        #endif
+        if (Input::isQuitRequested())
+            break;
 
         // Assume we are not restarting the current level at first
         gbIsLevelBeingRestarted = false;
@@ -450,16 +451,12 @@ void G_RunGame() noexcept {
         // Cleanup after the level is done.
         // Texture cache: unlock everything except UI assets and other reserved areas of VRAM.
         // In limit removing mode also ensure we are using tight packing of VRAM.
-        #if PSYDOOM_MODS
-            #if PSYDOOM_LIMIT_REMOVING
-                I_LockAllWallAndFloorTextures(false);
-                I_TexCacheUseLoosePacking(false);
-            #else
-                I_UnlockAllTexCachePages();
-                I_LockTexCachePage(0);
-            #endif
+        #if PSYDOOM_LIMIT_REMOVING
+            I_LockAllWallAndFloorTextures(false);
+            I_TexCacheUseLoosePacking(false);
         #else
-            gLockedTexPagesMask &= 1;
+            I_UnlockAllTexCachePages();
+            I_LockTexCachePage(0);
         #endif
 
         Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
@@ -471,39 +468,23 @@ void G_RunGame() noexcept {
         MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
         // PsyDoom: if app quit was requested then exit immediately
-        #if PSYDOOM_MODS
-            if (Input::isQuitRequested())
-                break;
-        #endif
+        if (Input::isQuitRequested())
+            break;
 
         // Should we do the Ultimate DOOM style (text only, no cast sequence) finale?
-        //
-        // Notes:
-        //  (1) For Final Doom this finale type will show when finishing the first 2 out of 3 episodes.
-        //  (2) Showing finales is restricted to the case where we are not warping to a secret level, since the
-        //      Ultimate Doom secret levels will not be within the map number range for the Ultimate Doom episode.
-        //      Any warp to a level other than the next one is considered a secret level warp.
-        //  (3) PsyDoom: I'm restricting endings to the Doom and Final Doom games specifically.
-        //      If some other game type is playing then we simply won't do them.
-        //
-        const bool bDoFinales = ((Game::gGameType == GameType::Doom) || (Game::gGameType == GameType::FinalDoom));
-        const bool bGoingToSecretLevel = (gNextMap != gGameMap + 1);
-        const int32_t curEpisodeNum = Game::getMapEpisode(gGameMap);
+        const MapInfo::Map* const pMap = MapInfo::getMap(gGameMap);
+        const MapInfo::Map* const pNextMap = MapInfo::getMap(gNextMap);
+
+        const int32_t curClusterNum = (pMap) ? pMap->cluster : 0;
+        const int32_t nextClusterNum = (pNextMap) ? pNextMap->cluster : curClusterNum;
         const int32_t nextEpisodeNum = Game::getMapEpisode(gNextMap);
 
-        if ((gNetGame == gt_single) && (!bGoingToSecretLevel) && (curEpisodeNum != nextEpisodeNum)) {
-            if (bDoFinales) {
-                MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+        if ((gNetGame == gt_single) && (curClusterNum != nextClusterNum)) {
+            MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
-                // PsyDoom: if app quit was requested then exit immediately
-                #if PSYDOOM_MODS
-                    if (Input::isQuitRequested())
-                        break;
-                #endif
-            } else {
-                gGameAction = ga_nothing;
+            // PsyDoom: if app quit was requested then exit immediately
+            if (Input::isQuitRequested())
                 break;
-            }
 
             if (gGameAction == ga_warped || gGameAction == ga_restart)
                 continue;
@@ -521,23 +502,17 @@ void G_RunGame() noexcept {
             continue;
         }
 
-        if (bDoFinales) {
-            MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
+        MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
 
-            // PsyDoom: if app quit was requested then exit immediately
-            #if PSYDOOM_MODS
-                if (Input::isQuitRequested())
-                    break;
-            #endif
-        } else {
-            gGameAction = ga_nothing;
+        // PsyDoom: if app quit was requested then exit immediately
+        if (Input::isQuitRequested())
             break;
-        }
 
         if ((gGameAction != ga_warped) && (gGameAction != ga_restart))
             break;
     }
 }
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Plays back the current demo in the demo buffer

@@ -31,7 +31,65 @@ When this definition is encountered it instructs the game to clear the current l
 ```
 ClearEpisodes {}
 ```
+## Map
+Defines various settings unique to each map. Full example (not all these fields need to be specified):
+```
+Map 3 "My Cool Map" {
+    Music = 5
+    Cluster = 1
+    SkyPal = -1
+    PlayCdMusic = 0
+    ReverbMode = 6
+    ReverbDepth = 0x27FF
+    ReverbDelay = 0
+    ReverbFeedback = 0
+}
+```
+Header fields:
+- `1st`: The map's number. Must be between 1 and 255.
+- `2nd`: The name of the map, as shown on the automap and intermission screens.
 
+Internal Fields:
+- `Music`: Which sequencer music track to play for the map, or '0' if none. If 'PlayCdMusic' is enabled then this specifies a CD track instead. Must be between 0 and 1024.
+- `Cluster`: Which cluster of maps the map belongs to. Determines when finale screens are shown; if the next map has a different cluster number then this will trigger the non-cast call finale.
+- `SkyPal`: Can be used to override the palette used for the map's sky. Doom has 20 built-in palettes; Final Doom has 26. The engine can support up to 32 palettes in PLAYERPAL, so 6 additional user palettes can be defined. Specify `-1` (the default) to have the engine automatically determine the sky palette from the sky texture number. This field must be between -1 and 32. Built in palettes are as follows:
+    ```
+    MAINPAL               = 0       // Used for most sprites and textures in the game
+    REDPALS (0-7)         = 1-8    // Pain palettes (red shift)
+    BONUSPALS (0-3)       = 9-12   // Bonus pickup (gold shift) palettes
+    RADIATIONPAL          = 13      // Radiation suit green shift
+    INVULNERABILITYPAL    = 14      // PSX Doom: invulnerability effect
+    FIRESKYPAL            = 15      // PSX Doom: fire sky palette
+    UIPAL                 = 16      // PSX Doom: ui elements palette
+    TITLEPAL              = 17      // PSX Doom: title screen palette
+    IDCREDITS1PAL         = 18      // PSX Doom: ID credits screen palette
+    WCREDITS1PAL          = 19      // PSX Doom: Williams credits screen palette
+    UIPAL2                = 20      // PSX Final Doom: additional UI palette (used for plaques etc.)
+    SKYPAL1               = 21      // PSX Final Doom: additional sky palette
+    SKYPAL2               = 22      // PSX Final Doom: additional sky palette
+    SKYPAL3               = 23      // PSX Final Doom: additional sky palette
+    SKYPAL4               = 24      // PSX Final Doom: additional sky palette
+    SKYPAL5               = 25      // PSX Final Doom: additional sky palette
+    ```
+- `PlayCdMusic`: If `1` or greater then `Music` is interpreted as a CD track to play instead of a music sequence. You can use this to play CD audio for the map instead of sequencer music.
+- `ReverbMode`: Defines the type of reverb effect used for the map. Allowed reverb type numbers are:
+    ```
+    OFF        = 0      // No reverb
+    ROOM       = 1
+    STUDIO_A   = 2
+    STUDIO_B   = 3
+    STUDIO_C   = 4
+    HALL       = 5
+    SPACE      = 6
+    ECHO       = 7      // Note: requires 'ReverbDelay' to be set and uses 'ReverbFeedback' instead of 'ReverbDepth'
+    DELAY      = 8      // Note: requires 'ReverbDelay' to be set and uses 'ReverbFeedback' instead of 'ReverbDepth'
+    PIPE       = 9
+    ```
+- `ReverbDepthL`: for most `ReverbMode` types (except `ECHO` and `DELAY`) this specifies the depth of the reverb effect (left channel). Allowed values are from -32768 to 32767.
+- `ReverbDepthR`: for most `ReverbMode` types (except `ECHO` and `DELAY`) this specifies the depth of the reverb effect (right channel). Allowed values are from -32768 to 32767.
+- `ReverbDepth`: This is an alias which sets both `ReverbDepthL` and `ReverbDepthR` at the same time. Most of the time you would probably want equal reverb on both channels.
+- `ReverbDelay`: for the `ECHO` and `DELAY` reverb modes defines the delay for the effect. Allowed values are from -32768 to 32767.
+- `ReverbFeedback`: for the `ECHO` and `DELAY` reverb modes defines effect strength. Allowed values are from -32768 to 32767.
 ## MusicTrack
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:
 ```

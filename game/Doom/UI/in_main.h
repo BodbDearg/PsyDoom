@@ -2,8 +2,11 @@
 
 #include "Doom/doomdef.h"
 
-extern const char gMapNames_Doom[][32];
-extern const char gMapNames_FinalDoom[][32];
+// PsyDoom: these are now defined in the 'MapInfo' module and can be overriden for new user maps
+#if !PSYDOOM_MODS
+    extern const char gMapNames_Doom[][32];
+    extern const char gMapNames_FinalDoom[][32];
+#endif
 
 void IN_Start() noexcept;
 void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept;

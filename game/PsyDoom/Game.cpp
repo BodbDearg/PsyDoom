@@ -29,8 +29,9 @@ static constexpr uint32_t NUM_REGULAR_MAPS_FINAL_DOOM = 30;
 static constexpr uint32_t SOUL_LIMIT_DOOM = -1;
 static constexpr uint32_t SOUL_LIMIT_FINAL_DOOM = 16;
 
-// The an unknown episode name
+// Unknown map/episode name placeholders
 static constexpr String32 UNKNOWN_EPISODE_NAME = "Unknown Episode";
+static constexpr String32 UNKNOWN_MAP_NAME = "Unknown Map";
 
 GameType        gGameType;
 GameVariant     gGameVariant;
@@ -190,18 +191,9 @@ int32_t getNumRegularMaps() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the name of the specified map number
 //------------------------------------------------------------------------------------------------------------------------------------------
-const char* getMapName(const int32_t mapNum) noexcept {
-    if (gGameType == GameType::Doom) {
-        if ((mapNum >= 1) && (mapNum <= 59)) {
-            return gMapNames_Doom[mapNum - 1];
-        }
-    } else if (gGameType == GameType::FinalDoom) {
-        if ((mapNum >= 1) && (mapNum <= 30)) {
-            return gMapNames_FinalDoom[mapNum - 1];
-        }
-    }
-
-    return "Unknown Mapname";
+const String32& getMapName(const int32_t mapNum) noexcept {
+    const MapInfo::Map* const pMap = MapInfo::getMap(mapNum);
+    return (pMap) ? pMap->name : UNKNOWN_MAP_NAME;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

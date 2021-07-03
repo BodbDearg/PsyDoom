@@ -18,6 +18,7 @@
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
 #include "pw_main.h"
+#include "SmallString.h"
 #include "st_main.h"
 #include "Wess/psxcd.h"
 
@@ -28,108 +29,112 @@ struct pstats_t {
     int32_t     fragcount;
 };
 
-const char gMapNames_Doom[][32] = {
-    // Doom 1
-    "Hangar",
-    "Plant",
-    "Toxin Refinery",
-    "Command Control",
-    "Phobos Lab",
-    "Central Processing",
-    "Computer Station",
-    "Phobos Anomaly",
-    "Deimos Anomaly",
-    "Containment Area",
-    "Refinery",
-    "Deimos Lab",
-    "Command Center",
-    "Halls of the Damned",
-    "Spawning Vats",
-    "Hell Gate",
-    "Hell Keep",
-    "Pandemonium",
-    "House of Pain",
-    "Unholy Cathedral",
-    "Mt. Erebus",
-    "Limbo",
-    "Tower Of Babel",
-    "Hell Beneath",
-    "Perfect Hatred",
-    "Sever The Wicked",
-    "Unruly Evil",
-    "Unto The Cruel",
-    "Twilight Descends",
-    "Threshold of Pain",
-    // Doom 2
-    "Entryway",
-    "Underhalls",
-    "The Gantlet",
-    "The Focus",
-    "The Waste Tunnels",
-    "The Crusher",
-    "Dead Simple",
-    "Tricks And Traps",
-    "The Pit",
-    "Refueling Base",
-    "O of Destruction!",
-    "The Factory",
-    "The Inmost Dens",
-    "Suburbs",
-    "Tenements",
-    "The Courtyard",
-    "The Citadel",
-    "Nirvana",
-    "The Catacombs",
-    "Barrels of Fun",
-    "Bloodfalls",
-    "The Abandoned Mines",
-    "Monster Condo",
-    "Redemption Denied",
-    "Fortress of Mystery",
-    "The Military Base",
-    "The Marshes",
-    "The Mansion",
-    "Club Doom"
-};
+// PsyDoom: these are now defined in the 'MapInfo' module and can be overriden for new user maps
+#if !PSYDOOM_MODS
+    const char gMapNames_Doom[][32] = {
+        // Doom 1
+        "Hangar",
+        "Plant",
+        "Toxin Refinery",
+        "Command Control",
+        "Phobos Lab",
+        "Central Processing",
+        "Computer Station",
+        "Phobos Anomaly",
+        "Deimos Anomaly",
+        "Containment Area",
+        "Refinery",
+        "Deimos Lab",
+        "Command Center",
+        "Halls of the Damned",
+        "Spawning Vats",
+        "Hell Gate",
+        "Hell Keep",
+        "Pandemonium",
+        "House of Pain",
+        "Unholy Cathedral",
+        "Mt. Erebus",
+        "Limbo",
+        "Tower Of Babel",
+        "Hell Beneath",
+        "Perfect Hatred",
+        "Sever The Wicked",
+        "Unruly Evil",
+        "Unto The Cruel",
+        "Twilight Descends",
+        "Threshold of Pain",
+        // Doom 2
+        "Entryway",
+        "Underhalls",
+        "The Gantlet",
+        "The Focus",
+        "The Waste Tunnels",
+        "The Crusher",
+        "Dead Simple",
+        "Tricks And Traps",
+        "The Pit",
+        "Refueling Base",
+        "O of Destruction!",
+        "The Factory",
+        "The Inmost Dens",
+        "Suburbs",
+        "Tenements",
+        "The Courtyard",
+        "The Citadel",
+        "Nirvana",
+        "The Catacombs",
+        "Barrels of Fun",
+        "Bloodfalls",
+        "The Abandoned Mines",
+        "Monster Condo",
+        "Redemption Denied",
+        "Fortress of Mystery",
+        "The Military Base",
+        "The Marshes",
+        "The Mansion",
+        "Club Doom"
+    };
 
-const char gMapNames_FinalDoom[][32] = {
-    // Master Levels
-    "Attack",
-    "Virgil",
-    "Canyon",
-    "Combine",
-    "Catwalk",
-    "Fistula",
-    "Geryon",
-    "Minos",
-    "Nessus",
-    "Paradox",
-    "Subspace",
-    "Subterra",
-    "Vesperas",
-    // TNT
-    "System Control",
-    "Human Barbeque",
-    "Wormhole",
-    "Crater",
-    "Nukage Processing",
-    "Deepest Reaches",
-    "Processing Area",
-    "Lunar Mining Project",
-    "Quarry",
-    "Ballistyx",
-    "Heck",
-    // Plutonia
-    "Congo",
-    "Aztec",
-    "Ghost Town",
-    "Baron's Lair",
-    "The Death Domain",
-    "Onslaught"
-};
+    const char gMapNames_FinalDoom[][32] = {
+        // Master Levels
+        "Attack",
+        "Virgil",
+        "Canyon",
+        "Combine",
+        "Catwalk",
+        "Fistula",
+        "Geryon",
+        "Minos",
+        "Nessus",
+        "Paradox",
+        "Subspace",
+        "Subterra",
+        "Vesperas",
+        // TNT
+        "System Control",
+        "Human Barbeque",
+        "Wormhole",
+        "Crater",
+        "Nukage Processing",
+        "Deepest Reaches",
+        "Processing Area",
+        "Lunar Mining Project",
+        "Quarry",
+        "Ballistyx",
+        "Heck",
+        // Plutonia
+        "Congo",
+        "Aztec",
+        "Ghost Town",
+        "Baron's Lair",
+        "The Death Domain",
+        "Onslaught"
+    };
 
-static_assert(C_ARRAY_SIZE(gMapNames_Doom) == 59);
-static_assert(C_ARRAY_SIZE(gMapNames_FinalDoom) == 30);
+    static_assert(C_ARRAY_SIZE(gMapNames_Doom) == 59);
+    static_assert(C_ARRAY_SIZE(gMapNames_FinalDoom) == 30);
+
+#endif  // #if !PSYDOOM_MODS
 
 // The final stats to display for each player
 static pstats_t gPStats[MAXPLAYERS];
@@ -435,7 +440,7 @@ void IN_SingleDrawer() noexcept {
         const int32_t timeY = 115;
     #endif
 
-    I_DrawString(-1, mapNameY, Game::getMapName(gGameMap));
+    I_DrawString(-1, mapNameY, Game::getMapName(gGameMap).c_str().data());
     I_DrawString(-1, finishedY, "Finished");
 
     I_DrawString(57, killsY, "Kills");
@@ -473,7 +478,7 @@ void IN_SingleDrawer() noexcept {
     // Only draw the next map and password if there is a next map
     if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 145, "Entering");
-        I_DrawString(-1, 161, Game::getMapName(gNextMap));
+        I_DrawString(-1, 161, Game::getMapName(gNextMap).c_str().data());
         I_DrawString(-1, 187, "Password");
 
         char passwordStr[PW_SEQ_LEN + 1];
@@ -552,7 +557,7 @@ void IN_CoopDrawer() noexcept {
     // Only draw the next map and password if there is a next map
     if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 149, "Entering");
-        I_DrawString(-1, 165, Game::getMapName(gNextMap));
+        I_DrawString(-1, 165, Game::getMapName(gNextMap).c_str().data());
 
         // Well this is mean! The current player only gets to see a password if not dead :(
         if (gPlayers[gCurPlayerIndex].health > 0) {
@@ -576,7 +581,7 @@ void IN_CoopDrawer() noexcept {
 void IN_DeathmatchDrawer() noexcept {
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
 
-    I_DrawString(-1, 20, Game::getMapName(gGameMap));
+    I_DrawString(-1, 20, Game::getMapName(gGameMap).c_str().data());
     I_DrawString(-1, 36, "Finished");
 
     const facesprite_t* pFaceSpriteP1;
@@ -655,6 +660,6 @@ void IN_DeathmatchDrawer() noexcept {
     // Only draw the next map if there is one
     if (gNextMap <= Game::getNumMaps()) {
         I_DrawString(-1, 190, "Entering");
-        I_DrawString(-1, 206, Game::getMapName(gNextMap));
+        I_DrawString(-1, 206, Game::getMapName(gNextMap).c_str().data());
     }
 }

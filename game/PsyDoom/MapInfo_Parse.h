@@ -168,10 +168,10 @@ struct Block {
         return nullptr;
     }
 
-    // Ensure the list of header tokens has the exact amount of tokens specified.
+    // Ensure the list of header tokens has at least the amount of tokens specified.
     // Issues a fatal error if this is not the case.
-    void ensureHeaderTokenCount(const int32_t count) const noexcept {
-        if (getHeaderTokenCount() != count) {
+    void ensureMinHeaderTokenCount(const int32_t count) const noexcept {
+        if (getHeaderTokenCount() < count) {
             error(pType->token.end, "MAPINFO block has an invalid header! See PsyDoom's MAPINFO docs for the expected format.");
         }
     }
@@ -197,9 +197,10 @@ struct Block {
         return (int32_t) getRequiredHeaderNumber(index);
     }
 
-    // Helper: gets a mandatory header string and issues a fatal error if not existing
-    std::string_view getRequiredHeaderString(const int32_t index) const noexcept {
-        return getRequiredHeaderToken(index, TokenType::String).token.text();
+    // Helper: gets a mandatory header small string and issues a fatal error if not existing
+    String32 getRequiredHeaderString32(const int32_t index) const noexcept {
+        const std::string_view text = getRequiredHeaderToken(index, TokenType::String).token.text();
+        return String32(text.data(), (uint32_t) text.size());
     }
 
     // Gets a value (of any type) with the specified name; name comparison rules are case insensitive.

@@ -13,6 +13,7 @@
 #include "PsyDoom/Vulkan/VDrawing.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
+#include "SmallString.h"
 
 #include <cstdio>
 
@@ -257,7 +258,7 @@ void I_DrawPausedOverlay() noexcept {
         char warpmsg[64];
         std::sprintf(warpmsg, "warp to level %d", gMapNumToCheatWarpTo);
         I_DrawString(-1, 40, warpmsg);
-        I_DrawString(-1, 60, Game::getMapName(gMapNumToCheatWarpTo));
+        I_DrawString(-1, 60, Game::getMapName(gMapNumToCheatWarpTo).c_str().data());
     }
     else if (player.cheats & CF_VRAMVIEWER) {
         // Draw the vram viewer: first clear the background to black and then draw it.

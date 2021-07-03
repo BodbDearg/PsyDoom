@@ -27,6 +27,7 @@
 #include "p_tick.h"
 #include "PsyDoom/DevMapAutoReloader.h"
 #include "PsyDoom/MapHash.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/MapPatcher.h"
 #include "PsyDoom/MobjSpritePrecacher.h"
 #include "PsyDoom/ModMgr.h"
@@ -1238,6 +1239,19 @@ static void P_Init() noexcept {
                 case '6':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL5];    break;
             }
         }
+
+        // PsyDoom: MAPINFO allows the sky palette to be overriden
+        #if PSYDOOM_MODS
+            const MapInfo::Map* const pMap = MapInfo::getMap(gGameMap);
+
+            if (pMap) {
+                const int32_t skyPalOverride = pMap->skyPaletteOverride;
+
+                if ((skyPalOverride >= 0) && (skyPalOverride < MAXPALETTES)) {
+                    gPaletteClutId_CurMapSky = gPaletteClutIds[skyPalOverride];
+                }
+            }
+        #endif
 
         // Ensure the sky texture is in VRAM.
         // PsyDoom limit removing: this code is now just flagging the texture for later loading rather than loading directly.

@@ -408,7 +408,7 @@ void ST_Drawer() noexcept {
 
             // PsyDoom: use 'snprintf' just to be safe here
             #if PSYDOOM_MODS
-                std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, gGameMap, Game::getMapName(gGameMap));
+                std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, gGameMap, Game::getMapName(gGameMap).c_str().data());
             #else
                 std::sprintf(mapTitle, MAP_TITLE_FMT, gGameMap, gMapNames[gGameMap - 1]);
             #endif

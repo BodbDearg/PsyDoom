@@ -58,116 +58,9 @@ const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
     8,      // cdmusic_finale_doom2
 };
 
-// PsyDoom: restructured this data to make it more modding friendly and to remove data which can automatically be derived.
+// PsyDoom: sound related config for maps (music track, reverb settings etc.) now resides in the 'MapInfo' module - it used to be here.
 // For the original data and structures see the 'Old' folder version of this file.
 #if PSYDOOM_MODS
-    // PsyDoom: defines the music for a map in the game.
-    // Specifies the track and the type of reverb to be used.
-    struct mapmusic_t {
-        int32_t         trackIdx;       // Which music track is to be used
-        SpuReverbMode   reverbMode;     // What type of reverb to use
-        int16_t         reverbDepth;    // Reverb depth: left and right
-    };
-
-    // What music track and reverb setting to use for all maps in the game: Doom
-    static const mapmusic_t gMapMusic_Doom[] = {
-        { 0,    SPU_REV_MODE_OFF,       0x0000 },   // -
-        { 1,    SPU_REV_MODE_SPACE,     0x0FFF },   // MAP01
-        { 2,    SPU_REV_MODE_SPACE,     0x0FFF },   // MAP02
-        { 3,    SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP03
-        { 4,    SPU_REV_MODE_HALL,      0x17FF },   // MAP04
-        { 5,    SPU_REV_MODE_STUDIO_A,  0x23FF },   // MAP05
-        { 6,    SPU_REV_MODE_HALL,      0x1FFF },   // MAP06
-        { 7,    SPU_REV_MODE_STUDIO_C,  0x26FF },   // MAP07
-        { 8,    SPU_REV_MODE_STUDIO_B,  0x2DFF },   // MAP08
-        { 11,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP09
-        { 9,    SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP10
-        { 15,   SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP11
-        { 10,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP12
-        { 19,   SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP13
-        { 2,    SPU_REV_MODE_HALL,      0x1FFF },   // MAP14
-        { 1,    SPU_REV_MODE_HALL,      0x1FFF },   // MAP15
-        { 12,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP16
-        { 16,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP17
-        { 17,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP18
-        { 6,    SPU_REV_MODE_HALL,      0x1FFF },   // MAP19
-        { 18,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP20
-        { 13,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP21
-        { 14,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP22
-        { 3,    SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP23
-        { 20,   SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP24
-        { 11,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP25
-        { 7,    SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP26
-        { 4,    SPU_REV_MODE_HALL,      0x17FF },   // MAP27
-        { 5,    SPU_REV_MODE_STUDIO_A,  0x23FF },   // MAP28
-        { 10,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP29
-        { 19,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP30
-        { 1,    SPU_REV_MODE_SPACE,     0x0FFF },   // MAP31
-        { 9,    SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP32
-        { 14,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP33
-        { 12,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP34
-        { 8,    SPU_REV_MODE_STUDIO_B,  0x2DFF },   // MAP35
-        { 13,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP36
-        { 18,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP37
-        { 20,   SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP38
-        { 15,   SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP39
-        { 19,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP40
-        { 11,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP41
-        { 16,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP42
-        { 12,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP43
-        { 17,   SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP44
-        { 6,    SPU_REV_MODE_HALL,      0x1FFF },   // MAP45
-        { 5,    SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP46
-        { 9,    SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP47
-        { 2,    SPU_REV_MODE_HALL,      0x1FFF },   // MAP48
-        { 3,    SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP49
-        { 1,    SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP50
-        { 7,    SPU_REV_MODE_STUDIO_C,  0x26FF },   // MAP51
-        { 8,    SPU_REV_MODE_STUDIO_B,  0x2DFF },   // MAP52
-        { 15,   SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP53
-        { 4,    SPU_REV_MODE_HALL,      0x17FF },   // MAP54
-        { 17,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP55
-        { 18,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP56
-        { 10,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP57
-        { 16,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP58
-        { 13,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP59
-    };
-
-    // What sound LCD file and music track to use for all maps in the game: Final Doom
-    static const mapmusic_t gMapMusic_FinalDoom[] = {
-        { 0,    SPU_REV_MODE_OFF,       0x0000 },   // -
-        { 23,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP01
-        { 29,   SPU_REV_MODE_STUDIO_C,  0x26FF },   // MAP02
-        { 24,   SPU_REV_MODE_SPACE,     0x1FFF },   // MAP03
-        { 30,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP04
-        { 21,   SPU_REV_MODE_SPACE,     0x1FFF },   // MAP05
-        { 27,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP06
-        { 25,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP07
-        { 28,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP08
-        { 22,   SPU_REV_MODE_SPACE,     0x1FFF },   // MAP09
-        { 26,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP10
-        { 1,    SPU_REV_MODE_SPACE,     0x0FFF },   // MAP11
-        { 2,    SPU_REV_MODE_SPACE,     0x0FFF },   // MAP12
-        { 3,    SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP13
-        { 4,    SPU_REV_MODE_HALL,      0x17FF },   // MAP14
-        { 5,    SPU_REV_MODE_STUDIO_A,  0x23FF },   // MAP15
-        { 6,    SPU_REV_MODE_HALL,      0x1FFF },   // MAP16
-        { 7,    SPU_REV_MODE_STUDIO_C,  0x26FF },   // MAP17
-        { 8,    SPU_REV_MODE_STUDIO_B,  0x2DFF },   // MAP18
-        { 9,    SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP19
-        { 10,   SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP20
-        { 11,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP21
-        { 12,   SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP22
-        { 13,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP23
-        { 14,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP24
-        { 15,   SPU_REV_MODE_STUDIO_B,  0x27FF },   // MAP25
-        { 16,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP26
-        { 17,   SPU_REV_MODE_HALL,      0x1FFF },   // MAP27
-        { 18,   SPU_REV_MODE_SPACE,     0x0FFF },   // MAP28
-        { 22,   SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP29
-        { 26,   SPU_REV_MODE_STUDIO_C,  0x2FFF },   // MAP30
-    };
-
     // PsyDoom: a sound queued and waiting to be played when the tick ends.
     // PsyDoom queues sounds and only plays them at the end of a tick in order to avoid duplicate sounds.
     struct queued_sound_t {
@@ -309,7 +202,15 @@ void S_StartMusic() noexcept {
     S_StopMusic();
 
     if (gCurMusicSeqIdx != 0) {
-        wess_seq_trigger(gCurMusicSeqIdx);
+        const MapInfo::Map* const pMap = MapInfo::getMap(gGameMap);
+        const bool bPlayCdMusic = (pMap) ? pMap->bPlayCdMusic : false;
+
+        // PsyDoom: maps can now play CD music if they want
+        if (bPlayCdMusic) {
+            psxcd_play_at_andloop(pMap->music, gCdMusicVol, 0, 0, pMap->music, gCdMusicVol, 0, 0);
+        } else {
+            wess_seq_trigger(gCurMusicSeqIdx);
+        }
     }
 }
 #endif  // #if PSYDOOM_MODS
@@ -384,22 +285,19 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
         }
     }
 
-    // Pick which map music we are using (if any)
-    mapmusic_t mapMusic = {};
-
-    if (Game::isFinalDoom()) {
-        if ((mapNum >= 1) && (mapNum < C_ARRAY_SIZE(gMapMusic_FinalDoom))) {
-            mapMusic = gMapMusic_FinalDoom[mapNum];
-        }
-    } else {
-        if ((mapNum >= 1) && (mapNum < C_ARRAY_SIZE(gMapMusic_Doom))) {
-            mapMusic = gMapMusic_Doom[mapNum];
-        }
-    }
+    // Get the settings for the map's music
+    const MapInfo::Map* const pMap = MapInfo::getMap(mapNum);
+    const int32_t mapMusicTrack = (pMap) ? pMap->music : 0;
+    const SpuReverbMode mapReverbMode = (pMap) ? pMap->reverbMode : SpuReverbMode::SPU_REV_MODE_OFF;
+    const int16_t mapReverbDepthL = (pMap) ? pMap->reverbDepthL : 0;
+    const int16_t mapReverbDepthR = (pMap) ? pMap->reverbDepthR : 0;
+    const int16_t mapReverbDelay = (pMap) ? pMap->reverbDelay : 0;
+    const int16_t mapReverbFeedback = (pMap) ? pMap->reverbFeedback : 0;
+    const bool bPlayCdMusic = (pMap) ? pMap->bPlayCdMusic : false;
 
     // Load the music sequence and lcd file for the map music.
     // Also initialize the reverb mode depending on the music.
-    const MapInfo::MusicTrack* const pMusicTrack = MapInfo::getMusicTrack(mapMusic.trackIdx);
+    const MapInfo::MusicTrack* const pMusicTrack = MapInfo::getMusicTrack(mapMusicTrack);
     gCurMusicSeqIdx = (pMusicTrack) ? pMusicTrack->sequenceNum : 0;
     uint32_t destSpuAddr = gSound_MapLcdSpuStartAddr;
 
@@ -407,15 +305,17 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
         // No music sequences for this map - turn off reverb
         psxspu_init_reverb(SPU_REV_MODE_OFF, 0, 0, 0, 0);
     } else {
-        // Normal case: playing a map music sequence and initializing reverb.
+        // Normal case: most likely playing a map music sequence (unless CD music is requested) and initializing reverb.
         // Note: incorporating a change Final Doom made for all versions here, mute all audio first to prevent artifacts when initializing reverb:
         const int32_t masterVol = psxspu_get_master_vol();
         psxspu_set_master_vol(0);
+        psxspu_init_reverb(mapReverbMode, mapReverbDepthL, mapReverbDepthR, mapReverbDelay, mapReverbFeedback);
 
-        psxspu_init_reverb(mapMusic.reverbMode, mapMusic.reverbDepth, mapMusic.reverbDepth, 0, 0);
-        wess_seq_load(gCurMusicSeqIdx, gpSound_MusicSeqData);
-        const CdFileId lcdFileId = getMusicLcdFileId(mapMusic.trackIdx);
-        destSpuAddr += wess_dig_lcd_load(lcdFileId, destSpuAddr, &gMapSndBlock, false);
+        if (!bPlayCdMusic) {
+            wess_seq_load(gCurMusicSeqIdx, gpSound_MusicSeqData);
+            const CdFileId lcdFileId = getMusicLcdFileId(mapMusicTrack);
+            destSpuAddr += wess_dig_lcd_load(lcdFileId, destSpuAddr, &gMapSndBlock, false);
+        }
 
         // Restore the master volume to what it was.
         // Again, this mute/restore was only added in Final Doom, but I'm going to do it for all Doom versions:

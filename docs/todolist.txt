@@ -1,6 +1,7 @@
 0.8 - Limit extending and modding?
 - Investigate a MAPINFO format for naming maps, choosing music etc.
 - Support sector type 11.
+- Investigate weird pain sound audio bug after loading custom map with new SFX and then loading Final Doom's "Congo"
 
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.
