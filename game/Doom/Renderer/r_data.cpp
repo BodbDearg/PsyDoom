@@ -4,6 +4,7 @@
 #include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/Game/doomdata.h"
+#include "PsyDoom/Game.h"
 #include "PsyQ/LIBGPU.h"
 
 #include <cstring>
@@ -380,9 +381,19 @@ static void R_InitPalette() noexcept {
 
     const int32_t numPalettes = W_LumpLength(playpalLumpNum) / sizeof(palette_t);
 
-    if ((numPalettes != NUMPALETTES_DOOM) && (numPalettes != NUMPALETTES_FINAL_DOOM)) {
-        I_Error("R_InitPalettes: palette foulup\n");
-    }
+    // PsyDoom: allow up to 32 palettes to be defined, since there is leftover room in VRAM for this.
+    // Doom defines 20, Final Doom 26 - so the user can define an additional 6.
+    #if PSYDOOM_MODS
+        const int32_t minAllowedPalettes = Game::isFinalDoom() ? NUMPALETTES_FINAL_DOOM : NUMPALETTES_DOOM;
+
+        if ((numPalettes < minAllowedPalettes) || (numPalettes > MAXPALETTES)) {
+            I_Error("R_InitPalettes: palette foulup\n");
+        }
+    #else
+        if ((numPalettes != NUMPALETTES_DOOM) && (numPalettes != NUMPALETTES_FINAL_DOOM)) {
+            I_Error("R_InitPalettes: palette foulup\n");
+        }
+    #endif
 
     // PsyDoom: zero init the palettes list so nothing is undefined if we don't load some (have less palettes for Doom)
     #if PSYDOOM_MODS

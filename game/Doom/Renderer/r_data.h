@@ -11,7 +11,12 @@ static constexpr uint32_t TEX_INVALID_UPLOAD_FRAME_NUM = UINT32_MAX;
 // The number of palettes available in the game for Doom and Final Doom and maximum the engine supports
 static constexpr uint32_t NUMPALETTES_DOOM          = 20;
 static constexpr uint32_t NUMPALETTES_FINAL_DOOM    = 26;
-static constexpr uint32_t MAXPALETTES               = NUMPALETTES_FINAL_DOOM;
+
+#if PSYDOOM_MODS
+    static constexpr uint32_t MAXPALETTES = 32;     // PsyDoom: allow an additional 6 user palettes (there is room in VRAM)
+#else
+    static constexpr uint32_t MAXPALETTES = NUMPALETTES_FINAL_DOOM;
+#endif
 
 // Palette indices and ranges
 static constexpr uint32_t MAINPAL               = 0;    // Used for most sprites and textures in the game
