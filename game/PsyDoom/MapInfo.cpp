@@ -17,13 +17,6 @@
 
 BEGIN_NAMESPACE(MapInfo)
 
-// A saved linear search result. Used to speed up looking up the same MAPINFO item over and over again.
-// The integer key of the item being looked up and array index where it was found (past the end if not found).
-struct CachedSearchResult {
-    int32_t     key;
-    uint32_t    itemIdx;
-};
-
 static std::vector<MusicTrack>  gMusicTracks;
 static std::vector<Episode>     gEpisodes;
 
@@ -76,6 +69,13 @@ static void readMusicTrack(const Block& block) noexcept {
     if ((track.sequenceNum < 0) || (track.sequenceNum > 16384)) {
         error(block, "MusicTrack: 'Sequence' must be specified and be between 0 and 16384!");
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads the 'clear episodes' command: just clears the episode list, does nothing else
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readClearEpisodes(const Block& block) noexcept {
+    gEpisodes.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,6 +136,7 @@ static void readMapInfoFromIWAD() noexcept {
     };
 
     constexpr BlockReader BLOCK_READERS[] = {
+        { "ClearEpisodes", readClearEpisodes},
         { "Episode", readEpisode },
         { "MusicTrack", readMusicTrack },
     };
