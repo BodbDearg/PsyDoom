@@ -226,6 +226,8 @@ void S_InitSampleBlock(SampleBlock& block) noexcept {
 // Unload all loaded samples in the given sample block
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept {
+    ASSERT(sampleBlock.num_samples <= SAMPLE_BLOCK_SIZE);
+
     // Zero the patch address in SPU RAM for every single loaded sample:
     while (sampleBlock.num_samples > 0) {
         sampleBlock.num_samples--;
@@ -325,7 +327,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
     // Remember what map we have loaded sound and music for
     gLoadedSoundAndMusMapNum = mapNum;
 
-    // Load the sound LCD file for the map.
+    // Load the sound LCD file for the map (if we are on one).
     // Note that if we are doing the finale then load LCD number max(60, numMaps) because Final Doom still uses '60' for the finale LCD.
     //
     // PsyDoom: if 'ALLMAPS.LCD' is present in the user data dir (and we are not doing the finale) then load that instead with the expectation
@@ -334,8 +336,8 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
     #if PSYDOOM_MODS
         bool bLoadedMapSounds = false;
 
-        if ((!bIsFinale) && ModMgr::areOverridesAvailableForFile("ALLMAPS.LCD")) {
-            wess_dig_lcd_load("ALLMAPS.LCD", destSpuAddr, &gMapSndBlock, false);
+        if ((!bIsFinale) && (mapNum > 0) && ModMgr::areOverridesAvailableForFile("ALLMAPS.LCD")) {
+            destSpuAddr += wess_dig_lcd_load("ALLMAPS.LCD", destSpuAddr, &gMapSndBlock, false);
             bLoadedMapSounds = true;
         }
     #else

@@ -129,6 +129,7 @@ int32_t wess_dig_lcd_data_read(
 
                     // Save the details of the sound to the sample block also, if it's given
                     if (pSampleBlock) {
+                        ASSERT(pSampleBlock->num_samples < SAMPLE_BLOCK_SIZE);
                         pSampleBlock->patch_sample_idx[pSampleBlock->num_samples] = patchSampleIdx;
                         pSampleBlock->sample_spu_addr_8[pSampleBlock->num_samples] = (uint16_t)(patchSample.spu_addr / 8);
                         pSampleBlock->num_samples++;
