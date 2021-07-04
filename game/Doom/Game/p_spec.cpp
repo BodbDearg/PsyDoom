@@ -1173,7 +1173,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             if (!player.powers[pw_ironfeet]) {
                 gStatusBar.specialFace = f_mowdown;
 
-                if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
+                if ((gGameTic > gPrevGameTic) && ((gGameTic & 0xF) == 0)) {     // Apply roughly every 1 second
                     P_DamageMobj(*player.mo, nullptr, nullptr, 10);
                 }
             }
@@ -1184,7 +1184,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             if (!player.powers[pw_ironfeet]) {
                 gStatusBar.specialFace = f_mowdown;
 
-                if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
+                if ((gGameTic > gPrevGameTic) && ((gGameTic & 0xF) == 0)) {     // Apply roughly every 1 second
                     P_DamageMobj(*player.mo, nullptr, nullptr, 5);
                 }
             }
@@ -1197,7 +1197,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             if ((!player.powers[pw_ironfeet]) || (P_Random() < 5)) {    // Occasionally damages even if a radiation suit is worn
                 gStatusBar.specialFace = f_mowdown;
 
-                if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
+                if ((gGameTic > gPrevGameTic) && ((gGameTic & 0xF) == 0)) {     // Apply roughly every 1 second
                     P_DamageMobj(*player.mo, nullptr, nullptr, 20);
                 }
             }
@@ -1207,6 +1207,23 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
         case 9: {
             player.secretcount += 1;
             sector.special = 0;         // Consume the special so it's only counted once!
+        }   break;
+
+        // PsyDoom: add support for the PC E1M8 style exit.
+        // This special kills the player and causes an exit, and even disables god mode.
+        case 11: {
+            player.cheats &= ~CF_GODMODE;
+
+            // Apply damage roughly every 1 second
+            if ((gGameTic > gPrevGameTic) && ((gGameTic & 0xF) == 0)) {     // Apply roughly every 1 second
+                P_DamageMobj(*player.mo, nullptr, nullptr, 20);
+            }
+
+            // If player health is low enough exit the level.
+            // Note: exit immediately for this special (unlike normal exit switches) - we don't need to delay to hear the switch sound play.
+            if (player.health <= 10) {
+                G_ExitLevelImmediately();
+            }
         }   break;
 
         // PsyDoom: scripted player in special sector action
@@ -1458,6 +1475,16 @@ void G_ExitLevel() noexcept {
     gNextMap = gGameMap + 1;
     P_ScheduleDelayedAction(4, G_CompleteLevel);
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: same as 'G_ExitLevel()' except it happens immediately
+//------------------------------------------------------------------------------------------------------------------------------------------
+void G_ExitLevelImmediately() noexcept {
+    gNextMap = gGameMap + 1;
+    G_CompleteLevel();
+}
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Schedules the level to end in 4 tics and go to the specified map; used for entering/exiting secret maps
