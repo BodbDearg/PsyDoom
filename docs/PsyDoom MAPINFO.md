@@ -1,7 +1,8 @@
 # PsyDoom MAPINFO documentation
 To help modding, PsyDoom supports a 'MAPINFO' lump which allows information like level & episode names, music selection and so on to be defined. The purpose of this document is to list the definition types supported and fields within those definitions.
  
- Some high level points to note:
+Some high level points to note:
+- The lump must be defined in a main IWAD file (not a map WAD file). Normally you would use the extension IWAD `PSXDOOM_EXT.WAD` to do this. It can also be present in `PSXDOOM.WAD`.
 - The syntax used is similar to the 'New ZDoom' format (see: https://zdoom.org/wiki/MAPINFO).
 - All block and field names are case insensitive. Camel case is recommended however for readability.
 - The MAPINFO lump is processed sequentially, from start to finish. This means that definitions like `ClearEpisodes` should be placed first before `Episode`.

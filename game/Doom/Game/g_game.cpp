@@ -477,6 +477,7 @@ void G_RunGame() noexcept {
 
         const int32_t curClusterNum = (pMap) ? pMap->cluster : 0;
         const int32_t nextClusterNum = (pNextMap) ? pNextMap->cluster : curClusterNum;
+        const int32_t curEpisodeNum = Game::getMapEpisode(gGameMap);
         const int32_t nextEpisodeNum = Game::getMapEpisode(gNextMap);
 
         if ((gNetGame == gt_single) && (curClusterNum != nextClusterNum)) {
@@ -492,8 +493,12 @@ void G_RunGame() noexcept {
             if (gGameAction == ga_exitdemo)
                 break;
 
-            gStartMapOrEpisode = -nextEpisodeNum;   // The '-' instructs the main menu to select this episode automatically
-            break;
+            // PsyDoom: now only quitting out to the main menu if the episode is different or if there is no next map
+            if ((curEpisodeNum != nextEpisodeNum) || (gNextMap > Game::getNumMaps())) {
+                // Note: the '-' instructs the main menu to select this episode automatically
+                gStartMapOrEpisode = -nextEpisodeNum;
+                break;
+            }
         }
 
         // If there is a next map go onto it, otherwise show the DOOM II style finale (text, followed by cast)
