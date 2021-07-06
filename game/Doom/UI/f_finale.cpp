@@ -21,6 +21,7 @@
 #include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
 #include "PsyDoom/Video.h"
@@ -29,98 +30,101 @@
 #include "PsyQ/LIBGPU.h"
 #include "Wess/wessapi.h"
 
-// Win text for Doom 1 and 2, and Final Doom.
-// Note that this is all in the Final Doom format, which is an unbounded C-String.
-static const char* const gDoom1WinText[] = {
-    "you have won!",
-    "your victory enabled",
-    "humankind to evacuate",
-    "earth and escape the",
-    "nightmare.",
-    "but then earth control",
-    "pinpoints the source",
-    "of the alien invasion.",
-    "you are their only hope.",
-    "you painfully get up",
-    "and return to the fray.",
-    nullptr
-};
+// PsyDoom: this is all now defined in the 'MapInfo' module
+#if !PSYDOOM_MODS
+    // Win text for Doom 1 and 2, and Final Doom.
+    // Note that this is all in the Final Doom format, which is an unbounded C-String.
+    static const char* const gDoom1WinText[] = {
+        "you have won!",
+        "your victory enabled",
+        "humankind to evacuate",
+        "earth and escape the",
+        "nightmare.",
+        "but then earth control",
+        "pinpoints the source",
+        "of the alien invasion.",
+        "you are their only hope.",
+        "you painfully get up",
+        "and return to the fray.",
+        nullptr
+    };
 
-static const char* const gDoom2WinText[] = {
-    "you did it!",
-    "by turning the evil of",
-    "the horrors of hell in",
-    "upon itself you have",
-    "destroyed the power of",
-    "the demons.",
-    "their dreadful invasion",
-    "has been stopped cold!",
-    "now you can retire to",
-    "a lifetime of frivolity.",
-    "congratulations!",
-    nullptr
-};
+    static const char* const gDoom2WinText[] = {
+        "you did it!",
+        "by turning the evil of",
+        "the horrors of hell in",
+        "upon itself you have",
+        "destroyed the power of",
+        "the demons.",
+        "their dreadful invasion",
+        "has been stopped cold!",
+        "now you can retire to",
+        "a lifetime of frivolity.",
+        "congratulations!",
+        nullptr
+    };
 
-static const char* const gFinalDoomWinText_MasterLevels[] = {
-    "you have assaulted and",
-    "triumphed over the most",
-    "vicious realms that the",
-    "demented minds of our",
-    "designers could devise.",
-    "the havoc you left",
-    "behind you as you",
-    "smashed your way",
-    "through the master",
-    "levels is mute tribute",
-    "to your prowess.",
-    "you have earned the",
-    "title of",
-    "Master of Destruction.",
-    nullptr
-};
+    static const char* const gFinalDoomWinText_MasterLevels[] = {
+        "you have assaulted and",
+        "triumphed over the most",
+        "vicious realms that the",
+        "demented minds of our",
+        "designers could devise.",
+        "the havoc you left",
+        "behind you as you",
+        "smashed your way",
+        "through the master",
+        "levels is mute tribute",
+        "to your prowess.",
+        "you have earned the",
+        "title of",
+        "Master of Destruction.",
+        nullptr
+    };
 
-static const char* const gFinalDoomWinText_Tnt[] = {
-    "suddenly all is silent",
-    "from one horizon to the",
-    "other.",
-    "the agonizing echo of",
-    "hell fades away.",
-    "the nightmare sky",
-    "turns blue.",
-    "the heaps of monster",
-    "corpses begin to dissolve",
-    "along with the evil stench",
-    "that filled the air.",
-    "maybe you_have done it.",
-    "Have you really won...",
-    nullptr
-};
+    static const char* const gFinalDoomWinText_Tnt[] = {
+        "suddenly all is silent",
+        "from one horizon to the",
+        "other.",
+        "the agonizing echo of",
+        "hell fades away.",
+        "the nightmare sky",
+        "turns blue.",
+        "the heaps of monster",
+        "corpses begin to dissolve",
+        "along with the evil stench",
+        "that filled the air.",
+        "maybe you_have done it.",
+        "Have you really won...",
+        nullptr
+    };
 
-static const char* const gFinalDoomWinText_Plutonia[] = {
-    "you_gloat_over_the",
-    "carcass_of_the_guardian.",
-    "with_its_death_you_have",
-    "wrested_the_accelerator",
-    "from_the_stinking_claws",
-    "of_hell._you_are_done.",
-    "hell_has_returned_to",
-    "pounding_dead_folks",
-    "instead_of_good_live_ones.",
-    "remember_to_tell_your",
-    "grandkids_to_put_a_rocket",
-    "launcher_in_your_coffin.",
-    "If_you_go_to_hell_when",
-    "you_die_you_will_need_it",
-    "for_some_cleaning_up.",
-    nullptr
-};
+    static const char* const gFinalDoomWinText_Plutonia[] = {
+        "you_gloat_over_the",
+        "carcass_of_the_guardian.",
+        "with_its_death_you_have",
+        "wrested_the_accelerator",
+        "from_the_stinking_claws",
+        "of_hell._you_are_done.",
+        "hell_has_returned_to",
+        "pounding_dead_folks",
+        "instead_of_good_live_ones.",
+        "remember_to_tell_your",
+        "grandkids_to_put_a_rocket",
+        "launcher_in_your_coffin.",
+        "If_you_go_to_hell_when",
+        "you_die_you_will_need_it",
+        "for_some_cleaning_up.",
+        nullptr
+    };
 
-// The top y position of the win text for Doom 1 and 2, and Final Doom
-static constexpr int32_t DOOM1_TEXT_YPOS = 45;
-static constexpr int32_t DOOM2_TEXT_YPOS = 45;
-static constexpr int32_t MASTERLEV_TEXT_YPOS = 22;
-static constexpr int32_t TNT_TEXT_YPOS = 29;
-static constexpr int32_t PLUTONIA_TEXT_YPOS = 15;
+    // The top y position of the win text for Doom 1 and 2, and Final Doom
+    static constexpr int32_t DOOM1_TEXT_YPOS = 45;
+    static constexpr int32_t DOOM2_TEXT_YPOS = 45;
+    static constexpr int32_t MASTERLEV_TEXT_YPOS = 22;
+    static constexpr int32_t TNT_TEXT_YPOS = 29;
+    static constexpr int32_t PLUTONIA_TEXT_YPOS = 15;
+#endif
 
 // The cast of characters to display
 struct castinfo_t {
@@ -155,11 +159,21 @@ enum finalestage_t : int32_t {
     F_STAGE_CAST,
 };
 
+#if PSYDOOM_MODS
+    static const MapInfo::Cluster*  gpCluster;      // PsyDoom: which cluster the finale is being shown for
+    static texture_t                gFinaleBgTex;   // PsyDoom: finale background texture (it can be anything)
+#endif
+
 static finalestage_t        gFinaleStage;           // What stage of the finale we are on
 static int32_t              gFinTextYPos;           // Current y position of the top finale line
 static char                 gFinIncomingLine[64];   // Text for the incoming line
 static int32_t              gFinIncomingLineLen;    // How many characters are being displayed for the incomming text line
-static const char* const*   gFinTextLines;          // Which text lines we are using for this finale text?
+
+// PsyDoom: not needed anymore after changes to make the finale use data defined in MAPINFO
+#if !PSYDOOM_MODS
+    static const char* const*   gFinTextLines;      // Which text lines we are using for this finale text?
+#endif
+
 static int32_t              gFinLinesDone;          // How many full lines we are displaying
 static int32_t              gCastNum;               // Which of the cast characters (specified by index) we are showing
 static int32_t              gCastTics;              // Tracks current time in the current cast state
@@ -169,44 +183,105 @@ static bool                 gbCastDeath;            // Are we killing the curren
 static const state_t*       gpCastState;            // Current state being displayed for the cast character
 static texture_t            gTex_DEMON;             // The demon (icon of sin) background for the DOOM II finale
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: fetches the cluster to use for the finale and issues a fatal error if not found
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void F_LookupCluster() noexcept {
+    const MapInfo::Map* const pMap = MapInfo::getMap(gGameMap);
+
+    if (!pMap) {
+        I_Error("F_LookupCluster: no map info available for map '%d'!", gGameMap);
+    }
+
+    gpCluster = MapInfo::getCluster(pMap->cluster);
+
+    if (!gpCluster) {
+        I_Error("F_LookupCluster: cluster '%d' does not exist in MAPINFO!", pMap->cluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: gets the specified finale line as a null terminated c-string.
+// If the line number is invalid then an empty line is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static std::array<char, 33> F_GetLine(const int32_t lineNum) noexcept {
+    constexpr int32_t MAX_LINES = C_ARRAY_SIZE(MapInfo::Cluster::text);
+    return ((lineNum >= 0) && (lineNum < MAX_LINES)) ? gpCluster->text[lineNum].c_str() : std::array<char, 33>{};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: determine the x position to render a C-string at given the cluster finale settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t F_GetLineXPos(const char* const str) noexcept {
+    // If not centering the text then the 'textX' field is an explicit position
+    if (gpCluster->bNoCenterText)
+        return gpCluster->textX;
+
+    // If not using the small font 'I_DrawString' will automatically center for us when specifying '-1'
+    if (!gpCluster->bSmallFont)
+        return -1;
+
+    // When using the small 8x8 font we have to manually center the string
+    const int32_t textLen = (int32_t) std::strlen(str);
+    return (SCREEN_W - textLen * 8) / 2;
+}
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the Ultimate DOOM style finale (text only, no cast sequence) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Start() noexcept {
+    // PsyDoom: lookup which cluster to show the finale for
+    #if PSYDOOM_MODS
+        F_LookupCluster();
+    #endif
+
     // Draw the loading plaque, purge the texture cache and load up the background needed
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
     I_PurgeTexCache();
-    I_CacheTex(gTex_BACK);
+
+    // PsyDoom: the background texture for the finale can now be anything
+    #if PSYDOOM_MODS
+        I_LoadAndCacheTexLump(gFinaleBgTex, gpCluster->pic.c_str().data(), 0);
+    #else
+        I_CacheTex(gTex_BACK);
+    #endif
 
     // Init finale
     gFinLinesDone = 0;
     gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
 
-    if (Game::isFinalDoom()) {
-        if (Game::getMapEpisode(gGameMap) == 1) {
-            gFinTextLines = gFinalDoomWinText_MasterLevels;
-            gFinTextYPos = MASTERLEV_TEXT_YPOS;
+    // PsyDoom: finale data is now defined in the 'MapInfo' module
+    #if PSYDOOM_MODS
+        gFinTextYPos = gpCluster->textY;
+    #else
+        if (Game::isFinalDoom()) {
+            if (Game::getMapEpisode(gGameMap) == 1) {
+                gFinTextLines = gFinalDoomWinText_MasterLevels;
+                gFinTextYPos = MASTERLEV_TEXT_YPOS;
+            } else {
+                gFinTextLines = gFinalDoomWinText_Tnt;
+                gFinTextYPos = TNT_TEXT_YPOS;
+            }
         } else {
-            gFinTextLines = gFinalDoomWinText_Tnt;
-            gFinTextYPos = TNT_TEXT_YPOS;
+            gFinTextLines = gDoom1WinText;
+            gFinTextYPos = DOOM1_TEXT_YPOS;
         }
-    } else {
-        gFinTextLines = gDoom1WinText;
-        gFinTextYPos = DOOM1_TEXT_YPOS;
-    }
+    #endif
 
-    // Play the finale cd track
-    psxcd_play_at_andloop(
-        gCDTrackNum[cdmusic_finale_doom1_final_doom],
-        gCdMusicVol,
-        0,
-        0,
-        gCDTrackNum[cdmusic_credits_demo],
-        gCdMusicVol,
-        0,
-        0
-    );
+    // Play the finale cd track.
+    // PsyDoom: finale data is now defined in the 'MapInfo' module.
+    #if PSYDOOM_MODS
+        const int32_t startCdTrack = gpCluster->cdMusicA;
+        const int32_t loopCdTrack = gpCluster->cdMusicB;
+    #else
+        const int32_t startCdTrack = gCDTrackNum[cdmusic_finale_doom1_final_doom];
+        const int32_t loopCdTrack = gCDTrackNum[cdmusic_credits_demo];
+    #endif
+
+    psxcd_play_at_andloop(startCdTrack, gCdMusicVol, 0, 0, loopCdTrack, gCdMusicVol, 0, 0);
 
     // Wait until some cd audio has been read
     Utils::waitForCdAudioPlaybackStart();
@@ -257,8 +332,14 @@ gameaction_t F1_Ticker() noexcept {
     if (gbGamePaused)
         return gGameAction;
 
-    // Check to see if the text needs to advance more, or if we can exit
-    const char* const textLine = gFinTextLines[gFinLinesDone];
+    // Check to see if the text needs to advance more, or if we can exit.
+    // PsyDoom: added updates here to source finale data from MAPINFO instead.
+    #if PSYDOOM_MODS
+        const std::array<char, 33> textLineChars = F_GetLine(gFinLinesDone);
+        const char* const textLine = (textLineChars.data()[0]) ? textLineChars.data() : nullptr;
+    #else
+        const char* const textLine = gFinTextLines[gFinLinesDone];
+    #endif
 
     if (textLine) {
         // Text is not yet done popping up: only advance if time has elapsed and on every 2nd tick
@@ -296,19 +377,62 @@ void F1_Drawer() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
-    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+    // PsyDoom: the background for the finale can now be anything as it is sourced from MAPINFO.
+    #if PSYDOOM_MODS
+        I_CacheAndDrawSprite(gFinaleBgTex, 0, 0, gPaletteClutIds[gpCluster->picPal]);
+    #else
+        I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+    #endif
 
-    // Show both the incoming and fully displayed text lines
+    // Show both the incoming and fully displayed text lines.
+    // PsyDoom: update this to source the line data from MAPINFO and to allow for small and non-centered text.
     int32_t ypos = gFinTextYPos;
 
-    for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
-        I_DrawString(-1, ypos, gFinTextLines[lineIdx]);
-        ypos += 14;
-    }
+    #if PSYDOOM_MODS
+        // PsyDoom: need to set the texture window before drawing (if we are using the small font)
+        {
+            DR_MODE drawModePrim = {};
+            const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
+            I_AddPrim(drawModePrim);
+        }
 
-    I_DrawString(-1, ypos, gFinIncomingLine);
+        // Draw each fully visible line of text
+        const int32_t ystep = (gpCluster->bSmallFont) ? 8 : 14;
 
-    // Not sure why the finale screen would be 'paused'?
+        for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
+            const std::array<char, 33> textLineChars = F_GetLine(lineIdx);
+            const int32_t xpos = F_GetLineXPos(textLineChars.data());
+
+            if (gpCluster->bSmallFont) {
+                I_DrawStringSmall(xpos, ypos, textLineChars.data(), gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+            } else {
+                I_DrawString(xpos, ypos, textLineChars.data());
+            }
+
+            ypos += ystep;
+        }
+
+        // Draw the incoming line of text which is partially visible
+        const int32_t lastLineXPos = F_GetLineXPos(gFinIncomingLine);
+
+        if (gpCluster->bSmallFont) {
+            I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+        } else {
+            I_DrawString(lastLineXPos, ypos, gFinIncomingLine);
+        }
+    #else
+        // Draw each fully presented line of text
+        for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
+            I_DrawString(-1, ypos, gFinTextLines[lineIdx]);
+            ypos += 14;
+        }
+
+        // Draw the incoming line of text which is partially visible
+        I_DrawString(-1, ypos, gFinIncomingLine);
+    #endif
+
+    // Finale can be paused too, a step towards exiting back to the main menu...
     if (gbGamePaused) {
         I_DrawPausedOverlay();
     }
@@ -322,12 +446,22 @@ void F1_Drawer() noexcept {
 // Initializes the DOOM II style finale (text, followed by cast) screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Start() noexcept {
+    // PsyDoom: lookup which cluster to show the finale for
+    #if PSYDOOM_MODS
+        F_LookupCluster();
+    #endif
+
     // Show the loading plaque and purge the texture cache
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
     I_PurgeTexCache();
 
     // Load the background and sprites needed.
-    I_LoadAndCacheTexLump(gTex_DEMON, "DEMON", 0);
+    // PsyDoom: the background texture for the finale can now be anything.
+    #if PSYDOOM_MODS
+        I_LoadAndCacheTexLump(gFinaleBgTex, gpCluster->pic.c_str().data(), 0);
+    #else
+        I_LoadAndCacheTexLump(gTex_DEMON, "DEMON", 0);
+    #endif
 
     #if !PSYDOOM_MODS
         // PsyDoom: don't bother loading the sprites yet, let the code grab them from the main IWAD as required.
@@ -344,13 +478,18 @@ void F2_Start() noexcept {
     gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
 
-    if (Game::isFinalDoom()) {
-        gFinTextLines = gFinalDoomWinText_Plutonia;
-        gFinTextYPos = PLUTONIA_TEXT_YPOS;
-    } else {
-        gFinTextLines = gDoom2WinText;
-        gFinTextYPos = DOOM2_TEXT_YPOS;
-    }
+    // PsyDoom: finale data is now defined in the 'MapInfo' module
+    #if PSYDOOM_MODS
+        gFinTextYPos = gpCluster->textY;
+    #else
+        if (Game::isFinalDoom()) {
+            gFinTextLines = gFinalDoomWinText_Plutonia;
+            gFinTextYPos = PLUTONIA_TEXT_YPOS;
+        } else {
+            gFinTextLines = gDoom2WinText;
+            gFinTextYPos = DOOM2_TEXT_YPOS;
+        }
+    #endif
 
     // Initialize the cast display
     gCastNum = 0;
@@ -376,17 +515,17 @@ void F2_Start() noexcept {
     // Load sound for the finale
     S_LoadMapSoundAndMusic(Game::getNumMaps() + 1);
 
-    // Play the finale cd track
-    psxcd_play_at_andloop(
-        gCDTrackNum[(Game::isFinalDoom()) ? cdmusic_finale_doom1_final_doom : cdmusic_finale_doom2],
-        gCdMusicVol,
-        0,
-        0,
-        gCDTrackNum[cdmusic_credits_demo],
-        gCdMusicVol,
-        0,
-        0
-    );
+    // Play the finale cd track.
+    // PsyDoom: finale data is now defined in the 'MapInfo' module.
+    #if PSYDOOM_MODS
+        const int32_t startCdTrack = gpCluster->cdMusicA;
+        const int32_t loopCdTrack = gpCluster->cdMusicB;
+    #else
+        const int32_t startCdTrack = gCDTrackNum[(Game::isFinalDoom()) ? cdmusic_finale_doom1_final_doom : cdmusic_finale_doom2];
+        const int32_t loopCdTrack = gCDTrackNum[cdmusic_credits_demo];
+    #endif
+
+    psxcd_play_at_andloop(startCdTrack, gCdMusicVol, 0, 0, loopCdTrack, gCdMusicVol, 0, 0);
 
     // Wait until some cd audio has been read
     Utils::waitForCdAudioPlaybackStart();
@@ -450,8 +589,14 @@ gameaction_t F2_Ticker() noexcept {
     if (gFinaleStage == F_STAGE_TEXT) {
         // Currently popping up text: only advance if time has elapsed and on every 2nd tick
         if ((gGameTic > gPrevGameTic) && ((gGameTic & 1) == 0)) {
-            // Get the current incoming text line text and see if we need to move onto another
-            const char* const textLine = gFinTextLines[gFinLinesDone];
+            // Get the current incoming text line text and see if we need to move onto another.
+            // PsyDoom: added updates here to source finale data from MAPINFO instead.
+            #if PSYDOOM_MODS
+                const std::array<char, 33> textLineChars = F_GetLine(gFinLinesDone);
+                const char* const textLine = (textLineChars.data()[0]) ? textLineChars.data() : nullptr;
+            #else
+                const char* const textLine = gFinTextLines[gFinLinesDone];
+            #endif
 
             if (textLine) {
                 if (textLine[gFinIncomingLineLen] == 0) {
@@ -627,19 +772,62 @@ void F2_Drawer() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
-    I_CacheAndDrawSprite(gTex_DEMON, 0, 0, gPaletteClutIds[MAINPAL]);
+    // PsyDoom: the background for the finale can now be anything as it is sourced from MAPINFO
+    #if PSYDOOM_MODS
+        I_CacheAndDrawSprite(gFinaleBgTex, 0, 0, gPaletteClutIds[gpCluster->picPal]);
+    #else
+        I_CacheAndDrawSprite(gTex_DEMON, 0, 0, gPaletteClutIds[MAINPAL]);
+    #endif
 
     // See whether we are drawing the text or the cast of characters
-    if (gFinaleStage >= F_STAGE_TEXT && gFinaleStage <= F_STAGE_SCROLLTEXT) {
-        // Still showing the text, show both the incoming and fully displayed text lines
+    if ((gFinaleStage >= F_STAGE_TEXT) && (gFinaleStage <= F_STAGE_SCROLLTEXT)) {
+        // Still showing the text, show both the incoming and fully displayed text lines.
+        // PsyDoom: update this to source the line data from MAPINFO and to allow for small and non-centered text.
         int32_t ypos = gFinTextYPos;
 
-        for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
-            I_DrawString(-1, ypos, gFinTextLines[lineIdx]);
-            ypos += 14;
-        }
+        #if PSYDOOM_MODS
+            // PsyDoom: need to set the texture window before drawing (if we are using the small font)
+            {
+                DR_MODE drawModePrim = {};
+                const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
+                LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
+                I_AddPrim(drawModePrim);
+            }
 
-        I_DrawString(-1, ypos, gFinIncomingLine);
+            // Draw each fully visible line of text
+            const int32_t ystep = (gpCluster->bSmallFont) ? 8 : 14;
+
+            for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
+                const std::array<char, 33> textLineChars = F_GetLine(lineIdx);
+                const int32_t xpos = F_GetLineXPos(textLineChars.data());
+
+                if (gpCluster->bSmallFont) {
+                    I_DrawStringSmall(xpos, ypos, textLineChars.data(), gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+                } else {
+                    I_DrawString(xpos, ypos, textLineChars.data());
+                }
+
+                ypos += ystep;
+            }
+
+            // Draw the incoming line of text which is partially visible
+            const int32_t lastLineXPos = F_GetLineXPos(gFinIncomingLine);
+
+            if (gpCluster->bSmallFont) {
+                I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+            } else {
+                I_DrawString(lastLineXPos, ypos, gFinIncomingLine);
+            }
+        #else
+            // Draw each fully visible line of text
+            for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
+                I_DrawString(-1, ypos, gFinTextLines[lineIdx]);
+                ypos += 14;
+            }
+
+            // Draw the incoming line of text which is partially visible
+            I_DrawString(-1, ypos, gFinIncomingLine);
+        #endif
     }
     else if (gFinaleStage == F_STAGE_CAST) {
         // Showing the cast of character, get the texture for the current sprite to show and cache it
@@ -786,7 +974,7 @@ void F2_Drawer() noexcept {
         I_DrawString(-1, 208, gCastOrder[gCastNum].name);
     }
 
-    // Not sure why the finale screen would be 'paused'?
+    // Finale can be paused too, a step towards exiting back to the main menu...
     if (gbGamePaused) {
         I_DrawPausedOverlay();
     }

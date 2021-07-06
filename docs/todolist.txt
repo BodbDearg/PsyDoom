@@ -1,5 +1,6 @@
 0.8 - Limit extending and modding?
 - Investigate a MAPINFO format for naming maps, choosing music etc.
+- Investigate punch sound not working when using ALLMAPS.LCD
 
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.

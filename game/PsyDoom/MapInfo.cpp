@@ -8,7 +8,9 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapInfo.h"
 
+#include "Doom/Base/s_sound.h"
 #include "Doom/Base/w_wad.h"
+#include "Doom/Renderer/r_data.h"
 #include "Game.h"
 #include "MapInfo_Parse.h"
 #include "PsyQ/LIBSPU.h"
@@ -22,11 +24,31 @@ BEGIN_NAMESPACE(MapInfo)
 static std::vector<MusicTrack>  gMusicTracks;
 static std::vector<Episode>     gEpisodes;
 static std::vector<Map>         gMaps;
+static std::vector<Cluster>     gClusters;
 
 // Used to speed up repeated searches for the same 'Map' data structure.
 // Cache which map was queried and where it is in the maps array, so we can do O(1) lookup for repeat queries.
 static int32_t  gLastGetMap         = -1;
 static int32_t  gLastGetMapIndex    = -1;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Default constructor: marks all non-optional fields as undefined in some way
+//------------------------------------------------------------------------------------------------------------------------------------------
+Cluster::Cluster() noexcept
+    : castLcdFile(S_GetSoundLcdFileId(std::max(60, Game::getNumMaps() + 1)))
+    , pic("BACK")
+    , picPal(Game::getTexPalette_BACK())
+    , cdMusicA((int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom])
+    , cdMusicB((int16_t) gCDTrackNum[cdmusic_credits_demo])
+    , textX(0)
+    , textY(15)
+    , bSkipFinale(true)
+    , bEnableCast(false)
+    , bNoCenterText(false)
+    , bSmallFont(false)
+    , text{}
+{
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Find a specified data structure in a list by an integer field
@@ -146,7 +168,7 @@ static void readEpisode(const Block& block) noexcept {
 
     // Read and validate the episode properties
     Episode& episode = getOrCreateStructWithIntKey(episodeNum, gEpisodes, &Episode::episodeNum);
-    episode.name = block.getSingleString32Value("Name", episode.name);
+    episode.name = block.getSingleSmallStringValue("Name", episode.name);
     episode.startMap = block.getSingleIntValue("StartMap", episode.startMap);
 
     if ((episode.startMap < 1) || (episode.startMap > 255)) {
@@ -158,7 +180,7 @@ static void readEpisode(const Block& block) noexcept {
 // Reads a map definition from the specicified value block
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void readMap(const Block& block) noexcept {
-    // Read and validate the episode header
+    // Read and validate the map header
     block.ensureMinHeaderTokenCount(1);
     const int32_t mapNum = block.getRequiredHeaderInt(0);
     
@@ -169,7 +191,7 @@ static void readMap(const Block& block) noexcept {
     Map& map = getOrCreateStructWithIntKey(mapNum, gMaps, &Map::mapNum);
 
     if (block.getHeaderTokenCount() > 1) {
-        map.name = block.getRequiredHeaderString32(1);
+        map.name = block.getRequiredHeaderSmallString<String32>(1);
     }
 
     // Read and validate all other map properties
@@ -211,6 +233,47 @@ static void readMap(const Block& block) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Reads a cluster definition from the specicified value block
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readCluster(const Block& block) noexcept {
+    // Read and validate the cluster header
+    block.ensureMinHeaderTokenCount(1);
+    const int32_t clusterNum = block.getRequiredHeaderInt(0);
+
+    if ((clusterNum < 1) || (clusterNum > 255)) {
+        error(block, "Cluster: cluster number must be between 1 and 255!");
+    }
+
+    // Read and validate all other map properties
+    Cluster& cluster = getOrCreateStructWithIntKey(clusterNum, gClusters, &Cluster::clusterNum);
+    cluster.castLcdFile = block.getSingleSmallStringValue("CastLcdFile", cluster.castLcdFile);
+    cluster.pic = block.getSingleSmallStringValue("Pic", cluster.pic);
+    cluster.picPal = block.getSingleIntValue("PicPal", cluster.picPal);
+    cluster.cdMusicA = (int16_t) block.getSingleIntValue("CdMusicA", cluster.cdMusicA);
+    cluster.cdMusicB = (int16_t) block.getSingleIntValue("CdMusicB", cluster.cdMusicB);
+    cluster.textX = (int16_t) block.getSingleIntValue("TextX", cluster.textX);
+    cluster.textY = (int16_t) block.getSingleIntValue("TextY", cluster.textY);
+    cluster.bSkipFinale = (block.getSingleIntValue("SkipFinale", cluster.bSkipFinale) > 0);
+    cluster.bEnableCast = (block.getSingleIntValue("EnableCast", cluster.bEnableCast) > 0);
+    cluster.bNoCenterText = (block.getSingleIntValue("NoCenterText", cluster.bNoCenterText) > 0);
+    cluster.bSmallFont = (block.getSingleIntValue("SmallFont", cluster.bSmallFont) > 0);
+
+    {
+        const LinkedToken* const pTextValue = block.getValue("Text");
+        const LinkedToken* pTextData = (pTextValue) ? pTextValue->pNextData : nullptr;
+
+        for (int32_t lineIdx = 0; (lineIdx < C_ARRAY_SIZE(Cluster::text)) && pTextData; ++lineIdx, pTextData = pTextData->pNextData) {
+            const std::string_view text = pTextData->token.text();
+            cluster.text[lineIdx].assign(text.data(), (uint32_t) text.length());
+        }
+    }
+
+    if ((cluster.picPal < 0) || (cluster.picPal > 31)) {
+        error(block, "Cluster: 'PicPal' must be between 0 and 31!");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the MAPINFO lump data from the main IWAD (if available) as a C string
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::unique_ptr<char[]> readMapInfoLumpAsCString() noexcept {
@@ -247,6 +310,7 @@ static void readMapInfoFromIWAD() noexcept {
 
     constexpr BlockReader BLOCK_READERS[] = {
         { "ClearEpisodes", readClearEpisodes},
+        { "Cluster", readCluster},
         { "Episode", readEpisode },
         { "Map", readMap},
         { "MusicTrack", readMusicTrack },
@@ -388,6 +452,138 @@ static void setMapInfoToDefaults() noexcept {
         defineBuiltInMap(58, 2, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
         defineBuiltInMap(59, 2, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
     }
+
+    // Default clusters
+    gClusters.clear();
+
+    if (Game::isFinalDoom()) {
+        {
+            Cluster& clus = gClusters.emplace_back();
+            clus.clusterNum = 1;
+            clus.castLcdFile = "MAP60.LCD";
+            clus.pic = "BACK";
+            clus.picPal = TITLEPAL;
+            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom];
+            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
+            clus.textY = 22;
+            clus.bSkipFinale = false;
+            clus.bEnableCast = false;
+            clus.text[0] = "you have assaulted and";
+            clus.text[1] = "triumphed over the most";
+            clus.text[2] = "vicious realms that the";
+            clus.text[3] = "demented minds of our";
+            clus.text[4] = "designers could devise.";
+            clus.text[5] = "the havoc you left";
+            clus.text[6] = "behind you as you";
+            clus.text[7] = "smashed your way";
+            clus.text[8] = "through the master";
+            clus.text[9] = "levels is mute tribute";
+            clus.text[10] = "to your prowess.";
+            clus.text[11] = "you have earned the";
+            clus.text[12] = "title of";
+            clus.text[13] = "Master of Destruction.";
+        }
+        {
+            Cluster& clus = gClusters.emplace_back();
+            clus.clusterNum = 2;
+            clus.castLcdFile = "MAP60.LCD";
+            clus.pic = "BACK";
+            clus.picPal = TITLEPAL;
+            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom];
+            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
+            clus.textY = 29;
+            clus.bSkipFinale = false;
+            clus.bEnableCast = false;
+            clus.text[0] = "suddenly all is silent";
+            clus.text[1] = "from one horizon to the";
+            clus.text[2] = "other.";
+            clus.text[3] = "the agonizing echo of";
+            clus.text[4] = "hell fades away.";
+            clus.text[5] = "the nightmare sky";
+            clus.text[6] = "turns blue.";
+            clus.text[7] = "the heaps of monster";
+            clus.text[8] = "corpses begin to dissolve";
+            clus.text[9] = "along with the evil stench";
+            clus.text[10] = "that filled the air.";
+            clus.text[11] = "maybe you_have done it.";
+            clus.text[12] = "Have you really won...";
+        }
+        {
+            Cluster& clus = gClusters.emplace_back();
+            clus.clusterNum = 3;
+            clus.castLcdFile = "MAP60.LCD";
+            clus.pic = "DEMON";
+            clus.picPal = MAINPAL;
+            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom];
+            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
+            clus.textY = 15;
+            clus.bSkipFinale = false;
+            clus.bEnableCast = true;
+            clus.text[0] = "you_gloat_over_the";
+            clus.text[1] = "carcass_of_the_guardian.";
+            clus.text[2] = "with_its_death_you_have";
+            clus.text[3] = "wrested_the_accelerator";
+            clus.text[4] = "from_the_stinking_claws";
+            clus.text[5] = "of_hell._you_are_done.";
+            clus.text[6] = "hell_has_returned_to";
+            clus.text[7] = "pounding_dead_folks";
+            clus.text[8] = "instead_of_good_live_ones.";
+            clus.text[9] = "remember_to_tell_your";
+            clus.text[10] = "grandkids_to_put_a_rocket";
+            clus.text[11] = "launcher_in_your_coffin.";
+            clus.text[12] = "If_you_go_to_hell_when";
+            clus.text[13] = "you_die_you_will_need_it";
+            clus.text[14] = "for_some_cleaning_up.";
+        }
+    }
+    else {
+        {
+            Cluster& clus = gClusters.emplace_back();
+            clus.clusterNum = 1;
+            clus.castLcdFile = "MAP60.LCD";
+            clus.pic = "BACK";
+            clus.picPal = MAINPAL;
+            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom];
+            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
+            clus.textY = 45;
+            clus.bSkipFinale = false;
+            clus.bEnableCast = false;
+            clus.text[0] = "you have won!";
+            clus.text[1] = "your victory enabled";
+            clus.text[2] = "humankind to evacuate";
+            clus.text[3] = "earth and escape the";
+            clus.text[4] = "nightmare.";
+            clus.text[5] = "but then earth control";
+            clus.text[6] = "pinpoints the source";
+            clus.text[7] = "of the alien invasion.";
+            clus.text[8] = "you are their only hope.";
+            clus.text[9] = "you painfully get up";
+            clus.text[10] = "and return to the fray.";
+        }
+        {
+            Cluster& clus = gClusters.emplace_back();
+            clus.clusterNum = 2;
+            clus.castLcdFile = "MAP60.LCD";
+            clus.pic = "DEMON";
+            clus.picPal = MAINPAL;
+            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom2];
+            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
+            clus.textY = 45;
+            clus.bSkipFinale = false;
+            clus.bEnableCast = true;
+            clus.text[0] = "you did it!";
+            clus.text[1] = "by turning the evil of";
+            clus.text[2] = "the horrors of hell in";
+            clus.text[3] = "upon itself you have";
+            clus.text[4] = "destroyed the power of";
+            clus.text[5] = "the demons.";
+            clus.text[6] = "their dreadful invasion";
+            clus.text[7] = "has been stopped cold!";
+            clus.text[8] = "now you can retire to";
+            clus.text[9] = "a lifetime of frivolity.";
+            clus.text[10] = "congratulations!";
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -408,8 +604,11 @@ void init() noexcept {
 // Cleanup of MAPINFO data and releasing resources
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
-    gLastGetMap = -1;
     gLastGetMapIndex = -1;
+    gLastGetMap = -1;
+    gClusters.clear();
+    gMaps.clear();
+    gEpisodes.clear();
     gMusicTracks.clear();
 }
 
@@ -468,6 +667,17 @@ const Map* getMap(const int32_t mapNum) noexcept {
 
 const std::vector<Map>& allMaps() noexcept {
     return gMaps;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Find a 'Cluster' structure by cluster number or return all clusters
+//------------------------------------------------------------------------------------------------------------------------------------------
+const Cluster* getCluster(const int32_t clusterNum) noexcept {
+    return findStructByIntKey(clusterNum, gClusters, &Cluster::clusterNum);
+}
+
+const std::vector<Cluster>& allClusters() noexcept {
+    return gClusters;
 }
 
 END_NAMESPACE(MapInfo)

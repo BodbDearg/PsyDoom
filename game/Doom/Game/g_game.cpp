@@ -471,50 +471,81 @@ void G_RunGame() noexcept {
         if (Input::isQuitRequested())
             break;
 
-        // Should we do the Ultimate DOOM style (text only, no cast sequence) finale?
+        // PsyDoom: don't allow the finale to trigger in deathmatch mode, just go straight to the next (non secret) map unless there is no next one.
+        // Apparently the Doom II finale could trigger in the original code for deathmatch, if the last non-secret map was completed...
+        const bool bNextMapExists = (gNextMap <= Game::getNumMaps());
+        const bool bIsGameEndMap = (gGameMap == Game::getNumRegularMaps());
+
+        if (gNetGame == gt_deathmatch) {
+            if (bNextMapExists && (!bIsGameEndMap)) {
+                // Next map exists in deathmatch mode and we didn't just complete the last non-secret map: go onto it, skipping all finales
+                gGameMap = gNextMap;
+                continue;
+            } else {
+                // No next non-secret map for deathmatch mode: return to the main menu
+                break;
+            }
+        }
+
+        // Should we do a finale and which one should we do, one with a cast call (Finale 2) or one without? (Finale 1).
+        // 
+        // PsyDoom: originally for co-op mode the finale was only done for the last map in the game, but I've changed that to make it behave the same as single player.
+        // This means the MP game will disconnect between episodes but it also gives the players to opportunity to choose what to do next.
         const MapInfo::Map* const pMap = MapInfo::getMap(gGameMap);
         const MapInfo::Map* const pNextMap = MapInfo::getMap(gNextMap);
 
         const int32_t curClusterNum = (pMap) ? pMap->cluster : 0;
         const int32_t nextClusterNum = (pNextMap) ? pNextMap->cluster : curClusterNum;
-        const int32_t curEpisodeNum = Game::getMapEpisode(gGameMap);
-        const int32_t nextEpisodeNum = Game::getMapEpisode(gNextMap);
+        const MapInfo::Cluster* const pCluster = MapInfo::getCluster(curClusterNum);
 
-        if ((gNetGame == gt_single) && (curClusterNum != nextClusterNum)) {
-            MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+        const bool bDoFinale = (
+            bIsGameEndMap ||                    // Finale triggers if there is no next (non-secret) map
+            (!bNextMapExists) ||                // Trigger the finale if the next map does not exist
+            (curClusterNum != nextClusterNum)   // Finale also triggers if cluster number changes
+        );
+
+        if (!bDoFinale) {
+            // Not doing a finale, just go onto the next map
+            gGameMap = gNextMap;
+            continue;
+        }
+
+        // Do the finale and decide which type of finale to do from MAPINFO.
+        // PsyDoom: allow the finale itself to be skipped, if the cluster specifies.
+        const bool bSkipFinale = (pCluster) ? pCluster->bSkipFinale : true;
+
+        if (!bSkipFinale) {
+            const bool bDoFinaleWithCast = (pCluster) ? pCluster->bEnableCast : false;
+
+            if (bDoFinaleWithCast) {
+                MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
+            } else {
+                MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+            }
 
             // PsyDoom: if app quit was requested then exit immediately
             if (Input::isQuitRequested())
                 break;
 
-            if (gGameAction == ga_warped || gGameAction == ga_restart)
+            // Restart the level if requested or if warping to map
+            if ((gGameAction == ga_warped) || (gGameAction == ga_restart))
                 continue;
-
-            if (gGameAction == ga_exitdemo)
-                break;
-
-            // PsyDoom: now only quitting out to the main menu if the episode is different or if there is no next map
-            if ((curEpisodeNum != nextEpisodeNum) || (gNextMap > Game::getNumMaps())) {
-                // Note: the '-' instructs the main menu to select this episode automatically
-                gStartMapOrEpisode = -nextEpisodeNum;
-                break;
-            }
         }
 
-        // If there is a next map go onto it, otherwise show the DOOM II style finale (text, followed by cast)
-        if (gNextMap <= Game::getNumMaps()) {
+        // PsyDoom: now only quitting out to the main menu if the next episode is different or if there is no next (non-secret) map.
+        // This allows finale texts to play midway between episode levels, if required.
+        const int32_t curEpisodeNum = Game::getMapEpisode(gGameMap);
+        const int32_t nextEpisodeNum = Game::getMapEpisode(gNextMap);
+
+        if ((curEpisodeNum != nextEpisodeNum) || bIsGameEndMap || (!bNextMapExists)) {
+            // Quit to the main menu because the episode is different or there is no next map.
+            // Note: the '-' instructs the main menu to select the next episode automatically.
+            gStartMapOrEpisode = -nextEpisodeNum;
+            break;
+        } else {
+            // Go onto the next map!
             gGameMap = gNextMap;
-            continue;
         }
-
-        MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
-
-        // PsyDoom: if app quit was requested then exit immediately
-        if (Input::isQuitRequested())
-            break;
-
-        if ((gGameAction != ga_warped) && (gGameAction != ga_restart))
-            break;
     }
 }
 #endif  // #if PSYDOOM_MODS

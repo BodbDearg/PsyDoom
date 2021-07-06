@@ -232,7 +232,7 @@ void I_DrawStringSmall(
             const int32_t texV = fontRow * 8 - 88;
 
             // Populate and submit the primitive
-            LIBGPU_setUV0(spritePrim, (uint8_t) texU, (uint8_t) texV);
+            LIBGPU_setUV0(spritePrim, (uint8_t) texU, (uint8_t) texV);  // N.B: bit truncation to 'uint8_t' instead of 'LibGpuUV' is deliberate here and needed for correct display
             spritePrim.x0 = (int16_t) curX;
 
             I_AddPrim(spritePrim);

@@ -181,7 +181,7 @@ PsxCd_File* psxcd_open(const CdFileId discFile) noexcept {
     const PsxCd_MapTblEntry fileTableEntry = CdMapTbl_GetEntry(discFile);
 
     if (fileTableEntry == PsxCd_MapTblEntry{}) {
-        FatalErrors::raise("psxcd_open: invalid file specified!");
+        FatalErrors::raiseF("psxcd_open: attempt to open non-existing file '%s'!", discFile.c_str().data());
     }
 
     // Find a free disc reader slot to accomodate this file

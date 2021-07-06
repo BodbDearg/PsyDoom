@@ -50,7 +50,9 @@ static bool isValidBlockHeaderTokenType(const TokenType type) noexcept {
     return (
         (type == TokenType::Identifier) ||
         (type == TokenType::String) ||
-        (type == TokenType::Number)
+        (type == TokenType::Number) ||
+        (type == TokenType::True) ||
+        (type == TokenType::False)
     );
 }
 
@@ -61,7 +63,9 @@ static bool isValidDataTokenType(const TokenType type) noexcept {
     return (
         (type == TokenType::Identifier) ||
         (type == TokenType::String) ||
-        (type == TokenType::Number)
+        (type == TokenType::Number) ||
+        (type == TokenType::True) ||
+        (type == TokenType::False)
     );
 }
 
@@ -189,6 +193,61 @@ static Token parseNumber(const TextLoc startLoc) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Peeks to see if boolean 'true' is ahead in the stream (case insensitive)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool peekBooleanTrue(const TextLoc startLoc) noexcept {
+    return (
+        (std::toupper(startLoc.pStr[0]) == 'T') &&
+        (std::toupper(startLoc.pStr[1]) == 'R') &&
+        (std::toupper(startLoc.pStr[2]) == 'U') &&
+        (std::toupper(startLoc.pStr[3]) == 'E')
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Peeks to see if boolean 'false' is ahead in the stream (case insensitive)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool peekBooleanFalse(const TextLoc startLoc) noexcept {
+    return (
+        (std::toupper(startLoc.pStr[0]) == 'F') &&
+        (std::toupper(startLoc.pStr[1]) == 'A') &&
+        (std::toupper(startLoc.pStr[2]) == 'L') &&
+        (std::toupper(startLoc.pStr[3]) == 'S') &&
+        (std::toupper(startLoc.pStr[4]) == 'E')
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Parses boolean 'true' starting at the specified location
+//------------------------------------------------------------------------------------------------------------------------------------------
+static Token parseBooleanTrue(const TextLoc startLoc) noexcept {
+    ASSERT(peekBooleanTrue(startLoc));
+
+    Token token = {};
+    token.begin = startLoc;
+    token.end = startLoc;
+    token.end.column += 4;
+    token.end.pStr += 4;
+    token.type = TokenType::True;
+    return token;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Parses boolean 'false' starting at the specified location
+//------------------------------------------------------------------------------------------------------------------------------------------
+static Token parseBooleanFalse(const TextLoc startLoc) noexcept {
+    ASSERT(peekBooleanFalse(startLoc));
+
+    Token token = {};
+    token.begin = startLoc;
+    token.end = startLoc;
+    token.end.column += 5;
+    token.end.pStr += 5;
+    token.type = TokenType::False;
+    return token;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses an identifier starting at the specified location
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Token parseIdentifier(const TextLoc startLoc) noexcept {
@@ -246,8 +305,16 @@ static Token nextToken(TextLoc startLoc) noexcept {
         case '.':
             return parseNumber(startLoc);
 
-        // Possibly an identifier, but we need to make sure it starts with a valid character
+        // Possibly an identifier, or 'true' or 'false' boolean literals
         default: {
+            // Boolean literals 'true' or 'false' ahead?
+            if (peekBooleanTrue(startLoc))
+                return parseBooleanTrue(startLoc);
+
+            if (peekBooleanFalse(startLoc))
+                return parseBooleanFalse(startLoc);
+
+            // Only valid possibility left is an identifier: we need to make sure it starts with a valid character
             if (isValidIdentifierStartChar(charAhead)) {
                 return parseIdentifier(startLoc);
             } else {

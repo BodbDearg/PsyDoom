@@ -17,7 +17,7 @@ struct MusicTrack {
     int32_t     trackNum;      // Music track number. Also determines which LCD file is used (MUSLEV<trackNum>.LCD).
     int32_t     sequenceNum;   // Which sequence number from the module file to play for this music track.
 
-    // Default constructor: mark all non-optional fields as undefined in some way
+    // Default constructor: marks all non-optional fields as undefined in some way
     inline constexpr MusicTrack() noexcept
         : trackNum(-1)
         , sequenceNum(-1)
@@ -33,13 +33,35 @@ struct Episode {
     int32_t     startMap;       // Starting map for the episode
     String32    name;           // Name of the episode shown in the main menu
 
-    // Default constructor: mark all non-optional fields as undefined in some way
+    // Default constructor: marks all non-optional fields as undefined in some way
     inline constexpr Episode() noexcept
         : episodeNum(-1)
         , startMap(-1)
         , name("Unnamed Episode")
     {
     }
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Defines a cluster/group of maps.
+// Just specifies how the finale is handled when the cluster end is reached.
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct Cluster {
+    int32_t     clusterNum;         // The cluster number/identifier
+    String16    castLcdFile;        // Which LCD file to load for the cast call
+    String8     pic;                // Background image displayed for the finale
+    int32_t     picPal;             // Which palette to use for the finale background
+    int16_t     cdMusicA;           // Which CD music track to play initially for the finale
+    int16_t     cdMusicB;           // Which CD music track to play looped after the initial finale track is done
+    int16_t     textX;              // Position for the finale text: x; ignored if the text is centered.
+    int16_t     textY;              // Position for the finale text: y
+    bool        bSkipFinale;        // Show no finale?
+    bool        bEnableCast;        // Show the cast call for this finale?
+    bool        bNoCenterText;      // Avoid centering the finale text?
+    bool        bSmallFont;         // Use a small font for the finale instead of a big one?
+    String32    text[30];           // Text lines for the finale text (max 32x30 characters)
+
+    Cluster() noexcept;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -58,7 +80,7 @@ struct Map {
     int16_t         reverbDelay;            // Only used for the 'ECHO' and 'DELAY' reverb modes. Specifies how long the delay is.
     int16_t         reverbFeedback;         // Only used for the 'ECHO' and 'DELAY' reverb modes. Affects the strength of the effect.
 
-    // Default constructor: mark all non-optional fields as undefined in some way
+    // Default constructor: marks all non-optional fields as undefined in some way
     inline constexpr Map() noexcept
         : mapNum(-1)
         , music(-1)
@@ -87,5 +109,8 @@ int32_t getNumEpisodes() noexcept;
 
 const Map* getMap(const int32_t mapNum) noexcept;
 const std::vector<Map>& allMaps() noexcept;
+
+const Cluster* getCluster(const int32_t clusterNum) noexcept;
+const std::vector<Cluster>& allClusters() noexcept;
 
 END_NAMESPACE(MapInfo)

@@ -25,6 +25,7 @@ Header fields:
 - `1st`: The episode number which identifies the episode. Must be between 1 and 255.
 
 Internal Fields:
+- `Name`: Name of the episode which is displayed on the main menu.
 - `StartMap`: Which map to load when starting a new game with this episode selected. Must be between 1 and 255.
 
 ## ClearEpisodes
@@ -91,6 +92,39 @@ Internal Fields:
 - `ReverbDepth`: This is an alias which sets both `ReverbDepthL` and `ReverbDepthR` at the same time. Most of the time you would probably want equal reverb on both channels.
 - `ReverbDelay`: for the `ECHO` and `DELAY` reverb modes defines the delay for the effect. Allowed values are from -32768 to 32767.
 - `ReverbFeedback`: for the `ECHO` and `DELAY` reverb modes defines effect strength. Allowed values are from -32768 to 32767.
+## Cluster
+Defines the finale to show for a group of maps. Whenever the game detects the last (non-secret) map is completed or the next map is from a different cluster then the finale screen will be shown. An example, which matches the settings for the Doom II cluster:
+```
+Cluster 2 {
+    CastLcdFile = "MAP60.LCD"
+    Pic = "DEMON"
+    PicPal = 0
+    CdMusicA = 8
+    CdMusicB = 4
+    TextX = 0
+    TextY = 45
+    SkipFinale = false
+    EnableCast = true
+    NoCenterText = false
+    SmallFont = false
+}
+```
+Header fields:
+- `1st`: The cluster's number. Must be between 1 and 255.
+
+Internal Fields:
+- `CastLcdFile`: Which LCD files contains the SFX used for the cast call. In the retail games this is 'MAP60.LCD'.
+- `Pic`: Which image to show for the finale background.
+- `PicPal`: Which palette to use to display `Pic`. Must be between 0 and 31. For a list of available palettes, see the documentation for `Map`.
+- `CdMusicA`: The CD track to play once for the finale.
+- `CdMusicB`: The CD track which will loop after `CdMusicA` is finished.
+- `TextX`: X position of finale text. Ignored unless `NoCenterText` is enabled (`true`).
+- `TextY`: Y position of the finale text.
+- `SkipFinale`: if set to `true` then no finale will show.
+- `EnableCast`: if set to `true` then a finale with a cast call will be shown.
+- `NoCenterText`: if set to `true` then the finale text will not be centered.
+- `SmallFont`: if set to `true` then the small (8x8) font used for rendering status bar messages will be used for the finale.
+
 ## MusicTrack
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:
 ```

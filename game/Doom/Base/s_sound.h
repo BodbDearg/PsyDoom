@@ -2,6 +2,14 @@
 
 #include <cstdint>
 
+// PsyDoom: 'CdFileId' has changed in format
+#if PSYDOOM_MODS
+    struct String16;
+    typedef String16 CdFileId;
+#else 
+    typedef int32_t CdFileId;
+#endif
+
 enum sfxenum_t : int32_t;
 struct mobj_t;
 struct SampleBlock;
@@ -40,6 +48,12 @@ int32_t doomToPsxSpuVol(const int32_t doomVol) noexcept;
 
 void S_SetSfxVolume(int32_t sfxVol) noexcept;
 void S_SetMusicVolume(const int32_t musVol) noexcept;
+
+#if PSYDOOM_MODS
+    CdFileId S_GetMusicLcdFileId(const int32_t trackNum) noexcept;
+    CdFileId S_GetSoundLcdFileId(const int32_t num) noexcept;
+#endif
+
 void S_StopMusic() noexcept;
 void S_StartMusic() noexcept;
 void S_InitSampleBlock(SampleBlock& block) noexcept;

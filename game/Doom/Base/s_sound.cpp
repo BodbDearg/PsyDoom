@@ -165,7 +165,7 @@ void S_SetMusicVolume(const int32_t musVol) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper: returns the file id 'MUSLEV[X].LCD' where '[X]' is provided as the track number
 //------------------------------------------------------------------------------------------------------------------------------------------
-static CdFileId getMusicLcdFileId(const int32_t trackNum) noexcept {
+CdFileId S_GetMusicLcdFileId(const int32_t trackNum) noexcept {
     char lcdFileName[32];
     std::sprintf(lcdFileName, "MUSLEV%d.LCD", trackNum);
     return lcdFileName;
@@ -174,7 +174,7 @@ static CdFileId getMusicLcdFileId(const int32_t trackNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper: returns the file id 'MAP[X].LCD' where '[X]' is provided as the map number
 //------------------------------------------------------------------------------------------------------------------------------------------
-static CdFileId getSoundLcdFileId(const int32_t num) noexcept {
+CdFileId S_GetSoundLcdFileId(const int32_t num) noexcept {
     char lcdFileName[32];
     std::sprintf(lcdFileName, "MAP%02d.LCD", num);
     return lcdFileName;
@@ -315,7 +315,7 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
 
         if (!bPlayCdMusic) {
             wess_seq_load(gCurMusicSeqIdx, gpSound_MusicSeqData);
-            const CdFileId lcdFileId = getMusicLcdFileId(mapMusicTrack);
+            const CdFileId lcdFileId = S_GetMusicLcdFileId(mapMusicTrack);
             destSpuAddr += wess_dig_lcd_load(lcdFileId, destSpuAddr, &gMapSndBlock, false);
         }
 
@@ -348,9 +348,18 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
         CdFileId mapSoundLcdFileId = {};
 
         if (mapNum > Game::getNumMaps()) {
-            mapSoundLcdFileId = getSoundLcdFileId(std::max(60, Game::getNumMaps() + 1));    // Finale LCD
+            // Load the finale LCD, which is normally 'MAP60.LCD' for both Doom and Final Doom.
+            // PsyDoom: this can now be flexibly specified in MAPINFO.
+            #if PSYDOOM_MODS
+                // N.B: need to use the 'gGameMap' field at this point to lookup the cluster because the map number passed in for the finale is NOT valid
+                const MapInfo::Map* const pGameEndMap = MapInfo::getMap(gGameMap);
+                const MapInfo::Cluster* const pCluster = (pGameEndMap) ? MapInfo::getCluster(pGameEndMap->cluster) : nullptr;
+                mapSoundLcdFileId = (pCluster) ? pCluster->castLcdFile : CdFileId{};
+            #else
+                mapSoundLcdFileId = S_GetSoundLcdFileId(std::max(60, Game::getNumMaps() + 1));
+            #endif
         } else if (mapNum > 0) {
-            mapSoundLcdFileId = getSoundLcdFileId(mapNum);  // Normal map LCD
+            mapSoundLcdFileId = S_GetSoundLcdFileId(mapNum);    // Normal map LCD
         }
 
         if (mapSoundLcdFileId != CdFileId{}) {

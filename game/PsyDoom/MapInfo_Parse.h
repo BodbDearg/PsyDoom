@@ -41,6 +41,8 @@ enum class TokenType : uint32_t {
     Identifier,     // An unquoted identifier like 'Map' or 'NoIntermission'
     String,         // A quoted string like "Hello"
     Number,         // A number of some sort, specified as an integer, hex value or float
+    True,           // Boolean 'true' literal (becomes numeric '1')
+    False,          // Boolean 'false' literal (becomes numeric '0')
     Equals,         // A '=' character
     OpenBlock,      // A '{' character
     CloseBlock,     // A '}' character
@@ -90,7 +92,7 @@ struct Token {
             }
         }
 
-        return true;
+        return (*pOther == 0);  // If the other string is longer the strings cannot be equal
     }
 
     // Returns a string view for the token text
@@ -176,40 +178,54 @@ struct Block {
         }
     }
 
-    // Gets a mandatory header token which must be of the specified type.
-    // Issues a fatal error if not found or matching.
-    const LinkedToken& getRequiredHeaderToken(const int32_t index, const TokenType type) const noexcept {
+    // Gets a mandatory header token; issues a fatal error if not found
+    const LinkedToken& getRequiredHeaderToken(const int32_t index) const noexcept {
         const LinkedToken* pToken = getHeaderTokenWithIndex(index);
 
-        if ((!pToken) || (pToken->token.type != type)) {
+        if (!pToken) {
             error(pType->token.end, "MAPINFO block has an invalid header! See PsyDoom's MAPINFO docs for the expected format.");
         }
 
         return *pToken;
     }
 
-    // Helper: gets a mandatory header number and issues a fatal error if not existing
+    // Helper: gets a mandatory header number and issues a fatal error if not existing.
+    // Note: boolean values are automatically converted to '1.0' and '0.0' values.
     float getRequiredHeaderNumber(const int32_t index) const noexcept {
-        return getRequiredHeaderToken(index, TokenType::Number).token.number;
+        const Token& token = getRequiredHeaderToken(index).token;
+        const TokenType tokenType = token.type;
+
+        if (tokenType == TokenType::Number) {
+            return token.number;
+        } else if (tokenType == TokenType::True) {
+            return 1.0f;
+        } else if (tokenType == TokenType::False) {
+            return 0.0f;
+        }
+
+        error(pType->token.end, "MAPINFO block has an invalid header! See PsyDoom's MAPINFO docs for the expected format.");
+        return 0.0f;
     }
 
     int32_t getRequiredHeaderInt(const int32_t index) const noexcept {
         return (int32_t) getRequiredHeaderNumber(index);
     }
 
-    // Helper: gets a mandatory header small string and issues a fatal error if not existing
-    String32 getRequiredHeaderString32(const int32_t index) const noexcept {
-        const std::string_view text = getRequiredHeaderToken(index, TokenType::String).token.text();
-        return String32(text.data(), (uint32_t) text.size());
+    // Helper: gets a mandatory header small string and issues a fatal error if not existing.
+    // Note: identifiers are allowed to be used as strings.
+    template <class SmallStrT>
+    SmallStrT getRequiredHeaderSmallString(const int32_t index) const noexcept {
+        const Token& token = getRequiredHeaderToken(index).token;
+        const std::string_view text = token.text();
+        return SmallStrT(text.data(), (uint32_t) text.size());
     }
 
     // Gets a value (of any type) with the specified name; name comparison rules are case insensitive.
     // Returns 'nullptr' if not found.
     const LinkedToken* getValue(const char* const name) const noexcept {
         for (const LinkedToken* pCurToken = pValues; pCurToken; pCurToken = pCurToken->pNext) {
-            if (pCurToken->token.textEqualsIgnoreCase(name)) {
+            if (pCurToken->token.textEqualsIgnoreCase(name))
                 return pCurToken;
-            }
         }
 
         return nullptr;
@@ -221,7 +237,23 @@ struct Block {
     float getSingleNumberValue(const char* const name, const float defaultValue) const noexcept {
         const LinkedToken* pToken = getValue(name);
         const LinkedToken* pDataToken = (pToken) ? pToken->pNextData : nullptr;
-        return (pDataToken && (pDataToken->token.type == TokenType::Number)) ? pDataToken->token.number : defaultValue;
+
+        if (pDataToken) {
+            const TokenType dataType = pDataToken->token.type;
+
+            if (dataType == TokenType::Number) {
+                return pDataToken->token.number;
+            } else if (dataType == TokenType::True) {
+                return 1.0f;
+            } else if (dataType == TokenType::False) {
+                return 0.0f;
+            } else {
+                return defaultValue;
+            }
+        } else {
+            // Note: a value with no data is interpreted as a flag set to true (1.0)
+            return (pToken) ? 1.0f : defaultValue;
+        }
     }
 
     // Helper: get a a single integer value specifically
@@ -233,7 +265,7 @@ struct Block {
     // Returns a default value if not found or if the wrong type.
     // Note: if the value is a list then all entries except the 1st are ignored.
     template <class SmallStrT>
-    SmallStrT getSingleString32Value(const char* const name, const SmallStrT& defaultValue) const noexcept {
+    SmallStrT getSingleSmallStringValue(const char* const name, const SmallStrT& defaultValue) const noexcept {
         const LinkedToken* pToken = getValue(name);
         const LinkedToken* pDataToken = (pToken) ? pToken->pNextData : nullptr;
 
