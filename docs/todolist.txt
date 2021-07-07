@@ -1,6 +1,3 @@
-0.8 - Limit extending and modding?
-- Investigate punch sound not working when using ALLMAPS.LCD
-
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.
     - Could also be used for a rewind feature??!
