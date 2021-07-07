@@ -22,9 +22,10 @@ BEGIN_NAMESPACE(MapInfo)
 
 // All of the main MAPINFO data structures
 static std::vector<MusicTrack>  gMusicTracks;
+static GameInfo                 gGameInfo;
 static std::vector<Episode>     gEpisodes;
-static std::vector<Map>         gMaps;
 static std::vector<Cluster>     gClusters;
+static std::vector<Map>         gMaps;
 
 // Used to speed up repeated searches for the same 'Map' data structure.
 // Cache which map was queried and where it is in the maps array, so we can do O(1) lookup for repeat queries.
@@ -32,10 +33,10 @@ static int32_t  gLastGetMap         = -1;
 static int32_t  gLastGetMapIndex    = -1;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Default constructor: marks all non-optional fields as undefined in some way
+// Initializes a cluster with default settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Cluster() noexcept
-    : castLcdFile(S_GetSoundLcdFileId(std::max(60, Game::getNumMaps() + 1)))
+    : castLcdFile(S_GetSoundLcdFileId(60))
     , pic("BACK")
     , picPal(Game::getTexPalette_BACK())
     , cdMusicA((int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom])
@@ -47,6 +48,16 @@ Cluster::Cluster() noexcept
     , bNoCenterText(false)
     , bSmallFont(false)
     , text{}
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes game info with the default settings appropriate to the current base game
+//------------------------------------------------------------------------------------------------------------------------------------------
+GameInfo::GameInfo() noexcept
+    : numMaps((Game::gGameType == GameType::FinalDoom) ? 30 : 59)
+    , numRegularMaps((Game::gGameType == GameType::FinalDoom) ? 30 : 54)
+    , bFinalDoomGameRules(Game::gGameType == GameType::FinalDoom)
 {
 }
 
@@ -148,6 +159,25 @@ static void readMusicTrack(const Block& block) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Reads general game info from the specicified value block
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readGameInfo(const Block& block) noexcept {
+    // Read and validate all properties
+    GameInfo& gameInfo = gGameInfo;
+    gameInfo.numMaps = block.getSingleIntValue("NumMaps", gameInfo.numMaps);
+    gameInfo.numRegularMaps = block.getSingleIntValue("NumRegularMaps", gameInfo.numRegularMaps);
+    gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
+
+    if ((gameInfo.numMaps < 1) || (gameInfo.numMaps > 255)) {
+        error(block, "GameInfo: 'NumMaps' must be between 1 and 255!");
+    }
+
+    if ((gameInfo.numRegularMaps < 1) || (gameInfo.numRegularMaps > 255)) {
+        error(block, "GameInfo: 'NumRegularMaps' must be between 1 and 255!");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the 'clear episodes' command: just clears the episode list, does nothing else
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void readClearEpisodes([[maybe_unused]] const Block& block) noexcept {
@@ -173,6 +203,47 @@ static void readEpisode(const Block& block) noexcept {
 
     if ((episode.startMap < 1) || (episode.startMap > 255)) {
         error(block, "Episode: 'StartMap' must be specified and be between 1 and 255!");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads a cluster definition from the specicified value block
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readCluster(const Block& block) noexcept {
+    // Read and validate the cluster header
+    block.ensureMinHeaderTokenCount(1);
+    const int32_t clusterNum = block.getRequiredHeaderInt(0);
+
+    if ((clusterNum < 1) || (clusterNum > 255)) {
+        error(block, "Cluster: cluster number must be between 1 and 255!");
+    }
+
+    // Read and validate all other map properties
+    Cluster& cluster = getOrCreateStructWithIntKey(clusterNum, gClusters, &Cluster::clusterNum);
+    cluster.castLcdFile = block.getSingleSmallStringValue("CastLcdFile", cluster.castLcdFile);
+    cluster.pic = block.getSingleSmallStringValue("Pic", cluster.pic);
+    cluster.picPal = block.getSingleIntValue("PicPal", cluster.picPal);
+    cluster.cdMusicA = (int16_t) block.getSingleIntValue("CdMusicA", cluster.cdMusicA);
+    cluster.cdMusicB = (int16_t) block.getSingleIntValue("CdMusicB", cluster.cdMusicB);
+    cluster.textX = (int16_t) block.getSingleIntValue("TextX", cluster.textX);
+    cluster.textY = (int16_t) block.getSingleIntValue("TextY", cluster.textY);
+    cluster.bSkipFinale = (block.getSingleIntValue("SkipFinale", cluster.bSkipFinale) > 0);
+    cluster.bEnableCast = (block.getSingleIntValue("EnableCast", cluster.bEnableCast) > 0);
+    cluster.bNoCenterText = (block.getSingleIntValue("NoCenterText", cluster.bNoCenterText) > 0);
+    cluster.bSmallFont = (block.getSingleIntValue("SmallFont", cluster.bSmallFont) > 0);
+
+    {
+        const LinkedToken* const pTextValue = block.getValue("Text");
+        const LinkedToken* pTextData = (pTextValue) ? pTextValue->pNextData : nullptr;
+
+        for (int32_t lineIdx = 0; (lineIdx < C_ARRAY_SIZE(Cluster::text)) && pTextData; ++lineIdx, pTextData = pTextData->pNextData) {
+            const std::string_view text = pTextData->token.text();
+            cluster.text[lineIdx].assign(text.data(), (uint32_t) text.length());
+        }
+    }
+
+    if ((cluster.picPal < 0) || (cluster.picPal > 31)) {
+        error(block, "Cluster: 'PicPal' must be between 0 and 31!");
     }
 }
 
@@ -233,47 +304,6 @@ static void readMap(const Block& block) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Reads a cluster definition from the specicified value block
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void readCluster(const Block& block) noexcept {
-    // Read and validate the cluster header
-    block.ensureMinHeaderTokenCount(1);
-    const int32_t clusterNum = block.getRequiredHeaderInt(0);
-
-    if ((clusterNum < 1) || (clusterNum > 255)) {
-        error(block, "Cluster: cluster number must be between 1 and 255!");
-    }
-
-    // Read and validate all other map properties
-    Cluster& cluster = getOrCreateStructWithIntKey(clusterNum, gClusters, &Cluster::clusterNum);
-    cluster.castLcdFile = block.getSingleSmallStringValue("CastLcdFile", cluster.castLcdFile);
-    cluster.pic = block.getSingleSmallStringValue("Pic", cluster.pic);
-    cluster.picPal = block.getSingleIntValue("PicPal", cluster.picPal);
-    cluster.cdMusicA = (int16_t) block.getSingleIntValue("CdMusicA", cluster.cdMusicA);
-    cluster.cdMusicB = (int16_t) block.getSingleIntValue("CdMusicB", cluster.cdMusicB);
-    cluster.textX = (int16_t) block.getSingleIntValue("TextX", cluster.textX);
-    cluster.textY = (int16_t) block.getSingleIntValue("TextY", cluster.textY);
-    cluster.bSkipFinale = (block.getSingleIntValue("SkipFinale", cluster.bSkipFinale) > 0);
-    cluster.bEnableCast = (block.getSingleIntValue("EnableCast", cluster.bEnableCast) > 0);
-    cluster.bNoCenterText = (block.getSingleIntValue("NoCenterText", cluster.bNoCenterText) > 0);
-    cluster.bSmallFont = (block.getSingleIntValue("SmallFont", cluster.bSmallFont) > 0);
-
-    {
-        const LinkedToken* const pTextValue = block.getValue("Text");
-        const LinkedToken* pTextData = (pTextValue) ? pTextValue->pNextData : nullptr;
-
-        for (int32_t lineIdx = 0; (lineIdx < C_ARRAY_SIZE(Cluster::text)) && pTextData; ++lineIdx, pTextData = pTextData->pNextData) {
-            const std::string_view text = pTextData->token.text();
-            cluster.text[lineIdx].assign(text.data(), (uint32_t) text.length());
-        }
-    }
-
-    if ((cluster.picPal < 0) || (cluster.picPal > 31)) {
-        error(block, "Cluster: 'PicPal' must be between 0 and 31!");
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the MAPINFO lump data from the main IWAD (if available) as a C string
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::unique_ptr<char[]> readMapInfoLumpAsCString() noexcept {
@@ -309,10 +339,11 @@ static void readMapInfoFromIWAD() noexcept {
     };
 
     constexpr BlockReader BLOCK_READERS[] = {
-        { "ClearEpisodes", readClearEpisodes},
-        { "Cluster", readCluster},
+        { "ClearEpisodes", readClearEpisodes },
+        { "Cluster", readCluster },
         { "Episode", readEpisode },
-        { "Map", readMap},
+        { "GameInfo", readGameInfo },
+        { "Map", readMap },
         { "MusicTrack", readMusicTrack },
     };
 
@@ -340,6 +371,9 @@ static void setMapInfoToDefaults() noexcept {
         defineBuiltInMusicTrack(trackNum, 89 + trackNum);
     }
 
+    // Default game info
+    gGameInfo = GameInfo();
+
     // Default episodes
     gEpisodes.clear();
 
@@ -350,107 +384,6 @@ static void setMapInfoToDefaults() noexcept {
     } else {
         defineBuiltInEpisode(1, 1,  "Ultimate Doom");
         defineBuiltInEpisode(2, 31, "Doom II");
-    }
-
-    // Default maps
-    gMaps.clear();
-
-    if (Game::isFinalDoom()) {
-        // Master Levels
-        defineBuiltInMap(1,  1, "Attack",                   23,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(2,  1, "Virgil",                   29,   SPU_REV_MODE_STUDIO_C,  0x26FF);
-        defineBuiltInMap(3,  1, "Canyon",                   24,   SPU_REV_MODE_SPACE,     0x1FFF);
-        defineBuiltInMap(4,  1, "Combine",                  30,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(5,  1, "Catwalk",                  21,   SPU_REV_MODE_SPACE,     0x1FFF);
-        defineBuiltInMap(6,  1, "Fistula",                  27,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(7,  1, "Geryon",                   25,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(8,  1, "Minos",                    28,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(9,  1, "Nessus",                   22,   SPU_REV_MODE_SPACE,     0x1FFF);
-        defineBuiltInMap(10, 1, "Paradox",                  26,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(11, 1, "Subspace",                 1,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(12, 1, "Subterra",                 2,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(13, 1, "Vesperas",                 3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        // TNT
-        defineBuiltInMap(14, 2, "System Control",           4,    SPU_REV_MODE_HALL,      0x17FF);
-        defineBuiltInMap(15, 2, "Human Barbeque",           5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
-        defineBuiltInMap(16, 2, "Wormhole",                 6,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(17, 2, "Crater",                   7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
-        defineBuiltInMap(18, 2, "Nukage Processing",        8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
-        defineBuiltInMap(19, 2, "Deepest Reaches",          9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(20, 2, "Processing Area",          10,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(21, 2, "Lunar Mining Project",     11,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(22, 2, "Quarry",                   12,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(23, 2, "Ballistyx",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(24, 2, "Heck",                     14,   SPU_REV_MODE_HALL,      0x1FFF);
-        // Plutonia
-        defineBuiltInMap(25, 3, "Congo",                    15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(26, 3, "Aztec",                    16,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(27, 3, "Ghost Town",               17,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(28, 3, "Baron's Lair",             18,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(29, 3, "The Death Domain",         22,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(30, 3, "Onslaught",                26,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-    } else {
-        // Doom 1
-        defineBuiltInMap(1 , 1, "Hangar",                   1,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(2 , 1, "Plant",                    2,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(3 , 1, "Toxin Refinery",           3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(4 , 1, "Command Control",          4,    SPU_REV_MODE_HALL,      0x17FF);
-        defineBuiltInMap(5 , 1, "Phobos Lab",               5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
-        defineBuiltInMap(6 , 1, "Central Processing",       6,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(7 , 1, "Computer Station",         7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
-        defineBuiltInMap(8 , 1, "Phobos Anomaly",           8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
-        defineBuiltInMap(9 , 1, "Deimos Anomaly",           11,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(10, 1, "Containment Area",         9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(11, 1, "Refinery",                 15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(12, 1, "Deimos Lab",               10,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(13, 1, "Command Center",           19,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(14, 1, "Halls of the Damned",      2,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(15, 1, "Spawning Vats",            1,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(16, 1, "Hell Gate",                12,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(17, 1, "Hell Keep",                16,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(18, 1, "Pandemonium",              17,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(19, 1, "House of Pain",            6,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(20, 1, "Unholy Cathedral",         18,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(21, 1, "Mt. Erebus",               13,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(22, 1, "Limbo",                    14,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(23, 1, "Tower Of Babel",           3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(24, 1, "Hell Beneath",             20,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(25, 1, "Perfect Hatred",           11,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(26, 1, "Sever The Wicked",         7,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(27, 1, "Unruly Evil",              4,    SPU_REV_MODE_HALL,      0x17FF);
-        defineBuiltInMap(28, 1, "Unto The Cruel",           5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
-        defineBuiltInMap(29, 1, "Twilight Descends",        10,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(30, 1, "Threshold of Pain",        19,   SPU_REV_MODE_HALL,      0x1FFF);
-        // Doom 2
-        defineBuiltInMap(31, 2, "Entryway",                 1,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(32, 2, "Underhalls",               9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(33, 2, "The Gantlet",              14,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(34, 2, "The Focus",                12,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(35, 2, "The Waste Tunnels",        8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
-        defineBuiltInMap(36, 2, "The Crusher",              13,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(37, 2, "Dead Simple",              18,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(38, 2, "Tricks And Traps",         20,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(39, 2, "The Pit",                  15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(40, 2, "Refueling Base",           19,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(41, 2, "O of Destruction!",        11,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(42, 2, "The Factory",              16,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(43, 2, "The Inmost Dens",          12,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(44, 2, "Suburbs",                  17,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(45, 2, "Tenements",                6,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(46, 2, "The Courtyard",            5,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(47, 2, "The Citadel",              9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(48, 2, "Nirvana",                  2,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(49, 2, "The Catacombs",            3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(50, 2, "Barrels of Fun",           1,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(51, 2, "Bloodfalls",               7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
-        defineBuiltInMap(52, 2, "The Abandoned Mines",      8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
-        defineBuiltInMap(53, 2, "Monster Condo",            15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(54, 2, "Redemption Denied",        4,    SPU_REV_MODE_HALL,      0x17FF);
-        defineBuiltInMap(55, 1, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(56, 1, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(57, 1, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(58, 2, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(59, 2, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
     }
 
     // Default clusters
@@ -584,6 +517,107 @@ static void setMapInfoToDefaults() noexcept {
             clus.text[10] = "congratulations!";
         }
     }
+
+    // Default maps
+    gMaps.clear();
+
+    if (Game::isFinalDoom()) {
+        // Master Levels
+        defineBuiltInMap(1,  1, "Attack",                   23,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(2,  1, "Virgil",                   29,   SPU_REV_MODE_STUDIO_C,  0x26FF);
+        defineBuiltInMap(3,  1, "Canyon",                   24,   SPU_REV_MODE_SPACE,     0x1FFF);
+        defineBuiltInMap(4,  1, "Combine",                  30,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(5,  1, "Catwalk",                  21,   SPU_REV_MODE_SPACE,     0x1FFF);
+        defineBuiltInMap(6,  1, "Fistula",                  27,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(7,  1, "Geryon",                   25,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(8,  1, "Minos",                    28,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(9,  1, "Nessus",                   22,   SPU_REV_MODE_SPACE,     0x1FFF);
+        defineBuiltInMap(10, 1, "Paradox",                  26,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(11, 1, "Subspace",                 1,    SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(12, 1, "Subterra",                 2,    SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(13, 1, "Vesperas",                 3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+        // TNT
+        defineBuiltInMap(14, 2, "System Control",           4,    SPU_REV_MODE_HALL,      0x17FF);
+        defineBuiltInMap(15, 2, "Human Barbeque",           5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
+        defineBuiltInMap(16, 2, "Wormhole",                 6,    SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(17, 2, "Crater",                   7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
+        defineBuiltInMap(18, 2, "Nukage Processing",        8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
+        defineBuiltInMap(19, 2, "Deepest Reaches",          9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(20, 2, "Processing Area",          10,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(21, 2, "Lunar Mining Project",     11,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(22, 2, "Quarry",                   12,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(23, 2, "Ballistyx",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(24, 2, "Heck",                     14,   SPU_REV_MODE_HALL,      0x1FFF);
+        // Plutonia
+        defineBuiltInMap(25, 3, "Congo",                    15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(26, 3, "Aztec",                    16,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(27, 3, "Ghost Town",               17,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(28, 3, "Baron's Lair",             18,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(29, 3, "The Death Domain",         22,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(30, 3, "Onslaught",                26,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+    } else {
+        // Doom 1
+        defineBuiltInMap(1 , 1, "Hangar",                   1,    SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(2 , 1, "Plant",                    2,    SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(3 , 1, "Toxin Refinery",           3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(4 , 1, "Command Control",          4,    SPU_REV_MODE_HALL,      0x17FF);
+        defineBuiltInMap(5 , 1, "Phobos Lab",               5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
+        defineBuiltInMap(6 , 1, "Central Processing",       6,    SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(7 , 1, "Computer Station",         7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
+        defineBuiltInMap(8 , 1, "Phobos Anomaly",           8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
+        defineBuiltInMap(9 , 1, "Deimos Anomaly",           11,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(10, 1, "Containment Area",         9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(11, 1, "Refinery",                 15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(12, 1, "Deimos Lab",               10,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(13, 1, "Command Center",           19,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(14, 1, "Halls of the Damned",      2,    SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(15, 1, "Spawning Vats",            1,    SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(16, 1, "Hell Gate",                12,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(17, 1, "Hell Keep",                16,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(18, 1, "Pandemonium",              17,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(19, 1, "House of Pain",            6,    SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(20, 1, "Unholy Cathedral",         18,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(21, 1, "Mt. Erebus",               13,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(22, 1, "Limbo",                    14,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(23, 1, "Tower Of Babel",           3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(24, 1, "Hell Beneath",             20,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(25, 1, "Perfect Hatred",           11,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(26, 1, "Sever The Wicked",         7,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(27, 1, "Unruly Evil",              4,    SPU_REV_MODE_HALL,      0x17FF);
+        defineBuiltInMap(28, 1, "Unto The Cruel",           5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
+        defineBuiltInMap(29, 1, "Twilight Descends",        10,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(30, 1, "Threshold of Pain",        19,   SPU_REV_MODE_HALL,      0x1FFF);
+        // Doom 2
+        defineBuiltInMap(31, 2, "Entryway",                 1,    SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(32, 2, "Underhalls",               9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(33, 2, "The Gantlet",              14,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(34, 2, "The Focus",                12,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(35, 2, "The Waste Tunnels",        8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
+        defineBuiltInMap(36, 2, "The Crusher",              13,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(37, 2, "Dead Simple",              18,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(38, 2, "Tricks And Traps",         20,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(39, 2, "The Pit",                  15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(40, 2, "Refueling Base",           19,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(41, 2, "O of Destruction!",        11,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(42, 2, "The Factory",              16,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(43, 2, "The Inmost Dens",          12,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(44, 2, "Suburbs",                  17,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(45, 2, "Tenements",                6,    SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(46, 2, "The Courtyard",            5,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(47, 2, "The Citadel",              9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(48, 2, "Nirvana",                  2,    SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(49, 2, "The Catacombs",            3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(50, 2, "Barrels of Fun",           1,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+        defineBuiltInMap(51, 2, "Bloodfalls",               7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
+        defineBuiltInMap(52, 2, "The Abandoned Mines",      8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
+        defineBuiltInMap(53, 2, "Monster Condo",            15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+        defineBuiltInMap(54, 2, "Redemption Denied",        4,    SPU_REV_MODE_HALL,      0x17FF);
+        defineBuiltInMap(55, 1, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+        defineBuiltInMap(56, 1, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(57, 1, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(58, 2, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+        defineBuiltInMap(59, 2, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -606,8 +640,8 @@ void init() noexcept {
 void shutdown() noexcept {
     gLastGetMapIndex = -1;
     gLastGetMap = -1;
-    gClusters.clear();
     gMaps.clear();
+    gClusters.clear();
     gEpisodes.clear();
     gMusicTracks.clear();
 }
@@ -621,6 +655,13 @@ const MusicTrack* getMusicTrack(const int32_t trackNum) noexcept {
 
 const std::vector<MusicTrack>& allMusicTracks() noexcept {
     return gMusicTracks;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get general game info
+//------------------------------------------------------------------------------------------------------------------------------------------
+const GameInfo& getGameInfo() noexcept {
+    return gGameInfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -649,6 +690,17 @@ int32_t getNumEpisodes() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Find a 'Cluster' structure by cluster number or return all clusters
+//------------------------------------------------------------------------------------------------------------------------------------------
+const Cluster* getCluster(const int32_t clusterNum) noexcept {
+    return findStructByIntKey(clusterNum, gClusters, &Cluster::clusterNum);
+}
+
+const std::vector<Cluster>& allClusters() noexcept {
+    return gClusters;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Find a 'Map' structure by map number or return all maps
 //------------------------------------------------------------------------------------------------------------------------------------------
 const Map* getMap(const int32_t mapNum) noexcept {
@@ -667,17 +719,6 @@ const Map* getMap(const int32_t mapNum) noexcept {
 
 const std::vector<Map>& allMaps() noexcept {
     return gMaps;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Find a 'Cluster' structure by cluster number or return all clusters
-//------------------------------------------------------------------------------------------------------------------------------------------
-const Cluster* getCluster(const int32_t clusterNum) noexcept {
-    return findStructByIntKey(clusterNum, gClusters, &Cluster::clusterNum);
-}
-
-const std::vector<Cluster>& allClusters() noexcept {
-    return gClusters;
 }
 
 END_NAMESPACE(MapInfo)

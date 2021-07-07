@@ -9,30 +9,6 @@ Some high level points to note:
 - Unrecognized definition types or fields will be ignored.
 - If the game already defines something (Map, Episode etc.) then defining it again in MAPINFO overwrites the existing definition. Furthermore, if some fields are omitted from the new definition, then those fields will be sourced from the original object. In this way you can use MAPINFO to partially tweak some existing game data, without having to redefine all of it. For example, you could alter the music track of an existing map without changing anything else.
 
-## Episode
-Defines an episode which can be selected on the main menu. Note: the game's episode list should be contiguous, with no missing episode numbers between the first and last. Example:
-```
-Episode 1 { 
-    Name = "Hell To Pay!"
-    StartMap = 1
-}
-Episode 2 { 
-    Name = "Doomed..."
-    StartMap = 10
-}
-```
-Header fields:
-- `1st`: The episode number which identifies the episode. Must be between 1 and 255.
-
-Internal Fields:
-- `Name`: Name of the episode which is displayed on the main menu.
-- `StartMap`: Which map to load when starting a new game with this episode selected. Must be between 1 and 255.
-
-## ClearEpisodes
-When this definition is encountered it instructs the game to clear the current list of episodes. You can use it for example to remove unwanted episodes from Doom or Final Doom. Note: the definition doesn't have any other information associated with it, it's just a simple command/instruction:
-```
-ClearEpisodes {}
-```
 ## Map
 Defines various settings unique to each map. Full example (not all these fields need to be specified):
 ```
@@ -92,6 +68,30 @@ Internal Fields:
 - `ReverbDepth`: This is an alias which sets both `ReverbDepthL` and `ReverbDepthR` at the same time. Most of the time you would probably want equal reverb on both channels.
 - `ReverbDelay`: for the `ECHO` and `DELAY` reverb modes defines the delay for the effect. Allowed values are from -32768 to 32767.
 - `ReverbFeedback`: for the `ECHO` and `DELAY` reverb modes defines effect strength. Allowed values are from -32768 to 32767.
+## Episode
+Defines an episode which can be selected on the main menu. Note: the game's episode list should be contiguous, with no missing episode numbers between the first and last. Example:
+```
+Episode 1 { 
+    Name = "Hell To Pay!"
+    StartMap = 1
+}
+Episode 2 { 
+    Name = "Doomed..."
+    StartMap = 10
+}
+```
+Header fields:
+- `1st`: The episode number which identifies the episode. Must be between 1 and 255.
+
+Internal Fields:
+- `Name`: Name of the episode which is displayed on the main menu.
+- `StartMap`: Which map to load when starting a new game with this episode selected. Must be between 1 and 255.
+
+## ClearEpisodes
+When this definition is encountered it instructs the game to clear the current list of episodes. You can use it for example to remove unwanted episodes from Doom or Final Doom. Note: the definition doesn't have any other information associated with it, it's just a simple command/instruction:
+```
+ClearEpisodes {}
+```
 ## Cluster
 Defines the finale to show for a group of maps. Whenever the game detects the last (non-secret) map is completed or the next map is from a different cluster then the finale screen will be shown. An example, which matches the settings for the Doom II cluster:
 ```
@@ -124,7 +124,19 @@ Internal Fields:
 - `EnableCast`: if set to `true` then a finale with a cast call will be shown.
 - `NoCenterText`: if set to `true` then the finale text will not be centered.
 - `SmallFont`: if set to `true` then the small (8x8) font used for rendering status bar messages will be used for the finale.
-
+## GameInfo
+Defines general (global) game settings. If these settings are not explicitly specified, then the default values for the current game disc will be used. Example, using the same settings as the original PSX Doom:
+```
+GameInfo {
+    NumMaps = 59
+    NumRegularMaps = 54
+    FinalDoomGameRules = false
+}
+```
+Internal Fields:
+- `NumMaps`: the total number of maps available in the game, including secret ones. For Doom and Final Doom this value was `59` and `30` respectively. Affects which map numbers are valid to cheat warp to etc. Must be between 1 and 255.
+- `NumRegularMaps`: the number of non-secret maps in the game. Any maps after the last non-secret map are assumed to be secret maps. Affects when the game detects the last (normal) level of the game has been completed and which levels can be used as the starting point for a multiplayer game. For Doom and Final Doom this value was `54` and `30` respectively. Must be between 1 and 255.
+- `FinalDoomGameRules`: whether Final Doom style game rules should be used. Final Doom forward movement is slightly slower, and only 16 Lost Souls can spawn from Pain Elementals.
 ## MusicTrack
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:
 ```

@@ -17,14 +17,6 @@
 
 BEGIN_NAMESPACE(Game)
 
-// Total number of maps in the game for Doom and Final Doom
-static constexpr uint32_t NUM_MAPS_DOOM = 59;
-static constexpr uint32_t NUM_MAPS_FINAL_DOOM = 30;
-
-// Number of regular (non secret) maps in the game for Doom and Final Doom
-static constexpr uint32_t NUM_REGULAR_MAPS_DOOM = 54;
-static constexpr uint32_t NUM_REGULAR_MAPS_FINAL_DOOM = 30;
-
 // The Lost Soul spawn limit for Doom and Final Doom (-1 means no limit)
 static constexpr uint32_t SOUL_LIMIT_DOOM = -1;
 static constexpr uint32_t SOUL_LIMIT_FINAL_DOOM = 16;
@@ -94,9 +86,10 @@ bool isFinalDoom() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void getUserGameSettings(GameSettings& settings) noexcept {
     settings = {};
+    const bool bFinalDoomDefaultRules = MapInfo::getGameInfo().bFinalDoomGameRules;
 
     if (Config::gUsePalTimings < 0) {
-        settings.bUsePalTimings = (gGameVariant == GameVariant::PAL) ? true : false;    // Auto set timings based on the game disc
+        settings.bUsePalTimings = (gGameVariant == GameVariant::PAL) ? true : false;        // Auto set timings based on the game disc
     } else {
         settings.bUsePalTimings = (Config::gUsePalTimings != 0);
     }
@@ -108,13 +101,13 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bUseItemPickupFix          = Config::gbUseItemPickupFix;
 
     if (Config::gUseFinalDoomPlayerMovement < 0) {
-        settings.bUseFinalDoomPlayerMovement = (isFinalDoom()) ? true : false;  // Auto decide based on the game
+        settings.bUseFinalDoomPlayerMovement = (bFinalDoomDefaultRules) ? true : false;     // Auto decide based on the game
     } else {
         settings.bUseFinalDoomPlayerMovement = (Config::gUseFinalDoomPlayerMovement != 0);
     }
 
     if (Config::gAllowMovementCancellation < 0) {
-        settings.bAllowMovementCancellation = (isFinalDoom()) ? true : false;   // Auto decide based on the game
+        settings.bAllowMovementCancellation = (bFinalDoomDefaultRules) ? true : false;       // Auto decide based on the game
     } else {
         settings.bAllowMovementCancellation = (Config::gAllowMovementCancellation != 0);
     }
@@ -139,7 +132,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bFixOutdoorBulletPuffs = Config::gbFixOutdoorBulletPuffs;
 
     if (Config::gLostSoulSpawnLimit == 0) {
-        settings.lostSoulSpawnLimit = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;    // Auto set the spawn limit based on the game
+        settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game
     } else {
         settings.lostSoulSpawnLimit = Config::gLostSoulSpawnLimit;
     }
@@ -151,6 +144,8 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 // Get the settings to use to play back a classic (original game) demo for the current game
 //------------------------------------------------------------------------------------------------------------------------------------------
 void getClassicDemoGameSettings(GameSettings& settings) noexcept {
+    const bool bFinalDoomRules = MapInfo::getGameInfo().bFinalDoomGameRules;
+
     settings = {};
     settings.bUsePalTimings                 = (gGameVariant == GameVariant::PAL);
     settings.bUseDemoTimings                = true;
@@ -158,8 +153,8 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUseSuperShotgunDelayTweak     = false;
     settings.bUseMoveInputLatencyTweak      = false;
     settings.bUseItemPickupFix              = false;
-    settings.bUseFinalDoomPlayerMovement    = isFinalDoom();
-    settings.bAllowMovementCancellation     = isFinalDoom();
+    settings.bUseFinalDoomPlayerMovement    = bFinalDoomRules;
+    settings.bAllowMovementCancellation     = bFinalDoomRules;
     settings.bAllowTurningCancellation      = false;
     settings.bFixViewBobStrength            = false;
     settings.bFixGravityStrength            = false;
@@ -170,7 +165,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUseLineOfSightOverflowFix     = false;
     settings.bRemoveMaxCrossLinesLimit      = false;
     settings.bFixOutdoorBulletPuffs         = false;
-    settings.lostSoulSpawnLimit             = (isFinalDoom()) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
+    settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
 }
 
@@ -178,14 +173,14 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
 // Get the total number of maps for this game
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t getNumMaps() noexcept {
-    return (gGameType == GameType::FinalDoom) ? NUM_MAPS_FINAL_DOOM : NUM_MAPS_DOOM;
+    return MapInfo::getGameInfo().numMaps;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the total number of maps excluding secret levels for this game
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t getNumRegularMaps() noexcept {
-    return (gGameType == GameType::FinalDoom) ? NUM_REGULAR_MAPS_FINAL_DOOM : NUM_REGULAR_MAPS_DOOM;
+    return MapInfo::getGameInfo().numRegularMaps;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

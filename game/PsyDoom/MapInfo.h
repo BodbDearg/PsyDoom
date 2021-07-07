@@ -14,15 +14,25 @@ BEGIN_NAMESPACE(MapInfo)
 // Defines a music track played the WESS sequencer system
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct MusicTrack {
-    int32_t     trackNum;      // Music track number. Also determines which LCD file is used (MUSLEV<trackNum>.LCD).
-    int32_t     sequenceNum;   // Which sequence number from the module file to play for this music track.
+    int32_t     trackNum;       // Music track number. Also determines which LCD file is used (MUSLEV<trackNum>.LCD).
+    int32_t     sequenceNum;    // Which sequence number from the module file to play for this music track.
 
-    // Default constructor: marks all non-optional fields as undefined in some way
     inline constexpr MusicTrack() noexcept
-        : trackNum(-1)
-        , sequenceNum(-1)
+        : trackNum(-1)      // Not yet defined
+        , sequenceNum(-1)   // Not yet defined
     {
     }
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// General game settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct GameInfo {
+    int32_t     numMaps;                // The total number of maps in the game, including secret ones
+    int32_t     numRegularMaps;         // The total number of regular non-secret maps in the game
+    bool        bFinalDoomGameRules;    // If true then the game should use all Final Doom style game rules by default
+
+    GameInfo() noexcept;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -33,11 +43,10 @@ struct Episode {
     int32_t     startMap;       // Starting map for the episode
     String32    name;           // Name of the episode shown in the main menu
 
-    // Default constructor: marks all non-optional fields as undefined in some way
     inline constexpr Episode() noexcept
-        : episodeNum(-1)
-        , startMap(-1)
-        , name("Unnamed Episode")
+        : episodeNum(-1)            // Not yet defined
+        , startMap(-1)              // Not yet defined
+        , name("Unnamed Episode")   // Not yet defined
     {
     }
 };
@@ -82,11 +91,11 @@ struct Map {
 
     // Default constructor: marks all non-optional fields as undefined in some way
     inline constexpr Map() noexcept
-        : mapNum(-1)
-        , music(-1)
-        , name("Unnamed Map")
-        , cluster(-1)
-        , skyPaletteOverride(-1)
+        : mapNum(-1)                    // Not yet defined
+        , music(-1)                     // Not yet defined
+        , name("Unnamed Map")           // Not yet defined
+        , cluster(-1)                   // Not yet defined
+        , skyPaletteOverride(-1)        // No override
         , bPlayCdMusic(false)
         , reverbMode(SpuReverbMode{})
         , reverbDepthL(0)
@@ -103,14 +112,16 @@ void shutdown() noexcept;
 const MusicTrack* getMusicTrack(const int32_t trackNum) noexcept;
 const std::vector<MusicTrack>& allMusicTracks() noexcept;
 
+const GameInfo& getGameInfo() noexcept;
+
 const Episode* getEpisode(const int32_t episodeNum) noexcept;
 const std::vector<Episode>& allEpisodes() noexcept;
 int32_t getNumEpisodes() noexcept;
 
-const Map* getMap(const int32_t mapNum) noexcept;
-const std::vector<Map>& allMaps() noexcept;
-
 const Cluster* getCluster(const int32_t clusterNum) noexcept;
 const std::vector<Cluster>& allClusters() noexcept;
+
+const Map* getMap(const int32_t mapNum) noexcept;
+const std::vector<Map>& allMaps() noexcept;
 
 END_NAMESPACE(MapInfo)
