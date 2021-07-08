@@ -4,6 +4,9 @@ Table of contents:
     - [Capabilities](#Capabilities)
     - [Limitations](#Limitations)
 - [Setting up a basic Lua script](#Setting-up-a-basic-Lua-script)
+- [More complicated scripting examples](#More-complicated-scripting-examples)
+    - [Custom floor mover with texture change on finish](#Custom-floor-mover-with-texture-change-on-finish)
+    - [Spawn an Imp's fireball from one marker towards another](#Spawn-an-Imps-fireball-from-one-marker-towards-another)
 - [Available script execution hooks](#Available-script-execution-hooks)
     - [Scripted linedef special types](#Scripted-linedef-special-types)
     - [Scripted sector special types](#Scripted-sector-special-types)
@@ -73,6 +76,41 @@ SetAction(1, function()
 end)
 ```
 4. In order to trigger the action in-game, use a PsyDoom specific 'scripted' line or sector special. For a line special the line tag identifies which action number to execute. For a sector special the sector tag identifies which action to execute. For example, assigning action `300` to a line (`W1 Do Script Action (Player only)`) and setting the line tag to `1` will cause script action `1` to be executed one time only, when the player walks over the line.
+# More complicated scripting examples
+## Custom floor mover with texture change on finish
+```
+-- When this action is triggered, move the floor for each sector with tag '2' to height -100.
+-- When each floor is done moving, action '101' will be called for that floor.
+SetAction(100, function()
+    ForEachSectorWithTag(2, function(sector)
+        local floor = CustomFloorDef.new()      -- Custom floor def is initialized with default settings
+        floor.destheight = -100                 -- This field MUST be specified
+        floor.speed = 1                         -- Make it slow
+        floor.dofinishscript = true             -- Call action 101 when done
+        floor.finishscript_actionnum = 101
+        floor.stopsound = sfx_swtchn            -- Play a switch activate sound when done
+        EV_DoCustomFloor(sector, floor)         -- Try and get the floor moving
+    end)
+end)
+
+-- Changes the texture of the floor that just finished moving to water
+SetAction(101, function()
+    local sector = GetTriggeringSector()
+    sector.floorpic = R_FlatNumForName("WATER01")   -- Note: this texture must already be loaded for the map
+end)
+```
+## Spawn an Imp's fireball from one marker towards another
+```
+-- Find the MARKER1 and MARKER2 things in the first sector found with tag 1 and 2 respectively.
+-- Then spawn an Imp's fireball from the 1st marker in the direction towards the 2nd.
+SetAction(100, function()
+    local srcSector = FindSectorWithTag(1)
+    local dstSector = FindSectorWithTag(2)
+    local srcMarker = srcSector:FindMobjWithType(MT_MARKER1)
+    local dstMarker = dstSector:FindMobjWithType(MT_MARKER2)
+    P_SpawnMissile(srcMarker, dstMarker, MT_TROOPSHOT)
+end)
+```
 
 # Available script execution hooks
 ## Scripted linedef special types
@@ -149,7 +187,7 @@ sector_t {
     int32   tag             -- Sector tag
     uint32  flags           -- Sector bit flags
     uint8   ceil_colorid    -- Sector ceiling light color (PsyDoom extension, if '0' use normal sector light color)
-    int32   numlines        -- Number of lines in the sector
+    int32   numlines        -- Number of lines in the sector (readonly)
     bool    hasthinker      -- If 'true' then there is an effect (floor mover etc.) operating exclusively on the sector (readonly)
     
     GetLine(int32 index) -> line_t      -- Get a specific line in the sector or 'nil' if the index is out of range
@@ -194,10 +232,10 @@ line_t {
     uint32      flags           -- Line bit flags
     int32       special         -- The current line special
     int32       tag             -- Tag for the line
-    side_t      frontside       -- Front side for the line
-    side_t      backside        -- Back side for the line (nil if none)
-    sector_t    frontsector     -- Front sector for the line
-    sector_t    backsector      -- Back sector for the  line (nil if none)
+    side_t      frontside       -- Front side for the line (readonly)
+    side_t      backside        -- Back side for the line (nil if none)(readonly)
+    sector_t    frontsector     -- Front sector for the line (readonly)
+    sector_t    backsector      -- Back sector for the  line (nil if none)(readonly)
 }
 ```
 ### side_t
@@ -205,9 +243,9 @@ line_t {
 -- Represents one side of a line
 side_t {
     int32       index                   -- Index of the side in the list of sides for the level (ZERO BASED!)(readonly)
-    float       textureoffset           -- Horizontal texture offset (floating-point/real format)    
+    float       textureoffset           -- Horizontal texture offset (floating-point/real format)
     int32       textureoffset_fixed     -- Horizontal texture offset (16.16 integer fixed point format)
-    float       rowoffset               -- Vertical texture offset (floating-point/real format)    
+    float       rowoffset               -- Vertical texture offset (floating-point/real format)
     int32       rowoffset_fixed         -- Vertical texture offset (16.16 integer fixed point format)
     int32       toptexture              -- Top texture number
     int32       bottomtexture           -- Bottom texture number
