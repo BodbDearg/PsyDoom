@@ -149,9 +149,30 @@ static void setupActionRegisterLuaEnv() noexcept {
         lua[unwantedFuncName] = nullptr;
     }
 
-    // Make the 'math' library table read-only to prevent globals being written to this table
-    if (auto tbl = lua.get<std::optional<sol::table>>("math"); tbl) {
-        makeTableReadOnly(tbl.value());
+    // Make the 'math' library table read-only to prevent globals being written to this table.
+    // Also remove unwanted functions. Available functions after this pruning are (as of Lua 5.4):
+    //
+    // math.abs     math.tointeger
+    // math.ceil    math.floor
+    // math.min     math.max
+    // math.fmod
+    //
+    if (auto optTbl = lua.get<std::optional<sol::table>>("math"); optTbl) {
+        constexpr const char* const UNWANTED_MATH_FUNCS[] = {
+            "sqrt", "sin", "mininteger", "maxinteger",
+            "huge", "exp", "pi", "acos",
+            "randomseed", "type", "random", "cos",
+            "tan", "ult", "atan", "asin",
+            "log", "rad", "modf", "deg",
+        };
+
+        sol::table& tbl = optTbl.value();
+
+        for (const char* unwantedFuncName : UNWANTED_MATH_FUNCS) {
+            tbl[unwantedFuncName] = nullptr;
+        }
+
+        makeTableReadOnly(tbl);
     }
 
     // Provide a function to register script actions with
