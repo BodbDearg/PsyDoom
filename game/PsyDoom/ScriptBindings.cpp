@@ -252,6 +252,16 @@ static float AngleToPoint(const float x1, const float y1, const float x2, const 
     return AngleToDegrees(R_PointToAngle2(x1Frac, y1Frac, x2Frac, y2Frac));
 }
 
+static float FineSine(const float degrees) noexcept {
+    const angle_t angle = DegreesToAngle(degrees);
+    return FixedToFloat(gFineSine[angle >> ANGLETOFINESHIFT]);
+}
+
+static float FineCosine(const float degrees) noexcept {
+    const angle_t angle = DegreesToAngle(degrees);
+    return FixedToFloat(gFineCosine[angle >> ANGLETOFINESHIFT]);
+}
+
 static void AlertMessage(const char* const message, const uint32_t numTics, const uint32_t soundId) noexcept {
     ST_AlertMessage(message, numTics);
 
@@ -990,6 +1000,8 @@ static void registerLuaFunctions(sol::state& lua) noexcept {
     lua["ApproxLength"] = ApproxLength;
     lua["ApproxDistance"] = ApproxDistance;
     lua["AngleToPoint"] = AngleToPoint;
+    lua["FineSine"] = FineSine;
+    lua["FineCosine"] = FineCosine;
     lua["IsSinglePlayerGame"] = []{ return (gNetGame == gt_single); };
     lua["IsCoopGame"] = []{ return (gNetGame == gt_coop); };
     lua["IsDeathmatchGame"] = []{ return (gNetGame == gt_deathmatch); };

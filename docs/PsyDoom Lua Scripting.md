@@ -367,6 +367,10 @@ ApproxLength(float dx, float dy) -> float                           -- Using Doo
 ApproxDistance(float x1, float y1, float x2, float y2) -> float     -- Using Doom's portable 'approximate' length estimation, return the distance between the two points
 AngleToPoint(float x1, float y1, float x2, float y2) -> float       -- Using Doom's lookup tables, compute the angle from one point to another (from p1 to p2)
 
+-- Using Doom's finite lookup tables, return the sine or cosine of an angle given in degrees
+FineSine(float angleDegrees)
+FineCosine(float angleDegrees)
+
 -- Tells if the current game is single player, coop or deathmatch
 IsSinglePlayerGame() -> bool
 IsCoopGame() -> bool
