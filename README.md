@@ -86,10 +86,10 @@ The original goal of this project was to have a complete replacement for the ori
 - User mods are supplied in the form of a directory.
 - Specify where the mod directory is located using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
 - For details on creating new content using PsyDoom's modding system, see the following documents:
-  - [PsyDoom Modding Overview.md](PsyDoom%20Modding%20Overview.md)
-  - [PsyDoom Special Lumps.md](PsyDoom%20Special%20Lumps.md)
-  - [PsyDoom MAPINFO.md](PsyDoom%20MAPINFO.md)
-  - [PsyDoom Lua Scripting.md](PsyDoom%20Lua%20Scripting.md)
+  - [PsyDoom Modding Overview.md](docs/PsyDoom%20Modding%20Overview.md)
+  - [PsyDoom Special Lumps.md](docs/PsyDoom%20Special%20Lumps.md)
+  - [PsyDoom MAPINFO.md](docs/PsyDoom%20MAPINFO.md)
+  - [PsyDoom Lua Scripting.md](docs/PsyDoom%20Lua%20Scripting.md)
 
 ## Multiplayer/link-cable emulation
 - PsyDoom now supports an emulation of the original 'Link Cable' multiplayer functionality, over regular TCP.
