@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <type_traits>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Base generic type for small string classes.
@@ -18,8 +19,10 @@ struct TSmallString {
         char    chars[MAX_LEN];
     };
 
-    // Default empty string constructor
+    // Default empty string constructors.
+    // One default intializes via the 'words' union member, the other via the 'chars' union member.
     inline constexpr TSmallString() noexcept : words{} {}
+    inline constexpr TSmallString([[maybe_unused]] std::nullptr_t unused) noexcept : chars{} {}
 
     // Default copy and assignment
     constexpr TSmallString(const TSmallString& other) = default;
@@ -99,8 +102,10 @@ struct TSmallString {
 
     // Give back the single word for the string.
     // Only allowed for single word strings, query is ambiguous otherwise.
-    template <typename = std::enable_if_t<NumWords == 1>>
-    inline constexpr WordT word() const noexcept { return words[0]; }
+    inline constexpr WordT word() const noexcept {
+        static_assert(NumWords == 1, "Should only be called for single word string types!");
+        return words[0];
+    }
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,7 +137,7 @@ struct String32 : public TSmallString<uint64_t, 4> {
         const char c20 = 0, const char c21 = 0, const char c22 = 0, const char c23 = 0,
         const char c24 = 0, const char c25 = 0, const char c26 = 0, const char c27 = 0,
         const char c28 = 0, const char c29 = 0, const char c30 = 0, const char c31 = 0
-    ) noexcept : TSmallString() {
+    ) noexcept : TSmallString(nullptr) {
         chars[0 ] = c0;   chars[1 ] = c1;   chars[2 ] = c2;   chars[3 ] = c3;
         chars[4 ] = c4;   chars[5 ] = c5;   chars[6 ] = c6;   chars[7 ] = c7;
         chars[8 ] = c8;   chars[9 ] = c9;   chars[10] = c10;  chars[11] = c11;
@@ -162,7 +167,7 @@ struct String16 : public TSmallString<uint64_t, 2> {
         const char c4  = 0, const char c5  = 0, const char c6  = 0, const char c7  = 0,
         const char c8  = 0, const char c9  = 0, const char c10 = 0, const char c11 = 0,
         const char c12 = 0, const char c13 = 0, const char c14 = 0, const char c15 = 0
-    ) noexcept : TSmallString() {
+    ) noexcept : TSmallString(nullptr) {
         chars[0 ] = c0;   chars[1 ] = c1;   chars[2 ] = c2;   chars[3 ] = c3;
         chars[4 ] = c4;   chars[5 ] = c5;   chars[6 ] = c6;   chars[7 ] = c7;
         chars[8 ] = c8;   chars[9 ] = c9;   chars[10] = c10;  chars[11] = c11;
@@ -185,7 +190,7 @@ struct String8 : public TSmallString<uint64_t, 1> {
     inline constexpr String8(
         const char c0,     const char c1 = 0, const char c2 = 0, const char c3 = 0,
         const char c4 = 0, const char c5 = 0, const char c6 = 0, const char c7 = 0
-    ) noexcept : TSmallString() {
+    ) noexcept : TSmallString(nullptr) {
         chars[0] = c0;  chars[1] = c1;  chars[2] = c2;  chars[3] = c3;
         chars[4] = c4;  chars[5] = c5;  chars[6] = c6;  chars[7] = c7;
     }
@@ -203,7 +208,7 @@ struct String4 : public TSmallString<uint32_t, 1> {
         words[0] = word;
     }
 
-    inline constexpr String4(const char c0, const char c1 = 0, const char c2 = 0, const char c3 = 0) noexcept : TSmallString() {
+    inline constexpr String4(const char c0, const char c1 = 0, const char c2 = 0, const char c3 = 0) noexcept : TSmallString(nullptr) {
         chars[0] = c0;
         chars[1] = c1;
         chars[2] = c2;

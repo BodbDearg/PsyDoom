@@ -19,6 +19,7 @@
 // MacOS: some POSIX stuff needed due to <filesystem> workaround
 #if __APPLE__
     #include <dirent.h>
+    #include <errno.h>
 #else
     #include <filesystem>
 #endif
