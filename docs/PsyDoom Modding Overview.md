@@ -3,7 +3,7 @@ Table of contents:
 - [The basics](#The-basics)
 - [Extension IWADS](#Extension-IWADS)
 - [Level Editor](#Level-Editor)
-- [`ALLMAPS.LCD`](#ALLMAPS\.LCD)
+- [`ALLMAPS.LCD`](#ALLMAPSLCD)
 - [PsyDoom limit removing and extended features](#PsyDoom-limit-removing-and-extended-features)
 
 In-depth specifications:
