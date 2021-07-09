@@ -43,7 +43,7 @@ https://github.com/Erick194/DoomBuilderPSX
 
 Some additional points to note when using this tool for PsyDoom mapping specifically:
 - PsyDoom does not require `MAPSPRXX.IMG` and `MAPTEXXX.IMG` files to be generated via the scripts supplied with this custom GZDoom Builder. PsyDoom ignores these files and instead loads all graphical resources from the main IWAD files. This means you can simply save a WAD file in GZDoom builder immediately test it without having to run any scripts.
-- Similarly you do not need generate a `MAPXX.LCD` file containing monster sounds for the level if [`ALLMAPS.LCD` is used instead (see below)](#ALLMAPS.LCD).
+- Similarly you do not need generate a `MAPXX.LCD` file containing monster sounds for the level if [`ALLMAPS.LCD` is used instead (see below)](#ALLMAPSLCD).
 
 ## `ALLMAPS.LCD`
 In order to simplify editing maps, PsyDoom will search for a file called `ALLMAPS.LCD` in the mod directory. This file should contain all possible monster sounds for any level in the game. If the game sees this file is present, it will not attempt to load any of the `MAPXX.LCD` files and will instead use this sound archive. Loading all enemy sounds in the game is now possible because PsyDoom has a greatly enlargened sound RAM capacity.
