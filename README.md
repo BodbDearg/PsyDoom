@@ -7,13 +7,22 @@ The port is very accurate in terms of its gameplay and has been verified to repr
 
 A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE), by [Erick Vásquez García (Erick194)](https://github.com/Erick194) also completely recreates the Doom source code for the actual PlayStation hardware and 'PsyQ' SDK. The reverse engineering work for that project was used to help accelerate the transition to native C++ code for this project and to cross verify the reverse engineering work in both projects.
 
-Here is a recent video showing the project in action:
+Here is a recent video showing the port in action:
 
 [![Alt text](https://img.youtube.com/vi/0miyRHptfeA/0.jpg)](https://youtu.be/0miyRHptfeA)
 
 The original goal of this project was to have a complete replacement for the original PlayStation Doom .EXE for modern systems. Now that this objective has been achieved, the focus turns to adding quality of life improvements, some modding features and additional polish.
 
-## Running
+## README contents:
+- [Running the game](#Running-the-game)
+- [Controls](#Controls)
+- [Running and creating user mods](#Running-and-creating-user-mods)
+- [Multiplayer/link-cable emulation](#Multiplayerlink-cable-emulation)
+- [Command line arguments](#Command-line-arguments)
+- [Current limitations/bugs](#Current-limitationsbugs)
+- [How to build](#How-to-build)
+
+## Running the game
 - Download the latest release build from here: https://github.com/BodbDearg/PsyDoom/releases
 - Presently only Windows 64-bit and MacOS (ARM/Intel 64-bit) are supported. Linux is not currently supported but is planned for a future release.
   - The Vulkan renderer also requires a Vulkan 1.1 capable GPU. On MacOS a 'Metal' capable GPU is required.
@@ -32,6 +41,8 @@ The original goal of this project was to have a complete replacement for the ori
 - For the best audio quality, set your audio device's sample rate to 44.1 kHz (44,100 Hz or 'CD Quality').
   - Sometimes using different sample rates like 48 kHz can result in strange noise/artifacts when the audio stream is resampled to a different rate by the host system.
   - 44.1 kHz is the sample rate originally used by the PS1 SPU and the native sample rate of PsyDoom.
+
+## Controls
 - Keyboard controls currently default to the following:
   - Up/W and Down/S : Move Forward and Move Backward
   - A and D : Strafe Left and Right
@@ -70,35 +81,40 @@ The original goal of this project was to have a complete replacement for the ori
   - idmt : Show all map things
   - idray : X-ray vision
   - idram : Open the VRAM viewer
-- Multiplayer/link-cable emulation
-    - PsyDoom now supports an emulation of the original 'Link Cable' multiplayer functionality, over regular TCP.
-    - This requires a VERY low latency network connection to be playable as the game's network protocol is synchronous and not lag tolerant, Ethernet or very fast Wifi is HIGHLY recommended.
-    - Player 1 is the 'server' and listens for connections from Player 2, the 'client'.
-    - To specify the machine as a server, add the following command line switch (listen port is optional, defaults to `666`):
-        - `-server [LISTEN_PORT]`
-    - To specify the current machine as a client, add the `-client` switch and specify the server host name afterwards:
-        - `-client [SERVER_HOST_NAME_AND_PORT]` 
-    - If you need to specify a server port other than the default `666`, use the following format:
-        - `-client 192.168.0.2:12345`
-- Modding system: file overrides and extension WADs
-    - You can override any of the game's files by supplying a directory containing those overrides. This mechanism can also be used to play new map sets created for PsyDoom that have been packaged up into a mod directory.
-    - Specify this user mod directory using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
-    - Put files in this folder (note: not in any child folders!) that you wish to override, e.g 'MAP01.WAD'.
-    - If the game goes to load a file such as 'MAP01.WAD' and it is present in the overrides dir, then the on-disk version will be used instead.
-    - Additionally, if the directory specified contains a file called `PSXDOOM_EXT.WAD` then this will be used as an extension to the main IWAD. It can override lumps in the original `PSXDOOM.WAD` or add new ones. This can be used for instance to add new textures for custom maps.
-    - Additional IWADs can also be specified 1 at a time via the `-file <WAD_FILE_PATH>` command line argument. These take precedence over the regular game IWAD and the `PSXDOOM_EXT.WAD` extension IWAD. Later arguments have most precedence.
-        - This could be used for instance to add a custom status bar while playing a new map set.
-    - Note that new maps cannot be added via the IWADs and any map data contained within them will be ignored.
-        - Map wads must be used to do that separately, and they must be named after the level number, like `MAP12.WAD` for example.
-- Other miscellaneous command line arguments
-    - The .cue file used can be manually specified on launch via `-cue <CUE_FILE_PATH>`.
-    - For a 'no monsters' cheat similar to PC Doom use the `-nomonsters` switch.
-    - To force pistol starts on all levels, use the `-pistolstart` switch. This setting also affects password generation and multiplayer.
-    - To enable the 'turbo mode' cheat, use the `-turbo` switch. This setting allows the player to move and fire 2x as fast. Doors and platforms also move 2x as fast. Monsters are unaffected.
-    - To play a demo lump file and exit use `-playdemo <DEMO_LUMP_FILE_PATH>`.
-    - To save the results of demo playback to a .json file use `-saveresult <RESULT_FILE_PATH>`.
-    - To verify that the result of demo playback matches a result .json file use `-checkresult <RESULT_FILE_PATH>`. If the result matches the expected result, the return code from the executable will be '0'. On an unexpected result, a non-zero return code is returned.
-    - To run the game in headless mode (for demo playback) use `-headless`
+
+## Running and creating user mods
+- User mods are supplied in the form of a directory.
+- Specify where the mod directory is located using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
+- For details on creating new content using PsyDoom's modding system, see the following documents:
+  - [PsyDoom Modding Overview.md](PsyDoom%20Modding%20Overview.md)
+  - [PsyDoom Special Lumps.md](PsyDoom%20Special%20Lumps.md)
+  - [PsyDoom MAPINFO.md](PsyDoom%20MAPINFO.md)
+  - [PsyDoom Lua Scripting.md](PsyDoom%20Lua%20Scripting.md)
+
+## Multiplayer/link-cable emulation
+- PsyDoom now supports an emulation of the original 'Link Cable' multiplayer functionality, over regular TCP.
+- This requires a VERY low latency network connection to be playable as the game's network protocol is synchronous and not lag tolerant, Ethernet or very fast Wifi is HIGHLY recommended.
+- Player 1 is the 'server' and listens for connections from Player 2, the 'client'.
+- To specify the machine as a server, add the following command line switch (listen port is optional, defaults to `666`):
+    - `-server [LISTEN_PORT]`
+- To specify the current machine as a client, add the `-client` switch and specify the server host name afterwards:
+    - `-client [SERVER_HOST_NAME_AND_PORT]` 
+- If you need to specify a server port other than the default `666`, use the following format:
+    - `-client 192.168.0.2:12345`
+
+## Command line arguments
+- Specify a user mod directory via the `-datadir <MY_DIRECTORY_PATH>` argument.
+- The .cue file used can be manually specified on launch via `-cue <CUE_FILE_PATH>`.
+- See [Multiplayer/link-cable emulation](#Multiplayerlink-cable-emulation) for multiplayer related arguments.
+- To add extra IWADs to the game, use the `-file <WAD_FILE_PATH>` argument.
+    - See [Extension IWADS](docs/PsyDoom%20Modding%20Overview.md#Extension-IWADS) in the [PsyDoom Modding Overview](docs/PsyDoom%20Modding%20Overview.md) for more details on this.
+- For a 'no monsters' cheat similar to PC Doom use the `-nomonsters` switch.
+- To force pistol starts on all levels, use the `-pistolstart` switch. This setting also affects password generation and multiplayer.
+- To enable the 'turbo mode' cheat, use the `-turbo` switch. This setting allows the player to move and fire 2x as fast. Doors and platforms also move 2x as fast. Monsters are unaffected.
+- To play a demo lump file and exit use `-playdemo <DEMO_LUMP_FILE_PATH>`.
+- To save the results of demo playback to a .json file use `-saveresult <RESULT_FILE_PATH>`.
+- To verify that the result of demo playback matches a result .json file use `-checkresult <RESULT_FILE_PATH>`. If the result matches the expected result, the return code from the executable will be '0'. On an unexpected result, a non-zero return code is returned.
+- To run the game in headless mode (for demo playback only) use `-headless`
 
 ## Current limitations/bugs
 - The intro movie does not play yet. This functionality will be implemented in a future build.
@@ -107,3 +123,4 @@ The original goal of this project was to have a complete replacement for the ori
 - Requires a recent CMake to generate the IDE specific project files (3.15 or higher)
 - Builds with Visual Studio 2019 (Windows 64-bit) and also Xcode 11 on MacOS. Other IDEs and toolchains may work but are untested.
 - Note: Only Windows and MacOS are valid platforms to build on, Linux is not yet supported.
+- On MacOS you must download and install the Vulkan SDK in order to be able to build with the Vulkan renderer enabled.

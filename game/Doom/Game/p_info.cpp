@@ -129,14 +129,14 @@ static void P_ParseDecorAttribute(
 //      DOOMEDNUM SPRITENAME FRAMES [RADIUS:X] [HEIGHT:X] [CEILING] [BLOCKING]
 // 
 // Where:
-//  DOOMEDNUM       Doom editor number for the thing
-//  SPRITENAME      4 character name for the sprite, e.g 'CEYE'
-//  FRAMES          A list of tic duration and frame letter pairs, in one unbroken string (no spaces).
+//  DOOMEDNUM       Is the Doom editor number for the thing
+//  SPRITENAME      Is a 4 character name for the sprite, e.g. 'CEYE'
+//  FRAMES          Is a list of tic duration and frame letter pairs, in one unbroken string (no spaces).
 //                  E.G: 2A3B4C will play frame 'A' for 2 tics, 'B' for 3 tics and 'C' for 4 tics.
-//  [RADIUS:X]      Optionally specify the thing's radius as 'X'. Note: there must be no spaces between the colon and number.
-//  [HEIGHT:X]      Optionally specify the thing's height as 'X'. Note: there must be no spaces between the colon and number.
-//  [CEILING]       Optional flag. If specified then the decor is attached to the ceiling.
-//  [BLOCKING]      Optional flag. If specified then the thing is treated as solid/blocking.
+//  [RADIUS:X]      Optionally specifies the thing's radius as 'X'. Note: there must be no spaces between the colon and number.
+//  [HEIGHT:X]      Optionally specifies the thing's height as 'X'. Note: there must be no spaces between the colon and number.
+//  [CEILING]       Is an optional flag. If specified then the decor is attached to the ceiling.
+//  [BLOCKING]      Is an optional flag. If specified then the thing is treated as solid/blocking.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_ReadDecorateLump(const char* const lumpName) noexcept {
     // Does the lump exist?
