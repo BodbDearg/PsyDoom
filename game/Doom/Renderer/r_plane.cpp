@@ -30,6 +30,10 @@ static span_t gFlatSpans[VIEW_3D_H];
 #if PSYDOOM_MODS
     // PsyDoom: a temporary buffer used used to store screenspace x and y values (interleaved) for leaf edge vertices
     static std::vector<int32_t> gLeafScreenVerts;
+
+    // PsyDoom: a texture offset to apply to the current flat being drawn; can be used to implement scrolling flat textures
+    static fixed_t gFlatTexOffsetX;
+    static fixed_t gFlatTexOffsetY;
 #endif
 
 // Internal plane rendering function only: forward declare here
@@ -132,6 +136,18 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
             planeZ = drawsec.floorheight - gViewZ;
         #endif
     }
+
+    // PsyDoom: set the texutre offset for the current flat being drawn.
+    // This is a new feature for PsyDoom that allows for flats to be scrolled.
+    #if PSYDOOM_MODS
+        if (bIsCeiling) {
+            gFlatTexOffsetX = drawsec.ceilTexOffsetX;
+            gFlatTexOffsetY = drawsec.ceilTexOffsetY;
+        } else {
+            gFlatTexOffsetX = drawsec.floorTexOffsetX;
+            gFlatTexOffsetY = drawsec.floorTexOffsetY;
+        }
+    #endif
 
     // Draw the horizontal spans of the leaf
     R_DrawFlatSpans(leaf, d_fixed_to_int(planeZ), tex);
@@ -387,8 +403,15 @@ static void R_DrawFlatSpans(leaf_t& leaf, const int32_t planeViewZ, const textur
         const fixed_t viewSin = gViewSin;
         const fixed_t viewX = gViewX;
         const fixed_t viewY = gViewY;
-        const fixed_t spanUOffset = dist * viewCos + viewX;
-        const fixed_t spanVOffset = dist * viewSin + viewY;
+
+        #if PSYDOOM_MODS
+            // New PsyDoom feature: flats are now allowed to scroll!
+            const fixed_t spanUOffset = dist * viewCos + viewX + gFlatTexOffsetX;
+            const fixed_t spanVOffset = dist * viewSin + viewY + gFlatTexOffsetY;
+        #else
+            const fixed_t spanUOffset = dist * viewCos + viewX;
+            const fixed_t spanVOffset = dist * viewSin + viewY;
+        #endif
 
         // Compute the uv stepping per each pixel in the span.
         // I'm not sure why the code is doing a 'ceil' type rounding operation here in the case negative coords...

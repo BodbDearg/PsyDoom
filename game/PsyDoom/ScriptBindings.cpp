@@ -777,6 +777,10 @@ static void registerType_sector_t(sol::state& lua) noexcept {
     type["tag"] = &sector_t::tag;
     type["flags"] = &sector_t::flags;
     type["ceil_colorid"] = SOL_BYTE_PROPERTY(sector_t, ceilColorid);
+    type["floor_tex_offset_x"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, floorTexOffsetX);
+    type["floor_tex_offset_y"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, floorTexOffsetY);
+    type["ceil_tex_offset_x"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilTexOffsetX);
+    type["ceil_tex_offset_y"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilTexOffsetY);
     type["numlines"] = sol::readonly(&sector_t::linecount);
     type["hasthinker"] = sol::readonly_property([](const sector_t& sector){ return (sector.specialdata != nullptr); });
     type.set_function("GetLine", GetLineInSector);

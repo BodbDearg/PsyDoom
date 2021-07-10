@@ -190,6 +190,12 @@ sector_t {
     int32   numlines        -- Number of lines in the sector (readonly)
     bool    hasthinker      -- If 'true' then there is an effect (floor mover etc.) operating exclusively on the sector (readonly)
     
+    -- Floor and ceiling texture x and y offsets: can be used to scroll textures
+    float   floor_tex_offset_x
+    float   floor_tex_offset_y
+    float   ceil_tex_offset_x
+    float   ceil_tex_offset_y
+
     GetLine(int32 index) -> line_t      -- Get a specific line in the sector or 'nil' if the index is out of range
     ForEachLine(function f)             -- Call function 'f' for each line in the sector, passing in a 'line_t' as a parameter
     ForEachMobj(function f)             -- Call function 'f' for each thing in the sector, passing in a 'mobj_t' as a parameter

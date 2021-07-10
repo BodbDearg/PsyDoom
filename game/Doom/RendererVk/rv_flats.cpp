@@ -94,6 +94,20 @@ static void RV_DrawPlane(
     float triFanCenterZ;
     RV_CalcSubsecTriFanCenter(pLeafEdges, triFanCenterX, triFanCenterZ);
 
+    // Get the texture offset for the sector and wrap the offset to be within the texture's bounds (for precision purposes).
+    // Note: this code assumes the floor texture dimensions are a power of two, which should always be the case for all textures.
+    float uOffset, vOffset;
+
+    {
+        const sector_t& sector = *subsec.sector;
+        const fixed_t texOffsetX = (IsFloor) ? sector.floorTexOffsetX : sector.ceilTexOffsetX;
+        const fixed_t texOffsetY = (IsFloor) ? sector.floorTexOffsetY : sector.ceilTexOffsetY;
+        const fixed_t wrapTexOffsetX = (texOffsetX & ((texWinX << FRACBITS) - 1));
+        const fixed_t wrapTexOffsetY = (texOffsetY & ((texWinY << FRACBITS) - 1));
+        uOffset = RV_FixedToFloat(wrapTexOffsetX);
+        vOffset = RV_FixedToFloat(wrapTexOffsetY);
+    }
+
     // Decide light diminishing mode depending on whether view lighting is disabled or not (disabled for visor powerup)
     const VLightDimMode lightDimMode = (gbDoViewLighting) ? VLightDimMode::Flats : VLightDimMode::None;
 
@@ -115,9 +129,9 @@ static void RV_DrawPlane(
         // For ceilings as well reverse the winding order so backface culling works OK.
         if constexpr (IsFloor) {
             VDrawing::addWorldTriangle(
-                x1, planeH, z1, x1, z1,
-                x2, planeH, z2, x2, z2,
-                triFanCenterX, planeH, triFanCenterZ, triFanCenterX, triFanCenterZ,
+                x1, planeH, z1, x1 + uOffset, z1 + vOffset,
+                x2, planeH, z2, x2 + uOffset, z2 + vOffset,
+                triFanCenterX, planeH, triFanCenterZ, triFanCenterX + uOffset, triFanCenterZ + vOffset,
                 colR, colG, colB,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,
@@ -126,9 +140,9 @@ static void RV_DrawPlane(
             );
         } else {
             VDrawing::addWorldTriangle(
-                x1, planeH, z1, x1, z1,
-                triFanCenterX, planeH, triFanCenterZ, triFanCenterX, triFanCenterZ,
-                x2, planeH, z2, x2, z2,
+                x1, planeH, z1, x1 + uOffset, z1 + vOffset,
+                triFanCenterX, planeH, triFanCenterZ, triFanCenterX + uOffset, triFanCenterZ + vOffset,
+                x2, planeH, z2, x2 + uOffset, z2 + vOffset,
                 colR, colG, colB,
                 gClutX, gClutY,
                 texWinX, texWinY, texWinW, texWinH,

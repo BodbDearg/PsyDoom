@@ -59,10 +59,16 @@ struct sector_t {
     fixed_t         lowerColorZ;        // PsyDoom: the Z value at which the floor sector color applies
     fixed_t         upperColorZ;        // PsyDoom: the Z value at which the ceiling sector color applies
     fixed_t         shadeHeightDiv;     // PsyDoom: a multiplier that divides by 'upperColorZ - lowerColorZ'
+    fixed_t         floorTexOffsetX;    // PsyDoom: floor texture x offset (can be used to scroll flats)
 #endif
     mobj_t*         thinglist;          // The list of things in the sector; each thing stores next/previous sector thing links
     void*           specialdata;        // Stores a pointer to a thinker which is operating on the sector (if any)
     int32_t         linecount;          // How many lines in the sector
+#if PSYDOOM_MODS
+    fixed_t         floorTexOffsetY;    // PsyDoom: floor texture y offset (can be used to scroll flats)
+    fixed_t         ceilTexOffsetX;     // PsyDoom: ceiling texture x offset (can be used to scroll flats)
+    fixed_t         ceilTexOffsetY;     // PsyDoom: ceiling texture y offset (can be used to scroll flats)
+#endif
     line_t**        lines;              // The list of sector lines
 };
 
