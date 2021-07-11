@@ -248,15 +248,31 @@ void clearRect(Core& core, const Color16 color, const uint16_t x, const uint16_t
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Convert a 24-bit color to 16-bit.
-// Note that the blending/semi-transparency flag is set to '0' during this conversion and overbright colors are saturated.
+// 
+// Notes:
+//  (1) The conversion calculations vary depending on the draw mode. For textured primitives on the PSX, '128' is regarded as full bright.
+//      Anything over '128' for textured primitives is 'extra bright'. For untextured primitives on the PSX however, '255' is full bright.
+//      Hence the conversions are handled differently depending on the draw mode.
+//  (2) The blending/semi-transparency flag is set to '0' during this conversion and overbright colors are saturated.
 //------------------------------------------------------------------------------------------------------------------------------------------
+template <DrawMode DrawMode>
 Color16 color24FTo16(const Color24F colorIn) noexcept {
+    constexpr bool bIsTextured = ((DrawMode == DrawMode::Textured) || (DrawMode == DrawMode::TexturedBlended));
+    constexpr uint32_t COLOR_NORMALIZE = (bIsTextured) ? 128 : 255;
+    constexpr uint32_t ROUND_UP = (bIsTextured) ? 0 : 128;
+
     Color16 colorOut;
-    colorOut.comp.r = (uint16_t) std::min((uint32_t) colorIn.comp.r * 31u / 128u, 31u);
-    colorOut.comp.g = (uint16_t) std::min((uint32_t) colorIn.comp.g * 31u / 128u, 31u);
-    colorOut.comp.b = (uint16_t) std::min((uint32_t) colorIn.comp.b * 31u / 128u, 31u);
+    colorOut.comp.r = (uint16_t) std::min(((uint32_t) colorIn.comp.r * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u);
+    colorOut.comp.g = (uint16_t) std::min(((uint32_t) colorIn.comp.g * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u);
+    colorOut.comp.b = (uint16_t) std::min(((uint32_t) colorIn.comp.b * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u);
     return colorOut;
 }
+
+// Instantiate the variants of this function
+template Color16 color24FTo16<DrawMode::Colored>(const Color24F colorIn) noexcept;
+template Color16 color24FTo16<DrawMode::ColoredBlended>(const Color24F colorIn) noexcept;
+template Color16 color24FTo16<DrawMode::Textured>(const Color24F colorIn) noexcept;
+template Color16 color24FTo16<DrawMode::TexturedBlended>(const Color24F colorIn) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Modulate a 16-bit color by a 24-bit one where the components are in 1.7 fixed point format
@@ -351,7 +367,7 @@ static void draw(Core& core, const DrawRect& rect) noexcept {
     Color16 fgColor;
 
     if constexpr ((DrawMode == DrawMode::Colored) || (DrawMode == DrawMode::ColoredBlended)) {
-        fgColor = color24FTo16(rectColor);
+        fgColor = color24FTo16<DrawMode>(rectColor);
     }
 
     // Fill in the rectangle pixels
@@ -430,7 +446,7 @@ void draw(Core& core, const DrawLine& line) noexcept {
         return;
 
     // Get the color to shade the line with
-    const Color16 lineColor = color24FTo16(line.color);
+    const Color16 lineColor = color24FTo16<DrawMode>(line.color);
 
     // This is Bresenham's line drawing algorithm. In order to handle all 4 cases of line we swap components as required so that the
     // delta error increment is on the dimension with the smallest change in the line. Also we insure the primary dimension with the
@@ -561,7 +577,7 @@ static void draw(Core& core, const DrawTriangle& triangle) noexcept {
     Color16 fgColor;
 
     if constexpr ((DrawMode == DrawMode::Colored) || (DrawMode == DrawMode::ColoredBlended)) {
-        fgColor = color24FTo16(triangleColor);
+        fgColor = color24FTo16<DrawMode>(triangleColor);
     }
 
     // Cache the uv coords
@@ -915,7 +931,7 @@ void draw(Core& core, const DrawFloorRow& row) noexcept {
     Color16 fgColor;
 
     if constexpr ((DrawMode == DrawMode::Colored) || (DrawMode == DrawMode::ColoredBlended)) {
-        fgColor = color24FTo16(rowColor);
+        fgColor = color24FTo16<DrawMode>(rowColor);
     }
 
     // Cache some GPU RAM related params
@@ -1034,7 +1050,7 @@ void draw(Core& core, const DrawWallCol& col) noexcept {
     Color16 fgColor;
 
     if constexpr ((DrawMode == DrawMode::Colored) || (DrawMode == DrawMode::ColoredBlended)) {
-        fgColor = color24FTo16(colColor);
+        fgColor = color24FTo16<DrawMode>(colColor);
     }
 
     // Cache some GPU RAM related params

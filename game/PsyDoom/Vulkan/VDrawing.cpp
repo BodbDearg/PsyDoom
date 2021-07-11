@@ -332,10 +332,10 @@ void addUILine(
         vert.r = r;
         vert.g = g;
         vert.b = b;
-        vert.stmulR = 128;
-        vert.stmulG = 128;
-        vert.stmulB = 128;
-        vert.stmulA = 128;
+        vert.stmulR = 255;
+        vert.stmulG = 255;
+        vert.stmulB = 255;
+        vert.stmulA = 255;
     }
 
     // Fill in xy positions
@@ -368,10 +368,10 @@ void addFlatColoredTriangle(
         vert.r = r;
         vert.g = g;
         vert.b = b;
-        vert.stmulR = 128;
-        vert.stmulG = 128;
-        vert.stmulB = 128;
-        vert.stmulA = 128;
+        vert.stmulR = 255;
+        vert.stmulG = 255;
+        vert.stmulB = 255;
+        vert.stmulA = 255;
     }
 
     pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;
@@ -407,10 +407,10 @@ void addFlatColoredQuad(
         vert.r = r;
         vert.g = g;
         vert.b = b;
-        vert.stmulR = 128;
-        vert.stmulG = 128;
-        vert.stmulB = 128;
-        vert.stmulA = 128;
+        vert.stmulR = 255;
+        vert.stmulG = 255;
+        vert.stmulB = 255;
+        vert.stmulA = 255;
     }
 
     pVerts[0].x = x1;   pVerts[0].y = y1;   pVerts[0].z = z1;

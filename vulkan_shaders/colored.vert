@@ -15,5 +15,5 @@ void main() {
     gl_Position = uniforms.mvpMatrix * vec4(in_pos, 1);
     out_color.rgb = vec3(in_color_lightDimMode.rgb);
     out_color.a = in_stmul.a;
-    out_color /= 128.0;
+    out_color /= 255.0;
 }

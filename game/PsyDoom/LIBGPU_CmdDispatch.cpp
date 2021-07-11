@@ -309,9 +309,9 @@ void submit(const LINE_F2& line) noexcept {
     drawLine.y1 = line.y0;
     drawLine.x2 = line.x1;
     drawLine.y2 = line.y1;
-    drawLine.color.comp.r = (bColorLine) ? line.r0 : 128;   // Note: '128' is '1.0' or full strength color if we don't want to modulate
-    drawLine.color.comp.g = (bColorLine) ? line.g0 : 128;
-    drawLine.color.comp.b = (bColorLine) ? line.b0 : 128;
+    drawLine.color.comp.r = (bColorLine) ? line.r0 : 255;   // Note: '255' is '1.0' or full strength color if we don't want to modulate
+    drawLine.color.comp.g = (bColorLine) ? line.g0 : 255;
+    drawLine.color.comp.b = (bColorLine) ? line.b0 : 255;
 
     // Are we using the Vulkan renderer? If so submit via that.
     // This allows us to re-use a lot of the old PSX 2D rendering without any changes.
@@ -389,9 +389,9 @@ void submit(const POLY_F4& poly) noexcept {
     const bool bColorPoly = ((poly.code & 0x1) == 0);
     const bool bBlendPoly = (poly.code & 0x2);
 
-    const uint8_t r = (bColorPoly) ? poly.r0 : 128;     // Note: '128' is '1.0' or full strength color if we don't want to modulate
-    const uint8_t g = (bColorPoly) ? poly.g0 : 128;
-    const uint8_t b = (bColorPoly) ? poly.b0 : 128;
+    const uint8_t r = (bColorPoly) ? poly.r0 : 255;     // Note: '255' is '1.0' or full strength color if we don't want to modulate
+    const uint8_t g = (bColorPoly) ? poly.g0 : 255;
+    const uint8_t b = (bColorPoly) ? poly.b0 : 255;
 
     Gpu::DrawTriangle drawTri1 = {};
     Gpu::DrawTriangle drawTri2 = {};

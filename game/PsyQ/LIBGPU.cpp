@@ -64,7 +64,7 @@ static void clearDrawingArea(const uint8_t r, const uint8_t g, const uint8_t b) 
 
     Gpu::clearRect(
         gpu,
-        Gpu::color24FTo16(clearColor),
+        Gpu::color24FTo16<Gpu::DrawMode::Colored>(clearColor),
         gpu.drawAreaLx,
         gpu.drawAreaTy,
         (gpu.drawAreaRx - gpu.drawAreaLx) + 1,

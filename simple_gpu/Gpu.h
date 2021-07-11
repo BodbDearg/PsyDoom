@@ -262,8 +262,10 @@ void updateClutCache(Core& core) noexcept;
 bool isPixelInDrawArea(const Core& core, const uint16_t x, const uint16_t y) noexcept;
 void clearRect(Core& core, const Color16 color, const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h) noexcept;
 
-// Color manipulation
+// Color manipulation and conversion
+template <DrawMode DrawMode>
 Color16 color24FTo16(const Color24F colorIn) noexcept;
+
 Color16 colorMul(const Color16 color1, const Color24F color2) noexcept;
 Color16 colorBlend(const Color16 bg, const Color16 fg, const BlendMode mode) noexcept;
 
