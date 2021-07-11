@@ -286,6 +286,7 @@ mobj_t {
 ### player_t
 ```lua
 player_t {
+    int32   index               -- Index of the player in the list of players (ZERO BASED!)(readonly)
     mobj_t  mo                  -- The player's thing/map-object (readonly)
     int32   health              -- Player health (as displayed)(readonly)
     int32   armorpoints         -- Armor points (readonly)

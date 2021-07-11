@@ -871,6 +871,7 @@ static void registerType_mobj_t(sol::state& lua) noexcept {
 static void registerType_player_t(sol::state& lua) noexcept {
     sol::usertype<player_t> type = lua.new_usertype<player_t>("player_t", sol::no_constructor);
 
+    type["index"] = sol::readonly_property([](const player_t& p) noexcept { return &p - gPlayers; });
     type["mo"] = sol::readonly(&player_t::mo);
     type["health"] = sol::readonly(&player_t::health);
     type["armorpoints"] = sol::readonly(&player_t::armorpoints);
