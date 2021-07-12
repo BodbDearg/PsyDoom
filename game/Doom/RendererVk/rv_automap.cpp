@@ -33,6 +33,15 @@ static fixed_t gRvMap_AutomapX;
 static fixed_t gRvMap_AutomapY;
 static fixed_t gRvMap_AutomapScale;
 
+// Automap colors to use if deliberately brightening automap lines for the Vulkan renderer.
+// The brightening is done to compensate for lines appearing dimmer, due to them being thinner at high resolutions.
+static constexpr uint32_t BRIGHT_AM_COLOR_RED       = 0xFF0000;
+static constexpr uint32_t BRIGHT_AM_COLOR_GREEN     = 0x00FF00;
+static constexpr uint32_t BRIGHT_AM_COLOR_BROWN     = 0xFFAA59;
+static constexpr uint32_t BRIGHT_AM_COLOR_YELLOW    = 0xFFFF00;
+static constexpr uint32_t BRIGHT_AM_COLOR_GREY      = 0xBBBBBB;
+static constexpr uint32_t BRIGHT_AM_COLOR_AQUA      = 0x0080FF;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Compute the position and rotation to use for the automap for the player, taking into account framerate independent movement.
 // Also does the same for the 'free camera' automap position that is used when the player is manually panning over the map.
@@ -119,6 +128,8 @@ static void RV_AddAutomapLine(const uint32_t color, const float x1, const float 
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_DrawMapLines() noexcept {
     const player_t& curPlayer = gPlayers[gCurPlayerIndex];
+    const bool bBrightLines = Config::gbVulkanBrightenAutomap;
+
     const int32_t numLines = gNumLines;
     const line_t* const pLines = gpLines;
 
@@ -144,23 +155,26 @@ static void RV_DrawMapLines() noexcept {
         const float y2 = RV_FixedToFloat(v2.y);
 
         // Decide on line color: start off with the normal two sided line color to begin with
-        uint32_t color = AM_COLOR_BROWN;
+        uint32_t color;
 
         if (((curPlayer.cheats & CF_ALLLINES) + curPlayer.powers[pw_allmap] != 0) && ((line.flags & ML_MAPPED) == 0)) {
             // A known line (due to all map cheat/powerup) but unseen
-            color = AM_COLOR_GREY;
+            color = (bBrightLines) ? BRIGHT_AM_COLOR_GREY : AM_COLOR_GREY;
         }
         else if (line.flags & ML_SECRET) {
             // Secret
-            color = AM_COLOR_RED;
+            color = (bBrightLines) ? BRIGHT_AM_COLOR_RED : AM_COLOR_RED;
         }
         else if (line.special != 0) {
             // Special or activatable thing
-            color = AM_COLOR_YELLOW;
+            color = (bBrightLines) ? BRIGHT_AM_COLOR_YELLOW : AM_COLOR_YELLOW;
         }
         else if ((line.flags & ML_TWOSIDED) == 0) {
             // One sided line
-            color = AM_COLOR_RED;
+            color = (bBrightLines) ? BRIGHT_AM_COLOR_RED : AM_COLOR_RED;
+        } else {
+            // Everything else...
+            color = (bBrightLines) ? BRIGHT_AM_COLOR_BROWN : AM_COLOR_BROWN;
         }
 
         RV_AddAutomapLine(color, x1, y1, x2, y2);

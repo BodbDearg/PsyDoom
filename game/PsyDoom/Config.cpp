@@ -75,6 +75,7 @@ int32_t         gTopOverscanPixels;
 int32_t         gBottomOverscanPixels;
 bool            gbFloorRenderGapFix;
 bool            gbSkyLeakFix;
+bool            gbVulkanBrightenAutomap;
 bool            gbUseVulkan32BitShading;
 int32_t         gVramSizeInMegabytes;
 std::string     gVulkanPreferredDevicesRegex;
@@ -309,6 +310,18 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbSkyLeakFix = iniEntry.getBoolValue(true); },
         []() { gbSkyLeakFix = true; }
+    },
+    {
+        "VulkanBrightenAutomap",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Vulkan renderer only: if '1' then automap lines will be brightened to compensate for them\n"
+        "# appearing perceptually darker at higher resolutions, due to the lines being much thinner.\n"
+        "# This tweak helps a high res Vulkan automap feel more like the original (low resolution) automap.\n"
+        "# If you are running the Vulkan renderer at low resolution however, you may want to disable this.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbVulkanBrightenAutomap = iniEntry.getBoolValue(true); },
+        []() { gbVulkanBrightenAutomap = true; }
     },
     {
         "VramSizeInMegabytes",
