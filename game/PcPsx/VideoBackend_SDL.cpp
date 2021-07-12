@@ -160,12 +160,56 @@ void VideoBackend_SDL::copyPsxToSdlFramebufferTexture() noexcept {
             const uint32_t r = ((srcPixel >> 10) & 0x1F) << 3;
             const uint32_t g = ((srcPixel >> 5 ) & 0x1F) << 3;
             const uint32_t b = ((srcPixel >> 0 ) & 0x1F) << 3;
-            
+
+#define DITHER_NOCASH 1
+#define DITHER_SONY 1
+
+#ifdef DITHER_NOCASH
+
+            static const int32_t dither[4][4] =
+            {
+                {-4, +0, -3, +1},
+                {+2, -2, +3, -1},
+                {-3, +1, -4, +0},
+                {+3, -1, +2, -2}
+            };
+
+            const int32_t d = dither[y % 4][x % 4];
+
+            const uint32_t u = std::clamp(static_cast<int32_t>(r) + d, 0, 255);
+            const uint32_t v = std::clamp(static_cast<int32_t>(g) + d, 0, 255);
+            const uint32_t w = std::clamp(static_cast<int32_t>(b) + d, 0, 255);
+
+#elif DITHER_SONY
+
+            static const uint32_t dither[4][4] =
+            {
+                {0u, 8u, 2u, 10u},
+                {12u, 4u, 14u, 6u},
+                {3u, 11u, 1u, 9u},
+                {15u, 7u, 13u, 5u}
+            };
+
+            const uint32_t d = dither[y % 4][x % 4];
+
+            const uint32_t u = static_cast<uint32_t>(std::clamp(r + 0.5 * d - 4, 0.0, 255.0));
+            const uint32_t v = static_cast<uint32_t>(std::clamp(g + 0.5 * d - 4, 0.0, 255.0));
+            const uint32_t w = static_cast<uint32_t>(std::clamp(b + 0.5 * d - 4, 0.0, 255.0));
+
+#else
+
+            const uint32_t u = r;
+            const uint32_t v = g;
+            const uint32_t w = b;
+
+#endif
+
+
             *pDstPixel = (
-               0xFF000000 |
-               (r << 16) |
-               (g << 8 ) |
-               (b << 0 )
+                0xFF000000 |
+                (u << 16) |
+                (v << 8) |
+                (w << 0)
             );
 
             ++pDstPixel;
