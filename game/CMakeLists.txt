@@ -451,6 +451,7 @@ endif()
 # Setup target compile options
 if (PLATFORM_WINDOWS)
     set_property(TARGET ${GAME_TGT_NAME} PROPERTY WIN32_EXECUTABLE true)        # Win32 GUI APP
+    set_property(TARGET ${GAME_TGT_NAME} PROPERTY VS_DPI_AWARE "PerMonitor")    # Make the game DPI-aware so it correctly detects screen resolution
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DUNICODE -D_UNICODE)   # Use Unicode WinMain()
 elseif(PLATFORM_MAC)
     SET_TARGET_PROPERTIES(${GAME_TGT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
@@ -474,9 +475,4 @@ if (PLATFORM_MAC AND PSYDOOM_INCLUDE_VULKAN_RENDERER)
         COMMAND cp "${VULKAN_LIBS_DIR}/libMoltenVK.dylib" "$<TARGET_FILE_DIR:${GAME_TGT_NAME}>/../Frameworks"
         COMMAND cp "${PROJECT_SOURCE_DIR}/Game/Resources/macOS/MoltenVK_icd.json" "$<TARGET_FILE_DIR:${GAME_TGT_NAME}>/../Resources/vulkan/icd.d"
     )
-endif()
-
-# Windows: make game DPI-aware so it correctly detects screen resolution
-if (PLATFORM_WINDOWS)
-    set_property(TARGET ${GAME_TGT_NAME} PROPERTY VS_DPI_AWARE "PerMonitor")
 endif()
