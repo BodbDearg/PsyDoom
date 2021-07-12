@@ -1,6 +1,10 @@
 PsyDoom contributors (sorted alphabetically)
 ============================================
 
+* **[aybe](https://github.com/aybe)**
+    * Ensure DPI aware for correct screen resolution detection:
+        https://github.com/BodbDearg/PsyDoom/pull/13
+
 * **[Erick Vásquez García (Erick194)](https://github.com/Erick194)**
 
     * Author of the sister project of PsyDoom: [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE)
