@@ -289,7 +289,8 @@ int32_t R_TextureNumForName(const char* const name, const bool bMustExist) noexc
     const texture_t* const pTextures = gpTextures;
     const int32_t numTextures = gNumTexLumps;
 
-    for (int32_t texIdx = 0; texIdx < numTextures; ++texIdx) {
+    // Note: iterate backwards, since the highest precedence WADS will have their lumps last in the list
+    for (int32_t texIdx = numTextures - 1; texIdx >= 0; --texIdx) {
         const int32_t texLumpIdx = pTextures[texIdx].lumpNum;
         const WadLumpName texLumpName = W_GetLumpName(texLumpIdx);
 
@@ -315,7 +316,8 @@ int32_t R_FlatNumForName(const char* const name, const bool bMustExist) noexcept
     const texture_t* const pFlatTextures = gpFlatTextures;
     const int32_t numFlatTextures = gNumFlatLumps;
 
-    for (int32_t flatIdx = 0; flatIdx < numFlatTextures; ++flatIdx) {
+    // Note: iterate backwards, since the highest precedence WADS will have their lumps last in the list
+    for (int32_t flatIdx = numFlatTextures - 1; flatIdx >= 0; --flatIdx) {
         const int32_t flatLumpIdx = pFlatTextures[flatIdx].lumpNum;
         const WadLumpName flatLumpName = W_GetLumpName(flatLumpIdx);
 
