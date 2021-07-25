@@ -1021,16 +1021,23 @@ static void P_GroupLines() noexcept {
     {
         line_t* pLine = gpLines;
 
-        for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
-            ++pLine->frontsector->linecount;
+        for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx, ++pLine) {
+            sector_t* const pLineFrontSec = pLine->frontsector;
+            sector_t* const pLineBackSec = pLine->backsector;
+
+            // PsyDoom: rather than crashing gracefully handle orphaned lines with no sectors in the map data - just ignore them...
+            #if PSYDOOM_MODS
+                if (!pLineFrontSec)
+                    continue;
+            #endif
+
+            ++pLineFrontSec->linecount;
             ++totalLineRefs;
 
-            if (pLine->backsector && pLine->backsector != pLine->frontsector) {
-                ++pLine->backsector->linecount;
+            if (pLineBackSec && (pLineBackSec != pLineFrontSec)) {
+                ++pLineBackSec->linecount;
                 ++totalLineRefs;
             }
-
-            ++pLine;
         }
     }
 
@@ -1054,18 +1061,25 @@ static void P_GroupLines() noexcept {
         {
             line_t* pLine = gpLines;
 
-            for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
+            for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx, ++pLine) {
+                sector_t* const pLineFrontSec = pLine->frontsector;
+                sector_t* const pLineBackSec = pLine->backsector;
+
+                // PsyDoom: rather than crashing gracefully handle orphaned lines with no sectors in the map data - just ignore them...
+                #if PSYDOOM_MODS
+                    if (!pLineFrontSec)
+                        continue;
+                #endif
+
                 // Does this line belong to this sector?
                 // If so save the line reference in the sector line list and add to the sector bounding box.
-                if ((pLine->frontsector == pSec) || (pLine->backsector == pSec)) {
+                if ((pLineFrontSec == pSec) || (pLineBackSec == pSec)) {
                     *pLineRef = pLine;
                     ++pLineRef;
 
                     M_AddToBox(bbox, pLine->vertex1->x, pLine->vertex1->y);
                     M_AddToBox(bbox, pLine->vertex2->x, pLine->vertex2->y);
                 }
-
-                ++pLine;
             }
         }
 
