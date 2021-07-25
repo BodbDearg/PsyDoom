@@ -133,12 +133,29 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
 
         sector_t& frontSector = *line.frontsector;
 
-        // If the sector is a closed door then sound can't pass through it
-        if (frontSector.floorheight >= pBackSector->ceilingheight)
-            continue;
+        // If the sector is a closed door then sound can't pass through it.
+        // PsyDoom: this logic is bugged - won't work on closed 'window' doors like the small one in E1M3, fix:
+        #if PSYDOOM_MODS
+            const bool bFixSoundPropagation = Game::gSettings.bFixSoundPropagation;
+        #else
+            constexpr bool bFixSoundPropagation = false;
+        #endif
 
-        if (frontSector.ceilingheight <= pBackSector->floorheight)
-            continue;
+        if (bFixSoundPropagation) {
+            // Fixed logic: only allow sound to pass if there is an opening or air gap between the sectors
+            const fixed_t openingTop = std::min(frontSector.ceilingheight, pBackSector->ceilingheight);
+            const fixed_t openingBot = std::max(frontSector.floorheight, pBackSector->floorheight);
+            
+            if (openingTop <= openingBot)
+                continue;
+        } else {
+            // Original logic, which fails on certain kinds of closed doors and allows sound through when it shouldn't...
+            if (frontSector.floorheight >= pBackSector->ceilingheight)
+                continue;
+
+            if (frontSector.ceilingheight <= pBackSector->floorheight)
+                continue;
+        }
 
         // Need to recurse into the sector on the opposite side of this sector's line
         sector_t& checkSector = (&frontSector == &sector) ? *pBackSector : frontSector;

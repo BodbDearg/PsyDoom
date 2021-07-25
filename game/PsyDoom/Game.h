@@ -38,6 +38,7 @@ struct GameSettings {
     uint8_t     bUseLineOfSightOverflowFix;     // If true then apply a fix to prevent numeric overflows in the enemy line of sight code
     uint8_t     bRemoveMaxCrossLinesLimit;      // If true then the player can cross an unlimited number of line specials per tick rather than '8'
     uint8_t     bFixOutdoorBulletPuffs;         // Fix a Doom engine bug where bullet puffs don't appear sometimes after shooting outdoor walls?
+    uint8_t     bFixSoundPropagation;           // Fix an original bug where sometimes sound propagates through closed doors that should block it?
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength
 };

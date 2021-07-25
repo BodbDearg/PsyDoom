@@ -430,6 +430,7 @@ int32_t                 gLostSoulSpawnLimit;
 bool                    gbUseLostSoulSpawnFix;
 bool                    gbUseLineOfSightOverflowFix;
 bool                    gbFixOutdoorBulletPuffs;
+bool                    gbFixSoundPropagation;
 float                   gViewBobbingStrength;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -725,6 +726,18 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixOutdoorBulletPuffs = iniEntry.getBoolValue(true); },
         []() { gbFixOutdoorBulletPuffs = true; }
+    },
+    {
+        "FixSoundPropagation",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then fix an original PSX Doom bug where sound can travel through certain kinds of\n"
+        "# closed doors when it shouldn't be able to. This bug can be observed with the small window into the\n"
+        "# secret room, in MAP03 of Doom. It allows sound to pass through it even though it is closed.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbFixSoundPropagation = iniEntry.getBoolValue(true); },
+        []() { gbFixSoundPropagation = true; }
     },
     {
         "ViewBobbingStrength",

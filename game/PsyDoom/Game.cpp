@@ -130,6 +130,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     #endif
 
     settings.bFixOutdoorBulletPuffs = Config::gbFixOutdoorBulletPuffs;
+    settings.bFixSoundPropagation = Config::gbFixSoundPropagation;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game
@@ -165,6 +166,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUseLineOfSightOverflowFix     = false;
     settings.bRemoveMaxCrossLinesLimit      = false;
     settings.bFixOutdoorBulletPuffs         = false;
+    settings.bFixSoundPropagation           = false;
     settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
 }
