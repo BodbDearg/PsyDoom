@@ -407,6 +407,15 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
                     const int32_t side1SectorIdx = (int32_t)(side1.sector - gpSectors);
                     sector_t& oppositeSector = *getSector(sectorIdx, lineIdx, (side1SectorIdx == sectorIdx) ? 1 : 0);
 
+                    // PsyDoom: fix the 'lower and change texture' special not working sometimes if the sector being lowered is surrounded by another
+                    // sector that isn't at the destination height. Only adopt the texture and sector special of floors that are at the height being lowered to.
+                    // Without this fix a series of lowering floor segments like E3M1 in PC Doom will not work. This bug is also in Jaguar Doom code.
+                    // I've made this fix unconditional as it does not affect the behavior of any of the retail maps or break demo compatibility.
+                    #if PSYDOOM_MODS
+                        if (oppositeSector.floorheight != floor.floordestheight)
+                            continue;
+                    #endif
+
                     floor.texture = (int16_t) oppositeSector.floorpic;
                     floor.newspecial = oppositeSector.special;
                     break;
