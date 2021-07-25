@@ -2,8 +2,6 @@
 - Fix tall pillars being clipped away in classic renderer up close.
 - E2M3's track sounds off-sync in length.
     - The track should be 1:19 minutes in length before looping - for some reason it's a few seconds longer which causes the sync issue.
-- Sector Action 4 doesn't strobe lights fast.
-    - Sector Action 4: 10% to 20% Damage (Lights Blink at 0.5 sec) is missing fast strobing lights
 - Sector Action 11 shouldn't let you die.
     - Sector Action 11: 10% to 20% Damage (ends level) kills you
 - Linedef action 37 - W1 Floor Lower to Lowest Floor (changes texture) still doesn't work properly.
