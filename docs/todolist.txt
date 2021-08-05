@@ -3,8 +3,6 @@
     - The track should be 1:19 minutes in length before looping - for some reason it's a few seconds longer which causes the sync issue.
 - Sector Action 11 shouldn't let you die.
     - Sector Action 11: 10% to 20% Damage (ends level) kills you
-- Doomguy can't climb steep stairs normally unless they run at an angle.
-    - Found when converting the PC Doom 1 maps, E3M4 has a steep staircase at the end of the level.
 
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.
