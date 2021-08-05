@@ -34,7 +34,7 @@ struct vissprite_t {
 static vissprite_t  gVisSprites[MAXVISSPRITES];
 static vissprite_t  gVisSpriteHead;
 
-#if PSYDOOM_MODS
+#if PSYDOOM_LIMIT_REMOVING
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: sets up the final XY and UV coordinates for a sprite quad, after clipping against the screen edges.
 // The clipping is done to avoid the sprite going too much offscreen, and thus running into PlayStation GPU limitations.
@@ -101,7 +101,7 @@ static void R_ClipSprite(
     poly.u2 = ul;   poly.v2 = vb;
     poly.u3 = ur;   poly.v3 = vb;
 }
-#endif  // #if PSYDOOM_MODS
+#endif  // #if PSYDOOM_LIMIT_REMOVING
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws all of the sprites in a subsector, back to front
