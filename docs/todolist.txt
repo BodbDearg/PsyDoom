@@ -1,5 +1,4 @@
 0.8 Bugs & investigation:
-- Fix tall pillars being clipped away in classic renderer up close.
 - E2M3's track sounds off-sync in length.
     - The track should be 1:19 minutes in length before looping - for some reason it's a few seconds longer which causes the sync issue.
 - Sector Action 11 shouldn't let you die.

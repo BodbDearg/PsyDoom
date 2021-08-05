@@ -1,5 +1,6 @@
 #include "r_things.h"
 
+#include "Asserts.h"
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_texcache.h"
@@ -32,6 +33,75 @@ struct vissprite_t {
 // The head is a dummy vissprite which is not actually drawn and vorks in a similar fashion to the head of the map objects list.
 static vissprite_t  gVisSprites[MAXVISSPRITES];
 static vissprite_t  gVisSpriteHead;
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: sets up the final XY and UV coordinates for a sprite quad, after clipping against the screen edges.
+// The clipping is done to avoid the sprite going too much offscreen, and thus running into PlayStation GPU limitations.
+// If the X distance between vertices exceeds '1023' or Y distance exceeds '511' then the quad won't render; clipping prevents that.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void R_ClipSprite(
+    POLY_FT4& poly,
+    int16_t xl,
+    int16_t xr,
+    int16_t yt,
+    int16_t yb,
+    LibGpuUV ul,
+    LibGpuUV ur,
+    LibGpuUV vt,
+    LibGpuUV vb
+) noexcept {
+    ASSERT(xl <= xr);
+    ASSERT(yt <= yb);
+    int32_t spriteW = xr - xl;
+    int32_t spriteH = yb - yt;
+
+    // Too much offscreen at the top?
+    if ((spriteH > 500) && (yt < 0)) {
+        const int32_t offscreenAmt = -yt;
+        const fixed_t offscreenPercent = (offscreenAmt << FRACBITS) / spriteH;
+        yt = 0;
+        vt = (LibGpuUV) d_fixed_to_int(R_LerpCoord(vt << FRACBITS, vb << FRACBITS, offscreenPercent) + 0x8000);
+        spriteH -= offscreenAmt;
+    }
+
+    // Too much offscreen at the bottom?
+    if ((spriteH > 500) && (yb > VIEW_3D_H)) {
+        const int32_t offscreenAmt = yb - VIEW_3D_H;
+        const fixed_t offscreenPercent = (offscreenAmt << FRACBITS) / spriteH;
+        yb = VIEW_3D_H;
+        vb = (LibGpuUV) d_fixed_to_int(R_LerpCoord(vb << FRACBITS, vt << FRACBITS, offscreenPercent) + 0x8000);
+    }
+
+    // Too much offscreen to the left?
+    if ((spriteW > 1000) && (xl < 0)) {
+        const int32_t offscreenAmt = -xl;
+        const fixed_t offscreenPercent = (offscreenAmt << FRACBITS) / spriteW;
+        xl = 0;
+        ul = (LibGpuUV) d_fixed_to_int(R_LerpCoord(ul << FRACBITS, ur << FRACBITS, offscreenPercent) + 0x8000);
+        spriteW -= offscreenAmt;
+    }
+
+    // Too much offscreen to the right?
+    if ((spriteW > 1000) && (xr > SCREEN_W)) {
+        const int32_t offscreenAmt = xr - SCREEN_W;
+        const fixed_t offscreenPercent = (offscreenAmt << FRACBITS) / spriteW;
+        xr = SCREEN_W;
+        ur = (LibGpuUV) d_fixed_to_int(R_LerpCoord(ur << FRACBITS, ul << FRACBITS, offscreenPercent) + 0x8000);
+    }
+
+    // Output the final (clipped) polygon
+    poly.x0 = xl;   poly.y0 = yt;
+    poly.x1 = xr;   poly.y1 = yt;
+    poly.x2 = xl;   poly.y2 = yb;
+    poly.x3 = xr;   poly.y3 = yb;
+
+    poly.u0 = ul;   poly.v0 = vt;
+    poly.u1 = ur;   poly.v1 = vt;
+    poly.u2 = ul;   poly.v2 = vb;
+    poly.u3 = ur;   poly.v3 = vb;
+}
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws all of the sprites in a subsector, back to front
@@ -289,12 +359,19 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         const int16_t pos_ty = (int16_t)(drawY);
         const int16_t pos_by = (int16_t)(drawY + drawH);
 
-        LIBGPU_setXY4(polyPrim,
-            pos_lx, pos_ty,
-            pos_rx, pos_ty,
-            pos_lx, pos_by,
-            pos_rx, pos_by
-        );
+        #if PSYDOOM_LIMIT_REMOVING
+            // PsyDoom limit removing: clip the quad so that tall sprites (e.g tech columns) which are up close do not vanish.
+            // In the original PSX engine hardware limits could sometimes be exceeded and due to the distances between sprite vertexes being too great.
+            // Avoid exceeding these GPU limitations via clipping...
+            R_ClipSprite(polyPrim, pos_lx, pos_rx, pos_ty, pos_by, polyPrim.u0, polyPrim.u1, polyPrim.v0, polyPrim.v2);
+        #else
+            LIBGPU_setXY4(polyPrim,
+                pos_lx, pos_ty,
+                pos_rx, pos_ty,
+                pos_lx, pos_by,
+                pos_rx, pos_by
+            );
+        #endif
 
         I_AddPrim(polyPrim);
     }
