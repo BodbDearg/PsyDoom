@@ -1190,10 +1190,16 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             }
         }   break;
 
-        // Strobe hurt
+        // Strobe hurt (note: on PSX Doom the strobe was actually removed, it's just 'hurt' now)
         case 4:
         // Super hellslime damage
-        case 16: {
+        case 16:
+    #if PSYDOOM_MODS
+        // PsyDoom addition: an actual 'strobe hurt' (strobe flash + hurt) for the PSX engine.
+        // This behaves the same as special '4' did originally on PC.
+        case 32:
+    #endif
+        {
             if ((!player.powers[pw_ironfeet]) || (P_Random() < 5)) {    // Occasionally damages even if a radiation suit is worn
                 gStatusBar.specialFace = f_mowdown;
 
@@ -1516,6 +1522,16 @@ void P_SpawnSpecials() noexcept {
             case 13:    P_SpawnStrobeFlash(sector, FASTDARK, true);     break;  // Sync strobe fast
             case 14:    P_SpawnDoorRaiseIn5Mins(sector, sectorIdx);     break;  // Door raise in 5 minutes
             case 17:    P_SpawnFireFlicker(sector);                     break;  // Fire flicker
+
+        #if PSYDOOM_MODS
+            // PsyDoom addition: an actual 'strobe hurt' (strobe flash + hurt) for the PSX engine.
+            // This behaves the same as special '4' did originally on PC.
+            case 32:
+                P_SpawnStrobeFlash(sector, FASTDARK, false);
+                sector.special = 32;
+                break;
+        #endif
+
             case 200:   P_SpawnGlowingLight(sector, glowto10);          break;  // Glow to dark
             case 201:   P_SpawnGlowingLight(sector, glowto255);         break;  // Glow to bright
             case 202:   P_SpawnRapidStrobeFlash(sector);                break;  // Rapid strobe flash (PSX addition)
