@@ -26,6 +26,7 @@
 #include "p_switch.h"
 #include "p_tick.h"
 #include "PsyDoom/DevMapAutoReloader.h"
+#include "PsyDoom/Game.h"
 #include "PsyDoom/MapHash.h"
 #include "PsyDoom/MapInfo.h"
 #include "PsyDoom/MapPatcher.h"
@@ -1244,7 +1245,7 @@ static void P_Init() noexcept {
         }
 
         // Final Doom: if the last digit in 'SKYXX' matches one of these digits, then use whatever palette is for that sky:
-        if (gbLoadingFinalDoomMap) {
+        if (Game::isFinalDoom()) {
             switch (skyTexName.chars[4]) {
                 case '2':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL1];    break;
                 case '3':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL2];    break;
