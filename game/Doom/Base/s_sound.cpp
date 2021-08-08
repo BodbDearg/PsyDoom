@@ -387,6 +387,15 @@ void S_Resume() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StopSound(const mobj_t* pOrigin) noexcept {
     wess_seq_stoptype((uintptr_t) pOrigin);
+
+    // PsyDoom: stop any queued sounds with this origin also
+    #if PSYDOOM_MODS
+        for (queued_sound_t& snd : gQueuedSounds) {
+            if (snd.pOrigin == pOrigin) {
+                snd.soundId = {};   // Cancel this sound
+            }
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

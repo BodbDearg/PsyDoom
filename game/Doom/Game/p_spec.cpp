@@ -1215,8 +1215,9 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             sector.special = 0;         // Consume the special so it's only counted once!
         }   break;
 
-        // PsyDoom: add support for the PC E1M8 style exit.
-        // This special kills the player and causes an exit, and even disables god mode.
+    // PsyDoom: add support for the PC E1M8 style exit.
+    // This special kills the player and causes an exit, and even disables god mode.
+    #if PSYDOOM_MODS
         case 11: {
             player.cheats &= ~CF_GODMODE;
 
@@ -1228,16 +1229,18 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             // If player health is low enough exit the level.
             // Note: exit immediately for this special (unlike normal exit switches) - we don't need to delay to hear the switch sound play.
             if (player.health <= 10) {
+                S_StopSound(player.mo);     // PsyDoom: don't do the player death sound (silent death, similar to PC)
                 G_ExitLevelImmediately();
             }
         }   break;
+    #endif
 
-        // PsyDoom: scripted player in special sector action
-        #if PSYDOOM_MODS
-            case 301: {
-                ScriptingEngine::doAction(sector.tag, nullptr, &sector, player.mo, 0, 0);
-            }   break;
-        #endif
+    // PsyDoom: scripted player in special sector action
+    #if PSYDOOM_MODS
+        case 301: {
+            ScriptingEngine::doAction(sector.tag, nullptr, &sector, player.mo, 0, 0);
+        }   break;
+    #endif
 
         default:
             I_Error("P_PlayerInSpecialSector: unknown special %i", sector.special);
