@@ -1,7 +1,3 @@
-0.8 Bugs & investigation:
-- E2M3's track sounds off-sync in length.
-    - The track should be 1:19 minutes in length before looping - for some reason it's a few seconds longer which causes the sync issue.
-
 0.9 - Networking, saves and interpolation?
 - Investigate rollback networking to combat latency.
     - Could also be used for a rewind feature??!
