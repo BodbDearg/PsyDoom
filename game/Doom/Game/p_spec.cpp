@@ -705,7 +705,7 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             line.special = 0;
             break;
 
-        // Raise floor to nearest height and change texture
+        // Lower floor to nearest height and change texture
         case 19:
             EV_DoFloor(line, lowerFloor);
             line.special = 0;

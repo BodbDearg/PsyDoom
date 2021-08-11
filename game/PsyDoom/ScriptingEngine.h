@@ -22,7 +22,7 @@ void init() noexcept;
 void shutdown() noexcept;
 void runScheduledActions() noexcept;
 
-void doAction(
+bool doAction(
     const int32_t actionNum,
     line_t* const pTrigLine,
     sector_t* const pTrigSector,

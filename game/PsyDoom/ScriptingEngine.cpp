@@ -347,10 +347,10 @@ void runScheduledActions() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Executes the specified script action number.
+// Executes the specified script action number and returns whether the script specifies the action was allowed (used by switches).
 // The line and map object which triggered the script action (both optional) are passed in as additional context for scripts.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void doAction(
+bool doAction(
     const int32_t actionNum,
     line_t* const pTrigLine,
     sector_t* const pTrigSector,
@@ -392,6 +392,8 @@ void doAction(
         std::printf("PsyDoom: no scripting action #%d is available to execute!\n", actionNum);
     }
 
+    const bool bWasActionAllowed = gbCurActionAllowed;
+
     // Clear script context
     gpCurTriggeringLine = nullptr;
     gpCurTriggeringSector = nullptr;
@@ -406,6 +408,8 @@ void doAction(
     if (gNumExecutingScripts == 0) {
         doMobjGC();
     }
+
+    return bWasActionAllowed;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

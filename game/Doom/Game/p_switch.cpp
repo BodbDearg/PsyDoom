@@ -632,9 +632,9 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         #if PSYDOOM_MODS
             // Multi: Do Script Action (Player only)
             case 330: {
-                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj, 0, 0);
+                const bool bActionAllowed = ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj, 0, 0);
 
-                if (ScriptingEngine::gbCurActionAllowed) {
+                if (bActionAllowed) {
                     P_ChangeSwitchTexture(line, true);
                 }
             }   break;
@@ -831,9 +831,9 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         #if PSYDOOM_MODS
             // Once: Do Script Action (Player only)
             case 320: {
-                ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj, 0, 0);
+                const bool bActionAllowed = ScriptingEngine::doAction(line.tag, &line, line.frontsector, &mobj, 0, 0);
 
-                if (ScriptingEngine::gbCurActionAllowed) {
+                if (bActionAllowed) {
                     P_ChangeSwitchTexture(line, false);
                 }
             }   break;
