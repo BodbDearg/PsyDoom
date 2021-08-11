@@ -1146,7 +1146,7 @@ static void registerLuaConstants(sol::state& lua) noexcept {
     lua["ML_MIDMASKED"] = ML_MIDMASKED;
     lua["ML_MIDTRANSLUCENT"] = ML_MIDTRANSLUCENT;
     lua["ML_BLOCKPRJECTILE"] = ML_BLOCKPRJECTILE;
-    lua["ML_MIDHEIGHT_128"] = ML_MIDHEIGHT_128;
+    lua["ML_MID_FIXED_HEIGHT"] = ML_MID_FIXED_HEIGHT;
     lua["ML_VOID"] = ML_VOID;
     lua["ML_ADD_SKY_WALL_HINT"] = ML_ADD_SKY_WALL_HINT;
 

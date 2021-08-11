@@ -37,7 +37,7 @@ static constexpr uint32_t ML_MAPPED              = 0x100;       // Set when the 
 static constexpr uint32_t ML_MIDMASKED           = 0x200;       // PSX DOOM: Middle texture has translucent or alpha blended pixels
 static constexpr uint32_t ML_MIDTRANSLUCENT      = 0x400;       // PSX DOOM: Middle texture drawn with alpha blending
 static constexpr uint32_t ML_BLOCKPRJECTILE      = 0x800;       // PSX DOOM: Line stops projectiles
-static constexpr uint32_t ML_MIDHEIGHT_128       = 0x1000;      // PSX FINAL DOOM: forces the middle part of a wall to be a fixed 128 units in height. Used for fences and such in Final Doom, so they don't repeat vertically.
+static constexpr uint32_t ML_MID_FIXED_HEIGHT    = 0x1000;      // PSX FINAL DOOM: originally forced the middle part of a wall to be a fixed 128 units in height. PsyDoom: now forces the mid wall to be the texture height, whatever that is. Used for fences and such in Final Doom, so they don't repeat vertically.
 static constexpr uint32_t ML_VOID                = 0x4000;      // PsyDoom specific: flags a line as 'see through' in parts for occlusion culling (on the basis that it has see-through upper or lower voids) and prohibits sky walls from being rendered for the line
 static constexpr uint32_t ML_ADD_SKY_WALL_HINT   = 0x8000;      // PsyDoom specific: hints that a 'sky wall' should be added for 2 sided lines with a sky ceiling or floors. Note: if 'ML_VOID' is specified then this is ignored.
 

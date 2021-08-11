@@ -284,11 +284,14 @@ static void RV_DrawSegBlended(const rvseg_t& seg, const subsector_t& subsec) noe
     fixed_t midTy = std::min(fty, bty);
     fixed_t midBy = std::max(fby, bby);
 
-    // Final Doom: force the mid wall to be 128 units in height if this flag is specified.
+    // Final Doom: force the mid wall to be a fixed height (equal to the texture height) if this flag is specified.
     // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
-    // Note for PsyDoom this is restricted to two sided linedefs only, for more on that see 'R_DrawWalls' in the original renderer.
-    if (line.flags & ML_MIDHEIGHT_128) {
-        midTy = midBy + 128 * FRACUNIT;
+    // 
+    // Note that for PsyDoom this is restricted to two sided linedefs only; for more on that see 'R_DrawWalls' in the original renderer.
+    // Also, in the original renderer the fixed height was always '128' but for PsyDoom it's now based on the texture height.
+    // This allows us to have fence textures shorter than '128' units.
+    if (line.flags & ML_MID_FIXED_HEIGHT) {
+        midTy = midBy + tex_m.height * FRACUNIT;
     }
 
     // Compute the top and bottom v coordinate

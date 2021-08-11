@@ -721,7 +721,7 @@ ML_MAPPED               -- Set when the line is to be shown on the automap
 ML_MIDMASKED            -- PSX DOOM: Middle texture has translucent or alpha blended pixels
 ML_MIDTRANSLUCENT       -- PSX DOOM: Middle texture drawn with alpha blending
 ML_BLOCKPRJECTILE       -- PSX DOOM: Line stops projectiles
-ML_MIDHEIGHT_128        -- PSX FINAL DOOM: forces the middle part of a wall to be a fixed 128 units in height (used for fences)
+ML_MID_FIXED_HEIGHT     -- PSX FINAL DOOM: forces the middle part of a wall to have a fixed height equal to the texture height (used for fences that don't repeat vertically)
 ML_VOID                 -- PsyDoom specific: flag a line as 'see through' for occlusion culling and prohibit sky walls from being rendered
 ML_ADD_SKY_WALL_HINT    -- PsyDoom specific: hints that a 'sky wall' should be added for 2 sided lines with a sky ceiling or floors
 ```

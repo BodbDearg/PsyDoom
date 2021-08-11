@@ -153,35 +153,6 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             return;
     }
 
-    // Final Doom: force the mid wall to be 128 units (127 for PsyDoom) in height if this flag is specified.
-    // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
-    if (line.flags & ML_MIDHEIGHT_128) {
-        // PsyDoom: restricting this flag to two sided linedefs only.
-        //
-        // For some strange reason one of the maps in the original PSX Doom (MAP15, Spawning Vats) has this flag set on some of the one
-        // sided wall linedefs, which causes them to be clipped without this modification. Perhaps the flag meant something else temporarily
-        // during the development of the original PSX Doom? I don't think it makes sense for this flag to be used on anything other than 2
-        // sided lines anyway so this change should be OK to apply without condition to both Doom and Final Doom:
-        #if PSYDOOM_MODS
-            const bool bApplyFixedWallHeightFlag = (line.flags & ML_TWOSIDED);
-        #else 
-            const bool bApplyFixedWallHeightFlag = true;
-        #endif
-
-        if (bApplyFixedWallHeightFlag) {
-            // Note again, since texture space coords are opposite to view space coords, we do a -128 instead of +128 you might expect
-            //
-            // PsyDoom: tweak the height to be '127' rather than '128' to avoid stuff wrapping around and causing artifacts on some fences.
-            // I would make the adjustment smaller but we are just dealing with integer coordinates here.
-            #if PSYDOOM_MODS
-                mid_ty = mid_by - 127;
-            #else
-                mid_ty = mid_by - 128;
-            #endif
-        }
-    }
-
-    // Drawing the mid wall.
     // PsyDoom: texture indexes can now be '-1' to indicate a wall has no texture (and therefore is not drawn).
     #if PSYDOOM_MODS
         const bool bMidWallHasTex = (side.midtexture >= 0);
@@ -189,6 +160,39 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
         constexpr bool bMidWallHasTex = true;
     #endif
 
+    // Final Doom: force the mid wall to be 128 units in height (127 for PsyDoom) if this flag is specified.
+    // This is used for masked fences and such, to stop them from repeating vertically; MAP23 (BALLISTYX) is a good example of this.
+    // 
+    // PsyDoom: use the texture height instead of a hardcoded '128' or '127', so we can have fences shorter than 128 units.
+    if (line.flags & ML_MID_FIXED_HEIGHT) {
+        // PsyDoom: restricting this flag to two sided linedefs only, and only for sides that have a valid texture.
+        //
+        // For some strange reason one of the maps in the original PSX Doom (MAP15, Spawning Vats) has this flag set on some of the one
+        // sided wall linedefs, which causes them to be clipped without this modification. Perhaps the flag meant something else temporarily
+        // during the development of the original PSX Doom? I don't think it makes sense for this flag to be used on anything other than 2
+        // sided lines anyway so this change should be OK to apply without condition to both Doom and Final Doom:
+        #if PSYDOOM_MODS
+            const bool bApplyFixedWallHeightFlag = (bMidWallHasTex && (line.flags & ML_TWOSIDED));
+        #else 
+            const bool bApplyFixedWallHeightFlag = true;
+        #endif
+
+        if (bApplyFixedWallHeightFlag) {
+            // Note again, since texture space coords are opposite to view space coords, we do a -128 instead of +128 you might expect.
+            //
+            // PsyDoom: use the texture height as the fixed height, so we can have fences shorter than 128 units.
+            // PsyDoom: tweak the height to be 'tex.height - 1' rather than 'tex.height' to avoid stuff wrapping around and causing artifacts on some fences.
+            // I would make the adjustment smaller but we are just dealing with integer coordinates here.
+            #if PSYDOOM_MODS
+                texture_t& tex = gpTextures[gpTextureTranslation[side.midtexture]];
+                mid_ty = mid_by - (tex.height - 1);
+            #else
+                mid_ty = mid_by - 128;
+            #endif
+        }
+    }
+
+    // Drawing the mid wall
     if (bMidWallHasTex) {
         // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way.
         // PsyDoom: removed this restriction because 16-bit UV coord support has been added to the GPU; this allows us to do tall walls greater than 256 units.
