@@ -208,21 +208,21 @@ sector_t {
     ForEachSurroundingSector(function f)
     
     -- Get the minimum or maximum floor, ceiling or light level in surrounding sectors; if there are no surrounding sectors return 'defaultValue'
-    GetLowestSurroundingFloor(sector_t sector, float defaultValue) -> float
-    GetLowestSurroundingCeiling(sector_t sector, float defaultValue) -> float
-    GetLowestSurroundingLightLevel(sector_t sector, int32 defaultValue) -> int32
-    GetHighestSurroundingFloor(sector_t sector, float defaultValue) -> float
-    GetHighestSurroundingCeiling(sector_t sector, float defaultValue) -> float
-    GetHighestSurroundingLightLevel(sector_t sector, int32 defaultValue) -> int32
+    GetLowestSurroundingFloor(float defaultValue) -> float
+    GetLowestSurroundingCeiling(float defaultValue) -> float
+    GetLowestSurroundingLightLevel(int32 defaultValue) -> int32
+    GetHighestSurroundingFloor(float defaultValue) -> float
+    GetHighestSurroundingCeiling(float defaultValue) -> float
+    GetHighestSurroundingLightLevel(int32 defaultValue) -> int32
     
     -- Get the next floor, ceiling or light level in surrounding sectors which is lower or higher than the specified value.
     -- If no such value exists, return 'defaultValue'.
-    GetNextLowestSurroundingFloor(sector_t sector, float lowerThanValue, float defaultValue) -> float
-    GetNextLowestSurroundingCeiling(sector_t sector, float lowerThanValue, float defaultValue) -> float
-    GetNextLowestSurroundingLightLevel(sector_t sector, int32 lowerThanValue, int32 defaultValue) -> int32
-    GetNextHighestSurroundingFloor(sector_t sector, float higherThanValue, float defaultValue) -> float
-    GetNextHighestSurroundingCeiling(sector_t sector, float higherThanValue, float defaultValue) -> float
-    GetNextHighestSurroundingLightLevel(sector_t sector, int32 higherThanValue, int32 defaultValue) -> int32
+    GetNextLowestSurroundingFloor(float lowerThanValue, float defaultValue) -> float
+    GetNextLowestSurroundingCeiling(float lowerThanValue, float defaultValue) -> float
+    GetNextLowestSurroundingLightLevel(int32 lowerThanValue, int32 defaultValue) -> int32
+    GetNextHighestSurroundingFloor(float higherThanValue, float defaultValue) -> float
+    GetNextHighestSurroundingCeiling(float higherThanValue, float defaultValue) -> float
+    GetNextHighestSurroundingLightLevel(int32 higherThanValue, int32 defaultValue) -> int32
 }
 ```
 ### line_t
