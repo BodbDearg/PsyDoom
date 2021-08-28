@@ -46,6 +46,57 @@ static line_t gPartialThingLine {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom modification: sets the target point for a shot given an attack vector and origin point.
+// Checks for overflows and will shorten the attack line to be within the bounds of the map if it extends beyond the edge.
+// Uses 64-bit arithmetic available in modern CPUs to make these operations easier and more efficient.
+//------------------------------------------------------------------------------------------------------------------------------------------
+#if PSYDOOM_MODS
+static void P_SetShootTargetPt(
+    const fixed_t originX,
+    const fixed_t originY,
+    fixed_t attackDx,
+    fixed_t attackDy
+) noexcept {
+    // Compute the proposed target point (48.16 format)
+    int64_t target64x = (int64_t) originX + attackDx;
+    int64_t target64y = (int64_t) originY + attackDy;
+
+    // This routine scales the attack vector by the given 16.16 fraction and recomputes the target point
+    const auto scaleShootVec = [&](const fixed_t frac) {
+        attackDx = (fixed_t) d_rshift<FRACBITS>((int64_t) attackDx * frac);
+        attackDy = (fixed_t) d_rshift<FRACBITS>((int64_t) attackDy * frac);
+        target64x = (int64_t) originX + attackDx;
+        target64y = (int64_t) originY + attackDy;
+    };
+
+    // Check to make sure the target point would not be out of bounds on each axis.
+    // If out of bounds then reduce the length on that axis by the amount out of bounds (over step).
+    // Note: this scale operation will incur some precision loss, but it's far better than the alternative of overflowing.
+    if (target64x < INT32_MIN) {
+        const int64_t overStep = target64x - INT32_MIN;
+        scaleShootVec((fixed_t)(d_lshift<FRACBITS>(attackDx - overStep) / attackDx));
+    }
+    else if (target64x > INT32_MAX) {
+        const int64_t overStep = target64x - INT32_MAX;
+        scaleShootVec((fixed_t)(d_lshift<FRACBITS>(attackDx - overStep) / attackDx));
+    }
+
+    if (target64y < INT32_MIN) {
+        const int64_t overStep = target64y - INT32_MIN;
+        scaleShootVec((fixed_t)(d_lshift<FRACBITS>(attackDy - overStep) / attackDy));
+    }
+    else if (target64y > INT32_MAX) {
+        const int64_t overStep = target64y - INT32_MAX;
+        scaleShootVec((fixed_t)(d_lshift<FRACBITS>(attackDy - overStep) / attackDy));
+    }
+
+    // Save the target point, which should now fit inside a 32-bit integer
+    gShootX2 = (fixed_t) target64x;
+    gShootY2 = (fixed_t) target64y;
+}
+#endif  // #if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Does a raycast for the current shooter taking a shot and determines what is hit.
 // Saves the wall or thing which is hit, and the hit point etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,8 +110,16 @@ void P_Shoot2() noexcept {
     const int32_t attackRangeInt = d_fixed_to_int(gAttackRange);
     const uint32_t attackFineAngle = gAttackAngle >> ANGLETOFINESHIFT;
 
-    gShootX2 = shooter.x + attackRangeInt * gFineCosine[attackFineAngle];
-    gShootY2 = shooter.y + attackRangeInt * gFineSine[attackFineAngle];
+    #if PSYDOOM_MODS
+        // PsyDoom: use a new routine to compute the shoot target point that will check for overflows in the arithmetic.
+        // This helps prevent overflow errors near the edges of the maximum possible map area.
+        const fixed_t attackDx = attackRangeInt * gFineCosine[attackFineAngle];
+        const fixed_t attackDy = attackRangeInt * gFineSine[attackFineAngle];
+        P_SetShootTargetPt(shooter.x, shooter.y, attackDx, attackDy);
+    #else
+        gShootX2 = shooter.x + attackRangeInt * gFineCosine[attackFineAngle];
+        gShootY2 = shooter.y + attackRangeInt * gFineSine[attackFineAngle];
+    #endif
 
     // Precompute the line vector for the shot line and whether it's slope is positive
     gShootDiv.dx = gShootX2 - gShootDiv.x;
