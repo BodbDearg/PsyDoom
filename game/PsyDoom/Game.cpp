@@ -94,11 +94,12 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.bUsePalTimings = (Config::gUsePalTimings != 0);
     }
 
-    settings.bUseDemoTimings            = Config::gbUseDemoTimings;
-    settings.bUsePlayerRocketBlastFix   = Config::gbUsePlayerRocketBlastFix;
-    settings.bUseSuperShotgunDelayTweak = Config::gbUseSuperShotgunDelayTweak;
-    settings.bUseMoveInputLatencyTweak  = Config::gbUseMoveInputLatencyTweak;
-    settings.bUseItemPickupFix          = Config::gbUseItemPickupFix;
+    settings.bUseDemoTimings                = Config::gbUseDemoTimings;
+    settings.bUseExtendedPlayerShootRange   = Config::gbUseExtendedPlayerShootRange;
+    settings.bUsePlayerRocketBlastFix       = Config::gbUsePlayerRocketBlastFix;
+    settings.bUseSuperShotgunDelayTweak     = Config::gbUseSuperShotgunDelayTweak;
+    settings.bUseMoveInputLatencyTweak      = Config::gbUseMoveInputLatencyTweak;
+    settings.bUseItemPickupFix              = Config::gbUseItemPickupFix;
 
     if (Config::gUseFinalDoomPlayerMovement < 0) {
         settings.bUseFinalDoomPlayerMovement = (bFinalDoomDefaultRules) ? true : false;     // Auto decide based on the game
@@ -150,6 +151,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings = {};
     settings.bUsePalTimings                 = (gGameVariant == GameVariant::PAL);
     settings.bUseDemoTimings                = true;
+    settings.bUseExtendedPlayerShootRange   = false;
     settings.bUsePlayerRocketBlastFix       = false;
     settings.bUseSuperShotgunDelayTweak     = false;
     settings.bUseMoveInputLatencyTweak      = false;

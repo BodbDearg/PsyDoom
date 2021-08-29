@@ -418,6 +418,7 @@ bool                    gbEnableSinglePlayerLevelTimer;
 int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
+bool                    gbUseExtendedPlayerShootRange;
 bool                    gbUseItemPickupFix;
 bool                    gbUsePlayerRocketBlastFix;
 bool                    gbUseSuperShotgunDelayTweak;
@@ -557,6 +558,20 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseMoveInputLatencyTweak = iniEntry.getBoolValue(true); },
         []() { gbUseMoveInputLatencyTweak = true; }
+    },
+    {
+        "UseExtendedPlayerShootRange",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled, extends the following player attack limits:\n"
+        "#  - Max shoot/hitscan distance, from '2048' to '8192'.\n"
+        "#  - Max auto-aim distance, from '1024' to '8192'.\n"
+        "#  - Max BFG spray/tracer distance, from '1024' to '2048'.\n"
+        "#\n"
+        "# Extending these limits can make combat on large open maps less frustrating.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbUseExtendedPlayerShootRange = iniEntry.getBoolValue(true); },
+        []() { gbUseExtendedPlayerShootRange = true; }
     },
     {
         "UseItemPickupFix",

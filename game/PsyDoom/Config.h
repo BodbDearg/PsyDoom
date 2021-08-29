@@ -17,6 +17,7 @@ extern bool     gbEnableSinglePlayerLevelTimer;
 extern int32_t  gUsePalTimings;
 extern bool     gbUseDemoTimings;
 extern bool     gbUseMoveInputLatencyTweak;
+extern bool     gbUseExtendedPlayerShootRange;
 extern bool     gbUseItemPickupFix;
 extern bool     gbUsePlayerRocketBlastFix;
 extern bool     gbUseSuperShotgunDelayTweak;

@@ -586,15 +586,22 @@ void A_FirePlasma(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept 
 // Saves the resulting vertical slope to 'gBulletSlope'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_BulletSlope(mobj_t& mobj) noexcept {
-    gBulletSlope = P_AimLineAttack(mobj, mobj.angle, 1024 * FRACUNIT);
+    // PsyDoom: aim range can be further extended
+    #if PSYDOOM_MODS
+        const fixed_t aimRange = (Game::gSettings.bUseExtendedPlayerShootRange) ? EXT_MISSILERANGE : 1024 * FRACUNIT;
+    #else
+        const fixed_t aimRange = 1024 * FRACUNIT;
+    #endif
+
+    gBulletSlope = P_AimLineAttack(mobj, mobj.angle, aimRange);
 
     constexpr angle_t AIM_WIGGLE = ANG45 / 8;
 
     if (!gpLineTarget) {
-        gBulletSlope = P_AimLineAttack(mobj, mobj.angle + AIM_WIGGLE, 1024 * FRACUNIT);
+        gBulletSlope = P_AimLineAttack(mobj, mobj.angle + AIM_WIGGLE, aimRange);
 
         if (!gpLineTarget) {
-            gBulletSlope = P_AimLineAttack(mobj, mobj.angle - AIM_WIGGLE, 1024 * FRACUNIT);
+            gBulletSlope = P_AimLineAttack(mobj, mobj.angle - AIM_WIGGLE, aimRange);
         }
     }
 }
@@ -613,7 +620,14 @@ static void P_GunShot(mobj_t& mobj, const bool bAccurate) noexcept {
         angle += ((angle_t) P_SubRandom()) << 18;
     }
 
-    P_LineAttack(mobj, angle, MISSILERANGE, INT32_MAX, damage);
+    // PsyDoom: shoot range can be further extended
+    #if PSYDOOM_MODS
+        const fixed_t attackRange = (Game::gSettings.bUseExtendedPlayerShootRange) ? EXT_MISSILERANGE : MISSILERANGE;
+    #else
+        const fixed_t attackRange = MISSILERANGE;
+    #endif
+    
+    P_LineAttack(mobj, angle, attackRange, INT32_MAX, damage);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -646,8 +660,15 @@ void A_FireShotgun(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept
     // Do muzzle flash
     P_SetPsprite(player, ps_flash, weaponInfo.flashstate);
 
+    // PsyDoom: shoot range can be further extended
+    #if PSYDOOM_MODS
+        const fixed_t attackRange = (Game::gSettings.bUseExtendedPlayerShootRange) ? EXT_MISSILERANGE : MISSILERANGE;
+    #else
+        const fixed_t attackRange = MISSILERANGE;
+    #endif
+
     // Decide on vertical aim and fire the 7 shotgun pellets (4-16 damage each)
-    const fixed_t aimZSlope = P_AimLineAttack(playerMobj, playerMobj.angle, MISSILERANGE);
+    const fixed_t aimZSlope = P_AimLineAttack(playerMobj, playerMobj.angle, attackRange);
 
     for (int32_t pelletIdx = 0; pelletIdx < 7; ++pelletIdx) {
         // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
@@ -656,7 +677,7 @@ void A_FireShotgun(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept
         const angle_t angleVariance = ((angle_t) P_SubRandom()) << 18;
         const angle_t angle = playerMobj.angle + angleVariance;
 
-        P_LineAttack(playerMobj, angle, MISSILERANGE, aimZSlope, damage);
+        P_LineAttack(playerMobj, angle, attackRange, aimZSlope, damage);
     }
 }
 
@@ -678,6 +699,13 @@ void A_FireShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcep
     // Figure out the vertical aim slope
     P_BulletSlope(playerMobj);
 
+    // PsyDoom: shoot range can be further extended
+    #if PSYDOOM_MODS
+        const fixed_t attackRange = (Game::gSettings.bUseExtendedPlayerShootRange) ? EXT_MISSILERANGE : MISSILERANGE;
+    #else
+        const fixed_t attackRange = MISSILERANGE;
+    #endif
+
     // Fire all of the 20 shotgun pellets (5-15 damage each)
     for (int32_t pelletIdx = 0; pelletIdx < 20; ++pelletIdx) {
         // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
@@ -687,7 +715,7 @@ void A_FireShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcep
         const angle_t angle = playerMobj.angle + angleVariance;
         const fixed_t aimSlope = gBulletSlope + P_SubRandom() * 32;
 
-        P_LineAttack(playerMobj, angle, MISSILERANGE, aimSlope, damage);
+        P_LineAttack(playerMobj, angle, attackRange, aimSlope, damage);
     }
 }
 
@@ -745,11 +773,18 @@ void A_BFGSpray(mobj_t& mobj) noexcept {
     ASSERT(mobj.target);
     mobj_t& target = *mobj.target;
 
+    // PsyDoom: spray/tracer range can be further extended to '2048' units
+    #if PSYDOOM_MODS
+        const fixed_t attackRange = (Game::gSettings.bUseExtendedPlayerShootRange) ? 2048 * FRACUNIT : 1024 * FRACUNIT;
+    #else
+        const fixed_t attackRange = 1024 * FRACUNIT;
+    #endif
+
     // Spawn explosions from -45 degrees relative to the player to +45 degrees
     constexpr int32_t NUM_EXPLOSIONS = 40;
 
     for (int32_t explosionIdx = 0; explosionIdx < NUM_EXPLOSIONS; ++explosionIdx) {
-        P_AimLineAttack(target, mobj.angle - ANG45 + (ANG90 / NUM_EXPLOSIONS) * explosionIdx, 1024 * FRACUNIT);
+        P_AimLineAttack(target, mobj.angle - ANG45 + (ANG90 / NUM_EXPLOSIONS) * explosionIdx, attackRange);
         mobj_t* const pLineTarget = gpLineTarget;
 
         if (!pLineTarget)

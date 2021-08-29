@@ -619,20 +619,27 @@ mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noex
 // Spawn a missile for the player and try to do a little auto-aim
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept {
+    // PsyDoom: aim range can be further extended
+    #if PSYDOOM_MODS
+        const fixed_t aimRange = (Game::gSettings.bUseExtendedPlayerShootRange) ? EXT_MISSILERANGE : 1024 * FRACUNIT;
+    #else
+        const fixed_t aimRange = 1024 * FRACUNIT;
+    #endif
+
     // Figure out the vertical aim slope.
     // If we don't hit a thing then do a bit of auto-aim and wiggle the aim a bit to try and hit something.
     angle_t aimAngle = source.angle;
-    fixed_t aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
+    fixed_t aimSlope = P_AimLineAttack(source, aimAngle, aimRange);
 
     if (!gpLineTarget) {
         constexpr angle_t AIM_WIGGLE = ANG45 / 8;
 
         aimAngle = source.angle + AIM_WIGGLE;
-        aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
+        aimSlope = P_AimLineAttack(source, aimAngle, aimRange);
 
         if (!gpLineTarget) {
             aimAngle = source.angle - AIM_WIGGLE;
-            aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
+            aimSlope = P_AimLineAttack(source, aimAngle, aimRange);
 
             // If we still haven't hit a thing after all these attempts then just shoot dead level ahead
             if (!gpLineTarget) {
