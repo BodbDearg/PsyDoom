@@ -73,7 +73,23 @@ static void applyCommonMapPatches() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Fix a bug in Doom with the House Of Pain where an unintended door linedef causes one of the ceilings to collapse permanently.
+// Fix bugs in Doom MAP04, 'Command Control' where step textures appear black
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_CommandControl() noexcept {
+    applyCommonMapPatches();
+
+    // These steps need to have their 'lower unpegged' flag cleared
+    modifyLinedefs(
+        [](line_t& line) { line.flags &= ~ML_DONTPEGBOTTOM; },
+        337, 746, 747, 748
+    );
+
+    // This step needs a texture coordinate adjustment
+    gpSides[253].rowoffset = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix a bug in Doom with MAP19 ('House Of Pain') where an unintended door linedef causes one of the ceilings to collapse permanently.
 // Removes the line action which causes the bug.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_HouseOfPain() noexcept {
@@ -82,7 +98,7 @@ static void patchMap_HouseOfPain() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Fixes the starting hut for MAP47, The Citadel for Doom.
+// Fixes the starting hut for MAP47, 'The Citadel' for Doom.
 // Makes it so you can see past it, since it is shorter than buildings around it.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheCitadel() noexcept {
@@ -94,7 +110,7 @@ static void patchMap_TheCitadel() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Fix various issues in MAP23, Ballistyx for Final Doom
+// Fix various issues in MAP23, 'Ballistyx' for Final Doom
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Ballistyx() noexcept {
     applyCommonMapPatches();
@@ -119,7 +135,7 @@ static const PatchDef gPatches[] = {
     {  56435, 0x5EE4CE66B4AD2179, 0xA7F86B8608F27644, applyCommonMapPatches },          // MAP01
     { 119369, 0x520B906763CDD74E, 0x09DC01B15DE80996, applyCommonMapPatches },          // MAP02
     { 110284, 0xCAD12871033AFF9B, 0xC6BAB8F9D345F412, applyCommonMapPatches },          // MAP03
-    {  92341, 0x816042E5BDB5791D, 0x4A4BAF1EA013944E, applyCommonMapPatches },          // MAP04
+    {  92341, 0x816042E5BDB5791D, 0x4A4BAF1EA013944E, patchMap_CommandControl },        // MAP04
     {  89865, 0x366E3D83FCCF8A0A, 0xE01CEEDD5C7A0A07, applyCommonMapPatches },          // MAP05
     { 124094, 0xF33F520768E89720, 0x7223B13226C5F0A2, applyCommonMapPatches },          // MAP06
     { 108814, 0xFD543482A4CA9ED8, 0x69A50C28FA78C1C7, applyCommonMapPatches },          // MAP07
