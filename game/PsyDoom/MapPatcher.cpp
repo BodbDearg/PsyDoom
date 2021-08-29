@@ -98,6 +98,18 @@ static void patchMap_HouseOfPain() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix a bug in Doom with MAP22 ('Limbo') where a single step/lower-wall is not rendered
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Limbo() noexcept {
+    applyCommonMapPatches();
+
+    // This texture was not assigned in the original map, but was defaulted to texture index '0' by the original PSX Doom code in 'P_Init'.
+    // PsyDoom now allows walls to deliberately have no texture assigned so they can be invisible, but that change causes a bug with this
+    // step (beside the lift) not appearing in the room with the lift and the Baron. Fix by replicating the original PSX behavior.
+    gpSides[967].bottomtexture = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fixes the starting hut for MAP47, 'The Citadel' for Doom.
 // Makes it so you can see past it, since it is shorter than buildings around it.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -153,7 +165,7 @@ static const PatchDef gPatches[] = {
     {  75515, 0x2A4A41FE016B71FE, 0x97F66D95A1AFA7A3, patchMap_HouseOfPain },           // MAP19
     { 143483, 0x4962D3BA6019A036, 0x646DEDE003BFC32B, applyCommonMapPatches },          // MAP20
     {  86538, 0xE5499992FD023A40, 0x469BEA3CB45C18B4, applyCommonMapPatches },          // MAP21
-    { 109754, 0x5C64E68F44663E1E, 0xF362C88FA72CCA3D, applyCommonMapPatches },          // MAP22
+    { 109754, 0x5C64E68F44663E1E, 0xF362C88FA72CCA3D, patchMap_Limbo },                 // MAP22
     {  32935, 0xC33A05D44E4AA255, 0xF89E51CE24DB6C63, applyCommonMapPatches },          // MAP23
     {  52915, 0xB27126F576E8CCA8, 0x3C38035D2CB82BDA, applyCommonMapPatches },          // MAP24
     {  72352, 0xF4B4463AEE115325, 0x550D3C0C7625E330, applyCommonMapPatches },          // MAP25
