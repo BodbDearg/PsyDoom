@@ -141,12 +141,14 @@ GameInfo {
     NumMaps = 59
     NumRegularMaps = 54
     FinalDoomGameRules = false
+    DisableMultiplayer = false
 }
 ```
 Internal Fields:
 - `NumMaps`: the total number of maps available in the game, including secret ones. For Doom and Final Doom this value was `59` and `30` respectively. Affects which map numbers are valid to cheat warp to etc. Must be between 1 and 255.
 - `NumRegularMaps`: the number of non-secret maps in the game. Any maps after the last non-secret map are assumed to be secret maps. Affects when the game detects the last (normal) level of the game has been completed and which levels can be used as the starting point for a multiplayer game. For Doom and Final Doom this value was `54` and `30` respectively. Must be between 1 and 255.
 - `FinalDoomGameRules`: whether Final Doom style game rules should be used. Final Doom forward movement is slightly slower, and only 16 Lost Souls can spawn from Pain Elementals.
+- `DisableMultiplayer`: whether multiplayer game modes should be disallowed. Disabling multiplayer can be useful for mods that do tricks like Doom 64's faux-3D bridges, or 'silent teleporters' which would break in a multiplayer game.
 ## `MusicTrack` definition
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:
 ```

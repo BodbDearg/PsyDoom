@@ -13,6 +13,7 @@
 #include "o_main.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/Network.h"
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
@@ -393,28 +394,42 @@ gameaction_t M_Ticker() noexcept {
     }
 
     if (gCursorPos[0] == gamemode) {
-        // Menu left/right movements: game mode
-        if (bMenuRight) {
-            if (gStartGameType < gt_deathmatch) {
-                gStartGameType = (gametype_t)((uint32_t) gStartGameType + 1);
+        // Menu left/right movements: game mode.
+        // PsyDoom: multiplayer can now be disabled by mods that don't want to support it or which can't support it.
+        #if PSYDOOM_MODS
+            const bool bAllowMultiplayer = (!MapInfo::getGameInfo().bDisableMultiplayer);
+        #else
+            const bool bAllowMultiplayer = true;
+        #endif
 
-                if (gStartGameType == gt_coop) {
-                    gStartMapOrEpisode = 1;
+        if (bAllowMultiplayer) {
+            if (bMenuRight) {
+                if (gStartGameType < gt_deathmatch) {
+                    gStartGameType = (gametype_t)((uint32_t) gStartGameType + 1);
+
+                    if (gStartGameType == gt_coop) {
+                        gStartMapOrEpisode = 1;
+                    }
+
+                    S_StartSound(nullptr, sfx_swtchx);
                 }
-
-                S_StartSound(nullptr, sfx_swtchx);
             }
-        }
-        else if (bMenuLeft) {
-            if (gStartGameType != gt_single) {
-                gStartGameType = (gametype_t)((uint32_t) gStartGameType -1);
+            else if (bMenuLeft) {
+                if (gStartGameType != gt_single) {
+                    gStartGameType = (gametype_t)((uint32_t) gStartGameType -1);
 
-                if (gStartGameType == gt_single) {
-                    gStartMapOrEpisode = 1;
+                    if (gStartGameType == gt_single) {
+                        gStartMapOrEpisode = 1;
+                    }
+
+                    S_StartSound(nullptr, sfx_swtchx);
                 }
-
-                S_StartSound(nullptr, sfx_swtchx);
             }
+        } else {
+            #if PSYDOOM_MODS
+                // PsyDoom: play a sound when trying to switch to multiplayer when it is not allowed
+                S_StartSound(nullptr, sfx_itemup);
+            #endif
         }
 
         if (gStartGameType == gt_single) {

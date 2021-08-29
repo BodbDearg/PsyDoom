@@ -58,6 +58,7 @@ GameInfo::GameInfo() noexcept
     : numMaps((Game::gGameType == GameType::FinalDoom) ? 30 : 59)
     , numRegularMaps((Game::gGameType == GameType::FinalDoom) ? 30 : 54)
     , bFinalDoomGameRules(Game::gGameType == GameType::FinalDoom)
+    , bDisableMultiplayer(false)
 {
 }
 
@@ -167,6 +168,7 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.numMaps = block.getSingleIntValue("NumMaps", gameInfo.numMaps);
     gameInfo.numRegularMaps = block.getSingleIntValue("NumRegularMaps", gameInfo.numRegularMaps);
     gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
+    gameInfo.bDisableMultiplayer = (block.getSingleIntValue("DisableMultiplayer", gameInfo.bDisableMultiplayer) > 0);
 
     if ((gameInfo.numMaps < 1) || (gameInfo.numMaps > 255)) {
         error(block, "GameInfo: 'NumMaps' must be between 1 and 255!");
