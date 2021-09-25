@@ -427,8 +427,10 @@ gameaction_t M_Ticker() noexcept {
             }
         } else {
             #if PSYDOOM_MODS
-                // PsyDoom: play a sound when trying to switch to multiplayer when it is not allowed
-                S_StartSound(nullptr, sfx_itemup);
+                if (bMenuRight || bMenuLeft) {
+                    // PsyDoom: play a sound when trying to switch to multiplayer when it is not allowed
+                    S_StartSound(nullptr, sfx_itemup);
+                }
             #endif
         }
 
