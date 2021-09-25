@@ -548,9 +548,10 @@ void R_DrawWallPiece(
                     vtCur += vTopToCenter - vHalfScreen;
 
                     #if PSYDOOM_MODS
-                        clipWtColR += (uint8_t)(rTopToCenter - rHalfScreen);
-                        clipWtColG += (uint8_t)(gTopToCenter - gHalfScreen);
-                        clipWtColB += (uint8_t)(bTopToCenter - bHalfScreen);
+                        // Note: need to guard against underflow due to rounding of potential negative numbers (color value deltas) working like a 'floor()' operation
+                        clipWtColR = (uint8_t) std::max(wtColR + rTopToCenter - rHalfScreen, 0);
+                        clipWtColG = (uint8_t) std::max(wtColG + gTopToCenter - gHalfScreen, 0);
+                        clipWtColB = (uint8_t) std::max(wtColB + bTopToCenter - bHalfScreen, 0);
                     #endif
                 }
 
@@ -560,9 +561,10 @@ void R_DrawWallPiece(
                     vbCur = vtOrig + vTopToCenter + vHalfScreen;
 
                     #if PSYDOOM_MODS
-                        clipWbColR = (uint8_t)(wtColR + rTopToCenter + rHalfScreen);
-                        clipWbColG = (uint8_t)(wtColG + gTopToCenter + gHalfScreen);
-                        clipWbColB = (uint8_t)(wtColB + bTopToCenter + bHalfScreen);
+                        // Note: need to guard against underflow due to rounding of potential negative numbers (color value deltas) working like a 'floor()' operation
+                        clipWbColR = (uint8_t) std::max(wtColR + rTopToCenter + rHalfScreen, 0);
+                        clipWbColG = (uint8_t) std::max(wtColG + gTopToCenter + gHalfScreen, 0);
+                        clipWbColB = (uint8_t) std::max(wtColB + bTopToCenter + bHalfScreen, 0);
                     #endif
                 }
             }
