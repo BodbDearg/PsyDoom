@@ -1460,12 +1460,14 @@ void A_VileChase(mobj_t& actor) noexcept {
                 P_SetMobjState(actor, S_VILE_HEAL1);
                 S_StartSound(&raiseMobj, sfx_slop);
 
-                // Put the thing being raised into the raising state, make taller again, restore health, flags and clear target
+                // Put the thing being raised into the raising state, make taller again, restore health, flags and clear target.
+                // Note: PSX Doom blending flags need to be preserved however!
                 mobjinfo_t& raiseObjInfo = *raiseMobj.info;
                 P_SetMobjState(raiseMobj, raiseObjInfo.raisestate);
+                const uint32_t flagsToPreserve = raiseMobj.flags & MF_ALL_BLEND_FLAGS;
 
                 raiseMobj.height = d_lshift<2>(raiseMobj.height);
-                raiseMobj.flags = raiseObjInfo.flags;
+                raiseMobj.flags = raiseObjInfo.flags | flagsToPreserve;
                 raiseMobj.health = raiseObjInfo.spawnhealth;
                 raiseMobj.target = nullptr;
 
