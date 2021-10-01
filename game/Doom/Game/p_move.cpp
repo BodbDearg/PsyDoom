@@ -312,9 +312,9 @@ static void PM_CheckPosition() noexcept {
     // Initialize various movement checking variables
     gpMoveThing = nullptr;
     gpBlockLine = nullptr;
-    gTmFloorZ = newSector.floorheight;          // Initial value: lowered as collision testing touches lines
-    gTmCeilingZ = newSector.ceilingheight;      // Initial value: raised as collision testing touches lines
-    gTmDropoffZ = newSector.floorheight;        // Initial value: Lowered as collision testing touches lines
+    gTmFloorZ = newSector.floorheight;          // Initial value: raised as collision testing touches lines
+    gTmCeilingZ = newSector.ceilingheight;      // Initial value: lowered as collision testing touches lines
+    gTmDropoffZ = newSector.floorheight;        // Initial value: lowered as collision testing touches lines
 
     #if PSYDOOM_MODS
         gpCrossCheckLines.clear();
