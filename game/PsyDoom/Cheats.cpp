@@ -235,6 +235,13 @@ static void doToggleAllMapThingsCheat() noexcept {
 static void doToggleXRayVisionCheat() noexcept {
     player_t& player = gPlayers[gCurPlayerIndex];
     player.cheats ^= CF_XRAYVISION;
+    gStatusBar.messageTicsLeft = 30;
+
+    if (player.cheats & CF_XRAYVISION) {
+        gStatusBar.message = "X-Ray Vision ON.";
+    } else {
+        gStatusBar.message = "X-Ray Vision OFF.";
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

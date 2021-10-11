@@ -552,9 +552,21 @@ void P_CheckCheats() noexcept {
                 }   break;
 
                 // Enable/disable 'xray vision' cheat
-                case CHT_SEQ_XRAY_VISION:
+                case CHT_SEQ_XRAY_VISION: {
                     player.cheats ^= CF_XRAYVISION;
-                    break;
+
+                    // PsyDoom addition: show a message when this cheat is enabled and disabled to avoid confusion.
+                    // Making this non-optional, as it doesn't detract from the original game experience.
+                    #if PSYDOOM_MODS
+                        gStatusBar.messageTicsLeft = 1;
+
+                        if (player.cheats & CF_XRAYVISION) {
+                            gStatusBar.message = "X-Ray Vision ON.";
+                        } else {
+                            gStatusBar.message = "X-Ray Vision OFF.";
+                        }
+                    #endif
+                }   break;
 
             #if PSYDOOM_MODS
                 // Re-add in the VRAM viewer that was not available in the retail build
