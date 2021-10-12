@@ -340,6 +340,10 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
                 ceiling.direction = 1;
                 ceiling.speed = CEILSPEED;
                 break;
+                
+            case customCeiling:
+                ASSERT_FAIL("Custom ceilings should not use this function!");
+                break;
         }
 
         // Remember the ceiling type and sector tag, and add to the active ceilings list

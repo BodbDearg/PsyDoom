@@ -391,7 +391,7 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
         // The special operating on the sector might not be a regular door, it could be a custom door or something else.
         // Detect that scenario here by checking the thinker function, and no-op if current thinker is incompatible:
         thinker_t* const pThinker = (thinker_t*) doorSector.specialdata;
-        const bool bIsNormalDoorThinker = (pThinker && (pThinker->function == (void*) &T_VerticalDoor));
+        const bool bIsNormalDoorThinker = (pThinker && (pThinker->function == (think_t) &T_VerticalDoor));
 
         if (pThinker && (!bIsNormalDoorThinker))
             return;

@@ -36,11 +36,9 @@ static fixed_t gRvMap_AutomapScale;
 // Automap colors to use if deliberately brightening automap lines for the Vulkan renderer.
 // The brightening is done to compensate for lines appearing dimmer, due to them being thinner at high resolutions.
 static constexpr uint32_t BRIGHT_AM_COLOR_RED       = 0xFF0000;
-static constexpr uint32_t BRIGHT_AM_COLOR_GREEN     = 0x00FF00;
 static constexpr uint32_t BRIGHT_AM_COLOR_BROWN     = 0xFFAA59;
 static constexpr uint32_t BRIGHT_AM_COLOR_YELLOW    = 0xFFFF00;
 static constexpr uint32_t BRIGHT_AM_COLOR_GREY      = 0xBBBBBB;
-static constexpr uint32_t BRIGHT_AM_COLOR_AQUA      = 0x0080FF;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Compute the position and rotation to use for the automap for the player, taking into account framerate independent movement.

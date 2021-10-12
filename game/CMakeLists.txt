@@ -436,10 +436,10 @@ if (COMPILER_MSVC)
     target_compile_options(${GAME_TGT_NAME} PUBLIC /bigobj)
 
     # Warnings
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4102)     # No unreferenced label warnings
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)     # Negating unsigned integer
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4245)     # Conversion from signed to unsigned
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4702)     # Unreachable code
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4102)     # Disable: no unreferenced label warnings
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)     # Disable: negating unsigned integer
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4245)     # Disable: conversion from signed to unsigned
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4702)     # Disable: unreachable code
     target_compile_options(${GAME_TGT_NAME} PUBLIC /W4)         # Enable all warnings (except the ones disabled above)
 
     # MSVC: Don't complain about using regular 'std::fopen()' etc.
@@ -448,12 +448,18 @@ else()
     add_common_target_compile_options(${GAME_TGT_NAME})
 endif()
 
+# Clang or GCC specific
+if (COMPILER_CLANG OR COMPILER_GCC)
+    # Warnings
+    target_compile_options(${GAME_TGT_NAME} PUBLIC -Wno-format-security)        # Disable: format string is not a string literal (potentially insecure)
+endif()
+
 # Setup target compile options
 if (PLATFORM_WINDOWS)
     set_property(TARGET ${GAME_TGT_NAME} PROPERTY WIN32_EXECUTABLE true)        # Win32 GUI APP
     set_property(TARGET ${GAME_TGT_NAME} PROPERTY VS_DPI_AWARE "PerMonitor")    # Make the game DPI-aware so it correctly detects screen resolution
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DUNICODE -D_UNICODE)   # Use Unicode WinMain()
-elseif(PLATFORM_MAC)
+elseif (PLATFORM_MAC)
     SET_TARGET_PROPERTIES(${GAME_TGT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
 elseif (PLATFORM_LINUX)
     target_compile_options(${GAME_TGT_NAME} PRIVATE -pthread)

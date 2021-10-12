@@ -181,7 +181,11 @@ static int32_t              gCastFrames;            // Tracks how many frames a 
 static int32_t              gCastOnMelee;           // If non zero then the cast member should do a melee attack
 static bool                 gbCastDeath;            // Are we killing the current cast member?
 static const state_t*       gpCastState;            // Current state being displayed for the cast character
-static texture_t            gTex_DEMON;             // The demon (icon of sin) background for the DOOM II finale
+
+// PsyDoom: the background for the finale can now be anything as it is sourced from MAPINFO
+#if !PSYDOOM_MODS
+    static texture_t gTex_DEMON;    // The demon (icon of sin) background for the DOOM II finale
+#endif
 
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
