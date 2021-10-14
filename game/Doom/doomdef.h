@@ -253,6 +253,9 @@ struct degenmobj_t {
     fixed_t         x;
     fixed_t         y;
     fixed_t         z;
+#if PSYDOOM_MODS
+    int32_t         tag;
+#endif
     subsector_t*    subsector;
 };
 
