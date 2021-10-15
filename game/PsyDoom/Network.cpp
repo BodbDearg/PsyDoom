@@ -289,7 +289,7 @@ bool sendBytes(const void* const pBuffer, const int32_t numBytes) noexcept {
             asio::buffer(pBuffer, (size_t) numBytes),
             [&](const asio::error_code& error, const std::size_t bytesWritten) noexcept {
                 bDoneAsyncOp = true;
-                bWasSuccessful = ((!error) && (bytesWritten == numBytes));
+                bWasSuccessful = ((!error) && (bytesWritten == (size_t) numBytes));
             }
         );
 
@@ -336,7 +336,7 @@ bool recvBytes(void* pBuffer, const int32_t numBytes) noexcept {
             asio::buffer(pBuffer, (size_t) numBytes),
             [&](const asio::error_code error, const std::size_t bytesRead) noexcept {
                 bDoneAsyncOp = true;
-                bWasSuccessful = ((!error) && (bytesRead == numBytes));
+                bWasSuccessful = ((!error) && (bytesRead == (size_t) numBytes));
             }
         );
 

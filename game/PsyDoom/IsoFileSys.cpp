@@ -217,7 +217,7 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
 
             // If the record says it's zero length then it means there are no more records in the directory.
             // Otherwise sanity check some things about the record to make sure it is good.
-            const int32_t recordLen = (int32_t) record.recordLen;
+            const uint8_t recordLen = record.recordLen;
 
             if (recordLen == 0)
                 break;

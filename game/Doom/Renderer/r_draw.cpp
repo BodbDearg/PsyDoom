@@ -145,7 +145,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     uint32_t curLeafIdx = 0;
 
     #if PSYDOOM_LIMIT_REMOVING
-        const int32_t maxNewClipVerts = subsec.numLeafEdges * 8;
+        const size_t maxNewClipVerts = subsec.numLeafEdges * 8;
         
         if (maxNewClipVerts > gNewClipVerts.size()) {
             gNewClipVerts.resize(maxNewClipVerts);
@@ -363,7 +363,7 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
 
             // Clipping required: will make a new vertex because of the clipping operation:
             #if PSYDOOM_LIMIT_REMOVING
-                ASSERT(gNumNewClipVerts < gNewClipVerts.size());    // Sanity check: buffer should always be big enough
+                ASSERT((size_t) gNumNewClipVerts < gNewClipVerts.size());    // Sanity check: buffer should always be big enough
             #endif
 
             vertex_t& newVert = gNewClipVerts[gNumNewClipVerts];
@@ -471,7 +471,7 @@ int32_t R_CheckLeafSide(const bool bRightViewPlane, const leaf_t& leaf) noexcept
     #if PSYDOOM_MODS
         #if PSYDOOM_LIMIT_REMOVING
             // For limit removing builds ensure the std::vector is big enough and oversize deliberately to service future allocations
-            const int32_t numLeafPoints = numLeafEdges + 1;
+            const size_t numLeafPoints = numLeafEdges + 1;
 
             if (gbPointsOnOutside.size() < numLeafPoints) {
                 gbPointsOnOutside.resize(numLeafPoints * 2);
@@ -608,7 +608,7 @@ int32_t R_LeftEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         }
 
         #if PSYDOOM_LIMIT_REMOVING
-            ASSERT(gNumNewClipVerts < gNewClipVerts.size());    // Sanity check: buffer should always be big enough
+            ASSERT((size_t) gNumNewClipVerts < gNewClipVerts.size());   // Sanity check: buffer should always be big enough
         #endif
 
         vertex_t& newVert = gNewClipVerts[gNumNewClipVerts];
@@ -757,7 +757,7 @@ int32_t R_RightEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         }
 
         #if PSYDOOM_LIMIT_REMOVING
-            ASSERT(gNumNewClipVerts < gNewClipVerts.size());    // Sanity check: buffer should always be big enough
+            ASSERT((size_t) gNumNewClipVerts < gNewClipVerts.size());   // Sanity check: buffer should always be big enough
         #endif
 
         vertex_t& newVert = gNewClipVerts[gNumNewClipVerts];

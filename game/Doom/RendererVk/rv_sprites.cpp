@@ -285,7 +285,7 @@ static void RV_SpriteFrag_VisitSubsector(const subsector_t& subsec, const Sprite
     if (drawSubsecIdx < 0)
         return;
 
-    ASSERT(drawSubsecIdx < gRvDrawSubsecSprFrags.size());
+    ASSERT((size_t) drawSubsecIdx < gRvDrawSubsecSprFrags.size());
 
     // Add this sprite fragment to the draw list for the subsector
     const int32_t sprFragIdx = (int32_t) gRvSpriteFrags.size();
@@ -551,7 +551,7 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unused]] const int32_t drawSubsecIdx) noexcept {
     // Sanity check!
-    ASSERT(drawSubsecIdx < gRvDrawSubsecs.size());
+    ASSERT((size_t) drawSubsecIdx < gRvDrawSubsecs.size());
 
     // Early out if there are no things in the sector
     sector_t& sector = *subsec.sector;
@@ -621,13 +621,13 @@ void RV_BuildSpriteFragLists() noexcept {
 void RV_DrawSubsecSpriteFrags(const int32_t drawSubsecIdx) noexcept {
     // Firstly gather all of the sprite fragments for this draw subsector
     ASSERT(gRvSortedFrags.empty());
-    ASSERT(drawSubsecIdx < gRvDrawSubsecs.size());
+    ASSERT((size_t) drawSubsecIdx < gRvDrawSubsecs.size());
 
     int32_t nextSprIdx = gRvDrawSubsecSprFrags[drawSubsecIdx];
     const SpriteFrag* const pAllSprFrags = gRvSpriteFrags.data();
 
     while (nextSprIdx >= 0) {
-        ASSERT(nextSprIdx < gRvSpriteFrags.size());
+        ASSERT((size_t) nextSprIdx < gRvSpriteFrags.size());
         const SpriteFrag& sprFrag = pAllSprFrags[nextSprIdx];
         gRvSortedFrags.emplace_back(&sprFrag);
         nextSprIdx = sprFrag.nextSubsecFragIdx;

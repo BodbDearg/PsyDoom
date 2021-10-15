@@ -104,7 +104,7 @@ static void openDebugConsoleWindow() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Windows entrypoint for PsyDoom
 //------------------------------------------------------------------------------------------------------------------------------------------
-int wWinMain(
+int WINAPI wWinMain(
     [[maybe_unused]] HINSTANCE hInstance,
     [[maybe_unused]] HINSTANCE hPrevInstance,
     PWSTR lpCmdLine,

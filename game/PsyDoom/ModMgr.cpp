@@ -28,7 +28,7 @@
 // Provides a hash for a CD file ID, required so we can put it in a set
 //------------------------------------------------------------------------------------------------------------------------------------------
 template<> struct std::hash<CdFileId> {
-    inline std::size_t operator()(const CdFileId& fileId) const noexcept {
+    inline uint64_t operator()(const CdFileId& fileId) const noexcept {
         return fileId.words[0] ^ fileId.words[1];
     }
 };

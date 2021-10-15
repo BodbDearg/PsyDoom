@@ -577,7 +577,7 @@ void init() noexcept {
 
     {
         std::byte* const pBytes = gPsxVramTexture.lock();
-        std::memset(pBytes, 0, gPsxVramTexture.getLockedSizeInBytes());
+        std::memset(pBytes, 0, (size_t) gPsxVramTexture.getLockedSizeInBytes());
         gPsxVramTexture.unlock();
     }
 

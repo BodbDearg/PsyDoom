@@ -79,7 +79,7 @@ public:
 
     // Get the minimum required alignment for uniform buffers
     inline size_t getMinUniformBufferAlignment() const noexcept {
-        return mProps.limits.minUniformBufferOffsetAlignment;
+        return (size_t) mProps.limits.minUniformBufferOffsetAlignment;
     }
 
     // Get the maximum level of anisotropic filtering supported
