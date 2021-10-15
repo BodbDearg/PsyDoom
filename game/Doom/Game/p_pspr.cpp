@@ -247,6 +247,17 @@ static void P_BringUpWeapon(player_t& player) noexcept {
         player.pendingweapon = player.readyweapon;
     }
 
+    // PsyDoom sanity check: no weapon for some reason? Clear all player sprites in that case and bail.
+    // This is added safety to fix a crash where activating and deactivating god mode after death and then firing would crash the game.
+    // The crash was caused by overflowing the 'gWeaponInfo' array with an index of 'wp_nochange'.
+    #if PSYDOOM_MODS
+        if (player.pendingweapon == wp_nochange) {
+            P_SetPsprite(player, ps_weapon, S_NULL);
+            P_SetPsprite(player, ps_flash, S_NULL);
+            return;
+        }
+    #endif
+
     // If we're raising the chainsaw then play its up sound.
     // Exception: don't do this on level start.
     if ((player.pendingweapon == wp_chainsaw) && gbIsLevelDataCached) {
@@ -432,9 +443,24 @@ void A_Lower(player_t& player, pspdef_t& sprite) noexcept {
         return;
     }
 
-    // If the player just died put the weapon into the NULL state since it is now fully offscreen
-    if (player.health == 0) {
+    // If the player just died put the weapon into the NULL state since it is now fully offscreen.
+    // 
+    // PsyDoom: fix a crash where activating and deactivating god mode after death and then firing would crash the game.
+    // Don't use just player health for this check, verify player state too...
+    #if PSYDOOM_MODS
+        const bool bPlayerDead = ((player.health == 0) || (player.playerstate == PST_DEAD));
+    #else
+        const bool bPlayerDead = (player.health == 0);
+    #endif
+
+    if (bPlayerDead) {
         P_SetPsprite(player, ps_weapon, S_NULL);
+
+        // PsyDoom: ensure the flash is cleared too for good measure
+        #if PSYDOOM_MODS
+            P_SetPsprite(player, ps_flash, S_NULL);
+        #endif
+
         return;
     }
 
