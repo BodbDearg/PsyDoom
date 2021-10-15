@@ -17,7 +17,7 @@ public:
     {
     }
 
-    inline void init(const uint64_t size) noexcept {
+    inline void init(const uint32_t size) noexcept {
         if (mNumBits != size) {
             mBits.reset(new uint64_t[numWordsForBits(size)]);
             mNumBits = size;
@@ -26,26 +26,26 @@ public:
         removeAll();
     }
 
-    inline bool isAdded(const uint64_t index) noexcept {
+    inline bool isAdded(const uint32_t index) noexcept {
         ASSERT(index < mNumBits);
-        const uint64_t word = index / 64u;
-        const uint32_t bit = (uint32_t) index & 63u;
+        const uint32_t word = index / 64u;
+        const uint32_t bit = index & 63u;
         const uint64_t mask = uint64_t(1) << bit;
         return (mBits.get()[word] & mask);
     }
 
-    inline void add(const uint64_t index) noexcept {
+    inline void add(const uint32_t index) noexcept {
         ASSERT(index < mNumBits);
-        const uint64_t word = index / 64u;
-        const uint32_t bit = (uint32_t) index & 63u;
+        const uint32_t word = index / 64u;
+        const uint32_t bit = index & 63u;
         const uint64_t mask = uint64_t(1) << bit;
         mBits.get()[word] |= mask;
     }
 
-    inline void remove(const uint64_t index) noexcept {
+    inline void remove(const uint32_t index) noexcept {
         ASSERT(index < mNumBits);
-        const uint64_t word = index / 64u;
-        const uint32_t bit = (uint32_t) index & 63u;
+        const uint32_t word = index / 64u;
+        const uint32_t bit = index & 63u;
         const uint64_t mask = ~(uint64_t(1) << bit);
         mBits.get()[word] &= mask;
     }
@@ -57,9 +57,9 @@ public:
     template <class T>
     inline void forEachIndex(const T& callback) const noexcept {
         const uint64_t* const pWords = mBits.get();
-        const uint64_t numWords = numWordsForBits(mNumBits);
+        const uint32_t numWords = numWordsForBits(mNumBits);
 
-        for (uint64_t wordIdx = 0; wordIdx < numWords; ++wordIdx) {
+        for (uint32_t wordIdx = 0; wordIdx < numWords; ++wordIdx) {
             uint64_t word = pWords[wordIdx];
             uint32_t bitIdx = 0;
 
@@ -74,16 +74,16 @@ public:
         }
     }
 
-    inline uint64_t size() const noexcept {
+    inline uint32_t size() const noexcept {
         return mNumBits;
     }
 
 private:
     // Tells how many words are required to hold the specified number of bits
-    inline static uint64_t numWordsForBits(const uint64_t numBits) {
+    inline static uint32_t numWordsForBits(const uint32_t numBits) {
         return (numBits + 63) / 64;
     }
 
     std::unique_ptr<uint64_t>   mBits;
-    uint64_t                    mNumBits;
+    uint32_t                    mNumBits;
 };
