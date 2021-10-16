@@ -238,6 +238,10 @@ static void readCluster(const Block& block) noexcept {
         const LinkedToken* const pTextValue = block.getValue("Text");
         const LinkedToken* pTextData = (pTextValue) ? pTextValue->pNextData : nullptr;
 
+        if (pTextValue) {
+            std::memset(cluster.text, 0, sizeof(cluster.text));     // If text is specified then it overwrites the text for the cluster
+        }
+
         for (int32_t lineIdx = 0; (lineIdx < C_ARRAY_SIZE(Cluster::text)) && pTextData; ++lineIdx, pTextData = pTextData->pNextData) {
             const std::string_view text = pTextData->token.text();
             cluster.text[lineIdx].assign(text.data(), (uint32_t) text.length());

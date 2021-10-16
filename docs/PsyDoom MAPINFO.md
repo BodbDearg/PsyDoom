@@ -117,6 +117,18 @@ Cluster 2 {
     EnableCast = true
     NoCenterText = false
     SmallFont = false
+    Text = 
+        "you did it!",
+        "by turning the evil of",
+        "the horrors of hell in",
+        "upon itself you have",
+        "destroyed the power of",
+        "the demons.",
+        "their dreadful invasion",
+        "has been stopped cold!",
+        "now you can retire to",
+        "a lifetime of frivolity.",
+        "congratulations!"
 }
 ```
 Header fields:
@@ -134,6 +146,8 @@ Internal Fields:
 - `EnableCast`: if set to `true` then a finale with a cast call will be shown.
 - `NoCenterText`: if set to `true` then the finale text will not be centered.
 - `SmallFont`: if set to `true` then the small (8x8) font used for rendering status bar messages will be used for the finale.
+- `Text`: The text to show for the finale, with one line in each string. Each pair of lines is separated by `,`.
+
 ## `GameInfo` definition
 Defines general (global) game settings. If these settings are not explicitly specified, then the default values for the current game disc will be used. Example, using the same settings as the original PSX Doom:
 ```
