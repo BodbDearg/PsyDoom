@@ -146,7 +146,9 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 // Get the settings to use to play back a classic (original game) demo for the current game
 //------------------------------------------------------------------------------------------------------------------------------------------
 void getClassicDemoGameSettings(GameSettings& settings) noexcept {
-    const bool bFinalDoomRules = MapInfo::getGameInfo().bFinalDoomGameRules;
+    // Note: ignore MAPINFO defaults and user settings for game rules when it comes to classic demos.
+    // Use the game rules associated with the current base game, because that is what the demos would be recorded with.
+    const bool bFinalDoomRules = Game::isFinalDoom();
 
     settings = {};
     settings.bUsePalTimings                 = (gGameVariant == GameVariant::PAL);
