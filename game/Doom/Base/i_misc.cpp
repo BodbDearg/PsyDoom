@@ -34,7 +34,14 @@ const fontchar_t gBigFontChars[NUM_BIG_FONT_CHARS] = {
     {   8, 211,   7,  16 }, // . - 13
     {  16, 211,  15,  16 }, // A - 14
     {  32, 211,  13,  16 }, // B - 15
+
+// PsyDoom: fix uppercase 'C' being slightly cut off
+#if PSYDOOM_MODS
+    {  46, 211,  13,  16 }, // C - 16
+#else
     {  46, 211,  12,  16 }, // C - 16
+#endif
+
     {  60, 211,  13,  16 }, // D - 17
     {  74, 211,  13,  16 }, // E - 18
     {  88, 211,  13,  16 }, // F - 19
