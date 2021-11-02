@@ -17,6 +17,7 @@
 #include "PsyDoom/Utils.h"
 #include "sounds.h"
 #include "Wess/lcdload.h"
+#include "Wess/psxcmd.h"
 #include "Wess/psxspu.h"
 #include "Wess/seqload.h"
 #include "Wess/seqload_r.h"
@@ -643,6 +644,12 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     // Initialize the WESS API and low level CDROM utilities
     wess_init();
     psxcd_init();
+
+    // PsyDoom: set the mute release time to avoid clicks and artifacts when stopping sounds (like destroyed missiles) abruptly.
+    // Allow them a little time to fade out instead...
+    #if PSYDOOM_MODS
+        wess_set_mute_release(256);     // ~256 MS to fade out
+    #endif
 
     // Read the WMD file into the given buffer (assumes it is big enough)
     PsxCd_File* const pFile = psxcd_open(CdFile::DOOMSND_WMD);
