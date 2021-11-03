@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxspu.h"
 
+#include "psxcmd.h"
 #include "PsyDoom/BitShift.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxVm.h"
@@ -105,6 +106,14 @@ void psxspu_init_reverb(
     }
 
     LIBSPU_SpuSetReverbVoice(bReverbEnabled, SPU_ALLCH);
+
+    // PsyDoom: fix reverb being wrong (incorrectly on or off) for some sounds shortly after loading a level.
+    // We are enabling or disabling reverb for all voices here, need to update the sound system's cached view of the reverb status for each voice.
+    // Failure to do this update may result in reverb not being enabled or disabled where it should be...
+    #if PSYDOOM_MODS
+        wess_init_channels_reverb_amt((bReverbEnabled) ? 127 : 0);
+    #endif
+
     gbPsxSpu_timer_callback_enabled = true;
 }
 

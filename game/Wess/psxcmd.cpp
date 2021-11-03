@@ -1026,3 +1026,14 @@ void PSX_NoteOff(track_status& trackStat) noexcept {
         }
     }
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: initializes the reverb amount that all channels will have new sounds played with
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_init_channels_reverb_amt(const uint8_t allChannelsAmt) noexcept {
+    for (uint8_t& channelAmt : gWess_drv_chanReverbAmt) {
+        channelAmt = allChannelsAmt;
+    }
+}
+#endif  // #if PSYDOOM_MODS

@@ -61,3 +61,7 @@ void PSX_voicenote(
 
 void PSX_NoteOn(track_status& trackStat) noexcept;
 void PSX_NoteOff(track_status& trackStat) noexcept;
+
+#if PSYDOOM_MODS
+    void wess_init_channels_reverb_amt(const uint8_t allChannelsAmt) noexcept;
+#endif
