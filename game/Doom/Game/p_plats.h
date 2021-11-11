@@ -49,7 +49,7 @@ struct plat_t {
     int32_t         tag;            // The tag for the line which activated this platform
     plattype_e      type;           // What type of behavior the moving platform has
 
-    // PsyDoom: new fields used by custom crushers
+    // PsyDoom: new fields used by custom platforms
     #if PSYDOOM_MODS
         plat_e      finishState;                // Which state the platform should finish on, once it's complete
         sfxenum_t   startSound;                 // Sound to make when starting ('sfx_None' if none)

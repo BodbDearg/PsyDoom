@@ -241,6 +241,7 @@ set(SOURCE_FILES
     "PsyDoom/PsxPadButtons.h"
     "PsyDoom/PsxVm.cpp"
     "PsyDoom/PsxVm.h"
+    "PsyDoom/SaveData.h"
     "PsyDoom/ScriptBindings.cpp"
     "PsyDoom/ScriptBindings.h"
     "PsyDoom/ScriptingEngine.cpp"

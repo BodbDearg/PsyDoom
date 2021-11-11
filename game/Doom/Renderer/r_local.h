@@ -100,12 +100,12 @@ struct line_t {
     int32_t         special;        // What special action (switch, trigger etc.) the line does
     int32_t         tag;            // Tag for the action: what to affect in some cases, in terms of sectors
     int32_t         sidenum[2];     // If sidenum[1] is '-1' then the line is one sided
-    fixed_t         bbox[4];        // Worlspace bounding box for the line
+    fixed_t         bbox[4];        // Worldspace bounding box for the line
     slopetype_t     slopetype;      // Used to simplify some collision detection
     sector_t*       frontsector;    // Sector on the front side of the line
     sector_t*       backsector;     // Sector on the back side of the line (null for a 1 sided line)
     int32_t         validcount;     // Marker used to avoid re-doing certain checks
-    void*           specialdata;    // Used by thinkers doing special logic
+    void*           specialdata;    // Unused by PSX Doom: intended to be used by thinkers doing special logic
     fixed_t         fineangle;      // So sine/cosine can be looked up quicker
 };
 
