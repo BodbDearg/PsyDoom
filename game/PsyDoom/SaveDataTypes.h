@@ -30,6 +30,10 @@ struct strobe_t;
 struct vlcustomdoor_t;
 struct vldoor_t;
 
+namespace ScriptingEngine {
+    struct ScheduledAction;
+}
+
 // The current save file format version
 static constexpr uint32_t SAVE_FILE_VERSION = 1;
 
@@ -55,13 +59,26 @@ struct SavedSectorT {
     fixed_t         ceilTexOffsetX;     // PsyDoom: ceiling texture x offset (can be used to scroll flats)
     fixed_t         ceilTexOffsetY;     // PsyDoom: ceiling texture y offset (can be used to scroll flats)
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const sector_t& sector) noexcept;
     void deserializeTo(sector_t& sector) const noexcept;
 };
 
 static_assert(sizeof(SavedSectorT) == 48);
+
+// Saved state for a line
+struct SavedLineT {
+    uint32_t        flags;              // ML_XXX line flags
+    int32_t         special;            // What special action (switch, trigger etc.) the line does
+    int32_t         tag;                // Tag for the action: what to affect in some cases, in terms of sectors
+
+    void byteSwap() noexcept;
+    void serializeFrom(const line_t& line) noexcept;
+    void deserializeTo(line_t& line) const noexcept;
+};
+
+static_assert(sizeof(SavedLineT) == 12);
 
 // Saved state for a side
 struct SavedSideT {
@@ -70,29 +87,14 @@ struct SavedSideT {
     int16_t         toptexture;         // Wall texture index for the side's top texture
     int16_t         bottomtexture;      // Wall texture index for the side's bottom texture
     int16_t         midtexture;         // Wall texture index for the side's mid/wall texture
-    uint16_t        sector;             // Index of what sector the side belongs to
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const side_t& side) noexcept;
     void deserializeTo(side_t& side) const noexcept;
 };
 
 static_assert(sizeof(SavedSideT) == 16);
-
-// Saved state for a line
-struct SavedLineT {
-    uint32_t        flags;              // ML_XXX line flags
-    int32_t         special;            // What special action (switch, trigger etc.) the line does
-    int32_t         tag;                // Tag for the action: what to affect in some cases, in terms of sectors
-
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
-    void serializeFrom(const line_t& line) noexcept;
-    void deserializeTo(line_t& line) const noexcept;
-};
-
-static_assert(sizeof(SavedLineT) == 12);
 
 // Saved version of a map object.
 // Note: the map object is initially assumed to NOT be associated with a player.
@@ -104,8 +106,8 @@ struct SavedMobjT {
     int32_t         tag;                // PsyDoom: a tag that can be assigned via scripting, for identification purposes
     int32_t         subsectorIdx;       // What subsector (by index) the map object is currently in (and by extension, what sector)
     angle_t         angle;              // Direction the thing is facing in
-    uint32_t        sprite;             // Current sprite displayed
-    uint32_t        frame;              // Current sprite frame displayed. Must use 'FF_FRAMEMASK' to get the actual frame number.
+    int32_t         sprite;             // Current sprite displayed
+    int32_t         frame;              // Current sprite frame displayed. Must use 'FF_FRAMEMASK' to get the actual frame number.
     fixed_t         floorz;             // Highest floor in contact with map object
     fixed_t         ceilingz;           // Lowest floor in contact with map object
     fixed_t         radius;             // For collision detection
@@ -129,8 +131,8 @@ struct SavedMobjT {
     int16_t         spawnangle;         // Used for respawns: item angle
     int32_t         tracerIdx;          // Used by homing missiles (map object index, or '-1' if none)
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const mobj_t& mobj) noexcept;
     void deserializeTo(mobj_t& mobj) const noexcept;
 };
@@ -144,8 +146,8 @@ struct SavedPspdefT {
     fixed_t         sx;                 // Offset of the sprite, x & y
     fixed_t         sy;
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const pspdef_t& spr) noexcept;
     void deserializeTo(pspdef_t& spr) const noexcept;
 };
@@ -184,8 +186,8 @@ struct SavedPlayerT {
     uint32_t        extralight;                 // Extra light to add to the world on account of weapon firing or muzzle flashes
     SavedPspdefT    psprites[NUMPSPRITES];      // Current state information for the player's weapon sprites (weapon + muzzle flash)
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const player_t& player) noexcept;
     void deserializeTo(player_t& player) const noexcept;
 };
@@ -202,8 +204,8 @@ struct SavedVLDoorT {
     int32_t         topwait;                // Door setting: total number of tics for the door to wait in the opened state
     int32_t         topcountdown;           // Door state: how many tics before the door starts closing
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const vldoor_t& door) noexcept;
     void deserializeTo(vldoor_t& door) const noexcept;
 };
@@ -218,8 +220,8 @@ struct SavedVLCustomdoorT {
     int32_t         postWaitDirection;      // Direction that the door will go in after waiting
     int32_t         countdown;              // Current countdown (if waiting)
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const vlcustomdoor_t& door) noexcept;
     void deserializeTo(vlcustomdoor_t& door) const noexcept;
 };
@@ -243,8 +245,8 @@ struct SavedFloorMoveT {
     int32_t     finishScriptActionNum;      // PsyDoom custom floors: if enabled, the script action number to execute when the floor is done moving
     int32_t     finishScriptUserdata;       // PsyDoom custom floors: userdata field which will be sent along to the finish action when it executes
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const floormove_t& floor) noexcept;
     void deserializeTo(floormove_t& floor) const noexcept;
 };
@@ -274,8 +276,8 @@ struct SavedCeilingT {
     int32_t         finishScriptActionNum;      // If enabled, a script action to execute when the ceiling has come to a complete stop/finished
     int32_t         finishScriptUserdata;       // Userdata to pass to the 'finish' script action
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const ceiling_t& ceil) noexcept;
     void deserializeTo(ceiling_t& ceil) const noexcept;
 };
@@ -305,8 +307,8 @@ struct SavedPlatT {
     int32_t         finishScriptActionNum;      // PsyDoom custom platforms: if enabled, a script action to execute when the platform has come to a complete stop/finished
     int32_t         finishScriptUserdata;       // PsyDoom custom platforms: userdata to pass to the 'finish' script action
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const plat_t& plat) noexcept;
     void deserializeTo(plat_t& plat) const noexcept;
 };
@@ -320,8 +322,8 @@ struct SavedFireFlickerT {
     int32_t     maxlight;
     int32_t     minlight;
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const fireflicker_t& light) noexcept;
     void deserializeTo(fireflicker_t& light) const noexcept;
 };
@@ -337,8 +339,8 @@ struct SavedLightFlashT {
     int32_t     maxtime;
     int32_t     mintime;
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const lightflash_t& light) noexcept;
     void deserializeTo(lightflash_t& light) const noexcept;
 };
@@ -354,8 +356,8 @@ struct SavedStrobeT {
     int32_t     darktime;
     int32_t     brighttime;
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const strobe_t& light) noexcept;
     void deserializeTo(strobe_t& light) const noexcept;
 };
@@ -369,8 +371,8 @@ struct SavedGlowT {
     int32_t     maxlight;
     int32_t     direction;
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const glow_t& light) noexcept;
     void deserializeTo(glow_t& light) const noexcept;
 };
@@ -381,8 +383,7 @@ static_assert(sizeof(SavedGlowT) == 16);
 struct SavedDelayedExitT {
     int32_t     ticsleft;       // How many tics until we perform the action
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
     void serializeFrom(const delayaction_t& action) noexcept;
     void deserializeTo(delayaction_t& action) const noexcept;
 };
@@ -396,13 +397,32 @@ struct SavedButtonT {
     int32_t     btexture;       // The texture to switch the line back to
     int32_t     btimer;         // The countdown for when the button reverts to it's former state; reverts when it reaches '0'
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const button_t& btn) noexcept;
     void deserializeTo(button_t& btn) const noexcept;
 };
 
 static_assert(sizeof(SavedButtonT) == 16);
+
+// Saved state for a scheduled script action.
+// This is presently identical to the runtime struct but we keep the types separate in case they need to differ.
+struct SavedScheduledAction {
+    int32_t     actionNum;              // Which action function to execute with
+    int32_t     delayTics;              // Game tics left until the action executes
+    int32_t     executionsLeft;         // The number of action executions left; '0' if the action will not execute again, or '-1' if infinitely repeating.
+    int32_t     repeatDelay;            // The delay in tics between repeats ('0' means execute every tic)
+    int32_t     tag;                    // User defined tag associated with the action
+    int32_t     userdata;               // User defined data associated with the action
+    bool        bPaused;                // If 'true' then the action is paused, otherwise it's unpaused
+    bool        bPendingExecute;        // If 'true' then the action is pending execution this frame
+
+    void byteSwap() noexcept;
+    void serializeFrom(const ScriptingEngine::ScheduledAction& action) noexcept;
+    void deserializeTo(ScriptingEngine::ScheduledAction& action) const noexcept;
+};
+
+static_assert(sizeof(SavedScheduledAction) == 28);
 
 // Saved state for the status bar
 struct SavedSTBarT {
@@ -414,8 +434,8 @@ struct SavedSTBarT {
     char            alertMessage[32];       // PsyDoom: a message displayed near the center of the screen which is not interrupted by pickups
     int32_t         alertMessageTicsLeft;   // PsyDoom: how many tics left before the alert message is done displaying
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFrom(const stbar_t& sbar) noexcept;
     void deserializeTo(stbar_t& sbar) const noexcept;
 };
@@ -427,7 +447,7 @@ struct SavedGlobals {
     int32_t             gameMap;                        // The map being played
     int32_t             nextMap;                        // If exiting which map to go to next
     skill_t             gameSkill;                      // Skill level the game is being played with
-    double              levelElapsedTime;               // How long ago the level started (in seconds)
+    int64_t             levelElapsedTime;               // How long ago the level started (in microseconds)
     int32_t             totalKills;                     // Player stats: kills made so far in the level
     int32_t             totalItems;                     // Player stats: items picked up so far in the level
     int32_t             totalSecret;                    // Player stats: secrets found so far in the level
@@ -445,23 +465,22 @@ struct SavedGlobals {
     angle_t             extCameraAngle;
     int32_t             numPasswordCharsEntered;        // How many characters have been input for the current password sequence
     uint8_t             passwordCharBuffer[10];         // The password input buffer
-    uint32_t            curCDTrack;                     // If non zero play the specified cd-audio track
+    int32_t             curCDTrack;                     // If non zero play the specified cd-audio track (handles Club Doom music activated)
     SavedSTBarT         statusBar;                      // The main state for the status bar
     int32_t             faceTics;                       // Ticks left for current face
     bool                bDrawSBFace;                    // Draw the face sprite?
-    uint32_t            curSBFaceSpriteIdx;             // Index of which face sprite to draw on the status bar
     bool                bGibDraw;                       // Are we animating the face being gibbed?
     bool                bDoSpclFace;                    // Should we do a special face next?
     int32_t             newFace;                        // Which normal face to use next
     spclface_e          spclFaceType;                   // Which special face to use next
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serializeFromGlobals() noexcept;
     void deserializeToGlobals() const noexcept;
 };
 
-static_assert(sizeof(SavedGlobals) == 376);
+static_assert(sizeof(SavedGlobals) == 368);
 
 // Header for a save file, comes first in the file
 struct SaveFileHdr {
@@ -472,8 +491,8 @@ struct SaveFileHdr {
     uint64_t    mapHashWord1;           // Hash of all the map data: word 1 (used to verify the same map is being played)
     uint64_t    mapHashWord2;           // Hash of all the map data: word 2 (used to verify the same map is being played)
     uint32_t    numSectors;             // Number of 'SavedSectorT' in the save file
-    uint32_t    numSides;               // Number of 'SavedSideT' in the save file
     uint32_t    numLines;               // Number of 'SavedLineT' in the save file
+    uint32_t    numSides;               // Number of 'SavedSideT' in the save file
     uint32_t    numMobjs;               // Number of 'SavedMobjT' in the save file
     uint32_t    numVlDoors;             // Number of 'SavedVLDoorT' in the save file
     uint32_t    numVlCustomDoors;       // Number of 'SavedVLCustomdoorT' in the save file
@@ -486,10 +505,13 @@ struct SaveFileHdr {
     uint32_t    numGlows;               // Number of 'SavedGlowT' in the save file
     uint32_t    numDelayedExits;        // Number of 'SavedDelayedExitT' in the save file
     uint32_t    numButtons;             // Number of 'SavedButtonT' in the save file
-    uint32_t    _reserved2;             // Padding: currently reserved
+    uint32_t    numScheduledActions;    // Number of 'SavedScheduledAction' in the save file
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validateFileId() const noexcept;
+    bool validateVersion() const noexcept;
+    bool validateMapHash() const noexcept;
+    bool validate() const noexcept;
 };
 
 static_assert(sizeof(SaveFileHdr) == 96);
@@ -500,8 +522,8 @@ struct SaveData {
     SaveFileHdr                             hdr;
     SavedGlobals                            globals;
     std::unique_ptr<SavedSectorT[]>         sectors;
-    std::unique_ptr<SavedSideT[]>           sides;
     std::unique_ptr<SavedLineT[]>           lines;
+    std::unique_ptr<SavedSideT[]>           sides;
     std::unique_ptr<SavedMobjT[]>           mobjs;
     std::unique_ptr<SavedVLDoorT[]>         vlDoors;
     std::unique_ptr<SavedVLCustomdoorT[]>   vlCustomDoors;
@@ -515,8 +537,8 @@ struct SaveData {
     std::unique_ptr<SavedDelayedExitT[]>    delayedExits;
     std::unique_ptr<SavedButtonT[]>         buttons;
 
-    void endianCorrect() noexcept;
-    bool validate() noexcept;
+    void byteSwap() noexcept;
+    bool validate() const noexcept;
     void serialize() noexcept;
     void deserialize() const noexcept;
     bool writeToFile(FileOutputStream& file) const noexcept;

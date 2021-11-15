@@ -307,4 +307,22 @@ int64_t getLevelFinishTimeCentisecs() noexcept {
     return gLevelFinishTimeCentisecs;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns how much time has elapsed in the level (in microseconds)
+//------------------------------------------------------------------------------------------------------------------------------------------
+int64_t getLevelElapsedTimeMicrosecs() noexcept {
+    const auto now = std::chrono::high_resolution_clock::now();
+    const auto elapsed = now - gLevelStartTime;
+    return std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set how much time has elapsed in the level (in microseconds)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void setLevelElapsedTimeMicrosecs(const int64_t elapsedUsec) noexcept {
+    const auto now = std::chrono::high_resolution_clock::now();
+    std::chrono::microseconds elapsed(elapsedUsec);
+    gLevelStartTime = now - elapsed;
+}
+
 END_NAMESPACE(Game)

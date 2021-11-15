@@ -34,22 +34,12 @@
 #include <string>
 #include <vector>
 
-// Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
-typedef void (*delayed_actionfn_t)() noexcept;
-
 // Definition for a flat or texture animation
 struct animdef_t {
     bool        istexture;      // False for flats
     char        startname[9];   // Name of the first lump in the animation
     char        endname[9];     // Name of the last lump in the animation
     uint32_t    ticmask;        // New field for PSX: controls which game tics the animation will advance on
-};
-
-// New to PSX DOOM: definition for a thinker which performs an actionfunc after a delay
-struct delayaction_t {
-    thinker_t           thinker;
-    int32_t             ticsleft;       // How many tics until we perform the actionfunc
-    delayed_actionfn_t  actionfunc;     // The action to perform after the delay
 };
 
 // Mask applied to offsets for scrolling walls (wrap every 128 units)
@@ -118,8 +108,6 @@ static anim_t* gpLastAnim;
     static line_t*  gpLineSpecialList[MAXLINEANIMS];    // A list of scrolling lines for the level
     static int32_t  gNumLinespecials;                   // The number of scrolling lines in the level
 #endif
-
-static void T_DelayedAction(delayaction_t& action) noexcept;
 
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------

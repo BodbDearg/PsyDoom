@@ -26,10 +26,6 @@ static constexpr int32_t PLATSPEED  = 2 * FRACUNIT;     // Standard platform spe
     plat_t* gpActivePlats[MAXPLATS];
 #endif
 
-// Not required externally: making private to this module
-static void P_AddActivePlat(plat_t& plat) noexcept;
-static void P_RemoveActivePlat(plat_t& plat) noexcept;
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom: default custom platform settings
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,7 +86,7 @@ static bool checkCustomPlatFinished(plat_t& plat, sector_t& platSector, const pl
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a moving platform: moves the platform, does state transitions and sounds etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_PlatRaise(plat_t& plat) noexcept {
+void T_PlatRaise(plat_t& plat) noexcept {
     sector_t& sector = *plat.sector;
     const plattype_e platType = plat.type;
 
@@ -486,7 +482,7 @@ void EV_StopPlat(line_t& line) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add the given moving platform to a free slot in the 'active platforms' list
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_AddActivePlat(plat_t& plat) noexcept {
+void P_AddActivePlat(plat_t& plat) noexcept {
     #if PSYDOOM_LIMIT_REMOVING
         const int32_t numPlats = (int32_t) gpActivePlats.size();
     #else
@@ -511,7 +507,7 @@ static void P_AddActivePlat(plat_t& plat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Remove the given moving platform from the active platforms list; also dissociates it with it's sector and deallocs it's thinker
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_RemoveActivePlat(plat_t& plat) noexcept {
+void P_RemoveActivePlat(plat_t& plat) noexcept {
     #if PSYDOOM_LIMIT_REMOVING
         const int32_t numPlats = (int32_t) gpActivePlats.size();
     #else

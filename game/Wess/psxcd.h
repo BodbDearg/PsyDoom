@@ -82,5 +82,6 @@ void psxcd_pause() noexcept;
 void psxcd_restart(const int32_t vol) noexcept;
 int32_t psxcd_elapsed_sectors() noexcept;
 int32_t psxcd_get_file_size(const CdFileId discFile) noexcept;
+int32_t psxcd_get_playing_track() noexcept;
 
 #endif  // #if PSYDOOM_MODS

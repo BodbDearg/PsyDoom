@@ -16,6 +16,16 @@ struct anim_t {
     uint32_t    ticmask;        // New field for PSX: controls which game tics the animation will advance on
 };
 
+// Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
+typedef void (*delayed_actionfn_t)() noexcept;
+
+// New to PSX DOOM: definition for a thinker which performs an actionfunc after a delay
+struct delayaction_t {
+    thinker_t           thinker;
+    int32_t             ticsleft;       // How many tics until we perform the actionfunc
+    delayed_actionfn_t  actionfunc;     // The action to perform after the delay
+};
+
 extern card_t   gMapBlueKeyType;
 extern card_t   gMapRedKeyType;
 extern card_t   gMapYellowKeyType;
@@ -43,6 +53,7 @@ void P_ShootSpecialLine(mobj_t& mobj, line_t& line) noexcept;
 void P_PlayerInSpecialSector(player_t& player) noexcept;
 void P_UpdateSpecials() noexcept;
 bool EV_DoDonut(line_t& line) noexcept;
+void T_DelayedAction(delayaction_t& action) noexcept;
 void G_ExitLevel() noexcept;
 
 #if PSYDOOM_MODS

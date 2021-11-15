@@ -85,10 +85,17 @@ struct ceiling_t {
     };
 #endif
 
+void T_MoveCeiling(ceiling_t& ceiling) noexcept;
 bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept;
 
 #if PSYDOOM_MODS
     bool EV_DoCustomCeiling(sector_t& sector, const CustomCeilingDef& ceilDef) noexcept;
+#endif
+
+void P_AddActiveCeiling(ceiling_t& ceiling) noexcept;
+void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept;
+
+#if PSYDOOM_MODS
     bool P_ActivateInStasisCeilingsForTag(const int32_t tag) noexcept;
     bool P_ActivateInStasisCeilingForSector(const sector_t& sector) noexcept;
     bool EV_CeilingCrushStopForTag(const int32_t tag) noexcept;

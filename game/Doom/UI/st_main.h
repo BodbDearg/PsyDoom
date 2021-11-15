@@ -25,6 +25,14 @@ enum spclface_e : int32_t {
     NUMSPCLFACES
 };
 
+// State relating to flashing keycards on the status bar
+struct sbflash_t {
+    int16_t     active;     // Is the flash currently active?
+    int16_t     doDraw;     // Are we currently drawing the keycard as part of the flash?
+    int16_t     delay;      // Ticks until next draw/no-draw change
+    int16_t     times;      // How many flashes are left
+};
+
 // Container for most status bar related state.
 // PsyDoom: all 'bool' fields here were originally 'uint32_t', changed them to express meaning better.
 struct stbar_t {
@@ -54,8 +62,16 @@ static constexpr int32_t FIRSTSPLAT = 42;   // Gib frames
 // Which slot (by index) on the weapon micronumbers display each weapon maps to
 static constexpr int32_t WEAPON_MICRO_INDEXES[NUMWEAPONS] = { 0, 1, 2, 3, 4, 5, 6, 7, 0 };
 
-extern const facesprite_t   gFaceSprites[NUMFACES];
-extern stbar_t              gStatusBar;
+extern sbflash_t                gFlashCards[NUMCARDS];
+extern const facesprite_t       gFaceSprites[NUMFACES];
+extern stbar_t                  gStatusBar;
+extern int32_t                  gFaceTics;
+extern bool                     gbDrawSBFace;
+extern const facesprite_t*      gpCurSBFaceSprite;
+extern bool                     gbGibDraw;
+extern bool                     gbDoSpclFace;
+extern int32_t                  gNewFace;
+extern spclface_e               gSpclFaceType;
 
 void ST_Init() noexcept;
 void ST_InitEveryLevel() noexcept;

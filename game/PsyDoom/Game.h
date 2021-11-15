@@ -77,5 +77,7 @@ uint16_t getTexPalette_DebugFontSmall() noexcept;
 void startLevelTimer() noexcept;
 void stopLevelTimer() noexcept;
 int64_t getLevelFinishTimeCentisecs() noexcept;
+int64_t getLevelElapsedTimeMicrosecs() noexcept;
+void setLevelElapsedTimeMicrosecs(const int64_t elapsedUsec) noexcept;
 
 END_NAMESPACE(Game)

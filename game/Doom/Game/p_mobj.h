@@ -5,8 +5,14 @@
 enum statenum_t : int32_t;
 struct mapthing_t;
 
-extern int32_t  gItemRespawnQueueHead;
-extern int32_t  gItemRespawnQueueTail;
+// Item respawn queue
+static constexpr int32_t ITEMQUESIZE = 64;
+static constexpr int32_t ITEMQUESIZE_MASK = ITEMQUESIZE - 1;    // Convenience constant for wrapping
+
+extern int32_t      gItemRespawnQueueHead;
+extern int32_t      gItemRespawnQueueTail;
+extern int32_t      gItemRespawnTime[ITEMQUESIZE];
+extern mapthing_t   gItemRespawnQueue[ITEMQUESIZE];
 
 void P_RemoveMobj(mobj_t& mobj) noexcept;
 void P_RespawnSpecials() noexcept;

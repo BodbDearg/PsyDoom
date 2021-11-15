@@ -16,30 +16,6 @@
 
 #include <algorithm>
 
-// State for a door thinker
-struct vldoor_t {
-    thinker_t   thinker;        // Basic thinker fields
-    vldoor_e    type;           // What type of door it is
-    sector_t*   sector;         // Which sector is being moved
-    fixed_t     topheight;      // Sector ceiling height when opened
-    fixed_t     speed;          // Speed of door movement
-    int32_t     direction;      // Current movement direction: 1 = up, 0 = opened, -1 = down
-    int32_t     topwait;        // Door setting: total number of tics for the door to wait in the opened state
-    int32_t     topcountdown;   // Door state: how many tics before the door starts closing
-};
-
-// PsyDoom: state for a custom door thinker
-#if PSYDOOM_MODS
-    struct vlcustomdoor_t {
-        thinker_t       thinker;            // Basic thinker fields
-        sector_t*       sector;             // Which sector is being moved
-        CustomDoorDef   def;                // Settings for the door
-        int32_t         direction;          // Current direction of movement (1 = open, 0 = wait, -1 = close)
-        int32_t         postWaitDirection;  // Direction that the door will go in after waiting
-        int32_t         countdown;          // Current countdown (if waiting)
-    };
-#endif
-
 static constexpr fixed_t VDOORSPEED = FRACUNIT * 6;     // Regular speed of vertical doors
 static constexpr int32_t VDOORWAIT  = 70;               // How long vertical doors normally wait before closing (game tics)
 
@@ -67,7 +43,7 @@ CustomDoorDef::CustomDoorDef() noexcept
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a door: moves the door, does door state transitions and sounds etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_VerticalDoor(vldoor_t& door) noexcept {
+void T_VerticalDoor(vldoor_t& door) noexcept {
     // Which way is the door moving?
     switch (door.direction) {
         // Door is waiting
@@ -558,7 +534,7 @@ static void PlayCustomDoorSound(const sfxenum_t sound, sector_t& atSector) noexc
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom: thinker/update logic for a custom door: moves the door, does door state transitions and sounds etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_CustomDoor(vlcustomdoor_t& door) noexcept {
+void T_CustomDoor(vlcustomdoor_t& door) noexcept {
     sector_t& sector = *door.sector;
 
     // Handle a waiting door and tick the wait

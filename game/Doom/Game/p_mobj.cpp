@@ -27,15 +27,10 @@
 #include <algorithm>
 #include <cstdio>
 
-// Item respawn queue
-static constexpr int32_t ITEMQUESIZE = 64;
-static constexpr int32_t ITEMQUESIZE_MASK = ITEMQUESIZE - 1;    // Convenience constant for wrapping
-
-int32_t     gItemRespawnQueueHead;      // Head of the circular queue
-int32_t     gItemRespawnQueueTail;      // Tail of the circular queue
-
-static int32_t      gItemRespawnTime[ITEMQUESIZE];      // When each item in the respawn queue began the wait to respawn
-static mapthing_t   gItemRespawnQueue[ITEMQUESIZE];     // Details for the things to be respawned
+int32_t         gItemRespawnQueueHead;              // Head of the circular queue
+int32_t         gItemRespawnQueueTail;              // Tail of the circular queue
+int32_t         gItemRespawnTime[ITEMQUESIZE];      // When each item in the respawn queue began the wait to respawn
+mapthing_t      gItemRespawnQueue[ITEMQUESIZE];     // Details for the things to be respawned
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Removes the given map object from the game

@@ -92,6 +92,7 @@ struct plat_t {
     };
 #endif
 
+void T_PlatRaise(plat_t& plat) noexcept;
 bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount) noexcept;
 
 #if PSYDOOM_MODS
@@ -103,3 +104,5 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 #endif
 
 void EV_StopPlat(line_t& line) noexcept;
+void P_AddActivePlat(plat_t& plat) noexcept;
+void P_RemoveActivePlat(plat_t& plat) noexcept;

@@ -21,6 +21,7 @@
 #include "PsyDoom/Vulkan/VRenderer.h"
 #include "PsyQ/LIBGPU.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 
@@ -88,27 +89,17 @@ const facesprite_t gFaceSprites[NUMFACES] = {
     { 114, 204, 204, 137, 28, 30 }      // STSPLAT4 - 46
 };
 
-// State relating to flashing keycards on the status bar
-struct sbflash_t {
-    int16_t     active;     // Is the flash currently active?
-    int16_t     doDraw;     // Are we currently drawing the keycard as part of the flash?
-    int16_t     delay;      // Ticks until next draw/no-draw change
-    int16_t     times;      // How many flashes are left
-};
-
-static sbflash_t gFlashCards[NUMCARDS];
-
-// The main state for the status bar
-stbar_t gStatusBar;
+sbflash_t   gFlashCards[NUMCARDS];      // State relating to flashing keycards on the status bar
+stbar_t     gStatusBar;                 // The main state for the status bar
 
 // Face related state
-static int32_t                  gFaceTics;              // Ticks left for current face
-static bool                     gbDrawSBFace;           // Draw the face sprite?
-static const facesprite_t*      gpCurSBFaceSprite;      // Which sprite to draw
-static bool                     gbGibDraw;              // Are we animating the face being gibbed?
-static bool                     gbDoSpclFace;           // Should we do a special face next?
-static int32_t                  gNewFace;               // Which normal face to use next
-static spclface_e               gSpclFaceType;          // Which special face to use next
+int32_t                 gFaceTics;              // Ticks left for current face
+bool                    gbDrawSBFace;           // Draw the face sprite?
+const facesprite_t*     gpCurSBFaceSprite;      // Which sprite to draw
+bool                    gbGibDraw;              // Are we animating the face being gibbed?
+bool                    gbDoSpclFace;           // Should we do a special face next?
+int32_t                 gNewFace;               // Which normal face to use next
+spclface_e              gSpclFaceType;          // Which special face to use next
 
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,7 +333,12 @@ void ST_Ticker() noexcept {
         }
     }
 
-    // Save the sprite info for the face that will be drawn
+    // Save the sprite info for the face that will be drawn.
+    // PsyDoom: add extra safety to ensure the face stays in range.
+    #if PSYDOOM_MODS
+        gStatusBar.face = std::clamp(gStatusBar.face, 0u, (uint32_t) NUMFACES - 1u);
+    #endif
+
     gpCurSBFaceSprite = &gFaceSprites[gStatusBar.face];
 
     // Update the current palette in use

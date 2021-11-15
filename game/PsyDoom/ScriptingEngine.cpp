@@ -18,19 +18,6 @@
 
 BEGIN_NAMESPACE(ScriptingEngine)
 
-// Holds details on an action which is scheduled to run later.
-// Note that delayed actions have no triggering line, sector or thing associated with them.
-struct ScheduledAction {
-    int32_t     actionNum;          // Which action function to execute with
-    int32_t     delayTics;          // Game tics left until the action executes
-    int32_t     executionsLeft;     // The number of action executions left; '0' if the action will not execute again, or '-1' if infinitely repeating.
-    int32_t     repeatDelay;        // The delay in tics between repeats ('0' means execute every tic)
-    int32_t     tag;                // User defined tag associated with the action
-    int32_t     userdata;           // User defined data associated with the action
-    bool        bPaused;            // If 'true' then the action is paused, otherwise it's unpaused
-    bool        bPendingExecute;    // If 'true' then the action is pending execution this frame
-};
-
 // The main Lua VM, managed and wrapped by the 'Sol2' library
 static std::unique_ptr<sol::state> gpLuaState;
 
@@ -38,13 +25,13 @@ static std::unique_ptr<sol::state> gpLuaState;
 // Each action has an integer identifier associated with it that is referenced by line tags.
 static std::unordered_map<int32_t, sol::protected_function> gScriptActions;
 
-// The list of actions scheduled to execute later. This list may contain 'holes' or actions that are done executing.
-// This is so we preserve the relative order of actions scheduled to occur on the same tic - they should happen in the same order they were scheduled in.
-static std::vector<ScheduledAction> gScheduledActions;
-
 // How many 'doAction' calls are currently active?
 // Scripts might invoke other scripts, so the 'doAction' calls can be nested.
 static int32_t gNumExecutingScripts = 0;
+
+// The list of actions scheduled to execute later. This list may contain 'holes' or actions that are done executing.
+// This is so we preserve the relative order of actions scheduled to occur on the same tic - they should happen in the same order they were scheduled in.
+std::vector<ScheduledAction> gScheduledActions;
 
 // Context for the current script action being executed.
 // Which linedef, sector and thing triggered the action, all of which are optional.

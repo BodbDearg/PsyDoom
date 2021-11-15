@@ -1,11 +1,8 @@
 #pragma once
 
-#include <cstdint>
+#include "Doom/doomdef.h"
 
-enum statenum_t : int32_t;
-struct mobj_t;
-struct player_t;
-struct pspdef_t;
+extern int32_t gTicRemainder[MAXPLAYERS];
 
 #if PSYDOOM_MODS
     void P_NoiseAlertToMobj(mobj_t& noiseMaker) noexcept;

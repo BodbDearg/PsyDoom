@@ -22,8 +22,6 @@ static constexpr fixed_t CEILSPEED = FRACUNIT * 2;
 #endif
 
 // Not required externally: making private to this module
-static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept;
-static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept;
 static void P_ActivateInStasisCeiling(line_t& line) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -111,7 +109,7 @@ static void onCustomCeilingDestHeightReached(ceiling_t& ceiling, sector_t& ceili
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a moving ceiling or crusher: moves the ceiling, does state transitions and sounds etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
+void T_MoveCeiling(ceiling_t& ceiling) noexcept {
     sector_t& ceilingSector = *ceiling.sector;
     const ceiling_e ceilingType = ceiling.type;
 
@@ -407,7 +405,7 @@ bool EV_DoCustomCeiling(sector_t& sector, const CustomCeilingDef& ceilDef) noexc
 // Add the given ceiling mover to a free slot in the 'active ceilings' list.
 // Note: does NOT get added if there are no free slots.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept {
+void P_AddActiveCeiling(ceiling_t& ceiling) noexcept {
     #if PSYDOOM_LIMIT_REMOVING
         const int32_t numCeilings = (int32_t) gpActiveCeilings.size();
     #else
@@ -430,7 +428,7 @@ static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Remove the given ceiling from the active ceilings list; also dissociates it with it's sector and deallocs it's thinker
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
+void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
     #if PSYDOOM_LIMIT_REMOVING
         const int32_t numCeilings = (int32_t) gpActiveCeilings.size();
     #else

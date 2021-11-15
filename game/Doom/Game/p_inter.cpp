@@ -16,8 +16,8 @@
 
 #include <algorithm>
 
-static constexpr uint32_t BONUSADD          = 4;    // How much to add to the 'bonus' effect strength counter anytime a bonus is picked up
-static constexpr uint32_t MAX_DEAD_PLAYERS  = 32;   // Maximum number of dead player corpses to leave lying around (deathmatch)
+// How much to add to the 'bonus' effect strength counter anytime a bonus is picked up
+static constexpr uint32_t BONUSADD = 4;
 
 // The maximum amount of ammo for each ammo type
 const int32_t gMaxAmmo[NUMAMMO] = {
@@ -39,7 +39,7 @@ const int32_t gClipAmmo[NUMAMMO] = {
 uint32_t gDeadPlayerRemovalQueueIdx;
 
 // A queue of player corpses that eventually get removed from the game when a new corpse uses an occupied queue slot
-static mobj_t* gDeadPlayerMobjRemovalQueue[MAX_DEAD_PLAYERS];
+mobj_t* gDeadPlayerMobjRemovalQueue[MAX_DEAD_PLAYERS];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Try to give the specified player the specified number of ammo clips of the given type.

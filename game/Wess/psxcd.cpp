@@ -538,3 +538,9 @@ int32_t psxcd_get_file_size(const CdFileId discFile) noexcept {
 
     return CdMapTbl_GetEntry(discFile).size;
 }
+
+int32_t psxcd_get_playing_track() noexcept {
+    LockCdPlayer cdPlayerLock;
+    const DiscTrack* const pTrack = gCdPlayer.discReader.getOpenTrack();
+    return (pTrack) ? pTrack->trackNum : -1;
+}

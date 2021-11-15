@@ -45,9 +45,23 @@ inline constexpr uint32_t byteSwap(const uint32_t num) noexcept {
     );
 }
 
+inline constexpr uint64_t byteSwap(const uint64_t num) noexcept {
+    return (
+        ((num & 0x00000000000000FFu) << 56) |
+        ((num & 0x000000000000FF00u) << 40) |
+        ((num & 0x0000000000FF0000u) << 24) |
+        ((num & 0x00000000FF000000u) << 8)  |
+        ((num & 0x000000FF00000000u) >> 8)  |
+        ((num & 0x0000FF0000000000u) >> 24) |
+        ((num & 0x00FF000000000000u) >> 40) |
+        ((num & 0xFF00000000000000u) >> 56)
+    );
+}
+
 inline constexpr int8_t byteSwap(const int8_t num) noexcept { return num; }
 inline constexpr int16_t byteSwap(const int16_t num) noexcept { return (int16_t) byteSwap((uint16_t) num); }
 inline constexpr int32_t byteSwap(const int32_t num) noexcept { return (int32_t) byteSwap((uint32_t) num); }
+inline constexpr int64_t byteSwap(const int64_t num) noexcept { return (int64_t) byteSwap((uint64_t) num); }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Convert from little endian to host endian and visa versa

@@ -9,50 +9,10 @@
 
 #include <algorithm>
 
-// Definition and state for a fire flicker light
-struct fireflicker_t {
-    thinker_t   thinker;
-    sector_t*   sector;
-    int32_t     count;
-    int32_t     maxlight;
-    int32_t     minlight;
-};
-
-// Definition and state for a flashing light
-struct lightflash_t {
-    thinker_t   thinker;
-    sector_t*   sector;
-    int32_t     count;
-    int32_t     maxlight;
-    int32_t     minlight;
-    int32_t     maxtime;
-    int32_t     mintime;
-};
-
-// Definition and state for a strobing light
-struct strobe_t {
-    thinker_t   thinker;
-    sector_t*   sector;
-    int32_t     count;
-    int32_t     minlight;
-    int32_t     maxlight;
-    int32_t     darktime;
-    int32_t     brighttime;
-};
-
-// Definition and state for a glowing light
-struct glow_t {
-    thinker_t   thinker;
-    sector_t*   sector;
-    int32_t     minlight;
-    int32_t     maxlight;
-    int32_t     direction;
-};
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a light that flickers like fire
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_FireFlicker(fireflicker_t& flicker) noexcept {
+void T_FireFlicker(fireflicker_t& flicker) noexcept {
     // Time to flicker yet?
     if (--flicker.count != 0)
         return;
@@ -90,7 +50,7 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a flashing light
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_LightFlash(lightflash_t& lightFlash) noexcept {
+void T_LightFlash(lightflash_t& lightFlash) noexcept {
     // Time to flash yet?
     if (--lightFlash.count != 0)
         return;
@@ -129,7 +89,7 @@ void P_SpawnLightFlash(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a strobe flash light
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_StrobeFlash(strobe_t& strobe) noexcept {
+void T_StrobeFlash(strobe_t& strobe) noexcept {
     // Time to flash yet?
     if (--strobe.count != 0)
         return;
@@ -282,7 +242,7 @@ void EV_LightTurnOn(line_t& line, const int32_t onLightLevel) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a glowing light
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_Glow(glow_t& glow) noexcept {
+void T_Glow(glow_t& glow) noexcept {
     sector_t& sector = *glow.sector;
 
     if (glow.direction == -1) {

@@ -21,8 +21,8 @@ const uint8_t gRndTable[256] = {
 };
 
 // Current position in the RNG table for main game and UI rngs
-static uint32_t gPRndIndex;
-static uint32_t gMRndIndex;
+uint32_t gPRndIndex;
+uint32_t gMRndIndex;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return a pseudo random number from 0-255 using the main game RNG
