@@ -40,7 +40,9 @@
 #include "Doom/UI/st_main.h"
 #include "Endian.h"
 #include "Game.h"
+#include "InputStream.h"
 #include "MapHash.h"
+#include "OutputStream.h"
 #include "SaveAndLoad.h"
 #include "ScriptingEngine.h"
 #include "Wess/psxcd.h"
@@ -62,6 +64,25 @@ template <class T>
 static void byteSwapEnumField(T& toSwap) noexcept {
     typedef std::underlying_type_t<T> EnumT;
     toSwap = (T) Endian::byteSwap((EnumT) toSwap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Call 'byteSwap' on an array of objects
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void byteSwapObjects(T* const pObjs, const uint32_t numObjs) noexcept {
+    for (uint32_t i = 0; i < numObjs; ++i) {
+        pObjs[i].byteSwap();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: allocates an array of objects and then reads those objects from the specified file
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void readArray(InputStream& file, std::unique_ptr<T[]>& arrayStorage, const uint32_t numElems) THROWS {
+    arrayStorage = std::make_unique<T[]>(numElems);
+    file.readArray(arrayStorage.get(), numElems);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -114,6 +135,19 @@ static bool isValidStateIdx(const int32_t idx) noexcept {
 
 static bool isValidMoveDir(const dirtype_t dir) noexcept {
     return ((dir >= 0) && (dir < NUMDIRS));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Validate an array of objects by calling 'validate()'
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static bool validateObjects(T* const pObjs, const uint32_t numObjs) noexcept {
+    for (uint32_t i = 0; i < numObjs; ++i) {
+        if (!pObjs[i].validate())
+            return false;
+    }
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1409,12 +1443,95 @@ bool SaveFileHdr::validate() const noexcept {
         validateVersion() &&
         validateMapHash() &&
         // Sanity these counts match the map
-        (numSectors == gNumSectors) &&
-        (numLines == gNumLines) &&
-        (numSides == gNumSides)
+        ((int32_t) numSectors == gNumSectors) &&
+        ((int32_t) numLines == gNumLines) &&
+        ((int32_t) numSides == gNumSides)
     );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // SaveData
 //------------------------------------------------------------------------------------------------------------------------------------------
+void SaveData::byteSwap() noexcept {
+    hdr.byteSwap();
+    globals.byteSwap();
+    byteSwapObjects(sectors.get(), hdr.numSectors);
+    byteSwapObjects(lines.get(), hdr.numLines);
+    byteSwapObjects(sides.get(), hdr.numSides);
+    byteSwapObjects(mobjs.get(), hdr.numMobjs);
+    byteSwapObjects(vlDoors.get(), hdr.numVlDoors);
+    byteSwapObjects(vlCustomDoors.get(), hdr.numVlCustomDoors);
+    byteSwapObjects(floorMovers.get(), hdr.numFloorMovers);
+    byteSwapObjects(ceilings.get(), hdr.numCeilings);
+    byteSwapObjects(plats.get(), hdr.numPlats);
+    byteSwapObjects(fireFlickers.get(), hdr.numFireFlickers);
+    byteSwapObjects(lightFlashes.get(), hdr.numLightFlashes);
+    byteSwapObjects(strobes.get(), hdr.numStrobes);
+    byteSwapObjects(glows.get(), hdr.numGlows);
+    byteSwapObjects(delayedExits.get(), hdr.numDelayedExits);
+    byteSwapObjects(buttons.get(), hdr.numButtons);
+    byteSwapObjects(scheduledActions.get(), hdr.numScheduledActions);
+}
+
+bool SaveData::writeTo(OutputStream& out) const noexcept {
+    try {
+        out.write(hdr);
+        out.write(globals);
+        out.writeArray(sectors.get(), hdr.numSectors);
+        out.writeArray(lines.get(), hdr.numLines);
+        out.writeArray(sides.get(), hdr.numSides);
+        out.writeArray(mobjs.get(), hdr.numMobjs);
+        out.writeArray(vlDoors.get(), hdr.numVlDoors);
+        out.writeArray(vlCustomDoors.get(), hdr.numVlCustomDoors);
+        out.writeArray(floorMovers.get(), hdr.numFloorMovers);
+        out.writeArray(ceilings.get(), hdr.numCeilings);
+        out.writeArray(plats.get(), hdr.numPlats);
+        out.writeArray(fireFlickers.get(), hdr.numFireFlickers);
+        out.writeArray(lightFlashes.get(), hdr.numLightFlashes);
+        out.writeArray(strobes.get(), hdr.numStrobes);
+        out.writeArray(glows.get(), hdr.numGlows);
+        out.writeArray(delayedExits.get(), hdr.numDelayedExits);
+        out.writeArray(buttons.get(), hdr.numButtons);
+        out.writeArray(scheduledActions.get(), hdr.numScheduledActions);
+        return true;
+    }
+    catch (...) {
+        return false;
+    }
+}
+
+SaveData::ReadFromFileResult SaveData::readFrom(InputStream& in) noexcept {
+    try {
+        // Read the header first and do basic validity checks
+        in.read(hdr);
+
+        if (!hdr.validateFileId())
+            return ReadFromFileResult::BAD_FILE_ID;
+
+        if (!hdr.validateVersion())
+            return ReadFromFileResult::BAD_VERSION;
+
+        // Read everything else
+        in.read(globals);
+        readArray(in, sectors, hdr.numSectors);
+        readArray(in, lines, hdr.numLines);
+        readArray(in, sides, hdr.numSides);
+        readArray(in, mobjs, hdr.numMobjs);
+        readArray(in, vlDoors, hdr.numVlDoors);
+        readArray(in, vlCustomDoors, hdr.numVlCustomDoors);
+        readArray(in, floorMovers, hdr.numFloorMovers);
+        readArray(in, ceilings, hdr.numCeilings);
+        readArray(in, plats, hdr.numPlats);
+        readArray(in, fireFlickers, hdr.numFireFlickers);
+        readArray(in, lightFlashes, hdr.numLightFlashes);
+        readArray(in, strobes, hdr.numStrobes);
+        readArray(in, glows, hdr.numGlows);
+        readArray(in, delayedExits, hdr.numDelayedExits);
+        readArray(in, buttons, hdr.numButtons);
+        readArray(in, scheduledActions, hdr.numScheduledActions);
+        return ReadFromFileResult::OK;
+    }
+    catch (...) {
+        return ReadFromFileResult::READ_ERROR;
+    }
+}

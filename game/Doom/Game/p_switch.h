@@ -40,3 +40,7 @@ struct button_t {
 void P_InitSwitchList() noexcept;
 void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept;
 bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept;
+
+#if PSYDOOM_MODS
+    uint32_t P_GetMaxButtons() noexcept;
+#endif

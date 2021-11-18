@@ -6,8 +6,8 @@
 
 #include <memory>
 
-class FileInputStream;
-class FileOutputStream;
+class InputStream;
+class OutputStream;
 enum bwhere_e : int32_t;
 enum ceiling_e : int32_t;
 enum floor_e : int32_t;
@@ -518,29 +518,38 @@ static_assert(sizeof(SaveFileHdr) == 96);
 
 // Save data for the game in it's entirety, in order of how it appears in the file.
 // Just encapsulates state for a single player game, does NOT support multiplayer.
+//
+// Note: unlike other types this object deliberately does not handle validation, serialization and deserialization.
+// Orchestrating those operations at a high level is handled by the 'SaveAndLoad' module.
 struct SaveData {
-    SaveFileHdr                             hdr;
-    SavedGlobals                            globals;
-    std::unique_ptr<SavedSectorT[]>         sectors;
-    std::unique_ptr<SavedLineT[]>           lines;
-    std::unique_ptr<SavedSideT[]>           sides;
-    std::unique_ptr<SavedMobjT[]>           mobjs;
-    std::unique_ptr<SavedVLDoorT[]>         vlDoors;
-    std::unique_ptr<SavedVLCustomdoorT[]>   vlCustomDoors;
-    std::unique_ptr<SavedFloorMoveT[]>      floorMovers;
-    std::unique_ptr<SavedCeilingT[]>        ceilings;
-    std::unique_ptr<SavedPlatT[]>           plats;
-    std::unique_ptr<SavedFireFlickerT[]>    fireFlickers;
-    std::unique_ptr<SavedLightFlashT[]>     lightFlashes;
-    std::unique_ptr<SavedStrobeT[]>         strobes;
-    std::unique_ptr<SavedGlowT[]>           glows;
-    std::unique_ptr<SavedDelayedExitT[]>    delayedExits;
-    std::unique_ptr<SavedButtonT[]>         buttons;
+    // Enum representing the result of reading a save from a file
+    enum class ReadFromFileResult {
+        OK,             // Read was OK
+        BAD_FILE_ID,    // File ID was invalid
+        BAD_VERSION,    // Save file format is not supported (invalid version)
+        READ_ERROR      // General read error, not enough data, IO error etc.
+    };
+
+    SaveFileHdr                                 hdr;
+    SavedGlobals                                globals;
+    std::unique_ptr<SavedSectorT[]>             sectors;
+    std::unique_ptr<SavedLineT[]>               lines;
+    std::unique_ptr<SavedSideT[]>               sides;
+    std::unique_ptr<SavedMobjT[]>               mobjs;
+    std::unique_ptr<SavedVLDoorT[]>             vlDoors;
+    std::unique_ptr<SavedVLCustomdoorT[]>       vlCustomDoors;
+    std::unique_ptr<SavedFloorMoveT[]>          floorMovers;
+    std::unique_ptr<SavedCeilingT[]>            ceilings;
+    std::unique_ptr<SavedPlatT[]>               plats;
+    std::unique_ptr<SavedFireFlickerT[]>        fireFlickers;
+    std::unique_ptr<SavedLightFlashT[]>         lightFlashes;
+    std::unique_ptr<SavedStrobeT[]>             strobes;
+    std::unique_ptr<SavedGlowT[]>               glows;
+    std::unique_ptr<SavedDelayedExitT[]>        delayedExits;
+    std::unique_ptr<SavedButtonT[]>             buttons;
+    std::unique_ptr<SavedScheduledAction[]>     scheduledActions;
 
     void byteSwap() noexcept;
-    bool validate() const noexcept;
-    void serialize() noexcept;
-    void deserialize() const noexcept;
-    bool writeToFile(FileOutputStream& file) const noexcept;
-    bool readFromFile(FileInputStream& file) noexcept;
+    bool writeTo(OutputStream& out) const noexcept;
+    [[nodiscard]] ReadFromFileResult readFrom(InputStream& in) noexcept;
 };

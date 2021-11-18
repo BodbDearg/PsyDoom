@@ -845,3 +845,17 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
 
     return true;
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the current number of buttons in the buttons array.
+// Note: for limit removing builds this can be expanded as required.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t P_GetMaxButtons() noexcept {
+    #if PSYDOOM_LIMIT_REMOVING
+        return (uint32_t) gButtonList.size();
+    #else
+        return MAXBUTTONS;
+    #endif
+}
+#endif  // #if PSYDOOM_MODS
