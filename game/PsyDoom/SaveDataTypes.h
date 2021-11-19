@@ -10,6 +10,7 @@ class InputStream;
 class OutputStream;
 enum bwhere_e : int32_t;
 enum ceiling_e : int32_t;
+enum class ReadSaveResult : int32_t;
 enum floor_e : int32_t;
 enum plat_e : int32_t;
 enum plattype_e : int32_t;
@@ -518,18 +519,14 @@ static_assert(sizeof(SaveFileHdr) == 96);
 
 // Save data for the game in it's entirety, in order of how it appears in the file.
 // Just encapsulates state for a single player game, does NOT support multiplayer.
+// 
+// Notes:
+//  (1) The data is always read and written in little endian format.
+//      If the host machine is big endian then byte order corrections are performed automatically.
+//  (2) Unlike other types this object deliberately does not handle validation, serialization and deserialization.
+//      Orchestrating those operations at a high level is handled by the 'SaveAndLoad' module.
 //
-// Note: unlike other types this object deliberately does not handle validation, serialization and deserialization.
-// Orchestrating those operations at a high level is handled by the 'SaveAndLoad' module.
 struct SaveData {
-    // Enum representing the result of reading a save from a file
-    enum class ReadFromFileResult {
-        OK,             // Read was OK
-        BAD_FILE_ID,    // File ID was invalid
-        BAD_VERSION,    // Save file format is not supported (invalid version)
-        READ_ERROR      // General read error, not enough data, IO error etc.
-    };
-
     SaveFileHdr                                 hdr;
     SavedGlobals                                globals;
     std::unique_ptr<SavedSectorT[]>             sectors;
@@ -549,7 +546,6 @@ struct SaveData {
     std::unique_ptr<SavedButtonT[]>             buttons;
     std::unique_ptr<SavedScheduledAction[]>     scheduledActions;
 
-    void byteSwap() noexcept;
     bool writeTo(OutputStream& out) const noexcept;
-    [[nodiscard]] ReadFromFileResult readFrom(InputStream& in) noexcept;
+    [[nodiscard]] ReadSaveResult readFrom(InputStream& in) noexcept;
 };

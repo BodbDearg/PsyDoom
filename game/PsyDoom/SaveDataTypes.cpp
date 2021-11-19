@@ -15,7 +15,6 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
-#include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
@@ -77,12 +76,57 @@ static void byteSwapObjects(T* const pObjs, const uint32_t numObjs) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: allocates an array of objects and then reads those objects from the specified file
+// Helper: read an object (stored in little endiant format) from the specified stream
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
-static void readArray(InputStream& file, std::unique_ptr<T[]>& arrayStorage, const uint32_t numElems) THROWS {
-    arrayStorage = std::make_unique<T[]>(numElems);
-    file.readArray(arrayStorage.get(), numElems);
+static void readObjectLE(InputStream& in, T& obj) THROWS {
+    in.read(obj);
+
+    if constexpr (Endian::isBig()) {
+        obj.byteSwap();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: allocates an array of objects and then reads those objects from the specified stream.
+// The objects in the file are assumed to be little endian.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void readArrayLE(InputStream& in, std::unique_ptr<T[]>& arrayStorage, const uint32_t numObjs) THROWS {
+    arrayStorage = std::make_unique<T[]>(numObjs);
+    in.readArray(arrayStorage.get(), numObjs);
+
+    if constexpr (Endian::isBig()) {
+        byteSwapObjects(arrayStorage.get(), numObjs);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: write an object to the specified stream in little endian format
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void writeObjectLE(OutputStream& out, const T& obj) THROWS {
+    if constexpr (Endian::isLittle()) {
+        out.write(obj);
+    } else {
+        T littleObj = obj;
+        littleObj.byteSwap();
+        out.write(littleObj);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: writes an array objects to the specified stream in little endian format
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void writeArrayLE(OutputStream& out, const T* const pObjs, const uint32_t numObjs) THROWS {
+    if constexpr (Endian::isLittle()) {
+        out.writeArray(pObjs, numObjs);
+    } else {
+        for (uint32_t i = 0; i < numObjs; ++i) {
+            writeObjectLE(out, pObjs[i]);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -408,7 +452,9 @@ void SavedMobjT::serializeFrom(const mobj_t& mobj) noexcept {
 }
 
 void SavedMobjT::deserializeTo(mobj_t& mobj) const noexcept {
-    // Note: not initializing the mobj linked list fields here deliberately; that happens elsewhere
+    // Note: don't init the following here deliberately - done elsewhere:
+    //  (1) The mobj linked list fields (global mobj list, sector list, blockmap list)
+    //  (2) The player field
     mobj.x = x;
     mobj.y = y;
     mobj.z = z;
@@ -436,7 +482,6 @@ void SavedMobjT::deserializeTo(mobj_t& mobj) const noexcept {
     mobj.target = getMobjAtIdx(targetIdx);
     mobj.reactiontime = reactiontime;
     mobj.threshold = threshold;
-    mobj.player = nullptr;      // Initialized later
     mobj.extradata = {};        // Not serialized, default init
     mobj.spawnx = spawnx;
     mobj.spawny = spawny;
@@ -456,18 +501,19 @@ void SavedPspdefT::byteSwap() noexcept {
 }
 
 bool SavedPspdefT::validate() const noexcept {
-    return isValidStateIdx(stateIdx);
+    // Note: state is optional for some player sprites!
+    return ((stateIdx <= -1) || isValidStateIdx(stateIdx));
 }
 
 void SavedPspdefT::serializeFrom(const pspdef_t& spr) noexcept {
-    stateIdx = (int32_t)(spr.state - gStates);
+    stateIdx = (spr.state) ? (int32_t)(spr.state - gStates) : -1;
     tics = spr.tics;
     sx = spr.sx;
     sy = spr.sy;
 }
 
 void SavedPspdefT::deserializeTo(pspdef_t& spr) const noexcept {
-    spr.state = &gStates[stateIdx];
+    spr.state = (stateIdx >= 0) ? &gStates[stateIdx] : nullptr;
     spr.tics = tics;
     spr.sx = sx;
     spr.sy = sy;
@@ -594,6 +640,7 @@ void SavedPlayerT::serializeFrom(const player_t& player) noexcept {
 
 void SavedPlayerT::deserializeTo(player_t& player) const noexcept {
     player.mo = getMobjAtIdx(mobjIdx);
+    player.mo->player = &player;
     player.playerstate = playerstate;
     player.forwardmove = forwardmove;
     player.sidemove = sidemove;
@@ -872,11 +919,6 @@ void SavedCeilingT::deserializeTo(ceiling_t& ceil) const noexcept {
     ceil.stopSound = stopSound;
     ceil.finishScriptActionNum = finishScriptActionNum;
     ceil.finishScriptUserdata = finishScriptUserdata;
-
-    // TODO: REMOVE - handle this in the load/save module.
-    if (bIsActive) {
-        P_AddActiveCeiling(ceil);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -953,11 +995,6 @@ void SavedPlatT::deserializeTo(plat_t& plat) const noexcept {
     plat.stopSound = stopSound;
     plat.finishScriptActionNum = finishScriptActionNum;
     plat.finishScriptUserdata = finishScriptUserdata;
-
-    // TODO: REMOVE - handle this in the load/save module.
-    if (bIsActive) {
-        P_AddActivePlat(plat);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1320,7 +1357,7 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
     gTotalSecret = totalSecret;
     
     std::memset(gPlayers, 0, sizeof(gPlayers));     // Zero-init the bits we don't use
-    player.deserializeTo(gPlayers[0]);;
+    player.deserializeTo(gPlayers[0]);
     
     gPRndIndex = prndIndex;
     gMRndIndex = mrndIndex;
@@ -1346,17 +1383,6 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
     gbDoSpclFace = bDoSpclFace;
     gNewFace = newFace;
     gSpclFaceType = spclFaceType;
-
-    // Switch to playing CD music if not already playing it
-    // TODO: REMOVE - handle this in the load/save module.
-    if (curCDTrack > 0) {
-        const int32_t playingCdTrack = psxcd_get_playing_track();
-
-        if (playingCdTrack != curCDTrack) {
-            S_StopMusic();
-            psxcd_play_at_andloop(curCDTrack, gCdMusicVol, 0, 0, curCDTrack, gCdMusicVol, 0, 0);
-        }
-    }
 
     // Default init the item respawn queue and dead player removal queue.
     // Don't serialize these because the save file is for single player only...
@@ -1390,11 +1416,6 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
 
     // The count marker gets reset after deserializing
     gValidCount = 0;
-
-    // Clear these for good measure, deserializing an active ceiling or plat will add to these lists
-    // TODO: REMOVE - handle this in the load/save module.
-    gpActiveCeilings.clear();
-    gpActivePlats.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1445,54 +1466,35 @@ bool SaveFileHdr::validate() const noexcept {
         // Sanity these counts match the map
         ((int32_t) numSectors == gNumSectors) &&
         ((int32_t) numLines == gNumLines) &&
-        ((int32_t) numSides == gNumSides)
+        ((int32_t) numSides == gNumSides) &&
+        // There should be at least one map object! (the player)
+        (numMobjs > 0)
     );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // SaveData
 //------------------------------------------------------------------------------------------------------------------------------------------
-void SaveData::byteSwap() noexcept {
-    hdr.byteSwap();
-    globals.byteSwap();
-    byteSwapObjects(sectors.get(), hdr.numSectors);
-    byteSwapObjects(lines.get(), hdr.numLines);
-    byteSwapObjects(sides.get(), hdr.numSides);
-    byteSwapObjects(mobjs.get(), hdr.numMobjs);
-    byteSwapObjects(vlDoors.get(), hdr.numVlDoors);
-    byteSwapObjects(vlCustomDoors.get(), hdr.numVlCustomDoors);
-    byteSwapObjects(floorMovers.get(), hdr.numFloorMovers);
-    byteSwapObjects(ceilings.get(), hdr.numCeilings);
-    byteSwapObjects(plats.get(), hdr.numPlats);
-    byteSwapObjects(fireFlickers.get(), hdr.numFireFlickers);
-    byteSwapObjects(lightFlashes.get(), hdr.numLightFlashes);
-    byteSwapObjects(strobes.get(), hdr.numStrobes);
-    byteSwapObjects(glows.get(), hdr.numGlows);
-    byteSwapObjects(delayedExits.get(), hdr.numDelayedExits);
-    byteSwapObjects(buttons.get(), hdr.numButtons);
-    byteSwapObjects(scheduledActions.get(), hdr.numScheduledActions);
-}
-
 bool SaveData::writeTo(OutputStream& out) const noexcept {
     try {
-        out.write(hdr);
-        out.write(globals);
-        out.writeArray(sectors.get(), hdr.numSectors);
-        out.writeArray(lines.get(), hdr.numLines);
-        out.writeArray(sides.get(), hdr.numSides);
-        out.writeArray(mobjs.get(), hdr.numMobjs);
-        out.writeArray(vlDoors.get(), hdr.numVlDoors);
-        out.writeArray(vlCustomDoors.get(), hdr.numVlCustomDoors);
-        out.writeArray(floorMovers.get(), hdr.numFloorMovers);
-        out.writeArray(ceilings.get(), hdr.numCeilings);
-        out.writeArray(plats.get(), hdr.numPlats);
-        out.writeArray(fireFlickers.get(), hdr.numFireFlickers);
-        out.writeArray(lightFlashes.get(), hdr.numLightFlashes);
-        out.writeArray(strobes.get(), hdr.numStrobes);
-        out.writeArray(glows.get(), hdr.numGlows);
-        out.writeArray(delayedExits.get(), hdr.numDelayedExits);
-        out.writeArray(buttons.get(), hdr.numButtons);
-        out.writeArray(scheduledActions.get(), hdr.numScheduledActions);
+        writeObjectLE(out, hdr);
+        writeObjectLE(out, globals);
+        writeArrayLE(out, sectors.get(), hdr.numSectors);
+        writeArrayLE(out, lines.get(), hdr.numLines);
+        writeArrayLE(out, sides.get(), hdr.numSides);
+        writeArrayLE(out, mobjs.get(), hdr.numMobjs);
+        writeArrayLE(out, vlDoors.get(), hdr.numVlDoors);
+        writeArrayLE(out, vlCustomDoors.get(), hdr.numVlCustomDoors);
+        writeArrayLE(out, floorMovers.get(), hdr.numFloorMovers);
+        writeArrayLE(out, ceilings.get(), hdr.numCeilings);
+        writeArrayLE(out, plats.get(), hdr.numPlats);
+        writeArrayLE(out, fireFlickers.get(), hdr.numFireFlickers);
+        writeArrayLE(out, lightFlashes.get(), hdr.numLightFlashes);
+        writeArrayLE(out, strobes.get(), hdr.numStrobes);
+        writeArrayLE(out, glows.get(), hdr.numGlows);
+        writeArrayLE(out, delayedExits.get(), hdr.numDelayedExits);
+        writeArrayLE(out, buttons.get(), hdr.numButtons);
+        writeArrayLE(out, scheduledActions.get(), hdr.numScheduledActions);
         return true;
     }
     catch (...) {
@@ -1500,38 +1502,43 @@ bool SaveData::writeTo(OutputStream& out) const noexcept {
     }
 }
 
-SaveData::ReadFromFileResult SaveData::readFrom(InputStream& in) noexcept {
+ReadSaveResult SaveData::readFrom(InputStream& in) noexcept {
     try {
         // Read the header first and do basic validity checks
-        in.read(hdr);
+        readObjectLE(in, hdr);
 
         if (!hdr.validateFileId())
-            return ReadFromFileResult::BAD_FILE_ID;
+            return ReadSaveResult::BAD_FILE_ID;
 
         if (!hdr.validateVersion())
-            return ReadFromFileResult::BAD_VERSION;
+            return ReadSaveResult::BAD_VERSION;
+
+        // Read the globals and verify the map number is OK
+        readObjectLE(in, globals);
+
+        if ((globals.gameMap < 1) || (globals.gameMap > Game::getNumMaps()))
+            return ReadSaveResult::BAD_MAP_NUM;
 
         // Read everything else
-        in.read(globals);
-        readArray(in, sectors, hdr.numSectors);
-        readArray(in, lines, hdr.numLines);
-        readArray(in, sides, hdr.numSides);
-        readArray(in, mobjs, hdr.numMobjs);
-        readArray(in, vlDoors, hdr.numVlDoors);
-        readArray(in, vlCustomDoors, hdr.numVlCustomDoors);
-        readArray(in, floorMovers, hdr.numFloorMovers);
-        readArray(in, ceilings, hdr.numCeilings);
-        readArray(in, plats, hdr.numPlats);
-        readArray(in, fireFlickers, hdr.numFireFlickers);
-        readArray(in, lightFlashes, hdr.numLightFlashes);
-        readArray(in, strobes, hdr.numStrobes);
-        readArray(in, glows, hdr.numGlows);
-        readArray(in, delayedExits, hdr.numDelayedExits);
-        readArray(in, buttons, hdr.numButtons);
-        readArray(in, scheduledActions, hdr.numScheduledActions);
-        return ReadFromFileResult::OK;
+        readArrayLE(in, sectors, hdr.numSectors);
+        readArrayLE(in, lines, hdr.numLines);
+        readArrayLE(in, sides, hdr.numSides);
+        readArrayLE(in, mobjs, hdr.numMobjs);
+        readArrayLE(in, vlDoors, hdr.numVlDoors);
+        readArrayLE(in, vlCustomDoors, hdr.numVlCustomDoors);
+        readArrayLE(in, floorMovers, hdr.numFloorMovers);
+        readArrayLE(in, ceilings, hdr.numCeilings);
+        readArrayLE(in, plats, hdr.numPlats);
+        readArrayLE(in, fireFlickers, hdr.numFireFlickers);
+        readArrayLE(in, lightFlashes, hdr.numLightFlashes);
+        readArrayLE(in, strobes, hdr.numStrobes);
+        readArrayLE(in, glows, hdr.numGlows);
+        readArrayLE(in, delayedExits, hdr.numDelayedExits);
+        readArrayLE(in, buttons, hdr.numButtons);
+        readArrayLE(in, scheduledActions, hdr.numScheduledActions);
+        return ReadSaveResult::OK;
     }
     catch (...) {
-        return ReadFromFileResult::READ_ERROR;
+        return ReadSaveResult::IO_ERROR;
     }
 }
