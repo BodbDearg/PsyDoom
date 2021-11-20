@@ -172,7 +172,10 @@ static void allocButtonsToLoad() noexcept {
         gButtonList.clear();
         gButtonList.resize(numBtns);
     #else
-        // In non limit removing builds if there are too many buttons then just immediately revert the switch texture
+        // In non limit removing builds if there are too many buttons then just immediately revert the switch texture.
+        // Also zero-init the entire buttons array.
+        std::memset(gButtonList, 0, sizeof(gButtonList));
+
         if (numBtns > MAXBUTTONS) {
             for (uint32_t i = MAXBUTTONS; i < numBtns; ++i) {
                 const SavedButtonT& savedBtn = gSaveDataIn.buttons[i];
@@ -556,7 +559,7 @@ LoadSaveResult load() noexcept {
     deserializeObjects(saveData.strobes, gStrobes);
     deserializeObjects(saveData.glows, gGlows);
     deserializeObjects(saveData.delayedExits, gDelayedExits);
-    deserializeObjects(saveData.buttons, gActiveButtons);
+    deserializeObjects(saveData.buttons, gButtonList.data(), hdr.numButtons);
     deserializeObjects(saveData.scheduledActions, ScriptingEngine::gScheduledActions.data(), hdr.numScheduledActions);
 
     // Post load actions: adding map objects into the blockmap and sector lists, and associating thinkers with their sectors
