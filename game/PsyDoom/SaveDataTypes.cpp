@@ -52,15 +52,22 @@
 static_assert(PW_SEQ_LEN == C_ARRAY_SIZE(SavedGlobals::passwordCharBuffer), "Password char buffer has unexpected size!");
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Perform an in-place byte swap of a single field
+// Perform an in-place byte swap of a single primitive value, an array of primitive values or an enum
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
-static void byteSwapField(T& toSwap) noexcept {
+static void byteSwapValue(T& toSwap) noexcept {
     toSwap = Endian::byteSwap(toSwap);
 }
 
+template <class T, size_t ArraySize>
+static void byteSwapValueArray(T (&toSwap)[ArraySize]) noexcept {
+    for (T& elem : toSwap) {
+        byteSwapValue(elem);
+    }
+}
+
 template <class T>
-static void byteSwapEnumField(T& toSwap) noexcept {
+static void byteSwapEnumValue(T& toSwap) noexcept {
     typedef std::underlying_type_t<T> EnumT;
     toSwap = (T) Endian::byteSwap((EnumT) toSwap);
 }
@@ -72,6 +79,21 @@ template <class T>
 static void byteSwapObjects(T* const pObjs, const uint32_t numObjs) noexcept {
     for (uint32_t i = 0; i < numObjs; ++i) {
         pObjs[i].byteSwap();
+    }
+}
+
+template <class T, uint32_t ArraySize>
+static void byteSwapObjects(T (&pObjs)[ArraySize]) noexcept {
+    byteSwapObjects(pObjs, ArraySize);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: assign the elements of one array to another
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T, uint32_t ArraySize>
+static void arrayAssign(T (&pDstObjs)[ArraySize], const T (&pSrcObjs)[ArraySize]) noexcept {
+    for (uint32_t i = 0; i < ArraySize; ++i) {
+        pDstObjs[i] = pSrcObjs[i];
     }
 }
 
@@ -181,6 +203,10 @@ static bool isValidMoveDir(const dirtype_t dir) noexcept {
     return ((dir >= 0) && (dir < NUMDIRS));
 }
 
+static bool isValidWeaponType(const weapontype_t weapon) noexcept {
+    return ((weapon >= 0) && (weapon < NUMWEAPONS));
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Validate an array of objects by calling 'validate()'
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -192,6 +218,11 @@ static bool validateObjects(T* const pObjs, const uint32_t numObjs) noexcept {
     }
 
     return true;
+}
+
+template <class T, uint32_t ArraySize>
+static bool validateObjects(const T (&pObjs)[ArraySize]) noexcept {
+    return validateObjects(pObjs, ArraySize);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -244,21 +275,21 @@ static mobj_t* getMobjAtIdx(const int32_t idx) noexcept {
 // SavedSectorT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedSectorT::byteSwap() noexcept {
-    byteSwapField(floorheight);
-    byteSwapField(ceilingheight);
-    byteSwapField(floorpic);
-    byteSwapField(ceilingpic);
-    byteSwapField(colorid);
-    byteSwapField(ceilColorid);
-    byteSwapField(lightlevel);
-    byteSwapField(special);
-    byteSwapField(tag);
-    byteSwapField(soundtargetIdx);
-    byteSwapField(flags);
-    byteSwapField(floorTexOffsetX);
-    byteSwapField(floorTexOffsetY);
-    byteSwapField(ceilTexOffsetX);
-    byteSwapField(ceilTexOffsetY);
+    byteSwapValue(floorheight);
+    byteSwapValue(ceilingheight);
+    byteSwapValue(floorpic);
+    byteSwapValue(ceilingpic);
+    byteSwapValue(colorid);
+    byteSwapValue(ceilColorid);
+    byteSwapValue(lightlevel);
+    byteSwapValue(special);
+    byteSwapValue(tag);
+    byteSwapValue(soundtargetIdx);
+    byteSwapValue(flags);
+    byteSwapValue(floorTexOffsetX);
+    byteSwapValue(floorTexOffsetY);
+    byteSwapValue(ceilTexOffsetX);
+    byteSwapValue(ceilTexOffsetY);
 }
 
 bool SavedSectorT::validate() const noexcept {
@@ -284,6 +315,9 @@ void SavedSectorT::serializeFrom(const sector_t& sector) noexcept {
 }
 
 void SavedSectorT::deserializeTo(sector_t& sector) const noexcept {
+    // All things should be removed from the map at this point!
+    ASSERT(sector.thinglist == nullptr);
+
     // Note: we don't init the thing list deliberately here - that's done elsewhere
     sector.floorheight = floorheight;
     sector.ceilingheight = ceilingheight;
@@ -313,9 +347,9 @@ void SavedSectorT::deserializeTo(sector_t& sector) const noexcept {
 // SavedLineT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedLineT::byteSwap() noexcept {
-    byteSwapField(flags);
-    byteSwapField(special);
-    byteSwapField(tag);
+    byteSwapValue(flags);
+    byteSwapValue(special);
+    byteSwapValue(tag);
 }
 
 void SavedLineT::serializeFrom(const line_t& line) noexcept {
@@ -328,18 +362,19 @@ void SavedLineT::deserializeTo(line_t& line) const noexcept {
     line.flags = flags;
     line.special = special;
     line.tag = tag;
-    line.validcount = 0;        // Not serialized, resets on load
+    line.validcount = 0;            // Not serialized, resets on load
+    line.specialdata = nullptr;     // Unused by PSX DOOM - default init
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // SavedSideT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedSideT::byteSwap() noexcept {
-    byteSwapField(textureoffset);
-    byteSwapField(rowoffset);
-    byteSwapField(toptexture);
-    byteSwapField(bottomtexture);
-    byteSwapField(midtexture);
+    byteSwapValue(textureoffset);
+    byteSwapValue(rowoffset);
+    byteSwapValue(toptexture);
+    byteSwapValue(bottomtexture);
+    byteSwapValue(midtexture);
 }
 
 bool SavedSideT::validate() const noexcept {
@@ -366,36 +401,36 @@ void SavedSideT::deserializeTo(side_t& side) const noexcept {
 // SavedMobjT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedMobjT::byteSwap() noexcept {
-    byteSwapField(x);
-    byteSwapField(y);
-    byteSwapField(z);
-    byteSwapField(tag);
-    byteSwapField(subsectorIdx);
-    byteSwapField(angle);
-    byteSwapField(sprite);
-    byteSwapField(frame);
-    byteSwapField(floorz);
-    byteSwapField(ceilingz);
-    byteSwapField(radius);
-    byteSwapField(height);
-    byteSwapField(momx);
-    byteSwapField(momy);
-    byteSwapField(momz);
-    byteSwapEnumField(type);
-    byteSwapField(tics);
-    byteSwapField(stateIdx);
-    byteSwapField(flags);
-    byteSwapField(health);
-    byteSwapEnumField(movedir);
-    byteSwapField(movecount);
-    byteSwapField(targetIdx);
-    byteSwapField(reactiontime);
-    byteSwapField(threshold);
-    byteSwapField(spawnx);
-    byteSwapField(spawny);
-    byteSwapField(spawntype);
-    byteSwapField(spawnangle);
-    byteSwapField(tracerIdx);
+    byteSwapValue(x);
+    byteSwapValue(y);
+    byteSwapValue(z);
+    byteSwapValue(tag);
+    byteSwapValue(subsectorIdx);
+    byteSwapValue(angle);
+    byteSwapValue(sprite);
+    byteSwapValue(frame);
+    byteSwapValue(floorz);
+    byteSwapValue(ceilingz);
+    byteSwapValue(radius);
+    byteSwapValue(height);
+    byteSwapValue(momx);
+    byteSwapValue(momy);
+    byteSwapValue(momz);
+    byteSwapEnumValue(type);
+    byteSwapValue(tics);
+    byteSwapValue(stateIdx);
+    byteSwapValue(flags);
+    byteSwapValue(health);
+    byteSwapEnumValue(movedir);
+    byteSwapValue(movecount);
+    byteSwapValue(targetIdx);
+    byteSwapValue(reactiontime);
+    byteSwapValue(threshold);
+    byteSwapValue(spawnx);
+    byteSwapValue(spawny);
+    byteSwapValue(spawntype);
+    byteSwapValue(spawnangle);
+    byteSwapValue(tracerIdx);
 }
 
 bool SavedMobjT::validate() const noexcept {
@@ -495,10 +530,10 @@ void SavedMobjT::deserializeTo(mobj_t& mobj) const noexcept {
 // SavedPspdefT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedPspdefT::byteSwap() noexcept {
-    byteSwapField(stateIdx);
-    byteSwapField(tics);
-    byteSwapField(sx);
-    byteSwapField(sy);
+    byteSwapValue(stateIdx);
+    byteSwapValue(tics);
+    byteSwapValue(sx);
+    byteSwapValue(sy);
 }
 
 bool SavedPspdefT::validate() const noexcept {
@@ -524,71 +559,48 @@ void SavedPspdefT::deserializeTo(pspdef_t& spr) const noexcept {
 // SavedPlayerT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedPlayerT::byteSwap() noexcept {
-    byteSwapField(mobjIdx);
-    byteSwapEnumField(playerstate);
-    byteSwapField(forwardmove);
-    byteSwapField(sidemove);
-    byteSwapField(angleturn);
-    byteSwapField(viewz);
-    byteSwapField(viewheight);
-    byteSwapField(deltaviewheight);
-    byteSwapField(bob);
-    byteSwapField(health);
-    byteSwapField(armorpoints);
-    byteSwapField(armortype);
-
-    for (int32_t& powerAmt : powers) {
-        byteSwapField(powerAmt);
-    }
-
-    for (bool& bHaveCard : cards) {
-        byteSwapField(bHaveCard);
-    }
-
-    byteSwapField(backpack);
-    byteSwapEnumField(readyweapon);
-    byteSwapEnumField(pendingweapon);
-
-    for (bool& bWeaponOwned : weaponowned) {
-        byteSwapField(bWeaponOwned);
-    }
-
-    for (int32_t& ammoAmt : ammo) {
-        byteSwapField(ammoAmt);
-    }
-
-    for (int32_t& maxAmmoAmt : maxammo) {
-        byteSwapField(maxAmmoAmt);
-    }
-
-    byteSwapField(cheats);
-    byteSwapField(killcount);
-    byteSwapField(itemcount);
-    byteSwapField(secretcount);
-    byteSwapField(damagecount);
-    byteSwapField(bonuscount);
-    byteSwapField(attackerIdx);
-    byteSwapField(extralight);
-
-    for (SavedPspdefT& spr : psprites) {
-        spr.byteSwap();
-    }
-
-    byteSwapField(automapx);
-    byteSwapField(automapy);
-    byteSwapField(automapscale);
+    byteSwapValue(mobjIdx);
+    byteSwapEnumValue(playerstate);
+    byteSwapValue(forwardmove);
+    byteSwapValue(sidemove);
+    byteSwapValue(angleturn);
+    byteSwapValue(viewz);
+    byteSwapValue(viewheight);
+    byteSwapValue(deltaviewheight);
+    byteSwapValue(bob);
+    byteSwapValue(health);
+    byteSwapValue(armorpoints);
+    byteSwapValue(armortype);
+    byteSwapValueArray(powers);
+    byteSwapValueArray(cards);
+    byteSwapValue(backpack);
+    byteSwapEnumValue(readyweapon);
+    byteSwapEnumValue(pendingweapon);
+    byteSwapValueArray(weaponowned);
+    byteSwapValueArray(ammo);
+    byteSwapValueArray(maxammo);
+    byteSwapValue(cheats);
+    byteSwapValue(killcount);
+    byteSwapValue(itemcount);
+    byteSwapValue(secretcount);
+    byteSwapValue(damagecount);
+    byteSwapValue(bonuscount);
+    byteSwapValue(attackerIdx);
+    byteSwapValue(extralight);
+    byteSwapObjects(psprites);
+    byteSwapValue(automapx);
+    byteSwapValue(automapy);
+    byteSwapValue(automapscale);
 }
 
 bool SavedPlayerT::validate() const noexcept {
-    if (!isValidMobjIdx(mobjIdx))
-        return false;
-
-    for (const SavedPspdefT& spr : psprites) {
-        if (!spr.validate())
-            return false;
-    }
-
-    return true;
+    return (
+        isValidMobjIdx(mobjIdx) &&
+        isValidWeaponType(readyweapon) &&
+        ((pendingweapon == wp_nochange) || isValidWeaponType(pendingweapon)) &&
+        isValidMobjIdx(attackerIdx) &&
+        validateObjects(psprites)
+    );
 }
 
 void SavedPlayerT::serializeFrom(const player_t& player) noexcept {
@@ -604,31 +616,14 @@ void SavedPlayerT::serializeFrom(const player_t& player) noexcept {
     health = player.health;
     armorpoints = player.armorpoints;
     armortype = player.armortype;
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(powers); ++i) {
-        powers[i] = player.powers[i];
-    }
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(cards); ++i) {
-        cards[i] = player.cards[i];
-    }
-
+    arrayAssign(powers, player.powers);
+    arrayAssign(cards, player.cards);
     backpack = player.backpack;
     readyweapon = player.readyweapon;
     pendingweapon = player.pendingweapon;
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(weaponowned); ++i) {
-        weaponowned[i] = player.weaponowned[i];
-    }
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(ammo); ++i) {
-        ammo[i] = player.ammo[i];
-    }
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(maxammo); ++i) {
-        maxammo[i] = player.maxammo[i];
-    }
-
+    arrayAssign(weaponowned, player.weaponowned);
+    arrayAssign(ammo, player.ammo);
+    arrayAssign(maxammo, player.maxammo);
     cheats = player.cheats;
     killcount = player.killcount;
     itemcount = player.itemcount;
@@ -649,7 +644,7 @@ void SavedPlayerT::serializeFrom(const player_t& player) noexcept {
 
 void SavedPlayerT::deserializeTo(player_t& player) const noexcept {
     player.mo = getMobjAtIdx(mobjIdx);
-    player.mo->player = &player;
+    player.mo->player = &player;            // Link the map object to player
     player.playerstate = playerstate;
     player.forwardmove = forwardmove;
     player.sidemove = sidemove;
@@ -661,33 +656,16 @@ void SavedPlayerT::deserializeTo(player_t& player) const noexcept {
     player.health = health;
     player.armorpoints = armorpoints;
     player.armortype = armortype;
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(powers); ++i) {
-        player.powers[i] = powers[i];
-    }
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(cards); ++i) {
-        player.cards[i] = cards[i];
-    }
-
+    arrayAssign(player.powers, powers);
+    arrayAssign(player.cards, cards);
     player.backpack = backpack;
     player.frags = {};                      // Not serialized, default init
     player._unused = {};                    // Not serialized, default init
     player.readyweapon = readyweapon;
     player.pendingweapon = pendingweapon;
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(weaponowned); ++i) {
-        player.weaponowned[i] = weaponowned[i];
-    }
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(ammo); ++i) {
-        player.ammo[i] = ammo[i];
-    }
-
-    for (uint32_t i = 0; i < C_ARRAY_SIZE(maxammo); ++i) {
-        player.maxammo[i] = maxammo[i];
-    }
-
+    arrayAssign(player.weaponowned, weaponowned);
+    arrayAssign(player.ammo, ammo);
+    arrayAssign(player.maxammo, maxammo);
     player.attackdown = 0;                  // Not serialized, default init
     player.usedown = false;                 // Not serialized, default init
     player.cheats = cheats;
@@ -722,13 +700,13 @@ void SavedPlayerT::deserializeTo(player_t& player) const noexcept {
 // SavedVLDoorT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedVLDoorT::byteSwap() noexcept {
-    byteSwapEnumField(type);
-    byteSwapField(sectorIdx);
-    byteSwapField(topheight);
-    byteSwapField(speed);
-    byteSwapField(direction);
-    byteSwapField(topwait);
-    byteSwapField(topcountdown);
+    byteSwapEnumValue(type);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(topheight);
+    byteSwapValue(speed);
+    byteSwapValue(direction);
+    byteSwapValue(topwait);
+    byteSwapValue(topcountdown);
 }
 
 bool SavedVLDoorT::validate() const noexcept {
@@ -760,18 +738,22 @@ void SavedVLDoorT::deserializeTo(vldoor_t& door) const noexcept {
 // SavedVLCustomdoorT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedVLCustomdoorT::byteSwap() noexcept {
-    byteSwapField(sectorIdx);
-    byteSwapField(def.minHeight);
-    byteSwapField(def.maxHeight);
-    byteSwapField(def.speed);
-    byteSwapField(def.waitTime);
-    byteSwapEnumField(def.openSound);
-    byteSwapEnumField(def.closeSound);
-    byteSwapField(def.finishScriptActionNum);
-    byteSwapField(def.finishScriptUserdata);
-    byteSwapField(direction);
-    byteSwapField(postWaitDirection);
-    byteSwapField(countdown);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(def.bOpen);
+    byteSwapValue(def.bDoReturn);
+    byteSwapValue(def.bBlockable);
+    byteSwapValue(def.bDoFinishScript);
+    byteSwapValue(def.minHeight);
+    byteSwapValue(def.maxHeight);
+    byteSwapValue(def.speed);
+    byteSwapValue(def.waitTime);
+    byteSwapEnumValue(def.openSound);
+    byteSwapEnumValue(def.closeSound);
+    byteSwapValue(def.finishScriptActionNum);
+    byteSwapValue(def.finishScriptUserdata);
+    byteSwapValue(direction);
+    byteSwapValue(postWaitDirection);
+    byteSwapValue(countdown);
 }
 
 bool SavedVLCustomdoorT::validate() const noexcept {
@@ -799,24 +781,24 @@ void SavedVLCustomdoorT::deserializeTo(vlcustomdoor_t& door) const noexcept {
 // SavedFloorMoveT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedFloorMoveT::byteSwap() noexcept {
-    byteSwapEnumField(type);
-    byteSwapField(crush);
-    byteSwapField(bDoFinishScript);
-    byteSwapField(sectorIdx);
-    byteSwapField(direction);
-    byteSwapField(newspecial);
-    byteSwapField(texture);
-    byteSwapField(floordestheight);
-    byteSwapField(speed);
-    byteSwapEnumField(moveSound);
-    byteSwapField(moveSoundFreq);
-    byteSwapEnumField(stopSound);
-    byteSwapField(finishScriptActionNum);
-    byteSwapField(finishScriptUserdata);
+    byteSwapEnumValue(type);
+    byteSwapValue(crush);
+    byteSwapValue(bDoFinishScript);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(direction);
+    byteSwapValue(newspecial);
+    byteSwapValue(texture);
+    byteSwapValue(floordestheight);
+    byteSwapValue(speed);
+    byteSwapEnumValue(moveSound);
+    byteSwapValue(moveSoundFreq);
+    byteSwapEnumValue(stopSound);
+    byteSwapValue(finishScriptActionNum);
+    byteSwapValue(finishScriptUserdata);
 }
 
 bool SavedFloorMoveT::validate() const noexcept {
-    return isValidSectorIdx(sectorIdx);
+    return (isValidSectorIdx(sectorIdx) && isValidTexNum(texture));
 }
 
 void SavedFloorMoveT::serializeFrom(const floormove_t& floor) noexcept {
@@ -858,26 +840,26 @@ void SavedFloorMoveT::deserializeTo(floormove_t& floor) const noexcept {
 // SavedCeilingT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedCeilingT::byteSwap() noexcept {
-    byteSwapEnumField(type);
-    byteSwapField(sectorIdx);
-    byteSwapField(bottomheight);
-    byteSwapField(topheight);
-    byteSwapField(speed);
-    byteSwapField(crush);
-    byteSwapField(bIsCrushing);
-    byteSwapField(bDoFinishScript);
-    byteSwapField(bIsActive);
-    byteSwapField(direction);
-    byteSwapField(tag);
-    byteSwapField(olddirection);
-    byteSwapField(crushSpeed);
-    byteSwapField(dirChangesLeft);
-    byteSwapEnumField(moveSound);
-    byteSwapField(moveSoundFreq);
-    byteSwapEnumField(changeDirSound);
-    byteSwapEnumField(stopSound);
-    byteSwapField(finishScriptActionNum);
-    byteSwapField(finishScriptUserdata);
+    byteSwapEnumValue(type);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(bottomheight);
+    byteSwapValue(topheight);
+    byteSwapValue(speed);
+    byteSwapValue(crush);
+    byteSwapValue(bIsCrushing);
+    byteSwapValue(bDoFinishScript);
+    byteSwapValue(bIsActive);
+    byteSwapValue(direction);
+    byteSwapValue(tag);
+    byteSwapValue(olddirection);
+    byteSwapValue(crushSpeed);
+    byteSwapValue(dirChangesLeft);
+    byteSwapEnumValue(moveSound);
+    byteSwapValue(moveSoundFreq);
+    byteSwapEnumValue(changeDirSound);
+    byteSwapEnumValue(stopSound);
+    byteSwapValue(finishScriptActionNum);
+    byteSwapValue(finishScriptUserdata);
 }
 
 bool SavedCeilingT::validate() const noexcept {
@@ -934,26 +916,26 @@ void SavedCeilingT::deserializeTo(ceiling_t& ceil) const noexcept {
 // SavedPlatT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedPlatT::byteSwap() noexcept {
-    byteSwapField(sectorIdx);
-    byteSwapField(speed);
-    byteSwapField(low);
-    byteSwapField(high);
-    byteSwapField(wait);
-    byteSwapField(count);
-    byteSwapEnumField(status);
-    byteSwapEnumField(oldstatus);
-    byteSwapField(crush);
-    byteSwapField(bDoFinishScript);
-    byteSwapField(bIsActive);
-    byteSwapField(tag);
-    byteSwapEnumField(type);
-    byteSwapEnumField(finishState);
-    byteSwapEnumField(startSound);
-    byteSwapEnumField(moveSound);
-    byteSwapField(moveSoundFreq);
-    byteSwapEnumField(stopSound);
-    byteSwapField(finishScriptActionNum);
-    byteSwapField(finishScriptUserdata);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(speed);
+    byteSwapValue(low);
+    byteSwapValue(high);
+    byteSwapValue(wait);
+    byteSwapValue(count);
+    byteSwapEnumValue(status);
+    byteSwapEnumValue(oldstatus);
+    byteSwapValue(crush);
+    byteSwapValue(bDoFinishScript);
+    byteSwapValue(bIsActive);
+    byteSwapValue(tag);
+    byteSwapEnumValue(type);
+    byteSwapEnumValue(finishState);
+    byteSwapEnumValue(startSound);
+    byteSwapEnumValue(moveSound);
+    byteSwapValue(moveSoundFreq);
+    byteSwapEnumValue(stopSound);
+    byteSwapValue(finishScriptActionNum);
+    byteSwapValue(finishScriptUserdata);
 }
 
 bool SavedPlatT::validate() const noexcept {
@@ -1010,10 +992,10 @@ void SavedPlatT::deserializeTo(plat_t& plat) const noexcept {
 // SavedFireFlickerT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedFireFlickerT::byteSwap() noexcept {
-    byteSwapField(sectorIdx);
-    byteSwapField(count);
-    byteSwapField(maxlight);
-    byteSwapField(minlight);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(count);
+    byteSwapValue(maxlight);
+    byteSwapValue(minlight);
 }
 
 bool SavedFireFlickerT::validate() const noexcept {
@@ -1039,12 +1021,12 @@ void SavedFireFlickerT::deserializeTo(fireflicker_t& light) const noexcept {
 // SavedLightFlashT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedLightFlashT::byteSwap() noexcept {
-    byteSwapField(sectorIdx);
-    byteSwapField(count);
-    byteSwapField(maxlight);
-    byteSwapField(minlight);
-    byteSwapField(maxtime);
-    byteSwapField(mintime);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(count);
+    byteSwapValue(maxlight);
+    byteSwapValue(minlight);
+    byteSwapValue(maxtime);
+    byteSwapValue(mintime);
 }
 
 bool SavedLightFlashT::validate() const noexcept {
@@ -1074,12 +1056,12 @@ void SavedLightFlashT::deserializeTo(lightflash_t& light) const noexcept {
 // SavedStrobeT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedStrobeT::byteSwap() noexcept {
-    byteSwapField(sectorIdx);
-    byteSwapField(count);
-    byteSwapField(minlight);
-    byteSwapField(maxlight);
-    byteSwapField(darktime);
-    byteSwapField(brighttime);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(count);
+    byteSwapValue(minlight);
+    byteSwapValue(maxlight);
+    byteSwapValue(darktime);
+    byteSwapValue(brighttime);
 }
 
 bool SavedStrobeT::validate() const noexcept {
@@ -1109,10 +1091,10 @@ void SavedStrobeT::deserializeTo(strobe_t& light) const noexcept {
 // SavedGlowT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedGlowT::byteSwap() noexcept {
-    byteSwapField(sectorIdx);
-    byteSwapField(minlight);
-    byteSwapField(maxlight);
-    byteSwapField(direction);
+    byteSwapValue(sectorIdx);
+    byteSwapValue(minlight);
+    byteSwapValue(maxlight);
+    byteSwapValue(direction);
 }
 
 bool SavedGlowT::validate() const noexcept {
@@ -1138,7 +1120,7 @@ void SavedGlowT::deserializeTo(glow_t& light) const noexcept {
 // SavedDelayedExitT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedDelayedExitT::byteSwap() noexcept {
-    byteSwapField(ticsleft);
+    byteSwapValue(ticsleft);
 }
 
 void SavedDelayedExitT::serializeFrom(const delayaction_t& action) noexcept {
@@ -1155,10 +1137,10 @@ void SavedDelayedExitT::deserializeTo(delayaction_t& action) const noexcept {
 // SavedButtonT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedButtonT::byteSwap() noexcept {
-    byteSwapField(lineIdx);
-    byteSwapEnumField(where);
-    byteSwapField(btexture);
-    byteSwapField(btimer);
+    byteSwapValue(lineIdx);
+    byteSwapEnumValue(where);
+    byteSwapValue(btexture);
+    byteSwapValue(btimer);
 }
 
 bool SavedButtonT::validate() const noexcept {
@@ -1186,14 +1168,14 @@ void SavedButtonT::deserializeTo(button_t& btn) const noexcept {
 // SavedScheduledAction
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedScheduledAction::byteSwap() noexcept {
-    byteSwapField(actionNum);
-    byteSwapField(delayTics);
-    byteSwapField(executionsLeft);
-    byteSwapField(repeatDelay);
-    byteSwapField(tag);
-    byteSwapField(userdata);
-    byteSwapField(bPaused);
-    byteSwapField(bPendingExecute);
+    byteSwapValue(actionNum);
+    byteSwapValue(delayTics);
+    byteSwapValue(executionsLeft);
+    byteSwapValue(repeatDelay);
+    byteSwapValue(tag);
+    byteSwapValue(userdata);
+    byteSwapValue(bPaused);
+    byteSwapValue(bPendingExecute);
 }
 
 void SavedScheduledAction::serializeFrom(const ScriptingEngine::ScheduledAction& action) noexcept {
@@ -1222,12 +1204,12 @@ void SavedScheduledAction::deserializeTo(ScriptingEngine::ScheduledAction& actio
 // SavedSTBarT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedSTBarT::byteSwap() noexcept {
-    byteSwapField(face);
-    byteSwapEnumField(specialFace);
-    byteSwapField(gotgibbed);
-    byteSwapField(gibframe);
-    byteSwapField(gibframeTicsLeft);
-    byteSwapField(alertMessageTicsLeft);
+    byteSwapValue(face);
+    byteSwapEnumValue(specialFace);
+    byteSwapValue(gotgibbed);
+    byteSwapValue(gibframe);
+    byteSwapValue(gibframeTicsLeft);
+    byteSwapValue(alertMessageTicsLeft);
 }
 
 bool SavedSTBarT::validate() const noexcept {
@@ -1264,34 +1246,34 @@ void SavedSTBarT::deserializeTo(stbar_t& sbar) const noexcept {
 // SavedGlobals
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SavedGlobals::byteSwap() noexcept {
-    byteSwapField(gameMap);
-    byteSwapField(nextMap);
-    byteSwapEnumField(gameSkill);
-    byteSwapField(levelElapsedTime);
-    byteSwapField(totalKills);
-    byteSwapField(totalItems);
-    byteSwapField(totalSecret);
+    byteSwapValue(gameMap);
+    byteSwapValue(nextMap);
+    byteSwapEnumValue(gameSkill);
+    byteSwapValue(levelElapsedTime);
+    byteSwapValue(totalKills);
+    byteSwapValue(totalItems);
+    byteSwapValue(totalSecret);
     player.byteSwap();
-    byteSwapField(prndIndex);
-    byteSwapField(mrndIndex);
-    byteSwapField(gameTic);
-    byteSwapField(ticCon);
-    byteSwapField(ticRemainder);
-    byteSwapField(mapBossSpecialFlags);
-    byteSwapField(extCameraTicsLeft);
-    byteSwapField(extCameraX);
-    byteSwapField(extCameraY);
-    byteSwapField(extCameraZ);
-    byteSwapField(extCameraAngle);
-    byteSwapField(numPasswordCharsEntered);
-    byteSwapField(curCDTrack);
+    byteSwapValue(prndIndex);
+    byteSwapValue(mrndIndex);
+    byteSwapValue(gameTic);
+    byteSwapValue(ticCon);
+    byteSwapValue(ticRemainder);
+    byteSwapValue(mapBossSpecialFlags);
+    byteSwapValue(extCameraTicsLeft);
+    byteSwapValue(extCameraX);
+    byteSwapValue(extCameraY);
+    byteSwapValue(extCameraZ);
+    byteSwapValue(extCameraAngle);
+    byteSwapValue(numPasswordCharsEntered);
+    byteSwapValue(curCDTrack);
     statusBar.byteSwap();
-    byteSwapField(faceTics);
-    byteSwapField(bDrawSBFace);
-    byteSwapField(bGibDraw);
-    byteSwapField(bDoSpclFace);
-    byteSwapField(newFace);
-    byteSwapEnumField(spclFaceType);
+    byteSwapValue(faceTics);
+    byteSwapValue(bDrawSBFace);
+    byteSwapValue(bGibDraw);
+    byteSwapValue(bDoSpclFace);
+    byteSwapValue(newFace);
+    byteSwapEnumValue(spclFaceType);
 }
 
 bool SavedGlobals::validate() const noexcept {
@@ -1316,6 +1298,12 @@ bool SavedGlobals::validate() const noexcept {
     if (!statusBar.validate())
         return false;
 
+    if ((newFace < 0) || (newFace >= NUMFACES))
+        return false;
+
+    if (gbDoSpclFace && ((spclFaceType < 0) || (spclFaceType >= NUMSPCLFACES)))
+        return false;
+
     return true;
 }
 
@@ -1327,7 +1315,7 @@ void SavedGlobals::serializeFromGlobals() noexcept {
     totalKills = gTotalKills;
     totalItems = gTotalItems;
     totalSecret = gTotalSecret;
-
+    
     player.serializeFrom(gPlayers[0]);
     
     prndIndex = gPRndIndex;
@@ -1336,7 +1324,7 @@ void SavedGlobals::serializeFromGlobals() noexcept {
     ticCon = gTicCon;
     
     ticRemainder = gTicRemainder[0];
-    
+
     mapBossSpecialFlags = gMapBossSpecialFlags;
     extCameraTicsLeft = gExtCameraTicsLeft;
     extCameraX = gExtCameraX;
@@ -1431,28 +1419,28 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
 // SaveFileHdr
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SaveFileHdr::byteSwap() noexcept {
-    byteSwapField(fileId1);
-    byteSwapField(fileId2);
-    byteSwapField(version);
-    byteSwapField(_reserved1);
-    byteSwapField(mapHashWord1);
-    byteSwapField(mapHashWord2);
-    byteSwapField(numSectors);
-    byteSwapField(numLines);
-    byteSwapField(numSides);
-    byteSwapField(numMobjs);
-    byteSwapField(numVlDoors);
-    byteSwapField(numVlCustomDoors);
-    byteSwapField(numFloorMovers);
-    byteSwapField(numCeilings);
-    byteSwapField(numPlats);
-    byteSwapField(numFireFlickers);
-    byteSwapField(numLightFlashes);
-    byteSwapField(numStrobes);
-    byteSwapField(numGlows);
-    byteSwapField(numDelayedExits);
-    byteSwapField(numButtons);
-    byteSwapField(numScheduledActions);
+    byteSwapValue(fileId1);
+    byteSwapValue(fileId2);
+    byteSwapValue(version);
+    byteSwapValue(_reserved1);
+    byteSwapValue(mapHashWord1);
+    byteSwapValue(mapHashWord2);
+    byteSwapValue(numSectors);
+    byteSwapValue(numLines);
+    byteSwapValue(numSides);
+    byteSwapValue(numMobjs);
+    byteSwapValue(numVlDoors);
+    byteSwapValue(numVlCustomDoors);
+    byteSwapValue(numFloorMovers);
+    byteSwapValue(numCeilings);
+    byteSwapValue(numPlats);
+    byteSwapValue(numFireFlickers);
+    byteSwapValue(numLightFlashes);
+    byteSwapValue(numStrobes);
+    byteSwapValue(numGlows);
+    byteSwapValue(numDelayedExits);
+    byteSwapValue(numButtons);
+    byteSwapValue(numScheduledActions);
 }
 
 bool SaveFileHdr::validateFileId() const noexcept {

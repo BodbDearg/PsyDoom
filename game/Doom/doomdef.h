@@ -219,7 +219,7 @@ struct mobj_t {
     uint32_t        sprite;             // Current sprite displayed
     uint32_t        frame;              // Current sprite frame displayed. Must use 'FF_FRAMEMASK' to get the actual frame number.
     mobj_t*         bnext;              // Linked list of things in this blockmap block
-    mobj_t*         bprev;              
+    mobj_t*         bprev;
     fixed_t         floorz;             // Highest floor in contact with map object
     fixed_t         ceilingz;           // Lowest floor in contact with map object
     fixed_t         radius;             // For collision detection
