@@ -186,6 +186,9 @@ struct SavedPlayerT {
     int32_t         attackerIdx;                // Index of the last thing to damage this player, or '-1' if an environmental thing (crusher etc.) did the damage.
     uint32_t        extralight;                 // Extra light to add to the world on account of weapon firing or muzzle flashes
     SavedPspdefT    psprites[NUMPSPRITES];      // Current state information for the player's weapon sprites (weapon + muzzle flash)
+    int32_t         automapx;                   // View position in the automap: x
+    int32_t         automapy;                   // View position in the automap: y
+    uint32_t        automapscale;               // Render scaling for the automap
 
     void byteSwap() noexcept;
     bool validate() const noexcept;
@@ -193,7 +196,7 @@ struct SavedPlayerT {
     void deserializeTo(player_t& player) const noexcept;
 };
 
-static_assert(sizeof(SavedPlayerT) == 196);
+static_assert(sizeof(SavedPlayerT) == 208);
 
 // Saved state for a vertical door mover
 struct SavedVLDoorT {
@@ -481,7 +484,7 @@ struct SavedGlobals {
     void deserializeToGlobals() const noexcept;
 };
 
-static_assert(sizeof(SavedGlobals) == 368);
+static_assert(sizeof(SavedGlobals) == 384);
 
 // Header for a save file, comes first in the file
 struct SaveFileHdr {

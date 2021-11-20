@@ -420,6 +420,16 @@ static void addMobjsToSectors() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Load helper: associates the specified list of thinkers with their corresponding sectors
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class ThinkerT>
+static void associateThinkersWithSectors(const std::vector<ThinkerT*>& thinkers) noexcept {
+    for (ThinkerT* const pThinker : thinkers) {
+        pThinker->sector->specialdata = pThinker;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to save the game to the specified output file
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool save(OutputStream& out) noexcept {
@@ -549,10 +559,17 @@ LoadSaveResult load() noexcept {
     deserializeObjects(saveData.buttons, gActiveButtons);
     deserializeObjects(saveData.scheduledActions, ScriptingEngine::gScheduledActions.data(), hdr.numScheduledActions);
 
-    // Post load actions: adding map objects into the blockmap, sectors lists etc, playing music and so on...
-    playCdTrackIfNeeded(saveData.globals.curCDTrack);
-    addActiveCeilingsAndPlats();
+    // Post load actions: adding map objects into the blockmap and sector lists, and associating thinkers with their sectors
     addMobjsToSectors();
+    associateThinkersWithSectors(gVlDoors);
+    associateThinkersWithSectors(gVlCustomDoors);
+    associateThinkersWithSectors(gFloorMovers);
+    associateThinkersWithSectors(gCeilings);
+    associateThinkersWithSectors(gPlats);
+    addActiveCeilingsAndPlats();
+
+    // Post load actions: play CD music if required and kill any interpolation for the next frame (snap to the new position)
+    playCdTrackIfNeeded(saveData.globals.curCDTrack);
     R_NextInterpolation();
 
     // Finish up and cleanup

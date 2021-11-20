@@ -328,6 +328,7 @@ void SavedLineT::deserializeTo(line_t& line) const noexcept {
     line.flags = flags;
     line.special = special;
     line.tag = tag;
+    line.validcount = 0;        // Not serialized, resets on load
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -572,6 +573,10 @@ void SavedPlayerT::byteSwap() noexcept {
     for (SavedPspdefT& spr : psprites) {
         spr.byteSwap();
     }
+
+    byteSwapField(automapx);
+    byteSwapField(automapy);
+    byteSwapField(automapscale);
 }
 
 bool SavedPlayerT::validate() const noexcept {
@@ -636,6 +641,10 @@ void SavedPlayerT::serializeFrom(const player_t& player) noexcept {
     for (uint32_t i = 0; i < C_ARRAY_SIZE(psprites); ++i) {
         psprites[i].serializeFrom(player.psprites[i]);
     }
+
+    automapx = player.automapx;
+    automapy = player.automapy;
+    automapscale = player.automapscale;
 }
 
 void SavedPlayerT::deserializeTo(player_t& player) const noexcept {
@@ -700,10 +709,10 @@ void SavedPlayerT::deserializeTo(player_t& player) const noexcept {
 
     player.didsecret = {};                  // Not serialized, default init
     player.lastsoundsector = nullptr;       // Not serialized, default init
-    player.automapx = {};                   // Not serialized, default init
-    player.automapy = {};                   // Not serialized, default init
-    player.automapscale = {};               // Not serialized, default init
-    player.automapflags = {};               // Not serialized, default init
+    player.automapx = automapx;
+    player.automapy = automapy;
+    player.automapscale = automapscale;
+    player.automapflags = 0;                // Not serialized, default init
     player.turnheld = {};                   // Not serialized, default init
     player.psxMouseUseCountdown = {};       // Not serialized, default init
     player.psxMouseUse = {};                // Not serialized, default init
