@@ -1405,6 +1405,11 @@ bool EV_DoDonut(line_t& line) noexcept {
             // This is normally used to raise slime and change the slime texture.
             {
                 floormove_t& floorMove = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
+
+                #if PSYDOOM_MODS
+                    floorMove = {};     // PsyDoom: zero-init all fields to be safe
+                #endif
+
                 P_AddThinker(floorMove.thinker);
                 pNextSector->specialdata = &floorMove;
 
@@ -1423,6 +1428,11 @@ bool EV_DoDonut(line_t& line) noexcept {
             // This sector just lowers down to the height of the back sector we just found.
             {
                 floormove_t& floorMove = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
+
+                #if PSYDOOM_MODS
+                    floorMove = {};     // PsyDoom: zero-init all fields to be safe
+                #endif
+
                 P_AddThinker(floorMove.thinker);
                 sector.specialdata = &floorMove;
 
