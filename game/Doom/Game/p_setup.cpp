@@ -25,6 +25,7 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
+#include "p_weak.h"
 #include "PsyDoom/DevMapAutoReloader.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/MapHash.h"
@@ -1237,6 +1238,15 @@ static void P_Init() noexcept {
             gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
             gUpdateFireSkyFunc = P_UpdateFireSky;
 
+            // PsyDoom: updates to work with the new WAD management code - ensure texture metrics are up-to-date!
+            #if PSYDOOM_MODS
+            {
+                const WadLump& skyTexWadLump = W_GetLump(skyTex.lumpNum);
+                const std::byte* const pLumpData = (const std::byte*) skyTexWadLump.pCachedData;
+                R_UpdateTexMetricsFromData(skyTex, pLumpData, skyTexWadLump.uncompressedSize);
+            }
+            #endif
+
             // This gets the fire going, so it doesn't take a while to creep up when the map is started.
             // Do a number of fire update rounds before the player even enters the map:
             for (int32_t i = 0; i < 64; ++i) {
@@ -1417,6 +1427,11 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     I_PurgeTexCache();
     Z_CheckHeap(*gpMainMemZone);
     M_ClearRandom();
+
+    // PsyDoom: initialize the map object weak referencing system
+    #if PSYDOOM_MODS
+        P_InitWeakRefs();
+    #endif
 
     // PsyDoom limit removing: init the sets of wall and flat textures to be loaded
     #if PSYDOOM_LIMIT_REMOVING

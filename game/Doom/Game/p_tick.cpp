@@ -846,6 +846,16 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
         ScriptingEngine::shutdown();
         DevMapAutoReloader::shutdown();
     #endif
+
+    // PsyDoom: shut down the map object weak referencing system.
+    // Also cleanup all map objects to remove all usage of weak reference counts before we shutdown the system.
+    #if PSYDOOM_MODS
+        while (gMobjHead.next != &gMobjHead) {
+            P_RemoveMobj(*gMobjHead.next);
+        }
+
+        P_ShutdownWeakRefs();
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

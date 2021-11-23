@@ -32,10 +32,12 @@ void P_CheckSights() noexcept {
     for (mobj_t* pmobj = gMobjHead.next; pmobj != &gMobjHead; pmobj = pmobj->next) {
         // Must be killable (enemy) to do sight checking.
         //
-        // PsyDoom: extend the sight check to types that include a 'see state' in order to allow the reimplemented 'Icon Of Sin' boss to spot the player.
+        // PsyDoom: extend the sight check to types that include a 'see state' (except the player) in order to allow the reimplemented 'Icon Of Sin' boss to spot the player.
         // This doesn't cause any demo de-sync against original game demos so I've made this update non-optional.
         #if PSYDOOM_MODS
-            const bool bCheckSight = ((pmobj->flags & MF_COUNTKILL) || pmobj->info->seestate);
+            const bool bHasSeeState = (pmobj->info->seestate != S_NULL);
+            const bool bIsNotPlayer = (pmobj->type != MT_PLAYER);
+            const bool bCheckSight = ((pmobj->flags & MF_COUNTKILL) || (bHasSeeState && bIsNotPlayer));
         #else
             const bool bCheckSight = (pmobj->flags & MF_COUNTKILL);
         #endif
@@ -47,7 +49,9 @@ void P_CheckSights() noexcept {
         if (pmobj->tics == 1) {
             // See if we can see the target - if any.
             // Add or remove the visibility flag based on this:
-            if (pmobj->target && P_CheckSight(*pmobj, *pmobj->target)) {
+            mobj_t* const pMobjTarget = pmobj->target;
+
+            if (pMobjTarget && P_CheckSight(*pmobj, *pMobjTarget)) {
                 pmobj->flags |= MF_SEETARGET;
             } else {
                 pmobj->flags &= (~MF_SEETARGET);    // No longer can see target

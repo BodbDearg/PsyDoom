@@ -535,17 +535,29 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
 
         // If we are colliding with the same species which fired the missile in most cases explode/collide the missile, but don't damage what was hit.
         // The firing thing is in the 'target' field for missiles.
-        mobj_t& firingThing = *tryMoveThing.target;
+        // PsyDoom: add a safety check to ensure the firer still exists; this is needed now that we have weak 'mobj_t' pointers.
+        mobj_t* const pFiringThing = tryMoveThing.target;
 
-        if (mobj.type == firingThing.type) {
-            // Missiles don't collide with the things which fired them
-            if (&mobj == &firingThing)
-                return true;
+        #if PSYDOOM_FIX_UB
+            const bool bFirerExists = (pFiringThing != nullptr);
+        #else
+            // The original code did not check if the firer existed ('target' field) because that pointer should always be set for a missile.
+            // The firer could technically be destroyed and freed however (undefined behavior) as the original code did not have weak pointers.
+            constexpr bool bFirerExists = true;
+            ASSERT(pFiringThing);
+        #endif
 
-            // Explode, but do no damage by just returning 'false' and not saving what was hit.
-            // The exception to this is if the thing type is a player; players can splash damage other players with rockets...
-            if (mobj.type != MT_PLAYER)
-                return false;
+        if (bFirerExists) {
+            if (mobj.type == pFiringThing->type) {
+                // Missiles don't collide with the things which fired them
+                if (&mobj == pFiringThing)
+                    return true;
+
+                // Explode, but do no damage by just returning 'false' and not saving what was hit.
+                // The exception to this is if the thing type is a player; players can splash damage other players with rockets...
+                if (mobj.type != MT_PLAYER)
+                    return false;
+            }
         }
 
         // If the thing hit is shootable then save it for damage purposes and return 'false' for a collision

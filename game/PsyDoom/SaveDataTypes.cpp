@@ -244,11 +244,11 @@ static int32_t getMobjIndex(mobj_t* const pMobj) noexcept {
     if (pMobj) {
         const auto iter = SaveAndLoad::gMobjToIdx.find(pMobj);
 
+        // Make sure the map object pointer is valid. There are bugs in the DOOM code where sometimes the 'target' and 'tracer'
+        // fields end up pointing to deleted objects. I've fixed this issue but keep the sanity checks here just in case.
+        // If the pointer is to an invalid object then just pretend it was a null pointer for the purposes of serialization...
         if (iter != SaveAndLoad::gMobjToIdx.end()) {
             return iter->second;
-        } else {
-            // This should never happen, if it does then it might indicate some bad problems elsewhere...
-            I_Error("SaveData: getMobjIndex: can't serialize invalid map object with no index!");
         }
     }
 

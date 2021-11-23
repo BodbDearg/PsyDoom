@@ -129,12 +129,13 @@ bool P_CheckMeleeRange(mobj_t& attacker) noexcept {
         return false;
 
     // If there is no target then obviously nothing is in melee range
-    if (!attacker.target)
+    mobj_t* const pTarget = attacker.target;
+
+    if (!pTarget)
         return false;
 
     // Return whether the target is within melee range
-    mobj_t& target = *attacker.target;
-    const fixed_t approxDist = P_AproxDistance(target.x - attacker.x, target.y - attacker.y);
+    const fixed_t approxDist = P_AproxDistance(pTarget->x - attacker.x, pTarget->y - attacker.y);
     return (approxDist < MELEERANGE);
 }
 
@@ -143,6 +144,8 @@ bool P_CheckMeleeRange(mobj_t& attacker) noexcept {
 // Takes into account things like range and current sight status and also adds an element of randomness.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_CheckMissileRange(mobj_t& attacker) noexcept {
+    ASSERT(attacker.target);
+
     // If the attacker can't see it's target then it can't do a missile attack
     if ((attacker.flags & MF_SEETARGET) == 0)
         return false;
@@ -158,7 +161,8 @@ bool P_CheckMissileRange(mobj_t& attacker) noexcept {
         return false;
 
     // Get the distance to the target and do a tweak adjust for the sake of the random logic below
-    fixed_t distFrac = P_AproxDistance(attacker.x - attacker.target->x, attacker.y - attacker.target->y);
+    mobj_t& target = *attacker.target;
+    fixed_t distFrac = P_AproxDistance(attacker.x - target.x, attacker.y - target.y);
     distFrac -= 64 * FRACUNIT;
 
     // If the attacker has no melee attack then do a missile attack more frequently
@@ -250,7 +254,9 @@ bool P_TryWalk(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_NewChaseDir(mobj_t& actor) noexcept {
     // Actor is expected to have a target if called
-    if (!actor.target) {
+    const mobj_t* const pTarget = actor.target;
+
+    if (!pTarget) {
         I_Error("P_NewChaseDir: called with no target");
         return;
     }
@@ -263,11 +269,11 @@ void P_NewChaseDir(mobj_t& actor) noexcept {
     // PsyDoom: if the external camera is active then make monsters walk away from their targets, to give the player time to react after the camera ends.
     #if PSYDOOM_MODS
         const int32_t tgtDistFlip = (gExtCameraTicsLeft > 0) ? -1 : 1;
-        const fixed_t tgtDistX = (actor.target->x - actor.x) * tgtDistFlip;
-        const fixed_t tgtDistY = (actor.target->y - actor.y) * tgtDistFlip;
+        const fixed_t tgtDistX = (pTarget->x - actor.x) * tgtDistFlip;
+        const fixed_t tgtDistY = (pTarget->y - actor.y) * tgtDistFlip;
     #else
-        const fixed_t tgtDistX = actor.target->x - actor.x;
-        const fixed_t tgtDistY = actor.target->y - actor.y;
+        const fixed_t tgtDistX = pTarget->x - actor.x;
+        const fixed_t tgtDistY = pTarget->y - actor.y;
     #endif
 
     dirtype_t hdirToTgt;
@@ -581,16 +587,17 @@ void A_Chase(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FaceTarget(mobj_t& actor) noexcept {
     // Can't face target if there is none
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     // Monster is no longer in ambush mode and turn to face the target
-    mobj_t& target = *actor.target;
     actor.flags &= ~MF_AMBUSH;
-    actor.angle = R_PointToAngle2(actor.x, actor.y, target.x, target.y);
+    actor.angle = R_PointToAngle2(actor.x, actor.y, pTarget->x, pTarget->y);
 
     // If the target has partial invisbility then vary the angle randomly a bit (by almost 45 degrees)
-    if (target.flags & MF_ALL_BLEND_FLAGS) {
+    if (pTarget->flags & MF_ALL_BLEND_FLAGS) {
         actor.angle += P_SubRandom() * (ANG45 / 256);
     }
 }
@@ -718,18 +725,22 @@ void A_SpidRefire(mobj_t& actor) noexcept {
 // Does the attack for an Arachnotron
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_BspiAttack(mobj_t& actor) noexcept {
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     A_FaceTarget(actor);
-    P_SpawnMissile(actor, *actor.target, MT_ARACHPLAZ);
+    P_SpawnMissile(actor, *pTarget, MT_ARACHPLAZ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does the attack for an Imp, which can either be a melee attack or sending a fireball towards the target
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_TroopAttack(mobj_t& actor) noexcept {
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     A_FaceTarget(actor);
@@ -738,9 +749,9 @@ void A_TroopAttack(mobj_t& actor) noexcept {
     if (P_CheckMeleeRange(actor)) {
         S_StartSound(&actor, sfx_claw);
         const int32_t damage = ((P_Random() & 7) + 1) * 3;      // 3-24 damage
-        P_DamageMobj(*actor.target, &actor, &actor, damage);
+        P_DamageMobj(*pTarget, &actor, &actor, damage);
     } else {
-        P_SpawnMissile(actor, *actor.target, MT_TROOPSHOT);
+        P_SpawnMissile(actor, *pTarget, MT_TROOPSHOT);
     }
 }
 
@@ -760,7 +771,9 @@ void A_SargAttack(mobj_t& actor) noexcept {
 // Does the attack for a Cacodemon, which can either be a melee attack or sending a fireball towards the target
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_HeadAttack(mobj_t& actor) noexcept {
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     A_FaceTarget(actor);
@@ -768,9 +781,9 @@ void A_HeadAttack(mobj_t& actor) noexcept {
     // Do a melee attack if possible, otherwise spawn a fireball
     if (P_CheckMeleeRange(actor)) {
         const int32_t damage = ((P_Random() & 7) + 1) * 8;      // 8-64 damage
-        P_DamageMobj(*actor.target, &actor, &actor, damage);
+        P_DamageMobj(*pTarget, &actor, &actor, damage);
     } else {
-        P_SpawnMissile(actor, *actor.target, MT_HEADSHOT);
+        P_SpawnMissile(actor, *pTarget, MT_HEADSHOT);
     }
 }
 
@@ -778,28 +791,30 @@ void A_HeadAttack(mobj_t& actor) noexcept {
 // Does the attack for a Cyberdemon
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_CyberAttack(mobj_t& actor) noexcept {
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     A_FaceTarget(actor);
-    P_SpawnMissile(actor, *actor.target, MT_ROCKET);
+    P_SpawnMissile(actor, *pTarget, MT_ROCKET);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does the attack for a Baron or Hell Knight, which can either be a melee attack or sending a fireball towards the target
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_BruisAttack(mobj_t& actor) noexcept {
-    if (!actor.target)
-        return;
+    mobj_t* const pTarget = actor.target;
 
-    mobj_t& target = *actor.target;
+    if (!pTarget)
+        return;
 
     if (P_CheckMeleeRange(actor)) {
         S_StartSound(&actor, sfx_claw);
         const int32_t damage = ((P_Random() & 7) + 1) * 11;     // 11-88 damage
-        P_DamageMobj(target, &actor, &actor, damage);
+        P_DamageMobj(*pTarget, &actor, &actor, damage);
     } else {
-        P_SpawnMissile(actor, target, MT_BRUISERSHOT);
+        P_SpawnMissile(actor, *pTarget, MT_BRUISERSHOT);
     }
 }
 
@@ -807,20 +822,22 @@ void A_BruisAttack(mobj_t& actor) noexcept {
 // Make a Revenant fire it's missile towards a player
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_SkelMissile(mobj_t& actor) noexcept {
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     A_FaceTarget(actor);
 
     // Spawn the missile: also hack adjust the Revenant height slightly (temporarily) so the missile spawns higher
     actor.z += 16 * FRACUNIT;
-    mobj_t& missile = *P_SpawnMissile(actor, *actor.target, MT_TRACER);
+    mobj_t& missile = *P_SpawnMissile(actor, *pTarget, MT_TRACER);
     actor.z -= 16 * FRACUNIT;
 
     // Move the missile a little and set it's target
     missile.x += missile.momx;
     missile.y += missile.momy;
-    missile.tracer = actor.target;
+    missile.tracer = pTarget;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -903,7 +920,9 @@ void A_SkelWhoosh(mobj_t& actor) noexcept {
 // Does the melee attack of the Revenant
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_SkelFist(mobj_t& actor) noexcept {
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     A_FaceTarget(actor);
@@ -911,7 +930,7 @@ void A_SkelFist(mobj_t& actor) noexcept {
     if (P_CheckMeleeRange(actor)) {
         S_StartSound(&actor, sfx_skepch);
         const int32_t damage = (P_Random() % 10 + 1) * 6;       // 6-60 damage
-        P_DamageMobj(*actor.target, &actor, &actor, damage);
+        P_DamageMobj(*pTarget, &actor, &actor, damage);
     }
 }
 
@@ -928,21 +947,22 @@ void A_FatRaise(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack1(mobj_t& actor) noexcept {
     // PsyDoom: avoid undefined behavior if for some reason there is no target
+    mobj_t* const pTarget = actor.target;
+
     #if PSYDOOM_MODS && PSYDOOM_FIX_UB
-        if (!actor.target)
+        if (!pTarget)
             return;
     #else
-        ASSERT(actor.target);
+        ASSERT(pTarget);
     #endif
 
     A_FaceTarget(actor);
-    mobj_t& target = *actor.target;
 
     // Spawn the projectiles for this round and adjust the mancubus's aim
     actor.angle += FATSPREAD;
-    P_SpawnMissile(actor, target, MT_FATSHOT);
+    P_SpawnMissile(actor, *pTarget, MT_FATSHOT);
 
-    mobj_t& missile = *P_SpawnMissile(actor, target, MT_FATSHOT);
+    mobj_t& missile = *P_SpawnMissile(actor, *pTarget, MT_FATSHOT);
     missile.angle += FATSPREAD;
 
     const uint32_t missileFineAngle = missile.angle >> ANGLETOFINESHIFT;
@@ -955,21 +975,22 @@ void A_FatAttack1(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack2(mobj_t& actor) noexcept {
     // PsyDoom: avoid undefined behavior if for some reason there is no target
+    mobj_t* const pTarget = actor.target;
+
     #if PSYDOOM_MODS && PSYDOOM_FIX_UB
-        if (!actor.target)
+        if (!pTarget)
             return;
     #else
-        ASSERT(actor.target);
+        ASSERT(pTarget);
     #endif
 
     A_FaceTarget(actor);
-    mobj_t& target = *actor.target;
 
     // Spawn the projectiles for this round and adjust the mancubus's aim
     actor.angle -= FATSPREAD;
-    P_SpawnMissile(actor, target, MT_FATSHOT);
+    P_SpawnMissile(actor, *pTarget, MT_FATSHOT);
 
-    mobj_t& missile = *P_SpawnMissile(actor, target, MT_FATSHOT);
+    mobj_t& missile = *P_SpawnMissile(actor, *pTarget, MT_FATSHOT);
     missile.angle -= FATSPREAD * 2;
 
     const uint32_t missileFineAngle = missile.angle >> ANGLETOFINESHIFT;
@@ -982,19 +1003,20 @@ void A_FatAttack2(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_FatAttack3(mobj_t& actor) noexcept {
     // PsyDoom: avoid undefined behavior if for some reason there is no target
+    mobj_t* const pTarget = actor.target;
+
     #if PSYDOOM_MODS && PSYDOOM_FIX_UB
-        if (!actor.target)
+        if (!pTarget)
             return;
     #else
-        ASSERT(actor.target);
+        ASSERT(pTarget);
     #endif
 
     A_FaceTarget(actor);
-    mobj_t& target = *actor.target;
 
     // Spawn the projectiles for this round and adjust the mancubus's aim
     {
-        mobj_t& missile = *P_SpawnMissile(actor, target, MT_FATSHOT);
+        mobj_t& missile = *P_SpawnMissile(actor, *pTarget, MT_FATSHOT);
         missile.angle -= FATSPREAD / 2;
 
         const uint32_t missileFineAngle = missile.angle >> ANGLETOFINESHIFT;
@@ -1003,7 +1025,7 @@ void A_FatAttack3(mobj_t& actor) noexcept {
     }
 
     {
-        mobj_t& missile = *P_SpawnMissile(actor, target, MT_FATSHOT);
+        mobj_t& missile = *P_SpawnMissile(actor, *pTarget, MT_FATSHOT);
         missile.angle += FATSPREAD / 2;
 
         const uint32_t missileFineAngle = missile.angle >> ANGLETOFINESHIFT;
@@ -1016,7 +1038,9 @@ void A_FatAttack3(mobj_t& actor) noexcept {
 // Does the attack for a Lost Soul, sets it flying towards it's target
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_SkullAttack(mobj_t& actor) noexcept {
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     // Skull is now flying, play the attack sound and face the target
@@ -1031,11 +1055,9 @@ void A_SkullAttack(mobj_t& actor) noexcept {
     actor.momy = FixedMul(SKULLSPEED, gFineSine[actorFineAngle]);
 
     // Figure out the z velocity based on the travel time and z delta to the target
-    mobj_t& target = *actor.target;
-
-    const fixed_t distToTgt = P_AproxDistance(target.x - actor.x, target.y - actor.y);
+    const fixed_t distToTgt = P_AproxDistance(pTarget->x - actor.x, pTarget->y - actor.y);
     const int32_t travelTime = std::max(distToTgt / SKULLSPEED, 1);
-    const fixed_t zDelta = target.z + d_rshift<1>(target.height) - actor.z;
+    const fixed_t zDelta = pTarget->z + d_rshift<1>(pTarget->height) - actor.z;
 
     actor.momz = zDelta / travelTime;
 }
@@ -1492,21 +1514,19 @@ void A_VileStart(mobj_t& actor) noexcept {
 // Spawns Arch-vile's fire and makes it face the target
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_VileTarget(mobj_t& actor) noexcept {
-    // Don't do anything if there is no target, otherwise face it
-    if (!actor.target)
+    // Don't do anything if there is no target, otherwise face it and spawn the fire
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     A_FaceTarget(actor);
-
-    // Spawn the fire
-    ASSERT(actor.target);
-    mobj_t& target = *actor.target;
-    mobj_t& fire = *P_SpawnMobj(target.x, target.x, target.z, MT_FIRE);
+    mobj_t& fire = *P_SpawnMobj(pTarget->x, pTarget->x, pTarget->z, MT_FIRE);
 
     // Make the Arch-vile remember the fire, and the fire remember the Arch-vile and it's target
     actor.tracer = &fire;
     fire.target = &actor;
-    fire.tracer = &target;
+    fire.tracer = pTarget;
 
     // Move the fire to follow the Arch-vile's target
     A_Fire(fire);
@@ -1517,22 +1537,21 @@ void A_VileTarget(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_VileAttack(mobj_t& actor) noexcept {
     // Don't do anything if there is no target, otherwise face it
-    if (!actor.target)
+    mobj_t* const pTarget = actor.target;
+
+    if (!pTarget)
         return;
 
     A_FaceTarget(actor);
 
     // If there is no line of sight now to the target then don't do the attack
-    ASSERT(actor.target);
-    mobj_t& target = *actor.target;
-
-    if (!P_CheckSight(actor, target))
+    if (!P_CheckSight(actor, *pTarget))
         return;
 
     // Play the attack sound, damage the target and make the target hop upwards
     S_StartSound(&actor, sfx_barexp);
-    P_DamageMobj(target, &actor, &actor, 20);
-    target.momz = (1000 * FRACUNIT) / target.info->mass;
+    P_DamageMobj(*pTarget, &actor, &actor, 20);
+    pTarget->momz = (1000 * FRACUNIT) / pTarget->info->mass;
     
     // Don't do splash damage unless there is fire
     mobj_t* const pFire = actor.tracer;
@@ -1542,8 +1561,8 @@ void A_VileAttack(mobj_t& actor) noexcept {
 
     // Make sure the fire is in front of the target
     const uint32_t angleIdx = actor.angle >> ANGLETOFINESHIFT;
-    pFire->x = target.x - FixedMul(24 * FRACUNIT, gFineCosine[angleIdx]);
-    pFire->y = target.y - FixedMul(24 * FRACUNIT, gFineSine[angleIdx]);
+    pFire->x = pTarget->x - FixedMul(24 * FRACUNIT, gFineCosine[angleIdx]);
+    pFire->y = pTarget->y - FixedMul(24 * FRACUNIT, gFineSine[angleIdx]);
 
     // Do the splash damage at the fire location
     P_RadiusAttack(*pFire, &actor, 70);
@@ -1559,11 +1578,11 @@ void A_Fire(mobj_t& actor) noexcept {
     if (!pVileTgt)
         return;
 
-    // Don't move the fire if there is no line of sight between it and it's target
-    ASSERT(actor.target);
-    mobj_t& vileMobj = *actor.target;
+    // Don't move the fire if there is no line of sight between the arch vile and it's target
+    mobj_t* const pVileMobj = actor.target;
+    const bool bVileHasLineOfSight = (pVileMobj && P_CheckSight(*pVileMobj, *pVileTgt));
 
-    if (!P_CheckSight(vileMobj, *pVileTgt))
+    if (!bVileHasLineOfSight)
         return;
 
     // Place the fire in front of the Arch-vile's target
@@ -1722,52 +1741,54 @@ void A_SpawnFly(mobj_t& actor) noexcept {
     if (--actor.reactiontime > 0)
         return;
 
-    // Do the spawn fire effect (re-uses Arch-vile fire)
-    ASSERT(actor.target);
-    mobj_t& target = *actor.target;
+    // Note: the target should always exist, but add a safety check here just in case it doesn't...
+    mobj_t* const pTarget = actor.target;
 
-    {
-        mobj_t& fireFx = *P_SpawnMobj(target.x, target.y, target.z, MT_SPAWNFIRE);
+    if (pTarget) {
+        // Do the spawn fire effect (re-uses Arch-vile fire).
+        mobj_t& fireFx = *P_SpawnMobj(pTarget->x, pTarget->y, pTarget->z, MT_SPAWNFIRE);
         S_StartSound(&fireFx, sfx_telept);
+
+        // Randomly decide which enemy to spawn.
+        // Lower level enemies are generally weighted higher in terms of probability.
+        const int32_t randNum = P_Random();
+        mobjtype_t spawnType;
+
+        if (randNum < 50) {
+            spawnType = MT_TROOP;
+        } else if (randNum < 120) {
+            spawnType = MT_SERGEANT;
+        } else if (randNum < 130) {
+            spawnType = MT_PAIN;
+        } else if (randNum < 160) {
+            spawnType = MT_HEAD;
+        } else if (randNum < 162) {
+            spawnType = MT_VILE;
+        } else if (randNum < 172) {
+            spawnType = MT_UNDEAD;
+        } else if (randNum < 192) {
+            spawnType = MT_BABY;
+        } else if (randNum < 222) {
+            spawnType = MT_FATSO;
+        } else if (randNum < 246) {
+            spawnType = MT_KNIGHT;
+        } else {
+            spawnType = MT_BRUISER;
+        }
+
+        // Spawn the enemy and alert it immediately
+        mobj_t& spawned = *P_SpawnMobj(pTarget->x, pTarget->y, pTarget->z, spawnType);
+
+        if (P_LookForPlayers(spawned, true)) {
+            P_SetMobjState(spawned, spawned.info->seestate);
+        }
+
+        // Telefrag anything where the enemy spawned and remove the cube.
+        // Note: do not allow self-telefragging!
+        P_Telefrag(spawned, spawned.x, spawned.y, false);
     }
 
-    // Randomly decide which enemy to spawn.
-    // Lower level enemies are generally weighted higher in terms of probability.
-    const int32_t randNum = P_Random();
-    mobjtype_t spawnType;
-
-    if (randNum < 50) {
-        spawnType = MT_TROOP;
-    } else if (randNum < 120) {
-        spawnType = MT_SERGEANT;
-    } else if (randNum < 130) {
-        spawnType = MT_PAIN;
-    } else if (randNum < 160) {
-        spawnType = MT_HEAD;
-    } else if (randNum < 162) {
-        spawnType = MT_VILE;
-    } else if (randNum < 172) {
-        spawnType = MT_UNDEAD;
-    } else if (randNum < 192) {
-        spawnType = MT_BABY;
-    } else if (randNum < 222) {
-        spawnType = MT_FATSO;
-    } else if (randNum < 246) {
-        spawnType = MT_KNIGHT;
-    } else {
-        spawnType = MT_BRUISER;
-    }
-
-    // Spawn the enemy and alert it immediately
-    mobj_t& spawned = *P_SpawnMobj(target.x, target.y, target.z, spawnType);
-
-    if (P_LookForPlayers(spawned, true)) {
-        P_SetMobjState(spawned, spawned.info->seestate);
-    }
-
-    // Telefrag anything where the enemy spawned and remove the cube.
-    // Note: do not allow self-telefragging!
-    P_Telefrag(spawned, spawned.x, spawned.y, false);
+    // Remove the spawner cube
     P_RemoveMobj(actor);
 }
 #endif  // #if PSYDOOM_MODS

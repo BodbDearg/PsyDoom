@@ -132,6 +132,10 @@ static void allocMobjsToLoad() noexcept {
         mobj_t& mobj = *(mobj_t*) Z_Malloc(*gpMainMemZone, sizeof(mobj_t), PU_LEVEL, nullptr);
         std::memset(&mobj, 0, sizeof(mobj_t));
 
+        #if PSYDOOM_MODS
+            new (&mobj) mobj_t();   // PsyDoom: construct C++ weak pointers
+        #endif
+
         // Keep track of it for later loading logic
         gMobjToIdx[&mobj] = i;
         gMobjList.push_back(&mobj);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Doom/Game/p_weak.h"
 #include "PsyDoom/BitShift.h"
 
 struct mobj_t;
@@ -235,7 +236,13 @@ struct mobj_t {
     int32_t         health;             // When this reaches '0' the object is dead
     dirtype_t       movedir;            // For enemy AI, what direction the enemy is moving in
     int32_t         movecount;          // When this reaches 0 a new dir is selected
+// PsyDoom: need to use weak refs!
+// These objects can sometimes get destroyed without references to them being cleared.
+#if PSYDOOM_MODS
+    MobjWeakPtr     target;             // The current map object being chased or attacked (if any), or for missiles the source object
+#else
     mobj_t*         target;             // The current map object being chased or attacked (if any), or for missiles the source object
+#endif
     int32_t         reactiontime;       // Time left until an attack is allowed
     int32_t         threshold;          // Time left chasing the current target
     player_t*       player;             // Associated player, if any
@@ -244,7 +251,14 @@ struct mobj_t {
     int16_t         spawny;             // Used for respawns: original spawn position (integer) y
     uint16_t        spawntype;          // Used for respawns: item 'DoomEd' type/number
     int16_t         spawnangle;         // Used for respawns: item angle
+// PsyDoom: need to use weak refs!
+// These objects can sometimes get destroyed without references to them being cleared.
+#if PSYDOOM_MODS
+    MobjWeakPtr     tracer;             // Used by homing missiles
+    uint32_t        weakCountIdx;       // PsyDoom: index of the weak reference counter allocated for this map object ('0' if there are no weak references to it)
+#else
     mobj_t*         tracer;             // Used by homing missiles
+#endif
 };
 
 // A degenerate map object with most of it's fields chopped out to save on memory.

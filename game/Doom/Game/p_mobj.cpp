@@ -63,6 +63,12 @@ void P_RemoveMobj(mobj_t& mobj) noexcept {
     // Remove from the global linked list of things and deallocate
     mobj.next->prev = mobj.prev;
     mobj.prev->next = mobj.next;
+
+    #if PSYDOOM_MODS
+        P_WeakReferencedDestroyed(mobj);    // PsyDoom: weak references to this object are now nulled
+        mobj.~mobj_t();                     // PsyDoom: destroy C++ weak pointers
+    #endif
+
     Z_Free2(*gpMainMemZone, &mobj);
 }
 
@@ -201,6 +207,10 @@ mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mob
     // Alloc and zero initialize the map object
     mobj_t& mobj = *(mobj_t*) Z_Malloc(*gpMainMemZone, sizeof(mobj_t), PU_LEVEL, nullptr);
     D_memset(&mobj, std::byte(0), sizeof(mobj_t));
+
+    #if PSYDOOM_MODS
+        new (&mobj) mobj_t();   // PsyDoom: call C++ constructors for weak pointers
+    #endif
 
     // Fill in basic fields
     mobjinfo_t& info = gMobjInfo[type];

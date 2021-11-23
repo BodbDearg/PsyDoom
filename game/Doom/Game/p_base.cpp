@@ -151,6 +151,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_FloatChange(mobj_t& mobj) noexcept {
     // Get the approximate distance to the target
+    ASSERT(mobj.target);
     mobj_t& target = *mobj.target;
     const fixed_t approxDist = P_AproxDistance(target.x - mobj.x, target.y - mobj.y);
 
@@ -648,17 +649,31 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
             return true;
 
         // Is the missile hitting the same species that it came from?
-        const mobjtype_t sourceObjType = baseThing.target->type;
+        // PsyDoom: add a safety check to ensure the firer still exists; this is needed now that we have weak 'mobj_t' pointers.
+        mobj_t* const pFirer = baseThing.target;
 
-        if (sourceObjType == mobj.type) {
-            // Colliding with the same species type: don't explode the missile if it's hitting the shooter of the missile
-            if (&mobj == baseThing.target)
-                return true;
+        #if PSYDOOM_FIX_UB
+            const bool bFirerExists = (pFirer != nullptr);
+        #else
+            // The original code did not check if the firer existed ('target' field) because that pointer should always be set for a missile.
+            // The firer could technically be destroyed and freed however (undefined behavior) as the original code did not have weak pointers.
+            constexpr bool bFirerExists = true;
+            ASSERT(pFirer);
+        #endif
 
-            // If it's hitting anything other than the player, explode the missile but do no damage (set no 'hit' thing).
-            // Players can still damage each other with missiles however, hence the exception.
-            if (sourceObjType != MT_PLAYER)
-                return false;
+        if (bFirerExists) {
+            const mobjtype_t sourceObjType = pFirer->type;
+
+            if (sourceObjType == mobj.type) {
+                // Colliding with the same species type: don't explode the missile if it's hitting the shooter of the missile
+                if (&mobj == pFirer)
+                    return true;
+
+                // If it's hitting anything other than the player, explode the missile but do no damage (set no 'hit' thing).
+                // Players can still damage each other with missiles however, hence the exception.
+                if (sourceObjType != MT_PLAYER)
+                    return false;
+            }
         }
 
         // So long as the thing is shootable then the missile can hit it

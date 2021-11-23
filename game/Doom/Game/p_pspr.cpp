@@ -797,9 +797,17 @@ void A_Light2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
 // Up to 40 explosions are created.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_BFGSpray(mobj_t& mobj) noexcept {
-    // PsyDoom: add extra assert here - it's expected the map object has a target (the firer of the BFG, i.e the player thing)
-    ASSERT(mobj.target);
-    mobj_t& target = *mobj.target;
+    // PsyDoom: added an extra check to make sure the firer still exists (this reference is now a weak pointer)
+    mobj_t* const pBfgFirer = mobj.target;
+
+    #if PSYDOOM_FIX_UB
+        if (!pBfgFirer)
+            return;
+    #else
+        // The original code did not check if the firer existed ('target' field) because that pointer should always be set for a BFG projectile.
+        // The firer could technically be destroyed and freed however (undefined behavior) as the original code did not have weak pointers.
+        ASSERT(pBfgFirer);
+    #endif
 
     // PsyDoom: spray/tracer range can be further extended to '2048' units
     #if PSYDOOM_MODS
@@ -812,7 +820,7 @@ void A_BFGSpray(mobj_t& mobj) noexcept {
     constexpr int32_t NUM_EXPLOSIONS = 40;
 
     for (int32_t explosionIdx = 0; explosionIdx < NUM_EXPLOSIONS; ++explosionIdx) {
-        P_AimLineAttack(target, mobj.angle - ANG45 + (ANG90 / NUM_EXPLOSIONS) * explosionIdx, attackRange);
+        P_AimLineAttack(*pBfgFirer, mobj.angle - ANG45 + (ANG90 / NUM_EXPLOSIONS) * explosionIdx, attackRange);
         mobj_t* const pLineTarget = gpLineTarget;
 
         if (!pLineTarget)
@@ -828,7 +836,7 @@ void A_BFGSpray(mobj_t& mobj) noexcept {
             damageAmt += (P_Random() & 7) + 1;
         }
 
-        P_DamageMobj(*pLineTarget, &target, &target, damageAmt);
+        P_DamageMobj(*pLineTarget, pBfgFirer, pBfgFirer, damageAmt);
     }
 }
 

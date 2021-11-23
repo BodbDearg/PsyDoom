@@ -117,6 +117,8 @@ set(SOURCE_FILES
     "Doom/Game/p_tick.h"
     "Doom/Game/p_user.cpp"
     "Doom/Game/p_user.h"
+    "Doom/Game/p_weak.cpp"
+    "Doom/Game/p_weak.h"
     "Doom/Game/sprinfo.cpp"
     "Doom/Game/sprinfo.h"
     "Doom/psx_main.cpp"
