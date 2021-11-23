@@ -1360,6 +1360,7 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
     gMRndIndex = mrndIndex;
     gGameTic = gameTic;
     gTicCon = ticCon;
+    gbIsFirstTick = (ticCon == 0);      // Not saved explicitly since it's redundant
 
     std::memset(gTicRemainder, 0, sizeof(gTicRemainder));   // Zero-init the bits we don't use
     gTicRemainder[0] = ticRemainder;
@@ -1408,7 +1409,6 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
     gTotalVBlanks = totalVBlanks;
     gElapsedVBlanks = 0;
     std::memset(gPlayersElapsedVBlanks, 0, sizeof(gPlayersElapsedVBlanks));
-    gbIsFirstTick = false;
     gLastTgtGameTicCount = tgtGameTicCount;
 
     // The count marker gets reset after deserializing

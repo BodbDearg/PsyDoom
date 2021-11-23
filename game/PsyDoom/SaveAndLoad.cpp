@@ -427,6 +427,25 @@ static void addMobjsToSectors() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Load helper: updates the shading parameters and current draw height of each sector after loading.
+// Needed to prevent glitches in the 1st frame after loading.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void updateSectorDrawParams() noexcept {
+    const int32_t forceUpdateVC = gValidCount - 1;      // Force sectors to be updated by using this 'valid count'
+    const int32_t numSectors = gNumSectors;
+    sector_t* const pSectors = gpSectors;
+
+    for (int32_t i = 0; i < numSectors; ++i) {
+        sector_t& sector = pSectors[i];
+
+        sector.validcount = forceUpdateVC;
+        R_UpdateShadingParams(sector);
+        sector.validcount = forceUpdateVC;
+        R_UpdateFloorDrawHeight(sector);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Load helper: associates the specified list of thinkers with their corresponding sectors
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class ThinkerT>
@@ -574,6 +593,7 @@ LoadSaveResult load() noexcept {
     associateThinkersWithSectors(gCeilings);
     associateThinkersWithSectors(gPlats);
     addActiveCeilingsAndPlats();
+    updateSectorDrawParams();
 
     // Post load actions: play CD music if required and kill any interpolation for the next frame (snap to the new position)
     playCdTrackIfNeeded(saveData.globals.curCDTrack);
