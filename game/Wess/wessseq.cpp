@@ -816,10 +816,11 @@ void Eng_NullEvent([[maybe_unused]] track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SeqEngine() noexcept {
     // PsyDoom: this can now be invoked at any time rather than at fixed 120 Hz intervals, so the delta time which can pass is variable.
+    // Restrict the maximum number of time that can be simulated however to 0.5 seconds.
     // Compute the fractional number of 120Hz ticks/interrupts elapsed here:
     #if PSYDOOM_MODS
         const timepoint_t now = std::chrono::high_resolution_clock::now();
-        const double deltaTime = std::max(std::chrono::duration<double>(now - gLastSequencerUpdateTime).count(), 0.0);
+        const double deltaTime = std::clamp(std::chrono::duration<double>(now - gLastSequencerUpdateTime).count(), 0.0, 0.5);
         const double deltaTime120HzTicks = std::min(deltaTime * 120.0, 8.0);
         gLastSequencerUpdateTime = now;
     #endif
