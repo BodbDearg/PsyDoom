@@ -25,6 +25,7 @@ enum option_t : int32_t {
 // PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu.
 // The previous 'password' slot now also directs to a load and save menu.
 #if PSYDOOM_MODS
+    opt_load,
     opt_load_save,
     opt_extra_options,
 #else
@@ -41,6 +42,7 @@ const char gOptionNames[][16] = {
 // PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu.
 // The previous 'password' menu item now also directs to a load and save menu.
 #if PSYDOOM_MODS
+    { "Load Game"       },
     { "Load And Save"   },
     { "Extra Options"   },
 #else
@@ -64,7 +66,7 @@ static const menuitem_t gOptMenuItems_MainMenu[] = {
 // PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu.
 // The previous 'password' menu item now also directs to a load and save menu.
 #if PSYDOOM_MODS
-    { opt_load_save,        62, 145 },
+    { opt_load,             62, 145 },
     { opt_extra_options,    62, 170 },
 #else
     { opt_password,         62, 145 },
@@ -348,8 +350,9 @@ gameaction_t O_Control() noexcept {
             }   break;
 
         // Password entry.
-        // PsyDoom: this is now replaced by the 'load and save' menu option.
+        // PsyDoom: this is now replaced by the 'load game' or 'load and save' menu option.
         #if PSYDOOM_MODS
+            case opt_load:
             case opt_load_save: {
                 if (bMenuOk) {
                     const gameaction_t action = MiniLoop(SaveRoot_Init, SaveRoot_Shutdown, SaveRoot_Update, SaveRoot_Draw);

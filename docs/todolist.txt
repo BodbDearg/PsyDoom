@@ -1,4 +1,3 @@
-- Tweak extra options menu layout.
 - Interpolate player weapon sway
 - Investigate interpolation for sprites and sectors.
 - Implement playing the intro movies and legal text
@@ -6,5 +5,4 @@
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
 - Add ability to input passwords with keyboard
-- Writeup final readmes and docs.
 - Makeup final logo

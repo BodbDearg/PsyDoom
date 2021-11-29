@@ -40,16 +40,16 @@ struct MenuItem {
 
 // Menu layouts: main menu and in-game
 static const MenuItem gMenuItems_MainMenu[] = {
-    { menu_load,        62, 75,  "Load"     },
-    { menu_password,    62, 100, "Password" },
-    { menu_back,        62, 205, "Back"     },
+    { menu_load,        62, 65,  "Load"     },
+    { menu_password,    62, 90,  "Password" },
+    { menu_back,        62, 195, "Back"     },
 };
 
 static const MenuItem gMenuItems_InGame[] = {
-    { menu_load,        62, 75,  "Load"     },
-    { menu_save,        62, 100, "Save"     },
-    { menu_password,    62, 125, "Password" },
-    { menu_back,        62, 205, "Back"     },
+    { menu_load,        62, 50,  "Load"     },
+    { menu_save,        62, 75,  "Save"     },
+    { menu_password,    62, 100, "Password" },
+    { menu_back,        62, 195, "Back"     },
 };
 
 // Currently in-use options menu layout: items list and size
