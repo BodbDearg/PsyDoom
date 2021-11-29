@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_MODS
 
-#include "neterror_main.h"
+#include "errormenu_main.h"
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
@@ -25,10 +25,11 @@
 #include <string>
 #include <vector>
 
-// The error message the UI is initialized with
-const char* gNetErrorMenuMsg = "";
+// The title and error message the UI is initialized with
+static std::string gErrorMenuTitle;
+static std::string gErrorMenuMsg;
 
-// Individual lines in the network error message
+// Individual lines in the error message
 static std::vector<std::string> gErrorLines;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,22 +41,22 @@ static void DrawCursor(const int16_t cursorX, const int16_t cursorY) noexcept {
         gPaletteClutIds[UIPAL],
         (int16_t) cursorX - 24,
         (int16_t) cursorY - 2,
-        // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
-        #if PSYDOOM_MODS
-            (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
-            (int16_t)(gTex_STATUS.texPageCoordY + M_SKULL_TEX_V),
-        #else
-            M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
-            M_SKULL_TEX_V,
-        #endif
+        (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
+        (int16_t)(gTex_STATUS.texPageCoordY + M_SKULL_TEX_V),
         M_SKULL_W,
         M_SKULL_H
     );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Show the network error menu for various different types of errors
+// Show a network error menu for various different types of errors
 //------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t RunNetErrorMenu(const char* const msg) noexcept {
+    gErrorMenuTitle = "Network Error!";
+    gErrorMenuMsg = msg;
+    return MiniLoop(ErrorMenu_Init, ErrorMenu_Shutdown, ErrorMenu_Update, ErrorMenu_Draw);
+}
+
 gameaction_t RunNetErrorMenu_FailedToConnect() noexcept {
     return RunNetErrorMenu("Failed to connect!\nCheck network status.\nCheck network settings.");
 }
@@ -65,17 +66,50 @@ gameaction_t RunNetErrorMenu_GameTypeOrVersionMismatch() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Convenience function that runs the network error menu with the given message
+// Show an error menu for various different types of 'load game' errors
 //------------------------------------------------------------------------------------------------------------------------------------------
-gameaction_t RunNetErrorMenu(const char* const msg) noexcept {
-    gNetErrorMenuMsg = msg;
-    return MiniLoop(NetError_Init, NetError_Shutdown, NetError_Update, NetError_Draw);
+gameaction_t RunLoadGameErrorMenu(const char* const msg) noexcept {
+    gErrorMenuTitle = "Load Failed!";
+    gErrorMenuMsg = msg;
+    return MiniLoop(ErrorMenu_Init, ErrorMenu_Shutdown, ErrorMenu_Update, ErrorMenu_Draw);
+}
+
+gameaction_t RunLoadGameErrorMenu_BadFileId() noexcept {
+    return RunLoadGameErrorMenu("Bad save file ID!\nNot a valid PsyDoom\nsave!");
+}
+
+gameaction_t RunLoadGameErrorMenu_BadFileVersion() noexcept {
+    return RunLoadGameErrorMenu("Bad save file version!\nSave is from an\nincompatible version\nof PsyDoom!");
+}
+
+gameaction_t RunLoadGameErrorMenu_BadMapNum() noexcept {
+    return RunLoadGameErrorMenu("Bad save file map num!\nMap does not exist\nin this game!");
+}
+
+gameaction_t RunLoadGameErrorMenu_IOError() noexcept {
+    return RunLoadGameErrorMenu("An IO error occurred!\nData may be corrupt or\ntruncated or disk\nmay be faulty.");
+}
+
+gameaction_t RunLoadGameErrorMenu_BadMapHash() noexcept {
+    RunLoadGameErrorMenu("Bad map hash!\nThe map data has\nchanged since the\nsave was made.");
+
+    // Restart the map as the game is broken at this point (map only partially setup).
+    // At least this way the player will get to play the save file map using a pistol start...
+    return ga_restart;
+}
+
+gameaction_t RunLoadGameErrorMenu_BadMapData() noexcept {
+    RunLoadGameErrorMenu("Bad save data!\nSome parts of the\nsave data failed\nvalidation checks.");
+
+    // Restart the map as the game is broken at this point (map only partially setup).
+    // At least this way the player will get to play the save file map using a pistol start...
+    return ga_restart;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes the network error menu
+// Initializes the error menu
 //------------------------------------------------------------------------------------------------------------------------------------------
-void NetError_Init() noexcept {
+void ErrorMenu_Init() noexcept {
     Input::consumeEvents();
     S_StartSound(nullptr, sfx_firxpl);
     gCursorFrame = 0;
@@ -83,7 +117,7 @@ void NetError_Init() noexcept {
     // Split up the error message into lines
     {
         gErrorLines.clear();
-        std::stringstream errorMsgStream(gNetErrorMenuMsg);
+        std::stringstream errorMsgStream(gErrorMenuMsg);
         std::string errorLine;
 
         while (std::getline(errorMsgStream, errorLine, '\n')) {
@@ -93,23 +127,23 @@ void NetError_Init() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Shuts down the network error menu
+// Shuts down the error menu
 //------------------------------------------------------------------------------------------------------------------------------------------
-void NetError_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
+void ErrorMenu_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
     gErrorLines.clear();
     gErrorLines.shrink_to_fit();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Runs update logic for the network error menu: does menu controls
+// Runs update logic for the error menu: does menu controls
 //------------------------------------------------------------------------------------------------------------------------------------------
-gameaction_t NetError_Update() noexcept {
+gameaction_t ErrorMenu_Update() noexcept {
     // Gather menu inputs and exit if the back button has just been pressed
     const bool bMenuBack = Controls::isJustPressed(Controls::Binding::Menu_Back);
     const bool bMenuOk = Controls::isJustPressed(Controls::Binding::Menu_Ok);
 
     if (bMenuBack || bMenuOk) {
-        S_StartSound(nullptr, sfx_pistol);
+        S_StartSound(nullptr, sfx_itmbk);
         return ga_exit;
     }
 
@@ -128,9 +162,9 @@ gameaction_t NetError_Update() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Draws the network error menu
+// Draws the error menu
 //------------------------------------------------------------------------------------------------------------------------------------------
-void NetError_Draw() noexcept {
+void ErrorMenu_Draw() noexcept {
     // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
 
@@ -151,7 +185,7 @@ void NetError_Draw() noexcept {
     // Don't do any rendering if we are about to exit the menu
     if (gGameAction == ga_nothing) {
         // Menu title
-        I_DrawString(-1, 20, "Network Error!");
+        I_DrawString(-1, 20, gErrorMenuTitle.c_str());
 
         // Draw the error message lines
         int32_t yPos = 60;

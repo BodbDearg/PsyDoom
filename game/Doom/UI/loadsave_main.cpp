@@ -17,6 +17,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
+#include "errormenu_main.h"
 #include "FileInputStream.h"
 #include "FileOutputStream.h"
 #include "FileUtils.h"
@@ -538,7 +539,13 @@ gameaction_t LoadGameForSlot(const SaveFileSlot slot) noexcept {
     }
 
     // If that failed then show an error menu
-    // TODO: handle read save errors
+    switch (readSaveResult) {
+        case ReadSaveResult::OK:            break;
+        case ReadSaveResult::BAD_FILE_ID:   return RunLoadGameErrorMenu_BadFileId();
+        case ReadSaveResult::BAD_VERSION:   return RunLoadGameErrorMenu_BadFileVersion();
+        case ReadSaveResult::BAD_MAP_NUM:   return RunLoadGameErrorMenu_BadMapNum();
+        case ReadSaveResult::IO_ERROR:      return RunLoadGameErrorMenu_IOError();
+    }
 
     // Do we need to switch map?
     // If that is the case we must warp to the next map and try to load the save on starting it.
@@ -553,9 +560,15 @@ gameaction_t LoadGameForSlot(const SaveFileSlot slot) noexcept {
     
     // We are already on the correct map!
     // Load the save game in-place and clear out the buffered save file data.
-    // TODO: handle loading errors
-    SaveAndLoad::load();
+    const LoadSaveResult loadSaveResult = SaveAndLoad::load();
     SaveAndLoad::clearBufferedSave();
+
+    // If that failed then show an error menu
+    switch (loadSaveResult) {
+        case LoadSaveResult::OK:            break;
+        case LoadSaveResult::BAD_MAP_HASH:  return RunLoadGameErrorMenu_BadMapHash();
+        case LoadSaveResult::BAD_MAP_DATA:  return RunLoadGameErrorMenu_BadMapData();
+    }
 
     // Display what was loaded when we are loading in place and clear the currently loading slot
     DisplayLoadedHudMessage(slot, true);

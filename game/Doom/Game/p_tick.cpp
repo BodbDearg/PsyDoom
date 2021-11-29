@@ -713,6 +713,10 @@ gameaction_t P_Ticker() noexcept {
                 } else if (action == ga_exitmenus) {
                     gbGamePaused = false;
                     P_OnGameUnpause();
+                } else if (action == ga_restart) {
+                    // Triggered if loading fails midway through the map setup process.
+                    // Restart the current map to try and recover...
+                    gGameAction = ga_restart;
                 }
             }
 

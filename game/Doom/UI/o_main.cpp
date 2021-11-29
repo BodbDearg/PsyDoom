@@ -354,7 +354,7 @@ gameaction_t O_Control() noexcept {
                 if (bMenuOk) {
                     const gameaction_t action = MiniLoop(SaveRoot_Init, SaveRoot_Shutdown, SaveRoot_Update, SaveRoot_Draw);
 
-                    if ((action == ga_warped) || (action == ga_exitmenus))
+                    if ((action == ga_warped) || (action == ga_exitmenus) || (action == ga_restart))
                         return action;
                 }
             }   break;

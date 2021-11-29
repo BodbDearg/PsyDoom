@@ -1,4 +1,3 @@
-- Implement save games.
 - Tweak extra options menu layout.
 - Interpolate player weapon sway
 - Investigate interpolation for sprites and sectors.

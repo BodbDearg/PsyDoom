@@ -8,7 +8,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Game/p_user.h"
 #include "Doom/Renderer/r_data.h"
-#include "Doom/UI/neterror_main.h"
+#include "Doom/UI/errormenu_main.h"
 #include "FatalErrors.h"
 #include "i_drawcmds.h"
 #include "i_texcache.h"

@@ -175,8 +175,8 @@ gameaction_t SaveRoot_Update() noexcept {
                 LoadSave_SetMode(LoadSaveMenuMode::Load);
                 const gameaction_t action = MiniLoop(LoadSave_Init, LoadSave_Shutdown, LoadSave_Update, LoadSave_Draw);
 
-                // Handle exiting all menus or warping to a new level
-                if ((action == ga_warped) || (action == ga_exitmenus)) {
+                // Handle exiting all menus, warping to a new level or restarting the level if loading failed (to recover from a half loaded map)
+                if ((action == ga_warped) || (action == ga_exitmenus) || (action == ga_restart)) {
                     return action;
                 }
             }   break;

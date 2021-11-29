@@ -10,6 +10,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/errormenu_main.h"
 #include "Doom/UI/f_finale.h"
 #include "Doom/UI/in_main.h"
 #include "Doom/UI/loadsave_main.h"
@@ -145,14 +146,24 @@ void G_DoLoadLevel() noexcept {
     // PsyDoom: do we need to load a save on starting a level?
     #if PSYDOOM_MODS
         if (ShouldLoadSaveOnLevelStart()) {
-            // TODO: handle load save errors
-            // Load the game
+            // Load the game, and if that fails trigger a restart of the map (don't leave it half setup)
             ClearLoadSaveOnLevelStartFlag();
-            SaveAndLoad::load();
+            const LoadSaveResult loadResult = SaveAndLoad::load();
             SaveAndLoad::clearBufferedSave();
 
-            // Display what was loaded and clear the current save slot being used
-            DisplayLoadedHudMessage(SaveAndLoad::gCurSaveSlot, true);
+            switch (loadResult) {
+                case LoadSaveResult::OK:
+                    DisplayLoadedHudMessage(SaveAndLoad::gCurSaveSlot, true);
+                    break;
+
+                case LoadSaveResult::BAD_MAP_HASH:  RunLoadGameErrorMenu_BadMapHash(); break;
+                case LoadSaveResult::BAD_MAP_DATA:  RunLoadGameErrorMenu_BadMapData(); break;
+            }
+
+            if (loadResult != LoadSaveResult::OK) {
+                gGameAction = ga_restart;
+            }
+
             SaveAndLoad::gCurSaveSlot = SaveFileSlot::NONE;
         }
     #endif
@@ -450,9 +461,19 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_RunGame() noexcept {
     while (true) {
-        // Load the level and run the game
+        // Load the level and run the game.
+        // PsyDoom: 'G_DoLoadLevel()' can now fail and request a map restart if loading a save game on startup fails.
         G_DoLoadLevel();
-        MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+
+        #if PSYDOOM_MODS
+            if (gGameAction != ga_restart) {
+                MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+            } else {
+                P_Stop(ga_restart);     // Need to do some cleanup for the aborted level run...
+            }
+        #else
+            MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+        #endif
 
         // PsyDoom: if app quit was requested then exit immediately
         if (Input::isQuitRequested())

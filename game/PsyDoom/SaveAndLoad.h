@@ -22,7 +22,7 @@ enum class ReadSaveResult : int32_t {
 enum class LoadSaveResult : int32_t {
     OK,             // Load was OK
     BAD_MAP_HASH,   // Map file has changed, not the same map the game was saved with
-    BAD_DATA        // Certain validation checks failed
+    BAD_MAP_DATA    // Certain map data validation checks failed
 };
 
 // Enum corresponding to a save file slot

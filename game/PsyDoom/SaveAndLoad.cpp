@@ -530,7 +530,7 @@ LoadSaveResult load() noexcept {
         return LoadSaveResult::BAD_MAP_HASH;
 
     if (!hdr.validate())
-        return LoadSaveResult::BAD_DATA;
+        return LoadSaveResult::BAD_MAP_DATA;
 
     // Clear out stuff from the map
     removeAllMobj();
@@ -572,7 +572,7 @@ LoadSaveResult load() noexcept {
     );
 
     if (!bAllValid)
-        return LoadSaveResult::BAD_DATA;
+        return LoadSaveResult::BAD_MAP_DATA;
 
     // Deserialize all objects
     saveData.globals.deserializeToGlobals();
