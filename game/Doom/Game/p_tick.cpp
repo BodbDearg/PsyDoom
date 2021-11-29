@@ -13,6 +13,7 @@
 #include "Doom/RendererVk/rv_data.h"
 #include "Doom/RendererVk/rv_main.h"
 #include "Doom/UI/am_main.h"
+#include "Doom/UI/loadsave_main.h"
 #include "Doom/UI/o_main.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
@@ -32,6 +33,7 @@
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxPadButtons.h"
+#include "PsyDoom/SaveAndLoad.h"
 #include "PsyDoom/ScriptingEngine.h"
 #include "PsyDoom/Video.h"
 #include "PsyQ/LIBGPU.h"
@@ -89,6 +91,9 @@ int32_t     gTicConOnPause;                         // What 1 vblank tick we pau
     TickInputs  gNextTickInputs;                // Network games only: what inputs we told the other player we will use next; sent ahead of time to reduce lag
     uint32_t    gTicButtons;                    // Currently PSX pad buttons for this player
     uint32_t    gOldTicButtons;                 // Previously pressed PSX buttons for this player
+    bool        gbIgnoreCurrentAttack;          // A flag set to prevent accidental firing on returning to the game - causes attack to be ignored until the key is released
+    bool        gbDoQuicksave;                  // A flag set to perform a quicksave at the next available opportunity (15 Hz tick)
+    bool        gbDoQuickload;                  // A flag set to perform a quicksave at the next available opportunity (15 Hz tick)
 #else
     uint32_t    gTicButtons[MAXPLAYERS];        // Currently pressed buttons by all players
     uint32_t    gOldTicButtons[MAXPLAYERS];     // Previously pressed buttons by all players
@@ -305,11 +310,18 @@ void P_CheckCheats() noexcept {
         // Run the options menu
         const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
 
-        if (optionsAction != ga_exit) {
+        #if PSYDOOM_MODS
+            // PsyDoom: don't quit the game entirely if just exiting menus is requested
+            const bool bExitGame = ((optionsAction != ga_exit) && (optionsAction != ga_exitmenus));
+        #else
+            const bool bExitGame = (optionsAction != ga_exit);
+        #endif
+
+        if (bExitGame) {
             gGameAction = optionsAction;
 
             // Do one final draw in some situations for screen fading
-            if (optionsAction == ga_restart || optionsAction == ga_exitdemo) {
+            if ((optionsAction == ga_restart) || (optionsAction == ga_exitdemo)) {
                 O_Drawer();
             }
         } else {
@@ -685,6 +697,30 @@ gameaction_t P_Ticker() noexcept {
         P_PlayerThink(player);
     }
 
+    // PsyDoom: do quick save and load if requested in singleplayer (even if paused).
+    // Only do them on 15 Hz (full game tick) boundaries however...
+    #if PSYDOOM_MODS
+        if ((gNetGame == gt_single) && (gGameTic > gPrevGameTic)) {
+            if (gbDoQuicksave) {
+                DoQuicksave();
+            } else if (gbDoQuickload) {
+                // Try to do a quick load and request warp to another map if that save is on another map.
+                // Otherwise (if requested via 'exit all menus') unpause the game.
+                const gameaction_t action = DoQuickload();
+
+                if (action == ga_warped) {
+                    gGameAction = ga_warped;
+                } else if (action == ga_exitmenus) {
+                    gbGamePaused = false;
+                    P_OnGameUnpause();
+                }
+            }
+
+            gbDoQuicksave = false;
+            gbDoQuickload = false;
+        }
+    #endif
+
     return gGameAction;
 }
 
@@ -758,6 +794,7 @@ void P_Start() noexcept {
         #endif
 
         P_PlayerInitTurning();
+        gbIgnoreCurrentAttack = true;   // If fire is held while the level is loading then ignore the current attack
 
         // PsyDoom: don't interpolate the first draw frame if doing uncapped framerates
         if (Config::gbUncapFramerate) {
@@ -785,9 +822,14 @@ void P_Start() noexcept {
         );
     }
 
-    // PsyDoom: start the level timer
+    // PsyDoom: start the level timer and auto save if requested
     #if PSYDOOM_MODS
         Game::startLevelTimer();
+
+        if (gbAutoSaveOnLevelStart) {
+            gbAutoSaveOnLevelStart = false;
+            SaveGameForSlot(SaveFileSlot::AUTOSAVE);
+        }
     #endif
 }
 
@@ -920,6 +962,8 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.bMenuBack = Controls::getBool(Controls::Binding::Menu_Back);
     inputs.bEnterPasswordChar = Controls::getBool(Controls::Binding::Menu_EnterPasswordChar);
     inputs.bDeletePasswordChar = Controls::getBool(Controls::Binding::Menu_DeletePasswordChar);
+    inputs.bQuicksave = Controls::getBool(Controls::Binding::Quicksave);
+    inputs.bQuickload = Controls::getBool(Controls::Binding::Quickload);
 
     // Allow toggle of autorun if the right button is pressed
     if (Controls::isJustPressed(Controls::Binding::Toggle_Autorun)) {
@@ -931,6 +975,16 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // If we're always running then this gets inverted
     if (PlayerPrefs::gbAlwaysRun) {
         inputs.bRun = (!inputs.bRun);
+    }
+
+    // Should the currently held attack be ignored immediately after loading or saving a game and returning to gameplay?
+    // If this is the case then once the user releases attack everything goes back to normal.
+    if (gbIgnoreCurrentAttack) {
+        if (Controls::getBool(Controls::Binding::Action_Attack)) {
+            inputs.bAttack = false;
+        } else {
+            gbIgnoreCurrentAttack = false;
+        }
     }
 
     // Direct weapon switching

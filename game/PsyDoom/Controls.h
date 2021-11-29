@@ -74,6 +74,8 @@ enum class Binding : uint16_t {
     PSXCheatCode_R2,
     // Miscellaneous
     Toggle_Renderer,
+    Quicksave,
+    Quickload,
     // How many bindings there are
     NUM_BINDINGS
 };

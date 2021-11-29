@@ -129,7 +129,8 @@ enum gameaction_t : int32_t {
     ga_restart,         // PSX DOOM: player restarted the level
     ga_exit,            // PSX DOOM: Exit the current screen or demo
 #if PSYDOOM_MODS
-    ga_quitapp          // PsyDoom: exit the application entirely
+    ga_quitapp,         // PsyDoom: exit the application entirely
+    ga_exitmenus,       // PsyDoom: exit menus only (not the game itself)
 #endif
 };
 
@@ -486,9 +487,12 @@ struct player_t {
         uint8_t bMenuStart : 1;
         uint8_t bMenuBack : 1;
         uint8_t bEnterPasswordChar : 1;
-
         uint8_t bDeletePasswordChar : 1;
-        uint8_t _unused2 : 7;
+
+        // Quick save and load keys
+        uint8_t bQuicksave : 1;
+        uint8_t bQuickload : 1;
+        uint8_t _unused2 : 5;
 
         // Playstation mouse input movement deltas: used for classic 'Final Doom' demo playback only.
         // These inputs should always be zeroed in all other cases.

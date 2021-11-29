@@ -19,11 +19,13 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "Game.h"
 #include "InputStream.h"
 #include "MapHash.h"
 #include "OutputStream.h"
 #include "SaveDataTypes.h"
 #include "ScriptingEngine.h"
+#include "Utils.h"
 
 BEGIN_NAMESPACE(SaveAndLoad)
 
@@ -32,6 +34,9 @@ std::unordered_map<mobj_t*, int32_t> gMobjToIdx;
 
 // Save/load accelerator LUT: maps from a map object index to it's pointer
 std::vector<mobj_t*> gMobjList;
+
+// Used during loading and saving: keeps track globally which slot is being used
+SaveFileSlot gCurSaveSlot = SaveFileSlot::NONE;
 
 // LUTS for thinkers of various types: used during saving and loading
 static std::vector<vldoor_t*>           gVlDoors;
@@ -292,6 +297,9 @@ static void populateSaveHeader(SaveFileHdr& hdr) noexcept {
     hdr.fileId1 = SAVE_FILE_ID1;
     hdr.fileId2 = SAVE_FILE_ID2;
     hdr.version = SAVE_FILE_VERSION;
+    hdr.mapNum = gGameMap;
+    hdr.secondsPlayed = Game::getLevelElapsedTimeMicrosecs() / 1000000;
+    hdr.mapName = Game::getMapName(gGameMap);
     hdr.mapHashWord1 = MapHash::gWord1;
     hdr.mapHashWord2 = MapHash::gWord2;
     hdr.numSectors = (uint32_t) gNumSectors;
@@ -602,6 +610,45 @@ LoadSaveResult load() noexcept {
     // Finish up and cleanup
     clearTempLuts();
     return LoadSaveResult::OK;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the name of the save file used for the specified save slot
+//------------------------------------------------------------------------------------------------------------------------------------------
+const char* getSaveFileName(const SaveFileSlot slot) noexcept {
+    switch (slot) {
+        case SaveFileSlot::SAVE1:       return "Save1.sav";
+        case SaveFileSlot::SAVE2:       return "Save2.sav";
+        case SaveFileSlot::SAVE3:       return "Save3.sav";
+        case SaveFileSlot::QUICKSAVE:   return "Quick.sav";
+        case SaveFileSlot::AUTOSAVE:    return "Auto.sav";
+        case SaveFileSlot::NONE:        break;
+    }
+
+    ASSERT_FAIL("Bad save file slot type!");
+    return "Unknown.sav";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the path to the specified save file
+//------------------------------------------------------------------------------------------------------------------------------------------
+std::string getSaveFilePath(const SaveFileSlot slot) noexcept {
+    const std::string userDataFolder = Utils::getOrCreateUserDataFolder();
+    return userDataFolder + getSaveFileName(slot);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clears the data for the currently buffered input save
+//------------------------------------------------------------------------------------------------------------------------------------------
+void clearBufferedSave() noexcept {
+    gSaveDataIn = {};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the map number for the currently buffered input save
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t getBufferedSaveMapNum() noexcept {
+    return gSaveDataIn.hdr.mapNum;
 }
 
 END_NAMESPACE(SaveAndLoad)

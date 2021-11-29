@@ -2,6 +2,7 @@
 
 #include "Macros.h"
 
+#include <string>
 #include <unordered_map>
 
 class InputStream;
@@ -24,13 +25,28 @@ enum class LoadSaveResult : int32_t {
     BAD_DATA        // Certain validation checks failed
 };
 
+// Enum corresponding to a save file slot
+enum class SaveFileSlot : uint8_t {
+    SAVE1,
+    SAVE2,
+    SAVE3,
+    QUICKSAVE,
+    AUTOSAVE,
+    NONE = 255,     // Indicates no slot
+};
+
 BEGIN_NAMESPACE(SaveAndLoad)
 
 extern std::unordered_map<mobj_t*, int32_t>     gMobjToIdx;
 extern std::vector<mobj_t*>                     gMobjList;
+extern SaveFileSlot                             gCurSaveSlot;
 
 bool save(OutputStream& out) noexcept;
 ReadSaveResult read(InputStream& in) noexcept;
 LoadSaveResult load() noexcept;
+const char* getSaveFileName(const SaveFileSlot slot) noexcept;
+std::string getSaveFilePath(const SaveFileSlot slot) noexcept;
+void clearBufferedSave() noexcept;
+int32_t getBufferedSaveMapNum() noexcept;
 
 END_NAMESPACE(SaveAndLoad)

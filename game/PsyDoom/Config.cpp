@@ -983,7 +983,9 @@ static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
     CONTROL_BIND_GROUP_MIDDLE(Action_Respawn, "Mouse Left, Gamepad RightTrigger, Left Ctrl, Right Ctrl, Gamepad Y"),
     CONTROL_BIND_GROUP_MIDDLE(Modifier_Run, "Left Shift, Right Shift, Gamepad X, Gamepad LeftTrigger"),
     CONTROL_BIND_GROUP_MIDDLE(Modifier_Strafe, "Left Alt, Right Alt, Gamepad A"),
-    CONTROL_BIND_GROUP_FOOTER(Toggle_Autorun, "CapsLock"),
+    CONTROL_BIND_GROUP_MIDDLE(Toggle_Autorun, "CapsLock"),
+    CONTROL_BIND_GROUP_MIDDLE(Quicksave, "F5"),
+    CONTROL_BIND_GROUP_FOOTER(Quickload, "F9"),
     //--------------------------------------------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------------------------------
     CONTROL_BIND_GROUP_HEADER(
@@ -1124,7 +1126,7 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
     {
         "EnableDevCheatShortcuts",
         "#---------------------------------------------------------------------------------------------------\n"
-        "# Set to '1' to enable convenience single key cheats (keys F1-F9) on the pause menu.\n"
+        "# Set to '1' to enable convenience single key cheats.\n"
         "# If you frequently use cheats for development purposes then these shortcuts might be useful.\n"
         "# They are disabled by default since they can be accidentally invoked very easily.\n"
         "#\n"
@@ -1134,11 +1136,10 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "#      F2: No-clip (new cheat for PC port!)\n"
         "#      F3: All weapons keys and ammo\n"
         "#      F4: Level warp (note: secret maps can now be warped to also)\n"
-        "#      F5: X-ray vision\n"
-        "#      F6: Show all map things\n"
-        "#      F7: Show all map lines\n"
-        "#      F8: VRAM Viewer (functionality hidden in retail)\n"
-        "#      F9: No-target (new cheat for PC port!)\n"
+        "#\n"
+        "#      F6: X-ray vision\n"
+        "#      F7: VRAM Viewer (functionality hidden in retail)\n"
+        "#      F8: No-target (new cheat for PC port!)\n"
         "#---------------------------------------------------------------------------------------------------",
         "0", "\n",
         [](const IniUtils::Entry& iniEntry) { gbEnableDevCheatShortcuts = iniEntry.getBoolValue(); },

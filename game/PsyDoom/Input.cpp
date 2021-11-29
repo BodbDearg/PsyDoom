@@ -2,6 +2,7 @@
 
 #include "GamepadInput.h"
 #include "Config.h"
+#include "Doom/Game/p_tick.h"
 #include "FatalErrors.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
@@ -233,11 +234,15 @@ static void handleSdlEvents() noexcept {
 
             case SDL_WINDOWEVENT: {
                 switch (sdlEvent.window.event) {
-                    case SDL_WINDOWEVENT_FOCUS_GAINED:
+                    case SDL_WINDOWEVENT_FOCUS_GAINED: {
                         // Note: don't grab mouse input here, wait until the window's client area is actually clicked.
                         // This makes resizing and such easier in windowed mode.
                         bConsumeEvents = true;
-                        break;
+
+                        // Tell the game to ignore firing until the fire button is released.
+                        // This prevents clicking on the window with a mouse for example triggering firing.
+                        gbIgnoreCurrentAttack = true;
+                    }   break;
 
                     case SDL_WINDOWEVENT_FOCUS_LOST:
                         SDL_ShowCursor(SDL_ENABLE);
@@ -276,6 +281,10 @@ static void handleSdlEvents() noexcept {
                     SDL_SetWindowGrab(Video::gpSdlWindow, SDL_TRUE);
                     SDL_SetRelativeMouseMode(SDL_TRUE);
                     bConsumeEvents = true;
+
+                    // Tell the game to ignore firing until the fire button is released.
+                    // This prevents clicking on the window with a mouse for example triggering firing.
+                    gbIgnoreCurrentAttack = true;
                 }
 
                 // Handle the button click

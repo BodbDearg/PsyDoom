@@ -12,6 +12,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/f_finale.h"
 #include "Doom/UI/in_main.h"
+#include "Doom/UI/loadsave_main.h"
 #include "doomdata.h"
 #include "Endian.h"
 #include "info.h"
@@ -25,6 +26,7 @@
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapInfo.h"
+#include "PsyDoom/SaveAndLoad.h"
 #include "PsyDoom/Utils.h"
 #include "Wess/wessapi.h"
 
@@ -62,9 +64,13 @@ bool gbDemoRecording;
 // Is the level being restarted?
 bool gbIsLevelBeingRestarted;
 
-// PsyDoom: external camera for cutscenes showing doors opening etc.
-// How many tics it has left, the camera position and angle.
 #if PSYDOOM_MODS
+    // PsyDoom: whether to auto-save on starting the next level.
+    // Set to true after the player successfully completes the previous level.
+    bool gbAutoSaveOnLevelStart;
+
+    // PsyDoom: external camera for cutscenes showing doors opening etc.
+    // How many tics it has left, the camera position and angle.
     uint32_t    gExtCameraTicsLeft;
     fixed_t     gExtCameraX;
     fixed_t     gExtCameraY;
@@ -135,6 +141,21 @@ void G_DoLoadLevel() noexcept {
 
     // No action set upon starting a level
     gGameAction = ga_nothing;
+
+    // PsyDoom: do we need to load a save on starting a level?
+    #if PSYDOOM_MODS
+        if (ShouldLoadSaveOnLevelStart()) {
+            // TODO: handle load save errors
+            // Load the game
+            ClearLoadSaveOnLevelStartFlag();
+            SaveAndLoad::load();
+            SaveAndLoad::clearBufferedSave();
+
+            // Display what was loaded and clear the current save slot being used
+            DisplayLoadedHudMessage(SaveAndLoad::gCurSaveSlot, true);
+            SaveAndLoad::gCurSaveSlot = SaveFileSlot::NONE;
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -412,6 +433,12 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
             gStates[S_DSGUN5].tics = 3;
         }
     #endif
+
+    // PsyDoom: ensure we don't autosave on starting a new game.
+    // User must complete a level first...
+    #if PSYDOOM_MODS
+        gbAutoSaveOnLevelStart = false;
+    #endif
 }
 
 #if PSYDOOM_MODS
@@ -505,8 +532,14 @@ void G_RunGame() noexcept {
         );
 
         if (!bDoFinale) {
-            // Not doing a finale, just go onto the next map
+            // Not doing a finale, just go onto the next map.
+            // PsyDoom: also request an auto-save on starting the next level.
             gGameMap = gNextMap;
+
+            #if PSYDOOM_MODS
+                gbAutoSaveOnLevelStart = true;
+            #endif
+
             continue;
         }
 

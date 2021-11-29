@@ -14,7 +14,7 @@
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
-#include "pw_main.h"
+#include "saveroot_main.h"
 #include "Wess/psxspu.h"
 #include "xoptions_main.h"
 
@@ -22,11 +22,13 @@
 enum option_t : int32_t {
     opt_music,
     opt_sound,
-    opt_password,
-// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu
+// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu.
+// The previous 'password' slot now also directs to a load and save menu.
 #if PSYDOOM_MODS
+    opt_load_save,
     opt_extra_options,
 #else
+    opt_password,
     opt_config,
 #endif
     opt_main_menu,
@@ -36,11 +38,13 @@ enum option_t : int32_t {
 const char gOptionNames[][16] = {
     { "Music Volume"    },
     { "Sound Volume"    },
-    { "Password"        },
-// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu
+// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu.
+// The previous 'password' menu item now also directs to a load and save menu.
 #if PSYDOOM_MODS
+    { "Load And Save"   },
     { "Extra Options"   },
 #else
+    { "Password"        },
     { "Configuration"   },
 #endif
     { "Main Menu"       },
@@ -57,11 +61,13 @@ struct menuitem_t {
 static const menuitem_t gOptMenuItems_MainMenu[] = {
     { opt_music,            62, 65  },
     { opt_sound,            62, 105 },
-    { opt_password,         62, 145 },
-// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu
+// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu.
+// The previous 'password' menu item now also directs to a load and save menu.
 #if PSYDOOM_MODS
+    { opt_load_save,        62, 145 },
     { opt_extra_options,    62, 170 },
 #else
+    { opt_password,         62, 145 },
     { opt_config,           62, 170 },
 #endif
     { opt_main_menu,        62, 195 },
@@ -70,11 +76,13 @@ static const menuitem_t gOptMenuItems_MainMenu[] = {
 static const menuitem_t gOptMenuItems_Single[] = {
     { opt_music,            62, 50  },
     { opt_sound,            62, 90  },
-    { opt_password,         62, 130 },
-// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu
+// PsyDoom: Removing the psx controller configuration menu and replacing with an 'extra options' menu.
+// The previous 'password' menu item now also directs to a load and save menu.
 #if PSYDOOM_MODS
+    { opt_load_save,        62, 130 },
     { opt_extra_options,    62, 155 },
 #else
+    { opt_password,         62, 130 },
     { opt_config,           62, 155 },
 #endif
     { opt_main_menu,        62, 180 },
@@ -339,13 +347,25 @@ gameaction_t O_Control() noexcept {
                 #endif
             }   break;
 
-            // Password entry
+        // Password entry.
+        // PsyDoom: this is now replaced by the 'load and save' menu option.
+        #if PSYDOOM_MODS
+            case opt_load_save: {
+                if (bMenuOk) {
+                    const gameaction_t action = MiniLoop(SaveRoot_Init, SaveRoot_Shutdown, SaveRoot_Update, SaveRoot_Draw);
+
+                    if ((action == ga_warped) || (action == ga_exitmenus))
+                        return action;
+                }
+            }   break;
+        #else
             case opt_password: {
                 if (bMenuOk) {
                     if (MiniLoop(START_PasswordScreen, STOP_PasswordScreen, TIC_PasswordScreen, DRAW_PasswordScreen) == ga_warped)
                         return ga_warped;
                 }
             }   break;
+        #endif
 
             // PsyDoom: Adding a new 'extra options' menu
             case opt_extra_options: {

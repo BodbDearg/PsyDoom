@@ -323,11 +323,9 @@ void update() noexcept {
         checkDevCheat(SDL_SCANCODE_F2, doToggleNoClipCheat);
         checkDevCheat(SDL_SCANCODE_F3, doWeaponsKeysAndArmorCheat);
         checkDevCheat(SDL_SCANCODE_F4, doOpenLevelWarpCheat);
-        checkDevCheat(SDL_SCANCODE_F5, doToggleXRayVisionCheat);
-        checkDevCheat(SDL_SCANCODE_F6, doToggleAllMapThingsCheat);
-        checkDevCheat(SDL_SCANCODE_F7, doToggleAllMapLinesCheat);
-        checkDevCheat(SDL_SCANCODE_F8, doToggleVramViewerCheat);
-        checkDevCheat(SDL_SCANCODE_F9, doToggleNoTargetCheat);
+        checkDevCheat(SDL_SCANCODE_F6, doToggleXRayVisionCheat);
+        checkDevCheat(SDL_SCANCODE_F7, doToggleVramViewerCheat);
+        checkDevCheat(SDL_SCANCODE_F8, doToggleNoTargetCheat);
 
         if (Config::gbEnableDevInPlaceReloadFunctionKey) {
             checkDevCheat(SDL_SCANCODE_F11, doInPlaceReloadCheat);

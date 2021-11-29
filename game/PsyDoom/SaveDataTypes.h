@@ -2,7 +2,7 @@
 
 #include "Doom/doomdef.h"
 #include "Doom/Game/p_doors.h"
-#include "Macros.h"
+#include "SmallString.h"
 
 #include <memory>
 
@@ -36,7 +36,7 @@ namespace ScriptingEngine {
 }
 
 // The current save file format version
-static constexpr uint32_t SAVE_FILE_VERSION = 1;
+static constexpr uint32_t SAVE_FILE_VERSION = 2;
 
 // The expected file ids in little endian format (says 'PSYDSAVF' at the top of the file)
 static constexpr uint32_t SAVE_FILE_ID1 = 0x44595350;
@@ -491,7 +491,9 @@ struct SaveFileHdr {
     uint32_t    fileId1;                // Should match 'SAVE_FILE_ID1'
     uint32_t    fileId2;                // Should match 'SAVE_FILE_ID2'
     uint32_t    version;                // Should match 'SAVE_FILE_VERSION'
-    uint32_t    _reserved1;             // Padding: currently reserved
+    int32_t     mapNum;                 // Map number
+    int64_t     secondsPlayed;          // Number of seconds the player has been playing the map
+    String32    mapName;                // Name of the map
     uint64_t    mapHashWord1;           // Hash of all the map data: word 1 (used to verify the same map is being played)
     uint64_t    mapHashWord2;           // Hash of all the map data: word 2 (used to verify the same map is being played)
     uint32_t    numSectors;             // Number of 'SavedSectorT' in the save file
@@ -514,11 +516,12 @@ struct SaveFileHdr {
     void byteSwap() noexcept;
     bool validateFileId() const noexcept;
     bool validateVersion() const noexcept;
+    bool validateMapNum() const noexcept;
     bool validateMapHash() const noexcept;
     bool validate() const noexcept;
 };
 
-static_assert(sizeof(SaveFileHdr) == 96);
+static_assert(sizeof(SaveFileHdr) == 136);
 
 // Save data for the game in it's entirety, in order of how it appears in the file.
 // Just encapsulates state for a single player game, does NOT support multiplayer.

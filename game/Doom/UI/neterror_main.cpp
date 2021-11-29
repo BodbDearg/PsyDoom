@@ -171,4 +171,4 @@ void NetError_Draw() noexcept {
     I_DrawPresent();
 }
 
-#endif  // // #if PSYDOOM_MODS
+#endif  // #if PSYDOOM_MODS

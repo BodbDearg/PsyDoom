@@ -54,6 +54,9 @@ extern int32_t      gTicConOnPause;
     extern TickInputs   gNextTickInputs;
     extern uint32_t     gTicButtons;
     extern uint32_t     gOldTicButtons;
+    extern bool         gbIgnoreCurrentAttack;
+    extern bool         gbDoQuicksave;
+    extern bool         gbDoQuickload;
 #else
     extern uint32_t     gTicButtons[MAXPLAYERS];
     extern uint32_t     gOldTicButtons[MAXPLAYERS];

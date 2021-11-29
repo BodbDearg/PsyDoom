@@ -121,7 +121,7 @@ texture_t gTex_CONNECT;
 
     // The current network protocol version.
     // Should be incremented whenever the data format being transmitted changes, or when updates might cause differences in game behavior.
-    static constexpr int32_t NET_PROTOCOL_VERSION = 13;
+    static constexpr int32_t NET_PROTOCOL_VERSION = 14;
 
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
@@ -437,7 +437,6 @@ void I_DrawSprite(
 }
 
 #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom extension/helper: same as 'I_DrawSprite' but with the ability to change the sprite's color and semi-transparency option
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -473,8 +472,7 @@ void I_DrawColoredSprite(
 
     I_AddPrim(spritePrim);
 }
-
-#endif
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Copies the front buffer to the back buffer, draws a loading plaque over it and presents it to the screen.

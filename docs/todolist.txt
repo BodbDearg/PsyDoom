@@ -1,16 +1,11 @@
-0.9 - Networking, saves and interpolation?
-- Investigate rollback networking to combat latency.
-    - Could also be used for a rewind feature??!
-    - Could also be used for a save feature.
+- Implement save games.
+- Tweak extra options menu layout.
 - Interpolate player weapon sway
-- Investigate interpolation for sprites and sectors in addition to player view.
-
-1.0 - Final polish?
-- Linux support.
+- Investigate interpolation for sprites and sectors.
 - Implement playing the intro movies and legal text
+- Linux support.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
-- Do a final review/diff against PSXDOOM-RE to double check for any inconsistencies.
 - Add ability to input passwords with keyboard
 - Writeup final readmes and docs.
 - Makeup final logo

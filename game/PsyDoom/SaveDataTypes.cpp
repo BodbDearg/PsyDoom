@@ -1419,10 +1419,12 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
 // SaveFileHdr
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SaveFileHdr::byteSwap() noexcept {
+    // Note: dont byte swap 'mapName' as the characters should always be in the same order, regardless of endianness
     byteSwapValue(fileId1);
     byteSwapValue(fileId2);
     byteSwapValue(version);
-    byteSwapValue(_reserved1);
+    byteSwapValue(mapNum);
+    byteSwapValue(secondsPlayed);
     byteSwapValue(mapHashWord1);
     byteSwapValue(mapHashWord2);
     byteSwapValue(numSectors);
@@ -1451,6 +1453,10 @@ bool SaveFileHdr::validateVersion() const noexcept {
     return (version == SAVE_FILE_VERSION);
 }
 
+bool SaveFileHdr::validateMapNum() const noexcept {
+    return ((mapNum >= 1) && (mapNum <= Game::getNumMaps()));
+}
+
 bool SaveFileHdr::validateMapHash() const noexcept {
     return ((mapHashWord1 == MapHash::gWord1) && (mapHashWord2 == MapHash::gWord2));
 }
@@ -1459,7 +1465,10 @@ bool SaveFileHdr::validate() const noexcept {
     return (
         validateFileId() &&
         validateVersion() &&
+        validateMapNum() &&
         validateMapHash() &&
+        // Should not be negative!
+        (secondsPlayed >= 0) &&
         // Sanity these counts match the map
         ((int32_t) numSectors == gNumSectors) &&
         ((int32_t) numLines == gNumLines) &&
@@ -1510,13 +1519,11 @@ ReadSaveResult SaveData::readFrom(InputStream& in) noexcept {
         if (!hdr.validateVersion())
             return ReadSaveResult::BAD_VERSION;
 
-        // Read the globals and verify the map number is OK
-        readObjectLE(in, globals);
-
-        if ((globals.gameMap < 1) || (globals.gameMap > Game::getNumMaps()))
+        if (!hdr.validateMapNum())
             return ReadSaveResult::BAD_MAP_NUM;
 
-        // Read everything else
+        // Read the globals and everything else
+        readObjectLE(in, globals);
         readArrayLE(in, sectors, hdr.numSectors);
         readArrayLE(in, lines, hdr.numLines);
         readArrayLE(in, sides, hdr.numSides);

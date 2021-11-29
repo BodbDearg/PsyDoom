@@ -44,14 +44,8 @@ static void DrawCursor(const int16_t cursorX, const int16_t cursorY) noexcept {
         gPaletteClutIds[UIPAL],
         (int16_t) cursorX - 24,
         (int16_t) cursorY - 2,
-        // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
-        #if PSYDOOM_MODS
-            (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
-            (int16_t)(gTex_STATUS.texPageCoordY + M_SKULL_TEX_V),
-        #else
-            M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
-            M_SKULL_TEX_V,
-        #endif
+        (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
+        (int16_t)(gTex_STATUS.texPageCoordY + M_SKULL_TEX_V),
         M_SKULL_W,
         M_SKULL_H
     );
@@ -115,7 +109,7 @@ gameaction_t XOptions_Update() noexcept {
         // If there are no direction buttons pressed then the next move is allowed instantly
         gVBlanksUntilMenuMove[playerIdx] = 0;
     } else {
-        // Direction buttons pressed or held down, check to see if we can an up/down move now
+        // Direction buttons pressed or held down, check to see if we can move up/down now
         gVBlanksUntilMenuMove[playerIdx] -= gPlayersElapsedVBlanks[playerIdx];
 
         if (gVBlanksUntilMenuMove[playerIdx] <= 0) {
@@ -286,14 +280,8 @@ void XOptions_Draw() noexcept {
                 gPaletteClutIds[UIPAL],
                 (int16_t)(menuItemX + 13),
                 (int16_t)(menuItemY + 20),
-                // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
-                #if PSYDOOM_MODS
-                    (int16_t)(gTex_STATUS.texPageCoordX + 0),
-                    (int16_t)(gTex_STATUS.texPageCoordY + 184),
-                #else
-                    0,
-                    184,
-                #endif
+                (int16_t)(gTex_STATUS.texPageCoordX + 0),
+                (int16_t)(gTex_STATUS.texPageCoordY + 184),
                 108,
                 11
             );
@@ -306,14 +294,8 @@ void XOptions_Draw() noexcept {
                 gPaletteClutIds[UIPAL],
                 (int16_t)(menuItemX + 14 + sliderVal),
                 (int16_t)(menuItemY + 20),
-                // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
-                #if PSYDOOM_MODS
-                    (int16_t)(gTex_STATUS.texPageCoordX + 108),
-                    (int16_t)(gTex_STATUS.texPageCoordY + 184),
-                #else
-                    108,
-                    184,
-                #endif
+                (int16_t)(gTex_STATUS.texPageCoordX + 108),
+                (int16_t)(gTex_STATUS.texPageCoordY + 184),
                 6,
                 11
             );
@@ -352,7 +334,7 @@ void XOptions_Draw() noexcept {
         }
 
         // Draw the exit option
-        I_DrawString(62, 205, "Exit");
+        I_DrawString(62, 205, "Back");
 
         if (gCursorPos[gCurPlayerIndex] == menu_exit) {
             cursorY = 205;
@@ -367,4 +349,4 @@ void XOptions_Draw() noexcept {
     I_DrawPresent();
 }
 
-#endif  // // #if PSYDOOM_MODS
+#endif  // #if PSYDOOM_MODS

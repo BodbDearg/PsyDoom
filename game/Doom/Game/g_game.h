@@ -20,6 +20,7 @@ extern bool             gbDemoRecording;
 extern bool             gbIsLevelBeingRestarted;
 
 #if PSYDOOM_MODS
+    extern bool         gbAutoSaveOnLevelStart;
     extern uint32_t     gExtCameraTicsLeft;
     extern fixed_t      gExtCameraX;
     extern fixed_t      gExtCameraY;

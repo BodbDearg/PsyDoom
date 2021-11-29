@@ -842,6 +842,23 @@ void P_PlayerThink(player_t& player) noexcept {
         #endif
     }
 
+    // PsyDoom: check for quick save and load keys in singleplayer
+    #if PSYDOOM_MODS
+        if (gNetGame == gt_single) {
+            if (inputs.bQuicksave && (!oldInputs.bQuicksave)) {
+                // Only allow quicksave if the player is not dead, otherwise pointless.
+                // You can still manually save when dead however, if you really really want to...
+                if ((player.health > 0) && (player.playerstate == PST_LIVE)) {
+                    gbDoQuicksave = true;
+                }
+            }
+
+            if (inputs.bQuickload && (!oldInputs.bQuickload)) {
+                gbDoQuickload = true;
+            }
+        }
+    #endif
+
     // Updates for when the game is NOT paused
     if (!gbGamePaused) {
         // Do physical movements due to velocity and state transitions for the player.
@@ -870,7 +887,8 @@ void P_PlayerThink(player_t& player) noexcept {
             if (!bUseOrigMovement) {
                 P_PlayerMobjThink(playerMobj);
             }
-        } else {
+        }
+        else {
             // Attacking with the chainsaw causes some movement forward
             if (playerMobj.flags & MF_JUSTATTACKED) {
                 player.angleturn = 0;
