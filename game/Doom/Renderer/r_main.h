@@ -55,6 +55,8 @@ extern sector_t*        gpCurDrawSector;
 extern subsector_t**    gppEndDrawSubsector;
 
 #if PSYDOOM_MODS
+    extern fixed_t      gPlayerLerpFactor;
+    extern fixed_t      gWorldLerpFactor;
     extern fixed_t      gOldViewX;
     extern fixed_t      gOldViewY;
     extern fixed_t      gOldViewZ;
@@ -63,6 +65,8 @@ extern subsector_t**    gppEndDrawSubsector;
     extern fixed_t      gOldAutomapY;
     extern fixed_t      gOldAutomapScale;
     extern bool         gbSnapViewZInterpolation;
+    extern fixed_t      gViewPushedZ;
+    extern bool         gbOldViewZIsPushed;
 #endif
 
 void R_Init() noexcept;
@@ -73,15 +77,19 @@ int32_t R_PointOnSide(const fixed_t x, const fixed_t y, const node_t& node) noex
 subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept;
 
 #if PSYDOOM_MODS
-    void R_NextInterpolation() noexcept;
+    void R_NextPlayerInterpolation() noexcept;
+    void R_NextWorldInterpolation() noexcept;
     void R_SnapViewZInterpolation() noexcept;
-    fixed_t R_CalcLerpFactor() noexcept;
+    void R_SnapSectorInterpolation(sector_t& sector) noexcept;
+    void R_SnapMobjInterpolation(mobj_t& mobj) noexcept;
+    void R_CalcLerpFactors() noexcept;
     fixed_t R_LerpCoord(const fixed_t oldCoord, const fixed_t newCoord, const fixed_t mix) noexcept;
     angle_t R_LerpAngle(const angle_t oldAngle, const angle_t newAngle, const fixed_t mix) noexcept;
     bool R_HasHigherSurroundingSkyCeiling(const sector_t& sector) noexcept;
     bool R_HasLowerSurroundingSkyFloor(const sector_t& sector) noexcept;
-    void R_UpdateFloorDrawHeight(sector_t& sector) noexcept;
+    void R_UpdateSectorDrawHeights(sector_t& sector) noexcept;
     void R_UpdateShadingParams(sector_t& sector) noexcept;
     light_t R_GetSectorLightColor(const sector_t& sector, const fixed_t z) noexcept;
     void R_GetSectorDrawColor(const sector_t& sector, const fixed_t z, uint8_t& r, uint8_t& g, uint8_t& b) noexcept;
+    fixed_t R_FindLowestSurroundingInterpFloorHeight(sector_t& sector) noexcept;
 #endif

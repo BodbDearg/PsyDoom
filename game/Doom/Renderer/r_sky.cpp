@@ -267,15 +267,15 @@ void R_DrawSegSkyWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
         return;
 
     // Get the top and bottom z values of the front sector
-    const fixed_t ftz = frontSec.ceilingheight;
-    const fixed_t fbz = frontSec.floorDrawHeight;
+    const fixed_t ftz = frontSec.ceilingDrawH;
+    const fixed_t fbz = frontSec.floorDrawH;
 
     // See if the seg's line is two sided or not, have to check the back sector sky status if two sided
     if (seg.backsector) {
         // Get the bottom and top z values of the back sector
         const sector_t& backSec = *seg.backsector;
-        const fixed_t btz = backSec.ceilingheight;
-        const fixed_t bbz = backSec.floorDrawHeight;
+        const fixed_t btz = backSec.ceilingDrawH;
+        const fixed_t bbz = backSec.floorDrawH;
 
         // Get the mid wall size so that it only occupies the gap between the upper and lower walls
         const fixed_t midTz = std::min(ftz, btz);

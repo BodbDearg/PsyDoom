@@ -47,10 +47,12 @@ static fixed_t gAM_AutomapScale;
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void AM_CalcPlayerMapTransforms() noexcept {
     const player_t& player = gPlayers[gCurPlayerIndex];
+
+    R_CalcLerpFactors();
     const bool bUncapFramerate = Config::gbUncapFramerate;
 
     if (bUncapFramerate) {
-        const fixed_t lerpFactor = R_CalcLerpFactor();
+        const fixed_t lerpFactor = gPlayerLerpFactor;
         gAM_PlayerX = R_LerpCoord(gOldViewX, player.mo->x, lerpFactor);
         gAM_PlayerY = R_LerpCoord(gOldViewY, player.mo->y, lerpFactor);
         gAM_PlayerAngle = R_LerpAngle(gOldViewAngle, player.mo->angle, lerpFactor);

@@ -168,7 +168,7 @@ static void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const 
     if (bDrawFloor) {
         // Draw the floor plane if the view is above it and if it's a normal floor (not a sky floor).
         // Note that sky floors are new engine feature added by PsyDoom.
-        const float floorH = RV_FixedToFloat(sector.floorDrawHeight);
+        const float floorH = RV_FixedToFloat(sector.floorDrawH);
 
         if (gViewZf > floorH) {
             if (sector.floorpic >= 0) {
@@ -179,7 +179,7 @@ static void RV_DrawFlat(const subsector_t& subsec, const bool bDrawFloor, const 
     }
     else {
         // Draw the ceiling plane if the view is below it and if it's a normal ceiling (not a sky ceiling).
-        const float ceilH = RV_FixedToFloat(sector.ceilingheight);
+        const float ceilH = RV_FixedToFloat(sector.ceilingDrawH);
 
         if (gViewZf < ceilH) {
             if (sector.ceilingpic >= 0) {
@@ -220,7 +220,7 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         uint8_t secR;
         uint8_t secG;
         uint8_t secB;
-        R_GetSectorDrawColor(sector, sector.floorheight, secR, secG, secB);
+        R_GetSectorDrawColor(sector, sector.floorDrawH, secR, secG, secB);
 
         // Draw the floor
         RV_DrawFlat(subsec, true, secR, secG, secB);
@@ -237,7 +237,7 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         if (!nextSubsec.bVkCanBatchFlats)
             break;
 
-        if (nextSector.floorDrawHeight != sector.floorDrawHeight)
+        if (nextSector.floorDrawH != sector.floorDrawH)
             break;
 
         // Break the batch if the next subsector has visible masked or blended mid walls.
@@ -275,7 +275,7 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
         uint8_t secR;
         uint8_t secG;
         uint8_t secB;
-        R_GetSectorDrawColor(sector, sector.ceilingheight, secR, secG, secB);
+        R_GetSectorDrawColor(sector, sector.ceilingDrawH, secR, secG, secB);
 
         // Draw the ceiling
         RV_DrawFlat(subsec, false, secR, secG, secB);
@@ -292,7 +292,7 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
         if (!nextSubsec.bVkCanBatchFlats)
             break;
 
-        if (nextSector.ceilingheight != sector.ceilingheight)
+        if (nextSector.ceilingDrawH != sector.ceilingDrawH)
             break;
 
         // Break the batch if the next subsector has visible masked or blended mid walls.

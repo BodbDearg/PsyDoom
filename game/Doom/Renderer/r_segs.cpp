@@ -29,14 +29,16 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     // Note: texture space y coords run in the opposite direction to viewspace z, hence this calculation is
     // inverted from what it would normally be in viewspace.
     // 
-    // PsyDoom: floor might be drawn at a different height to it's real height ('ghost platform' effects).
+    // PsyDoom: floors and ceilings might be drawn at a different height to their real height due to interpolation etc.
     #if PSYDOOM_MODS 
-        const fixed_t frontFloorH = frontSec.floorDrawHeight;
+        const fixed_t frontFloorH = frontSec.floorDrawH;
+        const fixed_t frontCeilH = frontSec.ceilingDrawH;
     #else
         const fixed_t frontFloorH = frontSec.floorheight;
+        const fixed_t frontCeilH = frontSec.ceilingheight;
     #endif
 
-    const int32_t fsec_ty = d_fixed_to_int(gViewZ - frontSec.ceilingheight);
+    const int32_t fsec_ty = d_fixed_to_int(gViewZ - frontCeilH);
     const int32_t fsec_by = d_fixed_to_int(gViewZ - frontFloorH);
 
     // Initially the mid wall texture space y coords are that of the sector.
@@ -49,17 +51,19 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
     if (pBackSec) {
         // Get the top and bottom y values for the back sector in texture space.
-        // PsyDoom: floor might be drawn at a different height to it's real height ('ghost platform' effects).
+        // PsyDoom: floors and ceilings might be drawn at a different height to their real height due to interpolation etc.
         // PsyDoom: texture indexes can now be '-1' to indicate a wall has no texture (and therefore is not drawn).
         #if PSYDOOM_MODS
-            const fixed_t backFloorH = pBackSec->floorDrawHeight;
+            const fixed_t backFloorH = pBackSec->floorDrawH;
+            const fixed_t backCeilH = pBackSec->ceilingDrawH;
             const bool bUpperWallHasTex = (side.toptexture >= 0);
         #else
             const fixed_t backFloorH = pBackSec->floorheight;
+            const fixed_t backCeilH = pBackSec->ceilingheight;
             constexpr bool bUpperWallHasTex = true;
         #endif
 
-        const int32_t bsec_ty = d_fixed_to_int(gViewZ - pBackSec->ceilingheight);
+        const int32_t bsec_ty = d_fixed_to_int(gViewZ - backCeilH);
         const int32_t bsec_by = d_fixed_to_int(gViewZ - backFloorH);
 
         // Do we need to render the upper wall?

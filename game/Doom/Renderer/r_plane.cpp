@@ -123,15 +123,19 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
         I_AddPrim(texWinPrim);
     }
 
-    // Get Z position of the plane (height) in viewspace
+    // Get Z position of the plane (height) in viewspace.
+    // PsyDoom: floor and ceiling might be drawn at a different height to it's real height (interpolation and 'ghost platform' effects)
     fixed_t planeZ;
 
     if (bIsCeiling) {
-        planeZ = drawsec.ceilingheight - gViewZ;
-    } else {
-        // PsyDoom: floor might be drawn at a different height to it's real height ('ghost platform' effects)
         #if PSYDOOM_MODS
-            planeZ = drawsec.floorDrawHeight - gViewZ;
+            planeZ = drawsec.ceilingDrawH - gViewZ;
+        #else
+            planeZ = drawsec.ceilingheight - gViewZ;
+        #endif
+    } else {
+        #if PSYDOOM_MODS
+            planeZ = drawsec.floorDrawH - gViewZ;
         #else
             planeZ = drawsec.floorheight - gViewZ;
         #endif

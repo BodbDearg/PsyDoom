@@ -254,15 +254,17 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     }
 
     // Draw the floor if above it.
-    // PsyDoom: floors can now have skies and draw floor height might be different to real height.
+    // PsyDoom: floors and ceilings can now have a different draw height to real height (due to interpolation etc.)
     sector_t& drawsec = *gpCurDrawSector;
 
     #if PSYDOOM_MODS
         const bool bHasSkyFloor = (drawsec.floorpic == -1);
-        const fixed_t drawSecFloorH = drawsec.floorDrawHeight;
+        const fixed_t drawSecFloorH = drawsec.floorDrawH;
+        const fixed_t drawSecCeilH = drawsec.ceilingDrawH;
     #else
         constexpr bool bHasSkyFloor = false;
         const fixed_t drawSecFloorH = drawsec.floorheight;
+        const fixed_t drawSecCeilH = drawsec.ceilingheight;
     #endif
 
     if ((!bHasSkyFloor) && (gViewZ > drawSecFloorH)) {
@@ -270,7 +272,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     }
 
     // Draw the ceiling if below it and it is not a sky ceiling
-    if ((drawsec.ceilingpic != -1) && (gViewZ < drawsec.ceilingheight)) {
+    if ((drawsec.ceilingpic != -1) && (gViewZ < drawSecCeilH)) {
         R_DrawSubsectorFlat(drawleaf, true);
     }
 

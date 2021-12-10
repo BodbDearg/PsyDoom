@@ -138,10 +138,19 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
             VECTOR viewpos;
 
             {
+                // PsyDoom: account for interpolation if that is enabled
+                #if PSYDOOM_MODS
+                    const fixed_t thingX = pThing->x.renderValue();
+                    const fixed_t thingY = pThing->y.renderValue();
+                #else
+                    const fixed_t thingX = pThing->x;
+                    const fixed_t thingY = pThing->y;
+                #endif
+
                 SVECTOR worldpos = {
-                    (int16_t) d_fixed_to_int(pThing->x - gViewX),
+                    (int16_t) d_fixed_to_int(thingX - gViewX),
                     0,
-                    (int16_t) d_fixed_to_int(pThing->y - gViewY)
+                    (int16_t) d_fixed_to_int(thingY - gViewY)
                 };
 
                 int32_t flagsOut;
@@ -232,7 +241,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
     // Draw all the sprites in the draw list for the subsector
     for (const vissprite_t* pSpr = gVisSpriteHead.next; pSpr != &gVisSpriteHead; pSpr = pSpr->next) {
         // Grab the sprite frame to use
-        const mobj_t& thing = *pSpr->thing;
+        mobj_t& thing = *pSpr->thing;
         const spritedef_t& spriteDef = gSprites[thing.sprite];
         const spriteframe_t& frame = spriteDef.spriteframes[thing.frame & FF_FRAMEMASK];
 
@@ -242,7 +251,16 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         bool bFlipSpr;
 
         if (frame.rotate) {
-            const angle_t angToThing = R_PointToAngle2(gViewX, gViewY, thing.x, thing.y);
+            // PsyDoom: account for interpolation if that is enabled
+            #if PSYDOOM_MODS
+                const fixed_t thingX = thing.x.renderValue();
+                const fixed_t thingY = thing.y.renderValue();
+            #else
+                const fixed_t thingX = thing.x;
+                const fixed_t thingY = thing.y;
+            #endif
+
+            const angle_t angToThing = R_PointToAngle2(gViewX, gViewY, thingX, thingY);
             const uint32_t dirIdx = (angToThing - thing.angle + (ANG45 / 2) * 9) >> 29;     // Note: same calculation as PC Doom
 
             lumpIdx = frame.lump[dirIdx];
@@ -276,14 +294,21 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         // Note: this is encoded/packed into the texture page id.
         polyPrim.tpage = tex.texPageId | LIBGPU_GetTPageSemiTransBits(blendFlags >> 1);
 
-        // Set draw color
+        // Set draw color.
+        // PsyDoom: adding support for uncapped framerate interpolation for the thing Z value.
+        #if PSYDOOM_MODS
+            const fixed_t thingZ = thing.z.renderValue();
+        #else
+            const fixed_t thingZ = thing.z;
+        #endif
+
         if (thing.frame & FF_FULLBRIGHT) {
             LIBGPU_setRGB0(polyPrim, LIGHT_INTENSTIY_MAX, LIGHT_INTENSTIY_MAX, LIGHT_INTENSTIY_MAX);
         } else {
             // PsyDoom: need to account for dual colored lighting now when setting the thing color
             #if PSYDOOM_MODS
                 uint8_t sectorR, sectorG, sectorB;
-                R_GetSectorDrawColor(sector, thing.z, sectorR, sectorG, sectorB);
+                R_GetSectorDrawColor(sector, thingZ, sectorR, sectorG, sectorB);
                 LIBGPU_setRGB0(polyPrim, sectorR, sectorG, sectorB);
             #else
                 LIBGPU_setRGB0(polyPrim, (uint8_t) gCurLightValR, (uint8_t) gCurLightValG, (uint8_t) gCurLightValB);
@@ -303,7 +328,14 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         constexpr fixed_t ASPECT_CORRECT = (FRACUNIT * 4) / 5;
 
         const fixed_t scale = pSpr->scale;
-        int32_t drawY = d_fixed_to_int(thing.z - gViewZ);
+
+        #if PSYDOOM_MODS
+            // PsyDoom: add support for interpolation when using uncapped framerates
+            int32_t drawY = d_fixed_to_int(thingZ - gViewZ);
+        #else
+            int32_t drawY = d_fixed_to_int(thing.z - gViewZ);
+        #endif
+
         drawY += tex.offsetY;
         drawY = d_fixed_to_int(drawY * -scale);     // Scale due to perspective
         drawY += HALF_VIEW_3D_H;
@@ -452,16 +484,16 @@ void R_DrawWeapon() noexcept {
 
         // PsyDoom: changes to account for dual colored lighting
         #if PSYDOOM_MODS
-            const mobj_t& playerMobj = *player.mo;
+            mobj_t& playerMobj = *player.mo;
             const sector_t& sector = *playerMobj.subsector->sector;
         #endif
 
         if (state.frame & FF_FULLBRIGHT) {
             // Note: these magic 5/8 multipliers correspond VERY closely to 'LIGHT_INTENSTIY_MAX / 255'.
             // The resulting values are sometimes not quite the same however.
-            // PsyDoom: added changes here to account for dual colored lighting.
+            // PsyDoom: added changes here to account for dual colored lighting and uncapped framerate interpolation.
             #if PSYDOOM_MODS
-                const light_t light = R_GetSectorLightColor(sector, playerMobj.z);
+                const light_t light = R_GetSectorLightColor(sector, playerMobj.z.renderValue());
             #else
                 const light_t& light = *gpCurLight;
             #endif
@@ -472,10 +504,10 @@ void R_DrawWeapon() noexcept {
                 (uint8_t)(((uint32_t) light.b * 5) / 8)
             );
         } else {
-            // PsyDoom: changes to account for dual colored lighting
+            // PsyDoom: changes to account for dual colored lighting and uncapped framerate interpolation
             #if PSYDOOM_MODS
                 uint8_t sectorR, sectorG, sectorB;
-                R_GetSectorDrawColor(sector, playerMobj.z, sectorR, sectorG, sectorB);
+                R_GetSectorDrawColor(sector, playerMobj.z.renderValue(), sectorR, sectorG, sectorB);
                 LIBGPU_setRGB0(spr, sectorR, sectorG, sectorB);
             #else
                 LIBGPU_setRGB0(spr, (uint8_t) gCurLightValR, (uint8_t) gCurLightValG, (uint8_t) gCurLightValB);

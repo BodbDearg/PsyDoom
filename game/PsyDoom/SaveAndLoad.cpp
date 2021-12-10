@@ -449,7 +449,7 @@ static void updateSectorDrawParams() noexcept {
         sector.validcount = forceUpdateVC;
         R_UpdateShadingParams(sector);
         sector.validcount = forceUpdateVC;
-        R_UpdateFloorDrawHeight(sector);
+        R_UpdateSectorDrawHeights(sector);
     }
 }
 
@@ -601,11 +601,12 @@ LoadSaveResult load() noexcept {
     associateThinkersWithSectors(gCeilings);
     associateThinkersWithSectors(gPlats);
     addActiveCeilingsAndPlats();
-    updateSectorDrawParams();
 
-    // Post load actions: play CD music if required and kill any interpolation for the next frame (snap to the new position)
+    // Post load actions: play CD music if required, kill interpolations and update sector draw params
     playCdTrackIfNeeded(saveData.globals.curCDTrack);
-    R_NextInterpolation();
+    R_NextWorldInterpolation();
+    R_NextPlayerInterpolation();
+    updateSectorDrawParams();
 
     // Finish up and cleanup
     clearTempLuts();

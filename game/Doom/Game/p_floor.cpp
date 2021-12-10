@@ -311,7 +311,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
                 floor.sector = &sector;
                 floor.speed = FLOORSPEED;
                 floor.floordestheight = P_FindLowestCeilingSurrounding(sector);
-                floor.floordestheight = std::min(floor.floordestheight, sector.ceilingheight);      // Don't go above the current ceiling
+                floor.floordestheight = std::min(floor.floordestheight, (fixed_t) sector.ceilingheight);    // Don't go above the current ceiling
 
                 if (floorType == raiseFloorCrush) {
                     floor.floordestheight -= 8 * FRACUNIT;      // Leave a small gap for crushing floors (in case player gets caught in it)

@@ -71,14 +71,20 @@ static float gSpriteFragThingPos[3];
 // Get and cache the texture to use for the given thing and sprite frame, and get whether it is flipped.
 // This code is copied more or less directly from 'R_DrawSubsectorSprites'.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static texture_t& RV_CacheThingSpriteFrame(const mobj_t& thing, const spriteframe_t& frame, bool& bFlipSrite) noexcept {
+static texture_t& RV_CacheThingSpriteFrame(
+    const fixed_t thingX,
+    const fixed_t thingY,
+    const angle_t thingAngle,
+    const spriteframe_t& frame,
+    bool& bFlipSrite
+) noexcept {
     // Decide on which sprite lump to use and whether the sprite is flipped.
     // If the frame supports rotations then decide on the exact orientation to use, otherwise use the default.
     int32_t lumpIdx;
 
     if (frame.rotate) {
-        const angle_t angToThing = R_PointToAngle2(gViewX, gViewY, thing.x, thing.y);
-        const uint32_t dirIdx = (angToThing - thing.angle + (ANG45 / 2) * 9) >> 29;     // Note: same calculation as PC Doom
+        const angle_t angToThing = R_PointToAngle2(gViewX, gViewY, thingX, thingY);
+        const uint32_t dirIdx = (angToThing - thingAngle + (ANG45 / 2) * 9) >> 29;      // Note: same calculation as PC Doom
 
         lumpIdx = frame.lump[dirIdx];
         bFlipSrite = frame.flip[dirIdx];
@@ -99,6 +105,9 @@ static texture_t& RV_CacheThingSpriteFrame(const mobj_t& thing, const spritefram
 static void RV_InitSpriteFrag(
     mobj_t& thing,
     SpriteFrag& sprFrag,
+    const fixed_t thingX,
+    const fixed_t thingY,
+    const fixed_t thingZ,
     const uint8_t secR,
     const uint8_t secG,
     const uint8_t secB
@@ -106,9 +115,9 @@ static void RV_InitSpriteFrag(
     // Transform its xyz (Doom xzy) position by the view projection matrix to obtain the depth of the thing.
     // This will be useful later for depth sorting.
     const float thingPos[3] = {
-        RV_FixedToFloat(thing.x),
-        RV_FixedToFloat(thing.z),
-        RV_FixedToFloat(thing.y)
+        RV_FixedToFloat(thingX),
+        RV_FixedToFloat(thingZ),
+        RV_FixedToFloat(thingY)
     };
 
     float thingDepth;
@@ -125,7 +134,7 @@ static void RV_InitSpriteFrag(
 
     // Make sure the sprite is resident in VRAM and get whether it is flipped
     bool bFlipSprite = {};
-    const texture_t& tex = RV_CacheThingSpriteFrame(thing, frame, bFlipSprite);
+    const texture_t& tex = RV_CacheThingSpriteFrame(thingX, thingY, thing.angle, frame, bFlipSprite);
 
     // Get the texture window params for the sprite
     uint16_t texWinX;
@@ -311,10 +320,10 @@ static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine&
             // In all other cases allow a split to take place across this seg, even if the split test line crosses it.
             const sector_t& frontSector = *seg.frontsector;
 
-            const float fby = RV_FixedToFloat(frontSector.floorDrawHeight);
-            const float bby = RV_FixedToFloat(pBackSector->floorDrawHeight);
+            const float fby = RV_FixedToFloat(frontSector.floorDrawH);
+            const float bby = RV_FixedToFloat(pBackSector->floorDrawH);
             const float midBy = std::max(fby, bby);
-            const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingheight, pBackSector->ceilingheight));
+            const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingDrawH, pBackSector->ceilingDrawH));
 
             if ((splitLine.y >= midBy) && (splitLine.y <= midTy))
                 return true;
@@ -573,21 +582,26 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
         if ((pThing->player == gpViewPlayer) && (gExtCameraTicsLeft <= 0))
             continue;
 
+        // Get the interpolated position of the sprite
+        const fixed_t thingX = pThing->x.renderValue();
+        const fixed_t thingY = pThing->y.renderValue();
+        const fixed_t thingZ = pThing->z.renderValue();
+
         // Get the light/color value for the thing at it's z-height
         uint8_t secR;
         uint8_t secG;
         uint8_t secB;
-        R_GetSectorDrawColor(*subsec.sector, pThing->z, secR, secG, secB);
+        R_GetSectorDrawColor(*subsec.sector, thingZ, secR, secG, secB);
 
         // Allocate and initialize a full sprite fragment for the thing
         SpriteFrag sprFrag;
-        RV_InitSpriteFrag(*pThing, sprFrag, secR, secG, secB);
+        RV_InitSpriteFrag(*pThing, sprFrag, thingX, thingY, thingZ, secR, secG, secB);
 
         // Split up the sprite fragment into further small pieces (on subsector boundaries) if neccessary and remember the position of the thing being split.
         // The thing position is used to resolve cases that we can't split and where we need to decide on a sprite subsector.
-        gSpriteFragThingPos[0] = RV_FixedToFloat(pThing->x);
-        gSpriteFragThingPos[1] = RV_FixedToFloat(pThing->z);
-        gSpriteFragThingPos[2] = RV_FixedToFloat(pThing->y);
+        gSpriteFragThingPos[0] = RV_FixedToFloat(thingX);
+        gSpriteFragThingPos[1] = RV_FixedToFloat(thingY);
+        gSpriteFragThingPos[2] = RV_FixedToFloat(thingZ);
 
         const int32_t bspRootNodeIdx = gNumBspNodes - 1;
         RV_SpriteFrag_VisitBspNode(bspRootNodeIdx, sprFrag);

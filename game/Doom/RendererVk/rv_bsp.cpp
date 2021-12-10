@@ -33,14 +33,14 @@ static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) n
         return true;
 
     // Get the mid-wall gap between the front and back sectors.
-    // Also update the height that the back sector floor is to be drawn at, before we compare.
+    // Also update the height that the back sector floors and ceilings are to be drawn at, before we compare.
     sector_t& backSector = *seg.backsector;
-    R_UpdateFloorDrawHeight(backSector);
+    R_UpdateSectorDrawHeights(backSector);
 
-    const fixed_t fty = frontSector.ceilingheight;
-    const fixed_t fby = frontSector.floorDrawHeight;
-    const fixed_t bty = backSector.ceilingheight;
-    const fixed_t bby = backSector.floorDrawHeight;
+    const fixed_t fty = frontSector.ceilingDrawH;
+    const fixed_t fby = frontSector.floorDrawH;
+    const fixed_t bty = backSector.ceilingDrawH;
+    const fixed_t bby = backSector.floorDrawH;
     const fixed_t midTy = std::min(fty, bty);
     const fixed_t midBy = std::max(fby, bby);
 
@@ -100,10 +100,10 @@ static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
 // Adds it to the list of subsectors to be drawn, and marks the areas that its fully solid walls occlude.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
-    // Update the height that the sector floor is to be rendered at
+    // Update the heights that the sector will use for rendering
     subsector_t& subsec = gpSubsectors[subsecIdx];
     sector_t& frontSector = *subsec.sector;
-    R_UpdateFloorDrawHeight(frontSector);
+    R_UpdateSectorDrawHeights(frontSector);
 
     // Assume the subsector can have its flats batched initially
     subsec.bVkCanBatchFlats = true;
@@ -163,8 +163,8 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
         const sector_t* const pBackSec = seg.backsector;
 
         if (pBackSec) {
-            const bool bLowerWallBreaksBatches = (pBackSec->floorDrawHeight > frontSector.ceilingheight);
-            const bool bUpperWallBreaksBatches = (pBackSec->ceilingheight < frontSector.floorDrawHeight);
+            const bool bLowerWallBreaksBatches = (pBackSec->floorDrawH > frontSector.ceilingDrawH);
+            const bool bUpperWallBreaksBatches = (pBackSec->ceilingDrawH < frontSector.floorDrawH);
 
             if (bLowerWallBreaksBatches || bUpperWallBreaksBatches) {
                 subsec.bVkCanBatchFlats = false;

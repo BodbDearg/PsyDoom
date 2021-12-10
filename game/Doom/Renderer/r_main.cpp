@@ -65,8 +65,11 @@ subsector_t**   gppEndDrawSubsector;    // Used to point to the last draw subsec
 // PsyDoom: used for interpolation for uncapped framerates 
 #if PSYDOOM_MODS
     typedef std::chrono::high_resolution_clock::time_point timepoint_t;
-    static timepoint_t gPrevFrameTime;
+    static timepoint_t gPrevPlayerFrameStartTime;
+    static timepoint_t gPrevWorldFrameStartTime;
 
+    fixed_t     gPlayerLerpFactor;      // 0-1 interpolation factor for the current draw frame (player only, 30 Hz tics)
+    fixed_t     gWorldLerpFactor;       // 0-1 interpolation factor for the current draw frame (world and mobj, 15 Hz tics)
     fixed_t     gOldViewX;
     fixed_t     gOldViewY;
     fixed_t     gOldViewZ;
@@ -75,6 +78,15 @@ subsector_t**   gppEndDrawSubsector;    // Used to point to the last draw subsec
     fixed_t     gOldAutomapY;
     fixed_t     gOldAutomapScale;
     bool        gbSnapViewZInterpolation;
+
+    // How much of the current view 'z' value is due to the player being pushed by the world (lifts/crushers etc.).
+    // We must interpolate this amount at a different rate for smooth motion because the world ticks at 15 Hz while the player ticks at 30 Hz.
+    fixed_t gViewPushedZ;
+
+    // Whether the old view z value incorporates a component of motion from pushing by the world.
+    // This affects how interpolation is calculated. On even 30 Hz player ticks it is 'false' and on odd ones it is 'true'.
+    // It's basically 'false' for the frames where both the player AND the world tick.
+    bool gbOldViewZIsPushed;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,9 +138,10 @@ void R_RenderPlayerView() noexcept {
     player_t& player = gPlayers[gCurPlayerIndex];
     gpViewPlayer = &player;
 
-    // PsyDoom: use interpolation to update the actual view if doing an uncapped framerate
+    // PsyDoom: update the lerp factors and use interpolation to update the actual view if doing an uncapped framerate.
     #if PSYDOOM_MODS
         const bool bInterpolateFrame = Config::gbUncapFramerate;
+        R_CalcLerpFactors();
     #else
         const bool bInterpolateFrame = false;
     #endif
@@ -142,16 +155,30 @@ void R_RenderPlayerView() noexcept {
         const fixed_t newViewY = playerMobj.y;
         const fixed_t newViewZ = player.viewz;
         const angle_t newViewAngle = playerMobj.angle;
-        const fixed_t lerp = R_CalcLerpFactor();
+        const fixed_t lerp = gPlayerLerpFactor;
 
         if (gbSnapViewZInterpolation) {
             gOldViewZ = newViewZ;
+            gViewPushedZ = 0;
+            gbOldViewZIsPushed = false;
             gbSnapViewZInterpolation = false;
         }
 
         gViewX = R_LerpCoord(gOldViewX, newViewX, lerp) & (~FRACMASK);
         gViewY = R_LerpCoord(gOldViewY, newViewY, lerp) & (~FRACMASK);
-        gViewZ = R_LerpCoord(gOldViewZ, newViewZ, lerp) & (~FRACMASK);
+
+        // Note: interpolate the amount that the view was pushed by the world at a lower 15 Hz rate.
+        // Sectors and enemies in the world tick at 15 Hz rather than 30 Hz like the player.
+        if (gbOldViewZIsPushed) {
+            // Note: when the old 'ViewZ' value already incorporates some 15 Hz (world) motion then we must remove that from
+            // consideration for this 30 Hz (player) interpolation. The 15 Hz motion will be interpolated separately below.
+            gViewZ = R_LerpCoord(gOldViewZ - gViewPushedZ, newViewZ - gViewPushedZ, lerp);
+        } else {
+            gViewZ = R_LerpCoord(gOldViewZ, newViewZ - gViewPushedZ, lerp);
+        }
+
+        gViewZ += R_LerpCoord(0, gViewPushedZ, gWorldLerpFactor);   // Interpolating the 15 Hz (world) motion at a slower rate
+        gViewZ &= ~FRACMASK;
 
         // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped
         if (gbDemoPlayback) {
@@ -427,16 +454,16 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
 
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom addition: update the 'previous' values used in interpolation to their current (actual) values.
-// Used before simulating an actual game tick, or when we want to snap immediately to the actual values - like when teleporting.
+// PsyDoom addition: update the 'previous' player values used in interpolation to their current (actual) values.
+// Used before simulating an actual player tick, or when we want to snap immediately to the actual values - like when teleporting.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_NextInterpolation() noexcept {
+void R_NextPlayerInterpolation() noexcept {
     player_t& player = gPlayers[gCurPlayerIndex];
     mobj_t& mobj = *player.mo;
 
     const bool bAutomapFreeCamera = (player.automapflags & AF_FOLLOW);
 
-    gPrevFrameTime = std::chrono::high_resolution_clock::now();
+    gPrevPlayerFrameStartTime = std::chrono::high_resolution_clock::now();
     gOldViewX = mobj.x;
     gOldViewY = mobj.y;
     gOldViewZ = player.viewz;
@@ -445,34 +472,75 @@ void R_NextInterpolation() noexcept {
     gOldAutomapY = (bAutomapFreeCamera) ? player.automapy : mobj.y;
     gOldAutomapScale = player.automapscale;
     gbSnapViewZInterpolation = false;
+
+    // The 'old' z value now potentially incorporates some world Z motion, until we do the next world (15 Hz) simulation tick.
+    // We must account for this in the interpolation calculations, to achieve smooth motion.
+    gbOldViewZIsPushed = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Kill the current interpolation of viewz and cause it to go immediately to the actual viewz value
+// PsyDoom addition: called at the start of a world/mobj (15 Hz NTSC) tick.
+// Starts the timer used for world/mobj interpolation.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_NextWorldInterpolation() noexcept {
+    gPrevWorldFrameStartTime = std::chrono::high_resolution_clock::now();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Requests that the next frame rendered immediately snaps the player's Z coordinate into it's real position, killing all interpolation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_SnapViewZInterpolation() noexcept {
     gbSnapViewZInterpolation = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom: compute the interpolation factor (0-1) by how much we are in between frames.
+// Kills all interpolations for the specified sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_SnapSectorInterpolation(sector_t& sector) noexcept {
+    sector.floorheight.snap();
+    sector.ceilingheight.snap();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Kills all interpolations for the specified thing
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_SnapMobjInterpolation(mobj_t& mobj) noexcept {
+    mobj.x.snap();
+    mobj.y.snap();
+    mobj.z.snap();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: computes and saves globally interpolation factors (0-1) of how much we are in-between 15 Hz (world) and 30 Hz (player) ticks.
 // When the value is '0' it means use the old frame values, when '1' use the new frame values.
 //------------------------------------------------------------------------------------------------------------------------------------------
-fixed_t R_CalcLerpFactor() noexcept {
+void R_CalcLerpFactors() noexcept {
+    // If the framerate is not uncapped then this is easy, always use the latest/current values:
+    if (!Config::gbUncapFramerate) {
+        gPlayerLerpFactor = FRACUNIT;
+        gWorldLerpFactor = FRACUNIT;
+        return;
+    }
+
     // Get the elapsed time since the last frame we saved data for
     const timepoint_t now = std::chrono::high_resolution_clock::now();
-    const double elapsedSeconds = std::chrono::duration<double>(now - gPrevFrameTime).count();
+    const double playerElapsedSeconds = std::chrono::duration<double>(now - gPrevPlayerFrameStartTime).count();
+    const double worldElapsedSeconds = std::chrono::duration<double>(now - gPrevWorldFrameStartTime).count();
 
     // How many tics per second can the game do maximum?
-    // For demo playback/recording the game is capped at 15 Hz for consistency, and the cap is 30 Hz for normal games.
-    // These values are adjusted slightly for PAL mode also.
-    const double normalTicsPerSec = (Game::gSettings.bUsePalTimings) ? 25.0 : 30.0;
+    //  (1) For NTSC demo playback/recording the player sim is capped at 15 Hz for consistency, and the cap is 30 Hz for normal NTSC games.
+    //  (2) World sim uses the demo tick rate (15 Hz in the NTSC case).
+    //  (3) PAL mode has slightly different timings for player and world sim.
+    const double normalPlayerTicsPerSec = (Game::gSettings.bUsePalTimings) ? 25.0 : 30.0;
     const double demoTicsPerSec = (Game::gSettings.bUsePalTimings) ? 16.666666 : 15.0;
-    const double ticsPerSec = (Game::gSettings.bUseDemoTimings) ? demoTicsPerSec : normalTicsPerSec;
+    const double playerTicsPerSec = (Game::gSettings.bUseDemoTimings) ? demoTicsPerSec : normalPlayerTicsPerSec;
+    const double worldTicsPerSec = demoTicsPerSec;
 
-    // Compute the lerp factor in 16.16 format
-    const double elapsedGameTics = std::clamp(elapsedSeconds * ticsPerSec, 0.0, 1.0);
-    return (fixed_t)(elapsedGameTics * (double) FRACUNIT);
+    // Compute the player and world lerp factors in 16.16 format
+    const double playerElapsedTics = std::clamp(playerElapsedSeconds * playerTicsPerSec, 0.0, 1.0);
+    const double worldElapsedTics = std::clamp(worldElapsedSeconds * worldTicsPerSec, 0.0, 1.0);
+    gPlayerLerpFactor = (fixed_t)(playerElapsedTics * (double) FRACUNIT);
+    gWorldLerpFactor = (fixed_t)(worldElapsedTics * (double) FRACUNIT);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -506,7 +574,7 @@ bool R_HasHigherSurroundingSkyCeiling(const sector_t& sector) noexcept {
         const sector_t* pNextSector = (line.frontsector == &sector) ? line.backsector : line.frontsector;
 
         if (pNextSector && (pNextSector->ceilingpic == -1)) {
-            if (pNextSector->ceilingheight > sector.ceilingheight)
+            if (pNextSector->ceilingDrawH > sector.ceilingDrawH)
                 return true;
         }
     }
@@ -530,7 +598,7 @@ bool R_HasLowerSurroundingSkyFloor(const sector_t& sector) noexcept {
         const sector_t* pNextSector = (line.frontsector == &sector) ? line.backsector : line.frontsector;
 
         if (pNextSector && (pNextSector->floorpic == -1)) {
-            if (pNextSector->floorDrawHeight < sector.floorDrawHeight)
+            if (pNextSector->floorDrawH < sector.floorDrawH)
                 return true;
         }
     }
@@ -539,23 +607,25 @@ bool R_HasLowerSurroundingSkyFloor(const sector_t& sector) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom: updates the height that the sector's floor is to be rendered at, if required.
-// It might be rendered at a different height to it's real (physical) height to achieve invisible platform effects.
+// PsyDoom: updates the heights that the sector's floor and ceilings are to be rendered at, if required.
+// These heights will take into account interpolation and also 'ghost platform' effects.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_UpdateFloorDrawHeight(sector_t& sector) noexcept {
+void R_UpdateSectorDrawHeights(sector_t& sector) noexcept {
     const bool bIsInvisiblePlatform = (sector.flags & SF_GHOSTPLAT);
 
     if (!bIsInvisiblePlatform) {
-        sector.floorDrawHeight = sector.floorheight;
+        sector.floorDrawH = sector.floorheight.renderValue();
     } else {
         // Finding the lowest floor surrounding a sector might be slightly expensive if done often, so skip it if we can:
         const int32_t validCount = gValidCount;
 
         if (sector.validcount != validCount) {
-            sector.floorDrawHeight = P_FindLowestFloorSurrounding(sector);
+            sector.floorDrawH = R_FindLowestSurroundingInterpFloorHeight(sector);
             sector.validcount = validCount;
         }
     }
+
+    sector.ceilingDrawH = sector.ceilingheight.renderValue();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -574,8 +644,8 @@ void R_UpdateShadingParams(sector_t& sector) noexcept {
         return;
 
     // Initially the z values at which to apply the floor and ceiling colors are just the floor and ceiling heights respectively
-    fixed_t lowerColorZ = sector.floorheight;
-    fixed_t upperColorZ = sector.ceilingheight;
+    fixed_t lowerColorZ = sector.floorheight.renderValue();
+    fixed_t upperColorZ = sector.ceilingheight.renderValue();
 
     // Adjust the floor/ceiling z values for the purposes of shading (if adjustments are specified)
     const uint32_t sflags = sector.flags;
@@ -699,4 +769,25 @@ void R_GetSectorDrawColor(const sector_t& sector, const fixed_t z, uint8_t& r, u
         b = 128;
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: finds the lowest surrounding floor height to the given sector or the input sector's floor height if none is lower.
+// The value returned is an interpolated render value.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t R_FindLowestSurroundingInterpFloorHeight(sector_t& sector) noexcept {
+    fixed_t lowestFloorH = sector.floorheight.renderValue();
+
+    for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+        line_t& line = *sector.lines[lineIdx];
+        sector_t* const pNextSector = getNextSector(line, sector);
+
+        if (pNextSector) {
+            const fixed_t nextSectorH = pNextSector->floorheight.renderValue();
+            lowestFloorH = std::min(lowestFloorH, nextSectorH);
+        }
+    }
+
+    return lowestFloorH;
+}
+
 #endif  // PSYDOOM_MODS

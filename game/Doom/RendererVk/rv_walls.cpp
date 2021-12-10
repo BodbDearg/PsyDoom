@@ -113,8 +113,8 @@ static void RV_DrawSegSolid(const rvseg_t& seg, const subsector_t& subsec) noexc
     // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
     const sector_t& frontSec = *subsec.sector;
-    const fixed_t fty = frontSec.ceilingheight;
-    const fixed_t fby = frontSec.floorDrawHeight;
+    const fixed_t fty = frontSec.ceilingDrawH;
+    const fixed_t fby = frontSec.floorDrawH;
 
     // Get u and v offsets for the seg and the u1/u2 coordinates
     const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
@@ -135,8 +135,8 @@ static void RV_DrawSegSolid(const rvseg_t& seg, const subsector_t& subsec) noexc
     if (bTwoSidedWall) {
         // Get the bottom and top y values of the back sector
         const sector_t& backSec = *seg.backsector;
-        const fixed_t bty = backSec.ceilingheight;
-        const fixed_t bby = backSec.floorDrawHeight;
+        const fixed_t bty = backSec.ceilingDrawH;
+        const fixed_t bby = backSec.floorDrawH;
 
         // Adjust mid wall size so that it only occupies the gap between the upper and lower walls
         midTy = std::min(midTy, bty);
@@ -256,8 +256,8 @@ static void RV_DrawSegBlended(const rvseg_t& seg, const subsector_t& subsec) noe
     // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
     const sector_t& frontSec = *subsec.sector;
-    const fixed_t fty = frontSec.ceilingheight;
-    const fixed_t fby = frontSec.floorDrawHeight;
+    const fixed_t fty = frontSec.ceilingDrawH;
+    const fixed_t fby = frontSec.floorDrawH;
 
     // Get the mid texture for the seg; if it doesn't exist then don't draw
     const side_t& side = *seg.sidedef;
@@ -276,8 +276,8 @@ static void RV_DrawSegBlended(const rvseg_t& seg, const subsector_t& subsec) noe
 
     // Get the floor and ceiling heights for the back sector
     const sector_t& backSec = *seg.backsector;
-    const fixed_t bty = backSec.ceilingheight;
-    const fixed_t bby = backSec.floorDrawHeight;
+    const fixed_t bty = backSec.ceilingDrawH;
+    const fixed_t bby = backSec.floorDrawH;
 
     // These are the y values for the top and bottom of the mid wall.
     // It occupies the gap between the front and back sectors.
@@ -358,15 +358,15 @@ static void RV_DrawSegSkyWalls(const rvseg_t& seg, const subsector_t& subsec) no
     // Note: use the subsector passed into this function rather than the seg's reference to it - the subsector passed in is more reliable.
     // Some maps in PSX Final Doom (MAP04, 'Combine' for example) have not all segs in a subsector pointing to that same subsector, as expected.
     // This inconsitency causes problems such as bad wall heights, due to querying the wrong sector for height.
-    const float fty = RV_FixedToFloat(frontSec.ceilingheight);
-    const float fby = RV_FixedToFloat(frontSec.floorDrawHeight);
+    const float fty = RV_FixedToFloat(frontSec.ceilingDrawH);
+    const float fby = RV_FixedToFloat(frontSec.floorDrawH);
 
     // See if the seg's line is two sided or not, have to check the back sector sky status if two sided
     if (seg.backsector) {
         // Get the bottom and top y values of the back sector
         const sector_t& backSec = *seg.backsector;
-        const float bty = RV_FixedToFloat(backSec.ceilingheight);
-        const float bby = RV_FixedToFloat(backSec.floorDrawHeight);
+        const float bty = RV_FixedToFloat(backSec.ceilingDrawH);
+        const float bby = RV_FixedToFloat(backSec.floorDrawH);
 
         // Get the mid wall size so that it only occupies the gap between the upper and lower walls
         const float midTy = std::min(fty, bty);
@@ -488,7 +488,7 @@ void RV_DrawSubsecSkyWalls(const int32_t fromDrawSubsecIdx) noexcept {
 
         const sector_t& nextSector = *gRvDrawSubsecs[gNextSkyWallDrawSubsecIdx]->sector;
 
-        if (nextSector.ceilingheight != sector.ceilingheight)
+        if (nextSector.ceilingDrawH != sector.ceilingDrawH)
             break;
 
         const bool bHasSkyCeil = (sector.ceilingpic == -1);

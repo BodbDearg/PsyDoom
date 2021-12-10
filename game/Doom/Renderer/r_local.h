@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #include "Doom/doomdef.h"
+#include "PsyDoom/InterpFixedT.h"
 
 #include <vector>
 
@@ -37,8 +38,13 @@ struct vertex_t {
 
 // Describes a sector or collection of lines and subsectors
 struct sector_t {
+#if PSYDOOM_MODS
+    InterpFixedT    floorheight;        // Current floor height for the sector
+    InterpFixedT    ceilingheight;      // Current ceiling height for the sector
+#else
     fixed_t         floorheight;        // Current floor height for the sector
     fixed_t         ceilingheight;      // Current ceiling height for the sector
+#endif
     int32_t         floorpic;           // Index of the flat texture used for the sector floor
     int32_t         ceilingpic;         // Index of the flat texture used for the sector ceiling
     int16_t         colorid;            // Which of the colored light colors (by index) to use for the sector
@@ -50,7 +56,8 @@ struct sector_t {
     uint32_t        flags;              // Sector flags (new addition for PSX)
     int32_t         blockbox[4];        // Bounding box for the sector in blockmap units
 #if PSYDOOM_MODS
-    fixed_t         floorDrawHeight;    // PsyDoom: height to render the floor at. Might be different to actual floor height (ghost/invisible platform effects)
+    fixed_t         floorDrawH;         // PsyDoom: height to render the floor at taking into account interpolation and ghost/invisible platform effects.
+    fixed_t         ceilingDrawH;       // PsyDoom: height to render the ceiling at taking into account interpolation.
 #endif
     degenmobj_t     soundorg;           // A partial 'mobj_t' which defines where sounds come from in the sector, for sectors that make noises
     int32_t         validcount;         // A marker used to avoid re-doing certain checks

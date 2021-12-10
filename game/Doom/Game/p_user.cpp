@@ -617,10 +617,32 @@ static void P_CalcHeight(player_t& player) noexcept {
     const fixed_t bobAmplitude = gFineSine[bobPhase];
 
     // Compute the final view z based on map object z, view height and bob amount
+    const fixed_t oldViewZ = player.viewz;
     player.viewz = mobj.z + player.viewheight + d_rshift<17>(player.bob) * bobAmplitude;
 
     // Clamp the view z so it's not to close to the ceiling (if need be)
-    player.viewz = std::min(player.viewz, maxViewZ);
+    const bool bCeilingClipViewZ = (player.viewz > maxViewZ);
+
+    if (bCeilingClipViewZ) {
+        player.viewz = maxViewZ;
+    }
+
+    // PsyDoom: if this player's view is sticking into the ceiling then that needs to be handled differently for interpolation.
+    // Assume this is due to a crusher operating, which ticks at 15 Hz (world/mobj tick rate) instead of the player's 30 Hz.
+    // Because the crusher ticks at a slower rate, we need to interpolate this motion over a longer period.
+    // Make a note of how much the player's view was pushed by the crusher moving here:
+    #if PSYDOOM_MODS
+        const bool bIsCurrentPlayer = (&player == &gPlayers[gCurPlayerIndex]);
+
+        // Is the current player's view being clipped by a crushing ceiling?
+        if (bIsCurrentPlayer && bCeilingClipViewZ) {
+            // Only account for this difference on the even frames where we do a world/mobj simulation too.
+            // On the odd player (30 Hz) frames we've already noted this amount so don't need to add it again.
+            if (!gbOldViewZIsPushed) {
+                gViewPushedZ += player.viewz - oldViewZ;
+            }
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

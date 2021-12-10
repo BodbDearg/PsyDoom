@@ -32,21 +32,24 @@ bool P_ThingHeightClip(mobj_t& mobj) noexcept {
     mobj.floorz = gTmFloorZ;
     mobj.ceilingz = gTmCeilingZ;
 
-    // PsyDoom: If the thing is the current player, on the floor, and the floor moved up or down then snap the current Z interpolation.
-    // The player's viewpoint moves with the sector immediately in this instance because the player is being pushed/pulled:
-    #if PSYDOOM_MODS
-        if ((oldFloorZ != mobj.floorz) && bWasOnFloor && (mobj.player == &gPlayers[gCurPlayerIndex])) {
-            R_SnapViewZInterpolation();
-        }
-    #endif
-
     // Things that were on the floor previously rise and fall as the sector floor rises and falls.
     // Otherwise, if a floating thing, clip against the ceiling.
+    const fixed_t oldZ = mobj.z;
+
     if (bWasOnFloor) {
         mobj.z = mobj.floorz;
-    } else if (mobj.z + mobj.height > mobj.ceilingz) {
+    } else if (oldZ + mobj.height > mobj.ceilingz) {
         mobj.z = mobj.ceilingz - mobj.height;
     }
+
+    // Record that the player's view was shifted by this change if it's the current player.
+    // Need to adjust interpolation accordingly if that is the case, since the world ticks at a slower rate (15 Hz) than the player (30 Hz).
+    // Movements due to world motion must be interpolated over a longer period of time...
+    #if PSYDOOM_MODS
+        if (mobj.player && (mobj.player == &gPlayers[gCurPlayerIndex])) {
+            gViewPushedZ += mobj.z - oldZ;
+        }
+    #endif
 
     return (mobj.height <= mobj.ceilingz - mobj.floorz);    // Is there enough vertical room for the thing?
 }

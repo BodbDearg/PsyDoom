@@ -351,9 +351,9 @@ void R_Subsector(const int32_t subsecNum) noexcept {
         gppEndDrawSubsector++;
     #endif
 
-    // PsyDoom: update the height that the floor is to be rendered at
+    // PsyDoom: update the heights that the sector will render at
     #if PSYDOOM_MODS
-        R_UpdateFloorDrawHeight(*subsec.sector);
+        R_UpdateSectorDrawHeights(*subsec.sector);
     #endif
 
     // Do draw preparation on all of the segs in the subsector.
@@ -609,18 +609,21 @@ void R_AddLine(seg_t& seg) noexcept {
         bool bSegFullyOccludes;
 
         if (pBackSec) {
-            // PsyDoom: update the back sector floor draw height before we compare.
-            // Also compare using floor draw height rather than actual height.
+            // PsyDoom: update the sector draw heights before we compare and use those heights for comparison
             #if PSYDOOM_MODS
-                R_UpdateFloorDrawHeight(*pBackSec);
-                const fixed_t frontFloorH = frontSec.floorDrawHeight;
-                const fixed_t backFloorH = pBackSec->floorDrawHeight;
+                R_UpdateSectorDrawHeights(*pBackSec);
+                const fixed_t frontFloorH = frontSec.floorDrawH;
+                const fixed_t frontCeilH = frontSec.ceilingDrawH;
+                const fixed_t backFloorH = pBackSec->floorDrawH;
+                const fixed_t backCeilH = pBackSec->ceilingDrawH;
             #else
                 const fixed_t frontFloorH = frontSec.floorheight;
+                const fixed_t frontCeilH = frontSec.ceilingheight;
                 const fixed_t backFloorH = pBackSec->floorheight;
+                const fixed_t backCeilH = pBackSec->ceilingheight;
             #endif
 
-            bSegFullyOccludes = ((frontFloorH >= pBackSec->ceilingheight) || (backFloorH >= frontSec.ceilingheight));
+            bSegFullyOccludes = ((frontFloorH >= backCeilH) || (backFloorH >= frontCeilH));
         } else {
             bSegFullyOccludes = true;
         }

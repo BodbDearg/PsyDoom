@@ -330,7 +330,8 @@ void SavedSectorT::deserializeTo(sector_t& sector) const noexcept {
     sector.soundtraversed = 0;
     sector.soundtarget = getMobjAtIdx(soundtargetIdx);
     sector.flags = flags;
-    sector.floorDrawHeight = {};                    // Not serialized, default init
+    sector.floorDrawH = {};                         // Not serialized, default init
+    sector.ceilingDrawH = {};                       // Not serialized, default init
     sector.validcount = 0;                          // Not serialized, resets on load
     sector.ceilColorid = ceilColorid;
     sector.lowerColorZ = {};                        // Not serialized, default init
@@ -341,6 +342,9 @@ void SavedSectorT::deserializeTo(sector_t& sector) const noexcept {
     sector.floorTexOffsetY = floorTexOffsetY;
     sector.ceilTexOffsetX = ceilTexOffsetX;
     sector.ceilTexOffsetY = ceilTexOffsetY;
+
+    // Don't do interpolations for the first frame!
+    R_SnapSectorInterpolation(sector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -524,6 +528,9 @@ void SavedMobjT::deserializeTo(mobj_t& mobj) const noexcept {
     mobj.spawntype = spawntype;
     mobj.spawnangle = spawnangle;
     mobj.tracer = getMobjAtIdx(tracerIdx);
+
+    // Don't do interpolations for the first frame!
+    R_SnapMobjInterpolation(mobj);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -49,6 +49,7 @@ static void RV_DetermineDrawParams() noexcept {
     // Determine the view x/y/z position and the angle in fixed point terms first.
     // If we are doing an uncapped frame-rate then use interpolation to determine these parameters.
     // Note that unlike the original renderer I am not discarding the fractional component of the player's position here.
+    R_CalcLerpFactors();
     const bool bInterpolateFrame = Config::gbUncapFramerate;
     mobj_t& playerMobj = *player.mo;
 
@@ -57,16 +58,29 @@ static void RV_DetermineDrawParams() noexcept {
         const fixed_t newViewY = playerMobj.y;
         const fixed_t newViewZ = player.viewz;
         const angle_t newViewAngle = playerMobj.angle;
-        const fixed_t lerp = R_CalcLerpFactor();
+        const fixed_t lerp = gPlayerLerpFactor;
 
         if (gbSnapViewZInterpolation) {
             gOldViewZ = newViewZ;
+            gViewPushedZ = 0;
+            gbOldViewZIsPushed = false;
             gbSnapViewZInterpolation = false;
         }
 
+        // Note: interpolate the amount that the view was pushed by the world at a lower 15 Hz rate.
+        // Sectors and enemies in the world tick at 15 Hz rather than 30 Hz like the player.
         gViewX = R_LerpCoord(gOldViewX, newViewX, lerp);
         gViewY = R_LerpCoord(gOldViewY, newViewY, lerp);
-        gViewZ = R_LerpCoord(gOldViewZ, newViewZ, lerp);
+
+        if (gbOldViewZIsPushed) {
+            // Note: when the old 'ViewZ' value already incorporates some 15 Hz (world) motion then we must remove that from
+            // consideration for this 30 Hz (player) interpolation. The 15 Hz motion will be interpolated separately below.
+            gViewZ = R_LerpCoord(gOldViewZ - gViewPushedZ, newViewZ - gViewPushedZ, lerp);
+        } else {
+            gViewZ = R_LerpCoord(gOldViewZ, newViewZ - gViewPushedZ, lerp);
+        }
+
+        gViewZ += R_LerpCoord(0, gViewPushedZ, gWorldLerpFactor);   // Interpolating the 15 Hz (world) motion at a slower rate
 
         // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped
         if (gbDemoPlayback) {

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Doom/Game/p_weak.h"
+#include "Game/p_weak.h"
 #include "PsyDoom/BitShift.h"
+#include "PsyDoom/InterpFixedT.h"
 
 struct mobj_t;
 struct mobjinfo_t;
@@ -205,9 +206,15 @@ typedef void (*latecall_t)(mobj_t& mobj) noexcept;
 
 // Holds state for an object/thing in the game world
 struct mobj_t {
+#if PSYDOOM_MODS
+    InterpFixedT    x;                  // Global position in the world, in 16.16 format (supporting interpolation)
+    InterpFixedT    y;
+    InterpFixedT    z;
+#else
     fixed_t         x;                  // Global position in the world, in 16.16 format
     fixed_t         y;
     fixed_t         z;
+#endif
 #if PSYDOOM_MODS
     int32_t         tag;                // PsyDoom: a tag that can be assigned via scripting, for identification purposes
 #endif
@@ -223,7 +230,7 @@ struct mobj_t {
     mobj_t*         bnext;              // Linked list of things in this blockmap block
     mobj_t*         bprev;
     fixed_t         floorz;             // Highest floor in contact with map object
-    fixed_t         ceilingz;           // Lowest floor in contact with map object
+    fixed_t         ceilingz;           // Lowest ceiling in contact with map object
     fixed_t         radius;             // For collision detection
     fixed_t         height;             // For collision detection
     fixed_t         momx;               // Current velocity/speed: x, y & z
@@ -265,9 +272,15 @@ struct mobj_t {
 // A degenerate map object with most of it's fields chopped out to save on memory.
 // Used to store a sound origin location within the 'sector_t' struct, so we know where to position sounds when the sector makes a noise (floor move etc.).
 struct degenmobj_t {
+#if PSYDOOM_MODS
+    InterpFixedT    x;
+    InterpFixedT    y;
+    InterpFixedT    z;
+#else
     fixed_t         x;
     fixed_t         y;
     fixed_t         z;
+#endif
 #if PSYDOOM_MODS
     int32_t         tag;
 #endif

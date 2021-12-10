@@ -219,9 +219,9 @@ bool verifyMatchesJsonFileResult(const char* const jsonFilePath) noexcept {
     rapidjson::Value& playerJson = document["player"];
 
     return (
-        verifyJsonFieldMatches(playerJson, "x", mobj.x) &&
-        verifyJsonFieldMatches(playerJson, "y", mobj.y) &&
-        verifyJsonFieldMatches(playerJson, "z", mobj.z) &&
+        verifyJsonFieldMatches(playerJson, "x", mobj.x.value) &&
+        verifyJsonFieldMatches(playerJson, "y", mobj.y.value) &&
+        verifyJsonFieldMatches(playerJson, "z", mobj.z.value) &&
         verifyJsonFieldMatches(playerJson, "angle", mobj.angle) &&
         verifyJsonFieldMatches(playerJson, "momx", mobj.momx) &&
         verifyJsonFieldMatches(playerJson, "momy", mobj.momy) &&

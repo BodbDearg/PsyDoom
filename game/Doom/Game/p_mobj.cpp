@@ -253,6 +253,12 @@ mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mob
     mobj.next = &gMobjHead;
     mobj.prev = gMobjHead.prev;
     gMobjHead.prev = &mobj;
+
+    // PsyDoom: reset all interpolations for the thing
+    #if PSYDOOM_MODS
+        R_SnapMobjInterpolation(mobj);
+    #endif
+
     return &mobj;
 }
 

@@ -290,7 +290,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 
             case downWaitUpStay: {
                 plat.speed = PLATSPEED * 4;
-                plat.low = std::min(P_FindLowestFloorSurrounding(sector), sector.floorheight);
+                plat.low = std::min(P_FindLowestFloorSurrounding(sector), (fixed_t) sector.floorheight);
                 plat.wait = TICRATE * PLATWAIT;
                 plat.status = down;
                 plat.high = sector.floorheight;
@@ -299,7 +299,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 
             case blazeDWUS: {
                 plat.speed = PLATSPEED * 8;
-                plat.low = std::min(P_FindLowestFloorSurrounding(sector), sector.floorheight);
+                plat.low = std::min(P_FindLowestFloorSurrounding(sector), (fixed_t) sector.floorheight);
                 plat.wait = TICRATE * PLATWAIT;
                 plat.status = down;
                 plat.high = sector.floorheight;
@@ -308,8 +308,8 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 
             case perpetualRaise: {
                 plat.speed = PLATSPEED;
-                plat.low = std::min(P_FindLowestFloorSurrounding(sector), sector.floorheight);
-                plat.high = std::max(P_FindHighestFloorSurrounding(sector), sector.floorheight);
+                plat.low = std::min(P_FindLowestFloorSurrounding(sector), (fixed_t) sector.floorheight);
+                plat.high = std::max(P_FindHighestFloorSurrounding(sector), (fixed_t) sector.floorheight);
                 plat.wait = TICRATE * PLATWAIT;
                 plat.status = (P_Random() & 1) ? down : up;
                 S_StartSound((mobj_t*) &sector.soundorg, sfx_pstart);

@@ -216,6 +216,8 @@ set(SOURCE_FILES
     "PsyDoom/GamepadInput.h"
     "PsyDoom/Input.cpp"
     "PsyDoom/Input.h"
+    "PsyDoom/InterpFixedT.cpp"
+    "PsyDoom/InterpFixedT.h"
     "PsyDoom/IsoFileSys.cpp"
     "PsyDoom/IsoFileSys.h"
     "PsyDoom/IVideoBackend.h"

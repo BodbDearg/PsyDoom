@@ -1654,7 +1654,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
                 playerMobj.angle = gInPlaceReloadPlayerAng;
                 playerMobj.floorz = newSector.floorheight;
                 playerMobj.ceilingz = newSector.ceilingheight;
-                playerMobj.z = std::max(gInPlaceReloadPlayerZ, newSector.floorheight);
+                playerMobj.z = std::max(gInPlaceReloadPlayerZ, (fixed_t) newSector.floorheight);
                 player.viewz = playerMobj.z + VIEWHEIGHT;
                 player.viewheight = VIEWHEIGHT;
                 player.deltaviewheight = 0;

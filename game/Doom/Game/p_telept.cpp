@@ -144,7 +144,8 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             // PsyDoom: if we just teleported this player then kill any interpolations
             #if PSYDOOM_MODS
                 if (mobj.player == &gPlayers[gCurPlayerIndex]) {
-                    R_NextInterpolation();
+                    R_NextPlayerInterpolation();
+                    R_NextWorldInterpolation();
                 }
             #endif
 
@@ -234,10 +235,11 @@ bool EV_TeleportTo(
 
     mobj.angle = dstAngle;
 
-    // PsyDoom: if it's player adjust the current xy interpolation to account for the teleportation.
+    // PsyDoom: if it's player and we're preserving momentum adjust the current xy interpolation to account for the teleportation.
     // This is done so we can do a smooth silent teleport to another location.
     #if PSYDOOM_MODS
-        if (mobj.player == &gPlayers[gCurPlayerIndex]) {
+        if (bPreserveMomentum && (mobj.player == &gPlayers[gCurPlayerIndex])) {
+            // Snap the z component if it's changed by the teleportation
             if (oldZ != mobj.z) {
                 R_SnapViewZInterpolation();
             }
