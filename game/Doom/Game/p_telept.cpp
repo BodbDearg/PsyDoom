@@ -141,12 +141,15 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             mobj.momx = 0;
             mobj.angle = pDstMarker->angle;
 
-            // PsyDoom: if we just teleported this player then kill any interpolations
+            // PsyDoom: if we just teleported this player then kill any interpolations.
+            // Also kill any interpolations for the map object itself.
             #if PSYDOOM_MODS
                 if (mobj.player == &gPlayers[gCurPlayerIndex]) {
                     R_NextPlayerInterpolation();
                     R_NextWorldInterpolation();
                 }
+
+                R_SnapMobjInterpolation(mobj);
             #endif
 
             // Teleportation was a success!
@@ -235,24 +238,26 @@ bool EV_TeleportTo(
 
     mobj.angle = dstAngle;
 
-    // PsyDoom: if it's player and we're preserving momentum adjust the current xy interpolation to account for the teleportation.
+    // If it's player and we're preserving momentum adjust the current xy interpolation to account for the teleportation.
     // This is done so we can do a smooth silent teleport to another location.
-    #if PSYDOOM_MODS
-        if (bPreserveMomentum && (mobj.player == &gPlayers[gCurPlayerIndex])) {
-            // Snap the z component if it's changed by the teleportation
-            if (oldZ != mobj.z) {
-                R_SnapViewZInterpolation();
-            }
-
-            const fixed_t dx = oldX - gOldViewX;
-            const fixed_t dy = oldY - gOldViewY;
-            gOldViewX = mobj.x - dx;
-            gOldViewY = mobj.y - dy;
-            gOldViewAngle = mobj.angle;
+    if (bPreserveMomentum && (mobj.player == &gPlayers[gCurPlayerIndex])) {
+        // Snap the z component if it's changed by the teleportation
+        if (oldZ != mobj.z) {
+            R_SnapViewZInterpolation();
         }
-    #endif
+
+        const fixed_t dx = oldX - gOldViewX;
+        const fixed_t dy = oldY - gOldViewY;
+        gOldViewX = mobj.x - dx;
+        gOldViewY = mobj.y - dy;
+        gOldViewAngle = mobj.angle;
+    } 
+    else {
+        // Otherwise snap all movements
+        R_SnapMobjInterpolation(mobj);
+    }
 
     // Teleportation was a success!
     return true;
 }
-#endif
+#endif  // #if PSYDOOM_MODS
