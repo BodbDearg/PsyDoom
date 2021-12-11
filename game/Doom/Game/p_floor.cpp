@@ -6,11 +6,13 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "doomdata.h"
+#include "Finally.h"
 #include "g_game.h"
 #include "p_change.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/ScriptingEngine.h"
 
@@ -52,6 +54,16 @@ result_e T_MovePlane(
         if (Game::gSettings.bTurboMode) {
             speed *= 2;
         }
+    #endif
+
+    // PsyDoom: before exiting snap all sector motion if that sort of interpolation is not enabled
+    #if PSYDOOM_MODS
+        const auto snapSectorMovement = finally([&]() noexcept {
+            if (!Config::gbInterpolateSectors) {
+                sector.floorheight.snap();
+                sector.ceilingheight.snap();
+            }
+        });
     #endif
 
     // What are we moving?

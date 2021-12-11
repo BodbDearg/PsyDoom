@@ -177,7 +177,12 @@ void R_RenderPlayerView() noexcept {
             gViewZ = R_LerpCoord(gOldViewZ, newViewZ - gViewPushedZ, lerp);
         }
 
-        gViewZ += R_LerpCoord(0, gViewPushedZ, gWorldLerpFactor);   // Interpolating the 15 Hz (world) motion at a slower rate
+        if (Config::gbInterpolateSectors) {
+            gViewZ += R_LerpCoord(0, gViewPushedZ, gWorldLerpFactor);   // Interpolating the 15 Hz (world) motion at a slower rate
+        } else {
+            gViewZ += gViewPushedZ;     // Sector interpolation is turned off, so snap motion due to sectors (the world) immediately
+        }
+
         gViewZ &= ~FRACMASK;
 
         // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped

@@ -14,6 +14,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_move.h"
+#include "PsyDoom/Config.h"
 
 bool gbNofit;           // If 'true' then one or more things in the test sector undergoing height changes do not fit
 bool gbCrushChange;     // If 'true' then the current sector undergoing height changes should crush/damage things when they do not fit
@@ -48,6 +49,15 @@ bool P_ThingHeightClip(mobj_t& mobj) noexcept {
     #if PSYDOOM_MODS
         if (mobj.player && (mobj.player == &gPlayers[gCurPlayerIndex])) {
             gViewPushedZ += mobj.z - oldZ;
+        }
+    #endif
+
+    // PsyDoom: if the thing was moved by the sector and the interpolation of sectors is not enabled then snap the z motion of the object
+    #if PSYDOOM_MODS
+        if (!Config::gbInterpolateSectors) {
+            if (oldZ != mobj.z) {
+                mobj.z.snap();
+            }
         }
     #endif
 

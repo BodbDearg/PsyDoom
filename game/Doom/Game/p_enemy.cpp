@@ -24,6 +24,7 @@
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
+#include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
 
 #include <algorithm>
@@ -202,9 +203,32 @@ bool P_Move(mobj_t& actor) noexcept {
         // Move was successful: stop trying to float up/down (can reach whatever we're after)
         actor.flags &= ~MF_INFLOAT;
 
+        // PsyDoom: snap motion if monster movement is not interpolated
+        #if PSYDOOM_MODS
+            if (!Config::gbInterpolateMonsters) {
+                actor.x.snap();
+                actor.y.snap();
+            }
+        #endif
+
         // If the actor is not floating, ensure it is grounded on whatever sector it is in (in case it's going down steps)
         if ((actor.flags & MF_FLOAT) == 0) {
+            // PsyDoom: keep track of the old z value for snapping purposes
+            #if PSYDOOM_MODS
+                const fixed_t oldZ = actor.z;
+            #endif
+
             actor.z = actor.floorz;
+
+            // PsyDoom: snap motion if monster movement is not interpolated.
+            // Only snap however if there was actual movement, don't want to upset any smooth motion due to platforms and such moving...
+            #if PSYDOOM_MODS
+                if (!Config::gbInterpolateMonsters) {
+                    if (oldZ != actor.z) {
+                        actor.z.snap();
+                    }
+                }
+            #endif
         }
 
         return true;
@@ -838,6 +862,10 @@ void A_SkelMissile(mobj_t& actor) noexcept {
     missile.x += missile.momx;
     missile.y += missile.momy;
     missile.tracer = pTarget;
+
+    #if PSYDOOM_MODS
+        R_SnapMobjInterpolation(missile);   // PsyDoom: snap the motion we just added since the missile is just spawning
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1564,6 +1592,9 @@ void A_VileAttack(mobj_t& actor) noexcept {
     pFire->x = pTarget->x - FixedMul(24 * FRACUNIT, gFineCosine[angleIdx]);
     pFire->y = pTarget->y - FixedMul(24 * FRACUNIT, gFineSine[angleIdx]);
 
+    // Need to snap the flame motion since it's basically teleports around the map
+    R_SnapMobjInterpolation(*pFire);
+
     // Do the splash damage at the fire location
     P_RadiusAttack(*pFire, &actor, 70);
 }
@@ -1593,6 +1624,9 @@ void A_Fire(mobj_t& actor) noexcept {
     actor.y = pVileTgt->y + FixedMul(24 * FRACUNIT, gFineSine[angleIdx]);
     actor.z = pVileTgt->z;
     P_SetThingPosition(actor);
+
+    // Need to snap the flame motion since it's basically teleports around the map
+    R_SnapMobjInterpolation(actor);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

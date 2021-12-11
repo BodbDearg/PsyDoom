@@ -11,6 +11,10 @@ BEGIN_NAMESPACE(Config)
 //------------------------------------------------------------------------------------------------------------------------------------------
 const char*     getCueFilePath() noexcept;
 extern bool     gbUncapFramerate;
+extern bool     gbInterpolateSectors;
+extern bool     gbInterpolateMobj;
+extern bool     gbInterpolateMonsters;
+extern bool     gbInterpolateWeapon;
 extern int32_t  gMainMemoryHeapSize;
 extern bool     gbUseFastLoading;
 extern bool     gbEnableSinglePlayerLevelTimer;

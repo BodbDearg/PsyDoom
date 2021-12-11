@@ -17,6 +17,7 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_tick.h"
+#include "PsyDoom/Config.h"
 
 #include <algorithm>
 
@@ -335,6 +336,14 @@ static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
     baseThing.y = gTestY;
 
     PB_SetThingPosition(baseThing);
+
+    // PsyDoom: snap this object's position if mobj interpolation is not enabled
+    #if PSYDOOM_MODS
+        if (!Config::gbInterpolateMobj) {
+            baseThing.x.snap();
+            baseThing.y.snap();
+        }
+    #endif
 
     // This move was successful
     return true;

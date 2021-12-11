@@ -363,11 +363,11 @@ void AM_Drawer() noexcept {
             const fixed_t sin3 = gFineSine[fineAng3];
 
             // Compute the line points.
-            // PsyDoom: scale is now a fixed point number due to framerate uncapped automap movement.
-            const fixed_t vx = pMobj->x - ox;
-            const fixed_t vy = pMobj->y - oy;
-
+            // PsyDoom: scale is now a fixed point number due to framerate uncapped automap movement. Also supporting interpolation here.
             #if PSYDOOM_MODS
+                const fixed_t vx = pMobj->x.renderValue() - ox;
+                const fixed_t vy = pMobj->y.renderValue() - oy;
+
                 const int32_t x1 = d_fixed_to_int(FixedMul((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
                 const int32_t y1 = d_fixed_to_int(FixedMul((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
                 const int32_t x2 = d_fixed_to_int(FixedMul((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
@@ -375,6 +375,9 @@ void AM_Drawer() noexcept {
                 const int32_t x3 = d_fixed_to_int(FixedMul((vx + cos3 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
                 const int32_t y3 = d_fixed_to_int(FixedMul((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W, scale));
             #else
+                const fixed_t vx = pMobj->x - ox;
+                const fixed_t vy = pMobj->y - oy;
+
                 const int32_t x1 = d_fixed_to_int(((vx + cos1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
                 const int32_t y1 = d_fixed_to_int(((vy + sin1 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
                 const int32_t x2 = d_fixed_to_int(((vx + cos2 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
@@ -415,7 +418,7 @@ void AM_Drawer() noexcept {
 
         // Compute the the sine and cosines for the angles of the 3 points in the triangle.
         // PsyDoom: use a (potentially) framerate uncapped rotation if it is the local player.
-        const mobj_t& mobj = *player.mo;
+        mobj_t& mobj = *player.mo;
 
         #if PSYDOOM_MODS
             const angle_t playerAngle = (bIsLocalPlayer) ? gAM_PlayerAngle : mobj.angle;
@@ -438,8 +441,8 @@ void AM_Drawer() noexcept {
         // Compute the line points.
         // PsyDoom: use a (potentially) framerate uncapped rotation if it is the local player.
         #if PSYDOOM_MODS
-            const fixed_t playerX = (bIsLocalPlayer) ? gAM_PlayerX : mobj.x;
-            const fixed_t playerY = (bIsLocalPlayer) ? gAM_PlayerY : mobj.y;
+            const fixed_t playerX = (bIsLocalPlayer) ? gAM_PlayerX : mobj.x.renderValue();
+            const fixed_t playerY = (bIsLocalPlayer) ? gAM_PlayerY : mobj.y.renderValue();
         #else
             const fixed_t playerX = mobj.x;
             const fixed_t playerY = mobj.y;

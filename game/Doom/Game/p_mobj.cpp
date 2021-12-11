@@ -556,6 +556,10 @@ void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
                 mobj.y += d_rshift<4>(mobj.momy);
                 mobj.z += d_rshift<4>(mobj.momz);
 
+                #if PSYDOOM_MODS
+                    R_SnapMobjInterpolation(mobj);  // PsyDoom: snap the motion we just added since the missile is just spawning
+                #endif
+
                 P_ExplodeMissile(mobj);
                 return;
             }
@@ -571,6 +575,10 @@ void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
     if (!P_TryMove(mobj, mobj.x, mobj.y)) {
         P_ExplodeMissile(mobj);
     }
+
+    #if PSYDOOM_MODS
+        R_SnapMobjInterpolation(mobj);  // PsyDoom: snap the motion we just added since the missile is just spawning
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

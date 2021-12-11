@@ -208,8 +208,8 @@ static void RV_DrawAutomapShowAllThingsCheat() noexcept {
         const float sin3 = std::sin(ang3);
 
         // Compute the line points for the triangle
-        const float tx = RV_FixedToFloat(mobj.x);
-        const float ty = RV_FixedToFloat(mobj.y);
+        const float tx = RV_FixedToFloat(mobj.x.renderValue());
+        const float ty = RV_FixedToFloat(mobj.y.renderValue());
 
         const float x1 = tx + cos1 * (float) AM_THING_TRI_SIZE;
         const float y1 = ty + sin1 * (float) AM_THING_TRI_SIZE;
@@ -250,7 +250,7 @@ static void RV_DrawAutomapPlayers() noexcept {
 
         // Compute the the sine and cosines for the angles of the 3 points in the triangle.
         // Use a (potentially) framerate uncapped rotation if it is the local player.
-        const mobj_t& mobj = *player.mo;
+        mobj_t& mobj = *player.mo;
         const angle_t playerAngle = (bIsLocalPlayer) ? gRvMap_PlayerAngle : mobj.angle;
 
         const float ang1 = RV_AngleToFloat(playerAngle);
@@ -266,8 +266,8 @@ static void RV_DrawAutomapPlayers() noexcept {
 
         // Compute the line points for the triangle.
         // Use a (potentially) framerate uncapped position if it is the local player.
-        const fixed_t playerX = (bIsLocalPlayer) ? gRvMap_PlayerX : mobj.x;
-        const fixed_t playerY = (bIsLocalPlayer) ? gRvMap_PlayerY : mobj.y;
+        const fixed_t playerX = (bIsLocalPlayer) ? gRvMap_PlayerX : mobj.x.renderValue();
+        const fixed_t playerY = (bIsLocalPlayer) ? gRvMap_PlayerY : mobj.y.renderValue();
         const float tx = RV_FixedToFloat(playerX);
         const float ty = RV_FixedToFloat(playerY);
 
