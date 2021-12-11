@@ -600,8 +600,8 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
         // Split up the sprite fragment into further small pieces (on subsector boundaries) if neccessary and remember the position of the thing being split.
         // The thing position is used to resolve cases that we can't split and where we need to decide on a sprite subsector.
         gSpriteFragThingPos[0] = RV_FixedToFloat(thingX);
-        gSpriteFragThingPos[1] = RV_FixedToFloat(thingY);
-        gSpriteFragThingPos[2] = RV_FixedToFloat(thingZ);
+        gSpriteFragThingPos[1] = RV_FixedToFloat(thingZ);   // N.B: converting to Vulkan coords (where 'y' is up and 'z' is foward)
+        gSpriteFragThingPos[2] = RV_FixedToFloat(thingY);
 
         const int32_t bspRootNodeIdx = gNumBspNodes - 1;
         RV_SpriteFrag_VisitBspNode(bspRootNodeIdx, sprFrag);

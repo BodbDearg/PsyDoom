@@ -1,4 +1,5 @@
 - Fix bug with squished monsters sometimes blocking the player.
+- Fix bug with dev cheats causing view rotation to snap sometimes.
 - Interpolate player weapon sway
 - Implement playing the intro movies and legal text
 - Linux support.
