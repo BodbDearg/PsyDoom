@@ -516,6 +516,14 @@ void R_SnapMobjInterpolation(mobj_t& mobj) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Kills all interpolations for the specified player weapon sprite
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_SnapPsprInterpolation(pspdef_t& pspr) noexcept {
+    pspr.sx.snap();
+    pspr.sy.snap();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom: computes and saves globally interpolation factors (0-1) of how much we are in-between 15 Hz (world) and 30 Hz (player) ticks.
 // When the value is '0' it means use the old frame values, when '1' use the new frame values.
 //------------------------------------------------------------------------------------------------------------------------------------------

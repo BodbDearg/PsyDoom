@@ -10,6 +10,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "Finally.h"
 #include "g_game.h"
 #include "info.h"
 #include "p_inter.h"
@@ -17,6 +18,7 @@
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_tick.h"
+#include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
 
 const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
@@ -274,6 +276,11 @@ static void P_BringUpWeapon(player_t& player) noexcept {
     player.psprites[ps_weapon].sx = WEAPONX;
     player.psprites[ps_weapon].sy = WEAPONBOTTOM;
     P_SetPsprite(player, ps_weapon, nextWeaponState);
+
+    // PsyDoom: snap interpolations for the initial weapon position
+    #if PSYDOOM_MODS
+        R_SnapPsprInterpolation(player.psprites[ps_weapon]);
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -350,6 +357,13 @@ void P_FireWeapon(player_t& player) noexcept {
 
     P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].atkstate);
 
+    // PsyDoom: snap weapon movement if interpolation is disabled
+    #if PSYDOOM_MODS
+        if (!Config::gbInterpolateWeapon) {
+            R_SnapPsprInterpolation(weaponSprite);
+        }
+    #endif
+
     // Alert monsters to the noise
     P_NoiseAlert(player);
 }
@@ -397,6 +411,13 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
     const int32_t bobAngle = d_lshift<6>(gTicCon);
     sprite.sx = WEAPONX + d_fixed_to_int(player.bob) * gFineCosine[bobAngle & COSA_MASK];
     sprite.sy = WEAPONTOP + d_fixed_to_int(player.bob) * gFineSine[bobAngle & SINA_MASK];
+
+    // PsyDoom: snap weapon movement if interpolation is disabled
+    #if PSYDOOM_MODS
+        if (!Config::gbInterpolateWeapon) {
+            R_SnapPsprInterpolation(sprite);
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -432,6 +453,15 @@ void A_CheckReload(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept
 // Once the weapon is fully lowered, does the switch to the new weapon and begins raising it - unless the player is dead.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_Lower(player_t& player, pspdef_t& sprite) noexcept {
+    // PsyDoom: snap weapon movement if interpolation is disabled
+    #if PSYDOOM_MODS
+        const auto maybeSnapWeaponPos = finally([&]() noexcept {
+            if (!Config::gbInterpolateWeapon) {
+                R_SnapPsprInterpolation(sprite);
+            }
+        });
+    #endif
+
     // Lower the weapon a little bit more: if we're not finished then we can just stop there
     sprite.sy += LOWERSPEED;
 
@@ -475,6 +505,15 @@ void A_Lower(player_t& player, pspdef_t& sprite) noexcept {
 // Does the process of raising the player's weapon and puts it into the 'ready' state once fully raised
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_Raise(player_t& player, pspdef_t& sprite) noexcept {
+    // PsyDoom: snap weapon movement if interpolation is disabled
+    #if PSYDOOM_MODS
+        const auto maybeSnapWeaponPos = finally([&]() noexcept {
+            if (!Config::gbInterpolateWeapon) {
+                R_SnapPsprInterpolation(sprite);
+            }
+        });
+    #endif
+
     // Raise the weapon a little bit more: if we're not finished then we can just stop there
     sprite.sy -= RAISESPEED;
 

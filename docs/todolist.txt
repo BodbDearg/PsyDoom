@@ -1,7 +1,6 @@
 - Fix bug with squished monsters sometimes blocking the player.
 - Fix bug with dev cheats causing view rotation to snap sometimes.
 - Fix entryway skywall glitching.
-- Interpolate player weapon sway
 - Implement playing the intro movies and legal text
 - Linux support.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.

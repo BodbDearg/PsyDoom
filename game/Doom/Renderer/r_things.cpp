@@ -473,9 +473,19 @@ void R_DrawWeapon() noexcept {
             LIBGPU_SetSemiTrans(spr, true);
         }
 
+
+        #if PSYDOOM_MODS
+            // PsyDoom: weapon sway is now interpolated
+            const fixed_t sprX = pSprite->sx.renderValue();
+            const fixed_t sprY = pSprite->sy.renderValue();
+        #else
+            const fixed_t sprX = pSprite->sx;
+            const fixed_t sprY = pSprite->sy;
+        #endif
+
         LIBGPU_setXY0(spr,
-            (int16_t)(d_fixed_to_int(pSprite->sx) + HALF_SCREEN_W - tex.offsetX),
-            (int16_t)(d_fixed_to_int(pSprite->sy) + VIEW_3D_H - 1 - tex.offsetY)
+            (int16_t)(d_fixed_to_int(sprX) + HALF_SCREEN_W - tex.offsetX),
+            (int16_t)(d_fixed_to_int(sprY) + VIEW_3D_H - 1 - tex.offsetY)
         );
 
         LIBGPU_setWH(spr, tex.width, tex.height);

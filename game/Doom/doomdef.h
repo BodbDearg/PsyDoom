@@ -305,8 +305,13 @@ enum psprnum_t : int32_t {
 struct pspdef_t {
     const state_t*  state;      // Pointer to state structure
     int32_t         tics;       // How many tics are left in this state?
+#if PSYDOOM_MODS
+    InterpFixedT    sx;         // Offset of the sprite, x & y (interpolated)
+    InterpFixedT    sy;
+#else
     fixed_t         sx;         // Offset of the sprite, x & y
     fixed_t         sy;
+#endif
 };
 
 // Keycard types: skull keys and keycards

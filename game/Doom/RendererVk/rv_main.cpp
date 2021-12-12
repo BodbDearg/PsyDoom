@@ -225,9 +225,9 @@ void RV_RenderPlayerView() noexcept {
     Utils::onBeginUIDrawing();
     RV_DrawWidescreenStatusBarLetterbox();
 
-    // TODO: implement this natively eventually for Vulkan so we can interpolate at a higher precision
+    // Draw the player's weapon
     if (gExtCameraTicsLeft <= 0) {
-        R_DrawWeapon();
+        RV_DrawWeapon();
     }
 }
 

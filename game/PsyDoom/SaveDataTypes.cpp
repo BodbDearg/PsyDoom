@@ -560,6 +560,9 @@ void SavedPspdefT::deserializeTo(pspdef_t& spr) const noexcept {
     spr.tics = tics;
     spr.sx = sx;
     spr.sy = sy;
+
+    // Don't do interpolations for the first frame!
+    R_SnapPsprInterpolation(spr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

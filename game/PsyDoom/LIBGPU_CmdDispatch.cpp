@@ -256,8 +256,8 @@ void submit(const SPRT& sprite) noexcept {
                     texWinX + sprite.u0,
                     texWinY + sprite.v0,
                     // Size the texture window to cover only the region of sprite pixels that we need, to avoid artifacts as mentioned above
-                    std::min((uint16_t) sprite.w, drawRect.w),
-                    std::min((uint16_t) sprite.h, drawRect.h)
+                    drawRect.w,
+                    drawRect.h
                 );
             }
 

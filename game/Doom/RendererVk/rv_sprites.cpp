@@ -664,4 +664,91 @@ void RV_DrawSubsecSpriteFrags(const int32_t drawSubsecIdx) noexcept {
     gRvSortedFrags.clear();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the player weapon for the Vulkan renderer.
+// Implemented natively for Vulkan so that weapon sway can be interpolated to a higher precision.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void RV_DrawWeapon() noexcept {
+    // Run through all of the player sprites for the view player and render
+    player_t& player = *gpViewPlayer;
+    pspdef_t* pSprite = player.psprites;
+
+    for (int32_t pspIdx = 0; pspIdx < NUMPSPRITES; ++pspIdx, ++pSprite) {
+        // Is this particular player sprite slot showing anything?
+        if (!pSprite->state)
+            continue;
+
+        // Get the texture for the sprite and upload to VRAM if required
+        const state_t& state = *pSprite->state;
+        const spritedef_t& spriteDef = gSprites[state.sprite];
+        const int32_t frameNum = state.frame & FF_FRAMEMASK;
+        const spriteframe_t& frame = spriteDef.spriteframes[frameNum];
+
+        texture_t& tex = R_GetTexForLump(frame.lump[0]);
+        I_CacheTex(tex);
+
+        // Set the blending mode to use (alpha or additive)
+        const bool bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_FLAGS) != 0);
+
+        if (bIsTransparent) {
+            VDrawing::setDrawPipeline(VPipelineType::UI_8bpp_Add);
+        } else {
+            VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
+        }
+        
+        // Get the size and location of the weapon sprite
+        const float sprX = RV_FixedToFloat(pSprite->sx.renderValue()) + (float) HALF_SCREEN_W - (float) tex.offsetX;
+        const float sprY = RV_FixedToFloat(pSprite->sy.renderValue()) + (float) VIEW_3D_H - 1.0f - (float) tex.offsetY;
+        const float sprW = tex.width;
+        const float sprH = tex.height;
+
+        // Figure out the color of the weapon sprite from the player's sector
+        mobj_t& playerMobj = *player.mo;
+        const sector_t& sector = *playerMobj.subsector->sector;
+        uint8_t sprR, sprG, sprB = {};
+
+        if (state.frame & FF_FULLBRIGHT) {
+            // Note: these magic 5/8 multipliers correspond VERY closely to 'LIGHT_INTENSTIY_MAX / 255'.
+            // The resulting values are sometimes not quite the same however.
+            const light_t light = R_GetSectorLightColor(sector, playerMobj.z.renderValue());
+            sprR = (uint8_t)(((uint32_t) light.r * 5) / 8);
+            sprG = (uint8_t)(((uint32_t) light.g * 5) / 8);
+            sprB = (uint8_t)(((uint32_t) light.b * 5) / 8);
+        }
+        else {
+            R_GetSectorDrawColor(sector, playerMobj.z.renderValue(), sprR, sprG, sprB);
+        }
+
+        // Get CLUT and texture window information
+        uint16_t clutX, clutY = {};
+        uint16_t texWinX, texWinY = {};
+        uint16_t texWinW, texWinH = {};
+
+        RV_ClutIdToClutXy(g3dViewPaletteClutId, clutX, clutY);
+        RV_GetTexWinXyWh(tex, texWinX, texWinY, texWinW, texWinH);
+
+        // Draw the sprite and restrict the texture window to cover the exact area of VRAM occupied by the sprite.
+        // Ignoring the gpu texture window/page settings in this way and restricting to the exact pixels used by the
+        // sprite helps to avoid stitching artifacts, especially when MSAA is active.
+        VDrawing::addUISprite(
+            sprX,
+            sprY,
+            sprW,
+            sprH,
+            0,          // UV coords are local to the texture window, which covers the entire sprite area
+            0,
+            sprR,
+            sprG,
+            sprB,
+            128,
+            clutX,
+            clutY,
+            texWinX,
+            texWinY,
+            texWinW,
+            texWinH
+        );
+    }
+}
+
 #endif  // #if PSYDOOM_VULKAN_RENDERER
