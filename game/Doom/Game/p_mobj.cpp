@@ -481,6 +481,27 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
     const fixed_t spawnZ = z + d_lshift<10>(P_SubRandom());
     mobj_t& mobj = *P_SpawnMobj(x, y, spawnZ, MT_PUFF);
 
+    // PsyDoom: fix puffs spawning beneath the floor (and potentially above the ceiling).
+    // Causes sudden jumps in the puff position (on the next frame) and looks especially weird with interpolation.
+    // Making this fix non opitonal since it doesn't affect demo playback.
+    #if PSYDOOM_MODS
+    {
+        const sector_t& sector = *mobj.subsector->sector;
+        const fixed_t floorZ = sector.floorheight;
+        const fixed_t ceilingZ = sector.ceilingheight;
+        const fixed_t mobjZ = mobj.z;
+
+        if (mobjZ < floorZ) {
+            mobj.z = floorZ;
+            mobj.z.snap();
+        }
+        else if (mobjZ > ceilingZ) {
+            mobj.z = ceilingZ;
+            mobj.z.snap();
+        }
+    }
+    #endif
+
     // Give some upward momentum and randomly adjust tics left
     mobj.momz = FRACUNIT;
     mobj.tics -= P_Random() & 1;

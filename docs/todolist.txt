@@ -1,4 +1,3 @@
-- Fix bullet puff weird glitching.
 - Fix bug with squished monsters sometimes blocking the player.
 - Fix bug with dev cheats causing view rotation to snap sometimes.
 - Fix entryway skywall glitching.
