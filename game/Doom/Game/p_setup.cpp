@@ -1648,7 +1648,6 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
                 playerMobj.x = gInPlaceReloadPlayerX;
                 playerMobj.y = gInPlaceReloadPlayerY;
                 P_SetThingPosition(playerMobj);
-                R_SnapMobjInterpolation(playerMobj);
 
                 // Set player z position, view height and angle
                 const sector_t& newSector = *playerMobj.subsector->sector;
@@ -1659,6 +1658,9 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
                 player.viewz = playerMobj.z + VIEWHEIGHT;
                 player.viewheight = VIEWHEIGHT;
                 player.deltaviewheight = 0;
+
+                // Snap all interpolations
+                R_SnapMobjInterpolation(playerMobj);
             }
         #endif
     }
