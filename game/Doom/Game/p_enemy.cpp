@@ -239,6 +239,14 @@ bool P_Move(mobj_t& actor) noexcept {
     if ((actor.flags & MF_FLOAT) && gbFloatOk) {
         actor.z += (actor.z >= gTmFloorZ) ? -FLOATSPEED : FLOATSPEED;
         actor.flags |= MF_INFLOAT;
+
+        #if PSYDOOM_MODS
+            // PsyDoom: snap floating motion if monster interpolation is not enabled
+            if (!Config::gbInterpolateMonsters) {
+                actor.z.snap();
+            }
+        #endif
+
         return true;
     }
 

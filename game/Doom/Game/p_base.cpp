@@ -189,7 +189,19 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
 
     // Do floating up and down to meet the target for floating monsters
     if ((mobj.flags & MF_FLOAT) && mobj.target) {
+        // PsyDoom: track how much the mobj moved due to floating
+        #if PSYDOOM_MODS
+            const fixed_t oldZ = mobj.z;
+        #endif
+
         P_FloatChange(mobj);
+
+        // PsyDoom: snap any movement due to floating if monster interpolation is disabled
+        #if PSYDOOM_MODS
+            if (!Config::gbInterpolateMonsters) {
+                mobj.z.oldValue += mobj.z - oldZ;
+            }
+        #endif
     }
 
     // Collide with the floor, or if no collision then do gravity
@@ -230,6 +242,22 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
             mobj.latecall = &P_ExplodeMissile;
         }
     }
+
+    #if PSYDOOM_MODS
+        // Ensure the old values we are interpolating from are clamped against the floor/ceiling bounds
+        if (mobj.z.oldValue < mobj.floorz) {
+            mobj.z.oldValue = mobj.floorz;
+        }
+
+        if (mobj.z.oldValue + mobj.height > mobj.ceilingz) {
+            mobj.z.oldValue = mobj.ceilingz - mobj.height;
+        }
+
+        // PsyDoom: snap mobj z movements if interpolation of that is not enabled
+        if (!Config::gbInterpolateMobj) {
+            mobj.z.snap();
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
