@@ -231,6 +231,8 @@ set(SOURCE_FILES
     "PsyDoom/MapInfo_Parse.h"
     "PsyDoom/MapPatcher.cpp"
     "PsyDoom/MapPatcher.h"
+    "PsyDoom/MDEC/CDXAFileStreamer.cpp"
+    "PsyDoom/MDEC/CDXAFileStreamer.h"
     "PsyDoom/MobjSpritePrecacher.cpp"
     "PsyDoom/MobjSpritePrecacher.h"
     "PsyDoom/ModMgr.cpp"
