@@ -9,7 +9,7 @@ class FileInputStream;
 struct DiscInfo;
 struct IsoFileSys;
 
-BEGIN_NAMESPACE(mdec)
+BEGIN_NAMESPACE(movie)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Header info for CD-XA sectors on a CD-ROM.
@@ -87,7 +87,7 @@ public:
         const DiscInfo& disc,
         const IsoFileSys& fileSys,
         const char* const fileName,
-        const uint32_t bufferSize = 64      // How many sectors can be held in the buffer before some are dropped
+        const uint32_t bufferSize       // How many sectors can be held in the buffer before some are dropped
     ) noexcept;
 
     bool isOpen() const noexcept;
@@ -101,7 +101,7 @@ public:
     //--------------------------------------------------------------------------------------------------------------------------------------
     template <class PredT>
     const CDXASector* peekSectorType(const PredT& sectorPredicate) noexcept {
-        for (uint32_t slotIdx : mUsedBufferSlots) {
+        for (uint32_t slotIdx : mUsedSectorBufferSlots) {
             const CDXASector& sector = mSectorBuffer[slotIdx];
 
             if (sectorPredicate(sector))
@@ -146,4 +146,4 @@ private:
     std::vector<uint32_t>               mFreeSectorBufferSlots;     // Which sector buffer slots are free
 };
 
-END_NAMESPACE(mdec)
+END_NAMESPACE(movie)

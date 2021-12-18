@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-BEGIN_NAMESPACE(mdec)
+BEGIN_NAMESPACE(movie)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Creates a CD-XA file streamer with no open file
@@ -62,7 +62,7 @@ bool CDXAFileStreamer::open(
     // If it fails then abort the opening process.
     try {
         mFile = std::make_unique<FileInputStream>(pTrack->sourceFilePath.c_str());
-        mFile->skipBytes(pTrack->fileOffset);
+        mFile->skipBytes(pTrack->fileOffset + pFsEntry->startLba * sizeof(CDXASector));
     } catch (...) {
         close();
         return false;
@@ -174,4 +174,4 @@ CDXASector& CDXAFileStreamer::allocBufferSector() noexcept {
     return mSectorBuffer[slotIdx];
 }
 
-END_NAMESPACE(mdec)
+END_NAMESPACE(movie)
