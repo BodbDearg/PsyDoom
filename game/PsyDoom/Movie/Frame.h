@@ -12,7 +12,7 @@ struct CDXASector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // 32-byte header for a CD sector containing video data in a STR file.
-// For more info on this, see: https://github.com/m35/jpsxdec/blob/readme/jpsxdec/PlayStation1_STR_format.txt
+// For more info on this see: https://github.com/m35/jpsxdec/blob/readme/jpsxdec/PlayStation1_STR_format.txt
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct FrameSectorHeader {
     uint16_t    status;                 // Unknown flags (don't use this)

@@ -579,7 +579,10 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
     // If the object triggering the special is not a player then only certain specials can be triggered.
     // Some things like projectiles are also not allowed to trigger specials.
     if (!mobj.player) {
-        // Only monsters and (oddly) weapons and barrels can trigger specials
+        // Only monsters and (oddly) weapons and barrels can trigger specials.
+        //
+        // BUG: should the end of the range here be 'MT_ARACHPLAZ' instead? Seems like it...
+        // In any case it shouldnt't matter since line crossing checks are not done for non-AI objects in Jaguar and PSX Doom.
         if ((mobj.type >= MT_TROOPSHOT) && (mobj.type <= MT_BFG))
             return;
 

@@ -240,6 +240,8 @@ set(SOURCE_FILES
     "PsyDoom/Movie/CDXAFileStreamer.h"
     "PsyDoom/Movie/Frame.cpp"
     "PsyDoom/Movie/Frame.h"
+    "PsyDoom/Movie/MBlockBitStream.cpp"
+    "PsyDoom/Movie/MBlockBitStream.h"
     "PsyDoom/NetPacketReader.h"
     "PsyDoom/NetPacketWriter.h"
     "PsyDoom/Network.cpp"

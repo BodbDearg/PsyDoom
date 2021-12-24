@@ -13,7 +13,7 @@ BEGIN_NAMESPACE(movie)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Header info for CD-XA sectors on a CD-ROM.
-// For more info on this, see: https://github.com/m35/jpsxdec/blob/readme/jpsxdec/PlayStation1_STR_format.txt
+// For more info on this see: https://github.com/m35/jpsxdec/blob/readme/jpsxdec/PlayStation1_STR_format.txt
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct CDXAHeader {
     // Submode flags
