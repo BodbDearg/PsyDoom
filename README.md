@@ -26,7 +26,6 @@ The original goal of this project was to have a complete replacement for the ori
 - Download the latest release build from here: https://github.com/BodbDearg/PsyDoom/releases
 - Presently only Windows 64-bit and MacOS (ARM/Intel 64-bit) are supported. Linux is not currently supported but is planned for a future release.
   - The Vulkan renderer also requires a Vulkan 1.1 capable GPU. On MacOS a 'Metal' capable GPU is required.
-  - Note: ARM Support for MacOS is currently experimental/untested. If you have this platform, please let me know if it works! :)
 - On Windows, make sure to have the latest Visual C redistributable installed:
   - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 - On MacOS you must manually allow the .app through Gatekeeper in order to run the game, as the code is not signed.
