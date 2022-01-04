@@ -27,7 +27,7 @@ struct ACCoeff {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Movie block bitstream: provides the means for individual blocks in an MDEC movie frame to be read.
-// Wraps an array of bytes and provides a bit oriented input stream from that array of bytes.
+// Wraps an array of 16-bit words and provides a bit oriented input stream from that array.
 // 
 // For more info on MDEC movie decoding see: https://github.com/m35/jpsxdec/blob/readme/jpsxdec/PlayStation1_STR_format.txt
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -36,8 +36,8 @@ public:
     // Represents an error type thrown by the bit stream
     enum ErrorType {
         UNEXPECTED_EOF,     // Reached an unexpected end of the data
-        INVALID_ENCODING,   // The MDEC movie data is not a valid encoding
-        INTERNAL_ERROR      // The MDEC decoder encountered an unexpected internal logic error (this should never be thrown, hopefully)
+        INVALID_ENCODING,   // The MDEC movie is not validly encoded
+        INTERNAL_ERROR      // The MDEC decoder encountered an unexpected internal bug or logic error (this should never be thrown, hopefully)
     };
 
     MBlockBitStream() noexcept;

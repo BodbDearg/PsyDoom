@@ -49,14 +49,14 @@ bool decode(
     if (!bDecodedAllBlocksOk)
         return false;
 
-    // Process each pixel and convert to the PlayStation's RGBX5551 format
+    // Process each pixel and convert to the PlayStation's XRGB1555 format
     for (uint32_t y = 0; y < PIXELS_H; ++y) {
-        for (uint32_t x = 0; y < PIXELS_H; ++y) {
+        for (uint32_t x = 0; x < PIXELS_W; ++x) {
             // Firstly get the chroma red and blue values as well as the luma value
             const float chromaRf = (float) blockCr.mValues[y / 2][x / 2];
             const float chromaBf = (float) blockCb.mValues[y / 2][x / 2];
             const Block& lumaBlock = blockY[(y / 8) * 2 + (x / 8)];
-            const float lumaF = (float) lumaBlock.mValues[y % 8][x % 8];
+            const float lumaF = (float)(lumaBlock.mValues[y % 8][x % 8] + 128);     // Note: +128 for JPEG 'level shift' (see jpsxdec docs for more on this)
 
             // Convert YCbCr to RGB in the manner done by the PSX MDEC chip and clamp between 0 and 255
             const float colorRf = std::clamp(lumaF + 1.402f * chromaRf, 0.0f, 255.0f);

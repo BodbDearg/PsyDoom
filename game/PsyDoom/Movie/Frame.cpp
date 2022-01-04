@@ -238,7 +238,7 @@ bool Frame::decodeMacroBlocks() noexcept {
     MBlockBitStream frameDataStream;
     frameDataStream.open((const uint16_t*)(mpDemuxedData + 8), (mDemuxedDataSize - 8) / sizeof(uint16_t));
 
-    // The macro blocks are arranged in a column like order, decode in that fashion.
+    // The macro blocks are arranged in a column major order, decode in that fashion.
     // If the frame size is not an even multiple of 16 then the extra pixels are simply padding that are ignored.
     const uint32_t blocksW = (mFirstSecHdr.frameW + 15u) / 16u;
     const uint32_t blocksH = (mFirstSecHdr.frameH + 15u) / 16u;

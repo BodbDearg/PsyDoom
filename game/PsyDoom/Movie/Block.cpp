@@ -24,7 +24,7 @@ static constexpr uint8_t UNZIGZAG_MATRIX[Block::PIXELS_H][Block::PIXELS_W] = {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Scaling values that each matrix element must be multipled by during the dequantization step.
-// This same table is used by almost every PSX game. For more info see: 
+// This same table is used by almost every PSX game. For more info see:
 //  https://github.com/m35/jpsxdec/blob/readme/jpsxdec/PlayStation1_STR_format.txt
 //------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr int16_t QUANTIZATION_SCALE_MATRIX[Block::PIXELS_H][Block::PIXELS_W] = {
@@ -43,7 +43,7 @@ static constexpr int16_t QUANTIZATION_SCALE_MATRIX[Block::PIXELS_H][Block::PIXEL
 // This same table is used by almost every PSX game. For more info see:
 //  https://github.com/m35/jpsxdec/blob/readme/jpsxdec/PlayStation1_STR_format.txt
 //------------------------------------------------------------------------------------------------------------------------------------------
-static constexpr int16_t IDTC_M[Block::PIXELS_H][Block::PIXELS_W] = {
+static constexpr int16_t IDCT_M[Block::PIXELS_H][Block::PIXELS_W] = {
     { 23170,  23170,  23170,  23170,  23170,  23170,  23170,  23170 },
     { 32138,  27245,  18204,   6392,  -6393, -18205, -27246, -32139 },
     { 30273,  12539, -12540, -30274, -30274, -12540,  12539,  30273 },
@@ -55,22 +55,22 @@ static constexpr int16_t IDTC_M[Block::PIXELS_H][Block::PIXELS_W] = {
 };
 
 // Transpose of the inverse discrete cosine transform matrix
-static constexpr int16_t IDTC_MT[Block::PIXELS_H][Block::PIXELS_W] = {
-    { IDTC_M[0][0], IDTC_M[1][0], IDTC_M[2][0], IDTC_M[3][0], IDTC_M[4][0], IDTC_M[5][0], IDTC_M[6][0], IDTC_M[7][0], },
-    { IDTC_M[0][1], IDTC_M[1][1], IDTC_M[2][1], IDTC_M[3][1], IDTC_M[4][1], IDTC_M[5][1], IDTC_M[6][1], IDTC_M[7][1], },
-    { IDTC_M[0][2], IDTC_M[1][2], IDTC_M[2][2], IDTC_M[3][2], IDTC_M[4][2], IDTC_M[5][2], IDTC_M[6][2], IDTC_M[7][2], },
-    { IDTC_M[0][3], IDTC_M[1][3], IDTC_M[2][3], IDTC_M[3][3], IDTC_M[4][3], IDTC_M[5][3], IDTC_M[6][3], IDTC_M[7][3], },
-    { IDTC_M[0][4], IDTC_M[1][4], IDTC_M[2][4], IDTC_M[3][4], IDTC_M[4][4], IDTC_M[5][4], IDTC_M[6][4], IDTC_M[7][4], },
-    { IDTC_M[0][5], IDTC_M[1][5], IDTC_M[2][5], IDTC_M[3][5], IDTC_M[4][5], IDTC_M[5][5], IDTC_M[6][5], IDTC_M[7][5], },
-    { IDTC_M[0][6], IDTC_M[1][6], IDTC_M[2][6], IDTC_M[3][6], IDTC_M[4][6], IDTC_M[5][6], IDTC_M[6][6], IDTC_M[7][6], },
-    { IDTC_M[0][7], IDTC_M[1][7], IDTC_M[2][7], IDTC_M[3][7], IDTC_M[4][7], IDTC_M[5][7], IDTC_M[6][7], IDTC_M[7][7], },
+static constexpr int16_t IDCT_MT[Block::PIXELS_H][Block::PIXELS_W] = {
+    { IDCT_M[0][0], IDCT_M[1][0], IDCT_M[2][0], IDCT_M[3][0], IDCT_M[4][0], IDCT_M[5][0], IDCT_M[6][0], IDCT_M[7][0], },
+    { IDCT_M[0][1], IDCT_M[1][1], IDCT_M[2][1], IDCT_M[3][1], IDCT_M[4][1], IDCT_M[5][1], IDCT_M[6][1], IDCT_M[7][1], },
+    { IDCT_M[0][2], IDCT_M[1][2], IDCT_M[2][2], IDCT_M[3][2], IDCT_M[4][2], IDCT_M[5][2], IDCT_M[6][2], IDCT_M[7][2], },
+    { IDCT_M[0][3], IDCT_M[1][3], IDCT_M[2][3], IDCT_M[3][3], IDCT_M[4][3], IDCT_M[5][3], IDCT_M[6][3], IDCT_M[7][3], },
+    { IDCT_M[0][4], IDCT_M[1][4], IDCT_M[2][4], IDCT_M[3][4], IDCT_M[4][4], IDCT_M[5][4], IDCT_M[6][4], IDCT_M[7][4], },
+    { IDCT_M[0][5], IDCT_M[1][5], IDCT_M[2][5], IDCT_M[3][5], IDCT_M[4][5], IDCT_M[5][5], IDCT_M[6][5], IDCT_M[7][5], },
+    { IDCT_M[0][6], IDCT_M[1][6], IDCT_M[2][6], IDCT_M[3][6], IDCT_M[4][6], IDCT_M[5][6], IDCT_M[6][6], IDCT_M[7][6], },
+    { IDCT_M[0][7], IDCT_M[1][7], IDCT_M[2][7], IDCT_M[3][7], IDCT_M[4][7], IDCT_M[5][7], IDCT_M[6][7], IDCT_M[7][7], },
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does one matrix multiply for the inverse discrete cosine transform.
 // Assumes one of the matrixes is in 0.16 fixed point format.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void doIdtcMatrixMultiply(
+static void doIdctMatrixMultiply(
     const int16_t matrix1[Block::PIXELS_H][Block::PIXELS_W],
     const int16_t matrix2[Block::PIXELS_H][Block::PIXELS_W],
     int16_t outMatrix[Block::PIXELS_H][Block::PIXELS_W]
@@ -79,7 +79,7 @@ static void doIdtcMatrixMultiply(
 
     for (uint32_t row = 0; row < Block::PIXELS_H; ++row) {
         for (uint32_t col = 0; col < Block::PIXELS_W; ++col) {
-            // Note: the numbers in the value (non IDTC) matrix should be between -2048 and 2047 (12 bits needed) and the IDTC matrix itself
+            // Note: the numbers in the value (non IDCT) matrix should be between -2048 and 2047 (12 bits needed) and the IDCT matrix itself
             // needs 16-bits of precision. The sum is done over 8 elements so that should be an additional 4-bits of precision required, for
             // a total of 32-bits used. Because of this I'm dropping 4-bits during calculations to avoid overflow, just to be safe.
             // 
@@ -139,13 +139,13 @@ static void dequantizeBlock(Block& block, const int16_t quantizationScale) noexc
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Decoding step: applies the inverse cosine transform to a block.
+// Decoding step: applies the inverse discrete cosine transform to a block.
 // For more on this see: https://github.com/m35/jpsxdec/blob/readme/jpsxdec/PlayStation1_STR_format.txt
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void applyInverseCosineTransformToBlock(Block& block) noexcept {
+static void applyInverseDiscreteCosineTransformToBlock(Block& block) noexcept {
     int16_t tmpMatrix[Block::PIXELS_H][Block::PIXELS_W];
-    doIdtcMatrixMultiply(IDTC_MT, block.mValues, tmpMatrix);
-    doIdtcMatrixMultiply(tmpMatrix, IDTC_M, block.mValues);
+    doIdctMatrixMultiply(IDCT_MT, block.mValues, tmpMatrix);
+    doIdctMatrixMultiply(tmpMatrix, IDCT_M, block.mValues);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -195,7 +195,7 @@ static void readDcAndAcCoeffForBlock(Block& block, MBlockBitStream& inputStream)
 void Block::clear() noexcept {
     for (uint32_t y = 0; y < PIXELS_H; ++y) {
         for (uint32_t x = 0; x < PIXELS_W; ++x) {
-            mValues[x][y] = 0;
+            mValues[y][x] = 0;
         }
     }
 }
@@ -218,12 +218,13 @@ bool Block::readAndDecode(MBlockBitStream& inputStream, const int16_t quantizati
         return false;
     }
 
-    // Reverse the zig-zag matrix order, dequantize and apply the inverse cosine transform.
+    // Reverse the zig-zag matrix order, dequantize and apply the inverse discrete cosine transform.
     // This yields the final block values.
     unZigZagBlock(*this);
     dequantizeBlock(*this, quantizationScale);
-    applyInverseCosineTransformToBlock(*this);
+    applyInverseDiscreteCosineTransformToBlock(*this);
 
+    // All good if we've made it to here!
     return true;
 }
 
