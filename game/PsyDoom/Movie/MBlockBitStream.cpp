@@ -13,7 +13,7 @@ MBlockBitStream::MBlockBitStream() noexcept
     , mSize(0)
     , mCurOffset(0)
     , mCurWord(0)
-    , mCurWordShift(16)
+    , mCurWordBitsLeft(0)
 {
 }
 
@@ -27,7 +27,7 @@ void MBlockBitStream::open(const uint16_t* pWords, const uint32_t numWords) noex
     mSize = numWords;
     mCurOffset = 0;
     mCurWord = 0;
-    mCurWordShift = 16;
+    mCurWordBitsLeft = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ void MBlockBitStream::close() noexcept {
     mSize = 0;
     mCurOffset = 0;
     mCurWord = 0;
-    mCurWordShift = 16;
+    mCurWordBitsLeft = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -46,13 +46,14 @@ void MBlockBitStream::close() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t MBlockBitStream::readBit() THROWS {
     // Get the next 16-bit word of data if all bits are consumed
-    if (mCurWordShift >= 16) {
+    if (mCurWordBitsLeft <= 0) {
         nextWord();
     }
 
-    // Return the next bit in the currently loaded word
-    const uint16_t bit = (mCurWord >> mCurWordShift) & 0x1;
-    mCurWordShift++;
+    // Return the next bit in the currently loaded word.
+    // Note that the highest bits are read first.
+    --mCurWordBitsLeft;
+    const uint16_t bit = (mCurWord >> mCurWordBitsLeft) & 0x1u;
     return bit;
 }
 
@@ -67,7 +68,7 @@ ACCoeff MBlockBitStream::readACCoeff() THROWS {
     switch (topBits) {
         case 0b00:  return readACCoeff_00();            // 00
         case 0b01:  return readACCoeff_01();            // 01
-        case 0b10:  return ACCoeff::EOF();              // 10 (EOF)
+        case 0b10:  return ACCoeff::eof();              // 10 (EOF)
         case 0b11:  return readACCoeffSign(0, 1);       // 11
     }
 
@@ -88,7 +89,7 @@ void MBlockBitStream::nextWord() THROWS {
         mCurWord = Endian::byteSwap(mpWords[mCurOffset]);
     }
 
-    mCurWordShift = 0;
+    mCurWordBitsLeft = 16;
     mCurOffset++;
 }
 

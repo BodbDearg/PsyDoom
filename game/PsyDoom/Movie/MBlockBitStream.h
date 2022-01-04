@@ -17,11 +17,11 @@ struct ACCoeff {
     int16_t     nonZeroCoeff;
 
     // Tells if this struct is a special marker representing the end of the block's bit stream
-    inline bool isEOF() const { return (numZeroValueCoeff == 0xFFFFu); }
+    inline bool isEof() const noexcept { return (numZeroValueCoeff == 0xFFFFu); }
 
-    // Returns a special value representing the end of the block's bit stream 
-    static constexpr ACCoeff EOF() {
-        return ACCoeff { 0xFFFFu, 0 };
+    // Returns a special value representing the end of the block's bit stream
+    static constexpr ACCoeff eof() noexcept {
+        return { 0xFFFFu, 0 };
     }
 };
 
@@ -44,7 +44,7 @@ public:
 
     void open(const uint16_t* pWords, const uint32_t numWords) noexcept;
     void close() noexcept;
-    inline bool isOpen() const { return (mpWords != nullptr); }
+    inline bool isOpen() const noexcept { return (mpWords != nullptr); }
 
     uint16_t readBit() THROWS;
 
@@ -63,27 +63,27 @@ public:
         } else {
             // Regular case: reading 2 or more bits, may have to extract bits from 2 different words.
             // First check for the easy case where all bits are available in the currently loaded word:
-            const uint16_t numBitsConsumed = mCurWordShift;
-            const uint16_t numBitsFree = 16 - numBitsConsumed;
+            const uint16_t numBitsFree = mCurWordBitsLeft;
+            const uint16_t numBitsConsumed = 16 - numBitsFree;
             constexpr uint16_t READ_BITS_MASK = 0xFFFFu >> (16u - NumReadBits);
 
-            if (NumReadBits <= numBitsFree) {
-                const uint16_t bits = (mCurWord >> numBitsConsumed) & READ_BITS_MASK;
-                mCurWordShift = numBitsConsumed + NumReadBits;
+            if (numBitsFree >= NumReadBits) {
+                mCurWordBitsLeft = numBitsFree - NumReadBits;
+                const uint16_t bits = (mCurWord >> mCurWordBitsLeft) & READ_BITS_MASK;
                 return bits;
             }
 
             // Harder case: must split up the read across two 16-bit words; read the first chunk of bits:
-            const uint16_t lowBits = (mCurWord >> numBitsConsumed) & READ_BITS_MASK;
-            const uint16_t numLowBits = 16 - numBitsConsumed;
-            const uint16_t numHighBits = NumReadBits - numLowBits;
-            const uint16_t highBitsMask = READ_BITS_MASK >> numLowBits;
+            const uint16_t highBits = mCurWord & (0xFFFFu >> numBitsConsumed);
+            const uint16_t numHighBits = numBitsFree;
+            const uint16_t numLowBits = NumReadBits - numHighBits;
+            const uint16_t lowBitsMask = READ_BITS_MASK >> numHighBits;
 
             // Get a fresh word and read the rest of the bits
             nextWord();
-            const uint16_t highBits = (mCurWord & highBitsMask) << numLowBits;
-            mCurWordShift = numHighBits;
-            return lowBits | highBits;
+            mCurWordBitsLeft -= numLowBits;
+            const uint16_t lowBits = (mCurWord >> mCurWordBitsLeft) & lowBitsMask;
+            return (highBits << numLowBits) | lowBits;
         }
     }
 
@@ -110,7 +110,7 @@ private:
     uint32_t        mSize;              // How many 16-bit words there are in 'mpWords'
     uint32_t        mCurOffset;         // Which word we are currently on in 'mpWords'
     uint16_t        mCurWord;           // The current word we are reading bits from
-    uint16_t        mCurWordShift;      // How many bits have been consumed from the current word
+    uint16_t        mCurWordBitsLeft;   // How many bits are remaining to read from the current word
 };
 
 END_NAMESPACE(movie)

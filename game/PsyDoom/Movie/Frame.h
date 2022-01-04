@@ -25,7 +25,7 @@ struct FrameSectorHeader {
     uint16_t    frameH;                 // Height of the frame in pixels
     uint16_t    numCodeChunks;          // How many 32-byte blocks it takes to hold all of the uncompressed MDEC code chunks
     uint16_t    _unused1;               // Always '0x3800'
-    uint16_t    quantizationScale;      // The quantization scale for the frame (MDEC decompression var)
+    int16_t     quantizationScale;      // The quantization scale for the frame (MDEC decompression var)
     uint16_t    mdecVersion;            // What decompression method is used, we only support version '2'
     uint32_t    _unused2;               // Always '0'
 
@@ -42,6 +42,7 @@ class Frame {
 public:
     inline uint16_t getWidth() const noexcept { return mFirstSecHdr.frameW; }
     inline uint16_t getHeight() const noexcept { return mFirstSecHdr.frameH; }
+    inline const uint16_t* getPixels() const noexcept { return mpPixelBuffer; }
 
     Frame() noexcept;
     ~Frame() noexcept;
@@ -53,14 +54,18 @@ private:
     Frame& operator = (const Frame& other) = delete;
 
     void ensureDemuxedDataBufferCapacity(const uint32_t capacity) noexcept;
+    void ensurePixelBufferCapacity(const uint32_t capacity) noexcept;
     void getFrameSectorHeader(const CDXASector& sector, FrameSectorHeader& hdrOut) noexcept;
     void bufferFrameData(const CDXASector& sector) noexcept;
     bool demuxFrame(CDXAFileStreamer& cdStreamer, const uint8_t channelNum) noexcept;
+    bool decodeMacroBlocks() noexcept;
 
     FrameSectorHeader   mFirstSecHdr;           // Holds the header for the first sector in the frame, subsequent sectors largely duplicate this info
     std::byte*          mpDemuxedData;          // Buffer holding the de-multiplexed compressed data for the frame
     uint32_t            mDemuxedDataSize;       // How much of the demuxed frame data buffer is occupied
     uint32_t            mDemuxedDataCapacity;   // Size of the demuxed frame data buffer
+    uint16_t*           mpPixelBuffer;          // Pixel buffer for holding decoded frame data
+    uint32_t            mPixelBufferCapacity;   // The number of pixels that the pixel buffer can hold
 };
 
 END_NAMESPACE(movie)
