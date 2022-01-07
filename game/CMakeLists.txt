@@ -246,6 +246,8 @@ set(SOURCE_FILES
     "PsyDoom/Movie/MacroBlockDecoder.h"
     "PsyDoom/Movie/MBlockBitStream.cpp"
     "PsyDoom/Movie/MBlockBitStream.h"
+    "PsyDoom/Movie/XAAdpcmDecoder.cpp"
+    "PsyDoom/Movie/XAAdpcmDecoder.h"
     "PsyDoom/NetPacketReader.h"
     "PsyDoom/NetPacketWriter.h"
     "PsyDoom/Network.cpp"
