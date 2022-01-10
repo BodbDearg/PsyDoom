@@ -34,6 +34,10 @@ private:
     // PSX renderer framebuffers, as copied from the PSX GPU - these are blitted onto the current swapchain image.
     // One for each ringbuffer slot, so we can update while a previous frame's image is still blitting to the screen.
     vgl::MutableTexture mPsxFramebufferTextures[vgl::Defines::RINGBUFFER_SIZE];
+
+    // Whether each of the framebuffer textures has been transferred from 'preinitialized' to the 'general' Vulkan image layout.
+    // This needs to be done the first time they are used.
+    bool mbFbTexInVkGeneralImgLayout[vgl::Defines::RINGBUFFER_SIZE];
 };
 
-#endif
+#endif  // #if PSYDOOM_VULKAN_RENDERER

@@ -67,7 +67,7 @@ union Color24F {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// Represents a 15-bit RGB555 color used by the GPU plus 1 bit that says whether blending is enabled for the pixel.
+// Represents a 15-bit BGR555 color used by the GPU plus 1 bit that says whether blending is enabled for the pixel.
 // This is used as a dest/output format for the framebuffer and also as an input format for 16-bit textures & CLUTs.
 //----------------------------------------------------------------------------------------------------------------------
 union Color16 {
@@ -76,7 +76,7 @@ union Color16 {
         uint16_t r : 5;
         uint16_t g : 5;
         uint16_t b : 5;
-        uint16_t t : 1;     // Blending/semi-transparency flag: if set then blend the pixel, if drawing a blended primitive
+        uint16_t t : 1;     // High bit: blending/semi-transparency flag. If set then blend the pixel, if drawing a blended primitive.
     } comp;
 
     // The full 16-bits of the color

@@ -20,7 +20,7 @@ BEGIN_NAMESPACE(MacroBlockDecoder)
 bool decode(
     MBlockBitStream& inputStream,
     const int16_t quantizationScale,
-    uint16_t pPixelsOut[PIXELS_H][PIXELS_W]
+    uint32_t pPixelsOut[PIXELS_H][PIXELS_W]
 ) noexcept {
     ASSERT(pPixelsOut);
 
@@ -49,7 +49,7 @@ bool decode(
     if (!bDecodedAllBlocksOk)
         return false;
 
-    // Process each pixel and convert to the PlayStation's XRGB1555 format
+    // Process each pixel and convert to ABGR8888 format
     for (uint32_t y = 0; y < PIXELS_H; ++y) {
         for (uint32_t x = 0; x < PIXELS_W; ++x) {
             // Firstly get the chroma red and blue values as well as the luma value
@@ -58,17 +58,17 @@ bool decode(
             const Block& lumaBlock = blockY[(y / 8) * 2 + (x / 8)];
             const float lumaF = (float)(lumaBlock.mValues[y % 8][x % 8] + 128);     // Note: +128 for JPEG 'level shift' (see jpsxdec docs for more on this)
 
-            // Convert YCbCr to RGB in the manner done by the PSX MDEC chip and clamp between 0 and 255
-            const float colorRf = std::clamp(lumaF + 1.402f * chromaRf, 0.0f, 255.0f);
-            const float colorGf = std::clamp(lumaF - 0.3437f * chromaBf - 0.7143f * chromaRf, 0.0f, 255.0f);
-            const float colorBf = std::clamp(lumaF + 1.772f * chromaBf, 0.0f, 255.0f);
+            // Convert YCbCr to RGB and clamp between 0 and 255
+            const float colorRf = std::clamp(lumaF + 1.4020f * chromaRf + 0.5f, 0.0f, 255.0f);
+            const float colorGf = std::clamp(lumaF - 0.3437f * chromaBf - 0.7143f * chromaRf + 0.5f, 0.0f, 255.0f);
+            const float colorBf = std::clamp(lumaF + 1.7720f * chromaBf + 0.5f, 0.0f, 255.0f);
 
-            // Convert to 5-bit RGB and save the output pixel
-            const uint16_t colorR = (uint16_t) colorRf >> 3;
-            const uint16_t colorG = (uint16_t) colorGf >> 3;
-            const uint16_t colorB = (uint16_t) colorBf >> 3;
+            // Convert to 8-bit RGB and save the output pixel in ABGR8888 format
+            const uint32_t colorR = (uint32_t) colorRf;
+            const uint32_t colorG = (uint32_t) colorGf;
+            const uint32_t colorB = (uint32_t) colorBf;
 
-            pPixelsOut[y][x] = (colorR << 10) | (colorG << 5) | colorB;
+            pPixelsOut[y][x] = 0xFF000000 | (colorB << 16) | (colorG << 8) | colorR;
         }
     }
 

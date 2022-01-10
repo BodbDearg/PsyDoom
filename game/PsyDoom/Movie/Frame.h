@@ -42,7 +42,7 @@ class Frame {
 public:
     inline uint16_t getWidth() const noexcept { return mFirstSecHdr.frameW; }
     inline uint16_t getHeight() const noexcept { return mFirstSecHdr.frameH; }
-    inline const uint16_t* getPixels() const noexcept { return mpPixelBuffer; }
+    inline const uint32_t* getPixels() const noexcept { return mpPixelBuffer; }
 
     Frame() noexcept;
     ~Frame() noexcept;
@@ -64,7 +64,7 @@ private:
     std::byte*          mpDemuxedData;          // Buffer holding the de-multiplexed compressed data for the frame
     uint32_t            mDemuxedDataSize;       // How much of the demuxed frame data buffer is occupied
     uint32_t            mDemuxedDataCapacity;   // Size of the demuxed frame data buffer
-    uint16_t*           mpPixelBuffer;          // Pixel buffer for holding decoded frame data
+    uint32_t*           mpPixelBuffer;          // Pixel buffer for holding decoded frame data (32-bit ABGR8888)
     uint32_t            mPixelBufferCapacity;   // The number of pixels that the pixel buffer can hold
 };
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Doom/doomdef.h"
-#include "PsyDoom/Buffer.h"
+#include "PsyDoom/ResizableBuffer.h"
 #include "PsyQ/LIBGPU.h"
 
 #include <cstddef>
@@ -77,7 +77,7 @@ extern texture_t            gTex_CONNECT;
 
 // PsyDoom: the temporary buffer can now be resized to any size
 #if PSYDOOM_LIMIT_REMOVING
-    extern Buffer gTmpBuffer;
+    extern ResizableBuffer gTmpBuffer;
 #else
     extern std::byte gTmpBuffer[TMP_BUFFER_SIZE];
 #endif

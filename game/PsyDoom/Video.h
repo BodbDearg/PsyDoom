@@ -8,6 +8,8 @@ struct SDL_Window;
 
 BEGIN_NAMESPACE(Video)
 
+class IVideoBackend;
+
 // The original render/draw and output/display resolution of the game: the game rendered to a 256x240 framebuffer but stretched this image to
 // approximately 292.57x240 in square pixel terms - even though the game asks for a 320x200 'pixel' display (CRTs did not have pixels).
 //
@@ -46,5 +48,6 @@ void getClassicFramebufferWindowRect(
 
 void displayFramebuffer() noexcept;
 bool isUsingVulkanRenderPath() noexcept;
+IVideoBackend& getCurrentBackend() noexcept;
 
 END_NAMESPACE(Video)

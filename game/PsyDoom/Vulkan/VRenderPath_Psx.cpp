@@ -20,6 +20,7 @@ VRenderPath_Psx::VRenderPath_Psx() noexcept
     : mbIsValid(false)
     , mpDevice(nullptr)
     , mPsxFramebufferTextures{}
+    , mbFbTexInVkGeneralImgLayout{}
 {
 }
 
@@ -43,9 +44,13 @@ void VRenderPath_Psx::init(vgl::LogicalDevice& device, const VkFormat psxFramebu
     ASSERT((psxFramebufferFormat == VK_FORMAT_A1R5G5B5_UNORM_PACK16) || (psxFramebufferFormat == VK_FORMAT_B8G8R8A8_UNORM));
 
     // Initialize the PSX framebuffer textures used to hold the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer
-    for (vgl::MutableTexture& psxFbTex : mPsxFramebufferTextures) {
+    for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
+        vgl::MutableTexture& psxFbTex = mPsxFramebufferTextures[i];
+
         if (!psxFbTex.initAs2dTexture(device, psxFramebufferFormat, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y))
             FatalErrors::raise("Failed to create a Vulkan texture for the classic PSX renderer's framebuffer!");
+
+        mbFbTexInVkGeneralImgLayout[i] = false;     // Initially the texture is in the 'preinitialized' layout
     }
 
     // Now initialized
@@ -61,8 +66,9 @@ void VRenderPath_Psx::destroy() noexcept {
 
     mbIsValid = false;
 
-    for (vgl::MutableTexture& tex : mPsxFramebufferTextures) {
-        tex.destroy(true);
+    for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
+        mbFbTexInVkGeneralImgLayout[i] = false;
+        mPsxFramebufferTextures[i].destroy(true);
     }
 
     mpDevice = nullptr;
@@ -87,16 +93,17 @@ void VRenderPath_Psx::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecord
     ASSERT(swapchain.isValid());
     ASSERT(swapchain.getAcquiredImageIdx() < swapchain.getLength());
 
-    // Transition the PSX framebuffer to general in preparation for writing
+    // Transition the PSX framebuffer from the 'preinitialized' layout to 'general' in preparation for blitting.
+    // Note that this only needs to be done once per framebuffer image.
     vgl::LogicalDevice& device = *mpDevice;
     const uint32_t ringbufferIdx = device.getRingbufferMgr().getBufferIndex();
 
-    {
+    if (!mbFbTexInVkGeneralImgLayout[ringbufferIdx]) {
         vgl::MutableTexture& psxFbTexture = mPsxFramebufferTextures[ringbufferIdx];
 
         VkImageMemoryBarrier imgBarrier = {};
         imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
         imgBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
         imgBarrier.image = psxFbTexture.getVkImage();
         imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -111,6 +118,9 @@ void VRenderPath_Psx::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecord
             1,
             &imgBarrier
         );
+
+        // Don't do this transition again!
+        mbFbTexInVkGeneralImgLayout[ringbufferIdx] = true;
     }
 
     // Transition the swapchain image to transfer destination optimal in preparation for blitting

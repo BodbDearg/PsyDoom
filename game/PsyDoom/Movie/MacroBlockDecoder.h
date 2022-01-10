@@ -16,7 +16,7 @@ static constexpr uint32_t PIXELS_H = 16;    // Height of the decoded block in pi
 bool decode(
     MBlockBitStream& inputStream,
     const int16_t quantizationScale,
-    uint16_t pPixelsOut[PIXELS_H][PIXELS_W]
+    uint32_t pPixelsOut[PIXELS_H][PIXELS_W]     // 32-bit ABGR8888 format
 ) noexcept;
 
 END_NAMESPACE(MacroBlockDecoder)

@@ -57,4 +57,4 @@ private:
     vgl::RenderTexture*             mpOldFbImagesToLayout[2];       // Old framebuffer images/textures which need to be changed to 'shader read only' layout at the start of the next frame, or null if no transition is needed
 };
 
-#endif
+#endif  // #if PSYDOOM_VULKAN_RENDERER

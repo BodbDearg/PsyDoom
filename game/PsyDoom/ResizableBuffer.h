@@ -8,19 +8,19 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Provides a simple byte buffer that can be resized if required
 //------------------------------------------------------------------------------------------------------------------------------------------
-class Buffer {
+class ResizableBuffer {
 public:
-    inline Buffer() noexcept
+    inline ResizableBuffer() noexcept
         : mpBytes(nullptr)
         , mSize(0)
     {
     }
 
-    inline Buffer(size_t size) noexcept : Buffer() {
+    inline ResizableBuffer(size_t size) noexcept : ResizableBuffer() {
         resize(size);
     }
 
-    inline Buffer(Buffer&& other) noexcept
+    inline ResizableBuffer(ResizableBuffer&& other) noexcept
         : mpBytes(other.mpBytes)
         , mSize(other.mSize)
     {
@@ -28,7 +28,7 @@ public:
         other.mSize = 0;
     }
 
-    inline ~Buffer() noexcept {
+    inline ~ResizableBuffer() noexcept {
         free();
     }
 
@@ -93,9 +93,9 @@ public:
 
 private:
     // These operations are disallowed
-    Buffer(const Buffer& other) = delete;
-    Buffer& operator = (const Buffer& other) = delete;
-    Buffer& operator = (Buffer&& other) = delete;
+    ResizableBuffer(const ResizableBuffer& other) = delete;
+    ResizableBuffer& operator = (const ResizableBuffer& other) = delete;
+    ResizableBuffer& operator = (ResizableBuffer&& other) = delete;
 
     std::byte*  mpBytes;
     size_t      mSize;

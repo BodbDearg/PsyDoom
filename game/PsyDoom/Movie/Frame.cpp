@@ -105,7 +105,7 @@ void Frame::ensurePixelBufferCapacity(const uint32_t capacity) noexcept {
         return;
 
     mPixelBufferCapacity = capacity;
-    mpPixelBuffer = (uint16_t*) std::realloc(mpPixelBuffer, capacity * sizeof(uint16_t));
+    mpPixelBuffer = (uint32_t*) std::realloc(mpPixelBuffer, capacity * sizeof(uint32_t));
 
     if (!mpDemuxedData) {
         FatalErrors::outOfMemory();
@@ -246,7 +246,7 @@ bool Frame::decodeMacroBlocks() noexcept {
     for (uint32_t bx = 0; bx < blocksW; ++bx) {
         for (uint32_t by = 0; by < blocksH; ++by) {
             // Decode this block of pixels and abort if failed
-            uint16_t blockPixels[16][16];
+            uint32_t blockPixels[16][16];
 
             if (!MacroBlockDecoder::decode(frameDataStream, mFirstSecHdr.quantizationScale, blockPixels))
                 return false;

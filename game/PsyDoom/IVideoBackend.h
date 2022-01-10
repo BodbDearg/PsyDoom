@@ -3,10 +3,13 @@
 #include "Macros.h"
 
 #include <cstdint>
+#include <memory>
 
 struct SDL_Window;
 
 BEGIN_NAMESPACE(Video)
+
+class IVideoSurface;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Interface for a backend that supports presentation of the current framebuffer to the screen.
@@ -28,6 +31,25 @@ public:
 
     // Displays the current framebuffer to the screen
     virtual void displayFramebuffer() noexcept = 0;
+
+    // Displays the specified surface to the screen, which must be a surface for this backend.
+    // This display method is slow, but sufficient for displaying video frames and intro logos.
+    // The surface is displayed at the specified location and with the specified size and optionally with bi-linear filtering.
+    // Areas of the screen not covered by the surface are displayed black.
+    virtual void displaySurface(
+        IVideoSurface& surface,
+        const int32_t displayX,
+        const int32_t displayY,
+        const uint32_t displayW,
+        const uint32_t displayH,
+        const bool bUseFiltering
+    ) noexcept = 0;
+
+    // Get the size of the destination screen/window in pixels
+    virtual void getScreenSizeInPixels(uint32_t& width, uint32_t& height) noexcept = 0;
+
+    // Create a surface for the video backend that can be manually populated
+    [[nodiscard]] virtual std::unique_ptr<IVideoSurface> createSurface(const uint32_t width, const uint32_t height) noexcept = 0;
 };
 
 END_NAMESPACE(Video)

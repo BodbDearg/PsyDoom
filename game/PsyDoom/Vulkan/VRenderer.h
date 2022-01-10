@@ -16,6 +16,7 @@ namespace vgl {
 }
 
 class IVRendererPath;
+class VRenderPath_Blit;
 class VRenderPath_Crossfade;
 class VRenderPath_Main;
 class VRenderPath_Psx;
@@ -31,6 +32,7 @@ extern vgl::VkFuncs             gVkFuncs;
 extern VRenderPath_Psx          gRenderPath_Psx;
 extern VRenderPath_Main         gRenderPath_Main;
 extern VRenderPath_Crossfade    gRenderPath_Crossfade;
+extern VRenderPath_Blit         gRenderPath_Blit;
 extern uint32_t                 gPresentSurfaceW;
 extern uint32_t                 gPresentSurfaceH;
 extern uint32_t                 gFramebufferW;

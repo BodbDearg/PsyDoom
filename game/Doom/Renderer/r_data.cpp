@@ -9,7 +9,7 @@
 
 #include <cstring>
 
-// Structure for a palette in the game: contains 256 RGBA5551 color values.
+// Structure for a palette in the game: contains 256 XBGR1555 color values.
 struct palette_t {
     uint16_t colors[256];
 };

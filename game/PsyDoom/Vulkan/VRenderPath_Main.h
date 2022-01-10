@@ -56,4 +56,4 @@ private:
     vgl::Framebuffer    mFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
 };
 
-#endif
+#endif  // #if PSYDOOM_VULKAN_RENDERER

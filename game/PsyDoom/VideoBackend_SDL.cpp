@@ -5,6 +5,7 @@
 #include "Gpu.h"
 #include "PsxVm.h"
 #include "Video.h"
+#include "VideoSurface_SDL.h"
 
 #include <algorithm>
 #include <cmath>
@@ -112,6 +113,73 @@ void VideoBackend_SDL::displayFramebuffer() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Displays the specified surface to the screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VideoBackend_SDL::displaySurface(
+    IVideoSurface& surface,
+    const int32_t displayX,
+    const int32_t displayY,
+    const uint32_t displayW,
+    const uint32_t displayH,
+    const bool bUseFiltering
+) noexcept {
+    // Must be an SDL video surface!
+    ASSERT(dynamic_cast<VideoSurface_SDL*>(&surface));
+    VideoSurface_SDL& sdlSurface = static_cast<VideoSurface_SDL&>(surface);
+
+    // Decide source and destination rectangles
+    SDL_Rect srcRect = {};
+    srcRect.w = (int) sdlSurface.getWidth();
+    srcRect.h = (int) sdlSurface.getHeight();
+
+    SDL_Rect dstRect = {};
+    dstRect.x = displayX;
+    dstRect.y = displayY;
+    dstRect.w = (int) displayW;
+    dstRect.h = (int) displayH;
+
+    // Clear the screen and blit the surface to the display using the specified scaling.
+    // If there is no valid texture then just clear the screen.
+    SDL_RenderClear(mpRenderer);
+    SDL_Texture* const pSdlTexture = sdlSurface.getTexture();
+
+    if (pSdlTexture) {
+        SDL_SetTextureScaleMode(pSdlTexture, (bUseFiltering) ? SDL_ScaleModeLinear : SDL_ScaleModeNearest);
+        SDL_RenderCopy(mpRenderer, pSdlTexture, &srcRect, &dstRect);
+    }
+
+    // Present the rendered frame
+    SDL_RenderPresent(mpRenderer);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gives the size of the swapchain/window in pixels
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VideoBackend_SDL::getScreenSizeInPixels(uint32_t& width, uint32_t& height) noexcept {
+    int sdlWidth = 0;
+    int sdlHeight = 0;
+
+    if (mpRenderer) {
+        if (SDL_GetRendererOutputSize(mpRenderer, &sdlWidth, &sdlHeight) != 0) {
+            // Just to be safe, clear these again on an error...
+            sdlWidth = 0;
+            sdlHeight = 0;
+        }
+    }
+
+    width = sdlWidth;
+    height = sdlHeight;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Creates and returns an SDL format video surface.
+// Fails if renderers have not been initialized.
+//------------------------------------------------------------------------------------------------------------------------------------------
+std::unique_ptr<IVideoSurface> VideoBackend_SDL::createSurface(const uint32_t width, const uint32_t height) noexcept {
+    return (mpRenderer) ? std::make_unique<VideoSurface_SDL>(*mpRenderer, width, height) : std::unique_ptr<IVideoSurface>();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Lock the SDL texture we upload the PSX framebuffer to for writing
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VideoBackend_SDL::lockFramebufferTexture() noexcept {
@@ -145,30 +213,23 @@ void VideoBackend_SDL::copyPsxToSdlFramebufferTexture() noexcept {
 
     // Copy the framebuffer
     Gpu::Core& gpu = PsxVm::gGpu;
-    const uint16_t* const vramPixels = gpu.pRam;
+    const Gpu::Color16* const vramPixels = reinterpret_cast<const Gpu::Color16*>(gpu.pRam);
     uint32_t* pDstPixel = mpFramebufferPixels;
 
     for (uint32_t y = 0; y < ORIG_DRAW_RES_Y; ++y) {
-        const uint16_t* const rowPixels = vramPixels + ((intptr_t) y + gpu.displayAreaY) * gpu.ramPixelW;
+        const Gpu::Color16* const rowPixels = vramPixels + ((intptr_t) y + gpu.displayAreaY) * gpu.ramPixelW;
         const uint32_t xStart = (uint32_t) gpu.displayAreaX;
         const uint32_t xEnd = xStart + ORIG_DRAW_RES_X;
         ASSERT(xEnd <= gpu.ramPixelW);
 
         // Note: don't bother doing multiple pixels at a time - compiler is smart and already optimizes this to use SIMD
-        for (uint32_t x = xStart; x < xEnd; ++x) {
-            const uint16_t srcPixel = rowPixels[x];
-            const uint32_t r = ((srcPixel >> 10) & 0x1F) << 3;
-            const uint32_t g = ((srcPixel >> 5 ) & 0x1F) << 3;
-            const uint32_t b = ((srcPixel >> 0 ) & 0x1F) << 3;
+        for (uint32_t x = xStart; x < xEnd; ++x, ++pDstPixel) {
+            const Gpu::Color16 srcPixel = rowPixels[x];
+            const uint32_t r = (uint32_t) srcPixel.comp.r << 3;
+            const uint32_t g = (uint32_t) srcPixel.comp.g << 3;
+            const uint32_t b = (uint32_t) srcPixel.comp.b << 3;
 
-            *pDstPixel = (
-               0xFF000000 |
-               (r << 16) |
-               (g << 8 ) |
-               (b << 0 )
-            );
-
-            ++pDstPixel;
+            *pDstPixel = (0xFF000000 | (b << 16) | (g << 8 ) | (r << 0));
         }
     }
 }
@@ -218,10 +279,10 @@ void VideoBackend_SDL::presentSdlFramebufferTexture() noexcept {
     srcRect.h = Video::ORIG_DRAW_RES_Y - Video::gTopOverscan - Video::gBotOverscan;
 
     SDL_Rect dstRect = {};
-    dstRect.x = (int32_t) outputRectX;
-    dstRect.y = (int32_t) outputRectY;
-    dstRect.w = (int32_t) std::ceil(outputRectW);
-    dstRect.h = (int32_t) std::ceil(outputRectH);
+    dstRect.x = (int) outputRectX;
+    dstRect.y = (int) outputRectY;
+    dstRect.w = (int) std::ceil(outputRectW);
+    dstRect.h = (int) std::ceil(outputRectH);
 
     // Done writing to the locked framebuffer, update the texture with whatever writes we made
     unlockFramebufferTexture();

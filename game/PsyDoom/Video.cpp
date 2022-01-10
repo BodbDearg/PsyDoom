@@ -198,6 +198,23 @@ void shutdownVideo() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the current window size in pixels (NOT points!)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void getWindowSizeInPixels(uint32_t& width, uint32_t& height) noexcept {
+    // Get the SDL renderer associated with the window and from that get the pixel size
+    SDL_Renderer* const pRenderer = (gpSdlWindow) ? SDL_GetRenderer(gpSdlWindow) : nullptr;
+    int sdlWidth = 0;
+    int sdlHeight = 0;
+
+    if (pRenderer) {
+        SDL_GetRendererOutputSize(pRenderer, &sdlWidth, &sdlHeight);
+    }
+
+    width = sdlWidth;
+    height = sdlHeight;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // This function determines where in the window the framebuffer for the classic PSX renderer should be output to.
 // Considers the current window size (specified in pixels) and user scaling settings.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -277,6 +294,18 @@ bool isUsingVulkanRenderPath() noexcept {
     #endif
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the currently active video backend
+//------------------------------------------------------------------------------------------------------------------------------------------
+IVideoBackend& getCurrentBackend() noexcept {
+    #if PSYDOOM_VULKAN_RENDERER
+        if (gBackendType == BackendType::Vulkan)
+            return gVideoBackend_Vulkan;
+    #endif
+
+    return gVideoBackend_SDL;
 }
 
 END_NAMESPACE(Video)

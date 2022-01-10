@@ -109,7 +109,7 @@ texture_t gTex_CONNECT;
 // PsyDoom: the temporary buffer can now be resized to any size.
 // Start off with a plentiful 1 MiB however...
 #if PSYDOOM_LIMIT_REMOVING
-    Buffer gTmpBuffer(1024 * 1024);
+    ResizableBuffer gTmpBuffer(1024 * 1024);
 #else
     // A 64-KiB buffer used for WAD loading and other stuff
     std::byte gTmpBuffer[TMP_BUFFER_SIZE];

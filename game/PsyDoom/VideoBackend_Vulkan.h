@@ -22,6 +22,18 @@ public:
     virtual void destroyRenderers() noexcept override;
     virtual void displayFramebuffer() noexcept override;
 
+    virtual void displaySurface(
+        IVideoSurface& surface,
+        const int32_t displayX,
+        const int32_t displayY,
+        const uint32_t displayW,
+        const uint32_t displayH,
+        const bool bUseFiltering
+    ) noexcept override;
+
+    virtual void getScreenSizeInPixels(uint32_t& width, uint32_t& height) noexcept override;
+    [[nodiscard]] virtual std::unique_ptr<IVideoSurface> createSurface(const uint32_t width, const uint32_t height) noexcept override;
+
 private:
     SDL_Window*     mpSdlWindow;            // The SDL window used
 };

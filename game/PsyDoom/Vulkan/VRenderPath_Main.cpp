@@ -220,7 +220,7 @@ void VRenderPath_Main::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorde
 
     vgl::LogicalDevice& device = *mpDevice;
 
-    // Finish up drawing for the 'occluder plane' and regular 'draw' subpasses
+    // Finish up drawing for the main rendering subpass
     VDrawing::endFrame(cmdRec);
 
     // Do an MSAA resolve subpass if MSAA is enabled
