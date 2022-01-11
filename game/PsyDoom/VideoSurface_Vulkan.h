@@ -1,5 +1,7 @@
 #include "IVideoSurface.h"
 
+#if PSYDOOM_VULKAN_RENDERER
+
 #include "MutableTexture.h"
 
 BEGIN_NAMESPACE(Video)
@@ -28,3 +30,5 @@ private:
 };
 
 END_NAMESPACE(Video)
+
+#endif  // #if PSYDOOM_VULKAN_RENDERER

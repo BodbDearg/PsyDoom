@@ -53,6 +53,7 @@ bool VideoBackend_Vulkan::isBackendSupported() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 VideoBackend_Vulkan::VideoBackend_Vulkan() noexcept 
     : mpSdlWindow(nullptr)
+    , mpDispExtSurfOldRenderPath(nullptr)
 {
 }
 
@@ -101,9 +102,33 @@ void VideoBackend_Vulkan::displayFramebuffer() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Performs setup prior to displaying external surfaces
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VideoBackend_Vulkan::beginExternalSurfaceDisplay() noexcept {
+    // Finish up the current frame that was automatically started and remember the render path used.
+    // Frames will be submitted manually via 'displayExternalSurface()' from here on in:
+    mpDispExtSurfOldRenderPath = &VRenderer::getActiveRenderPath();
+    VRenderer::endFrame();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Performs cleanup once we are done displaying external surfaces
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VideoBackend_Vulkan::endExternalSurfaceDisplay() noexcept {
+    // Go back to automatically starting frames and restore the previous render path.
+    // No longer submitting frames manually via 'displayExternalSurface()'.
+    if (mpDispExtSurfOldRenderPath) {
+        VRenderer::setNextRenderPath(*mpDispExtSurfOldRenderPath);
+        mpDispExtSurfOldRenderPath = nullptr;
+    }
+
+    VRenderer::beginFrame();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Displays the specified surface to the screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VideoBackend_Vulkan::displaySurface(
+void VideoBackend_Vulkan::displayExternalSurface(
     IVideoSurface& surface,
     const int32_t displayX,
     const int32_t displayY,
@@ -115,9 +140,8 @@ void VideoBackend_Vulkan::displaySurface(
     ASSERT(dynamic_cast<VideoSurface_Vulkan*>(&surface));
     VideoSurface_Vulkan& vulkanSurface = static_cast<VideoSurface_Vulkan&>(surface);
 
-    // Finish up current drawing and switch to the blit render path for the next frame
-    VRenderer::endFrame();
-    IVRendererPath& prevRenderPath = VRenderer::getActiveRenderPath();
+    // Note: it's assumed that no frame is currently active, hence no 'endFrame()' call.
+    // This will always be the case if 'beginExternalSurfaceDisplay()' is called prior to calling this function for a series of frames.
     VRenderer::setNextRenderPath(VRenderer::gRenderPath_Blit);
     const bool bCanDraw = VRenderer::beginFrame();
 
@@ -247,13 +271,9 @@ void VideoBackend_Vulkan::displaySurface(
         }
     }
 
-    // Finish up and switch back to the previous render path for the next frame
-    VRenderer::endFrame();
-    VRenderer::setNextRenderPath(prevRenderPath);
-    VRenderer::beginFrame();
-
-    // Wait for all rendering to finish, so the surface can be used freely again without worrying about synchronization.
+    // Finish up and wait for all rendering to complete so the surface can be used freely again without worrying about synchronization.
     // This is of course suboptimal, but this routine is used for things that don't need much performance.
+    VRenderer::endFrame();
     VRenderer::gDevice.waitUntilDeviceIdle();
 }
 

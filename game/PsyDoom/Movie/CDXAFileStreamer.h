@@ -46,7 +46,7 @@ struct CDXAHeader {
     }
 
     inline uint32_t getSampleRate() const noexcept {
-        return (codingInfo & 0xC) ? 37800 : 18900;      // Stored in bits 2..3: should be '0' for 18.9 kHz and '1' for 37.8 kHz
+        return (codingInfo & 0xC) ? 18900 : 37800;      // Stored in bits 2..3: should be '0' for 37.8 kHz and '1' for 18.9 kHz
     }
 
     inline uint32_t getBitsPerSample() const noexcept {

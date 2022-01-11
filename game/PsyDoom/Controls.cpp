@@ -197,6 +197,38 @@ static bool isInputJustPressed(const InputSrc src) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the given input has just been released.
+// Note: doesn't need to consider modifiers for this particular query - we can just use the raw inputs.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool isInputJustReleased(const InputSrc src) noexcept {
+    if (src.device == InputSrc::KEYBOARD_KEY) {
+        return Input::isKeyboardKeyJustReleased(src.input);
+    }
+    else if (src.device == InputSrc::MOUSE_BUTTON) {
+        return Input::isMouseButtonJustReleased((MouseButton) src.input);
+    }
+    else if (src.device == InputSrc::MOUSE_WHEEL) {
+        // This would be an odd binding but count any mouse wheel movement as the button being just released.
+        // It's wiped the frame after it is used...
+        return ((Input::getMouseWheelAxisMovement(0) != 0) || (Input::getMouseWheelAxisMovement(1) != 0));
+    }
+    else if ((src.device == InputSrc::GAMEPAD_AXIS) || (src.device == InputSrc::GAMEPAD_BUTTON)) {
+        return Input::isGamepadInputJustReleased((GamepadInput) src.input);
+    }
+    else if (src.device == InputSrc::JOYSTICK_AXIS) {
+        return Input::isJoystickAxisJustReleased(src.input);
+    }
+    else if (src.device == InputSrc::JOYSTICK_BUTTON) {
+        return Input::isJoystickButtonJustReleased(src.input);
+    }
+    else if (src.device == InputSrc::JOYSTICK_HAT) {
+        return Input::isJoystickHatJustReleased(src.input);
+    }
+
+    return false;   // Null or unsupported input source
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Get the current input for a particular control binding in floating point format.
 // If there are multiple sources then their inputs are combined additively.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -504,6 +536,26 @@ bool isJustPressed(const Binding binding) noexcept {
             const InputSrc inputSrc = gInputSources[inputRange.startIndex + i];
 
             if (isInputJustPressed(inputSrc))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the given input binding has just been released - useful for toggle type actions
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isJustReleased(const Binding binding) noexcept {
+    uint16_t bindingIdx = (uint16_t) binding;
+
+    if (bindingIdx < (uint16_t) Binding::NUM_BINDINGS) {
+        const InputSrcRange inputRange = gBindings[bindingIdx];
+
+        for (uint16_t i = 0; i < inputRange.size; ++i) {
+            const InputSrc inputSrc = gInputSources[inputRange.startIndex + i];
+
+            if (isInputJustReleased(inputSrc))
                 return true;
         }
     }

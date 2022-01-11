@@ -48,6 +48,9 @@ struct SectorAudio {
     // This is a combined count for the left and right channels, and is always a multiple of '2'.
     uint32_t numSamples;
 
+    // The sample rate for the decoded audio
+    uint32_t sampleRate;
+
     // The decoded samples for the sector, in interleaved stereo format
     int16_t samples[SECTOR_MAX_ADPCM_SAMPLES];
 };

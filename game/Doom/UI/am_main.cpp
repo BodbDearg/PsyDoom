@@ -240,11 +240,13 @@ void AM_Drawer() noexcept {
 
     // PsyDoom: if the Vulkan renderer is active then delegate automap drawing to that.
     // Otherwise compute the player map transforms to use, taking into account framerate independent movement.
-    #if PSYDOOM_MODS && PSYDOOM_VULKAN_RENDERER
-        if (Video::isUsingVulkanRenderPath()) {
-            RV_DrawAutomap();
-            return;
-        }
+    #if PSYDOOM_MODS
+        #if PSYDOOM_VULKAN_RENDERER
+            if (Video::isUsingVulkanRenderPath()) {
+                RV_DrawAutomap();
+                return;
+            }
+        #endif
 
         AM_CalcPlayerMapTransforms();
     #endif

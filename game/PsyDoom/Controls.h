@@ -87,6 +87,7 @@ void parseBinding(const Binding binding, const char* str) noexcept;
 float getFloat(const Binding binding) noexcept;
 bool getBool(const Binding binding) noexcept;
 bool isJustPressed(const Binding binding) noexcept;
+bool isJustReleased(const Binding binding) noexcept;
 uint16_t getPSXCheatButtonBits() noexcept;
 
 END_NAMESPACE(Controls)

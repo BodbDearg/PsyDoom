@@ -122,9 +122,15 @@ void STOP_Title([[maybe_unused]] const gameaction_t exitAction) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Title() noexcept {
     // End the title screen if any buttons are pressed.
-    // PsyDoom: just accept menu start/ok/back:
+    // PsyDoom: just accept menu start/ok/back but require them to be just released:
     #if PSYDOOM_MODS
-        if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
+        const bool bExitJustReleased = (
+            ((!gTickInputs[0].bMenuOk)    && gOldTickInputs[0].bMenuOk) ||
+            ((!gTickInputs[0].bMenuStart) && gOldTickInputs[0].bMenuStart) ||
+            ((!gTickInputs[0].bMenuBack)  && gOldTickInputs[0].bMenuBack)
+        );
+
+        if (bExitJustReleased)
             return ga_exit;
     #else
         if (gTicButtons[0] != 0)

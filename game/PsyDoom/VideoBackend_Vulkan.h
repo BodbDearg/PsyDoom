@@ -4,6 +4,8 @@
 
 #include "IVideoBackend.h"
 
+class IVRendererPath;
+
 BEGIN_NAMESPACE(Video)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -22,7 +24,10 @@ public:
     virtual void destroyRenderers() noexcept override;
     virtual void displayFramebuffer() noexcept override;
 
-    virtual void displaySurface(
+    virtual void beginExternalSurfaceDisplay() noexcept override;
+    virtual void endExternalSurfaceDisplay() noexcept override;
+
+    virtual void displayExternalSurface(
         IVideoSurface& surface,
         const int32_t displayX,
         const int32_t displayY,
@@ -35,7 +40,8 @@ public:
     [[nodiscard]] virtual std::unique_ptr<IVideoSurface> createSurface(const uint32_t width, const uint32_t height) noexcept override;
 
 private:
-    SDL_Window*     mpSdlWindow;            // The SDL window used
+    SDL_Window*         mpSdlWindow;                    // The SDL window used
+    IVRendererPath*     mpDispExtSurfOldRenderPath;     // The old render path used prior to displaying external surfaces manually (restored on completion of that)
 };
 
 END_NAMESPACE(Video)

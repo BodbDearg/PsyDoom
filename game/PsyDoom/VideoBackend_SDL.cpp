@@ -113,9 +113,16 @@ void VideoBackend_SDL::displayFramebuffer() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// These functions are no-ops for the SDL backend.
+// Don't need to do anything special to display an external surface at any given time.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void VideoBackend_SDL::beginExternalSurfaceDisplay() noexcept {}
+void VideoBackend_SDL::endExternalSurfaceDisplay() noexcept {}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Displays the specified surface to the screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VideoBackend_SDL::displaySurface(
+void VideoBackend_SDL::displayExternalSurface(
     IVideoSurface& surface,
     const int32_t displayX,
     const int32_t displayY,

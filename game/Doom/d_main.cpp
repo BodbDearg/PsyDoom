@@ -20,6 +20,7 @@
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapInfo.h"
+#include "PsyDoom/Movie/MoviePlayer.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxPadButtons.h"
@@ -75,6 +76,21 @@ bool gbDidAbortGame = false;
 static int32_t gDebugDrawStringXPos;
 static int32_t gDebugDrawStringYPos;
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: play the intro movie and logos.
+// These were originally done outside of 'PSXDOOM.EXE' in the main launcher executable.
+// For PsyDoom however this logic needs to reside all within the same executable.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void D_PlayIntros() noexcept {
+    // Play the intro movie (Williams logo)
+    if ((Game::gGameType == GameType::Doom) || (Game::gGameType == GameType::FinalDoom)) {
+        const float movieFps = (Game::gGameVariant == GameVariant::PAL) ? 25.0f : 30.0f;
+        movie::MoviePlayer::play("PSXDOOM/ABIN/MOVIE.STR", movieFps);
+    }
+}
+#endif  // #if PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Main DOOM entry point.
 // Bootstraps the engine and platform specific code and runs the game loops.
@@ -118,12 +134,14 @@ void D_DoomMain() noexcept {
 
     ST_Init();
 
-    // PsyDoom: new cleanup logic before we exit
+    // PsyDoom: new cleanup logic before we exit and playing intro movies and logos
     #if PSYDOOM_MODS
         const auto dmainCleanup = finally([]() noexcept {
             MapInfo::shutdown();
             W_Shutdown();
         });
+
+        D_PlayIntros();
     #endif
 
     // Clearing some global tick counters and inputs

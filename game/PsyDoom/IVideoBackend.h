@@ -32,11 +32,22 @@ public:
     // Displays the current framebuffer to the screen
     virtual void displayFramebuffer() noexcept = 0;
 
-    // Displays the specified surface to the screen, which must be a surface for this backend.
-    // This display method is slow, but sufficient for displaying video frames and intro logos.
+    // Must be called prior to calling 'displayExternalSurface' for a succession of images.
+    // Performs any setup for that needs to be done for that process.
+    virtual void beginExternalSurfaceDisplay() noexcept = 0;
+
+    // Must be called after calling 'displayExternalSurface' for a succession of images.
+    // Performs any cleanup for that needs to be done for that process.
+    virtual void endExternalSurfaceDisplay() noexcept = 0;
+
+    // Displays the specified externally populated surface to the screen, which must be a surface for this backend.
+    // This display method is slow, but sufficient for displaying video frames and intro logos etc.
     // The surface is displayed at the specified location and with the specified size and optionally with bi-linear filtering.
     // Areas of the screen not covered by the surface are displayed black.
-    virtual void displaySurface(
+    //
+    // Note: 'beginExternalSurfaceDisplay()' should be called prior to calling this function for a series of display frames.
+    // Also 'endExternalSurfaceDisplay()' should be called once you are done invoking this for a series of frames.
+    virtual void displayExternalSurface(
         IVideoSurface& surface,
         const int32_t displayX,
         const int32_t displayY,

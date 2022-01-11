@@ -154,7 +154,6 @@ inline constexpr int16_t toInt16Sample(const float sample) noexcept {
 }
 
 #if !SIMPLE_SPU_FLOAT_SPU
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Do a saturated/clamped addition and subtraction of 16-bit sample values
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,7 +176,6 @@ inline int16_t sampleAttenuate(const int16_t sample, const int16_t volume) noexc
     const int32_t frac32 = (int32_t) sample * (int32_t) volume;
     return (int16_t)(frac32 >> 15);
 }
-
 #endif  // #if !SIMPLE_SPU_FLOAT_SPU
 
 //------------------------------------------------------------------------------------------------------------------------------------------

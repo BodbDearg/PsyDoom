@@ -5,6 +5,7 @@
 - Fix entryway skywall glitching.
 - Implement playing the intro movies and legal text.
 - Implement integer scaling.
+- Remove menu option for Vulkan renderer if the feature is not compiled in.
 - Fix reliance on bitfields for 16-bit pixels (bitfield order implementation dependant).
 - Linux support.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.

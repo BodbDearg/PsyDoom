@@ -1,5 +1,7 @@
 #include "VideoSurface_Vulkan.h"
 
+#if PSYDOOM_VULKAN_RENDERER
+
 #include "Asserts.h"
 
 #include <cstring>
@@ -48,3 +50,5 @@ void VideoSurface_Vulkan::setPixels(const uint32_t* const pSrcPixels) noexcept {
 }
 
 END_NAMESPACE(Video)
+
+#endif  // #if PSYDOOM_VULKAN_RENDERER

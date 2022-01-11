@@ -583,13 +583,15 @@ void ST_Drawer() noexcept {
             // If using the Vulkan renderer, draw then as far as possible to the right, being widescreen aware
             int32_t widescreenAdjust = 0;
 
-            if (Video::isUsingVulkanRenderPath()) {
-                // Compute the extra space/padding at the left and right sides of the screen (in PSX coords) due to widescreen.
-                // This is the same calculation used by the Vulkan renderer in 'VDrawing::computeTransformMatrixForUI'.
-                // Note: need to invert the adjustment for 'ST_DrawRightAlignedStat' since the margin is subtracted.
-                const float xPadding = (VRenderer::gPsxCoordsFbX / VRenderer::gPsxCoordsFbW) * (float) SCREEN_W;
-                widescreenAdjust = (int32_t) -xPadding;
-            }
+            #if PSYDOOM_VULKAN_RENDERER
+                if (Video::isUsingVulkanRenderPath()) {
+                    // Compute the extra space/padding at the left and right sides of the screen (in PSX coords) due to widescreen.
+                    // This is the same calculation used by the Vulkan renderer in 'VDrawing::computeTransformMatrixForUI'.
+                    // Note: need to invert the adjustment for 'ST_DrawRightAlignedStat' since the margin is subtracted.
+                    const float xPadding = (VRenderer::gPsxCoordsFbX / VRenderer::gPsxCoordsFbW) * (float) SCREEN_W;
+                    widescreenAdjust = (int32_t) -xPadding;
+                }
+            #endif
 
             ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'K', player.killcount, gTotalKills);
 

@@ -249,8 +249,11 @@ bool decode(CDXAFileStreamer& fileIn, Context& ctx, SectorAudio& out) noexcept {
         }
     }
 
-    // Decoding succeeded, record the number of output samples and free up the sector since we are done with it
+    // Decoding succeeded, record the number of output samples and the sample rate
     out.numSamples = samplesPerChunk * ADPCM_CHUNKS_PER_SECTOR;
+    out.sampleRate = pSector->header.getSampleRate();
+
+    // Free up the cd sector since we are now done with it and return 'true' for success
     fileIn.freeSector(*pSector);
     return true;
 }

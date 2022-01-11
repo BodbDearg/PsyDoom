@@ -22,7 +22,10 @@ public:
     virtual void destroyRenderers() noexcept override;
     virtual void displayFramebuffer() noexcept override;
 
-    virtual void displaySurface(
+    virtual void beginExternalSurfaceDisplay() noexcept override;
+    virtual void endExternalSurfaceDisplay() noexcept override;
+
+    virtual void displayExternalSurface(
         IVideoSurface& surface,
         const int32_t displayX,
         const int32_t displayY,
