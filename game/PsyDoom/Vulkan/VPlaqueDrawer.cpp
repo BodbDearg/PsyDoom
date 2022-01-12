@@ -271,6 +271,17 @@ void drawPlaque(texture_t& plaqueTex, const int16_t plaqueX, const int16_t plaqu
 
     I_IncDrawnFrameCount();
 
+    // Make sure the main renderpath has rendered to all its framebuffer images at least once and generate blank frames if not.
+    // They might be destroyed if the view is resized just before drawing a plaque.
+    // We need the framebuffer images to be populated and in the right Vulkan image layout for this effect to work:
+    VRenderPath_Main& mainRenderPath = VRenderer::gRenderPath_Main;
+
+    while (!mainRenderPath.didRenderToAllFramebuffers()) {
+        VRenderer::endFrame();
+        VRenderer::setNextRenderPath(mainRenderPath);
+        VRenderer::beginFrame();
+    }
+
     // Make sure the plaque texture is cached to VRAM firstly and populate the loading plaque texture.
     // Also decide which previous framebuffer texture to use for the background.
     vgl::LogicalDevice& device = VRenderer::gDevice;
@@ -306,8 +317,8 @@ void drawPlaque(texture_t& plaqueTex, const int16_t plaqueX, const int16_t plaqu
         transitionBackgroundTexImageLayout();
 
         // Ensure we are still set to be on the main render path and begin the next frame
-        VRenderer::setNextRenderPath(VRenderer::gRenderPath_Main);
-        VRenderer::gRenderPath_Main.beginFrame(VRenderer::gSwapchain, VRenderer::gCmdBufferRec);
+        VRenderer::setNextRenderPath(mainRenderPath);
+        mainRenderPath.beginFrame(VRenderer::gSwapchain, VRenderer::gCmdBufferRec);
 
         // What size is the view being rendered to?
         const uint32_t viewportW = VRenderer::gFramebufferW;

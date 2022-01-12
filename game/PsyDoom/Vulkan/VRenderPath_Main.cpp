@@ -22,6 +22,7 @@ VRenderPath_Main::VRenderPath_Main() noexcept
     , mMsaaResolver()
     , mColorAttachments{}
     , mFramebuffers{}
+    , mbRenderedToFramebuffer{}
 {
 }
 
@@ -75,6 +76,7 @@ void VRenderPath_Main::destroy() noexcept {
     for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
         mFramebuffers[i].destroy(true);
         mColorAttachments[i].destroy(true);
+        mbRenderedToFramebuffer[i] = false;
     }
 
     mMsaaResolver.destroy();
@@ -120,6 +122,7 @@ bool VRenderPath_Main::ensureValidFramebuffers(const uint32_t fbWidth, const uin
         // Cleanup any previous framebuffer and attachments
         mFramebuffers[i].destroy(true);
         mColorAttachments[i].destroy(true);
+        mbRenderedToFramebuffer[i] = false;
 
         // Color attachment can either be used as a transfer & sampling source (for blits and crossfades, with no MSAA) or an input attachment for MSAA resolve
         const VkImageUsageFlags colorAttachUsage = (mNumDrawSamples > 1) ?
@@ -207,6 +210,9 @@ void VRenderPath_Main::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecor
 
     // Begin a frame for the drawing module
     VDrawing::beginFrame(ringbufferIdx);
+
+    // Begun rendering to this framebuffer
+    mbRenderedToFramebuffer[ringbufferIdx] = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -317,6 +323,19 @@ void VRenderPath_Main::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorde
             &imgBarrier
         );
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells whether we rendered to all the framebuffers at least once.
+// This check can be used to make sure there is previous frame data for effects like plaque drawing and cross fade.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool VRenderPath_Main::didRenderToAllFramebuffers() noexcept {
+    for (bool bDidRenderToFramebuffer : mbRenderedToFramebuffer) {
+        if (!bDidRenderToFramebuffer)
+            return false;
+    }
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

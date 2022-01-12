@@ -39,6 +39,8 @@ public:
         return mColorAttachments[idx];
     }
 
+    bool didRenderToAllFramebuffers() noexcept;
+
 private:
     bool initRenderPass() noexcept;
 
@@ -54,6 +56,9 @@ private:
     // Note that the framebuffer might contain an additional MSAA resolve attachment (owned by the MSAA resolver) if that feature is active.
     vgl::RenderTexture  mColorAttachments[vgl::Defines::RINGBUFFER_SIZE];
     vgl::Framebuffer    mFramebuffers[vgl::Defines::RINGBUFFER_SIZE];
+
+    // Whether each of the framebuffers have been involved in a frame yet
+    bool mbRenderedToFramebuffer[vgl::Defines::RINGBUFFER_SIZE];
 };
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER
