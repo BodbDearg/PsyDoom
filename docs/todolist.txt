@@ -1,4 +1,3 @@
-- Fix Vulkan errors blitting out of range.
 - Fix jitter on dying when turning to face enemy.
 - Investigate DEM1_1 etc. flats being reordered when loaded in engine.
 - Fix bug with squished monsters sometimes blocking the player.

@@ -75,7 +75,7 @@ static AudioSector* popAudioSectorForDecoding() noexcept {
 // 
 // For more info, see: https://www.paulinternet.nl/?page=bicubic
 //------------------------------------------------------------------------------------------------------------------------------------------
-static Spu::Sample cubicInterpolate(
+static Spu::Sample cubicInterpolateAudioSample(
     const Spu::Sample& sample0,
     const Spu::Sample& sample1,
     const Spu::Sample& sample2,
@@ -238,7 +238,7 @@ static void tryLoadNextAudioSample() noexcept {
 // Audio callback for the movie player.
 // Called on the audio thread to retrieve the next sample of audio from the movie.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static Spu::StereoSample movieAudioCallback([[maybe_unused]] void* const pUserData) noexcept {
+static Spu::StereoSample movieGetAudioSampleCallback([[maybe_unused]] void* const pUserData) noexcept {
     // Move along time and grab new samples if required
     gCurAudioSampleTime += gAudioSampleTimeStep;
 
@@ -256,8 +256,8 @@ static Spu::StereoSample movieAudioCallback([[maybe_unused]] void* const pUserDa
         const Spu::StereoSample& s1 = gAudioSamples[1];
         const Spu::StereoSample& s2 = gAudioSamples[2];
         const Spu::StereoSample& s3 = gAudioSamples[3];
-        interpolated.left = cubicInterpolate(s0.left, s1.left, s2.left, s3.left, t);
-        interpolated.right = cubicInterpolate(s0.right, s1.right, s2.right, s3.right, t);
+        interpolated.left = cubicInterpolateAudioSample(s0.left, s1.left, s2.left, s3.left, t);
+        interpolated.right = cubicInterpolateAudioSample(s0.right, s1.right, s2.right, s3.right, t);
     }
 
     return interpolated;
@@ -319,7 +319,7 @@ static bool initMoviePlayback(const char* const cdFilePath) noexcept {
 
         gPrevAudioExtInput = spu.pExtInputCallback;
         gPrevAudioExtInputUserdata = spu.pExtInputUserData;
-        spu.pExtInputCallback = movieAudioCallback;
+        spu.pExtInputCallback = movieGetAudioSampleCallback;
         spu.pExtInputUserData = nullptr;
     }
 
@@ -451,8 +451,8 @@ static void displayCurrentVideoFrame() noexcept {
         // Determine output width and height and center the framebuffer image in the window
         rectW = (int)(logicalResX * scale + 0.5f);
         rectH = (int)(logicalResY * scale + 0.5f);
-        rectX = (int)((windowW - rectW) * 0.5f + 0.5f);
-        rectY = (int)((windowH - rectH) * 0.5f + 0.5f);
+        rectX = (int)(((float) windowW - (float) rectW) * 0.5f + 0.5f);
+        rectY = (int)(((float) windowH - (float) rectH) * 0.5f + 0.5f);
     }
 
     // Show the frame!
