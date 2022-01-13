@@ -109,6 +109,15 @@ static void patchMap_Limbo() noexcept {
     gpSides[967].bottomtexture = 0;
 }
 
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fixes to 'Entryway' for Doom: fixes grass beyond the sky wall sometimes appearing
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Entryway() noexcept {
+    applyCommonMapPatches();
+    gpSectors[25].floorpic = -1;    // Sky, don't render any grass!
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fixes the starting hut for MAP47, 'The Citadel' for Doom.
 // Makes it so you can see past it, since it is shorter than buildings around it.
@@ -118,6 +127,18 @@ static void patchMap_TheCitadel() noexcept {
     modifyLinedefs(
         [](line_t& line) { line.flags |= ML_VOID; },
         170, 171, 172, 173, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix a wall top/floor sometimes not appearing for MAP46, 'The Courtyard' for Doom.
+// This wall is at the starting area and borders the sky.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheCourtyard() noexcept {
+    applyCommonMapPatches();
+    modifyLinedefs(
+        [](line_t& line) { line.flags |= ML_VOID; },
+        45, 17, 18, 51
     );
 }
 
@@ -174,7 +195,7 @@ static const PatchDef gPatches[] = {
     { 146652, 0x480752CCB2D35A1C, 0x65691D4565332279, applyCommonMapPatches },          // MAP28
     { 163970, 0x7A56FC6398F5E585, 0x4B328675621D5E82, applyCommonMapPatches },          // MAP29
     { 146600, 0x702C96D26BA67607, 0xF06328FB4BB425EA, applyCommonMapPatches },          // MAP30
-    {  46210, 0x10252B975669EA41, 0x0DD4BBA4460C76E4, applyCommonMapPatches },          // MAP31
+    {  46210, 0x10252B975669EA41, 0x0DD4BBA4460C76E4, patchMap_Entryway     },          // MAP31
     {  63255, 0xBF3A2A2B72807978, 0xD9BA36727A8F75DA, applyCommonMapPatches },          // MAP32
     {  71907, 0xBEE994902B075493, 0xDC8076E6CD56A8FD, applyCommonMapPatches },          // MAP33
     {  67614, 0x7DAEE033A6706CE3, 0x0888DFDF3ADF2392, applyCommonMapPatches },          // MAP34
@@ -189,8 +210,8 @@ static const PatchDef gPatches[] = {
     { 192997, 0x8348755BC3B9867B, 0x8D8912AB44CEF5D5, applyCommonMapPatches },          // MAP43
     { 110145, 0x74AB38DE2A1296E2, 0x4C4D2341F85B5013, applyCommonMapPatches },          // MAP44
     { 158462, 0x418A055F33A1D637, 0x2B13EBFDA65626A8, applyCommonMapPatches },          // MAP45
-    { 105883, 0xC15B00742892A00C, 0x6AFAF8680C3A1737, applyCommonMapPatches },          // MAP46
-    { 186755, 0xD51FE28AF00EE173, 0xCAD32CFE67F41581, patchMap_TheCitadel },            // MAP47
+    { 105883, 0xC15B00742892A00C, 0x6AFAF8680C3A1737, patchMap_TheCourtyard },          // MAP46
+    { 186755, 0xD51FE28AF00EE173, 0xCAD32CFE67F41581, patchMap_TheCitadel   },          // MAP47
     {  54866, 0xB26F2B1C634014F4, 0x58E85A0D51558E72, applyCommonMapPatches },          // MAP48
     {  74303, 0x73E0D84A00562252, 0x1DB3988C100C192C, applyCommonMapPatches },          // MAP49
     {  64540, 0xDC335FBADB67EA47, 0xC1EC2F844D788022, applyCommonMapPatches },          // MAP50
