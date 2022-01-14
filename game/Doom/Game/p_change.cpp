@@ -15,6 +15,7 @@
 #include "p_mobj.h"
 #include "p_move.h"
 #include "PsyDoom/Config.h"
+#include "PsyDoom/Game.h"
 
 bool gbNofit;           // If 'true' then one or more things in the test sector undergoing height changes do not fit
 bool gbCrushChange;     // If 'true' then the current sector undergoing height changes should crush/damage things when they do not fit
@@ -81,6 +82,13 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
 
         mobj.height = 0;    // This prevents the height clip test from failing again and triggering more crushing
         mobj.radius = 0;
+
+        // PsyDoom: fix a bug where gibs become blocking if the monster is crushed during it's death sequence 
+        #if PSYDOOM_MODS
+            if (Game::gSettings.bFixBlockingGibsBug) {
+                mobj.flags &= ~MF_SOLID;
+            }
+        #endif
 
         // If it is the player being gibbed then make the status bar head gib
         if (mobj.player == &gPlayers[gCurPlayerIndex]) {

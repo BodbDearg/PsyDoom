@@ -1,9 +1,12 @@
 - Investigate DEM1_1 etc. flats being reordered when loaded in engine.
 - Fix bug with squished monsters sometimes blocking the player.
+- Fix arch vile raising ghost monsters.
 - Implement playing the intro movies and legal text.
 - Implement integer scaling.
 - Remove menu option for Vulkan renderer if the feature is not compiled in.
 - Fix reliance on bitfields for 16-bit pixels (bitfield order implementation dependant).
+- Fix reliance on bitfields for network code (bitfield order implementation dependant).
+- Evaluate other uses of bitfields for implementation dependent use.
 - Linux support.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.

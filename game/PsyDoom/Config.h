@@ -34,6 +34,7 @@ extern int32_t  gLostSoulSpawnLimit;
 extern bool     gbUseLostSoulSpawnFix;
 extern bool     gbUseLineOfSightOverflowFix;
 extern bool     gbFixOutdoorBulletPuffs;
+extern bool     gbFixBlockingGibsBug;
 extern bool     gbFixSoundPropagation;
 extern float    gViewBobbingStrength;
 

@@ -435,6 +435,7 @@ int32_t                 gLostSoulSpawnLimit;
 bool                    gbUseLostSoulSpawnFix;
 bool                    gbUseLineOfSightOverflowFix;
 bool                    gbFixOutdoorBulletPuffs;
+bool                    gbFixBlockingGibsBug;
 bool                    gbFixSoundPropagation;
 float                   gViewBobbingStrength;
 
@@ -784,6 +785,17 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixOutdoorBulletPuffs = iniEntry.getBoolValue(true); },
         []() { gbFixOutdoorBulletPuffs = true; }
+    },
+    {
+        "FixBlockingGibsBug",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then fix an original bug where sometimes monster gibs can block the player if an\n"
+        "# enemy is crushed whilst playing it's death animation sequence.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbFixBlockingGibsBug = iniEntry.getBoolValue(true); },
+        []() { gbFixBlockingGibsBug = true; }
     },
     {
         "FixSoundPropagation",
