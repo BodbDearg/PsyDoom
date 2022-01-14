@@ -1462,6 +1462,11 @@ static bool PIT_VileCheck(mobj_t& thing) noexcept {
     if ((xDist > maxDist) || (yDist > maxDist))
         return true;
 
+    // If the thing was crushed (symptoms: has no radius or height) then don't raise.
+    // This prevents an original Doom bug where 'ghost monsters' are created.
+    if ((thing.radius <= 0) || (thing.height <= 0))
+        return true;
+
     // Kill any momentum this corpse has and remember it as a potential resurrect corpse
     gpVileCorpse = &thing;
     thing.momx = 0;

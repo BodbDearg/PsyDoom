@@ -1,6 +1,4 @@
 - Investigate DEM1_1 etc. flats being reordered when loaded in engine.
-- Fix bug with squished monsters sometimes blocking the player.
-- Fix arch vile raising ghost monsters.
 - Implement playing the intro movies and legal text.
 - Implement integer scaling.
 - Remove menu option for Vulkan renderer if the feature is not compiled in.
