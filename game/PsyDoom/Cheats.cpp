@@ -14,6 +14,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/Game/p_user.h"
 #include "Doom/UI/st_main.h"
 #include "Game.h"
 #include "Input.h"
@@ -24,9 +25,6 @@
 #include <vector>
 
 BEGIN_NAMESPACE(Cheats)
-
-// Set to true when a cheat has just been executed for this frame
-bool gbJustExecutedACheat = false;
 
 // Type for a function which executes a cheat
 typedef void (*CheatAction)();
@@ -108,6 +106,10 @@ static void ensureGamePaused() noexcept {
     // Remember the tick we paused on and reset cheat button sequences
     gCurCheatBtnSequenceIdx = 0;
     gTicConOnPause = gTicCon;
+
+    // If there is any turning contained in tick inputs which hasn't been rolled into the player object then uncommit that turning now.
+    // The tick inputs from this point on will essentially be ignored/discarded, but we don't want the player to lose turning made in between 30 Hz frames.
+    P_UncommitTurningTickInputs();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -272,8 +274,6 @@ static void doToggleNoTargetCheat() noexcept {
 // Initializes the cheats module and registers all cheats
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
-    gbJustExecutedACheat = false;
-
     addCheat(Config::gCheatKeys_GodMode,                doToggleGodModeCheat);
     addCheat(Config::gCheatKeys_NoClip,                 doToggleNoClipCheat);
     addCheat(Config::gCheatKeys_LevelWarp,              doOpenLevelWarpCheat);
@@ -298,15 +298,15 @@ void shutdown() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void update() noexcept {
     // Only allowed in singleplayer games!
-    gbJustExecutedACheat = false;
-
     if (gNetGame != gt_single)
         return;
 
     // Check for cheat key sequences just input
+    bool bEnteredCheatKeySequence = false;
+
     for (const uint16_t key : Input::getKeyboardKeysJustPressed()) {
         if (updateCheatKeySequencesForKeyPress(key)) {
-            gbJustExecutedACheat = true;
+            bEnteredCheatKeySequence = true;
         }
     }
 
@@ -315,7 +315,6 @@ void update() noexcept {
         const auto checkDevCheat = [&](const uint16_t keyboardKey, const CheatAction pAction) noexcept {
             if (Input::isKeyboardKeyJustPressed(keyboardKey)) {
                 pAction();
-                gbJustExecutedACheat = true;
             }
         };
 
@@ -332,8 +331,8 @@ void update() noexcept {
         }
     }
 
-    // If we did a cheat then consume all inputs to try and prevent input conflicts
-    if (gbJustExecutedACheat) {
+    // If we entered a cheat key sequence then kill all inputs to try and prevent conflicts.
+    if (bEnteredCheatKeySequence) {
         Input::consumeEvents();
 
         TickInputs& tickInputs = gTickInputs[gCurPlayerIndex];
