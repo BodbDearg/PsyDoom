@@ -185,10 +185,11 @@ void R_RenderPlayerView() noexcept {
 
         gViewZ &= ~FRACMASK;
 
-        // View angle is not interpolated (except in demos) since turning movements are now completely framerate uncapped
-        if (gbDemoPlayback) {
-            gViewAngle = R_LerpAngle(gOldViewAngle, newViewAngle, lerp);
-        } else {
+        // The player's view angle is no longer interpolated in most situations since turning movements are now completely framerate uncapped.
+        // The only exception is when the user does not have control, during demo playback and after death.
+        const bool bUserControlsTurning = ((!gbDemoPlayback) && (player.playerstate == PST_LIVE));
+
+        if (bUserControlsTurning) {
             // Normal gameplay: take into consideration how much turning movement we haven't committed to the player object yet here.
             // For net games, we must use the view angle we said we would use NEXT as that is the most up-to-date angle.
             if (gNetGame == gt_single) {
@@ -196,6 +197,9 @@ void R_RenderPlayerView() noexcept {
             } else {
                 gViewAngle = gPlayerNextTickViewAngle + gPlayerUncommittedTurning;
             }
+        } else {
+            // User not currently in control: interpolate changes in player view angle
+            gViewAngle = R_LerpAngle(gOldViewAngle, newViewAngle, lerp);
         }
     }
     else {
