@@ -1,6 +1,5 @@
 - Implement playing the intro movies and legal text.
 - Implement integer scaling.
-- Remove menu option for Vulkan renderer if the feature is not compiled in.
 - Default to no anti-aliasing if resolution is 4K
 - Fix reliance on bitfields for 16-bit pixels via 'Color16' (bitfield order implementation dependant).
 - Fix reliance on bitfields for network code via 'TickInputs' (bitfield order implementation dependant).
@@ -9,4 +8,4 @@
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.
 - Add ability to input passwords with keyboard
-- Makeup final logo
+- Makeup final logo and add a program icon

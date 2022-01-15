@@ -30,7 +30,9 @@ enum MenuItem : uint32_t {
     menu_turn_speed,
     menu_always_run,
     menu_stat_display,
+#if PSYDOOM_VULKAN_RENDERER
     menu_renderer,
+#endif
     menu_exit,
     num_menu_items
 };
@@ -189,22 +191,21 @@ gameaction_t XOptions_Update() noexcept {
             }
         }   break;
 
+    #if PSYDOOM_VULKAN_RENDERER
         // Renderer toggle
         case menu_renderer: {
             const bool bCanSwitchRenderers = (Video::gBackendType == Video::BackendType::Vulkan);
 
-            #if PSYDOOM_VULKAN_RENDERER
-                if (bCanSwitchRenderers) {
-                    if (bMenuLeft && (!Video::isUsingVulkanRenderPath())) {
-                        VRenderer::switchToMainVulkanRenderPath();
-                        S_StartSound(nullptr, sfx_swtchx);
-                    }
-                    else if (bMenuRight && Video::isUsingVulkanRenderPath()) {
-                        VRenderer::switchToPsxRenderPath();
-                        S_StartSound(nullptr, sfx_swtchx);
-                    }
+            if (bCanSwitchRenderers) {
+                if (bMenuLeft && (!Video::isUsingVulkanRenderPath())) {
+                    VRenderer::switchToMainVulkanRenderPath();
+                    S_StartSound(nullptr, sfx_swtchx);
                 }
-            #endif
+                else if (bMenuRight && Video::isUsingVulkanRenderPath()) {
+                    VRenderer::switchToPsxRenderPath();
+                    S_StartSound(nullptr, sfx_swtchx);
+                }
+            }
 
             // If renderer switch is not possible and an attempt was made to do so then play this sound
             if (!bCanSwitchRenderers) {
@@ -213,6 +214,7 @@ gameaction_t XOptions_Update() noexcept {
                 }
             }
         }   break;
+    #endif  // #if PSYDOOM_VULKAN_RENDERER
 
         // Exit to the options menu
         case menu_exit: {
@@ -325,13 +327,15 @@ void XOptions_Draw() noexcept {
             cursorY = 115;
         }
 
-        // Draw the renderer option
-        const bool bIsUsingVulkan = Video::isUsingVulkanRenderPath();
-        I_DrawString(62, 140, (bIsUsingVulkan) ? "Vulkan Renderer" : "Classic Renderer");
+        #if PSYDOOM_VULKAN_RENDERER
+            // Draw the renderer option
+            const bool bIsUsingVulkan = Video::isUsingVulkanRenderPath();
+            I_DrawString(62, 140, (bIsUsingVulkan) ? "Vulkan Renderer" : "Classic Renderer");
 
-        if (gCursorPos[gCurPlayerIndex] == menu_renderer) {
-            cursorY = 140;
-        }
+            if (gCursorPos[gCurPlayerIndex] == menu_renderer) {
+                cursorY = 140;
+            }
+        #endif
 
         // Draw the exit option
         I_DrawString(62, 205, "Back");
