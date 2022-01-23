@@ -1,5 +1,7 @@
 - Implement playing the intro movies and legal text.
 - Implement integer scaling.
+- Interpolate scrolling walls.
+- Don't interpolate instant lower floors.
 - Default to no anti-aliasing if resolution is 4K
 - Fix reliance on bitfields for 16-bit pixels via 'Color16' (bitfield order implementation dependant).
 - Fix reliance on bitfields for network code via 'TickInputs' (bitfield order implementation dependant).

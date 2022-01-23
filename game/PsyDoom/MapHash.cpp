@@ -48,13 +48,13 @@ void finalize() noexcept {
     gMD5Hasher.getHash(md5);
 
     gWord1 = (
-        ((uint64_t) md5[0 ] << 0 ) | ((uint64_t) md5[1 ] << 8 ) | ((uint64_t) md5[2 ] << 16) | ((uint64_t) md5[3 ] << 24) |
-        ((uint64_t) md5[4 ] << 32) | ((uint64_t) md5[5 ] << 40) | ((uint64_t) md5[6 ] << 48) | ((uint64_t) md5[7 ] << 56)
+        ((uint64_t) md5[0 ] << 56) | ((uint64_t) md5[1 ] << 48) | ((uint64_t) md5[2 ] << 40) | ((uint64_t) md5[3 ] << 32) |
+        ((uint64_t) md5[4 ] << 24) | ((uint64_t) md5[5 ] << 16) | ((uint64_t) md5[6 ] <<  8) | ((uint64_t) md5[7 ] <<  0)
     );
 
     gWord2 = (
-        ((uint64_t) md5[8 ] << 0 ) | ((uint64_t) md5[9 ] << 8 ) | ((uint64_t) md5[10] << 16) | ((uint64_t) md5[11] << 24) |
-        ((uint64_t) md5[12] << 32) | ((uint64_t) md5[13] << 40) | ((uint64_t) md5[14] << 48) | ((uint64_t) md5[15] << 56)
+        ((uint64_t) md5[8 ] << 56) | ((uint64_t) md5[9 ] << 48) | ((uint64_t) md5[10] << 40) | ((uint64_t) md5[11] << 32) |
+        ((uint64_t) md5[12] << 24) | ((uint64_t) md5[13] << 16) | ((uint64_t) md5[14] <<  8) | ((uint64_t) md5[15] <<  0)
     );
 }
 
