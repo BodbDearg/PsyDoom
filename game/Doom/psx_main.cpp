@@ -8,6 +8,7 @@
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/IntroLogos.h"
 #include "PsyDoom/ModMgr.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
@@ -68,10 +69,11 @@ int psx_main(const int argc, const char** const argv) noexcept {
         Game::determineGameTypeAndVariant();
         CdMapTbl_Init();
 
-        // Initialize the display, modding manager and cheats
+        // Initialize the display, modding manager, cheats and intro logos
         Video::initVideo();
         ModMgr::init();
         Cheats::init();
+        IntroLogos::init();
     #endif
 
     // Call the original PSX Doom 'main()' function
@@ -83,6 +85,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
             PlayerPrefs::save();
         }
 
+        IntroLogos::shutdown();
         Video::shutdownVideo();
         PsxVm::shutdown();
         Cheats::shutdown();

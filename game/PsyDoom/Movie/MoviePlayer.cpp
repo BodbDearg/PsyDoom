@@ -448,7 +448,7 @@ static void displayCurrentVideoFrame() noexcept {
         const float yScale = windowH / logicalResY;
         const float scale = std::min(xScale, yScale);
 
-        // Determine output width and height and center the framebuffer image in the window
+        // Determine output width and height and center the frame image in the window
         rectW = (int)(logicalResX * scale + 0.5f);
         rectH = (int)(logicalResY * scale + 0.5f);
         rectX = (int)(((float) windowW - (float) rectW) * 0.5f + 0.5f);
@@ -506,7 +506,7 @@ bool play(const char* const cdFilePath, const float fps) noexcept {
     // Movies do not play in headless mode
     if (ProgArgs::gbHeadlessMode)
         return false;
-    
+
     // Startup movie playback
     ASSERT(!gbIsPlaying);
 

@@ -417,6 +417,7 @@ bool                    gbInterpolateMobj;
 bool                    gbInterpolateMonsters;
 bool                    gbInterpolateWeapon;
 int32_t                 gMainMemoryHeapSize;
+bool                    gbSkipIntros;
 bool                    gbUseFastLoading;
 bool                    gbEnableSinglePlayerLevelTimer;
 int32_t                 gUsePalTimings;
@@ -524,6 +525,15 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "-1", "\n",
         [](const IniUtils::Entry& iniEntry) { gMainMemoryHeapSize = iniEntry.getIntValue(-1); },
         []() { gMainMemoryHeapSize = -1; }
+    },
+    {
+        "SkipIntros",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then all intro logos and movies will be skipped on game startup.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "0", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbSkipIntros = iniEntry.getBoolValue(false); },
+        []() { gbSkipIntros = false; }
     },
     {
         "UseFastLoading",

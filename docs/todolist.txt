@@ -1,4 +1,3 @@
-- Implement playing the intro movies and legal text.
 - Implement integer scaling.
 - Interpolate scrolling walls.
 - Don't interpolate instant lower floors.

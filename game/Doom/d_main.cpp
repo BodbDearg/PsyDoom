@@ -17,8 +17,11 @@
 #include "Game/p_switch.h"
 #include "Game/p_tick.h"
 #include "Game/sprinfo.h"
+#include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/IntroLogos.h"
+#include "PsyDoom/LogoPlayer.h"
 #include "PsyDoom/MapInfo.h"
 #include "PsyDoom/Movie/MoviePlayer.h"
 #include "PsyDoom/PlayerPrefs.h"
@@ -83,11 +86,17 @@ static int32_t gDebugDrawStringYPos;
 // For PsyDoom however this logic needs to reside all within the same executable.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void D_PlayIntros() noexcept {
+    // Show the Sony intro logo
+    LogoPlayer::play(IntroLogos::getSonyIntroLogo());
+
     // Play the intro movie (Williams logo)
     if ((Game::gGameType == GameType::Doom) || (Game::gGameType == GameType::FinalDoom)) {
         const float movieFps = (Game::gGameVariant == GameVariant::PAL) ? 25.0f : 30.0f;
         movie::MoviePlayer::play("PSXDOOM/ABIN/MOVIE.STR", movieFps);
     }
+
+    // Show the legals intro logo
+    LogoPlayer::play(IntroLogos::getLegalsIntroLogo());
 }
 #endif  // #if PSYDOOM_MODS
 
@@ -141,7 +150,9 @@ void D_DoomMain() noexcept {
             W_Shutdown();
         });
 
-        D_PlayIntros();
+        if (!Config::gbSkipIntros) {
+            D_PlayIntros();
+        }
     #endif
 
     // Clearing some global tick counters and inputs

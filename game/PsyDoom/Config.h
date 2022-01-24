@@ -16,6 +16,7 @@ extern bool     gbInterpolateMobj;
 extern bool     gbInterpolateMonsters;
 extern bool     gbInterpolateWeapon;
 extern int32_t  gMainMemoryHeapSize;
+extern bool     gbSkipIntros;
 extern bool     gbUseFastLoading;
 extern bool     gbEnableSinglePlayerLevelTimer;
 extern int32_t  gUsePalTimings;
