@@ -191,8 +191,15 @@ static bool decodePsxDoomBootExeLogo(const uint32_t logoExeOffset, LogoPlayer::L
     uint32_t* pPixelOut = output.pPixels.get();
 
     for (uint32_t i = 0; i < NUM_LOGO_PIXELS; ++i, ++pPixelIn, ++pPixelOut) {
-        // Get the color components of the pixel
+        // Get the color components of the pixel.
+        // Note: if the index is '0' then that is the transparent color, make it black:
         const uint8_t colorIdx = *pPixelIn;
+
+        if (colorIdx == 0) {
+            *pPixelOut = 0xFF000000u;   // Special case, transparent pixel but make it black to match the screen clear color...
+            continue;
+        }
+
         const uint8_t* const pPaletteEntryRgb = pPalette + colorIdx * 3;
         const uint32_t r = pPaletteEntryRgb[0];
         const uint32_t g = pPaletteEntryRgb[1];
