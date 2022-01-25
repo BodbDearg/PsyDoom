@@ -99,9 +99,9 @@ static void RV_DrawPlane(
     float uOffset, vOffset;
 
     {
-        const sector_t& sector = *subsec.sector;
-        const fixed_t texOffsetX = (IsFloor) ? sector.floorTexOffsetX : sector.ceilTexOffsetX;
-        const fixed_t texOffsetY = (IsFloor) ? sector.floorTexOffsetY : sector.ceilTexOffsetY;
+        sector_t& sector = *subsec.sector;
+        const fixed_t texOffsetX = (IsFloor) ? sector.floorTexOffsetX.renderValue() : sector.ceilTexOffsetX.renderValue();
+        const fixed_t texOffsetY = (IsFloor) ? sector.floorTexOffsetY.renderValue() : sector.ceilTexOffsetY.renderValue();
         const fixed_t wrapTexOffsetX = (texOffsetX & ((texWinX << FRACBITS) - 1));
         const fixed_t wrapTexOffsetY = (texOffsetY & ((texWinY << FRACBITS) - 1));
         uOffset = RV_FixedToFloat(wrapTexOffsetX);

@@ -1,5 +1,6 @@
 #include "ScriptBindings.h"
 
+#include "Config.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
@@ -758,6 +759,32 @@ void S_PlaySoundAtPosition(const float x, const float y, const uint32_t soundId)
         [](TypeName& obj, const int32_t value) noexcept { obj.FieldName = (uint8_t) std::clamp(value, 0, 255); }\
     )
 
+// Register a fixed property which is interpolated if sector interpolation is enabled
+#define SOL_LERPED_SECTOR_FIXED_PROPERTY(TypeName, FieldName)\
+    sol::property(\
+        [](const TypeName& obj) noexcept { return obj.FieldName; },\
+        [](TypeName& obj, const fixed_t value) noexcept {\
+            obj.FieldName = value;\
+            \
+            if (!Config::gbInterpolateSectors) {\
+                obj.FieldName.snap();\
+            }\
+        }\
+    )
+
+// Register a fixed property (exposed as a float) which is interpolated if sector interpolation is enabled
+#define SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(TypeName, FieldName)\
+    sol::property(\
+        [](const TypeName& obj) noexcept { return FixedToFloat(obj.FieldName); },\
+        [](TypeName& obj, const float value) noexcept {\
+            obj.FieldName = FloatToFixed(value);\
+            \
+            if (!Config::gbInterpolateSectors) {\
+                obj.FieldName.snap();\
+            }\
+        }\
+    )
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Type registration functions
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -765,10 +792,10 @@ static void registerType_sector_t(sol::state& lua) noexcept {
     sol::usertype<sector_t> type = lua.new_usertype<sector_t>("sector_t", sol::no_constructor);
 
     type["index"] = sol::readonly_property([](const sector_t& s) noexcept { return &s - gpSectors; });
-    type["floorheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, floorheight);
-    type["floorheight_fixed"] = &sector_t::floorheight;
-    type["ceilingheight"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilingheight);
-    type["ceilingheight_fixed"] = &sector_t::ceilingheight;
+    type["floorheight"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(sector_t, floorheight);
+    type["floorheight_fixed"] = SOL_LERPED_SECTOR_FIXED_PROPERTY(sector_t, floorheight);
+    type["ceilingheight"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilingheight);
+    type["ceilingheight_fixed"] = SOL_LERPED_SECTOR_FIXED_PROPERTY(sector_t, ceilingheight);
     type["floorpic"] = &sector_t::floorpic;
     type["ceilingpic"] = &sector_t::ceilingpic;
     type["colorid"] = SOL_BYTE_PROPERTY(sector_t, colorid);
@@ -777,10 +804,10 @@ static void registerType_sector_t(sol::state& lua) noexcept {
     type["tag"] = &sector_t::tag;
     type["flags"] = &sector_t::flags;
     type["ceil_colorid"] = SOL_BYTE_PROPERTY(sector_t, ceilColorid);
-    type["floor_tex_offset_x"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, floorTexOffsetX);
-    type["floor_tex_offset_y"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, floorTexOffsetY);
-    type["ceil_tex_offset_x"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilTexOffsetX);
-    type["ceil_tex_offset_y"] = SOL_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilTexOffsetY);
+    type["floor_tex_offset_x"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(sector_t, floorTexOffsetX);
+    type["floor_tex_offset_y"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(sector_t, floorTexOffsetY);
+    type["ceil_tex_offset_x"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilTexOffsetX);
+    type["ceil_tex_offset_y"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(sector_t, ceilTexOffsetY);
     type["numlines"] = sol::readonly(&sector_t::linecount);
     type["hasthinker"] = sol::readonly_property([](const sector_t& sector){ return (sector.specialdata != nullptr); });
     type.set_function("GetLine", GetLineInSector);
@@ -828,10 +855,10 @@ static void registerType_side_t(sol::state& lua) noexcept {
     sol::usertype<side_t> type = lua.new_usertype<side_t>("side_t", sol::no_constructor);
 
     type["index"] = sol::readonly_property([](const side_t& s) noexcept { return &s - gpSides; });
-    type["textureoffset"] = SOL_FIXED_PROPERTY_AS_FLOAT(side_t, textureoffset);
-    type["textureoffset_fixed"] = &side_t::textureoffset;
-    type["rowoffset"] = SOL_FIXED_PROPERTY_AS_FLOAT(side_t, rowoffset);
-    type["rowoffset_fixed"] = &side_t::rowoffset;
+    type["textureoffset"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(side_t, textureoffset);
+    type["textureoffset_fixed"] = SOL_LERPED_SECTOR_FIXED_PROPERTY(side_t, textureoffset);
+    type["rowoffset"] = SOL_LERPED_SECTOR_FIXED_PROPERTY_AS_FLOAT(side_t, rowoffset);
+    type["rowoffset_fixed"] = SOL_LERPED_SECTOR_FIXED_PROPERTY(side_t, rowoffset);
     type["toptexture"] = &side_t::toptexture;
     type["bottomtexture"] = &side_t::bottomtexture;
     type["midtexture"] = &side_t::midtexture;

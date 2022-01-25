@@ -508,6 +508,10 @@ void R_SnapViewZInterpolation() noexcept {
 void R_SnapSectorInterpolation(sector_t& sector) noexcept {
     sector.floorheight.snap();
     sector.ceilingheight.snap();
+    sector.floorTexOffsetX.snap();
+    sector.floorTexOffsetY.snap();
+    sector.ceilTexOffsetX.snap();
+    sector.ceilTexOffsetY.snap();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

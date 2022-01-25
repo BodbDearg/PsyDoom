@@ -44,7 +44,7 @@ static void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const textur
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     // Get the texture for the flat
-    const sector_t& drawsec = *gpCurDrawSector;
+    sector_t& drawsec = *gpCurDrawSector;
     const int32_t flatPicNum = (bIsCeiling) ? drawsec.ceilingpic : drawsec.floorpic;
     const int32_t flatTexNum = gpFlatTranslation[flatPicNum];
     texture_t& tex = gpFlatTextures[flatTexNum];
@@ -145,11 +145,11 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     // This is a new feature for PsyDoom that allows for flats to be scrolled.
     #if PSYDOOM_MODS
         if (bIsCeiling) {
-            gFlatTexOffsetX = drawsec.ceilTexOffsetX;
-            gFlatTexOffsetY = drawsec.ceilTexOffsetY;
+            gFlatTexOffsetX = drawsec.ceilTexOffsetX.renderValue();
+            gFlatTexOffsetY = drawsec.ceilTexOffsetY.renderValue();
         } else {
-            gFlatTexOffsetX = drawsec.floorTexOffsetX;
-            gFlatTexOffsetY = drawsec.floorTexOffsetY;
+            gFlatTexOffsetX = drawsec.floorTexOffsetX.renderValue();
+            gFlatTexOffsetY = drawsec.floorTexOffsetY.renderValue();
         }
     #endif
 

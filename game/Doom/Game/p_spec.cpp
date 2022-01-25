@@ -25,6 +25,7 @@
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
+#include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/ParserTokenizer.h"
 #include "PsyDoom/ScriptingEngine.h"
@@ -1281,42 +1282,46 @@ void P_UpdateSpecials() noexcept {
 
         // PsyDoom: need to handle wrapping of uv offsets specially now that they are interpolated.
         // Adjust the 'old' value we are interpolating from so that the wrap adjustment is not part of the interpolation.
+        // If interpolation is disabled also, just snap the value immediately:
         #if PSYDOOM_MODS
-            const auto wrapUVOffset = [](InterpFixedT& offset) noexcept {
-                const fixed_t newOffset = offset.value & SCROLLMASK;
-                const fixed_t wrapAdjustment = newOffset - offset;
-                offset = newOffset;
-                offset.oldValue += wrapAdjustment;  // Don't interpolate the quantity we just adjusted by to wrap
+            const auto offsetUVAndWrap = [](InterpFixedT& uv, const fixed_t offset) noexcept {
+                uv += offset;
+                const fixed_t postWrapUV = uv & SCROLLMASK;
+                const fixed_t wrapAdjustment = postWrapUV - uv;
+                uv = postWrapUV;
+
+                if (Config::gbInterpolateSectors) {
+                    uv.oldValue += wrapAdjustment;      // Don't interpolate the quantity we just adjusted by to wrap
+                } else {
+                    uv.snap();                          // Interpolation disabled, just snap!
+                }
             };
         #else
-            const auto wrapUVOffset = [](fixed_t& offset) noexcept {
-                offset &= SCROLLMASK;
+            const auto offsetUVAndWrap = [](fixed_t& uv, const fixed_t offset) noexcept {
+                uv += offset;
+                uv &= SCROLLMASK;
             };
         #endif
 
         switch (line.special) {
             // Effect: scroll left
             case 200: {
-                side.textureoffset += FRACUNIT;
-                wrapUVOffset(side.textureoffset);
+                offsetUVAndWrap(side.textureoffset, +FRACUNIT);
             }   break;
 
             // Effect: scroll right
             case 201: {
-                side.textureoffset -= FRACUNIT;
-                wrapUVOffset(side.textureoffset);
+                offsetUVAndWrap(side.textureoffset, -FRACUNIT);
             }   break;
 
             // Effect: scroll up
             case 202: {
-                side.rowoffset += FRACUNIT;
-                wrapUVOffset(side.rowoffset);
+                offsetUVAndWrap(side.rowoffset, +FRACUNIT);
             }   break;
 
             // Effect: scroll down
             case 203: {
-                side.rowoffset -= FRACUNIT;
-                wrapUVOffset(side.rowoffset);
+                offsetUVAndWrap(side.rowoffset, -FRACUNIT);
             }   break;
         }
     }
