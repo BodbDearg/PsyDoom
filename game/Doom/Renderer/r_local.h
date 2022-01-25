@@ -81,12 +81,17 @@ struct sector_t {
 
 // Describes a side of a line
 struct side_t {
-    fixed_t     textureoffset;      // Horizontal texture offset for the side
-    fixed_t     rowoffset;          // Vertical texture offset for the side
-    int32_t     toptexture;         // Wall texture index for the side's top texture
-    int32_t     bottomtexture;      // Wall texture index for the side's bottom texture
-    int32_t     midtexture;         // Wall texture index for the side's mid/wall texture
-    sector_t*   sector;             // What sector the side belongs to
+#if PSYDOOM_MODS
+    InterpFixedT    textureoffset;      // Horizontal texture offset for the side
+    InterpFixedT    rowoffset;          // Vertical texture offset for the side
+#else
+    fixed_t         textureoffset;      // Horizontal texture offset for the side
+    fixed_t         rowoffset;          // Vertical texture offset for the side    
+#endif
+    int32_t         toptexture;         // Wall texture index for the side's top texture
+    int32_t         bottomtexture;      // Wall texture index for the side's bottom texture
+    int32_t         midtexture;         // Wall texture index for the side's mid/wall texture
+    sector_t*       sector;             // What sector the side belongs to
 };
 
 // What type of slope a line has

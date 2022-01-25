@@ -86,6 +86,7 @@ static void patchMap_CommandControl() noexcept {
 
     // This step needs a texture coordinate adjustment
     gpSides[253].rowoffset = 0;
+    gpSides[253].rowoffset.snap();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

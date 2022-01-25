@@ -399,6 +399,9 @@ void SavedSideT::deserializeTo(side_t& side) const noexcept {
     side.toptexture = toptexture;
     side.bottomtexture = bottomtexture;
     side.midtexture = midtexture;
+
+    // Don't do interpolations for the first frame!
+    R_SnapSideInterpolation(side);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

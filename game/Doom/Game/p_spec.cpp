@@ -1279,29 +1279,44 @@ void P_UpdateSpecials() noexcept {
         line_t& line = *gpLineSpecialList[specialIdx];
         side_t& side = gpSides[line.sidenum[0]];
 
+        // PsyDoom: need to handle wrapping of uv offsets specially now that they are interpolated.
+        // Adjust the 'old' value we are interpolating from so that the wrap adjustment is not part of the interpolation.
+        #if PSYDOOM_MODS
+            const auto wrapUVOffset = [](InterpFixedT& offset) noexcept {
+                const fixed_t newOffset = offset.value & SCROLLMASK;
+                const fixed_t wrapAdjustment = newOffset - offset;
+                offset = newOffset;
+                offset.oldValue += wrapAdjustment;  // Don't interpolate the quantity we just adjusted by to wrap
+            };
+        #else
+            const auto wrapUVOffset = [](fixed_t& offset) noexcept {
+                offset &= SCROLLMASK;
+            };
+        #endif
+
         switch (line.special) {
             // Effect: scroll left
             case 200: {
                 side.textureoffset += FRACUNIT;
-                side.textureoffset &= SCROLLMASK;
+                wrapUVOffset(side.textureoffset);
             }   break;
 
             // Effect: scroll right
             case 201: {
                 side.textureoffset -= FRACUNIT;
-                side.textureoffset &= SCROLLMASK;
+                wrapUVOffset(side.textureoffset);
             }   break;
 
             // Effect: scroll up
             case 202: {
                 side.rowoffset += FRACUNIT;
-                side.rowoffset &= SCROLLMASK;
+                wrapUVOffset(side.rowoffset);
             }   break;
 
             // Effect: scroll down
             case 203: {
                 side.rowoffset -= FRACUNIT;
-                side.rowoffset &= SCROLLMASK;
+                wrapUVOffset(side.rowoffset);
             }   break;
         }
     }

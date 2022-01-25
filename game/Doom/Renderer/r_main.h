@@ -20,6 +20,7 @@ static constexpr int32_t NEAR_CLIP_DIST = 2;
 struct light_t;
 struct MATRIX;
 struct node_t;
+struct side_t;
 struct subsector_t;
 
 extern int32_t          gValidCount;
@@ -81,6 +82,7 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept;
     void R_NextWorldInterpolation() noexcept;
     void R_SnapViewZInterpolation() noexcept;
     void R_SnapSectorInterpolation(sector_t& sector) noexcept;
+    void R_SnapSideInterpolation(side_t& side) noexcept;
     void R_SnapMobjInterpolation(mobj_t& mobj) noexcept;
     void R_SnapPsprInterpolation(pspdef_t& pspr) noexcept;
     void R_CalcLerpFactors() noexcept;

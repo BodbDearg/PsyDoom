@@ -484,6 +484,11 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                     ensureValidFlatPic(pDstSec->ceilingpic);
                 }
             }
+            
+            // PsyDoom: sector is not interpolated for the first frame!
+            #if PSYDOOM_MODS
+                R_SnapSectorInterpolation(*pDstSec);
+            #endif
 
             ++pSrcSec;
             ++pDstSec;
@@ -808,6 +813,11 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
                     }
                 #endif
             }
+
+            // PsyDoom: side is not interpolated for the first frame!
+            #if PSYDOOM_MODS
+                R_SnapSideInterpolation(*pDstSide);
+            #endif
 
             ++pSrcSide;
             ++pDstSide;

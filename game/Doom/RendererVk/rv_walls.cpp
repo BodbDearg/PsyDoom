@@ -96,7 +96,7 @@ static void RV_DrawSegSolid(const rvseg_t& seg, const subsector_t& subsec) noexc
         return;
 
     // This line is now viewed by the player: show in the automap if the line is viewable there
-    const side_t& side = *seg.sidedef;
+    side_t& side = *seg.sidedef;
     line_t& line = *seg.linedef;
     line.flags |= ML_MAPPED;
 
@@ -117,8 +117,8 @@ static void RV_DrawSegSolid(const rvseg_t& seg, const subsector_t& subsec) noexc
     const fixed_t fby = frontSec.floorDrawH;
 
     // Get u and v offsets for the seg and the u1/u2 coordinates
-    const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
-    const float vOffset = RV_FixedToFloat(side.rowoffset);
+    const float uOffset = RV_FixedToFloat(side.textureoffset.renderValue()) + seg.uOffset;
+    const float vOffset = RV_FixedToFloat(side.rowoffset.renderValue());
     const float u1 = uOffset;
     const float u2 = uOffset + segLen;
 
@@ -260,7 +260,7 @@ static void RV_DrawSegBlended(const rvseg_t& seg, const subsector_t& subsec) noe
     const fixed_t fby = frontSec.floorDrawH;
 
     // Get the mid texture for the seg; if it doesn't exist then don't draw
-    const side_t& side = *seg.sidedef;
+    side_t& side = *seg.sidedef;
     const int32_t midTexIdx = side.midtexture;
 
     if (midTexIdx < 0)
@@ -269,8 +269,8 @@ static void RV_DrawSegBlended(const rvseg_t& seg, const subsector_t& subsec) noe
     texture_t& tex_m = gpTextures[gpTextureTranslation[side.midtexture]];
 
     // Get u and v offsets for the seg and the u1/u2 coordinates
-    const float uOffset = RV_FixedToFloat(side.textureoffset) + seg.uOffset;
-    const float vOffset = RV_FixedToFloat(side.rowoffset);
+    const float uOffset = RV_FixedToFloat(side.textureoffset.renderValue()) + seg.uOffset;
+    const float vOffset = RV_FixedToFloat(side.rowoffset.renderValue());
     const float u1 = uOffset;
     const float u2 = uOffset + segLen;
 

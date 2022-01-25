@@ -1,5 +1,5 @@
 - Implement integer scaling.
-- Interpolate scrolling walls.
+- Interpolate scrolling flats.
 - Don't interpolate instant lower floors.
 - MAPINFO: add a flag to inhibit the 'Entering <MAP_NAME>' message.
 - Default to no anti-aliasing if resolution is 4K

@@ -83,15 +83,21 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             #endif
 
             // Compute top and bottom texture 'v' coordinates
+            #if PSYDOOM_MODS
+                const fixed_t sideRowOffset = side.rowoffset.renderValue();     // PsyDoom: scrolling walls can now be interpolated 
+            #else
+                const fixed_t sideRowOffset = side.rowoffset;
+            #endif
+
             int32_t vt, vb;
 
             if (line.flags & ML_DONTPEGTOP) {
                 // Top of texture is at top of upper wall
-                vt = d_fixed_to_int(side.rowoffset);
+                vt = d_fixed_to_int(sideRowOffset);
                 vb = vt + tex_h;
             } else {
                 // Bottom of texture is at bottom of upper wall
-                vb = d_fixed_to_int(side.rowoffset) + TEXCOORD_MAX;
+                vb = d_fixed_to_int(sideRowOffset) + TEXCOORD_MAX;
                 vt = vb - tex_h;
             }
 
@@ -128,6 +134,12 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             // Compute top and bottom texture 'v' coordinates
             int32_t vt, vb;
 
+            #if PSYDOOM_MODS
+                const fixed_t sideRowOffset = side.rowoffset.renderValue();     // PsyDoom: scrolling walls can now be interpolated 
+            #else
+                const fixed_t sideRowOffset = side.rowoffset;
+            #endif
+
             if (line.flags & ML_DONTPEGBOTTOM) {
                 // Don't anchor lower wall texture to the floor.
                 // This seems to do a weird wrapping as well every 128 units - not sure why that is, probably related to the limitations of  8-bit uv coords.
@@ -136,13 +148,13 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
                 // PsyDoom: eliminate the weird wrapping as it's not needed anymore now with 16-bit UV coord support and could cause problems
                 #if PSYDOOM_LIMIT_REMOVING
-                    vt = d_fixed_to_int(side.rowoffset) + wall_h;
+                    vt = d_fixed_to_int(sideRowOffset) + wall_h;
                 #else
-                    vt = (d_fixed_to_int(side.rowoffset) + wall_h) & (~128);
+                    vt = (d_fixed_to_int(sideRowOffset) + wall_h) & (~128);
                 #endif
             } else {
                 // Anchor lower wall texture to the floor
-                vt = d_fixed_to_int(side.rowoffset);
+                vt = d_fixed_to_int(sideRowOffset);
             }
 
             vb = vt + tex_h;
@@ -209,15 +221,21 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
         #endif
 
         // Compute top and bottom texture 'v' coordinates
+        #if PSYDOOM_MODS
+            const fixed_t sideRowOffset = side.rowoffset.renderValue();     // PsyDoom: scrolling walls can now be interpolated 
+        #else
+            const fixed_t sideRowOffset = side.rowoffset;
+        #endif
+
         int32_t vt, vb;
 
         if (line.flags & ML_DONTPEGBOTTOM) {
             // Bottom of texture is at bottom of mid wall
-            vb = d_fixed_to_int(side.rowoffset) + TEXCOORD_MAX;
+            vb = d_fixed_to_int(sideRowOffset) + TEXCOORD_MAX;
             vt = vb - tex_h;
         } else {
             // Top of texture is at top of mid wall
-            vt = d_fixed_to_int(side.rowoffset);
+            vt = d_fixed_to_int(sideRowOffset);
             vb = vt + tex_h;
         }
 
@@ -454,8 +472,14 @@ void R_DrawWallPiece(
 
     // Compute the constant 'u' texture offset for the seg, in pixels.
     // This offset is based on the texture offset, as well as the viewpoint's distance along the seg.
+    #if PSYDOOM_MODS
+        const fixed_t segTextureOffset = seg.sidedef->textureoffset.renderValue();  // PsyDoom: scrolling walls can now be interpolated 
+    #else
+        const fixed_t segTextureOffset = seg.sidedef->textureoffset;
+    #endif
+
     const int32_t segStartU = d_rshift<8>(
-        (seg.offset + FRACUNIT + seg.sidedef->textureoffset) -
+        (seg.offset + FRACUNIT + segTextureOffset) -
         (segP1ViewX * segCos + segP1ViewY * segSin)
     );
 
