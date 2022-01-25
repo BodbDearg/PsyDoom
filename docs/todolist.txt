@@ -1,5 +1,4 @@
 - Implement integer scaling.
-- Don't interpolate instant lower floors.
 - MAPINFO: add a flag to inhibit the 'Entering <MAP_NAME>' message.
 - Default to no anti-aliasing if resolution is 4K
 - Fix reliance on bitfields for 16-bit pixels via 'Color16' (bitfield order implementation dependant).

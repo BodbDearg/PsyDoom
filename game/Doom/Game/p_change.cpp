@@ -20,6 +20,11 @@
 bool gbNofit;           // If 'true' then one or more things in the test sector undergoing height changes do not fit
 bool gbCrushChange;     // If 'true' then the current sector undergoing height changes should crush/damage things when they do not fit
 
+#if PSYDOOM_MODS
+    bool gbFloorIsInstantMoving;        // PsyDoom: a flag set if 'T_MovePlane' is moving a floor which instantly reaches its destination (instant floor)
+    bool gbCeilingIsInstantMoving;      // PsyDoom: a flag set if 'T_MovePlane' is moving a ceiling which instantly reaches its destination (instant ceiling)
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Clamps the map object's z position to be in a valid range for the sector it is within using the current floor/ceiling height.
 // Returns 'true' if the object can fit vertically in it's current sector, 'false' otherwise (should be crushed).
@@ -38,10 +43,24 @@ bool P_ThingHeightClip(mobj_t& mobj) noexcept {
     // Otherwise, if a floating thing, clip against the ceiling.
     const fixed_t oldZ = mobj.z;
 
+    #if PSYDOOM_MODS
+        // PsyDoom: snap the map object's z position if it was pushed due to an instantly moving floor or ceiling
+        bool bSnapDueToInstantMovingSector = false;
+    #endif
+
     if (bWasOnFloor) {
         mobj.z = mobj.floorz;
-    } else if (oldZ + mobj.height > mobj.ceilingz) {
+
+        #if PSYDOOM_MODS
+            bSnapDueToInstantMovingSector = gbFloorIsInstantMoving;
+        #endif
+    }
+    else if (oldZ + mobj.height > mobj.ceilingz) {
         mobj.z = mobj.ceilingz - mobj.height;
+
+        #if PSYDOOM_MODS
+            bSnapDueToInstantMovingSector = gbCeilingIsInstantMoving;
+        #endif
     }
 
     // Record that the player's view was shifted by this change if it's the current player.
@@ -53,9 +72,10 @@ bool P_ThingHeightClip(mobj_t& mobj) noexcept {
         }
     #endif
 
-    // PsyDoom: if the thing was moved by the sector and the interpolation of sectors is not enabled then snap the z motion of the object
+    // PsyDoom: if the thing was moved by the sector and the interpolation of sectors is not enabled then snap the z motion of the object.
+    // Also snap if it's being pushed by an instantly moving floor or ceiling:
     #if PSYDOOM_MODS
-        if (!Config::gbInterpolateSectors) {
+        if ((!Config::gbInterpolateSectors) || bSnapDueToInstantMovingSector) {
             if (oldZ != mobj.z) {
                 mobj.z.snap();
             }

@@ -56,11 +56,27 @@ result_e T_MovePlane(
         }
     #endif
 
-    // PsyDoom: before exiting snap all sector motion if that sort of interpolation is not enabled
+    // PsyDoom: initially assume no floors or ceilings are being instantly moved.
+    // In the code below detect instantly moving floors or ceilings by checking if they are already past their destination before any motion is applied.
+    // On finding this situation we disable interpolations for the motion since the intent by the level author is for the action to be instant.
+    // For more on the engine quirk of 'instant' floors/ceilings see: https://doomwiki.org/wiki/Instant_raising_and_lowering_sectors
+    #if PSYDOOM_MODS
+        gbFloorIsInstantMoving = false;
+        gbCeilingIsInstantMoving = false;
+    #endif
+
+    // PsyDoom: before exiting snap all sector motion if sector interpolation is disabled.
+    // Also snap motion for instant floors/ceilings (see comments above).
     #if PSYDOOM_MODS
         const auto snapSectorMovement = finally([&]() noexcept {
-            if (!Config::gbInterpolateSectors) {
+            const bool bSnapFloor = ((gbFloorIsInstantMoving) || (!Config::gbInterpolateSectors));
+            const bool bSnapCeiling = ((gbCeilingIsInstantMoving) || (!Config::gbInterpolateSectors));
+
+            if (bSnapFloor) {
                 sector.floorheight.snap();
+            }
+
+            if (bSnapCeiling) {
                 sector.ceilingheight.snap();
             }
         });
@@ -74,6 +90,11 @@ result_e T_MovePlane(
             const fixed_t prevFloorH = sector.floorheight;
 
             if (sector.floorheight - speed < destHeight) {
+                // PsyDoom: detect instantly moving floors by checking if they are already past their destination without any motion being applied
+                #if PSYDOOM_MODS
+                    gbFloorIsInstantMoving = (sector.floorheight < destHeight);
+                #endif
+
                 // Reached destination: allow move if not crushing stuff, otherwise restore previous height
                 sector.floorheight = destHeight;
 
@@ -100,6 +121,11 @@ result_e T_MovePlane(
             const fixed_t prevFloorH = sector.floorheight;
 
             if (sector.floorheight + speed > destHeight) {
+                // PsyDoom: detect instantly moving floors by checking if they are already past their destination without any motion being applied
+                #if PSYDOOM_MODS
+                    gbFloorIsInstantMoving = (sector.floorheight > destHeight);
+                #endif
+
                 // Reached destination: allow move if not crushing stuff, otherwise restore previous height
                 sector.floorheight = destHeight;
 
@@ -134,6 +160,11 @@ result_e T_MovePlane(
             const fixed_t prevCeilH = sector.ceilingheight;
 
             if (sector.ceilingheight - speed < destHeight) {
+                // PsyDoom: detect instantly moving ceilings by checking if they are already past their destination without any motion being applied
+                #if PSYDOOM_MODS
+                    gbCeilingIsInstantMoving = (sector.ceilingheight < destHeight);
+                #endif
+
                 // Reached destination: allow move if not crushing stuff, otherwise restore previous height
                 sector.ceilingheight = destHeight;
 
@@ -164,6 +195,11 @@ result_e T_MovePlane(
             const fixed_t prevCeilH = sector.ceilingheight;
 
             if (speed + sector.ceilingheight > destHeight) {
+                // PsyDoom: detect instantly moving ceilings by checking if they are already past their destination without any motion being applied
+                #if PSYDOOM_MODS
+                    gbCeilingIsInstantMoving = (sector.ceilingheight > destHeight);
+                #endif
+
                 // Reached destination: allow move if not crushing stuff, otherwise restore previous height
                 sector.ceilingheight = destHeight;
 
