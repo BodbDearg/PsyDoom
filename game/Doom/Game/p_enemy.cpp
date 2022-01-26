@@ -26,6 +26,7 @@
 #include "p_tick.h"
 #include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
+#include "sprinfo.h"
 
 #include <algorithm>
 #include <cmath>
@@ -1809,7 +1810,7 @@ void A_SpawnFly(mobj_t& actor) noexcept {
             spawnType = MT_PAIN;
         } else if (randNum < 160) {
             spawnType = MT_HEAD;
-        } else if (randNum < 162) {
+        } else if ((randNum < 162) && gbHaveSprites_ArchVile) {     // Pass over the Arch-vile if we haven't got the sprites available...
             spawnType = MT_VILE;
         } else if (randNum < 172) {
             spawnType = MT_UNDEAD;

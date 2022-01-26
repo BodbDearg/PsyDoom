@@ -24,6 +24,15 @@ static std::vector<spriteframe_t>                   gSpriteFrames;
 static std::vector<spritedef_t>                     gSpriteDefs;
 static std::unordered_map<uint32_t, spritedef_t*>   gSprNameToDef;      // LUT for accelerated lookup, use raw int as the key to avoid hashing difficulties
 
+// PsyDoom: whether the sprites for certain enemies that are restored for PsyDoom are in the currently loaded wads.
+// These enemies were missing from PSX Doom vs the PC version of Doom II.
+#if PSYDOOM_MODS
+    bool gbHaveSprites_IconOfSin;
+    bool gbHaveSprites_ArchVile;
+    bool gbHaveSprites_Keen;
+    bool gbHaveSprites_WolfSS;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: iterates through all of the sprite lumps defined in the main WAD file(s).
 // Calls the specified function and passes in the current sprite lump index and name.
@@ -311,6 +320,28 @@ static void sortSpriteDefs() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: tells if a specified sprite exists with at least the specified number of frames
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool checkSpriteExists(const sprname_t name, const int32_t minSpritesRequired) noexcept {
+    for (const spritedef_t& sprdef : gSpriteDefs) {
+        if (sprdef.name == name)
+            return (sprdef.numframes >= minSpritesRequired);
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: check for the existence of sprites for enemies that are restored for PsyDoom (Arch-vile etc.)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void checkForExtendedEnemySprites() noexcept {
+    gbHaveSprites_IconOfSin = (checkSpriteExists("BBRN", 2) && checkSpriteExists("BOSF", 4) && checkSpriteExists("FIRE", 8));
+    gbHaveSprites_ArchVile = (checkSpriteExists("VILE", 29) && checkSpriteExists("FIRE", 8));
+    gbHaveSprites_Keen = checkSpriteExists("KEEN", 13);
+    gbHaveSprites_WolfSS = checkSpriteExists("SSWV", 22);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Builds the data for all sprites in the game from the main WAD file(s)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitSprites() noexcept {
@@ -327,6 +358,9 @@ void P_InitSprites() noexcept {
     // Fill in the lump and rotation info for all sprites then sort the list of sprite definitions
     populateSpriteFrameList();
     sortSpriteDefs();
+
+    // Check whether extended enemy sprites are present (Arch-vile etc.)
+    checkForExtendedEnemySprites();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

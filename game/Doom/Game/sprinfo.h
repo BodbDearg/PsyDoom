@@ -29,6 +29,14 @@ struct spritedef_t {
     extern const spritedef_t gSprites[BASE_NUM_SPRITES];
 #endif
 
+// Info on whether extended enemy sprites are present
+#if PSYDOOM_MODS
+    extern bool gbHaveSprites_IconOfSin;
+    extern bool gbHaveSprites_ArchVile;
+    extern bool gbHaveSprites_Keen;
+    extern bool gbHaveSprites_WolfSS;
+#endif
+
 void P_InitSprites() noexcept;
 int32_t P_SpriteCheckNumForName(const sprname_t name) noexcept;
 int32_t P_SpriteGetNumForName(const sprname_t name) noexcept;
