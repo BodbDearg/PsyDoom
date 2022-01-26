@@ -15,6 +15,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
+#include "PsyDoom/Controls.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/PlayerPrefs.h"
@@ -33,6 +34,54 @@ static int32_t      gCurPasswordCharIdx;                // Which password charac
 int32_t     gNumPasswordCharsEntered;               // How many characters have been input for the current password sequence
 uint8_t     gPasswordCharBuffer[PW_SEQ_LEN];        // The password input buffer
 bool        gbUsingAPassword;                       // True if a valid password is currently being used
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: pop and return the next password character index which the user has typed in via the keyboard for the password screen.
+// Returns '-1' if the user hasn't typed in a password character.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t popTypedPasswordChar() noexcept {
+    // See if any valid password characters were typed
+    const char typedChar = std::tolower(Input::popTypedChar());
+
+    switch (typedChar) {
+        case 'b':   return 0;
+        case 'c':   return 1;
+        case 'd':   return 2;
+        case 'f':   return 3;
+        case 'g':   return 4;
+        case 'h':   return 5;
+        case 'j':   return 6;
+        case 'k':   return 7;
+        case 'l':   return 8;
+        case 'm':   return 9;
+        case 'n':   return 10;
+        case 'p':   return 11;
+        case 'q':   return 12;
+        case 'r':   return 13;
+        case 's':   return 14;
+        case 't':   return 15;
+        case 'v':   return 16;
+        case 'w':   return 17;
+        case 'x':   return 18;
+        case 'y':   return 19;
+        case 'z':   return 20;
+        case '0':   return 21;
+        case '1':   return 22;
+        case '2':   return 23;
+        case '3':   return 24;
+        case '4':   return 25;
+        case '5':   return 26;
+        case '6':   return 27;
+        case '7':   return 28;
+        case '8':   return 29;
+        case '9':   return 30;
+        case '!':   return 31;
+    }
+
+    return -1;  // Not a valid password char!
+}
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the password screen
@@ -181,9 +230,14 @@ gameaction_t TIC_PasswordScreen() noexcept {
     #endif
 
     // Entering or deleting a password character, or pressing the 'menu ok' command?
+    // PsyDoom: allow password characters to be typed with the keyboard also.
     #if PSYDOOM_MODS
+        const int32_t typedPasswordCharIdx = popTypedPasswordChar();
         const bool bMenuOkPressed = (inputs.bMenuOk && (!oldInputs.bMenuOk));
-        const bool bEnterPasswordChar = (inputs.bEnterPasswordChar && (!oldInputs.bEnterPasswordChar));
+        const bool bEnterPasswordChar = (
+            (inputs.bEnterPasswordChar && (!oldInputs.bEnterPasswordChar)) ||
+            (typedPasswordCharIdx >= 0)
+        );
         const bool bDeletePasswordChar = (inputs.bDeletePasswordChar && (!oldInputs.bDeletePasswordChar));
     #else
         const bool bEnterPasswordChar = (ticButtons & (PAD_SQUARE | PAD_CROSS | PAD_CIRCLE));
@@ -201,7 +255,17 @@ gameaction_t TIC_PasswordScreen() noexcept {
         S_StartSound(nullptr, sfx_swtchx);
 
         if (gNumPasswordCharsEntered < PW_SEQ_LEN) {
-            gPasswordCharBuffer[gNumPasswordCharsEntered] = (uint8_t) gCurPasswordCharIdx;
+            // PsyDoom: allow passwords to be typed in with the keyboard also
+            #if PSYDOOM_MODS
+                if (typedPasswordCharIdx >= 0) {
+                    gPasswordCharBuffer[gNumPasswordCharsEntered] = (uint8_t) typedPasswordCharIdx;
+                } else {
+                    gPasswordCharBuffer[gNumPasswordCharsEntered] = (uint8_t) gCurPasswordCharIdx;
+                }
+            #else
+                gPasswordCharBuffer[gNumPasswordCharsEntered] = (uint8_t) gCurPasswordCharIdx;
+            #endif
+
             gNumPasswordCharsEntered++;
 
             // If the password sequence is not yet complete then there is nothing more to do

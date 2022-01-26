@@ -27,6 +27,7 @@ static int                              gNumKeyboardStateKeys;
 static std::vector<uint16_t>            gKeyboardKeysPressed;
 static std::vector<uint16_t>            gKeyboardKeysJustPressed;
 static std::vector<uint16_t>            gKeyboardKeysJustReleased;
+static std::vector<char>                gTypedChars;                    // Text input via the OS, respect the keyboard layout and modifiers
 static std::vector<MouseButton>         gMouseButtonsPressed;
 static std::vector<MouseButton>         gMouseButtonsJustPressed;
 static std::vector<MouseButton>         gMouseButtonsJustReleased;
@@ -252,6 +253,17 @@ static void handleSdlEvents() noexcept {
                 }
             }   break;
 
+            case SDL_TEXTINPUT: {
+                // Typed text which respects the current keyboard layout and modifiers like the shift key
+                for (const char typedChar : sdlEvent.text.text) {
+                    if (typedChar) {
+                        gTypedChars.push_back(typedChar);
+                    } else {
+                        break;
+                    }
+                }
+            }   break;
+
             case SDL_KEYDOWN: {
                 const uint16_t scancode = (uint16_t) sdlEvent.key.keysym.scancode;
 
@@ -473,8 +485,9 @@ void init() noexcept {
     gbIsQuitRequested = false;
 
     gpKeyboardState = SDL_GetKeyboardState(&gNumKeyboardStateKeys);
-    gKeyboardKeysJustPressed.reserve(16);
-    gKeyboardKeysJustReleased.reserve(16);
+    gKeyboardKeysJustPressed.reserve(32);
+    gKeyboardKeysJustReleased.reserve(32);
+    gTypedChars.reserve(32);
 
     gMouseButtonsPressed.reserve(NUM_MOUSE_BUTTONS);
     gMouseButtonsJustPressed.reserve(NUM_MOUSE_BUTTONS);
@@ -534,6 +547,7 @@ void shutdown() noexcept {
     emptyAndShrinkVector(gMouseButtonsJustPressed);
     emptyAndShrinkVector(gMouseButtonsPressed);
 
+    emptyAndShrinkVector(gTypedChars);
     emptyAndShrinkVector(gKeyboardKeysJustReleased);
     emptyAndShrinkVector(gKeyboardKeysJustPressed);
     emptyAndShrinkVector(gKeyboardKeysPressed);
@@ -561,10 +575,14 @@ void consumeEvents() noexcept {
     // Clear all events
     gKeyboardKeysJustPressed.clear();
     gKeyboardKeysJustReleased.clear();
+    consumeTypedChars();
+
     gMouseButtonsJustPressed.clear();
     gMouseButtonsJustReleased.clear();
+
     gGamepadInputsJustPressed.clear();
     gGamepadInputsJustReleased.clear();
+    
     gJoystickAxesJustPressed.clear();
     gJoystickAxesJustReleased.clear();
     gJoystickButtonsJustPressed.clear();
@@ -578,6 +596,13 @@ void consumeEvents() noexcept {
     gMouseWheelAxisMovements[1] = 0.0f;
 
     consumeMouseMovements();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Consumes all typed character events
+//------------------------------------------------------------------------------------------------------------------------------------------
+void consumeTypedChars() noexcept {
+    gTypedChars.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -603,7 +628,8 @@ void requestQuit() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Returns true if any keys or buttons are pressed
+// Returns true if any keys or buttons are pressed.
+// Note: the check does not include typed chars, those are just recorded events not input states.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool areAnyKeysOrButtonsPressed() noexcept {
     // Check keyboard and mouse for any button pressed
@@ -629,6 +655,28 @@ bool areAnyKeysOrButtonsPressed() noexcept {
     return false;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the next typed character, if any.
+// If there is no next typed character then the 'NUL' character is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+char peekTypedChar() noexcept {
+    return (gTypedChars.empty()) ? 0 : gTypedChars.front();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Pops and returns the next typed character, if any.
+// If there is no next typed character then the 'NUL' character is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+char popTypedChar() noexcept {
+    if (gTypedChars.empty()) {
+        return 0;
+    } else {
+        const char nextChar = gTypedChars.front();
+        gTypedChars.erase(gTypedChars.begin());
+        return nextChar;
+    }
+}
+
 const std::vector<uint16_t>& getKeyboardKeysPressed() noexcept {
     return gKeyboardKeysPressed;
 }
@@ -639,6 +687,10 @@ const std::vector<uint16_t>& getKeyboardKeysJustPressed() noexcept {
 
 const std::vector<uint16_t>& getKeyboardKeysJustReleased() noexcept {
     return gKeyboardKeysJustReleased;
+}
+
+const std::vector<char>& getTypedChars() noexcept {
+    return gTypedChars;
 }
 
 const std::vector<MouseButton>& getMouseButtonsPressed() noexcept {

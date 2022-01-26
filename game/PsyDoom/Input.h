@@ -59,15 +59,19 @@ void init() noexcept;
 void shutdown() noexcept;
 void update() noexcept;
 void consumeEvents() noexcept;
+void consumeTypedChars() noexcept;
 void consumeMouseMovements() noexcept;
 bool isQuitRequested() noexcept;
 void requestQuit() noexcept;
 bool areAnyKeysOrButtonsPressed() noexcept;
+char peekTypedChar() noexcept;
+char popTypedChar() noexcept;
 
 // Get a list of things pressed, just pressed or just released
 const std::vector<uint16_t>& getKeyboardKeysPressed() noexcept;
 const std::vector<uint16_t>& getKeyboardKeysJustPressed() noexcept;
 const std::vector<uint16_t>& getKeyboardKeysJustReleased() noexcept;
+const std::vector<char>& getTypedChars() noexcept;
 
 const std::vector<MouseButton>& getMouseButtonsPressed() noexcept;
 const std::vector<MouseButton>& getMouseButtonsJustPressed() noexcept;
