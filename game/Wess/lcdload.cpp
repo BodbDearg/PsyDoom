@@ -31,6 +31,15 @@ static uint16_t             gWess_lcd_load_numSounds;           // How many soun
 static uint8_t*             gpWess_lcd_load_headerBuf;          // This buffer contains the LCD file header (2048 bytes max)
 static uint32_t             gWess_lcd_load_samplePos;           // This is the current address in SPU RAM to upload sound to: incremented as we load
 
+#if PSYDOOM_MODS
+    // PsyDoom: a flag used to indicate LCD loading should be aborted, due to an error of some kind
+    static bool gbWess_lcd_load_abort;
+
+    // PsyDoom: the total number of patch samples in the loaded WMD file.
+    // Use this for additional safety checks when reading an LCD file, in case it contains a sound that doesn't exist in the WMD.
+    static uint16_t gWess_lcd_load_numPatchSamples;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the LCD loader with the specified master status struct
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,6 +80,10 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
         wess_align_byte_ptr(pPatchesData, alignof(patch_sample));
         gpWess_lcd_load_patchSamples = (patch_sample*) pPatchesData;
         pPatchesData += sizeof(patch_sample) * pPatchGroup->hdr.num_patch_samples;
+
+        #if PSYDOOM_MODS
+            gWess_lcd_load_numPatchSamples = pPatchGroup->hdr.num_patch_samples;
+        #endif
 
         wess_align_byte_ptr(pPatchesData, alignof(drum_patch));
         gpWess_lcd_load_drumPatches = (drum_patch*) pPatchesData;
@@ -144,10 +157,23 @@ int32_t wess_dig_lcd_data_read(
             // Otherwise switch over to reading and uploading the next sound.
             // Set the number of bytes to read, and where to upload it to in SPU ram when we are done.
             gWess_lcd_load_soundNum++;
-
             const int32_t nextPatchSampleIdx = pPatchSampleIndices[gWess_lcd_load_soundNum];
-            patch_sample& nextPatchSample = pPatchSamples[nextPatchSampleIdx];
 
+            #if PSYDOOM_MODS
+                // PsyDoom: added safety when loading LCD files.
+                // If the sample index is out of range then abort loading the LCD and issue a warning.
+                if (nextPatchSampleIdx >= gWess_lcd_load_numPatchSamples) {
+                    #if PSYDOOM_MODS
+                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:LCD load error! Bad snd idx!");
+                    #endif
+
+                    gWess_lcd_load_soundBytesLeft = 0;
+                    gbWess_lcd_load_abort = true;
+                    return bytesWritten;
+                }
+            #endif
+
+            patch_sample& nextPatchSample = pPatchSamples[nextPatchSampleIdx];
             gWess_lcd_load_soundBytesLeft = nextPatchSample.size;
 
             // PsyDoom: fix samples being uploaded to the wrong SPU address in some cases if other sounds in the LCD are already loaded and skipped over.
@@ -173,6 +199,7 @@ int32_t wess_dig_lcd_data_read(
                 #endif
 
                 gWess_lcd_load_soundBytesLeft = 0;
+                gbWess_lcd_load_abort = true;
                 return bytesWritten;
             }
 
@@ -234,6 +261,9 @@ int32_t wess_dig_lcd_load(
     if (ProgArgs::gbHeadlessMode)
         return 0;
 
+    // Clear this error flag
+    gbWess_lcd_load_abort = false;
+
     // Open the LCD file firstly and abort if that fails or the file handle returned is invalid
     PsxCd_File* const pLcdFile = psxcd_open(lcdFileToLoad);
 
@@ -277,7 +307,7 @@ int32_t wess_dig_lcd_load(
     int32_t lcdBytesLeft = pLcdFile->size - CDROM_SECTOR_SIZE;
     int32_t numSpuBytesWritten = 0;
 
-    while (lcdBytesLeft > 0) {
+    while ((lcdBytesLeft > 0) && (!gbWess_lcd_load_abort)) {
         // Read this sector from the LCD file and the number of bytes left is smaller then read that amount instead
         uint8_t* const sectorBuffer = gWess_sectorBuffer2;
         const int32_t readSize = (lcdBytesLeft < CDROM_SECTOR_SIZE) ? lcdBytesLeft : CDROM_SECTOR_SIZE;
