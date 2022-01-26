@@ -42,7 +42,7 @@ bool        gbUsingAPassword;                       // True if a valid password 
 //------------------------------------------------------------------------------------------------------------------------------------------
 static int32_t popTypedPasswordChar() noexcept {
     // See if any valid password characters were typed
-    const char typedChar = std::tolower(Input::popTypedChar());
+    const char typedChar = (char) std::tolower(Input::popTypedChar());
 
     switch (typedChar) {
         case 'b':   return 0;
