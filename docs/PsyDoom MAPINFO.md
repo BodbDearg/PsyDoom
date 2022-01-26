@@ -114,6 +114,7 @@ Cluster 2 {
     TextX = 0
     TextY = 45
     SkipFinale = false
+    HideNextMapForFinale = false
     EnableCast = true
     NoCenterText = false
     SmallFont = false
@@ -143,6 +144,7 @@ Internal Fields:
 - `TextX`: X position of finale text. Ignored unless `NoCenterText` is enabled (`true`).
 - `TextY`: Y position of the finale text.
 - `SkipFinale`: if set to `true` then no finale will show.
+- `HideNextMapForFinale`: if the conditions to show a finale arise (ignoring `SkipFinale`), hide the 'Entering <MAP_NAME>' message and password on the intermission screen?
 - `EnableCast`: if set to `true` then a finale with a cast call will be shown.
 - `NoCenterText`: if set to `true` then the finale text will not be centered.
 - `SmallFont`: if set to `true` then the small (8x8) font used for rendering status bar messages will be used for the finale.

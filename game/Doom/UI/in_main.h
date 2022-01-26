@@ -8,6 +8,10 @@
     extern const char gMapNames_FinalDoom[][32];
 #endif
 
+#if PSYDOOM_MODS
+    extern bool gbIntermissionHideNextMap;
+#endif
+
 void IN_Start() noexcept;
 void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept;
 gameaction_t IN_Ticker() noexcept;

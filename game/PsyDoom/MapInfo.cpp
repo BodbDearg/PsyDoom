@@ -44,6 +44,7 @@ Cluster::Cluster() noexcept
     , textX(0)
     , textY(15)
     , bSkipFinale(true)
+    , bHideNextMapForFinale(false)
     , bEnableCast(false)
     , bNoCenterText(false)
     , bSmallFont(false)
@@ -230,6 +231,7 @@ static void readCluster(const Block& block) noexcept {
     cluster.textX = (int16_t) block.getSingleIntValue("TextX", cluster.textX);
     cluster.textY = (int16_t) block.getSingleIntValue("TextY", cluster.textY);
     cluster.bSkipFinale = (block.getSingleIntValue("SkipFinale", cluster.bSkipFinale) > 0);
+    cluster.bHideNextMapForFinale = (block.getSingleIntValue("HideNextMapForFinale", cluster.bHideNextMapForFinale) > 0);
     cluster.bEnableCast = (block.getSingleIntValue("EnableCast", cluster.bEnableCast) > 0);
     cluster.bNoCenterText = (block.getSingleIntValue("NoCenterText", cluster.bNoCenterText) > 0);
     cluster.bSmallFont = (block.getSingleIntValue("SmallFont", cluster.bSmallFont) > 0);
@@ -406,6 +408,7 @@ static void setMapInfoToDefaults() noexcept {
             clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
             clus.textY = 22;
             clus.bSkipFinale = false;
+            clus.bHideNextMapForFinale = false;
             clus.bEnableCast = false;
             clus.text[0] = "you have assaulted and";
             clus.text[1] = "triumphed over the most";
@@ -432,6 +435,7 @@ static void setMapInfoToDefaults() noexcept {
             clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
             clus.textY = 29;
             clus.bSkipFinale = false;
+            clus.bHideNextMapForFinale = false;
             clus.bEnableCast = false;
             clus.text[0] = "suddenly all is silent";
             clus.text[1] = "from one horizon to the";
@@ -457,6 +461,7 @@ static void setMapInfoToDefaults() noexcept {
             clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
             clus.textY = 15;
             clus.bSkipFinale = false;
+            clus.bHideNextMapForFinale = false;
             clus.bEnableCast = true;
             clus.text[0] = "you_gloat_over_the";
             clus.text[1] = "carcass_of_the_guardian.";
@@ -486,6 +491,7 @@ static void setMapInfoToDefaults() noexcept {
             clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
             clus.textY = 45;
             clus.bSkipFinale = false;
+            clus.bHideNextMapForFinale = false;
             clus.bEnableCast = false;
             clus.text[0] = "you have won!";
             clus.text[1] = "your victory enabled";
@@ -509,6 +515,7 @@ static void setMapInfoToDefaults() noexcept {
             clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
             clus.textY = 45;
             clus.bSkipFinale = false;
+            clus.bHideNextMapForFinale = false;
             clus.bEnableCast = true;
             clus.text[0] = "you did it!";
             clus.text[1] = "by turning the evil of";

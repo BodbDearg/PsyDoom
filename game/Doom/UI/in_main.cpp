@@ -149,6 +149,11 @@ static int32_t  gFragValue[MAXPLAYERS];
 // 0 = ramping up score, 1 = score fully shown, 2 = begin exiting intermission.
 static int32_t  gIntermissionStage;
 
+#if PSYDOOM_MODS
+    // PsyDoom: a flag which allows hiding of the 'Entering <MAP_NAME>' message and the password
+    bool gbIntermissionHideNextMap;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialization/setup logic for the intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -477,18 +482,27 @@ void IN_SingleDrawer() noexcept {
 
     // Only draw the next map and password if there is a next map
     if (gNextMap <= Game::getNumMaps()) {
-        I_DrawString(-1, 145, "Entering");
-        I_DrawString(-1, 161, Game::getMapName(gNextMap).c_str().data());
-        I_DrawString(-1, 187, "Password");
+        // PsyDoom: the next map and password can now be hidden via MAPINFO for the last map in the cluster
+        #if PSYDOOM_MODS
+            const bool bShowNextMap = (!gbIntermissionHideNextMap);
+        #else
+            const bool bShowNextMap = true;
+        #endif
 
-        char passwordStr[PW_SEQ_LEN + 1];
+        if (bShowNextMap) {
+            I_DrawString(-1, 145, "Entering");
+            I_DrawString(-1, 161, Game::getMapName(gNextMap).c_str().data());
+            I_DrawString(-1, 187, "Password");
 
-        for (int32_t i = 0; i < PW_SEQ_LEN; ++i) {
-            passwordStr[i] = gPasswordChars[gPasswordCharBuffer[i]];
+            char passwordStr[PW_SEQ_LEN + 1];
+
+            for (int32_t i = 0; i < PW_SEQ_LEN; ++i) {
+                passwordStr[i] = gPasswordChars[gPasswordCharBuffer[i]];
+            }
+
+            passwordStr[PW_SEQ_LEN] = 0;
+            I_DrawString(-1, 203, passwordStr);
         }
-
-        passwordStr[PW_SEQ_LEN] = 0;
-        I_DrawString(-1, 203, passwordStr);
     }
 }
 
@@ -556,21 +570,30 @@ void IN_CoopDrawer() noexcept {
 
     // Only draw the next map and password if there is a next map
     if (gNextMap <= Game::getNumMaps()) {
-        I_DrawString(-1, 149, "Entering");
-        I_DrawString(-1, 165, Game::getMapName(gNextMap).c_str().data());
+        // PsyDoom: the next map and password can now be hidden via MAPINFO for the last map in the cluster
+        #if PSYDOOM_MODS
+            const bool bShowNextMap = (!gbIntermissionHideNextMap);
+        #else
+            const bool bShowNextMap = true;
+        #endif
 
-        // Well this is mean! The current player only gets to see a password if not dead :(
-        if (gPlayers[gCurPlayerIndex].health > 0) {
-            I_DrawString(-1, 191, "Password");
+        if (bShowNextMap) {
+            I_DrawString(-1, 149, "Entering");
+            I_DrawString(-1, 165, Game::getMapName(gNextMap).c_str().data());
 
-            char passwordStr[PW_SEQ_LEN + 1];
+            // Well this is mean! The current player only gets to see a password if not dead :(
+            if (gPlayers[gCurPlayerIndex].health > 0) {
+                I_DrawString(-1, 191, "Password");
 
-            for (int32_t i = 0; i < PW_SEQ_LEN; ++i) {
-                passwordStr[i] = gPasswordChars[gPasswordCharBuffer[i]];
+                char passwordStr[PW_SEQ_LEN + 1];
+
+                for (int32_t i = 0; i < PW_SEQ_LEN; ++i) {
+                    passwordStr[i] = gPasswordChars[gPasswordCharBuffer[i]];
+                }
+
+                passwordStr[PW_SEQ_LEN] = 0;
+                I_DrawString(-1, 207, passwordStr);
             }
-
-            passwordStr[PW_SEQ_LEN] = 0;
-            I_DrawString(-1, 207, passwordStr);
         }
     }
 }
@@ -659,7 +682,16 @@ void IN_DeathmatchDrawer() noexcept {
 
     // Only draw the next map if there is one
     if (gNextMap <= Game::getNumMaps()) {
-        I_DrawString(-1, 190, "Entering");
-        I_DrawString(-1, 206, Game::getMapName(gNextMap).c_str().data());
+        // PsyDoom: the next map can now be hidden via MAPINFO for the last map in the cluster
+        #if PSYDOOM_MODS
+            const bool bShowNextMap = (!gbIntermissionHideNextMap);
+        #else
+            const bool bShowNextMap = true;
+        #endif
+
+        if (bShowNextMap) {
+            I_DrawString(-1, 190, "Entering");
+            I_DrawString(-1, 206, Game::getMapName(gNextMap).c_str().data());
+        }
     }
 }

@@ -512,28 +512,10 @@ void G_RunGame() noexcept {
         if (gGameAction == ga_exitdemo)
             break;
 
-        // Do the intermission
-        MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
-
-        // PsyDoom: if app quit was requested then exit immediately
-        if (Input::isQuitRequested())
-            break;
-
         // PsyDoom: don't allow the finale to trigger in deathmatch mode, just go straight to the next (non secret) map unless there is no next one.
         // Apparently the Doom II finale could trigger in the original code for deathmatch, if the last non-secret map was completed...
         const bool bNextMapExists = (gNextMap <= Game::getNumMaps());
         const bool bIsGameEndMap = (gGameMap == Game::getNumRegularMaps());
-
-        if (gNetGame == gt_deathmatch) {
-            if (bNextMapExists && (!bIsGameEndMap)) {
-                // Next map exists in deathmatch mode and we didn't just complete the last non-secret map: go onto it, skipping all finales
-                gGameMap = gNextMap;
-                continue;
-            } else {
-                // No next non-secret map for deathmatch mode: return to the main menu
-                break;
-            }
-        }
 
         // Should we do a finale and which one should we do, one with a cast call (Finale 2) or one without? (Finale 1).
         // 
@@ -551,6 +533,28 @@ void G_RunGame() noexcept {
             (!bNextMapExists) ||                // Trigger the finale if the next map does not exist
             (curClusterNum != nextClusterNum)   // Finale also triggers if cluster number changes
         );
+
+        // PsyDoom: set whether the 'Entering <MAP_NAME>' message and the password should be allowed on the intermission screen.
+        // It can be inhibited if mapinfo says so, but only for the finale:
+        gbIntermissionHideNextMap = (bDoFinale && pCluster && pCluster->bHideNextMapForFinale);
+
+        // Do the intermission
+        MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
+
+        // PsyDoom: if app quit was requested then exit immediately
+        if (Input::isQuitRequested())
+            break;
+
+        if (gNetGame == gt_deathmatch) {
+            if (bNextMapExists && (!bIsGameEndMap)) {
+                // Next map exists in deathmatch mode and we didn't just complete the last non-secret map: go onto it, skipping all finales
+                gGameMap = gNextMap;
+                continue;
+            } else {
+                // No next non-secret map for deathmatch mode: return to the main menu
+                break;
+            }
+        }
 
         if (!bDoFinale) {
             // Not doing a finale, just go onto the next map.

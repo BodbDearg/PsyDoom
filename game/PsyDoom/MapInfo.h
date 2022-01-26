@@ -57,19 +57,20 @@ struct Episode {
 // Just specifies how the finale is handled when the cluster end is reached.
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct Cluster {
-    int32_t     clusterNum;         // The cluster number/identifier
-    String16    castLcdFile;        // Which LCD file to load for the cast call
-    String8     pic;                // Background image displayed for the finale
-    int32_t     picPal;             // Which palette to use for the finale background
-    int16_t     cdMusicA;           // Which CD music track to play initially for the finale
-    int16_t     cdMusicB;           // Which CD music track to play looped after the initial finale track is done
-    int16_t     textX;              // Position for the finale text: x; ignored if the text is centered.
-    int16_t     textY;              // Position for the finale text: y
-    bool        bSkipFinale;        // Show no finale?
-    bool        bEnableCast;        // Show the cast call for this finale?
-    bool        bNoCenterText;      // Avoid centering the finale text?
-    bool        bSmallFont;         // Use a small font for the finale instead of a big one?
-    String32    text[30];           // Text lines for the finale text (max 32x30 characters)
+    int32_t     clusterNum;             // The cluster number/identifier
+    String16    castLcdFile;            // Which LCD file to load for the cast call
+    String8     pic;                    // Background image displayed for the finale
+    int32_t     picPal;                 // Which palette to use for the finale background
+    int16_t     cdMusicA;               // Which CD music track to play initially for the finale
+    int16_t     cdMusicB;               // Which CD music track to play looped after the initial finale track is done
+    int16_t     textX;                  // Position for the finale text: x; ignored if the text is centered.
+    int16_t     textY;                  // Position for the finale text: y
+    bool        bSkipFinale;            // Show no finale?
+    bool        bHideNextMapForFinale;  // If the conditions to show a finale arise (ignoring the skip flag), hide the 'Entering <MAP_NAME>' message and password on the intermission screen?
+    bool        bEnableCast;            // Show the cast call for this finale?
+    bool        bNoCenterText;          // Avoid centering the finale text?
+    bool        bSmallFont;             // Use a small font for the finale instead of a big one?
+    String32    text[30];               // Text lines for the finale text (max 32x30 characters)
 
     Cluster() noexcept;
 };
