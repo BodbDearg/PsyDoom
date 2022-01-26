@@ -841,7 +841,7 @@ void P_Start() noexcept {
 
         if (gbAutoSaveOnLevelStart) {
             gbAutoSaveOnLevelStart = false;
-            SaveGameForSlot(SaveFileSlot::AUTOSAVE);
+            SaveGameForSlot(SaveFileSlot::AUTOSAVE, true);
         }
     #endif
 }

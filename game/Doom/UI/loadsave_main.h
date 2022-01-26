@@ -16,7 +16,7 @@ void LoadSave_Init() noexcept;
 void LoadSave_Shutdown(const gameaction_t exitAction) noexcept;
 gameaction_t LoadSave_Update() noexcept;
 void LoadSave_Draw() noexcept;
-gameaction_t SaveGameForSlot(const SaveFileSlot slot) noexcept;
+gameaction_t SaveGameForSlot(const SaveFileSlot slot, const bool bIsAutoSaving) noexcept;
 gameaction_t LoadGameForSlot(const SaveFileSlot slot) noexcept;
 bool ShouldLoadSaveOnLevelStart() noexcept;
 void ClearLoadSaveOnLevelStartFlag() noexcept;

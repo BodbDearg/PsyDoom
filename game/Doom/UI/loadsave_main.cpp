@@ -339,7 +339,7 @@ gameaction_t LoadSave_Update() noexcept {
                 action = LoadGameForSlot(saveSlot);
             } else {
                 S_StartSound(nullptr, sfx_pistol);
-                action = SaveGameForSlot(saveSlot);
+                action = SaveGameForSlot(saveSlot, false);
             }
 
             if (action == ga_exitmenus) {
@@ -492,7 +492,7 @@ void LoadSave_Draw() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Save the game for the specified save slot
 //------------------------------------------------------------------------------------------------------------------------------------------
-gameaction_t SaveGameForSlot(const SaveFileSlot slot) noexcept {
+gameaction_t SaveGameForSlot(const SaveFileSlot slot, const bool bIsAutoSaving) noexcept {
     ASSERT_LOG(gNetGame == gt_single, "Should only be called in single player games!");
 
     // Do the save and remember temporarily the slot being used
@@ -508,8 +508,16 @@ gameaction_t SaveGameForSlot(const SaveFileSlot slot) noexcept {
         // Ignore...
     }
 
-    // Display the result to the HUD and clear the current slot being loaded
-    DisplaySavedHudMessage(slot, bSuccess);
+    // Display the result to the HUD and clear the current slot being loaded.
+    // Skip the HUD message however if the unusual situation arises where we are auto-saving on level start and there is already
+    // a message being displayed. The message already being displayed is likely a warning of some sort, so it should get priority.
+    const bool bHudAlreadyHasMessage = ((gStatusBar.message != nullptr) && (gStatusBar.messageTicsLeft > 0));
+    const bool bSkipHudMessage = (bHudAlreadyHasMessage && bIsAutoSaving);
+
+    if (!bSkipHudMessage) {
+        DisplaySavedHudMessage(slot, bSuccess);
+    }
+
     SaveAndLoad::gCurSaveSlot = SaveFileSlot::NONE;
 
     // Exit all menus and unpause the game
@@ -626,7 +634,7 @@ void DisplayLoadedHudMessage(const SaveFileSlot slot, const bool bSuccess) noexc
 // Helper: attempts to quicksave the game
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DoQuicksave() noexcept {
-    SaveGameForSlot(SaveFileSlot::QUICKSAVE);
+    SaveGameForSlot(SaveFileSlot::QUICKSAVE, false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
