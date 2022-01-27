@@ -14,7 +14,7 @@
 #include "Video.h"
 
 #include <algorithm>
-#include <ctime>
+#include <chrono>
 #include <functional>
 
 BEGIN_NAMESPACE(LogoPlayer)
@@ -173,13 +173,14 @@ static bool logoPlaybackLoop(const Logo& logo, const float duration, const std::
         return true;
 
     // Display for the specified number of seconds
-    std::clock_t playbackStartTime = std::clock();
+    typedef std::chrono::system_clock timer;
+    const timer::time_point playbackStartTime = timer::now();
 
     while (shouldContinueLogoPlayback()) {
         // Figure out the percentage completion of displaying the logo and the logo brightness as a result
-        const std::clock_t elapsedTime = std::clock() - playbackStartTime;
-        const float elapsedTimeSecs = (float)((double) elapsedTime / (double) CLOCKS_PER_SEC);
-        const float percentComplete = std::clamp(elapsedTimeSecs / duration, 0.0f, 1.0f);
+        const timer::duration elapsedTime = timer::now() - playbackStartTime;
+        const double elapsedTimeSecs = std::chrono::duration<double>(elapsedTime).count();
+        const float percentComplete = (float) std::clamp(elapsedTimeSecs / duration, 0.0, 1.0);
         const float logoBrightness = brightnessFunc(percentComplete);
 
         // Update the logo surface and then display it

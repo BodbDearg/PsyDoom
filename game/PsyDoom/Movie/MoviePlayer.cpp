@@ -16,7 +16,7 @@
 #include "XAAdpcmDecoder.h"
 
 #include <atomic>
-#include <ctime>
+#include <chrono>
 #include <mutex>
 #include <thread>
 
@@ -463,14 +463,16 @@ static void displayCurrentVideoFrame() noexcept {
 // Runs the main loop for movie playback
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void moviePlaybackLoop(const float secondsPerFrame) noexcept {
+    typedef std::chrono::system_clock timer;
+    const timer::time_point playbackStartTime = timer::now();
+    
     int32_t curFrameIndex = -1;
-    std::clock_t playbackStartTime = std::clock();
 
     while (shouldContinueMoviePlayback()) {
         // What frame should we be on?
         // Try to decode a new frame if it's time to do that...
-        const std::clock_t elapsedTime = std::clock() - playbackStartTime;
-        const double elapsedTimeSecs = (double) elapsedTime / (double) CLOCKS_PER_SEC;
+        const timer::duration elapsedTime = timer::now() - playbackStartTime;
+        const double elapsedTimeSecs = std::chrono::duration<double>(elapsedTime).count();
         const int32_t tgtFrameIndex = (int32_t)(elapsedTimeSecs / secondsPerFrame);
 
         if (curFrameIndex < tgtFrameIndex) {
