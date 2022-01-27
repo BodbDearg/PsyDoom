@@ -261,11 +261,11 @@ Color16 color24FTo16(const Color24F colorIn) noexcept {
     constexpr uint32_t COLOR_NORMALIZE = (bIsTextured) ? 128 : 255;
     constexpr uint32_t ROUND_UP = (bIsTextured) ? 0 : 128;
 
-    Color16 colorOut;
-    colorOut.comp.r = (uint16_t) std::min(((uint32_t) colorIn.comp.r * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u);
-    colorOut.comp.g = (uint16_t) std::min(((uint32_t) colorIn.comp.g * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u);
-    colorOut.comp.b = (uint16_t) std::min(((uint32_t) colorIn.comp.b * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u);
-    return colorOut;
+    return Color16::make(
+        (uint16_t) std::min(((uint32_t) colorIn.comp.r * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u),
+        (uint16_t) std::min(((uint32_t) colorIn.comp.g * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u),
+        (uint16_t) std::min(((uint32_t) colorIn.comp.b * 31u + ROUND_UP) / COLOR_NORMALIZE, 31u)
+    );
 }
 
 // Instantiate the variants of this function
@@ -278,12 +278,12 @@ template Color16 color24FTo16<DrawMode::TexturedBlended>(const Color24F colorIn)
 // Modulate a 16-bit color by a 24-bit one where the components are in 1.7 fixed point format
 //------------------------------------------------------------------------------------------------------------------------------------------
 Color16 colorMul(const Color16 color1, const Color24F color2) noexcept {
-    Color16 out;
-    out.comp.r = (uint16_t) std::min((color1.comp.r * color2.comp.r) >> 7, 31);
-    out.comp.g = (uint16_t) std::min((color1.comp.g * color2.comp.g) >> 7, 31);
-    out.comp.b = (uint16_t) std::min((color1.comp.b * color2.comp.b) >> 7, 31);
-    out.comp.t = color1.comp.t;
-    return out;
+    return Color16::make(
+        (uint16_t) std::min((color1.getR() * color2.comp.r) >> 7, 31),
+        (uint16_t) std::min((color1.getG() * color2.comp.g) >> 7, 31),
+        (uint16_t) std::min((color1.getB() * color2.comp.b) >> 7, 31),
+        color1.getT()
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -294,27 +294,35 @@ Color16 colorBlend(const Color16 bg, const Color16 fg, const BlendMode mode) noe
 
     switch (mode) {
         case BlendMode::Alpha50:
-            result.comp.r = (uint16_t)((bg.comp.r + fg.comp.r) >> 1);
-            result.comp.g = (uint16_t)((bg.comp.g + fg.comp.g) >> 1);
-            result.comp.b = (uint16_t)((bg.comp.b + fg.comp.b) >> 1);
+            result.setRGB(
+                (uint16_t)((bg.getR() + fg.getR()) >> 1),
+                (uint16_t)((bg.getG() + fg.getG()) >> 1),
+                (uint16_t)((bg.getB() + fg.getB()) >> 1)
+            );
             break;
 
         case BlendMode::Add:
-            result.comp.r = (uint16_t) std::min(bg.comp.r + fg.comp.r, 31);
-            result.comp.g = (uint16_t) std::min(bg.comp.g + fg.comp.g, 31);
-            result.comp.b = (uint16_t) std::min(bg.comp.b + fg.comp.b, 31);
+            result.setRGB(
+                (uint16_t) std::min(bg.getR() + fg.getR(), 31),
+                (uint16_t) std::min(bg.getG() + fg.getG(), 31),
+                (uint16_t) std::min(bg.getB() + fg.getB(), 31)
+            );
             break;
 
         case BlendMode::Subtract:
-            result.comp.r = (uint16_t) std::max((int32_t) bg.comp.r - (int32_t) fg.comp.r, 0);
-            result.comp.g = (uint16_t) std::max((int32_t) bg.comp.g - (int32_t) fg.comp.g, 0);
-            result.comp.b = (uint16_t) std::max((int32_t) bg.comp.b - (int32_t) fg.comp.b, 0);
+            result.setRGB(
+                (uint16_t) std::max((int32_t) bg.getR() - (int32_t) fg.getR(), 0),
+                (uint16_t) std::max((int32_t) bg.getG() - (int32_t) fg.getG(), 0),
+                (uint16_t) std::max((int32_t) bg.getB() - (int32_t) fg.getB(), 0)
+            );
             break;
 
         case BlendMode::Add25:
-            result.comp.r = (uint16_t) std::min(bg.comp.r + (fg.comp.r >> 2), 31);
-            result.comp.g = (uint16_t) std::min(bg.comp.g + (fg.comp.g >> 2), 31);
-            result.comp.b = (uint16_t) std::min(bg.comp.b + (fg.comp.b >> 2), 31);
+            result.setRGB(
+                (uint16_t) std::min(bg.getR() + (fg.getR() >> 2), 31),
+                (uint16_t) std::min(bg.getG() + (fg.getG() >> 2), 31),
+                (uint16_t) std::min(bg.getB() + (fg.getB() >> 2), 31)
+            );
             break;
     }
 
@@ -835,10 +843,11 @@ static void draw(Core& core, const DrawTriangleGouraud& triangle) noexcept {
             }
             else {
                 // Not doing texture mapping: foreground color is just the interpolated color
-                fgColor.comp.r = std::min<uint16_t>(((uint16_t) gColorR + 4) >> 3, 31u);
-                fgColor.comp.g = std::min<uint16_t>(((uint16_t) gColorG + 4) >> 3, 31u);
-                fgColor.comp.b = std::min<uint16_t>(((uint16_t) gColorB + 4) >> 3, 31u);
-                fgColor.comp.t = 0;
+                fgColor = Color16::make(
+                    std::min<uint16_t>(((uint16_t) gColorR + 4) >> 3, 31u),
+                    std::min<uint16_t>(((uint16_t) gColorG + 4) >> 3, 31u),
+                    std::min<uint16_t>(((uint16_t) gColorB + 4) >> 3, 31u)
+                );
             }
 
             // Do blending with the background if that is enabled
@@ -1242,10 +1251,11 @@ void draw(Core& core, const DrawWallColGouraud& col) noexcept {
             fgColor = colorMul(fgColor, colColor);
         } else {
             // Not doing texture mapping: foreground color is just the interpolated color
-            fgColor.comp.r = std::min<uint16_t>(((uint16_t) gColorR + 4) >> 3, 31u);
-            fgColor.comp.g = std::min<uint16_t>(((uint16_t) gColorG + 4) >> 3, 31u);
-            fgColor.comp.b = std::min<uint16_t>(((uint16_t) gColorB + 4) >> 3, 31u);
-            fgColor.comp.t = 0;
+            fgColor = Color16::make(
+                std::min<uint16_t>(((uint16_t) gColorR + 4) >> 3, 31u),
+                std::min<uint16_t>(((uint16_t) gColorG + 4) >> 3, 31u),
+                std::min<uint16_t>(((uint16_t) gColorB + 4) >> 3, 31u)
+            );
         }
 
         // Do blending with the background if that is enabled

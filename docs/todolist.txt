@@ -1,5 +1,4 @@
 - Implement integer scaling.
-- Fix reliance on bitfields for 16-bit pixels via 'Color16' (bitfield order implementation dependant).
 - Fix reliance on bitfields for network code via 'TickInputs' (bitfield order implementation dependant).
 - Fix reliance on bitfields for 'spu::AdsrEnvelope' (bitfield order implementation dependant).
 - Linux support.

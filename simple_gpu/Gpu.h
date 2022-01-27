@@ -67,24 +67,38 @@ union Color24F {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// Represents a 15-bit BGR555 color used by the GPU plus 1 bit that says whether blending is enabled for the pixel.
+// Represents a 15-bit TBGR1555 color used by the GPU.
 // This is used as a dest/output format for the framebuffer and also as an input format for 16-bit textures & CLUTs.
+// Note: the top bit (T) is the PlayStation 'semi-transparency' bit.
 //----------------------------------------------------------------------------------------------------------------------
-union Color16 {
-    // The individual components of the color
-    struct {
-        uint16_t r : 5;
-        uint16_t g : 5;
-        uint16_t b : 5;
-        uint16_t t : 1;     // High bit: blending/semi-transparency flag. If set then blend the pixel, if drawing a blended primitive.
-    } comp;
-
-    // The full 16-bits of the color
+struct Color16 {
     uint16_t bits;
+    
+    inline constexpr uint16_t getR() const noexcept { return bits & 0x1F; }
+    inline constexpr uint16_t getG() const noexcept { return (bits >> 5) & 0x1F; }
+    inline constexpr uint16_t getB() const noexcept { return (bits >> 10) & 0x1F; }
+    inline constexpr uint16_t getT() const noexcept { return bits >> 15; }
 
     inline constexpr Color16() noexcept : bits(0) {}
     inline constexpr Color16(const uint16_t bits) noexcept : bits(bits) {}
     inline constexpr operator uint16_t() const noexcept { return bits; }
+    
+    // Set the color values using RGB555 components that are assumed to be in range
+    void setRGB(const uint16_t r5, const uint16_t g5, const uint16_t b5) noexcept {
+        bits &= 0x8000;
+        bits |= (r5 | (g5 << 5) | (b5 << 10));
+    }
+    
+    // Makes a color from the individual components.
+    // Note: the components are already assumed to be in range: 5-bits for RGB and 1-bit for semi-transparency.
+    static inline constexpr Color16 make(const uint16_t r5, const uint16_t g5, const uint16_t b5, const uint16_t t1) noexcept {
+        return Color16(r5 | (g5 << 5) | (b5 << 10) | (t1 << 15));
+    }
+    
+    // Same as 'make' but with the semi transparency flag not set (RGB only)
+    static inline constexpr Color16 make(const uint16_t r5, const uint16_t g5, const uint16_t b5) noexcept {
+        return Color16(r5 | (g5 << 5) | (b5 << 10));
+    }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

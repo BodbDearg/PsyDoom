@@ -232,9 +232,9 @@ void VideoBackend_SDL::copyPsxToSdlFramebufferTexture() noexcept {
         // Note: don't bother doing multiple pixels at a time - compiler is smart and already optimizes this to use SIMD
         for (uint32_t x = xStart; x < xEnd; ++x, ++pDstPixel) {
             const Gpu::Color16 srcPixel = rowPixels[x];
-            const uint32_t r = (uint32_t) srcPixel.comp.r << 3;
-            const uint32_t g = (uint32_t) srcPixel.comp.g << 3;
-            const uint32_t b = (uint32_t) srcPixel.comp.b << 3;
+            const uint32_t r = (uint32_t) srcPixel.getR() << 3;
+            const uint32_t g = (uint32_t) srcPixel.getG() << 3;
+            const uint32_t b = (uint32_t) srcPixel.getB() << 3;
 
             *pDstPixel = (0xFF000000 | (b << 16) | (g << 8 ) | (r << 0));
         }
