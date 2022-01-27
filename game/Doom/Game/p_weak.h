@@ -33,7 +33,7 @@ public:
     static constexpr uint32_t NULL_WEAK_COUNT_IDX = 0;
 
     inline MobjWeakPtr() noexcept : weakCountIdx(NULL_WEAK_COUNT_IDX) {}
-    inline MobjWeakPtr(nullptr_t) noexcept : weakCountIdx(NULL_WEAK_COUNT_IDX) {}
+    inline MobjWeakPtr(std::nullptr_t) noexcept : weakCountIdx(NULL_WEAK_COUNT_IDX) {}
     inline MobjWeakPtr(mobj_t* const pMobj) noexcept : weakCountIdx(P_AddWeakRef(pMobj)) {}
 
     inline MobjWeakPtr(const MobjWeakPtr& other) noexcept : weakCountIdx(other.weakCountIdx) {
@@ -48,7 +48,7 @@ public:
         P_RemoveWeakRef(weakCountIdx);
     }
 
-    inline MobjWeakPtr& operator = (nullptr_t) noexcept {
+    inline MobjWeakPtr& operator = (std::nullptr_t) noexcept {
         P_RemoveWeakRef(weakCountIdx);
         weakCountIdx = NULL_WEAK_COUNT_IDX;
         return *this;

@@ -166,7 +166,7 @@ static void decodeAdpcmChunk(Context& ctx, const uint8_t* const pDataIn, int16_t
 // Sets the values for the previous samples to zero.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Context::init() noexcept {
-    std::memset(this, 0, sizeof(this));
+    std::memset(this, 0, sizeof(*this));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

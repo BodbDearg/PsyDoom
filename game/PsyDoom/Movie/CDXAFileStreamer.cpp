@@ -126,7 +126,7 @@ const CDXASector* CDXAFileStreamer::readSector() noexcept {
         mFile->read(sector);
     } catch (...) {
         close();
-        return false;
+        return nullptr;
     }
 
     // Success! Mark this sector as read and return its contents:

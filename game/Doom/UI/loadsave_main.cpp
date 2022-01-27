@@ -196,7 +196,7 @@ static void DrawSaveSlot(const SaveFileInfo& save, const int16_t slotX, const in
                 std::snprintf(strBuffer, C_ARRAY_SIZE(strBuffer), "Map%02d %d:%02d", (int) save.mapNum, (int) save.mins, (int) save.secs);
             }
         } else {
-            strcpy_s(strBuffer, C_ARRAY_SIZE(strBuffer), "-");
+            std::snprintf(strBuffer, C_ARRAY_SIZE(strBuffer), "-");
         }
 
         I_DrawStringSmall(slotX + 24, slotY + 6, strBuffer, gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
