@@ -230,13 +230,27 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
 
         // Set: envelope ADSR directly (1st and 2nd 16-bits)
         if (bSetAdsrPart1) {
-            voice.envBits &= 0xFFFF0000;
-            voice.envBits |= (uint32_t) attribs.adsr1;
+            // Note: the original PSX code set the low 16-bits of the ADSR envelope directly using 'attribs.adsr1'.
+            // We can't rely on that method however because a particular bitfield order is not guaranteed in C++.
+            // Instead decode all fields individually in a portable manner:
+            voice.env.sustainLevel = attribs.adsr1 & 0xF;
+            voice.env.decayShift = (attribs.adsr1 >> 4) & 0xF;
+            voice.env.attackStep = (attribs.adsr1 >> 8) & 0x3;
+            voice.env.attackShift = (attribs.adsr1 >> 10) & 0x1F;
+            voice.env.bAttackExp = (attribs.adsr1 >> 15);
         }
 
         if (bSetAdsrPart2) {
-            voice.envBits &= 0x0000FFFF;
-            voice.envBits |= ((uint32_t) attribs.adsr2) << 16;
+            // Note: the original PSX code set the high 16-bits of the ADSR envelope directly using 'attribs.adsr2'.
+            // We can't rely on that method however because a particular bitfield order is not guaranteed in C++.
+            // Instead decode all fields individually in a portable manner:
+            voice.env.releaseShift = attribs.adsr2 & 0x1F;
+            voice.env.bReleaseExp = (attribs.adsr2 >> 5) & 0x1;
+            voice.env.sustainStep = (attribs.adsr2 >> 6) & 0x3;
+            voice.env.sustainShift = (attribs.adsr2 >> 8) & 0x1F;
+            voice.env._unused = (attribs.adsr2 >> 13) & 0x1;
+            voice.env.bSustainDec = (attribs.adsr2 >> 14) & 0x1;
+            voice.env.bSustainExp = attribs.adsr2 >> 15;
         }
 
         // Set: wave loop address (64-bit word index).

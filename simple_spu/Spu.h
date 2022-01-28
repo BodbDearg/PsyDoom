@@ -370,11 +370,8 @@ struct Voice {
     // Current envelope phase
     EnvPhase envPhase;
 
-    // The ADSR envelope to use: can be accessed as individual bit fields or as a single uint32_t
-    union {
-        AdsrEnvelope    env;
-        uint32_t        envBits;
-    };
+    // The ADSR envelope to use
+    AdsrEnvelope env;
 
     // How many cycles to wait before processing the envelope.
     // This is generally always '1' but can be larger for really slow envelopes.
