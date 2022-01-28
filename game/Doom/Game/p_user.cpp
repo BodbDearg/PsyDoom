@@ -255,16 +255,16 @@ static void P_BuildMove(player_t& player) noexcept {
         const TickInputs& inputs = gTickInputs[gPlayerNum];
         const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
 
-        const bool bTurnLeft = inputs.bTurnLeft;
-        const bool bOldTurnLeft = oldInputs.bTurnLeft;
-        const bool bTurnRight = inputs.bTurnRight;
-        const bool bOldTurnRight = oldInputs.bTurnRight;
-        const bool bStrafeLeft = inputs.bStrafeLeft;
-        const bool bStrafeRight = inputs.bStrafeRight;
-        const bool bMoveForward = inputs.bMoveForward;
-        const bool bMoveBackward = inputs.bMoveBackward;
-        const bool bRun = inputs.bRun;
-        const bool bStrafe = inputs.bStrafe;
+        const bool bTurnLeft = inputs.fTurnLeft();
+        const bool bOldTurnLeft = oldInputs.fTurnLeft();
+        const bool bTurnRight = inputs.fTurnRight();
+        const bool bOldTurnRight = oldInputs.fTurnRight();
+        const bool bStrafeLeft = inputs.fStrafeLeft();
+        const bool bStrafeRight = inputs.fStrafeRight();
+        const bool bMoveForward = inputs.fMoveForward();
+        const bool bMoveBackward = inputs.fMoveBackward();
+        const bool bRun = inputs.fRun();
+        const bool bStrafe = inputs.fStrafe();
     #else
         const uint32_t curBtns = gTicButtons[gPlayerNum];
         const uint32_t oldBtns = gOldTicButtons[gPlayerNum];
@@ -407,7 +407,7 @@ static void P_BuildMove(player_t& player) noexcept {
     }
 
     // Final Doom classic demo playback only: try and do a 'use' action when the mouse is double clicked quickly
-    if (inputs.bPsxMouseUse) {
+    if (inputs.fPsxMouseUse()) {
         if ((player.psxMouseUseCountdown > 0) && (player.psxMouseUseCountdown < 10)) {
             // Rapid double click with the psx mouse done: try and do a use action and force the user to release the mouse before using again
             player.psxMouseUse = true;
@@ -742,7 +742,7 @@ static void P_DeathThink(player_t& player) noexcept {
 
     // Respawn if the right buttons are pressed and the player's view has dropped enough
     #if PSYDOOM_MODS
-        const bool bRespawnBtnPressed = gTickInputs[gPlayerNum].bRespawn;
+        const bool bRespawnBtnPressed = gTickInputs[gPlayerNum].fRespawn();
     #else
         const bool bRespawnBtnPressed = (gTicButtons[gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS));
     #endif
@@ -773,10 +773,10 @@ void P_PlayerThink(player_t& player) noexcept {
         const TickInputs& inputs = gTickInputs[gPlayerNum];
         const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
 
-        const bool bPrevWeapon = (inputs.bPrevWeapon && (!oldInputs.bPrevWeapon));
-        const bool bNextWeapon = (inputs.bNextWeapon && (!oldInputs.bNextWeapon));
-        const bool bUse = inputs.bUse;
-        const bool bAttack = inputs.bAttack;
+        const bool bPrevWeapon = (inputs.fPrevWeapon() && (!oldInputs.fPrevWeapon()));
+        const bool bNextWeapon = (inputs.fNextWeapon() && (!oldInputs.fNextWeapon()));
+        const bool bUse = inputs.fUse();
+        const bool bAttack = inputs.fAttack();
     #else
         const uint32_t curBtns = gTicButtons[gPlayerNum];
         const uint32_t oldBtns = gOldTicButtons[gPlayerNum];
@@ -867,7 +867,7 @@ void P_PlayerThink(player_t& player) noexcept {
     // PsyDoom: check for quick save and load keys in singleplayer
     #if PSYDOOM_MODS
         if (gNetGame == gt_single) {
-            if (inputs.bQuicksave && (!oldInputs.bQuicksave)) {
+            if (inputs.fQuicksave() && (!oldInputs.fQuicksave())) {
                 // Only allow quicksave if the player is not dead, otherwise pointless.
                 // You can still manually save when dead however, if you really really want to...
                 if ((player.health > 0) && (player.playerstate == PST_LIVE)) {
@@ -875,7 +875,7 @@ void P_PlayerThink(player_t& player) noexcept {
                 }
             }
 
-            if (inputs.bQuickload && (!oldInputs.bQuickload)) {
+            if (inputs.fQuickload() && (!oldInputs.fQuickload())) {
                 gbDoQuickload = true;
             }
         }
@@ -1071,30 +1071,30 @@ void P_PlayerDoTurning() noexcept {
         // Do keyboard turning if the 'strafe' button is not pressed (that makes turn keys act as strafe instead)
         const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
 
-        if (!inputs.bStrafe) {
+        if (!inputs.fStrafe()) {
             const bool bAllowTurnCancel = Game::gSettings.bAllowTurningCancellation;
             fixed_t turnAmt = 0;
 
-            if (inputs.bRun && (!inputs.bMoveForward) && (!inputs.bMoveBackward)) {
+            if (inputs.fRun() && (!inputs.fMoveForward()) && (!inputs.fMoveBackward())) {
                 // Do fast turning when run is pressed and we are not moving forward/back
                 const fixed_t turnSpeed = (bFinalDoomMovementMode) ? FAST_ANGLE_TURN_FDOOM[player.turnheld] : FAST_ANGLE_TURN_DOOM[player.turnheld];
 
-                if (inputs.bTurnLeft) {
+                if (inputs.fTurnLeft()) {
                     turnAmt += turnSpeed;
                 }
 
-                if (inputs.bTurnRight && (bAllowTurnCancel || (!inputs.bTurnLeft))) {
+                if (inputs.fTurnRight() && (bAllowTurnCancel || (!inputs.fTurnLeft()))) {
                     turnAmt -= turnSpeed;
                 }
             } else {
                 // Otherwise do the slow turning speed
                 const fixed_t turnSpeed = (bFinalDoomMovementMode) ? ANGLE_TURN_FDOOM[player.turnheld] : ANGLE_TURN_DOOM[player.turnheld];
 
-                if (inputs.bTurnLeft) {
+                if (inputs.fTurnLeft()) {
                     turnAmt += turnSpeed;
                 }
 
-                if (inputs.bTurnRight && (bAllowTurnCancel || (!inputs.bTurnLeft))) {
+                if (inputs.fTurnRight() && (bAllowTurnCancel || (!inputs.fTurnLeft()))) {
                     turnAmt -= turnSpeed;
                 }
             }
@@ -1115,8 +1115,8 @@ void P_PlayerDoTurning() noexcept {
 
             // Figure out how much of the high and low turn speeds to use; use the higher turn speed as the stick is pressed more.
             // Note: again I'm not adjusting for PAL mode since turning is independent of framerate, maintain the same turn speed in both PAL and NSTC mode.
-            const float turnSpeedLow = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
-            const float turnSpeedHigh = (inputs.bRun) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
+            const float turnSpeedLow = (inputs.fRun()) ? Config::gGamepadFastTurnSpeed_Low : Config::gGamepadTurnSpeed_Low;
+            const float turnSpeedHigh = (inputs.fRun()) ? Config::gGamepadFastTurnSpeed_High : Config::gGamepadTurnSpeed_High;
             const float turnSpeedMix = std::abs(axis);
             const float turnSpeed = (turnSpeedLow * (1.0f - turnSpeedMix) + turnSpeedHigh * turnSpeedMix) * PlayerPrefs::getTurnSpeedMultiplier();
 

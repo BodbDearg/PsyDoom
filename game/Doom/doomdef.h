@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Flags.h"
 #include "Game/p_weak.h"
 #include "PsyDoom/BitShift.h"
 #include "PsyDoom/InterpFixedT.h"
@@ -469,54 +470,63 @@ struct player_t {
         uint8_t directSwitchToWeapon;
 
         // In-game: whether various action buttons are pressed
-        uint8_t bTurnLeft : 1;
-        uint8_t bTurnRight : 1;
-        uint8_t bMoveForward : 1;
-        uint8_t bMoveBackward : 1;
-        uint8_t bStrafeLeft : 1;
-        uint8_t bStrafeRight : 1;
-        uint8_t bUse : 1;
-        uint8_t bAttack : 1;
+        Flags8 _flags1;
+        DEFINE_FLAGS_FIELD_MEMBER(_flags1, 0, fTurnLeft)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags1, 1, fTurnRight)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags1, 2, fMoveForward)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags1, 3, fMoveBackward)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags1, 4, fStrafeLeft)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags1, 5, fStrafeRight)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags1, 6, fUse)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags1, 7, fAttack)
 
-        uint8_t bRun : 1;
-        uint8_t bStrafe : 1;
-        uint8_t bPrevWeapon : 1;
-        uint8_t bNextWeapon : 1;
-        uint8_t bTogglePause : 1;
-        uint8_t bToggleMap : 1;             // Toggle the automap on/off
-        uint8_t bAutomapZoomIn : 1;
-        uint8_t bAutomapZoomOut : 1;
+        Flags8 _flags2;
+        DEFINE_FLAGS_FIELD_MEMBER(_flags2, 0, fRun)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags2, 1, fStrafe)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags2, 2, fPrevWeapon)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags2, 3, fNextWeapon)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags2, 4, fTogglePause)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags2, 5, fToggleMap)       // Toggle the automap on/off
+        DEFINE_FLAGS_FIELD_MEMBER(_flags2, 6, fAutomapZoomIn)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags2, 7, fAutomapZoomOut)
 
-        uint8_t bAutomapMoveLeft : 1;
-        uint8_t bAutomapMoveRight : 1;
-        uint8_t bAutomapMoveUp : 1;
-        uint8_t bAutomapMoveDown : 1;
-        uint8_t bAutomapPan : 1;            // Manually pan the automap
-        uint8_t bRespawn : 1;               // Respawn in deathmatch
-        uint8_t bPsxMouseUse : 1;           // Used for Final Doom classic demo playback only: try and do 'use' action via the psx mouse left/right buttons
-        uint8_t _unused1 : 1;
+        Flags8 _flags3;
+        DEFINE_FLAGS_FIELD_MEMBER(_flags3, 0, fAutomapMoveLeft)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags3, 1, fAutomapMoveRight)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags3, 2, fAutomapMoveUp)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags3, 3, fAutomapMoveDown)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags3, 4, fAutomapPan)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags3, 5, fRespawn)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags3, 6, fPsxMouseUse)     // Used for Final Doom classic demo playback only: try and do 'use' action via the psx mouse left/right buttons
 
         // UI: whether various action buttons are pressed
-        uint8_t bMenuUp : 1;
-        uint8_t bMenuDown : 1;
-        uint8_t bMenuLeft : 1;
-        uint8_t bMenuRight : 1;
-        uint8_t bMenuOk : 1;
-        uint8_t bMenuStart : 1;
-        uint8_t bMenuBack : 1;
-        uint8_t bEnterPasswordChar : 1;
-        uint8_t bDeletePasswordChar : 1;
+        Flags8 _flags4;
+        DEFINE_FLAGS_FIELD_MEMBER(_flags4, 0, fMenuUp)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags4, 1, fMenuDown)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags4, 2, fMenuLeft)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags4, 3, fMenuRight)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags4, 4, fMenuOk)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags4, 5, fMenuStart)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags4, 6, fMenuBack)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags4, 7, fEnterPasswordChar)
 
-        // Quick save and load keys
-        uint8_t bQuicksave : 1;
-        uint8_t bQuickload : 1;
-        uint8_t _unused2 : 5;
+        // UI (continued) and quick save and load keys
+        Flags8 _flags5;
+        DEFINE_FLAGS_FIELD_MEMBER(_flags5, 0, fDeletePasswordChar)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags5, 1, fQuicksave)
+        DEFINE_FLAGS_FIELD_MEMBER(_flags5, 2, fQuickload)
 
         // Playstation mouse input movement deltas: used for classic 'Final Doom' demo playback only.
         // These inputs should always be zeroed in all other cases.
         int8_t psxMouseDx;
         int8_t psxMouseDy;
+
+        // Byte swapping for endian correction
+        void byteSwap() noexcept;
+        void endianCorrect() noexcept;
     };
+
+    static_assert(sizeof(TickInputs) == 20);
 
     // Packet sent/received by all players when connecting to a game.
     // Note: a packet containing the settings ('GameSettings') for the game is sent immediately after this by the server.
@@ -526,7 +536,13 @@ struct player_t {
         gametype_t  startGameType;      // Only sent by the server for the game: what type of game will be played
         skill_t     startGameSkill;     // Only sent by the server for the game: what skill level will be used
         int32_t     startMap;           // Only sent by the server for the game: what starting map will be used
+
+        // Byte swapping for Endian correction
+        void byteSwap() noexcept;
+        void endianCorrect() noexcept;
     };
+
+    static_assert(sizeof(NetPacket_Connect) == 20);
 
     // Packet sent/received by all players to share per-tick updates for a network game
     struct NetPacket_Tick {
@@ -534,5 +550,11 @@ struct player_t {
         int32_t     elapsedVBlanks;     // How many vblanks have elapsed for the player sending the update
         int32_t     lastPacketDelayMs;  // Message from this peer: how long the last packet received was delayed from when we expected it (MS). Used to adjust time.
         TickInputs  inputs;             // Inputs for the player sending this update
+
+        // Byte swapping for Endian correction
+        void byteSwap() noexcept;
+        void endianCorrect() noexcept;
     };
+
+    static_assert(sizeof(NetPacket_Tick) == 32);
 #endif

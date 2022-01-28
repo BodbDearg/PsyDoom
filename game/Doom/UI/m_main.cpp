@@ -301,14 +301,14 @@ gameaction_t M_Ticker() noexcept {
         const TickInputs& inputs = gTickInputs[0];
         const TickInputs& oldInputs = gOldTickInputs[0];
 
-        const bool bMenuStart = (inputs.bMenuStart && (inputs.bMenuStart != oldInputs.bMenuStart));
-        const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
-        const bool bMenuUp = inputs.bMenuUp;
-        const bool bMenuDown = inputs.bMenuDown;
-        const bool bMenuLeft = inputs.bMenuLeft;
-        const bool bMenuRight = inputs.bMenuRight;
+        const bool bMenuStart = (inputs.fMenuStart() && (inputs.fMenuStart() != oldInputs.fMenuStart()));
+        const bool bMenuOk = (inputs.fMenuOk() && (!oldInputs.fMenuOk()));
+        const bool bMenuUp = inputs.fMenuUp();
+        const bool bMenuDown = inputs.fMenuDown();
+        const bool bMenuLeft = inputs.fMenuLeft();
+        const bool bMenuRight = inputs.fMenuRight();
         const bool bMenuMove = (bMenuUp || bMenuDown || bMenuLeft || bMenuRight);
-        const bool bMenuAnyInput = (bMenuMove || bMenuOk || bMenuStart || inputs.bMenuBack);
+        const bool bMenuAnyInput = (bMenuMove || bMenuOk || bMenuStart || inputs.fMenuBack());
     #else
         const padbuttons_t ticButtons = gTicButtons[0];
 

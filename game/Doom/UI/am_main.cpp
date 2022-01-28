@@ -102,15 +102,15 @@ void AM_Control(player_t& player) noexcept {
         TickInputs& inputs = gTickInputs[gPlayerNum];
         const TickInputs& oldInputs = gOldTickInputs[gPlayerNum];
 
-        const bool bMenuBack = (inputs.bToggleMap && (!oldInputs.bToggleMap));
-        const bool bAutomapPan = inputs.bAutomapPan;
-        const bool bPanFast = inputs.bRun;
-        const bool bAutomapMoveLeft = inputs.bAutomapMoveLeft;
-        const bool bAutomapMoveRight = inputs.bAutomapMoveRight;
-        const bool bAutomapMoveUp = inputs.bAutomapMoveUp;
-        const bool bAutomapMoveDown = inputs.bAutomapMoveDown;
-        const bool bAutomapZoomIn = inputs.bAutomapZoomIn;
-        const bool bAutomapZoomOut = inputs.bAutomapZoomOut;
+        const bool bMenuBack = (inputs.fToggleMap() && (!oldInputs.fToggleMap()));
+        const bool bAutomapPan = inputs.fAutomapPan();
+        const bool bPanFast = inputs.fRun();
+        const bool bAutomapMoveLeft = inputs.fAutomapMoveLeft();
+        const bool bAutomapMoveRight = inputs.fAutomapMoveRight();
+        const bool bAutomapMoveUp = inputs.fAutomapMoveUp();
+        const bool bAutomapMoveDown = inputs.fAutomapMoveDown();
+        const bool bAutomapZoomIn = inputs.fAutomapZoomIn();
+        const bool bAutomapZoomOut = inputs.fAutomapZoomOut();
     #else
         const padbuttons_t ticButtons = gTicButtons[gPlayerNum];
         const padbuttons_t oldTicButtons = gOldTicButtons[gPlayerNum];
@@ -213,13 +213,13 @@ void AM_Control(player_t& player) noexcept {
 
     // When not in follow mode, consume these inputs so that we don't move the player in the level
     #if PSYDOOM_MODS
-        inputs.bMoveForward = false;
-        inputs.bMoveBackward = false;
-        inputs.bAttack = false;
-        inputs.bTurnLeft = false;
-        inputs.bTurnRight = false;
-        inputs.bStrafeLeft = false;
-        inputs.bStrafeRight = false;
+        inputs.fMoveForward() = false;
+        inputs.fMoveBackward() = false;
+        inputs.fAttack() = false;
+        inputs.fTurnLeft() = false;
+        inputs.fTurnRight() = false;
+        inputs.fStrafeLeft() = false;
+        inputs.fStrafeRight() = false;
         inputs.analogForwardMove = 0;
         inputs.analogSideMove = 0;
         inputs.analogTurn = 0;

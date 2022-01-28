@@ -7,6 +7,7 @@
 #include "Macros.h"
 
 #include <cstdint>
+#include <type_traits>
 
 BEGIN_NAMESPACE(Endian)
 
@@ -63,6 +64,12 @@ inline constexpr int16_t byteSwap(const int16_t num) noexcept { return (int16_t)
 inline constexpr int32_t byteSwap(const int32_t num) noexcept { return (int32_t) byteSwap((uint32_t) num); }
 inline constexpr int64_t byteSwap(const int64_t num) noexcept { return (int64_t) byteSwap((uint64_t) num); }
 
+template <class T>
+static T byteSwapEnum(const T toSwap) noexcept {
+    typedef std::underlying_type_t<T> EnumIntT;
+    return (T) byteSwap((EnumIntT) toSwap);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Convert from little endian to host endian and visa versa
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,6 +107,22 @@ inline constexpr T hostToBig(const T num) noexcept {
     } else {
         return num;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Byte swap an ordinary value in place
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+inline void byteSwapInPlace(T& value) noexcept {
+    value = byteSwap(value);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Byte swap an enum value in place
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+inline void byteSwapEnumInPlace(T& value) noexcept {
+    value = byteSwapEnum(value);
 }
 
 END_NAMESPACE(Endian)

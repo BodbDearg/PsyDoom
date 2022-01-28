@@ -42,7 +42,7 @@ static bool isCancelNetworkConnectionRequested() noexcept {
     // Cancel the network operation if the menu 'back' button is pressed
     TickInputs inputs;
     P_GatherTickInputs(inputs);
-    return inputs.bMenuBack;
+    return inputs.fMenuBack();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

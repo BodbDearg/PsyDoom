@@ -188,13 +188,13 @@ gameaction_t O_Control() noexcept {
             const TickInputs& inputs = gTickInputs[playerIdx];
             const TickInputs& oldInputs = gOldTickInputs[playerIdx];
 
-            const bool bMenuStart = (inputs.bMenuStart && (!oldInputs.bMenuStart));
-            const bool bMenuBack = (inputs.bMenuBack && (!oldInputs.bMenuBack));
-            const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
-            const bool bMenuUp = inputs.bMenuUp;
-            const bool bMenuDown = inputs.bMenuDown;
-            const bool bMenuLeft = inputs.bMenuLeft;
-            const bool bMenuRight = inputs.bMenuRight;
+            const bool bMenuStart = (inputs.fMenuStart() && (!oldInputs.fMenuStart()));
+            const bool bMenuBack = (inputs.fMenuBack() && (!oldInputs.fMenuBack()));
+            const bool bMenuOk = (inputs.fMenuOk() && (!oldInputs.fMenuOk()));
+            const bool bMenuUp = inputs.fMenuUp();
+            const bool bMenuDown = inputs.fMenuDown();
+            const bool bMenuLeft = inputs.fMenuLeft();
+            const bool bMenuRight = inputs.fMenuRight();
             const bool bMenuMove = (bMenuUp || bMenuDown || bMenuLeft || bMenuRight);
         #else
             const padbuttons_t ticButtons = gTicButtons[playerIdx];
@@ -219,7 +219,7 @@ gameaction_t O_Control() noexcept {
             // This code basically allows the 'Esc' key (in the default bindings) to function as both a 'pause' and 'menu back' key which toggles
             // directly between the options menu and the game, bypassing the intermediate step of the pause screen:
             #if PSYDOOM_MODS
-                gbUnpauseAfterOptionsMenu = (inputs.bTogglePause && (!oldInputs.bTogglePause));
+                gbUnpauseAfterOptionsMenu = (inputs.fTogglePause() && (!oldInputs.fTogglePause()));
             #endif
 
             return ga_exit;

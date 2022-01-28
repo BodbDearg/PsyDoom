@@ -262,7 +262,7 @@ gameaction_t IN_Ticker() noexcept {
         #if PSYDOOM_MODS
             const TickInputs& inputs = gTickInputs[playerIdx];
             const TickInputs& oldInputs = gOldTickInputs[playerIdx];
-            const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
+            const bool bMenuOk = (inputs.fMenuOk() && (!oldInputs.fMenuOk()));
         #else
             const padbuttons_t ticButtons = gTicButtons[playerIdx];
             const padbuttons_t oldTicButtons = gOldTicButtons[playerIdx];

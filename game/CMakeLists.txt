@@ -57,7 +57,7 @@ set(SOURCE_FILES
     "Doom/cdmaptbl.h"
     "Doom/d_main.cpp"
     "Doom/d_main.h"
-    "Doom/doomdef.h"
+    "Doom/doomdef.cpp"
     "Doom/doomdef.h"
     "Doom/Game/doomdata.h"
     "Doom/Game/g_game.cpp"

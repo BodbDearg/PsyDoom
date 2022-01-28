@@ -121,10 +121,10 @@ gameaction_t SaveRoot_Update() noexcept {
     const TickInputs& inputs = gTickInputs[playerIdx];
     const TickInputs& oldInputs = gOldTickInputs[playerIdx];
 
-    const bool bMenuBack = (inputs.bMenuBack && (!oldInputs.bMenuBack));
-    const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
-    const bool bMenuUp = inputs.bMenuUp;
-    const bool bMenuDown = inputs.bMenuDown;
+    const bool bMenuBack = (inputs.fMenuBack() && (!oldInputs.fMenuBack()));
+    const bool bMenuOk = (inputs.fMenuOk() && (!oldInputs.fMenuOk()));
+    const bool bMenuUp = inputs.fMenuUp();
+    const bool bMenuDown = inputs.fMenuDown();
     const bool bMenuMove = (bMenuUp || bMenuDown);
 
     if (bMenuBack) {

@@ -15,19 +15,19 @@ constexpr uint32_t VIDEO_DATA_BYTES_PER_SECTOR = 2048 - sizeof(FrameSectorHeader
 // Endian correction: swaps the bytes in the frame header
 //------------------------------------------------------------------------------------------------------------------------------------------
 void FrameSectorHeader::byteSwap() noexcept {
-    status = Endian::byteSwap(status);
-    type = Endian::byteSwap(type);
-    chunkNum = Endian::byteSwap(chunkNum);
-    numChunks = Endian::byteSwap(numChunks);
-    frameNum = Endian::byteSwap(frameNum);
-    numDemuxedBytes = Endian::byteSwap(numDemuxedBytes);
-    frameW = Endian::byteSwap(frameW);
-    frameH = Endian::byteSwap(frameH);
-    numCodeChunks = Endian::byteSwap(numCodeChunks);
-    _unused1 = Endian::byteSwap(_unused1);
-    quantizationScale = Endian::byteSwap(quantizationScale);
-    mdecVersion = Endian::byteSwap(mdecVersion);
-    _unused2 = Endian::byteSwap(_unused2);
+    Endian::byteSwapInPlace(status);
+    Endian::byteSwapInPlace(type);
+    Endian::byteSwapInPlace(chunkNum);
+    Endian::byteSwapInPlace(numChunks);
+    Endian::byteSwapInPlace(frameNum);
+    Endian::byteSwapInPlace(numDemuxedBytes);
+    Endian::byteSwapInPlace(frameW);
+    Endian::byteSwapInPlace(frameH);
+    Endian::byteSwapInPlace(numCodeChunks);
+    Endian::byteSwapInPlace(_unused1);
+    Endian::byteSwapInPlace(quantizationScale);
+    Endian::byteSwapInPlace(mdecVersion);
+    Endian::byteSwapInPlace(_unused2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

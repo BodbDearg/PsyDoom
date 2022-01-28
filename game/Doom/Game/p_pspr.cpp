@@ -393,7 +393,7 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
 
     // If the fire button is pressed then try fire the player's weapon
     #if PSYDOOM_MODS
-        const bool bAttack = gTickInputs[gPlayerNum].bAttack;
+        const bool bAttack = gTickInputs[gPlayerNum].fAttack();
     #else
         const padbuttons_t attackBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
         const bool bAttack = gTicButtons[gPlayerNum] & attackBtn;
@@ -426,7 +426,7 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_ReFire(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     #if PSYDOOM_MODS
-        const bool bAttack = gTickInputs[gPlayerNum].bAttack;
+        const bool bAttack = gTickInputs[gPlayerNum].fAttack();
     #else
         const padbuttons_t attackBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
         const bool bAttack = (gTicButtons[gPlayerNum] & attackBtn);

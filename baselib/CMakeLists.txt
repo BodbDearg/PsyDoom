@@ -10,6 +10,7 @@ set(SOURCE_FILES
     "FileUtils.cpp"
     "FileUtils.h"
     "Finally.h"
+    "Flags.h"
     "IniUtils.cpp"
     "IniUtils.h"
     "InputStream.h"

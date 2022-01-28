@@ -48,18 +48,18 @@ constexpr ShiftNibbleEncodingTable SHIFT_NIBBLE_ENC_TABLE = buildShiftNibbleEnco
 //------------------------------------------------------------------------------------------------------------------------------------------
 void VagFileHdr::endianCorrect() noexcept {
     if (Endian::isLittle()) {
-        fileId = Endian::byteSwap(fileId);
-        version = Endian::byteSwap(version);
-        _reserved1 = Endian::byteSwap(_reserved1);
-        adpcmDataSize = Endian::byteSwap(adpcmDataSize);
-        sampleRate = Endian::byteSwap(sampleRate);
+        Endian::byteSwapInPlace(fileId);
+        Endian::byteSwapInPlace(version);
+        Endian::byteSwapInPlace(_reserved1);
+        Endian::byteSwapInPlace(adpcmDataSize);
+        Endian::byteSwapInPlace(sampleRate);
 
         for (uint32_t& value : _reserved2) {
-            value = Endian::byteSwap(value);
+            Endian::byteSwapInPlace(value);
         }
 
         for (uint32_t& value : _unknown) {
-            value = Endian::byteSwap(value);
+            Endian::byteSwapInPlace(value);
         }
     }
 }

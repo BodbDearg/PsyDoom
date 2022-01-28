@@ -700,7 +700,7 @@ gameaction_t MiniLoop(
                     exitAction = ga_exit;
 
                     #if PSYDOOM_MODS
-                        if (tickInputs.bMenuOk || tickInputs.bMenuBack || tickInputs.bMenuStart)
+                        if (tickInputs.fMenuOk() || tickInputs.fMenuBack() || tickInputs.fMenuStart())
                             break;
                     #else
                         if (padBtns & PAD_ANY_BTNS)
@@ -737,7 +737,7 @@ gameaction_t MiniLoop(
                 exitAction = ga_exitdemo;
 
                 #if PSYDOOM_MODS
-                    if (gTickInputs[gCurPlayerIndex].bTogglePause)
+                    if (gTickInputs[gCurPlayerIndex].fTogglePause())
                         break;
                 #else
                     if (padBtns & PAD_START)

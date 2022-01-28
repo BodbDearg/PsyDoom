@@ -121,7 +121,7 @@ texture_t gTex_CONNECT;
 
     // The current network protocol version.
     // Should be incremented whenever the data format being transmitted changes, or when updates might cause differences in game behavior.
-    static constexpr int32_t NET_PROTOCOL_VERSION = 15;
+    static constexpr int32_t NET_PROTOCOL_VERSION = 16;
 
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
@@ -689,12 +689,7 @@ void I_NetSetup() noexcept {
     }
 
     // Endian correct the output packet and send
-    outPkt.protocolVersion = Endian::hostToLittle(outPkt.protocolVersion);
-    outPkt.gameId = Endian::hostToLittle(outPkt.gameId);
-    outPkt.startGameType = Endian::hostToLittle(outPkt.startGameType);
-    outPkt.startGameSkill = Endian::hostToLittle(outPkt.startGameSkill);
-    outPkt.startMap = Endian::hostToLittle(outPkt.startMap);
-
+    outPkt.endianCorrect();
     Network::sendBytes(&outPkt, sizeof(outPkt));
 
     // If the player is the server then determine the game settings, endian correct and send to the client
@@ -704,20 +699,14 @@ void I_NetSetup() noexcept {
 
         // Copy and endian correct the settings before sending to the client player
         GameSettings settings = Game::gSettings;
-        settings.lostSoulSpawnLimit = Endian::hostToLittle(settings.lostSoulSpawnLimit);
-
+        settings.endianCorrect();
         Network::sendBytes(&settings, sizeof(settings));
     }
 
     // Read the input connect packet from the other player and endian correct
     NetPacket_Connect inPkt = {};
     Network::recvBytes(&inPkt, sizeof(inPkt));
-
-    inPkt.protocolVersion = Endian::littleToHost(inPkt.protocolVersion);
-    inPkt.gameId = Endian::littleToHost(inPkt.gameId);
-    inPkt.startGameType = Endian::littleToHost(inPkt.startGameType);
-    inPkt.startGameSkill = Endian::littleToHost(inPkt.startGameSkill);
-    inPkt.startMap = Endian::littleToHost(inPkt.startMap);
+    inPkt.endianCorrect();
 
     // Verify the network protocol version and game ids are OK - abort if not
     if ((inPkt.protocolVersion != NET_PROTOCOL_VERSION) || (inPkt.gameId != netGameId)) {
@@ -733,7 +722,7 @@ void I_NetSetup() noexcept {
         gStartSkill = inPkt.startGameSkill;
         gStartMapOrEpisode = inPkt.startMap;
 
-        // Read the game settings from the server and endian correct
+        // Read the game settings from the server, endian correct and save
         GameSettings settings = {};
 
         if (!Network::recvBytes(&settings, sizeof(settings))) {
@@ -742,9 +731,7 @@ void I_NetSetup() noexcept {
             return;
         }
 
-        settings.lostSoulSpawnLimit = Endian::littleToHost(settings.lostSoulSpawnLimit);
-
-        // Save the game settings to use
+        settings.endianCorrect();
         Game::gSettings = settings;
     }
 

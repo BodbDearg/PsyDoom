@@ -323,7 +323,7 @@ gameaction_t F1_Ticker() noexcept {
     #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
         const TickInputs& oldInputs = gOldTickInputs[gCurPlayerIndex];
-        const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
+        const bool bMenuOk = (inputs.fMenuOk() && (!oldInputs.fMenuOk()));
     #else
         const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
         const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
@@ -576,7 +576,7 @@ gameaction_t F2_Ticker() noexcept {
     #if PSYDOOM_MODS
         const TickInputs& inputs = gTickInputs[gCurPlayerIndex];
         const TickInputs& oldInputs = gOldTickInputs[gCurPlayerIndex];
-        const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
+        const bool bMenuOk = (inputs.fMenuOk() && (!oldInputs.fMenuOk()));
     #else
         const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
         const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];

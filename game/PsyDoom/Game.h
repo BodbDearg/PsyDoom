@@ -43,6 +43,10 @@ struct GameSettings {
     uint8_t     bFixSoundPropagation;           // Fix an original bug where sometimes sound propagates through closed doors that should block it?
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength
+
+    // Byte swapping for Endian correction
+    void byteSwap() noexcept;
+    void endianCorrect() noexcept;
 };
 
 struct String32;

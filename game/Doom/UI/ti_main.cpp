@@ -125,9 +125,9 @@ gameaction_t TIC_Title() noexcept {
     // PsyDoom: just accept menu start/ok/back but require them to be just released:
     #if PSYDOOM_MODS
         const bool bExitJustReleased = (
-            ((!gTickInputs[0].bMenuOk)    && gOldTickInputs[0].bMenuOk) ||
-            ((!gTickInputs[0].bMenuStart) && gOldTickInputs[0].bMenuStart) ||
-            ((!gTickInputs[0].bMenuBack)  && gOldTickInputs[0].bMenuBack)
+            ((!gTickInputs[0].fMenuOk())    && gOldTickInputs[0].fMenuOk()) ||
+            ((!gTickInputs[0].fMenuStart()) && gOldTickInputs[0].fMenuStart()) ||
+            ((!gTickInputs[0].fMenuBack())  && gOldTickInputs[0].fMenuBack())
         );
 
         if (bExitJustReleased)

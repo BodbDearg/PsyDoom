@@ -6,6 +6,7 @@
 #include "Config.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/UI/in_main.h"
+#include "Endian.h"
 #include "FatalErrors.h"
 #include "IsoFileSys.h"
 #include "MapInfo.h"
@@ -15,6 +16,44 @@
 
 #include <algorithm>
 #include <chrono>
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Byte swaps all fields in the 'GameSettings' structure
+//------------------------------------------------------------------------------------------------------------------------------------------
+void GameSettings::byteSwap() noexcept {
+    Endian::byteSwapInPlace(bUsePalTimings);
+    Endian::byteSwapInPlace(bUseDemoTimings);
+    Endian::byteSwapInPlace(bUseExtendedPlayerShootRange);
+    Endian::byteSwapInPlace(bUsePlayerRocketBlastFix);
+    Endian::byteSwapInPlace(bUseSuperShotgunDelayTweak);
+    Endian::byteSwapInPlace(bUseMoveInputLatencyTweak);
+    Endian::byteSwapInPlace(bUseItemPickupFix);
+    Endian::byteSwapInPlace(bUseFinalDoomPlayerMovement);
+    Endian::byteSwapInPlace(bAllowMovementCancellation);
+    Endian::byteSwapInPlace(bAllowTurningCancellation);
+    Endian::byteSwapInPlace(bFixViewBobStrength);
+    Endian::byteSwapInPlace(bFixGravityStrength);
+    Endian::byteSwapInPlace(bNoMonsters);
+    Endian::byteSwapInPlace(bPistolStart);
+    Endian::byteSwapInPlace(bTurboMode);
+    Endian::byteSwapInPlace(bUseLostSoulSpawnFix);
+    Endian::byteSwapInPlace(bUseLineOfSightOverflowFix);
+    Endian::byteSwapInPlace(bRemoveMaxCrossLinesLimit);
+    Endian::byteSwapInPlace(bFixOutdoorBulletPuffs);
+    Endian::byteSwapInPlace(bFixBlockingGibsBug);
+    Endian::byteSwapInPlace(bFixSoundPropagation);
+    Endian::byteSwapInPlace(lostSoulSpawnLimit);
+    Endian::byteSwapInPlace(viewBobbingStrengthFixed);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Bytes swaps from little to big endian or big endian to little if the host architecture is big-endian
+//------------------------------------------------------------------------------------------------------------------------------------------
+void GameSettings::endianCorrect() noexcept {
+    if constexpr (Endian::isBig()) {
+        byteSwap();
+    }
+}
 
 BEGIN_NAMESPACE(Game)
 

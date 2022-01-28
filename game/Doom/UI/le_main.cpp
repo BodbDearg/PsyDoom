@@ -93,7 +93,7 @@ gameaction_t TIC_Legals() noexcept {
 
             // PsyDoom: only accept main menu buttons to skip
             #if PSYDOOM_MODS
-                if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
+                if (gTickInputs[0].fMenuOk() || gTickInputs[0].fMenuStart() || gTickInputs[0].fMenuBack())
                     return ga_exit;
             #else
                 if (gTicButtons[0] != 0)

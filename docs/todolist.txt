@@ -1,5 +1,4 @@
 - Implement integer scaling.
-- Fix reliance on bitfields for network code via 'TickInputs' (bitfield order implementation dependant).
 - Linux support.
 - Add demo recording support and a new demo format that supports 30 FPS recording and analog movement.
     - Still support old format for playback, add signature to demo start to identify.

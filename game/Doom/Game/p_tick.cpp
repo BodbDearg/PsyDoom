@@ -241,7 +241,7 @@ void P_CheckCheats() noexcept {
 
         // Toggling pause?
         #if PSYDOOM_MODS
-            const bool bPauseJustPressed = (inputs.bTogglePause && (!oldInputs.bTogglePause));
+            const bool bPauseJustPressed = (inputs.fTogglePause() && (!oldInputs.fTogglePause()));
         #else
             const bool bPauseJustPressed = Utils::padBtnJustPressed(PAD_START, padBtns, oldPadBtns);
         #endif
@@ -284,7 +284,7 @@ void P_CheckCheats() noexcept {
         // Otherwise do not do any of the logic below...
         #if PSYDOOM_MODS
             const bool bMenuBackJustPressed = (
-                (inputs.bMenuBack && (!oldInputs.bMenuBack)) &&
+                (inputs.fMenuBack() && (!oldInputs.fMenuBack())) &&
                 // PsyDoom: hack: ignore the 'back' operation if a cheat sequence is halfway entered and cheat buttons are being pressed.
                 // This fixes an input conflict where the normal menu back button is mapped to a PSX button for cheat inputting.
                 // This assumes the conflict will occur in the later part of the cheat sequence.
@@ -348,11 +348,11 @@ void P_CheckCheats() noexcept {
         const uint32_t padBtns = gTicButtons;
         const uint32_t oldPadBtns = gOldTicButtons;
 
-        const bool bMenuLeft = gTickInputs[0].bMenuLeft;
-        const bool bMenuRight = gTickInputs[0].bMenuRight;
-        const bool bJustPressedMenuLeft = (gTickInputs[0].bMenuLeft && (!gOldTickInputs[0].bMenuLeft));
-        const bool bJustPressedMenuRight = (gTickInputs[0].bMenuRight && (!gOldTickInputs[0].bMenuRight));
-        const bool bJustPressedMenuOk = (gTickInputs[0].bMenuOk && (!gOldTickInputs[0].bMenuOk));
+        const bool bMenuLeft = gTickInputs[0].fMenuLeft();
+        const bool bMenuRight = gTickInputs[0].fMenuRight();
+        const bool bJustPressedMenuLeft = (gTickInputs[0].fMenuLeft() && (!gOldTickInputs[0].fMenuLeft()));
+        const bool bJustPressedMenuRight = (gTickInputs[0].fMenuRight() && (!gOldTickInputs[0].fMenuRight()));
+        const bool bJustPressedMenuOk = (gTickInputs[0].fMenuOk() && (!gOldTickInputs[0].fMenuOk()));
     #else
         const uint32_t padBtns = gTicButtons[0];
         const uint32_t oldPadBtns = gOldTicButtons[0];
@@ -950,39 +950,39 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // Gather basic inputs
     inputs.analogForwardMove = (fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveForwardBack) * (float) FRACUNIT);
     inputs.analogSideMove = (fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveLeftRight) * (float) FRACUNIT);
-    inputs.bTurnLeft = Controls::getBool(Controls::Binding::Digital_TurnLeft);
-    inputs.bTurnRight = Controls::getBool(Controls::Binding::Digital_TurnRight);
-    inputs.bMoveForward = Controls::getBool(Controls::Binding::Digital_MoveForward);
-    inputs.bMoveBackward = Controls::getBool(Controls::Binding::Digital_MoveBackward);
-    inputs.bStrafeLeft = Controls::getBool(Controls::Binding::Digital_StrafeLeft);
-    inputs.bStrafeRight = Controls::getBool(Controls::Binding::Digital_StrafeRight);
-    inputs.bUse = Controls::getBool(Controls::Binding::Action_Use);
-    inputs.bAttack = Controls::getBool(Controls::Binding::Action_Attack);
-    inputs.bRun = Controls::getBool(Controls::Binding::Modifier_Run);
-    inputs.bStrafe = Controls::getBool(Controls::Binding::Modifier_Strafe);
-    inputs.bPrevWeapon = Controls::getBool(Controls::Binding::Weapon_Previous);
-    inputs.bNextWeapon = Controls::getBool(Controls::Binding::Weapon_Next);
-    inputs.bTogglePause = Controls::isJustPressed(Controls::Binding::Toggle_Pause);
-    inputs.bToggleMap = Controls::isJustPressed(Controls::Binding::Toggle_Map);
-    inputs.bAutomapZoomIn = Controls::getBool(Controls::Binding::Automap_ZoomIn);
-    inputs.bAutomapZoomOut = Controls::getBool(Controls::Binding::Automap_ZoomOut);
-    inputs.bAutomapMoveLeft = Controls::getBool(Controls::Binding::Automap_MoveLeft);
-    inputs.bAutomapMoveRight = Controls::getBool(Controls::Binding::Automap_MoveRight);
-    inputs.bAutomapMoveUp = Controls::getBool(Controls::Binding::Automap_MoveUp);
-    inputs.bAutomapMoveDown = Controls::getBool(Controls::Binding::Automap_MoveDown);
-    inputs.bAutomapPan = Controls::getBool(Controls::Binding::Automap_Pan);
-    inputs.bRespawn = Controls::getBool(Controls::Binding::Action_Respawn);
-    inputs.bMenuUp = Controls::getBool(Controls::Binding::Menu_Up);
-    inputs.bMenuDown = Controls::getBool(Controls::Binding::Menu_Down);
-    inputs.bMenuLeft = Controls::getBool(Controls::Binding::Menu_Left);
-    inputs.bMenuRight = Controls::getBool(Controls::Binding::Menu_Right);
-    inputs.bMenuOk = Controls::getBool(Controls::Binding::Menu_Ok);
-    inputs.bMenuStart = Controls::getBool(Controls::Binding::Menu_Start);
-    inputs.bMenuBack = Controls::getBool(Controls::Binding::Menu_Back);
-    inputs.bEnterPasswordChar = Controls::getBool(Controls::Binding::Menu_EnterPasswordChar);
-    inputs.bDeletePasswordChar = Controls::getBool(Controls::Binding::Menu_DeletePasswordChar);
-    inputs.bQuicksave = Controls::getBool(Controls::Binding::Quicksave);
-    inputs.bQuickload = Controls::getBool(Controls::Binding::Quickload);
+    inputs.fTurnLeft() = Controls::getBool(Controls::Binding::Digital_TurnLeft);
+    inputs.fTurnRight() = Controls::getBool(Controls::Binding::Digital_TurnRight);
+    inputs.fMoveForward() = Controls::getBool(Controls::Binding::Digital_MoveForward);
+    inputs.fMoveBackward() = Controls::getBool(Controls::Binding::Digital_MoveBackward);
+    inputs.fStrafeLeft() = Controls::getBool(Controls::Binding::Digital_StrafeLeft);
+    inputs.fStrafeRight() = Controls::getBool(Controls::Binding::Digital_StrafeRight);
+    inputs.fUse() = Controls::getBool(Controls::Binding::Action_Use);
+    inputs.fAttack() = Controls::getBool(Controls::Binding::Action_Attack);
+    inputs.fRun() = Controls::getBool(Controls::Binding::Modifier_Run);
+    inputs.fStrafe() = Controls::getBool(Controls::Binding::Modifier_Strafe);
+    inputs.fPrevWeapon() = Controls::getBool(Controls::Binding::Weapon_Previous);
+    inputs.fNextWeapon() = Controls::getBool(Controls::Binding::Weapon_Next);
+    inputs.fTogglePause() = Controls::isJustPressed(Controls::Binding::Toggle_Pause);
+    inputs.fToggleMap() = Controls::isJustPressed(Controls::Binding::Toggle_Map);
+    inputs.fAutomapZoomIn() = Controls::getBool(Controls::Binding::Automap_ZoomIn);
+    inputs.fAutomapZoomOut() = Controls::getBool(Controls::Binding::Automap_ZoomOut);
+    inputs.fAutomapMoveLeft() = Controls::getBool(Controls::Binding::Automap_MoveLeft);
+    inputs.fAutomapMoveRight() = Controls::getBool(Controls::Binding::Automap_MoveRight);
+    inputs.fAutomapMoveUp() = Controls::getBool(Controls::Binding::Automap_MoveUp);
+    inputs.fAutomapMoveDown() = Controls::getBool(Controls::Binding::Automap_MoveDown);
+    inputs.fAutomapPan() = Controls::getBool(Controls::Binding::Automap_Pan);
+    inputs.fRespawn() = Controls::getBool(Controls::Binding::Action_Respawn);
+    inputs.fMenuUp() = Controls::getBool(Controls::Binding::Menu_Up);
+    inputs.fMenuDown() = Controls::getBool(Controls::Binding::Menu_Down);
+    inputs.fMenuLeft() = Controls::getBool(Controls::Binding::Menu_Left);
+    inputs.fMenuRight() = Controls::getBool(Controls::Binding::Menu_Right);
+    inputs.fMenuOk() = Controls::getBool(Controls::Binding::Menu_Ok);
+    inputs.fMenuStart() = Controls::getBool(Controls::Binding::Menu_Start);
+    inputs.fMenuBack() = Controls::getBool(Controls::Binding::Menu_Back);
+    inputs.fEnterPasswordChar() = Controls::getBool(Controls::Binding::Menu_EnterPasswordChar);
+    inputs.fDeletePasswordChar() = Controls::getBool(Controls::Binding::Menu_DeletePasswordChar);
+    inputs.fQuicksave() = Controls::getBool(Controls::Binding::Quicksave);
+    inputs.fQuickload() = Controls::getBool(Controls::Binding::Quickload);
 
     // Allow toggle of autorun if the right button is pressed
     if (Controls::isJustPressed(Controls::Binding::Toggle_Autorun)) {
@@ -993,14 +993,14 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 
     // If we're always running then this gets inverted
     if (PlayerPrefs::gbAlwaysRun) {
-        inputs.bRun = (!inputs.bRun);
+        inputs.fRun() = (!inputs.fRun());
     }
 
     // Should the currently held attack be ignored immediately after loading or saving a game and returning to gameplay?
     // If this is the case then once the user releases attack everything goes back to normal.
     if (gbIgnoreCurrentAttack) {
         if (Controls::getBool(Controls::Binding::Action_Attack)) {
-            inputs.bAttack = false;
+            inputs.fAttack() = false;
         } else {
             gbIgnoreCurrentAttack = false;
         }
@@ -1082,126 +1082,126 @@ void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* co
     inputs.psxMouseDy = -(int8_t)(buttons >> 24);
 
     if (buttons & PAD_UP) {
-        inputs.bMoveForward = true;
-        inputs.bMenuUp = true;
-        inputs.bAutomapMoveUp = true;
+        inputs.fMoveForward() = true;
+        inputs.fMenuUp() = true;
+        inputs.fAutomapMoveUp() = true;
     }
 
     if (buttons & PAD_DOWN) {
-        inputs.bMoveBackward = true;
-        inputs.bMenuDown = true;
-        inputs.bAutomapMoveDown = true;
+        inputs.fMoveBackward() = true;
+        inputs.fMenuDown() = true;
+        inputs.fAutomapMoveDown() = true;
     }
 
     if (buttons & PAD_LEFT) {
-        inputs.bTurnLeft = true;
-        inputs.bMenuLeft = true;
-        inputs.bAutomapMoveLeft = true;
+        inputs.fTurnLeft() = true;
+        inputs.fMenuLeft() = true;
+        inputs.fAutomapMoveLeft() = true;
     }
 
     if (buttons & PAD_RIGHT) {
-        inputs.bTurnRight = true;
-        inputs.bMenuRight = true;
-        inputs.bAutomapMoveRight = true;
+        inputs.fTurnRight() = true;
+        inputs.fMenuRight() = true;
+        inputs.fAutomapMoveRight() = true;
     }
 
     if (buttons & PAD_TRIANGLE) {
-        inputs.bDeletePasswordChar = true;
-        inputs.bMenuOk = true;
-        inputs.bRespawn = true;
+        inputs.fDeletePasswordChar() = true;
+        inputs.fMenuOk() = true;
+        inputs.fRespawn() = true;
     }
 
     if (buttons & PAD_CROSS) {
-        inputs.bEnterPasswordChar = true;
-        inputs.bMenuOk = true;
-        inputs.bAutomapPan = true;
-        inputs.bRespawn = true;
+        inputs.fEnterPasswordChar() = true;
+        inputs.fMenuOk() = true;
+        inputs.fAutomapPan() = true;
+        inputs.fRespawn() = true;
     }
 
     if (buttons & PAD_SQUARE) {
-        inputs.bEnterPasswordChar = true;
-        inputs.bMenuOk = true;
-        inputs.bRespawn = true;
+        inputs.fEnterPasswordChar() = true;
+        inputs.fMenuOk() = true;
+        inputs.fRespawn() = true;
     }
 
     if (buttons & PAD_CIRCLE) {
-        inputs.bEnterPasswordChar = true;
-        inputs.bMenuOk = true;
-        inputs.bRespawn = true;
+        inputs.fEnterPasswordChar() = true;
+        inputs.fMenuOk() = true;
+        inputs.fRespawn() = true;
     }
 
     if (buttons & PAD_L1) {
-        inputs.bAutomapZoomIn = true;
-        inputs.bRespawn = true;
+        inputs.fAutomapZoomIn() = true;
+        inputs.fRespawn() = true;
     }
 
     if (buttons & PAD_R1) {
-        inputs.bAutomapZoomOut = true;
-        inputs.bRespawn = true;
+        inputs.fAutomapZoomOut() = true;
+        inputs.fRespawn() = true;
     }
 
     if (buttons & PAD_L2) {
-        inputs.bRespawn = true;
+        inputs.fRespawn() = true;
     }
 
     if (buttons & PAD_R2) {
-        inputs.bRespawn = true;
+        inputs.fRespawn() = true;
     }
 
     if (buttons & PAD_START) {
-        inputs.bMenuStart = true;
-        inputs.bTogglePause = true;
+        inputs.fMenuStart() = true;
+        inputs.fTogglePause() = true;
     }
 
     if (buttons & PAD_SELECT) {
-        inputs.bMenuBack = true;
-        inputs.bToggleMap = true;
+        inputs.fMenuBack() = true;
+        inputs.fToggleMap() = true;
     }
 
     if (buttons & PSX_MOUSE_ANY_BTNS) {
-        inputs.bPsxMouseUse = true;
+        inputs.fPsxMouseUse() = true;
     }
 
     if (buttons & pControlBindings[cbind_attack]) {
-        inputs.bAttack = true;
+        inputs.fAttack() = true;
     }
 
     if (buttons & pControlBindings[cbind_strafe]) {
-        inputs.bStrafe = true;
+        inputs.fStrafe() = true;
     }
 
     if (buttons & pControlBindings[cbind_run]) {
-        inputs.bRun = true;
+        inputs.fRun() = true;
     }
 
     if (buttons & pControlBindings[cbind_use]) {
-        inputs.bUse = true;
+        inputs.fUse() = true;
     }
 
     if (buttons & pControlBindings[cbind_strafe_left]) {
-        inputs.bStrafeLeft = true;
+        inputs.fStrafeLeft() = true;
     }
 
     if (buttons & pControlBindings[cbind_strafe_right]) {
-        inputs.bStrafeRight = true;
+        inputs.fStrafeRight() = true;
     }
 
     if (buttons & pControlBindings[cbind_prev_weapon]) {
-        inputs.bPrevWeapon = true;
+        inputs.fPrevWeapon() = true;
     }
 
     if (buttons & pControlBindings[cbind_next_weapon]) {
-        inputs.bNextWeapon = true;
+        inputs.fNextWeapon() = true;
     }
 
     if (buttons & pControlBindings[cbind_move_forward]) {
-        inputs.bMoveForward = true;
-        inputs.bAutomapMoveUp = true;
+        inputs.fMoveForward() = true;
+        inputs.fAutomapMoveUp() = true;
     }
 
     if (buttons & pControlBindings[cbind_move_backward]) {
-        inputs.bMoveBackward = true;
-        inputs.bAutomapMoveDown = true;
+        inputs.fMoveBackward() = true;
+        inputs.fAutomapMoveDown() = true;
     }
 }
 #endif  // #if PSYDOOM_MODS

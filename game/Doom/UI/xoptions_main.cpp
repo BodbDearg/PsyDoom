@@ -93,12 +93,12 @@ gameaction_t XOptions_Update() noexcept {
     const TickInputs& inputs = gTickInputs[playerIdx];
     const TickInputs& oldInputs = gOldTickInputs[playerIdx];
 
-    const bool bMenuBack = (inputs.bMenuBack && (!oldInputs.bMenuBack));
-    const bool bMenuOk = (inputs.bMenuOk && (!oldInputs.bMenuOk));
-    const bool bMenuUp = inputs.bMenuUp;
-    const bool bMenuDown = inputs.bMenuDown;
-    const bool bMenuLeft = inputs.bMenuLeft;
-    const bool bMenuRight = inputs.bMenuRight;
+    const bool bMenuBack = (inputs.fMenuBack() && (!oldInputs.fMenuBack()));
+    const bool bMenuOk = (inputs.fMenuOk() && (!oldInputs.fMenuOk()));
+    const bool bMenuUp = inputs.fMenuUp();
+    const bool bMenuDown = inputs.fMenuDown();
+    const bool bMenuLeft = inputs.fMenuLeft();
+    const bool bMenuRight = inputs.fMenuRight();
     const bool bMenuMove = (bMenuUp || bMenuDown || bMenuLeft || bMenuRight);
 
     if (bMenuBack) {
@@ -181,11 +181,11 @@ gameaction_t XOptions_Update() noexcept {
 
         // Stat display setting
         case menu_stat_display: {
-            if (bMenuLeft && (!oldInputs.bMenuLeft) && (PlayerPrefs::gStatDisplayMode > StatDisplayMode::None)) {
+            if (bMenuLeft && (!oldInputs.fMenuLeft()) && (PlayerPrefs::gStatDisplayMode > StatDisplayMode::None)) {
                 PlayerPrefs::gStatDisplayMode = (StatDisplayMode)((int32_t) PlayerPrefs::gStatDisplayMode - 1);
                 S_StartSound(nullptr, sfx_swtchx);
             }
-            else if (bMenuRight && (!oldInputs.bMenuRight) && (PlayerPrefs::gStatDisplayMode < StatDisplayMode::KillsSecretsAndItems)) {
+            else if (bMenuRight && (!oldInputs.fMenuRight()) && (PlayerPrefs::gStatDisplayMode < StatDisplayMode::KillsSecretsAndItems)) {
                 PlayerPrefs::gStatDisplayMode = (StatDisplayMode)((int32_t) PlayerPrefs::gStatDisplayMode + 1);
                 S_StartSound(nullptr, sfx_swtchx);
             }
@@ -209,7 +209,7 @@ gameaction_t XOptions_Update() noexcept {
 
             // If renderer switch is not possible and an attempt was made to do so then play this sound
             if (!bCanSwitchRenderers) {
-                if ((bMenuLeft && (!oldInputs.bMenuLeft)) || (bMenuRight && (!oldInputs.bMenuRight))) {
+                if ((bMenuLeft && (!oldInputs.fMenuLeft())) || (bMenuRight && (!oldInputs.fMenuRight()))) {
                     S_StartSound(nullptr, sfx_itemup);
                 }
             }

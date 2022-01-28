@@ -46,8 +46,6 @@
 #include "ScriptingEngine.h"
 #include "Wess/psxcd.h"
 
-#include <type_traits>
-
 // Make sure the global password character buffer is the expected size
 static_assert(PW_SEQ_LEN == C_ARRAY_SIZE(SavedGlobals::passwordCharBuffer), "Password char buffer has unexpected size!");
 
@@ -56,7 +54,7 @@ static_assert(PW_SEQ_LEN == C_ARRAY_SIZE(SavedGlobals::passwordCharBuffer), "Pas
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
 static void byteSwapValue(T& toSwap) noexcept {
-    toSwap = Endian::byteSwap(toSwap);
+    Endian::byteSwapInPlace(toSwap);
 }
 
 template <class T, size_t ArraySize>
@@ -68,8 +66,7 @@ static void byteSwapValueArray(T (&toSwap)[ArraySize]) noexcept {
 
 template <class T>
 static void byteSwapEnumValue(T& toSwap) noexcept {
-    typedef std::underlying_type_t<T> EnumT;
-    toSwap = (T) Endian::byteSwap((EnumT) toSwap);
+    Endian::byteSwapEnumInPlace(toSwap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

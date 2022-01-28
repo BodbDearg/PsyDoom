@@ -153,12 +153,12 @@ gameaction_t TIC_PasswordScreen() noexcept {
         const TickInputs& inputs = gTickInputs[0];
         const TickInputs& oldInputs = gOldTickInputs[0];
 
-        const bool bMenuUp = inputs.bMenuUp;
-        const bool bMenuDown = inputs.bMenuDown;
-        const bool bMenuLeft = inputs.bMenuLeft;
-        const bool bMenuRight = inputs.bMenuRight;
-        const bool bMenuStart = inputs.bMenuStart;
-        const bool bMenuBack = inputs.bMenuBack;
+        const bool bMenuUp = inputs.fMenuUp();
+        const bool bMenuDown = inputs.fMenuDown();
+        const bool bMenuLeft = inputs.fMenuLeft();
+        const bool bMenuRight = inputs.fMenuRight();
+        const bool bMenuStart = inputs.fMenuStart();
+        const bool bMenuBack = inputs.fMenuBack();
         const bool bMenuMove = (bMenuUp || bMenuDown || bMenuLeft || bMenuRight);
     #else
         const padbuttons_t ticButtons = gTicButtons[0];
@@ -233,12 +233,12 @@ gameaction_t TIC_PasswordScreen() noexcept {
     // PsyDoom: allow password characters to be typed with the keyboard also.
     #if PSYDOOM_MODS
         const int32_t typedPasswordCharIdx = popTypedPasswordChar();
-        const bool bMenuOkPressed = (inputs.bMenuOk && (!oldInputs.bMenuOk));
+        const bool bMenuOkPressed = (inputs.fMenuOk() && (!oldInputs.fMenuOk()));
         const bool bEnterPasswordChar = (
-            (inputs.bEnterPasswordChar && (!oldInputs.bEnterPasswordChar)) ||
+            (inputs.fEnterPasswordChar() && (!oldInputs.fEnterPasswordChar())) ||
             (typedPasswordCharIdx >= 0)
         );
-        const bool bDeletePasswordChar = (inputs.bDeletePasswordChar && (!oldInputs.bDeletePasswordChar));
+        const bool bDeletePasswordChar = (inputs.fDeletePasswordChar() && (!oldInputs.fDeletePasswordChar()));
     #else
         const bool bEnterPasswordChar = (ticButtons & (PAD_SQUARE | PAD_CROSS | PAD_CIRCLE));
         const bool bDeletePasswordChar = (ticButtons & PAD_TRIANGLE);

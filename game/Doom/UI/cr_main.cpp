@@ -87,7 +87,7 @@ gameaction_t TIC_Credits() noexcept {
     // If any controller buttons are pressed then exit the credits.
     // PsyDoom: just accept certain menu inputs for this.
     #if PSYDOOM_MODS
-        if (gTickInputs[0].bMenuOk || gTickInputs[0].bMenuStart || gTickInputs[0].bMenuBack)
+        if (gTickInputs[0].fMenuOk() || gTickInputs[0].fMenuStart() || gTickInputs[0].fMenuBack())
             return ga_exit;
     #else
         if (gTicButtons[0] != 0)
