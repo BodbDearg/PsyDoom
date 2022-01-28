@@ -468,3 +468,20 @@ bool DiscInfo::parseFromCueFile(const char* const filePath, std::string& errorMs
         return false;
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns what track a particular CD-ROM sector on the disc belongs to.
+// Returns '-1' if the sector does not belong to any track.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t DiscInfo::getSectorTrack(const uint32_t sectorIdx) noexcept {
+    uint32_t trackEndSector = 0;
+
+    for (const DiscTrack& track : tracks) {
+        trackEndSector += (uint32_t) track.blockCount;
+
+        if (sectorIdx < trackEndSector)
+            return track.trackNum;
+    }
+
+    return -1;
+}

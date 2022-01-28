@@ -395,9 +395,9 @@ gameaction_t M_Ticker() noexcept {
 
     if (gCursorPos[0] == gamemode) {
         // Menu left/right movements: game mode.
-        // PsyDoom: multiplayer can now be disabled by mods that don't want to support it or which can't support it.
+        // PsyDoom: multiplayer can now be disabled by mods that don't want to support it or which can't support it. It's also disabled for the demo.
         #if PSYDOOM_MODS
-            const bool bAllowMultiplayer = (!MapInfo::getGameInfo().bDisableMultiplayer);
+            const bool bAllowMultiplayer = ((!MapInfo::getGameInfo().bDisableMultiplayer) && (!Game::gbIsDemoVersion));
         #else
             const bool bAllowMultiplayer = true;
         #endif
@@ -428,8 +428,11 @@ gameaction_t M_Ticker() noexcept {
         } else {
             #if PSYDOOM_MODS
                 if (bMenuRight || bMenuLeft) {
-                    // PsyDoom: play a sound when trying to switch to multiplayer when it is not allowed
-                    S_StartSound(nullptr, sfx_itemup);
+                    // PsyDoom: play a sound when trying to switch to multiplayer when it is not allowed.
+                    // Don't play the sound for the demo version of the game however, to replicate the original demo behavior.
+                    if (!Game::gbIsDemoVersion) {
+                        S_StartSound(nullptr, sfx_itemup);
+                    }
                 }
             #endif
         }
@@ -471,23 +474,31 @@ gameaction_t M_Ticker() noexcept {
     }
     else if (gCursorPos[0] == difficulty) {
         // Menu left/right movements: difficulty select
-        if (bMenuRight) {
-            // PsyDoom: allow the previously hidden 'Nightmare' skill to be selected
-            #if PSYDOOM_MODS
-                constexpr skill_t MAX_ALLOWED_SKILL = sk_nightmare;
-            #else
-                constexpr skill_t MAX_ALLOWED_SKILL = sk_hard;
-            #endif
+        #if PSYDOOM_MODS
+            const bool bAllowDifficultySelect = (!Game::gbIsDemoVersion);   // Difficulty select disabled for the Doom demo
+        #else
+            const bool bAllowDifficultySelect = true;
+        #endif
 
-            if (gStartSkill < MAX_ALLOWED_SKILL) {
-                gStartSkill = (skill_t)((uint32_t) gStartSkill + 1);
-                S_StartSound(nullptr, sfx_swtchx);
+        if (bAllowDifficultySelect) {
+            if (bMenuRight) {
+                // PsyDoom: allow the previously hidden 'Nightmare' skill to be selected
+                #if PSYDOOM_MODS
+                    constexpr skill_t MAX_ALLOWED_SKILL = sk_nightmare;
+                #else
+                    constexpr skill_t MAX_ALLOWED_SKILL = sk_hard;
+                #endif
+
+                if (gStartSkill < MAX_ALLOWED_SKILL) {
+                    gStartSkill = (skill_t)((uint32_t) gStartSkill + 1);
+                    S_StartSound(nullptr, sfx_swtchx);
+                }
             }
-        }
-        else if (bMenuLeft) {
-            if (gStartSkill != sk_baby) {
-                gStartSkill = (skill_t)((uint32_t) gStartSkill - 1);
-                S_StartSound(nullptr, sfx_swtchx);
+            else if (bMenuLeft) {
+                if (gStartSkill != sk_baby) {
+                    gStartSkill = (skill_t)((uint32_t) gStartSkill - 1);
+                    S_StartSound(nullptr, sfx_swtchx);
+                }
             }
         }
     }

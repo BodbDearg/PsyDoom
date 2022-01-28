@@ -10,10 +10,13 @@
 #include "i_main.h"
 #include "m_fixed.h"
 #include "PsyDoom/Config.h"
+#include "PsyDoom/DiscInfo.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/IsoFileSys.h"
 #include "PsyDoom/MapInfo.h"
 #include "PsyDoom/ModMgr.h"
 #include "PsyDoom/ProgArgs.h"
+#include "PsyDoom/PsxVm.h"
 #include "PsyDoom/Utils.h"
 #include "sounds.h"
 #include "Wess/lcdload.h"
@@ -49,7 +52,7 @@ static const int32_t* gSound_SettingsLists[2] = {
 };
 
 // What CD audio track each piece of CD music uses
-const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
+uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
     2,      // cdmusic_title_screen
     3,      // cdmusic_main_menu
     4,      // cdmusic_credits_demo
@@ -129,6 +132,51 @@ static SavedVoiceList gPausedMusVoiceState;
 // PsyDoom: don't need this - remove.
 #if !PSYDOOM_MODS
     static uint32_t gNumSoundTics;
+#endif
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: looks up the track numbers for all CD music based on their file system entries (.RAW files).
+// May be needed to correctly handle certain demo discs of PSX Doom.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void S_DetermineCDAudioTrackNumbers() noexcept {
+    // This does the work of looking up the track number for a specified .RAW file path
+    auto lookupCDTrackNumber = [](const char* const rawFilePath, const cdmusic_t musicType) noexcept {
+        const IsoFileSysEntry* const pFsEntry = PsxVm::gIsoFileSys.getEntry(rawFilePath);
+
+        if (pFsEntry) {
+            const int32_t trackNumber = PsxVm::gDiscInfo.getSectorTrack(pFsEntry->startLba);
+
+            // Note: if the music is located in track '1' then ignore because that is data...
+            if (trackNumber > 1) {
+                gCDTrackNum[musicType] = trackNumber;
+            }
+        }
+    };
+
+    // For the demo clear all the default track numbers, because they might not be present on some demo discs
+    if (Game::gbIsDemoVersion) {
+        for (uint32_t& trackNum : gCDTrackNum) {
+            trackNum = 0;
+        }
+    }
+
+    // These will only be present for the demo on some combined demo discs like 'Essential PlayStation CD Three/3'
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/SAMPLEV.RAW",  cdmusic_title_screen);
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/SAMPMAIN.RAW", cdmusic_main_menu);
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/SAMPMAIN.RAW", cdmusic_credits_demo);  // Main menu music is repeated for in-game on some demo discs!
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/SAMPCOMP.RAW", cdmusic_intermission);
+
+    // These are expected on the regular retail versions of the game and the standalone PSX Doom demo disc
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/DOOMMAIN.RAW", cdmusic_title_screen);
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/DMSELECT.RAW", cdmusic_main_menu);
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/CREDITS.RAW",  cdmusic_credits_demo);
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/COMPLETE.RAW", cdmusic_intermission);
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/DOOMRAVE.RAW", cdmusic_club_doom);
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/DOOM1FIN.RAW", cdmusic_finale_doom1_final_doom);
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/FINALE2.RAW",  cdmusic_finale_doom1_final_doom);   // Final Doom uses 'FINALE2'
+    lookupCDTrackNumber("PSXDOOM/CDAUDIO/FINALE1.RAW",  cdmusic_finale_doom2);
+}
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -641,6 +689,11 @@ void S_UpdateSounds() noexcept {
 // The given temporary buffer is used to hold the .WMD file while it is being processed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWmdLoadBuffer) noexcept {
+    // PsyDoom: determine track numbers for CD music
+    #if PSYDOOM_MODS
+        S_DetermineCDAudioTrackNumbers();
+    #endif
+
     // Initialize the WESS API and low level CDROM utilities
     wess_init();
     psxcd_init();

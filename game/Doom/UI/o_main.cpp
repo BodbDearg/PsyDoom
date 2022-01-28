@@ -354,7 +354,8 @@ gameaction_t O_Control() noexcept {
         #if PSYDOOM_MODS
             case opt_load:
             case opt_load_save: {
-                if (bMenuOk) {
+                // Note: disable this menu for the demo version of the game
+                if (bMenuOk && (!Game::gbIsDemoVersion)) {
                     const gameaction_t action = MiniLoop(SaveRoot_Init, SaveRoot_Shutdown, SaveRoot_Update, SaveRoot_Draw);
 
                     if ((action == ga_warped) || (action == ga_exitmenus) || (action == ga_restart))

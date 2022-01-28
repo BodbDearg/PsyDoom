@@ -11,6 +11,7 @@
 #include "MapInfo.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
+#include "Utils.h"
 
 #include <algorithm>
 #include <chrono>
@@ -25,10 +26,11 @@ static constexpr uint32_t SOUL_LIMIT_FINAL_DOOM = 16;
 static constexpr String32 UNKNOWN_EPISODE_NAME = "Unknown Episode";
 static constexpr String32 UNKNOWN_MAP_NAME = "Unknown Map";
 
-GameType        gGameType;
-GameVariant     gGameVariant;
-GameSettings    gSettings;
-bool            gbIsPsxDoomForever;
+GameType        gGameType;              // The high level game type (Doom, Final Doom etc.)
+GameVariant     gGameVariant;           // Which region specific version of the game this is
+GameSettings    gSettings;              // Game rules to play with (unless overriden by demo playback or multiplayer)
+bool            gbIsDemoVersion;        // If the game type is 'Doom' this is set to 'true' if the one level demo disc is being played
+bool            gbIsPsxDoomForever;     // If the game type is 'Final Doom' this is set to 'true' if the 'PSX Doom Forever' ROM hack is being played
 
 // Level timer: start time
 static std::chrono::high_resolution_clock::time_point gLevelStartTime;
@@ -38,38 +40,65 @@ static std::chrono::high_resolution_clock::time_point gLevelStartTime;
 static int64_t gLevelFinishTimeCentisecs;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: checks if a file on the game disc exists
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool discFileExists(const char* const filePath) noexcept {
+    return (PsxVm::gIsoFileSys.getEntry(filePath) != nullptr);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: checks if a file on the game disc exists with the specified MD5 hash (encoded in visual order)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool discFileExists(const char* const filePath, const uint64_t hashWord1, const uint64_t hashWord2) noexcept {
+    return Utils::checkDiscFileMD5Hash(PsxVm::gDiscInfo, PsxVm::gIsoFileSys, filePath, hashWord1, hashWord2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Determine which game type we are playing and from what region
 //------------------------------------------------------------------------------------------------------------------------------------------
 void determineGameTypeAndVariant() noexcept {
+    gbIsDemoVersion = false;
     gbIsPsxDoomForever = false;
 
-    if (PsxVm::gIsoFileSys.getEntry("SLUS_000.77")) {
+    if (discFileExists("SLUS_000.77")) {
         gGameType = GameType::Doom;
         gGameVariant = GameVariant::NTSC_U;
-    } else if (PsxVm::gIsoFileSys.getEntry("SLPS_003.08")) {
+    } else if (discFileExists("SLPS_003.08")) {
         gGameType = GameType::Doom;
         gGameVariant = GameVariant::NTSC_J;
-    } else if (PsxVm::gIsoFileSys.getEntry("SLES_001.32")) {
+    } else if (discFileExists("SLES_001.32")) {
         gGameType = GameType::Doom;
         gGameVariant = GameVariant::PAL;
-    } else if (PsxVm::gIsoFileSys.getEntry("SLUS_003.31")) {
+    } else if (discFileExists("SLUS_003.31")) {
         gGameType = GameType::FinalDoom;
         gGameVariant = GameVariant::NTSC_U;
-    } else if (PsxVm::gIsoFileSys.getEntry("SLPS_007.27")) {
+    } else if (discFileExists("SLPS_007.27")) {
         gGameType = GameType::FinalDoom;
         gGameVariant = GameVariant::NTSC_J;
-    } else if (PsxVm::gIsoFileSys.getEntry("SLES_004.87")) {
+    } else if (discFileExists("SLES_004.87")) {
         gGameType = GameType::FinalDoom;
         gGameVariant = GameVariant::PAL;
-    } else if (PsxVm::gIsoFileSys.getEntry("ZONE3D/ABIN/ZONE3D.WAD")) {
+    } else if (
+        (discFileExists("SLES_001.57")) ||                                                          // Standalone Doom demo disc
+        (discFileExists("PSXDOOM/ABIN/PALDEMO.EXE", 0x6AAD82C7FF2D773A, 0x33E19B2483B90A36)) ||     // Essential PlayStation CD Three/3
+        (discFileExists("PSXDOOM/ABIN/PALDEMO.EXE", 0xBC82CC0AD31992FF, 0xFBB47455A3FCD677))        // Euro Demo (Future) 103 (Official PlayStation Magazine 103)
+    ) {
+        // Doom one level demo, standalone or in a demo collection; other demo discs may also match, but I haven't tested them all!
+        gGameType = GameType::Doom;
+        gGameVariant = GameVariant::PAL;
+        gbIsDemoVersion = true;
+    }
+    else if (discFileExists("ZONE3D/ABIN/ZONE3D.WAD")) {
         // This appears to be the 'PSX Doom Forever' ROM hack: pretend it's Final Doom, because it's basically just a re-skin of it
         gGameType = GameType::FinalDoom;
         gGameVariant = GameVariant::NTSC_U;
         gbIsPsxDoomForever = true;
-    } else {
+    } 
+    else {
         FatalErrors::raise(
             "Unknown/unrecognized PSX Doom game disc provided!\n"
-            "The disc given must be either 'Doom' or 'Final Doom' (NTSC-U, NTSC-J or PAL version)."
+            "The disc given must be either 'Doom' or 'Final Doom' (NTSC-U, NTSC-J or PAL version).\n"
+            "Certain demo discs of 'Doom' are also supported as well as 'PSX Doom Forever'."
         );
     }
 }

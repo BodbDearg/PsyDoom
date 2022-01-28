@@ -1,13 +1,11 @@
 #include "IntroLogos.h"
 
-#include "DiscReader.h"
 #include "Game.h"
-#include "IsoFileSys.h"
 #include "LogoPlayer.h"
 #include "PsxVm.h"
+#include "Utils.h"
 #include "Wess/psxcd.h"
 
-#include <md5.h>
 #include <memory>
 
 BEGIN_NAMESPACE(IntroLogos)
@@ -38,6 +36,7 @@ static constexpr PsxDoomBootExeLogos PSX_DOOM_BOOT_EXE_LOGOS[] = {
     { 0xB1B1457E43C6948E, 0xD4EC1D3C10F0358F, 0x1970C, 0x29A10, 0x39D14 },      // Doom 1.0: US (SLUS_000.77) (Original US PSX Doom release)
     { 0x5EC83BB625405725, 0xCA3067301CF27FEE, 0x1970C, 0x29A10, 0x39D14 },      // Doom 1.1: US (SLUS_000.77) (US 'Greatest Hits' re-release)
     { 0xFF0E934DE5BFA36E, 0x40841F9052CE40A3, 0x19758, 0x29A5C, 0x39D60 },      // Doom 1.1: Europe (SLES_001.32) (Original Europe PSX Doom release + 'Platinum' re-release)
+    { 0x0444AA3FA1BB09E3, 0x97EE0D65D59DA840, 0x19758, 0x29A5C, 0x39D60 },      // Doom 1.1: Europe (SLES_001.57) (One level demo disc)
     { 0x1641C74D99D15272, 0x705EDAEAB28BFF2A, 0x19704, 0x2980C, 0x39D0C },      // Doom 1.1: Japan (SLPS_003.08) (PSX Doom Japan release)
     { 0x0668FF031942802C, 0xC6384BA037DA257D, 0x1B008, 0x2B30C, 0x3B610 },      // Final Doom: US (SLUS_003.31)
     { 0x28EF0816BB969BC4, 0x87302D5B286BCEC2, 0x1B054, 0x2B358, 0x3B65C },      // Final Doom: Europe (SLES_004.87)
@@ -60,7 +59,7 @@ static const char* getPsxDoomBootExePath() noexcept {
         switch (Game::gGameVariant) {
             case GameVariant::NTSC_U:   return "SLUS_000.77";
             case GameVariant::NTSC_J:   return "SLPS_003.08";
-            case GameVariant::PAL:      return "SLES_001.32";
+            case GameVariant::PAL:      return (Game::gbIsDemoVersion) ? "SLES_001.57" : "SLES_001.32";
         }
     } else if (Game::gGameType == GameType::FinalDoom) {
         switch (Game::gGameVariant) {
@@ -78,88 +77,25 @@ static const char* getPsxDoomBootExePath() noexcept {
 // If no such executable exists on the disc then the hash is set to '0'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void determinePsxDoomBootExeHash() noexcept {
-    // Initialize the hash at first to just '0'
-    gPsxDoomBootExeHashWord1 = 0;
-    gPsxDoomBootExeHashWord2 = 0;
-
-    // Read the PlayStation Doom boot executable into memory
     const char* const exePath = getPsxDoomBootExePath();
-    const IsoFileSysEntry* const pFsEntry = (exePath) ? PsxVm::gIsoFileSys.getEntry(exePath) : nullptr;
-    const bool bValidFsEntry = (pFsEntry && (pFsEntry->size > 0));
 
-    if (!bValidFsEntry)
-        return;
-
-    std::unique_ptr<std::byte[]> bootExeBytes = std::make_unique<std::byte[]>(pFsEntry->size);
-
-    {
-        DiscReader discReader(PsxVm::gDiscInfo);
-
-        const bool bExeReadSuccess = (
-            discReader.setTrackNum(1) &&
-            discReader.trackSeekAbs((int32_t) pFsEntry->startLba * CDROM_SECTOR_SIZE) &&
-            discReader.read(bootExeBytes.get(), pFsEntry->size)
-        );
-
-        if (!bExeReadSuccess)
-            return;
+    if (!Utils::getDiscFileMD5Hash(PsxVm::gDiscInfo, PsxVm::gIsoFileSys, exePath, gPsxDoomBootExeHashWord1, gPsxDoomBootExeHashWord2)) {
+        gPsxDoomBootExeHashWord1 = 0;
+        gPsxDoomBootExeHashWord2 = 0;
     }
-
-    // Hash it, and turn it into 2 64-bit words
-    MD5 md5Hasher;
-    md5Hasher.reset();
-    md5Hasher.add(bootExeBytes.get(), pFsEntry->size);
-
-    uint8_t md5[16] = {};
-    md5Hasher.getHash(md5);
-
-    gPsxDoomBootExeHashWord1 = (
-        ((uint64_t) md5[0 ] << 56) | ((uint64_t) md5[1 ] << 48) | ((uint64_t) md5[2 ] << 40) | ((uint64_t) md5[3 ] << 32) |
-        ((uint64_t) md5[4 ] << 24) | ((uint64_t) md5[5 ] << 16) | ((uint64_t) md5[6 ] <<  8) | ((uint64_t) md5[7 ] <<  0)
-    );
-
-    gPsxDoomBootExeHashWord2 = (
-        ((uint64_t) md5[8 ] << 56) | ((uint64_t) md5[9 ] << 48) | ((uint64_t) md5[10] << 40) | ((uint64_t) md5[11] << 32) |
-        ((uint64_t) md5[12] << 24) | ((uint64_t) md5[13] << 16) | ((uint64_t) md5[14] <<  8) | ((uint64_t) md5[15] <<  0)
-    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: reads from the specified portion of a file in the CD-ROM image and returns the bytes if suceeded
 //------------------------------------------------------------------------------------------------------------------------------------------
 static std::unique_ptr<std::byte[]> readFromDiscFile(const char* const path, uint32_t offset, uint32_t size) noexcept {
-    // If no path is specified or bytes requested then the result is no bytes
-    if ((!path) || (size <= 0))
-        return {};
-
-    // Get the file system entry for the requested file and ensure we can do the read
-    const IsoFileSysEntry* const pFsEntry = PsxVm::gIsoFileSys.getEntry(path);
-
-    const bool bCanDoRead = (
-        pFsEntry &&
-        (size <= pFsEntry->size) &&
-        (offset < pFsEntry->size) &&
-        (offset + size <= pFsEntry->size)
-    );
-
-    if (!bCanDoRead)
-        return {};
-
-    // Try to read the bytes
-    std::unique_ptr<std::byte[]> bytes = std::make_unique<std::byte[]>(size);
-    DiscReader discReader(PsxVm::gDiscInfo);
-
-    const bool bReadSuccess = (
-        discReader.setTrackNum(1) &&
-        discReader.trackSeekAbs((int32_t) pFsEntry->startLba * CDROM_SECTOR_SIZE + (int32_t) offset) &&
-        discReader.read(bytes.get(), size)
-    );
-
-    if (!bReadSuccess) {
-        bytes.reset();
-    }
-
-    return bytes;
+    return Utils::getDiscFileData(
+        PsxVm::gDiscInfo,
+        PsxVm::gIsoFileSys,
+        path,
+        offset,
+        (int32_t) size
+    ).pBytes;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -554,6 +554,12 @@ void P_CheckCheats() noexcept {
 
                 // Level warp cheat, bring up the warp menu
                 case CHT_SEQ_LEVEL_WARP: {
+                    // Level warp not possible on the demo version!
+                    #if PSYDOOM_MODS
+                        if (Game::gbIsDemoVersion)
+                            return;
+                    #endif
+
                     player.cheats |= CF_WARPMENU;
 
                     if (gGameMap > maxCheatWarpLevel) {
@@ -706,9 +712,9 @@ gameaction_t P_Ticker() noexcept {
     }
 
     // PsyDoom: do quick save and load if requested in singleplayer (even if paused).
-    // Only do them on 15 Hz (full game tick) boundaries however...
+    // Only do them on 15 Hz (full game tick) boundaries however. Also this functionality is not available in the demo version.
     #if PSYDOOM_MODS
-        if ((gNetGame == gt_single) && (gGameTic > gPrevGameTic)) {
+        if ((gNetGame == gt_single) && (gGameTic > gPrevGameTic) && (!Game::gbIsDemoVersion)) {
             if (gbDoQuicksave) {
                 DoQuicksave();
             } else if (gbDoQuickload) {

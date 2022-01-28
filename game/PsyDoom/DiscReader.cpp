@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the disc reader: the reference to the disc info must remain valid for the lifetime of this object
 //------------------------------------------------------------------------------------------------------------------------------------------
-DiscReader::DiscReader(DiscInfo& discInfo) noexcept
+DiscReader::DiscReader(const DiscInfo& discInfo) noexcept
     : mDiscInfo(discInfo)
     , mpCurTrack(nullptr)
     , mCurTrackIdx(-1)

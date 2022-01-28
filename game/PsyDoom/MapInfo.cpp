@@ -53,12 +53,12 @@ Cluster::Cluster() noexcept
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes game info with the default settings appropriate to the current base game
+// Zero initializes a game info struct
 //------------------------------------------------------------------------------------------------------------------------------------------
 GameInfo::GameInfo() noexcept
-    : numMaps((Game::gGameType == GameType::FinalDoom) ? 30 : 59)
-    , numRegularMaps((Game::gGameType == GameType::FinalDoom) ? 30 : 54)
-    , bFinalDoomGameRules(Game::gGameType == GameType::FinalDoom)
+    : numMaps(0)
+    , numRegularMaps(0)
+    , bFinalDoomGameRules(false)
     , bDisableMultiplayer(false)
 {
 }
@@ -382,22 +382,52 @@ static void setMapInfoToDefaults() noexcept {
     // Default game info
     gGameInfo = GameInfo();
 
+    if (Game::gGameType == GameType::FinalDoom) {
+        gGameInfo.numMaps = 30;
+        gGameInfo.numRegularMaps = 30;
+        gGameInfo.bFinalDoomGameRules = true;
+    }
+    else if (Game::gGameType == GameType::Doom) {
+        gGameInfo.numMaps = 59;
+        gGameInfo.numRegularMaps = 54;
+        gGameInfo.bFinalDoomGameRules = false;
+
+        // Doom one level demo: don't allow going past 'The Gantlet'
+        if (Game::gbIsDemoVersion) {
+            gGameInfo.numMaps = 33;
+            gGameInfo.numRegularMaps = 33;
+        }
+    }
+    else {
+        FatalErrors::raise("MapInfo::setMapInfoToDefaults: game info not defined for game type!");
+    }
+
     // Default episodes
     gEpisodes.clear();
 
-    if (Game::isFinalDoom()) {
+    if (Game::gGameType == GameType::FinalDoom) {
         defineBuiltInEpisode(1, 1,  "Master Levels");
         defineBuiltInEpisode(2, 14, "TNT");
         defineBuiltInEpisode(3, 25, "Plutonia");
-    } else {
-        defineBuiltInEpisode(1, 1,  "Ultimate Doom");
-        defineBuiltInEpisode(2, 31, "Doom II");
+    }
+    else if (Game::gGameType == GameType::Doom) {
+        if (!Game::gbIsDemoVersion) {
+            // Doom: full game
+            defineBuiltInEpisode(1, 1,  "Ultimate Doom");
+            defineBuiltInEpisode(2, 31, "Doom II");
+        } else {
+            // Doom: one level demo version
+            defineBuiltInEpisode(1, 33, "Level 33");
+        }
+    }
+    else {
+        FatalErrors::raise("MapInfo::setMapInfoToDefaults: episodes not defined for game type!");
     }
 
     // Default clusters
     gClusters.clear();
 
-    if (Game::isFinalDoom()) {
+    if (Game::gGameType == GameType::FinalDoom) {
         {
             Cluster& clus = gClusters.emplace_back();
             clus.clusterNum = 1;
@@ -480,7 +510,7 @@ static void setMapInfoToDefaults() noexcept {
             clus.text[14] = "for_some_cleaning_up.";
         }
     }
-    else {
+    else if (Game::gGameType == GameType::Doom) {
         {
             Cluster& clus = gClusters.emplace_back();
             clus.clusterNum = 1;
@@ -529,12 +559,24 @@ static void setMapInfoToDefaults() noexcept {
             clus.text[9] = "a lifetime of frivolity.";
             clus.text[10] = "congratulations!";
         }
+    } 
+    else {
+        FatalErrors::raise("MapInfo::setMapInfoToDefaults: clusters not defined for game type!");
+    }
+
+    // Doom one level demo: skip all finales
+    if (Game::gbIsDemoVersion) {
+        for (Cluster& clus : gClusters) {
+            clus.bSkipFinale = true;
+            clus.bHideNextMapForFinale = true;
+            clus.bEnableCast = false;
+        }
     }
 
     // Default maps
     gMaps.clear();
 
-    if (Game::isFinalDoom()) {
+    if (Game::gGameType == GameType::FinalDoom) {
         // Master Levels
         defineBuiltInMap(1,  1, "Attack",                   23,   SPU_REV_MODE_HALL,      0x1FFF);
         defineBuiltInMap(2,  1, "Virgil",                   29,   SPU_REV_MODE_STUDIO_C,  0x26FF);
@@ -568,7 +610,8 @@ static void setMapInfoToDefaults() noexcept {
         defineBuiltInMap(28, 3, "Baron's Lair",             18,   SPU_REV_MODE_SPACE,     0x0FFF);
         defineBuiltInMap(29, 3, "The Death Domain",         22,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
         defineBuiltInMap(30, 3, "Onslaught",                26,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-    } else {
+    } 
+    else if (Game::gGameType == GameType::Doom) {
         // Doom 1
         defineBuiltInMap(1 , 1, "Hangar",                   1,    SPU_REV_MODE_SPACE,     0x0FFF);
         defineBuiltInMap(2 , 1, "Plant",                    2,    SPU_REV_MODE_SPACE,     0x0FFF);
@@ -630,6 +673,15 @@ static void setMapInfoToDefaults() noexcept {
         defineBuiltInMap(57, 1, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
         defineBuiltInMap(58, 2, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
         defineBuiltInMap(59, 2, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+
+        // Doom one level demo: play the credits music for the demo map
+        if (Game::gbIsDemoVersion) {
+            gMaps[32].bPlayCdMusic = true;
+            gMaps[32].music = gCDTrackNum[cdmusic_credits_demo];
+        }
+    }
+    else {
+        FatalErrors::raise("MapInfo::setMapInfoToDefaults: maps not defined for game type!");
     }
 }
 

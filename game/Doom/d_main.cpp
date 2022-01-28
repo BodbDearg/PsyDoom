@@ -95,8 +95,13 @@ static void D_PlayIntros() noexcept {
         movie::MoviePlayer::play("PSXDOOM/ABIN/MOVIE.STR", movieFps);
     }
 
-    // Show the legals intro logo
-    LogoPlayer::play(IntroLogos::getLegalsIntroLogo());
+    // Show the legals intro logo, if it's available in this build of the game.
+    // If it is a demo version and not available then emulate the demo behavior and show the 'legals' UI.
+    const bool bDidShowLegals = LogoPlayer::play(IntroLogos::getLegalsIntroLogo());
+
+    if ((!bDidShowLegals) && (Game::gbIsDemoVersion) && (!Input::isQuitRequested())) {
+        MiniLoop(START_Legals, STOP_Legals, TIC_Legals, DRAW_Legals);
+    }
 }
 #endif  // #if PSYDOOM_MODS
 
@@ -216,9 +221,25 @@ void D_DoomMain() noexcept {
         };
 
         if (!didExit(RunTitle())) {
-            if (!didExit(RunDemo(CdFile::DEMO1_LMP))) {
-                if (!didExit(RunCredits())) {
-                    if (!didExit(RunDemo(CdFile::DEMO2_LMP)))
+            // PsyDoom: if we're dealing with the demo version then we just play the 2nd demo lump first and then do the credits
+            #if PSYDOOM_MODS
+                const bool bIsDemoVersion = Game::gbIsDemoVersion;
+            #else
+                const bool bIsDemoVersion = false;
+            #endif
+
+            if (!bIsDemoVersion) {
+                // Full version of the game: run two demos and the credits in between them:
+                if (!didExit(RunDemo(CdFile::DEMO1_LMP))) {
+                    if (!didExit(RunCredits())) {
+                        if (!didExit(RunDemo(CdFile::DEMO2_LMP)))
+                            continue;
+                    }
+                }
+            } else {
+                // Demo version of Doom: just one demo for this
+                if (!didExit(RunDemo(CdFile::DEMO2_LMP))) {
+                    if (!didExit(RunCredits()))
                         continue;
                 }
             }
@@ -260,11 +281,15 @@ gameaction_t RunTitle() noexcept {
 // The maximum allowed demo size to be handled by this function is 16 KiB.
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemo(const CdFileId file) noexcept {
-    // PsyDoom: ensure this required graphic is loaded before starting the demo
+    // PsyDoom: ensure this required graphic is loaded before starting the demo.
+    // Also skip running the demo if the file does not exist.
     #if PSYDOOM_MODS
         if (!gTex_LOADING.bIsCached) {
             I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
         }
+
+        if (CdMapTbl_GetEntry(file).size <= 0)
+            return ga_nothing;
     #endif
 
     // Open the demo file

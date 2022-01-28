@@ -13,6 +13,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "PsyDoom/Controls.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/Utils.h"
 #include "ti_main.h"
@@ -60,6 +61,19 @@ gameaction_t TIC_Legals() noexcept {
             gbKeepInputEvents = true;   // Don't consume 'key pressed' etc. events yet, not ticking...
             return ga_nothing;
         }
+    #endif
+
+    // PsyDoom: allow the legals screen to be bypassed if the user presses certain menu action buttons
+    #if PSYDOOM_MODS
+        const bool bUserQuit = (
+            Input::isQuitRequested() ||
+            Controls::isJustReleased(Controls::Binding::Menu_Ok) ||
+            Controls::isJustReleased(Controls::Binding::Menu_Back) ||
+            Controls::isJustReleased(Controls::Binding::Menu_Start)
+        );
+
+        if (bUserQuit)
+            return ga_exit;
     #endif
 
     // Scroll the legal text, otherwise check for timeout

@@ -12,7 +12,7 @@ struct DiscTrack;
 //------------------------------------------------------------------------------------------------------------------------------------------
 class DiscReader {
 public:
-    DiscReader(DiscInfo& discInfo) noexcept;
+    DiscReader(const DiscInfo& discInfo) noexcept;
     ~DiscReader() noexcept;
 
     int32_t getTrackNum() const noexcept;
@@ -30,7 +30,7 @@ public:
 private:
     int32_t dataOffsetToPhysical(const int32_t dataOffset) const noexcept;
 
-    DiscInfo&           mDiscInfo;      // Information for the disc being read from
+    const DiscInfo&     mDiscInfo;      // Information for the disc being read from
     const DiscTrack*    mpCurTrack;     // Pointer to the current track open for the disc reader
     int32_t             mCurTrackIdx;   // Current track index in the disc that is open for reading or '-1' if none
     int32_t             mCurOffset;     // Current byte offset in the actual track data we are at (NOT physical offset in the file)

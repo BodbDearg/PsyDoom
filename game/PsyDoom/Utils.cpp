@@ -2,10 +2,13 @@
 
 #include "Config.h"
 #include "Controls.h"
+#include "DiscInfo.h"
+#include "DiscReader.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/UI/st_main.h"
 #include "FatalErrors.h"
 #include "Input.h"
+#include "IsoFileSys.h"
 #include "Network.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
@@ -19,6 +22,7 @@
 #include "Wess/wessseq.h"
 
 #include <chrono>
+#include <md5.h>
 #include <SDL.h>
 #include <thread>
 
@@ -163,7 +167,12 @@ bool waitForSeconds(const float seconds) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool waitForCdAudioPlaybackStart() noexcept {
     return waitForCond([]() noexcept {
-        return (psxcd_elapsed_sectors() != 0);
+        // PsyDoom: skip the wait if there isn't a valid track playing
+        #if PSYDOOM_MODS
+            return ((PsxVm::gDiscInfo.getTrack(psxcd_get_playing_track()) == nullptr) || (psxcd_elapsed_sectors() != 0));
+        #else
+            return (psxcd_elapsed_sectors() != 0);
+        #endif
     });
 }
 
@@ -259,6 +268,121 @@ void checkForRendererToggleInput() noexcept {
         gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer" : "Classic Renderer";
         gStatusBar.messageTicsLeft = 30;
     #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Retrieves data from a specified file on a game disc with the associated file system.
+// Starts reading the file from the specified offset and for the specified number of bytes.
+// If the number of bytes specified is '-1' or below it means that all the data from the given offset should be read.
+// Returns an empty data object on failure to read.
+//------------------------------------------------------------------------------------------------------------------------------------------
+DiscFileData getDiscFileData(
+    const DiscInfo& discInfo,
+    const IsoFileSys& isoFileSys,
+    const char* const filePath,
+    const uint32_t readOffset,
+    const int32_t numBytesToRead
+) noexcept {
+    // Zero sized reads are always invalid
+    if (numBytesToRead == 0)
+        return {};
+
+    // Retrieve the file system entry first and abort if that fails
+    const IsoFileSysEntry* const pFsEntry = (filePath) ? isoFileSys.getEntry(filePath) : nullptr;
+    const bool bValidFsEntry = (pFsEntry && (pFsEntry->size > 0));
+
+    if (!pFsEntry)
+        return {};
+
+    // If the read starts past the end then it's invalid
+    if (readOffset >= pFsEntry->size)
+        return {};
+
+    // Figure out the real size of the read ('-1' means all bytes past the offset).
+    // If the read is out of bounds then fail the read also.
+    const uint32_t realNumBytesToRead = (numBytesToRead < 0) ? pFsEntry->size - readOffset : (uint32_t) numBytesToRead;
+
+    if (readOffset + realNumBytesToRead > pFsEntry->size)
+        return {};
+
+    // Do the read and abort if that failed
+    std::unique_ptr<std::byte[]> fileBytes = std::make_unique<std::byte[]>(realNumBytesToRead);
+    DiscReader discReader(discInfo);
+
+    const bool bFileReadSuccess = (
+        discReader.setTrackNum(1) &&
+        discReader.trackSeekAbs((int32_t) pFsEntry->startLba * CDROM_SECTOR_SIZE + (int32_t) readOffset) &&
+        discReader.read(fileBytes.get(), realNumBytesToRead)
+    );
+
+    if (!bFileReadSuccess)
+        return {};
+
+    // Success! Return the bytes just read:
+    return { std::move(fileBytes), realNumBytesToRead };
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gets the MD5 hash of a file on the given game disc (with associated file system) and returns 'true' if was successfully retrieved.
+// The hash is returned as 2 64-bit words, with the bytes packed in the visual order that the MD5 would be read (as a string of bytes).
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool getDiscFileMD5Hash(
+    const DiscInfo& discInfo,
+    const IsoFileSys& isoFileSys,
+    const char* const filePath,
+    uint64_t& hashWord1,
+    uint64_t& hashWord2
+) noexcept {
+    // Get the data and abort if that fails
+    DiscFileData data = getDiscFileData(discInfo, isoFileSys, filePath);
+
+    if (!data.pBytes) {
+        hashWord1 = {};
+        hashWord2 = {};
+        return false;
+    }
+
+    // Hash the data and turn the hash into 2 64-bit words
+    MD5 md5Hasher;
+    md5Hasher.reset();
+    md5Hasher.add(data.pBytes.get(), data.numBytes);
+
+    uint8_t md5[16] = {};
+    md5Hasher.getHash(md5);
+
+    hashWord1 = (
+        ((uint64_t) md5[0 ] << 56) | ((uint64_t) md5[1 ] << 48) | ((uint64_t) md5[2 ] << 40) | ((uint64_t) md5[3 ] << 32) |
+        ((uint64_t) md5[4 ] << 24) | ((uint64_t) md5[5 ] << 16) | ((uint64_t) md5[6 ] <<  8) | ((uint64_t) md5[7 ] <<  0)
+    );
+
+    hashWord2 = (
+        ((uint64_t) md5[8 ] << 56) | ((uint64_t) md5[9 ] << 48) | ((uint64_t) md5[10] << 40) | ((uint64_t) md5[11] << 32) |
+        ((uint64_t) md5[12] << 24) | ((uint64_t) md5[13] << 16) | ((uint64_t) md5[14] <<  8) | ((uint64_t) md5[15] <<  0)
+    );
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Checks if the specified file exists on a game disc (with associated file system) and whether it's MD5 hash matches the input hash.
+// Returns 'true' if the file is found AND the hash matches.
+// The MD5 hash is specified in the visual order that the MD5 would be read (as a string of bytes).
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool checkDiscFileMD5Hash(
+    const DiscInfo& discInfo,
+    const IsoFileSys& isoFileSys,
+    const char* const filePath,
+    const uint64_t checkHashWord1,
+    const uint64_t checkHashWord2
+) noexcept {
+    uint64_t actualHashWord1 = {};
+    uint64_t actualHashWord2 = {};
+
+    if (getDiscFileMD5Hash(discInfo, isoFileSys, filePath, actualHashWord1, actualHashWord2)) {
+        return ((actualHashWord1 == checkHashWord1) && (actualHashWord2 == checkHashWord2));
+    } else {
+        return false;
+    }
 }
 
 END_NAMESPACE(Utils)

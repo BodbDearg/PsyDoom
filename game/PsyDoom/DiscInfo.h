@@ -61,4 +61,5 @@ struct DiscInfo {
 
     bool parseFromCueStr(const char* const str, const char* const cueBasePath, std::string& errorMsg) noexcept;
     bool parseFromCueFile(const char* const filePath, std::string& errorMsg) noexcept;
+    int32_t getSectorTrack(const uint32_t sectorIdx) noexcept;
 };

@@ -52,6 +52,7 @@ BEGIN_NAMESPACE(Game)
 extern GameType         gGameType;
 extern GameVariant      gGameVariant;
 extern GameSettings     gSettings;
+extern bool             gbIsDemoVersion;
 extern bool             gbIsPsxDoomForever;
 
 void determineGameTypeAndVariant() noexcept;

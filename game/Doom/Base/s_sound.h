@@ -39,7 +39,7 @@ enum cdmusic_t : int32_t {
     NUM_CD_MUSIC_TRACKS
 };
 
-extern const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS];
+extern uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS];
 
 extern int32_t gCdMusicVol;
 

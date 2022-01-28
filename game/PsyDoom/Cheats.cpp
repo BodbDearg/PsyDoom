@@ -150,6 +150,10 @@ static void doToggleNoClipCheat() noexcept {
 // Executes the cheat to open the level warp menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doOpenLevelWarpCheat() noexcept {
+    // Level warp not possible on the demo version!
+    if (Game::gbIsDemoVersion)
+        return;
+
     ensureGamePaused();
 
     player_t& player = gPlayers[gCurPlayerIndex];
