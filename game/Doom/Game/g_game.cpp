@@ -614,11 +614,8 @@ void G_RunGame() noexcept {
 gameaction_t G_PlayDemoPtr() noexcept {
     // Read the demo skill and map number
     gpDemo_p = gpDemoBuffer;
-
-    const skill_t skill = (skill_t) Endian::littleToHost(gpDemo_p[0]);
-    const int32_t mapNum = (int32_t) Endian::littleToHost(gpDemo_p[1]);
-
-    gpDemo_p += 2;
+    const skill_t skill = Endian::littleToHost(Demo_Read<skill_t>());
+    const int32_t mapNum = Endian::littleToHost(Demo_Read<int32_t>());
 
     // Read the control bindings for the demo and save the previous ones before that.
     //
@@ -628,10 +625,10 @@ gameaction_t G_PlayDemoPtr() noexcept {
     D_memcpy(prevCtrlBindings, gCtrlBindings, sizeof(prevCtrlBindings));
 
     if (Game::isFinalDoom()) {
-        D_memcpy(gCtrlBindings, gpDemo_p, sizeof(padbuttons_t) * NUM_BINDABLE_BTNS);
+        Demo_Read(gCtrlBindings, NUM_BINDABLE_BTNS);
     } else {
         // Note: original Doom did not have the move forward/backward bindings (due to no mouse support) - hence they are zeroed here:
-        D_memcpy(gCtrlBindings, gpDemo_p, sizeof(padbuttons_t) * 8);
+        Demo_Read(gCtrlBindings, 8);
         gCtrlBindings[8] = 0;
         gCtrlBindings[9] = 0;
     }
@@ -647,18 +644,11 @@ gameaction_t G_PlayDemoPtr() noexcept {
 
     static_assert(sizeof(prevCtrlBindings) == 40);
 
-    if (Game::isFinalDoom()) {
-        gpDemo_p += NUM_BINDABLE_BTNS;
-    } else {
-        gpDemo_p += 8;
-    }
-
     // For Final Doom read the mouse sensitivity and save the old value to restore later:
     const int32_t oldPsxMouseSensitivity = gPsxMouseSensitivity;
 
     if (Game::isFinalDoom()) {
-        gPsxMouseSensitivity = Endian::littleToHost((int32_t) *gpDemo_p);
-        gpDemo_p++;
+        gPsxMouseSensitivity = Endian::littleToHost(Demo_Read<int32_t>());
     }
 
     // PsyDoom: determine the game settings to play back this classic demo correctly, depending on what game is being used.

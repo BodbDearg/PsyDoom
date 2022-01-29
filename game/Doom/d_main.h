@@ -3,6 +3,7 @@
 #include "doomdef.h"
 
 #include <cstddef>
+#include <cstring>
 
 // PsyDoom: 'CdFileId' has changed in format
 #if PSYDOOM_MODS
@@ -19,8 +20,8 @@ extern int32_t      gPlayersElapsedVBlanks[MAXPLAYERS];
     extern int32_t  gNextPlayerElapsedVBlanks;
 #endif
 
-extern uint32_t*    gpDemoBuffer;
-extern uint32_t*    gpDemo_p;
+extern std::byte*   gpDemoBuffer;
+extern std::byte*   gpDemo_p;
 extern skill_t      gStartSkill;
 extern int32_t      gStartMapOrEpisode;
 extern gametype_t   gStartGameType;
@@ -29,7 +30,7 @@ extern bool         gbDidAbortGame;
 #if PSYDOOM_MODS
     extern bool         gbIsFirstTick;
     extern bool         gbKeepInputEvents;
-    extern uint32_t*    gpDemoBufferEnd;
+    extern std::byte*   gpDemoBufferEnd;
     extern bool         gbDoInPlaceLevelReload;
     extern fixed_t      gInPlaceReloadPlayerX;
     extern fixed_t      gInPlaceReloadPlayerY;
@@ -63,3 +64,54 @@ gameaction_t MiniLoop(
     gameaction_t (*const pTicker)(),
     void (*const pDrawer)()
 ) noexcept;
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper function to check if the specified number of values can be read from the demo buffer
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+inline bool Demo_CanRead(const uint32_t numElems = 1) noexcept {
+    const size_t numBytes = sizeof(T) * numElems;
+    return (gpDemo_p + numBytes <= gpDemoBufferEnd);
+}
+#endif  // #if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper function for reading a single value from the demo buffer.
+// This encapsulates some of the original logic in a way that is also more flexible for the new demo format.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+inline T Demo_Read() noexcept {
+    constexpr size_t NUM_BYTES = sizeof(T);
+
+    // For PsyDoom I'm adding additional safety and zeroing out of bounds reads
+    #if PSYDOOM_MODS
+        if (gpDemo_p + NUM_BYTES > gpDemoBufferEnd)
+            return {};
+    #endif
+
+    T value;
+    std::memcpy(&value, gpDemo_p, NUM_BYTES);
+    gpDemo_p += NUM_BYTES;
+    return value;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper function for reading multiple values from the demo buffer.
+// This encapsulates some of the original logic in a way that is also more flexible for the new demo format.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+inline void Demo_Read(T* const pElems, const uint32_t numElems) noexcept {
+    const size_t numBytes = sizeof(T) * numElems;
+
+    // For PsyDoom I'm adding additional safety and zeroing out of bounds reads
+    #if PSYDOOM_MODS
+        if (gpDemo_p + numBytes > gpDemoBufferEnd) {
+            std::memset(pElems, 0, numBytes);
+            return;
+        }
+    #endif
+
+    std::memcpy(pElems, gpDemo_p, numBytes);
+    gpDemo_p += numBytes;
+}

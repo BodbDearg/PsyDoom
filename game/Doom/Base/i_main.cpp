@@ -643,7 +643,6 @@ void I_Init() noexcept {
 }
 
 #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does the setup for a network game: synchronizes between players, then sends the game details and control bindings.
 // PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
@@ -962,5 +961,4 @@ int32_t I_GetTotalVBlanks() noexcept {
         return (int32_t) std::chrono::duration_cast<tick_60hz_t>(adjustedDuration).count();
     }
 }
-
-#endif
+#endif  // #if PSYDOOM_MODS

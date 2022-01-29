@@ -53,8 +53,8 @@ int32_t gPlayersElapsedVBlanks[MAXPLAYERS];
 #endif
 
 // Pointer to a buffer holding the demo and the current pointer within the buffer for playback/recording
-uint32_t* gpDemoBuffer;
-uint32_t* gpDemo_p;
+std::byte*  gpDemoBuffer;
+std::byte*  gpDemo_p;
 
 // Game start parameters
 skill_t     gStartSkill         = sk_medium;
@@ -67,7 +67,7 @@ bool gbDidAbortGame = false;
 #if PSYDOOM_MODS
     bool        gbIsFirstTick;              // Set to 'true' for the very first tick only, 'false' thereafter
     bool        gbKeepInputEvents;          // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
-    uint32_t*   gpDemoBufferEnd;            // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
+    std::byte*  gpDemoBufferEnd;            // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
     bool        gbDoInPlaceLevelReload;     // PsyDoom developer feature: reload the map but preserve player position and orientation? Allows for fast preview of changes.
     fixed_t     gInPlaceReloadPlayerX;      // Where to position the player after doing the 'in place' level reload (x)
     fixed_t     gInPlaceReloadPlayerY;      // Where to position the player after doing the 'in place' level reload (y)
@@ -300,16 +300,16 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
     #if PSYDOOM_MODS
         const int32_t demoFileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
 
-        std::unique_ptr<uint8_t[]> pDemoBuffer(new uint8_t[demoFileSize]);
-        gpDemoBuffer = (uint32_t*) pDemoBuffer.get();
-        gpDemoBufferEnd = (uint32_t*)(pDemoBuffer.get() + demoFileSize);
+        std::unique_ptr<std::byte[]> pDemoBuffer(new std::byte[demoFileSize]);
+        gpDemoBuffer = pDemoBuffer.get();
+        gpDemoBufferEnd = pDemoBuffer.get() + demoFileSize;
 
         SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
         ReadFile(openFileIdx, gpDemoBuffer, demoFileSize);
     #else
         // Read the demo file contents (up to 16 KiB)
         constexpr uint32_t DEMO_BUFFER_SIZE = 16 * 1024;
-        gpDemoBuffer = (uint32_t*) Z_EndMalloc(*gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);
+        gpDemoBuffer = (std::byte*) Z_EndMalloc(*gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);
         ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
     #endif
 
@@ -345,8 +345,8 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
     }
 
     // Setup the demo buffers and play the demo file
-    gpDemoBuffer = (uint32_t*) fileData.bytes.get();
-    gpDemoBufferEnd = (uint32_t*)(fileData.bytes.get() + fileData.size);
+    gpDemoBuffer = fileData.bytes.get();
+    gpDemoBufferEnd = fileData.bytes.get() + fileData.size;
 
     const gameaction_t exitAction = G_PlayDemoPtr();
 
@@ -677,21 +677,6 @@ gameaction_t MiniLoop(
                 }
             }
             else if (gbDemoRecording || gbDemoPlayback) {
-                // Had to move the demo pointer increment and end of demo check to here to work with uncapped framerates.
-                // The demo pointer is now also only incremented whenever actual 'vblanks' are registered as elapsed, which
-                // occurs when the required interval (15 Hz tick for demos, 30 Hz tick for normal gameplay) has elapsed.
-                #if PSYDOOM_MODS
-                    if (gElapsedVBlanks > 0) {
-                        gpDemo_p++;
-
-                        // Note: use a pointer to the end of the demo buffer to tell if the demo has ended for PsyDoom.
-                        // Don't assume the demo buffer is a fixed size, this allows us to work with demos of any size.
-                        // Also, the last tick of the demo does not get executed, hence +1...
-                        if (gpDemo_p + 1 >= gpDemoBufferEnd)
-                            break;
-                    }
-                #endif
-
                 // Demo recording or playback.
                 // Need to either read inputs from or save them to a buffer.
                 if (gbDemoPlayback) {
@@ -710,7 +695,7 @@ gameaction_t MiniLoop(
                     // Read inputs from the demo buffer and advance the demo.
                     // N.B: Demo inputs override everything else from here on in.
                     #if PSYDOOM_MODS
-                        const uint32_t padBtns = *gpDemo_p;
+                        const uint32_t padBtns = Endian::littleToHost(Demo_Read<uint32_t>());
                         gTicButtons = padBtns;
                         P_PsxButtonsToTickInputs(padBtns, gCtrlBindings, gTickInputs[gCurPlayerIndex]);
                     #else
@@ -722,16 +707,11 @@ gameaction_t MiniLoop(
                     // Demo recording: record pad inputs to the buffer.
                     // FIXME: need to implement a new demo format to support analog movements etc. - this won't work.
                     #if PSYDOOM_MODS
-                        *gpDemo_p = gTicButtons;
+                        // TODO: implement this...
                     #else
                         *gpDemo_p = padBtns;
                     #endif
                 }
-
-                // PsyDoom: moving the demo pointer increment to above to work with uncapped framerates
-                #if !PSYDOOM_MODS
-                    gpDemo_p++;
-                #endif
 
                 // Abort demo recording?
                 exitAction = ga_exitdemo;
@@ -744,9 +724,13 @@ gameaction_t MiniLoop(
                         break;
                 #endif
 
-                // PsyDoom: moving the end of demo check to above in order to work with uncapped framerates
-                #if !PSYDOOM_MODS
-                    // Is the demo recording too big or are we at the end of the largest possible demo size? If so then stop right now...
+                #if PSYDOOM_MODS
+                    // PsyDoom: don't assume the demo buffer is a fixed size, this allows us to work with demos of any size.
+                    // Also note that the last tick of the demo does not get executed with this statement, which was the original behavior:
+                    if (!Demo_CanRead<uint32_t>())
+                        break;
+                #else
+                    // Is the demo recording too big? Are we at the end of the largest possible demo size? If so then stop right now...
                     const int32_t demoTicksElapsed = (int32_t)(gpDemo_p - gpDemoBuffer);
 
                     if (demoTicksElapsed >= MAX_DEMO_TICKS)
