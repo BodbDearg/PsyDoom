@@ -291,7 +291,7 @@ DiscFileData getDiscFileData(
     const IsoFileSysEntry* const pFsEntry = (filePath) ? isoFileSys.getEntry(filePath) : nullptr;
     const bool bValidFsEntry = (pFsEntry && (pFsEntry->size > 0));
 
-    if (!pFsEntry)
+    if (!bValidFsEntry)
         return {};
 
     // If the read starts past the end then it's invalid

@@ -199,8 +199,8 @@ static bool onBeforeMapLoad_newDemoFormat() noexcept {
         const uint32_t demoFileVersion = Endian::littleToHost(demo_read<uint32_t>());
         const skill_t skill = Endian::littleToHost(demo_read<skill_t>());
         const int32_t mapNum = Endian::littleToHost(demo_read<int32_t>());
-        const gametype_t gameType = Endian::hostToLittle(demo_read<gametype_t>());
-        const int32_t playerIdx = Endian::hostToLittle(demo_read<int32_t>());
+        const gametype_t gameType = Endian::littleToHost(demo_read<gametype_t>());
+        const int32_t playerIdx = Endian::littleToHost(demo_read<int32_t>());
 
         const bool bValidDemoProperties = (
             verifyDemoFileVersion(demoFileVersion) &&
@@ -242,9 +242,9 @@ static bool onBeforeMapLoad_oldDemoFormat() noexcept {
         // Read and verify the demo skill and map number
         const skill_t skill = Endian::littleToHost(demo_read<skill_t>());
         const int32_t mapNum = Endian::littleToHost(demo_read<int32_t>());
-        const bool bValidMapAndSkill = (verifyDemoSkill(skill) && verifyDemoMapNum(mapNum));
+        const bool bValidDemoProperties = (verifyDemoSkill(skill) && verifyDemoMapNum(mapNum));
 
-        if (!bValidMapAndSkill)
+        if (!bValidDemoProperties)
             return false;
 
         // Read the control bindings for the demo: for original PSX Doom there are 8 bindings, for Final Doom there are 10.
@@ -406,7 +406,7 @@ bool onAfterMapLoad() noexcept {
             dstPlayer.mo->health = dstPlayer.health;
         }
 
-        // Init the previous tick inputs for all players to an expected value
+        // Init the previous tick inputs for all players to predefined/known starting values
         initPrevTickInputs();
     }
     catch (...) {

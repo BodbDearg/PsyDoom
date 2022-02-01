@@ -505,7 +505,8 @@ void G_RunGame() noexcept {
         gbIsLevelBeingRestarted = false;
 
         // End demo recording actions.
-        // PsyDoom: moved this to before we quit now, and removed use of the 'ga_recorddemo' enum.
+        // PsyDoom: ending demo recording is now done immediately after ending the level and no longer handled by this function.
+        // PsyDoom: also removed use of the 'ga_recorddemo' enum.
         #if !PSYDOOM_MODS
             if (gGameAction == ga_recorddemo) {
                 G_EndDemoRecording();

@@ -31,7 +31,7 @@ struct Flags {
     // Set a particular bit flag only.
     // Assumes the bit index is in range, the results are undefined otherwise!
     inline constexpr void set(const uint32_t bitIdx) noexcept {
-        ASSERT(bitIdx < NUM_BITS);
+        ASSERT(bitIdx < CAPACITY);
         const BitsT bitMask = BitsT(1) << bitIdx;
         bits |= bitMask;
     }

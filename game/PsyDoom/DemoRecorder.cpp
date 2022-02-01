@@ -64,7 +64,7 @@ static void writeDemoHeader() THROWS {
     ASSERT(gpDemoFile);
 
     // Begin the demo with a 32-bit integer set to '-1'.
-    // These is a signature to distinguish the new demo lump format from the old one.
+    // This is a signature to distinguish the new demo lump format from the old one.
     // In the old demo format this integer was the 'skill' field.
     gpDemoFile->write<int32_t>(Endian::hostToLittle(-1));
 
@@ -119,7 +119,7 @@ static void writeTickInputs(const DemoTickInputs& tickInputs) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: initializes the previous tick inputs set at the start of demo recording
+// Helper: initializes the previous tick inputs at the start of demo recording to predefined/known values
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initPrevTickInputs() noexcept {
     std::memset(gPrevTickInputs, 0, sizeof(gPrevTickInputs));
