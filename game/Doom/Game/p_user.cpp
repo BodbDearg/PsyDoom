@@ -360,9 +360,9 @@ static void P_BuildMove(player_t& player) noexcept {
     }
     else {
         // No strafe button held: do normal turning.
-        // PsyDoom: we now only do this if playing back a demo, turning movements are now done outside of 30 Hz ticks and only committed here.
+        // PsyDoom: we now only do this if playing back a classic demo, turning movements are now done outside of 30 Hz ticks and only committed here.
         #if PSYDOOM_MODS
-            const bool bDoTurning = gbDemoPlayback;
+            const bool bDoTurning = DemoPlayer::isPlayingAClassicDemo();
         #else
             const bool bDoTurning = true;
         #endif
@@ -655,10 +655,10 @@ static void P_MovePlayer(player_t& player) noexcept {
     mobj_t& mobj = *player.mo;
 
     if (Game::gSettings.bUseFinalDoomPlayerMovement) {
-        // PsyDoom: we only need to apply the vblank scale if playing a demo.
+        // PsyDoom: we only need to apply the vblank scale if playing back a classic demo.
         // If not playing a demo then it has already been applied.
         #if PSYDOOM_MODS
-            if (!gbDemoPlayback) {
+            if (!DemoPlayer::isPlayingAClassicDemo()) {
                 mobj.angle += player.angleturn;
             } else {
                 mobj.angle += player.angleturn * gPlayersElapsedVBlanks[gPlayerNum];
