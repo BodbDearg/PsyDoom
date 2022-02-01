@@ -924,8 +924,10 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     // PsyDoom: shut down the map object weak referencing system.
     // Also cleanup all map objects to remove all usage of weak reference counts before we shutdown the system.
     #if PSYDOOM_MODS
-        while (gMobjHead.next != &gMobjHead) {
-            P_RemoveMobj(*gMobjHead.next);
+        if (gMobjHead.next) {
+            while (gMobjHead.next != &gMobjHead) {
+                P_RemoveMobj(*gMobjHead.next);
+            }
         }
 
         P_ShutdownWeakRefs();

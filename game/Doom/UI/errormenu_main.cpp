@@ -153,9 +153,13 @@ gameaction_t RunDemoErrorMenu_BadMapHash() noexcept {
 // Initializes the error menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ErrorMenu_Init() noexcept {
+    // Consume all input events, setup the cursor and play the intro sound (fireball explode)
     Input::consumeEvents();
     S_StartSound(nullptr, sfx_firxpl);
     gCursorFrame = 0;
+    
+    // This lump needs to be cached for the error menu!
+    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg(), 0);
 
     // Split up the error message into lines
     {
