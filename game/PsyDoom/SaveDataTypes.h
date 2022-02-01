@@ -193,7 +193,7 @@ struct SavedPlayerT {
     void byteSwap() noexcept;
     bool validate() const noexcept;
     void serializeFrom(const player_t& player) noexcept;
-    void deserializeTo(player_t& player) const noexcept;
+    void deserializeTo(player_t& player, const bool bSkipMobjAssign = false) const noexcept;
 };
 
 static_assert(sizeof(SavedPlayerT) == 208);

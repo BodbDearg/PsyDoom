@@ -460,10 +460,22 @@ struct player_t {
     // Note: most fields are only used depending on certain contexts, like when you are in a menu or in-game.
     //--------------------------------------------------------------------------------------------------------------------------------------
     struct TickInputs {
-        // In-game: movement (0-1 range) and turning delta from analog sources and mouse input
-        fixed_t analogForwardMove;
-        fixed_t analogSideMove;
-        angle_t analogTurn;
+        // Compressed analog forward and side movement amounts (-1 to +1).
+        // The top bit is the sign bit and the other 7-bits are a percentage amount from 0-127 (0-100% movement).
+        uint8_t _analogForwardMove;
+        uint8_t _analogSideMove;
+
+        fixed_t getAnalogForwardMove() const noexcept;
+        fixed_t getAnalogSideMove() const noexcept;
+        void setAnalogForwardMove(const fixed_t amt) noexcept;
+        void setAnalogSideMove(const fixed_t amt) noexcept;
+
+        // Compressed analog turning amount.
+        // This is just an 'angle_t' with the lower 16-bits chopped off.
+        uint16_t _analogTurn;
+
+        angle_t getAnalogTurn() const noexcept;
+        void setAnalogTurn(const angle_t amt) noexcept;
 
         // In-game: which weapon the player wants to try and directly switch to ('wp_nochange' if not switching).
         // This is used to allow direct switching to weapons for PC.
@@ -526,7 +538,7 @@ struct player_t {
         void endianCorrect() noexcept;
     };
 
-    static_assert(sizeof(TickInputs) == 20);
+    static_assert(sizeof(TickInputs) == 12);
 
     // Packet sent/received by all players when connecting to a game.
     // Note: a packet containing the settings ('GameSettings') for the game is sent immediately after this by the server.
@@ -535,7 +547,8 @@ struct player_t {
         uint32_t    gameId;             // Must match the expected game id
         gametype_t  startGameType;      // Only sent by the server for the game: what type of game will be played
         skill_t     startGameSkill;     // Only sent by the server for the game: what skill level will be used
-        int32_t     startMap;           // Only sent by the server for the game: what starting map will be used
+        int16_t     startMap;           // Only sent by the server for the game: what starting map will be used
+        uint8_t     bIsDemoRecording;   // Whether this player is demo recording: affects whether pause can be used
 
         // Byte swapping for Endian correction
         void byteSwap() noexcept;
@@ -556,5 +569,5 @@ struct player_t {
         void endianCorrect() noexcept;
     };
 
-    static_assert(sizeof(NetPacket_Tick) == 32);
+    static_assert(sizeof(NetPacket_Tick) == 24);
 #endif

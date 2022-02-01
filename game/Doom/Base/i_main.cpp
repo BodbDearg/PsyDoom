@@ -13,6 +13,7 @@
 #include "i_drawcmds.h"
 #include "i_texcache.h"
 #include "PsyDoom/Config.h"
+#include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapHash.h"
@@ -121,7 +122,7 @@ texture_t gTex_CONNECT;
 
     // The current network protocol version.
     // Should be incremented whenever the data format being transmitted changes, or when updates might cause differences in game behavior.
-    static constexpr int32_t NET_PROTOCOL_VERSION = 16;
+    static constexpr int32_t NET_PROTOCOL_VERSION = 18;
 
     // Game ids for networking
     static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
@@ -142,6 +143,10 @@ texture_t gTex_CONNECT;
     // How delayed the last packet we received from the other player was.
     // This is relayed to the other peer on the next packet, so that the other player's time can be adjusted forward (if required).
     static int32_t gLastInputPacketDelayMs;
+
+    // Whether the game is being recorded as a demo by one of the players.
+    // Affects whether pause can be used or whether it ends the recording session.
+    bool gbNetIsGameBeingRecorded;
 #endif
 
 // Buffers used originally by the PsyQ SDK to store gamepad input.
@@ -576,7 +581,15 @@ void I_DrawPresent() noexcept {
         #endif
 
         gTotalVBlanks = curVBlanks;
-        gElapsedVBlanks = elapsedVBlanks;
+
+        // PsyDoom: don't allow elapsed vblanks to ever exceed '4' (15 Hz frame-rate).
+        // I don't think this should actually affect any logic, but I'm doing this for the benefit of the new demo recorder.
+        // The new demo recorder encodes the elapsed vblanks count using just 3 bits (0-7).
+        #if PSYDOOM_MODS
+            gElapsedVBlanks = std::min(elapsedVBlanks, 4);
+        #else
+            gElapsedVBlanks = elapsedVBlanks;
+        #endif
 
         // The original code spun in this loop to limit the framerate to 30 FPS (2 vblanks)
         if (gElapsedVBlanks >= 2)
@@ -665,10 +678,11 @@ void I_NetSetup() noexcept {
     const bool bIsPlayer1 = ProgArgs::gbIsNetServer;
     gCurPlayerIndex = (bIsPlayer1) ? 0 : 1;
 
-    // Clear these value initially
+    // Clear these value initially and set whether the game is being demo recorded based on the settings of this peer
     gNetPrevErrorCheck = {};
     gNetTimeAdjustMs = 0;
     gLastInputPacketDelayMs = 0;
+    gbNetIsGameBeingRecorded = ProgArgs::gbRecordDemos;
 
     // Fill in the connect output packet; note that player 1 decides the game params, so theese are zeroed for player 2:
     const uint32_t netGameId = (Game::isFinalDoom()) ? NET_GAMEID_FINAL_DOOM : NET_GAMEID_DOOM;
@@ -676,11 +690,12 @@ void I_NetSetup() noexcept {
     NetPacket_Connect outPkt = {};
     outPkt.protocolVersion = NET_PROTOCOL_VERSION;
     outPkt.gameId = netGameId;
+    outPkt.bIsDemoRecording = ProgArgs::gbRecordDemos;
 
     if (gCurPlayerIndex == 0) {
         outPkt.startGameType = gStartGameType;
         outPkt.startGameSkill = gStartSkill;
-        outPkt.startMap = gStartMapOrEpisode;
+        outPkt.startMap = (int16_t) gStartMapOrEpisode;
     } else {
         outPkt.startGameType = {};
         outPkt.startGameSkill = {};
@@ -713,6 +728,9 @@ void I_NetSetup() noexcept {
         RunNetErrorMenu_GameTypeOrVersionMismatch();
         return;
     }
+
+    // If the other player is demo recording then mark the game as being recorded
+    gbNetIsGameBeingRecorded = (gbNetIsGameBeingRecorded || inPkt.bIsDemoRecording);
 
     // Player 2 gets the details of the game from player 1 and must setup the game accordingly.
     // This includes the game settings packet sent from the server.
@@ -757,6 +775,10 @@ void I_NetSetup() noexcept {
 // PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool I_NetUpdate() noexcept {
+    // Easy case: if doing demo playback of a networked game then just read the inputs from the demo
+    if (gbDemoPlayback)
+        return (!DemoPlayer::readTickInputs());
+
     // Compute the value used for error checking.
     // Only do this while we are in the level however...
     const bool bInGame = gbIsLevelDataCached;
@@ -779,11 +801,12 @@ bool I_NetUpdate() noexcept {
         // Populate and send the output packet
         NetPacket_Tick outPkt = {};
         outPkt.errorCheck = Endian::hostToLittle(errorCheck);
-
+        outPkt.inputs.directSwitchToWeapon = wp_nochange;
         Network::sendTickPacket(outPkt);
 
         // Make sure these are set correctly for what we expect
         gNextTickInputs = {};
+        gNextTickInputs.directSwitchToWeapon = wp_nochange;
         gNextPlayerElapsedVBlanks = 0;
         gNetPrevErrorCheck = errorCheck;
     }
@@ -802,7 +825,7 @@ bool I_NetUpdate() noexcept {
         // The only situation where this should not be the case is if the game is paused and some of the uncommitted turning is being held onto for the next tick.
         ASSERT((gPlayerUncommittedTurning == 0) || (gbGamePaused));
         const angle_t playerAngle = (bInGame) ? gPlayers[gCurPlayerIndex].mo->angle : 0;
-        gPlayerNextTickViewAngle = playerAngle + gTickInputs[gCurPlayerIndex].analogTurn + gNextTickInputs.analogTurn;
+        gPlayerNextTickViewAngle = playerAngle + gTickInputs[gCurPlayerIndex].getAnalogTurn() + gNextTickInputs.getAnalogTurn();
     }
 
     std::swap(gTickInputs[gCurPlayerIndex], gNextTickInputs);
@@ -818,9 +841,7 @@ bool I_NetUpdate() noexcept {
     // Endian correct the output packet and send it
     outPkt.errorCheck = Endian::hostToLittle(outPkt.errorCheck);
     outPkt.elapsedVBlanks = Endian::hostToLittle(outPkt.elapsedVBlanks);
-    outPkt.inputs.analogForwardMove = Endian::hostToLittle(outPkt.inputs.analogForwardMove);
-    outPkt.inputs.analogSideMove = Endian::hostToLittle(outPkt.inputs.analogSideMove);
-    outPkt.inputs.analogTurn = Endian::hostToLittle(outPkt.inputs.analogTurn);
+    outPkt.inputs.endianCorrect();
     outPkt.lastPacketDelayMs = Endian::hostToLittle(outPkt.lastPacketDelayMs);
 
     Network::sendTickPacket(outPkt);
@@ -841,9 +862,7 @@ bool I_NetUpdate() noexcept {
     // Endian correct the input packet before we use it
     inPkt.errorCheck = Endian::littleToHost(inPkt.errorCheck);
     inPkt.elapsedVBlanks = Endian::littleToHost(inPkt.elapsedVBlanks);
-    inPkt.inputs.analogForwardMove = Endian::littleToHost(inPkt.inputs.analogForwardMove);
-    inPkt.inputs.analogSideMove = Endian::littleToHost(inPkt.inputs.analogSideMove);
-    inPkt.inputs.analogTurn = Endian::littleToHost(inPkt.inputs.analogTurn);
+    inPkt.inputs.endianCorrect();
     inPkt.lastPacketDelayMs = Endian::littleToHost(inPkt.lastPacketDelayMs);
 
     // See if the packet we received from the other player is what we expect; if it isn't then show a 'network error' message.

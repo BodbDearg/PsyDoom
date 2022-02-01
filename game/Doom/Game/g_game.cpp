@@ -24,9 +24,12 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PsyDoom/Config.h"
+#include "PsyDoom/DemoPlayer.h"
+#include "PsyDoom/DemoRecorder.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapInfo.h"
+#include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/SaveAndLoad.h"
 #include "PsyDoom/Utils.h"
 #include "Wess/wessapi.h"
@@ -461,15 +464,34 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_RunGame() noexcept {
     while (true) {
+        // PsyDoom: keep track of whether a save is being loaded.
+        // If we are loading a save then we can't record demos, because that can jump to any point in the game.
+        #if PSYDOOM_MODS
+            const bool bLoadedSaveGame = ShouldLoadSaveOnLevelStart();
+        #endif
+
         // Load the level and run the game.
         // PsyDoom: 'G_DoLoadLevel()' can now fail and request a map restart if loading a save game on startup fails.
+        // PsyDoom: also adding logic for beginning and ending demo recording.
         G_DoLoadLevel();
 
         #if PSYDOOM_MODS
             if (gGameAction != ga_restart) {
+                if (ProgArgs::gbRecordDemos && (!bLoadedSaveGame)) {
+                     DemoRecorder::begin();
+                     gbDemoRecording = true;
+                }
+
                 MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
-            } else {
-                P_Stop(ga_restart);     // Need to do some cleanup for the aborted level run...
+                gbDemoRecording = false;
+
+                if (DemoRecorder::isRecording()) {
+                    DemoRecorder::end();
+                }
+            }
+            else {
+                // Need to do some cleanup for the aborted level run...
+                P_Stop(ga_restart);
             }
         #else
             MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
@@ -482,10 +504,13 @@ void G_RunGame() noexcept {
         // Assume we are not restarting the current level at first
         gbIsLevelBeingRestarted = false;
 
-        // End demo recording actions
-        if (gGameAction == ga_recorddemo) {
-            G_EndDemoRecording();
-        }
+        // End demo recording actions.
+        // PsyDoom: moved this to before we quit now, and removed use of the 'ga_recorddemo' enum.
+        #if !PSYDOOM_MODS
+            if (gGameAction == ga_recorddemo) {
+                G_EndDemoRecording();
+            }
+        #endif
 
         if (gGameAction == ga_warped)
             continue;
@@ -606,100 +631,63 @@ void G_RunGame() noexcept {
         }
     }
 }
-#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Plays back the current demo in the demo buffer
+// PsyDoom helper: aborts the starting of playback for the current demo returns the exit action
+//------------------------------------------------------------------------------------------------------------------------------------------
+static gameaction_t G_AbortDemoPlayback() noexcept {
+    // If checking a demo result exit with failure since we can't play back the demo itself
+    if (ProgArgs::gCheckDemoResultFilePath[0] != 0) {
+        std::exit(1);
+    }
+
+    // Cleanup any map stuff loaded and demo playback related stuff
+    P_Stop(ga_exit);
+    DemoPlayer::onPlaybackDone();
+    return ga_exit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Plays back the current demo in the demo buffer.
+// PsyDoom: this function has been rewritten. For the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t G_PlayDemoPtr() noexcept {
-    // Read the demo skill and map number
-    gpDemo_p = gpDemoBuffer;
-    const skill_t skill = Endian::littleToHost(Demo_Read<skill_t>());
-    const int32_t mapNum = Endian::littleToHost(Demo_Read<int32_t>());
+    // Do demo setup prior to loading the map and if that fails then abort playback
+    if (!DemoPlayer::onBeforeMapLoad())
+        return G_AbortDemoPlayback();
 
-    // Read the control bindings for the demo and save the previous ones before that.
-    //
-    // Note: for original PSX Doom there are 8 bindings, for Final Doom there are 10.
-    // Need to adjust demo reading accordingly depending on which game version we are dealing with.
-    padbuttons_t prevCtrlBindings[NUM_BINDABLE_BTNS];
-    D_memcpy(prevCtrlBindings, gCtrlBindings, sizeof(prevCtrlBindings));
-
-    if (Game::isFinalDoom()) {
-        Demo_Read(gCtrlBindings, NUM_BINDABLE_BTNS);
-    } else {
-        // Note: original Doom did not have the move forward/backward bindings (due to no mouse support) - hence they are zeroed here:
-        Demo_Read(gCtrlBindings, 8);
-        gCtrlBindings[8] = 0;
-        gCtrlBindings[9] = 0;
-    }
-
-    #if PSYDOOM_MODS
-        // PsyDoom: endian correct the controls read from the demo
-        if constexpr (!Endian::isLittle()) {
-            for (uint32_t i = 0; i < NUM_BINDABLE_BTNS; ++i) {
-                gCtrlBindings[i] = Endian::littleToHost(gCtrlBindings[i]);
-            }
-        }
-    #endif
-
-    static_assert(sizeof(prevCtrlBindings) == 40);
-
-    // For Final Doom read the mouse sensitivity and save the old value to restore later:
-    const int32_t oldPsxMouseSensitivity = gPsxMouseSensitivity;
-
-    if (Game::isFinalDoom()) {
-        gPsxMouseSensitivity = Endian::littleToHost(Demo_Read<int32_t>());
-    }
-
-    // PsyDoom: determine the game settings to play back this classic demo correctly, depending on what game is being used.
-    // Save the previous game settings also, so they can be restored later.
-    // N.B: this *MUST* be done before loading the level, as some of the settings (e.g nomonsters) affect level loading.
-    #if PSYDOOM_MODS
-        const GameSettings prevGameSettings = Game::gSettings;
-        Game::getClassicDemoGameSettings(Game::gSettings);
-    #endif
-
-    // Do basic game initialization
-    G_InitNew(skill, mapNum, gt_single);
-
-    // Load the map used by the demo
+    // Actually load the level
     G_DoLoadLevel();
+
+    // Do demo setup after loading the map and if that fails then abort playback
+    if (!DemoPlayer::onAfterMapLoad())
+        return G_AbortDemoPlayback();
 
     // Run the demo
     gbDemoPlayback = true;
     const gameaction_t exitAction = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     gbDemoPlayback = false;
 
-    // Restore the previous control bindings, mouse sensitivity and cleanup
-    D_memcpy(gCtrlBindings, prevCtrlBindings, sizeof(prevCtrlBindings));
-    gPsxMouseSensitivity = oldPsxMouseSensitivity;
+    // Playback is now done
+    DemoPlayer::onPlaybackDone();
 
     // Texture cache: unlock everything except UI assets and other reserved areas of VRAM.
     // In limit removing mode also ensure we are using tight packing of VRAM.
-    #if PSYDOOM_MODS
-        #if PSYDOOM_LIMIT_REMOVING
-            I_LockAllWallAndFloorTextures(false);
-            I_TexCacheUseLoosePacking(false);
-        #else
-            I_UnlockAllTexCachePages();
-            I_LockTexCachePage(0);
-        #endif
+    #if PSYDOOM_LIMIT_REMOVING
+        I_LockAllWallAndFloorTextures(false);
+        I_TexCacheUseLoosePacking(false);
     #else
-        gLockedTexPagesMask &= 1;
+        I_UnlockAllTexCachePages();
+        I_LockTexCachePage(0);
     #endif
 
+    // Purge the heap and texture cache to cleanup and and finish up
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
-
-    // PsyDoom: cleanup the demo pointer when we're done and restore the previous game settings.
-    // Also purge the texture cache to cleanup any textures.
-    #if PSYDOOM_MODS
-        gpDemo_p = nullptr;
-        Game::gSettings = prevGameSettings;
-        I_PurgeTexCache();
-    #endif
+    I_PurgeTexCache();
 
     return exitAction;
 }
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // An empty function called when a level is ended while a demo is being recorded.

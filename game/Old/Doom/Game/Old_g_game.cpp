@@ -93,4 +93,60 @@ void G_RunGame() noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Plays back the current demo in the demo buffer
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t G_PlayDemoPtr() noexcept {
+    // Read the demo skill and map number
+    gpDemo_p = gpDemoBuffer;
+    const skill_t skill = Demo_Read<skill_t>();
+    const int32_t mapNum = Demo_Read<int32_t>();
+
+    // Read the control bindings for the demo and save the previous ones before that.
+    //
+    // Note: for original PSX Doom there are 8 bindings, for Final Doom there are 10.
+    // Need to adjust demo reading accordingly depending on which game version we are dealing with.
+    padbuttons_t prevCtrlBindings[NUM_BINDABLE_BTNS];
+    D_memcpy(prevCtrlBindings, gCtrlBindings, sizeof(prevCtrlBindings));
+
+    if (Game::isFinalDoom()) {
+        Demo_Read(gCtrlBindings, NUM_BINDABLE_BTNS);
+    } else {
+        // Note: original Doom did not have the move forward/backward bindings (due to no mouse support) - hence they are zeroed here:
+        Demo_Read(gCtrlBindings, 8);
+        gCtrlBindings[8] = 0;
+        gCtrlBindings[9] = 0;
+    }
+
+    static_assert(sizeof(prevCtrlBindings) == 40);
+
+    // For Final Doom read the mouse sensitivity and save the old value to restore later
+    const int32_t oldPsxMouseSensitivity = gPsxMouseSensitivity;
+
+    if (Game::isFinalDoom()) {
+        gPsxMouseSensitivity = Demo_Read<int32_t>();
+    }
+
+    // Do basic game initialization
+    G_InitNew(skill, mapNum, gt_single);
+
+    // Load the map used by the demo
+    G_DoLoadLevel();
+
+    // Run the demo
+    gbDemoPlayback = true;
+    const gameaction_t exitAction = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+    gbDemoPlayback = false;
+
+    // Restore the previous control bindings, mouse sensitivity and cleanup
+    D_memcpy(gCtrlBindings, prevCtrlBindings, sizeof(prevCtrlBindings));
+    gPsxMouseSensitivity = oldPsxMouseSensitivity;
+
+    // Texture cache: unlock everything except UI assets and other reserved areas of VRAM
+    gLockedTexPagesMask &= 1;
+    Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
+
+    return exitAction;
+}
+
 #endif  // #if !PSYDOOM_MODS

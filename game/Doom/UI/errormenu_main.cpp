@@ -19,6 +19,7 @@
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/Utils.h"
 
 #include <sstream>
@@ -104,6 +105,48 @@ gameaction_t RunLoadGameErrorMenu_BadMapData() noexcept {
     // Restart the map as the game is broken at this point (map only partially setup).
     // At least this way the player will get to play the save file map using a pistol start...
     return ga_restart;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Show an error menu for various different types of demo playback errors.
+// Note that if the game is playing back a demo in headless mode then the calls to run these menus will be ignored.
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t RunDemoErrorMenu(const char* const msg) noexcept {
+    if (!ProgArgs::gbHeadlessMode) {
+        gErrorMenuTitle = "Demo Error!";
+        gErrorMenuMsg = msg;
+        return MiniLoop(ErrorMenu_Init, ErrorMenu_Shutdown, ErrorMenu_Update, ErrorMenu_Draw);
+    } else {
+        return ga_exit;
+    }
+}
+
+gameaction_t RunDemoErrorMenu_UnexpectedEOF() noexcept {
+    return RunDemoErrorMenu("Unexpected EOF!\nCorrupt demo file!");
+}
+
+gameaction_t RunDemoErrorMenu_InvalidDemoVersion() noexcept {
+    return RunDemoErrorMenu("Wrong demo format!\nThis demo file is\nfor another\nversion of PsyDoom!");
+}
+
+gameaction_t RunDemoErrorMenu_InvalidSkill() noexcept {
+    return RunDemoErrorMenu("Invalid skill!");
+}
+
+gameaction_t RunDemoErrorMenu_InvalidMapNumber() noexcept {
+    return RunDemoErrorMenu("Invalid map!");
+}
+
+gameaction_t RunDemoErrorMenu_InvalidGameType() noexcept {
+    return RunDemoErrorMenu("Bad game type!");
+}
+
+gameaction_t RunDemoErrorMenu_InvalidPlayerNum() noexcept {
+    return RunDemoErrorMenu("Bad player num!");
+}
+
+gameaction_t RunDemoErrorMenu_BadMapHash() noexcept {
+    return RunLoadGameErrorMenu("Bad map hash!\nThe map data has\nchanged since the\ndemo was made.");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

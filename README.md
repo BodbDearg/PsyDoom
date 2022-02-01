@@ -111,8 +111,14 @@ The original goal of this project was to have a complete replacement for the ori
 - To force pistol starts on all levels, use the `-pistolstart` switch. This setting also affects password generation and multiplayer.
 - To enable the 'turbo mode' cheat, use the `-turbo` switch. This setting allows the player to move and fire 2x as fast. Doors and platforms also move 2x as fast. Monsters are unaffected.
 - To play a demo lump file and exit use `-playdemo <DEMO_LUMP_FILE_PATH>`.
+  - Note that this also causes intro screens to be skipped.
 - To save the results of demo playback to a .json file use `-saveresult <RESULT_FILE_PATH>`.
 - To verify that the result of demo playback matches a result .json file use `-checkresult <RESULT_FILE_PATH>`. If the result matches the expected result, the return code from the executable will be '0'. On an unexpected result, a non-zero return code is returned.
+- To record demos for each map played, use the `-record` switch. Notes on this:
+  - Pausing the game ends demo recording. In multiplayer any player pausing will end recording.
+  - Demos will only be recorded when playing from the start of the map, not when starting from a save game.
+  - Demos will be named `DEMO_MAP??.LMP` after the current map number and output to the user settings and data directory.
+  - To find the user settings and data directory, see: [Running The Game](#Running-the-game).
 - To run the game in headless mode (for demo playback only) use `-headless`
 
 ## Current limitations/bugs

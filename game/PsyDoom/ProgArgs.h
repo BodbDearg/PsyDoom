@@ -13,6 +13,7 @@ extern const char*  gDataDirPath;
 extern const char*  gPlayDemoFilePath;
 extern const char*  gSaveDemoResultFilePath;
 extern const char*  gCheckDemoResultFilePath;
+extern bool         gbRecordDemos;
 extern bool         gbIsNetServer;
 extern bool         gbIsNetClient;
 extern uint16_t     gServerPort;

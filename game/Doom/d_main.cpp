@@ -18,6 +18,8 @@
 #include "Game/p_tick.h"
 #include "Game/sprinfo.h"
 #include "PsyDoom/Config.h"
+#include "PsyDoom/DemoPlayer.h"
+#include "PsyDoom/DemoRecorder.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/IntroLogos.h"
@@ -148,14 +150,17 @@ void D_DoomMain() noexcept {
 
     ST_Init();
 
-    // PsyDoom: new cleanup logic before we exit and playing intro movies and logos
     #if PSYDOOM_MODS
+        // PsyDoom: new cleanup logic before we exit
         const auto dmainCleanup = finally([]() noexcept {
             MapInfo::shutdown();
             W_Shutdown();
         });
 
-        if (!Config::gbSkipIntros) {
+        // PsyDoom: playing intro movies and logos unless disabled or if we want to jump straight into playing back a demo file
+        const bool bSkipIntros = ((Config::gbSkipIntros) || (ProgArgs::gPlayDemoFilePath != nullptr));
+
+        if (!bSkipIntros) {
             D_PlayIntros();
         }
     #endif
@@ -675,6 +680,28 @@ gameaction_t MiniLoop(
 
                     break;
                 }
+
+                #if PSYDOOM_MODS
+                    // PsyDoom: recording demo ticks for multiplayer mode
+                    if (DemoRecorder::isRecording()) {
+                        DemoRecorder::recordTick();
+                    }
+
+                    // PsyDoom: check if the demo is done due to the pause key being pressed.
+                    // When playing back check for the exit demo keys or for when the end of the demo is reached.
+                    const bool bIsAnyPlayerPausing = (gTickInputs[0].fTogglePause() || gTickInputs[1].fTogglePause());
+                    const bool bDoingADemo = (gbDemoPlayback || gbNetIsGameBeingRecorded);
+                    const bool bPausedDuringADemo = (bDoingADemo && bIsAnyPlayerPausing);
+                    const bool bExitDemoKeysPressed = (tickInputs.fMenuOk() || tickInputs.fMenuBack() || tickInputs.fMenuStart());
+                    const bool bExitDemoPlayback = (gbDemoPlayback && bExitDemoKeysPressed);
+                    const bool bDemoPlaybackFinished = (gbDemoPlayback && DemoPlayer::hasReachedDemoEnd());
+
+                    if (bPausedDuringADemo || bExitDemoPlayback || bDemoPlaybackFinished) {
+                        exitAction = ga_exitdemo;
+                        gGameAction = ga_exitdemo;
+                        break;
+                    }
+                #endif
             }
             else if (gbDemoRecording || gbDemoPlayback) {
                 // Demo recording or playback.
@@ -695,9 +722,8 @@ gameaction_t MiniLoop(
                     // Read inputs from the demo buffer and advance the demo.
                     // N.B: Demo inputs override everything else from here on in.
                     #if PSYDOOM_MODS
-                        const uint32_t padBtns = Endian::littleToHost(Demo_Read<uint32_t>());
-                        gTicButtons = padBtns;
-                        P_PsxButtonsToTickInputs(padBtns, gCtrlBindings, gTickInputs[gCurPlayerIndex]);
+                        if (!DemoPlayer::readTickInputs())
+                            break;
                     #else
                         padBtns = *gpDemo_p;
                         gTicButtons[gCurPlayerIndex] = padBtns;
@@ -705,29 +731,33 @@ gameaction_t MiniLoop(
                 }
                 else {
                     // Demo recording: record pad inputs to the buffer.
-                    // FIXME: need to implement a new demo format to support analog movements etc. - this won't work.
+                    // PsyDoom: this logic is now handled by the demo recording module.
                     #if PSYDOOM_MODS
-                        // TODO: implement this...
+                        if (DemoRecorder::isRecording()) {
+                            DemoRecorder::recordTick();
+                        }
                     #else
                         *gpDemo_p = padBtns;
                     #endif
                 }
 
-                // Abort demo recording?
+                // Abort demo recording or playback?
                 exitAction = ga_exitdemo;
 
                 #if PSYDOOM_MODS
-                    if (gTickInputs[gCurPlayerIndex].fTogglePause())
+                    if (gTickInputs[gCurPlayerIndex].fTogglePause()) {
+                        gGameAction = ga_exitdemo;
                         break;
+                    }
                 #else
                     if (padBtns & PAD_START)
                         break;
                 #endif
 
                 #if PSYDOOM_MODS
-                    // PsyDoom: don't assume the demo buffer is a fixed size, this allows us to work with demos of any size.
-                    // Also note that the last tick of the demo does not get executed with this statement, which was the original behavior:
-                    if (!Demo_CanRead<uint32_t>())
+                    // PsyDoom: don't assume the demo playback buffer is a fixed size, this allows us to work with demos of any size.
+                    // Also note that the last tick of the demo does not get executed with this statement, which was the original behavior.
+                    if (gbDemoPlayback && DemoPlayer::hasReachedDemoEnd())
                         break;
                 #else
                     // Is the demo recording too big? Are we at the end of the largest possible demo size? If so then stop right now...

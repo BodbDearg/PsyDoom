@@ -42,7 +42,7 @@ static bool areWeakCountsInUse() noexcept {
 // Allocates a weak count for the specified map object which is assumed to not already have one and returns it by index.
 // The count is not initialized.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static uint32_t allocWeakCount(mobj_t& mobj) noexcept {
+static uint32_t allocWeakCount([[maybe_unused]] mobj_t& mobj) noexcept {
     // Object must not already have a count allocated
     ASSERT(mobj.weakCountIdx == MobjWeakPtr::NULL_WEAK_COUNT_IDX);
 

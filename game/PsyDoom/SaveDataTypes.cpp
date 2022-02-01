@@ -652,9 +652,13 @@ void SavedPlayerT::serializeFrom(const player_t& player) noexcept {
     automapscale = player.automapscale;
 }
 
-void SavedPlayerT::deserializeTo(player_t& player) const noexcept {
-    player.mo = getMobjAtIdx(mobjIdx);
-    player.mo->player = &player;            // Link the map object to player
+void SavedPlayerT::deserializeTo(player_t& player, const bool bSkipMobjAssign) const noexcept {
+    // Link the map object to player unless specified otherwise (demos skip this step)
+    if (!bSkipMobjAssign) {
+        player.mo = getMobjAtIdx(mobjIdx);
+        player.mo->player = &player;
+    }
+
     player.playerstate = playerstate;
     player.forwardmove = forwardmove;
     player.sidemove = sidemove;

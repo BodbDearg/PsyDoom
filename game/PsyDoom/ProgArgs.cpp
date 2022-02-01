@@ -28,6 +28,7 @@ const char* gDataDirPath = "";
 const char* gPlayDemoFilePath = "";             // The demo file to play and exit
 const char* gSaveDemoResultFilePath = "";       // Path to a json file to save the demo result to
 const char* gCheckDemoResultFilePath = "";      // Path to a json file to read the demo result from and verify a match with
+bool        gbRecordDemos;                      // True if the game should record demos for every map played
 
 bool        gbIsNetServer   = false;                // True if this peer is a server in a networked game (player 1, waits for client connection)
 bool        gbIsNetClient   = false;                // True if this peer is a client in a networked game (player 2, connects to waiting server)
@@ -106,6 +107,15 @@ static int parseArg_checkresult(const int argc, const char** const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-checkresult") == 0)) {
         gCheckDemoResultFilePath = argv[1];
         return 2;
+    }
+
+    return 0;
+}
+
+static int parseArg_record([[maybe_unused]] const int argc, const char** const argv) {
+    if (std::strcmp(argv[0], "-record") == 0) {
+        gbRecordDemos = true;
+        return 1;
     }
 
     return 0;
@@ -223,6 +233,7 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_playdemo,
     parseArg_saveresult,
     parseArg_checkresult,
+    parseArg_record,
     parseArg_nomonsters,
     parseArg_pistolstart,
     parseArg_turbo,

@@ -27,6 +27,7 @@
 #include "p_tick.h"
 #include "PsyDoom/Config.h"
 #include "PsyDoom/Controls.h"
+#include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/PlayerPrefs.h"
@@ -422,10 +423,10 @@ static void P_BuildMove(player_t& player) noexcept {
     }
 
     // PsyDoom: apply analog turning movements; this has already been adjusted for framerate, so is applied directly.
-    // We ignore the new turning system however when playing back demos.
+    // We ignore the new turning system however when playing back classic demos.
     #if PSYDOOM_MODS
-        if (!gbDemoPlayback) {
-            player.angleturn += inputs.analogTurn;
+        if (!DemoPlayer::isPlayingAClassicDemo()) {
+            player.angleturn += inputs.getAnalogTurn();
         }
     #endif
 
@@ -454,20 +455,20 @@ static void P_BuildMove(player_t& player) noexcept {
 
     // PsyDoom: do analog movements and also cancel any digital movement if using the analog controller
     #if PSYDOOM_MODS
-        if (inputs.analogForwardMove != 0.0f) {
+        if (inputs.getAnalogForwardMove() != 0) {
             player.forwardmove = 0;
         }
 
-        if (inputs.analogSideMove != 0.0f) {
+        if (inputs.getAnalogSideMove() != 0) {
             player.sidemove = 0;
         }
 
         if (bFinalDoomMovementMode) {
-            player.forwardmove -= FixedMul(inputs.analogForwardMove, FORWARD_MOVE_FDOOM[speedMode]);
-            player.sidemove += FixedMul(inputs.analogSideMove, SIDE_MOVE_FDOOM[speedMode]);
+            player.forwardmove -= FixedMul(inputs.getAnalogForwardMove(), FORWARD_MOVE_FDOOM[speedMode]);
+            player.sidemove += FixedMul(inputs.getAnalogSideMove(), SIDE_MOVE_FDOOM[speedMode]);
         } else {
-            const fixed_t forwardMove = FixedMul(inputs.analogForwardMove, FORWARD_MOVE_DOOM[speedMode]);
-            const fixed_t sideMove = FixedMul(inputs.analogSideMove, SIDE_MOVE_DOOM[speedMode]);
+            const fixed_t forwardMove = FixedMul(inputs.getAnalogForwardMove(), FORWARD_MOVE_DOOM[speedMode]);
+            const fixed_t sideMove = FixedMul(inputs.getAnalogSideMove(), SIDE_MOVE_DOOM[speedMode]);
 
             player.forwardmove -= (forwardMove * elapsedVBlanks) / VBLANKS_PER_TIC;
             player.sidemove += (sideMove * elapsedVBlanks) / VBLANKS_PER_TIC;
@@ -1027,7 +1028,6 @@ void P_PlayerThink(player_t& player) noexcept {
 }
 
 #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom: initialize the new (framerate uncapped) turning system for the current player
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1149,20 +1149,19 @@ void P_UncommitTurningTickInputs() noexcept {
 
     // Note: for networked games we need to consider inputs for the next frame too
     if (gNetGame == gt_single) {
-        gPlayerUncommittedTurning += tickInputs.analogTurn;
-        tickInputs.analogTurn = 0;
+        gPlayerUncommittedTurning += tickInputs.getAnalogTurn();
+        tickInputs.setAnalogTurn(0);
     } else {
         TickInputs& nextTickInputs = gNextTickInputs;
-        gPlayerUncommittedTurning += tickInputs.analogTurn;
-        gPlayerUncommittedTurning += nextTickInputs.analogTurn;
-        gPlayerNextTickViewAngle -= tickInputs.analogTurn;          // Don't double count, remove the turning from this since it's already in there
-        gPlayerNextTickViewAngle -= nextTickInputs.analogTurn;
+        gPlayerUncommittedTurning += tickInputs.getAnalogTurn();
+        gPlayerUncommittedTurning += nextTickInputs.getAnalogTurn();
+        gPlayerNextTickViewAngle -= tickInputs.getAnalogTurn();         // Don't double count, remove the turning from this since it's already in there
+        gPlayerNextTickViewAngle -= nextTickInputs.getAnalogTurn();
 
         // Note: even though it's REALLY bad practice to modify the inputs we said we'd do in the next frame, all peers understand that when
         // the game is paused tick inputs are essentially discarded. So wiping the inputs in this way is ok to do in this limited situation:
-        tickInputs.analogTurn = 0;
-        nextTickInputs.analogTurn = 0;
+        tickInputs.setAnalogTurn(0);
+        nextTickInputs.setAnalogTurn(0);
     }
 }
-
 #endif  // #if PSYDOOM_MODS

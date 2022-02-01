@@ -220,9 +220,9 @@ void AM_Control(player_t& player) noexcept {
         inputs.fTurnRight() = false;
         inputs.fStrafeLeft() = false;
         inputs.fStrafeRight() = false;
-        inputs.analogForwardMove = 0;
-        inputs.analogSideMove = 0;
-        inputs.analogTurn = 0;
+        inputs.setAnalogForwardMove(0);
+        inputs.setAnalogSideMove(0);
+        inputs.setAnalogTurn(0);
     #else
         gTicButtons[gPlayerNum] &= ~(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_R1 | PAD_L1);
     #endif

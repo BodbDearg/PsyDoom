@@ -27,6 +27,7 @@
 #include "PsyDoom/Cheats.h"
 #include "PsyDoom/Config.h"
 #include "PsyDoom/Controls.h"
+#include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/DemoResult.h"
 #include "PsyDoom/DevMapAutoReloader.h"
 #include "PsyDoom/Game.h"
@@ -341,6 +342,12 @@ void P_CheckCheats() noexcept {
     // Cheats are disallowed in a multiplayer game
     if (gNetGame != gt_single)
         return;
+
+    // PsyDoom: disallow cheats during demo playback or recording
+    #if PSYDOOM_MODS
+        if (gbDemoPlayback || gbDemoRecording)
+            return;
+    #endif
 
     // Grab inputs for the 1st player.
     // The rest of the cheat logic is for singleplayer mode only!
@@ -824,9 +831,15 @@ void P_Start() noexcept {
     // Shouldn't be loading anything off the CDROM during gameplay after this point
     gbIsLevelDataCached = true;
 
-    // Play music: for demos play the credits music cd track.
+    // Play music: for classic demos (only!) play the credits music cd track.
     // Otherwise play some sequencer music for the level.
-    if (!gbDemoPlayback) {
+    #if PSYDOOM_MODS
+        const bool bPlayNormalMapMusic = (!DemoPlayer::isPlayingAClassicDemo());
+    #else
+        const bool bPlayNormalMapMusic = (!gbDemoPlayback);
+    #endif
+
+    if (bPlayNormalMapMusic) {
         S_StartMusic();
     } else {
         psxcd_play_at_andloop(
@@ -948,8 +961,8 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.directSwitchToWeapon = wp_nochange;
 
     // Gather basic inputs
-    inputs.analogForwardMove = (fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveForwardBack) * (float) FRACUNIT);
-    inputs.analogSideMove = (fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveLeftRight) * (float) FRACUNIT);
+    inputs.setAnalogForwardMove((fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveForwardBack) * (float) FRACUNIT));
+    inputs.setAnalogSideMove((fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveLeftRight) * (float) FRACUNIT));
     inputs.fTurnLeft() = Controls::getBool(Controls::Binding::Digital_TurnLeft);
     inputs.fTurnRight() = Controls::getBool(Controls::Binding::Digital_TurnRight);
     inputs.fMoveForward() = Controls::getBool(Controls::Binding::Digital_MoveForward);
@@ -1064,7 +1077,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     // Apply uncommited turning outside of the 30 Hz update loop from analog controllers, mouse and keyboard etc.
     // Don't do this if the game is paused however, hold on to the uncommitted turning in that case till the next tick.
     if (!gbGamePaused) {
-        inputs.analogTurn += gPlayerUncommittedTurning;
+        inputs.setAnalogTurn(inputs.getAnalogTurn() + gPlayerUncommittedTurning);
         gPlayerUncommittedTurning = 0;
     }
 }

@@ -302,7 +302,11 @@ void shutdown() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void update() noexcept {
     // Only allowed in singleplayer games!
+    // Also disallowed during demo playback and recording.
     if (gNetGame != gt_single)
+        return;
+
+    if (gbDemoPlayback || gbDemoRecording)
         return;
 
     // Check for cheat key sequences just input
