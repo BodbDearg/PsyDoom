@@ -16,6 +16,12 @@
 #include "PsyDoom/Utils.h"
 #include "PsyDoom/Video.h"
 
+#if PSYDOOM_MODS
+    // PsyDoom: a flag set to 'true' if the result of demo playback is unexpected/wrong (when checking demo results).
+    // This is used to set the exit code for the application accordingly ('1' if the demo result checks fail, '0' otherwise).
+    extern bool gbCheckDemoResultFailed = false;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // This was the old reverse engineered entrypoint for PSXDOOM.EXE, which executed before 'main()' was called.
 //
@@ -81,6 +87,8 @@ int psx_main(const int argc, const char** const argv) noexcept {
 
     // PsyDoom: cleanup logic after Doom itself is done and save player prefs (unless headless mode)
     #if PSYDOOM_MODS
+        const bool bIsCheckingADemoResult = (ProgArgs::gCheckDemoResultFilePath[0] != 0);
+
         if (!ProgArgs::gbHeadlessMode) {
             PlayerPrefs::save();
         }
@@ -97,5 +105,11 @@ int psx_main(const int argc, const char** const argv) noexcept {
         Utils::uninstallFatalErrorHandler();
     #endif
 
-    return 0;
+    // PsyDoom: if we were checking the result of a demo and it produced an unexpected outcome then return error code '1' to indicate that.
+    // Otherwise return code '0' to indicate normal execution without any issues:
+    #if PSYDOOM_MODS
+        return (bIsCheckingADemoResult && gbCheckDemoResultFailed) ? 1 : 0;
+    #else
+        return 0;
+    #endif
 }

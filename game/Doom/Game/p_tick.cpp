@@ -9,6 +9,7 @@
 #include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
+#include "Doom/psx_main.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/RendererVk/rv_data.h"
 #include "Doom/RendererVk/rv_main.h"
@@ -887,8 +888,9 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 
         if (gbDemoPlayback && ProgArgs::gCheckDemoResultFilePath[0]) {
             if (!DemoResult::verifyMatchesJsonFileResult(ProgArgs::gCheckDemoResultFilePath)) {
-                // If checking the demo result fails, return code '1' to indicate a failure
-                std::exit(1);
+                // If demo produces an unexpected/wrong result set this flag to indicate a failure.
+                // It will cause error code '1' to be returned upon the program exiting.
+                gbCheckDemoResultFailed = true;
             }
         }
     #endif
