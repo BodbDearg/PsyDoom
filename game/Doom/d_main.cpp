@@ -664,6 +664,12 @@ gameaction_t MiniLoop(
             #endif
 
             if (gNetGame != gt_single) {
+                // PsyDoom: check if any keys to exit demo playback are pressed.
+                // Have to do it here before the network update, since that overwrites actual physical user inputs.
+                #if PSYDOOM_MODS
+                    const bool bExitDemoPlaybackKeysPressed = (tickInputs.fMenuOk() || tickInputs.fMenuBack() || tickInputs.fMenuStart());
+                #endif
+
                 // Updates for when we are in a networked game: abort from the game also if there is a problem
                 const bool bNetError = I_NetUpdate();
 
@@ -692,8 +698,7 @@ gameaction_t MiniLoop(
                     const bool bIsAnyPlayerPausing = (gTickInputs[0].fTogglePause() || gTickInputs[1].fTogglePause());
                     const bool bDoingADemo = (gbDemoPlayback || gbNetIsGameBeingRecorded);
                     const bool bPausedDuringADemo = (bDoingADemo && bIsAnyPlayerPausing);
-                    const bool bExitDemoKeysPressed = (tickInputs.fMenuOk() || tickInputs.fMenuBack() || tickInputs.fMenuStart());
-                    const bool bExitDemoPlayback = (gbDemoPlayback && bExitDemoKeysPressed);
+                    const bool bExitDemoPlayback = (gbDemoPlayback && bExitDemoPlaybackKeysPressed);
                     const bool bDemoPlaybackFinished = (gbDemoPlayback && DemoPlayer::hasReachedDemoEnd());
 
                     if (bPausedDuringADemo || bExitDemoPlayback || bDemoPlaybackFinished) {
