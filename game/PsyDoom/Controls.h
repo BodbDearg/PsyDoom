@@ -74,6 +74,7 @@ enum class Binding : uint16_t {
     PSXCheatCode_R2,
     // Miscellaneous
     Toggle_Renderer,
+    Toggle_ViewPlayer,  // Playback of multiplayer demos: toggle which player is being viewed
     Quicksave,
     Quickload,
     // How many bindings there are

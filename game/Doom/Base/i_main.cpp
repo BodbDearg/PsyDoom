@@ -13,6 +13,7 @@
 #include "i_drawcmds.h"
 #include "i_texcache.h"
 #include "PsyDoom/Config.h"
+#include "PsyDoom/Controls.h"
 #include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
@@ -775,9 +776,15 @@ void I_NetSetup() noexcept {
 // PsyDoom: this function has been rewritten, for the original version see the 'Old' folder.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool I_NetUpdate() noexcept {
-    // Easy case: if doing demo playback of a networked game then just read the inputs from the demo
-    if (gbDemoPlayback)
+    // Easy case: if doing demo playback of a networked game then just read the inputs from the demo.
+    // Also check if the key is pressed to toggle which player is viewed.
+    if (gbDemoPlayback) {
+        if (Controls::isJustReleased(Controls::Binding::Toggle_ViewPlayer)) {
+            gCurPlayerIndex ^= 1;
+        }
+
         return (!DemoPlayer::readTickInputs());
+    }
 
     // Compute the value used for error checking.
     // Only do this while we are in the level however...
