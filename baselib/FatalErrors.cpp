@@ -35,17 +35,8 @@ static constexpr const char* const UNSPECIFIED_ERROR_STR = "An unspecified/unkno
         gFatalErrorHandler((errorMsg != nullptr) ? errorMsg : UNSPECIFIED_ERROR_STR);
     }
 
-    // Use 'abort' in debug so the debugger pauses
-    #if NDEBUG
-        // Quick exit is apparently better/safer for a multi-threaded app, but doesn't seem to be available on MacOS...
-        #if __APPLE__
-            std::exit(-1);
-        #else
-            std::quick_exit(-1);
-        #endif
-    #else
-        std::abort();
-    #endif
+    // Terminate the app and don't call any global destructors (might be problematic due to undefined destruction order)
+    std::abort();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

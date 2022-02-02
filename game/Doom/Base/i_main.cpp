@@ -266,7 +266,7 @@ void I_PSXInit() noexcept {
     #if PSYDOOM_MODS
         if (ProgArgs::gbHeadlessMode) {
             std::printf("I_Error: %s", msgBuffer);
-            std::exit(1);
+            std::abort();
         }
     #endif
 
@@ -301,7 +301,7 @@ void I_PSXInit() noexcept {
                 if (Input::isQuitRequested()) {
                     // Note: shutting down PsxVm kills the app window immediately
                     PsxVm::shutdown();
-                    std::exit(0);
+                    std::abort();
                 }
             #endif
         }
