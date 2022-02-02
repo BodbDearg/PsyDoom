@@ -243,6 +243,36 @@ static constexpr ArgParser ARG_PARSERS[] = {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Performs additional validation and sanity checks for program arguments to fix some unsupported/invalid combos
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void validateAndSanitizeArgs() noexcept {
+    if (gbHeadlessMode && (!gPlayDemoFilePath[0])) {
+        std::printf("The '-headless' switch can only be used in conjunction with '-playdemo'! Arg will be ignored...\n");
+        gbHeadlessMode = false;
+    }
+
+    if (gbRecordDemos && gPlayDemoFilePath[0]) {
+        std::printf("Can't use '-record' in conjunction with '-playdemo'! Arg will be ignored...\n");
+        gbRecordDemos = false;
+    }
+
+    if (gbIsNetClient && gbIsNetServer) {
+        std::printf("Can't use '-server' in conjunction with '-client'! Arg will be ignored...\n");
+        gbIsNetServer = false;
+    }
+
+    if (gbRecordDemos && gSaveDemoResultFilePath[0]) {
+        std::printf("Can't use '-saveresult' in conjunction with '-record'! Arg will be ignored...\n");
+        gSaveDemoResultFilePath = "";
+    }
+
+    if (gbRecordDemos && gCheckDemoResultFilePath[0]) {
+        std::printf("Can't use '-checkresult' in conjunction with '-record'! Arg will be ignored...\n");
+        gCheckDemoResultFilePath = "";
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the arguments parser and parses the given list of arguments
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(const int argc, const char** const argv) noexcept {
@@ -273,6 +303,9 @@ void init(const int argc, const char** const argv) noexcept {
             pCurArgv++;
         }
     }
+
+    // Additional validation and sanitization
+    validateAndSanitizeArgs();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
