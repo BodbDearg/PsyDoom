@@ -7,6 +7,7 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
+#include "Doom/psx_main.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
@@ -639,7 +640,7 @@ void G_RunGame() noexcept {
 static gameaction_t G_AbortDemoPlayback() noexcept {
     // If checking a demo result exit with failure since we can't play back the demo itself
     if (ProgArgs::gCheckDemoResultFilePath[0] != 0) {
-        std::exit(1);
+        gbCheckDemoResultFailed = true;
     }
 
     // Cleanup any map stuff loaded and demo playback related stuff
