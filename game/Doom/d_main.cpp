@@ -158,7 +158,7 @@ void D_DoomMain() noexcept {
         });
 
         // PsyDoom: playing intro movies and logos unless disabled or if we want to jump straight into playing back a demo file
-        const bool bSkipIntros = ((Config::gbSkipIntros) || (ProgArgs::gPlayDemoFilePath != nullptr));
+        const bool bSkipIntros = (Config::gbSkipIntros || ProgArgs::gPlayDemoFilePath[0]);
 
         if (!bSkipIntros) {
             D_PlayIntros();
