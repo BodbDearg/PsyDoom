@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,7 +28,7 @@
 #ifdef __SSE__
 /* *INDENT-OFF* */
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 #define SSE_BEGIN \
     __m128 c128; \
     c128.m128_u32[0] = color; \
@@ -145,13 +145,13 @@ SDL_FillRect1(Uint8 * pixels, int pitch, Uint32 color, int w, int h)
             switch ((uintptr_t) p & 3) {
             case 1:
                 *p++ = (Uint8) color;
-                --n;                    /* fallthrough */
+                --n;                    SDL_FALLTHROUGH;
             case 2:
                 *p++ = (Uint8) color;
-                --n;                    /* fallthrough */
+                --n;                    SDL_FALLTHROUGH;
             case 3:
                 *p++ = (Uint8) color;
-                --n;                    /* fallthrough */
+                --n;
             }
             SDL_memset4(p, color, (n >> 2));
         }
@@ -159,11 +159,11 @@ SDL_FillRect1(Uint8 * pixels, int pitch, Uint32 color, int w, int h)
             p += (n & ~3);
             switch (n & 3) {
             case 3:
-                *p++ = (Uint8) color;   /* fallthrough */
+                *p++ = (Uint8) color;   SDL_FALLTHROUGH;
             case 2:
-                *p++ = (Uint8) color;   /* fallthrough */
+                *p++ = (Uint8) color;   SDL_FALLTHROUGH;
             case 1:
-                *p++ = (Uint8) color;   /* fallthrough */
+                *p++ = (Uint8) color;
             }
         }
         pixels += pitch;

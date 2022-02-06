@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -75,12 +75,19 @@ static void DetectWave##typ##Devs(void) { \
     const UINT iscapture = iscap ? 1 : 0; \
     const UINT devcount = wave##typ##GetNumDevs(); \
     capstyp##2W caps; \
+    SDL_AudioSpec spec; \
     UINT i; \
+    SDL_zero(spec); \
     for (i = 0; i < devcount; i++) { \
         if (wave##typ##GetDevCaps(i,(LP##capstyp##W)&caps,sizeof(caps))==MMSYSERR_NOERROR) { \
             char *name = WIN_LookupAudioDeviceName(caps.szPname,&caps.NameGuid); \
             if (name != NULL) { \
-                SDL_AddAudioDevice((int) iscapture, name, (void *) ((size_t) i+1)); \
+                /* Note that freq/format are not filled in, as this information \
+                 * is not provided by the caps struct! At best, we get possible \
+                 * sample formats, but not an _active_ format. \
+                 */ \
+                spec.channels = (Uint8)caps.wChannels; \
+                SDL_AddAudioDevice((int) iscapture, name, &spec, (void *) ((size_t) i+1)); \
                 SDL_free(name); \
             } \
         } \
@@ -128,7 +135,7 @@ FillSound(HWAVEOUT hwo, UINT uMsg, DWORD_PTR dwInstance,
 }
 
 static int
-SetMMerror(char *function, MMRESULT code)
+SetMMerror(const char *function, MMRESULT code)
 {
     int len;
     char errbuf[MAXERRORLENGTH];
@@ -426,7 +433,6 @@ WINMM_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
 
     return 0;                   /* Ready to go! */
 }
-
 
 static int
 WINMM_Init(SDL_AudioDriverImpl * impl)

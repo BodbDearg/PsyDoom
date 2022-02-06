@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -75,24 +75,24 @@
 #define SL_ANDROID_SPEAKER_7DOT1 (SL_ANDROID_SPEAKER_5DOT1 | SL_SPEAKER_SIDE_LEFT | SL_SPEAKER_SIDE_RIGHT)
 
 /* engine interfaces */
-static SLObjectItf engineObject;
-static SLEngineItf engineEngine;
+static SLObjectItf engineObject = NULL;
+static SLEngineItf engineEngine = NULL;
 
 /* output mix interfaces */
-static SLObjectItf outputMixObject;
+static SLObjectItf outputMixObject = NULL;
 
 /* buffer queue player interfaces */
-static SLObjectItf bqPlayerObject;
-static SLPlayItf bqPlayerPlay;
-static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
+static SLObjectItf bqPlayerObject = NULL;
+static SLPlayItf bqPlayerPlay = NULL;
+static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue = NULL;
 #if 0
 static SLVolumeItf bqPlayerVolume;
 #endif
 
 /* recorder interfaces */
-static SLObjectItf recorderObject;
-static SLRecordItf recorderRecord;
-static SLAndroidSimpleBufferQueueItf recorderBufferQueue;
+static SLObjectItf recorderObject = NULL;
+static SLRecordItf recorderRecord = NULL;
+static SLAndroidSimpleBufferQueueItf recorderBufferQueue = NULL;
 
 #if 0
 static const char *sldevaudiorecorderstr = "SLES Audio Recorder";
@@ -355,8 +355,6 @@ openslES_CreatePCMRecorder(_THIS)
 
 failed:
 
-    openslES_DestroyPCMRecorder(this);
-
     return SDL_SetError("Open device failed!");
 }
 
@@ -581,9 +579,7 @@ openslES_CreatePCMPlayer(_THIS)
 
 failed:
 
-    openslES_DestroyPCMPlayer(this);
-
-    return SDL_SetError("Open device failed!");
+    return -1;
 }
 
 static int
@@ -598,8 +594,24 @@ openslES_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
         LOGI("openslES_OpenDevice() %s for capture", devname);
         return openslES_CreatePCMRecorder(this);
     } else {
+        int ret;
         LOGI("openslES_OpenDevice() %s for playing", devname);
-        return openslES_CreatePCMPlayer(this);
+        ret = openslES_CreatePCMPlayer(this);
+        if (ret < 0) {
+            /* Another attempt to open the device with a lower frequency */
+            if (this->spec.freq > 48000) {
+                openslES_DestroyPCMPlayer(this);
+                this->spec.freq = 48000;
+                ret = openslES_CreatePCMPlayer(this);
+            }
+        }
+
+        if (ret == 0) {
+            return 0;
+        } else {
+            return SDL_SetError("Open device failed!");
+        }
+
     }
 }
 

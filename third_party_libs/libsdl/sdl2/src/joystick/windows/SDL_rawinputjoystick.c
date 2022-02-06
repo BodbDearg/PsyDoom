@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -40,12 +40,15 @@
 #include "SDL_timer.h"
 #include "../usb_ids.h"
 #include "../SDL_sysjoystick.h"
+#include "../controller_type.h"
 #include "../../core/windows/SDL_windows.h"
 #include "../../core/windows/SDL_hid.h"
 #include "../hidapi/SDL_hidapijoystick_c.h"
 
+#ifdef HAVE_XINPUT_H
 #define SDL_JOYSTICK_RAWINPUT_XINPUT
-#ifdef SDL_WINDOWS10_SDK
+#endif
+#ifdef HAVE_WINDOWS_GAMING_INPUT_H
 #define SDL_JOYSTICK_RAWINPUT_WGI
 #endif
 
@@ -100,6 +103,7 @@ typedef struct _SDL_RAWINPUT_Device
     Uint16 version;
     SDL_JoystickGUID guid;
     SDL_bool is_xinput;
+    SDL_bool is_xboxone;
     PHIDP_PREPARSED_DATA preparsed_data;
 
     HANDLE hDevice;
@@ -112,6 +116,7 @@ typedef struct _SDL_RAWINPUT_Device
 struct joystick_hwdata
 {
     SDL_bool is_xinput;
+    SDL_bool is_xboxone;
     PHIDP_PREPARSED_DATA preparsed_data;
     ULONG max_data_length;
     HIDP_DATA *data;
@@ -447,12 +452,12 @@ RAWINPUT_UpdateWindowsGamingInput()
     wgi_state.dirty = SDL_FALSE;
 
     if (wgi_state.need_device_list_update) {
+        HRESULT hr;
+        __FIVectorView_1_Windows__CGaming__CInput__CGamepad *gamepads;
         wgi_state.need_device_list_update = SDL_FALSE;
         for (ii = 0; ii < wgi_state.per_gamepad_count; ii++) {
             wgi_state.per_gamepad[ii]->connected = SDL_FALSE;
         }
-        HRESULT hr;
-        __FIVectorView_1_Windows__CGaming__CInput__CGamepad *gamepads;
 
         hr = __x_ABI_CWindows_CGaming_CInput_CIGamepadStatics_get_Gamepads(wgi_state.gamepad_statics, &gamepads);
         if (SUCCEEDED(hr)) {
@@ -477,13 +482,15 @@ RAWINPUT_UpdateWindowsGamingInput()
                         }
                         if (!found) {
                             /* New device, add it */
+                            WindowsGamingInputGamepadState *gamepad_state;
+
                             wgi_state.per_gamepad_count++;
                             wgi_state.per_gamepad = SDL_realloc(wgi_state.per_gamepad, sizeof(wgi_state.per_gamepad[0]) * wgi_state.per_gamepad_count);
                             if (!wgi_state.per_gamepad) {
                                 SDL_OutOfMemory();
                                 return;
                             }
-                            WindowsGamingInputGamepadState *gamepad_state = SDL_calloc(1, sizeof(*gamepad_state));
+                            gamepad_state = SDL_calloc(1, sizeof(*gamepad_state));
                             if (!gamepad_state) {
                                 SDL_OutOfMemory();
                                 return;
@@ -529,6 +536,10 @@ RAWINPUT_InitWindowsGamingInput(RAWINPUT_DeviceContext *ctx)
     wgi_state.need_device_list_update = SDL_TRUE;
     wgi_state.ref_count++;
     if (!wgi_state.initialized) {
+        static const IID SDL_IID_IGamepadStatics = { 0x8BBCE529, 0xD49C, 0x39E9, { 0x95, 0x60, 0xE4, 0x7D, 0xDE, 0x96, 0xB7, 0xC8 } };
+        HRESULT hr;
+        HMODULE hModule;
+
         /* I think this takes care of RoInitialize() in a way that is compatible with the rest of SDL */
         if (FAILED(WIN_CoInitialize())) {
             return;
@@ -536,9 +547,7 @@ RAWINPUT_InitWindowsGamingInput(RAWINPUT_DeviceContext *ctx)
         wgi_state.initialized = SDL_TRUE;
         wgi_state.dirty = SDL_TRUE;
 
-        static const IID SDL_IID_IGamepadStatics = { 0x8BBCE529, 0xD49C, 0x39E9, { 0x95, 0x60, 0xE4, 0x7D, 0xDE, 0x96, 0xB7, 0xC8 } };
-        HRESULT hr;
-        HMODULE hModule = LoadLibraryA("combase.dll");
+        hModule = LoadLibraryA("combase.dll");
         if (hModule != NULL) {
             typedef HRESULT (WINAPI *WindowsCreateStringReference_t)(PCWSTR sourceString, UINT32 length, HSTRING_HEADER *hstringHeader, HSTRING* string);
             typedef HRESULT (WINAPI *RoGetActivationFactory_t)(HSTRING activatableClassId, REFIID iid, void** factory);
@@ -546,13 +555,13 @@ RAWINPUT_InitWindowsGamingInput(RAWINPUT_DeviceContext *ctx)
             WindowsCreateStringReference_t WindowsCreateStringReferenceFunc = (WindowsCreateStringReference_t)GetProcAddress(hModule, "WindowsCreateStringReference");
             RoGetActivationFactory_t RoGetActivationFactoryFunc = (RoGetActivationFactory_t)GetProcAddress(hModule, "RoGetActivationFactory");
             if (WindowsCreateStringReferenceFunc && RoGetActivationFactoryFunc) {
-                LPTSTR pNamespace = L"Windows.Gaming.Input.Gamepad";
+                PCWSTR pNamespace = L"Windows.Gaming.Input.Gamepad";
                 HSTRING_HEADER hNamespaceStringHeader;
                 HSTRING hNamespaceString;
 
                 hr = WindowsCreateStringReferenceFunc(pNamespace, (UINT32)SDL_wcslen(pNamespace), &hNamespaceStringHeader, &hNamespaceString);
                 if (SUCCEEDED(hr)) {
-                    RoGetActivationFactoryFunc(hNamespaceString, &SDL_IID_IGamepadStatics, &wgi_state.gamepad_statics);
+                    RoGetActivationFactoryFunc(hNamespaceString, &SDL_IID_IGamepadStatics, (void **)&wgi_state.gamepad_statics);
                 }
             }
             FreeLibrary(hModule);
@@ -670,7 +679,7 @@ RAWINPUT_DeviceFromHandle(HANDLE hDevice)
 static void
 RAWINPUT_AddDevice(HANDLE hDevice)
 {
-#define CHECK(exp) { if(!(exp)) goto err; }
+#define CHECK(expression) { if(!(expression)) goto err; }
     SDL_RAWINPUT_Device *device = NULL;
     SDL_RAWINPUT_Device *curr, *last;
     RID_DEVICE_INFO rdi;
@@ -703,6 +712,7 @@ RAWINPUT_AddDevice(HANDLE hDevice)
     device->product_id = (Uint16)rdi.hid.dwProductId;
     device->version = (Uint16)rdi.hid.dwVersionNumber;
     device->is_xinput = SDL_TRUE;
+    device->is_xboxone = GuessControllerType(device->vendor_id, device->product_id) == k_eControllerType_XBoxOneController;
 
     {
         const Uint16 vendor = device->vendor_id;
@@ -733,10 +743,10 @@ RAWINPUT_AddDevice(HANDLE hDevice)
         WCHAR string[128];
 
         if (SDL_HidD_GetManufacturerString(hFile, string, sizeof(string))) {
-            manufacturer_string = WIN_StringToUTF8(string);
+            manufacturer_string = WIN_StringToUTF8W(string);
         }
         if (SDL_HidD_GetProductString(hFile, string, sizeof(string))) {
-            product_string = WIN_StringToUTF8(string);
+            product_string = WIN_StringToUTF8W(string);
         }
 
         device->name = SDL_CreateJoystickName(device->vendor_id, device->product_id, manufacturer_string, product_string);
@@ -889,7 +899,7 @@ RAWINPUT_IsDevicePresent(Uint16 vendor_id, Uint16 product_id, Uint16 version, co
         /* The Xbox One controller shows up as a hardcoded raw input VID/PID */
         if (name && SDL_strcmp(name, "Xbox One Game Controller") == 0 &&
             device->vendor_id == USB_VENDOR_MICROSOFT &&
-            device->product_id == USB_PRODUCT_XBOX_ONE_RAW_INPUT_CONTROLLER) {
+            device->product_id == USB_PRODUCT_XBOX_ONE_XBOXGIP_CONTROLLER) {
             return SDL_TRUE;
         }
 
@@ -1040,7 +1050,7 @@ RAWINPUT_JoystickOpen(SDL_Joystick *joystick, int device_index)
         /* We'll try to get guide button and trigger axes from XInput */
 #ifdef SDL_JOYSTICK_RAWINPUT_XINPUT
         xinput_device_change = SDL_TRUE;
-        ctx->xinput_enabled = SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_CORRELATE_XINPUT, SDL_TRUE);
+        ctx->xinput_enabled = SDL_GetHintBoolean(SDL_HINT_JOYSTICK_RAWINPUT_CORRELATE_XINPUT, SDL_TRUE);
         if (ctx->xinput_enabled && (WIN_LoadXInputDLL() < 0 || !XINPUTGETSTATE)) {
             ctx->xinput_enabled = SDL_FALSE;
         }
@@ -1052,6 +1062,7 @@ RAWINPUT_JoystickOpen(SDL_Joystick *joystick, int device_index)
     }
 
     ctx->is_xinput = device->is_xinput;
+    ctx->is_xboxone = device->is_xboxone;
     ctx->preparsed_data = device->preparsed_data;
     ctx->max_data_length = SDL_HidP_MaxDataListLength(HidP_Input, ctx->preparsed_data);
     ctx->data = (HIDP_DATA *)SDL_malloc(ctx->max_data_length * sizeof(*ctx->data));
@@ -1216,9 +1227,8 @@ RAWINPUT_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uin
 {
 #if defined(SDL_JOYSTICK_RAWINPUT_WGI) || defined(SDL_JOYSTICK_RAWINPUT_XINPUT)
     RAWINPUT_DeviceContext *ctx = joystick->hwdata;
-#endif
-
     SDL_bool rumbled = SDL_FALSE;
+#endif
 
 #ifdef SDL_JOYSTICK_RAWINPUT_WGI
     if (!rumbled && ctx->wgi_correlated) {
@@ -1267,7 +1277,7 @@ RAWINPUT_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint
         gamepad_state->vibration.RightTrigger = (DOUBLE)right_rumble / SDL_MAX_UINT16;
         hr = __x_ABI_CWindows_CGaming_CInput_CIGamepad_put_Vibration(gamepad_state->gamepad, gamepad_state->vibration);
         if (!SUCCEEDED(hr)) {
-            return SDL_SetError("Setting vibration failed: 0x%x\n", hr);
+            return SDL_SetError("Setting vibration failed: 0x%lx\n", hr);
         }
     }
     return 0;
@@ -1276,14 +1286,39 @@ RAWINPUT_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint
 #endif
 }
 
-static SDL_bool
-RAWINPUT_JoystickHasLED(SDL_Joystick *joystick)
+static Uint32
+RAWINPUT_JoystickGetCapabilities(SDL_Joystick *joystick)
 {
-    return SDL_FALSE;
+    RAWINPUT_DeviceContext *ctx = joystick->hwdata;
+    Uint32 result = 0;
+
+#ifdef SDL_JOYSTICK_RAWINPUT_XINPUT
+    if (ctx->is_xinput) {
+        result |= SDL_JOYCAP_RUMBLE;
+    }
+#endif
+
+#ifdef SDL_JOYSTICK_RAWINPUT_WGI
+    if (ctx->is_xinput) {
+        result |= SDL_JOYCAP_RUMBLE;
+
+        if (ctx->is_xboxone) {
+            result |= SDL_JOYCAP_RUMBLE_TRIGGERS;
+        }
+    }
+#endif
+
+    return result;
 }
 
 static int
 RAWINPUT_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+{
+    return SDL_Unsupported();
+}
+
+static int
+RAWINPUT_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size)
 {
     return SDL_Unsupported();
 }
@@ -1481,7 +1516,9 @@ RAWINPUT_UpdateOtherAPIs(SDL_Joystick *joystick)
 #ifdef SDL_JOYSTICK_RAWINPUT_WGI
     /* Parallel logic to WINDOWS_XINPUT below */
     RAWINPUT_UpdateWindowsGamingInput();
-    if (ctx->wgi_correlated) {
+    if (ctx->wgi_correlated &&
+        !joystick->low_frequency_rumble && !joystick->high_frequency_rumble &&
+        !joystick->left_trigger_rumble && !joystick->right_trigger_rumble) {
         /* We have been previously correlated, ensure we are still matching, see comments in XINPUT section */
         if (RAWINPUT_WindowsGamingInputSlotMatches(&match_state_xinput, ctx->wgi_slot)) {
             ctx->wgi_uncorrelate_count = 0;
@@ -1489,9 +1526,9 @@ RAWINPUT_UpdateOtherAPIs(SDL_Joystick *joystick)
             ++ctx->wgi_uncorrelate_count;
             /* Only un-correlate if this is consistent over multiple Update() calls - the timing of polling/event
               pumping can easily cause this to uncorrelate for a frame.  2 seemed reliable in my testing, but
-              let's set it to 3 to be safe.  An incorrect un-correlation will simply result in lower precision
+              let's set it to 5 to be safe.  An incorrect un-correlation will simply result in lower precision
               triggers for a frame. */
-            if (ctx->wgi_uncorrelate_count >= 3) {
+            if (ctx->wgi_uncorrelate_count >= 5) {
 #ifdef DEBUG_RAWINPUT
                 SDL_Log("UN-Correlated joystick %d to WindowsGamingInput device #%d\n", joystick->instance_id, ctx->wgi_slot);
 #endif
@@ -1511,7 +1548,7 @@ RAWINPUT_UpdateOtherAPIs(SDL_Joystick *joystick)
         SDL_bool new_correlation_count = 0;
         if (RAWINPUT_MissingWindowsGamingInputSlot()) {
             Uint8 correlation_id;
-            WindowsGamingInputGamepadState *slot_idx;
+            WindowsGamingInputGamepadState *slot_idx = NULL;
             if (RAWINPUT_GuessWindowsGamingInputSlot(&match_state_xinput, &correlation_id, &slot_idx)) {
                 /* we match exactly one WindowsGamingInput device */
                 /* Probably can do without wgi_correlation_count, just check and clear wgi_slot to NULL, unless we need
@@ -1559,7 +1596,8 @@ RAWINPUT_UpdateOtherAPIs(SDL_Joystick *joystick)
     /* Parallel logic to WINDOWS_GAMING_INPUT above */
     if (ctx->xinput_enabled) {
         RAWINPUT_UpdateXInput();
-        if (ctx->xinput_correlated) {
+        if (ctx->xinput_correlated &&
+            !joystick->low_frequency_rumble && !joystick->high_frequency_rumble) {
             /* We have been previously correlated, ensure we are still matching */
             /* This is required to deal with two (mostly) un-preventable mis-correlation situations:
               A) Since the HID data stream does not provide an initial state (but polling XInput does), if we open
@@ -1582,9 +1620,9 @@ RAWINPUT_UpdateOtherAPIs(SDL_Joystick *joystick)
                 ++ctx->xinput_uncorrelate_count;
                 /* Only un-correlate if this is consistent over multiple Update() calls - the timing of polling/event
                   pumping can easily cause this to uncorrelate for a frame.  2 seemed reliable in my testing, but
-                  let's set it to 3 to be safe.  An incorrect un-correlation will simply result in lower precision
+                  let's set it to 5 to be safe.  An incorrect un-correlation will simply result in lower precision
                   triggers for a frame. */
-                if (ctx->xinput_uncorrelate_count >= 3) {
+                if (ctx->xinput_uncorrelate_count >= 5) {
 #ifdef DEBUG_RAWINPUT
                     SDL_Log("UN-Correlated joystick %d to XInput device #%d\n", joystick->instance_id, ctx->xinput_slot);
 #endif
@@ -1819,9 +1857,9 @@ RAWINPUT_WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT result = -1;
 
-    SDL_LockMutex(SDL_RAWINPUT_mutex);
-
     if (SDL_RAWINPUT_inited) {
+        SDL_LockMutex(SDL_RAWINPUT_mutex);
+
         switch (msg) {
             case WM_INPUT_DEVICE_CHANGE:
             {
@@ -1865,9 +1903,9 @@ RAWINPUT_WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             result = 0;
             break;
         }
-    }
 
-    SDL_UnlockMutex(SDL_RAWINPUT_mutex);
+        SDL_UnlockMutex(SDL_RAWINPUT_mutex);
+    }
 
     if (result >= 0) {
         return result;
@@ -1882,8 +1920,6 @@ RAWINPUT_JoystickQuit(void)
         return;
     }
 
-    SDL_LockMutex(SDL_RAWINPUT_mutex);
-
     while (SDL_RAWINPUT_devices) {
         RAWINPUT_DelDevice(SDL_RAWINPUT_devices, SDL_FALSE);
     }
@@ -1894,7 +1930,6 @@ RAWINPUT_JoystickQuit(void)
 
     SDL_RAWINPUT_inited = SDL_FALSE;
 
-    SDL_UnlockMutex(SDL_RAWINPUT_mutex);
     SDL_DestroyMutex(SDL_RAWINPUT_mutex);
     SDL_RAWINPUT_mutex = NULL;
 }
@@ -1918,8 +1953,9 @@ SDL_JoystickDriver SDL_RAWINPUT_JoystickDriver =
     RAWINPUT_JoystickOpen,
     RAWINPUT_JoystickRumble,
     RAWINPUT_JoystickRumbleTriggers,
-    RAWINPUT_JoystickHasLED,
+    RAWINPUT_JoystickGetCapabilities,
     RAWINPUT_JoystickSetLED,
+    RAWINPUT_JoystickSendEffect,
     RAWINPUT_JoystickSetSensorsEnabled,
     RAWINPUT_JoystickUpdate,
     RAWINPUT_JoystickClose,

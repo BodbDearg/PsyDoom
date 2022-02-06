@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -42,36 +42,36 @@ void lockDecr(volatile int *piVal);
   parm [eax];
 */
 
-static ULONG _getEnvULong(PSZ pszName, ULONG ulMax, ULONG ulDefault)
+static ULONG _getEnvULong(const char *name, ULONG ulMax, ULONG ulDefault)
 {
     ULONG   ulValue;
-    PCHAR   pcEnd;
-    PSZ     pszEnvVal = SDL_getenv(pszName);
+    char*   end;
+    char*   envval = SDL_getenv(name);
 
-    if (pszEnvVal == NULL)
+    if (envval == NULL)
         return ulDefault;
 
-    ulValue = SDL_strtoul((const char *)pszEnvVal, &pcEnd, 10);
-    return (pcEnd == pszEnvVal) || (ulValue > ulMax)? ulDefault : ulMax;
+    ulValue = SDL_strtoul(envval, &end, 10);
+    return (end == envval) || (ulValue > ulMax)? ulDefault : ulMax;
 }
 
-static int _MCIError(PSZ pszFunc, ULONG ulResult)
+static int _MCIError(const char *func, ULONG ulResult)
 {
     CHAR    acBuf[128];
     mciGetErrorString(ulResult, acBuf, sizeof(acBuf));
-    return SDL_SetError("[%s] %s", pszFunc, acBuf);
+    return SDL_SetError("[%s] %s", func, acBuf);
 }
 
-static void _mixIOError(PSZ pszFunction, ULONG ulRC)
+static void _mixIOError(const char *function, ULONG ulRC)
 {
     debug_os2("%s() - failed, rc = 0x%X (%s)",
-              pszFunction, ulRC,
+              function, ulRC,
               (ulRC == MCIERR_INVALID_MODE)   ? "Mixer mode does not match request" :
               (ulRC == MCIERR_INVALID_BUFFER) ? "Caller sent an invalid buffer"     : "unknown");
 }
 
-LONG APIENTRY cbAudioWriteEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer,
-                                ULONG ulFlags)
+static LONG APIENTRY cbAudioWriteEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer,
+                                       ULONG ulFlags)
 {
     SDL_PrivateAudioData *pAData = (SDL_PrivateAudioData *)pBuffer->ulUserParm;
     ULONG   ulRC;
@@ -87,11 +87,11 @@ LONG APIENTRY cbAudioWriteEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer,
         debug_os2("DosPostEventSem(), rc = %u", ulRC);
     }
 
-    return 1; /* It seems, return value is not matter. */
+    return 1; /* return value doesn't seem to matter. */
 }
 
-LONG APIENTRY cbAudioReadEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer,
-                               ULONG ulFlags)
+static LONG APIENTRY cbAudioReadEvent(ULONG ulStatus, PMCI_MIX_BUFFER pBuffer,
+                                      ULONG ulFlags)
 {
     SDL_PrivateAudioData *pAData = (SDL_PrivateAudioData *)pBuffer->ulUserParm;
     ULONG   ulRC;
@@ -133,7 +133,7 @@ static void OS2_DetectDevices(void)
         return;
     }
 
-    ulDevicesNum = atol(stMCISysInfo.pszReturn);
+    ulDevicesNum = SDL_strtoul(stMCISysInfo.pszReturn, NULL, 10);
 
     for (stSysInfoParams.ulNumber = 0; stSysInfoParams.ulNumber < ulDevicesNum;
          stSysInfoParams.ulNumber++) {
@@ -151,7 +151,7 @@ static void OS2_DetectDevices(void)
         /* Get textual product description. */
         stSysInfoParams.ulItem = MCI_SYSINFO_QUERY_DRIVER;
         stSysInfoParams.pSysInfoParm = &stLogDevice;
-        strcpy(stLogDevice.szInstallName, stSysInfoParams.pszReturn);
+        SDL_strlcpy(stLogDevice.szInstallName, stSysInfoParams.pszReturn, MAX_DEVICE_NAME);
         ulRC = mciSendCommand(0, MCI_SYSINFO, MCI_WAIT | MCI_SYSINFO_ITEM,
                               &stSysInfoParams, 0);
         if (ulRC != NO_ERROR) {
@@ -160,9 +160,9 @@ static void OS2_DetectDevices(void)
         }
 
         ulHandle++;
-        SDL_AddAudioDevice(0, stLogDevice.szProductInfo, (void *)(ulHandle));
+        SDL_AddAudioDevice(0, stLogDevice.szProductInfo, NULL, (void *)(ulHandle));
         ulHandle++;
-        SDL_AddAudioDevice(1, stLogDevice.szProductInfo, (void *)(ulHandle));
+        SDL_AddAudioDevice(1, stLogDevice.szProductInfo, NULL, (void *)(ulHandle));
     }
 }
 
@@ -211,10 +211,8 @@ static void OS2_CloseDevice(_THIS)
         return;
 
     /* Close up audio */
-    if (pAData->usDeviceId != (USHORT)~0) {
-        /* Device is open. */
-        if (pAData->stMCIMixSetup.ulBitsPerSample != 0) {
-            /* Mixer was initialized. */
+    if (pAData->usDeviceId != (USHORT)~0) { /* Device is open. */
+        if (pAData->stMCIMixSetup.ulBitsPerSample != 0) { /* Mixer was initialized. */
             ulRC = mciSendCommand(pAData->usDeviceId, MCI_MIXSETUP,
                                   MCI_WAIT | MCI_MIXSETUP_DEINIT,
                                   &pAData->stMCIMixSetup, 0);
@@ -223,8 +221,7 @@ static void OS2_CloseDevice(_THIS)
             }
         }
 
-        if (pAData->cMixBuffers != 0) {
-            /* Buffers was allocated. */
+        if (pAData->cMixBuffers != 0) { /* Buffers was allocated. */
             MCI_BUFFER_PARMS    stMCIBuffer;
 
             stMCIBuffer.ulBufferSize = pAData->aMixBuffers[0].ulBufferLength;
@@ -410,15 +407,13 @@ static int OS2_OpenDevice(_THIS, void *handle, const char *devname,
         pAData->aMixBuffers[ulIdx].ulBufferLength = stMCIBuffer.ulBufferSize;
         pAData->aMixBuffers[ulIdx].ulUserParm     = (ULONG)pAData;
 
-        memset(((PMCI_MIX_BUFFER)stMCIBuffer.pBufList)[ulIdx].pBuffer,
-                _this->spec.silence, stMCIBuffer.ulBufferSize);
+        SDL_memset(((PMCI_MIX_BUFFER)stMCIBuffer.pBufList)[ulIdx].pBuffer,
+                   _this->spec.silence, stMCIBuffer.ulBufferSize);
     }
 
     /* Write buffers to kick off the amp mixer */
-    /*pAData->ulQueuedBuf = 1;//stMCIBuffer.ulNumBuffers */
     ulRC = pAData->stMCIMixSetup.pmixWrite(pAData->stMCIMixSetup.ulMixHandle,
-                                           pAData->aMixBuffers,
-                                           1 /*stMCIBuffer.ulNumBuffers*/);
+                                           pAData->aMixBuffers, 1);
     if (ulRC != MCIERR_SUCCESS) {
         _mixIOError("pmixWrite", ulRC);
         return -1;
@@ -447,7 +442,9 @@ static int OS2_Init(SDL_AudioDriverImpl * impl)
 }
 
 
-AudioBootStrap OS2AUDIO_bootstrap = { "MMOS2", "OS/2 DART", OS2_Init, 0 };
+AudioBootStrap OS2AUDIO_bootstrap = {
+    "DART", "OS/2 DART", OS2_Init, 0
+};
 
 #endif /* SDL_AUDIO_DRIVER_OS2 */
 

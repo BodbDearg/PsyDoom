@@ -1,6 +1,6 @@
 Note: I have stripped out some stuff which is not needed to use this library.
 The full version is available at the link below.
 
-Version 2.0.14:
-    https://www.libsdl.org/release/SDL2-2.0.14.zip
+Version 2.0.20:
+    https://www.libsdl.org/release/SDL2-2.0.20.zip
     https://www.libsdl.org/download-2.0.php

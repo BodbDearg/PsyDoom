@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -37,6 +37,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <AppKit.h>
+#include <Cursor.h>
 #include <InterfaceKit.h>
 #include <game/DirectWindow.h>
 #if SDL_VIDEO_OPENGL
@@ -123,7 +124,7 @@ class SDL_BWin:public BDirectWindow
 #ifdef DRAWTHREAD
         wait_for_thread(_draw_thread_id, &result);
 #endif
-        free(_clips);
+        SDL_free(_clips);
         delete _buffer_locker;
     }
 
@@ -140,8 +141,7 @@ class SDL_BWin:public BDirectWindow
             _gl_type = gl_flags;
         }
         AddChild(_SDL_GLView);
-        _SDL_GLView->SetEventMask(B_POINTER_EVENTS | B_KEYBOARD_EVENTS, B_NO_POINTER_HISTORY);
-        _SDL_GLView->EnableDirectMode(true);
+        _SDL_GLView->EnableDirectMode(false); /* Disable direct mode */
         _SDL_GLView->LockGL();  /* "New" GLViews are created */
         Unlock();
         return (_SDL_GLView);
@@ -184,16 +184,16 @@ class SDL_BWin:public BDirectWindow
             if (info->clip_list_count > _num_clips)
             {
                 if(_clips) {
-                    free(_clips);
+                    SDL_free(_clips);
                     _clips = NULL;
                 }
             }
 
             _num_clips = info->clip_list_count;
             if (_clips == NULL)
-                _clips = (clipping_rect *)malloc(_num_clips*sizeof(clipping_rect));
+                _clips = (clipping_rect *)SDL_malloc(_num_clips*sizeof(clipping_rect));
             if(_clips) {
-                memcpy(_clips, info->clip_list,
+                SDL_memcpy(_clips, info->clip_list,
                     _num_clips*sizeof(clipping_rect));
 
                 _bits = (uint8*) info->bits;
