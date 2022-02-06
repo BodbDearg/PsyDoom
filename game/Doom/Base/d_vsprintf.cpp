@@ -91,8 +91,8 @@ int32_t D_vsprintf(char* dstStr, const char* fmtStr, va_list args) noexcept {
         }
 
         // Dealing with a numeric of some sort - figure out the format
-        uint32_t num = -1;
-        uint32_t numBase = -1;
+        uint32_t num = UINT32_MAX;
+        uint32_t numBase = UINT32_MAX;
 
         if (*fmtStr == 'o') {
             // Octal unsigned number

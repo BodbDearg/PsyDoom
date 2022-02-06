@@ -58,7 +58,7 @@ void GameSettings::endianCorrect() noexcept {
 BEGIN_NAMESPACE(Game)
 
 // The Lost Soul spawn limit for Doom and Final Doom (-1 means no limit)
-static constexpr uint32_t SOUL_LIMIT_DOOM = -1;
+static constexpr uint32_t SOUL_LIMIT_DOOM = UINT32_MAX;
 static constexpr uint32_t SOUL_LIMIT_FINAL_DOOM = 16;
 
 // Unknown map/episode name placeholders

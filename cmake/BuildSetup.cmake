@@ -56,6 +56,9 @@ macro(compiler_specific_setup)
         # TODO: make these configurable
         add_compile_options(/GS-)
         STRING (REGEX REPLACE "/RTC[^ ]*" "" CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG}")
+
+        # Disable a warning coming often from 'winbase.h': "macro expansion producing 'defined' has undefined behavior"
+        add_compile_options(/wd5105)
     endif()
 endmacro()
 
