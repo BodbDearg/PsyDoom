@@ -703,7 +703,7 @@ void I_VramViewerDraw(const uint32_t texPageIdx) noexcept {
     // Draw red lines around all entries on this texture cache page
     const texture_t* const* pCacheEntry = &texPage.cells[0][0];
 
-    for (int32_t entryIdx = 0; entryIdx < TCACHE_CELLS_X * TCACHE_CELLS_Y; ++entryIdx, ++pCacheEntry) {
+    for (uint32_t entryIdx = 0; entryIdx < TCACHE_CELLS_X * TCACHE_CELLS_Y; ++entryIdx, ++pCacheEntry) {
         // Skip past this texture cache cell if there's no texture occupying it
         const texture_t* pTex = *pCacheEntry;
 

@@ -7,6 +7,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 BEGIN_NAMESPACE(FatalErrors)
@@ -93,7 +94,6 @@ static constexpr const char* const UNSPECIFIED_ERROR_STR = "An unspecified/unkno
             }
         }
 
-        va_end(va_args);
         raiseImpl(buffer.data());
     }
 }

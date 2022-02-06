@@ -128,8 +128,8 @@ static void RV_DetermineDrawParams() noexcept {
     gViewYf = RV_FixedToFloat(gViewY);
     gViewZf = RV_FixedToFloat(gViewZ);
     gViewAnglef = RV_AngleToFloat(gViewAngle - ANG90);
-    gViewCosf = std::cosf(gViewAnglef);
-    gViewSinf = std::sinf(gViewAnglef);
+    gViewCosf = std::cos(gViewAnglef);
+    gViewSinf = std::sin(gViewAnglef);
 
     // Determine the view rotation matrix used for sprite billboarding
     gSpriteBillboardMatrix = Matrix4f::rotateY(-gViewAnglef);

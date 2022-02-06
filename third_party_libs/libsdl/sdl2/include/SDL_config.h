@@ -37,6 +37,9 @@
 #include "SDL_config_macosx.h"
 #elif defined(__IPHONEOS__)
 #include "SDL_config_iphoneos.h"
+#elif defined(__linux__)
+/* PsyDoom: Adding a manual config for linux */
+#include "SDL_config_linux.h"
 #elif defined(__ANDROID__)
 #include "SDL_config_android.h"
 #elif defined(__PSP__)

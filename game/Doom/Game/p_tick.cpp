@@ -47,7 +47,7 @@
 #include <cmath>
 
 // The number of buttons in a cheat sequence and a list of all the cheat sequences and their indices
-static constexpr uint32_t CHEAT_SEQ_LEN = 8;
+static constexpr int32_t CHEAT_SEQ_LEN = 8;
 
 struct CheatSequence {
     uint16_t btns[CHEAT_SEQ_LEN];

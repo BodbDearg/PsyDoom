@@ -1,0 +1,6 @@
+# Output folders that some toolchains like to use
+build
+
+# QTCreator user project file
+/CMakeLists.txt.user*
+

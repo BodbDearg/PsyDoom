@@ -18,6 +18,7 @@
 #include "PsyDoom/Utils.h"
 #include "Spu.h"
 
+#include <cstring>
 #include <mutex>
 
 static constexpr int32_t MAX_OPEN_FILES     = 4;        // Maximum number of open files

@@ -19,7 +19,7 @@
 #if PSYDOOM_MODS
     // PsyDoom: a flag set to 'true' if the result of demo playback is unexpected/wrong (when checking demo results).
     // This is used to set the exit code for the application accordingly ('1' if the demo result checks fail, '0' otherwise).
-    extern bool gbCheckDemoResultFailed = false;
+    bool gbCheckDemoResultFailed = false;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------

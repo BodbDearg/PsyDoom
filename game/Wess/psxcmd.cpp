@@ -92,7 +92,7 @@ void add_music_mute_note(
     if (pSavedVoices) {
         // PsyDoom: sanity check we haven't exceeded the bounds of the saved notes array.
         // This shouldn't be called more times than there are hardware voices available!
-        WESS_ASSERT(pSavedVoices->size < SPU_NUM_VOICES);
+        WESS_ASSERT(pSavedVoices->size < (int32_t) SPU_NUM_VOICES);
 
         SavedVoice& voice = pSavedVoices->voices[pSavedVoices->size];
         voice.seq_idx = seqIdx;
@@ -304,7 +304,7 @@ void PSX_DriverInit(master_status_structure& mstat) noexcept {
     psxspu_init();
 
     // Init reverb levels for all channels
-    for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+    for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
         gWess_drv_chanReverbAmt[voiceIdx] = WESS_MAX_REVERB_DEPTH;
     }
 }

@@ -190,10 +190,13 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
             return false;
 
         // Firstly skip past any extended attribute record bytes for this directory
-        int32_t dirBytesLeft = dir.size;
+        uint32_t dirBytesLeft = dir.size;
 
         if (dir.xaRecordSize > 0) {
-            dirBytesLeft -= (int32_t) dir.xaRecordSize;
+            if (dir.xaRecordSize > dirBytesLeft)
+                return false;
+
+            dirBytesLeft -= dir.xaRecordSize;
 
             if (!discReader.trackSeekRel(dir.xaRecordSize))
                 return false;
@@ -251,7 +254,7 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
             }
 
             // Skip the rest of the record bytes
-            const int32_t skipBytes = recordLen - sizeof(IsoDirRecord) - record.nameLen;
+            const uint32_t skipBytes = recordLen - sizeof(IsoDirRecord) - record.nameLen;
 
             if ((skipBytes > dirBytesLeft) || (!discReader.trackSeekRel(skipBytes)))
                 return false;
@@ -321,7 +324,7 @@ int32_t IsoFileSys::getEntryIndex(const IsoFileSysEntry& root, const char* const
         const int32_t childEntryIdx = root.firstChildIdx + childIdx;
         const IsoFileSysEntry& childEntry = entries[childEntryIdx];
 
-        for (int32_t charIdx = 0; charIdx < C_ARRAY_SIZE(childEntry.name); ++charIdx) {
+        for (uint32_t charIdx = 0; charIdx < C_ARRAY_SIZE(childEntry.name); ++charIdx) {
             // Do case insensitive comparison
             const char c1 = (char) std::toupper(childEntry.name[charIdx]);
             const char c2 = (char) std::toupper(path[charIdx]);

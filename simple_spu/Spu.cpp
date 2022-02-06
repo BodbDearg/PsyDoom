@@ -3,6 +3,8 @@
 #include "Asserts.h"
 
 #include <algorithm>
+#include <cstring>
+
 using namespace Spu;
 
 // A series of co-efficients used by the SPU's gaussian sample interpolation.

@@ -1282,7 +1282,7 @@ static void P_Init() noexcept {
             if (pMap) {
                 const int32_t skyPalOverride = pMap->skyPaletteOverride;
 
-                if ((skyPalOverride >= 0) && (skyPalOverride < MAXPALETTES)) {
+                if ((skyPalOverride >= 0) && ((uint32_t) skyPalOverride < MAXPALETTES)) {
                     gPaletteClutId_CurMapSky = gPaletteClutIds[skyPalOverride];
                 }
             }
@@ -1514,23 +1514,23 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         void* const pMapWadFileData = W_OpenMapWad(mapWadFile);
     #endif
 
-    // Figure out the name of the map start lump marker
-    char mapLumpName[8] = {};
-    mapLumpName[0] = 'M';
-    mapLumpName[1] = 'A';
-    mapLumpName[2] = 'P';
-
-    {
-        uint8_t digit1 = (uint8_t) mapNum / 10;
-        uint8_t digit2 = (uint8_t) mapNum - digit1 * 10;
-        mapLumpName[3] = '0' + digit1;
-        mapLumpName[4] = '0' + digit2;
-    }
-
-    // Get the lump index for the map start lump.
     // PsyDoom: don't use this lump relative indexing anymore, just search for the lump names we want.
     // This also allows more flexibility where the 'MAP01' etc. markers in the map WAD can just be ignored - map files can be renamed more easily.
     #if !PSYDOOM_MODS
+        // Figure out the name of the map start lump marker
+        char mapLumpName[8] = {};
+        mapLumpName[0] = 'M';
+        mapLumpName[1] = 'A';
+        mapLumpName[2] = 'P';
+
+        {
+            uint8_t digit1 = (uint8_t) mapNum / 10;
+            uint8_t digit2 = (uint8_t) mapNum - digit1 * 10;
+            mapLumpName[3] = '0' + digit1;
+            mapLumpName[4] = '0' + digit2;
+        }
+
+        // Get the lump index for the map start lump
         const uint32_t mapStartLump = W_MapCheckNumForName(mapLumpName);
 
         if (mapStartLump == -1) {
@@ -1714,7 +1714,7 @@ static void P_FlagMapTexturesForLoading() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_CacheAndUpdateTexSizeInfo(texture_t& tex, const int32_t lumpNum) noexcept {
     // Sanity check
-    if (W_LumpLength(lumpNum) < sizeof(texlump_header_t)) {
+    if (W_LumpLength(lumpNum) < (int32_t) sizeof(texlump_header_t)) {
         I_Error("P_CacheAndUpdateTexSizeInfo: Bad tex lump %d! Not enough data!", lumpNum);
     }
 

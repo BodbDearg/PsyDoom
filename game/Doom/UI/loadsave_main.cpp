@@ -35,7 +35,7 @@
 #include <chrono>
 
 // The available menu items
-enum MenuItem : uint32_t {
+enum MenuItem : int32_t {
     menu_slot1,
     menu_slot2,
     menu_slot3,
@@ -107,7 +107,7 @@ static void ReadSaveHeader(SaveFileInfo& save) noexcept {
 // Tells if there is a save slot currently focused
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool IsSaveSlotFocused() noexcept {
-    return ((gFocusedSaveSlot >= 0) && (gFocusedSaveSlot < C_ARRAY_SIZE(gSaveFiles)));
+    return ((gFocusedSaveSlot >= 0) && (gFocusedSaveSlot < (int32_t) C_ARRAY_SIZE(gSaveFiles)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -371,7 +371,7 @@ gameaction_t LoadSave_Update() noexcept {
                 if (bMenuOk) {
                     // If loading then only allow focusing the slot if it's not empty
                     const int32_t saveSlotIdx = curMenuItem - menu_slot1;
-                    ASSERT((saveSlotIdx >= 0) && (saveSlotIdx < C_ARRAY_SIZE(gSaveFiles)));
+                    ASSERT((saveSlotIdx >= 0) && (saveSlotIdx < (int32_t) C_ARRAY_SIZE(gSaveFiles)));
                     const SaveFileInfo& saveFile = gSaveFiles[saveSlotIdx];
 
                     const bool bDisallowFocus = (gMenuMode == LoadSaveMenuMode::Load) && (saveFile.mapNum <= 0);

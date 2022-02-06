@@ -3,6 +3,7 @@
 #include "VkFuncs.h"
 
 #include <algorithm>
+#include <cstring>
 
 BEGIN_NAMESPACE(vgl)
 

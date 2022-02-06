@@ -46,6 +46,8 @@
 #include "ScriptingEngine.h"
 #include "Wess/psxcd.h"
 
+#include <algorithm>
+
 // Make sure the global password character buffer is the expected size
 static_assert(PW_SEQ_LEN == C_ARRAY_SIZE(SavedGlobals::passwordCharBuffer), "Password char buffer has unexpected size!");
 
@@ -1306,7 +1308,7 @@ bool SavedGlobals::validate() const noexcept {
     if (!player.validate())
         return false;
 
-    if ((numPasswordCharsEntered < 0) || (numPasswordCharsEntered > C_ARRAY_SIZE(passwordCharBuffer)))
+    if ((numPasswordCharsEntered < 0) || (numPasswordCharsEntered > (int32_t) C_ARRAY_SIZE(passwordCharBuffer)))
         return false;
 
     if (!statusBar.validate())

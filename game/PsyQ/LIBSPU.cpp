@@ -9,6 +9,7 @@
 #include "Spu.h"
 
 #include <cmath>
+#include <cstring>
 
 // This table defines the sample rates for an entire octave of notes (12 semitones) in 1/16 semitone steps.
 // The first note in the octave plays at 44,100 Hz (0x1000) and the last note (the start of the next octave) at 88,200 Hz (0x2000).
@@ -671,7 +672,7 @@ SpuVoiceMask LIBSPU_SpuSetReverbVoice(const int32_t onOff, const SpuVoiceMask vo
     PsxVm::LockSpu spuLock;
 
     if (onOff == SPU_BIT) {
-        for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+        for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
             Spu::Voice& voice = spu.pVoices[voiceIdx];
             voice.bDoReverb = (voiceBits & (SpuVoiceMask(1) << voiceIdx));
         }
@@ -683,7 +684,7 @@ SpuVoiceMask LIBSPU_SpuSetReverbVoice(const int32_t onOff, const SpuVoiceMask vo
     const bool bEnableReverb = (onOff != SPU_OFF);
     SpuVoiceMask enabledVoiceBits = 0;
 
-    for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+    for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
         Spu::Voice& voice = spu.pVoices[voiceIdx];
 
         if (voiceBits & (SpuVoiceMask(1) << voiceIdx)) {

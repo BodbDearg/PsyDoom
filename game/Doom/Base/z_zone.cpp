@@ -425,6 +425,15 @@ void Z_SetUser(void* const ptr, void** const ppUser) noexcept {
 
     block.user = ppUser;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: same as 'Z_Malloc' except the memory returned is zero intialized
+//------------------------------------------------------------------------------------------------------------------------------------------
+void* Z_ZeroedMalloc(memzone_t& zone, const int32_t size, const int16_t tag, void** const ppUser) noexcept {
+    void* const pMemory = Z_Malloc(zone, size, tag, ppUser);
+    std::memset(pMemory, 0, size);
+    return pMemory;
+}
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -71,3 +71,8 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
 include_directories(${SRC_DIR})
 target_include_directories(${LUA_TGT_NAME} INTERFACE ${SRC_DIR})
+
+if (NOT PLATFORM_WINDOWS)
+    # Fix GCC warning: the use of `tmpnam' is dangerous, better use `mkstemp'
+    target_compile_definitions(${LUA_TGT_NAME} PRIVATE -DLUA_USE_POSIX)
+endif()

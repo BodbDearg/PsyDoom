@@ -49,6 +49,7 @@ void Z_ChangeTag(void* const ptr, const int16_t tagBits) noexcept;
 
 #if PSYDOOM_MODS
     void Z_SetUser(void* const ptr, void** const ppUser) noexcept;
+    void* Z_ZeroedMalloc(memzone_t& zone, const int32_t size, const int16_t tag, void** const ppUser) noexcept;
 #endif
 
 int32_t Z_FreeMemory(memzone_t& zone) noexcept;

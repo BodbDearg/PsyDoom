@@ -34,10 +34,10 @@ macro(compiler_agnostic_setup)
 endmacro()
 
 macro(compiler_specific_setup)
-    # Clang, Apple Clang, or GCC - enable debugging
-    if (COMPILER_CLANG OR COMPILER_GCC)
-        set(CMAKE_C_FLAGS -g)
-        set(CMAKE_CXX_FLAGS -g)
+    # GCC specific
+    if (COMPILER_GCC)
+        # Disable a warning about an ABI change: 'parameter passing for argument of type ??? changed in GCC 7.1'
+        add_compile_options(-Wno-psabi)
     endif()
 
     # MSVC: statically link against the CRT.

@@ -77,7 +77,7 @@ bool PipelineLayout::init(
 
     if (vkFuncs.vkCreatePipelineLayout(mpDevice->getVkDevice(), &layoutCreateInfo, nullptr, &mVkPipelineLayout) != VK_SUCCESS) {
         ASSERT_FAIL("Failed to create a pipeline layout!");
-        return nullptr;
+        return false;
     }
 
     // All good if we get to here!

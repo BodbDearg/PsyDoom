@@ -9,6 +9,8 @@
 #include "MapInfo_Parse.h"
 
 #include "Asserts.h"
+
+#include <cstdlib>
 #include <vector>
 
 BEGIN_NAMESPACE(MapInfo)

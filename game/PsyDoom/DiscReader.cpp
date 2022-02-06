@@ -4,6 +4,7 @@
 #include "DiscInfo.h"
 
 #include <algorithm>
+#include <cstring>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the disc reader: the reference to the disc info must remain valid for the lifetime of this object

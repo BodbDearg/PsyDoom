@@ -697,7 +697,7 @@ bool DeviceMemMgr::allocUnpooled(
     const MemMgrIdT allocId = pickNewUnpooledAllocId();
 
     if (allocId == INVALID_MEM_MGR_ID)
-        return nullptr;
+        return false;
 
     // Fill in the details of the memory alloc for vulkan
     VkMemoryAllocateInfo memAllocInfo = {};
@@ -710,7 +710,7 @@ bool DeviceMemMgr::allocUnpooled(
     VkDeviceMemory vkDeviceMemory = VK_NULL_HANDLE;
 
     if (mVkFuncs.vkAllocateMemory(vkDevice, &memAllocInfo, nullptr, &vkDeviceMemory) != VK_SUCCESS)
-        return nullptr;
+        return false;
 
     ASSERT(vkDeviceMemory);
 
@@ -736,7 +736,7 @@ bool DeviceMemMgr::allocUnpooled(
             // Failed to do a mapping - cleanup the buffer and return null!
             ASSERT_FAIL("Failed to map device memory to a host visible buffer!");
             mVkFuncs.vkFreeMemory(vkDevice, vkDeviceMemory, nullptr);
-            return nullptr;
+            return false;
         }
     }
 

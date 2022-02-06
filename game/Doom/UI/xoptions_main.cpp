@@ -26,7 +26,7 @@
 #include <cstdio>
 
 // The available menu items
-enum MenuItem : uint32_t {
+enum MenuItem : int32_t {
     menu_turn_speed,
     menu_always_run,
     menu_stat_display,

@@ -35,7 +35,7 @@ void init(
     const auto computeLerpFactor = [](const float lerpTimeInSeconds) noexcept -> float  {
         if (lerpTimeInSeconds > 0.0f) {
             const float lerpTimeInSamples = lerpTimeInSeconds * 44100.0f;
-            return 1.0f - std::expf(-1.0f / lerpTimeInSamples);             // Note: exp(-x) = 1.0 / exp(x)
+            return 1.0f - std::exp(-1.0f / lerpTimeInSamples); // Note: exp(-x) = 1.0 / exp(x)
         } else {
             return 1.0f;
         }

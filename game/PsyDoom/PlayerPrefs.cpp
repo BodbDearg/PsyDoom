@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 
 BEGIN_NAMESPACE(PlayerPrefs)
 

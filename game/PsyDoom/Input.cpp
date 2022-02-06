@@ -863,7 +863,7 @@ float getAdjustedGamepadInputValue(const GamepadInput input, const float deadZon
     if (b2dAxisPair) {
         // A 2d-axis pair
         const float rawAxisOpp = getGamepadInputValue(oppositeInput);
-        const float axisVecLen = std::sqrtf(rawAxis * rawAxis + rawAxisOpp * rawAxisOpp);
+        const float axisVecLen = std::sqrt(rawAxis * rawAxis + rawAxisOpp * rawAxisOpp);
 
         const float axisNormalized = (axisVecLen > 0) ? rawAxis / axisVecLen : 0.0f;
         const float axisRescale = std::max((axisVecLen - clampedDeadZone) / (1.0f - clampedDeadZone), 0.0f);

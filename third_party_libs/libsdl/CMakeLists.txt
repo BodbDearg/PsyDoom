@@ -91,6 +91,8 @@ set(SOURCE_FILES
     "${SRC_DIR}/cpuinfo/SDL_cpuinfo.c"
     "${SRC_DIR}/events/blank_cursor.h"
     "${SRC_DIR}/events/default_cursor.h"
+    "${SRC_DIR}/events/imKStoUCS.c"
+    "${SRC_DIR}/events/imKStoUCS.h"
     "${SRC_DIR}/events/SDL_clipboardevents.c"
     "${SRC_DIR}/events/SDL_clipboardevents_c.h"
     "${SRC_DIR}/events/SDL_displayevents.c"
@@ -160,6 +162,7 @@ set(SOURCE_FILES
     "${SRC_DIR}/stdlib/SDL_qsort.c"
     "${SRC_DIR}/stdlib/SDL_stdlib.c"
     "${SRC_DIR}/stdlib/SDL_string.c"
+    "${SRC_DIR}/stdlib/SDL_strtokr.c"
     "${SRC_DIR}/thread/SDL_systhread.h"
     "${SRC_DIR}/thread/SDL_thread.c"
     "${SRC_DIR}/thread/SDL_thread_c.h"
@@ -342,8 +345,8 @@ endif()
 if (PLATFORM_LINUX)
     list(APPEND SOURCE_FILES
         "${INCLUDE_DIR}/SDL_config_linux.h"
-        "${SRC_DIR}/audio/alsa/SDL_alsa_audio.c"
-        "${SRC_DIR}/audio/alsa/SDL_alsa_audio.h"
+        "${SRC_DIR}/audio/pulseaudio/SDL_pulseaudio.c"
+        "${SRC_DIR}/audio/pulseaudio/SDL_pulseaudio.h"
         "${SRC_DIR}/core/linux/SDL_dbus.c"
         "${SRC_DIR}/core/linux/SDL_dbus.h"
         "${SRC_DIR}/core/linux/SDL_evdev.c"
@@ -354,8 +357,6 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/core/linux/SDL_evdev_kbd.h"
         "${SRC_DIR}/core/linux/SDL_evdev_kbd_default_accents.h"
         "${SRC_DIR}/core/linux/SDL_evdev_kbd_default_keymap.h"
-        "${SRC_DIR}/core/linux/SDL_fcitx.c"
-        "${SRC_DIR}/core/linux/SDL_fcitx.h"
         "${SRC_DIR}/core/linux/SDL_ibus.c"
         "${SRC_DIR}/core/linux/SDL_ibus.h"
         "${SRC_DIR}/core/linux/SDL_ime.c"
@@ -369,6 +370,7 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/haptic/linux/SDL_syshaptic.c"
         "${SRC_DIR}/joystick/linux/SDL_sysjoystick.c"
         "${SRC_DIR}/joystick/linux/SDL_sysjoystick_c.h"
+        "${SRC_DIR}/loadso/dlopen/SDL_sysloadso.c"
         "${SRC_DIR}/locale/unix/SDL_syslocale.c"
         "${SRC_DIR}/misc/unix/SDL_sysurl.c"
         "${SRC_DIR}/thread/pthread/SDL_syscond.c"
@@ -381,8 +383,6 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/timer/unix/SDL_systimer.c"
         "${SRC_DIR}/video/x11/edid-parse.c"
         "${SRC_DIR}/video/x11/edid.h"
-        "${SRC_DIR}/video/x11/imKStoUCS.c"
-        "${SRC_DIR}/video/x11/imKStoUCS.h"
         "${SRC_DIR}/video/x11/SDL_x11clipboard.c"
         "${SRC_DIR}/video/x11/SDL_x11clipboard.h"
         "${SRC_DIR}/video/x11/SDL_x11dyn.c"
@@ -414,6 +414,8 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/video/x11/SDL_x11vulkan.h"
         "${SRC_DIR}/video/x11/SDL_x11window.c"
         "${SRC_DIR}/video/x11/SDL_x11window.h"
+        "${SRC_DIR}/video/x11/SDL_x11xfixes.c"
+        "${SRC_DIR}/video/x11/SDL_x11xfixes.h"
         "${SRC_DIR}/video/x11/SDL_x11xinput2.c"
         "${SRC_DIR}/video/x11/SDL_x11xinput2.h"
     )
@@ -486,15 +488,18 @@ if (PLATFORM_LINUX)
     include_directories("${BASE_DIR}/wayland-protocols")
 
     target_link_libraries(${LIBSDL_TGT_NAME}
-        asound
         dl
         pthread
+        pulse
         X11
         Xcursor
         Xext
+        Xfixes
         Xi
         Xinerama
         Xrandr
         Xxf86vm
     )
+
+    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-deprecated-declarations)     # No warnings about using deprecated library functions
 endif()

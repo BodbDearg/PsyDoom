@@ -381,12 +381,12 @@ static void R_InitPalette() noexcept {
         const palette_t* const pGamePalettes = (const palette_t*) W_CacheLumpNum(playpalLumpNum, PU_CACHE, true);
     #endif
 
-    const int32_t numPalettes = W_LumpLength(playpalLumpNum) / sizeof(palette_t);
+    const uint32_t numPalettes = W_LumpLength(playpalLumpNum) / sizeof(palette_t);
 
     // PsyDoom: allow up to 32 palettes to be defined, since there is leftover room in VRAM for this.
     // Doom defines 20, Final Doom 26 - so the user can define an additional 6.
     #if PSYDOOM_MODS
-        const int32_t minAllowedPalettes = Game::isFinalDoom() ? NUMPALETTES_FINAL_DOOM : NUMPALETTES_DOOM;
+        const uint32_t minAllowedPalettes = Game::isFinalDoom() ? NUMPALETTES_FINAL_DOOM : NUMPALETTES_DOOM;
 
         if ((numPalettes < minAllowedPalettes) || (numPalettes > MAXPALETTES)) {
             I_Error("R_InitPalettes: palette foulup\n");
@@ -411,16 +411,13 @@ static void R_InitPalette() noexcept {
         const palette_t* pPalette = pGamePalettes;
         uint16_t* pClutId = gPaletteClutIds;
 
-        for (int32_t palIdx = 0; palIdx < numPalettes; ++palIdx, ++pPalette, ++pClutId) {
+        for (uint32_t palIdx = 0; palIdx < numPalettes; ++palIdx, ++pPalette, ++pClutId) {
             // How many palettes we can squeeze onto a VRAM texture page that also has a framebuffer.
             // The palettes for the game are packed into some of the unused rows of the framebuffer.
             constexpr int32_t PAL_ROWS_PER_TPAGE = 256 - SCREEN_H;
 
-            // Set the destination location in VRAM for the palette.
-            //
-            // Note: i'm not sure why this check is done - the palette index cannot be negative?
-            // Perhaps something that was compiled out for the PAL version of the game maybe?
-            const int32_t palRow = (palIdx >= 0) ? palIdx : palIdx + 15;
+            // Set the destination location in VRAM for the palette
+            const int32_t palRow = palIdx;
             const int32_t palTPage = palRow / PAL_ROWS_PER_TPAGE;
 
             dstVramRect.x = (int16_t)(palTPage * 256);
@@ -475,7 +472,7 @@ SRECT getTextureVramRect(const texture_t& tex) noexcept {
 // This means that the 'SPRITE1' and 'TEXTURE1' lumps can be ignored for PsyDoom when adding new textures and sprites.
 //-----------------------------------------------------------------------------------------------------------------------------------------
 void R_UpdateTexMetricsFromData(texture_t& tex, const void* const pTexData, const int32_t texDataSize) noexcept {
-    if (texDataSize <= sizeof(texlump_header_t)) {
+    if (texDataSize <= (int32_t) sizeof(texlump_header_t)) {
         I_Error("R_UpdateTexMetricsFromData: invalid tex data size!");
     }
 

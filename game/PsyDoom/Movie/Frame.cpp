@@ -6,6 +6,9 @@
 #include "MacroBlockDecoder.h"
 #include "MBlockBitStream.h"
 
+#include <cstdlib>
+#include <cstring>
+
 BEGIN_NAMESPACE(movie)
 
 // In an MDEC video sector there's just 2048 bytes of data, and 32 of that is taken up by the header

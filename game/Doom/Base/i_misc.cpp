@@ -131,7 +131,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
 
     // Work with unsigned while we are printing, until the end
     bool bNegativeVal;
-    int32_t valueAbs;
+    uint32_t valueAbs;
 
     if (value >= 0) {
         bNegativeVal = false;
@@ -144,7 +144,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     // Figure out what digits to print
     constexpr uint32_t MAX_DIGITS = 16;
     int32_t digits[MAX_DIGITS];
-    int32_t digitIdx = 0;
+    uint32_t digitIdx = 0;
 
     while (digitIdx < MAX_DIGITS) {
         digits[digitIdx] = valueAbs % 10;
@@ -157,7 +157,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     }
 
     // Print the digits, starting with the least significant and move backwards across the screen
-    const int32_t numDigits = digitIdx + 1;
+    const uint32_t numDigits = digitIdx + 1;
     int32_t curX = x;
 
     for (digitIdx = 0; digitIdx < numDigits; ++digitIdx) {
@@ -309,10 +309,10 @@ void I_DrawPausedOverlay() noexcept {
 void I_UpdatePalette() noexcept {
     // Decide on red amount from current damage or scaled beserk time left (pick whichever is greatest)
     player_t& player = gPlayers[gCurPlayerIndex];
-    int32_t redAmount = player.damagecount;
+    uint32_t redAmount = player.damagecount;
 
     if (player.powers[pw_strength] != 0) {
-        const int32_t berserkAmount = 12 - d_rshift<6>(player.powers[pw_strength]);
+        const uint32_t berserkAmount = 12 - d_rshift<6>(player.powers[pw_strength]);
 
         if (berserkAmount > redAmount) {
             redAmount = berserkAmount;
@@ -333,7 +333,7 @@ void I_UpdatePalette() noexcept {
         paletteIdx = INVULNERABILITYPAL;
     }
     else if (redAmount != 0) {
-        int32_t redPalIdx = d_rshift<3>(redAmount + 7);
+        uint32_t redPalIdx = d_rshift<3>(redAmount + 7);
 
         if (redPalIdx >= NUMREDPALS) {
             redPalIdx = NUMREDPALS - 1;
@@ -345,7 +345,7 @@ void I_UpdatePalette() noexcept {
         paletteIdx = RADIATIONPAL;
     }
     else if (player.bonuscount != 0) {
-        int32_t bonusPalIdx = d_rshift<3>(player.bonuscount + 7);
+        uint32_t bonusPalIdx = d_rshift<3>(player.bonuscount + 7);
 
         if (bonusPalIdx >= NUMBONUSPALS) {
             bonusPalIdx = NUMBONUSPALS - 1;

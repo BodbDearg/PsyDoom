@@ -134,8 +134,7 @@ static void allocMobjsToLoad() noexcept {
 
     for (uint32_t i = 0; i < numMobjs; ++i) {
         // Alloc the map object and zero init
-        mobj_t& mobj = *(mobj_t*) Z_Malloc(*gpMainMemZone, sizeof(mobj_t), PU_LEVEL, nullptr);
-        std::memset(&mobj, 0, sizeof(mobj_t));
+        mobj_t& mobj = *(mobj_t*) Z_ZeroedMalloc(*gpMainMemZone, sizeof(mobj_t), PU_LEVEL, nullptr);
 
         #if PSYDOOM_MODS
             new (&mobj) mobj_t();   // PsyDoom: construct C++ weak pointers
@@ -163,8 +162,7 @@ static void allocThinkersToLoad(std::vector<ThinkerT*>& outputList, const uint32
     outputList.reserve(amt);
 
     for (uint32_t i = 0; i < amt; ++i) {
-        ThinkerT& thinker = *(ThinkerT*) Z_Malloc(*gpMainMemZone, sizeof(ThinkerT), PU_LEVSPEC, nullptr);
-        std::memset(&thinker, 0, sizeof(ThinkerT));
+        ThinkerT& thinker = *(ThinkerT*) Z_ZeroedMalloc(*gpMainMemZone, sizeof(ThinkerT), PU_LEVSPEC, nullptr);
         P_AddThinker(thinker.thinker);
         outputList.push_back(&thinker);
     }
@@ -353,10 +351,18 @@ static void serializeObjects(const SrcT* const pSrcObjs, std::unique_ptr<DstT[]>
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class SrcT, class DstT>
 static void serializeObjects(const std::vector<SrcT*>& srcObjs, std::unique_ptr<DstT[]>& dstObjs) noexcept {
-    // Alloc the output array and ensure even padding bytes are zero initialized
-    dstObjs = std::make_unique<DstT[]>(srcObjs.size());
+    // Alloc the output array and ensure all objects are initialized
     const size_t numObjs = srcObjs.size();
-    std::memset(dstObjs.get(), 0, sizeof(DstT) * numObjs);
+    dstObjs = std::make_unique<DstT[]>(numObjs);
+
+    if constexpr (std::is_trivial_v<DstT>) {
+        std::memset(dstObjs.get(), 0, sizeof(DstT) * numObjs);
+    } else {
+        // For non trivially constructed/copied objects use this method instead of a simple 'memset()'
+        for (size_t i = 0; i < numObjs; ++i) {
+            dstObjs[i] = {};
+        }
+    }
 
     // Serialize everything
     for (size_t i = 0; i < numObjs; ++i) {
