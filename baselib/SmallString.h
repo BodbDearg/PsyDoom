@@ -22,7 +22,7 @@ struct TSmallString {
     // Default empty string constructors.
     // One default intializes via the 'words' union member, the other via the 'chars' union member.
     inline constexpr TSmallString() noexcept : words{} {}
-    inline constexpr TSmallString([[maybe_unused]] std::nullptr_t unused) noexcept : chars{} {}
+    inline constexpr TSmallString(std::nullptr_t) noexcept : chars{} {}
 
     // Default copy and assignment
     constexpr TSmallString(const TSmallString& other) = default;

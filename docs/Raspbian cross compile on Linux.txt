@@ -1,0 +1,80 @@
+Steps to setup a 'chroot' environment for making Raspbian PsyDoom builds on a Debian based Linux (Ubuntu, Mint etc.).
+Source: https://www.j1nx.nl/diy/crosscompiling-software-for-raspbian-in-a-chroot-environment/
+
+(1) Ensure emulation for non-native Linux binaries and the Debian bootstrapping utility are available:
+        sudo apt-get install qemu-user-static debootstrap
+
+(2) Set the following environment variables to appropriate values to make customizing all steps easier:
+        #   Root folder on your system for the new 'chroot' build environment
+        export CROSS_ROOT_DIR=~/build-envs/armhf
+        #   Target CPU architecture (E.G 'armhf' or 'arm64')
+        export CROSS_ARCH=armhf
+        #   Which version of Debian the target version of Raspbian is based on (E.G: 'bullseye', 'buster', 'stretch' etc.)
+        export CROSS_DEBIAN_VER=buster
+        #   Where the PsyDoom GIT repository is located on your system
+        export PSYDOOM_REPO_PATH=~/GIT/PsyDoom
+
+(2) Make the root folder for the new 'chroot' build environment:
+        mkdir -p "${CROSS_ROOT_DIR}"
+
+(3) Do the first stage of Debian distribution bootstrapping into that folder:
+        sudo debootstrap --no-check-gpg --foreign --arch=${CROSS_ARCH} ${CROSS_DEBIAN_VER} "${CROSS_ROOT_DIR}" http://archive.raspbian.org/raspbian
+
+(4) Step (3) may fail if the root filesystem is encrypted. The message may say something about the filesystem being 'mounted with noexec or nodev'. Follow the steps here to fix: 'https://askubuntu.com/questions/409609/cannot-install-into-target-mounted-with-noexec-or-nodev-while-doing-qemu-deboot' by executing the following:
+        sudo mount -i -o remount,exec,dev /home/[MY_LINUX_HOME_FOLDER_NAME]
+
+(5) Initiate the second stage of the Debian bootstrap process (this takes a while). If that fails due to 'noexec or nodev' errors try step (4):
+        sudo chroot "${CROSS_ROOT_DIR}" /debootstrap/debootstrap --second-stage
+
+(6) Setup the 'sources.list' file for the new environment to add the correct package repositories for Raspbian.
+        echo deb http://mirrordirector.raspbian.org/raspbian/ ${CROSS_DEBIAN_VER} main contrib non-free rpi | sudo tee "${CROSS_ROOT_DIR}/etc/apt/sources.list"
+        echo deb http://archive.raspberrypi.org/debian/ ${CROSS_DEBIAN_VER} main | sudo tee -a "${CROSS_ROOT_DIR}/etc/apt/sources.list"
+    
+(7) Update the list of available packages inside the 'chroot' environment and then upgrade all packages:
+        sudo chroot "${CROSS_ROOT_DIR}" apt-get update
+        sudo chroot "${CROSS_ROOT_DIR}" apt-get upgrade
+
+(8) Install all required packages for building inside the new environment and verify the correct GCC version (with corresponding architecture) is installed:
+        sudo chroot "${CROSS_ROOT_DIR}"
+        apt-get install gcc g++ cmake libgl-dev libvulkan-dev libpulse-dev libx11-dev libxcursor-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev
+	    gcc -v
+        exit
+
+(9) Make a home and build output folder for the new environment:
+        sudo chroot "${CROSS_ROOT_DIR}" mkdir -p /home/builduser/build
+
+(10) Check the current cmake version using the following command:
+        sudo chroot "${CROSS_ROOT_DIR}" cmake --version
+
+    At the time of writing for PsyDoom it should be >= 3.15. See PsyDoom's root 'CMakeLists.txt' to confirm this requirement.
+
+(11) If the CMake provided by the distribution is too old, then build and install it from source using steps similar to these:
+        sudo chroot "${CROSS_ROOT_DIR}"
+        cd /home/builduser
+        mkdir cmake
+        cd cmake
+        apt install wget libssl-dev
+        wget https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2.tar.gz
+        tar -xf cmake-3.22.2.tar.gz
+        cd cmake-3.22.2
+        ./configure
+        make install
+        cd /home/builduser
+        rm -rf cmake
+        exit
+
+(12) Make the PsyDoom root directory available within the 'chroot' jail using a bind mount.
+    Note that you may have to repeat this step every time your machine is restarted:
+        sudo mkdir -p "${CROSS_ROOT_DIR}/home/builduser/PsyDoom"
+        sudo mount --bind "${PSYDOOM_REPO_PATH}" "${CROSS_ROOT_DIR}/home/builduser/PsyDoom"
+
+    WARNING: be sure to unmount this first (or restart the machine) if deleting the 'chroot' environment folder, otherwise you may accidentally delete your repository!
+
+(13) Generate the Unix makefiles for the project and then build using make. Change 'Release' to 'Debug' if a debug build is desired:
+        sudo chroot "${CROSS_ROOT_DIR}"
+        cd /home/builduser/build
+        cmake ../PsyDoom -DCMAKE_BUILD_TYPE=Release
+        make
+
+(14) If all went well you should now hopefully have a 'PsyDoom' executable under '/home/builduser/build/game'.
+

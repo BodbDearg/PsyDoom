@@ -36,3 +36,8 @@ target_link_libraries(${BASELIB_TGT_NAME}
 )
 
 target_include_directories(${BASELIB_TGT_NAME} PUBLIC ${INCLUDE_PATHS})
+
+# GCC: fix linker errors about missing 'std::filesystem'
+if (COMPILER_GCC)
+    target_link_libraries(${BASELIB_TGT_NAME} stdc++fs)
+endif()

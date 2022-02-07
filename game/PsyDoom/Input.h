@@ -23,7 +23,7 @@ inline static constexpr uint16_t NUM_KEYBOARD_KEYS = 512;
 inline static constexpr uint8_t NUM_MOUSE_WHEEL_AXES = 2;
 
 // Direction for a joystick hat (d-pad)
-enum JoyHatDir : uint16_t {
+enum JoyHatDir : uint8_t {
     Up      = 0,
     Down    = 1,
     Left    = 2,
@@ -33,8 +33,8 @@ enum JoyHatDir : uint16_t {
 // Holds a joystick hat (d-pad) direction and hat number
 union JoyHat {
     struct {
-        JoyHatDir   hatDir : 2;
-        uint16_t    hatNum : 14;
+        JoyHatDir   hatDir;
+        uint8_t     hatNum;
     } fields;
 
     uint16_t bits;
@@ -42,9 +42,9 @@ union JoyHat {
     inline JoyHat() noexcept : bits() {}
     inline JoyHat(const uint16_t bits) noexcept : bits(bits) {}
 
-    inline JoyHat(const JoyHatDir dir, const uint16_t hatNum) noexcept : bits() {
+    inline JoyHat(const JoyHatDir dir, const uint8_t hatNum) noexcept : bits() {
         fields.hatDir = dir;
-        fields.hatNum = hatNum & 0x3FFF;
+        fields.hatNum = hatNum;
     }
 
     inline operator uint16_t() const noexcept { return bits; }

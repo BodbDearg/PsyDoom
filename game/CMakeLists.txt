@@ -524,3 +524,9 @@ if (PLATFORM_MAC AND PSYDOOM_INCLUDE_VULKAN_RENDERER)
         COMMAND cp "${PROJECT_SOURCE_DIR}/Game/Resources/macOS/MoltenVK_icd.json" "$<TARGET_FILE_DIR:${GAME_TGT_NAME}>/../Resources/vulkan/icd.d"
     )
 endif()
+
+# Linux specific
+if (PLATFORM_LINUX)
+    # Static link the standard c++ and gcc libraries to make the binary more portable between Linux versions
+    target_link_options(${GAME_TGT_NAME} PRIVATE -static-libgcc -static-libstdc++)
+endif()

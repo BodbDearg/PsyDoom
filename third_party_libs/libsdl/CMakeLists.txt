@@ -502,4 +502,5 @@ if (PLATFORM_LINUX)
     )
 
     target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-deprecated-declarations)     # No warnings about using deprecated library functions
+    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-incompatible-pointer-types)  # No warnings about incompatible pointer type conversion
 endif()
