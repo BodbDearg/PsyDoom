@@ -38,6 +38,7 @@ set(SOURCE_FILES
     "${INCLUDE_DIR}/SDL_gamecontroller.h"
     "${INCLUDE_DIR}/SDL_gesture.h"
     "${INCLUDE_DIR}/SDL_haptic.h"
+    "${INCLUDE_DIR}/SDL_hidapi.h"
     "${INCLUDE_DIR}/SDL_hints.h"
     "${INCLUDE_DIR}/SDL_joystick.h"
     "${INCLUDE_DIR}/SDL_keyboard.h"
@@ -74,6 +75,7 @@ set(SOURCE_FILES
     "${INCLUDE_DIR}/SDL_types.h"
     "${INCLUDE_DIR}/SDL_version.h"
     "${INCLUDE_DIR}/SDL_video.h"
+    "${INCLUDE_DIR}/SDL_vulkan.h"
     "${SRC_DIR}/atomic/SDL_atomic.c"
     "${SRC_DIR}/atomic/SDL_spinlock.c"
     "${SRC_DIR}/audio/dummy/SDL_dummyaudio.c"
@@ -320,8 +322,6 @@ if (PLATFORM_MAC)
         "${SRC_DIR}/video/cocoa/SDL_cocoamodes.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoamouse.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoamouse.m"
-        "${SRC_DIR}/video/cocoa/SDL_cocoamousetap.h"
-        "${SRC_DIR}/video/cocoa/SDL_cocoamousetap.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoashape.h"
         "${SRC_DIR}/video/cocoa/SDL_cocoashape.m"
         "${SRC_DIR}/video/cocoa/SDL_cocoavideo.h"
@@ -475,9 +475,9 @@ if (PLATFORM_MAC)
         ${METAL_FRAMEWORK}
     )
 
-    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_VIDEO_METAL=1)           # Enable Metal Video backend
-    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -fno-objc-arc)                    # ARC must be disabled for SDL
-    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-deprecated-declarations)     # Ignore deprecation warnings
+    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_VIDEO_METAL=1)       # Enable Metal Video backend
+    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -fno-objc-arc)                # ARC must be disabled for SDL
+    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-objc-method-access)      # No warnings about calling undeclared Objective C methods
     
     if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
         target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DVK_USE_PLATFORM_METAL_EXT=1)
@@ -500,7 +500,13 @@ if (PLATFORM_LINUX)
         Xrandr
         Xxf86vm
     )
+endif()
 
-    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-deprecated-declarations)     # No warnings about using deprecated library functions
-    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-incompatible-pointer-types)  # No warnings about incompatible pointer type conversion
+if (COMPILER_CLANG OR COMPILER_GCC)
+    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-deprecated-declarations)             # No warnings about using deprecated library functions
+    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-incompatible-pointer-types)          # No warnings about incompatible pointer type conversion
+endif()
+
+if (COMPILER_CLANG)
+    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-compare-distinct-pointer-types)      # No warnings about comparing distinct pointer types
 endif()

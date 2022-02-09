@@ -41,7 +41,8 @@
 #elif defined (__GNUC__)
     // GCC or Clang
     #define BEGIN_DISABLE_HEADER_WARNINGS\
-        /* Insert pragmas to disable warnings here... */
+        _Pragma("GCC diagnostic push")\
+        /* ... Insert pragmas to disable warnings here! ... */
 
     #define END_DISABLE_HEADER_WARNINGS\
         _Pragma("GCC diagnostic pop")
