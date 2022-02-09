@@ -21,7 +21,13 @@
 #include <cstring>
 #include <mutex>
 
-static constexpr int32_t MAX_OPEN_FILES     = 4;        // Maximum number of open files
+// PsyDoom: raise the open file limit
+#if PSYDOOM_MODS
+    static constexpr int32_t MAX_OPEN_FILES = 16;   // Maximum number of open files
+#else
+    static constexpr int32_t MAX_OPEN_FILES = 4;    // Maximum number of open files
+#endif
+
 static constexpr int32_t FADE_TIME_MS       = 250;      // Time it takes to fade out CD audio (milliseconds)
 static constexpr int32_t CDDA_SECTOR_SIZE   = 2352;     // Size of of a CD digital audio sector
 
@@ -56,7 +62,12 @@ struct LockCdPlayer {
 };
 
 // Disc readers used for each open file
-static DiscReader gFileDiscReaders[MAX_OPEN_FILES] = { PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo };
+static DiscReader gFileDiscReaders[MAX_OPEN_FILES] = {
+    PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo,
+    PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo,
+    PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo,
+    PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo, PsxVm::gDiscInfo,
+};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // A callback invoked by the SPU when it wants audio from the CD player - returns a single sample.
