@@ -10,8 +10,8 @@
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/w_wad.h"
-#include "Doom/Renderer/r_data.h"
 #include "Game.h"
+#include "MapInfo_Defaults.h"
 #include "MapInfo_Parse.h"
 #include "PsyQ/LIBSPU.h"
 
@@ -92,52 +92,6 @@ static DataT& getOrCreateStructWithIntKey(const int32_t key, ListT& list, int32_
     DataT& obj = list.emplace_back();
     obj.*keyField = key;
     return obj;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: defines a built-in music track
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void defineBuiltInMusicTrack(const int32_t trackNum, const int32_t sequenceNum) noexcept {
-    MusicTrack& musicTrack = gMusicTracks.emplace_back();
-    musicTrack.trackNum = trackNum;
-    musicTrack.sequenceNum = sequenceNum;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: defines a built-in episode
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void defineBuiltInEpisode(
-    const int32_t episodeNum,
-    const int32_t startMap,
-    const String32& name
-) noexcept {
-    Episode& episode = gEpisodes.emplace_back();
-    episode.episodeNum = episodeNum;
-    episode.startMap = startMap;
-    episode.name = name;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: defines a built-in map, defaulting fields that aren't relevant to standard retail maps.
-// Assumes the map doesn't already exist.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void defineBuiltInMap(
-    const int32_t mapNum,
-    const int32_t cluster,
-    const String32& name,
-    const int32_t musicTrack,
-    const SpuReverbMode reverbMode,
-    const int16_t reverbDepth
-) noexcept {
-    Map& map = gMaps.emplace_back();
-    map.mapNum = mapNum;
-    map.music = musicTrack;
-    map.name = name;
-    map.cluster = cluster;
-    map.skyPaletteOverride = -1;
-    map.reverbMode = reverbMode;
-    map.reverbDepthL = reverbDepth;
-    map.reverbDepthR = reverbDepth;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -351,12 +305,12 @@ static void readMapInfoFromIWAD() noexcept {
     };
 
     constexpr BlockReader BLOCK_READERS[] = {
-        { "ClearEpisodes", readClearEpisodes },
-        { "Cluster", readCluster },
-        { "Episode", readEpisode },
-        { "GameInfo", readGameInfo },
-        { "Map", readMap },
-        { "MusicTrack", readMusicTrack },
+        { "ClearEpisodes",  readClearEpisodes   },
+        { "Cluster",        readCluster         },
+        { "Episode",        readEpisode         },
+        { "GameInfo",       readGameInfo        },
+        { "Map",            readMap             },
+        { "MusicTrack",     readMusicTrack      },
     };
 
     // Read all supported block types, ignore unsupported ones
@@ -371,331 +325,12 @@ static void readMapInfoFromIWAD() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes MAPINFO to the defaults appropriate for the current game ('Doom' or 'Final Doom')
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void setMapInfoToDefaults() noexcept {
-    // Default music tracks, including track '0' (the invalid/null track).
-    // There are 30 of these in Final Doom (a superset of Doom's music) and they begin at sequence '90' for track '1'.
-    gMusicTracks.clear();
-    defineBuiltInMusicTrack(0, 0);
-
-    for (int32_t trackNum = 1; trackNum <= 30; ++trackNum) {
-        defineBuiltInMusicTrack(trackNum, 89 + trackNum);
-    }
-
-    // Default game info
-    gGameInfo = GameInfo();
-
-    if (Game::gGameType == GameType::FinalDoom) {
-        gGameInfo.numMaps = 30;
-        gGameInfo.numRegularMaps = 30;
-        gGameInfo.bFinalDoomGameRules = true;
-    }
-    else if (Game::gGameType == GameType::Doom) {
-        gGameInfo.numMaps = 59;
-        gGameInfo.numRegularMaps = 54;
-        gGameInfo.bFinalDoomGameRules = false;
-
-        // Doom one level demo: don't allow going past 'The Gantlet'
-        if (Game::gbIsDemoVersion) {
-            gGameInfo.numMaps = 33;
-            gGameInfo.numRegularMaps = 33;
-        }
-    }
-    else {
-        FatalErrors::raise("MapInfo::setMapInfoToDefaults: game info not defined for game type!");
-    }
-
-    // Default episodes
-    gEpisodes.clear();
-
-    if (Game::gGameType == GameType::FinalDoom) {
-        defineBuiltInEpisode(1, 1,  "Master Levels");
-        defineBuiltInEpisode(2, 14, "TNT");
-        defineBuiltInEpisode(3, 25, "Plutonia");
-    }
-    else if (Game::gGameType == GameType::Doom) {
-        if (!Game::gbIsDemoVersion) {
-            // Doom: full game
-            defineBuiltInEpisode(1, 1,  "Ultimate Doom");
-            defineBuiltInEpisode(2, 31, "Doom II");
-        } else {
-            // Doom: one level demo version
-            defineBuiltInEpisode(1, 33, "Level 33");
-        }
-    }
-    else {
-        FatalErrors::raise("MapInfo::setMapInfoToDefaults: episodes not defined for game type!");
-    }
-
-    // Default clusters
-    gClusters.clear();
-
-    if (Game::gGameType == GameType::FinalDoom) {
-        {
-            Cluster& clus = gClusters.emplace_back();
-            clus.clusterNum = 1;
-            clus.castLcdFile = "MAP60.LCD";
-            clus.pic = "BACK";
-            clus.picPal = TITLEPAL;
-            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom];
-            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
-            clus.textY = 22;
-            clus.bSkipFinale = false;
-            clus.bHideNextMapForFinale = false;
-            clus.bEnableCast = false;
-            clus.text[0] = "you have assaulted and";
-            clus.text[1] = "triumphed over the most";
-            clus.text[2] = "vicious realms that the";
-            clus.text[3] = "demented minds of our";
-            clus.text[4] = "designers could devise.";
-            clus.text[5] = "the havoc you left";
-            clus.text[6] = "behind you as you";
-            clus.text[7] = "smashed your way";
-            clus.text[8] = "through the master";
-            clus.text[9] = "levels is mute tribute";
-            clus.text[10] = "to your prowess.";
-            clus.text[11] = "you have earned the";
-            clus.text[12] = "title of";
-            clus.text[13] = "Master of Destruction.";
-        }
-        {
-            Cluster& clus = gClusters.emplace_back();
-            clus.clusterNum = 2;
-            clus.castLcdFile = "MAP60.LCD";
-            clus.pic = "BACK";
-            clus.picPal = TITLEPAL;
-            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom];
-            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
-            clus.textY = 29;
-            clus.bSkipFinale = false;
-            clus.bHideNextMapForFinale = false;
-            clus.bEnableCast = false;
-            clus.text[0] = "suddenly all is silent";
-            clus.text[1] = "from one horizon to the";
-            clus.text[2] = "other.";
-            clus.text[3] = "the agonizing echo of";
-            clus.text[4] = "hell fades away.";
-            clus.text[5] = "the nightmare sky";
-            clus.text[6] = "turns blue.";
-            clus.text[7] = "the heaps of monster";
-            clus.text[8] = "corpses begin to dissolve";
-            clus.text[9] = "along with the evil stench";
-            clus.text[10] = "that filled the air.";
-            clus.text[11] = "maybe you_have done it.";
-            clus.text[12] = "Have you really won...";
-        }
-        {
-            Cluster& clus = gClusters.emplace_back();
-            clus.clusterNum = 3;
-            clus.castLcdFile = "MAP60.LCD";
-            clus.pic = "DEMON";
-            clus.picPal = MAINPAL;
-            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom];
-            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
-            clus.textY = 15;
-            clus.bSkipFinale = false;
-            clus.bHideNextMapForFinale = false;
-            clus.bEnableCast = true;
-            clus.text[0] = "you_gloat_over_the";
-            clus.text[1] = "carcass_of_the_guardian.";
-            clus.text[2] = "with_its_death_you_have";
-            clus.text[3] = "wrested_the_accelerator";
-            clus.text[4] = "from_the_stinking_claws";
-            clus.text[5] = "of_hell._you_are_done.";
-            clus.text[6] = "hell_has_returned_to";
-            clus.text[7] = "pounding_dead_folks";
-            clus.text[8] = "instead_of_good_live_ones.";
-            clus.text[9] = "remember_to_tell_your";
-            clus.text[10] = "grandkids_to_put_a_rocket";
-            clus.text[11] = "launcher_in_your_coffin.";
-            clus.text[12] = "If_you_go_to_hell_when";
-            clus.text[13] = "you_die_you_will_need_it";
-            clus.text[14] = "for_some_cleaning_up.";
-        }
-    }
-    else if (Game::gGameType == GameType::Doom) {
-        {
-            Cluster& clus = gClusters.emplace_back();
-            clus.clusterNum = 1;
-            clus.castLcdFile = "MAP60.LCD";
-            clus.pic = "BACK";
-            clus.picPal = MAINPAL;
-            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom];
-            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
-            clus.textY = 45;
-            clus.bSkipFinale = false;
-            clus.bHideNextMapForFinale = false;
-            clus.bEnableCast = false;
-            clus.text[0] = "you have won!";
-            clus.text[1] = "your victory enabled";
-            clus.text[2] = "humankind to evacuate";
-            clus.text[3] = "earth and escape the";
-            clus.text[4] = "nightmare.";
-            clus.text[5] = "but then earth control";
-            clus.text[6] = "pinpoints the source";
-            clus.text[7] = "of the alien invasion.";
-            clus.text[8] = "you are their only hope.";
-            clus.text[9] = "you painfully get up";
-            clus.text[10] = "and return to the fray.";
-        }
-        {
-            Cluster& clus = gClusters.emplace_back();
-            clus.clusterNum = 2;
-            clus.castLcdFile = "MAP60.LCD";
-            clus.pic = "DEMON";
-            clus.picPal = MAINPAL;
-            clus.cdMusicA = (int16_t) gCDTrackNum[cdmusic_finale_doom2];
-            clus.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
-            clus.textY = 45;
-            clus.bSkipFinale = false;
-            clus.bHideNextMapForFinale = false;
-            clus.bEnableCast = true;
-            clus.text[0] = "you did it!";
-            clus.text[1] = "by turning the evil of";
-            clus.text[2] = "the horrors of hell in";
-            clus.text[3] = "upon itself you have";
-            clus.text[4] = "destroyed the power of";
-            clus.text[5] = "the demons.";
-            clus.text[6] = "their dreadful invasion";
-            clus.text[7] = "has been stopped cold!";
-            clus.text[8] = "now you can retire to";
-            clus.text[9] = "a lifetime of frivolity.";
-            clus.text[10] = "congratulations!";
-        }
-    } 
-    else {
-        FatalErrors::raise("MapInfo::setMapInfoToDefaults: clusters not defined for game type!");
-    }
-
-    // Doom one level demo: skip all finales
-    if (Game::gbIsDemoVersion) {
-        for (Cluster& clus : gClusters) {
-            clus.bSkipFinale = true;
-            clus.bHideNextMapForFinale = true;
-            clus.bEnableCast = false;
-        }
-    }
-
-    // Default maps
-    gMaps.clear();
-
-    if (Game::gGameType == GameType::FinalDoom) {
-        // Master Levels
-        defineBuiltInMap(1,  1, "Attack",                   23,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(2,  1, "Virgil",                   29,   SPU_REV_MODE_STUDIO_C,  0x26FF);
-        defineBuiltInMap(3,  1, "Canyon",                   24,   SPU_REV_MODE_SPACE,     0x1FFF);
-        defineBuiltInMap(4,  1, "Combine",                  30,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(5,  1, "Catwalk",                  21,   SPU_REV_MODE_SPACE,     0x1FFF);
-        defineBuiltInMap(6,  1, "Fistula",                  27,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(7,  1, "Geryon",                   25,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(8,  1, "Minos",                    28,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(9,  1, "Nessus",                   22,   SPU_REV_MODE_SPACE,     0x1FFF);
-        defineBuiltInMap(10, 1, "Paradox",                  26,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(11, 1, "Subspace",                 1,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(12, 1, "Subterra",                 2,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(13, 1, "Vesperas",                 3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        // TNT
-        defineBuiltInMap(14, 2, "System Control",           4,    SPU_REV_MODE_HALL,      0x17FF);
-        defineBuiltInMap(15, 2, "Human Barbeque",           5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
-        defineBuiltInMap(16, 2, "Wormhole",                 6,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(17, 2, "Crater",                   7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
-        defineBuiltInMap(18, 2, "Nukage Processing",        8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
-        defineBuiltInMap(19, 2, "Deepest Reaches",          9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(20, 2, "Processing Area",          10,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(21, 2, "Lunar Mining Project",     11,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(22, 2, "Quarry",                   12,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(23, 2, "Ballistyx",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(24, 2, "Heck",                     14,   SPU_REV_MODE_HALL,      0x1FFF);
-        // Plutonia
-        defineBuiltInMap(25, 3, "Congo",                    15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(26, 3, "Aztec",                    16,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(27, 3, "Ghost Town",               17,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(28, 3, "Baron's Lair",             18,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(29, 3, "The Death Domain",         22,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(30, 3, "Onslaught",                26,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-    } 
-    else if (Game::gGameType == GameType::Doom) {
-        // Doom 1
-        defineBuiltInMap(1 , 1, "Hangar",                   1,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(2 , 1, "Plant",                    2,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(3 , 1, "Toxin Refinery",           3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(4 , 1, "Command Control",          4,    SPU_REV_MODE_HALL,      0x17FF);
-        defineBuiltInMap(5 , 1, "Phobos Lab",               5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
-        defineBuiltInMap(6 , 1, "Central Processing",       6,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(7 , 1, "Computer Station",         7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
-        defineBuiltInMap(8 , 1, "Phobos Anomaly",           8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
-        defineBuiltInMap(9 , 1, "Deimos Anomaly",           11,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(10, 1, "Containment Area",         9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(11, 1, "Refinery",                 15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(12, 1, "Deimos Lab",               10,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(13, 1, "Command Center",           19,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(14, 1, "Halls of the Damned",      2,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(15, 1, "Spawning Vats",            1,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(16, 1, "Hell Gate",                12,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(17, 1, "Hell Keep",                16,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(18, 1, "Pandemonium",              17,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(19, 1, "House of Pain",            6,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(20, 1, "Unholy Cathedral",         18,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(21, 1, "Mt. Erebus",               13,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(22, 1, "Limbo",                    14,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(23, 1, "Tower Of Babel",           3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(24, 1, "Hell Beneath",             20,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(25, 1, "Perfect Hatred",           11,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(26, 1, "Sever The Wicked",         7,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(27, 1, "Unruly Evil",              4,    SPU_REV_MODE_HALL,      0x17FF);
-        defineBuiltInMap(28, 1, "Unto The Cruel",           5,    SPU_REV_MODE_STUDIO_A,  0x23FF);
-        defineBuiltInMap(29, 1, "Twilight Descends",        10,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(30, 1, "Threshold of Pain",        19,   SPU_REV_MODE_HALL,      0x1FFF);
-        // Doom 2
-        defineBuiltInMap(31, 2, "Entryway",                 1,    SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(32, 2, "Underhalls",               9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(33, 2, "The Gantlet",              14,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(34, 2, "The Focus",                12,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(35, 2, "The Waste Tunnels",        8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
-        defineBuiltInMap(36, 2, "The Crusher",              13,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(37, 2, "Dead Simple",              18,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(38, 2, "Tricks And Traps",         20,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(39, 2, "The Pit",                  15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(40, 2, "Refueling Base",           19,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(41, 2, "O of Destruction!",        11,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(42, 2, "The Factory",              16,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(43, 2, "The Inmost Dens",          12,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(44, 2, "Suburbs",                  17,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(45, 2, "Tenements",                6,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(46, 2, "The Courtyard",            5,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(47, 2, "The Citadel",              9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(48, 2, "Nirvana",                  2,    SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(49, 2, "The Catacombs",            3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(50, 2, "Barrels of Fun",           1,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
-        defineBuiltInMap(51, 2, "Bloodfalls",               7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
-        defineBuiltInMap(52, 2, "The Abandoned Mines",      8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
-        defineBuiltInMap(53, 2, "Monster Condo",            15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
-        defineBuiltInMap(54, 2, "Redemption Denied",        4,    SPU_REV_MODE_HALL,      0x17FF);
-        defineBuiltInMap(55, 1, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
-        defineBuiltInMap(56, 1, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(57, 1, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(58, 2, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
-        defineBuiltInMap(59, 2, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
-
-        // Doom one level demo: play the credits music for the demo map
-        if (Game::gbIsDemoVersion) {
-            gMaps[32].bPlayCdMusic = true;
-            gMaps[32].music = gCDTrackNum[cdmusic_credits_demo];
-        }
-    }
-    else {
-        FatalErrors::raise("MapInfo::setMapInfoToDefaults: maps not defined for game type!");
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the MAPINFO lump, if present from one of the main IWAD files.
 // Otherwise initializes MAPINFO to the appropriate settings for the current game (Doom or Final Doom).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
-    // Set MAPINFO to the defaults
-    setMapInfoToDefaults();
+    // Set MAPINFO to the default values then read overrides from one of the IWADs
+    setMapInfoToDefaults(gGameInfo, gEpisodes, gClusters, gMaps, gMusicTracks);
     readMapInfoFromIWAD();
 
     // Clear the cached search result for 'getMap'

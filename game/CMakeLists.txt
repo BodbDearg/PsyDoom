@@ -237,6 +237,8 @@ set(SOURCE_FILES
     "PsyDoom/MapHash.h"
     "PsyDoom/MapInfo.cpp"
     "PsyDoom/MapInfo.h"
+    "PsyDoom/MapInfo_Defaults.cpp"
+    "PsyDoom/MapInfo_Defaults.h"
     "PsyDoom/MapInfo_Parse.cpp"
     "PsyDoom/MapInfo_Parse.h"
     "PsyDoom/MapPatcher.cpp"
