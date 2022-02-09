@@ -58,30 +58,83 @@ static void addMusicTrack(std::vector<MusicTrack>& musicTracks, const int32_t tr
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes a 'GameInfo' struct for 'Doom'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
+    gameInfo.numMaps = 59;
+    gameInfo.numRegularMaps = 54;
+    gameInfo.bFinalDoomGameRules = false;
+    gameInfo.bDisableMultiplayer = false;
+    gameInfo.texPalette_BACK = MAINPAL;
+    gameInfo.texPalette_LOADING = UIPAL;
+    gameInfo.texPalette_PAUSE = MAINPAL;
+    gameInfo.texPalette_NETERR = UIPAL;
+    gameInfo.texPalette_DOOM = TITLEPAL;
+    gameInfo.texPalette_CONNECT = MAINPAL;
+    gameInfo.texPalette_OptionsBG = MAINPAL;
+    gameInfo.texLumpName_OptionsBG = "MARB01";
+
+    // Doom one level demo: don't allow going past 'The Gantlet'
+    if (Game::gbIsDemoVersion) {
+        gameInfo.numMaps = 33;
+        gameInfo.numRegularMaps = 33;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes a 'GameInfo' struct for 'Final Doom'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
+    gameInfo.numMaps = 30;
+    gameInfo.numRegularMaps = 30;
+    gameInfo.bFinalDoomGameRules = true;
+    gameInfo.bDisableMultiplayer = false;
+    gameInfo.texPalette_BACK = TITLEPAL;
+    gameInfo.texPalette_LOADING = UIPAL2;
+    gameInfo.texPalette_PAUSE = UIPAL2;
+    gameInfo.texPalette_NETERR = UIPAL2;
+    gameInfo.texPalette_DOOM = UIPAL;
+    gameInfo.texPalette_CONNECT = UIPAL2;
+    gameInfo.texPalette_OptionsBG = UIPAL2;
+    gameInfo.texLumpName_OptionsBG = "TILE";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the 'GameInfo' struct for the current game to the default set of values
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initGameInfo(GameInfo& gameInfo) noexcept {
     gameInfo = GameInfo();
 
-    if (Game::gGameType == GameType::FinalDoom) {
-        gameInfo.numMaps = 30;
-        gameInfo.numRegularMaps = 30;
-        gameInfo.bFinalDoomGameRules = true;
-    }
-    else if (Game::gGameType == GameType::Doom) {
-        gameInfo.numMaps = 59;
-        gameInfo.numRegularMaps = 54;
-        gameInfo.bFinalDoomGameRules = false;
+    switch (Game::gGameType) {
+        case GameType::Doom:            initGameInfo_Doom(gameInfo);            break;
+        case GameType::FinalDoom:       initGameInfo_FinalDoom(gameInfo);       break;
 
-        // Doom one level demo: don't allow going past 'The Gantlet'
-        if (Game::gbIsDemoVersion) {
-            gameInfo.numMaps = 33;
-            gameInfo.numRegularMaps = 33;
-        }
+        default:
+            FatalErrors::raise("MapInfo::initGameInfo(): unhandled game type!");
     }
-    else {
-        FatalErrors::raise("MapInfo::initGameInfo(): unhandled game type!");
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds all the default episodes for 'Doom' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addEpisodes_Doom(std::vector<Episode>& episodes) noexcept {
+    if (!Game::gbIsDemoVersion) {
+        // Doom: full game
+        addEpisode(episodes, 1, 1,  "Ultimate Doom");
+        addEpisode(episodes, 2, 31, "Doom II");
+    } else {
+        // Doom: one level demo version
+        addEpisode(episodes, 1, 33, "Level 33");
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds all the default episodes for 'Final Doom' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addEpisodes_FinalDoom(std::vector<Episode>& episodes) noexcept {
+    addEpisode(episodes, 1, 1,  "Master Levels");
+    addEpisode(episodes, 2, 14, "TNT");
+    addEpisode(episodes, 3, 25, "Plutonia");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,23 +143,12 @@ static void initGameInfo(GameInfo& gameInfo) noexcept {
 static void initEpisodes(std::vector<Episode>& episodes) noexcept {
     episodes.clear();
 
-    if (Game::gGameType == GameType::FinalDoom) {
-        addEpisode(episodes, 1, 1,  "Master Levels");
-        addEpisode(episodes, 2, 14, "TNT");
-        addEpisode(episodes, 3, 25, "Plutonia");
-    }
-    else if (Game::gGameType == GameType::Doom) {
-        if (!Game::gbIsDemoVersion) {
-            // Doom: full game
-            addEpisode(episodes, 1, 1,  "Ultimate Doom");
-            addEpisode(episodes, 2, 31, "Doom II");
-        } else {
-            // Doom: one level demo version
-            addEpisode(episodes, 1, 33, "Level 33");
-        }
-    }
-    else {
-        FatalErrors::raise("MapInfo::initEpisodes(): unhandled game type!");
+    switch (Game::gGameType) {
+        case GameType::Doom:            addEpisodes_Doom(episodes);             break;
+        case GameType::FinalDoom:       addEpisodes_FinalDoom(episodes);        break;
+
+        default:
+            FatalErrors::raise("MapInfo::initEpisodes(): unhandled game type!");
     }
 }
 
@@ -270,8 +312,8 @@ static void initClusters(std::vector<Cluster>& clusters) noexcept {
     clusters.clear();
 
     switch (Game::gGameType) {
-        case GameType::Doom:        addClusters_Doom(clusters);         break;
-        case GameType::FinalDoom:   addClusters_FinalDoom(clusters);    break;
+        case GameType::Doom:            addClusters_Doom(clusters);             break;
+        case GameType::FinalDoom:       addClusters_FinalDoom(clusters);        break;
 
         default:
             FatalErrors::raise("MapInfo::initClusters(): unhandled game type!");
@@ -400,8 +442,8 @@ static void initMaps(std::vector<Map>& maps) noexcept {
     maps.clear();
 
     switch (Game::gGameType) {
-        case GameType::Doom:        addMaps_Doom(maps);         break;
-        case GameType::FinalDoom:   addMaps_FinalDoom(maps);    break;
+        case GameType::Doom:            addMaps_Doom(maps);             break;
+        case GameType::FinalDoom:       addMaps_FinalDoom(maps);        break;
 
         default:
             FatalErrors::raise("MapInfo::initMaps(): unhandled game type!");

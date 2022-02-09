@@ -46,10 +46,12 @@ static void CdMapTbl_Init_PsxDoomForever() noexcept {
 // Initialize the cd map table and figure out where each file is on disc and file sizes
 //------------------------------------------------------------------------------------------------------------------------------------------
 void CdMapTbl_Init() noexcept {
-    // Build up the list of filenames on the game disc.
-    // Note that we completely ignore the folder structure and flatten the disc.
+    // Reserve room for all the entries
     gDiscFiles.clear();
     gDiscFiles.reserve(512);
+
+    // Build up the list of filenames on the game disc.
+    // Note that we completely ignore the folder structure and flatten the disc.
     const IsoFileSys& fileSys = PsxVm::gIsoFileSys;
 
     for (const IsoFileSysEntry& fsEntry : fileSys.entries) {

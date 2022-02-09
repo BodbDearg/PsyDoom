@@ -10,6 +10,7 @@
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/w_wad.h"
+#include "Doom/Renderer/r_data.h"
 #include "Game.h"
 #include "MapInfo_Defaults.h"
 #include "MapInfo_Parse.h"
@@ -61,6 +62,14 @@ GameInfo::GameInfo() noexcept
     , numRegularMaps(0)
     , bFinalDoomGameRules(false)
     , bDisableMultiplayer(false)
+    , texPalette_BACK(MAINPAL)
+    , texPalette_LOADING(UIPAL)
+    , texPalette_PAUSE(MAINPAL)
+    , texPalette_NETERR(UIPAL)
+    , texPalette_DOOM(TITLEPAL)
+    , texPalette_CONNECT(MAINPAL)
+    , texPalette_OptionsBG(MAINPAL)
+    , texLumpName_OptionsBG("MARB01")
 {
 }
 
@@ -125,6 +134,14 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.numRegularMaps = block.getSingleIntValue("NumRegularMaps", gameInfo.numRegularMaps);
     gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
     gameInfo.bDisableMultiplayer = (block.getSingleIntValue("DisableMultiplayer", gameInfo.bDisableMultiplayer) > 0);
+    gameInfo.texPalette_BACK = (uint8_t) block.getSingleIntValue("TexPalette_BACK", gameInfo.texPalette_BACK);
+    gameInfo.texPalette_LOADING = (uint8_t) block.getSingleIntValue("TexPalette_LOADING", gameInfo.texPalette_LOADING);
+    gameInfo.texPalette_PAUSE = (uint8_t) block.getSingleIntValue("TexPalette_PAUSE", gameInfo.texPalette_PAUSE);
+    gameInfo.texPalette_NETERR = (uint8_t) block.getSingleIntValue("TexPalette_NETERR", gameInfo.texPalette_NETERR);
+    gameInfo.texPalette_DOOM = (uint8_t) block.getSingleIntValue("TexPalette_DOOM", gameInfo.texPalette_DOOM);
+    gameInfo.texPalette_CONNECT = (uint8_t) block.getSingleIntValue("TexPalette_CONNECT", gameInfo.texPalette_CONNECT);
+    gameInfo.texPalette_OptionsBG = (uint8_t) block.getSingleIntValue("TexPalette_OptionsBG", gameInfo.texPalette_OptionsBG);
+    gameInfo.texLumpName_OptionsBG = block.getSingleSmallStringValue("TexLumpName_OptionsBG", gameInfo.texLumpName_OptionsBG);
 
     if ((gameInfo.numMaps < 1) || (gameInfo.numMaps > 255)) {
         error(block, "GameInfo: 'NumMaps' must be between 1 and 255!");
@@ -132,6 +149,34 @@ static void readGameInfo(const Block& block) noexcept {
 
     if ((gameInfo.numRegularMaps < 1) || (gameInfo.numRegularMaps > 255)) {
         error(block, "GameInfo: 'NumRegularMaps' must be between 1 and 255!");
+    }
+
+    if (gameInfo.texPalette_BACK >= MAXPALETTES) {
+        error(block, "GameInfo: 'TexPalette_BACK' must be between 0 and 31!");
+    }
+
+    if (gameInfo.texPalette_LOADING >= MAXPALETTES) {
+        error(block, "GameInfo: 'TexPalette_LOADING' must be between 0 and 31!");
+    }
+
+    if (gameInfo.texPalette_PAUSE >= MAXPALETTES) {
+        error(block, "GameInfo: 'TexPalette_PAUSE' must be between 0 and 31!");
+    }
+
+    if (gameInfo.texPalette_NETERR >= MAXPALETTES) {
+        error(block, "GameInfo: 'TexPalette_NETERR' must be between 0 and 31!");
+    }
+
+    if (gameInfo.texPalette_DOOM >= MAXPALETTES) {
+        error(block, "GameInfo: 'TexPalette_DOOM' must be between 0 and 31!");
+    }
+
+    if (gameInfo.texPalette_CONNECT >= MAXPALETTES) {
+        error(block, "GameInfo: 'TexPalette_CONNECT' must be between 0 and 31!");
+    }
+
+    if (gameInfo.texPalette_OptionsBG >= MAXPALETTES) {
+        error(block, "GameInfo: 'TexPalette_OptionsBG' must be between 0 and 31!");
     }
 }
 

@@ -192,7 +192,7 @@ void DRAW_ControlsScreen() noexcept {
     I_IncDrawnFrameCount();
 
     {
-        const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();
+        const uint16_t bgPaletteClutId = gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL2 : MAINPAL];
 
         for (int32_t y = 0; y < 4; ++y) {
             for (int32_t x = 0; x < 4; ++x) {

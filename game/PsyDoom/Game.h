@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Macros.h"
+#include "SmallString.h"
 
 #include <cstdint>
 
@@ -73,13 +74,13 @@ int32_t getMapEpisode(const int32_t mapNum) noexcept;
 uint16_t getTexPalette_BACK() noexcept;
 uint16_t getTexPalette_LOADING() noexcept;
 uint16_t getTexPalette_PAUSE() noexcept;
-uint16_t getTexPalette_OptionsBg() noexcept;
-const char* getTexLumpName_OptionsBg() noexcept;
 uint16_t getTexPalette_NETERR() noexcept;
 uint16_t getTexPalette_DOOM() noexcept;
-uint16_t getTexPalette_BUTTONS() noexcept;
 uint16_t getTexPalette_CONNECT() noexcept;
+uint16_t getTexPalette_BUTTONS() noexcept;
+uint16_t getTexPalette_OptionsBg() noexcept;
 uint16_t getTexPalette_DebugFontSmall() noexcept;
+String8 getTexLumpName_OptionsBg() noexcept;
 void startLevelTimer() noexcept;
 void stopLevelTimer() noexcept;
 int64_t getLevelFinishTimeCentisecs() noexcept;

@@ -28,10 +28,18 @@ struct MusicTrack {
 // General game settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct GameInfo {
-    int32_t     numMaps;                // The total number of maps in the game, including secret ones
-    int32_t     numRegularMaps;         // The total number of regular non-secret maps in the game
-    bool        bFinalDoomGameRules;    // If 'true' then the game should use all Final Doom style game rules by default
-    bool        bDisableMultiplayer;    // If 'true' then the game does not support multiplayer. Multiplayer can be disabled for mods that use tricks which would break in MP game modes.
+    int32_t     numMaps;                    // The total number of maps in the game, including secret ones
+    int32_t     numRegularMaps;             // The total number of regular non-secret maps in the game
+    bool        bFinalDoomGameRules;        // If 'true' then the game should use all Final Doom style game rules by default
+    bool        bDisableMultiplayer;        // If 'true' then the game does not support multiplayer. Multiplayer can be disabled for mods that use tricks which would break in MP game modes.
+    uint8_t     texPalette_BACK;            // Palette index to use for the 'BACK' image lump
+    uint8_t     texPalette_LOADING;         // Palette index to use for the 'LOADING' image lump
+    uint8_t     texPalette_PAUSE;           // Palette index to use for the 'PAUSE' image lump
+    uint8_t     texPalette_NETERR;          // Palette index to use for the 'NETERR' image lump
+    uint8_t     texPalette_DOOM;            // Palette index to use for the 'DOOM' image lump
+    uint8_t     texPalette_CONNECT;         // Palette index to use for the 'CONNECT' image lump
+    uint8_t     texPalette_OptionsBG;       // Palette index to use for the options menu tiled background
+    String8     texLumpName_OptionsBG;      // Which texture lump to use for the options menu tile background
 
     GameInfo() noexcept;
 };

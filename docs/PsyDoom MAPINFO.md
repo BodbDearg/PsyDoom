@@ -158,6 +158,13 @@ GameInfo {
     NumRegularMaps = 54
     FinalDoomGameRules = false
     DisableMultiplayer = false
+    TexPalette_BACK = 0
+    TexPalette_LOADING = 16
+    TexPalette_PAUSE = 0
+    TexPalette_NETERR = 0
+    TexPalette_DOOM = 17
+    TexPalette_OptionsBG = 0
+    TexLumpName_OptionsBG = "MARB01"
 }
 ```
 Internal Fields:
@@ -165,6 +172,14 @@ Internal Fields:
 - `NumRegularMaps`: the number of non-secret maps in the game. Any maps after the last non-secret map are assumed to be secret maps. Affects when the game detects the last (normal) level of the game has been completed and which levels can be used as the starting point for a multiplayer game. For Doom and Final Doom this value was `54` and `30` respectively. Must be between 1 and 255.
 - `FinalDoomGameRules`: whether Final Doom style game rules should be used. Final Doom forward movement is slightly slower, and only 16 Lost Souls can spawn from Pain Elementals.
 - `DisableMultiplayer`: whether multiplayer game modes should be disallowed. Disabling multiplayer can be useful for mods that do tricks like Doom 64's faux-3D bridges, or 'silent teleporters' which would break in a multiplayer game.
+- `TexPalette_BACK`: palette index to use for the `BACK` image lump. Must be between 0 and 31.
+- `TexPalette_LOADING`: palette index to use for the `LOADING` image lump. Must be between 0 and 31.
+- `TexPalette_PAUSE`: palette index to use for the `PAUSE` image lump. Must be between 0 and 31.
+- `TexPalette_NETERR`: palette index to use for the `NETERR` image lump. Must be between 0 and 31.
+- `TexPalette_DOOM`: palette index to use for the `DOOM` image lump. Must be between 0 and 31.
+- `TexPalette_CONNECT`: palette index to use for the `CONNECT` image lump. Must be between 0 and 31.
+- `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
+- `TexLumpName_OptionsBG`: which texture lump to use for the options menu tiled background.
 ## `MusicTrack` definition
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:
 ```

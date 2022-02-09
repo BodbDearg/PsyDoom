@@ -306,46 +306,49 @@ int32_t getMapEpisode(const int32_t mapNum) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the palette or lump name to use for various textures
+// Get the palette (PSX Clut ID) or lump name to use for various textures
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t getTexPalette_BACK() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? TITLEPAL : MAINPAL];
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_BACK];
 }
 
 uint16_t getTexPalette_LOADING() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL2 : UIPAL];
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_LOADING];
 }
 
 uint16_t getTexPalette_PAUSE() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL2 : MAINPAL];
-}
-
-uint16_t getTexPalette_OptionsBg() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL2 : MAINPAL];
-}
-
-const char* getTexLumpName_OptionsBg() noexcept {
-    return (gGameType == GameType::FinalDoom) ? "TILE" : "MARB01";
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_PAUSE];
 }
 
 uint16_t getTexPalette_NETERR() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL2 : UIPAL];
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_NETERR];
 }
 
 uint16_t getTexPalette_DOOM() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL : TITLEPAL];
-}
-
-uint16_t getTexPalette_BUTTONS() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL2 : MAINPAL];
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DOOM];
 }
 
 uint16_t getTexPalette_CONNECT() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL2 : MAINPAL];
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_CONNECT];
+}
+
+uint16_t getTexPalette_BUTTONS() noexcept {
+    // Note: don't bother making this configurable via MAPINFO since it's not used anymore.
+    // Leaving it here for historical reference only!
+    return gPaletteClutIds[(gGameType == GameType::Doom) ? MAINPAL : UIPAL2];
+}
+
+uint16_t getTexPalette_OptionsBg() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_OptionsBG];
 }
 
 uint16_t getTexPalette_DebugFontSmall() noexcept {
-    return gPaletteClutIds[(gGameType == GameType::FinalDoom) ? UIPAL : MAINPAL];
+    // Note: don't bother making this configurable via MAPINFO since it's not used in any user facing display
+    return gPaletteClutIds[(gGameType == GameType::Doom) ? MAINPAL : UIPAL];
+}
+
+String8 getTexLumpName_OptionsBg() noexcept {
+    return MapInfo::getGameInfo().texLumpName_OptionsBG;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
