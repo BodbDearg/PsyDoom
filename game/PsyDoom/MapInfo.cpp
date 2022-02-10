@@ -60,8 +60,10 @@ Cluster::Cluster() noexcept
 GameInfo::GameInfo() noexcept
     : numMaps(0)
     , numRegularMaps(0)
-    , bFinalDoomGameRules(false)
     , bDisableMultiplayer(false)
+    , bFinalDoomGameRules(false)
+    , bFinalDoomTitleScreen(false)
+    , bFinalDoomCredits(false)
     , texPalette_BACK(MAINPAL)
     , texPalette_LOADING(UIPAL)
     , texPalette_PAUSE(MAINPAL)
@@ -132,8 +134,10 @@ static void readGameInfo(const Block& block) noexcept {
     GameInfo& gameInfo = gGameInfo;
     gameInfo.numMaps = block.getSingleIntValue("NumMaps", gameInfo.numMaps);
     gameInfo.numRegularMaps = block.getSingleIntValue("NumRegularMaps", gameInfo.numRegularMaps);
-    gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
     gameInfo.bDisableMultiplayer = (block.getSingleIntValue("DisableMultiplayer", gameInfo.bDisableMultiplayer) > 0);
+    gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
+    gameInfo.bFinalDoomTitleScreen = (block.getSingleIntValue("FinalDoomTitleScreen", gameInfo.bFinalDoomTitleScreen) > 0);
+    gameInfo.bFinalDoomCredits = (block.getSingleIntValue("FinalDoomCredits", gameInfo.bFinalDoomCredits) > 0);
     gameInfo.texPalette_BACK = (uint8_t) block.getSingleIntValue("TexPalette_BACK", gameInfo.texPalette_BACK);
     gameInfo.texPalette_LOADING = (uint8_t) block.getSingleIntValue("TexPalette_LOADING", gameInfo.texPalette_LOADING);
     gameInfo.texPalette_PAUSE = (uint8_t) block.getSingleIntValue("TexPalette_PAUSE", gameInfo.texPalette_PAUSE);

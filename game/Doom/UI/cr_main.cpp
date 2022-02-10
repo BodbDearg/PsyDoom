@@ -5,8 +5,8 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
-#include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/Utils.h"
 #include "ti_main.h"
 #include "Wess/psxcd.h"
@@ -35,7 +35,7 @@ void START_Credits() noexcept {
     I_LoadAndCacheTexLump(gTex_WMSCRED1, "WMSCRED1", 0);
     I_LoadAndCacheTexLump(gTex_WMSCRED2, "WMSCRED2", 0);
 
-    if (Game::isFinalDoom()) {
+    if (MapInfo::getGameInfo().bFinalDoomCredits) {
         I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
         I_LoadAndCacheTexLump(gTex_LEVCRED2, "LEVCRED2", 0);
     }
@@ -104,7 +104,7 @@ gameaction_t TIC_Credits() noexcept {
     gCreditsScrollYPos -= 1;
 
     // Move onto the next page or exit if we have scrolled far enough
-    if (Game::isFinalDoom()) {
+    if (MapInfo::getGameInfo().bFinalDoomCredits) {
         // Final Doom: 3 credit screen pages
         if (gCreditsPage < 2) {
             if (gCreditsScrollYPos < -256) {
@@ -146,7 +146,7 @@ void DRAW_Credits() noexcept {
     #endif
 
     // Draw the background and scrolling credits text for whatever credits page we are on
-    if (Game::isFinalDoom()) {
+    if (MapInfo::getGameInfo().bFinalDoomCredits) {
         // Final Doom: there are 3 pages: level, ID and Williams credits
         if (gCreditsPage == 0) {
             I_CacheAndDrawSprite(gTex_TITLE, 0, 0, gPaletteClutIds[TITLEPAL]);

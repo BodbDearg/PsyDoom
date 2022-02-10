@@ -17,6 +17,7 @@
 #include "o_main.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -82,7 +83,7 @@ void START_Title() noexcept {
 
     // Doom: initially the DOOM logo is offscreen.
     // Final Doom: it doesn't move and covers the fire.
-    if (Game::isFinalDoom()) {
+    if (MapInfo::getGameInfo().bFinalDoomTitleScreen) {
         gTitleScreenSpriteY = 0;
     } else {
         gTitleScreenSpriteY = SCREEN_H + 10;
@@ -143,7 +144,7 @@ gameaction_t TIC_Title() noexcept {
 
     // For Final Doom the scroll value is actually an RGB color multiply for the title image.
     // The logic to update it is different in that case.
-    if (Game::isFinalDoom()) {
+    if (MapInfo::getGameInfo().bFinalDoomTitleScreen) {
         // PsyDoom: don't run this too fast
         #if PSYDOOM_MODS
             if (gPlayersElapsedVBlanks[gCurPlayerIndex] <= 0)
@@ -246,14 +247,16 @@ gameaction_t TIC_Title() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_Title() noexcept {
     I_IncDrawnFrameCount();
-
+    
     #if PSYDOOM_MODS
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
     // Draw the title logo.
     // Final Doom: this is drawn on top of everything (at the end) instead.
-    if (!Game::isFinalDoom()) {
+    const bool bFinalDoomTitleScreen = MapInfo::getGameInfo().bFinalDoomTitleScreen;
+
+    if (!bFinalDoomTitleScreen) {
         const int16_t titleY = (int16_t) gTitleScreenSpriteY;
 
         // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -306,7 +309,7 @@ void DRAW_Title() noexcept {
         const auto texV = skyTex.texPageCoordY;
 
         int16_t x = 0;
-        const int16_t y = (Game::isFinalDoom()) ? 112 : 116;
+        const int16_t y = (bFinalDoomTitleScreen) ? 112 : 116;
 
         for (int32_t i = 0; i < 4; ++i) {
             I_DrawSprite(skyTex.texPageId, gPaletteClutId_CurMapSky, x, y, texU, texV, SKY_W, SKY_H);
@@ -315,7 +318,7 @@ void DRAW_Title() noexcept {
     }
 
     // Draw the title logo for Final Doom (on top of everything):
-    if (Game::isFinalDoom()) {
+    if (bFinalDoomTitleScreen) {
         const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
 
         // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)

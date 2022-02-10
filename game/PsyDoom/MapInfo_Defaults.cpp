@@ -63,8 +63,10 @@ static void addMusicTrack(std::vector<MusicTrack>& musicTracks, const int32_t tr
 static void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
     gameInfo.numMaps = 59;
     gameInfo.numRegularMaps = 54;
-    gameInfo.bFinalDoomGameRules = false;
     gameInfo.bDisableMultiplayer = false;
+    gameInfo.bFinalDoomGameRules = false;
+    gameInfo.bFinalDoomTitleScreen = false;
+    gameInfo.bFinalDoomCredits = false;
     gameInfo.texPalette_BACK = MAINPAL;
     gameInfo.texPalette_LOADING = UIPAL;
     gameInfo.texPalette_PAUSE = MAINPAL;
@@ -87,8 +89,10 @@ static void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
 static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
     gameInfo.numMaps = 30;
     gameInfo.numRegularMaps = 30;
-    gameInfo.bFinalDoomGameRules = true;
     gameInfo.bDisableMultiplayer = false;
+    gameInfo.bFinalDoomGameRules = true;
+    gameInfo.bFinalDoomTitleScreen = true;
+    gameInfo.bFinalDoomCredits = true;
     gameInfo.texPalette_BACK = TITLEPAL;
     gameInfo.texPalette_LOADING = UIPAL2;
     gameInfo.texPalette_PAUSE = UIPAL2;

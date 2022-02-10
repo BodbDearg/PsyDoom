@@ -30,8 +30,10 @@ struct MusicTrack {
 struct GameInfo {
     int32_t     numMaps;                    // The total number of maps in the game, including secret ones
     int32_t     numRegularMaps;             // The total number of regular non-secret maps in the game
-    bool        bFinalDoomGameRules;        // If 'true' then the game should use all Final Doom style game rules by default
     bool        bDisableMultiplayer;        // If 'true' then the game does not support multiplayer. Multiplayer can be disabled for mods that use tricks which would break in MP game modes.
+    bool        bFinalDoomGameRules;        // If 'true' then the game should use all Final Doom style game rules by default
+    bool        bFinalDoomTitleScreen;      // If 'true' then do a 'Final Doom' style title screen instead of the 'Doom' style one
+    bool        bFinalDoomCredits;          // If 'true' then do a 'Final Doom' style credits screen (3 pages) instead of the 'Doom' style one (2 pages)
     uint8_t     texPalette_BACK;            // Palette index to use for the 'BACK' image lump
     uint8_t     texPalette_LOADING;         // Palette index to use for the 'LOADING' image lump
     uint8_t     texPalette_PAUSE;           // Palette index to use for the 'PAUSE' image lump
