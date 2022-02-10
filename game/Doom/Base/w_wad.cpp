@@ -8,6 +8,7 @@
 
 #include "Doom/cdmaptbl.h"
 #include "i_main.h"
+#include "PsyDoom/Game.h"
 #include "PsyDoom/ModMgr.h"
 #include "PsyDoom/WadList.h"
 
@@ -30,9 +31,17 @@ static WadFile gMapWad;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void W_Init() noexcept {
     // Open all main WAD files and finalize the list.
-    // Add user WADs first so they take precedence and can override lumps in the original WAD.
+    // Add user main WADs first so they take precedence and can override lumps in the original main WAD.
     ModMgr::addUserWads(gMainWadList);
-    gMainWadList.add(CdFile::PSXDOOM_WAD);
+
+    for (const String16& wadName : Game::gConstants.mainWads) {
+        if (wadName.length() > 0) {
+            gMainWadList.add(wadName);
+        } else {
+            break;  // The list is terminated by an empty name!
+        }
+    }
+    
     gMainWadList.finalize();
 }
 

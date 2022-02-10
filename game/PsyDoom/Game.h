@@ -1,25 +1,32 @@
 #pragma once
 
+#include "GameConstants.h"
 #include "Macros.h"
 #include "SmallString.h"
 
 #include <cstdint>
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // What type of game disc is loaded?
+//------------------------------------------------------------------------------------------------------------------------------------------
 enum class GameType : int32_t {
     Doom,
     FinalDoom
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // What variant of the game is being run?
+//------------------------------------------------------------------------------------------------------------------------------------------
 enum class GameVariant : int32_t {
     NTSC_U,     // North America/US version (NTSC)
     NTSC_J,     // Japanese version (NTSC)
     PAL         // European version (PAL)
 };
 
-// Settings for the game.
-// These must be synchronized in multiplayer games, and set appropriately for correct demo playback.
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Settings for the game, which in most cases are configurable by the user.
+// These must be synchronized in multiplayer games and set appropriately for correct demo playback.
+//------------------------------------------------------------------------------------------------------------------------------------------
 struct GameSettings {
     uint8_t     bUsePalTimings;                 // Use 50 Hz vblanks and other various timing adjustments for the PAL version of the game?
     uint8_t     bUseDemoTimings;                // Force player logic to run at a consistent, but slower rate used by demos? (15 Hz for NTSC)
@@ -57,6 +64,7 @@ BEGIN_NAMESPACE(Game)
 extern GameType         gGameType;
 extern GameVariant      gGameVariant;
 extern GameSettings     gSettings;
+extern GameConstants    gConstants;
 extern bool             gbIsDemoVersion;
 extern bool             gbIsPsxDoomForever;
 

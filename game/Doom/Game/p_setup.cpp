@@ -1265,7 +1265,7 @@ static void P_Init() noexcept {
         }
 
         // Final Doom: if the last digit in 'SKYXX' matches one of these digits, then use whatever palette is for that sky:
-        if (Game::isFinalDoom()) {
+        if (Game::gConstants.bUseFinalDoomSkyPalettes) {
             switch (skyTexName.chars[4]) {
                 case '2':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL1];    break;
                 case '3':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL2];    break;

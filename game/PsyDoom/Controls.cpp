@@ -380,19 +380,19 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
         }
         else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickHat_Up)) {
             inputSrc.device = InputSrc::JOYSTICK_HAT;
-            inputSrc.input = Input::JoyHat(Input::JoyHatDir::Up, (uint16_t)(std::stoi(regexMatches[1]) - 1));
+            inputSrc.input = Input::JoyHat(Input::JoyHatDir::Up, (uint8_t)(std::stoi(regexMatches[1]) - 1));
         }
         else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickHat_Down)) {
             inputSrc.device = InputSrc::JOYSTICK_HAT;
-            inputSrc.input = Input::JoyHat(Input::JoyHatDir::Down, (uint16_t)(std::stoi(regexMatches[1]) - 1));
+            inputSrc.input = Input::JoyHat(Input::JoyHatDir::Down, (uint8_t)(std::stoi(regexMatches[1]) - 1));
         }
         else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickHat_Left)) {
             inputSrc.device = InputSrc::JOYSTICK_HAT;
-            inputSrc.input = Input::JoyHat(Input::JoyHatDir::Left, (uint16_t)(std::stoi(regexMatches[1]) - 1));
+            inputSrc.input = Input::JoyHat(Input::JoyHatDir::Left, (uint8_t)(std::stoi(regexMatches[1]) - 1));
         }
         else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickHat_Right)) {
             inputSrc.device = InputSrc::JOYSTICK_HAT;
-            inputSrc.input = Input::JoyHat(Input::JoyHatDir::Right, (uint16_t)(std::stoi(regexMatches[1]) - 1));
+            inputSrc.input = Input::JoyHat(Input::JoyHatDir::Right, (uint8_t)(std::stoi(regexMatches[1]) - 1));
         }
     }
     else if (nameUpper.find("INV GAMEPAD ") == 0) {

@@ -69,12 +69,7 @@ static std::string getPrefsFilePath() noexcept {
 // Get which password setting to use for the current game
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Password& getCurGameLastPassword() noexcept {
-    if (Game::gGameType == GameType::Doom) {
-        return gLastPassword_Doom;
-    } else {
-        ASSERT_LOG(Game::gGameType == GameType::FinalDoom, "Unexpected/unhandled game type!");
-        return gLastPassword_FDoom;
-    }
+    return (Game::gConstants.bUseFinalDoomPasswordStorage) ? gLastPassword_FDoom : gLastPassword_Doom;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

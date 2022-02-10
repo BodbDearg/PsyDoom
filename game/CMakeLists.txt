@@ -215,6 +215,8 @@ set(SOURCE_FILES
     "PsyDoom/FixedIndexSet.h"
     "PsyDoom/Game.cpp"
     "PsyDoom/Game.h"
+    "PsyDoom/GameConstants.cpp"
+    "PsyDoom/GameConstants.h"
     "PsyDoom/GameFileReader.cpp"
     "PsyDoom/GameFileReader.h"
     "PsyDoom/GamepadInput.cpp"

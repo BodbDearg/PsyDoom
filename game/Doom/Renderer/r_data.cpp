@@ -386,9 +386,9 @@ static void R_InitPalette() noexcept {
     // PsyDoom: allow up to 32 palettes to be defined, since there is leftover room in VRAM for this.
     // Doom defines 20, Final Doom 26 - so the user can define an additional 6.
     #if PSYDOOM_MODS
-        const uint32_t minAllowedPalettes = Game::isFinalDoom() ? NUMPALETTES_FINAL_DOOM : NUMPALETTES_DOOM;
+        const uint32_t minNumPalettes = Game::gConstants.numPalettesRequired;
 
-        if ((numPalettes < minAllowedPalettes) || (numPalettes > MAXPALETTES)) {
+        if ((numPalettes < minNumPalettes) || (numPalettes > MAXPALETTES)) {
             I_Error("R_InitPalettes: palette foulup\n");
         }
     #else

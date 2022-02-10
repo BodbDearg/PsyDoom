@@ -125,10 +125,6 @@ texture_t gTex_CONNECT;
     // Should be incremented whenever the data format being transmitted changes, or when updates might cause differences in game behavior.
     static constexpr int32_t NET_PROTOCOL_VERSION = 18;
 
-    // Game ids for networking
-    static constexpr int32_t NET_GAMEID_DOOM        = 0xAA11AA22;
-    static constexpr int32_t NET_GAMEID_FINAL_DOOM  = 0xAB11AB22;
-
     // Previous game error checking value when we last sent to the other player.
     // Have to store this because we always send 1 packet ahead for the next frame.
     static uint32_t gNetPrevErrorCheck;
@@ -686,11 +682,9 @@ void I_NetSetup() noexcept {
     gbNetIsGameBeingRecorded = ProgArgs::gbRecordDemos;
 
     // Fill in the connect output packet; note that player 1 decides the game params, so theese are zeroed for player 2:
-    const uint32_t netGameId = (Game::isFinalDoom()) ? NET_GAMEID_FINAL_DOOM : NET_GAMEID_DOOM;
-
     NetPacket_Connect outPkt = {};
     outPkt.protocolVersion = NET_PROTOCOL_VERSION;
-    outPkt.gameId = netGameId;
+    outPkt.gameId = Game::gConstants.netGameId;
     outPkt.bIsDemoRecording = ProgArgs::gbRecordDemos;
 
     if (gCurPlayerIndex == 0) {
@@ -724,7 +718,7 @@ void I_NetSetup() noexcept {
     inPkt.endianCorrect();
 
     // Verify the network protocol version and game ids are OK - abort if not
-    if ((inPkt.protocolVersion != NET_PROTOCOL_VERSION) || (inPkt.gameId != netGameId)) {
+    if ((inPkt.protocolVersion != NET_PROTOCOL_VERSION) || (inPkt.gameId != Game::gConstants.netGameId)) {
         gbDidAbortGame = true;
         RunNetErrorMenu_GameTypeOrVersionMismatch();
         return;

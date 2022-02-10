@@ -449,7 +449,7 @@ static void handleSdlEvents() noexcept {
 
             case SDL_JOYHATMOTION: {
                 if (sdlEvent.jhat.which == gJoystickId) {
-                    const uint16_t hatNum = sdlEvent.jhat.hat;
+                    const uint8_t hatNum = sdlEvent.jhat.hat;
                     updateJoystickHat(JoyHat(JoyHatDir::Up, hatNum), (sdlEvent.jhat.value & SDL_HAT_UP));
                     updateJoystickHat(JoyHat(JoyHatDir::Down, hatNum), (sdlEvent.jhat.value & SDL_HAT_DOWN));
                     updateJoystickHat(JoyHat(JoyHatDir::Left, hatNum), (sdlEvent.jhat.value & SDL_HAT_LEFT));

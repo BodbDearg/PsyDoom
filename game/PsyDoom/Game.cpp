@@ -68,6 +68,7 @@ static constexpr String32 UNKNOWN_MAP_NAME = "Unknown Map";
 GameType        gGameType;              // The high level game type (Doom, Final Doom etc.)
 GameVariant     gGameVariant;           // Which region specific version of the game this is
 GameSettings    gSettings;              // Game rules to play with (unless overriden by demo playback or multiplayer)
+GameConstants   gConstants;             // Constants that vary by game type
 bool            gbIsDemoVersion;        // If the game type is 'Doom' this is set to 'true' if the one level demo disc is being played
 bool            gbIsPsxDoomForever;     // If the game type is 'Final Doom' this is set to 'true' if the 'PSX Doom Forever' ROM hack is being played
 
@@ -93,7 +94,8 @@ static bool discFileExists(const char* const filePath, const uint64_t hashWord1,
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Determine which game type we are playing and from what region
+// Determine which game type we are playing and from what region.
+// Also sets constants for the game based on the game type.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void determineGameTypeAndVariant() noexcept {
     gbIsDemoVersion = false;
@@ -140,6 +142,9 @@ void determineGameTypeAndVariant() noexcept {
             "Certain demo discs of 'Doom' are also supported as well as 'PSX Doom Forever'."
         );
     }
+
+    // Populate constants that vary from game to game
+    gConstants.populate(gGameType);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -217,7 +222,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     // Note: ignore MAPINFO defaults and user settings for game rules when it comes to classic demos.
     // Use the game rules associated with the current base game, because that is what the demos would be recorded with.
-    const bool bFinalDoomRules = Game::isFinalDoom();
+    const bool bFinalDoomRules = Game::gConstants.bUseFinalDoomClassicDemoFormat;
 
     settings = {};
     settings.bUsePalTimings                 = (gGameVariant == GameVariant::PAL);
@@ -333,9 +338,8 @@ uint16_t getTexPalette_CONNECT() noexcept {
 }
 
 uint16_t getTexPalette_BUTTONS() noexcept {
-    // Note: don't bother making this configurable via MAPINFO since it's not used anymore.
-    // Leaving it here for historical reference only!
-    return gPaletteClutIds[(gGameType == GameType::Doom) ? MAINPAL : UIPAL2];
+    // Note: don't bother making this configurable via MAPINFO since it's not used anymore
+    return gPaletteClutIds[Game::gConstants.texPalette_BUTTONS];
 }
 
 uint16_t getTexPalette_OptionsBg() noexcept {
@@ -344,7 +348,7 @@ uint16_t getTexPalette_OptionsBg() noexcept {
 
 uint16_t getTexPalette_DebugFontSmall() noexcept {
     // Note: don't bother making this configurable via MAPINFO since it's not used in any user facing display
-    return gPaletteClutIds[(gGameType == GameType::Doom) ? MAINPAL : UIPAL];
+    return gPaletteClutIds[Game::gConstants.texPalette_DebugFontSmall];
 }
 
 String8 getTexLumpName_OptionsBg() noexcept {

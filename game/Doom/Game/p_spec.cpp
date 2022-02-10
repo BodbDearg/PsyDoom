@@ -46,11 +46,6 @@ struct animdef_t {
 // Mask applied to offsets for scrolling walls (wrap every 128 units)
 static constexpr int32_t SCROLLMASK = 0xFF7F0000;
 
-// The base number of animated floor/texture types in the game for Doom and Final Doom.
-// The true number can be extended by user mods.
-static constexpr int32_t BASE_NUM_ANIMS_DOOM = 16;
-static constexpr int32_t BASE_NUM_ANIMS_FDOOM = 18;
-
 // Definitions for all flat and texture animations built into the game
 static const animdef_t gBaseAnimDefs[BASE_NUM_ANIMS_FDOOM] = {
     { 0, "BLOOD1",   "BLOOD3",   3 },
@@ -70,8 +65,8 @@ static const animdef_t gBaseAnimDefs[BASE_NUM_ANIMS_FDOOM] = {
     { 1, "TVSNOW01", "TVSNOW03", 1 },
     { 1, "WARN01",   "WARN02",   3 },
     // Final Doom only animations: note that the 'GLOW01' texture is found in the original DOOM but it is not animated, even
-    // though all the frames for it exist. Also note that these entries are NOT found at the end of the array in the Final Doom
-    // code; I added them here for convenience so they can be ignored more easily in the case of the original Doom game.
+    // though all the frames for it exist. Also note that these entries are NOT found at the end of the array in the Final Doom code.
+    // I added them here for convenience so they can be ignored more easily in the case of the original Doom game.
     { 0, "GLOW01",   "GLOW04",   3 },
     { 1, "WFALL1",   "WFALL4",   3 },
 };
@@ -182,9 +177,9 @@ void P_InitAnimDefs() noexcept {
     // Add base animation definitions
     gAnimDefs.clear();
     gAnimDefs.reserve(128);
-    const int32_t numBaseAnims = (Game::isFinalDoom()) ? BASE_NUM_ANIMS_FDOOM : BASE_NUM_ANIMS_DOOM;
+    const int32_t baseNumAnims = Game::gConstants.baseNumAnims;
 
-    for (int32_t i = 0; i < numBaseAnims; ++i) {
+    for (int32_t i = 0; i < baseNumAnims; ++i) {
         gAnimDefs.push_back(gBaseAnimDefs[i]);
     }
 

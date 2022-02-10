@@ -249,7 +249,7 @@ static bool onBeforeMapLoad_oldDemoFormat() noexcept {
 
         // Read the control bindings for the demo: for original PSX Doom there are 8 bindings, for Final Doom there are 10.
         // Need to adjust demo reading accordingly depending on which game version we are dealing with.
-        if (Game::isFinalDoom()) {
+        if (Game::gConstants.bUseFinalDoomClassicDemoFormat) {
             demo_read(gCtrlBindings, NUM_BINDABLE_BTNS);
         } else {
             // Note: original Doom did not have the move forward/backward bindings (due to no mouse support) - hence they are zeroed here:
@@ -266,7 +266,7 @@ static bool onBeforeMapLoad_oldDemoFormat() noexcept {
         }
 
         // For Final Doom read the mouse sensitivity
-        if (Game::isFinalDoom()) {
+        if (Game::gConstants.bUseFinalDoomClassicDemoFormat) {
             gPsxMouseSensitivity = Endian::littleToHost(demo_read<int32_t>());
         }
 

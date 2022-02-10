@@ -5,6 +5,11 @@
 struct line_t;
 struct side_t;
 
+// The base number of animated floor & texture types in the game for Doom and Final Doom.
+// The true number can be extended by user mods.
+static constexpr int32_t BASE_NUM_ANIMS_DOOM = 16;
+static constexpr int32_t BASE_NUM_ANIMS_FDOOM = 18;
+
 // Holds state for an animated texture or flat.
 // Note that only one of these exists per texture - individual walls & floors do not have unique anims.
 struct anim_t {
