@@ -21,7 +21,6 @@ static void populateConsts_Doom(GameConstants& consts) noexcept {
     consts.netGameId = NET_GAMEID_DOOM;
     consts.baseNumAnims = BASE_NUM_ANIMS_DOOM;
     consts.texPalette_BUTTONS = MAINPAL;
-    consts.texPalette_DebugFontSmall = MAINPAL;
     consts.numPalettesRequired = NUMPALETTES_DOOM;
     consts.bUseFinalDoomClassicDemoFormat = false;
     consts.bUseFinalDoomSkyPalettes = false;
@@ -36,7 +35,6 @@ static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
     consts.netGameId = NET_GAMEID_FINAL_DOOM;
     consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;
     consts.texPalette_BUTTONS = UIPAL2;
-    consts.texPalette_DebugFontSmall = UIPAL;
     consts.numPalettesRequired = NUMPALETTES_FINAL_DOOM;
     consts.bUseFinalDoomClassicDemoFormat = true;
     consts.bUseFinalDoomSkyPalettes = true;

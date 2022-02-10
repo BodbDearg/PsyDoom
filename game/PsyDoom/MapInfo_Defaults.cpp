@@ -67,12 +67,19 @@ static void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
     gameInfo.bFinalDoomGameRules = false;
     gameInfo.bFinalDoomTitleScreen = false;
     gameInfo.bFinalDoomCredits = false;
+    gameInfo.texPalette_STATUS = UIPAL;
+    gameInfo.texPalette_TITLE = TITLEPAL;
     gameInfo.texPalette_BACK = MAINPAL;
     gameInfo.texPalette_LOADING = UIPAL;
     gameInfo.texPalette_PAUSE = MAINPAL;
     gameInfo.texPalette_NETERR = UIPAL;
     gameInfo.texPalette_DOOM = TITLEPAL;
     gameInfo.texPalette_CONNECT = MAINPAL;
+    gameInfo.texPalette_IDCRED1 = IDCREDITS1PAL;
+    gameInfo.texPalette_IDCRED2 = UIPAL;
+    gameInfo.texPalette_WMSCRED1 = WCREDITS1PAL;
+    gameInfo.texPalette_WMSCRED2 = UIPAL;
+    gameInfo.texPalette_LEVCRED2 = WCREDITS1PAL;
     gameInfo.texPalette_OptionsBG = MAINPAL;
     gameInfo.texLumpName_OptionsBG = "MARB01";
 
@@ -93,12 +100,19 @@ static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
     gameInfo.bFinalDoomGameRules = true;
     gameInfo.bFinalDoomTitleScreen = true;
     gameInfo.bFinalDoomCredits = true;
+    gameInfo.texPalette_STATUS = UIPAL;
+    gameInfo.texPalette_TITLE = TITLEPAL;
     gameInfo.texPalette_BACK = TITLEPAL;
     gameInfo.texPalette_LOADING = UIPAL2;
     gameInfo.texPalette_PAUSE = UIPAL2;
     gameInfo.texPalette_NETERR = UIPAL2;
     gameInfo.texPalette_DOOM = UIPAL;
     gameInfo.texPalette_CONNECT = UIPAL2;
+    gameInfo.texPalette_IDCRED1 = IDCREDITS1PAL;
+    gameInfo.texPalette_IDCRED2 = WCREDITS1PAL;
+    gameInfo.texPalette_WMSCRED1 = WCREDITS1PAL;
+    gameInfo.texPalette_WMSCRED2 = WCREDITS1PAL;
+    gameInfo.texPalette_LEVCRED2 = WCREDITS1PAL;
     gameInfo.texPalette_OptionsBG = UIPAL2;
     gameInfo.texLumpName_OptionsBG = "TILE";
 }

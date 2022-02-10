@@ -160,11 +160,18 @@ GameInfo {
     FinalDoomGameRules = false
     FinalDoomTitleScreen = false
     FinalDoomCredits = false
+    TexPalette_STATUS = 16
+    TexPalette_TITLE = 17
     TexPalette_BACK = 0
     TexPalette_LOADING = 16
     TexPalette_PAUSE = 0
     TexPalette_NETERR = 0
     TexPalette_DOOM = 17
+    TexPalette_IDCRED1 = 18
+    TexPalette_IDCRED2 = 16
+    TexPalette_WMSCRED1 = 19
+    TexPalette_WMSCRED2 = 16
+    TexPalette_LEVCRED2 = 19
     TexPalette_OptionsBG = 0
     TexLumpName_OptionsBG = "MARB01"
 }
@@ -176,12 +183,19 @@ Internal Fields:
 - `FinalDoomGameRules`: whether Final Doom style game rules should be used. Final Doom forward movement is slightly slower, and only 16 Lost Souls can spawn from Pain Elementals.
 - `FinalDoomTitleScreen`: whether to use a Final Doom style title screen instead of a Doom style one.
 - `FinalDoomCredits`: whether to use a Final Doom style credits screen (3 pages) instead of a Doom style one (2 pages).
+- `TexPalette_STATUS`: palette index to use for the `STATUS` image lump. Must be between 0 and 31.
+- `TexPalette_TITLE`: palette index to use for the `TITLE` image lump. Must be between 0 and 31.
 - `TexPalette_BACK`: palette index to use for the `BACK` image lump. Must be between 0 and 31.
 - `TexPalette_LOADING`: palette index to use for the `LOADING` image lump. Must be between 0 and 31.
 - `TexPalette_PAUSE`: palette index to use for the `PAUSE` image lump. Must be between 0 and 31.
 - `TexPalette_NETERR`: palette index to use for the `NETERR` image lump. Must be between 0 and 31.
 - `TexPalette_DOOM`: palette index to use for the `DOOM` image lump. Must be between 0 and 31.
 - `TexPalette_CONNECT`: palette index to use for the `CONNECT` image lump. Must be between 0 and 31.
+- `TexPalette_IDCRED1`: palette index to use for the `IDCRED1` image lump. Must be between 0 and 31.
+- `TexPalette_IDCRED2`: palette index to use for the `IDCRED2` image lump. Must be between 0 and 31.
+- `TexPalette_WMSCRED1`: palette index to use for the `WMSCRED1` image lump. Must be between 0 and 31.
+- `TexPalette_WMSCRED2`: palette index to use for the `WMSCRED2` image lump. Must be between 0 and 31.
+- `TexPalette_LEVCRED2`: palette index to use for the `LEVCRED2` image lump. Must be between 0 and 31.
 - `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
 - `TexLumpName_OptionsBG`: which texture lump to use for the options menu tiled background.
 ## `MusicTrack` definition

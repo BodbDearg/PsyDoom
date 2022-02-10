@@ -434,7 +434,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
             gDebugDrawStringXPos,
             gDebugDrawStringYPos,
             msgBuffer,
-            Game::getTexPalette_DebugFontSmall(),
+            Game::getTexPalette_STATUS(),
             128,
             128,
             128,

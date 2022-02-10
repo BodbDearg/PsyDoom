@@ -409,7 +409,7 @@ void F1_Drawer() noexcept {
             const int32_t xpos = F_GetLineXPos(textLineChars.data());
 
             if (gpCluster->bSmallFont) {
-                I_DrawStringSmall(xpos, ypos, textLineChars.data(), gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+                I_DrawStringSmall(xpos, ypos, textLineChars.data(), Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
             } else {
                 I_DrawString(xpos, ypos, textLineChars.data());
             }
@@ -421,7 +421,7 @@ void F1_Drawer() noexcept {
         const int32_t lastLineXPos = F_GetLineXPos(gFinIncomingLine);
 
         if (gpCluster->bSmallFont) {
-            I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+            I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
         } else {
             I_DrawString(lastLineXPos, ypos, gFinIncomingLine);
         }
@@ -806,7 +806,7 @@ void F2_Drawer() noexcept {
                 const int32_t xpos = F_GetLineXPos(textLineChars.data());
 
                 if (gpCluster->bSmallFont) {
-                    I_DrawStringSmall(xpos, ypos, textLineChars.data(), gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+                    I_DrawStringSmall(xpos, ypos, textLineChars.data(), Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
                 } else {
                     I_DrawString(xpos, ypos, textLineChars.data());
                 }
@@ -818,7 +818,7 @@ void F2_Drawer() noexcept {
             const int32_t lastLineXPos = F_GetLineXPos(gFinIncomingLine);
 
             if (gpCluster->bSmallFont) {
-                I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+                I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
             } else {
                 I_DrawString(lastLineXPos, ypos, gFinIncomingLine);
             }

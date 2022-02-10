@@ -525,7 +525,7 @@ void M_Drawer() noexcept {
     // Draw the skull cursor
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        gPaletteClutIds[UIPAL],
+        Game::getTexPalette_STATUS(),
         50,
         gMenuYPos[gCursorPos[0]] - 2,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)

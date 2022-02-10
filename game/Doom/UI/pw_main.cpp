@@ -358,7 +358,7 @@ void DRAW_PasswordScreen() noexcept {
     #endif
 
     LIBGPU_SetSprt(spritePrim);
-    spritePrim.clut = gPaletteClutIds[UIPAL];
+    spritePrim.clut = Game::getTexPalette_STATUS();
 
     // Draw the array of password characters
     for (int32_t pwCharIdx = 0; pwCharIdx < NUM_PW_CHARS; ++pwCharIdx) {

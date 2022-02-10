@@ -13,7 +13,6 @@ struct GameConstants {
     uint32_t    netGameId;                          // ID to send for the game type in networked games. Must match the game id for other players.
     uint32_t    baseNumAnims;                       // How many animated floor and wall textures are built into the game by default? (ignoring any loaded user mods)
     uint8_t     texPalette_BUTTONS;                 // Which palette to use for the 'BUTTONS' lump? (Note: this lump is non longer used by PsyDoom, here just for historical reference)
-    uint8_t     texPalette_DebugFontSmall;          // Which palette to use for the small debug font?
     uint8_t     numPalettesRequired;                // How many palettes this game requires (at a minimum) to be available
     bool        bUseFinalDoomClassicDemoFormat;     // Whether to interpret classic demos as being in the Final Doom format or not
     bool        bUseFinalDoomSkyPalettes;           // Use Final Doom style sky palettes for certain skies?

@@ -470,7 +470,7 @@ void O_Drawer() noexcept {
                 // Draw the slider backing/container
                 I_DrawSprite(
                     gTex_STATUS.texPageId,
-                    gPaletteClutIds[UIPAL],
+                    Game::getTexPalette_STATUS(),
                     (int16_t)(pMenuItem->x + 13),
                     (int16_t)(pMenuItem->y + 20),
                     // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -490,7 +490,7 @@ void O_Drawer() noexcept {
 
                 I_DrawSprite(
                     gTex_STATUS.texPageId,
-                    gPaletteClutIds[UIPAL],
+                    Game::getTexPalette_STATUS(),
                     (int16_t)(pMenuItem->x + 14 + sliderVal),
                     (int16_t)(pMenuItem->y + 20),
                     // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -513,7 +513,7 @@ void O_Drawer() noexcept {
 
         I_DrawSprite(
             gTex_STATUS.texPageId,
-            gPaletteClutIds[UIPAL],
+            Game::getTexPalette_STATUS(),
             (int16_t) menuItem.x - 24,
             (int16_t) menuItem.y - 2,
             // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)

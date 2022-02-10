@@ -43,7 +43,7 @@ enum MenuItem : int32_t {
 static void DrawCursor(const int16_t cursorX, const int16_t cursorY) noexcept {
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        gPaletteClutIds[UIPAL],
+        Game::getTexPalette_STATUS(),
         (int16_t) cursorX - 24,
         (int16_t) cursorY - 2,
         (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
@@ -279,7 +279,7 @@ void XOptions_Draw() noexcept {
             // Draw the slider background
             I_DrawSprite(
                 gTex_STATUS.texPageId,
-                gPaletteClutIds[UIPAL],
+                Game::getTexPalette_STATUS(),
                 (int16_t)(menuItemX + 13),
                 (int16_t)(menuItemY + 20),
                 (int16_t)(gTex_STATUS.texPageCoordX + 0),
@@ -293,7 +293,7 @@ void XOptions_Draw() noexcept {
 
             I_DrawSprite(
                 gTex_STATUS.texPageId,
-                gPaletteClutIds[UIPAL],
+                Game::getTexPalette_STATUS(),
                 (int16_t)(menuItemX + 14 + sliderVal),
                 (int16_t)(menuItemY + 20),
                 (int16_t)(gTex_STATUS.texPageCoordX + 108),

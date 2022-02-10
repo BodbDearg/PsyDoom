@@ -514,7 +514,7 @@ void IN_CoopDrawer() noexcept {
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        gPaletteClutIds[UIPAL],
+        Game::getTexPalette_STATUS(),
         139,
         20,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -533,7 +533,7 @@ void IN_CoopDrawer() noexcept {
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        gPaletteClutIds[UIPAL],
+        Game::getTexPalette_STATUS(),
         213,
         20,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -640,7 +640,7 @@ void IN_DeathmatchDrawer() noexcept {
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        gPaletteClutIds[UIPAL],
+        Game::getTexPalette_STATUS(),
         127,
         70,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -659,7 +659,7 @@ void IN_DeathmatchDrawer() noexcept {
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        gPaletteClutIds[UIPAL],
+        Game::getTexPalette_STATUS(),
         200,
         70,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)

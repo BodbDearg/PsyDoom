@@ -263,7 +263,7 @@ void DRAW_Title() noexcept {
         #if PSYDOOM_MODS
             I_DrawSprite(
                 gTex_TITLE.texPageId,
-                gPaletteClutIds[TITLEPAL],
+                Game::getTexPalette_TITLE(),
                 0,
                 titleY,
                 gTex_TITLE.texPageCoordX,
@@ -325,7 +325,7 @@ void DRAW_Title() noexcept {
         #if PSYDOOM_MODS
             I_DrawColoredSprite(
                 gTex_TITLE.texPageId,
-                gPaletteClutIds[TITLEPAL],
+                Game::getTexPalette_TITLE(),
                 0,
                 0,
                 gTex_TITLE.texPageCoordX,

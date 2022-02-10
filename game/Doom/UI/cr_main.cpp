@@ -5,6 +5,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
+#include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapInfo.h"
 #include "PsyDoom/Utils.h"
@@ -149,27 +150,27 @@ void DRAW_Credits() noexcept {
     if (MapInfo::getGameInfo().bFinalDoomCredits) {
         // Final Doom: there are 3 pages: level, ID and Williams credits
         if (gCreditsPage == 0) {
-            I_CacheAndDrawSprite(gTex_TITLE, 0, 0, gPaletteClutIds[TITLEPAL]);
-            I_CacheAndDrawSprite(gTex_LEVCRED2, 11, (int16_t) gCreditsScrollYPos, gPaletteClutIds[WCREDITS1PAL]);
+            I_CacheAndDrawSprite(gTex_TITLE, 0, 0, Game::getTexPalette_TITLE());
+            I_CacheAndDrawSprite(gTex_LEVCRED2, 11, (int16_t) gCreditsScrollYPos, Game::getTexPalette_LEVCRED2());
         }
         else if (gCreditsPage == 1) {
-            I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, gPaletteClutIds[WCREDITS1PAL]);
-            I_CacheAndDrawSprite(gTex_WMSCRED2, 5, (int16_t) gCreditsScrollYPos, gPaletteClutIds[WCREDITS1PAL]);
+            I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
+            I_CacheAndDrawSprite(gTex_WMSCRED2, 5, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
         }
         else if (gCreditsPage == 2) {
-            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, gPaletteClutIds[IDCREDITS1PAL]);
-            I_CacheAndDrawSprite(gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, gPaletteClutIds[WCREDITS1PAL]);
+            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
+            I_CacheAndDrawSprite(gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
         }
     }
     else {
         // Regular Doom: there are 2 pages: ID and Williams credits
         if (gCreditsPage == 0) {
-            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, gPaletteClutIds[IDCREDITS1PAL]);
-            I_CacheAndDrawSprite(gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
+            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
+            I_CacheAndDrawSprite(gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
         }
         else if (gCreditsPage == 1) {
-            I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, gPaletteClutIds[WCREDITS1PAL]);
-            I_CacheAndDrawSprite(gTex_WMSCRED2, 7, (int16_t) gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
+            I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
+            I_CacheAndDrawSprite(gTex_WMSCRED2, 7, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
         }
     }
 

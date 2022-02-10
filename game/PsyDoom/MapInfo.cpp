@@ -64,12 +64,19 @@ GameInfo::GameInfo() noexcept
     , bFinalDoomGameRules(false)
     , bFinalDoomTitleScreen(false)
     , bFinalDoomCredits(false)
+    , texPalette_STATUS(UIPAL)
+    , texPalette_TITLE(TITLEPAL)
     , texPalette_BACK(MAINPAL)
     , texPalette_LOADING(UIPAL)
     , texPalette_PAUSE(MAINPAL)
     , texPalette_NETERR(UIPAL)
     , texPalette_DOOM(TITLEPAL)
     , texPalette_CONNECT(MAINPAL)
+    , texPalette_IDCRED1(IDCREDITS1PAL)
+    , texPalette_IDCRED2(UIPAL)
+    , texPalette_WMSCRED1(WCREDITS1PAL)
+    , texPalette_WMSCRED2(UIPAL)
+    , texPalette_LEVCRED2(WCREDITS1PAL)
     , texPalette_OptionsBG(MAINPAL)
     , texLumpName_OptionsBG("MARB01")
 {
@@ -138,15 +145,23 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
     gameInfo.bFinalDoomTitleScreen = (block.getSingleIntValue("FinalDoomTitleScreen", gameInfo.bFinalDoomTitleScreen) > 0);
     gameInfo.bFinalDoomCredits = (block.getSingleIntValue("FinalDoomCredits", gameInfo.bFinalDoomCredits) > 0);
+    gameInfo.texPalette_STATUS = (uint8_t) block.getSingleIntValue("TexPalette_STATUS", gameInfo.texPalette_STATUS);
+    gameInfo.texPalette_TITLE = (uint8_t) block.getSingleIntValue("TexPalette_TITLE", gameInfo.texPalette_TITLE);
     gameInfo.texPalette_BACK = (uint8_t) block.getSingleIntValue("TexPalette_BACK", gameInfo.texPalette_BACK);
     gameInfo.texPalette_LOADING = (uint8_t) block.getSingleIntValue("TexPalette_LOADING", gameInfo.texPalette_LOADING);
     gameInfo.texPalette_PAUSE = (uint8_t) block.getSingleIntValue("TexPalette_PAUSE", gameInfo.texPalette_PAUSE);
     gameInfo.texPalette_NETERR = (uint8_t) block.getSingleIntValue("TexPalette_NETERR", gameInfo.texPalette_NETERR);
     gameInfo.texPalette_DOOM = (uint8_t) block.getSingleIntValue("TexPalette_DOOM", gameInfo.texPalette_DOOM);
     gameInfo.texPalette_CONNECT = (uint8_t) block.getSingleIntValue("TexPalette_CONNECT", gameInfo.texPalette_CONNECT);
+    gameInfo.texPalette_IDCRED1 = (uint8_t) block.getSingleIntValue("TexPalette_IDCRED1", gameInfo.texPalette_IDCRED1);
+    gameInfo.texPalette_IDCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_IDCRED2", gameInfo.texPalette_IDCRED2);
+    gameInfo.texPalette_WMSCRED1 = (uint8_t) block.getSingleIntValue("TexPalette_WMSCRED1", gameInfo.texPalette_WMSCRED1);
+    gameInfo.texPalette_WMSCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_WMSCRED2", gameInfo.texPalette_WMSCRED2);
+    gameInfo.texPalette_LEVCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_LEVCRED2", gameInfo.texPalette_LEVCRED2);
     gameInfo.texPalette_OptionsBG = (uint8_t) block.getSingleIntValue("TexPalette_OptionsBG", gameInfo.texPalette_OptionsBG);
     gameInfo.texLumpName_OptionsBG = block.getSingleSmallStringValue("TexLumpName_OptionsBG", gameInfo.texLumpName_OptionsBG);
 
+    // Check the map numbers are in range
     if ((gameInfo.numMaps < 1) || (gameInfo.numMaps > 255)) {
         error(block, "GameInfo: 'NumMaps' must be between 1 and 255!");
     }
@@ -155,33 +170,27 @@ static void readGameInfo(const Block& block) noexcept {
         error(block, "GameInfo: 'NumRegularMaps' must be between 1 and 255!");
     }
 
-    if (gameInfo.texPalette_BACK >= MAXPALETTES) {
-        error(block, "GameInfo: 'TexPalette_BACK' must be between 0 and 31!");
-    }
+    // Check all palettes are in range
+    const auto checkPalette = [&](const uint8_t paletteIdx, const char* const name) noexcept{
+        if (paletteIdx >= MAXPALETTES) {
+            error(block, "GameInfo: '%s' must be between 0 and 31!", name);
+        }
+    };
 
-    if (gameInfo.texPalette_LOADING >= MAXPALETTES) {
-        error(block, "GameInfo: 'TexPalette_LOADING' must be between 0 and 31!");
-    }
-
-    if (gameInfo.texPalette_PAUSE >= MAXPALETTES) {
-        error(block, "GameInfo: 'TexPalette_PAUSE' must be between 0 and 31!");
-    }
-
-    if (gameInfo.texPalette_NETERR >= MAXPALETTES) {
-        error(block, "GameInfo: 'TexPalette_NETERR' must be between 0 and 31!");
-    }
-
-    if (gameInfo.texPalette_DOOM >= MAXPALETTES) {
-        error(block, "GameInfo: 'TexPalette_DOOM' must be between 0 and 31!");
-    }
-
-    if (gameInfo.texPalette_CONNECT >= MAXPALETTES) {
-        error(block, "GameInfo: 'TexPalette_CONNECT' must be between 0 and 31!");
-    }
-
-    if (gameInfo.texPalette_OptionsBG >= MAXPALETTES) {
-        error(block, "GameInfo: 'TexPalette_OptionsBG' must be between 0 and 31!");
-    }
+    checkPalette(gameInfo.texPalette_STATUS,        "TexPalette_STATUS");
+    checkPalette(gameInfo.texPalette_TITLE,         "TexPalette_TITLE");
+    checkPalette(gameInfo.texPalette_BACK,          "TexPalette_BACK");
+    checkPalette(gameInfo.texPalette_LOADING,       "TexPalette_LOADING");
+    checkPalette(gameInfo.texPalette_PAUSE,         "TexPalette_PAUSE");
+    checkPalette(gameInfo.texPalette_NETERR,        "TexPalette_NETERR");
+    checkPalette(gameInfo.texPalette_DOOM,          "TexPalette_DOOM");
+    checkPalette(gameInfo.texPalette_CONNECT,       "TexPalette_CONNECT");
+    checkPalette(gameInfo.texPalette_IDCRED1,       "TexPalette_IDCRED1");
+    checkPalette(gameInfo.texPalette_IDCRED2,       "TexPalette_IDCRED2");
+    checkPalette(gameInfo.texPalette_WMSCRED1,      "TexPalette_WMSCRED1");
+    checkPalette(gameInfo.texPalette_WMSCRED2,      "TexPalette_WMSCRED2");
+    checkPalette(gameInfo.texPalette_LEVCRED2,      "TexPalette_LEVCRED2");
+    checkPalette(gameInfo.texPalette_OptionsBG,     "TexPalette_OptionsBG");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

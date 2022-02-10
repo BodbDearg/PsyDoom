@@ -62,7 +62,7 @@ static const MenuItem*  gpMenuItems;
 static void DrawCursor(const int16_t cursorX, const int16_t cursorY) noexcept {
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        gPaletteClutIds[UIPAL],
+        Game::getTexPalette_STATUS(),
         (int16_t) cursorX - 24,
         (int16_t) cursorY - 2,
         (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),

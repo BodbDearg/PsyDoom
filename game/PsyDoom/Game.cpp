@@ -306,6 +306,14 @@ int32_t getMapEpisode(const int32_t mapNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the palette (PSX Clut ID) or lump name to use for various textures
 //------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t getTexPalette_STATUS() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_STATUS];
+}
+
+uint16_t getTexPalette_TITLE() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_TITLE];
+}
+
 uint16_t getTexPalette_BACK() noexcept {
     return gPaletteClutIds[MapInfo::getGameInfo().texPalette_BACK];
 }
@@ -335,13 +343,28 @@ uint16_t getTexPalette_BUTTONS() noexcept {
     return gPaletteClutIds[Game::gConstants.texPalette_BUTTONS];
 }
 
-uint16_t getTexPalette_OptionsBg() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_OptionsBG];
+uint16_t getTexPalette_IDCRED1() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_IDCRED1];
 }
 
-uint16_t getTexPalette_DebugFontSmall() noexcept {
-    // Note: don't bother making this configurable via MAPINFO since it's not used in any user facing display
-    return gPaletteClutIds[Game::gConstants.texPalette_DebugFontSmall];
+uint16_t getTexPalette_IDCRED2() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_IDCRED2];
+}
+
+uint16_t getTexPalette_WMSCRED1() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_WMSCRED1];
+}
+
+uint16_t getTexPalette_WMSCRED2() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_WMSCRED2];
+}
+
+uint16_t getTexPalette_LEVCRED2() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_LEVCRED2];
+}
+
+uint16_t getTexPalette_OptionsBg() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_OptionsBG];
 }
 
 String8 getTexLumpName_OptionsBg() noexcept {

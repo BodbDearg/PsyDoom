@@ -126,7 +126,7 @@ static void DrawStatusSprite(
 ) noexcept {
     const int16_t tpU = (int16_t)(gTex_STATUS.texPageCoordX + u);
     const int16_t tpV = (int16_t)(gTex_STATUS.texPageCoordY + v);
-    I_DrawColoredSprite(gTex_STATUS.texPageId, gPaletteClutIds[UIPAL], x, y, tpU, tpV, w, h, r, g, b, false);
+    I_DrawColoredSprite(gTex_STATUS.texPageId, Game::getTexPalette_STATUS(), x, y, tpU, tpV, w, h, r, g, b, false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,14 +199,14 @@ static void DrawSaveSlot(const SaveFileInfo& save, const int16_t slotX, const in
             std::snprintf(strBuffer, C_ARRAY_SIZE(strBuffer), "-");
         }
 
-        I_DrawStringSmall(slotX + 24, slotY + 6, strBuffer, gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+        I_DrawStringSmall(slotX + 24, slotY + 6, strBuffer, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
     }
 
     // Draw the map name
     if (save.mapNum > 0) {
-        I_DrawStringSmall(slotX + 24, slotY + 19, save.mapName.c_str().data(), gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+        I_DrawStringSmall(slotX + 24, slotY + 19, save.mapName.c_str().data(), Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
     } else {
-        I_DrawStringSmall(slotX + 24, slotY + 19, "-", gPaletteClutIds[UIPAL], 128, 128, 128, false, true);
+        I_DrawStringSmall(slotX + 24, slotY + 19, "-", Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
     }
 }
 

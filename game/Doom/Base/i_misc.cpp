@@ -122,7 +122,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
 
         LIBGPU_SetSprt(spritePrim);
         LIBGPU_SetShadeTex(spritePrim, true);
-        spritePrim.clut = gPaletteClutIds[UIPAL];
+        spritePrim.clut = Game::getTexPalette_STATUS();
     #endif
 
     spritePrim.y0 = (int16_t) y;            // Always on the same row
@@ -406,7 +406,6 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
 }
 
 #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Gives the width of the given string: useful for right aligning
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -451,7 +450,6 @@ int32_t I_GetStringWidth(const char* const str) noexcept {
 
     return width;
 }
-
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -485,7 +483,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(spritePrim, true);
-    spritePrim.clut = gPaletteClutIds[UIPAL];
+    spritePrim.clut = Game::getTexPalette_STATUS();
 
     // Decide on starting x position: can either be so the string is centered in the screen, or just the value verbatim
     int32_t curX = (x != -1) ? x : I_GetStringXPosToCenter(str);
