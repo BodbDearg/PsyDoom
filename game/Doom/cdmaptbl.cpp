@@ -7,6 +7,7 @@
 #include "PsyDoom/IsoFileSys.h"
 #include "PsyDoom/PsxVm.h"
 
+#include <cstdio>
 #include <vector>
 
 // The id of a filename on disc (up to 16 characters) and where it starts on the CD-ROM image
