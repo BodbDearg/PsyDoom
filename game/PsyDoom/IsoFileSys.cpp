@@ -1,5 +1,7 @@
 #include "IsoFileSys.h"
 
+#include "Asserts.h"
+#include "ByteInputStream.h"
 #include "DiscInfo.h"
 #include "DiscReader.h"
 #include "Endian.h"
@@ -115,42 +117,57 @@ struct IsoVolDescriptor {
 static_assert(sizeof(IsoVolDescriptor) == 2048);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Used to hold details on a directory to be processed
+// Used to hold details on a directory which is pending reading
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct DirToProcess {
-    uint32_t parentDirIndex;    // Index of the parent directory file system entry
-    uint32_t lba;               // Logical block address of where the directory records for this directory are
-    uint32_t size;              // Size of the directory records for this directory
-    uint32_t xaRecordSize;      // Extended attribute record size, normally '0'. If non zero skip this many bytes to get to the directory records for the dir.
+struct DirToRead {
+    uint32_t parentDirIndex;        // Index of the parent directory file system entry.
+    uint32_t lba;                   // Logical block address of where the directory records for this directory are.
+    uint32_t size;                  // Size of the directory records for this directory; includes padding and must to be a multiple of '2048'.
+    uint32_t xaRecordSize;          // Extended attribute record size, normally '0'. If non zero skip this many bytes to get to the directory records for the dir.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Sector that the primary volume descriptor is found on for the ISO 9960 file system
+// Holds context used by the directory reader
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct DirReaderContext {
+    IsoFileSys&             fs;                     // The filesystem being read
+    const DirToRead&        dir;                    // Which directory is being read
+    std::queue<DirToRead>&  dirsToRead;             // Which directories are left to read
+    uint32_t                xaRecordBytesLeft;      // How many bytes left of the extended attribute record there are left to skip
+    uint32_t                recordIdx;              // The index of the current record being read, within the directory
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// CD-ROM sector that the primary volume descriptor is found on for the ISO 9960 file system
 //------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr int32_t VOL_DESC_SECTOR = 16;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: tells if the specified character is a path separator
+//------------------------------------------------------------------------------------------------------------------------------------------
 static bool isPathSeparator(const char c) noexcept {
     return ((c == '\\') || (c == '/'));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Reads the entire ISO 9960 filesystem from the given disc's data track (01).
-// Returns 'true' if the filesystem was read successfully, without any errors.
+// Sets up the file system and disc reader for the process of reading files and directories.
+// Reads the volume descriptor for the filesystem and creates the root filesystem entry.
+// Also queues the first directory to be read.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool IsoFileSys::build(DiscReader& discReader) noexcept {
-    // Prealloc memory and default initialize this
-    logicalBlockSize = 0;
-
-    entries.clear();
-    entries.reserve(2048);
+static bool initFileSystemForReading(IsoFileSys& fs, std::queue<DirToRead>& dirsToRead, DiscReader& discReader) noexcept {
+    // Default initialize the file system and prealloc some memory for entries
+    fs.logicalBlockSize = 0;
+    fs.entries.clear();
+    fs.entries.reserve(2048);
 
     // Make sure the disc is open on the data track (01)
     if (!discReader.setTrackNum(1))
         return false;
 
+    // Read the ISO volume descriptor (located at sector 16)
     const DiscTrack* pTrack = discReader.getOpenTrack();
+    ASSERT(pTrack);
 
-    // Read the ISO volume descriptor and save the logical block size
     if (!discReader.trackSeekAbs(pTrack->blockPayloadSize * VOL_DESC_SECTOR))
         return false;
 
@@ -159,116 +176,99 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
     if (!discReader.read(&volDesc, sizeof(IsoVolDescriptor)))
         return false;
 
-    logicalBlockSize = Endian::littleToHost(volDesc.logicalBlockSizeLittle);
+    // Read the logical block size and verify it's within allowed limits
+    fs.logicalBlockSize = Endian::littleToHost(volDesc.logicalBlockSizeLittle);
 
-    // Create the root directory entry and the first directory to be processed
-    std::queue<DirToProcess> dirsToProcess;
+    const bool bInvalidLogicalBlockSize = (
+        (fs.logicalBlockSize < IsoFileSys::MIN_LOGICAL_BLOCK_SIZE) ||
+        (fs.logicalBlockSize > IsoFileSys::MAX_LOGICAL_BLOCK_SIZE)
+    );
 
+    if (bInvalidLogicalBlockSize)
+        return false;
+
+    // Create the filesystem entry for the volume root
     {
-        IsoFileSysEntry& volRoot = entries.emplace_back();
+        IsoFileSysEntry& volRoot = fs.entries.emplace_back();
         volRoot.bIsDirectory = true;
         volRoot.parentIdx = IsoFileSysEntry::ROOT_PARENT_IDX;
-
-        DirToProcess& dirToProcess = dirsToProcess.emplace();
-        dirToProcess.parentDirIndex = 0;
-        dirToProcess.lba = volDesc.rootRecord.getLba();
-        dirToProcess.size = volDesc.rootRecord.getSize();
-        dirToProcess.xaRecordSize = volDesc.rootRecord.xaRecordLen;
     }
 
-    // Visit all directories in the file system in depth first order
-    while (!dirsToProcess.empty()) {
-        // Get the directory to process
-        DirToProcess dir = dirsToProcess.front();
-        dirsToProcess.pop();
+    // Queue the first directory to be read (children of the root)
+    {
+        DirToRead& dir = dirsToRead.emplace();
+        dir.parentDirIndex = 0;
+        dir.lba = volDesc.rootRecord.getLba();
+        dir.size = volDesc.rootRecord.getSize();
+        dir.xaRecordSize = volDesc.rootRecord.xaRecordLen;
+    }
 
-        // Set the first child index of the parent directory
-        entries[dir.parentDirIndex].firstChildIdx = (uint16_t) entries.size();
+    // All good if we've got to here!
+    return true;
+}
 
-        // Seek to where the records for this directory are located
-        if (!discReader.trackSeekAbs(dir.lba * logicalBlockSize))
-            return false;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads a single sector of file system data for a directory in the file system.
+// Throws an exception if reading fails.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readFSDirSector(DirReaderContext& ctx, ByteInputStream& sectorBytes) THROWS {
+    // Firstly skip past any extended attribute record bytes for this directory.
+    // Those are located at the start of the directory data:
+    if (ctx.xaRecordBytesLeft > 0) {
+        const uint32_t numBytesToSkip = std::min((uint32_t) sectorBytes.size(), ctx.xaRecordBytesLeft);
+        sectorBytes.skipBytes(numBytesToSkip);
+        ctx.xaRecordBytesLeft -= numBytesToSkip;
+    }
 
-        // Firstly skip past any extended attribute record bytes for this directory
-        uint32_t dirBytesLeft = dir.size;
+    // Continue reading records until we reach the end of the sector and can read no more.
+    // Note: once reading is done any leftover bytes at the end of the sector are just zero padding bytes and are ignored.
+    while (sectorBytes.checkCanRead<IsoDirRecord>()) {
+        // Read the record firstly
+        IsoDirRecord record;
+        sectorBytes.read(record);
 
-        if (dir.xaRecordSize > 0) {
-            if (dir.xaRecordSize > dirBytesLeft)
-                return false;
+        // If the record says it's zero length then it means there are no more records in the sector.
+        // The rest of the data will simply be zero padding bytes.
+        const uint8_t recordLen = record.recordLen;
 
-            dirBytesLeft -= dir.xaRecordSize;
+        if (recordLen == 0)
+            break;
+        
+        // Otherwise sanity check some things about the directory record
+        const bool bBadOrUnsupportedRecord = (
+            (recordLen < sizeof(IsoDirRecord) + record.nameLen) ||      // Bad record length?
+            (record.volumeSeqNumLittle[0] != 1) ||                      // Expect volume number to always be '1'
+            (record.volumeSeqNumLittle[1] != 0) ||                      // Expect volume number to always be '1'
+            (record.interleaveGapSize != 0) ||                          // Not supporting this whatever it is
+            (record.fileUnitSize != 0)                                  // Not supporting this whatever it is
+        );
 
-            if (!discReader.trackSeekRel(dir.xaRecordSize))
-                return false;
+        if (bBadOrUnsupportedRecord)
+            throw "Bad filesystem record!";
+
+        // Read the name of the record and null terminate.
+        // Remove the version part of the name (';1' etc.) at the end of the string also.
+        char recordName[256];
+        sectorBytes.readArray(recordName, record.nameLen);
+        recordName[record.nameLen] = 0;
+
+        if (char* pVersionSep = std::strchr(recordName, ';'); pVersionSep) {
+            *pVersionSep = 0;
         }
 
-        // Current child file record index.
-        // For the ISO 9960 filesystem the following two child records indexes have the following meanings:
-        //      0 - Parent directory record
-        //      1 - This directory record (pointer to self)
+        // Skip the rest of the record bytes if there are any, we don't use them:
+        sectorBytes.skipBytes(recordLen - sizeof(IsoDirRecord) - record.nameLen);
+
+        // In the ISO 9960 filesystem the following two record indexes (within a directory) have the following meanings:
+        //  0 - Parent directory record
+        //  1 - This directory record (pointer to self)
         //
-        // We want to skip these for the purposes of generating the file system.
-        int32_t childRecordIdx = 0;
-
-        // Read all the records until they are exhausted
-        while (dirBytesLeft > 0) {
-            // Read the record firstly
-            IsoDirRecord record;
-
-            if ((dirBytesLeft < sizeof(IsoDirRecord)) || (!discReader.read(&record, sizeof(IsoDirRecord))))
-                return false;
-
-            // If the record says it's zero length then it means there are no more records in the directory.
-            // Otherwise sanity check some things about the record to make sure it is good.
-            const uint8_t recordLen = record.recordLen;
-
-            if (recordLen == 0)
-                break;
-
-            const bool bBadOrUnsupportedRecord = (
-                (recordLen < sizeof(IsoDirRecord)) ||
-                (recordLen > dirBytesLeft) ||
-                (record.volumeSeqNumLittle[0] != 1) ||      // Expect volume number to always be '1'
-                (record.volumeSeqNumLittle[1] != 0) ||      // Expect volume number to always be '1'
-                (record.interleaveGapSize != 0) ||          // Not supporting this whatever it is
-                (record.fileUnitSize != 0)                  // Not supporting this whatever it is
-            );
-
-            if (bBadOrUnsupportedRecord)
-                return false;
-
-            dirBytesLeft -= sizeof(IsoDirRecord);
-
-            // Read the name of the record and null terminate.
-            // Remove the version part of the name (';1' etc.) at the end of the string also.
-            char recordName[256];
-
-            if ((sizeof(IsoDirRecord) + record.nameLen > recordLen) || (!discReader.read(recordName, record.nameLen)))
-                return false;
-
-            recordName[record.nameLen] = 0;
-            dirBytesLeft -= record.nameLen;
-
-            if (char* pVersionSep = std::strchr(recordName, ';'); pVersionSep) {
-                *pVersionSep = 0;
-            }
-
-            // Skip the rest of the record bytes
-            const uint32_t skipBytes = recordLen - sizeof(IsoDirRecord) - record.nameLen;
-
-            if ((skipBytes > dirBytesLeft) || (!discReader.trackSeekRel(skipBytes)))
-                return false;
-
-            // Don't make records for the first 2 directory records in a directory - parent pointer, and pointer to self:
-            if (childRecordIdx < 2) {
-                ++childRecordIdx;
-                continue;
-            }
-
+        // Don't make file system entries for these!
+        if (ctx.recordIdx >= 2) {
             // Makeup the basic file system entry fields for this directory record
-            IsoFileSysEntry& fsEntry = entries.emplace_back();
+            IsoFileSysEntry& fsEntry = ctx.fs.entries.emplace_back();
             fsEntry.bIsDirectory = record.isDirectory();
-            fsEntry.parentIdx = (uint16_t) dir.parentDirIndex;
+            fsEntry.parentIdx = (uint16_t) ctx.dir.parentDirIndex;
 
             std::strncpy(fsEntry.name, recordName, C_ARRAY_SIZE(fsEntry.name) - 1);
             fsEntry.name[C_ARRAY_SIZE(fsEntry.name) - 1] = 0;
@@ -276,9 +276,9 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
 
             // Are we dealing with a directory or a file?
             if (fsEntry.bIsDirectory) {
-                // This is a directory: it will be processed at a later point
-                DirToProcess& queuedDir = dirsToProcess.emplace();
-                queuedDir.parentDirIndex = (uint32_t)(entries.size() - 1);
+                // This is a directory: it will have it's children read at a later point
+                DirToRead& queuedDir = ctx.dirsToRead.emplace();
+                queuedDir.parentDirIndex = (uint32_t)(ctx.fs.entries.size() - 1);
                 queuedDir.lba = record.getLba();
                 queuedDir.size = record.getSize();
                 queuedDir.xaRecordSize = record.xaRecordLen;
@@ -288,10 +288,78 @@ bool IsoFileSys::build(DiscReader& discReader) noexcept {
                 fsEntry.size = record.getSize();
             }
 
-            // The parent now has one more child underneath it and we have processed one more child record
-            entries[dir.parentDirIndex].numChildren++;
-            ++childRecordIdx;
+            // The parent filesystem entry now has one more child underneath it
+            ctx.fs.entries[ctx.dir.parentDirIndex].numChildren++;
         }
+
+        // We're moving onto the next record in this directory...
+        ctx.recordIdx++;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads the file system for a single directory at the front of the given queue of directories.
+// May place additional child directories at the back of the queue for reading later.
+// Returns 'false' if reading fails.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool readFileSystemDir(IsoFileSys& fs, std::queue<DirToRead>& dirsToRead, DiscReader& discReader) noexcept {
+    // Debug sanity checks
+    ASSERT(!dirsToRead.empty());
+    ASSERT(fs.logicalBlockSize > 0);
+
+    // Get the directory to read.
+    // Note that the size of the directory must be a multiple of the logical block size for the filesystem!
+    DirToRead dir = dirsToRead.front();
+    dirsToRead.pop();
+
+    if (dir.size % fs.logicalBlockSize != 0)
+        return false;
+
+    // In the parent directory set the index of where it's first child will be found (if there are any)
+    ASSERT(dir.parentDirIndex < fs.entries.size());
+    fs.entries[dir.parentDirIndex].firstChildIdx = (uint16_t) fs.entries.size();
+
+    // Seek to where the records for this directory are located
+    if (!discReader.trackSeekAbs(dir.lba * fs.logicalBlockSize))
+        return false;
+
+    // Read all the sectors of filesystem entries for this directory
+    DirReaderContext dirReaderCtx = { fs, dir, dirsToRead, dir.xaRecordSize, 0 };
+
+    for (uint32_t sectorsLeft = dir.size / fs.logicalBlockSize; sectorsLeft > 0; --sectorsLeft) {
+        // Get the raw sector bytes first
+        std::byte sectorData[IsoFileSys::MAX_LOGICAL_BLOCK_SIZE];
+
+        if (!discReader.read(sectorData, fs.logicalBlockSize))
+            return false;
+
+        // Read filesystem entries from this sector
+        try {
+            ByteInputStream byteStream(sectorData, fs.logicalBlockSize);
+            readFSDirSector(dirReaderCtx, byteStream);
+        } catch (...) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads the entire ISO 9960 filesystem from the given disc's data track (01).
+// Returns 'true' if the filesystem was read successfully, without any errors.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool IsoFileSys::build(DiscReader& discReader) noexcept {
+    // Initialize the filesystem in preparation for reading directories
+    std::queue<DirToRead> dirsToRead;
+
+    if (!initFileSystemForReading(*this, dirsToRead, discReader))
+        return false;
+
+    // Read all directories in the file system until there are no more left to process
+    while (!dirsToRead.empty()) {
+        if (!readFileSystemDir(*this, dirsToRead, discReader))
+            return false;
     }
 
     return true;

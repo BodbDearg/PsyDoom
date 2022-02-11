@@ -29,8 +29,11 @@ struct IsoFileSysEntry {
 // Note that the filesystem entries are cut down to just the attributes we are interested in.
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct IsoFileSys {
-    std::vector<IsoFileSysEntry>    entries;                // All the entries in the file system: the root entry is the first
-    uint32_t                        logicalBlockSize;       // Size of a logical sector for the CD-ROM, normally 2,048 bytes
+    static constexpr uint32_t MIN_LOGICAL_BLOCK_SIZE = 2048;    // Minimum allowed logical sector size
+    static constexpr uint32_t MAX_LOGICAL_BLOCK_SIZE = 2352;    // Maximum allowed logical sector size
+
+    uint32_t                        logicalBlockSize;   // Size of a logical sector for the CD-ROM's data track: normally 2,048 bytes
+    std::vector<IsoFileSysEntry>    entries;            // All the entries in the file system: the root entry is the first
 
     bool build(DiscReader& discReader) noexcept;
     int32_t getEntryIndex(const char* const path) const noexcept;

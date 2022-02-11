@@ -10,7 +10,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 class ByteInputStream final : public InputStream {
 public:
-    inline ByteInputStream(const std::byte* const pData, const uint32_t size) noexcept
+    inline ByteInputStream(const std::byte* const pData, const size_t size) noexcept
         : mpData(pData)
         , mSize(size)
         , mCurByteIdx(0)
@@ -46,6 +46,22 @@ public:
         T output;
         std::memcpy(&output, mpData + mCurByteIdx, sizeof(T));
         return output;
+    }
+
+    // Gives the overall size of the stream
+    inline size_t size() const noexcept {
+        return mSize;
+    }
+
+    // Tells how many bytes are left to read in the stream
+    inline size_t bytesLeft() noexcept {
+        return mSize - mCurByteIdx;
+    }
+
+    // Tells if the specified type can be read from the stream with the remaining bytes left
+    template <class T>
+    inline bool checkCanRead() noexcept {
+        return (bytesLeft() >= sizeof(T));
     }
 
 private:
