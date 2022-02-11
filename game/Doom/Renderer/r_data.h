@@ -134,6 +134,8 @@ void R_InitData() noexcept;
     int32_t R_TextureNumForName(const char* const name, const bool bMustExist = false) noexcept;
     int32_t R_FlatNumForName(const char* const name, const bool bMustExist = false) noexcept;
     texture_t& R_GetTexForLump(const int32_t lumpIdx) noexcept;
+    int32_t R_GetOverrideFlatNum(const int32_t origFlatNum) noexcept;
+    int32_t R_GetOverrideTexNum(const int32_t origTexNum) noexcept;
 #else
     int32_t R_TextureNumForName(const char* const name) noexcept;
     int32_t R_FlatNumForName(const char* const name) noexcept;

@@ -349,6 +349,41 @@ texture_t& R_GetTexForLump(const int32_t lumpIdx) noexcept {
 
     return *pTex;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: given a flat number returns number of the flat that overrides it and which has the same lump name (if any).
+// If there are no overrides then the input flat number is simply returned.
+// Useful for allowing Final Doom format maps to have original textures overriden by loaded wads.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t R_GetOverrideFlatNum(const int32_t origFlatNum) noexcept {
+    if ((origFlatNum >= 0) && (origFlatNum < gNumFlatLumps)) {
+        // Valid flat: check for overrides by doing a lookup via the lump name, the version with the highest precedence will be returned:
+        const int32_t origLumpIdx = gpFlatTextures[origFlatNum].lumpNum;
+        const WadLumpName lumpName = W_GetLumpName(origLumpIdx).word() & WAD_LUMPNAME_MASK;     // N.B: lump name might have the compression flag included!
+        return R_FlatNumForName(lumpName.c_str().data(), true);
+    } else {
+        // Not a valid flat (might be a sky), just return what was passed in...
+        return origFlatNum;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: given a texture number returns number of the texture that overrides it and which has the same lump name (if any).
+// If there are no overrides then the input texture number is simply returned.
+// Useful for allowing Final Doom format maps to have original textures overriden by loaded wads.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t R_GetOverrideTexNum(const int32_t origTexNum) noexcept {
+    if ((origTexNum >= 0) && (origTexNum < gNumTexLumps)) {
+        // Valid texture: check for overrides by doing a lookup via the lump name, the version with the highest precedence will be returned:
+        const int32_t origLumpIdx = gpTextures[origTexNum].lumpNum;
+        const WadLumpName lumpName = W_GetLumpName(origLumpIdx).word() & WAD_LUMPNAME_MASK;     // N.B: lump name might have the compression flag included!
+        return R_TextureNumForName(lumpName.c_str().data(), true);
+    } else {
+        // Not a valid texture (might be an unassigned wall), just return what was passed in...
+        return origTexNum;
+    }
+}
+
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------

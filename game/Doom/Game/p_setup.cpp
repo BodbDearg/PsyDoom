@@ -404,8 +404,14 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 
             if constexpr (bFinalDoom) {
                 // Final Doom specific stuff: we have the actual floor and ceiling texture indexes in this case: no lookup needed!
-                const int32_t ceilingPic = Endian::littleToHost(pSrcSec->ceilingpic);
-                const int32_t floorPic = Endian::littleToHost(pSrcSec->floorpic);
+                // PsyDoom: use the overriden version of the flats if there are multiple versions of the same flat.
+                #if PSYDOOM_MODS
+                    const int32_t ceilingPic = R_GetOverrideFlatNum(Endian::littleToHost(pSrcSec->ceilingpic));
+                    const int32_t floorPic = R_GetOverrideFlatNum(Endian::littleToHost(pSrcSec->floorpic));
+                #else
+                    const int32_t ceilingPic = Endian::littleToHost(pSrcSec->ceilingpic);
+                    const int32_t floorPic = Endian::littleToHost(pSrcSec->floorpic);
+                #endif
 
                 pDstSec->floorpic = floorPic;
                 pDstSec->ceilingpic = ceilingPic;
@@ -783,9 +789,16 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
 
             // For Final Doom we don't need to do any lookup, we have the numbers already...
             if constexpr (bFinalDoom) {
-                pDstSide->toptexture = Endian::littleToHost(pSrcSide->toptexture);
-                pDstSide->midtexture = Endian::littleToHost(pSrcSide->midtexture);
-                pDstSide->bottomtexture = Endian::littleToHost(pSrcSide->bottomtexture);
+                // PsyDoom: use the overriden version of the textures if there are multiple versions of the same texture
+                #if PSYDOOM_MODS
+                    pDstSide->toptexture = R_GetOverrideTexNum(Endian::littleToHost(pSrcSide->toptexture));
+                    pDstSide->midtexture = R_GetOverrideTexNum(Endian::littleToHost(pSrcSide->midtexture));
+                    pDstSide->bottomtexture = R_GetOverrideTexNum(Endian::littleToHost(pSrcSide->bottomtexture));
+                #else
+                    pDstSide->toptexture = Endian::littleToHost(pSrcSide->toptexture);
+                    pDstSide->midtexture = Endian::littleToHost(pSrcSide->midtexture);
+                    pDstSide->bottomtexture = Endian::littleToHost(pSrcSide->bottomtexture);
+                #endif
             } else {
                 pDstSide->toptexture = R_TextureNumForName(pSrcSide->toptexture);
                 pDstSide->midtexture = R_TextureNumForName(pSrcSide->midtexture);
