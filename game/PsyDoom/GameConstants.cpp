@@ -12,6 +12,7 @@
 // Game ids for networking
 static constexpr uint32_t NET_GAMEID_DOOM           = 0xAA11AA22;
 static constexpr uint32_t NET_GAMEID_FINAL_DOOM     = 0xAB11AB22;
+static constexpr uint32_t NET_GAMEID_GEC_ME_BETA3   = 0xAB00AB22;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the values of all constants for 'Doom'
@@ -42,6 +43,27 @@ static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Set the values of all constants for 'GEC Master Edition (Beta 3)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
+    // Use the settings for Final Doom in most cases
+    populateConsts_FinalDoom(consts);
+
+    // Quick hack to support the Master Edition:
+    // (1) Load the Final Doom WAD first so that the .ROM format maps reference the correct lump numbers for floor and wall textures.
+    // (2) Load the regular Doom WAD on top so we get extra/missing assets from that WAD.
+    // (3) But we want Final Doom assets to take precedence, so load that WAD on top of Doom again.
+    // 
+    // This method is a bit hacky, but does the job to merge the contents of the 2 separate IWADs.
+    consts.mainWads[0] = CdFile::PSXFINAL_WAD;
+    consts.mainWads[1] = CdFile::PSXDOOM_WAD;
+    consts.mainWads[2] = CdFile::PSXFINAL_WAD;
+
+    // All other differing constants
+    consts.netGameId = NET_GAMEID_GEC_ME_BETA3;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the set of game constants for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 void GameConstants::populate(const GameType gameType) noexcept {
@@ -52,6 +74,7 @@ void GameConstants::populate(const GameType gameType) noexcept {
     switch (gameType) {
         case GameType::Doom:            populateConsts_Doom(*this);             break;
         case GameType::FinalDoom:       populateConsts_FinalDoom(*this);        break;
+        case GameType::GECMasterBeta3:  populateConsts_GEC_ME_Beta3(*this);     break;
 
         default:
             FatalErrors::raise("GameConstants::populate(): unhandled game type!");

@@ -19,6 +19,7 @@ typedef String16 CdFileId;
 namespace CdFile {
     constexpr CdFileId MOVIE_STR    = "MOVIE.STR";
     constexpr CdFileId PSXDOOM_WAD  = "PSXDOOM.WAD";
+    constexpr CdFileId PSXFINAL_WAD = "PSXFINAL.WAD";   // GEC ME (Beta 3)
     constexpr CdFileId DOOMSFX_LCD  = "DOOMSFX.LCD";
     constexpr CdFileId DOOMSND_WMD  = "DOOMSND.WMD";
     constexpr CdFileId DEMO1_LMP    = "DEMO1.LMP";

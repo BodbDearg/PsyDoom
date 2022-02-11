@@ -129,6 +129,11 @@ void determineGameTypeAndVariant() noexcept {
         gGameVariant = GameVariant::PAL;
         gbIsDemoVersion = true;
     }
+    else if (discFileExists("SLUS_666.01", 0xD012570E0D1C31ED, 0xC51B8585D187CD59)) {
+        // [GEC] Master Edition PSX Doom for the PlayStation (Beta 3)
+        gGameType = GameType::GECMasterBeta3;
+        gGameVariant = GameVariant::NTSC_U;
+    }
     else if (discFileExists("ZONE3D/ABIN/ZONE3D.WAD")) {
         // This appears to be the 'PSX Doom Forever' ROM hack: pretend it's Final Doom, because it's basically just a re-skin of it
         gGameType = GameType::FinalDoom;

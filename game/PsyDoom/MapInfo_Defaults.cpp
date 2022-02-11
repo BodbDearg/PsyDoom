@@ -118,6 +118,16 @@ static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes a 'GameInfo' struct for 'GEC Master Edition (Beta 3)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
+    initGameInfo_FinalDoom(gameInfo);       // Uses Final Doom values for most settings
+    gameInfo.numMaps = 94;
+    gameInfo.numRegularMaps = 94;
+    gameInfo.bFinalDoomGameRules = false;   // Some maps might rely on the extra forward speed of 'Doom'
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the 'GameInfo' struct for the current game to the default set of values
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initGameInfo(GameInfo& gameInfo) noexcept {
@@ -126,6 +136,7 @@ static void initGameInfo(GameInfo& gameInfo) noexcept {
     switch (Game::gGameType) {
         case GameType::Doom:            initGameInfo_Doom(gameInfo);            break;
         case GameType::FinalDoom:       initGameInfo_FinalDoom(gameInfo);       break;
+        case GameType::GECMasterBeta3:  initGameInfo_GEC_ME_Beta3(gameInfo);    break;
 
         default:
             FatalErrors::raise("MapInfo::initGameInfo(): unhandled game type!");
@@ -156,6 +167,16 @@ static void addEpisodes_FinalDoom(std::vector<Episode>& episodes) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Adds all the default episodes for 'GEC Master Edition (Beta 3)' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addEpisodes_GEC_ME_Beta3(std::vector<Episode>& episodes) noexcept {
+    addEpisode(episodes, 1,  1,  "Doom");
+    addEpisode(episodes, 2, 31,  "Master Levels");
+    addEpisode(episodes, 3, 51,  "TNT");
+    addEpisode(episodes, 4, 71,  "Plutonia");
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the list of episodes for the game to the defaults for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initEpisodes(std::vector<Episode>& episodes) noexcept {
@@ -164,6 +185,7 @@ static void initEpisodes(std::vector<Episode>& episodes) noexcept {
     switch (Game::gGameType) {
         case GameType::Doom:            addEpisodes_Doom(episodes);             break;
         case GameType::FinalDoom:       addEpisodes_FinalDoom(episodes);        break;
+        case GameType::GECMasterBeta3:  addEpisodes_GEC_ME_Beta3(episodes);     break;
 
         default:
             FatalErrors::raise("MapInfo::initEpisodes(): unhandled game type!");
@@ -324,6 +346,42 @@ static void addClusters_FinalDoom(std::vector<Cluster>& clusters) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Adds all the default clusters for 'GEC Master Edition (Beta 3)' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addClusters_GEC_ME_Beta3(std::vector<Cluster>& clusters) noexcept {
+    // No finale for the GEC ME!
+    // TODO: GEC ME BETA 3: figure out end cast
+    {
+        Cluster& clus = clusters.emplace_back();
+        clus.clusterNum = 1;
+        clus.bSkipFinale = true;
+        clus.bHideNextMapForFinale = true;
+        clus.bEnableCast = false;
+    }
+    {
+        Cluster& clus = clusters.emplace_back();
+        clus.clusterNum = 2;
+        clus.bSkipFinale = true;
+        clus.bHideNextMapForFinale = true;
+        clus.bEnableCast = false;
+    }
+    {
+        Cluster& clus = clusters.emplace_back();
+        clus.clusterNum = 3;
+        clus.bSkipFinale = true;
+        clus.bHideNextMapForFinale = true;
+        clus.bEnableCast = false;
+    }
+    {
+        Cluster& clus = clusters.emplace_back();
+        clus.clusterNum = 4;
+        clus.bSkipFinale = true;
+        clus.bHideNextMapForFinale = true;
+        clus.bEnableCast = false;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the list of clusters for the game to the defaults for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initClusters(std::vector<Cluster>& clusters) noexcept {
@@ -332,6 +390,7 @@ static void initClusters(std::vector<Cluster>& clusters) noexcept {
     switch (Game::gGameType) {
         case GameType::Doom:            addClusters_Doom(clusters);             break;
         case GameType::FinalDoom:       addClusters_FinalDoom(clusters);        break;
+        case GameType::GECMasterBeta3:  addClusters_GEC_ME_Beta3(clusters);     break;
 
         default:
             FatalErrors::raise("MapInfo::initClusters(): unhandled game type!");
@@ -454,6 +513,112 @@ static void addMaps_FinalDoom(std::vector<Map>& maps) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the default maps for 'GEC Master Edition (Beta 3)' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addMaps_GEC_ME_Beta3(std::vector<Map>& maps) noexcept {
+    // Doom
+    addMap(maps, 1 , 1, "Phobos Mission Control",   6,    SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 2 , 1, "Forgotten Sewers",         1,    SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 3 , 1, "Altar Of Extraction",      15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+    addMap(maps, 4 , 1, "Hell Keep",                16,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 5 , 1, "Slough Of Despair",        12,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 6 , 1, "They Will Repent",         2,    SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 7 , 1, "Against Thee Wickedly",    4,    SPU_REV_MODE_HALL,      0x17FF);
+    addMap(maps, 8 , 1, "And Hell Followed",        14,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 9 , 1, "Dis",                      9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+    addMap(maps, 10, 1, "Industrial Zone",          7,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+    addMap(maps, 11, 1, "Betray",                   2,    SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 12, 1, "Gotcha",                   12,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 13, 1, "The Chasm",                15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+    addMap(maps, 14, 1, "The Spirit World",         19,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 15, 1, "The Living End",           10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 16, 1, "Icon Of Sin",              13,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 17, 1, "The Earth Base",           18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 18, 1, "The Pain Labs",            8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
+    addMap(maps, 19, 1, "Canyon of the Dead",       6,    SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 20, 1, "Hell Mountain",            12,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 21, 1, "Vivisection",              17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 22, 1, "Inferno of Blood",         18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 23, 1, "Barons Banquet",           10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 24, 1, "Tomb Of Malevolence",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 25, 1, "Warrens",                  7,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+    addMap(maps, 26, 1, "Fear",                     11,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 27, 1, "Wolfenstein",              3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+    addMap(maps, 28, 1, "Grosse",                   10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 29, 1, "March Of The Demons",      12,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 30, 1, "Baphomet Demense",         20,   SPU_REV_MODE_STUDIO_C,  0x2DFF);
+
+    // Master Levels
+    // TODO: GEC ME BETA 3: add details for all maps
+    addMap(maps, 31, 2, "Entryway",                 1,    SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 32, 2, "Underhalls",               9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+    addMap(maps, 33, 2, "The Gantlet",              14,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 34, 2, "The Focus",                12,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 35, 2, "The Waste Tunnels",        8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
+    addMap(maps, 36, 2, "The Crusher",              13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 37, 2, "Dead Simple",              18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 38, 2, "Tricks And Traps",         20,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+    addMap(maps, 39, 2, "The Pit",                  15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+    addMap(maps, 40, 2, "Refueling Base",           19,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 41, 2, "O of Destruction!",        11,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 42, 2, "The Factory",              16,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 43, 2, "The Inmost Dens",          12,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 44, 2, "Suburbs",                  17,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+    addMap(maps, 45, 2, "Tenements",                6,    SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 46, 2, "The Courtyard",            5,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+    addMap(maps, 47, 2, "The Citadel",              9,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+    addMap(maps, 48, 2, "Nirvana",                  2,    SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 49, 2, "The Catacombs",            3,    SPU_REV_MODE_STUDIO_B,  0x27FF);
+    addMap(maps, 50, 2, "Barrels of Fun",           1,    SPU_REV_MODE_STUDIO_C,  0x2FFF);
+    // TNT
+    addMap(maps, 51, 3, "Bloodfalls",               7,    SPU_REV_MODE_STUDIO_C,  0x26FF);
+    addMap(maps, 52, 3, "The Abandoned Mines",      8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
+    addMap(maps, 53, 3, "Monster Condo",            15,   SPU_REV_MODE_STUDIO_B,  0x27FF);
+    addMap(maps, 54, 3, "Redemption Denied",        4,    SPU_REV_MODE_HALL,      0x17FF);
+    addMap(maps, 55, 3, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 56, 3, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 57, 3, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 58, 3, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 59, 3, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 60, 3, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 61, 3, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 62, 3, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 63, 3, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 64, 3, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 65, 3, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 66, 3, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 67, 3, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 68, 3, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 69, 3, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 70, 3, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    // Plutonia
+    addMap(maps, 71, 4, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 72, 4, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 73, 4, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 74, 4, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 75, 4, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 76, 4, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 77, 4, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 78, 4, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 79, 4, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 80, 4, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 81, 4, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 82, 4, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 83, 4, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 84, 4, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 85, 4, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 86, 4, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 87, 4, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 88, 4, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 89, 4, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 90, 4, "Fortress of Mystery",      17,   SPU_REV_MODE_HALL,      0x1FFF);
+    addMap(maps, 91, 4, "The Military Base",        18,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 92, 4, "The Marshes",              10,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 93, 4, "The Mansion",              16,   SPU_REV_MODE_SPACE,     0x0FFF);
+    addMap(maps, 94, 4, "Club Doom",                13,   SPU_REV_MODE_SPACE,     0x0FFF);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the list of maps for the game to the defaults for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initMaps(std::vector<Map>& maps) noexcept {
@@ -462,6 +627,7 @@ static void initMaps(std::vector<Map>& maps) noexcept {
     switch (Game::gGameType) {
         case GameType::Doom:            addMaps_Doom(maps);             break;
         case GameType::FinalDoom:       addMaps_FinalDoom(maps);        break;
+        case GameType::GECMasterBeta3:  addMaps_GEC_ME_Beta3(maps);     break;
 
         default:
             FatalErrors::raise("MapInfo::initMaps(): unhandled game type!");
