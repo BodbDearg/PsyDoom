@@ -21,6 +21,7 @@
 #include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/DemoRecorder.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/GameConstants.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/IntroLogos.h"
 #include "PsyDoom/LogoPlayer.h"
@@ -91,10 +92,18 @@ static void D_PlayIntros() noexcept {
     // Show the Sony intro logo
     LogoPlayer::play(IntroLogos::getSonyIntroLogo());
 
-    // Play the intro movie (Williams logo)
-    if ((Game::gGameType == GameType::Doom) || (Game::gGameType == GameType::FinalDoom)) {
+    // Play the intro movies (just the Williams logo for 'Doom' and 'Final Doom')
+    for (const String32& moviePath : Game::gConstants.introMovies) {
+        // The list of movies is terminated by a blank path
+        if (moviePath.length() <= 0)
+            break;
+
+        // Play the movie and quit afterwards if the game is shutting down:
         const float movieFps = (Game::gGameVariant == GameVariant::PAL) ? 25.0f : 30.0f;
-        movie::MoviePlayer::play("PSXDOOM/ABIN/MOVIE.STR", movieFps);
+        movie::MoviePlayer::play(moviePath.c_str().data(), movieFps);
+
+        if (Input::isQuitRequested())
+            break;
     }
 
     // Show the legals intro logo, if it's available in this build of the game.

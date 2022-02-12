@@ -516,7 +516,7 @@ static void addMaps_FinalDoom(std::vector<Map>& maps) noexcept {
 // Adds the default maps for 'GEC Master Edition (Beta 3)' to the given list
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void addMaps_GEC_ME_Beta3(std::vector<Map>& maps) noexcept {
-    // Doom
+    // Doom, Doom II and others
     addMap(maps, 1 , 1, "Phobos Mission Control",   6,    SPU_REV_MODE_HALL,      0x1FFF);
     addMap(maps, 2 , 1, "Forgotten Sewers",         1,    SPU_REV_MODE_SPACE,     0x0FFF);
     addMap(maps, 3 , 1, "Altar Of Extraction",      15,   SPU_REV_MODE_STUDIO_B,  0x27FF);

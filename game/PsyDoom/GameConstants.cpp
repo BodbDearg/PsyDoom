@@ -19,6 +19,7 @@ static constexpr uint32_t NET_GAMEID_GEC_ME_BETA3   = 0xAB00AB22;
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void populateConsts_Doom(GameConstants& consts) noexcept {
     consts.mainWads[0] = CdFile::PSXDOOM_WAD;
+    consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE.STR";
     consts.netGameId = NET_GAMEID_DOOM;
     consts.baseNumAnims = BASE_NUM_ANIMS_DOOM;
     consts.texPalette_BUTTONS = MAINPAL;
@@ -33,6 +34,7 @@ static void populateConsts_Doom(GameConstants& consts) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
     consts.mainWads[0] = CdFile::PSXDOOM_WAD;
+    consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE.STR";
     consts.netGameId = NET_GAMEID_FINAL_DOOM;
     consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;
     consts.texPalette_BUTTONS = UIPAL2;
@@ -60,6 +62,9 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
     consts.mainWads[2] = CdFile::PSXFINAL_WAD;
 
     // All other differing constants
+    consts.introMovies[0] = "DATA/MOVIE.STR";
+    consts.introMovies[1] = "DATA/GEC.STR";
+    consts.introMovies[2] = "DATA/DWORLD.STR";
     consts.netGameId = NET_GAMEID_GEC_ME_BETA3;
 }
 

@@ -149,7 +149,8 @@ void Frame::bufferFrameData(const CDXASector& sector) noexcept {
 bool Frame::demuxFrame(CDXAFileStreamer& cdStreamer, const uint8_t channelNum) noexcept {
     // This helper lambda tells if an XA sector is one we are interested in
     const auto isValidVideoSector = [channelNum](const CDXASector& sector) noexcept {
-        return (sector.header.isVideoSector() && (sector.header.channelNum == channelNum));
+        const bool bIsVideoSector = (sector.header.isVideoSector() || sector.header.isDataSector());    // Note: interpret 'data' sectors as video too
+        return (bIsVideoSector && (sector.header.channelNum == channelNum));
     };
 
     // Grab the first sector in the frame and abort if not found.

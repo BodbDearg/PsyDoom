@@ -10,6 +10,7 @@ enum class GameType : int32_t;
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct GameConstants {
     String16    mainWads[4];                        // The list of main resource WADS to load for this game (terminated by an empty string, earlier WADs take precedence).
+    String32    introMovies[3];                     // Intro movies to play for the game (up to 3, blank string terminated list)
     uint32_t    netGameId;                          // ID to send for the game type in networked games. Must match the game id for other players.
     uint32_t    baseNumAnims;                       // How many animated floor and wall textures are built into the game by default? (ignoring any loaded user mods)
     uint8_t     texPalette_BUTTONS;                 // Which palette to use for the 'BUTTONS' lump? (Note: this lump is non longer used by PsyDoom, here just for historical reference)
