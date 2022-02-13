@@ -15,6 +15,7 @@
 #include "PsyQ/LIBGPU.h"
 #include "SmallString.h"
 
+#include <algorithm>
 #include <cstdio>
 
 const fontchar_t gBigFontChars[NUM_BIG_FONT_CHARS] = {
@@ -312,7 +313,12 @@ void I_UpdatePalette() noexcept {
     uint32_t redAmount = player.damagecount;
 
     if (player.powers[pw_strength] != 0) {
-        const uint32_t berserkAmount = 12 - d_rshift<6>(player.powers[pw_strength]);
+        // PsyDoom: using 'uint' here to fix warnings about mixing signed & unsigned integers, but make sure the quantity never goes below zero!
+        #if PSYDOOM_MODS
+            const uint32_t berserkAmount = std::max(12 - d_rshift<6>(player.powers[pw_strength]), 0);
+        #else
+            const int32_t berserkAmount = 12 - d_rshift<6>(player.powers[pw_strength]);
+        #endif
 
         if (berserkAmount > redAmount) {
             redAmount = berserkAmount;
