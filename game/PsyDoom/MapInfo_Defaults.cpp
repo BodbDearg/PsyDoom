@@ -82,6 +82,8 @@ static void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
     gameInfo.texPalette_LEVCRED2 = WCREDITS1PAL;
     gameInfo.texPalette_OptionsBG = MAINPAL;
     gameInfo.texLumpName_OptionsBG = "MARB01";
+    gameInfo.creditsXPos_IDCRED2 = 9;
+    gameInfo.creditsXPos_WMSCRED2 = 7;
 
     // Doom one level demo: don't allow going past 'The Gantlet'
     if (Game::gbIsDemoVersion) {
@@ -115,6 +117,9 @@ static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
     gameInfo.texPalette_LEVCRED2 = WCREDITS1PAL;
     gameInfo.texPalette_OptionsBG = UIPAL2;
     gameInfo.texLumpName_OptionsBG = "TILE";
+    gameInfo.creditsXPos_IDCRED2 = 9;
+    gameInfo.creditsXPos_WMSCRED2 = 5;
+    gameInfo.creditsXPos_LEVCRED2 = 11;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -125,6 +130,13 @@ static void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
     gameInfo.numMaps = 94;
     gameInfo.numRegularMaps = 94;
     gameInfo.bFinalDoomGameRules = false;   // Some maps might rely on the extra forward speed of 'Doom'
+    gameInfo.bFinalDoomCredits = false;
+    gameInfo.texPalette_IDCRED1  = 26;
+    gameInfo.texPalette_IDCRED2  = 28;
+    gameInfo.texPalette_WMSCRED1 = 27;
+    gameInfo.texPalette_WMSCRED2 = 28;
+    gameInfo.creditsXPos_IDCRED2 = 0;
+    gameInfo.creditsXPos_WMSCRED2 = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

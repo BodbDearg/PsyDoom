@@ -13,8 +13,8 @@ public:
     WadList() noexcept;
     ~WadList() noexcept;
 
-    void add(const char* const filePath) noexcept;
-    void add(const CdFileId fileId) noexcept;
+    void add(const char* const filePath, const RemapWadLumpNameFn lumpNameRemapFn = nullptr) noexcept;
+    void add(const CdFileId fileId, const RemapWadLumpNameFn lumpNameRemapFn = nullptr) noexcept;
     void finalize() noexcept;
     void clear() noexcept;
 

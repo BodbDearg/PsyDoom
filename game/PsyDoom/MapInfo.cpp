@@ -79,6 +79,9 @@ GameInfo::GameInfo() noexcept
     , texPalette_LEVCRED2(WCREDITS1PAL)
     , texPalette_OptionsBG(MAINPAL)
     , texLumpName_OptionsBG("MARB01")
+    , creditsXPos_IDCRED2(9)
+    , creditsXPos_WMSCRED2(7)
+    , creditsXPos_LEVCRED2(11)
 {
 }
 
@@ -160,6 +163,9 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.texPalette_LEVCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_LEVCRED2", gameInfo.texPalette_LEVCRED2);
     gameInfo.texPalette_OptionsBG = (uint8_t) block.getSingleIntValue("TexPalette_OptionsBG", gameInfo.texPalette_OptionsBG);
     gameInfo.texLumpName_OptionsBG = block.getSingleSmallStringValue("TexLumpName_OptionsBG", gameInfo.texLumpName_OptionsBG);
+    gameInfo.creditsXPos_IDCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_IDCRED2", gameInfo.creditsXPos_IDCRED2);
+    gameInfo.creditsXPos_WMSCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_WMSCRED2", gameInfo.creditsXPos_WMSCRED2);
+    gameInfo.creditsXPos_LEVCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_LEVCRED2", gameInfo.creditsXPos_LEVCRED2);
 
     // Check the map numbers are in range
     if ((gameInfo.numMaps < 1) || (gameInfo.numMaps > 255)) {

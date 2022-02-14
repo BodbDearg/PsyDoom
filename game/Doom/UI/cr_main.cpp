@@ -147,30 +147,35 @@ void DRAW_Credits() noexcept {
     #endif
 
     // Draw the background and scrolling credits text for whatever credits page we are on
+    const MapInfo::GameInfo& gameInfo = MapInfo::getGameInfo();
+    const int16_t xpos_IDCRED2 = gameInfo.creditsXPos_IDCRED2;
+    const int16_t xpos_WMSCRED2 = gameInfo.creditsXPos_WMSCRED2;
+    const int16_t xpos_LEVCRED2 = gameInfo.creditsXPos_LEVCRED2;
+
     if (MapInfo::getGameInfo().bFinalDoomCredits) {
         // Final Doom: there are 3 pages: level, ID and Williams credits
         if (gCreditsPage == 0) {
             I_CacheAndDrawSprite(gTex_TITLE, 0, 0, Game::getTexPalette_TITLE());
-            I_CacheAndDrawSprite(gTex_LEVCRED2, 11, (int16_t) gCreditsScrollYPos, Game::getTexPalette_LEVCRED2());
+            I_CacheAndDrawSprite(gTex_LEVCRED2, xpos_LEVCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_LEVCRED2());
         }
         else if (gCreditsPage == 1) {
             I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
-            I_CacheAndDrawSprite(gTex_WMSCRED2, 5, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
+            I_CacheAndDrawSprite(gTex_WMSCRED2, xpos_WMSCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
         }
         else if (gCreditsPage == 2) {
             I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
-            I_CacheAndDrawSprite(gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
+            I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
         }
     }
     else {
         // Regular Doom: there are 2 pages: ID and Williams credits
         if (gCreditsPage == 0) {
             I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
-            I_CacheAndDrawSprite(gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
+            I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
         }
         else if (gCreditsPage == 1) {
             I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
-            I_CacheAndDrawSprite(gTex_WMSCRED2, 7, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
+            I_CacheAndDrawSprite(gTex_WMSCRED2, xpos_WMSCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
         }
     }
 

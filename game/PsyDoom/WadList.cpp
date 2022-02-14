@@ -20,18 +20,18 @@ WadList::~WadList() noexcept {
 // Adds a new WAD at the specified file path to the list.
 // Note: the 'finalize()' call must be done before the WAD's resources are made visible.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void WadList::add(const char* const filePath) noexcept {
+void WadList::add(const char* const filePath, const RemapWadLumpNameFn lumpNameRemapFn) noexcept {
     WadFile& wadFile = mWadFiles.emplace_back();
-    wadFile.open(filePath);
+    wadFile.open(filePath, lumpNameRemapFn);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Adds a new WAD for the specified game file to the list.
 // Note: the 'finalize()' call must be done before the WAD's resources are made visible.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void WadList::add(const CdFileId fileId) noexcept {
+void WadList::add(const CdFileId fileId, const RemapWadLumpNameFn lumpNameRemapFn) noexcept {
     WadFile& wadFile = mWadFiles.emplace_back();
-    wadFile.open(fileId);
+    wadFile.open(fileId, lumpNameRemapFn);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

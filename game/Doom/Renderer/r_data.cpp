@@ -8,11 +8,7 @@
 #include "PsyQ/LIBGPU.h"
 
 #include <cstring>
-
-// Structure for a palette in the game: contains 256 XBGR1555 color values.
-struct palette_t {
-    uint16_t colors[256];
-};
+#include <memory>
 
 // Details about all of the textures in the game and the sky texture
 texture_t*  gpTextures;
@@ -410,21 +406,43 @@ static void R_InitPalette() noexcept {
     const int32_t playpalLumpNum = W_GetNumForName("PLAYPAL");
 
     #if PSYDOOM_MODS
+        // Alloc an array to hold all possible palettes and copy the 'PLAYPAL' lump palettes into that list first
+        std::unique_ptr<palette_t[]> palettes = std::make_unique<palette_t[]>(MAXPALETTES);
+        const palette_t* const pGamePalettes = palettes.get();
+
         const WadLump& playPalWadLump = W_CacheLumpNum(playpalLumpNum, PU_CACHE, true);
-        const palette_t* const pGamePalettes = (const palette_t*) playPalWadLump.pCachedData;
+        uint32_t numPalettes = (uint32_t) W_LumpLength(playpalLumpNum) / sizeof(palette_t);
+
+        if (numPalettes > MAXPALETTES) {
+            I_Error("R_InitPalettes: too many palettes defined! Max: %u\n", MAXPALETTES);
+        }
+
+        std::memcpy(palettes.get(), playPalWadLump.pCachedData, sizeof(palette_t) * numPalettes);
+
+        // PsyDoom: load any extra palettes defined by the game type
+        const uint32_t numExtraPalettes = Game::gConstants.numExtraPalettes;
+
+        if (numExtraPalettes > 0) {
+            if (numPalettes + numExtraPalettes > MAXPALETTES) {
+                I_Error("R_InitPalettes: too many palettes defined! Max: %u\n", MAXPALETTES);
+            }
+
+            std::memcpy(palettes.get() + numPalettes, Game::gConstants.pExtraPalettes, sizeof(palette_t) * numExtraPalettes);
+            numPalettes += numExtraPalettes;
+        }
     #else
         const palette_t* const pGamePalettes = (const palette_t*) W_CacheLumpNum(playpalLumpNum, PU_CACHE, true);
+        const uint32_t numPalettes = W_LumpLength(playpalLumpNum) / sizeof(palette_t);
     #endif
-
-    const uint32_t numPalettes = W_LumpLength(playpalLumpNum) / sizeof(palette_t);
 
     // PsyDoom: allow up to 32 palettes to be defined, since there is leftover room in VRAM for this.
     // Doom defines 20, Final Doom 26 - so the user can define an additional 6.
     #if PSYDOOM_MODS
         const uint32_t minNumPalettes = Game::gConstants.numPalettesRequired;
 
-        if ((numPalettes < minNumPalettes) || (numPalettes > MAXPALETTES)) {
-            I_Error("R_InitPalettes: palette foulup\n");
+        // PsyDoom: just need to check for too few palettes here now because we've already checked for too many - update the message accordingly
+        if (numPalettes < minNumPalettes) {
+            I_Error("R_InitPalettes: not enough palettes defined, expected at least %u!\n", minNumPalettes);
         }
     #else
         if ((numPalettes != NUMPALETTES_DOOM) && (numPalettes != NUMPALETTES_FINAL_DOOM)) {

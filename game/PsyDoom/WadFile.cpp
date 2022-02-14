@@ -75,20 +75,20 @@ void WadFile::close() noexcept {
 // Opens the specified WAD file on disk.
 // Note: if a WAD file is currently opened then it is closed first.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void WadFile::open(const char* const filePath) noexcept {
+void WadFile::open(const char* const filePath, const RemapWadLumpNameFn lumpNameRemapFn) noexcept {
     close();
     mFileReader.open(filePath);
-    initAfterOpen();
+    initAfterOpen(lumpNameRemapFn);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Opens the specified WAD file from the game's CD.
 // Note: if a WAD file is currently opened then it is closed first.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void WadFile::open(const CdFileId fileId) noexcept {
+void WadFile::open(const CdFileId fileId, const RemapWadLumpNameFn lumpNameRemapFn) noexcept {
     close();
     mFileReader.open(fileId);
-    initAfterOpen();
+    initAfterOpen(lumpNameRemapFn);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -257,14 +257,14 @@ void WadFile::readLump(const int32_t lumpIdx, void* const pDest, const bool bDec
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Performs WAD initialization after the file has been opened
 //------------------------------------------------------------------------------------------------------------------------------------------
-void WadFile::initAfterOpen() noexcept {
-    readLumpInfo();
+void WadFile::initAfterOpen(const RemapWadLumpNameFn lumpNameRemapFn) noexcept {
+    readLumpInfo(lumpNameRemapFn);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // WAD file initialization step: reads the header for the WAD, then reads information for all lumps and sets up lump entries
 //------------------------------------------------------------------------------------------------------------------------------------------
-void WadFile::readLumpInfo() noexcept {
+void WadFile::readLumpInfo(const RemapWadLumpNameFn lumpNameRemapFn) noexcept {
     // Read and ensure the WAD file header is valid.
     // Note: allow 'IWAD' or 'PWAD' as the file id, originally just 'IWAD' was allowed.
     WadHdr wadHdr = {};
@@ -293,7 +293,18 @@ void WadFile::readLumpInfo() noexcept {
         const WadLumpHdr& lumpHdr = lumpHdrs[i];
         WadLump& lump = mLumps[i];
 
-        mLumpNames[i] = lumpHdr.name;
+        // Remap the lump name if a name remapper is supplied!
+        // When remapping however don't supply the 'compressed' flag encoded in the lump name.
+        // Also re-add it after remapping, don't allow the remapping code to have any say over whether something is compressed:
+        if (lumpNameRemapFn) {
+            // Games like 'GEC Master Edition (Beta 3)' need some lump remapping to work!
+            const uint64_t compressedLumpBit = lumpHdr.name.word() & (~WAD_LUMPNAME_MASK);
+            mLumpNames[i] = lumpNameRemapFn(lumpHdr.name.word() ^ compressedLumpBit).word() ^ compressedLumpBit;
+        } else {
+            // This is the normal case for the 'Doom' and 'Final Doom' games - no lump remapper used:
+            mLumpNames[i] = lumpHdr.name;
+        }
+
         lump.wadFileOffset = lumpHdr.wadFileOffset;
         lump.uncompressedSize = lumpHdr.uncompressedSize;
     }

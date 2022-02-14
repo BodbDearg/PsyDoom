@@ -33,15 +33,18 @@ void W_Init() noexcept {
     // Open all main WAD files and finalize the list.
     // Add user main WADs first so they take precedence and can override lumps in the original main WAD.
     ModMgr::addUserWads(gMainWadList);
+    const GameConstants& gameConsts = Game::gConstants;
 
-    for (const String16& wadName : Game::gConstants.mainWads) {
+    for (uint32_t wadIdx = 0; wadIdx < C_ARRAY_SIZE(gameConsts.mainWads); ++wadIdx) {
+        const String16& wadName = Game::gConstants.mainWads[wadIdx];
+
         if (wadName.length() > 0) {
-            gMainWadList.add(wadName);
+            gMainWadList.add(wadName, gameConsts.mainWadLumpRemappers[wadIdx]);
         } else {
             break;  // The list is terminated by an empty name!
         }
     }
-    
+
     gMainWadList.finalize();
 }
 

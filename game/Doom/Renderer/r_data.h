@@ -38,6 +38,11 @@ static constexpr uint32_t SKYPAL3               = 23;   // PSX Final Doom: addit
 static constexpr uint32_t SKYPAL4               = 24;   // PSX Final Doom: additional sky palette
 static constexpr uint32_t SKYPAL5               = 25;   // PSX Final Doom: additional sky palette
 
+// Structure for a palette in the game: contains 256 XBGR1555 color values.
+struct palette_t {
+    uint16_t colors[256];
+};
+
 // Stores information about a texture, including it's dimensions, lump info and texture cache info
 struct texture_t {
     int16_t     offsetX;    // Used for anchoring/offsetting in some UIs

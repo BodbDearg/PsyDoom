@@ -59,6 +59,7 @@ PsyDoom has the following new or limit removing features versus the original Pla
 - Extended SRAM for sounds and music: increased from `512 KiB` to a default of `16 MiB` and user extendable beyond that.
 - Extended main RAM for general game data. Increased from `~1.3 MiB` to `64 MiB` by default, and user extendable beyond that.
 - Added support for any power of two texture size from `2x2` up to `1024x512`.
+- The number of PSX format palettes that can be stored in `PLAYPAL` has been raised from `26` to `32`. Final Doom uses `26` palettes so this allows an extra `6` user palettes.
 - Increased number of SPU voices (`64` instead of `24`).
 - Floating point mixing for the SPU; eliminates clipping artifacts if sound gets too loud.
 - A [Lua scripting engine](PsyDoom%20Lua%20Scripting.md) for more complex special actions.

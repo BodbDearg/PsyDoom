@@ -49,6 +49,9 @@ struct GameInfo {
     uint8_t     texPalette_LEVCRED2;        // Palette index to use for the 'LEVCRED2' image lump
     uint8_t     texPalette_OptionsBG;       // Palette index to use for the options menu tiled background
     String8     texLumpName_OptionsBG;      // Which texture lump to use for the options menu tile background
+    int16_t     creditsXPos_IDCRED2;        // X position of the 'IDCRED2' graphic on the credits screen
+    int16_t     creditsXPos_WMSCRED2;       // X position of the 'WMSCRED2' graphic on the credits screen
+    int16_t     creditsXPos_LEVCRED2;       // X position of the 'LEVCRED2' graphic on the credits screen
 
     GameInfo() noexcept;
 };

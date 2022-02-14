@@ -174,6 +174,9 @@ GameInfo {
     TexPalette_LEVCRED2 = 19
     TexPalette_OptionsBG = 0
     TexLumpName_OptionsBG = "MARB01"
+    CreditsXPos_IDCRED2 = 9
+    CreditsXPos_WMSCRED2 = 7
+    CreditsXPos_LEVCRED2 = 11
 }
 ```
 Internal Fields:
@@ -198,6 +201,10 @@ Internal Fields:
 - `TexPalette_LEVCRED2`: palette index to use for the `LEVCRED2` image lump. Must be between 0 and 31.
 - `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
 - `TexLumpName_OptionsBG`: which texture lump to use for the options menu tiled background.
+- `CreditsXPos_IDCRED2`: X position/offset of the `IDCRED2` image (text overlay) on the credits screen.
+- `CreditsXPos_WMSCRED2`: X position/offset of the `WMSCRED2` image (text overlay) on the credits screen.
+- `CreditsXPos_LEVCRED2`: X position/offset of the `LEVCRED2` image (text overlay) on the credits screen.
+
 ## `MusicTrack` definition
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:
 ```

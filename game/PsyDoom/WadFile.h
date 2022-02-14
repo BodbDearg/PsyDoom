@@ -31,6 +31,12 @@ static_assert(sizeof(WadLumpName) == 8);
 static constexpr uint64_t WAD_LUMPNAME_MASK = Endian::isLittle() ? 0xFFFFFFFFFFFFFF7F : 0x7FFFFFFFFFFFFFFF;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Type for a function that remaps a WAD lump name to (potentially) be some other name.
+// This can be supplied as an optional extra when opening a WAD to change the names of certain lumps.
+//------------------------------------------------------------------------------------------------------------------------------------------
+typedef WadLumpName (*RemapWadLumpNameFn)(const WadLumpName& oldName) noexcept;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Represents a WAD file: provides access to the lumps within the file and maintains an open file handle to the WAD.
 // This is part of the replacement for the old WAD handling code for PsyDoom.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -41,8 +47,8 @@ public:
     ~WadFile() noexcept;
 
     void close() noexcept;
-    void open(const char* const filePath) noexcept;
-    void open(const CdFileId fileId) noexcept;
+    void open(const char* const filePath, const RemapWadLumpNameFn lumpNameRemapFn = nullptr) noexcept;
+    void open(const CdFileId fileId, const RemapWadLumpNameFn lumpNameRemapFn = nullptr) noexcept;
 
     inline bool isValidLumpIdx(const int32_t lumpIdx) const noexcept {
         return ((lumpIdx >= 0) && (lumpIdx < mNumLumps));
@@ -74,8 +80,8 @@ private:
     WadFile& operator = (const WadFile& other) = delete;
     WadFile& operator = (WadFile&& other) = delete;
 
-    void initAfterOpen() noexcept;
-    void readLumpInfo() noexcept;
+    void initAfterOpen(const RemapWadLumpNameFn lumpNameRemapFn) noexcept;
+    void readLumpInfo(const RemapWadLumpNameFn lumpNameRemapFn) noexcept;
 
     int32_t                         mNumLumps;          // The number of lumps in the WAD
     std::unique_ptr<WadLumpName[]>  mLumpNames;         // Store names in their own list for cache-friendly search
