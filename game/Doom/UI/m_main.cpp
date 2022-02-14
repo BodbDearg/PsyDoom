@@ -23,13 +23,6 @@
 
 #include <algorithm>
 
-// PsyDoom: move this up slightly to make room for the 'quit' option
-#if PSYDOOM_MODS
-    static constexpr int32_t DOOM_LOGO_YPOS = 10;
-#else
-    static constexpr int32_t DOOM_LOGO_YPOS = 20;
-#endif
-
 texture_t   gTex_BACK;                  // The background texture for the main menu
 int32_t     gCursorPos[MAXPLAYERS];     // Which of the menu options each player's cursor is over (see 'menu_t')
 int32_t     gCursorFrame;               // Current frame that the menu cursor is displaying
@@ -86,6 +79,26 @@ static const char gSkillNames[NUMSKILLS][16] = {
 static texture_t    gTex_DOOM;                  // The texture for the DOOM logo
 static int32_t      gMaxStartEpisodeOrMap;      // Restricts what maps or episodes the player can pick
 
+#if PSYDOOM_MODS
+    static texture_t gTex_DATA;     // GEC Master Edition (Beta 3): sprite atlas for the title screen containing the text 'MASTER EDITION'
+#endif
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: encapsulates the logic for drawing the 'DOOM' logo.
+// Also draws any additional elements, like 'MASTER EDITION' text for the GEC Master Edition.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void M_DrawDoomLogo() noexcept {
+    I_CacheAndDrawSprite(gTex_DOOM, 75, Game::gConstants.doomLogoYPos, Game::getTexPalette_DOOM());
+
+    // PsyDoom: cache and draw the 'MASTER EDITION' text in addition to the DOOM logo if we're playing the GEC Master Edition
+    #if PSYDOOM_MODS
+        if (Game::gGameType == GameType::GECMasterBeta3) {
+            I_CacheTex(gTex_DATA);
+            I_DrawSprite(gTex_DATA.texPageId, gPaletteClutIds[30], 48, 2, gTex_DATA.texPageCoordX + 1, gTex_DATA.texPageCoordY + 1, 157, 8);
+        }
+    #endif
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Starts up the main menu and returns the action to do on exit
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -110,7 +123,7 @@ gameaction_t RunMenu() noexcept {
 
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
-        I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
+        M_DrawDoomLogo();
         I_SubmitGpuCmds();
         I_DrawPresent();
 
@@ -135,7 +148,7 @@ gameaction_t RunMenu() noexcept {
 
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
-        I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
+        M_DrawDoomLogo();
         I_SubmitGpuCmds();
         I_DrawPresent();
 
@@ -191,6 +204,13 @@ void M_Start() noexcept {
     I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
     I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
     I_LoadAndCacheTexLump(gTex_CONNECT, "CONNECT", 0);
+
+    // PsyDoom: cache the 'DATA' sprite atlas if we're playing the GEC Master Edition since we'll be using it later:
+    #if PSYDOOM_MODS
+        if (Game::gGameType == GameType::GECMasterBeta3) {
+            I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);
+        }
+    #endif
 
     // Some basic menu setup
     gCursorFrame = 0;
@@ -518,9 +538,7 @@ void M_Drawer() noexcept {
     #endif
 
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
-
-    // Draw the DOOM logo
-    I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
+    M_DrawDoomLogo();
 
     // Draw the skull cursor
     I_DrawSprite(
@@ -578,7 +596,7 @@ void M_DrawNetworkConnectDisplay() noexcept {
     Utils::onBeginUIDrawing();
 
     I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
-    I_CacheAndDrawSprite(gTex_DOOM, 75, DOOM_LOGO_YPOS, Game::getTexPalette_DOOM());
+    M_DrawDoomLogo();
     I_CacheAndDrawSprite(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());
 
     I_SubmitGpuCmds();

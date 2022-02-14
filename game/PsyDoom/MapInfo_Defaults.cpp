@@ -131,6 +131,7 @@ static void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
     gameInfo.numRegularMaps = 94;
     gameInfo.bFinalDoomGameRules = false;   // Some maps might rely on the extra forward speed of 'Doom'
     gameInfo.bFinalDoomCredits = false;
+    gameInfo.texPalette_BACK = 29;
     gameInfo.texPalette_IDCRED1  = 26;
     gameInfo.texPalette_IDCRED2  = 28;
     gameInfo.texPalette_WMSCRED1 = 27;

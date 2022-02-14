@@ -22,6 +22,7 @@ struct GameConstants {
     bool                    bUseFinalDoomClassicDemoFormat;     // Whether to interpret classic demos as being in the Final Doom format or not
     bool                    bUseFinalDoomSkyPalettes;           // Use Final Doom style sky palettes for certain skies?
     bool                    bUseFinalDoomPasswordStorage;       // PsyDoom: store the last password in the 'Final Doom' password field instead of 'Doom'?
+    int16_t                 doomLogoYPos;                       // Y position to render the 'DOOM' logo at in menus
 
     void populate(const GameType gameType) noexcept;
 };
