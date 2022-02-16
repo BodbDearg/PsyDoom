@@ -22,7 +22,7 @@ static constexpr const uint8_t MAX_ACTIVE_GRAPHICS_SHADERS = 5;
 
 // Hardware requirement: all hardware this engine runs on must support at least this dimension as the maximum 1d and 2d image size.
 // The engine guarantees that if it creates a rendering device, it will support at least this dimension of 1d and 2d image.
-static constexpr const uint16_t MIN_REQUIRED_2D_IMAGE_SIZE_LIMIT = 16384;
+static constexpr const uint16_t MIN_REQUIRED_2D_IMAGE_SIZE_LIMIT = 4096;
 
 // Minimum alignment for the offset and size of push constants (must be at least 32-bits aligned)
 static constexpr const uint32_t MIN_PUSH_CONSTANT_ALIGNMENT = 4;

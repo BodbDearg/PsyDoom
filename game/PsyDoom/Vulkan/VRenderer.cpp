@@ -576,10 +576,35 @@ void init() noexcept {
             FatalErrors::raise("Failed to create a Vulkan command buffer required for rendering!");
     }
 
+    // Workaround for lower-end devices like the Raspberry Pi 4 which only support texture sizes of 4096x4096 at the time of writing.
+    // Determine the maximum texture size supported by the Vulkan device and if it's smaller than the already chosen PSX VRAM size
+    // then re-initialize the PSX GPU with the smaller of the two memory sizes:
+    Gpu::Core& psxGpu = PsxVm::gGpu;
+    const uint32_t vkMaxTexSize = gpPhysicalDevice->getProps().limits.maxImageDimension2D;
+
+    if ((psxGpu.ramPixelW > vkMaxTexSize) || (psxGpu.ramPixelH > vkMaxTexSize)) {
+        // Note: we require support for at least 4096x4096 textures during device selection and ALL Vulkan capable devices should
+        // be able to handle that. The following VRAM sizes are what PsyDoom supports above that baseline, so if we are resizing
+        // down then it's just going to be one of these two situations:
+        //
+        //  8192x8192 -> 4096x4096 (128 MiB VRAM -> 32 MiB VRAM)
+        //  4096x8192 -> 4096x4096 (64 MiB VRAM -> 32 MiB VRAM)
+        //
+        const char* const oldVramMiB = (psxGpu.ramPixelW >= 8192) ? "128 MiB" : "64 MiB";
+        std::printf(
+            "PsyDoom: WARNING: due to max texture size restrictions, the current Vulkan device '%s' cannot support the desired VRAM size of %s.\n"
+            "PsyDoom will be limited to using 32 MiB of VRAM instead!\n"
+            "To silence this warning, set 'VramSizeInMegabytes' in 'graphics_cfg.ini' to '32'.\n",
+            gpPhysicalDevice->getName(),
+            oldVramMiB
+        );
+
+        Gpu::destroyCore(PsxVm::gGpu);
+        Gpu::initCore(PsxVm::gGpu, 4096, 4096);
+    }
+
     // Initialize the texture representing PSX VRAM and clear it all to black.
     // Note: use the R16 UINT format as we will have to unpack in the shader depending on the PSX texture format being used.
-    Gpu::Core& psxGpu = PsxVm::gGpu;
-
     if (!gPsxVramTexture.initAs2dTexture(gDevice, VK_FORMAT_R16_UINT, psxGpu.ramPixelW, psxGpu.ramPixelH)) {
         FatalErrors::raise(
             "Failed to create a Vulkan texture for PSX VRAM!\n"
