@@ -181,7 +181,10 @@ static void determine16BitColorSupport(const vgl::PhysicalDevice& device) noexce
     gbCanPsxFbUse16BitColor = device.findFirstSupportedLinearTilingFormat(
         &COLOR_16_FORMAT,
         1,
-        VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_BLIT_SRC_BIT
+    #if VGL_VULKAN_1_1
+        VK_FORMAT_FEATURE_TRANSFER_DST_BIT |    // N.B: only available in Vulkan 1.1 or greater
+    #endif
+        VK_FORMAT_FEATURE_BLIT_SRC_BIT
     );
 
     // Can the main draw framebuffer for the Vulkan renderer use 16-bit color?
@@ -398,7 +401,13 @@ bool isHeadlessPhysicalDeviceSuitable(const vgl::PhysicalDevice& device) noexcep
 
     // Check that the PSX framebuffer can be created in either 16-bit or 32-bit color mode.
     // We prefer 16-bit but fallback to 32-bit when that is unavailable:
-    constexpr VkFormatFeatureFlags PSX_FB_FORMAT_FEATURES = VK_FORMAT_FEATURE_TRANSFER_DST_BIT | VK_FORMAT_FEATURE_BLIT_SRC_BIT;
+    constexpr VkFormatFeatureFlags PSX_FB_FORMAT_FEATURES = (
+    #if VGL_VULKAN_1_1
+        VK_FORMAT_FEATURE_TRANSFER_DST_BIT |    // N.B: only available in Vulkan 1.1 or greater
+    #endif
+        VK_FORMAT_FEATURE_BLIT_SRC_BIT
+    );
+
     const bool bPsxFbFormatSupported = (
         (device.findFirstSupportedLinearTilingFormat(&COLOR_16_FORMAT, 1, PSX_FB_FORMAT_FEATURES) != VK_FORMAT_UNDEFINED) ||
         (device.findFirstSupportedLinearTilingFormat(&COLOR_32_FORMAT, 1, PSX_FB_FORMAT_FEATURES) != VK_FORMAT_UNDEFINED)

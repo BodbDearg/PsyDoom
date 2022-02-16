@@ -98,6 +98,7 @@ set(INCLUDE_PATHS
 
 add_library(${VULKAN_GL_TGT_NAME} ${SOURCE_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
+target_compile_definitions(${VULKAN_GL_TGT_NAME} PUBLIC -DVGL_VULKAN_1_0=1)     # Target Vulkan 1.0
 
 target_link_libraries(${VULKAN_GL_TGT_NAME}
     ${BASELIB_TGT_NAME}

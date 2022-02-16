@@ -179,7 +179,14 @@ bool VulkanInstance::createVkInstance(const bool bEnableValidationLayers) noexce
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);  // Don't care, just give it whatever...
     appInfo.pEngineName = "PsyDoom";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);       // Don't care, just give it whatever...
-    appInfo.apiVersion = VK_API_VERSION_1_1;
+
+    #if VGL_VULKAN_1_1
+        appInfo.apiVersion = VK_API_VERSION_1_1;
+    #elif VGL_VULKAN_1_0
+        appInfo.apiVersion = VK_API_VERSION_1_0;
+    #else
+        #error Unsupported Vulkan version!
+    #endif
 
     // Get the settings to use for validation layer reporting for instance creation and destruction.
     VkDebugReportCallbackCreateInfoEXT dbgReportCallbackCInfo = getDebugReportCallbackCreateInfo();

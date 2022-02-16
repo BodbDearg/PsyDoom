@@ -95,12 +95,17 @@ static void querySurfaceCapsForAllDevices(
 // These checks are minimal and are intended to be built upon by the host application.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool checkBasicHeadlessDeviceSuitability(const PhysicalDevice& device) noexcept {
-    // Device must support at least Vulkan 1.1.
-    // Need to use images with 'VK_FORMAT_FEATURE_TRANSFER_DST_BIT ' set and use 'VK_IMAGE_USAGE_TRANSFER_DST_BIT'.
     const VkPhysicalDeviceProperties& deviceProps = device.getProps();
 
-    if (deviceProps.apiVersion < VK_API_VERSION_1_1)
-        return false;
+    // Requiring Vulkan 1.1 support?
+    // Vulkan 1.1 is required to use the 'VK_FORMAT_FEATURE_TRANSFER_SRC_BIT' and 'VK_FORMAT_FEATURE_TRANSFER_DST_BIT' enums:
+    #if VGL_VULKAN_1_1
+        if (deviceProps.apiVersion < VK_API_VERSION_1_1)
+            return false;
+    #elif VGL_VULKAN_1_0
+        if (deviceProps.apiVersion < VK_API_VERSION_1_0)
+            return false;
+    #endif
 
     // Must have at least 1 queue family that supports both graphics and compute.
     // Note that if a queue family supports graphics and compute, it also supports transfer operations by extension implicitly...

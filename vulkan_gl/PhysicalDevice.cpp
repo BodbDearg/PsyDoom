@@ -219,7 +219,11 @@ VkFormat PhysicalDevice::findFirstSupportedTextureFormat(
     const VkFormatFeatureFlags requiredFeatureFlags
 ) const noexcept {
     constexpr VkFormatFeatureFlags BASE_FEATURE_FLAGS = (
+    #if VGL_VULKAN_1_1
+        // TRANSFER_SRC and TRANSFER_DST are only available in Vulkan 1.1.
+        // In Vulkan 1.0 assume all image formats support these!
         VK_FORMAT_FEATURE_TRANSFER_DST_BIT |
+    #endif
         VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
     );
 
