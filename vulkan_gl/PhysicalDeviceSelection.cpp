@@ -48,10 +48,16 @@ static int compareDeviceSuitability(const PhysicalDevice& device1, const Physica
         (value1 == true)
     );
 
-    // Prefer non-software GPU devices
+    // If no discrete GPU is available, prefer integrated GPUs
+    COMPARE_DEVICES_ON_VALUE(
+        ((device.getProps().deviceType & VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) != 0),
+        (value1 == true)
+    );
+
+    // Prefer any other non-software GPU devices
     COMPARE_DEVICES_ON_VALUE(
         ((device.getProps().deviceType & VK_PHYSICAL_DEVICE_TYPE_CPU) != 0),
-        (value1 == true)
+        (value1 == false)
     );
 
     // Prefer devices with more on-device memory available
