@@ -4,7 +4,7 @@
 
 #include "Defines.h"
 #include "IVRenderPath.h"
-#include "MutableTexture.h"
+#include "Texture.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // A Vulkan renderer path which takes the output from the emulated PSX GPU and blits it to the current swapchain image for display.
@@ -33,11 +33,7 @@ private:
 
     // PSX renderer framebuffers, as copied from the PSX GPU - these are blitted onto the current swapchain image.
     // One for each ringbuffer slot, so we can update while a previous frame's image is still blitting to the screen.
-    vgl::MutableTexture mPsxFramebufferTextures[vgl::Defines::RINGBUFFER_SIZE];
-
-    // Whether each of the framebuffer textures has been transferred from 'preinitialized' to the 'general' Vulkan image layout.
-    // This needs to be done the first time they are used.
-    bool mbFbTexInVkGeneralImgLayout[vgl::Defines::RINGBUFFER_SIZE];
+    vgl::Texture mPsxFramebufferTextures[vgl::Defines::RINGBUFFER_SIZE];
 };
 
 #endif  // #if PSYDOOM_VULKAN_RENDERER

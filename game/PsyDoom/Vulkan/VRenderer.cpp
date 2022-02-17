@@ -178,7 +178,7 @@ static void decideDrawSampleCount() noexcept {
 static void determine16BitColorSupport(const vgl::PhysicalDevice& device) noexcept {
     // Can the PSX framebuffer texture use a 16-bit format?
     // This is not used for any rendering, just for copying to and blitting from...
-    gbCanPsxFbUse16BitColor = device.findFirstSupportedLinearTilingFormat(
+    gbCanPsxFbUse16BitColor = device.findFirstSupportedOptimalTilingFormat(
         &COLOR_16_FORMAT,
         1,
     #if VGL_VULKAN_1_1
@@ -409,8 +409,8 @@ bool isHeadlessPhysicalDeviceSuitable(const vgl::PhysicalDevice& device) noexcep
     );
 
     const bool bPsxFbFormatSupported = (
-        (device.findFirstSupportedLinearTilingFormat(&COLOR_16_FORMAT, 1, PSX_FB_FORMAT_FEATURES) != VK_FORMAT_UNDEFINED) ||
-        (device.findFirstSupportedLinearTilingFormat(&COLOR_32_FORMAT, 1, PSX_FB_FORMAT_FEATURES) != VK_FORMAT_UNDEFINED)
+        (device.findFirstSupportedOptimalTilingFormat(&COLOR_16_FORMAT, 1, PSX_FB_FORMAT_FEATURES) != VK_FORMAT_UNDEFINED) ||
+        (device.findFirstSupportedOptimalTilingFormat(&COLOR_32_FORMAT, 1, PSX_FB_FORMAT_FEATURES) != VK_FORMAT_UNDEFINED)
     );
 
     if (!bPsxFbFormatSupported)

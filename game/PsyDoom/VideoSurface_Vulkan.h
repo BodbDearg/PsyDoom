@@ -2,7 +2,7 @@
 
 #if PSYDOOM_VULKAN_RENDERER
 
-#include "MutableTexture.h"
+#include "Texture.h"
 
 BEGIN_NAMESPACE(Video)
 
@@ -17,16 +17,16 @@ public:
     virtual uint32_t getHeight() const noexcept override;
     virtual void setPixels(const uint32_t* const pSrcPixels) noexcept override;
 
-    inline const vgl::MutableTexture& getTexture() const noexcept { return mTexture; }
+    inline const vgl::Texture& getTexture() const noexcept { return mTexture; }
 
-    inline void setDidTransitionToVkGeneralImgLayout() noexcept { mbInVkGeneralImgLayout = true; }
-    inline bool didDidTransitionToVkGeneralImgLayout() const noexcept { return mbInVkGeneralImgLayout; }
+    inline void setReadyForBlit() noexcept { mbIsReadyForBlit = true; }
+    inline bool isReadyForBlit() const noexcept { return mbIsReadyForBlit; }
 
 private:
-    vgl::MutableTexture     mTexture;                   // Contains the surface pixels
-    uint32_t                mWidth;                     // Pixel width of the surface
-    uint32_t                mHeight;                    // Pixel height of the surface
-    bool                    mbInVkGeneralImgLayout;     // A flag set to true once the image has been transitioned from 'preinitialized' to the Vulkan 'general' image layout
+    vgl::Texture    mTexture;           // Contains the surface pixels
+    uint32_t        mWidth;             // Pixel width of the surface
+    uint32_t        mHeight;            // Pixel height of the surface
+    bool            mbIsReadyForBlit;   // A flag set to 'true' once the surface is ready for blitting (is in the transfer surface optimal layout)
 };
 
 END_NAMESPACE(Video)

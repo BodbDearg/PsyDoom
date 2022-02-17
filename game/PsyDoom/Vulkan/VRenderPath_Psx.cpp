@@ -20,7 +20,6 @@ VRenderPath_Psx::VRenderPath_Psx() noexcept
     : mbIsValid(false)
     , mpDevice(nullptr)
     , mPsxFramebufferTextures{}
-    , mbFbTexInVkGeneralImgLayout{}
 {
 }
 
@@ -43,14 +42,13 @@ void VRenderPath_Psx::init(vgl::LogicalDevice& device, const VkFormat psxFramebu
     // Only two framebuffer formats are supported
     ASSERT((psxFramebufferFormat == VK_FORMAT_A1R5G5B5_UNORM_PACK16) || (psxFramebufferFormat == VK_FORMAT_B8G8R8A8_UNORM));
 
-    // Initialize the PSX framebuffer textures used to hold the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer
+    // Initialize the PSX framebuffer textures used to hold the old PSX renderer framebuffer before it is blit to the Vulkan framebuffer.
+    // Note: enable these textures to be read/copied from also!
     for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
-        vgl::MutableTexture& psxFbTex = mPsxFramebufferTextures[i];
-
-        if (!psxFbTex.initAs2dTexture(device, psxFramebufferFormat, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y))
+        vgl::Texture& psxFbTex = mPsxFramebufferTextures[i];
+        
+        if (!psxFbTex.initAs2dTexture(device, psxFramebufferFormat, Video::ORIG_DRAW_RES_X, Video::ORIG_DRAW_RES_Y, true))  // N.B: 'true' for copyable!
             FatalErrors::raise("Failed to create a Vulkan texture for the classic PSX renderer's framebuffer!");
-
-        mbFbTexInVkGeneralImgLayout[i] = false;     // Initially the texture is in the 'preinitialized' layout
     }
 
     // Now initialized
@@ -66,9 +64,8 @@ void VRenderPath_Psx::destroy() noexcept {
 
     mbIsValid = false;
 
-    for (uint32_t i = 0; i < vgl::Defines::RINGBUFFER_SIZE; ++i) {
-        mbFbTexInVkGeneralImgLayout[i] = false;
-        mPsxFramebufferTextures[i].destroy(true);
+    for (vgl::Texture& texture : mPsxFramebufferTextures) {
+        texture.destroy(true);
     }
 
     mpDevice = nullptr;
@@ -92,36 +89,6 @@ void VRenderPath_Psx::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecord
     ASSERT(mbIsValid);
     ASSERT(swapchain.isValid());
     ASSERT(swapchain.getAcquiredImageIdx() < swapchain.getLength());
-
-    // Transition the PSX framebuffer from the 'preinitialized' layout to 'general' in preparation for blitting.
-    // Note that this only needs to be done once per framebuffer image.
-    vgl::LogicalDevice& device = *mpDevice;
-    const uint32_t ringbufferIdx = device.getRingbufferMgr().getBufferIndex();
-
-    if (!mbFbTexInVkGeneralImgLayout[ringbufferIdx]) {
-        vgl::MutableTexture& psxFbTexture = mPsxFramebufferTextures[ringbufferIdx];
-
-        VkImageMemoryBarrier imgBarrier = {};
-        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
-        imgBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
-        imgBarrier.image = psxFbTexture.getVkImage();
-        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imgBarrier.subresourceRange.levelCount = 1;
-        imgBarrier.subresourceRange.layerCount = 1;
-
-        cmdRec.addPipelineBarrier(
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            0,
-            nullptr,
-            1,
-            &imgBarrier
-        );
-
-        // Don't do this transition again!
-        mbFbTexInVkGeneralImgLayout[ringbufferIdx] = true;
-    }
 
     // Transition the swapchain image to transfer destination optimal in preparation for blitting
     const uint32_t swapchainIdx = swapchain.getAcquiredImageIdx();
@@ -178,18 +145,21 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
     // Copy the PlayStation 1 framebuffer to the current framebuffer texture
     vgl::LogicalDevice& device = *mpDevice;
     const uint32_t ringbufferIdx = device.getRingbufferMgr().getBufferIndex();
-    vgl::MutableTexture& psxFbTexture = mPsxFramebufferTextures[ringbufferIdx];
+    vgl::Texture& psxFbTexture = mPsxFramebufferTextures[ringbufferIdx];
 
     {
         Gpu::Core& gpu = PsxVm::gGpu;
         const uint16_t* pSrcPixels = gpu.pRam + (gpu.displayAreaX + (uintptr_t) gpu.displayAreaY * gpu.ramPixelW);
+        const std::byte* const pDstTextureBytes = psxFbTexture.lock();
 
         if (psxFbTexture.getFormat() == VK_FORMAT_A1R5G5B5_UNORM_PACK16) {
-            copyPsxFramebufferToFbTexture_A1R5G5B5(pSrcPixels, (uint16_t*) psxFbTexture.getBytes());
+            copyPsxFramebufferToFbTexture_A1R5G5B5(pSrcPixels, (uint16_t*) pDstTextureBytes);
         } else {
             ASSERT(psxFbTexture.getFormat() == VK_FORMAT_B8G8R8A8_UNORM);
-            copyPsxFramebufferToFbTexture_B8G8R8A8(pSrcPixels, (uint32_t*) psxFbTexture.getBytes());
+            copyPsxFramebufferToFbTexture_B8G8R8A8(pSrcPixels, (uint32_t*) pDstTextureBytes);
         }
+
+        psxFbTexture.unlock();
     }
 
     // Get the area of the window to blit the PSX framebuffer to
@@ -206,6 +176,29 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
     // This avoids errors on MacOS/Metal also, where we try to blit to an incompatible destination window size.
     if (VRenderer::willSkipNextFramePresent())
         return;
+
+    // Wait for uploads to finish then transition the PSX framebuffer to transfer source optimal
+    {
+        VkImageMemoryBarrier imgBarrier = {};
+        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+        imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        imgBarrier.image = psxFbTexture.getVkImage();
+        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imgBarrier.subresourceRange.levelCount = 1;
+        imgBarrier.subresourceRange.layerCount = 1;
+
+        cmdRec.addPipelineBarrier(
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            nullptr,
+            1,
+            &imgBarrier
+        );
+    }
 
     // Blit the PSX framebuffer to the swapchain image
     ASSERT((Video::gTopOverscan >= 0) && (Video::gTopOverscan < Video::ORIG_DRAW_RES_Y / 2));
@@ -232,7 +225,7 @@ void VRenderPath_Psx::endFrame(vgl::Swapchain& swapchain, vgl::CmdBufferRecorder
 
         cmdRec.blitImage(
             psxFbTexture.getVkImage(),
-            VK_IMAGE_LAYOUT_GENERAL,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             swapchainImage,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             1,

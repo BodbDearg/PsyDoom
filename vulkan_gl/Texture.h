@@ -28,6 +28,7 @@ public:
         LogicalDevice& device,
         const VkFormat textureFormat,
         const uint32_t width,
+        const bool bCopyable = false,
         const uint32_t numLayers = 1,
         const uint32_t numMipLevels = 1,
         const AlphaMode alphaMode = AlphaMode::UNSPECIFIED
@@ -38,6 +39,7 @@ public:
         const VkFormat textureFormat,
         const uint32_t width,
         const uint32_t height,
+        const bool bCopyable = false,
         const uint32_t numLayers = 1,
         const uint32_t numMipLevels = 1,
         const AlphaMode alphaMode = AlphaMode::UNSPECIFIED
@@ -49,6 +51,7 @@ public:
         const uint32_t width,
         const uint32_t height,
         const uint32_t depth,
+        const bool bCopyable = false,
         const uint32_t numMipLevels = 1,
         const AlphaMode alphaMode = AlphaMode::UNSPECIFIED
     ) noexcept;
@@ -58,6 +61,7 @@ public:
         const VkFormat textureFormat,
         const uint32_t width,
         const uint32_t height,
+        const bool bCopyable = false,
         const uint32_t numLayers = 1,
         const uint32_t numMipLevels = 1,
         const AlphaMode alphaMode = AlphaMode::UNSPECIFIED

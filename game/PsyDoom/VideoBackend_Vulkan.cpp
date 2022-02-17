@@ -146,7 +146,7 @@ void VideoBackend_Vulkan::displayExternalSurface(
     const bool bCanDraw = VRenderer::beginFrame();
 
     // Get the size of the area we can blit to and clip the desintation rectangle to that area
-    const vgl::MutableTexture& srcTexture = vulkanSurface.getTexture();
+    const vgl::Texture& srcTexture = vulkanSurface.getTexture();
     const int32_t screenW = VRenderer::gSwapchain.getSwapExtentWidth();
     const int32_t screenH = VRenderer::gSwapchain.getSwapExtentHeight();
 
@@ -215,22 +215,24 @@ void VideoBackend_Vulkan::displayExternalSurface(
         const uint32_t curSwapchainImgIdx = VRenderer::gSwapchain.getAcquiredImageIdx();
         const VkImage vkSwapchainImg = VRenderer::gSwapchain.getVkImages()[curSwapchainImgIdx];
 
-        // Transition the blit texture to general (from preinitialized) in preparation for blitting (if not already done so)
+        // Transition the blit texture to the 'transfer src' layout (from 'shader read only') in preparation for blitting (if not already done so)
         vgl::CmdBufferRecorder& cmdRec = VRenderer::gCmdBufferRec;
 
-        if (!vulkanSurface.didDidTransitionToVkGeneralImgLayout()) {
+        if (!vulkanSurface.isReadyForBlit()) {
             VkImageMemoryBarrier imgBarrier = {};
             imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            imgBarrier.oldLayout = VK_IMAGE_LAYOUT_PREINITIALIZED;
-            imgBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+            imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;            // Wait for any texture uploads to finish
+            imgBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            imgBarrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             imgBarrier.image = srcTexture.getVkImage();
             imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imgBarrier.subresourceRange.levelCount = 1;
             imgBarrier.subresourceRange.layerCount = 1;
 
             cmdRec.addPipelineBarrier(
-                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
                 0,
                 nullptr,
                 1,
@@ -238,7 +240,7 @@ void VideoBackend_Vulkan::displayExternalSurface(
             );
 
             // Don't do this transition again!
-            vulkanSurface.setDidTransitionToVkGeneralImgLayout();
+            vulkanSurface.setReadyForBlit();
         }
 
         // Schedule the blit
@@ -261,7 +263,7 @@ void VideoBackend_Vulkan::displayExternalSurface(
 
             cmdRec.blitImage(
                 srcTexture.getVkImage(),
-                VK_IMAGE_LAYOUT_GENERAL,
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                 vkSwapchainImg,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 1,

@@ -77,6 +77,7 @@ bool Texture::initAs1dTexture(
     LogicalDevice& device,
     const VkFormat textureFormat,
     const uint32_t width,
+    const bool bCopyable,
     const uint32_t numLayers,
     const uint32_t numMipLevels,
     const AlphaMode alphaMode
@@ -86,7 +87,7 @@ bool Texture::initAs1dTexture(
         VK_IMAGE_TYPE_1D,
         (numLayers > 1) ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D,
         VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | ((bCopyable) ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0),
         VK_IMAGE_LAYOUT_UNDEFINED,
         DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
         textureFormat,
@@ -110,6 +111,7 @@ bool Texture::initAs2dTexture(
     const VkFormat textureFormat,
     const uint32_t width,
     const uint32_t height,
+    const bool bCopyable,
     const uint32_t numLayers,
     const uint32_t numMipLevels,
     const AlphaMode alphaMode
@@ -119,7 +121,7 @@ bool Texture::initAs2dTexture(
         VK_IMAGE_TYPE_2D,
         (numLayers > 1) ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D,
         VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | ((bCopyable) ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0),
         VK_IMAGE_LAYOUT_UNDEFINED,
         DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
         textureFormat,
@@ -144,6 +146,7 @@ bool Texture::initAs3dTexture(
     const uint32_t width,
     const uint32_t height,
     const uint32_t depth,
+    const bool bCopyable,
     const uint32_t numMipLevels,
     const AlphaMode alphaMode
 ) noexcept {
@@ -152,7 +155,7 @@ bool Texture::initAs3dTexture(
         VK_IMAGE_TYPE_3D,
         VK_IMAGE_VIEW_TYPE_3D,
         VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | ((bCopyable) ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0),
         VK_IMAGE_LAYOUT_UNDEFINED,
         DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
         textureFormat,
@@ -176,6 +179,7 @@ bool Texture::initAsCubeTexture(
     const VkFormat textureFormat,
     const uint32_t width,
     const uint32_t height,
+    const bool bCopyable,
     const uint32_t numLayers,
     const uint32_t numMipLevels,
     const AlphaMode alphaMode
@@ -185,7 +189,7 @@ bool Texture::initAsCubeTexture(
         VK_IMAGE_TYPE_2D,
         (numLayers > 1) ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY : VK_IMAGE_VIEW_TYPE_CUBE,
         VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | ((bCopyable) ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0),
         VK_IMAGE_LAYOUT_UNDEFINED,
         DeviceMemAllocMode::PREFER_DEVICE_LOCAL,
         textureFormat,
@@ -352,7 +356,9 @@ void Texture::unlock(TransferTask* const pTransferTaskOverride) noexcept {
 
     // Determine the old texture image layout.
     // If we have done an upload previously then it's shader read only optimal, otherwise it's undefined.
-    const VkImageLayout oldVkImageLayout = (mbDidATextureUpload) ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED;
+    // Optimization: use 'undefined' regardless of previous uploads if ovewriting the entire image; this allows the driver to just discard all the old data.
+    const bool bLockedWholeImage = ((mLockedSizeX >= mWidth) && (mLockedSizeY >= mHeight) && (mLockedSizeZ >= mDepth));
+    const VkImageLayout oldVkImageLayout = (mbDidATextureUpload && (!bLockedWholeImage)) ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED;
 
     // Schedule the data transfer for the image and image layout transitions
     TransferTask* pDstTask;
