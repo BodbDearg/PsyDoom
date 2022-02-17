@@ -181,6 +181,8 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
         if (oldName == "WMSCRED2")  { return "_UNUSED4";  }
         // Use the main menu background from 'MEDOOM.WAD' instead of 'PSXFINAL.WAD'
         if (oldName == "BACK")      { return "_UNUSED5";  }
+        // Use the 'DOOM' logo from 'MEDOOM.WAD' instead of 'PSXFINAL.WAD'
+        if (oldName == "DOOM")      { return "_UNUSED6";  }
 
         // Leave this lump name alone!
         return oldName;
