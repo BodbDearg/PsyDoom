@@ -863,9 +863,11 @@ gameaction_t MiniLoop(
                 const profiler_clock::time_point profilerEndTime = profiler_clock::now();
                 const profiler_clock::duration elapsedTime = profilerEndTime - profilerStartTime;
                 const std::chrono::microseconds elapsedTimeUsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime);
-                const double elapsedTimeSec = (double) elapsedTimeUsec.count() / 1000000.0;
-                const double fps = (elapsedTimeSec > 0.0) ? 1.0 / elapsedTimeSec : 999999.0;
-                std::printf("[GAME LOOP] usec=%zu fps=%.1f\n", (size_t) elapsedTimeUsec.count(), fps);
+
+                const double avgUsec = (double) elapsedTimeUsec.count() / (double) PROFILER_NUM_FRAMES_TO_AVERAGE;
+                const double avgElapsedSec = avgUsec / 1000000.0;
+                const double avgFps = (avgElapsedSec > 0.0) ? 1.0 / avgElapsedSec : 999999.0;
+                std::printf("[GAME LOOP] usec=%zu fps=%.1f\n", (size_t)(avgUsec + 0.5), avgFps);
 
                 // Begin a new profiling iteration
                 profilerNumFramesElapsed = 0;
