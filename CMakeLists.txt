@@ -64,6 +64,8 @@ These were tools which were used during the earlier stages of development.")
 set(PSYDOOM_INCLUDE_AUDIO_TOOLS FALSE CACHE BOOL
 "If TRUE include PlayStation Doom audio related tools in the project tree.")
 
+set(PSYDOOM_PROFILE_GAME_LOOP FALSE CACHE BOOL "Enables profiling of the main game loop. Frame times are printed to standard out.")
+
 # Adding individual projects and libraries
 add_subdirectory("${PROJECT_SOURCE_DIR}/baselib")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/rapidjson")

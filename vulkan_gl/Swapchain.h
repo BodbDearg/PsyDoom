@@ -11,6 +11,15 @@ class LogicalDevice;
 class Semaphore;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Enum representing a desired present mode for a swapchain
+//------------------------------------------------------------------------------------------------------------------------------------------
+enum SwapPresentMode : uint32_t {
+    Immediate,      // Do double buffering but present immediately with no vsync
+    DoubleBuffer,   // Do normal double buffering with vsync
+    TripleBuffer    // Do triple buffering with vsync
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Represents a Vulkan swapchain.
 // A swapchain describes the surface formats rendered to for the output device, how swaps are performed and so forth...
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -26,7 +35,7 @@ public:
         LogicalDevice& device,
         const VkFormat winSurfaceFormat,
         const VkColorSpaceKHR winSurfaceColorspace,
-        const bool bTripleBuffer
+        const SwapPresentMode wantedPresentMode
     ) noexcept;
 
     void destroy(const bool bForceIfInvalid = false) noexcept;
@@ -55,9 +64,9 @@ private:
     Swapchain& operator = (const Swapchain& other) = delete;
     Swapchain& operator = (Swapchain&& other) = delete;
 
-    void choosePresentMode(const bool bTripleBuffer) noexcept;
+    void choosePresentMode(const SwapPresentMode wantedPresentMode) noexcept;
     bool chooseSwapExtent() noexcept;
-    void chooseSwapchainLength(const bool bTripleBuffer) noexcept;
+    void chooseSwapchainLength(const SwapPresentMode wantedPresentMode) noexcept;
     bool createSwapchain() noexcept;
     bool createSwapchainImageViews() noexcept;
 

@@ -366,7 +366,13 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
         gDevice.waitUntilDeviceIdle();
         gSwapchain.destroy();
 
-        if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace, Config::gbVulkanTripleBuffer))
+        #if PSYDOOM_PROFILE_GAME_LOOP
+            const vgl::SwapPresentMode swapMode = vgl::SwapPresentMode::Immediate;  // Don't use vsync if profiling the game loop!
+        #else
+            const vgl::SwapPresentMode swapMode = (Config::gbVulkanTripleBuffer) ? vgl::SwapPresentMode::TripleBuffer : vgl::SwapPresentMode::DoubleBuffer;
+        #endif
+
+        if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace, swapMode))
             return false;
 
         // Create or recreate the swap image synchronization semaphores too. We do this every time the swapchain is recreated in case

@@ -47,7 +47,7 @@ bool Swapchain::init(
     LogicalDevice& device,
     const VkFormat winSurfaceFormat,
     const VkColorSpaceKHR winSurfaceColorspace,
-    const bool bTripleBuffer
+    const SwapPresentMode wantedPresentMode
 ) noexcept {
     // Preconditions
     ASSERT_LOG((!mbIsValid), "Must call destroy() before re-initializing!");
@@ -77,8 +77,8 @@ bool Swapchain::init(
         return false;
 
     // Choose swapchain length, present mode and swap extent
-    chooseSwapchainLength(bTripleBuffer);
-    choosePresentMode(bTripleBuffer);
+    chooseSwapchainLength(wantedPresentMode);
+    choosePresentMode(wantedPresentMode);
 
     if (!chooseSwapExtent()) {
         ASSERT_FAIL("Failed to choose a swap extent for the swapchain!");
@@ -246,14 +246,22 @@ uint32_t Swapchain::acquireImage(Semaphore& imageReadySemaphore) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Chooses a presentation mode for the swap chain
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Swapchain::choosePresentMode(const bool bTripleBuffer) noexcept {
+void Swapchain::choosePresentMode(const SwapPresentMode wantedPresentMode) noexcept {
     // There should be a valid surface caps object and at least 1 valid present mode if we've reached here!
     const std::vector<VkPresentModeKHR>& vkPresentModes = mDeviceSurfaceCaps.getVkPresentModes();
     ASSERT(!vkPresentModes.empty());
 
-    // Prefer VK_PRESENT_MODE_MAILBOX_KHR if available when we want to do triple buffering. Whenever we submit new images to the queue
-    // in this mode and the queue is full then the current image in waiting will simply be replaced...
-    if (bTripleBuffer && (mLength >= 3)) {
+    // If we don't want vsync then try and use the immediate present mode
+    if (wantedPresentMode == SwapPresentMode::Immediate) {
+        if (Utils::containerContains(vkPresentModes, VK_PRESENT_MODE_IMMEDIATE_KHR)) {
+            mPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+            return;
+        }
+    }
+
+    // Prefer VK_PRESENT_MODE_MAILBOX_KHR if available when we want to do triple buffering. Whenever we submit new images
+    // to the queue in this mode and the queue is full then the current image in waiting will simply be replaced...
+    if ((wantedPresentMode == SwapPresentMode::TripleBuffer) && (mLength >= 3)) {
         if (Utils::containerContains(vkPresentModes, VK_PRESENT_MODE_MAILBOX_KHR)) {
             mPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
             return;
@@ -323,10 +331,10 @@ bool Swapchain::chooseSwapExtent() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Choose how many images to use in the swap chain
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Swapchain::chooseSwapchainLength(const bool bTripleBuffer) noexcept {
+void Swapchain::chooseSwapchainLength(const SwapPresentMode wantedPresentMode) noexcept {
     // If we are doing triple buffering ask for 3 images, otherwise 2
     const VkSurfaceCapabilitiesKHR& vkSurfaceCaps = mDeviceSurfaceCaps.getVkSurfaceCapabilities();
-    mLength = (bTripleBuffer) ? 3 : 2;
+    mLength = (wantedPresentMode == SwapPresentMode::TripleBuffer) ? 3 : 2;
 
     if (vkSurfaceCaps.maxImageCount != 0) {
         mLength = std::min(mLength, vkSurfaceCaps.maxImageCount);

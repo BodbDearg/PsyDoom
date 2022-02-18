@@ -41,8 +41,14 @@
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
 
+#include <chrono>
 #include <cstdio>
 #include <memory>
+
+#if PSYDOOM_PROFILE_GAME_LOOP
+    // PsyDoom: how many frames to average frame time over when profiling the game loop
+    constexpr uint32_t PROFILER_NUM_FRAMES_TO_AVERAGE = 15;
+#endif
 
 // The current number of 1 vblank ticks
 int32_t gTicCon;
@@ -625,6 +631,13 @@ gameaction_t MiniLoop(
 
     gElapsedVBlanks = 0;
 
+    // PsyDoom: stuff relating to profiling the game loop
+    #if PSYDOOM_PROFILE_GAME_LOOP
+        typedef std::chrono::high_resolution_clock profiler_clock;
+        profiler_clock::time_point profilerStartTime = profiler_clock::now();   // When we started profiling the frames
+        uint32_t profilerNumFramesElapsed = 0;                                  // How many frames have elapsed
+    #endif
+
     // Continue running the game loop until something causes us to exit
     gameaction_t exitAction = ga_nothing;
 
@@ -840,6 +853,25 @@ gameaction_t MiniLoop(
 
         gPrevGameTic = gGameTic;
         gbIsFirstTick = false;
+
+        // PsyDoom: emit frame times if profiling and it's time to emit
+        #if PSYDOOM_PROFILE_GAME_LOOP
+            profilerNumFramesElapsed++;
+
+            if (profilerNumFramesElapsed >= PROFILER_NUM_FRAMES_TO_AVERAGE) {
+                // Print the performance info
+                const profiler_clock::time_point profilerEndTime = profiler_clock::now();
+                const profiler_clock::duration elapsedTime = profilerEndTime - profilerStartTime;
+                const std::chrono::microseconds elapsedTimeUsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime);
+                const double elapsedTimeSec = (double) elapsedTimeUsec.count() / 1000000.0;
+                const double fps = (elapsedTimeSec > 0.0) ? 1.0 / elapsedTimeSec : 999999.0;
+                std::printf("[GAME LOOP] usec=%zu fps=%.1f\n", (size_t) elapsedTimeUsec.count(), fps);
+
+                // Begin a new profiling iteration
+                profilerNumFramesElapsed = 0;
+                profilerStartTime = profilerEndTime;
+            }
+        #endif
     }
 
     // PsyDoom: one last sound update before we exit

@@ -458,6 +458,12 @@ else()
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_LIMIT_REMOVING=0)
 endif()
 
+if (PSYDOOM_PROFILE_GAME_LOOP)
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_PROFILE_GAME_LOOP=1)
+else()
+    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_PROFILE_GAME_LOOP=0)
+endif()
+
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})
 
