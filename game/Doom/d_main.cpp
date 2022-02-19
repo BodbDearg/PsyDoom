@@ -74,6 +74,7 @@ gametype_t  gStartGameType      = gt_single;
 bool gbDidAbortGame = false;
 
 #if PSYDOOM_MODS
+    double      gPrevFrameDuration;         // How long the previous frame took: used to try and provide more accurate interpolation
     bool        gbIsFirstTick;              // Set to 'true' for the very first tick only, 'false' thereafter
     bool        gbKeepInputEvents;          // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
     std::byte*  gpDemoBufferEnd;            // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
@@ -631,11 +632,17 @@ gameaction_t MiniLoop(
 
     gElapsedVBlanks = 0;
 
-    // PsyDoom: stuff relating to profiling the game loop
+    // PsyDoom: stuff relating to profiling the game loop and timing frame durations
+    typedef std::chrono::high_resolution_clock frametimer_t;
+
+    #if PSYDOOM_MODS
+        frametimer_t::time_point frameStartTime = frametimer_t::now();      // When we started the current frame
+        gPrevFrameDuration = 0.0;                                           // No previous frame duration (yet)
+    #endif
+
     #if PSYDOOM_PROFILE_GAME_LOOP
-        typedef std::chrono::high_resolution_clock profiler_clock;
-        profiler_clock::time_point profilerStartTime = profiler_clock::now();   // When we started profiling the frames
-        uint32_t profilerNumFramesElapsed = 0;                                  // How many frames have elapsed
+        frametimer_t::time_point profilerStartTime = frameStartTime;        // When we started profiling the frames
+        uint32_t profilerNumFramesElapsed = 0;                              // How many frames have elapsed
     #endif
 
     // Continue running the game loop until something causes us to exit
@@ -854,14 +861,20 @@ gameaction_t MiniLoop(
         gPrevGameTic = gGameTic;
         gbIsFirstTick = false;
 
+        // PsyDoom: wrap up timing this frame's duration
+        #if PSYDOOM_MODS
+            const frametimer_t::time_point now = frametimer_t::now();
+            gPrevFrameDuration = std::chrono::duration<double>(now - frameStartTime).count();
+            frameStartTime = now;
+        #endif
+
         // PsyDoom: emit frame times if profiling and it's time to emit
         #if PSYDOOM_PROFILE_GAME_LOOP
             profilerNumFramesElapsed++;
 
             if (profilerNumFramesElapsed >= PROFILER_NUM_FRAMES_TO_AVERAGE) {
                 // Print the performance info
-                const profiler_clock::time_point profilerEndTime = profiler_clock::now();
-                const profiler_clock::duration elapsedTime = profilerEndTime - profilerStartTime;
+                const frametimer_t::duration elapsedTime = now - profilerStartTime;
                 const std::chrono::microseconds elapsedTimeUsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime);
 
                 const double avgUsec = (double) elapsedTimeUsec.count() / (double) PROFILER_NUM_FRAMES_TO_AVERAGE;
@@ -871,7 +884,7 @@ gameaction_t MiniLoop(
 
                 // Begin a new profiling iteration
                 profilerNumFramesElapsed = 0;
-                profilerStartTime = profilerEndTime;
+                profilerStartTime = now;
             }
         #endif
     }

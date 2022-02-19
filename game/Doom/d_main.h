@@ -28,6 +28,7 @@ extern gametype_t   gStartGameType;
 extern bool         gbDidAbortGame;
 
 #if PSYDOOM_MODS
+    extern double       gPrevFrameDuration;
     extern bool         gbIsFirstTick;
     extern bool         gbKeepInputEvents;
     extern std::byte*   gpDemoBufferEnd;

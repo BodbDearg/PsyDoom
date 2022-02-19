@@ -8,6 +8,7 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_spec.h"
 #include "Doom/Game/p_user.h"
+#include "Doom/d_main.h"
 #include "PsyDoom/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyQ/LIBGPU.h"
@@ -64,9 +65,10 @@ subsector_t**   gppEndDrawSubsector;    // Used to point to the last draw subsec
 
 // PsyDoom: used for interpolation for uncapped framerates 
 #if PSYDOOM_MODS
-    typedef std::chrono::high_resolution_clock::time_point timepoint_t;
-    static timepoint_t gPrevPlayerFrameStartTime;
-    static timepoint_t gPrevWorldFrameStartTime;
+    typedef std::chrono::high_resolution_clock frametimer_t;
+
+    static frametimer_t::time_point gCurPlayerFrameStartTime;   // When the current frame started for the player (30 Hz tics)
+    static frametimer_t::time_point gCurWorldFrameStartTime;    // When the current frame started for the world and mobjs (15 Hz tics)
 
     fixed_t     gPlayerLerpFactor;      // 0-1 interpolation factor for the current draw frame (player only, 30 Hz tics)
     fixed_t     gWorldLerpFactor;       // 0-1 interpolation factor for the current draw frame (world and mobj, 15 Hz tics)
@@ -472,7 +474,7 @@ void R_NextPlayerInterpolation() noexcept {
 
     const bool bAutomapFreeCamera = (player.automapflags & AF_FOLLOW);
 
-    gPrevPlayerFrameStartTime = std::chrono::high_resolution_clock::now();
+    gCurPlayerFrameStartTime = frametimer_t::now();
     gOldViewX = mobj.x;
     gOldViewY = mobj.y;
     gOldViewZ = player.viewz;
@@ -492,7 +494,7 @@ void R_NextPlayerInterpolation() noexcept {
 // Starts the timer used for world/mobj interpolation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_NextWorldInterpolation() noexcept {
-    gPrevWorldFrameStartTime = std::chrono::high_resolution_clock::now();
+    gCurWorldFrameStartTime = frametimer_t::now();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -551,25 +553,27 @@ void R_CalcLerpFactors() noexcept {
         return;
     }
 
-    // Get the elapsed time since the last frame we saved data for
-    const timepoint_t now = std::chrono::high_resolution_clock::now();
-    const double playerElapsedSeconds = std::chrono::duration<double>(now - gPrevPlayerFrameStartTime).count();
-    const double worldElapsedSeconds = std::chrono::duration<double>(now - gPrevWorldFrameStartTime).count();
-
-    // How many tics per second can the game do maximum?
+    // How long does a frame take for the current game?
     //  (1) For NTSC demo playback/recording the player sim is capped at 15 Hz for consistency, and the cap is 30 Hz for normal NTSC games.
     //  (2) World sim uses the demo tick rate (15 Hz in the NTSC case).
     //  (3) PAL mode has slightly different timings for player and world sim.
-    const double normalPlayerTicsPerSec = (Game::gSettings.bUsePalTimings) ? 25.0 : 30.0;
-    const double demoTicsPerSec = (Game::gSettings.bUsePalTimings) ? 16.666666 : 15.0;
-    const double playerTicsPerSec = (Game::gSettings.bUseDemoTimings) ? demoTicsPerSec : normalPlayerTicsPerSec;
-    const double worldTicsPerSec = demoTicsPerSec;
+    const double normalPlayerFrameTime = 1.0 / ((Game::gSettings.bUsePalTimings) ? 25.0 : 30.0);
+    const double demoFrameTime = 1.0 / ((Game::gSettings.bUsePalTimings) ? 16.666666 : 15.0);
+    const double playerFrameTime = (Game::gSettings.bUseDemoTimings) ? demoFrameTime : normalPlayerFrameTime;
+    const double worldFrameTime = demoFrameTime;
 
-    // Compute the player and world lerp factors in 16.16 format
-    const double playerElapsedTics = std::clamp(playerElapsedSeconds * playerTicsPerSec, 0.0, 1.0);
-    const double worldElapsedTics = std::clamp(worldElapsedSeconds * worldTicsPerSec, 0.0, 1.0);
-    gPlayerLerpFactor = (fixed_t)(playerElapsedTics * (double) FRACUNIT);
-    gWorldLerpFactor = (fixed_t)(worldElapsedTics * (double) FRACUNIT);
+    // Get the elapsed player and world seconds
+    const frametimer_t::time_point now = frametimer_t::now();
+    const double playerElapsedSeconds = std::chrono::duration<double>(now - gCurPlayerFrameStartTime).count();
+    const double worldElapsedSeconds = std::chrono::duration<double>(now - gCurWorldFrameStartTime).count();
+
+    // Compute the lerp factor and take into account how long the last frame took to try and yield a more accurate future display position.
+    // Don't trust the previous frame duration entirely however in case we overshoot, use just 75% of it to account for variance.
+    // I came at this value from general experimentation and it seems to work best.
+    const double playerLerp = std::clamp((playerElapsedSeconds + gPrevFrameDuration * 0.75) / playerFrameTime, 0.0, 1.0);
+    const double worldLerp = std::clamp((worldElapsedSeconds + gPrevFrameDuration * 0.75) / worldFrameTime, 0.0, 1.0);
+    gPlayerLerpFactor = (fixed_t)(playerLerp * (double) FRACUNIT);
+    gWorldLerpFactor = (fixed_t)(worldLerp * (double) FRACUNIT);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
