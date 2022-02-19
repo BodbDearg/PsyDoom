@@ -60,6 +60,18 @@ macro(compiler_specific_setup)
         # Disable a warning coming often from 'winbase.h': "macro expansion producing 'defined' has undefined behavior"
         add_compile_options(/wd5105)
     endif()
+
+    # Enable Address Sanitizer on all projects, if specified
+    if (PSYDOOM_ENABLE_ASAN)
+        if (COMPILER_MSVC)
+            add_compile_options(/fsanitize=address)
+        elseif (COMPILER_CLANG OR COMPILER_GCC)
+            add_compile_options(-fsanitize=address)
+            add_link_options(-fsanitize=address)
+        else()
+            message(FATAL_ERROR "Don't know how to enable ASAN for the current compiler!")
+        endif()
+    endif()
 endmacro()
 
 macro(build_setup)

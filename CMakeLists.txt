@@ -64,7 +64,12 @@ These were tools which were used during the earlier stages of development.")
 set(PSYDOOM_INCLUDE_AUDIO_TOOLS FALSE CACHE BOOL
 "If TRUE include PlayStation Doom audio related tools in the project tree.")
 
-set(PSYDOOM_PROFILE_GAME_LOOP FALSE CACHE BOOL "Enables profiling of the main game loop. Frame times are printed to standard out.")
+set(PSYDOOM_PROFILE_GAME_LOOP FALSE CACHE BOOL
+"Enables profiling of the main game loop. Frame times are printed to standard out.")
+
+set(PSYDOOM_ENABLE_ASAN FALSE CACHE BOOL
+"Compile with address sanitizer enabled for Clang, GCC and MSVC?"
+)
 
 # Adding individual projects and libraries
 add_subdirectory("${PROJECT_SOURCE_DIR}/baselib")
