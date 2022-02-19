@@ -12,8 +12,8 @@ struct FileData {
     FileData(const FileData& other) = delete;   // Only move is allowed: if you want a copy, you need to do manually
     FileData(FileData&& other) = default;
 
-    std::unique_ptr<std::byte>  bytes;
-    size_t                      size;
+    std::unique_ptr<std::byte[]>    bytes;
+    size_t                          size;
 };
 
 BEGIN_NAMESPACE(FileUtils)
