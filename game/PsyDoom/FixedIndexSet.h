@@ -19,7 +19,7 @@ public:
 
     inline void init(const uint32_t size) noexcept {
         if (mNumBits != size) {
-            mBits.reset(new uint64_t[numWordsForBits(size)]);
+            mBits = std::make_unique<uint64_t[]>(numWordsForBits(size));
             mNumBits = size;
         }
 
@@ -84,6 +84,6 @@ private:
         return (numBits + 63) / 64;
     }
 
-    std::unique_ptr<uint64_t>   mBits;
-    uint32_t                    mNumBits;
+    std::unique_ptr<uint64_t[]>     mBits;
+    uint32_t                        mNumBits;
 };
