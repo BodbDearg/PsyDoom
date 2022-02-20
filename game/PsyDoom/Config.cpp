@@ -372,7 +372,7 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
         "# Audio buffer size, in 44.1 KHz sound samples.\n"
         "# Lower values reduce sound latency and improve music timing precision.\n"
         "# Setting the buffer size too low however may cause audio instability or stutter on some systems.\n"
-        "# If set to '0' (auto) then PsyDoom will use a default value, which is '128' samples currently.\n"
+        "# If set to '0' (auto) then PsyDoom will use a default value, which is '256' samples currently.\n"
         "# Mostly this setting can be left alone but if you are experiencing sound issues, try adjusting.\n"
         "#\n"
         "# Some example values and their corresponding added sound latency (MS):\n"

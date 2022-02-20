@@ -183,7 +183,7 @@ bool init(const char* const doomCdCuePath) noexcept {
         if (Config::gAudioBufferSize > 0) {
             wantFmt.samples = (uint16_t) std::min<int32_t>(Config::gAudioBufferSize, UINT16_MAX);
         } else {
-            wantFmt.samples = 128;  // Use a default of '128' samples (~2.9 MS latency) when using 'auto' configure mode
+            wantFmt.samples = 256;  // Use a default of '256' samples (~5.8 MS latency) when using 'auto' configure mode
         }
 
         wantFmt.callback = SdlAudioCallback;
