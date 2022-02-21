@@ -174,27 +174,10 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
 
     // Lump name remapping to support this game:
     consts.mainWadLumpRemappers[0] = [](const WadLumpName& oldName) noexcept -> WadLumpName {
-        // Use the credits screen assets from 'MEDOOM.WAD' instead of 'PSXFINAL.WAD'
-        if (oldName == "IDCRED1")   { return "_UNUSED1";  }
-        if (oldName == "IDCRED2")   { return "_UNUSED2";  }
-        if (oldName == "WMSCRED1")  { return "_UNUSED3";  }
-        if (oldName == "WMSCRED2")  { return "_UNUSED4";  }
         // Use the main menu background from 'MEDOOM.WAD' instead of 'PSXFINAL.WAD'
-        if (oldName == "BACK")      { return "_UNUSED5";  }
+        if (oldName == "BACK")      { return "_UNUSED1";  }
         // Use the 'DOOM' logo from 'MEDOOM.WAD' instead of 'PSXFINAL.WAD'
-        if (oldName == "DOOM")      { return "_UNUSED6";  }
-
-        // Leave this lump name alone!
-        return oldName;
-    };
-
-    consts.mainWadLumpRemappers[1] = [](const WadLumpName& oldName) noexcept -> WadLumpName {
-        // Rename the credits screen assets from 'MEDOOM.WAD' so they match the original names.
-        // This means we can use them without any other code changes in the credits screen.
-        if (oldName == "GEC")       { return "IDCRED1";  }
-        if (oldName == "GECCRED")   { return "IDCRED2";  }
-        if (oldName == "DWOLRD")    { return "WMSCRED1"; }
-        if (oldName == "DWCRED")    { return "WMSCRED2"; }
+        if (oldName == "DOOM")      { return "_UNUSED2";  }
 
         // Leave this lump name alone!
         return oldName;

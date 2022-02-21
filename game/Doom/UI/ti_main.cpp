@@ -63,10 +63,10 @@ void START_Title() noexcept {
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
 
     // PsyDoom: if we are doing the 'GEC Master Edition' style title screen then different lumps are used
-    const TitleScreenStyle titleScreenStyle = MapInfo::getGameInfo().titleScreenStyle;
+    const TitleScreenStyle screenStyle = MapInfo::getGameInfo().titleScreenStyle;
 
     #if PSYDOOM_MODS
-        if (titleScreenStyle == TitleScreenStyle::GEC_ME) {
+        if (screenStyle == TitleScreenStyle::GEC_ME) {
             I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
             I_LoadAndCacheTexLump(gTex_FINAL, "FINAL", 0);
             I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);
@@ -102,7 +102,7 @@ void START_Title() noexcept {
 
     // Doom: initially the DOOM logo is offscreen.
     // Final Doom & others: it doesn't move and covers the fire.
-    if (titleScreenStyle == TitleScreenStyle::Doom) {
+    if (screenStyle == TitleScreenStyle::Doom) {
         gTitleScreenSpriteY = SCREEN_H + 10;
     } else {
         gTitleScreenSpriteY = 0;
@@ -273,9 +273,9 @@ void DRAW_Title() noexcept {
 
     // Draw the title logo for 'Doom'.
     // Note that for 'Final Doom' this is drawn on top of everything (at the end) instead.
-    const TitleScreenStyle titleScreenStyle = MapInfo::getGameInfo().titleScreenStyle;
+    const TitleScreenStyle screenStyle = MapInfo::getGameInfo().titleScreenStyle;
 
-    if (titleScreenStyle == TitleScreenStyle::Doom) {
+    if (screenStyle == TitleScreenStyle::Doom) {
         const int16_t titleY = (int16_t) gTitleScreenSpriteY;
 
         // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -328,7 +328,7 @@ void DRAW_Title() noexcept {
         const auto texV = skyTex.texPageCoordY;
 
         int16_t x = 0;
-        const int16_t y = (titleScreenStyle == TitleScreenStyle::FinalDoom) ? 112 : 116;
+        const int16_t y = (screenStyle == TitleScreenStyle::FinalDoom) ? 112 : 116;
 
         for (int32_t i = 0; i < 4; ++i) {
             I_DrawSprite(skyTex.texPageId, gPaletteClutId_CurMapSky, x, y, texU, texV, SKY_W, SKY_H);
@@ -337,7 +337,7 @@ void DRAW_Title() noexcept {
     }
 
     // Draw the title logo for Final Doom (on top of everything):
-    if (titleScreenStyle == TitleScreenStyle::FinalDoom) {
+    if (screenStyle == TitleScreenStyle::FinalDoom) {
         const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
 
         // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -363,7 +363,7 @@ void DRAW_Title() noexcept {
 
     // GEC Master Edition: draw the 'DOOM', 'Final DOOM' and 'Master Edition' logos
     #if PSYDOOM_MODS
-        if (titleScreenStyle == TitleScreenStyle::GEC_ME) {
+        if (screenStyle == TitleScreenStyle::GEC_ME) {
             const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
 
             // Decide on the x and y position of the 'DOOM' and 'Final DOOM' logos: put them side by side and roughly in the center of the screen

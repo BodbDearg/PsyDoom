@@ -159,7 +159,7 @@ GameInfo {
     DisableMultiplayer = false
     FinalDoomGameRules = false
     TitleScreenStyle = 0
-    FinalDoomCredits = false
+    CreditsScreenStyle = 0
     TexPalette_STATUS = 16
     TexPalette_TITLE = 17
     TexPalette_BACK = 0
@@ -172,14 +172,10 @@ GameInfo {
     TexPalette_IDCRED2 = 16
     TexPalette_WMSCRED1 = 19
     TexPalette_WMSCRED2 = 16
-    TexPalette_LEVCRED2 = 19
-    TexPalette_DATA = 30
-    TexPalette_FINAL = 29
     TexPalette_OptionsBG = 0
     TexLumpName_OptionsBG = "MARB01"
     CreditsXPos_IDCRED2 = 9
     CreditsXPos_WMSCRED2 = 7
-    CreditsXPos_LEVCRED2 = 11
 }
 ```
 Internal Fields:
@@ -188,10 +184,13 @@ Internal Fields:
 - `DisableMultiplayer`: whether multiplayer game modes should be disallowed. Disabling multiplayer can be useful for mods that do tricks like Doom 64's faux-3D bridges, or 'silent teleporters' which would break in a multiplayer game.
 - `FinalDoomGameRules`: whether Final Doom style game rules should be used. Final Doom forward movement is slightly slower, and only 16 Lost Souls can spawn from Pain Elementals.
 - `TitleScreenStyle`: what style of title screen to use. Valid values are currently:
-  - `0` = Doom. The 'DOOM' logo rises up above the fire.
-  - `1` = Final Doom. The 'TITLE' image displays over the fire at all times and fades in from black.
-  - `2` = GEC Master Edition. The `DOOM` and `FINAL` images display side-by-side over the fire at all times, fading in from black. The 'Master Edition' text from the 'DATA' lump also displays on top.
-- `FinalDoomCredits`: whether to use a Final Doom style credits screen (3 pages) instead of a Doom style one (2 pages).
+  - `0` = Doom: the 'DOOM' logo rises up above the fire.
+  - `1` = Final Doom: the 'TITLE' image displays over the fire at all times and fades in from black.
+  - `2` = GEC Master Edition: the `DOOM` and `FINAL` images display side-by-side over the fire at all times, fading in from black. The 'Master Edition' text from the 'DATA' lump also displays on top.
+- `CreditsScreenStyle`: what style of credits screen to use. Valid values are currently:
+  - `0` = Doom: 2 pages, ID and Williams.
+  - `1` = Final Doom: 3 pages, level, Williams and ID credits.
+  - `2` = GEC Master Edition: 5 pages, GEC, Doomworld, and Final Doom credits. 
 - `TexPalette_STATUS`: palette index to use for the `STATUS` image lump. Must be between 0 and 31.
 - `TexPalette_TITLE`: palette index to use for the `TITLE` image lump. Must be between 0 and 31.
 - `TexPalette_BACK`: palette index to use for the `BACK` image lump. Must be between 0 and 31.
@@ -205,13 +204,19 @@ Internal Fields:
 - `TexPalette_WMSCRED1`: palette index to use for the `WMSCRED1` image lump. Must be between 0 and 31.
 - `TexPalette_WMSCRED2`: palette index to use for the `WMSCRED2` image lump. Must be between 0 and 31.
 - `TexPalette_LEVCRED2`: palette index to use for the `LEVCRED2` image lump. Must be between 0 and 31.
-- `TexPalette_DATA`: palette index to use for the `DATA` image lump (from the GEC Master Edition). Must be between 0 and 31.
-- `TexPalette_FINAL`: palette index to use for the `FINAL` image lump (from the GEC Master Edition). Must be between 0 and 31.
+- `TexPalette_GEC`: palette index to use for the `GEC` image lump (GEC Master Edition addition). Must be between 0 and 31.
+- `TexPalette_GECCRED`: palette index to use for the `GECCRED` image lump (GEC Master Edition addition). Must be between 0 and 31.
+- `TexPalette_DWOLRD`: palette index to use for the `DWOLRD` image lump (GEC Master Edition addition). Must be between 0 and 31.
+- `TexPalette_DWCRED`: palette index to use for the `DWCRED` image lump (GEC Master Edition addition). Must be between 0 and 31.
+- `TexPalette_DATA`: palette index to use for the `DATA` image lump (GEC Master Edition addition). Must be between 0 and 31.
+- `TexPalette_FINAL`: palette index to use for the `FINAL` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
 - `TexLumpName_OptionsBG`: which texture lump to use for the options menu tiled background.
 - `CreditsXPos_IDCRED2`: X position/offset of the `IDCRED2` image (text overlay) on the credits screen.
 - `CreditsXPos_WMSCRED2`: X position/offset of the `WMSCRED2` image (text overlay) on the credits screen.
 - `CreditsXPos_LEVCRED2`: X position/offset of the `LEVCRED2` image (text overlay) on the credits screen.
+- `CreditsXPos_GECCRED`: X position/offset of the `GECCRED` image (text overlay) on the credits screen (GEC Master Edition addition).
+- `CreditsXPos_DWCRED`: X position/offset of the `DWCRED` image (text overlay) on the credits screen (GEC Master Edition addition).
 
 ## `MusicTrack` definition
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:

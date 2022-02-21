@@ -19,6 +19,14 @@ static texture_t gTex_IDCRED2;
 static texture_t gTex_WMSCRED1;
 static texture_t gTex_WMSCRED2;
 
+// PsyDoom: credits screen resources for 'GEC Master Edition'
+#if PSYDOOM_MODS
+    static texture_t gTex_GEC;
+    static texture_t gTex_GECCRED;
+    static texture_t gTex_DWOLRD;
+    static texture_t gTex_DWCRED;
+#endif
+
 // Current credits scroll position
 static int32_t  gCreditsScrollYPos;
 static int32_t  gCreditsPage;
@@ -36,10 +44,21 @@ void START_Credits() noexcept {
     I_LoadAndCacheTexLump(gTex_WMSCRED1, "WMSCRED1", 0);
     I_LoadAndCacheTexLump(gTex_WMSCRED2, "WMSCRED2", 0);
 
-    if (MapInfo::getGameInfo().bFinalDoomCredits) {
+    const CreditsScreenStyle screenStyle = MapInfo::getGameInfo().creditsScreenStyle;
+
+    if (screenStyle != CreditsScreenStyle::Doom) {
         I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
         I_LoadAndCacheTexLump(gTex_LEVCRED2, "LEVCRED2", 0);
     }
+
+    #if PSYDOOM_MODS
+        if (screenStyle == CreditsScreenStyle::GEC_ME) {
+            I_LoadAndCacheTexLump(gTex_GEC, "GEC", 0);
+            I_LoadAndCacheTexLump(gTex_GECCRED, "GECCRED", 0);
+            I_LoadAndCacheTexLump(gTex_DWOLRD, "DWOLRD", 0);
+            I_LoadAndCacheTexLump(gTex_DWCRED, "DWCRED", 0);
+        }
+    #endif
 
     gCreditsScrollYPos = SCREEN_H;
     gCreditsPage = 0;
@@ -105,19 +124,9 @@ gameaction_t TIC_Credits() noexcept {
     gCreditsScrollYPos -= 1;
 
     // Move onto the next page or exit if we have scrolled far enough
-    if (MapInfo::getGameInfo().bFinalDoomCredits) {
-        // Final Doom: 3 credit screen pages
-        if (gCreditsPage < 2) {
-            if (gCreditsScrollYPos < -256) {
-                gCreditsScrollYPos = SCREEN_H;
-                gCreditsPage += 1;
-            }
-        }
-        else if (gCreditsScrollYPos < -256) {
-            return ga_exitdemo;
-        }
-    }
-    else {
+    const CreditsScreenStyle screenStyle = MapInfo::getGameInfo().creditsScreenStyle;
+
+    if (screenStyle == CreditsScreenStyle::Doom) {
         // Regular Doom: just 2 credits screen pages
         if (gCreditsPage == 0) {
             if (gCreditsScrollYPos < -182) {
@@ -131,6 +140,35 @@ gameaction_t TIC_Credits() noexcept {
             }
         }
     }
+    else if (screenStyle == CreditsScreenStyle::FinalDoom) {
+        // Final Doom: 3 credit screen pages
+        if (gCreditsPage < 2) {
+            if (gCreditsScrollYPos < -256) {
+                gCreditsScrollYPos = SCREEN_H;
+                gCreditsPage += 1;
+            }
+        }
+        else if (gCreditsScrollYPos < -256) {
+            return ga_exitdemo;
+        }
+    }
+#if PSYDOOM_MODS
+    else if (screenStyle == CreditsScreenStyle::GEC_ME) {
+        // GEC Master Edition: 5 credit screen pages
+        if (gCreditsPage < 4) {
+            if (gCreditsScrollYPos < -256) {
+                gCreditsScrollYPos = SCREEN_H;
+                gCreditsPage += 1;
+            }
+        }
+        else if (gCreditsScrollYPos < -256) {
+            return ga_exitdemo;
+        }
+    }
+    else {
+        I_Error("TIC_Credits: unhandled credits screen type!");
+    }
+#endif  // #if PSYDOOM_MODS
 
     return ga_nothing;
 }
@@ -151,8 +189,23 @@ void DRAW_Credits() noexcept {
     const int16_t xpos_IDCRED2 = gameInfo.creditsXPos_IDCRED2;
     const int16_t xpos_WMSCRED2 = gameInfo.creditsXPos_WMSCRED2;
     const int16_t xpos_LEVCRED2 = gameInfo.creditsXPos_LEVCRED2;
+    const int16_t xpos_GECCRED = gameInfo.creditsXPos_GECCRED;
+    const int16_t xpos_DWCRED = gameInfo.creditsXPos_DWCRED;
 
-    if (MapInfo::getGameInfo().bFinalDoomCredits) {
+    const CreditsScreenStyle screenStyle = MapInfo::getGameInfo().creditsScreenStyle;
+
+    if (screenStyle == CreditsScreenStyle::Doom) {
+        // Regular Doom: there are 2 pages: ID and Williams credits
+        if (gCreditsPage == 0) {
+            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
+            I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
+        }
+        else if (gCreditsPage == 1) {
+            I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
+            I_CacheAndDrawSprite(gTex_WMSCRED2, xpos_WMSCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
+        }
+    }
+    else if (screenStyle == CreditsScreenStyle::FinalDoom) {
         // Final Doom: there are 3 pages: level, ID and Williams credits
         if (gCreditsPage == 0) {
             I_CacheAndDrawSprite(gTex_TITLE, 0, 0, Game::getTexPalette_TITLE());
@@ -167,17 +220,34 @@ void DRAW_Credits() noexcept {
             I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
         }
     }
-    else {
-        // Regular Doom: there are 2 pages: ID and Williams credits
+#if PSYDOOM_MODS
+    else if (screenStyle == CreditsScreenStyle::GEC_ME) {
+        // GEC Master Edition: there are 5 pages: GEC, Doomworld, Final Doom level, ID and Williams credits
         if (gCreditsPage == 0) {
-            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
-            I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
+            I_CacheAndDrawSprite(gTex_GEC, 0, 0, Game::getTexPalette_GEC());
+            I_CacheAndDrawSprite(gTex_GECCRED, xpos_GECCRED, (int16_t) gCreditsScrollYPos, Game::getTexPalette_GECCRED());
         }
         else if (gCreditsPage == 1) {
+            I_CacheAndDrawSprite(gTex_DWOLRD, 0, 0, Game::getTexPalette_DWOLRD());
+            I_CacheAndDrawSprite(gTex_DWCRED, xpos_DWCRED, (int16_t) gCreditsScrollYPos, Game::getTexPalette_DWCRED());
+        }
+        else if (gCreditsPage == 2) {
+            I_CacheAndDrawSprite(gTex_TITLE, 0, 0, Game::getTexPalette_TITLE());
+            I_CacheAndDrawSprite(gTex_LEVCRED2, xpos_LEVCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_LEVCRED2());
+        }
+        else if (gCreditsPage == 3) {
             I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
             I_CacheAndDrawSprite(gTex_WMSCRED2, xpos_WMSCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
         }
+        else if (gCreditsPage == 4) {
+            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
+            I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
+        }
     }
+    else {
+        I_Error("DRAW_Credits: unhandled credits screen type!");
+    }
+#endif  // #if PSYDOOM_MODS
 
     // Finish up the frame
     I_SubmitGpuCmds();

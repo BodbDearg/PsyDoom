@@ -368,6 +368,22 @@ uint16_t getTexPalette_LEVCRED2() noexcept {
     return gPaletteClutIds[MapInfo::getGameInfo().texPalette_LEVCRED2];
 }
 
+uint16_t getTexPalette_GEC() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_GEC];
+}
+
+uint16_t getTexPalette_GECCRED() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_GECCRED];
+}
+
+uint16_t getTexPalette_DWOLRD() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DWOLRD];
+}
+
+uint16_t getTexPalette_DWCRED() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DWCRED];
+}
+
 uint16_t getTexPalette_DATA() noexcept {
     return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DATA];
 }

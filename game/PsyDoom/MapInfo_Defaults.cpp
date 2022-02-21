@@ -3,6 +3,7 @@
 #include "Asserts.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/UI/cr_main.h"
 #include "Doom/UI/ti_main.h"
 #include "FatalErrors.h"
 #include "Game.h"
@@ -67,7 +68,7 @@ static void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
     gameInfo.bDisableMultiplayer = false;
     gameInfo.bFinalDoomGameRules = false;
     gameInfo.titleScreenStyle = TitleScreenStyle::Doom;
-    gameInfo.bFinalDoomCredits = false;
+    gameInfo.creditsScreenStyle = CreditsScreenStyle::Doom;
     gameInfo.texPalette_STATUS = UIPAL;
     gameInfo.texPalette_TITLE = TITLEPAL;
     gameInfo.texPalette_BACK = MAINPAL;
@@ -102,7 +103,7 @@ static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
     gameInfo.bDisableMultiplayer = false;
     gameInfo.bFinalDoomGameRules = true;
     gameInfo.titleScreenStyle = TitleScreenStyle::FinalDoom;
-    gameInfo.bFinalDoomCredits = true;
+    gameInfo.creditsScreenStyle = CreditsScreenStyle::FinalDoom;
     gameInfo.texPalette_STATUS = UIPAL;
     gameInfo.texPalette_TITLE = TITLEPAL;
     gameInfo.texPalette_BACK = TITLEPAL;
@@ -127,22 +128,22 @@ static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
 // Initializes a 'GameInfo' struct for 'GEC Master Edition (Beta 3)'
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
-    initGameInfo_FinalDoom(gameInfo);       // Uses Final Doom values for most settings
+    initGameInfo_FinalDoom(gameInfo);   // Uses Final Doom values for most settings
     gameInfo.numMaps = 94;
     gameInfo.numRegularMaps = 94;
     gameInfo.bFinalDoomGameRules = false;   // Some maps might rely on the extra forward speed of 'Doom'
     gameInfo.titleScreenStyle = TitleScreenStyle::GEC_ME;
-    gameInfo.bFinalDoomCredits = false;
+    gameInfo.creditsScreenStyle = CreditsScreenStyle::GEC_ME;
     gameInfo.texPalette_BACK = 29;
     gameInfo.texPalette_DOOM = 29;
-    gameInfo.texPalette_IDCRED1  = 26;
-    gameInfo.texPalette_IDCRED2  = 28;
-    gameInfo.texPalette_WMSCRED1 = 27;
-    gameInfo.texPalette_WMSCRED2 = 28;
+    gameInfo.texPalette_GEC  = 26;
+    gameInfo.texPalette_GECCRED  = 28;
+    gameInfo.texPalette_DWOLRD = 27;
+    gameInfo.texPalette_DWCRED = 28;
     gameInfo.texPalette_DATA = 30;
     gameInfo.texPalette_FINAL = 29;
-    gameInfo.creditsXPos_IDCRED2 = 0;
-    gameInfo.creditsXPos_WMSCRED2 = 0;
+    gameInfo.creditsXPos_GECCRED = 0;
+    gameInfo.creditsXPos_DWCRED = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

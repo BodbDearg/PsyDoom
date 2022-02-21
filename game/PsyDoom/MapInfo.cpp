@@ -11,6 +11,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/UI/cr_main.h"
 #include "Doom/UI/ti_main.h"
 #include "Game.h"
 #include "MapInfo_Defaults.h"
@@ -64,7 +65,7 @@ GameInfo::GameInfo() noexcept
     , bDisableMultiplayer(false)
     , bFinalDoomGameRules(false)
     , titleScreenStyle(TitleScreenStyle::Doom)
-    , bFinalDoomCredits(false)
+    , creditsScreenStyle(CreditsScreenStyle::Doom)
     , texPalette_STATUS(UIPAL)
     , texPalette_TITLE(TITLEPAL)
     , texPalette_BACK(MAINPAL)
@@ -78,13 +79,19 @@ GameInfo::GameInfo() noexcept
     , texPalette_WMSCRED1(WCREDITS1PAL)
     , texPalette_WMSCRED2(UIPAL)
     , texPalette_LEVCRED2(WCREDITS1PAL)
-    , texPalette_DATA(30)
-    , texPalette_FINAL(29)
+    , texPalette_GEC()
+    , texPalette_GECCRED()
+    , texPalette_DWOLRD()
+    , texPalette_DWCRED()
+    , texPalette_DATA()
+    , texPalette_FINAL()
     , texPalette_OptionsBG(MAINPAL)
     , texLumpName_OptionsBG("MARB01")
     , creditsXPos_IDCRED2(9)
     , creditsXPos_WMSCRED2(7)
     , creditsXPos_LEVCRED2(11)
+    , creditsXPos_GECCRED()
+    , creditsXPos_DWCRED()
 {
 }
 
@@ -149,8 +156,8 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.numRegularMaps = block.getSingleIntValue("NumRegularMaps", gameInfo.numRegularMaps);
     gameInfo.bDisableMultiplayer = (block.getSingleIntValue("DisableMultiplayer", gameInfo.bDisableMultiplayer) > 0);
     gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
-    gameInfo.titleScreenStyle = (TitleScreenStyle) block.getSingleIntValue("TitleScreenStyle", gameInfo.titleScreenStyle);
-    gameInfo.bFinalDoomCredits = (block.getSingleIntValue("FinalDoomCredits", gameInfo.bFinalDoomCredits) > 0);
+    gameInfo.titleScreenStyle = (TitleScreenStyle) block.getSingleIntValue("TitleScreenStyle", (int32_t) gameInfo.titleScreenStyle);
+    gameInfo.creditsScreenStyle = (CreditsScreenStyle) block.getSingleIntValue("CreditsScreenStyle", (int32_t) gameInfo.creditsScreenStyle);
     gameInfo.texPalette_STATUS = (uint8_t) block.getSingleIntValue("TexPalette_STATUS", gameInfo.texPalette_STATUS);
     gameInfo.texPalette_TITLE = (uint8_t) block.getSingleIntValue("TexPalette_TITLE", gameInfo.texPalette_TITLE);
     gameInfo.texPalette_BACK = (uint8_t) block.getSingleIntValue("TexPalette_BACK", gameInfo.texPalette_BACK);
@@ -164,6 +171,10 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.texPalette_WMSCRED1 = (uint8_t) block.getSingleIntValue("TexPalette_WMSCRED1", gameInfo.texPalette_WMSCRED1);
     gameInfo.texPalette_WMSCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_WMSCRED2", gameInfo.texPalette_WMSCRED2);
     gameInfo.texPalette_LEVCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_LEVCRED2", gameInfo.texPalette_LEVCRED2);
+    gameInfo.texPalette_GEC = (uint8_t) block.getSingleIntValue("TexPalette_GEC", gameInfo.texPalette_GEC);
+    gameInfo.texPalette_GECCRED = (uint8_t) block.getSingleIntValue("TexPalette_GECCRED", gameInfo.texPalette_GECCRED);
+    gameInfo.texPalette_DWOLRD = (uint8_t) block.getSingleIntValue("TexPalette_DWOLRD", gameInfo.texPalette_DWOLRD);
+    gameInfo.texPalette_DWCRED = (uint8_t) block.getSingleIntValue("TexPalette_DWCRED", gameInfo.texPalette_DWCRED);
     gameInfo.texPalette_DATA = (uint8_t) block.getSingleIntValue("TexPalette_DATA", gameInfo.texPalette_DATA);
     gameInfo.texPalette_FINAL = (uint8_t) block.getSingleIntValue("TexPalette_FINAL", gameInfo.texPalette_FINAL);
     gameInfo.texPalette_OptionsBG = (uint8_t) block.getSingleIntValue("TexPalette_OptionsBG", gameInfo.texPalette_OptionsBG);
@@ -171,6 +182,8 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.creditsXPos_IDCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_IDCRED2", gameInfo.creditsXPos_IDCRED2);
     gameInfo.creditsXPos_WMSCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_WMSCRED2", gameInfo.creditsXPos_WMSCRED2);
     gameInfo.creditsXPos_LEVCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_LEVCRED2", gameInfo.creditsXPos_LEVCRED2);
+    gameInfo.creditsXPos_GECCRED = (int16_t) block.getSingleIntValue("CreditsXPos_GECCRED", gameInfo.creditsXPos_GECCRED);
+    gameInfo.creditsXPos_DWCRED = (int16_t) block.getSingleIntValue("CreditsXPos_DWCRED", gameInfo.creditsXPos_DWCRED);
 
     // Check the map numbers are in range
     if ((gameInfo.numMaps < 1) || (gameInfo.numMaps > 255)) {
@@ -179,6 +192,15 @@ static void readGameInfo(const Block& block) noexcept {
 
     if ((gameInfo.numRegularMaps < 1) || (gameInfo.numRegularMaps > 255)) {
         error(block, "GameInfo: 'NumRegularMaps' must be between 1 and 255!");
+    }
+
+    // Validate title and credits screen styles
+    if ((uint32_t) gameInfo.titleScreenStyle >= NUM_TITLE_SCREEN_STYLES) {
+        error(block, "GameInfo: 'TitleScreenStyle' must be between 0 and %u!", NUM_TITLE_SCREEN_STYLES - 1u);
+    }
+
+    if ((uint32_t) gameInfo.creditsScreenStyle >= NUM_CREDITS_SCREEN_STYLES) {
+        error(block, "GameInfo: 'CreditsScreenStyle' must be between 0 and %u!", NUM_CREDITS_SCREEN_STYLES - 1u);
     }
 
     // Check all palettes are in range
@@ -201,6 +223,10 @@ static void readGameInfo(const Block& block) noexcept {
     checkPalette(gameInfo.texPalette_WMSCRED1,      "TexPalette_WMSCRED1");
     checkPalette(gameInfo.texPalette_WMSCRED2,      "TexPalette_WMSCRED2");
     checkPalette(gameInfo.texPalette_LEVCRED2,      "TexPalette_LEVCRED2");
+    checkPalette(gameInfo.texPalette_GEC,           "TexPalette_GEC");
+    checkPalette(gameInfo.texPalette_GECCRED,       "TexPalette_GECCRED");
+    checkPalette(gameInfo.texPalette_DWOLRD,        "TexPalette_DWOLRD");
+    checkPalette(gameInfo.texPalette_DWCRED,        "TexPalette_DWCRED");
     checkPalette(gameInfo.texPalette_DATA,          "TexPalette_DATA");
     checkPalette(gameInfo.texPalette_FINAL,         "TexPalette_FINAL");
     checkPalette(gameInfo.texPalette_OptionsBG,     "TexPalette_OptionsBG");
