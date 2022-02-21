@@ -183,6 +183,14 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
         return oldName;
     };
 
+    consts.mainWadLumpRemappers[2] = [](const WadLumpName& oldName) noexcept -> WadLumpName {
+        // Rename the 'Doom' version of this texture so we can use it instead of the 'Final Doom' version in 'Doom' episode maps
+        if (oldName == "REDROK01")  { return "REDROKX1";  }
+
+        // Leave this lump name alone!
+        return oldName;
+    };
+
     // All other differing constants
     consts.introMovies[0] = "DATA/MOVIE.STR";
     consts.introMovies[1] = "DATA/GEC.STR";

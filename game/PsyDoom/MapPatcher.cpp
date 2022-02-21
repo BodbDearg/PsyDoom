@@ -8,6 +8,7 @@
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
+#include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Game.h"
 #include "MapHash.h"
@@ -70,6 +71,34 @@ static void clearMysterySectorFlags() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void applyCommonMapPatches() noexcept {
     clearMysterySectorFlags();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A helper for 'GEC Master Edition (Beta 3)': fixes the wrong version of the 'REDROK01' texture being used for the 'Doom' episode maps.
+// Switches the 'Final Doom' style of this texture with the original 'Doom' version.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void gecMEBeta3_fixWrongREDROK01() noexcept {
+    const int32_t numSides = gNumSides;
+    const int32_t oldTexNum = R_TextureNumForName("REDROK01");
+    const int32_t newTexNum = R_TextureNumForName("REDROKX1");
+
+    if ((oldTexNum >= 0) && (newTexNum >= 0)) {
+        for (int32_t sideIdx = 0; sideIdx < numSides; ++sideIdx) {
+            side_t& side = gpSides[sideIdx];
+
+            if (side.bottomtexture == oldTexNum) {
+                side.bottomtexture = newTexNum;
+            }
+            
+            if (side.midtexture == oldTexNum) {
+                side.midtexture = newTexNum;
+            }
+
+            if (side.toptexture == oldTexNum) {
+                side.toptexture = newTexNum;
+            }
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -258,6 +287,10 @@ static const PatchDef gPatches[] = {
     { 107736, 0xD9789CCEA024CCCC, 0x61CCB6C421B65C47, applyCommonMapPatches },          // MAP29 (NTSC)
     { 107736, 0x0599BE06504C6FAD, 0x1DCB1C8AD6410764, applyCommonMapPatches },          // MAP29 (PAL, why different?)
     { 110131, 0x2C157281E504283E, 0x914845A33B9F0503, applyCommonMapPatches },          // MAP30
+    // GEC Master Edition (Beta 3)
+    {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, gecMEBeta3_fixWrongREDROK01 },    // MAP05
+    {  87975, 0x7CF1F4CF0C3427C5, 0x50A8701B4A994752, gecMEBeta3_fixWrongREDROK01 },    // MAP14
+    { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, gecMEBeta3_fixWrongREDROK01 },    // MAP30
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
