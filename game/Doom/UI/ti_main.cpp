@@ -26,8 +26,13 @@
 // Final Doom: this is repurposed as the current fade/color-multiplier for the title screen image.
 int32_t gTitleScreenSpriteY;
 
-// The DOOM logo texture
+// The DOOM logo texture for 'Doom' and 'Final Doom' style title screens
 texture_t gTex_TITLE;
+
+// The 'Final DOOM' logo for the 'GEC Master Edition' style title screen
+#if PSYDOOM_MODS
+    static texture_t gTex_FINAL;
+#endif
 
 // Controls how frequently the title sprite and fire sky update and move
 static int32_t gVBlanksUntilTitleSprMove;
@@ -56,7 +61,21 @@ void START_Title() noexcept {
     I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg().c_str().data(), 0);
     I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
-    I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
+
+    // PsyDoom: if we are doing the 'GEC Master Edition' style title screen then different lumps are used
+    const TitleScreenStyle titleScreenStyle = MapInfo::getGameInfo().titleScreenStyle;
+
+    #if PSYDOOM_MODS
+        if (titleScreenStyle == TitleScreenStyle::GEC_ME) {
+            I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
+            I_LoadAndCacheTexLump(gTex_FINAL, "FINAL", 0);
+            I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);
+        } else {
+            I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
+        }
+    #else
+        I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
+    #endif
 
     // PsyDoom: no longer required to be cached since we don't have the controls screen
     #if !PSYDOOM_MODS
@@ -82,11 +101,11 @@ void START_Title() noexcept {
     }
 
     // Doom: initially the DOOM logo is offscreen.
-    // Final Doom: it doesn't move and covers the fire.
-    if (MapInfo::getGameInfo().bFinalDoomTitleScreen) {
-        gTitleScreenSpriteY = 0;
-    } else {
+    // Final Doom & others: it doesn't move and covers the fire.
+    if (titleScreenStyle == TitleScreenStyle::Doom) {
         gTitleScreenSpriteY = SCREEN_H + 10;
+    } else {
+        gTitleScreenSpriteY = 0;
     }
 
     // Play the music for the title screen
@@ -142,33 +161,9 @@ gameaction_t TIC_Title() noexcept {
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gCurPlayerIndex];
     gVBlanksUntilTitleSprMove -= elapsedVBlanks;
 
-    // For Final Doom the scroll value is actually an RGB color multiply for the title image.
+    // For 'Final Doom' and 'GEC Master Edition' the scroll value is actually an RGB color multiply for the title image.
     // The logic to update it is different in that case.
-    if (MapInfo::getGameInfo().bFinalDoomTitleScreen) {
-        // PsyDoom: don't run this too fast
-        #if PSYDOOM_MODS
-            if (gPlayersElapsedVBlanks[gCurPlayerIndex] <= 0)
-                return ga_nothing;
-        #endif
-
-        // Update the fire sky after a certain number of ticks have elapsed
-        if ((gVBlanksUntilTitleSprMove <= 0) && (gTitleScreenSpriteY >= 128)) {
-            gVBlanksUntilTitleSprMove = 2;
-            P_UpdateFireSky(*gpSkyTexture);
-        }
-
-        // Do the fade in of the title screen
-        if (gTitleScreenSpriteY <= 128) {
-            gTitleScreenSpriteY += 4;
-        }
-
-        // Once the title is full faded in, timeout after a while...
-        if (gTitleScreenSpriteY >= 128) {
-            const bool bHasTimedOut = (gTicCon - gMenuTimeoutStartTicCon >= 1800);
-            return (bHasTimedOut) ? ga_timeout : ga_nothing;
-        }
-    }
-    else {
+    if (MapInfo::getGameInfo().titleScreenStyle == TitleScreenStyle::Doom) {
         // Regular Doom: if it is time to move the title sprite then do that.
         // Stop the title sprite also once it reaches the top of the screen and begin the menu timeout counter.
         if (gVBlanksUntilTitleSprMove <= 0) {
@@ -231,13 +226,37 @@ gameaction_t TIC_Title() noexcept {
             return (bHasTimedOut) ? ga_timeout : ga_nothing;
         }
     }
+    else {
+        // 'Final Doom' and 'GEC Master Edition' style title screen
+        #if PSYDOOM_MODS
+            // PsyDoom: don't run this too fast!
+            if (gPlayersElapsedVBlanks[gCurPlayerIndex] <= 0)
+                return ga_nothing;
+        #endif
+
+        // Update the fire sky after a certain number of ticks have elapsed
+        if ((gVBlanksUntilTitleSprMove <= 0) && (gTitleScreenSpriteY >= 128)) {
+            gVBlanksUntilTitleSprMove = 2;
+            P_UpdateFireSky(*gpSkyTexture);
+        }
+
+        // Do the fade in of the title screen
+        if (gTitleScreenSpriteY <= 128) {
+            gTitleScreenSpriteY += 4;
+        }
+
+        // Once the title is full faded in, timeout after a while...
+        if (gTitleScreenSpriteY >= 128) {
+            const bool bHasTimedOut = (gTicCon - gMenuTimeoutStartTicCon >= 1800);
+            return (bHasTimedOut) ? ga_timeout : ga_nothing;
+        }
+    }
 
     // Continue running the screen
     return ga_nothing;
 }
 
 #if PSYDOOM_MODS
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Renders the main title screen: the scrolling DOOM logo and fire sky.
 //
@@ -252,11 +271,11 @@ void DRAW_Title() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
-    // Draw the title logo.
-    // Final Doom: this is drawn on top of everything (at the end) instead.
-    const bool bFinalDoomTitleScreen = MapInfo::getGameInfo().bFinalDoomTitleScreen;
+    // Draw the title logo for 'Doom'.
+    // Note that for 'Final Doom' this is drawn on top of everything (at the end) instead.
+    const TitleScreenStyle titleScreenStyle = MapInfo::getGameInfo().titleScreenStyle;
 
-    if (!bFinalDoomTitleScreen) {
+    if (titleScreenStyle == TitleScreenStyle::Doom) {
         const int16_t titleY = (int16_t) gTitleScreenSpriteY;
 
         // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -309,7 +328,7 @@ void DRAW_Title() noexcept {
         const auto texV = skyTex.texPageCoordY;
 
         int16_t x = 0;
-        const int16_t y = (bFinalDoomTitleScreen) ? 112 : 116;
+        const int16_t y = (titleScreenStyle == TitleScreenStyle::FinalDoom) ? 112 : 116;
 
         for (int32_t i = 0; i < 4; ++i) {
             I_DrawSprite(skyTex.texPageId, gPaletteClutId_CurMapSky, x, y, texU, texV, SKY_W, SKY_H);
@@ -318,7 +337,7 @@ void DRAW_Title() noexcept {
     }
 
     // Draw the title logo for Final Doom (on top of everything):
-    if (bFinalDoomTitleScreen) {
+    if (titleScreenStyle == TitleScreenStyle::FinalDoom) {
         const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
 
         // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -341,6 +360,70 @@ void DRAW_Title() noexcept {
             I_DrawColoredSprite(gTex_TITLE.texPageId, gPaletteClutIds[TITLEPAL], 0, 0, 0, 0, SCREEN_W, SCREEN_H, rgb, rgb, rgb, false);
         #endif
     }
+
+    // GEC Master Edition: draw the 'DOOM', 'Final DOOM' and 'Master Edition' logos
+    #if PSYDOOM_MODS
+        if (titleScreenStyle == TitleScreenStyle::GEC_ME) {
+            const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
+
+            // Decide on the x and y position of the 'DOOM' and 'Final DOOM' logos: put them side by side and roughly in the center of the screen
+            const int32_t freeXSpace = std::max(SCREEN_W - gTex_DOOM.width - gTex_FINAL.width, 0);
+            const int32_t leftRightXPad = freeXSpace / 3;
+            const int32_t middleXSpacing = freeXSpace - leftRightXPad * 2;
+            const int32_t doomLogoX = leftRightXPad;
+            const int32_t doomLogoY = (SCREEN_H - skyTex.height / 3 - gTex_DOOM.height) / 2;
+            const int32_t finalLogoX = leftRightXPad + gTex_DOOM.width + middleXSpacing;
+            const int32_t finalLogoY = (SCREEN_H - skyTex.height / 3 - gTex_FINAL.height) / 2;
+
+            // Draw the 'DOOM' logo
+            I_DrawColoredSprite(
+                gTex_DOOM.texPageId,
+                Game::getTexPalette_DOOM(),
+                (int16_t) doomLogoX,
+                (int16_t) doomLogoY,
+                gTex_DOOM.texPageCoordX,
+                gTex_DOOM.texPageCoordY,
+                gTex_DOOM.width,
+                gTex_DOOM.height,
+                rgb,
+                rgb,
+                rgb,
+                false
+            );
+
+            // Draw the 'Final DOOM' logo
+            I_DrawColoredSprite(
+                gTex_FINAL.texPageId,
+                Game::getTexPalette_FINAL(),
+                (int16_t) finalLogoX,
+                (int16_t) finalLogoY,
+                gTex_FINAL.texPageCoordX,
+                gTex_FINAL.texPageCoordY,
+                gTex_FINAL.width,
+                gTex_FINAL.height,
+                rgb,
+                rgb,
+                rgb,
+                false
+            );
+
+            // Draw the 'Master Edition' logo
+            I_DrawColoredSprite(
+                gTex_DATA.texPageId,
+                Game::getTexPalette_DATA(),
+                49,
+                12,
+                gTex_DATA.texPageCoordX + 1,
+                gTex_DATA.texPageCoordY + 1,
+                157,
+                8,
+                rgb,
+                rgb,
+                rgb,
+                false
+            );
+        }
+    #endif
 
     I_SubmitGpuCmds();
     I_DrawPresent();

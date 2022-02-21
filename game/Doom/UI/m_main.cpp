@@ -24,9 +24,14 @@
 #include <algorithm>
 
 texture_t   gTex_BACK;                  // The background texture for the main menu
+texture_t   gTex_DOOM;                  // The texture for the DOOM logo
 int32_t     gCursorPos[MAXPLAYERS];     // Which of the menu options each player's cursor is over (see 'menu_t')
 int32_t     gCursorFrame;               // Current frame that the menu cursor is displaying
 int32_t     gMenuTimeoutStartTicCon;    // Tick that we start checking for menu timeouts from
+
+#if PSYDOOM_MODS
+    texture_t gTex_DATA;     // GEC Master Edition (Beta 3): sprite atlas for the title screen containing the text 'MASTER EDITION'
+#endif
 
 // Main menu options
 enum menu_t : int32_t {
@@ -76,12 +81,8 @@ static const char gSkillNames[NUMSKILLS][16] = {
 #endif
 };
 
-static texture_t    gTex_DOOM;                  // The texture for the DOOM logo
-static int32_t      gMaxStartEpisodeOrMap;      // Restricts what maps or episodes the player can pick
-
-#if PSYDOOM_MODS
-    static texture_t gTex_DATA;     // GEC Master Edition (Beta 3): sprite atlas for the title screen containing the text 'MASTER EDITION'
-#endif
+// Restricts what maps or episodes the player can pick
+static int32_t gMaxStartEpisodeOrMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper: encapsulates the logic for drawing the 'DOOM' logo.
@@ -94,7 +95,7 @@ static void M_DrawDoomLogo() noexcept {
     #if PSYDOOM_MODS
         if (Game::gGameType == GameType::GECMasterBeta3) {
             I_CacheTex(gTex_DATA);
-            I_DrawSprite(gTex_DATA.texPageId, gPaletteClutIds[30], 48, 2, gTex_DATA.texPageCoordX + 1, gTex_DATA.texPageCoordY + 1, 157, 8);
+            I_DrawSprite(gTex_DATA.texPageId, Game::getTexPalette_DATA(), 48, 2, gTex_DATA.texPageCoordX + 1, gTex_DATA.texPageCoordY + 1, 157, 8);
         }
     #endif
 }

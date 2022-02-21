@@ -3,6 +3,7 @@
 #include "Asserts.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/UI/ti_main.h"
 #include "FatalErrors.h"
 #include "Game.h"
 #include "PsyQ/LIBSPU.h"
@@ -65,7 +66,7 @@ static void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
     gameInfo.numRegularMaps = 54;
     gameInfo.bDisableMultiplayer = false;
     gameInfo.bFinalDoomGameRules = false;
-    gameInfo.bFinalDoomTitleScreen = false;
+    gameInfo.titleScreenStyle = TitleScreenStyle::Doom;
     gameInfo.bFinalDoomCredits = false;
     gameInfo.texPalette_STATUS = UIPAL;
     gameInfo.texPalette_TITLE = TITLEPAL;
@@ -100,7 +101,7 @@ static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
     gameInfo.numRegularMaps = 30;
     gameInfo.bDisableMultiplayer = false;
     gameInfo.bFinalDoomGameRules = true;
-    gameInfo.bFinalDoomTitleScreen = true;
+    gameInfo.titleScreenStyle = TitleScreenStyle::FinalDoom;
     gameInfo.bFinalDoomCredits = true;
     gameInfo.texPalette_STATUS = UIPAL;
     gameInfo.texPalette_TITLE = TITLEPAL;
@@ -130,6 +131,7 @@ static void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
     gameInfo.numMaps = 94;
     gameInfo.numRegularMaps = 94;
     gameInfo.bFinalDoomGameRules = false;   // Some maps might rely on the extra forward speed of 'Doom'
+    gameInfo.titleScreenStyle = TitleScreenStyle::GEC_ME;
     gameInfo.bFinalDoomCredits = false;
     gameInfo.texPalette_BACK = 29;
     gameInfo.texPalette_DOOM = 29;
@@ -137,6 +139,8 @@ static void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
     gameInfo.texPalette_IDCRED2  = 28;
     gameInfo.texPalette_WMSCRED1 = 27;
     gameInfo.texPalette_WMSCRED2 = 28;
+    gameInfo.texPalette_DATA = 30;
+    gameInfo.texPalette_FINAL = 29;
     gameInfo.creditsXPos_IDCRED2 = 0;
     gameInfo.creditsXPos_WMSCRED2 = 0;
 }

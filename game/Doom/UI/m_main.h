@@ -11,9 +11,14 @@ static constexpr uint8_t M_SKULL_W = 16;
 static constexpr uint8_t M_SKULL_H = 18;
 
 extern texture_t    gTex_BACK;
+extern texture_t    gTex_DOOM;
 extern int32_t      gCursorPos[MAXPLAYERS];
 extern int32_t      gCursorFrame;
 extern int32_t      gMenuTimeoutStartTicCon;
+
+#if PSYDOOM_MODS
+    extern texture_t gTex_DATA;
+#endif
 
 gameaction_t RunMenu() noexcept;
 

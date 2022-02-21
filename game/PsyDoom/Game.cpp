@@ -368,6 +368,14 @@ uint16_t getTexPalette_LEVCRED2() noexcept {
     return gPaletteClutIds[MapInfo::getGameInfo().texPalette_LEVCRED2];
 }
 
+uint16_t getTexPalette_DATA() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DATA];
+}
+
+uint16_t getTexPalette_FINAL() noexcept {
+    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_FINAL];
+}
+
 uint16_t getTexPalette_OptionsBg() noexcept {
     return gPaletteClutIds[MapInfo::getGameInfo().texPalette_OptionsBG];
 }

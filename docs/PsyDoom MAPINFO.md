@@ -184,7 +184,10 @@ Internal Fields:
 - `NumRegularMaps`: the number of non-secret maps in the game. Any maps after the last non-secret map are assumed to be secret maps. Affects when the game detects the last (normal) level of the game has been completed and which levels can be used as the starting point for a multiplayer game. For Doom and Final Doom this value was `54` and `30` respectively. Must be between 1 and 255.
 - `DisableMultiplayer`: whether multiplayer game modes should be disallowed. Disabling multiplayer can be useful for mods that do tricks like Doom 64's faux-3D bridges, or 'silent teleporters' which would break in a multiplayer game.
 - `FinalDoomGameRules`: whether Final Doom style game rules should be used. Final Doom forward movement is slightly slower, and only 16 Lost Souls can spawn from Pain Elementals.
-- `FinalDoomTitleScreen`: whether to use a Final Doom style title screen instead of a Doom style one.
+- `TitleScreenStyle`: what style of title screen to use. Valid values are currently:
+  - `0` = Doom. The 'DOOM' logo rises up above the fire.
+  - `1` = Final Doom. The 'TITLE' image displays over the fire at all times and fades in from black.
+  - `2` = GEC Master Edition. The `DOOM` and `FINAL` images display side-by-side over the fire at all times, fading in from black. The 'Master Edition' text from the 'DATA' lump also displays on top.
 - `FinalDoomCredits`: whether to use a Final Doom style credits screen (3 pages) instead of a Doom style one (2 pages).
 - `TexPalette_STATUS`: palette index to use for the `STATUS` image lump. Must be between 0 and 31.
 - `TexPalette_TITLE`: palette index to use for the `TITLE` image lump. Must be between 0 and 31.
@@ -199,6 +202,8 @@ Internal Fields:
 - `TexPalette_WMSCRED1`: palette index to use for the `WMSCRED1` image lump. Must be between 0 and 31.
 - `TexPalette_WMSCRED2`: palette index to use for the `WMSCRED2` image lump. Must be between 0 and 31.
 - `TexPalette_LEVCRED2`: palette index to use for the `LEVCRED2` image lump. Must be between 0 and 31.
+- `TexPalette_DATA`: palette index to use for the `DATA` image lump (from the GEC Master Edition). Must be between 0 and 31.
+- `TexPalette_FINAL`: palette index to use for the `FINAL` image lump (from the GEC Master Edition). Must be between 0 and 31.
 - `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
 - `TexLumpName_OptionsBG`: which texture lump to use for the options menu tiled background.
 - `CreditsXPos_IDCRED2`: X position/offset of the `IDCRED2` image (text overlay) on the credits screen.

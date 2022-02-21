@@ -93,6 +93,8 @@ uint16_t getTexPalette_IDCRED2() noexcept;
 uint16_t getTexPalette_WMSCRED1() noexcept;
 uint16_t getTexPalette_WMSCRED2() noexcept;
 uint16_t getTexPalette_LEVCRED2() noexcept;
+uint16_t getTexPalette_DATA() noexcept;
+uint16_t getTexPalette_FINAL() noexcept;
 uint16_t getTexPalette_OptionsBg() noexcept;
 String8 getTexLumpName_OptionsBg() noexcept;
 void startLevelTimer() noexcept;

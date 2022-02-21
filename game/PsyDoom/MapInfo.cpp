@@ -11,6 +11,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/UI/ti_main.h"
 #include "Game.h"
 #include "MapInfo_Defaults.h"
 #include "MapInfo_Parse.h"
@@ -62,7 +63,7 @@ GameInfo::GameInfo() noexcept
     , numRegularMaps(0)
     , bDisableMultiplayer(false)
     , bFinalDoomGameRules(false)
-    , bFinalDoomTitleScreen(false)
+    , titleScreenStyle(TitleScreenStyle::Doom)
     , bFinalDoomCredits(false)
     , texPalette_STATUS(UIPAL)
     , texPalette_TITLE(TITLEPAL)
@@ -77,6 +78,8 @@ GameInfo::GameInfo() noexcept
     , texPalette_WMSCRED1(WCREDITS1PAL)
     , texPalette_WMSCRED2(UIPAL)
     , texPalette_LEVCRED2(WCREDITS1PAL)
+    , texPalette_DATA(30)
+    , texPalette_FINAL(29)
     , texPalette_OptionsBG(MAINPAL)
     , texLumpName_OptionsBG("MARB01")
     , creditsXPos_IDCRED2(9)
@@ -146,7 +149,7 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.numRegularMaps = block.getSingleIntValue("NumRegularMaps", gameInfo.numRegularMaps);
     gameInfo.bDisableMultiplayer = (block.getSingleIntValue("DisableMultiplayer", gameInfo.bDisableMultiplayer) > 0);
     gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
-    gameInfo.bFinalDoomTitleScreen = (block.getSingleIntValue("FinalDoomTitleScreen", gameInfo.bFinalDoomTitleScreen) > 0);
+    gameInfo.titleScreenStyle = (TitleScreenStyle) block.getSingleIntValue("TitleScreenStyle", gameInfo.titleScreenStyle);
     gameInfo.bFinalDoomCredits = (block.getSingleIntValue("FinalDoomCredits", gameInfo.bFinalDoomCredits) > 0);
     gameInfo.texPalette_STATUS = (uint8_t) block.getSingleIntValue("TexPalette_STATUS", gameInfo.texPalette_STATUS);
     gameInfo.texPalette_TITLE = (uint8_t) block.getSingleIntValue("TexPalette_TITLE", gameInfo.texPalette_TITLE);
@@ -161,6 +164,8 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.texPalette_WMSCRED1 = (uint8_t) block.getSingleIntValue("TexPalette_WMSCRED1", gameInfo.texPalette_WMSCRED1);
     gameInfo.texPalette_WMSCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_WMSCRED2", gameInfo.texPalette_WMSCRED2);
     gameInfo.texPalette_LEVCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_LEVCRED2", gameInfo.texPalette_LEVCRED2);
+    gameInfo.texPalette_DATA = (uint8_t) block.getSingleIntValue("TexPalette_DATA", gameInfo.texPalette_DATA);
+    gameInfo.texPalette_FINAL = (uint8_t) block.getSingleIntValue("TexPalette_FINAL", gameInfo.texPalette_FINAL);
     gameInfo.texPalette_OptionsBG = (uint8_t) block.getSingleIntValue("TexPalette_OptionsBG", gameInfo.texPalette_OptionsBG);
     gameInfo.texLumpName_OptionsBG = block.getSingleSmallStringValue("TexLumpName_OptionsBG", gameInfo.texLumpName_OptionsBG);
     gameInfo.creditsXPos_IDCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_IDCRED2", gameInfo.creditsXPos_IDCRED2);
@@ -196,6 +201,8 @@ static void readGameInfo(const Block& block) noexcept {
     checkPalette(gameInfo.texPalette_WMSCRED1,      "TexPalette_WMSCRED1");
     checkPalette(gameInfo.texPalette_WMSCRED2,      "TexPalette_WMSCRED2");
     checkPalette(gameInfo.texPalette_LEVCRED2,      "TexPalette_LEVCRED2");
+    checkPalette(gameInfo.texPalette_DATA,          "TexPalette_DATA");
+    checkPalette(gameInfo.texPalette_FINAL,         "TexPalette_FINAL");
     checkPalette(gameInfo.texPalette_OptionsBG,     "TexPalette_OptionsBG");
 }
 
