@@ -368,35 +368,41 @@ static void addClusters_FinalDoom(std::vector<Cluster>& clusters) noexcept {
 // Adds all the default clusters for 'GEC Master Edition (Beta 3)' to the given list
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void addClusters_GEC_ME_Beta3(std::vector<Cluster>& clusters) noexcept {
-    // No finale for the GEC ME!
-    // TODO: GEC ME BETA 3: figure out end cast
+    // Use this template for all clusters and customize as required
+    Cluster clusTemplate = {};
+    clusTemplate.pic = "BACK";
+    clusTemplate.picPal = 29;
+    clusTemplate.cdMusicA = 9;
+    clusTemplate.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
+    clusTemplate.textY = 45;
+    clusTemplate.bSkipFinale = false;
+    clusTemplate.bHideNextMapForFinale = true;
+    clusTemplate.bEnableCast = false;
+    clusTemplate.text[0] = "We hope you";
+    clusTemplate.text[1] = "have enjoyed our master";
+    clusTemplate.text[2] = "edition finaldoom beta3";
+    clusTemplate.text[3] = "more coming soon";
+    clusTemplate.text[4] = "be aware for the";
+    clusTemplate.text[5] = "next beta release";
+    clusTemplate.text[6] = "thanks";
+
+    // Fill in the Doom and Final Doom episode clusters
     {
-        Cluster& clus = clusters.emplace_back();
+        Cluster& clus = clusters.emplace_back(clusTemplate);
         clus.clusterNum = 1;
-        clus.bSkipFinale = true;
-        clus.bHideNextMapForFinale = true;
-        clus.bEnableCast = false;
+        clus.text[2] = "edition doom beta 3";
     }
     {
-        Cluster& clus = clusters.emplace_back();
+        Cluster& clus = clusters.emplace_back(clusTemplate);
         clus.clusterNum = 2;
-        clus.bSkipFinale = true;
-        clus.bHideNextMapForFinale = true;
-        clus.bEnableCast = false;
     }
     {
-        Cluster& clus = clusters.emplace_back();
+        Cluster& clus = clusters.emplace_back(clusTemplate);
         clus.clusterNum = 3;
-        clus.bSkipFinale = true;
-        clus.bHideNextMapForFinale = true;
-        clus.bEnableCast = false;
     }
     {
-        Cluster& clus = clusters.emplace_back();
+        Cluster& clus = clusters.emplace_back(clusTemplate);
         clus.clusterNum = 4;
-        clus.bSkipFinale = true;
-        clus.bHideNextMapForFinale = true;
-        clus.bEnableCast = false;
     }
 }
 
