@@ -158,7 +158,7 @@ GameInfo {
     NumRegularMaps = 54
     DisableMultiplayer = false
     FinalDoomGameRules = false
-    FinalDoomTitleScreen = false
+    TitleScreenStyle = 0
     FinalDoomCredits = false
     TexPalette_STATUS = 16
     TexPalette_TITLE = 17
@@ -167,11 +167,14 @@ GameInfo {
     TexPalette_PAUSE = 0
     TexPalette_NETERR = 0
     TexPalette_DOOM = 17
+    TexPalette_CONNECT = 0
     TexPalette_IDCRED1 = 18
     TexPalette_IDCRED2 = 16
     TexPalette_WMSCRED1 = 19
     TexPalette_WMSCRED2 = 16
     TexPalette_LEVCRED2 = 19
+    TexPalette_DATA = 30
+    TexPalette_FINAL = 29
     TexPalette_OptionsBG = 0
     TexLumpName_OptionsBG = "MARB01"
     CreditsXPos_IDCRED2 = 9
