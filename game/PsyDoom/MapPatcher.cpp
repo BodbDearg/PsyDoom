@@ -308,6 +308,14 @@ static void patchMap_TheTwilight() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP89 'Bunker' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Bunker() noexcept {
+    // Fix a 'P_PlayerInSpecialSector: unknown special 235' error when stepping onto a teleporter pad
+    gpSectors[176].special = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues in MAP93 'Cyberden' for the GEC Master Edition (Beta 3)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Cyberden() noexcept {
@@ -439,6 +447,7 @@ static const PatchDef gPatches[] = {
     { 167156, 0xE21C586BF2242082, 0xFA5D9C91DB288B5E, patchMap_Pharaoh },               // MAP69
     { 120117, 0x475B5271367FB4C1, 0xF1D3C564A0145DA6, patchMap_Caribbean },             // MAP70
     {  95176, 0xA5DA6BC16E6BF2C2, 0xD8A4986E39B4EB00, patchMap_TheTwilight },           // MAP79
+    { 138392, 0x9DA7F8CC0F0CB11F, 0xE3383B410F789D07, patchMap_Bunker },                // MAP89
     { 106517, 0x2EA30BD21131045A, 0x524AD93A1261BC8F, patchMap_Cyberden },              // MAP93
     {  97336, 0x7DBB35F7DE4902C0, 0x93F71E0D6A338D71, patchMap_Go2It },                 // MAP94
 };
