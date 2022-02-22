@@ -191,6 +191,145 @@ static void patchMap_Ballistyx() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP24 'Tomb Of Malevolence' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TombOfMalevolence() noexcept {
+    // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 31; },
+        661, 662, 663, 664
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP30 'Baphomet Demense' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_BaphometDemense() noexcept {
+    gecMEBeta3_fixWrongREDROK01();
+
+    // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 31; },
+        683
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP36 'TEETH' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TEETH() noexcept {
+    // Correct the target secret level number from '20' (map number within the episode) to '50' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 50; },
+        304
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP49 'The Image of Evil' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheImageOfEvil() noexcept {
+    // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 51; },
+        929, 936, 937, 938
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP50 'Bad Dream' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_BadDream() noexcept {
+    // Correct the level to return to from '7' (map number within the episode) to '37' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 37; },
+        83
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP60 'Dead Zone' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_DeadZone() noexcept {
+    // Correct the target secret level number from '19' (map number within the episode) to '69' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 69; },
+        672
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP68 'River Styx' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_RiverStyx() noexcept {
+    // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 71; },
+        1840
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP69 'Pharaoh' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Pharaoh() noexcept {
+    // Correct the level to return to from '11' (map number within the episode) to '61' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 61; },
+        162, 258, 259, 429, 573, 734, 929, 964
+    );
+    // Correct the target secret level number from '20' (map number within the episode) to '70' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 70; },
+        1323
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP70 'Caribbean' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Caribbean() noexcept {
+    // Correct the level to return to from '11' (map number within the episode) to '61' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 61; },
+        662
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP79 'The Twilight' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheTwilight() noexcept {
+    // Correct the target secret level number from '23' (map number within the episode) to '93' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 93; },
+        120, 309, 911, 919
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP93 'Cyberden' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Cyberden() noexcept {
+    // Correct the target secret level number from '24' (map number within the episode) to '94' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 94; },
+        729, 732, 734, 735
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP94 'Go 2 It' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Go2It() noexcept {
+    // Correct the level to return to from '10' (map number within the episode) to '80' (global map number)
+    modifyLinedefs(
+        [](line_t& line) { line.tag = 80; },
+        880, 881, 882, 883
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // All of the map fixes to apply
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatches[] = {
@@ -290,7 +429,18 @@ static const PatchDef gPatches[] = {
     // GEC Master Edition (Beta 3)
     {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, gecMEBeta3_fixWrongREDROK01 },    // MAP05
     {  87975, 0x7CF1F4CF0C3427C5, 0x50A8701B4A994752, gecMEBeta3_fixWrongREDROK01 },    // MAP14
-    { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, gecMEBeta3_fixWrongREDROK01 },    // MAP30
+    {  87074, 0x8CE5FFE1D040C140, 0x4E89A7383999004F, patchMap_TombOfMalevolence  },    // MAP24
+    { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, patchMap_BaphometDemense },       // MAP30
+    { 123320, 0x87ED0BB125C317ED, 0x47E362A5D5258526, patchMap_TEETH },                 // MAP36
+    { 121126, 0x364CF475759D4689, 0x905D77EC9FE7AAD1, patchMap_TheImageOfEvil },        // MAP49
+    {  11033, 0x630B968605A4F759, 0x8A9D02099C77ECD1, patchMap_BadDream },              // MAP50
+    { 123947, 0x3805BA7B953B38B3, 0x2F9DCB10186E7DB3, patchMap_DeadZone },              // MAP60
+    { 164989, 0x413FE3E56F2C2453, 0x9E047C4ECCB4FEA7, patchMap_RiverStyx },             // MAP68
+    { 167156, 0xE21C586BF2242082, 0xFA5D9C91DB288B5E, patchMap_Pharaoh },               // MAP69
+    { 120117, 0x475B5271367FB4C1, 0xF1D3C564A0145DA6, patchMap_Caribbean },             // MAP70
+    {  95176, 0xA5DA6BC16E6BF2C2, 0xD8A4986E39B4EB00, patchMap_TheTwilight },           // MAP79
+    { 106517, 0x2EA30BD21131045A, 0x524AD93A1261BC8F, patchMap_Cyberden },              // MAP93
+    {  97336, 0x7DBB35F7DE4902C0, 0x93F71E0D6A338D71, patchMap_Go2It },                 // MAP94
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

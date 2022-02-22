@@ -128,9 +128,9 @@ static void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
 // Initializes a 'GameInfo' struct for 'GEC Master Edition (Beta 3)'
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
-    initGameInfo_FinalDoom(gameInfo);   // Uses Final Doom values for most settings
+    initGameInfo_FinalDoom(gameInfo);       // Uses Final Doom values for most settings
     gameInfo.numMaps = 94;
-    gameInfo.numRegularMaps = 94;
+    gameInfo.numRegularMaps = 92;           // Last two maps are secret: stops the game ending on completing 'Go 2 It'
     gameInfo.bFinalDoomGameRules = false;   // Some maps might rely on the extra forward speed of 'Doom'
     gameInfo.titleScreenStyle = TitleScreenStyle::GEC_ME;
     gameInfo.creditsScreenStyle = CreditsScreenStyle::GEC_ME;
@@ -376,7 +376,7 @@ static void addClusters_GEC_ME_Beta3(std::vector<Cluster>& clusters) noexcept {
     clusTemplate.cdMusicB = (int16_t) gCDTrackNum[cdmusic_credits_demo];
     clusTemplate.textY = 45;
     clusTemplate.bSkipFinale = false;
-    clusTemplate.bHideNextMapForFinale = true;
+    clusTemplate.bHideNextMapForFinale = false;
     clusTemplate.bEnableCast = false;
     clusTemplate.text[0] = "We hope you";
     clusTemplate.text[1] = "have enjoyed our master";
@@ -403,6 +403,7 @@ static void addClusters_GEC_ME_Beta3(std::vector<Cluster>& clusters) noexcept {
     {
         Cluster& clus = clusters.emplace_back(clusTemplate);
         clus.clusterNum = 4;
+        clusTemplate.bHideNextMapForFinale = true;
     }
 }
 
