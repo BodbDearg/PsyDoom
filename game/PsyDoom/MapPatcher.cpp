@@ -249,6 +249,37 @@ static void patchMap_BaphometDemense() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP32 'Trapped On Titan' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TrappedOnTitan() noexcept {
+    // Fix the player being unable to escape the area with the rising stairs and overhead sky.
+    // Raise the ceiling by 64 for all sectors in that square, so the player can reach the top of the stairs.
+    modifySectors(
+        [](sector_t& sector) { sector.ceilingheight += 64 * FRACUNIT; },
+        25, 37, 28, 35, 27, 39, 30, 41, 32, 38, 29, 36, 33, 40, 31, 42, 34
+    );
+
+    // Fix some sides by the sky squares in the above area being cut off
+    gpSectors[25].ceilingheight -= 24 * FRACUNIT;
+
+    // Fix some missing textures with a lift in the room with the blue door
+    gpSides[gpLines[212].sidenum[0]].bottomtexture = R_GetOverrideTexNum(R_TextureNumForName("SUPPORT5"));
+    gpSides[gpLines[212].sidenum[1]].bottomtexture = R_GetOverrideTexNum(R_TextureNumForName("DOORTRAK"));
+
+    // Fix some steps being too high to climb up in the wooden building
+    gpSectors[194].floorheight += 2 * FRACUNIT;
+    gpSectors[195].floorheight += 4 * FRACUNIT;
+
+    // Fix glitches when looking over one of the buildings outside: raise its sky level to be the same as the other buildings.
+    // This also makes the building more faithful to the PC original.
+    gpSectors[107].ceilingheight = 0;
+
+    // Fix the area beyond the lift not lowering after the switch outside is pressed.
+    // An Imp stuck in the ceiling prevents this. Fix by raising the ceiling so it is not stuck.
+    gpSectors[270].ceilingheight += 64 * FRACUNIT;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues in MAP36 'TEETH' for the GEC Master Edition (Beta 3)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TEETH() noexcept {
@@ -474,6 +505,7 @@ static const PatchDef gPatches[] = {
     {  87975, 0x7CF1F4CF0C3427C5, 0x50A8701B4A994752, gecMEBeta3_fixWrongREDROK01 },    // MAP14
     {  87074, 0x8CE5FFE1D040C140, 0x4E89A7383999004F, patchMap_TombOfMalevolence  },    // MAP24
     { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, patchMap_BaphometDemense },       // MAP30
+    { 172689, 0xB8354D5A39E9F37A, 0x013E5A66B42A71F9, patchMap_TrappedOnTitan },        // MAP32
     { 123320, 0x87ED0BB125C317ED, 0x47E362A5D5258526, patchMap_TEETH },                 // MAP36
     { 121126, 0x364CF475759D4689, 0x905D77EC9FE7AAD1, patchMap_TheImageOfEvil },        // MAP49
     {  11033, 0x630B968605A4F759, 0x8A9D02099C77ECD1, patchMap_BadDream },              // MAP50
