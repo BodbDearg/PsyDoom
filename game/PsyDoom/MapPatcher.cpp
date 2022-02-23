@@ -37,11 +37,24 @@ struct PatchDef {
 template <class ModFuncT>
 static void modifyLinedefs([[maybe_unused]] const ModFuncT & func) noexcept {}
 
-template <class ModFuncT, class ...Int32List> 
+template <class ModFuncT, class ...Int32List>
 static void modifyLinedefs(const ModFuncT & func, const int32_t linedefIdx, Int32List... linedefIndexes) noexcept {
     ASSERT(linedefIdx < gNumLines);
     func(gpLines[linedefIdx]);
     modifyLinedefs(func, linedefIndexes...);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility function: apply a transformation to a number of sectors
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class ModFuncT>
+static void modifySectors([[maybe_unused]] const ModFuncT & func) noexcept {}
+
+template <class ModFuncT, class ...Int32List>
+static void modifySectors(const ModFuncT & func, const int32_t sectorIdx, Int32List... sectorIndexes) noexcept {
+    ASSERT(sectorIdx < gNumSectors);
+    func(gpSectors[sectorIdx]);
+    modifySectors(func, sectorIndexes...);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -191,6 +204,18 @@ static void patchMap_Ballistyx() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues in MAP11 'Betray' for the GEC Master Edition (Beta 3)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Betray() noexcept {
+    // Fix sky walls rendering where they should not
+    modifyLinedefs(
+        [](line_t& line) { line.flags |= ML_VOID; },
+        495, 496, 497, 498, 499, 500, 501, 502, 673, 674, 675, 676, 677, 678, 679, 680,     // Two teleporter pillars
+        356, 357, 358, 359, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606                // Cross
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues in MAP24 'Tomb Of Malevolence' for the GEC Master Edition (Beta 3)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TombOfMalevolence() noexcept {
@@ -206,6 +231,15 @@ static void patchMap_TombOfMalevolence() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_BaphometDemense() noexcept {
     gecMEBeta3_fixWrongREDROK01();
+
+    // Fix glitches in the caged area where the soulsphere is.
+    // Create walls to cover the areas where the sky doesn't render; also fixes the sky flickering on and off!
+    gpSectors[174].ceilingheight = 136 * FRACUNIT;
+
+    // Fix glitches in the caged area where the chaingun is: get rid of the sky and brighten up the newly showing skin wall a little
+    gpSectors[162].lightlevel = 104;
+    gpSectors[177].ceilingpic = gpSectors[178].ceilingpic;
+    gpSectors[178].lightlevel = 128;
 
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
     modifyLinedefs(
@@ -436,6 +470,7 @@ static const PatchDef gPatches[] = {
     { 110131, 0x2C157281E504283E, 0x914845A33B9F0503, applyCommonMapPatches },          // MAP30
     // GEC Master Edition (Beta 3)
     {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, gecMEBeta3_fixWrongREDROK01 },    // MAP05
+    {  96628, 0x808AD04C8D43EEC8, 0x73B0859F1115F292, patchMap_Betray },                // MAP11
     {  87975, 0x7CF1F4CF0C3427C5, 0x50A8701B4A994752, gecMEBeta3_fixWrongREDROK01 },    // MAP14
     {  87074, 0x8CE5FFE1D040C140, 0x4E89A7383999004F, patchMap_TombOfMalevolence  },    // MAP24
     { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, patchMap_BaphometDemense },       // MAP30
