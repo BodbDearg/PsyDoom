@@ -1329,18 +1329,18 @@ static void P_Init() noexcept {
 
     // Give all sides without textures a default one.
     // Maybe done so constant validity checks don't have to be done elsewhere in the game to avoid crashing?
+    //
+    // PsyDoom: remove this code, so that we are preserving the concept of 'no texture' being defined for a side.
+    // Otherwise this may have unintended consequences for some gameplay code, for example floor movers of the 'raiseToTexture' type.
+    // We don't want some dummy texture or the WAD layout (whatever is the 1st texture) affecting the behavior of that mover type.
+    // When a texture is undefined, it should be ignored by special actions that vary their behavior depending on texture.
+    #if !PSYDOOM_MODS
     {
         side_t* pSide = gpSides;
 
         for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
             // These are the original checks: they just see if a side has an intentional '-1' texture (no-texture or 'don't care') and
             // assign the side a default texture to avoid the engine crashing when we try to access it.
-            //
-            // PsyDoom: remove this code, so that we are preserving the concept of 'no texture' being defined for a side.
-            // Otherwise this may have unintended consequences for some gameplay code, for example floor movers of the 'raiseToTexture' type.
-            // We don't want some dummy texture or the WAD layout (whatever is the 1st texture) affecting the behavior of that mover type.
-            // When a texture is undefined, it should be ignored by special actions that vary their behavior depending on texture.
-            #if !PSYDOOM_MODS
                 if (pSide->toptexture == -1) {
                     pSide->toptexture = 0;
                 }
@@ -1352,28 +1352,56 @@ static void P_Init() noexcept {
                 if (pSide->bottomtexture == -1) {
                     pSide->bottomtexture = 0;
                 }
-            #endif
-
-            // PsyDoom: handle ALL possible other invalid texture numbers - I've seen these pop up in some new maps.
-            // These missing textures are likely NOT intentional, so issue a warning when we find them.
-            #if PSYDOOM_MODS
-                if ((pSide->toptexture < -1) || (pSide->toptexture >= gNumTexLumps)) {
-                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad u-tex for side %d!", sideIdx);
-                    pSide->toptexture = -1;
-                }
-
-                if ((pSide->midtexture < -1) || (pSide->midtexture >= gNumTexLumps)) {
-                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad m-tex for side %d!", sideIdx);
-                    pSide->midtexture = -1;
-                }
-
-                if ((pSide->bottomtexture < -1) || (pSide->bottomtexture >= gNumTexLumps)) {
-                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad l-tex for side %d!", sideIdx);
-                    pSide->bottomtexture = -1;
-                }
-            #endif
         }
     }
+    #endif
+
+    // PsyDoom: check for sides that have invalid textures assigned other than '-1' (intentional no texture).
+    // These missing textures are likely NOT intentional, so issue a warning when we find them.
+    // Also remap the bad texture indexes to 'no texture' or texture index '-1' so that the engine ignores them.
+    #if PSYDOOM_MODS
+        // Check against all lines
+        for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
+            const line_t& line = gpLines[lineIdx];
+            const int32_t numSides = (line.sidenum[1] >= 0) ? 2 : 1;
+
+            // Check against all sides of this line
+            for (int32_t lineSide = 0; lineSide < numSides; ++lineSide) {
+                // Get the side and sanity check the line data
+                const int32_t sideIdx = line.sidenum[lineSide];
+
+                if ((sideIdx < 0) || (sideIdx >= gNumSides)) {
+                    I_Error("P_Init(): line %d with invalid side idx %d!", lineIdx, sideIdx);
+                }
+
+                side_t& side = gpSides[sideIdx];
+
+                // Verify the side textures are OK and use placeholder 'no texture' (-1) if not:
+                if ((side.toptexture < -1) || (side.toptexture >= gNumTexLumps)) {
+                    // Only warn if the line is two sided, otherwise it cannot be a problem!
+                    if (numSides == 2) {
+                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad u-tex for side %d!", sideIdx);
+                    }
+
+                    side.toptexture = -1;
+                }
+
+                if ((side.midtexture < -1) || (side.midtexture >= gNumTexLumps)) {
+                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad m-tex for side %d!", sideIdx);
+                    side.midtexture = -1;
+                }
+
+                if ((side.bottomtexture < -1) || (side.bottomtexture >= gNumTexLumps)) {
+                    // Only warn if the line is two sided, otherwise it cannot be a problem!
+                    if (numSides == 2) {
+                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad l-tex for side %d!", sideIdx);
+                    }
+
+                    side.bottomtexture = -1;
+                }
+            }
+        }
+    #endif
 
     // Some more hardcoded limits and memory arrangement for textures, this time for wall textures.
     // Lock down the texture pages used by wall textures and set the cache to start filling immediately after that (on the 6th page).
