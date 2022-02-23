@@ -67,6 +67,10 @@ set(PSYDOOM_INCLUDE_AUDIO_TOOLS FALSE CACHE BOOL
 set(PSYDOOM_PROFILE_GAME_LOOP FALSE CACHE BOOL
 "Enables profiling of the main game loop. Frame times are printed to standard out.")
 
+set(PSYDOOM_EMIT_MISSING_TEX_WARNINGS FALSE CACHE BOOL
+"Warn when a map uses missing textures? Disabled by default since some original maps can trigger these warnings.
+This feature can be a useful tool for map development however!")
+
 set(PSYDOOM_ENABLE_ASAN FALSE CACHE BOOL
 "Compile with address sanitizer enabled for Clang, GCC and MSVC?"
 )

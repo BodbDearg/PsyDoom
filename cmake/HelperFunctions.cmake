@@ -34,3 +34,14 @@ function(add_common_target_compile_options TARGET_NAME)
         target_compile_definitions(${TARGET_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)
     endif()
 endfunction()
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Add a single compile definition to the specified target that is either enabled (value='1') or disabled (value='0')
+#-----------------------------------------------------------------------------------------------------------------------
+function(target_bool_compile_definition TARGET_NAME ACCESS_LEVEL DEFINITION_NAME ENABLED)
+    if (ENABLED)
+        target_compile_definitions(${TARGET_NAME} ${ACCESS_LEVEL} -D${DEFINITION_NAME}=1)
+    else()
+        target_compile_definitions(${TARGET_NAME} ${ACCESS_LEVEL} -D${DEFINITION_NAME}=0)
+    endif()
+endfunction()

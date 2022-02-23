@@ -434,35 +434,12 @@ target_compile_definitions(${GAME_TGT_NAME} PRIVATE
 ) 
 
 # Various tweaks that can be applied
-if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_VULKAN_RENDERER=1)
-else()
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_VULKAN_RENDERER=0)
-endif()
-
-if (PSYDOOM_USE_NEW_I_ERROR)
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_USE_NEW_I_ERROR=1)
-else()
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_USE_NEW_I_ERROR=0)
-endif()
-
-if (PSYDOOM_FIX_UB)
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=1)
-else()
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_FIX_UB=0)
-endif()
-
-if (PSYDOOM_LIMIT_REMOVING)
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_LIMIT_REMOVING=1)
-else()
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_LIMIT_REMOVING=0)
-endif()
-
-if (PSYDOOM_PROFILE_GAME_LOOP)
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_PROFILE_GAME_LOOP=1)
-else()
-    target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPSYDOOM_PROFILE_GAME_LOOP=0)
-endif()
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_VULKAN_RENDERER         ${PSYDOOM_INCLUDE_VULKAN_RENDERER})
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_USE_NEW_I_ERROR         ${PSYDOOM_USE_NEW_I_ERROR})
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_FIX_UB                  ${PSYDOOM_FIX_UB})
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_LIMIT_REMOVING          ${PSYDOOM_LIMIT_REMOVING})
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_PROFILE_GAME_LOOP       ${PSYDOOM_PROFILE_GAME_LOOP})
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_MISSING_TEX_WARNINGS    ${PSYDOOM_EMIT_MISSING_TEX_WARNINGS})
 
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})

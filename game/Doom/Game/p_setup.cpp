@@ -370,19 +370,21 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
         sector_t* pDstSec = gpSectors;
 
         for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
-            // PsyDoom helper: ensures a floor or ceiling texture is in range and issues a warning if not.
+            // PsyDoom helper: ensures a floor or ceiling texture is in range and issues a warning if not (if warnings are allowed).
             // These are new safety checks which were originally not run.
             const auto ensureValidFlatPic = [&](int32_t& flatPicNum) noexcept {
                 #if PSYDOOM_MODS
                     if ((flatPicNum < 0) || (flatPicNum >= gNumFlatLumps)) {
                         flatPicNum = 0;
 
-                        std::snprintf(
-                            gLevelStartupWarning,
-                            C_ARRAY_SIZE(gLevelStartupWarning),
-                            (&flatPicNum == &pDstSec->floorpic) ? "W:bad f-tex for sector %d!" : "W:bad c-tex for sector %d!",
-                            secIdx
-                        );
+                        #if PSYDOOM_MISSING_TEX_WARNINGS
+                            std::snprintf(
+                                gLevelStartupWarning,
+                                C_ARRAY_SIZE(gLevelStartupWarning),
+                                (&flatPicNum == &pDstSec->floorpic) ? "W:bad f-tex for sector %d!" : "W:bad c-tex for sector %d!",
+                                secIdx
+                            );
+                        #endif
                     }
                 #endif
             };
@@ -805,9 +807,8 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
                 pDstSide->bottomtexture = R_TextureNumForName(pSrcSide->bottomtexture);
 
                 // PsyDoom: level startup warnings if textures are defined but not found.
-                // Note: disabling these warnings by default because they trigger on original maps.
-                // For creating new maps however it might be useful to remove the '&& false' and enable them.
-                #if PSYDOOM_MODS && false
+                // Note: these warnings may trigger on some original maps! For creating new maps however this can be a useful tool.
+                #if PSYDOOM_MODS && PSYDOOM_MISSING_TEX_WARNINGS
                     constexpr auto isTexNameDefined = [](const char name[8]) noexcept -> bool {
                         // Valid name if not empty string or '-' string
                         return (name[0] && ((name[0] != '-') || name[1]));
@@ -1357,7 +1358,7 @@ static void P_Init() noexcept {
     #endif
 
     // PsyDoom: check for sides that have invalid textures assigned other than '-1' (intentional no texture).
-    // These missing textures are likely NOT intentional, so issue a warning when we find them.
+    // These missing textures are likely NOT intentional, so issue a warning when we find them - if that feature is enabled.
     // Also remap the bad texture indexes to 'no texture' or texture index '-1' so that the engine ignores them.
     #if PSYDOOM_MODS
         // Check against all lines
@@ -1378,24 +1379,31 @@ static void P_Init() noexcept {
 
                 // Verify the side textures are OK and use placeholder 'no texture' (-1) if not:
                 if ((side.toptexture < -1) || (side.toptexture >= gNumTexLumps)) {
-                    // Only warn if the line is two sided, otherwise it cannot be a problem!
-                    if (numSides == 2) {
-                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad u-tex for side %d!", sideIdx);
-                    }
+                    #if PSYDOOM_MISSING_TEX_WARNINGS
+                        // Only warn if the line is two sided, otherwise it cannot be a problem!
+                        if (numSides == 2) {
+                            std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad u-tex for side %d!", sideIdx);
+                        }
+                    #endif
 
                     side.toptexture = -1;
                 }
 
                 if ((side.midtexture < -1) || (side.midtexture >= gNumTexLumps)) {
-                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad m-tex for side %d!", sideIdx);
+                    #if PSYDOOM_MISSING_TEX_WARNINGS
+                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad m-tex for side %d!", sideIdx);
+                    #endif
+
                     side.midtexture = -1;
                 }
 
                 if ((side.bottomtexture < -1) || (side.bottomtexture >= gNumTexLumps)) {
-                    // Only warn if the line is two sided, otherwise it cannot be a problem!
-                    if (numSides == 2) {
-                        std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad l-tex for side %d!", sideIdx);
-                    }
+                    #if PSYDOOM_MISSING_TEX_WARNINGS
+                        // Only warn if the line is two sided, otherwise it cannot be a problem!
+                        if (numSides == 2) {
+                            std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad l-tex for side %d!", sideIdx);
+                        }
+                    #endif
 
                     side.bottomtexture = -1;
                 }
