@@ -1363,7 +1363,7 @@ static void P_Init() noexcept {
         // Check against all lines
         for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
             const line_t& line = gpLines[lineIdx];
-            const int32_t numSides = (line.sidenum[1] >= 0) ? 2 : 1;
+            const int32_t numSides = ((line.sidenum[1] >= 0) && (line.flags & ML_TWOSIDED)) ? 2 : 1;
 
             // Check against all sides of this line
             for (int32_t lineSide = 0; lineSide < numSides; ++lineSide) {
