@@ -362,6 +362,9 @@ static void patchMap_ShippingRespawning() noexcept {
         [](sector_t& sector) { sector.floorheight += 12 * FRACUNIT; },
         12, 168
     );
+    
+    // Fix an automap line not rendering at a computer console
+    unhideLinedefs(982);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -431,6 +434,27 @@ static void patchMap_Caribbean() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP76: Speed
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Speed() noexcept {
+    // Fix the player being able to see past the end of the sky in various places: raise outer walls bordering the sky
+    modifySectors(
+        [](sector_t& sector) {
+            sector.floorheight += 16 * FRACUNIT;
+            sector.ceilingheight += 16 * FRACUNIT;
+        },
+        130, 156
+    );
+    
+    // Fix floors of an outer sky sometimes glitching in and out for one of the windows: the floor shouldn't be drawn
+    gpSectors[12].floorpic = -1;
+    
+    // Fix some geometry showing through the sky.
+    // Make the outer edge of sky walls void so that the one-sided sky walls draw behind it.
+    addVoidFlagToLinedefs(1123, 1124, 1126, 1127, 1128, 1129, 1136, 1137, 1138);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP79: The Twilight
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheTwilight() noexcept {
@@ -463,6 +487,19 @@ static void patchMap_NME() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP85: Impossible Mission
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_ImpossibleMission() noexcept {
+    // Fix ceilings that are level with the sky - lower them a little to create a lip
+    modifySectors(
+        [](sector_t& sector) {
+            sector.ceilingheight -= 22 * FRACUNIT;
+        },
+        145, 150, 152
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP89: Bunker
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Bunker() noexcept {
@@ -483,6 +520,14 @@ static void patchMap_TheSewers() noexcept {
         1430, 1431, 1432, 1433,                             // Bottom left light
         1422, 1423, 1424, 1425                              // Bottom right light
     );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP92: Odyssey of Noises
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_OdysseyOfNoises() noexcept {
+    // Fix automap lines that shouldn't be hidden
+    unhideLinedefs(187, 188, 202, 203);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -525,8 +570,8 @@ static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     { 145156, 0x51134C2A5A51C83F, 0x643A88CF3906D95B, patchMap_Vivisection },               // MAP21
     { 166908, 0xA67A3D273E02C0D1, 0xFAF4DC1387C0FFAA, patchMap_InfernoOfBlood },            // MAP22
     { 179930, 0x488228856FD3DD7E, 0xF579F43D9E39ACB2, patchMap_BaronsBanquet },             // MAP23
-    {  87074, 0x8CE5FFE1D040C140, 0x4E89A7383999004F, patchMap_TombOfMalevolence  },        // MAP24
-    { 113315, 0x843507387CE8BCBF, 0x5B4EB9EE56E95384, patchMap_Fear  },                     // MAP26
+    {  87074, 0x8CE5FFE1D040C140, 0x4E89A7383999004F, patchMap_TombOfMalevolence },         // MAP24
+    { 113315, 0x843507387CE8BCBF, 0x5B4EB9EE56E95384, patchMap_Fear },                      // MAP26
     { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, patchMap_BaphometDemense },           // MAP30
     { 172689, 0xB8354D5A39E9F37A, 0x013E5A66B42A71F9, patchMap_TrappedOnTitan },            // MAP32
     { 152959, 0xBD44DD87CE623522, 0x57AEC452C8FB2CF7, patchMap_BlackTower },                // MAP34
@@ -543,11 +588,14 @@ static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     { 164989, 0x413FE3E56F2C2453, 0x9E047C4ECCB4FEA7, patchMap_RiverStyx },                 // MAP68
     { 167156, 0xE21C586BF2242082, 0xFA5D9C91DB288B5E, patchMap_Pharaoh },                   // MAP69
     { 120117, 0x475B5271367FB4C1, 0xF1D3C564A0145DA6, patchMap_Caribbean },                 // MAP70
+    { 115075, 0x6A5BA4600D51FA60, 0x5E2B0CBCFBC0A065, patchMap_Speed },                     // MAP76
     {  95176, 0xA5DA6BC16E6BF2C2, 0xD8A4986E39B4EB00, patchMap_TheTwilight },               // MAP79
     {  99229, 0xE3B921D12019C298, 0x93AD211E85EC33D7, patchMap_TheOmen },                   // MAP80
     {  98162, 0xC2584F9BA85B42A5, 0xAE958A8D617754FC, patchMap_NME },                       // MAP83
+    { 154357, 0xBD3C80483B84E18A, 0x296AFAF8E748077E, patchMap_ImpossibleMission },         // MAP85
     { 138392, 0x9DA7F8CC0F0CB11F, 0xE3383B410F789D07, patchMap_Bunker },                    // MAP89
     { 144965, 0x11F026E6D12E8EC4, 0x045807938CC41667, patchMap_TheSewers },                 // MAP91
+    { 167748, 0xBE395077BE0BE3EF, 0xD419B6C4BC527803, patchMap_OdysseyOfNoises },           // MAP92
     { 106517, 0x2EA30BD21131045A, 0x524AD93A1261BC8F, patchMap_Cyberden },                  // MAP93
     {  97336, 0x7DBB35F7DE4902C0, 0x93F71E0D6A338D71, patchMap_Go2It },                     // MAP94
 };
