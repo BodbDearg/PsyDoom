@@ -48,7 +48,7 @@ static void AddDiscFile(const CdFileId id, const char* const path) noexcept {
 // Initialize the cd map table for [GEC] Master Edition PSX Doom for the PlayStation (Beta 3).
 // This needs to be done manually due to conflicting file names.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void CdMapTbl_Init_GECMasterBeta3() noexcept {
+static void CdMapTbl_Init_GEC_ME_Beta3() noexcept {
     // Buffers to use to make up temporary strings
     char srcFileName[256];
     char dstFileName[32];
@@ -135,8 +135,8 @@ void CdMapTbl_Init() noexcept {
     gDiscFiles.reserve(512);
 
     // Special case the GEC Master Edition Beta 3
-    if (Game::gGameType == GameType::GECMasterBeta3) {
-        CdMapTbl_Init_GECMasterBeta3();
+    if (Game::gGameType == GameType::GEC_ME_Beta3) {
+        CdMapTbl_Init_GEC_ME_Beta3();
         return;
     }
 

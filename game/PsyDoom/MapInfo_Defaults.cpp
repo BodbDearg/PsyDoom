@@ -155,7 +155,7 @@ static void initGameInfo(GameInfo& gameInfo) noexcept {
     switch (Game::gGameType) {
         case GameType::Doom:            initGameInfo_Doom(gameInfo);            break;
         case GameType::FinalDoom:       initGameInfo_FinalDoom(gameInfo);       break;
-        case GameType::GECMasterBeta3:  initGameInfo_GEC_ME_Beta3(gameInfo);    break;
+        case GameType::GEC_ME_Beta3:    initGameInfo_GEC_ME_Beta3(gameInfo);    break;
 
         default:
             FatalErrors::raise("MapInfo::initGameInfo(): unhandled game type!");
@@ -204,7 +204,7 @@ static void initEpisodes(std::vector<Episode>& episodes) noexcept {
     switch (Game::gGameType) {
         case GameType::Doom:            addEpisodes_Doom(episodes);             break;
         case GameType::FinalDoom:       addEpisodes_FinalDoom(episodes);        break;
-        case GameType::GECMasterBeta3:  addEpisodes_GEC_ME_Beta3(episodes);     break;
+        case GameType::GEC_ME_Beta3:    addEpisodes_GEC_ME_Beta3(episodes);     break;
 
         default:
             FatalErrors::raise("MapInfo::initEpisodes(): unhandled game type!");
@@ -416,7 +416,7 @@ static void initClusters(std::vector<Cluster>& clusters) noexcept {
     switch (Game::gGameType) {
         case GameType::Doom:            addClusters_Doom(clusters);             break;
         case GameType::FinalDoom:       addClusters_FinalDoom(clusters);        break;
-        case GameType::GECMasterBeta3:  addClusters_GEC_ME_Beta3(clusters);     break;
+        case GameType::GEC_ME_Beta3:    addClusters_GEC_ME_Beta3(clusters);     break;
 
         default:
             FatalErrors::raise("MapInfo::initClusters(): unhandled game type!");
@@ -652,7 +652,7 @@ static void initMaps(std::vector<Map>& maps) noexcept {
     switch (Game::gGameType) {
         case GameType::Doom:            addMaps_Doom(maps);             break;
         case GameType::FinalDoom:       addMaps_FinalDoom(maps);        break;
-        case GameType::GECMasterBeta3:  addMaps_GEC_ME_Beta3(maps);     break;
+        case GameType::GEC_ME_Beta3:    addMaps_GEC_ME_Beta3(maps);     break;
 
         default:
             FatalErrors::raise("MapInfo::initMaps(): unhandled game type!");

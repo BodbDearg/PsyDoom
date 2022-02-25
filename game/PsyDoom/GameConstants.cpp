@@ -212,7 +212,7 @@ void GameConstants::populate(const GameType gameType) noexcept {
     switch (gameType) {
         case GameType::Doom:            populateConsts_Doom(*this);             break;
         case GameType::FinalDoom:       populateConsts_FinalDoom(*this);        break;
-        case GameType::GECMasterBeta3:  populateConsts_GEC_ME_Beta3(*this);     break;
+        case GameType::GEC_ME_Beta3:    populateConsts_GEC_ME_Beta3(*this);     break;
 
         default:
             FatalErrors::raise("GameConstants::populate(): unhandled game type!");

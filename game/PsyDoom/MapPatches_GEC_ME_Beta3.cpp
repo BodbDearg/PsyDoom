@@ -13,7 +13,7 @@ BEGIN_NAMESPACE(MapPatches)
 // Fixes the wrong version of the 'REDROK01' texture being used for the 'Doom' episode maps.
 // Switches the 'Final Doom' style of this texture with the original 'Doom' version.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void gecMEBeta3_fixWrongREDROK01() noexcept {
+static void fixWrongREDROK01() noexcept {
     const int32_t numSides = gNumSides;
     const int32_t oldTexNum = R_TextureNumForName("REDROK01");
     const int32_t newTexNum = R_TextureNumForName("REDROKX1");
@@ -38,6 +38,17 @@ static void gecMEBeta3_fixWrongREDROK01() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP02: Forgotten Sewers
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_ForgottenSewers() noexcept {
+    // Fix automap lines that should be visible
+    unhideLinedefs(969, 970, 971, 972, 973);
+
+    // Fix a zero brightness sector
+    gpSectors[153].lightlevel = 128;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP07: Against Thee Wickedly
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_AgainstTheeWickedly() noexcept {
@@ -45,6 +56,16 @@ static void patchMap_AgainstTheeWickedly() noexcept {
     gpSectors[95].special = 0;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP08: And Hell Followed
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_AndHellFollowed() noexcept {
+    // Fix slime sectors that are supposed to be damaging but aren't
+    modifySectors(
+        [](sector_t& sector) { sector.special = 7; },   // Damage -2% or -5% health
+        213, 224, 225, 226, 227, 228
+    );
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP11: Betray
@@ -55,6 +76,72 @@ static void patchMap_Betray() noexcept {
         495, 496, 497, 498, 499, 500, 501, 502, 673, 674, 675, 676, 677, 678, 679, 680,     // Two teleporter pillars
         356, 357, 358, 359, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606                // Cross
     );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP13: The Chasm
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheChasm() noexcept {
+    // Fix missing textures when a floor raises
+    modifyLinedefs(
+        [](line_t& line) { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("SKIN08"); },
+        211, 212, 213, 214
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP16: Icon Of Sin
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_IconOfSin() noexcept {
+    // Fix missing lower step textures in the exit tunnels
+    modifyLinedefs(
+        [](line_t& line) { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("BRICK09"); },
+        261, 287, 293,      // Left tunnel
+        366, 367, 368 
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP21: Vivisection
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Vivisection() noexcept {
+    // Fix a missing step texture
+    gpSides[gpLines[1134].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK09");
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP22: Inferno of Blood
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_InfernoOfBlood() noexcept {
+    // Fix very mismatched textures used: red brick instead of brown rock
+    modifyLinedefs(
+        [](line_t& line) { gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("ROCK03"); },
+        759, 762
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP23: Barons Banquet
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_BaronsBanquet() noexcept {
+    // Fix a secret platform that won't lower: the special that triggers it is set to raise but it's already raised!
+    // Fix by adding another trigger that will lower the platform instead.
+    gpSectors[80].tag = 9;
+
+    modifyLinedefs(
+        [](line_t& line) {
+            line.special = 36;  // W1 Floor Lower to Lowest Floor
+            line.tag = 9;
+        },
+        565, 566, 567
+    );
+
+    // Fix an impaled corpse being translucent and rendered like a nightmare spectre
+    for (mobj_t* pMobj = gpSectors[75].thinglist; pMobj != nullptr; pMobj = pMobj->snext) {
+        if (pMobj->type == MT_MISC74) {
+            pMobj->flags &= ~MF_ALL_BLEND_FLAGS;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -69,10 +156,18 @@ static void patchMap_TombOfMalevolence() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP26: Fear
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Fear() noexcept {
+    // Fix a small crate having the wrong floor texture
+    gpSectors[95].floorpic = R_FlatNumForName("GRAY01");
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP30: Baphomet Demense
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_BaphometDemense() noexcept {
-    gecMEBeta3_fixWrongREDROK01();
+    fixWrongREDROK01();
 
     // Fix glitches in the caged area where the soulsphere is.
     // Create walls to cover the areas where the sky doesn't render; also fixes the sky flickering on and off!
@@ -105,8 +200,8 @@ static void patchMap_TrappedOnTitan() noexcept {
     gpSectors[25].ceilingheight -= 24 * FRACUNIT;
 
     // Fix some missing textures with a lift in the room with the blue door
-    gpSides[gpLines[212].sidenum[0]].bottomtexture = R_GetOverrideTexNum(R_TextureNumForName("SUPPORT5"));
-    gpSides[gpLines[212].sidenum[1]].bottomtexture = R_GetOverrideTexNum(R_TextureNumForName("DOORTRAK"));
+    gpSides[gpLines[212].sidenum[0]].bottomtexture = R_TextureNumForName("SUPPORT5");
+    gpSides[gpLines[212].sidenum[1]].bottomtexture = R_TextureNumForName("DOORTRAK");
 
     // Fix some steps being too high to climb up in the wooden building
     gpSectors[194].floorheight += 2 * FRACUNIT;
@@ -119,6 +214,18 @@ static void patchMap_TrappedOnTitan() noexcept {
     // Fix the area beyond the lift not lowering after the switch outside is pressed.
     // An Imp stuck in the ceiling prevents this. Fix by raising the ceiling so it is not stuck.
     gpSectors[270].ceilingheight += 64 * FRACUNIT;
+
+    // Fix being able to get stuck in the area with the rocket launcher, in between its pedestal and some walls.
+    // Lower the pedestal once it is reached.
+    gpSectors[43].tag = 5;
+
+    modifyLinedefs(
+        [](line_t& line) {
+            line.special = 36;  // W1 Floor Lower to 8 above Highest Floor
+            line.tag = 5;
+        },
+        162, 163, 164
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -163,11 +270,33 @@ static void patchMap_BadDream() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP53: Open Season
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_OpenSeason() noexcept {
+    // Fix a missing texture on a lift side at the start of the map
+    gpSides[gpLines[749].sidenum[0]].bottomtexture = R_TextureNumForName("SUPPORT3");
+
+    // Fix not being able to raise the starting platform if manually activating it just before crossing a line to raise it.
+    // Use the new repeatable version of the 'raise' action provided by PsyDoom:
+    gpLines[763].special = 128;
+
+    // Fix confusion over the color of a keycard where a yellow key is placed in a red sector.
+    // Shift the sector color more towards yellow/orange to avoid confusion, and alter the light level to make it blend better with nearby reds.
+    modifySectors(
+        [](sector_t& sector) {
+            sector.colorid = 45;
+            sector.lightlevel = 160;
+        },
+        43, 154, 161
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP57: Redemption
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Redemption() noexcept {
     // Fix a missing texture on a step side after it lowers
-    gpSides[gpLines[597].sidenum[1]].bottomtexture = R_GetOverrideTexNum(R_TextureNumForName("METAL03"));
+    gpSides[gpLines[597].sidenum[1]].bottomtexture = R_TextureNumForName("METAL03");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -201,6 +330,14 @@ static void patchMap_DeadZone() noexcept {
         [](sector_t& sector) { sector.floorpic = -1; },
         220, 91, 219, 80
     );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP61: Mill
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Mill() noexcept {
+    // Fix a missing step texture after lowering some walls near the end of the level
+    gpSides[gpLines[978].sidenum[1]].bottomtexture = R_TextureNumForName("BRICK19");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -377,20 +514,30 @@ static void patchMap_Go2It() noexcept {
 // All of the map patches for this game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
-    {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, gecMEBeta3_fixWrongREDROK01 },        // MAP05
+    { 120087, 0x6CF71CAD6729761C, 0xB9AADBB88CC49757, patchMap_ForgottenSewers },           // MAP02
+    {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, fixWrongREDROK01 },                   // MAP05
     { 129546, 0x3B2546BA128349AE, 0xC4D9982A6D4C27DD, patchMap_AgainstTheeWickedly },       // MAP07
+    { 141963, 0x0505711A9F4FB230, 0x86BDE1AB556902AC, patchMap_AndHellFollowed },           // MAP08
     {  96628, 0x808AD04C8D43EEC8, 0x73B0859F1115F292, patchMap_Betray },                    // MAP11
-    {  87975, 0x7CF1F4CF0C3427C5, 0x50A8701B4A994752, gecMEBeta3_fixWrongREDROK01 },        // MAP14
+    { 125944, 0x2B2CE1174955191F, 0xDBDC93F792A48D6E, patchMap_TheChasm },                  // MAP13
+    {  87975, 0x7CF1F4CF0C3427C5, 0x50A8701B4A994752, fixWrongREDROK01 },                   // MAP14
+    {  51103, 0x01D1F698C89E0228, 0xF59370050D1164D0, patchMap_IconOfSin },                 // MAP16
+    { 145156, 0x51134C2A5A51C83F, 0x643A88CF3906D95B, patchMap_Vivisection },               // MAP21
+    { 166908, 0xA67A3D273E02C0D1, 0xFAF4DC1387C0FFAA, patchMap_InfernoOfBlood },            // MAP22
+    { 179930, 0x488228856FD3DD7E, 0xF579F43D9E39ACB2, patchMap_BaronsBanquet },             // MAP23
     {  87074, 0x8CE5FFE1D040C140, 0x4E89A7383999004F, patchMap_TombOfMalevolence  },        // MAP24
+    { 113315, 0x843507387CE8BCBF, 0x5B4EB9EE56E95384, patchMap_Fear  },                     // MAP26
     { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, patchMap_BaphometDemense },           // MAP30
     { 172689, 0xB8354D5A39E9F37A, 0x013E5A66B42A71F9, patchMap_TrappedOnTitan },            // MAP32
     { 152959, 0xBD44DD87CE623522, 0x57AEC452C8FB2CF7, patchMap_BlackTower },                // MAP34
     { 123320, 0x87ED0BB125C317ED, 0x47E362A5D5258526, patchMap_TEETH },                     // MAP36
     { 121126, 0x364CF475759D4689, 0x905D77EC9FE7AAD1, patchMap_TheImageOfEvil },            // MAP49
     {  11033, 0x630B968605A4F759, 0x8A9D02099C77ECD1, patchMap_BadDream },                  // MAP50
+    {  92129, 0x508E355B9AC659BE, 0xA4E8B1A1202BB672, patchMap_OpenSeason },                // MAP53
     {  78120, 0x150CD634F190B42E, 0x5535698EAC736972, patchMap_Redemption },                // MAP57
     { 157892, 0x4A5802B317C04C27, 0xB7E3604C08F07666, patchMap_StorageFacility },           // MAP58
     { 123947, 0x3805BA7B953B38B3, 0x2F9DCB10186E7DB3, patchMap_DeadZone },                  // MAP60
+    { 208388, 0x576180A7759F98D2, 0x76B5E5021B925739, patchMap_Mill },                      // MAP61
     { 179279, 0x8C446FE7E1528EBE, 0x34B40119DCDABD64, patchMap_ShippingRespawning },        // MAP62
     { 186321, 0xDDAABED7BB4FF8B9, 0xEF0F5277E3C96A4C, patchMap_MountPain },                 // MAP67
     { 164989, 0x413FE3E56F2C2453, 0x9E047C4ECCB4FEA7, patchMap_RiverStyx },                 // MAP68

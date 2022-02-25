@@ -131,7 +131,7 @@ void determineGameTypeAndVariant() noexcept {
     }
     else if (discFileExists("SLUS_666.01", 0xD012570E0D1C31ED, 0xC51B8585D187CD59)) {
         // [GEC] Master Edition PSX Doom for the PlayStation (Beta 3)
-        gGameType = GameType::GECMasterBeta3;
+        gGameType = GameType::GEC_ME_Beta3;
         gGameVariant = GameVariant::NTSC_U;
     }
     else if (discFileExists("ZONE3D/ABIN/ZONE3D.WAD")) {

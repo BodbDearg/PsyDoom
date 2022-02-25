@@ -93,7 +93,7 @@ static void M_DrawDoomLogo() noexcept {
 
     // PsyDoom: cache and draw the 'MASTER EDITION' text in addition to the DOOM logo if we're playing the GEC Master Edition
     #if PSYDOOM_MODS
-        if (Game::gGameType == GameType::GECMasterBeta3) {
+        if (Game::gGameType == GameType::GEC_ME_Beta3) {
             I_CacheTex(gTex_DATA);
             I_DrawSprite(gTex_DATA.texPageId, Game::getTexPalette_DATA(), 48, 2, gTex_DATA.texPageCoordX + 1, gTex_DATA.texPageCoordY + 1, 157, 8);
         }
@@ -208,7 +208,7 @@ void M_Start() noexcept {
 
     // PsyDoom: cache the 'DATA' sprite atlas if we're playing the GEC Master Edition since we'll be using it later:
     #if PSYDOOM_MODS
-        if (Game::gGameType == GameType::GECMasterBeta3) {
+        if (Game::gGameType == GameType::GEC_ME_Beta3) {
             I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);
         }
     #endif

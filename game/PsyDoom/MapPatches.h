@@ -78,6 +78,17 @@ static inline void addVoidFlagToLinedefs(Int32List... linedefIndexes) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Utility function: removes the 'ML_DONTDRAW' flag on the specified linedefs, allowing them to be seen in the automap
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class ...Int32List>
+static inline void unhideLinedefs(Int32List... linedefIndexes) noexcept {
+    modifyLinedefs(
+        [](line_t& line) { line.flags &= ~ML_DONTDRAW; },
+        linedefIndexes...
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: clears mysterious sector flags (of unknown purpose) other than 'SF_NO_REVERB' found in original 'Doom' and 'Final Doom' maps.
 // 
 // The 'SF_NO_REVERB' flag was the only one originally used by the retail version of the game but for some reason various sectors in the
