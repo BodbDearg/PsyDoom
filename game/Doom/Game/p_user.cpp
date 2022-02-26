@@ -110,7 +110,6 @@ static void P_PlayerMove(mobj_t& mobj) noexcept {
     // Do the sliding movement
     gpSlideThing = &mobj;
     P_SlideMove();
-    line_t* const pSpecialLineToCross = gpSpecialLine;
 
     // If we did not succeed in doing a sliding movement, or cannot go to the suggested location then try stairstepping.
     // With stairstepping we try to do the x and y axis movements alone, instead of together:
@@ -138,10 +137,29 @@ static void P_PlayerMove(mobj_t& mobj) noexcept {
         }
     }
 
-    // Trigger line specials if we crossed a special line
-    if (pSpecialLineToCross) {
-        P_CrossSpecialLine(*pSpecialLineToCross, mobj);
+    // Trigger line specials if we crossed a special line.
+    // PsyDoom: we now allow multiple lines to be crossed at once, depending on game settings!
+    #if PSYDOOM_MODS
+    {
+        // Get what special lines were crossed
+        line_t** ppSpecialLines = nullptr;
+        uint32_t numSpecialLines = 0;
+        P_GetSpecialLines(ppSpecialLines, numSpecialLines);
+
+        // Cross them in the same order that the code detected they were crossed in
+        for (uint32_t lineIdx = 0; lineIdx < numSpecialLines; ++lineIdx) {
+            ASSERT(ppSpecialLines[lineIdx]);
+            line_t& line = *ppSpecialLines[lineIdx];
+            P_CrossSpecialLine(line, mobj);
+        }
     }
+    #else
+        line_t* const pSpecialLineToCross = gpSpecialLine;
+
+        if (pSpecialLineToCross) {
+            P_CrossSpecialLine(*pSpecialLineToCross, mobj);
+        }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

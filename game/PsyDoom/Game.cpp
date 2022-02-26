@@ -24,6 +24,7 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(bUsePalTimings);
     Endian::byteSwapInPlace(bUseDemoTimings);
     Endian::byteSwapInPlace(bUseExtendedPlayerShootRange);
+    Endian::byteSwapInPlace(bFixMultiLineSpecialCrossing);
     Endian::byteSwapInPlace(bUsePlayerRocketBlastFix);
     Endian::byteSwapInPlace(bUseSuperShotgunDelayTweak);
     Endian::byteSwapInPlace(bUseMoveInputLatencyTweak);
@@ -167,6 +168,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 
     settings.bUseDemoTimings                = Config::gbUseDemoTimings;
     settings.bUseExtendedPlayerShootRange   = Config::gbUseExtendedPlayerShootRange;
+    settings.bFixMultiLineSpecialCrossing   = Config::gbFixMultiLineSpecialCrossing;
     settings.bUsePlayerRocketBlastFix       = Config::gbUsePlayerRocketBlastFix;
     settings.bUseSuperShotgunDelayTweak     = Config::gbUseSuperShotgunDelayTweak;
     settings.bUseMoveInputLatencyTweak      = Config::gbUseMoveInputLatencyTweak;
@@ -226,6 +228,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUsePalTimings                 = (gGameVariant == GameVariant::PAL);
     settings.bUseDemoTimings                = true;
     settings.bUseExtendedPlayerShootRange   = false;
+    settings.bFixMultiLineSpecialCrossing   = false;
     settings.bUsePlayerRocketBlastFix       = false;
     settings.bUseSuperShotgunDelayTweak     = false;
     settings.bUseMoveInputLatencyTweak      = false;

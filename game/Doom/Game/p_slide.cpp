@@ -6,8 +6,10 @@
 #include "doomdata.h"
 #include "p_local.h"
 #include "p_setup.h"
+#include "PsyDoom/Game.h"
 
 #include <algorithm>
+#include <vector>
 
 static constexpr int32_t CLIPRADIUS = 23;   // Radius of the player for collisions against lines
 static constexpr int32_t SIDE_FRONT = +1;   // Return code for side checking: point is on the front side of the line
@@ -17,7 +19,13 @@ static constexpr int32_t SIDE_BACK  = -1;   // Return code for side checking: po
 mobj_t*     gpSlideThing;       // The thing being moved
 fixed_t     gSlideX;            // Where the player move is starting from: x
 fixed_t     gSlideY;            // Where the player move is starting from: y
-line_t*     gpSpecialLine;      // The special line that would be crossed by player movement
+
+// PsyDoom: more than one special line can now be crossed per frame (depending on game settings)
+#if PSYDOOM_MODS
+    std::vector<line_t*> gpSpecialLines;    // The special lines that would be crossed by player movement
+#else
+    line_t* gpSpecialLine;                  // The special line that would be crossed by player movement
+#endif
 
 static fixed_t  gSlideDx;       // How much the player is wanting to move: x
 static fixed_t  gSlideDy;       // How much the player is wanting to move: y
@@ -40,6 +48,21 @@ static fixed_t  gP4y;           // Movement line, p2: y
 static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept;
 static void SL_CheckLine(line_t& line) noexcept;
 static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, const fixed_t moveX2, const fixed_t moveY2) noexcept;
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: adds a line to the end of the crossed special lines list.
+// Ignores the input line if it has already been added to the list.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_AddCrossedSpecialLine(line_t& line) noexcept {
+    for (line_t* const pAlreadyCrossedLine : gpSpecialLines) {
+        if (pAlreadyCrossedLine == &line)
+            return;
+    }
+
+    gpSpecialLines.push_back(&line);
+}
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to do movement (with wall sliding) for the player's map object.
@@ -178,7 +201,13 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     // If the movement amount is less than 1/16 of what is allowed then stop movement entirely
     if (gBlockFrac < FRACUNIT / 16) {
         gBlockFrac = 0;
-        gpSpecialLine = nullptr;
+
+        // PsyDoom: there can now be multiple special lines crossed at once - clear the list:
+        #if PSYDOOM_MODS
+            gpSpecialLines.clear();
+        #else
+            gpSpecialLine = nullptr;
+        #endif
     }
 
     return gBlockFrac;
@@ -434,8 +463,15 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
     const int32_t bmapBy = std::max(d_rshift<MAPBLOCKSHIFT>(minMoveY - gBlockmapOriginY), 0);
     const int32_t bmapTy = std::min(d_rshift<MAPBLOCKSHIFT>(maxMoveY - gBlockmapOriginY), gBlockmapHeight - 1);
 
-    // Hit no special line yet and increment the valid count for a fresh check
-    gpSpecialLine = nullptr;
+    // Hit no special line yet and increment the valid count for a fresh check.
+    // PsyDoom: note that multiple special lines can now be crossed at once!
+    #if PSYDOOM_MODS
+        gpSpecialLines.clear();
+        gpSpecialLines.reserve(16);     // Should be more than enough for any map
+    #else
+        gpSpecialLine = nullptr;
+    #endif
+
     gValidCount++;
 
     // Check for crossing lines in this blockmap area
@@ -490,10 +526,33 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
                         continue;
                 }
 
-                // Crossed a special line, done:
-                gpSpecialLine = &line;
-                return;
+                // Crossed a special line.
+                // PsyDoom: it's now allowed that multiple lines can be crossed at once, provided that the game settings permit it!
+                #if PSYDOOM_MODS
+                    if (Game::gSettings.bFixMultiLineSpecialCrossing) {
+                        // New behavior: no limit to the number of lines that can be crossed
+                        P_AddCrossedSpecialLine(line);
+                    } else {
+                        // Emulate the original behavior of only allowing one line crossing
+                        gpSpecialLines.push_back(&line);
+                        return;
+                    }
+                #else
+                    // Old code: only one line could be crossed in a move!
+                    gpSpecialLine = &line;
+                    return;
+                #endif
             }
         }
     }
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: gets the list of special lines that have been crossed for the current move
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_GetSpecialLines(line_t**& ppSpecialLinesOut, uint32_t& numSpecialLinesOut) noexcept {
+    ppSpecialLinesOut = gpSpecialLines.data();
+    numSpecialLinesOut = (uint32_t) gpSpecialLines.size();
+}
+#endif  // #if PSYDOOM_MODS

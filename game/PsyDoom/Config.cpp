@@ -424,6 +424,7 @@ int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
 bool                    gbUseExtendedPlayerShootRange;
+bool                    gbFixMultiLineSpecialCrossing;
 bool                    gbUseItemPickupFix;
 bool                    gbUsePlayerRocketBlastFix;
 bool                    gbUseSuperShotgunDelayTweak;
@@ -622,10 +623,23 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#  - Max BFG spray/tracer distance, from '1024' to '2048'.\n"
         "#\n"
         "# Extending these limits can make combat on large open maps less frustrating.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseExtendedPlayerShootRange = iniEntry.getBoolValue(true); },
         []() { gbUseExtendedPlayerShootRange = true; }
+    },
+    {
+        "FixMultiLineSpecialCrossing",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Fix a limitation where only 1 line special can be crossed per frame?\n"
+        "# If enabled ('1') then the player can potentially trigger multiple line specials at the same time.\n"
+        "# Removing this limitation may be important for new maps with many line triggers in close proximity.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbFixMultiLineSpecialCrossing = iniEntry.getBoolValue(true); },
+        []() { gbFixMultiLineSpecialCrossing = true; }
     },
     {
         "UseItemPickupFix",
