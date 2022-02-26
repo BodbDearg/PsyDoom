@@ -635,7 +635,12 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Fix a limitation where only 1 line special can be crossed per frame?\n"
         "# If enabled ('1') then the player can potentially trigger multiple line specials at the same time.\n"
         "# Removing this limitation may be important for new maps with many line triggers in close proximity.\n"
-        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#\n"
+        "# Notes:\n"
+        "# (1) In each frame the same line special and tag is still only allowed to be triggered once.\n"
+        "#     This restriction prevents for example the player from activating the same teleporter twice in\n"
+        "#     one frame if crossing over 2 of it's edges (at a corner).\n"
+        "# (2) This setting is ignored during demos and networked games where you are not the host / server.\n"
         "#---------------------------------------------------------------------------------------------------",
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixMultiLineSpecialCrossing = iniEntry.getBoolValue(true); },

@@ -52,11 +52,17 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper: adds a line to the end of the crossed special lines list.
-// Ignores the input line if it has already been added to the list.
+// Ignores the input line if it has already been added to the list, or if another line with the same special and tag is already triggered.
+// This prevents the player from activating some teleporters twice in the same frame if crossing over two teleporter edges, for example.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_AddCrossedSpecialLine(line_t& line) noexcept {
     for (line_t* const pAlreadyCrossedLine : gpSpecialLines) {
+        // Did we already cross this particular line?
         if (pAlreadyCrossedLine == &line)
+            return;
+
+        // Already triggering this exact special?
+        if ((pAlreadyCrossedLine->special == line.special) && (pAlreadyCrossedLine->tag == line.tag))
             return;
     }
 
