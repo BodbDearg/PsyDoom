@@ -434,6 +434,24 @@ static void patchMap_Caribbean() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP73: Caughtyard
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Caughtyard() noexcept {
+    // Fix being able to climb over the fort walls: the step is 24 units tall and needs to be 25 as it was in Plutonia originally
+    gpSectors[45].floorheight += 1 * FRACUNIT;
+
+    // Fix two missing textures at the entraces to one of the huts
+    modifyLinedefs(
+        [](line_t& line) { gpSides[line.sidenum[0]].bottomtexture = R_TextureNumForName("WOOD06"); },
+        124, 136
+    );
+
+    // Fix a monster teleporter not working if the initial teleporter attempt fails.
+    // Change the type of teleporter from 'once' to 'repeatable'.
+    gpLines[359].special = 126;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP76: Speed
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Speed() noexcept {
@@ -477,6 +495,16 @@ static void patchMap_TheOmen() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP82: Neurosphere
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Neurosphere() noexcept {
+    // Fix a teleporter not working, trapping the player in a blood pit.
+    // For some reason a teleport destination marker seems to be missing - re-add it:
+    mobj_t* const pTeleDest = P_SpawnMobj(1024 * FRACUNIT, -2112 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
+    pTeleDest->angle = ANG180 + ANG45;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP83: N-M-E
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_NME() noexcept {
@@ -497,6 +525,18 @@ static void patchMap_ImpossibleMission() noexcept {
         },
         145, 150, 152
     );
+
+    // Fix the player being able to fall into pits that cannot be climbed out of.
+    // Add triggers to raise the pits if the player falls in.
+    modifyLinedefs(
+        [](line_t& line) {
+            line.special = 119;     // W1 Floor Raise to Next Higher Floor
+            line.tag = 8;
+        },
+        610, 582, 587, 591
+    );
+
+    gpSectors[58].floorheight = 19 * FRACUNIT;  // Raise the pits the full way the first time: don't create a lip and then remove it later...
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -588,9 +628,11 @@ static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     { 164989, 0x413FE3E56F2C2453, 0x9E047C4ECCB4FEA7, patchMap_RiverStyx },                 // MAP68
     { 167156, 0xE21C586BF2242082, 0xFA5D9C91DB288B5E, patchMap_Pharaoh },                   // MAP69
     { 120117, 0x475B5271367FB4C1, 0xF1D3C564A0145DA6, patchMap_Caribbean },                 // MAP70
+    {  48509, 0x3C16F377EEB066E6, 0x728CF548925EBC4E, patchMap_Caughtyard },                // MAP73
     { 115075, 0x6A5BA4600D51FA60, 0x5E2B0CBCFBC0A065, patchMap_Speed },                     // MAP76
     {  95176, 0xA5DA6BC16E6BF2C2, 0xD8A4986E39B4EB00, patchMap_TheTwilight },               // MAP79
     {  99229, 0xE3B921D12019C298, 0x93AD211E85EC33D7, patchMap_TheOmen },                   // MAP80
+    { 142221, 0x86D4E6672DFAA384, 0x6370FE4DE9BE0DCE, patchMap_Neurosphere },               // MAP82
     {  98162, 0xC2584F9BA85B42A5, 0xAE958A8D617754FC, patchMap_NME },                       // MAP83
     { 154357, 0xBD3C80483B84E18A, 0x296AFAF8E748077E, patchMap_ImpossibleMission },         // MAP85
     { 138392, 0x9DA7F8CC0F0CB11F, 0xE3383B410F789D07, patchMap_Bunker },                    // MAP89
