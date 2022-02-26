@@ -103,7 +103,12 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             mobj.flags |= MF_TELEPORT;
 
             if (mobj.player) {
-                P_Telefrag(mobj, pDstMarker->x, pDstMarker->y);
+                // PsyDoom: disabling all self telefragging
+                #if PSYDOOM_MODS
+                    P_Telefrag(mobj, pDstMarker->x, pDstMarker->y, false);
+                #else
+                    P_Telefrag(mobj, pDstMarker->x, pDstMarker->y);
+                #endif
             }
 
             // See if the teleport move can be made and abort if not
@@ -187,7 +192,7 @@ bool EV_TeleportTo(
     mobj.flags |= MF_TELEPORT;
 
     if (bTelefrag) {
-        P_Telefrag(mobj, dstX, dstY);
+        P_Telefrag(mobj, dstX, dstY, false);
     }
 
     // See if the teleport move can be made and abort if not
