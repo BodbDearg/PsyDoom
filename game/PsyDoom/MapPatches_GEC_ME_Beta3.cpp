@@ -186,6 +186,21 @@ static void patchMap_BaphometDemense() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP31: Titan Manor
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TitanManor() noexcept {
+    // Make the main progression path more obvious and not like a well hidden secret.
+    // Change the texture of the hidden door in the fireplace and unmark it as a secret to make it stand out.
+    modifyLinedefs(
+        [](line_t& line) {
+            line.flags &= ~ML_SECRET;
+            gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE05");
+        },
+        482
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP32: Trapped On Titan
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TrappedOnTitan() noexcept {
@@ -613,6 +628,7 @@ static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     {  87074, 0x8CE5FFE1D040C140, 0x4E89A7383999004F, patchMap_TombOfMalevolence },         // MAP24
     { 113315, 0x843507387CE8BCBF, 0x5B4EB9EE56E95384, patchMap_Fear },                      // MAP26
     { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, patchMap_BaphometDemense },           // MAP30
+    { 119562, 0xD994CF0954312F96, 0xC15EC0A72C4C4FB4, patchMap_TitanManor },                // MAP31
     { 172689, 0xB8354D5A39E9F37A, 0x013E5A66B42A71F9, patchMap_TrappedOnTitan },            // MAP32
     { 152959, 0xBD44DD87CE623522, 0x57AEC452C8FB2CF7, patchMap_BlackTower },                // MAP34
     { 123320, 0x87ED0BB125C317ED, 0x47E362A5D5258526, patchMap_TEETH },                     // MAP36
