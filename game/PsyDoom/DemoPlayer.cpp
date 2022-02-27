@@ -239,9 +239,11 @@ static bool onBeforeMapLoad_newDemoFormat() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool onBeforeMapLoad_oldDemoFormat() noexcept {
     try {
-        // Read and verify the demo skill and map number
+        // Read and verify the demo skill and map number.
+        // Note: the map number can be remapped depending on the current game constants.
         const skill_t skill = Endian::littleToHost(demo_read<skill_t>());
-        const int32_t mapNum = Endian::littleToHost(demo_read<int32_t>());
+        const int32_t origMapNum = Endian::littleToHost(demo_read<int32_t>());
+        const int32_t mapNum = (gCurClassicDemo.mapNumOverrider) ? gCurClassicDemo.mapNumOverrider(origMapNum) : origMapNum;
         const bool bValidDemoProperties = (verifyDemoSkill(skill) && verifyDemoMapNum(mapNum));
 
         if (!bValidDemoProperties)
@@ -249,7 +251,7 @@ static bool onBeforeMapLoad_oldDemoFormat() noexcept {
 
         // Read the control bindings for the demo: for original PSX Doom there are 8 bindings, for Final Doom there are 10.
         // Need to adjust demo reading accordingly depending on which game version we are dealing with.
-        if (Game::gConstants.bUseFinalDoomClassicDemoFormat) {
+        if (gCurClassicDemo.bFinalDoomDemo) {
             demo_read(gCtrlBindings, NUM_BINDABLE_BTNS);
         } else {
             // Note: original Doom did not have the move forward/backward bindings (due to no mouse support) - hence they are zeroed here:
@@ -266,7 +268,7 @@ static bool onBeforeMapLoad_oldDemoFormat() noexcept {
         }
 
         // For Final Doom read the mouse sensitivity
-        if (Game::gConstants.bUseFinalDoomClassicDemoFormat) {
+        if (gCurClassicDemo.bFinalDoomDemo) {
             gPsxMouseSensitivity = Endian::littleToHost(demo_read<int32_t>());
         }
 

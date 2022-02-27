@@ -65,6 +65,11 @@ int32_t gPlayersElapsedVBlanks[MAXPLAYERS];
 std::byte*  gpDemoBuffer;
 std::byte*  gpDemo_p;
 
+#if PSYDOOM_MODS
+    // PsyDoom: info about the current classic demo being played (what game mode to use etc.)
+    ClassicDemoDef gCurClassicDemo;
+#endif
+
 // Game start parameters
 skill_t     gStartSkill         = sk_medium;
 int32_t     gStartMapOrEpisode  = 1;
@@ -242,28 +247,46 @@ void D_DoomMain() noexcept {
         };
 
         if (!didExit(RunTitle())) {
-            // PsyDoom: if we're dealing with the demo version then we just play the 2nd demo lump first and then do the credits
+            // PsyDoom: use a new, more flexible method of playing demos.
+            // The constants for the game now define the list of demos to play.
             #if PSYDOOM_MODS
-                const bool bIsDemoVersion = Game::gbIsDemoVersion;
-            #else
-                const bool bIsDemoVersion = false;
-            #endif
+                bool bGotoTitle = false;    // Only go to the title if all demos were played without interruption and at least 1 demo was played
 
-            if (!bIsDemoVersion) {
-                // Full version of the game: run two demos and the credits in between them:
+                for (uint32_t demoIdx = 0; demoIdx < C_ARRAY_SIZE(GameConstants::demos); ++demoIdx) {
+                    // Grab the details for the current demo; if there are no more demos then playback stops:
+                    gCurClassicDemo = Game::gConstants.demos[demoIdx];
+
+                    if (gCurClassicDemo.filename.length() <= 0)
+                        break;
+
+                    // Run the demo itself
+                    bGotoTitle = true;
+
+                    if (didExit(RunDemo(gCurClassicDemo.filename))) {
+                        bGotoTitle = false;
+                        break;
+                    }
+
+                    // Show a credits screen after this demo?
+                    if (gCurClassicDemo.bShowCreditsAfter) {
+                        if (didExit(RunCredits())) {
+                            bGotoTitle = false;
+                            break;
+                        }
+                    }
+                }
+
+                // Re-run the title screen again?
+                if (bGotoTitle)
+                    continue;
+            #else
                 if (!didExit(RunDemo(CdFile::DEMO1_LMP))) {
                     if (!didExit(RunCredits())) {
                         if (!didExit(RunDemo(CdFile::DEMO2_LMP)))
                             continue;
                     }
                 }
-            } else {
-                // Demo version of Doom: just one demo for this
-                if (!didExit(RunDemo(CdFile::DEMO2_LMP))) {
-                    if (!didExit(RunCredits()))
-                        continue;
-                }
-            }
+            #endif
         }
 
         while (continueRunning()) {
@@ -364,6 +387,13 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
     if (!fileData.bytes) {
         FatalErrors::raiseF("Unable to read demo file '%s'! Is the file path valid?", filePath);
     }
+
+    // Set the info for the current classic demo in case we are playing one of those.
+    // Use the current game settings to determine the demo's game behavior and format.
+    ClassicDemoDef& demoDef = gCurClassicDemo;
+    demoDef = {};
+    demoDef.bFinalDoomDemo = (Game::gGameType != GameType::Doom);
+    demoDef.bPalDemo = (Game::gGameVariant == GameVariant::PAL);
 
     // Setup the demo buffers and play the demo file
     gpDemoBuffer = fileData.bytes.get();

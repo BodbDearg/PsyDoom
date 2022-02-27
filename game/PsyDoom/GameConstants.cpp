@@ -126,14 +126,21 @@ static const palette_t GEC_ME_BETA3_EXTRA_PALETTES[] = {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the values of all constants for 'Doom'
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void populateConsts_Doom(GameConstants& consts) noexcept {
+static void populateConsts_Doom(GameConstants& consts, const bool bIsDemoVersion) noexcept {
     consts.mainWads[0] = CdFile::PSXDOOM_WAD;
     consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE.STR";
+
+    if (!bIsDemoVersion) {
+        consts.demos[0] = ClassicDemoDef{ "DEMO1.LMP", false, (Game::gGameVariant == GameVariant::PAL), true  };
+        consts.demos[1] = ClassicDemoDef{ "DEMO2.LMP", false, (Game::gGameVariant == GameVariant::PAL), false };
+    } else {
+        consts.demos[0] = ClassicDemoDef{ "DEMO2.LMP", false, (Game::gGameVariant == GameVariant::PAL), true  };    // Demo only uses 'DEMO2.LMP'!
+    }
+
     consts.netGameId = NET_GAMEID_DOOM;
     consts.baseNumAnims = BASE_NUM_ANIMS_DOOM;
     consts.texPalette_BUTTONS = MAINPAL;
     consts.numPalettesRequired = NUMPALETTES_DOOM;
-    consts.bUseFinalDoomClassicDemoFormat = false;
     consts.bUseFinalDoomSkyPalettes = false;
     consts.bUseFinalDoomPasswordStorage = false;
     consts.doomLogoYPos = DOOM_LOGO_YPOS;
@@ -145,11 +152,12 @@ static void populateConsts_Doom(GameConstants& consts) noexcept {
 static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
     consts.mainWads[0] = CdFile::PSXDOOM_WAD;
     consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE.STR";
+    consts.demos[0] = ClassicDemoDef{ "DEMO1.LMP", true, (Game::gGameVariant == GameVariant::PAL), true  };
+    consts.demos[1] = ClassicDemoDef{ "DEMO2.LMP", true, (Game::gGameVariant == GameVariant::PAL), false };
     consts.netGameId = NET_GAMEID_FINAL_DOOM;
     consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;
     consts.texPalette_BUTTONS = UIPAL2;
     consts.numPalettesRequired = NUMPALETTES_FINAL_DOOM;
-    consts.bUseFinalDoomClassicDemoFormat = true;
     consts.bUseFinalDoomSkyPalettes = true;
     consts.bUseFinalDoomPasswordStorage = true;
     consts.doomLogoYPos = DOOM_LOGO_YPOS;
@@ -193,6 +201,22 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
         return oldName;
     };
 
+    // Demo files: note that we have to remap the map numbers for the 'Final Doom' episodes!
+    {
+        const ClassicDemoDef::MapNumOverrideFn remapMasterLevelsMapNum = [](const int32_t mapNum) noexcept { return mapNum + 30; };
+        const ClassicDemoDef::MapNumOverrideFn remapTntMapNum          = [](const int32_t mapNum) noexcept { return mapNum + 50; };
+        const ClassicDemoDef::MapNumOverrideFn remapPlutoniaMapNum     = [](const int32_t mapNum) noexcept { return mapNum + 70; };
+
+        consts.demos[0] = ClassicDemoDef{ "DEMO1.LMP", false, false, true                           };
+        consts.demos[1] = ClassicDemoDef{ "DEMO2.LMP", false, false, true                           };
+        consts.demos[2] = ClassicDemoDef{ "DEMO3.LMP", true,  false, true,  remapMasterLevelsMapNum };
+        consts.demos[3] = ClassicDemoDef{ "DEMO4.LMP", true,  false, true,  remapMasterLevelsMapNum };
+        consts.demos[4] = ClassicDemoDef{ "DEMO5.LMP", true,  false, true,  remapTntMapNum          };
+        consts.demos[5] = ClassicDemoDef{ "DEMO6.LMP", true,  false, true,  remapTntMapNum          };
+        consts.demos[6] = ClassicDemoDef{ "DEMO7.LMP", true,  false, true,  remapPlutoniaMapNum     };
+        consts.demos[7] = ClassicDemoDef{ "DEMO8.LMP", true,  false, false, remapPlutoniaMapNum     };
+    }
+
     // All other differing constants
     consts.introMovies[0] = "DATA/MOVIE.STR";
     consts.introMovies[1] = "DATA/GEC.STR";
@@ -207,8 +231,10 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
 // Set the values of all constants for '[GEC] Master Edition tools: single map test disc (Doom format)'
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void populateConsts_GEC_ME_TestMap_Doom(GameConstants& consts) noexcept {
-    populateConsts_Doom(consts);
+    populateConsts_Doom(consts, false);
     consts.introMovies[0] = "";
+    consts.demos[0] = {};
+    consts.demos[1] = {};
     consts.netGameId = NET_GAMEID_GEC_ME_TESTMAP_DOOM;
 }
 
@@ -218,19 +244,21 @@ static void populateConsts_GEC_ME_TestMap_Doom(GameConstants& consts) noexcept {
 static void populateConsts_GEC_ME_TestMap_FinalDoom(GameConstants& consts) noexcept {
     populateConsts_FinalDoom(consts);
     consts.introMovies[0] = "";
+    consts.demos[0] = {};
+    consts.demos[1] = {};
     consts.netGameId = NET_GAMEID_GEC_ME_TESTMAP_FINAL_DOOM;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the set of game constants for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
-void GameConstants::populate(const GameType gameType) noexcept {
+void GameConstants::populate(const GameType gameType, const bool bIsDemoVersion) noexcept {
     // Default init first
     *this = {};
 
     // Then populate all fields explicitly
     switch (gameType) {
-        case GameType::Doom:                        populateConsts_Doom(*this);                         break;
+        case GameType::Doom:                        populateConsts_Doom(*this, bIsDemoVersion);         break;
         case GameType::FinalDoom:                   populateConsts_FinalDoom(*this);                    break;
         case GameType::GEC_ME_Beta3:                populateConsts_GEC_ME_Beta3(*this);                 break;
         case GameType::GEC_ME_TestMap_Doom:         populateConsts_GEC_ME_TestMap_Doom(*this);          break;

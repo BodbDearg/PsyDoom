@@ -4,6 +4,7 @@
 #include "Game.h"
 
 #include "Config.h"
+#include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/UI/in_main.h"
 #include "Endian.h"
@@ -165,7 +166,7 @@ void determineGameTypeAndVariant() noexcept {
     }
 
     // Populate constants that vary from game to game
-    gConstants.populate(gGameType);
+    gConstants.populate(gGameType, gbIsDemoVersion);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -236,11 +237,11 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     // Note: ignore MAPINFO defaults and user settings for game rules when it comes to classic demos.
-    // Use the game rules associated with the current base game, because that is what the demos would be recorded with.
-    const bool bFinalDoomRules = Game::gConstants.bUseFinalDoomClassicDemoFormat;
+    // Use the rules associated with the base game that the demo was recorded against in order to reproduce the same behavior and avoid desync...
+    const bool bFinalDoomRules = gCurClassicDemo.bFinalDoomDemo;
 
     settings = {};
-    settings.bUsePalTimings                 = (gGameVariant == GameVariant::PAL);
+    settings.bUsePalTimings                 = gCurClassicDemo.bPalDemo;
     settings.bUseDemoTimings                = true;
     settings.bUseExtendedPlayerShootRange   = false;
     settings.bFixMultiLineSpecialCrossing   = false;

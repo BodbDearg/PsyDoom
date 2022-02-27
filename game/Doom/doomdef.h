@@ -533,6 +533,9 @@ struct player_t {
         int8_t psxMouseDx;
         int8_t psxMouseDy;
 
+        // Reset the inputs to their defaults (no input)
+        void reset() noexcept;
+
         // Byte swapping for endian correction
         void byteSwap() noexcept;
         void endianCorrect() noexcept;

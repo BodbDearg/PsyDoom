@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
+#include "DemoPlayer.h"
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_mobj.h"
 #include "Doom/Renderer/r_data.h"
@@ -452,8 +453,11 @@ static void patchMap_Caribbean() noexcept {
 // Fix issues for MAP73: Caughtyard
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Caughtyard() noexcept {
-    // Fix being able to climb over the fort walls: the step is 24 units tall and needs to be 25 as it was in Plutonia originally
-    gpSectors[45].floorheight += 1 * FRACUNIT;
+    // Fix being able to climb over the fort walls: the step is 24 units tall and needs to be 25 as it was in Plutonia originally.
+    // Exception: leave this alone if playing the 'Caughtyard' classic demo from the Master Edition disc - will cause a desync otherwise.
+    if (!DemoPlayer::isPlayingAClassicDemo()) {
+        gpSectors[45].floorheight += 1 * FRACUNIT;
+    }
 
     // Fix two missing textures at the entraces to one of the huts
     modifyLinedefs(
@@ -463,7 +467,10 @@ static void patchMap_Caughtyard() noexcept {
 
     // Fix a monster teleporter not working if the initial teleporter attempt fails.
     // Change the type of teleporter from 'once' to 'repeatable'.
-    gpLines[359].special = 126;
+    // Exception: leave this alone if playing the 'Caughtyard' classic demo from the Master Edition disc - might cause a desync otherwise.
+    if (!DemoPlayer::isPlayingAClassicDemo()) {
+        gpLines[359].special = 126;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -25,7 +25,7 @@ void DemoTickInputs::serializeFrom(const TickInputs& tickInputs) noexcept {
 // Fields not saved by 'DemoTickInputs' are zeroed.
 //--------------------------------------------------------------------------------------------------------------------------------------
 void DemoTickInputs::deserializeTo(TickInputs& tickInputs) const noexcept {
-    tickInputs = {};
+    tickInputs.reset();
     tickInputs._analogForwardMove = analogForwardMove;
     tickInputs._analogSideMove = analogSideMove;
     tickInputs._analogTurn = analogTurn;

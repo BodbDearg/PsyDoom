@@ -22,6 +22,11 @@ extern int32_t      gPlayersElapsedVBlanks[MAXPLAYERS];
 
 extern std::byte*   gpDemoBuffer;
 extern std::byte*   gpDemo_p;
+
+#if PSYDOOM_MODS
+    extern struct ClassicDemoDef gCurClassicDemo;
+#endif
+
 extern skill_t      gStartSkill;
 extern int32_t      gStartMapOrEpisode;
 extern gametype_t   gStartGameType;

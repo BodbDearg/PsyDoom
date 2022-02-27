@@ -803,12 +803,11 @@ bool I_NetUpdate() noexcept {
         // Populate and send the output packet
         NetPacket_Tick outPkt = {};
         outPkt.errorCheck = Endian::hostToLittle(errorCheck);
-        outPkt.inputs.directSwitchToWeapon = wp_nochange;
+        outPkt.inputs.reset();
         Network::sendTickPacket(outPkt);
 
         // Make sure these are set correctly for what we expect
-        gNextTickInputs = {};
-        gNextTickInputs.directSwitchToWeapon = wp_nochange;
+        gNextTickInputs.reset();
         gNextPlayerElapsedVBlanks = 0;
         gNetPrevErrorCheck = errorCheck;
     }

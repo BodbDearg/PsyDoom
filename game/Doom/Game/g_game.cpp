@@ -659,14 +659,16 @@ gameaction_t G_PlayDemoPtr() noexcept {
         return G_AbortDemoPlayback();
 
     // Actually load the level
+    gbDemoPlayback = true;
     G_DoLoadLevel();
 
     // Do demo setup after loading the map and if that fails then abort playback
-    if (!DemoPlayer::onAfterMapLoad())
+    if (!DemoPlayer::onAfterMapLoad()) {
+        gbDemoPlayback = false;
         return G_AbortDemoPlayback();
+    }
 
     // Run the demo
-    gbDemoPlayback = true;
     const gameaction_t exitAction = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     gbDemoPlayback = false;
 
@@ -686,6 +688,15 @@ gameaction_t G_PlayDemoPtr() noexcept {
     // Purge the heap and texture cache to cleanup and and finish up
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
     I_PurgeTexCache();
+
+    // PsyDoom: clear all inputs after the demo exits.
+    // Fixes a bug where some demos can cause a subsequent title screen to be skipped via inputs originating from the demo.
+    #if PSYDOOM_MODS
+        for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+            gTickInputs[playerIdx].reset();
+            gOldTickInputs[playerIdx].reset();
+        }
+    #endif
 
     return exitAction;
 }

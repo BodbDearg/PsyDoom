@@ -342,10 +342,7 @@ void update() noexcept {
     // If we entered a cheat key sequence then kill all inputs to try and prevent conflicts.
     if (bEnteredCheatKeySequence) {
         Input::consumeEvents();
-
-        TickInputs& tickInputs = gTickInputs[gCurPlayerIndex];
-        tickInputs = {};
-        tickInputs.directSwitchToWeapon = wp_nochange;
+        gTickInputs[gCurPlayerIndex].reset();
     }
 }
 

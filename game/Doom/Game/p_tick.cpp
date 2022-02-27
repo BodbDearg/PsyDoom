@@ -960,9 +960,8 @@ fixed_t P_GetGravity() noexcept {
 // PsyDoom: get the inputs to use for the next tick in the new 'TickInputs' format
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_GatherTickInputs(TickInputs& inputs) noexcept {
-    // Zero the inputs initially and assume no direct weapon change
-    inputs = {};
-    inputs.directSwitchToWeapon = wp_nochange;
+    // No inputs initially
+    inputs.reset();
 
     // Gather basic inputs
     inputs.setAnalogForwardMove((fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveForwardBack) * (float) FRACUNIT));
@@ -1092,8 +1091,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* const pControlBindings, TickInputs& inputs) noexcept {
     ASSERT(pControlBindings);
-    inputs = {};
-    inputs.directSwitchToWeapon = wp_nochange;
+    inputs.reset();
 
     inputs.psxMouseDx = -(int8_t)(buttons >> 16);
     inputs.psxMouseDy = -(int8_t)(buttons >> 24);
