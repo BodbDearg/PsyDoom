@@ -1229,9 +1229,16 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
         }   break;
     #endif
 
-        default:
-            I_Error("P_PlayerInSpecialSector: unknown special %i", sector.special);
-            return;
+        default: {
+            // PsyDoom: issue a warning rather than a fatal error if encountering a bad sector special
+            #if PSYDOOM_MODS
+                std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad sector special %d!", sector.special);
+                gStatusBar.message = gLevelStartupWarning;
+                gStatusBar.messageTicsLeft = 60;
+            #else
+                I_Error("P_PlayerInSpecialSector: unknown special %i", sector.special);
+            #endif
+        }   break;
     }
 }
 
