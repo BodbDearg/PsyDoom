@@ -147,15 +147,35 @@ static void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes a 'GameInfo' struct for '[GEC] Master Edition tools: single map test disc (Doom format)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void initGameInfo_GEC_ME_TestMap_Doom(GameInfo& gameInfo) noexcept {
+    initGameInfo_Doom(gameInfo);
+    gameInfo.numMaps = 1;
+    gameInfo.numRegularMaps = 1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes a 'GameInfo' struct for '[GEC] Master Edition tools: single map test disc (Final Doom format)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void initGameInfo_GEC_ME_TestMap_FinalDoom(GameInfo& gameInfo) noexcept {
+    initGameInfo_FinalDoom(gameInfo);
+    gameInfo.numMaps = 1;
+    gameInfo.numRegularMaps = 1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the 'GameInfo' struct for the current game to the default set of values
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initGameInfo(GameInfo& gameInfo) noexcept {
     gameInfo = GameInfo();
 
     switch (Game::gGameType) {
-        case GameType::Doom:            initGameInfo_Doom(gameInfo);            break;
-        case GameType::FinalDoom:       initGameInfo_FinalDoom(gameInfo);       break;
-        case GameType::GEC_ME_Beta3:    initGameInfo_GEC_ME_Beta3(gameInfo);    break;
+        case GameType::Doom:                        initGameInfo_Doom(gameInfo);                        break;
+        case GameType::FinalDoom:                   initGameInfo_FinalDoom(gameInfo);                   break;
+        case GameType::GEC_ME_Beta3:                initGameInfo_GEC_ME_Beta3(gameInfo);                break;
+        case GameType::GEC_ME_TestMap_Doom:         initGameInfo_GEC_ME_TestMap_Doom(gameInfo);         break;
+        case GameType::GEC_ME_TestMap_FinalDoom:    initGameInfo_GEC_ME_TestMap_FinalDoom(gameInfo);    break;
 
         default:
             FatalErrors::raise("MapInfo::initGameInfo(): unhandled game type!");
@@ -196,15 +216,24 @@ static void addEpisodes_GEC_ME_Beta3(std::vector<Episode>& episodes) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Adds all the default episodes for '[GEC] Master Edition tools: single map test disc' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addEpisodes_GEC_ME_TestMap(std::vector<Episode>& episodes) noexcept {
+    addEpisode(episodes, 1,  1,  "Test Map");
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the list of episodes for the game to the defaults for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initEpisodes(std::vector<Episode>& episodes) noexcept {
     episodes.clear();
 
     switch (Game::gGameType) {
-        case GameType::Doom:            addEpisodes_Doom(episodes);             break;
-        case GameType::FinalDoom:       addEpisodes_FinalDoom(episodes);        break;
-        case GameType::GEC_ME_Beta3:    addEpisodes_GEC_ME_Beta3(episodes);     break;
+        case GameType::Doom:                        addEpisodes_Doom(episodes);             break;
+        case GameType::FinalDoom:                   addEpisodes_FinalDoom(episodes);        break;
+        case GameType::GEC_ME_Beta3:                addEpisodes_GEC_ME_Beta3(episodes);     break;
+        case GameType::GEC_ME_TestMap_Doom:         addEpisodes_GEC_ME_TestMap(episodes);   break;
+        case GameType::GEC_ME_TestMap_FinalDoom:    addEpisodes_GEC_ME_TestMap(episodes);   break;
 
         default:
             FatalErrors::raise("MapInfo::initEpisodes(): unhandled game type!");
@@ -408,15 +437,28 @@ static void addClusters_GEC_ME_Beta3(std::vector<Cluster>& clusters) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Adds all the default clusters for '[GEC] Master Edition tools: single map test disc' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addClusters_GEC_ME_TestMap(std::vector<Cluster>& clusters) noexcept {
+    Cluster& clus = clusters.emplace_back();
+    clus.clusterNum = 1;
+    clus.bSkipFinale = true;
+    clus.bHideNextMapForFinale = true;
+    clus.bEnableCast = false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the list of clusters for the game to the defaults for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initClusters(std::vector<Cluster>& clusters) noexcept {
     clusters.clear();
 
     switch (Game::gGameType) {
-        case GameType::Doom:            addClusters_Doom(clusters);             break;
-        case GameType::FinalDoom:       addClusters_FinalDoom(clusters);        break;
-        case GameType::GEC_ME_Beta3:    addClusters_GEC_ME_Beta3(clusters);     break;
+        case GameType::Doom:                        addClusters_Doom(clusters);             break;
+        case GameType::FinalDoom:                   addClusters_FinalDoom(clusters);        break;
+        case GameType::GEC_ME_Beta3:                addClusters_GEC_ME_Beta3(clusters);     break;
+        case GameType::GEC_ME_TestMap_Doom:         addClusters_GEC_ME_TestMap(clusters);   break;
+        case GameType::GEC_ME_TestMap_FinalDoom:    addClusters_GEC_ME_TestMap(clusters);   break;
 
         default:
             FatalErrors::raise("MapInfo::initClusters(): unhandled game type!");
@@ -644,15 +686,24 @@ static void addMaps_GEC_ME_Beta3(std::vector<Map>& maps) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the default maps for '[GEC] Master Edition tools: single map test disc' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addMaps_GEC_ME_TestMap(std::vector<Map>& maps) noexcept {
+    addMap(maps, 1 , 1, "Test Map", 1, SPU_REV_MODE_SPACE, 0x0FFF);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the list of maps for the game to the defaults for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initMaps(std::vector<Map>& maps) noexcept {
     maps.clear();
 
     switch (Game::gGameType) {
-        case GameType::Doom:            addMaps_Doom(maps);             break;
-        case GameType::FinalDoom:       addMaps_FinalDoom(maps);        break;
-        case GameType::GEC_ME_Beta3:    addMaps_GEC_ME_Beta3(maps);     break;
+        case GameType::Doom:                        addMaps_Doom(maps);             break;
+        case GameType::FinalDoom:                   addMaps_FinalDoom(maps);        break;
+        case GameType::GEC_ME_Beta3:                addMaps_GEC_ME_Beta3(maps);     break;
+        case GameType::GEC_ME_TestMap_Doom:         addMaps_GEC_ME_TestMap(maps);   break;
+        case GameType::GEC_ME_TestMap_FinalDoom:    addMaps_GEC_ME_TestMap(maps);   break;
 
         default:
             FatalErrors::raise("MapInfo::initMaps(): unhandled game type!");

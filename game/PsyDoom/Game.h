@@ -12,7 +12,9 @@
 enum class GameType : int32_t {
     Doom,
     FinalDoom,
-    GEC_ME_Beta3,   // [GEC] Master Edition PSX Doom for the PlayStation (Beta 3)
+    GEC_ME_Beta3,               // [GEC] Master Edition PSX Doom for the PlayStation (Beta 3)
+    GEC_ME_TestMap_Doom,        // [GEC] Master Edition tools: single map test disc ('Doom' format)
+    GEC_ME_TestMap_FinalDoom,   // [GEC] Master Edition tools: single map test disc ('Final Doom' format)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

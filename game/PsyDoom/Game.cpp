@@ -135,6 +135,16 @@ void determineGameTypeAndVariant() noexcept {
         gGameType = GameType::GEC_ME_Beta3;
         gGameVariant = GameVariant::NTSC_U;
     }
+    else if (discFileExists("PSXDOOM/ABIN/PSXDOOM.EXE") && discFileExists("PSXDOOM/MAPDIR0/MAP01.WAD") && (!discFileExists("PSXDOOM/MAPDIR0/MAP02.WAD"))) {
+        // [GEC] Master Edition tools: single map test disc ('Doom' format)
+        gGameType = GameType::GEC_ME_TestMap_Doom;
+        gGameVariant = GameVariant::NTSC_U;
+    }
+    else if (discFileExists("PSXDOOM/ABIN/PSXDOOM.EXE") && discFileExists("PSXDOOM/MAPDIR0/MAP01.ROM") && (!discFileExists("PSXDOOM/MAPDIR0/MAP02.ROM"))) {
+        // [GEC] Master Edition tools: single map test disc ('Final Doom' format)
+        gGameType = GameType::GEC_ME_TestMap_FinalDoom;
+        gGameVariant = GameVariant::NTSC_U;
+    }
     else if (discFileExists("ZONE3D/ABIN/ZONE3D.WAD")) {
         // This appears to be the 'PSX Doom Forever' ROM hack: pretend it's Final Doom, because it's basically just a re-skin of it
         gGameType = GameType::FinalDoom;
@@ -144,8 +154,13 @@ void determineGameTypeAndVariant() noexcept {
     else {
         FatalErrors::raise(
             "Unknown/unrecognized PSX Doom game disc provided!\n"
-            "The disc given must be either 'Doom' or 'Final Doom' (NTSC-U, NTSC-J or PAL version).\n"
-            "Certain demo discs of 'Doom' are also supported as well as 'PSX Doom Forever'."
+            "The disc must be one of the following:\n\n"
+            "   - Doom: NTSC-U, NTSC-J or PAL version (original or re-release editions).\n"
+            "   - Final Doom: NTSC-U, NTSC-J or PAL version.\n"
+            "   - [GEC] Master Edition PSX Doom (Beta 3).\n"
+            "   - [GEC] Master Edition tools: single map test disc.\n"
+            "   - PSX Doom Forever (ROM hack).\n"
+            "   - Doom single level PAL demo (standalone disc, or in a demo collection)."
         );
     }
 

@@ -16,9 +16,11 @@ BEGIN_NAMESPACE(MapPatcher)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static MapPatches::PatchList getGamePatchList() noexcept {
     switch (Game::gGameType) {
-        case GameType::Doom:            return MapPatches::gPatches_Doom;
-        case GameType::FinalDoom:       return MapPatches::gPatches_FinalDoom;
-        case GameType::GEC_ME_Beta3:    return MapPatches::gPatches_GEC_ME_Beta3;
+        case GameType::Doom:                        return MapPatches::gPatches_Doom;
+        case GameType::FinalDoom:                   return MapPatches::gPatches_FinalDoom;
+        case GameType::GEC_ME_Beta3:                return MapPatches::gPatches_GEC_ME_Beta3;
+        case GameType::GEC_ME_TestMap_Doom:         return {};
+        case GameType::GEC_ME_TestMap_FinalDoom:    return {};
     }
 
     I_Error("MapPatcher: getGamePatchList(): unhandled game type!");

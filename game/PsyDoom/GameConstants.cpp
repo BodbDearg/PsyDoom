@@ -10,9 +10,11 @@
 #include "Game.h"
 
 // Game ids for networking
-static constexpr uint32_t NET_GAMEID_DOOM           = 0xAA11AA22;
-static constexpr uint32_t NET_GAMEID_FINAL_DOOM     = 0xAB11AB22;
-static constexpr uint32_t NET_GAMEID_GEC_ME_BETA3   = 0xAB00AB22;
+static constexpr uint32_t NET_GAMEID_DOOM                       = 0xAA11AA22;
+static constexpr uint32_t NET_GAMEID_FINAL_DOOM                 = 0xAB11AB22;
+static constexpr uint32_t NET_GAMEID_GEC_ME_BETA3               = 0xAB00AB22;
+static constexpr uint32_t NET_GAMEID_GEC_ME_TESTMAP_DOOM        = 0xBB00BB22;
+static constexpr uint32_t NET_GAMEID_GEC_ME_TESTMAP_FINAL_DOOM  = 0xBB00BB23;
 
 // Doom logo Y positions
 #if PSYDOOM_MODS
@@ -202,6 +204,24 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Set the values of all constants for '[GEC] Master Edition tools: single map test disc (Doom format)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void populateConsts_GEC_ME_TestMap_Doom(GameConstants& consts) noexcept {
+    populateConsts_Doom(consts);
+    consts.introMovies[0] = "";
+    consts.netGameId = NET_GAMEID_GEC_ME_TESTMAP_DOOM;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the values of all constants for '[GEC] Master Edition tools: single map test disc (Final Doom format)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void populateConsts_GEC_ME_TestMap_FinalDoom(GameConstants& consts) noexcept {
+    populateConsts_FinalDoom(consts);
+    consts.introMovies[0] = "";
+    consts.netGameId = NET_GAMEID_GEC_ME_TESTMAP_FINAL_DOOM;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the set of game constants for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 void GameConstants::populate(const GameType gameType) noexcept {
@@ -210,9 +230,11 @@ void GameConstants::populate(const GameType gameType) noexcept {
 
     // Then populate all fields explicitly
     switch (gameType) {
-        case GameType::Doom:            populateConsts_Doom(*this);             break;
-        case GameType::FinalDoom:       populateConsts_FinalDoom(*this);        break;
-        case GameType::GEC_ME_Beta3:    populateConsts_GEC_ME_Beta3(*this);     break;
+        case GameType::Doom:                        populateConsts_Doom(*this);                         break;
+        case GameType::FinalDoom:                   populateConsts_FinalDoom(*this);                    break;
+        case GameType::GEC_ME_Beta3:                populateConsts_GEC_ME_Beta3(*this);                 break;
+        case GameType::GEC_ME_TestMap_Doom:         populateConsts_GEC_ME_TestMap_Doom(*this);          break;
+        case GameType::GEC_ME_TestMap_FinalDoom:    populateConsts_GEC_ME_TestMap_FinalDoom(*this);     break;
 
         default:
             FatalErrors::raise("GameConstants::populate(): unhandled game type!");
