@@ -91,8 +91,17 @@ static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
     addNodeLineToBounds(nodeRx, nodeBy, nodeLx, nodeBy);
     addNodeLineToBounds(nodeLx, nodeBy, nodeLx, nodeTy);
 
-    // Regard the node as visible if any of that area is unobscured
-    return RV_IsRangeVisible(nodeMinX, nodeMaxX);
+    // Regard the node as visible if any of that area is unobscured.
+    // 
+    // Note: add in a 'fudge factor' extension of the test range on each end by 25% of it's length. This is to try and fix cases where sprites
+    // are inside a subsector that is technically not visible but are also jutting out into areas that ARE visible. The extra leniency fudge
+    // helps prevent 'pop-in' and sprites suddenly appearing out of nowhere once their parent subsector becomes visible. This does of course
+    // cost some performance, but it's worth it to help prevent annoying 'pop in' issues and improve consistency.
+    constexpr float FUDGE_FACTOR = 0.25f;
+    const float rangeLength = nodeMaxX - nodeMinX;
+    const float fudgeAmount = rangeLength * FUDGE_FACTOR;
+
+    return RV_IsRangeVisible(nodeMinX - fudgeAmount, nodeMaxX + fudgeAmount);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
