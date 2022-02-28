@@ -305,7 +305,11 @@ void S_LoadMapSoundAndMusic(const int32_t mapNum) noexcept {
 
             // PsyDoom: waiting for music to end now be optionally skipped if fast loading is enabled
             if (!Config::gbUseFastLoading) {
-                Utils::waitUntilSeqEnteredStatus(gCurMusicSeqIdx, SequenceStatus::SEQUENCE_INACTIVE);
+                const SequenceStatus musicStatus = wess_seq_status(gCurMusicSeqIdx);
+
+                if (musicStatus == SequenceStatus::SEQUENCE_PLAYING) {
+                    Utils::waitUntilSeqEnteredStatus(gCurMusicSeqIdx, SequenceStatus::SEQUENCE_INACTIVE);
+                }
             }
 
             // Free all music tracks
