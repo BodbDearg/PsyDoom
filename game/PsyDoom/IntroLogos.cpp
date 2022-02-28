@@ -1,5 +1,7 @@
 #include "IntroLogos.h"
 
+#include "Doom/Base/w_wad.h"
+#include "Doom/Game/doomdata.h"
 #include "Game.h"
 #include "LogoPlayer.h"
 #include "PsxVm.h"
@@ -7,6 +9,7 @@
 #include "Wess/psxcd.h"
 
 #include <memory>
+#include <vector>
 
 BEGIN_NAMESPACE(IntroLogos)
 
@@ -166,24 +169,107 @@ static const PsxDoomBootExeLogos* getPsxDoomBootExeLogos() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes the intro logos module
+// Helper: reads and returns the specified WAD file lump.
+// Returns an empty byte array on failure.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void init() noexcept {
-    determinePsxDoomBootExeHash();
+static std::vector<std::byte> readWadLump(const WadLumpName lumpName) noexcept {
+    // Lookup the lump index and abort if not found
+    const int32_t lumpIdx = W_CheckNumForName(lumpName);
+
+    if (lumpIdx < 0)
+        return {};
+
+    // Read the lump and return the data
+    const WadLump& lump = W_GetLump(lumpIdx);
+
+    if (lump.uncompressedSize <= 0)
+        return {};
+
+    std::vector<std::byte> lumpData;
+    lumpData.resize((uint32_t) lump.uncompressedSize);
+    W_ReadLump(lumpIdx, lumpData.data(), true);
+    return lumpData;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Does cleanup/teardown for the intro logos module
+// Helper: retrieves a PSX format palette (256 16-bit colors) from a specified WAD file lump.
+// Returns a null pointer on failure to load the palette.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void shutdown() noexcept {
-    gPsxDoomBootExeHashWord1 = {};
-    gPsxDoomBootExeHashWord2 = {};
+static std::unique_ptr<uint16_t[]> readWadPalette(const WadLumpName paletteLumpName, const uint8_t paletteIdx) noexcept {
+    // Get the palette lump contents
+    std::vector<std::byte> paletteLump = readWadLump(paletteLumpName);
+
+    // Verify this particular palette is in range for the palette lump
+    constexpr uint32_t PALETTE_SIZE = 256 * sizeof(uint16_t);
+    const uint32_t paletteOffset = paletteIdx * PALETTE_SIZE;
+
+    if (paletteOffset + PALETTE_SIZE > paletteLump.size())
+        return nullptr;
+
+    // Read and return the palette
+    std::unique_ptr<uint16_t[]> palette = std::make_unique<uint16_t[]>(256);
+    std::memcpy(palette.get(), paletteLump.data() + paletteOffset, PALETTE_SIZE);
+    return palette;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: gets the Sony intro logo for the current variant of the game
+// Helper: decodes an intro logo from currently loaded WAD files using the specified palette
 //------------------------------------------------------------------------------------------------------------------------------------------
-LogoPlayer::Logo getSonyIntroLogo() noexcept {
+static LogoPlayer::Logo decodeWadLogo(const WadLumpName logoLumpName, const uint16_t* const pPalette) noexcept {
+    // If no palette is given then no logo can be decoded!
+    if (!pPalette)
+        return {};
+
+    // Get the lump data for the image and verify that the lump header can be extacted from that
+    std::vector<std::byte> logoLumpBytes = readWadLump(logoLumpName);
+    
+    if (logoLumpBytes.size() < sizeof(texlump_header_t))
+        return {};
+
+    // Get the dimensions of the image and verify they are OK.
+    // Also verify there are enough bytes of data to read the entire image.
+    texlump_header_t texInfo;
+    std::memcpy(&texInfo, logoLumpBytes.data(), sizeof(texlump_header_t));
+
+    if ((texInfo.width <= 0) || (texInfo.height <= 0))
+        return {};
+
+    const uint32_t numPixels = (uint32_t) texInfo.width * texInfo.height;
+    const uint32_t expectedLumpSize = numPixels + (uint32_t) sizeof(texlump_header_t);
+
+    if (logoLumpBytes.size() < expectedLumpSize)
+        return {};
+
+    // Save the image dimensions and decode the pixels
+    LogoPlayer::Logo logo = {};
+    logo.width = texInfo.width;
+    logo.height = texInfo.height;
+    logo.pPixels = std::make_unique<uint32_t[]>(numPixels);
+
+    const uint8_t* const pSrcPixels = reinterpret_cast<uint8_t*>(logoLumpBytes.data() + sizeof(texlump_header_t));
+    uint32_t* const pDstPixels = logo.pPixels.get();
+
+    for (uint32_t pixelIdx = 0; pixelIdx < numPixels; ++pixelIdx) {
+        // Get the source color in PlayStation 'T1B5G5R5' format
+        const uint8_t colorIdx = pSrcPixels[pixelIdx];
+        const uint16_t srcColor = pPalette[colorIdx];
+
+        // Convert to 'X8B8G8R8' and save the pixel
+        const uint32_t r8 = (uint32_t)((srcColor >> 0 ) & 0x1Fu) << 3;
+        const uint32_t g8 = (uint32_t)((srcColor >> 5 ) & 0x1Fu) << 3;
+        const uint32_t b8 = (uint32_t)((srcColor >> 10) & 0x1Fu) << 3;
+        const uint32_t dstColor = 0xFF000000u | (b8 << 16) | (g8 << 8) | r8;
+
+        pDstPixels[pixelIdx] = dstColor;
+    }
+
+    return logo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: gets the Sony intro logo for the current variant of the game by extracting it from the boot executable
+//------------------------------------------------------------------------------------------------------------------------------------------
+static LogoPlayer::Logo getSonyLogo_FromBootExe() noexcept {
     // Only if there are embedded logos defined for this version of the game
     const PsxDoomBootExeLogos* const pLogos = getPsxDoomBootExeLogos();
 
@@ -215,17 +301,28 @@ LogoPlayer::Logo getSonyIntroLogo() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: gets the PSX Doom legals/copyright intro logo for the current variant of the game
+// Helper: gets the Sony intro logo for the 'GEC Master Edition (Beta 3)' disc
 //------------------------------------------------------------------------------------------------------------------------------------------
-LogoPlayer::Logo getLegalsIntroLogo() noexcept {
+static LogoPlayer::Logo getSonyLogo_GEC_ME_Beta3() noexcept {
+    LogoPlayer::Logo logo = decodeWadLogo("SONY", readWadPalette("GECINPAL", 3).get());
+    logo.holdTime = 3.0f;
+    logo.fadeOutTime = 0.5f;
+    return logo;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: gets the single PSX Doom legals/copyright intro logo by extracting it from the boot executable
+//------------------------------------------------------------------------------------------------------------------------------------------
+LogoList getLegalLogos_FromBootExe() noexcept {
     // Only if there are embedded logos defined for this version of the game
     const PsxDoomBootExeLogos* const pLogos = getPsxDoomBootExeLogos();
 
     if (!pLogos)
         return {};
 
-    // Read the logo and define it's parameters
-    LogoPlayer::Logo logo = {};
+    // Read the single legals logo used for this game and define it's display settings
+    LogoList logoList = {};
+    LogoPlayer::Logo& logo = logoList.logos[0];
 
     if (!decodePsxDoomBootExeLogo(pLogos->legalsLogoOffset, logo))
         return {};
@@ -233,7 +330,59 @@ LogoPlayer::Logo getLegalsIntroLogo() noexcept {
     logo.width = 256;
     logo.height = 240;
     logo.holdTime = 3.5f;
-    return logo;
+    return logoList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: gets the legals/copyright intro logos for 'GEC Master Edition (Beta 3)' disc
+//------------------------------------------------------------------------------------------------------------------------------------------
+LogoList getLegalLogos_GEC_ME_Beta3() noexcept {
+    LogoList logoList = {};
+    logoList.logos[0] = decodeWadLogo("LEGALS", readWadPalette("GECINPAL", 3).get());
+    logoList.logos[1] = decodeWadLogo("LEGALS2", readWadPalette("GECINPAL", 3).get());
+
+    for (LogoPlayer::Logo& logo : logoList.logos) {
+        logo.holdTime = 3.5f;
+    }
+
+    return logoList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the intro logos module
+//------------------------------------------------------------------------------------------------------------------------------------------
+void init() noexcept {
+    determinePsxDoomBootExeHash();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does cleanup/teardown for the intro logos module
+//------------------------------------------------------------------------------------------------------------------------------------------
+void shutdown() noexcept {
+    gPsxDoomBootExeHashWord1 = {};
+    gPsxDoomBootExeHashWord2 = {};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: gets the Sony intro logo for the current game
+//------------------------------------------------------------------------------------------------------------------------------------------
+LogoPlayer::Logo getSonyLogo() noexcept {
+    if (Game::gGameType == GameType::GEC_ME_Beta3) {
+        return getSonyLogo_GEC_ME_Beta3();
+    } else {
+        return getSonyLogo_FromBootExe();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: gets the PSX Doom legals/copyright intro logos for the current game
+//------------------------------------------------------------------------------------------------------------------------------------------
+LogoList getLegalLogos() noexcept {
+    if (Game::gGameType == GameType::GEC_ME_Beta3) {
+        return getLegalLogos_GEC_ME_Beta3();
+    } else {
+        return getLegalLogos_FromBootExe();
+    }
 }
 
 END_NAMESPACE(IntroLogos)

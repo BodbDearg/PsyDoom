@@ -24,7 +24,6 @@
 #include "PsyDoom/GameConstants.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/IntroLogos.h"
-#include "PsyDoom/LogoPlayer.h"
 #include "PsyDoom/MapInfo.h"
 #include "PsyDoom/Movie/MoviePlayer.h"
 #include "PsyDoom/PlayerPrefs.h"
@@ -102,7 +101,10 @@ static int32_t gDebugDrawStringYPos;
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void D_PlayIntros() noexcept {
     // Show the Sony intro logo
-    LogoPlayer::play(IntroLogos::getSonyIntroLogo());
+    LogoPlayer::play(IntroLogos::getSonyLogo());
+
+    if (Input::isQuitRequested())
+        return;
 
     // Play the intro movies (just the Williams logo for 'Doom' and 'Final Doom')
     for (const String32& moviePath : Game::gConstants.introMovies) {
@@ -115,14 +117,24 @@ static void D_PlayIntros() noexcept {
         movie::MoviePlayer::play(moviePath.c_str().data(), movieFps);
 
         if (Input::isQuitRequested())
-            break;
+            return;
     }
 
-    // Show the legals intro logo, if it's available in this build of the game.
-    // If it is a demo version and not available then emulate the demo behavior and show the 'legals' UI.
-    const bool bDidShowLegals = LogoPlayer::play(IntroLogos::getLegalsIntroLogo());
+    // Show the legal intro logos, if available for this game disc.
+    // Note: if it is a demo version of 'Doom' and legal logos are not available then emulate the demo behavior and show the special demo-only 'legals' UI.
+    IntroLogos::LogoList introLogos = IntroLogos::getLegalLogos();
+    bool bDidShowLegals = false;
+    
+    for (const LogoPlayer::Logo& logo : introLogos.logos) {
+        if (logo.pPixels && LogoPlayer::play(logo)) {
+            bDidShowLegals = true;
+        }
 
-    if ((!bDidShowLegals) && (Game::gbIsDemoVersion) && (!Input::isQuitRequested())) {
+        if (Input::isQuitRequested())
+            return;
+    }
+
+    if ((!bDidShowLegals) && Game::gbIsDemoVersion) {
         MiniLoop(START_Legals, STOP_Legals, TIC_Legals, DRAW_Legals);
     }
 }
