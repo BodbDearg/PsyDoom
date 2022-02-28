@@ -8,6 +8,7 @@
 #include "Utils.h"
 #include "Wess/psxcd.h"
 
+#include <cstring>
 #include <memory>
 #include <vector>
 
