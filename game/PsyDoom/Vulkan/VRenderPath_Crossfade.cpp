@@ -9,6 +9,41 @@
 #include "VDrawing.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: schedules a layout transition for the specified framebuffer texture
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void layoutFramebufferTex(
+    vgl::CmdBufferRecorder& cmdRec,
+    vgl::RenderTexture* const pTexture,
+    const VkImageLayout oldLayout,
+    const VkImageLayout newLayout
+) noexcept {
+    // Do nothing if invalid
+    if ((!pTexture) || (!pTexture->isValid()))
+        return;
+
+    // Schedule the image layout transition
+    VkImageMemoryBarrier imgBarrier = {};
+    imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+    imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+    imgBarrier.oldLayout = oldLayout;
+    imgBarrier.newLayout = newLayout;
+    imgBarrier.image = pTexture->getVkImage();
+    imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imgBarrier.subresourceRange.levelCount = 1;
+    imgBarrier.subresourceRange.layerCount = 1;
+
+    cmdRec.addPipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        0,
+        nullptr,
+        1,
+        &imgBarrier
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the render path to a default uninitialized state
 //------------------------------------------------------------------------------------------------------------------------------------------
 VRenderPath_Crossfade::VRenderPath_Crossfade() noexcept 
@@ -19,7 +54,7 @@ VRenderPath_Crossfade::VRenderPath_Crossfade() noexcept
     , mpMainRenderPath(nullptr)
     , mRenderPass()
     , mFramebuffers()
-    , mpOldFbImagesToLayout{}
+    , mpOldFbTextures{}
 {
 }
 
@@ -66,8 +101,8 @@ void VRenderPath_Crossfade::destroy() noexcept {
 
     mbIsValid = false;
 
-    mpOldFbImagesToLayout[0] = nullptr;
-    mpOldFbImagesToLayout[1] = nullptr;
+    mpOldFbTextures[0] = nullptr;
+    mpOldFbTextures[1] = nullptr;
 
     for (vgl::Framebuffer& framebuffer : mFramebuffers) {
         framebuffer.destroy(true);
@@ -118,17 +153,12 @@ void VRenderPath_Crossfade::beginFrame(vgl::Swapchain& swapchain, vgl::CmdBuffer
     ASSERT(mpDevice);
     ASSERT(swapchain.isValid());
     ASSERT(swapchain.getAcquiredImageIdx() < swapchain.getVkImages().size());
+    ASSERT(mpOldFbTextures[0] && mpOldFbTextures[1]);
+    ASSERT(mpOldFbTextures[0]->isValid() && mpOldFbTextures[1]->isValid());
 
-    // Transition the image layout for old framebuffer images, if required; this will happen on the first render path frame...
-    if (mpOldFbImagesToLayout[0]) {
-        transitionOldFramebufferTexLayout(*mpOldFbImagesToLayout[0], cmdRec);
-        mpOldFbImagesToLayout[0] = nullptr;
-    }
-
-    if (mpOldFbImagesToLayout[1]) {
-        transitionOldFramebufferTexLayout(*mpOldFbImagesToLayout[1], cmdRec);
-        mpOldFbImagesToLayout[1] = nullptr;
-    }
+    // Transition the image layout for old framebuffer images to shader read only optimal
+    layoutFramebufferTex(cmdRec, mpOldFbTextures[0], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    layoutFramebufferTex(cmdRec, mpOldFbTextures[1], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     // Begin the render pass
     const uint32_t swapchainIdx = swapchain.getAcquiredImageIdx();
@@ -155,6 +185,10 @@ void VRenderPath_Crossfade::endFrame([[maybe_unused]] vgl::Swapchain& swapchain,
     ASSERT(mbIsValid);
     ASSERT(swapchain.isValid());
     cmdRec.endRenderPass();
+
+    // Transition the image layout for old framebuffer images back to transfer source optimal, in case the plaque renderer etc. needs to blit them again
+    layoutFramebufferTex(cmdRec, mpOldFbTextures[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    layoutFramebufferTex(cmdRec, mpOldFbTextures[1], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -244,14 +278,12 @@ bool VRenderPath_Crossfade::doFramebuffersNeedRecreate() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Crossfade drawing setup.
-// These functions schedule specified framebuffer color attachment textures to be transitioned from an expected 'transfer source' image
-// layout to a 'shader read only' image layout at the beginning of the next render path frame. This transition is required to get the
-// framebuffers into the correct layout so they can be sampled in shaders.
+// Sets which (old) framebuffer textures are crossfaded.
+// Both textures are expected to be in the 'TRANSFER_SRC_OPTIMAL' layout initially and will be restored to that layout at the end.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_Crossfade::scheduleOldFramebufferLayoutTransitions(vgl::RenderTexture& fb1ColorAttach, vgl::RenderTexture& fb2ColorAttach) noexcept {
-    mpOldFbImagesToLayout[0] = &fb1ColorAttach;
-    mpOldFbImagesToLayout[1] = &fb2ColorAttach;
+void VRenderPath_Crossfade::setOldFramebufferTextures(vgl::RenderTexture* const pOldFbTex1, vgl::RenderTexture* const pOldFbTex2) noexcept {
+    mpOldFbTextures[0] = pOldFbTex1;
+    mpOldFbTextures[1] = pOldFbTex2;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

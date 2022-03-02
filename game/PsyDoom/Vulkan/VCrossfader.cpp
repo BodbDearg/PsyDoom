@@ -187,13 +187,12 @@ void doPreCrossfadeSetup() noexcept {
     ASSERT(gVertexBuffer.isValid());
     vgl::LogicalDevice& device = *gVertexBuffer.getDevice();
 
-    // Determine which textures/framebuffers to do the crossfade with and notify the crossfade render path about them.
-    // The render path will transition them to shader read only as soon as it starts its first frame.
+    // Determine which textures/framebuffers to do the crossfade with and tell the crossfader to use them
     determineCrossfadeTextures(device);
     ASSERT(gpCrossfadeTex1);
     ASSERT(gpCrossfadeTex2);
 
-    VRenderer::gRenderPath_Crossfade.scheduleOldFramebufferLayoutTransitions(*gpCrossfadeTex1, *gpCrossfadeTex2);
+    VRenderer::gRenderPath_Crossfade.setOldFramebufferTextures(gpCrossfadeTex1, gpCrossfadeTex2);
 
     // Schedule a transition to the crossfade render path next frame and request that the next frame rendered not be presented.
     // This will be the frame we fade INTO and we don't want it shown onscreen after it is drawn.
@@ -259,6 +258,9 @@ void doCrossfade(const int32_t vblanksDuration) noexcept {
 
     // Go back to doing normal rendering
     VRenderer::beginFrame();
+
+    // Clear these out for good measure
+    VRenderer::gRenderPath_Crossfade.setOldFramebufferTextures(nullptr, nullptr);
 }
 
 END_NAMESPACE(VCrossfader)

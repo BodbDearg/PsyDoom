@@ -16,6 +16,7 @@
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/Utils.h"
+#include "PsyDoom/Video.h"
 #include "ti_main.h"
 
 // Texture for the legals screen text
@@ -46,6 +47,11 @@ void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
 
     #if PSYDOOM_MODS
         I_PreCrossfade();
+
+        // Vulkan: this extra present is needed to cross fade to a black/blank screen and to get into the right render path
+        if (Video::isUsingVulkanRenderPath()) {
+            I_DrawPresent();
+        }
     #endif
 
     I_CrossfadeFrameBuffers();
