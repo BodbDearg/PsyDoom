@@ -13,6 +13,7 @@
 #include "Semaphore.h"
 #include "TransferMgr.h"
 #include "VkFuncs.h"
+#include "VulkanInstance.h"
 #include "WindowSurface.h"
 
 BEGIN_NAMESPACE(vgl)
@@ -232,6 +233,7 @@ void LogicalDevice::waitUntilDeviceIdle() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LogicalDevice::createDeviceAndQueues() noexcept {
     // Sanity checks
+    ASSERT(mpVulkanInstance);
     ASSERT(mpPhysicalDevice);
 
     // The physical device must have at least 1 valid graphics and transfer queue family
@@ -319,13 +321,16 @@ bool LogicalDevice::createDeviceAndQueues() noexcept {
 
     // Create the device itself using all of these settings
     {
-        // Note: need the swapchain extension for creating the swapchain.
-        // Enable the portability subset also if available (on MacOS) to identify parts of Vulkan we can't use, get a validation layer error otherwise.
+        // Note: need the swapchain extension for creating the swapchain
         std::vector<const char*> reqDeviceExts;
         reqDeviceExts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-        if (mpPhysicalDevice->getExtensions().hasExtension("VK_KHR_portability_subset")) {
-            reqDeviceExts.push_back("VK_KHR_portability_subset");
+        if (mpVulkanInstance->areValidationLayersEnabled()) {
+            // Enable the portability subset also if available (on MacOS) to identify parts of Vulkan we can't use.
+            // If we use something that isn't supported for MacOS then we'll get a validation layer error:
+            if (mpPhysicalDevice->getExtensions().hasExtension("VK_KHR_portability_subset")) {
+                reqDeviceExts.push_back("VK_KHR_portability_subset");
+            }
         }
 
         VkDeviceCreateInfo createInfo = {};

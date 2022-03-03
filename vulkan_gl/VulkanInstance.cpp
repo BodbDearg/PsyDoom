@@ -209,6 +209,13 @@ bool VulkanInstance::createVkInstance(const bool bEnableValidationLayers) noexce
     if (bEnableValidationLayers) {
         reqExtNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         reqExtNames.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        
+        // This is required by the 'VK_KHR_portability_subset' device extension used for validation on MacOS.
+        // If that extension is present then this one should be too - enable it if found:
+        if (mExtensions.hasExtension(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME)) {
+            reqExtNames.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+        }
+        
         reqLayerNames.push_back(KHRONOS_VALIDATION_LAYER_NAME);
     }
 
