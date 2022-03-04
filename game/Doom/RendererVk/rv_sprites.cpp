@@ -309,25 +309,14 @@ static void RV_SpriteFrag_VisitSubsector(const subsector_t& subsec, const Sprite
 // Returns 'true' if a sprite split is allowed to occur after testing against this seg.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine& splitLine) noexcept {
-    // Is the seg two sided? If so then don't consider it a blocking line for sprite splitting in certain situations:
+    // Is the seg two sided? If so then don't consider it a blocking line for sprite splitting in most situations.
     sector_t* const pBackSector = seg.backsector;
 
     if (pBackSector) {
-        // Firstly only consider it non blocking if the line is not masked or translucent.
+        // Only consider it non blocking if the line is not masked or translucent.
         // Don't want sprites poking through mid wall textures like bars and so on:
-        if ((seg.linedef->flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT)) == 0) {
-            // Treat the 2 sided seg as blocking if the split line would hit either the upper or lower walls.
-            // In all other cases allow a split to take place across this seg, even if the split test line crosses it.
-            const sector_t& frontSector = *seg.frontsector;
-
-            const float fby = RV_FixedToFloat(frontSector.floorDrawH);
-            const float bby = RV_FixedToFloat(pBackSector->floorDrawH);
-            const float midBy = std::max(fby, bby);
-            const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingDrawH, pBackSector->ceilingDrawH));
-
-            if ((splitLine.y >= midBy) && (splitLine.y <= midTy))
-                return true;
-        }
+        if ((seg.linedef->flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT)) == 0)
+            return true;
     }
 
     // Get the endpoints for the line segment
@@ -510,7 +499,7 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
                 frag.z1 * splitT1_inv + frag.z2 * splitT1,
                 frag.x1 * splitT2_inv + frag.x2 * splitT2,
                 frag.z1 * splitT2_inv + frag.z2 * splitT2,
-                (frag.yt + frag.yb) * 0.5f  // Note: make the test line be at 1/2 of the height of the sprite; splits can happen across small step ups, not large ones
+                (frag.yt + frag.yb) * 0.5f  // The test line is at 1/2 of the height of the sprite
             };
 
             // Test the split line against geometry to see if this split would be allowed
