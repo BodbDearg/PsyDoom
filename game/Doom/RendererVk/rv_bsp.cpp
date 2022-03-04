@@ -114,8 +114,19 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
     sector_t& frontSector = *subsec.sector;
     R_UpdateSectorDrawHeights(frontSector);
 
-    // Assume the subsector can have its flats batched initially
-    subsec.bVkCanBatchFlats = true;
+    // Assume the subsector can have its flats merged/batched initially unless the sector is almost or completely closed.
+    // Batching for closed or nearly closed sectors can cause ordering issues sometimes - be more strict about ordering in those cases.
+    //
+    // The purpose of batching is to try and fix ordering issues with cases like explosion sprites that extrude into the ground.
+    // Such ordering issues aren't completely resolved by splitting up sprites along subsector boundaries. Merging nearby flats helps
+    // fix those sprites being cut off by neighboring subsectors, but we have to do it carefully in case other issues are introduced.
+    //
+    // Batching nearly closed or almost closed sectors won't help ordering problems in most cases because problematic sprites
+    // generally won't be present in such sectors, and we risk introducing problems if we DO batch/merge.
+    // Hence avoid batching completely for closed or almost closed sectors!
+    //
+    constexpr fixed_t NO_BATCH_SECTOR_H = 32 * FRACUNIT;
+    subsec.bVkCanBatchFlats = (frontSector.ceilingDrawH - frontSector.floorDrawH > NO_BATCH_SECTOR_H);
 
     // Run through all of the segs for the subsector and mark out areas of the screen that they fully occlude.
     // Also determine whether each seg is visible and backfacing while we are at it.
@@ -165,17 +176,15 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
             RV_OccludeRange(segLx, segRx);
         }
 
-        // Check to see if the seg has a situation which might cause this subsector's flats to not be batchable with other flats.
-        // If the upper wall goes past the floor height or the lower wall goes past the ceiling height then the subsector flat MUST
-        // be drawn immediately after it's walls are rendered for correct layering. Because of this strict ordering requirement, the
-        // subsector's flats would not be batchable with other flats in that scenario.
+        // Check the gap with the back sector.
+        // If there is not enough of a gap then disable flat batching as it can cause ordering issues otherwise:
         const sector_t* const pBackSec = seg.backsector;
 
         if (pBackSec) {
-            const bool bLowerWallBreaksBatches = (pBackSec->floorDrawH > frontSector.ceilingDrawH);
-            const bool bUpperWallBreaksBatches = (pBackSec->ceilingDrawH < frontSector.floorDrawH);
-
-            if (bLowerWallBreaksBatches || bUpperWallBreaksBatches) {
+            const fixed_t midBy = std::max(frontSector.floorDrawH, pBackSec->floorDrawH);
+            const fixed_t midTy = std::min(frontSector.ceilingDrawH, pBackSec->ceilingDrawH);
+            
+            if (midTy - midBy <= NO_BATCH_SECTOR_H) {
                 subsec.bVkCanBatchFlats = false;
             }
         }
