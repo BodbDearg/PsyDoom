@@ -78,6 +78,17 @@ static inline void addVoidFlagToLinedefs(Int32List... linedefIndexes) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Utility function: adds the 'ML_ADD_SKY_WALL_HINT' flag to a series of lines
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class ...Int32List>
+static inline void addSkyWallFlagToLinedefs(Int32List... linedefIndexes) noexcept {
+    modifyLinedefs(
+        [](line_t& line) { line.flags |= ML_ADD_SKY_WALL_HINT; },
+        linedefIndexes...
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Utility function: removes the 'ML_DONTDRAW' flag on the specified linedefs, allowing them to be seen in the automap
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class ...Int32List>

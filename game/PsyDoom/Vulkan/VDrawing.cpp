@@ -676,20 +676,24 @@ void addWorldInfiniteSkyWall(
     pVerts[4].x = x1;   pVerts[4].z = z1;
     pVerts[5].x = x1;   pVerts[5].z = z1;
 
+    // Make the skywall be a certain fixed height to begin with.
+    // This should be enough for most situations but the vertex shader will also stretch the wall past the ends of the screen too.
+    constexpr float EXTRUDE_AMT = 1024.0f;
+
     if (bIsUpperSkyWall) {
-        pVerts[0].v = 0.0f;
-        pVerts[1].v = 1.0f;
-        pVerts[2].v = 0.0f;
-        pVerts[3].v = 1.0f;
-        pVerts[4].v = 0.0f;
-        pVerts[5].v = 1.0f;
+        pVerts[0].y = y;                pVerts[0].v = 0.0f;
+        pVerts[1].y = y + EXTRUDE_AMT;  pVerts[1].v = 1.0f;
+        pVerts[2].y = y;                pVerts[2].v = 0.0f;
+        pVerts[3].y = y + EXTRUDE_AMT;  pVerts[3].v = 1.0f;
+        pVerts[4].y = y;                pVerts[4].v = 0.0f;
+        pVerts[5].y = y + EXTRUDE_AMT;  pVerts[5].v = 1.0f;
     } else {
-        pVerts[0].v = -1.0f;
-        pVerts[1].v = 0.0f;
-        pVerts[2].v = -1.0f;
-        pVerts[3].v = 0.0f;
-        pVerts[4].v = -1.0f;
-        pVerts[5].v = 0.0f;
+        pVerts[0].y = y - EXTRUDE_AMT;  pVerts[0].v = -1.0f;
+        pVerts[1].y = y;                pVerts[1].v =  0.0f;
+        pVerts[2].y = y - EXTRUDE_AMT;  pVerts[2].v = -1.0f;
+        pVerts[3].y = y;                pVerts[3].v =  0.0f;
+        pVerts[4].y = y - EXTRUDE_AMT;  pVerts[4].v = -1.0f;
+        pVerts[5].y = y;                pVerts[5].v =  0.0f;
     }
 }
 
