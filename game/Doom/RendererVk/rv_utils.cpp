@@ -174,6 +174,10 @@ void RV_UploadDirtyTex(texture_t& tex) noexcept {
 //          -wc <= xc && xc <= wc
 //          -wc <= yc && yc <= wc
 //          -wc <= zc && zc <= wc
+//  (3) For the offscreen culling test, the caller is allowed to modify the left and right view frustum plane angles using a multiplier.
+//      This is so culling can be made more lenient if required, allowing lines that are *almost* onscreen to pass the culling test.
+//      This can be used to help avoid sprite pop-in issues for subsectors that are at the edges of the screen where their contained
+//      sprites extend across subsectors that ARE in view.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool RV_GetLineNdcBounds(
     const float p1x,
@@ -181,7 +185,8 @@ bool RV_GetLineNdcBounds(
     const float p2x,
     const float p2y,
     float& lx,
-    float& rx
+    float& rx,
+    const float lrpCullAdjust
 ) noexcept {
     // Convert the points to clip space by assuming they are the homogenous vectors (x, 0, y, 1) and
     // multiplying by the view projection transform matrix. Save only the xzw components.
@@ -212,9 +217,9 @@ bool RV_GetLineNdcBounds(
     const bool bP2BehindFrontPlane = (p2_clip[1] < -p2_clip[2]);
 
     const bool bCullLine = (
-        ((p1_clip[0] < -p1_clip[2]) && (p2_clip[0] < -p2_clip[2])) ||   // Line outside the left view frustrum plane?
-        ((p1_clip[0] > +p1_clip[2]) && (p2_clip[0] > +p2_clip[2])) ||   // Line outside the right view frustrum plane?
-        (bP1BehindFrontPlane && bP2BehindFrontPlane)                    // Line outside the front view frustrum plane?
+        ((p1_clip[0] < -p1_clip[2] * lrpCullAdjust) && (p2_clip[0] < -p2_clip[2] * lrpCullAdjust)) ||   // Line outside the left view frustrum plane?
+        ((p1_clip[0] > +p1_clip[2] * lrpCullAdjust) && (p2_clip[0] > +p2_clip[2] * lrpCullAdjust)) ||   // Line outside the right view frustrum plane?
+        (bP1BehindFrontPlane && bP2BehindFrontPlane)                                                    // Line outside the front view frustrum plane?
     );
 
     if (bCullLine)

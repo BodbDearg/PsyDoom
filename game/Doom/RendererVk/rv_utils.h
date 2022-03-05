@@ -43,7 +43,8 @@ bool RV_GetLineNdcBounds(
     const float p2x,
     const float p2y,
     float& lx,
-    float& rx
+    float& rx,
+    const float lrpCullAdjust = 1.0f    // Left/right plane angle adjustment for culling (1.0 = no change)
 ) noexcept;
 
 void RV_ClearSubsecDrawIndexes() noexcept;

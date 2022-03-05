@@ -80,7 +80,12 @@ static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
         float lx = {};
         float rx = {};
 
-        if (RV_GetLineNdcBounds(x1, y1, x2, y2, lx, rx)) {
+        // For the purposes of culling, adjust the angle of the left & right view frustum planes using this multiplier.
+        // This makes line culling more lenient, so that offscreen subsectors near the left and right sides of the screen are allowed to draw.
+        // The adjustment is made to try and avoid pop-in for sprites in these offscreen subsectors when they extend across visible subsectors.
+        constexpr float LR_PLANE_CULL_ANGLE_ADJUST = 2.0f;
+
+        if (RV_GetLineNdcBounds(x1, y1, x2, y2, lx, rx, LR_PLANE_CULL_ANGLE_ADJUST)) {
             nodeMinX = std::min(lx, nodeMinX);
             nodeMaxX = std::max(rx, nodeMaxX);
         }
