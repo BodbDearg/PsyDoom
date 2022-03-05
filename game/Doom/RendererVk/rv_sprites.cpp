@@ -309,16 +309,6 @@ static void RV_SpriteFrag_VisitSubsector(const subsector_t& subsec, const Sprite
 // Returns 'true' if a sprite split is allowed to occur after testing against this seg.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine& splitLine) noexcept {
-    // Is the seg two sided? If so then don't consider it a blocking line for sprite splitting in most situations.
-    sector_t* const pBackSector = seg.backsector;
-
-    if (pBackSector) {
-        // Only consider it non blocking if the line is not masked or translucent.
-        // Don't want sprites poking through mid wall textures like bars and so on:
-        if ((seg.linedef->flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT)) == 0)
-            return true;
-    }
-
     // Get the endpoints for the line segment
     const float segX1 = seg.v1x;
     const float segY1 = seg.v1y;
@@ -351,7 +341,34 @@ static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine&
     const float ty = numerator2 / denominator;
     const bool bLinesIntersect = ((tx >= 0.0f) && (tx <= 1.0f) && (ty >= 0.0f) && (ty <= 1.0f));
 
-    return (!bLinesIntersect);
+    // Now: if the lines do not intersect then this seg does not prevent sprite splitting
+    if (!bLinesIntersect)
+        return true;
+
+    // Otherwise if it is a one-sided line then it prevents splitting in all cases
+    sector_t* const pBackSector = seg.backsector;
+
+    if (!pBackSector)
+        return false;
+
+    // If it's a two-sided line that is masked or translucent then do not allow sprite splitting across it.
+    // Don't want sprites poking through mid wall textures like bars and so on.
+    if (seg.linedef->flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT))
+        return false;
+
+    // If the seg is not visible then allow splitting across two sided lines to prevent sprite ordering problems.
+    // Since we hopefully won't see the results anyway this should be the best approach to prevent the most ordering problems:
+    if ((seg.flags & SGF_VISIBLE_COLS) == 0)
+        return true;
+
+    // Treat the 2 sided seg as blocking if the split line would hit either the upper or lower walls.
+    // In all other cases allow a split to take place across this seg, even if the split test line crosses it.
+    const sector_t& frontSector = *seg.frontsector;
+
+    const float midBy = RV_FixedToFloat(std::max(frontSector.floorDrawH, pBackSector->floorDrawH));
+    const float midTy = RV_FixedToFloat(std::min(frontSector.ceilingDrawH, pBackSector->ceilingDrawH));
+
+    return ((splitLine.y >= midBy) && (splitLine.y <= midTy));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -499,7 +516,7 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
                 frag.z1 * splitT1_inv + frag.z2 * splitT1,
                 frag.x1 * splitT2_inv + frag.x2 * splitT2,
                 frag.z1 * splitT2_inv + frag.z2 * splitT2,
-                (frag.yt + frag.yb) * 0.5f  // The test line is at 1/2 of the height of the sprite
+                (frag.yt + frag.yb) * 0.5f  // Note: make the test line be at 1/2 of the height of the sprite; splits can happen across small step ups, not large ones
             };
 
             // Test the split line against geometry to see if this split would be allowed
