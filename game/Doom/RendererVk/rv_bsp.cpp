@@ -192,7 +192,19 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
             if (bSegIsVisible && bIsMaskedOrTranslucentSeg) {
                 subsec.bVkCanBatchFlats = false;
             }
-        } else {
+
+            // Check the gap with the back sector.
+            // If there is not enough of a gap then disable flat batching as it can cause ordering issues otherwise!
+            if (bSegIsOnscreen) {
+                const fixed_t midBy = std::max(frontSector.floorDrawH, pBackSec->floorDrawH);
+                const fixed_t midTy = std::min(frontSector.ceilingDrawH, pBackSec->ceilingDrawH);
+            
+                if (midTy - midBy <= NO_BATCH_SECTOR_H) {
+                    subsec.bVkCanBatchFlats = false;
+                }
+            }
+        }
+        else {
             // One sided seg that always has a wall.
             //
             // Don't allow flat batching for subsectors with onscreen backfacing walls since it can sometimes cause sprite ordering issues.

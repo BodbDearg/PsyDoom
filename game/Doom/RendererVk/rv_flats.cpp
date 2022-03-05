@@ -205,14 +205,15 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         gNextFloorDrawSubsecIdx--;
 
         // Should we end the draw batch here?
-        // Stop if there is no next draw sector, if this subsector is not batchable or if the floor height changes.
+        // Stop if there is no next draw sector, if this subsector (or the next) is not batchable or if the floor height changes.
         if (gNextFloorDrawSubsecIdx < 0)
             break;
 
         const subsector_t& nextSubsec = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx];
         const sector_t& nextSector = *nextSubsec.sector;
+        const bool bAllowBatching = (subsec.bVkCanBatchFlats && nextSubsec.bVkCanBatchFlats);
 
-        if (!subsec.bVkCanBatchFlats)
+        if (!bAllowBatching)
             break;
 
         if (nextSector.floorDrawH != sector.floorDrawH)
@@ -255,14 +256,15 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
         gNextCeilDrawSubsecIdx--;
 
         // Should we end the draw batch here?
-        // Stop if there is no next draw sector, if this subsector is not batchable or if the ceiling height changes.
+        // Stop if there is no next draw sector, if this subsector (or the next) is not batchable or if the ceiling height changes.
         if (gNextCeilDrawSubsecIdx < 0)
             break;
 
         const subsector_t& nextSubsec = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx];
         const sector_t& nextSector = *nextSubsec.sector;
+        const bool bAllowBatching = (subsec.bVkCanBatchFlats && nextSubsec.bVkCanBatchFlats);
 
-        if (!subsec.bVkCanBatchFlats)
+        if (!bAllowBatching)
             break;
 
         if (nextSector.ceilingDrawH != sector.ceilingDrawH)
