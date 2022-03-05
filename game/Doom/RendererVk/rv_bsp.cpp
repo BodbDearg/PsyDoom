@@ -138,53 +138,63 @@ static void RV_VisitSubsec(const int32_t subsecIdx) noexcept {
         rvseg_t& seg = pSegs[segIdx];
         seg.flags = 0;
 
-        // Determine whether the segment is backfacing so we can re-use the result later
+        // Determine and mark whether the segment is backfacing so we can re-use the result later
         const float p1f[2] = { seg.v1x, seg.v1y };
         const float p2f[2] = { seg.v2x, seg.v2y };
 
-        {
-            const float viewDx = gViewXf - p1f[0];
-            const float viewDy = gViewYf - p1f[1];
-            const float edgeDx = p2f[0] - p1f[0];
-            const float edgeDy = p2f[1] - p1f[1];
+        const float viewDx = gViewXf - p1f[0];
+        const float viewDy = gViewYf - p1f[1];
+        const float edgeDx = p2f[0] - p1f[0];
+        const float edgeDy = p2f[1] - p1f[1];
 
-            if (edgeDx * viewDy > edgeDy * viewDx) {
-                seg.flags |= SGF_BACKFACING;
-            }
+        const bool bSegIsBackFacing = (edgeDx * viewDy > edgeDy * viewDx);
+        const bool bSegIsFrontFacing = (!bSegIsBackFacing);
+
+        if (bSegIsBackFacing) {
+            seg.flags |= SGF_BACKFACING;
         }
 
-        // Determine if the seg is visible, ignoring whether it is backfacing or not.
-        // First get the area of the screen that the seg covers in normalized device coords, if it's onscreen.
-        // Then check if that range is actually visible if it is onscreen.
+        // Get the area of the screen that the seg covers in normalized device coords, and whether it's onscreen (within the view frustum)
         float segLx = {};
         float segRx = {};
+        const bool bSegIsOnscreen = RV_GetLineNdcBounds(p1f[0], p1f[1], p2f[0], p2f[1], segLx, segRx);
 
-        if (RV_GetLineNdcBounds(p1f[0], p1f[1], p2f[0], p2f[1], segLx, segRx)) {
-            if (RV_IsRangeVisible(segLx, segRx)) {
-                seg.flags |= SGF_VISIBLE_COLS;
-            }
+        // Determine and mark if any part of the seg is actually visible, ignoring whether it is backfacing or not
+        const bool bSegIsVisible = (bSegIsOnscreen && RV_IsRangeVisible(segLx, segRx));
+
+        if (bSegIsVisible) {
+            seg.flags |= SGF_VISIBLE_COLS;
         }
 
+        // Determine whether this type of seg can potentially occlude for the purposes of visibility
+        const bool bIsOccludingSegType = RV_IsOccludingSeg(seg, frontSector);
+
         // Make the seg occlude if it's the type of seg that occludes, it's not backfacing (so we can see via noclip) and if it's visible
-        const bool bMakeSegOcclude = (
-            ((seg.flags & SGF_BACKFACING) == 0) &&
-            (seg.flags & SGF_VISIBLE_COLS) &&
-            RV_IsOccludingSeg(seg, frontSector)
-        );
+        const bool bMakeSegOcclude = (bSegIsFrontFacing && bSegIsVisible && bIsOccludingSegType);
 
         if (bMakeSegOcclude) {
             RV_OccludeRange(segLx, segRx);
         }
 
-        // Check the gap with the back sector.
-        // If there is not enough of a gap then disable flat batching as it can cause ordering issues otherwise:
+        // Additional checks to see if the subsector should be marked as one that breaks flat batching
         const sector_t* const pBackSec = seg.backsector;
 
         if (pBackSec) {
-            const fixed_t midBy = std::max(frontSector.floorDrawH, pBackSec->floorDrawH);
-            const fixed_t midTy = std::min(frontSector.ceilingDrawH, pBackSec->ceilingDrawH);
-            
-            if (midTy - midBy <= NO_BATCH_SECTOR_H) {
+            // If the seg has visible masked or transparent walls then disable batching.
+            // We can't batch across those without causing ordering issues for sprites behind them, which should be occluded by stuff in front:
+            const bool bIsMaskedOrTranslucentSeg = (seg.linedef->flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT));
+
+            if (bSegIsVisible && bIsMaskedOrTranslucentSeg) {
+                subsec.bVkCanBatchFlats = false;
+            }
+        } else {
+            // One sided seg that always has a wall.
+            //
+            // Don't allow flat batching for subsectors with onscreen backfacing walls since it can sometimes cause sprite ordering issues.
+            // Such subsectors can sometimes rely on the flats of subsectors in front of them to cover up sprites that should not be seen!
+            // Note that we only need to break batches for back facing walls for the one-sided seg case, since two sided segs will break
+            // batches already anyway when there are lower or upper walls due to floor or ceiling height changes...
+            if (bSegIsOnscreen && bSegIsBackFacing) {
                 subsec.bVkCanBatchFlats = false;
             }
         }

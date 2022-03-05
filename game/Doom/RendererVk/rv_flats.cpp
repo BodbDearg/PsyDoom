@@ -23,28 +23,6 @@ static int32_t gNextFloorDrawSubsecIdx;     // Index of the next draw subsector 
 static int32_t gNextCeilDrawSubsecIdx;      // Index of the next draw subsector to have its ceiling drawn
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: tells if the specified subsector has any visible masked or blended walls
-//------------------------------------------------------------------------------------------------------------------------------------------
-static bool RV_SubsecHasVisibleMaskedOrBlendedMidWalls(const subsector_t& subsec) noexcept {
-    const rvseg_t* const pSegs = gpRvSegs.get() + subsec.firstseg;
-    const int32_t numSegs = subsec.numsegs;
-
-    for (int32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
-        const rvseg_t& seg = pSegs[segIdx];
-
-        if (seg.flags & SGF_BACKFACING)
-            continue;
-
-        const uint32_t lineFlags = seg.linedef->flags;
-
-        if (lineFlags & (ML_MIDMASKED | ML_MIDTRANSLUCENT))
-            return true;
-    }
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Figures out a 2D point (on the XZ plane) to act as the center of a triangle fan type arrangement for the subsector.
 // The subsector is convex so we should be able to do a triangle fan from this point to every other subector edge, in order to fill it.
 // N.B: assumes the subsector has at least 3 leaf edges!
@@ -227,22 +205,17 @@ void RV_DrawSubsecFloors(const int32_t fromDrawSubsecIdx) noexcept {
         gNextFloorDrawSubsecIdx--;
 
         // Should we end the draw batch here?
-        // Stop if there is no next draw sector, if the next subsector is not batchable or if the floor height changes.
+        // Stop if there is no next draw sector, if this subsector is not batchable or if the floor height changes.
         if (gNextFloorDrawSubsecIdx < 0)
             break;
 
         const subsector_t& nextSubsec = *gRvDrawSubsecs[gNextFloorDrawSubsecIdx];
         const sector_t& nextSector = *nextSubsec.sector;
 
-        if (!nextSubsec.bVkCanBatchFlats)
+        if (!subsec.bVkCanBatchFlats)
             break;
 
         if (nextSector.floorDrawH != sector.floorDrawH)
-            break;
-
-        // Break the batch if the next subsector has visible masked or blended mid walls.
-        // We can't batch across those without causing ordering issues for sprites behind them, which should be occluded by stuff in front:
-        if (RV_SubsecHasVisibleMaskedOrBlendedMidWalls(nextSubsec))
             break;
 
         // Also break the batch if there is a change in sky floor status.
@@ -282,22 +255,17 @@ void RV_DrawSubsecCeilings(const int32_t fromDrawSubsecIdx) noexcept {
         gNextCeilDrawSubsecIdx--;
 
         // Should we end the draw batch here?
-        // Stop if there is no next draw sector, if the next subsector is not batchable or if the ceiling height changes.
+        // Stop if there is no next draw sector, if this subsector is not batchable or if the ceiling height changes.
         if (gNextCeilDrawSubsecIdx < 0)
             break;
 
         const subsector_t& nextSubsec = *gRvDrawSubsecs[gNextCeilDrawSubsecIdx];
         const sector_t& nextSector = *nextSubsec.sector;
 
-        if (!nextSubsec.bVkCanBatchFlats)
+        if (!subsec.bVkCanBatchFlats)
             break;
 
         if (nextSector.ceilingDrawH != sector.ceilingDrawH)
-            break;
-
-        // Break the batch if the next subsector has visible masked or blended mid walls.
-        // We can't batch across those without causing ordering issues for sprites behind them, which should be occluded by stuff in front:
-        if (RV_SubsecHasVisibleMaskedOrBlendedMidWalls(nextSubsec))
             break;
 
         // Also break the batch if there is a change in sky ceiling status.
