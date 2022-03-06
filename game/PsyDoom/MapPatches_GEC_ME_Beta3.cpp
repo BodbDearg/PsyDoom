@@ -250,6 +250,27 @@ static void patchMap_TrappedOnTitan() noexcept {
 static void patchMap_BlackTower() noexcept {
     // Fix sky walls displaying over the pillars supporting a covering by the brown sludge
     addVoidFlagToLinedefs(629, 627, 939, 624, 626, 704, 623, 622, 693, 632, 633, 680, 634, 1081, 834, 636, 637, 985);
+
+    // Fix sky walls displaying over some of the tower side walls that shouldn't be there
+    addVoidFlagToLinedefs(79, 80, 105);
+
+    // Ensure there are sky walls displaying for some of the interior windows to block external geometry
+    gpSectors[189].ceilingheight = gpSectors[189].floorheight;
+    addVoidFlagToLinedefs(1126, 1152, 1159);
+
+    // Remove a switch (which isn't really needed) that lowers pillars and can cause the player to get stuck.
+    // These pillars obscure another switch that is used to escape from the basement area when some walls raise.
+    modifyLinedefs(
+        [](line_t& line) {
+            gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("MARBLE06");
+            line.special = 0;
+            line.tag = 0;
+        },
+        1398
+    );
+
+    // Remove a wall that shouldn't be rendered that sometimes causes streaks in the sky
+    gpSides[gpLines[961].sidenum[0]].toptexture = -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
