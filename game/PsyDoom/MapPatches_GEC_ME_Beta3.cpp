@@ -39,6 +39,14 @@ static void fixWrongREDROK01() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP01: Phobos Mission Control
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_PhobosMissionControl() noexcept {
+    // Doorway has the wrong trim on one side near the end of the map
+    gpSides[gpLines[385].sidenum[0]].midtexture = R_TextureNumForName("SUPPORT1");
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP02: Forgotten Sewers
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_ForgottenSewers() noexcept {
@@ -47,6 +55,18 @@ static void patchMap_ForgottenSewers() noexcept {
 
     // Fix a zero brightness sector
     gpSectors[153].lightlevel = 128;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP05: Slough Of Despair
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_SloughOfDespair() noexcept {
+    fixWrongREDROK01();
+
+    // Fix the secret level exit not being marked as a secret.
+    // Move the strobe flash from the secret sector to the teleport also just to make the exit more obvious.
+    gpSectors[73].special = 9;
+    gpSectors[74].special = 202;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,6 +139,12 @@ static void patchMap_InfernoOfBlood() noexcept {
         [](line_t& line) { gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("ROCK03"); },
         759, 762
     );
+
+    // Fix missing step texture near the end
+    gpSides[gpLines[457].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK15");
+
+    // Fix a hidden automap line in the blood river
+    unhideLinedefs(888);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -157,11 +183,35 @@ static void patchMap_TombOfMalevolence() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP25: Warrens
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Warrens() noexcept {
+    // Fix a missing step texture when a door opens near the start
+    gpSides[gpLines[91].sidenum[1]].bottomtexture = R_TextureNumForName("REDBR01");
+
+    // Fix a missing step texture near the red skull key
+    gpSides[gpLines[445].sidenum[1]].bottomtexture = R_TextureNumForName("GREY19");
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP26: Fear
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Fear() noexcept {
     // Fix a small crate having the wrong floor texture
     gpSectors[95].floorpic = R_FlatNumForName("GRAY01");
+
+    // Fix windows that block projectiles (rockets and plasma etc.) but which strangely allow bullets and all other things to pass.
+    // These windows did not block in the original map, so removing the projectile blocking is the most faithful fix:
+    modifyLinedefs(
+        [](line_t& line) { line.flags &= ~ML_BLOCKPRJECTILE; },
+        1069, 1072, 1075, 1078, 1081
+    );
+    
+    // Fix a secret door which looks odd (near the exit) when opening due to being upper unpegged
+    modifyLinedefs(
+        [](line_t& line) { line.flags &= ~ML_DONTPEGTOP; },
+        1041, 1058
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -178,6 +228,13 @@ static void patchMap_BaphometDemense() noexcept {
     gpSectors[162].lightlevel = 104;
     gpSectors[177].ceilingpic = gpSectors[178].ceilingpic;
     gpSectors[178].lightlevel = 128;
+
+    // Fix missing step texture near the end
+    gpSides[gpLines[1121].sidenum[1]].bottomtexture = R_TextureNumForName("METAL01");
+
+    // Fix thin wall-step sectors that shouldn't be marked as secret (near the end)
+    gpSectors[160].special = 0;
+    gpSectors[184].special = 0;
 
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
     modifyLinedefs(
@@ -274,6 +331,17 @@ static void patchMap_BlackTower() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP35: BloodseaKeep
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_BloodseaKeep() noexcept {
+    // Fix a door that looks weird when opening due to the walls being unpegged (remove the unpegged flags)
+    modifyLinedefs(
+        [](line_t& line) { line.flags &= ~(ML_DONTPEGBOTTOM | ML_DONTPEGTOP); },
+        1074, 1080, 1082
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP36: TEETH
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TEETH() noexcept {
@@ -282,6 +350,19 @@ static void patchMap_TEETH() noexcept {
         [](line_t& line) { line.tag = 50; },
         304
     );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP40: Crossing Acheron
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_CrossingAcheron() noexcept {
+    // Fix a missing lower texture when a lift is used in the room with the altar surrounded by short green pillars
+    gpSides[gpLines[1083].sidenum[1]].bottomtexture = R_TextureNumForName("SUPPORT2");
+
+    // Fix a secret that is almost impossible to register without using 'noclip' in the orange room near the start.
+    // Move which sector triggers the secret to fix the problem.
+    gpSectors[63].special = 9;
+    gpSectors[64].special = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -642,8 +723,9 @@ static void patchMap_Go2It() noexcept {
 // All of the map patches for this game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
+    { 122147, 0x794F1DDCA63477CF, 0x7167BA833E4218A9, patchMap_PhobosMissionControl },      // MAP01
     { 120087, 0x6CF71CAD6729761C, 0xB9AADBB88CC49757, patchMap_ForgottenSewers },           // MAP02
-    {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, fixWrongREDROK01 },                   // MAP05
+    {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, patchMap_SloughOfDespair },           // MAP05
     { 129546, 0x3B2546BA128349AE, 0xC4D9982A6D4C27DD, patchMap_AgainstTheeWickedly },       // MAP07
     { 141963, 0x0505711A9F4FB230, 0x86BDE1AB556902AC, patchMap_AndHellFollowed },           // MAP08
     {  96628, 0x808AD04C8D43EEC8, 0x73B0859F1115F292, patchMap_Betray },                    // MAP11
@@ -654,12 +736,15 @@ static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     { 166908, 0xA67A3D273E02C0D1, 0xFAF4DC1387C0FFAA, patchMap_InfernoOfBlood },            // MAP22
     { 179930, 0x488228856FD3DD7E, 0xF579F43D9E39ACB2, patchMap_BaronsBanquet },             // MAP23
     {  87074, 0x8CE5FFE1D040C140, 0x4E89A7383999004F, patchMap_TombOfMalevolence },         // MAP24
+    {  51095, 0x238B0B9A1F67D3E6, 0xAC8F27899AE00E13, patchMap_Warrens },                   // MAP25
     { 113315, 0x843507387CE8BCBF, 0x5B4EB9EE56E95384, patchMap_Fear },                      // MAP26
     { 166962, 0x9F83C36FCCE657BD, 0x8E17C9FE4D19BFED, patchMap_BaphometDemense },           // MAP30
     { 119562, 0xD994CF0954312F96, 0xC15EC0A72C4C4FB4, patchMap_TitanManor },                // MAP31
     { 172689, 0xB8354D5A39E9F37A, 0x013E5A66B42A71F9, patchMap_TrappedOnTitan },            // MAP32
     { 152959, 0xBD44DD87CE623522, 0x57AEC452C8FB2CF7, patchMap_BlackTower },                // MAP34
+    { 191029, 0x15530F2570001DDE, 0x4ED526B4E440796F, patchMap_BloodseaKeep },              // MAP35
     { 123320, 0x87ED0BB125C317ED, 0x47E362A5D5258526, patchMap_TEETH },                     // MAP36
+    { 116136, 0xF3D93C60427885FE, 0x2073118EE93AE4A3, patchMap_CrossingAcheron },           // MAP40
     { 121126, 0x364CF475759D4689, 0x905D77EC9FE7AAD1, patchMap_TheImageOfEvil },            // MAP49
     {  11033, 0x630B968605A4F759, 0x8A9D02099C77ECD1, patchMap_BadDream },                  // MAP50
     {  92129, 0x508E355B9AC659BE, 0xA4E8B1A1202BB672, patchMap_OpenSeason },                // MAP53
