@@ -67,36 +67,48 @@ static inline void modifySectors(const ModFuncT & func, const int32_t sectorIdx,
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utility function: adds the 'ML_VOID' flag to a series of lines
+// Utility function: adds specified flags to a series of lines
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class ...Int32List>
+static inline void addFlagsToLinedefs(const uint32_t flags, Int32List... linedefIndexes) noexcept {
+    modifyLinedefs(
+        [flags](line_t& line) { line.flags |= flags; },
+        linedefIndexes...
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility function: removes the specified flags from a series of lines
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class ...Int32List>
+static inline void removeFlagsFromLinedefs(const uint32_t flags, Int32List... linedefIndexes) noexcept {
+    modifyLinedefs(
+        [flags](line_t& line) { line.flags &= ~flags; },
+        linedefIndexes...
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility functions to add and remove various commonly used flags to linedefs
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class ...Int32List>
 static inline void addVoidFlagToLinedefs(Int32List... linedefIndexes) noexcept {
-    modifyLinedefs(
-        [](line_t& line) { line.flags |= ML_VOID; },
-        linedefIndexes...
-    );
+    addFlagsToLinedefs(ML_VOID, linedefIndexes...);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Utility function: adds the 'ML_ADD_SKY_WALL_HINT' flag to a series of lines
-//------------------------------------------------------------------------------------------------------------------------------------------
 template <class ...Int32List>
 static inline void addSkyWallFlagToLinedefs(Int32List... linedefIndexes) noexcept {
-    modifyLinedefs(
-        [](line_t& line) { line.flags |= ML_ADD_SKY_WALL_HINT; },
-        linedefIndexes...
-    );
+    addFlagsToLinedefs(ML_ADD_SKY_WALL_HINT, linedefIndexes...);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Utility function: removes the 'ML_DONTDRAW' flag on the specified linedefs, allowing them to be seen in the automap
-//------------------------------------------------------------------------------------------------------------------------------------------
+template <class ...Int32List>
+static inline void hideLinedefs(Int32List... linedefIndexes) noexcept {
+    addFlagsToLinedefs(ML_DONTDRAW, linedefIndexes...);
+}
+
 template <class ...Int32List>
 static inline void unhideLinedefs(Int32List... linedefIndexes) noexcept {
-    modifyLinedefs(
-        [](line_t& line) { line.flags &= ~ML_DONTDRAW; },
-        linedefIndexes...
-    );
+    removeFlagsFromLinedefs(ML_DONTDRAW, linedefIndexes...);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

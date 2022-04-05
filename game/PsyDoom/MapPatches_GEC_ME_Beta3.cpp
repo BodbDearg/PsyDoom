@@ -202,16 +202,10 @@ static void patchMap_Fear() noexcept {
 
     // Fix windows that block projectiles (rockets and plasma etc.) but which strangely allow bullets and all other things to pass.
     // These windows did not block in the original map, so removing the projectile blocking is the most faithful fix:
-    modifyLinedefs(
-        [](line_t& line) { line.flags &= ~ML_BLOCKPRJECTILE; },
-        1069, 1072, 1075, 1078, 1081
-    );
+    removeFlagsFromLinedefs(ML_BLOCKPRJECTILE, 1069, 1072, 1075, 1078, 1081);
     
     // Fix a secret door which looks odd (near the exit) when opening due to being upper unpegged
-    modifyLinedefs(
-        [](line_t& line) { line.flags &= ~ML_DONTPEGTOP; },
-        1041, 1058
-    );
+    removeFlagsFromLinedefs(ML_DONTPEGTOP, 1041, 1058);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -334,11 +328,8 @@ static void patchMap_BlackTower() noexcept {
 // Fix issues for MAP35: BloodseaKeep
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_BloodseaKeep() noexcept {
-    // Fix a door that looks weird when opening due to the walls being unpegged (remove the unpegged flags)
-    modifyLinedefs(
-        [](line_t& line) { line.flags &= ~(ML_DONTPEGBOTTOM | ML_DONTPEGTOP); },
-        1074, 1080, 1082
-    );
+    // Fix the yellow door looking weird when opening due to the walls being unpegged (remove the unpegged flags)
+    removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 1074, 1080, 1082);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -415,6 +406,13 @@ static void patchMap_OpenSeason() noexcept {
 static void patchMap_Redemption() noexcept {
     // Fix a missing texture on a step side after it lowers
     gpSides[gpLines[597].sidenum[1]].bottomtexture = R_TextureNumForName("METAL03");
+
+    // Fix the red door being upper unpegged (looks weird in motion)
+    gpLines[189].flags &= ~ML_DONTPEGTOP;
+    gpSides[gpLines[189].sidenum[0]].rowoffset = 0;
+
+    // Fix missing upper unpegged flag on a wall that is a deathmatch only door
+    gpLines[639].flags |= ML_DONTPEGTOP;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -470,10 +468,7 @@ static void patchMap_ShippingRespawning() noexcept {
 
     // Fix being able to get stuck outside of the level bounds if rushing forward to collect the soulsphere.
     // Don't allow the player to pass certain lines.
-    modifyLinedefs(
-        [](line_t& line) { line.flags |= ML_BLOCKING; },
-        60, 817, 186
-    );
+    addFlagsToLinedefs(ML_BLOCKING, 60, 817, 186);
 
     // Fix being able to see past the end of the sky texture in the soulsphere area - raise the walls to cover it
     modifySectors(
@@ -483,6 +478,25 @@ static void patchMap_ShippingRespawning() noexcept {
     
     // Fix an automap line not rendering at a computer console
     unhideLinedefs(982);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP63: Central Processing
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_CentralProcessing() noexcept {
+    // Fix a linedef in a secret area that should be hidden (all the other lines are in this area)
+    hideLinedefs(926);
+
+    // Fix a linedef that should not be hidden on the automap (in slime, at the west of the map)
+    unhideLinedefs(1254);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP65: Habitat
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Habitat() noexcept {
+    // Fix the acid floor lift looking weird when moving - the lower wall should not be unpegged
+    removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 77);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -605,6 +619,11 @@ static void patchMap_TheTwilight() noexcept {
         [](line_t& line) { line.tag = 93; },
         120, 309, 911, 919
     );
+
+    // Remove a secret that is easy to bypass, a small opening with a switch that opens another secret area.
+    // Unless you step into the opening when activating the switch you won't register the secret.
+    // Since it opens a secret area, registering the secret within that area will be enough.
+    gpSectors[3].special = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -753,6 +772,8 @@ static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     { 123947, 0x3805BA7B953B38B3, 0x2F9DCB10186E7DB3, patchMap_DeadZone },                  // MAP60
     { 208388, 0x576180A7759F98D2, 0x76B5E5021B925739, patchMap_Mill },                      // MAP61
     { 179279, 0x8C446FE7E1528EBE, 0x34B40119DCDABD64, patchMap_ShippingRespawning },        // MAP62
+    { 152137, 0x7FE1CA3607E86213, 0x569D24111516F4A7, patchMap_CentralProcessing },         // MAP63
+    { 132207, 0xCA9A619A8B6D83C9, 0x546CF35AF48B79BF, patchMap_Habitat },                   // MAP65
     { 186321, 0xDDAABED7BB4FF8B9, 0xEF0F5277E3C96A4C, patchMap_MountPain },                 // MAP67
     { 164989, 0x413FE3E56F2C2453, 0x9E047C4ECCB4FEA7, patchMap_RiverStyx },                 // MAP68
     { 167156, 0xE21C586BF2242082, 0xFA5D9C91DB288B5E, patchMap_Pharaoh },                   // MAP69
