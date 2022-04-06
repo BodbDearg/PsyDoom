@@ -52,7 +52,10 @@ static void patchMap_Entryway() noexcept {
     applyOriginalMapCommonPatches();
 
     // Fix grass beyond the sky wall sometimes appearing - don't render it!
-    gpSectors[25].floorpic = -1;
+    modifySectors(
+        [](sector_t& sector) { sector.floorpic = -1; },
+        3, 25
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
