@@ -91,6 +91,16 @@ struct texture_t {
         uint32_t        _pad2;                  // Unused
         uint32_t        uploadFrameNum;         // What frame the texture was added to the texture cache, used to detect texture cache overflows
     #endif
+
+    // PsyDoom: helper that encapsulates/abstracts the logic for checking if a texture is in the cache.
+    // This logic has changed slightly for PsyDoom, we no longer use the 'texPageId' field.
+    bool isCached() const noexcept {
+        #if PSYDOOM_MODS
+            return bIsCached;
+        #else
+            return (texPageId != 0);
+        #endif
+    }
 };
 
 // Stores info about the size and anchor point (offsetting) for a texture in WAD lump

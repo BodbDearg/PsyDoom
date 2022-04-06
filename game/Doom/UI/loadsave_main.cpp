@@ -124,8 +124,8 @@ static void DrawStatusSprite(
     const uint8_t g,
     const uint8_t b
 ) noexcept {
-    const int16_t tpU = (int16_t)(gTex_STATUS.texPageCoordX + u);
-    const int16_t tpV = (int16_t)(gTex_STATUS.texPageCoordY + v);
+    const LibGpuUV tpU = (LibGpuUV)(gTex_STATUS.texPageCoordX + u);
+    const LibGpuUV tpV = (LibGpuUV)(gTex_STATUS.texPageCoordY + v);
     I_DrawColoredSprite(gTex_STATUS.texPageId, Game::getTexPalette_STATUS(), x, y, tpU, tpV, w, h, r, g, b, false);
 }
 

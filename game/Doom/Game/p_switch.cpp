@@ -228,11 +228,11 @@ void P_InitSwitchList() noexcept {
             texture_t& tex1 = gpTextures[tex1Lump];
             texture_t& tex2 = gpTextures[tex2Lump];
 
-            if ((tex1.texPageId) != 0 && (tex2.texPageId == 0)) {
+            if (tex1.isCached() && (!tex2.isCached())) {
                 I_CacheTex(tex2);
             }
 
-            if ((tex2.texPageId != 0) && (tex1.texPageId == 0)) {
+            if (tex2.isCached() && (!tex1.isCached())) {
                 I_CacheTex(tex1);
             }
         #endif

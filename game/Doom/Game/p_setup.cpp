@@ -112,7 +112,6 @@ void (*gUpdateFireSkyFunc)(texture_t& skyTex) = nullptr;
     static void P_FlagMapTexturesForLoading() noexcept;
     static void P_LoadMapTextures() noexcept;
 #else
-    static void P_LoadBlocks(const CdFileId file) noexcept;
     static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept;
 #endif
 
@@ -1183,30 +1182,42 @@ static void P_Init() noexcept {
         for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx, ++pSec) {
             // Note: ceiling might not have a texture (sky)
             if (pSec->ceilingpic != -1) {
-                #if PSYDOOM_LIMIT_REMOVING
-                    if ((pSec->ceilingpic >= 0) && (pSec->ceilingpic < gNumFlatLumps)) {
-                        gCacheFlatTextureSet.add(pSec->ceilingpic);
-                    }
+                #if PSYDOOM_MODS
+                    const bool bValidCeilingPic = ((pSec->ceilingpic >= 0) && (pSec->ceilingpic < gNumFlatLumps));      // PsyDoom: added safety checks
                 #else
-                    texture_t& ceilTex = gpFlatTextures[pSec->ceilingpic];
+                    const bool bValidCeilingPic = true;
+                #endif
 
-                    if (ceilTex.texPageId == 0) {
-                        I_CacheTex(ceilTex);
+                if (bValidCeilingPic) {
+                    #if PSYDOOM_LIMIT_REMOVING
+                        gCacheFlatTextureSet.add(pSec->ceilingpic);
+                    #else
+                        texture_t& ceilTex = gpFlatTextures[pSec->ceilingpic];
+
+                        if (!ceilTex.isCached()) {
+                            I_CacheTex(ceilTex);
+                        }
+                    #endif
+                }
+            }
+
+            #if PSYDOOM_MODS
+                const bool bValidFloorPic = ((pSec->floorpic >= 0) && (pSec->floorpic < gNumFlatLumps));    // PsyDoom: added safety checks
+            #else
+                const bool bValidFloorPic = true;
+            #endif
+
+            if (bValidFloorPic) {
+                #if PSYDOOM_LIMIT_REMOVING
+                    gCacheFlatTextureSet.add(pSec->floorpic);
+                #else
+                    texture_t& floorTex = gpFlatTextures[pSec->floorpic];
+
+                    if (!floorTex.isCached()) {
+                        I_CacheTex(floorTex);
                     }
                 #endif
             }
-
-            #if PSYDOOM_LIMIT_REMOVING
-                if ((pSec->floorpic >= 0) && (pSec->floorpic < gNumFlatLumps)) {
-                    gCacheFlatTextureSet.add(pSec->floorpic);
-                }
-            #else
-                texture_t& floorTex = gpFlatTextures[pSec->floorpic];
-
-                if (floorTex.texPageId == 0) {
-                    I_CacheTex(floorTex);
-                }
-            #endif
         }
     }
 
@@ -1730,35 +1741,9 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     #endif
 }
 
-#if PSYDOOM_LIMIT_REMOVING
+#if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom limit removing addition: flags all textures in the map for loading
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void P_FlagMapTexturesForLoading() noexcept {
-    // Run through all the sides in the map and flag all their textures for loading
-    side_t* pSide = gpSides;
-
-    for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
-        const int32_t topTexture = pSide->toptexture;
-        const int32_t midTexture = pSide->midtexture;
-        const int32_t botTexture = pSide->bottomtexture;
-
-        if ((topTexture >= 0) && (topTexture < gNumTexLumps)) {
-            gCacheTextureSet.add(topTexture);
-        }
-
-        if ((midTexture >= 0) && (midTexture < gNumTexLumps)) {
-            gCacheTextureSet.add(midTexture);
-        }
-
-        if ((botTexture >= 0) && (botTexture < gNumTexLumps)) {
-            gCacheTextureSet.add(botTexture);
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom limit removing addition: caches and decompresses the lump for the specified texture.
+// PsyDoom addition: caches and decompresses the lump for the specified texture.
 // Once done, saves the size info for the texture to the texture object.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_CacheAndUpdateTexSizeInfo(texture_t& tex, const int32_t lumpNum) noexcept {
@@ -1784,6 +1769,34 @@ static void P_CacheAndUpdateTexSizeInfo(texture_t& tex, const int32_t lumpNum) n
     tex.height = Endian::littleToHost(texHdr.height);
     tex.width16 = (uint8_t)((tex.width + 15u) / 16u);
     tex.height16 = (uint8_t)((tex.height + 15u) / 16u);
+}
+#endif  // #if PSYDOOM_MODS
+
+#if PSYDOOM_LIMIT_REMOVING
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom limit removing addition: flags all textures in the map for loading
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_FlagMapTexturesForLoading() noexcept {
+    // Run through all the sides in the map and flag all their textures for loading
+    side_t* pSide = gpSides;
+
+    for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
+        const int32_t topTexture = pSide->toptexture;
+        const int32_t midTexture = pSide->midtexture;
+        const int32_t botTexture = pSide->bottomtexture;
+
+        if ((topTexture >= 0) && (topTexture < gNumTexLumps)) {
+            gCacheTextureSet.add(topTexture);
+        }
+
+        if ((midTexture >= 0) && (midTexture < gNumTexLumps)) {
+            gCacheTextureSet.add(midTexture);
+        }
+
+        if ((botTexture >= 0) && (botTexture < gNumTexLumps)) {
+            gCacheTextureSet.add(botTexture);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1866,30 +1879,52 @@ static void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
     }
     #endif
 
-    // Run through all the sides in the map and cache textures with the specified width
+    // PsyDoom: added safety to ensure the texture number is valid, before we cache it:
+    #if PSYDOOM_MODS
+        const auto isValidTexNum = [](const int32_t num) noexcept { return ((num >= 0) && (num < gNumTexLumps)); };
+    #else
+        const auto isValidTexNum = [](const int32_t num) noexcept { return (num != -1); };
+    #endif
+
+    // Run through all the sides in the map and cache textures with the specified width.
+    //
+    // PsyDoom: the 'TEXTURE1' lump is no longer used to know in advance the dimensions of all textures before they are loaded (to make modding easier).
+    // Hence we need to ensure each texture is loaded into RAM first before doing the size comparisons below.
     side_t* pSide = gpSides;
 
     for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
-        if (pSide->toptexture != -1) {
+        if (isValidTexNum(pSide->toptexture)) {
             texture_t& tex = gpTextures[pSide->toptexture];
 
-            if ((tex.width == width) && (tex.texPageId == 0)) {
+            #if PSYDOOM_MODS
+                P_CacheAndUpdateTexSizeInfo(tex, tex.lumpNum);  // PsyDoom: make sure we know the texture size before comparison!
+            #endif
+
+            if ((tex.width == width) && (!tex.isCached())) {
                 I_CacheTex(tex);
             }
         }
 
-        if (pSide->midtexture != -1) {
+        if (isValidTexNum(pSide->midtexture)) {
             texture_t& tex = gpTextures[pSide->midtexture];
 
-            if ((tex.width == width) && (tex.texPageId == 0)) {
+            #if PSYDOOM_MODS
+                P_CacheAndUpdateTexSizeInfo(tex, tex.lumpNum);  // PsyDoom: make sure we know the texture size before comparison!
+            #endif
+
+            if ((tex.width == width) && (!tex.isCached())) {
                 I_CacheTex(tex);
             }
         }
 
-        if (pSide->bottomtexture != -1) {
+        if (isValidTexNum(pSide->bottomtexture)) {
             texture_t& tex = gpTextures[pSide->bottomtexture];
 
-            if ((tex.width == width) && (tex.texPageId == 0)) {
+            #if PSYDOOM_MODS
+                P_CacheAndUpdateTexSizeInfo(tex, tex.lumpNum);  // PsyDoom: make sure we know the texture size before comparison!
+            #endif
+
+            if ((tex.width == width) && (!tex.isCached())) {
                 I_CacheTex(tex);
             }
         }
