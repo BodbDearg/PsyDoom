@@ -297,7 +297,7 @@ void R_DrawSegSkyWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
                 const bool bRenderSkyWall = (bHasNoOpening || (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasHigherSurroundingSkyCeiling(frontSec)));
 
                 if (bRenderSkyWall) {
-                    R_AddFrontFacingInfiniteSkyWall(edge, ftz, true);
+                    R_AddFrontFacingInfiniteSkyWall(edge, midTz, true);
                 }
             }
         }
@@ -312,7 +312,7 @@ void R_DrawSegSkyWalls(const subsector_t& subsec, const leafedge_t& edge) noexce
                 const bool bRenderSkyWall = (bHasNoOpening || (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasLowerSurroundingSkyFloor(frontSec)));
 
                 if (bRenderSkyWall) {
-                    R_AddFrontFacingInfiniteSkyWall(edge, fbz, false);
+                    R_AddFrontFacingInfiniteSkyWall(edge, midBz, false);
                 }
             }
         }

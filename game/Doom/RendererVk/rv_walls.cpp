@@ -386,9 +386,9 @@ static void RV_DrawSegSkyWalls(const rvseg_t& seg, const subsector_t& subsec) no
                 // In the "GEC Master Edition" for example this has been used to create effects like floating cubes.
                 // Only do this however if the map is not explicit about wanting a sky wall...
                 const bool bRenderSkyWall = (bHasNoOpening || (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasHigherSurroundingSkyCeiling(frontSec)));
-            
+
                 if (bRenderSkyWall) {
-                    RV_AddInfiniteSkyWall(x1, z1, x2, z2, fty, true);
+                    RV_AddInfiniteSkyWall(x1, z1, x2, z2, midTy, true);
                 }
             }
         }
@@ -403,7 +403,7 @@ static void RV_DrawSegSkyWalls(const rvseg_t& seg, const subsector_t& subsec) no
                 const bool bRenderSkyWall = (bHasNoOpening || (lineFlags & ML_ADD_SKY_WALL_HINT) || (!R_HasLowerSurroundingSkyFloor(frontSec)));
 
                 if (bRenderSkyWall) {
-                    RV_AddInfiniteSkyWall(x1, z1, x2, z2, fby, false);
+                    RV_AddInfiniteSkyWall(x1, z1, x2, z2, midBy, false);
                 }
             }
         }
