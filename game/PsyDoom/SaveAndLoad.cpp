@@ -187,7 +187,7 @@ static void allocButtonsToLoad() noexcept {
             for (uint32_t i = MAXBUTTONS; i < numBtns; ++i) {
                 const SavedButtonT& savedBtn = gSaveDataIn.buttons[i];
 
-                if (savedBtn.lineIdx < gNumLines) {
+                if (savedBtn.lineIdx < (uint32_t) gNumLines) {
                     line_t& line = gpLines[savedBtn.lineIdx];
                     side_t& side = gpSides[line.sidenum[0]];
 
@@ -251,6 +251,44 @@ static void gatherDelayedActionsOfType(const delayed_actionfn_t pActionFn, std::
             if (delayedAction.actionfunc == pActionFn) {
                 outputList.push_back(&delayedAction);
             }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gathers a list of currently active ceilings, saving them in the specified list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void gatherActiveCeilings(std::vector<ceiling_t*>& outputList) noexcept {
+    outputList.clear();
+
+    #if PSYDOOM_LIMIT_REMOVING
+        outputList.reserve(gpActiveCeilings.size());
+    #else
+        outputList.reserve(MAXCEILINGS);
+    #endif
+
+    for (ceiling_t* const pCeiling : gpActiveCeilings) {
+        if (pCeiling) {
+            outputList.push_back(pCeiling);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gathers a list of currently active platforms, saving them in the specified list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void gatherActivePlats(std::vector<plat_t*>& outputList) noexcept {
+    outputList.clear();
+
+    #if PSYDOOM_LIMIT_REMOVING
+        outputList.reserve(gpActivePlats.size());
+    #else
+        outputList.reserve(MAXPLATS);
+    #endif
+
+    for (plat_t* const pPlat : gpActivePlats) {
+        if (pPlat) {
+            outputList.push_back(pPlat);
         }
     }
 }
@@ -419,15 +457,11 @@ static void addActiveCeilingsAndPlats() noexcept {
     ASSERT(numPlats == gPlats.size());
 
     for (uint32_t i = 0; i < numCeils; ++i) {
-        if (gSaveDataIn.ceilings[i].bIsActive) {
-            P_AddActiveCeiling(*gCeilings[i]);
-        }
+        P_AddActiveCeiling(*gCeilings[i]);
     }
 
     for (uint32_t i = 0; i < numPlats; ++i) {
-        if (gSaveDataIn.plats[i].bIsActive) {
-            P_AddActivePlat(*gPlats[i]);
-        }
+        P_AddActivePlat(*gPlats[i]);
     }
 }
 
@@ -478,8 +512,8 @@ bool save(OutputStream& out) noexcept {
     gatherThinkersOfType(T_VerticalDoor, gVlDoors, 128);
     gatherThinkersOfType(T_CustomDoor, gVlCustomDoors, 128);
     gatherThinkersOfType(T_MoveFloor, gFloorMovers, 512);
-    gatherThinkersOfType(T_MoveCeiling, gCeilings, 512);
-    gatherThinkersOfType(T_PlatRaise, gPlats, 512);
+    gatherActiveCeilings(gCeilings);
+    gatherActivePlats(gPlats);
     gatherThinkersOfType(T_FireFlicker, gFireFlickers, 512);
     gatherThinkersOfType(T_LightFlash, gLightFlashes, 512);
     gatherThinkersOfType(T_StrobeFlash, gStrobes, 512);
@@ -581,6 +615,12 @@ LoadSaveResult load() noexcept {
         return LoadSaveResult::BAD_MAP_DATA;
 
     // Deserialize all objects
+    #if PSYDOOM_LIMIT_REMOVING
+        button_t* const pButtons = gButtonList.data();
+    #else
+        button_t* const pButtons = gButtonList;
+    #endif
+
     saveData.globals.deserializeToGlobals();
     deserializeObjects(saveData.sectors, gpSectors, hdr.numSectors);
     deserializeObjects(saveData.lines, gpLines, hdr.numLines);
@@ -596,7 +636,7 @@ LoadSaveResult load() noexcept {
     deserializeObjects(saveData.strobes, gStrobes);
     deserializeObjects(saveData.glows, gGlows);
     deserializeObjects(saveData.delayedExits, gDelayedExits);
-    deserializeObjects(saveData.buttons, gButtonList.data(), hdr.numButtons);
+    deserializeObjects(saveData.buttons, pButtons, hdr.numButtons);
     deserializeObjects(saveData.scheduledActions, ScriptingEngine::gScheduledActions.data(), hdr.numScheduledActions);
 
     // Post load actions: adding map objects into the blockmap and sector lists, and associating thinkers with their sectors

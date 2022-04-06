@@ -105,7 +105,6 @@ static void onCustomCeilingDestHeightReached(ceiling_t& ceiling, sector_t& ceili
     // Finally, change the ceiling direction itself
     ceiling.direction = (ceiling.direction < 0) ? +1 : -1;
 }
-
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------

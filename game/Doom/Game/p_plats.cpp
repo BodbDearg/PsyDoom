@@ -404,7 +404,7 @@ static bool P_ActivateMatchingInStasisPlats(const PlatFilterT& platFilter) noexc
     #endif
 
     for (int32_t i = 0; i < numPlats; ++i) {
-        plat_t* pPlat = gpActivePlats[i];
+        plat_t* const pPlat = gpActivePlats[i];
 
         if (pPlat && (pPlat->status == in_stasis) && platFilter(*pPlat)) {
             pPlat->status = pPlat->oldstatus;

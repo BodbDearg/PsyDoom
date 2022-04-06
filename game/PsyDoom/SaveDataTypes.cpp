@@ -225,17 +225,6 @@ static bool validateObjects(const T (&pObjs)[ArraySize]) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Checks to see if a ceiling or platform is active
-//------------------------------------------------------------------------------------------------------------------------------------------
-static bool isActiveCeil(const ceiling_t& ceil) noexcept {
-    return (std::find(gpActiveCeilings.begin(), gpActiveCeilings.end(), &ceil) != gpActiveCeilings.end());
-}
-
-static bool isActivePlat(const plat_t& plat) noexcept {
-    return (std::find(gpActivePlats.begin(), gpActivePlats.end(), &plat) != gpActivePlats.end());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Figures out the index of the specified map object.
 // Returns '-1' if the map object is not in the global map objects list, or is null.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -864,7 +853,6 @@ void SavedCeilingT::byteSwap() noexcept {
     byteSwapValue(crush);
     byteSwapValue(bIsCrushing);
     byteSwapValue(bDoFinishScript);
-    byteSwapValue(bIsActive);
     byteSwapValue(direction);
     byteSwapValue(tag);
     byteSwapValue(olddirection);
@@ -891,7 +879,6 @@ void SavedCeilingT::serializeFrom(const ceiling_t& ceil) noexcept {
     crush = ceil.crush;
     bIsCrushing = ceil.bIsCrushing;
     bDoFinishScript = ceil.bDoFinishScript;
-    bIsActive = isActiveCeil(ceil);
     direction = ceil.direction;
     tag = ceil.tag;
     olddirection = ceil.olddirection;
@@ -942,7 +929,6 @@ void SavedPlatT::byteSwap() noexcept {
     byteSwapEnumValue(oldstatus);
     byteSwapValue(crush);
     byteSwapValue(bDoFinishScript);
-    byteSwapValue(bIsActive);
     byteSwapValue(tag);
     byteSwapEnumValue(type);
     byteSwapEnumValue(finishState);
@@ -969,7 +955,6 @@ void SavedPlatT::serializeFrom(const plat_t& plat) noexcept {
     oldstatus = plat.oldstatus;
     crush = plat.crush;
     bDoFinishScript = plat.bDoFinishScript;
-    bIsActive = isActivePlat(plat);
     tag = plat.tag;
     type = plat.type;
     finishState = plat.finishState;

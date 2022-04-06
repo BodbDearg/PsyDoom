@@ -36,7 +36,7 @@ namespace ScriptingEngine {
 }
 
 // The current save file format version
-static constexpr uint32_t SAVE_FILE_VERSION = 2;
+static constexpr uint32_t SAVE_FILE_VERSION = 3;
 
 // The expected file ids in little endian format (says 'PSYDSAVF' at the top of the file)
 static constexpr uint32_t SAVE_FILE_ID1 = 0x44595350;
@@ -267,7 +267,6 @@ struct SavedCeilingT {
     bool            crush;                      // Does the ceiling damage things when they don't fit?
     bool            bIsCrushing;                // PsyDoom: a flag set to 'true' if the ceiling was crushing on the last frame
     bool            bDoFinishScript;            // PsyDoom: custom crushers: whether to do a 'finish' script action on fully stopping
-    bool            bIsActive;                  // Is this ceiling in the 'active ceilings' list?
     int32_t         direction;                  // 1 = up, 0 = waiting, -1 = down
     int32_t         tag;                        // Sector tag for the ceiling mover's sector
     int32_t         olddirection;               // In-stasis ceilings: which way the ceiling was moving before it was paused
@@ -300,7 +299,6 @@ struct SavedPlatT {
     plat_e          oldstatus;                  // Platform state before it was paused or put into stasis
     bool            crush;                      // If true then the moving platform damages things which don't fit
     bool            bDoFinishScript;            // PsyDoom: custom platforms: whether to do a 'finish' script action on fully stopping
-    bool            bIsActive;                  // Is this platform in the 'active platforms' list?
     int32_t         tag;                        // The tag for the line which activated this platform
     plattype_e      type;                       // What type of behavior the moving platform has
     plat_e          finishState;                // PsyDoom custom platforms: which state the platform should finish on, once it's complete
