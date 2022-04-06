@@ -688,6 +688,20 @@ static void patchMap_ImpossibleMission() noexcept {
 static void patchMap_Bunker() noexcept {
     // Fix a 'P_PlayerInSpecialSector: unknown special 235' error when stepping onto a teleporter pad
     gpSectors[176].special = 0;
+
+    // Fix some missing textures in a monster closet that is normally inaccessible, but which might be reached if 'turbo' mode is enabled
+    modifyLinedefs(
+        [](line_t& line) {
+            gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("64DOOR07");
+        },
+        160, 170, 176
+    );
+
+    // Fix the Megasphere secret not registering.
+    // The secret sector is a small thin strip before the teleport to the Megasphere, but often it does not count.
+    // Shift the secret to where the Megasphere is instead, which is a much larger area...
+    gpSectors[156].special = 0;
+    gpSectors[86].special = 9;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -703,6 +717,9 @@ static void patchMap_TheSewers() noexcept {
         1430, 1431, 1432, 1433,                             // Bottom left light
         1422, 1423, 1424, 1425                              // Bottom right light
     );
+
+    // Fix missing automap lines on the south east side of the map (in metal area with cages)
+    unhideLinedefs(715, 1135, 1051, 1195, 1053, 1056, 1190);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
