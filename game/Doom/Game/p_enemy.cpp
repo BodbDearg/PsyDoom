@@ -1162,8 +1162,20 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
     const fixed_t spawnY = actor.y + FixedMul(spawnDist, gFineSine[angle >> ANGLETOFINESHIFT]);
     const fixed_t spawnZ = actor.z + 8 * FRACUNIT;
 
-    // Spawn the skull and if it can't move (is already stuck in a wall) then kill it immediately
+    // Spawn the skull
     mobj_t& skull = *P_SpawnMobj(spawnX, spawnY, spawnZ, MT_SKULL);
+    
+    // PsyDoom: make the skull have the same blend mode as the parent Pain Elemental.
+    // Also double it's health if it's a nightmare skull.
+    #if PSYDOOM_MODS
+        skull.flags |= (actor.flags & MF_ALL_BLEND_FLAGS);
+        
+        if ((skull.flags & MF_ALL_BLEND_FLAGS) == MF_BLEND_SUBTRACT) {
+            skull.health *= 2;
+        }
+    #endif
+    
+    // If the skull can't move (is already stuck in a wall) then kill it immediately
     const bool bSpawnedInWall = (!P_TryMove(skull, skull.x, skull.y));
 
     if (bSpawnedInWall) {
