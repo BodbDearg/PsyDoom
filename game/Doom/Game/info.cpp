@@ -4559,7 +4559,13 @@ const mobjinfo_t gBaseMobjInfo[BASE_NUM_MOBJ_TYPES] = {
         0,                          // damage
         sfx_None,                   // activesound
         (                           // flags
-            MF_NOBLOCKMAP
+            #if PSYDOOM_MODS
+                // PsyDoom: fix this decoration not moving up/down if its parent sector is a platform - make sure it's added to the blockmap.
+                // This fix does not alter gameplay or demo behavior in any way, it's just purely cosmetic. Hence making the fix unconditional...
+                0
+            #else
+                MF_NOBLOCKMAP
+            #endif
         )
     },
     // MT_MISC85
@@ -4586,7 +4592,13 @@ const mobjinfo_t gBaseMobjInfo[BASE_NUM_MOBJ_TYPES] = {
         0,                          // damage
         sfx_None,                   // activesound
         (                           // flags
-            MF_NOBLOCKMAP
+            #if PSYDOOM_MODS
+                // PsyDoom: fix this decoration not moving up/down if its parent sector is a platform - make sure it's added to the blockmap.
+                // This fix does not alter gameplay or demo behavior in any way, it's just purely cosmetic. Hence making the fix unconditional...
+                0
+            #else
+                MF_NOBLOCKMAP
+            #endif
         )
     },
     // MT_MISC86
@@ -4613,7 +4625,13 @@ const mobjinfo_t gBaseMobjInfo[BASE_NUM_MOBJ_TYPES] = {
         0,                          // damage
         sfx_None,                   // activesound
         (                           // flags
-            MF_NOBLOCKMAP
+            #if PSYDOOM_MODS
+                // PsyDoom: fix this decoration not moving up/down if its parent sector is a platform - make sure it's added to the blockmap.
+                // This fix does not alter gameplay or demo behavior in any way, it's just purely cosmetic. Hence making the fix unconditional...
+                0
+            #else
+                MF_NOBLOCKMAP
+            #endif
         )
     },
 
