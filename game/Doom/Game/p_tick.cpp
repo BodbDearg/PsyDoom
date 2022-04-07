@@ -32,6 +32,7 @@
 #include "PsyDoom/DemoResult.h"
 #include "PsyDoom/DevMapAutoReloader.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/MapInfo.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxPadButtons.h"
@@ -658,6 +659,21 @@ gameaction_t P_Ticker() noexcept {
         // PsyDoom: update the old values used for player interpolation before ticking (if doing uncapped framerates)
         if (Config::gbUncapFramerate) {
             R_NextPlayerInterpolation();
+        }
+
+        // PsyDoom: fix certain sequencer music tracks in 'Final Doom' not looping correctly: if the sequencer track has ended then restart it.
+        // Only do this check when the game is not paused however, since that stops the music.
+        if (!gbGamePaused) {
+            // Make sure we're not playing a CD audio track like the 'Club Doom' music (that takes over from the map music)
+            if (psxcd_get_playing_track() <= 0) {
+                const MapInfo::Map* const pMap = MapInfo::getMap(gGameMap);
+                const MapInfo::MusicTrack* const pSequencerTrack = (pMap && (!pMap->bPlayCdMusic)) ? MapInfo::getMusicTrack(pMap->music) : nullptr;
+
+                // Has the current sequencer track stopped? If so then restart it...
+                if (pSequencerTrack && (wess_seq_status(pSequencerTrack->sequenceNum) == SEQUENCE_INACTIVE)) {
+                    wess_seq_trigger(pSequencerTrack->sequenceNum);
+                }
+            }
         }
     #endif
 
