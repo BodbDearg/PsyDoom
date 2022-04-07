@@ -150,6 +150,21 @@ static bool PIT_UseLines(line_t& line) noexcept {
     if (intersectFrac > gCloseDist)
         return true;
 
+    // PsyDoom: apply a fix to make line activation logic more reliable and prevent exploits of using switches and doors through walls (if enabled).
+    // Add an additional check to test whether the 'use line' intersection with the wall linedef actually falls within the line bounds.
+    // Failure to do this essentially makes the wall linedef be treated as if it extends infinitely for the purposes of line activation.
+    // This could cause problems in some cases, sometimes with activations not registering and sometimes with exploits...
+    #if PSYDOOM_MODS
+        if (Game::gSettings.bFixLineActivation) {
+            // Does the 'use line' intersection actually fall along the linedef line?
+            // Perform the opposite intersection test to find out and ignore the line if not...
+            const fixed_t intersectFrac2 = P_InterceptVector(divline, gUseLine);
+
+            if ((intersectFrac2 < 0) || (intersectFrac2 > FRACUNIT))
+                return true;
+        }
+    #endif
+
     // If the line is not usable then only make this the 'use' line if it's a solid wall or there is no opening
     if (!line.special) {
         P_LineOpening(line);

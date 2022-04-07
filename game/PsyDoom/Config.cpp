@@ -423,6 +423,7 @@ bool                    gbEnableSinglePlayerLevelTimer;
 int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
 bool                    gbUseMoveInputLatencyTweak;
+bool                    gbFixLineActivation;
 bool                    gbUseExtendedPlayerShootRange;
 bool                    gbFixMultiLineSpecialCrossing;
 bool                    gbUseItemPickupFix;
@@ -613,6 +614,21 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "1", "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseMoveInputLatencyTweak = iniEntry.getBoolValue(true); },
         []() { gbUseMoveInputLatencyTweak = true; }
+    },
+    {
+        "FixLineActivation",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then adjust line activation logic to fix some problem cases where valid attempts\n"
+        "# to use switches, doors and elevators would not register. Example problem cases are switches at 45\n"
+        "# degree angles to other walls, or switches surrounded by lots of other geometry.\n"
+        "#\n"
+        "# Notes:\n"
+        "#  (1) This fix will also remove many known exploits where switches can be used through walls!\n"
+        "#  (2) This setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "1", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbFixLineActivation = iniEntry.getBoolValue(true); },
+        []() { gbFixLineActivation = true; }
     },
     {
         "UseExtendedPlayerShootRange",

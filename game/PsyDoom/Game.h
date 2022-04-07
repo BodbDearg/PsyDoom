@@ -33,6 +33,7 @@ enum class GameVariant : int32_t {
 struct GameSettings {
     uint8_t     bUsePalTimings;                 // Use 50 Hz vblanks and other various timing adjustments for the PAL version of the game?
     uint8_t     bUseDemoTimings;                // Force player logic to run at a consistent, but slower rate used by demos? (15 Hz for NTSC)
+    uint8_t     bFixLineActivation;             // Use the fix for line activation logic, to make it more reliable and prevent exploits?
     uint8_t     bUseExtendedPlayerShootRange;   // Extend player max shoot distance from '2048' to '8192' and auto aim distance from '1024' to '8192'? (similar range to ZDoom)
     uint8_t     bFixMultiLineSpecialCrossing;   // Allow the player to cross multiple special lines in the same frame?
     uint8_t     bUsePlayerRocketBlastFix;       // Apply the fix for the player sometimes not receiving splash damage from rocket blasts?
