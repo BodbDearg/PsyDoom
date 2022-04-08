@@ -47,14 +47,13 @@ R"(#############################################################################
 struct ConfigFieldHandler {
     const char* name;               // The string key for the config field
     const char* preamble;           // Proceeds the actual key and value: normally used for commenting but can be null/empty if not needed.
-    const char* defaultValueStr;    // String representation of the default value. Note: the key/value is always put on a different line to the pre/postamble.
     const char* postamble;          // Comes after the key and value. Can be used to add an additional newline but can be null/empty if not needed.
 
     // Logic for parsing the config value
     std::function<void (const IniUtils::Entry& iniEntry)> parseFunc;
 
-    // Logic to set the config value to its default when it's not available in the .ini file
-    std::function<void ()> setValueToDefaultFunc;
+    // Returns the default value (represented as a string) for the config field
+    std::function<const char* ()> getDefaultValueFunc;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -89,9 +88,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# Fullscreen or windowed mode toggle.\n"
         "# Set to '1' cause the PsyDoom to launch in fullscreen mode, and '0' to use windowed mode.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFullscreen = iniEntry.getBoolValue(true); },
-        []() { gbFullscreen = true; }
+        []() { return "1"; },
     },
     {
         "OutputResolutionW",
@@ -102,15 +101,15 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# If the values are '0' or less (auto resolution) then this means use the current (desktop)\n"
         "# resolution in fullscreen mode, and auto-decide the window size in windowed mode.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "-1", "",
+        "",
         [](const IniUtils::Entry& iniEntry) { gOutputResolutionW = iniEntry.getIntValue(-1); },
-        []() { gOutputResolutionW = -1; }
+        []() { return "-1"; },
     },
     {
         "OutputResolutionH",
-        "", "-1", "\n",
+        "", "\n",
         [](const IniUtils::Entry& iniEntry) { gOutputResolutionH = iniEntry.getIntValue(-1); },
-        []() { gOutputResolutionH = -1; }
+        []() { return "-1"; },
     },
     {
         "AntiAliasingMultisamples",
@@ -122,9 +121,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# Note: if the hardware is unable to support the number of samples specified then the next available\n"
         "# sample count downwards will be selected.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "4", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gAAMultisamples = iniEntry.getIntValue(4); },
-        []() { gAAMultisamples = 4; }
+        []() { return "4"; },
     },
     {
         "VulkanRenderHeight",
@@ -140,9 +139,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#  480 = Use 2x the original PSX vertical resolution (480p: for best results use pixel stretch!)\n"
         "#   -1 = Use the native vertical resolution of the display or window\n"
         "#---------------------------------------------------------------------------------------------------",
-        "-1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gVulkanRenderHeight = iniEntry.getIntValue(-1); },
-        []() { gVulkanRenderHeight = -1; }
+        []() { return "-1"; },
     },
     {
         "VulkanPixelStretch",
@@ -161,9 +160,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# leave this setting off ('0') so that the Vulkan renderer can operate at the highest resolutions\n"
         "# and not suffer aliasing from having to stretch the framebuffer on output.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanPixelStretch = iniEntry.getBoolValue(false); },
-        []() { gbVulkanPixelStretch = false; }
+        []() { return "0"; },
     },
     {
         "VulkanTripleBuffer",
@@ -179,9 +178,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# reduce perceived input latency but will also greatly increase GPU and CPU usage.\n"
         "# Disable if you prefer to lower energy usage for slightly increased input latency.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanTripleBuffer = iniEntry.getBoolValue(false); },
-        []() { gbVulkanTripleBuffer = false; }
+        []() { return "0"; },
     },
     {
         "VulkanDrawExtendedStatusBar",
@@ -191,9 +190,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# of the bar which contains all the weapon numbers. If you disable this setting, then a black\n"
         "# letterbox will be rendered instead. This setting is also ignored if Vulkan widescreen is disabled.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanDrawExtendedStatusBar = iniEntry.getBoolValue(true); },
-        []() { gbVulkanDrawExtendedStatusBar = true; }
+        []() { return "1"; },
     },
     {
         "VulkanWidescreenEnabled",
@@ -203,9 +202,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# modern widescreen displays. If desired however you can disable this ('0') for an aspect ratio more\n"
         "# like the original game with cropping at the sides of the screen.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanWidescreenEnabled = iniEntry.getBoolValue(true); },
-        []() { gbVulkanWidescreenEnabled = true; }
+        []() { return "1"; },
     },
     {
         "UseVulkan32BitShading",
@@ -218,9 +217,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# display seem more 'washed out' and less atmospheric. It's recommended to leave this setting\n"
         "# disabled for better visuals, but if you dislike banding a lot then it can be enabled if needed.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseVulkan32BitShading = iniEntry.getBoolValue(false); },
-        []() { gbUseVulkan32BitShading = false; }
+        []() { return "0"; },
     },
     {
         "DisableVulkanRenderer",
@@ -232,9 +231,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# the Vulkan renderer always needs to be active and use memory in order to allow for fast toggling\n"
         "# between renderers.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbDisableVulkanRenderer = iniEntry.getBoolValue(false); },
-        []() { gbDisableVulkanRenderer = false; }
+        []() { return "0"; },
     },
     {
         "LogicalDisplayWidth",
@@ -257,9 +256,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#  -1  = Stretch to fill: the logical display width is automatically set such that the original PSX\n"
         "#        view area and UI elements will fill the display completely, regardless of how wide it is.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "292", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gLogicalDisplayW = iniEntry.getFloatValue(292.0f); },
-        []() { gLogicalDisplayW = 292.0f; }
+        []() { return "292"; },
     },
     {
         "TopOverscanPixels",
@@ -274,15 +273,14 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# HUD dead space without truncating the status bar or Doomguy's mugshot; the top of the screen will\n"
         "# also be left untouched by default in order to maximize the viewable area.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "",
+        "",
         [](const IniUtils::Entry& iniEntry) { gTopOverscanPixels = iniEntry.getIntValue(0); },
-        []() { gTopOverscanPixels = 0; }
+        []() { return "0"; },
     },
     {
-        "BottomOverscanPixels",
-        "", "6", "\n",
+        "BottomOverscanPixels", "", "\n",
         [](const IniUtils::Entry& iniEntry) { gBottomOverscanPixels = iniEntry.getIntValue(6); },
-        []() { gBottomOverscanPixels = 6; }
+        []() { return "6"; },
     },
     {
         "FloorRenderGapFix",
@@ -291,9 +289,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# the floor on some maps. This fix helps prevent some noticeable glitches on larger outdoor maps\n"
         "# like 'Tower Of Babel'. Set to '1' to enable the fix, and '0' to disable (original PSX behavior).\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFloorRenderGapFix = iniEntry.getBoolValue(true); },
-        []() { gbFloorRenderGapFix = true; }
+        []() { return "1"; },
     },
     {
         "SkyLeakFix",
@@ -307,9 +305,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#  (2) Enabling this setting will reduce performance in Classic renderer mode due to extra sky\n"
         "#      wall columns that must be drawn to patch over 'leaks' from rooms beyond.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbSkyLeakFix = iniEntry.getBoolValue(true); },
-        []() { gbSkyLeakFix = true; }
+        []() { return "1"; },
     },
     {
         "VulkanBrightenAutomap",
@@ -319,9 +317,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# This tweak helps a high res Vulkan automap feel more like the original (low resolution) automap.\n"
         "# If you are running the Vulkan renderer at low resolution however, you may want to disable this.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanBrightenAutomap = iniEntry.getBoolValue(true); },
-        []() { gbVulkanBrightenAutomap = true; }
+        []() { return "1"; },
     },
     {
         "VramSizeInMegabytes",
@@ -334,9 +332,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "# Acceptable values are 1, 2, 4, 8, 16, 32, 64 and 128. Values in-between will be rounded up.\n"
         "# If <= 0 is specified then the default value will be used, which is presently 128 MiB.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "-1", "\n",
-        [](const IniUtils::Entry& iniEntry) { gVramSizeInMegabytes = iniEntry.getIntValue(); },
-        []() { gVramSizeInMegabytes = -1; }
+        "\n",
+        [](const IniUtils::Entry& iniEntry) { gVramSizeInMegabytes = iniEntry.getIntValue(-1); },
+        []() { return "-1"; },
     },
     {
         "VulkanPreferredDevicesRegex",
@@ -353,9 +351,9 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#  NVIDIA.*RTX.*\n"
         "#  Intel\n"
         "#---------------------------------------------------------------------------------------------------",
-        "", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gVulkanPreferredDevicesRegex = iniEntry.value; },
-        []() { gVulkanPreferredDevicesRegex = ""; }
+        []() { return ""; },
     },
 };
 
@@ -381,9 +379,9 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
         "#  256  = ~5.8 MS\n"
         "#  512  = ~11.6 MS\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gAudioBufferSize = iniEntry.getIntValue(0); },
-        []() { gAudioBufferSize = 0; }
+        []() { return "0"; },
     },
     {
         "SpuRamSize",
@@ -395,9 +393,9 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
         "# 512 KiB will be ignored for compatibility reasons. This setting also has no effect if you build\n"
         "# PsyDoom without limit removing features.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "-1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gSpuRamSize = iniEntry.getIntValue(-1); },
-        []() { gSpuRamSize = -1; }
+        []() { return "-1"; },
     },
 };
 
@@ -459,9 +457,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#      will also NOT be provided on MacOS for this same reason.\n"
         "#  (2) This setting can also be overriden with the '-cue <CUE_PATH>' command-line argument.\n"
         "#---------------------------------------------------------------------------------------------------",
-        DEFAULT_CUE_FILE_PATH, "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gCueFilePath = iniEntry.value; },
-        []() { gCueFilePath = DEFAULT_CUE_FILE_PATH; }
+        []() { return DEFAULT_CUE_FILE_PATH; },
     },
     {
         "UncapFramerate",
@@ -470,9 +468,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Setting to '1' allows PsyDoom to run beyond the original 30 FPS cap of PSX Doom.\n"
         "# Frames in between the original 30 FPS keyframes will have movements and rotations interpolated.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },
-        []() { gbUncapFramerate = true; }
+        []() { return "1"; },
     },
     {
         "InterpolateSectors",
@@ -491,27 +489,24 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#              This is disabled by default because it looks bad for various reasons.\n"
         "# Weapon:      Whether to interpolate the weapon sway of the player.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "",
+        "",
         [](const IniUtils::Entry& iniEntry) { gbInterpolateSectors = iniEntry.getBoolValue(true); },
-        []() { gbInterpolateSectors = true; }
+        []() { return "1"; },
     },
     {
-        "InterpolateMobj",
-        "", "1", "",
+        "InterpolateMobj", "", "",
         [](const IniUtils::Entry& iniEntry) { gbInterpolateMobj = iniEntry.getBoolValue(true); },
-        []() { gbInterpolateMobj = true; }
+        []() { return "1"; },
     },
     {
-        "InterpolateMonsters",
-        "", "0", "",
+        "InterpolateMonsters", "", "",
         [](const IniUtils::Entry& iniEntry) { gbInterpolateMonsters = iniEntry.getBoolValue(false); },
-        []() { gbInterpolateMonsters = false; }
+        []() { return "0"; },
     },
     {
-        "InterpolateWeapon",
-        "", "1", "\n",
+        "InterpolateWeapon", "", "\n",
         [](const IniUtils::Entry& iniEntry) { gbInterpolateWeapon = iniEntry.getBoolValue(true); },
-        []() { gbInterpolateWeapon = true; }
+        []() { return "1"; },
     },
     {
         "MainMemoryHeapSize",
@@ -524,18 +519,18 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# available, though it also used less RAM in general being a 32-bit program instead of 64-bit.\n"
         "# WARNING: setting this value too low may result in the game crashing with an out of memory error!\n"
         "#---------------------------------------------------------------------------------------------------",
-        "-1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gMainMemoryHeapSize = iniEntry.getIntValue(-1); },
-        []() { gMainMemoryHeapSize = -1; }
+        []() { return "-1"; },
     },
     {
         "SkipIntros",
         "#---------------------------------------------------------------------------------------------------\n"
         "# If enabled ('1') then all intro logos and movies will be skipped on game startup.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbSkipIntros = iniEntry.getBoolValue(false); },
-        []() { gbSkipIntros = false; }
+        []() { return "0"; },
     },
     {
         "UseFastLoading",
@@ -549,9 +544,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# running but can make loading transitions more jarring and cause sounds to cut out abruptly.\n"
         "# If you are playing normally it is probably more pleasant to leave this setting disabled.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseFastLoading = iniEntry.getBoolValue(false); },
-        []() { gbUseFastLoading = false; }
+        []() { return "0"; },
     },
     {
         "EnableSinglePlayerLevelTimer",
@@ -564,9 +559,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# The time is displayed in 3 components, minutes, seconds and hundredths of seconds and is limited\n"
         "# to showing a maximum display of 999.59.99 - which is probably more than enough for any level.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbEnableSinglePlayerLevelTimer = iniEntry.getBoolValue(false); },
-        []() { gbEnableSinglePlayerLevelTimer = false; }
+        []() { return "0"; },
     },
     {
         "UsePalTimings",
@@ -583,9 +578,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#   1 = Use PAL timings\n"
         "#  -1 = Auto-decide based on the game disc region\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gUsePalTimings = iniEntry.getIntValue(0); },
-        []() { gUsePalTimings = 0; }
+        []() { return "0"; },
     },
     {
         "UseDemoTimings",
@@ -600,9 +595,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Its main use is to ensure consistent demo recording & playback, where it will be force enabled.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseDemoTimings = iniEntry.getBoolValue(false); },
-        []() { gbUseDemoTimings = false; }
+        []() { return "0"; },
     },
     {
         "UseMoveInputLatencyTweak",
@@ -611,9 +606,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# for sideways and forward movement. The effect of this will be subtle but should improve gameplay.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseMoveInputLatencyTweak = iniEntry.getBoolValue(true); },
-        []() { gbUseMoveInputLatencyTweak = true; }
+        []() { return "1"; },
     },
     {
         "FixLineActivation",
@@ -626,9 +621,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#  (1) This fix will also remove many known exploits where switches can be used through walls!\n"
         "#  (2) This setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixLineActivation = iniEntry.getBoolValue(true); },
-        []() { gbFixLineActivation = true; }
+        []() { return "1"; },
     },
     {
         "UseExtendedPlayerShootRange",
@@ -641,9 +636,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Extending these limits can make combat on large open maps less frustrating.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseExtendedPlayerShootRange = iniEntry.getBoolValue(true); },
-        []() { gbUseExtendedPlayerShootRange = true; }
+        []() { return "1"; },
     },
     {
         "FixMultiLineSpecialCrossing",
@@ -658,9 +653,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#     one frame if crossing over 2 of it's edges (at a corner).\n"
         "# (2) This setting is ignored during demos and networked games where you are not the host / server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixMultiLineSpecialCrossing = iniEntry.getBoolValue(true); },
-        []() { gbFixMultiLineSpecialCrossing = true; }
+        []() { return "1"; },
     },
     {
         "UseItemPickupFix",
@@ -668,9 +663,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# If enabled ('1') then fix a bug from the original game where sometimes the player is prevented\n"
         "# from picking up items if they are close to other items that cannot be picked up.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseItemPickupFix = iniEntry.getBoolValue(true); },
-        []() { gbUseItemPickupFix = true; }
+        []() { return "1"; },
     },
     {
         "UsePlayerRocketBlastFix",
@@ -679,9 +674,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# splash damage from rockets launched very close to walls.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUsePlayerRocketBlastFix = iniEntry.getBoolValue(true); },
-        []() { gbUsePlayerRocketBlastFix = true; }
+        []() { return "1"; },
     },
     {
         "UseSuperShotgunDelayTweak",
@@ -694,9 +689,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# but may be desirable for users who prefer this weapon to handle more like the PC version.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseSuperShotgunDelayTweak = iniEntry.getBoolValue(false); },
-        []() { gbUseSuperShotgunDelayTweak = false; }
+        []() { return "0"; },
     },
     {
         "UseFinalDoomPlayerMovement",
@@ -712,9 +707,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#   1 = Always use the PSX Final Doom player movement & turning logic\n"
         "#  -1 = Auto-decide based on the game being played\n"
         "#---------------------------------------------------------------------------------------------------",
-        "-1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gUseFinalDoomPlayerMovement = iniEntry.getIntValue(-1); },
-        []() { gUseFinalDoomPlayerMovement = -1; }
+        []() { return "-1"; },
     },
     {
         "AllowMovementCancellation",
@@ -730,9 +725,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#   1 = Opposite movements always cancel each other out\n"
         "#  -1 = Auto-decide based on the game being played\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gAllowMovementCancellation = iniEntry.getIntValue(1); },
-        []() { gAllowMovementCancellation = 1; }
+        []() { return "1"; },
     },
     {
         "AllowTurningCancellation",
@@ -743,9 +738,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# This setting does not affect any turning other than digital, all other turning can always cancel.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbAllowTurningCancellation = iniEntry.getBoolValue(true); },
-        []() { gbAllowTurningCancellation = true; }
+        []() { return "1"; },
     },
     {
         "FixViewBobStrength",
@@ -756,9 +751,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# it is not overly strong when walking.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixViewBobStrength = iniEntry.getBoolValue(true); },
-        []() { gbFixViewBobStrength = true; }
+        []() { return "1"; },
     },
     {
         "FixGravityStrength",
@@ -776,9 +771,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixGravityStrength = iniEntry.getBoolValue(true); },
-        []() { gbFixGravityStrength = true; }
+        []() { return "1"; },
     },
     {
         "LostSoulSpawnLimit",
@@ -794,9 +789,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#   >0 = Limit the number of Lost Souls to this much\n"
         "#   <0 = Apply no limit\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gLostSoulSpawnLimit = iniEntry.getIntValue(0); },
-        []() { gLostSoulSpawnLimit = 0; }
+        []() { return "0"; },
     },
     {
         "UseLostSoulSpawnFix",
@@ -804,9 +799,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# If enabled ('1') then apply a fix to the original game logic to try and prevent Lost Souls from\n"
         "# being occasionally spawned outside of level bounds.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseLostSoulSpawnFix = iniEntry.getBoolValue(true); },
-        []() { gbUseLostSoulSpawnFix = true; }
+        []() { return "1"; },
     },
     {
         "UseLineOfSightOverflowFix",
@@ -816,9 +811,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# sometimes, usually when there are large differences between sector floor and ceiling heights.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseLineOfSightOverflowFix = iniEntry.getBoolValue(true); },
-        []() { gbUseLineOfSightOverflowFix = true; }
+        []() { return "1"; },
     },
     {
         "FixOutdoorBulletPuffs",
@@ -827,9 +822,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# shooting certain walls outdoors.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixOutdoorBulletPuffs = iniEntry.getBoolValue(true); },
-        []() { gbFixOutdoorBulletPuffs = true; }
+        []() { return "1"; },
     },
     {
         "FixBlockingGibsBug",
@@ -838,9 +833,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# enemy is crushed whilst playing it's death animation sequence.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixBlockingGibsBug = iniEntry.getBoolValue(true); },
-        []() { gbFixBlockingGibsBug = true; }
+        []() { return "1"; },
     },
     {
         "FixSoundPropagation",
@@ -850,9 +845,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# secret room, in MAP03 of Doom. It allows sound to pass through it even though it is closed.\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixSoundPropagation = iniEntry.getBoolValue(true); },
-        []() { gbFixSoundPropagation = true; }
+        []() { return "1"; },
     },
     {
         "ViewBobbingStrength",
@@ -860,9 +855,9 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "# Multiplier for view bobbing strength, from 0.0 to 1.0 (or above, to make the walk bob stronger).\n"
         "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1.0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gViewBobbingStrength = iniEntry.getFloatValue(1.0f); },
-        []() { gViewBobbingStrength = 1.0f; }
+        []() { return "1.0"; },
     },
 };
 
@@ -883,9 +878,9 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------\n"
         "# How much turning movement to apply per pixel of mouse movement\n"
         "#---------------------------------------------------------------------------------------------------",
-        "12.0", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gMouseTurnSpeed = iniEntry.getFloatValue(12.0f); },
-        []() { gMouseTurnSpeed = 12.0f; }
+        []() { return "12.0"; },
     },
     {
         "GamepadDeadZone",
@@ -894,9 +889,9 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "# The default of '0.125' only registers movement if the stick is at least 12.5% moved.\n"
         "# Setting too low may result in unwanted jitter and movement when the controller is resting.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0.125", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gGamepadDeadZone = iniEntry.getFloatValue(0.125f); },
-        []() { gGamepadDeadZone = 0.125f; }
+        []() { return "0.125"; },
     },
     {
         "GamepadFastTurnSpeed_High",
@@ -910,27 +905,24 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "#  Walk: 300 - 1000\n"
         "#  Run:  800 - 1400\n"
         "#---------------------------------------------------------------------------------------------------",
-        "1400.0", "",
+        "",
         [](const IniUtils::Entry& iniEntry) { gGamepadFastTurnSpeed_High = iniEntry.getFloatValue(1400.0f); },
-        []() { gGamepadFastTurnSpeed_High = 1400.0f; }
+        []() { return "1400.0"; },
     },
     {
-        "GamepadFastTurnSpeed_Low",
-        "", "800.0", "",
+        "GamepadFastTurnSpeed_Low", "", "",
         [](const IniUtils::Entry& iniEntry) { gGamepadFastTurnSpeed_Low = iniEntry.getFloatValue(800.0f); },
-        []() { gGamepadFastTurnSpeed_Low = 800.0f; }
+        []() { return "800.0"; },
     },
     {
-        "GamepadTurnSpeed_High",
-        "", "1000.0",  "",
+        "GamepadTurnSpeed_High", "", "",
         [](const IniUtils::Entry& iniEntry) { gGamepadTurnSpeed_High = iniEntry.getFloatValue(1000.0f); },
-        []() { gGamepadTurnSpeed_High = 1000.0f; }
+        []() { return "1000.0"; },
     },
     {
-        "GamepadTurnSpeed_Low",
-        "", "600.0", "\n",
+        "GamepadTurnSpeed_Low", "", "\n",
         [](const IniUtils::Entry& iniEntry) { gGamepadTurnSpeed_Low = iniEntry.getFloatValue(600.0f); },
-        []() { gGamepadTurnSpeed_Low = 600.0f; }
+        []() { return "600.0"; },
     },
     {
         "AnalogToDigitalThreshold",
@@ -939,9 +931,9 @@ static const ConfigFieldHandler INPUT_CFG_INI_HANDLERS[] = {
         "# as 'pressed' when treated as a digital input (e.g trigger used for 'shoot' action).\n"
         "# The default of '0.5' (halfway depressed) is probably reasonable for most users.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0.5", "\n",
+        "\n",
         [](const IniUtils::Entry& iniEntry) { gAnalogToDigitalThreshold = iniEntry.getFloatValue(0.5f); },
-        []() { gAnalogToDigitalThreshold = 0.5f; }
+        []() { return "0.5"; },
     }
 };
 
@@ -1026,25 +1018,25 @@ R"(#----------------------------------------------------------------------------
 #define CONTROL_BIND_GROUP_HEADER(GROUP_HEADER, BINDING_NAME, BINDING_VALUE)\
     {\
         #BINDING_NAME,\
-        GROUP_HEADER, BINDING_VALUE, "",\
+        GROUP_HEADER, "",\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
-        []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
+        []() { return BINDING_VALUE; }\
     }
 
 #define CONTROL_BIND_GROUP_MIDDLE(BINDING_NAME, BINDING_VALUE)\
     {\
         #BINDING_NAME,\
-        "", BINDING_VALUE, "",\
+        "", "",\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
-        []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
+        []() { return BINDING_VALUE; }\
     }
 
 #define CONTROL_BIND_GROUP_FOOTER(BINDING_NAME, BINDING_VALUE)\
     {\
         #BINDING_NAME,\
-        "", BINDING_VALUE, "\n",\
+        "", "\n",\
         [](const IniUtils::Entry& iniEntry) { Controls::parseBinding(Controls::Binding::BINDING_NAME, iniEntry.value.c_str()); },\
-        []() { Controls::parseBinding(Controls::Binding::BINDING_NAME, BINDING_VALUE); }\
+        []() { return BINDING_VALUE; }\
     }
 
 static const ConfigFieldHandler CONTROL_BINDINGS_INI_HANDLERS[] = {
@@ -1243,9 +1235,9 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "#      F7: VRAM Viewer (functionality hidden in retail)\n"
         "#      F8: No-target (new cheat for PC port!)\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
-        [](const IniUtils::Entry& iniEntry) { gbEnableDevCheatShortcuts = iniEntry.getBoolValue(); },
-        []() { gbEnableDevCheatShortcuts = false; }
+        "\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableDevCheatShortcuts = iniEntry.getBoolValue(false); },
+        []() { return "0"; },
     },
     {
         "EnableDevInPlaceReloadFunctionKey",
@@ -1256,9 +1248,9 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "# 'refreshed' quickly and edits to be viewed in-engine quickly, enabling faster map iteration.\n"
         "# Note: this function is disallowed in multiplayer games.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
-        [](const IniUtils::Entry& iniEntry) { gbEnableDevInPlaceReloadFunctionKey = iniEntry.getBoolValue(); },
-        []() { gbEnableDevInPlaceReloadFunctionKey = false; }
+        "\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableDevInPlaceReloadFunctionKey = iniEntry.getBoolValue(false); },
+        []() { return "0"; },
     },
     {
         "EnableDevMapAutoReload",
@@ -1268,9 +1260,9 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "# This feature only works for files overridden via the file overrides mechanism, only in single\n"
         "# player mode and only on Windows.\n"
         "#---------------------------------------------------------------------------------------------------",
-        "0", "\n",
-        [](const IniUtils::Entry& iniEntry) { gbEnableDevMapAutoReload = iniEntry.getBoolValue(); },
-        []() { gbEnableDevMapAutoReload = false; }
+        "\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableDevMapAutoReload = iniEntry.getBoolValue(false); },
+        []() { return "0"; },
     },
     {
         "CheatKeySequence_GodMode",
@@ -1299,57 +1291,49 @@ static const ConfigFieldHandler CHEATS_CFG_INI_HANDLERS[] = {
         "#      VRAM viewer:            Triangle, Square, Up, Left, Down, Right, X, Circle\n"
         "#      No-target:              X, Up, X, Up, Square, Square, X, Square\n"
         "#---------------------------------------------------------------------------------------------------",
-        "iddqd", "",
+        "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_GodMode, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_GodMode, "iddqd"); }
+        []() { return "iddqd"; },
     },
     {
-        "CheatKeySequence_NoClip",
-        "", "idclip", "",
+        "CheatKeySequence_NoClip", "", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_NoClip, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_NoClip, "idclip"); }
+        []() { return "idclip"; },
     },
     {
-        "CheatKeySequence_LevelWarp",
-        "", "idclev", "",
+        "CheatKeySequence_LevelWarp", "", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_LevelWarp, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_LevelWarp, "idclev"); }
+        []() { return "idclev"; },
     },
     {
-        "CheatKeySequence_WeaponsKeysAndArmor",
-        "", "idkfa", "",
+        "CheatKeySequence_WeaponsKeysAndArmor", "", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_WeaponsKeysAndArmor, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_WeaponsKeysAndArmor, "idkfa"); }
+        []() { return "idkfa"; },
     },
     {
-        "CheatKeySequence_AllMapLinesOn",
-        "", "iddt", "",
+        "CheatKeySequence_AllMapLinesOn", "", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_AllMapLinesOn, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_AllMapLinesOn, "iddt"); }
+        []() { return "iddt"; },
     },
     {
-        "CheatKeySequence_AllMapThingsOn",
-        "", "idmt", "",
+        "CheatKeySequence_AllMapThingsOn", "", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_AllMapThingsOn, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_AllMapThingsOn, "idmt"); }
+        []() { return "idmt"; },
     },
     {
-        "CheatKeySequence_XRayVision",
-        "", "idray", "",
+        "CheatKeySequence_XRayVision", "", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_XRayVision, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_XRayVision, "idray"); }
+        []() { return "idray"; },
     },
     {
-        "CheatKeySequence_VramViewer",
-        "", "idram", "",
+        "CheatKeySequence_VramViewer", "", "",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_VramViewer, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_VramViewer, "idram"); }
+        []() { return "idram"; },
     },
     {
-        "CheatKeySequence_NoTarget",
-        "", "idcloak", "\n",
+        "CheatKeySequence_NoTarget", "", "\n",
         [](const IniUtils::Entry& iniEntry) { setCheatKeySequence(gCheatKeys_NoTarget, iniEntry.value.c_str()); },
-        []() { setCheatKeySequence(gCheatKeys_NoTarget, "idcloak"); }
+        []() { return "idcloak"; },
     },
 };
 
@@ -1427,7 +1411,7 @@ static void updateConfigFile(
             std::fprintf(pFile, "%s = %s\n", handler.name, existingValIter->second.c_str());
             existingFields.erase(existingValIter);
         } else {
-            std::fprintf(pFile, "%s = %s\n", handler.name, handler.defaultValueStr);
+            std::fprintf(pFile, "%s = %s\n", handler.name, handler.getDefaultValueFunc());
         }
 
         // Write the postamble for the field, if specified:
@@ -1460,8 +1444,15 @@ static void parseConfigFile(
     const char* const cfgFileHeader
 ) noexcept {
     // Set all values to their initial defaults (until we parse otherwise)
-    for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
-        configFieldHandlers[i].setValueToDefaultFunc();
+    {
+        IniUtils::Entry iniEntry;
+        iniEntry.value.reserve(256);
+
+        for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
+            const Config::ConfigFieldHandler& fieldHandler = configFieldHandlers[i];
+            iniEntry.value = fieldHandler.getDefaultValueFunc();
+            fieldHandler.parseFunc(iniEntry);
+        }
     }
 
     // Store which config field handlers have parsed config here
