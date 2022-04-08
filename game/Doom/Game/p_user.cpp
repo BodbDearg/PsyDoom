@@ -917,6 +917,21 @@ void P_PlayerThink(player_t& player) noexcept {
             P_PlayerMobjThink(playerMobj);
         }
 
+        // PsyDoom: update any 'Voodoo dolls' that exist for this player.
+        // This prevents the dolls from having their animation stuck and also allows them to respond to forces.
+        // Sector specials like slime are NOT supported on the doll however and do not have any effect - this is just a barebones update.
+        #if PSYDOOM_MODS
+            for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
+                // Is it a player thing belonging to this player?
+                if ((pMobj->type == MT_PLAYER) && (pMobj->player == &player)) {
+                    // Is it not the thing the player is controlling, and therefore a 'Voodoo doll'?
+                    if (pMobj != &playerMobj) {
+                        P_PlayerMobjThink(*pMobj);
+                    }
+                }
+            }
+        #endif
+
         // Gather inputs for the next move
         P_BuildMove(player);
 

@@ -360,6 +360,12 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     // Remember player starts for single player and co-op games
     if (mapthing.type <= MAXPLAYERS) {
         gPlayerStarts[mapthing.type - 1] = mapthing;
+
+        // PsyDoom: add this to the list of ALL player starts, including duplicate ones that create 'Voodoo dolls'
+        #if PSYDOOM_MODS
+            P_AddPlayerStart(mapthing);
+        #endif
+
         return;
     }
 

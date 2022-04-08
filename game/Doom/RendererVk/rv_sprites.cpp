@@ -584,8 +584,8 @@ static void RV_BuildSubsectorSpriteFrags(const subsector_t& subsec, [[maybe_unus
         if (pThing->state == &gStates[S_NULL])
             continue;
 
-        // Ignore this thing if it's the player and we are not using the external camera
-        if ((pThing->player == gpViewPlayer) && (gExtCameraTicsLeft <= 0))
+        // Ignore this thing if we're viewing from it and we are not using the external camera
+        if ((gpViewPlayer->mo == pThing) && (gExtCameraTicsLeft <= 0))
             continue;
 
         // Get the interpolated position of the sprite

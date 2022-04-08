@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 // How much heap space is required after loading the map in order to run the game (48 KiB in Doom, 32 KiB in Final Doom).
 // If we don't have this much then the game dies with an error; I'm adopting the Final Doom requirement here since it is the lowest.
@@ -83,6 +84,12 @@ uint8_t*        gpRejectMatrix;
 mapthing_t      gPlayerStarts[MAXPLAYERS];
 mapthing_t      gDeathmatchStarts[MAX_DEATHMATCH_STARTS];
 mapthing_t*     gpDeathmatchP;                                  // Points past the end of the deathmatch starts list
+
+// PsyDoom: a list of all player starts for players 1 & 2, including duplicates that spawn so called 'Voodoo dolls'.
+// This list is used to add support for 'Voodoo dolls' to the PSX engine.
+#if PSYDOOM_MODS
+    static std::vector<mapthing_t> gAllPlayerStarts;
+#endif
 
 // PsyDoom: if not null then issue this warning after the level has started.
 // Can be used to issue non-fatal warnings about bad map conditions to WAD authors.
@@ -603,9 +610,11 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
     const int32_t numThings = lumpSize / sizeof(mapthing_t);
     W_ReadMapLump(lumpNum, pTmpBufferBytes, true);
 
-    // PsyDoom: add to the hash for the map
+    // PsyDoom: add to the hash for the map and reset the list containing all player starts (including duplicates)
     #if PSYDOOM_MODS
         MapHash::addData(pTmpBufferBytes, lumpSize);
+        gAllPlayerStarts.clear();
+        gAllPlayerStarts.reserve(12);
     #endif
 
     // Spawn the map things
@@ -1684,6 +1693,30 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         I_Error("P_SetupLevel: not enough free memory %d", freeMemForGameplay);
     }
 
+    // PsyDoom: in single player and co-op spawn 'Voodoo dolls' if there are duplicate player starts.
+    // For each player start that is not the actual one used, spawn a 'Voodoo doll'.
+    #if PSYDOOM_MODS
+        const auto spawnVoodooDollsForPlayer = [](const int32_t playerIdx) noexcept {
+            for (const mapthing_t& playerStart : gAllPlayerStarts) {
+                // Is this start for this player?
+                if (playerStart.type == playerIdx + 1) {
+                    // Is this start different to the actual one used?
+                    if (std::memcmp(&gPlayerStarts[playerIdx], &playerStart, sizeof(mapthing_t)) != 0) {
+                        // This is a 'Voodoo doll' player start, spawn the doll and remove any 'noclip' cheats it might have inherited from the player:
+                        P_SpawnPlayer(playerStart);
+                        gPlayers[playerIdx].mo->flags &= ~(MF_NOCLIP);
+                    }
+                }
+            }
+        };
+
+        spawnVoodooDollsForPlayer(0);
+
+        if (gNetGame == gt_coop) {
+            spawnVoodooDollsForPlayer(1);
+        }
+    #endif
+
     // Spawn the player(s)
     if (gNetGame != gt_single) {
         I_NetHandshake();
@@ -1742,6 +1775,14 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 }
 
 #if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: adds the specified map thing to the list of all player starts (including duplicates) for the level.
+// Used to add support for so called 'Voodoo dolls'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_AddPlayerStart(const mapthing_t& mapThing) noexcept {
+    gAllPlayerStarts.push_back(mapThing);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: caches and decompresses the lump for the specified texture.
 // Once done, saves the size info for the texture to the texture object.

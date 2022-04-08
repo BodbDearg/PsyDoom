@@ -943,9 +943,22 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
 
     // Player specific logic
     if (pTargetPlayer) {
+        // PsyDoom: is the damaged player a 'Voodoo doll' of a real player?
+        #if PSYDOOM_MODS
+            const bool bIsVoodooDoll = (pTargetPlayer->mo != &target);
+        #endif
+
         // No damage to the player if god mode or invulnerability is active
-        if ((pTargetPlayer->cheats & CF_GODMODE) || pTargetPlayer->powers[pw_invulnerability])
-            return;
+        if ((pTargetPlayer->cheats & CF_GODMODE) || pTargetPlayer->powers[pw_invulnerability]) {
+            // PsyDoom: but only if it is not a 'Voodoo doll' for the actual player!
+            // Those are not included in any cheats enabled, as per PC Doom behavior.
+            #if PSYDOOM_MODS
+                if (!bIsVoodooDoll)
+                    return;
+            #else
+                return;
+            #endif
+        }
 
         // PsyDoom: if the external camera is active then don't allow players to be damaged
         #if PSYDOOM_MODS
@@ -981,8 +994,17 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
             pTargetPlayer->armorpoints -= armorDamage;
         }
 
-        // Do player pain sound
+        // Do the player pain sound.
+        // 
+        // PsyDoom: if the target is a 'Voodoo doll' for a real player then play the pain sound at the real player's origin also.
+        // This way if the doll and real player are far apart then we can hear the pain sound via both things.
         S_StartSound(&target, sfx_plpain);
+
+        #if PSYDOOM_MODS
+            if (bIsVoodooDoll) {
+                S_StartSound(pTargetPlayer->mo, sfx_plpain);
+            }
+        #endif
 
         // Apply the damage to the player, set the attacker and increase the damage palette effect
         pTargetPlayer->health = std::max(pTargetPlayer->health - damageAmt, 0);

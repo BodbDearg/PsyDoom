@@ -56,3 +56,7 @@ extern mapthing_t*      gpDeathmatchP;
 extern void (*gUpdateFireSkyFunc)(texture_t& skyTex);
 
 void P_SetupLevel(const int32_t mapNum, const skill_t skill) noexcept;
+
+#if PSYDOOM_MODS
+    void P_AddPlayerStart(const mapthing_t& mapThing) noexcept;
+#endif

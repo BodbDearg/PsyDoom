@@ -64,10 +64,10 @@ void P_CheckSights() noexcept {
 // Tells if 'mobj1' can see 'mobj2'. Returns 'true' if that is the case.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
-    // PsyDoom: if the target is a player and has the 'notarget' cheat on then it cannot be seen.
+    // PsyDoom: if the target is a player, not a 'Voodoo doll' and has the 'notarget' cheat on then it cannot be seen.
     // PsyDoom: if the external camera is active then don't allow anything to be sighted.
     #if PSYDOOM_MODS
-        if (mobj2.player && (mobj2.player->cheats & CF_NOTARGET))
+        if (mobj2.player && (mobj2.player->cheats & CF_NOTARGET) && (mobj2.player->mo == &mobj2))
             return false;
 
         if (gExtCameraTicsLeft > 0)
