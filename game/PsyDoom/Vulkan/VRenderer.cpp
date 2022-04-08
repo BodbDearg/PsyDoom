@@ -311,13 +311,13 @@ static void updateCoordSysInfo() noexcept {
     const bool bAllowWidescreen = Config::gbVulkanWidescreenEnabled;
 
     if (bHaveValidPresentSurface) {
-        const float blitWPercent = (bAllowWidescreen) ? (float) gPsxCoordsFbW / (float) gFramebufferW : 1.0f;
+        const float blitWPercent = (float) gPsxCoordsFbW / (float) gFramebufferW;
         const float displayedPsxRows = (float)(Video::ORIG_DRAW_RES_Y - Video::gTopOverscan - Video::gBotOverscan);
 
         gNdcToPsxScaleX = (0.5f / blitWPercent) * Video::ORIG_DRAW_RES_X;
         gNdcToPsxScaleY = 0.5f * displayedPsxRows;
 
-        const float blitStartXPercent = (bAllowWidescreen) ? (float) gPsxCoordsFbX / (float) gFramebufferW : 0.0f;
+        const float blitStartXPercent = (float) gPsxCoordsFbX / (float) gFramebufferW;
         gPsxNdcOffsetX = blitStartXPercent * 2.0f;
         gPsxNdcOffsetY = ((float) -Video::gTopOverscan * 2.0f) / displayedPsxRows;
     } else {
