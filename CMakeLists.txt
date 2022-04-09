@@ -29,6 +29,7 @@ set(HASH_LIBRARY_TGT_NAME           Hash-Library)
 set(LCD_TOOL_TGT_NAME               LcdTool)
 set(LIBSDL_TGT_NAME                 SDL)
 set(LUA_TGT_NAME                    Lua)
+set(PAL_TOOL_TGT_NAME               PalTool)
 set(PSXEXE_SIGMATCH_TGT_NAME        PSXExeSigMatcher)
 set(PSXOBJ_SIGGEN_TGT_NAME          PSXObjSigGen)
 set(RAPID_JSON_TGT_NAME             RapidJson)
@@ -57,12 +58,15 @@ set(PSYDOOM_INCLUDE_GAME TRUE CACHE BOOL
 "If TRUE include the game itself in the project tree.
 Optionally, you could remove the game if you just wanted to compile the audio tools for example.")
 
+set(PSYDOOM_INCLUDE_AUDIO_TOOLS FALSE CACHE BOOL
+"If TRUE include PlayStation Doom audio related tools in the project tree.")
+
+set(PSYDOOM_INCLUDE_OTHER_TOOLS FALSE CACHE BOOL
+"If TRUE include other miscellaneous tools in the project tree.")
+
 set(PSYDOOM_INCLUDE_REVERSING_TOOLS FALSE CACHE BOOL 
 "If TRUE include reverse engineering tools in the project tree.
 These were tools which were used during the earlier stages of development.")
-
-set(PSYDOOM_INCLUDE_AUDIO_TOOLS FALSE CACHE BOOL
-"If TRUE include PlayStation Doom audio related tools in the project tree.")
 
 set(PSYDOOM_PROFILE_GAME_LOOP FALSE CACHE BOOL
 "Enables profiling of the main game loop. Frame times are printed to standard out.")
@@ -99,6 +103,10 @@ if (PSYDOOM_INCLUDE_AUDIO_TOOLS)
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/lcd_tool")
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/vag_tool")
     add_subdirectory("${PROJECT_SOURCE_DIR}/tools/audio/wmd_tool")
+endif()
+
+if (PSYDOOM_INCLUDE_OTHER_TOOLS)
+    add_subdirectory("${PROJECT_SOURCE_DIR}/tools/other/pal_tool")
 endif()
 
 if (PSYDOOM_INCLUDE_REVERSING_TOOLS)

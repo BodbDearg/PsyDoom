@@ -26,7 +26,7 @@ FileData getContentsOfFile(
 
 bool writeDataToFile(
     const char* const filePath,
-    const std::byte* const pData,
+    const void* const pData,
     const size_t dataSize,
     const bool bAppend = false
 ) noexcept;
