@@ -178,7 +178,7 @@ bool checkBasicDeviceSuitability(const PhysicalDevice& device, const DeviceSurfa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Select the best physical device to use from a list of devices when using the specified window surface.
-// Uses a given filter function to decide which devices to use.
+// Uses a given filter function to decide which devices to use, or allows all devices if no filter is given.
 // Returns null if no device in the given list was suitable.
 //------------------------------------------------------------------------------------------------------------------------------------------
 const PhysicalDevice* selectBestDevice(
@@ -186,8 +186,6 @@ const PhysicalDevice* selectBestDevice(
     const WindowSurface& windowSurface,
     const DeviceFilter& deviceFilter
 ) noexcept {
-    ASSERT(deviceFilter);
-
     // Get the surface capabilities for all the devices
     std::vector<DeviceSurfaceCaps> deviceSurfaceCaps;
     querySurfaceCapsForAllDevices(devices, windowSurface, deviceSurfaceCaps);
@@ -198,7 +196,7 @@ const PhysicalDevice* selectBestDevice(
     const PhysicalDevice* pBestDevice = nullptr;
 
     for (const PhysicalDevice& device : devices) {
-        if (deviceFilter(device, *pCurDeviceSurfaceCaps)) {
+        if ((!deviceFilter) || deviceFilter(device, *pCurDeviceSurfaceCaps)) {
             if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
                 pBestDevice = &device;
             }
@@ -218,11 +216,10 @@ const PhysicalDevice* selectBestHeadlessDevice(
     const std::vector<PhysicalDevice>& devices,
     const HeadlessDeviceFilter& deviceFilter
 ) noexcept {
-    ASSERT(deviceFilter);
     const PhysicalDevice* pBestDevice = nullptr;
 
     for (const PhysicalDevice& device : devices) {
-        if (deviceFilter(device)) {
+        if ((!deviceFilter) || deviceFilter(device)) {
             if ((pBestDevice == nullptr) || (compareDeviceSuitability(device, *pBestDevice) < 0)) {
                 pBestDevice = &device;
             }

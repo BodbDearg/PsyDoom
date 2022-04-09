@@ -526,7 +526,6 @@ void init() noexcept {
                     return isPhysicalDeviceSuitable(device, surfaceCaps);
                 }
             );
-
         } catch (...) {
             FatalErrors::raiseF("Invalid value for 'VulkanPreferredDevicesRegex' - not a valid regex:\n%s", preferredGpusRegexStr);
         }

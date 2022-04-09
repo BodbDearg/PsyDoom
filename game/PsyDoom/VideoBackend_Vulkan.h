@@ -3,6 +3,11 @@
 #if PSYDOOM_VULKAN_RENDERER
 
 #include "IVideoBackend.h"
+#include <functional>
+
+namespace vgl {
+    class VulkanInstance;
+}
 
 class IVRendererPath;
 
@@ -14,6 +19,7 @@ BEGIN_NAMESPACE(Video)
 //------------------------------------------------------------------------------------------------------------------------------------------
 class VideoBackend_Vulkan : public IVideoBackend {
 public:
+    static bool withTempVkInstance(const std::function<void (vgl::VulkanInstance& vkInstance)>& doLogic) noexcept;
     static bool isBackendSupported() noexcept;
 
     VideoBackend_Vulkan() noexcept;

@@ -7,6 +7,14 @@
 #include "IniUtils.h"
 #include "Utils.h"
 
+#if PSYDOOM_VULKAN_RENDERER
+    #include "PhysicalDevice.h"
+    #include "PhysicalDeviceSelection.h"
+    #include "VideoBackend_Vulkan.h"
+    #include "VkFuncs.h"
+    #include "VulkanInstance.h"
+#endif
+
 #include <cstring>
 #include <functional>
 #include <map>
@@ -55,6 +63,13 @@ struct ConfigFieldHandler {
     // Returns the default value (represented as a string) for the config field
     std::function<const char* ()> getDefaultValueFunc;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Graphics config default settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const char* gDefaultAntiAliasingMultisamples = "4";
+static const char* gDefaultVulkanRenderHeight = "-1";
+static const char* gDefaultVulkanPixelStretch = "0";
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Graphics config settings
@@ -123,7 +138,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gAAMultisamples = iniEntry.getIntValue(4); },
-        []() { return "4"; },
+        []() { return gDefaultAntiAliasingMultisamples; },
     },
     {
         "VulkanRenderHeight",
@@ -141,7 +156,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gVulkanRenderHeight = iniEntry.getIntValue(-1); },
-        []() { return "-1"; },
+        []() { return gDefaultVulkanRenderHeight; },
     },
     {
         "VulkanPixelStretch",
@@ -162,7 +177,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanPixelStretch = iniEntry.getBoolValue(false); },
-        []() { return "0"; },
+        []() { return gDefaultVulkanPixelStretch; },
     },
     {
         "VulkanTripleBuffer",
@@ -1532,12 +1547,74 @@ static void parseAllConfigFiles(const std::string& configFolder) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Determines dynamic defaults for some config values based on the host environment and hardware
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void determineDynamicConfigDefaults() noexcept {
+    // Initialize SDL temporarily for this
+    SDL_InitSubSystem(SDL_INIT_VIDEO);
+
+    // Determine if the main display is a high density one, like a 4K monitor
+    bool bIsHighDensityDisplay = false;
+    
+    {
+        float diagDpi = {};
+        float horzDpi = {};
+        float vertDpi = {};
+
+        if (SDL_GetDisplayDPI(0, &diagDpi, &horzDpi, &vertDpi) == 0) {
+            if (vertDpi >= 120.0f) {
+                bIsHighDensityDisplay = true;
+            }
+        }
+    }
+
+    // Vulkan: determine if the 'best' device to use has more than 3 GiB of RAM.
+    // If that is the case consider it a more 'powerful' GPU and thus able to use MSAA.
+    // Also check to see if the device is a Raspberry Pi, special case that device since it is low powered.
+    bool bIsVulkanLowMemDevice = true;
+    bool bIsVulkanRpiDevice = false;
+
+    #if PSYDOOM_VULKAN_RENDERER
+        Video::VideoBackend_Vulkan::withTempVkInstance([&](vgl::VulkanInstance& vkInstance) {
+            const std::vector<vgl::PhysicalDevice>& gpus = vkInstance.getPhysicalDevices();
+            const vgl::PhysicalDevice* const pGpu = vgl::PhysicalDeviceSelection::selectBestHeadlessDevice(gpus, nullptr);
+
+            if (pGpu) {
+                bIsVulkanLowMemDevice = (pGpu->getDeviceMem() <= (uint64_t) 3u * 1024u * 1024u * 1024u);    // <= 3 GiB
+                const char* const gpuName = pGpu->getProps().deviceName;
+                bIsVulkanRpiDevice = (std::strstr(gpuName, "V3D") == gpuName);  // On Raspberry Pi the driver identifies the device starting with 'V3D'
+            }
+        });
+    #endif  // #if PSYDOOM_VULKAN_RENDERER
+
+    // Determine video defaults
+    if (bIsVulkanRpiDevice) {
+        // For the Raspberry Pi default to 480p rendering because it is so low powered.
+        // Also use the same pixel stretch that the PSX used to avoid UI elements having rows and columns truncated or doubled.
+        // Essentially these settings turn the game into a sort of 'Crispy' PSX Doom (double normal resolution).
+        gDefaultAntiAliasingMultisamples = "1";
+        gDefaultVulkanRenderHeight = "480";
+        gDefaultVulkanPixelStretch = "1";
+    } else {
+        // For all other devices just set whether MSAA is enabled or not.
+        const bool bUseMsaa = ((!bIsHighDensityDisplay) && (!bIsVulkanLowMemDevice));
+        gDefaultAntiAliasingMultisamples = (bUseMsaa) ? "4" : "1";
+    }
+
+    // Cleanup
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Read all config for the app, and generate config files for the user if it's the first launch.
 // If new config keys are missing then they will be appended to the existing config files.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
+    // Clear all control bindings and determine some dynamic config defaults
     Controls::clearAllBindings();
+    determineDynamicConfigDefaults();
 
+    // Create the config folder if it doesn't exist and parse all existing configs
     const std::string configFolder = Utils::getOrCreateUserDataFolder();
     parseAllConfigFiles(configFolder);
 

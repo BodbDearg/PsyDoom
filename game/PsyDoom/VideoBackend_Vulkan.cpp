@@ -22,9 +22,14 @@
 BEGIN_NAMESPACE(Video)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Checks whether the Vulkan video backend is supported
+// Performs some logic using a temporary (headless) Vulkan API instance, if it can be created.
+// Useful for determining Vulkan support status and devices present before fully initializing Video related subsystems.
+// Returns 'true' if the temporary Vulkan instance was created successfully and the given function called, 'false' otherwise.
+// Note: the tempory Vulkan instance is destroyed as soon as the call ends.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool VideoBackend_Vulkan::isBackendSupported() noexcept {
+bool VideoBackend_Vulkan::withTempVkInstance(const std::function<void (vgl::VulkanInstance& vkInstance)>& doLogic) noexcept {
+    ASSERT(doLogic);
+
     // Must be able to load the Vulkan library or have it embedded in the application
     if (SDL_Vulkan_LoadLibrary(nullptr) != 0)
         return false;
@@ -33,19 +38,36 @@ bool VideoBackend_Vulkan::isBackendSupported() noexcept {
     if (!SDL_Vulkan_GetVkGetInstanceProcAddr())
         return false;
 
-    // Create a temporary (headless) API instance and make sure we can pick a suitable device from it.
-    // It's possible that a Vulkan driver might be installed on the system but no valid devices are present.
-    //
-    // Note: have to use the headless checks because at this point we don't have an SDL window created.
-    // This function is used to DECIDE what type of SDL Window to create, so we can't check surface output capabilities yet...
+    // Create a temporary (headless) API instance
     vgl::VkFuncs vkFuncs = {};
     vgl::VulkanInstance vulkanInstance(vkFuncs);
 
     if (!vulkanInstance.init(nullptr))
         return false;
 
-    const std::vector<vgl::PhysicalDevice>& physicalDevices = vulkanInstance.getPhysicalDevices();
-    return vgl::PhysicalDeviceSelection::selectBestHeadlessDevice(physicalDevices, VRenderer::isHeadlessPhysicalDeviceSuitable);
+    // Do the given logic using the Vulkan instance
+    doLogic(vulkanInstance);
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Checks whether the Vulkan video backend is supported
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool VideoBackend_Vulkan::isBackendSupported() noexcept {
+    // Using a temporary (headless) Vulkan API instance, make sure we can pick a suitable device from it.
+    // It's possible that a Vulkan driver might be installed on the system but no valid devices are present.
+    //
+    // Note: have to use the headless checks because at this point we don't have an SDL window created.
+    // This function is used to DECIDE what type of SDL Window to create, so we can't check surface output capabilities yet...
+    bool bVulkanSupported = false;
+
+    withTempVkInstance([&](vgl::VulkanInstance& vulkanInstance) {
+        const std::vector<vgl::PhysicalDevice>& gpus = vulkanInstance.getPhysicalDevices();
+        const vgl::PhysicalDevice* const pBestGpu = vgl::PhysicalDeviceSelection::selectBestHeadlessDevice(gpus, VRenderer::isHeadlessPhysicalDeviceSuitable);
+        bVulkanSupported = (pBestGpu != nullptr);
+    });
+
+    return bVulkanSupported;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
