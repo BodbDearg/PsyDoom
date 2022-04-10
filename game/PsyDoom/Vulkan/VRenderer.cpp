@@ -363,15 +363,20 @@ static bool ensureValidSwapchainAndFramebuffers() noexcept {
 
     // No swapchain or invalid swapchain? If that is the case then try to create or re-create...
     if ((!gSwapchain.isValid()) || gSwapchain.needsRecreate() || VRenderer::isSwapchainOutOfDate()) {
+        // Destroy the old swapchain
         gDevice.waitUntilDeviceIdle();
         gSwapchain.destroy();
 
-        #if PSYDOOM_PROFILE_GAME_LOOP
-            const vgl::SwapPresentMode swapMode = vgl::SwapPresentMode::Immediate;  // Don't use vsync if profiling the game loop!
-        #else
-            const vgl::SwapPresentMode swapMode = (Config::gbVulkanTripleBuffer) ? vgl::SwapPresentMode::TripleBuffer : vgl::SwapPresentMode::DoubleBuffer;
-        #endif
+        // Decide which swap mode to use
+        vgl::SwapPresentMode swapMode = {};
+        
+        if (Config::gbEnableVSync) {
+            swapMode = (Config::gbVulkanTripleBuffer) ? vgl::SwapPresentMode::TripleBuffer : vgl::SwapPresentMode::DoubleBuffer;
+        } else {
+            swapMode = vgl::SwapPresentMode::Immediate;
+        }
 
+        // Recreate the swapchain
         if (!gSwapchain.init(gDevice, gPresentSurfaceFormat, gPresentSurfaceColorspace, swapMode))
             return false;
 

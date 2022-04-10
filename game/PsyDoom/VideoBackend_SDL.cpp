@@ -57,7 +57,8 @@ void VideoBackend_SDL::initRenderers(SDL_Window* const pSdlWindow) noexcept {
 
     // Create the renderer and framebuffer texture
     mpSdlWindow = pSdlWindow;
-    mpRenderer = SDL_CreateRenderer(pSdlWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    const Uint32 vsyncFlag = (Config::gbEnableVSync) ? SDL_RENDERER_PRESENTVSYNC : 0;
+    mpRenderer = SDL_CreateRenderer(pSdlWindow, -1, SDL_RENDERER_ACCELERATED | vsyncFlag);
 
     if (!mpRenderer) {
         FatalErrors::raise("Failed to create renderer!");

@@ -75,6 +75,7 @@ static const char* gDefaultVulkanPixelStretch = "0";
 // Graphics config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool            gbFullscreen;
+bool            gbEnableVSync;
 int32_t         gOutputResolutionW;
 int32_t         gOutputResolutionH;
 float           gLogicalDisplayW;
@@ -105,6 +106,17 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gbFullscreen = iniEntry.getBoolValue(true); },
+        []() { return "1"; },
+    },
+    {
+        "EnableVSync",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then request that video output be synchronized with the display, to try and avoid\n"
+        "# artifacts like tearing. Note that this setting might not be respected depending on the host OS and\n"
+        "# display driver. It is just a request/hint only.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableVSync = iniEntry.getBoolValue(true); },
         []() { return "1"; },
     },
     {

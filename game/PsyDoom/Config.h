@@ -45,6 +45,7 @@ extern float    gViewBobbingStrength;
 // Video settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 extern bool     gbFullscreen;
+extern bool     gbEnableVSync;
 extern int32_t  gOutputResolutionW;
 extern int32_t  gOutputResolutionH;
 extern float    gLogicalDisplayW;
