@@ -348,6 +348,11 @@ void XOptions_Draw() noexcept {
         DrawCursor(cursorX, cursorY);
     }
 
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
+    #endif
+
     // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();

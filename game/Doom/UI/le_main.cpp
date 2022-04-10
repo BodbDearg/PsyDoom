@@ -123,6 +123,11 @@ void DRAW_Legals() noexcept {
 
     I_CacheAndDrawSprite(gTex_LEGALS, 0, (int16_t) gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
 
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
+    #endif
+
     I_SubmitGpuCmds();
     I_DrawPresent();
 }

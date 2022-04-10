@@ -577,8 +577,14 @@ void M_Drawer() noexcept {
     I_DrawString(90, gMenuYPos[difficulty] + 20, gSkillNames[gStartSkill]);
     I_DrawString(74, gMenuYPos[options], "Options");
 
+    // PsyDoom: adding a 'Quit' option
     #if PSYDOOM_MODS
         I_DrawString(74, gMenuYPos[menu_quit], "Quit");
+    #endif
+
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
     #endif
 
     // Finish up the frame

@@ -441,6 +441,11 @@ void F1_Drawer() noexcept {
         I_DrawPausedOverlay();
     }
 
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
+    #endif
+
     // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();
@@ -982,6 +987,11 @@ void F2_Drawer() noexcept {
     if (gbGamePaused) {
         I_DrawPausedOverlay();
     }
+
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
+    #endif
 
     // Finish up the frame
     I_SubmitGpuCmds();

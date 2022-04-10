@@ -396,6 +396,11 @@ void IN_Drawer() noexcept {
         IN_SingleDrawer();
     }
 
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
+    #endif
+
     I_SubmitGpuCmds();
     I_DrawPresent();
 }

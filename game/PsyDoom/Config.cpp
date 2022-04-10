@@ -437,6 +437,7 @@ static const ConfigFieldHandler AUDIO_CFG_INI_HANDLERS[] = {
 
 static std::string      gCueFilePath;
 bool                    gbUncapFramerate;
+bool                    gbShowPerfCounters;
 bool                    gbInterpolateSectors;
 bool                    gbInterpolateMobj;
 bool                    gbInterpolateMonsters;
@@ -498,6 +499,15 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "\n",
         [](const IniUtils::Entry& iniEntry) { gbUncapFramerate = iniEntry.getBoolValue(true); },
         []() { return "1"; },
+    },
+    {
+        "ShowPerfCounters",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') show performance counters at the top left of the screen in certain situations.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "\n",
+        [](const IniUtils::Entry& iniEntry) { gbShowPerfCounters = iniEntry.getBoolValue(false); },
+        []() { return "0"; },
     },
     {
         "InterpolateSectors",

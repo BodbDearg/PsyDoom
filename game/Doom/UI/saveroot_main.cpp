@@ -244,6 +244,11 @@ void SaveRoot_Draw() noexcept {
         DrawCursor(menuItem.x, menuItem.y);
     }
 
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
+    #endif
+
     // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();

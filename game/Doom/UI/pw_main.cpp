@@ -449,6 +449,11 @@ void DRAW_PasswordScreen() noexcept {
         I_DrawString(-1, 200, "Exit");
     }
 
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
+    #endif
+
     // Finish up the draw
     I_SubmitGpuCmds();
     I_DrawPresent();

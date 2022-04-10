@@ -1,6 +1,7 @@
 #include "d_main.h"
 
 #include "Base/d_vsprintf.h"
+#include "Base/i_drawcmds.h"
 #include "Base/i_file.h"
 #include "Base/i_main.h"
 #include "Base/i_misc.h"
@@ -30,6 +31,7 @@
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
+#include "PsyDoom/Video.h"
 #include "PsyQ/LIBGPU.h"
 #include "Renderer/r_data.h"
 #include "Renderer/r_main.h"
@@ -40,13 +42,17 @@
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
 
+#if PSYDOOM_VULKAN_RENDERER
+    #include "PsyDoom/Vulkan/VRenderer.h"
+#endif
+
 #include <chrono>
 #include <cstdio>
 #include <memory>
 
-#if PSYDOOM_PROFILE_GAME_LOOP
-    // PsyDoom: how many frames to average frame time over when profiling the game loop
-    constexpr uint32_t PROFILER_NUM_FRAMES_TO_AVERAGE = 15;
+#if PSYDOOM_MODS
+    // PsyDoom: how frequently (in seconds) to update the performance counters that track the average frame time
+    static constexpr float PERF_COUNTER_FREQ = 0.25f;
 #endif
 
 // The current number of 1 vblank ticks
@@ -79,6 +85,8 @@ bool gbDidAbortGame = false;
 
 #if PSYDOOM_MODS
     double      gPrevFrameDuration;         // How long the previous frame took: used to try and provide more accurate interpolation
+    float       gPerfAvgFps;                // Performance counter: averaged FPS for the last few frames
+    float       gPerfAvgUsec;               // Performance counter: averaged microseconds duration for the last few frames
     bool        gbIsFirstTick;              // Set to 'true' for the very first tick only, 'false' thereafter
     bool        gbKeepInputEvents;          // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
     std::byte*  gpDemoBufferEnd;            // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
@@ -507,6 +515,46 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     gDebugDrawStringYPos += 8;
 }
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: draws frame performance counters (average frame duration and FPS) at the top left of the screen if they are enabled
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_DrawEnabledPerfCounters() noexcept {
+    // Are we showing performance counters?
+    if (!Config::gbShowPerfCounters)
+        return;
+
+    // If using the Vulkan renderer, draw then as far as possible to the left, being widescreen aware:
+    int32_t widescreenAdjust = 0;
+
+    #if PSYDOOM_VULKAN_RENDERER
+        if (Video::isUsingVulkanRenderPath()) {
+            // Compute the extra space/padding at the left and right sides of the screen (in PSX coords) due to widescreen.
+            // This is the same calculation used by the Vulkan renderer in 'VDrawing::computeTransformMatrixForUI'.
+            const float xPadding = (VRenderer::gPsxCoordsFbX / VRenderer::gPsxCoordsFbW) * (float) SCREEN_W;
+            widescreenAdjust = (int32_t) -xPadding;
+        }
+    #endif
+
+    // Need to setup the texture window beforehand for the draw string calls
+    {
+        DR_MODE drawModePrim = {};
+        const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
+        LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
+        I_AddPrim(drawModePrim);
+    }
+
+    // Show average frame microseconds elapsed
+    char msgBuffer[256];
+    std::snprintf(msgBuffer, sizeof(msgBuffer), "USEC: %zu", (size_t)(gPerfAvgUsec + 0.5f));
+    I_DrawStringSmall(2 + widescreenAdjust, 2, msgBuffer, Game::getTexPalette_STATUS(), 128, 255, 255, false, false);
+
+    // Show average FPS counter
+    std::snprintf(msgBuffer, sizeof(msgBuffer), "FPS:  %.1f", gPerfAvgFps);
+    I_DrawStringSmall(2 + widescreenAdjust, 10, msgBuffer, Game::getTexPalette_STATUS(), 128, 255, 255, false, false);
+}
+#endif  // #if PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set a region of memory to a specified byte value.
 // Bulk writes in 32-byte chunks where possible.
@@ -680,11 +728,11 @@ gameaction_t MiniLoop(
     #if PSYDOOM_MODS
         frametimer_t::time_point frameStartTime = frametimer_t::now();      // When we started the current frame
         gPrevFrameDuration = 0.0;                                           // No previous frame duration (yet)
-    #endif
 
-    #if PSYDOOM_PROFILE_GAME_LOOP
-        frametimer_t::time_point profilerStartTime = frameStartTime;        // When we started profiling the frames
-        uint32_t profilerNumFramesElapsed = 0;                              // How many frames have elapsed
+        frametimer_t::time_point profilerStartTime = frameStartTime;        // When we started profiling the current few frames
+        uint32_t profilerNumFramesElapsed = 0;                              // How many frames have elapsed for the frame profiler
+        gPerfAvgFps = 0;                                                    // Don't know this yet, frame profiler will tell us later!
+        gPerfAvgUsec = 0;                                                   // Don't know this yet, frame profiler will tell us later!
     #endif
 
     // Continue running the game loop until something causes us to exit
@@ -903,26 +951,27 @@ gameaction_t MiniLoop(
         gPrevGameTic = gGameTic;
         gbIsFirstTick = false;
 
-        // PsyDoom: wrap up timing this frame's duration
         #if PSYDOOM_MODS
+            // PsyDoom: wrap up timing this frame's duration
             const frametimer_t::time_point now = frametimer_t::now();
             gPrevFrameDuration = std::chrono::duration<double>(now - frameStartTime).count();
             frameStartTime = now;
-        #endif
 
-        // PsyDoom: emit frame times if profiling and it's time to emit
-        #if PSYDOOM_PROFILE_GAME_LOOP
+            // PsyDoom: update frame time profiling if enough time has passed
             profilerNumFramesElapsed++;
+            const float timeSincePerfUpdate = std::chrono::duration<float>(now - profilerStartTime).count();
 
-            if (profilerNumFramesElapsed >= PROFILER_NUM_FRAMES_TO_AVERAGE) {
-                // Print the performance info
+            if (timeSincePerfUpdate >= PERF_COUNTER_FREQ) {
+                // Compute and save the performance metrics
                 const frametimer_t::duration elapsedTime = now - profilerStartTime;
                 const std::chrono::microseconds elapsedTimeUsec = std::chrono::duration_cast<std::chrono::microseconds>(elapsedTime);
 
-                const double avgUsec = (double) elapsedTimeUsec.count() / (double) PROFILER_NUM_FRAMES_TO_AVERAGE;
+                const double avgUsec = (double) elapsedTimeUsec.count() / (double) profilerNumFramesElapsed;
                 const double avgElapsedSec = avgUsec / 1000000.0;
                 const double avgFps = (avgElapsedSec > 0.0) ? 1.0 / avgElapsedSec : 999999.0;
-                std::printf("[GAME LOOP] usec=%zu fps=%.1f\n", (size_t)(avgUsec + 0.5), avgFps);
+
+                gPerfAvgUsec = (float) avgUsec;
+                gPerfAvgFps = (float) avgFps;
 
                 // Begin a new profiling iteration
                 profilerNumFramesElapsed = 0;

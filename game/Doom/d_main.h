@@ -34,6 +34,8 @@ extern bool         gbDidAbortGame;
 
 #if PSYDOOM_MODS
     extern double       gPrevFrameDuration;
+    extern float        gPerfAvgFps;
+    extern float        gPerfAvgUsec;
     extern bool         gbIsFirstTick;
     extern bool         gbKeepInputEvents;
     extern std::byte*   gpDemoBufferEnd;
@@ -57,6 +59,10 @@ gameaction_t RunCredits() noexcept;
 
 void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept;
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept;
+
+#if PSYDOOM_MODS
+    void I_DrawEnabledPerfCounters() noexcept;
+#endif
 
 void D_memset(void* const pDst, const std::byte fillByte, const uint32_t count) noexcept;
 void D_memcpy(void* const pDst, const void* const pSrc, const uint32_t numBytes) noexcept;

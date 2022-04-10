@@ -68,9 +68,6 @@ set(PSYDOOM_INCLUDE_REVERSING_TOOLS FALSE CACHE BOOL
 "If TRUE include reverse engineering tools in the project tree.
 These were tools which were used during the earlier stages of development.")
 
-set(PSYDOOM_PROFILE_GAME_LOOP FALSE CACHE BOOL
-"Enables profiling of the main game loop. Frame times are printed to standard out.")
-
 set(PSYDOOM_EMIT_MISSING_TEX_WARNINGS FALSE CACHE BOOL
 "Warn when a map uses missing textures? Disabled by default since some original maps can trigger these warnings.
 This feature can be a useful tool for map development however!")

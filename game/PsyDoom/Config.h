@@ -11,6 +11,7 @@ BEGIN_NAMESPACE(Config)
 //------------------------------------------------------------------------------------------------------------------------------------------
 const char*     getCueFilePath() noexcept;
 extern bool     gbUncapFramerate;
+extern bool     gbShowPerfCounters;
 extern bool     gbInterpolateSectors;
 extern bool     gbInterpolateMobj;
 extern bool     gbInterpolateMonsters;

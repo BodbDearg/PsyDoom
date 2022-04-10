@@ -809,6 +809,12 @@ void P_Drawer() noexcept {
     }
 
     ST_Drawer();
+
+    // PsyDoom: draw any enabled performance counters
+    #if PSYDOOM_MODS
+        I_DrawEnabledPerfCounters();
+    #endif
+
     I_SubmitGpuCmds();
 
     // PsyDoom: moved presentation of rendering here to work better with the new Vulkan renderer.
