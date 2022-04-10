@@ -308,8 +308,6 @@ static void updateCoordSysInfo() noexcept {
     //  (2) I don't allow vertical stretching of the original UI assets, hence the 'Y' axis conversions here are fixed.
     //      The game viewport will be letterboxed (rather than extend) if the view is too long on the vertical axis.
     //      Because of all this, it is assumed the PSX framebuffer uses all of NDC space vertically.
-    const bool bAllowWidescreen = Config::gbVulkanWidescreenEnabled;
-
     if (bHaveValidPresentSurface) {
         const float blitWPercent = (float) gPsxCoordsFbW / (float) gFramebufferW;
         const float displayedPsxRows = (float)(Video::ORIG_DRAW_RES_Y - Video::gTopOverscan - Video::gBotOverscan);
