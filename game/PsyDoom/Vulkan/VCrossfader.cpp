@@ -21,12 +21,12 @@
 #include "VRenderer.h"
 #include "VRenderPath_Crossfade.h"
 #include "VRenderPath_Main.h"
+#include "VScreenQuad.h"
 
 BEGIN_NAMESPACE(VCrossfader)
 
-// A vertex buffer containing a single quad (two triangles) of vertex type 'VVertex_XyUv' covering the entire screen.
-// This is used to draw a screen quad during the crossfade.
-static vgl::Buffer gVertexBuffer;
+// The screen quad used for rendering the cross fade
+static VScreenQuad gScreenQuad;
 
 // A descriptor pool and the descriptor set allocated from it.
 // The descriptor set contains 2 bindings, one for each of the rendered framebuffers that the crossfade is happening between.
@@ -36,37 +36,6 @@ static vgl::DescriptorSet* gpDescriptorSet;
 // The textures used for crossfading
 static vgl::RenderTexture* gpCrossfadeTex1;
 static vgl::RenderTexture* gpCrossfadeTex2;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Create the vertex buffer containing the fullscreen quad and populate it
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void initVertexBuffer(vgl::LogicalDevice& device) noexcept {
-    // Create the buffer
-    const bool bCreatedBufferOk = gVertexBuffer.initWithElementCount<VVertex_XyUv>(
-        device,
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        vgl::BufferUsageMode::STATIC,
-        6
-    );
-
-    if (!bCreatedBufferOk)
-        FatalErrors::raise("Failed to initialize a vertex buffer used for crossfading!");
-
-    // Lock the buffer and populate it
-    VVertex_XyUv* const pv = gVertexBuffer.lockElements<VVertex_XyUv>(0, 6);
-
-    if (!pv)
-        FatalErrors::raise("Failed to lock a vertex buffer used for crossfading!");
-
-    pv[0].x = -1.0f;    pv[0].y = -1.0f;    pv[0].u = 0.0f;     pv[0].v = 0.0f;
-    pv[1].x = +1.0f;    pv[1].y = -1.0f;    pv[1].u = 1.0f;     pv[1].v = 0.0f;
-    pv[2].x = +1.0f;    pv[2].y = +1.0f;    pv[2].u = 1.0f;     pv[2].v = 1.0f;
-    pv[3].x = +1.0f;    pv[3].y = +1.0f;    pv[3].u = 1.0f;     pv[3].v = 1.0f;
-    pv[4].x = -1.0f;    pv[4].y = +1.0f;    pv[4].u = 0.0f;     pv[4].v = 1.0f;
-    pv[5].x = -1.0f;    pv[5].y = -1.0f;    pv[5].u = 0.0f;     pv[5].v = 0.0f;
-
-    gVertexBuffer.unlockElements<VVertex_XyUv>(6);
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Creates the descriptor pool and descriptor set used for crossfading
@@ -148,18 +117,19 @@ static void drawCrossfadeFrame(const float fadePercentComplete) noexcept {
 
     cmdRec.setViewport(0.0f, 0.0f, (float) viewportW, (float) viewportH, 0.0f, 1.0f);
     cmdRec.setScissors(0, 0, viewportW, viewportH);
-    cmdRec.bindVertexBuffer(gVertexBuffer, 0, 0);
     cmdRec.bindPipeline(pipeline);
     cmdRec.bindDescriptorSet(*gpDescriptorSet, pipeline, 0);
     cmdRec.pushConstants(VPipelines::gPipelineLayout_crossfade, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float), &fadePercentComplete);
-    cmdRec.draw(6, 0);
+
+    gScreenQuad.bindVertexBuffer(cmdRec, 0);
+    gScreenQuad.draw(cmdRec);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Setup all the resources needed for crossfading
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init(vgl::LogicalDevice& device) noexcept {
-    initVertexBuffer(device);
+    gScreenQuad.init(device);
     initDescriptorPoolAndSet(device);
 }
 
@@ -176,7 +146,7 @@ void destroy() noexcept {
     }
 
     gDescriptorPool.destroy(true);
-    gVertexBuffer.destroy(true);
+    gScreenQuad.destroy(true);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,8 +154,8 @@ void destroy() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void doPreCrossfadeSetup() noexcept {
     // Get the device to crossfade with
-    ASSERT(gVertexBuffer.isValid());
-    vgl::LogicalDevice& device = *gVertexBuffer.getDevice();
+    ASSERT(gScreenQuad.isValid());
+    vgl::LogicalDevice& device = *gDescriptorPool.getDevice();
 
     // Determine which textures/framebuffers to do the crossfade with and tell the crossfader to use them
     determineCrossfadeTextures(device);
@@ -205,8 +175,8 @@ void doPreCrossfadeSetup() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void doCrossfade(const int32_t vblanksDuration) noexcept {
     // Get the device to crossfade with
-    ASSERT(gVertexBuffer.isValid());
-    vgl::LogicalDevice& device = *gVertexBuffer.getDevice();
+    ASSERT(gScreenQuad.isValid());
+    vgl::LogicalDevice& device = *gDescriptorPool.getDevice();
 
     // Prior to this being called the renderer should already be put into the crossfade render path, and crossfade textures determined
     ASSERT(&VRenderer::getActiveRenderPath() == &VRenderer::gRenderPath_Crossfade);

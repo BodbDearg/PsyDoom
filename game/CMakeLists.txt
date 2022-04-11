@@ -323,6 +323,8 @@ set(SOURCE_FILES
     "PsyDoom/Vulkan/VRenderPath_Main.h"
     "PsyDoom/Vulkan/VRenderPath_Psx.cpp"
     "PsyDoom/Vulkan/VRenderPath_Psx.h"
+    "PsyDoom/Vulkan/VScreenQuad.cpp"
+    "PsyDoom/Vulkan/VScreenQuad.h"
     "PsyDoom/Vulkan/VTypes.h"
     "PsyDoom/Vulkan/VVertexBufferSet.h"
     "PsyDoom/WadFile.cpp"
