@@ -286,35 +286,4 @@ void VRenderPath_Crossfade::setOldFramebufferTextures(vgl::RenderTexture* const 
     mpOldFbTextures[1] = pOldFbTex2;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Transition the specified framebuffer texture/color-attachment (if valid) from an expected 'transfer source' image layout to the
-// 'shader read only' image layout. This prepares it for reading in shader code.
-//------------------------------------------------------------------------------------------------------------------------------------------
-void VRenderPath_Crossfade::transitionOldFramebufferTexLayout(vgl::RenderTexture& fbColorAttach, vgl::CmdBufferRecorder& cmdRec) noexcept {
-    // Do nothing if invalid
-    if (!fbColorAttach.isValid())
-        return;
-
-    // Schedule the image layout transition
-    VkImageMemoryBarrier imgBarrier = {};
-    imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-    imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-    imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imgBarrier.image = fbColorAttach.getVkImage();
-    imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    imgBarrier.subresourceRange.levelCount = 1;
-    imgBarrier.subresourceRange.layerCount = 1;
-
-    cmdRec.addPipelineBarrier(
-        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-        0,
-        nullptr,
-        1,
-        &imgBarrier
-    );
-}
-
 #endif  // #if PSYDOOM_VULKAN_RENDERER

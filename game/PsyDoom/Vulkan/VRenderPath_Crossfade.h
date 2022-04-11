@@ -45,7 +45,6 @@ public:
 private:
     bool initRenderPass() noexcept;
     bool doFramebuffersNeedRecreate() noexcept;
-    void transitionOldFramebufferTexLayout(vgl::RenderTexture& tex, vgl::CmdBufferRecorder& cmdRec) noexcept;
 
     bool                            mbIsValid;                  // True if the render path has been initialized
     vgl::LogicalDevice*             mpDevice;                   // The vulkan device used
