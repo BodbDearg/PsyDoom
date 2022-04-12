@@ -22,6 +22,7 @@ extern bool     gbUseFastLoading;
 extern bool     gbEnableSinglePlayerLevelTimer;
 extern int32_t  gUsePalTimings;
 extern bool     gbUseDemoTimings;
+extern bool     gbFixKillCount;
 extern bool     gbUseMoveInputLatencyTweak;
 extern bool     gbUseExtendedPlayerShootRange;
 extern bool     gbFixLineActivation;

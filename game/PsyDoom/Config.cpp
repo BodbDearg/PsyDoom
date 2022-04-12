@@ -448,6 +448,7 @@ bool                    gbUseFastLoading;
 bool                    gbEnableSinglePlayerLevelTimer;
 int32_t                 gUsePalTimings;
 bool                    gbUseDemoTimings;
+bool                    gbFixKillCount;
 bool                    gbUseMoveInputLatencyTweak;
 bool                    gbFixLineActivation;
 bool                    gbUseExtendedPlayerShootRange;
@@ -635,6 +636,19 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "\n",
         [](const IniUtils::Entry& iniEntry) { gbUseDemoTimings = iniEntry.getBoolValue(false); },
         []() { return "0"; },
+    },
+    {
+        "FixKillCount",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# If enabled ('1') then fix the total enemies count for the level to include any monsters that have\n"
+        "# been spawned or respawned. Each time a monster gets spawned or respawned, the total is increased.\n"
+        "# The fix prevents the total kills from exceeding 100% when enemies like Pain Elementals appear in\n"
+        "# a map and allows the number of enemies remaining to be gauged more accurately.\n"
+        "# Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "\n",
+        [](const IniUtils::Entry& iniEntry) { gbFixKillCount = iniEntry.getBoolValue(true); },
+        []() { return "1"; },
     },
     {
         "UseMoveInputLatencyTweak",

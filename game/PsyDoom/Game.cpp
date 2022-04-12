@@ -24,6 +24,7 @@
 void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(bUsePalTimings);
     Endian::byteSwapInPlace(bUseDemoTimings);
+    Endian::byteSwapInPlace(bFixKillCount);
     Endian::byteSwapInPlace(bFixLineActivation);
     Endian::byteSwapInPlace(bUseExtendedPlayerShootRange);
     Endian::byteSwapInPlace(bFixMultiLineSpecialCrossing);
@@ -184,6 +185,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     }
 
     settings.bUseDemoTimings                = Config::gbUseDemoTimings;
+    settings.bFixKillCount                  = Config::gbFixKillCount;
     settings.bFixLineActivation             = Config::gbFixLineActivation;
     settings.bUseExtendedPlayerShootRange   = Config::gbUseExtendedPlayerShootRange;
     settings.bFixMultiLineSpecialCrossing   = Config::gbFixMultiLineSpecialCrossing;
@@ -245,6 +247,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings = {};
     settings.bUsePalTimings                 = gCurClassicDemo.bPalDemo;
     settings.bUseDemoTimings                = true;
+    settings.bFixKillCount                  = false;
     settings.bFixLineActivation             = false;
     settings.bUseExtendedPlayerShootRange   = false;
     settings.bFixMultiLineSpecialCrossing   = false;

@@ -1164,6 +1164,14 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
 
     // Spawn the skull
     mobj_t& skull = *P_SpawnMobj(spawnX, spawnY, spawnZ, MT_SKULL);
+
+    // PsyDoom: increment the total enemy count if fixing the kill count is enabled.
+    // This stops the player from exceeding 100% kills and gives the user more accurate stats.
+    #if PSYDOOM_MODS
+        if (Game::gSettings.bFixKillCount) {
+            gTotalKills++;
+        }
+    #endif
     
     // PsyDoom: make the skull have the same blend mode as the parent Pain Elemental.
     // Also double it's health if it's a nightmare skull.
@@ -1546,6 +1554,14 @@ void A_VileChase(mobj_t& actor) noexcept {
                 raiseMobj.flags = raiseObjInfo.flags | flagsToPreserve;
                 raiseMobj.health = raiseObjInfo.spawnhealth;
                 raiseMobj.target = nullptr;
+
+                // PsyDoom: increment the total enemy count if fixing the kill count is enabled.
+                // This stops the player from exceeding 100% kills and gives the user more accurate stats.
+                #if PSYDOOM_MODS
+                    if (Game::gSettings.bFixKillCount) {
+                        gTotalKills++;
+                    }
+                #endif
 
                 // Done! Don't do any chasing while raising...
                 return;

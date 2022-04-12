@@ -423,7 +423,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     // Do not spawn monsters and keycards in deathmatch
     const mobjinfo_t& info = gMobjInfo[thingType];
 
-    if ((gNetGame == gt_deathmatch) && info.flags & (MF_NOTDMATCH|MF_COUNTKILL))
+    if ((gNetGame == gt_deathmatch) && info.flags & (MF_NOTDMATCH | MF_COUNTKILL))
         return;
 
     // PsyDoom: if the '-nomonsters' command line argument is specified then do not spawn if a monster...
