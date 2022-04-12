@@ -504,7 +504,7 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
     {
         "ShowPerfCounters",
         "#---------------------------------------------------------------------------------------------------\n"
-        "# If enabled ('1') show performance counters at the top left of the screen in certain situations.\n"
+        "# If enabled ('1') then show performance counters (FPS & frame duration) during gameplay and menus.\n"
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gbShowPerfCounters = iniEntry.getBoolValue(false); },
