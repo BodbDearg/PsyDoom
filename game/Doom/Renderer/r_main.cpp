@@ -567,11 +567,9 @@ void R_CalcLerpFactors() noexcept {
     const double playerElapsedSeconds = std::chrono::duration<double>(now - gCurPlayerFrameStartTime).count();
     const double worldElapsedSeconds = std::chrono::duration<double>(now - gCurWorldFrameStartTime).count();
 
-    // Compute the lerp factor and take into account how long the last frame took to try and yield a more accurate future display position.
-    // Don't trust the previous frame duration entirely however in case we overshoot, use just 75% of it to account for variance.
-    // I came at this value from general experimentation and it seems to work best.
-    const double playerLerp = std::clamp((playerElapsedSeconds + gPrevFrameDuration * 0.75) / playerFrameTime, 0.0, 1.0);
-    const double worldLerp = std::clamp((worldElapsedSeconds + gPrevFrameDuration * 0.75) / worldFrameTime, 0.0, 1.0);
+    // Compute the lerp factor and don't lerping too far into the future past 't = 1.0'
+    const double playerLerp = std::clamp(playerElapsedSeconds / playerFrameTime, 0.0, 2.0);
+    const double worldLerp = std::clamp(worldElapsedSeconds / worldFrameTime, 0.0, 2.0);
     gPlayerLerpFactor = (fixed_t)(playerLerp * (double) FRACUNIT);
     gWorldLerpFactor = (fixed_t)(worldLerp * (double) FRACUNIT);
 }
