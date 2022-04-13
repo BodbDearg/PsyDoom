@@ -656,9 +656,14 @@ gameaction_t P_Ticker() noexcept {
             return gGameAction;
         }
 
-        // PsyDoom: update the old values used for player interpolation before ticking (if doing uncapped framerates)
+        // PsyDoom: update the frame start times for interpolation and snap the player's position
         if (Config::gbUncapFramerate) {
-            R_NextPlayerInterpolation();
+            R_SnapPlayerInterpolation();
+            R_InterpBeginPlayerFrame();
+
+            if (gGameTic > gPrevGameTic) {
+                R_InterpBeginWorldFrame();
+            }
         }
 
         // PsyDoom: fix certain sequencer music tracks in 'Final Doom' not looping correctly: if the sequencer track has ended then restart it.
@@ -687,9 +692,6 @@ gameaction_t P_Ticker() noexcept {
     // Run map entities and do status bar logic, if it's time
     if ((!gbGamePaused) && (gGameTic > gPrevGameTic)) {
         #if PSYDOOM_MODS
-            // PsyDoom: start the timer for world/mobj interpolation for this tick
-            R_NextWorldInterpolation();
-
             // PsyDoom: the player's view has not been pushed by the world (yet) for this 15 Hz tick.
             // The 'old' view z value also does not (yet) incorporate any pushing that may be done by the world this tick.
             gViewPushedZ = 0;
@@ -846,8 +848,9 @@ void P_Start() noexcept {
 
         // PsyDoom: don't interpolate the first draw frame if doing uncapped framerates
         if (Config::gbUncapFramerate) {
-            R_NextPlayerInterpolation();
-            R_NextWorldInterpolation();
+            R_InterpBeginPlayerFrame();
+            R_InterpBeginWorldFrame();
+            R_SnapPlayerInterpolation();
         }
     #endif
 

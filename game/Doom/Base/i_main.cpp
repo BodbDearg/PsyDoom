@@ -962,15 +962,20 @@ void I_NetHandshake() noexcept {}
 void I_SubmitGpuCmds() noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom: get the total number of vblanks elapsed, and use the current time adjustment in networked games
+// PsyDoom: helper chrono typedefs for the code below
+//------------------------------------------------------------------------------------------------------------------------------------------
+typedef std::chrono::steady_clock                           appclock_t;
+typedef appclock_t::time_point                              time_point_t;
+typedef appclock_t::duration                                duration_t;
+typedef std::chrono::duration<int64_t, std::ratio<1,  50>>  tick_50hz_t;    // A tick that fires 50 times a second (50Hz/PAL)
+typedef std::chrono::duration<int64_t, std::ratio<1,  60>>  tick_60hz_t;    // A tick that fires 60 times a second (60Hz/NTSC)
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: get the total number of vblanks elapsed.
+// Also takes into account the current time adjustment in networked games.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t I_GetTotalVBlanks() noexcept {
-    typedef std::chrono::steady_clock::time_point               time_point_t;
-    typedef std::chrono::steady_clock::duration                 duration_t;
-    typedef std::chrono::duration<int64_t, std::ratio<1, 50>>   tick_50hz_t;
-    typedef std::chrono::duration<int64_t, std::ratio<1, 60>>   tick_60hz_t;
-
-    const time_point_t now = std::chrono::steady_clock::now();
+    const time_point_t now = appclock_t::now();
     const duration_t timeSinceAppStart = now - gAppStartTime;
     const duration_t timeAdjustMs = std::chrono::milliseconds((gNetGame != gt_single) ? gNetTimeAdjustMs : 0);
     const duration_t adjustedDuration = timeSinceAppStart + timeAdjustMs;
@@ -979,6 +984,21 @@ int32_t I_GetTotalVBlanks() noexcept {
         return (int32_t) std::chrono::duration_cast<tick_50hz_t>(adjustedDuration).count();
     } else {
         return (int32_t) std::chrono::duration_cast<tick_60hz_t>(adjustedDuration).count();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: gets the absolute time that the specified vblank occurred at
+//------------------------------------------------------------------------------------------------------------------------------------------
+time_point_t I_GetVBlankTimepoint(const int32_t vblankIdx) noexcept {
+    constexpr double NANOSECS_PER_SECOND = 1000 * 1000 * 1000;
+
+    if (Game::gSettings.bUsePalTimings) {
+        constexpr double nanosPerVblank = NANOSECS_PER_SECOND / 50.0;
+        return gAppStartTime + std::chrono::nanoseconds((int64_t)((double) vblankIdx * nanosPerVblank));
+    } else {
+        constexpr double nanosPerVblank = NANOSECS_PER_SECOND / 60.0;
+        return gAppStartTime + std::chrono::nanoseconds((int64_t)((double) vblankIdx * nanosPerVblank));
     }
 }
 #endif  // #if PSYDOOM_MODS

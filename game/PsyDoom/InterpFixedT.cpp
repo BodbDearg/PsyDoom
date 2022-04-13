@@ -27,15 +27,8 @@ fixed_t InterpFixedT::renderValue() noexcept {
         return value;
     }
 
-    // If no interpolation is required (or disabled globally) then we can just snap and return the real value
-    const fixed_t lerpFactor = gWorldLerpFactor;
-
-    if (lerpFactor >= FRACUNIT) {
-        snap();
-        return value;
-    }
-
     // Need to interpolate, do it!
+    const fixed_t lerpFactor = gWorldLerpFactor;
     return R_LerpCoord(oldValue, value, lerpFactor);
 }
 

@@ -78,8 +78,9 @@ int32_t R_PointOnSide(const fixed_t x, const fixed_t y, const node_t& node) noex
 subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept;
 
 #if PSYDOOM_MODS
-    void R_NextPlayerInterpolation() noexcept;
-    void R_NextWorldInterpolation() noexcept;
+    void R_SnapPlayerInterpolation() noexcept;
+    void R_InterpBeginPlayerFrame() noexcept;
+    void R_InterpBeginWorldFrame() noexcept;
     void R_SnapViewZInterpolation() noexcept;
     void R_SnapSectorInterpolation(sector_t& sector) noexcept;
     void R_SnapSideInterpolation(side_t& side) noexcept;

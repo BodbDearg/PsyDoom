@@ -150,9 +150,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             // Also kill any interpolations for the map object itself.
             #if PSYDOOM_MODS
                 if (mobj.player == &gPlayers[gCurPlayerIndex]) {
-                    R_NextPlayerInterpolation();
-                    gbSnapViewZInterpolation = true;    // View z hasn't been updated yet - snap it next time it is...
-                    R_NextWorldInterpolation();
+                    R_SnapPlayerInterpolation();
                 }
 
                 R_SnapMobjInterpolation(mobj);
@@ -261,9 +259,7 @@ bool EV_TeleportTo(
     else {
         // Otherwise snap all movements
         if (mobj.player == &gPlayers[gCurPlayerIndex]) {
-            R_NextPlayerInterpolation();
-            gbSnapViewZInterpolation = true;    // View z hasn't been updated yet - snap it next time it is...
-            R_NextWorldInterpolation();
+            R_SnapPlayerInterpolation();
         }
 
         R_SnapMobjInterpolation(mobj);

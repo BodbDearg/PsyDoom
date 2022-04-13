@@ -650,8 +650,7 @@ LoadSaveResult load() noexcept {
 
     // Post load actions: play CD music if required, kill interpolations and update sector draw params
     playCdTrackIfNeeded(saveData.globals.curCDTrack);
-    R_NextWorldInterpolation();
-    R_NextPlayerInterpolation();
+    R_SnapPlayerInterpolation();
     updateSectorDrawParams();
 
     // Finish up and cleanup

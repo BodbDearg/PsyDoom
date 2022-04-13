@@ -63,9 +63,9 @@ bool gbDoViewLighting;
 sector_t*       gpCurDrawSector;        // What sector is currently being drawn
 subsector_t**   gppEndDrawSubsector;    // Used to point to the last draw subsector in the list and iterate backwards
 
-// PsyDoom: used for interpolation for uncapped framerates 
+// PsyDoom: used for interpolation when the framerate is uncapped
 #if PSYDOOM_MODS
-    typedef std::chrono::high_resolution_clock frametimer_t;
+    typedef std::chrono::steady_clock frametimer_t;
 
     static frametimer_t::time_point gCurPlayerFrameStartTime;   // When the current frame started for the player (30 Hz tics)
     static frametimer_t::time_point gCurWorldFrameStartTime;    // When the current frame started for the world and mobjs (15 Hz tics)
@@ -89,6 +89,11 @@ subsector_t**   gppEndDrawSubsector;    // Used to point to the last draw subsec
     // This affects how interpolation is calculated. On even 30 Hz player ticks it is 'false' and on odd ones it is 'true'.
     // It's basically 'false' for the frames where both the player AND the world tick.
     bool gbOldViewZIsPushed;
+#endif
+
+// PsyDoom: this is not declared in the 'i_main' header to avoid exposing the <chrono> library
+#if PSYDOOM_MODS
+    std::chrono::steady_clock::time_point I_GetVBlankTimepoint(const int32_t vblankIdx) noexcept;
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -466,15 +471,14 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom addition: update the 'previous' player values used in interpolation to their current (actual) values.
-// Used before simulating an actual player tick, or when we want to snap immediately to the actual values - like when teleporting.
+// Can be used in situations like teleporting.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_NextPlayerInterpolation() noexcept {
+void R_SnapPlayerInterpolation() noexcept {
     player_t& player = gPlayers[gCurPlayerIndex];
     mobj_t& mobj = *player.mo;
 
     const bool bAutomapFreeCamera = (player.automapflags & AF_FOLLOW);
 
-    gCurPlayerFrameStartTime = frametimer_t::now();
     gOldViewX = mobj.x;
     gOldViewY = mobj.y;
     gOldViewZ = player.viewz;
@@ -482,6 +486,29 @@ void R_NextPlayerInterpolation() noexcept {
     gOldAutomapX = (bAutomapFreeCamera) ? player.automapx : mobj.x;     // Use the current player position if not following to avoid sudden jumps when switching to free camera
     gOldAutomapY = (bAutomapFreeCamera) ? player.automapy : mobj.y;
     gOldAutomapScale = player.automapscale;
+    gbSnapViewZInterpolation = true;
+    gbOldViewZIsPushed = false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom addition: should be called at the beginning of a player (30 Hz) tick.
+// Sets the time to interpolate from and moves 'current' player values to be 'previous' ones.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_InterpBeginPlayerFrame() noexcept {
+    // Remember when this player tick started for the purposes of interpolation
+    if (gNetGame == gt_single) {
+        // Get the time when the vblank (in which the update is due) began.
+        // This fixed/absolute time method of spacing frames produces the smoothest motion, but doesn't work in networked games where we adjust the clock.
+        gCurPlayerFrameStartTime = I_GetVBlankTimepoint(gTotalVBlanks);
+    } else {
+        // In networked games just space frames apart based on the start of the last frame.
+        // This can produce more jitter and inconsistency but we have to do this because the main clock can be adjusted mid-game to try and sync the peers.
+        // Adjusting the clock messes with the absolute frame spacing method above...
+        gCurPlayerFrameStartTime = frametimer_t::now();
+    }
+    
+    // Snap player interpolation, except view z which might still have some 15 Hz world motion (from platforms) that has not finished yet
+    R_SnapPlayerInterpolation();
     gbSnapViewZInterpolation = false;
 
     // The 'old' z value now potentially incorporates some world Z motion, until we do the next world (15 Hz) simulation tick.
@@ -490,11 +517,21 @@ void R_NextPlayerInterpolation() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom addition: called at the start of a world/mobj (15 Hz NTSC) tick.
-// Starts the timer used for world/mobj interpolation.
+// PsyDoom addition: should be called at the beginning of a world (15 Hz) tick.
+// Sets the time to interpolate from.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_NextWorldInterpolation() noexcept {
-    gCurWorldFrameStartTime = frametimer_t::now();
+void R_InterpBeginWorldFrame() noexcept {
+    // Remember when this world tick started for the purposes of interpolation.
+    if (gNetGame == gt_single) {
+        // Get the time when the vblank (in which the update is due) began.
+        // This fixed/absolute time method of spacing frames produces the smoothest motion, but doesn't work in networked games where we adjust the clock.
+        gCurWorldFrameStartTime = I_GetVBlankTimepoint(gTotalVBlanks);
+    } else {
+        // In networked games just space frames apart based on the start of the last frame.
+        // This can produce more jitter and inconsistency but we have to do this because the main clock can be adjusted mid-game to try and sync the peers.
+        // Adjusting the clock messes with the absolute frame spacing method above...
+        gCurWorldFrameStartTime = frametimer_t::now();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -557,8 +594,8 @@ void R_CalcLerpFactors() noexcept {
     //  (1) For NTSC demo playback/recording the player sim is capped at 15 Hz for consistency, and the cap is 30 Hz for normal NTSC games.
     //  (2) World sim uses the demo tick rate (15 Hz in the NTSC case).
     //  (3) PAL mode has slightly different timings for player and world sim.
-    const double normalPlayerFrameTime = 1.0 / ((Game::gSettings.bUsePalTimings) ? 25.0 : 30.0);
-    const double demoFrameTime = 1.0 / ((Game::gSettings.bUsePalTimings) ? 16.666666 : 15.0);
+    const double normalPlayerFrameTime = (Game::gSettings.bUsePalTimings) ? 2.0 / 50.0 : 2.0 / 60.0;
+    const double demoFrameTime = (Game::gSettings.bUsePalTimings) ? 3.0 / 50.0 : 4.0 / 60.0;
     const double playerFrameTime = (Game::gSettings.bUseDemoTimings) ? demoFrameTime : normalPlayerFrameTime;
     const double worldFrameTime = demoFrameTime;
 
@@ -567,9 +604,9 @@ void R_CalcLerpFactors() noexcept {
     const double playerElapsedSeconds = std::chrono::duration<double>(now - gCurPlayerFrameStartTime).count();
     const double worldElapsedSeconds = std::chrono::duration<double>(now - gCurWorldFrameStartTime).count();
 
-    // Compute the lerp factor and don't lerping too far into the future past 't = 1.0'
-    const double playerLerp = std::clamp(playerElapsedSeconds / playerFrameTime, 0.0, 2.0);
-    const double worldLerp = std::clamp(worldElapsedSeconds / worldFrameTime, 0.0, 2.0);
+    // Compute the lerp factor and don't allow lerping into the future since that often produces worse results (more jitter)
+    const double playerLerp = std::clamp(playerElapsedSeconds / playerFrameTime, 0.0, 1.0);
+    const double worldLerp = std::clamp(worldElapsedSeconds / worldFrameTime, 0.0, 1.0);
     gPlayerLerpFactor = (fixed_t)(playerLerp * (double) FRACUNIT);
     gWorldLerpFactor = (fixed_t)(worldLerp * (double) FRACUNIT);
 }
