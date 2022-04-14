@@ -556,9 +556,19 @@ static void P_CalcHeight(player_t& player) noexcept {
         {
             // PsyDoom: if we are doing 30 Hz ticks then adjust the speed fed into the view bobbing calculation to account for doubled friction @ 30 Hz.
             // Undo 1 tick of friction to get a bobbing amount closer to what would happen if the game ran at 15 Hz.
-            if (Game::gSettings.bFixViewBobStrength && (gElapsedVBlanks <= 2)) {
+            const uint32_t worldTickVblanks = (Game::gSettings.bUsePalTimings) ? 3 : 4;
+
+            if (Game::gSettings.bFixViewBobStrength && (gElapsedVBlanks < worldTickVblanks)) {
+                const fixed_t oldSpeedX = speedX;
+                const fixed_t oldSpeedY = speedY;
                 speedX = FixedDiv(speedX, FRICTION);
                 speedY = FixedDiv(speedY, FRICTION);
+
+                // If we are midway between 30 Hz and 15 Hz then lerp between the old and new (adjusted) speed values
+                if (gElapsedVBlanks == 3) {
+                    speedX = (speedX + oldSpeedX) / 2;
+                    speedY = (speedY + oldSpeedY) / 2;
+                }
             }
 
             // PsyDoom: if we are applying the movement input latency tweak then un-apply this frame's friction for the bob calculation.
