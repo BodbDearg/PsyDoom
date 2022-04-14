@@ -5,6 +5,7 @@
 #include "FileUtils.h"
 #include "Finally.h"
 #include "IniUtils.h"
+#include "ProgArgs.h"
 #include "Utils.h"
 
 #if PSYDOOM_VULKAN_RENDERER
@@ -67,9 +68,24 @@ struct ConfigFieldHandler {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Graphics config default settings
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+// Vulkan related default settings
 static const char* gDefaultAntiAliasingMultisamples = "4";
 static const char* gDefaultVulkanRenderHeight = "-1";
 static const char* gDefaultVulkanPixelStretch = "0";
+
+// Whether we determined Vulkan related default config settings
+static bool gbDidDetermineVulkanDefaultConfig = false;
+
+// Forward declaration
+static void lazyDetermineVulkanDynamicConfigDefaults() noexcept;
+
+// Helper: lazily determines Vulkan related dynamic config defaults and returns the specified default value afterwards.
+// At most only does the actual determination once!
+static const char* getVulkanDynamicConfigDefault(const char*& pDefault) noexcept {
+    lazyDetermineVulkanDynamicConfigDefaults();
+    return pDefault;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Graphics config settings
@@ -150,7 +166,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gAAMultisamples = iniEntry.getIntValue(4); },
-        []() { return gDefaultAntiAliasingMultisamples; },
+        []() { return getVulkanDynamicConfigDefault(gDefaultAntiAliasingMultisamples); },
     },
     {
         "VulkanRenderHeight",
@@ -168,7 +184,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gVulkanRenderHeight = iniEntry.getIntValue(-1); },
-        []() { return gDefaultVulkanRenderHeight; },
+        []() { return getVulkanDynamicConfigDefault(gDefaultVulkanRenderHeight); },
     },
     {
         "VulkanPixelStretch",
@@ -189,7 +205,7 @@ static const ConfigFieldHandler GRAPHICS_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gbVulkanPixelStretch = iniEntry.getBoolValue(false); },
-        []() { return gDefaultVulkanPixelStretch; },
+        []() { return getVulkanDynamicConfigDefault(gDefaultVulkanPixelStretch); },
     },
     {
         "VulkanTripleBuffer",
@@ -1494,18 +1510,6 @@ static void parseConfigFile(
     const size_t numConfigFieldHandlers,
     const char* const cfgFileHeader
 ) noexcept {
-    // Set all values to their initial defaults (until we parse otherwise)
-    {
-        IniUtils::Entry iniEntry;
-        iniEntry.value.reserve(256);
-
-        for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
-            const Config::ConfigFieldHandler& fieldHandler = configFieldHandlers[i];
-            iniEntry.value = fieldHandler.getDefaultValueFunc();
-            fieldHandler.parseFunc(iniEntry);
-        }
-    }
-
     // Store which config field handlers have parsed config here
     std::vector<bool> executedConfigHandler;
     executedConfigHandler.resize(numConfigFieldHandlers);
@@ -1547,12 +1551,24 @@ static void parseConfigFile(
         );
     }
 
-    // If we are missing expected config fields then we need to reopen the config and append to it
+    // If we are missing expected config fields then we need to reopen the config and append to it.
+    // Also generate default values for any fields that happen to be missing.
     size_t numMissingConfigFields = 0;
+   
+    {
+        IniUtils::Entry dummyIniEntry;      // Used to parse default built-in values
+        dummyIniEntry.value.reserve(256);
 
-    for (bool executed : executedConfigHandler) {
-        if (!executed) {
-            numMissingConfigFields++;
+        for (size_t i = 0; i < numConfigFieldHandlers; ++i) {
+            if (!executedConfigHandler[i]) {
+                // Field was missing: set this field to its default value
+                const Config::ConfigFieldHandler& fieldHandler = configFieldHandlers[i];
+                dummyIniEntry.value = fieldHandler.getDefaultValueFunc();
+                fieldHandler.parseFunc(dummyIniEntry);
+
+                // Show a message about new (defaulted) settings being available to change
+                numMissingConfigFields++;
+            }
         }
     }
 
@@ -1583,9 +1599,20 @@ static void parseAllConfigFiles(const std::string& configFolder) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Determines dynamic defaults for some config values based on the host environment and hardware
+// Lazily determines dynamic defaults for some Vulkan related config values based on the host environment and hardware.
+// This is only done when actually needed, as setting up a temporary Vulkan instance for this purpose can be expensive.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void determineDynamicConfigDefaults() noexcept {
+static void lazyDetermineVulkanDynamicConfigDefaults() noexcept {
+    // Don't do if we've already done
+    if (gbDidDetermineVulkanDefaultConfig)
+        return;
+
+    gbDidDetermineVulkanDefaultConfig = true;
+
+    // Skip if in headless mode - don't setup anything video related!
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
     // Initialize SDL temporarily for this
     SDL_InitSubSystem(SDL_INIT_VIDEO);
 
@@ -1646,9 +1673,8 @@ static void determineDynamicConfigDefaults() noexcept {
 // If new config keys are missing then they will be appended to the existing config files.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
-    // Clear all control bindings and determine some dynamic config defaults
+    // Clear all control bindings
     Controls::clearAllBindings();
-    determineDynamicConfigDefaults();
 
     // Create the config folder if it doesn't exist and parse all existing configs
     const std::string configFolder = Utils::getOrCreateUserDataFolder();
