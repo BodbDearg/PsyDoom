@@ -133,13 +133,13 @@ texture_t gTex_CONNECT;
     // Lets us know when we are sending the first update packet of the session.
     static bool gbNetIsFirstNetUpdate;
 
-    // How much to adjust time in a networked game.
-    // Used to tweak the clock to try and get both peers locked into the same time.
-    static int32_t gNetTimeAdjustMs;
-
     // How delayed the last packet we received from the other player was.
     // This is relayed to the other peer on the next packet, so that the other player's time can be adjusted forward (if required).
     static int32_t gLastInputPacketDelayMs;
+
+    // How much to adjust time in a networked game.
+    // Used to tweak the clock to try and get both peers locked into the same time.
+    int32_t gNetTimeAdjustMs;
 
     // Whether the game is being recorded as a demo by one of the players.
     // Affects whether pause can be used or whether it ends the recording session.
@@ -977,8 +977,8 @@ typedef std::chrono::duration<int64_t, std::ratio<1,  60>>  tick_60hz_t;    // A
 int32_t I_GetTotalVBlanks() noexcept {
     const time_point_t now = appclock_t::now();
     const duration_t timeSinceAppStart = now - gAppStartTime;
-    const duration_t timeAdjustMs = std::chrono::milliseconds((gNetGame != gt_single) ? gNetTimeAdjustMs : 0);
-    const duration_t adjustedDuration = timeSinceAppStart + timeAdjustMs;
+    const duration_t netTimeAdjust = std::chrono::milliseconds((gNetGame != gt_single) ? gNetTimeAdjustMs : 0);
+    const duration_t adjustedDuration = timeSinceAppStart + netTimeAdjust;
 
     if (Game::gSettings.bUsePalTimings) {
         return (int32_t) std::chrono::duration_cast<tick_50hz_t>(adjustedDuration).count();

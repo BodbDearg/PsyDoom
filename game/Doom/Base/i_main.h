@@ -82,9 +82,10 @@ extern texture_t            gTex_CONNECT;
     extern std::byte gTmpBuffer[TMP_BUFFER_SIZE];
 #endif
 
-// PsyDoom: whether the current networked game is being demo recorded by any player
+// PsyDoom: networking related globals
 #if PSYDOOM_MODS
-    extern bool gbNetIsGameBeingRecorded;
+    extern int32_t  gNetTimeAdjustMs;
+    extern bool     gbNetIsGameBeingRecorded;
 #endif
 
 void I_Main() noexcept;

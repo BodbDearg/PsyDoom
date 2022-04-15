@@ -495,17 +495,9 @@ void R_SnapPlayerInterpolation() noexcept {
 // Sets the time to interpolate from and moves 'current' player values to be 'previous' ones.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InterpBeginPlayerFrame() noexcept {
-    // Remember when this player tick started for the purposes of interpolation
-    if (gNetGame == gt_single) {
-        // Get the time when the vblank (in which the update is due) began.
-        // This fixed/absolute time method of spacing frames produces the smoothest motion, but doesn't work in networked games where we adjust the clock.
-        gCurPlayerFrameStartTime = I_GetVBlankTimepoint(gTotalVBlanks);
-    } else {
-        // In networked games just space frames apart based on the start of the last frame.
-        // This can produce more jitter and inconsistency but we have to do this because the main clock can be adjusted mid-game to try and sync the peers.
-        // Adjusting the clock messes with the absolute frame spacing method above...
-        gCurPlayerFrameStartTime = frametimer_t::now();
-    }
+    // Get the time when the vblank (in which the update is due) began.
+    // This fixed method of spacing frames equally apart (at absolute timepoints) apart tends to produce the smoothest motion.
+    gCurPlayerFrameStartTime = I_GetVBlankTimepoint(gTotalVBlanks);
     
     // Snap player interpolation, except view z which might still have some 15 Hz world motion (from platforms) that has not finished yet
     R_SnapPlayerInterpolation();
@@ -521,17 +513,9 @@ void R_InterpBeginPlayerFrame() noexcept {
 // Sets the time to interpolate from.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_InterpBeginWorldFrame() noexcept {
-    // Remember when this world tick started for the purposes of interpolation.
-    if (gNetGame == gt_single) {
-        // Get the time when the vblank (in which the update is due) began.
-        // This fixed/absolute time method of spacing frames produces the smoothest motion, but doesn't work in networked games where we adjust the clock.
-        gCurWorldFrameStartTime = I_GetVBlankTimepoint(gTotalVBlanks);
-    } else {
-        // In networked games just space frames apart based on the start of the last frame.
-        // This can produce more jitter and inconsistency but we have to do this because the main clock can be adjusted mid-game to try and sync the peers.
-        // Adjusting the clock messes with the absolute frame spacing method above...
-        gCurWorldFrameStartTime = frametimer_t::now();
-    }
+    // Get the time when the vblank (in which the update is due) began.
+    // This fixed method of spacing frames equally apart (at absolute timepoints) apart tends to produce the smoothest motion.
+    gCurWorldFrameStartTime = I_GetVBlankTimepoint(gTotalVBlanks);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -601,8 +585,9 @@ void R_CalcLerpFactors() noexcept {
 
     // Get the elapsed player and world seconds
     const frametimer_t::time_point now = frametimer_t::now();
-    const double playerElapsedSeconds = std::chrono::duration<double>(now - gCurPlayerFrameStartTime).count();
-    const double worldElapsedSeconds = std::chrono::duration<double>(now - gCurWorldFrameStartTime).count();
+    const frametimer_t::duration netTimeAdjust = std::chrono::milliseconds((gNetGame != gt_single) ? gNetTimeAdjustMs : 0);
+    const double playerElapsedSeconds = std::chrono::duration<double>(now - gCurPlayerFrameStartTime + netTimeAdjust).count();
+    const double worldElapsedSeconds = std::chrono::duration<double>(now - gCurWorldFrameStartTime + netTimeAdjust).count();
 
     // Compute the lerp factor and don't allow lerping into the future since that often produces worse results (more jitter)
     const double playerLerp = std::clamp(playerElapsedSeconds / playerFrameTime, 0.0, 1.0);
