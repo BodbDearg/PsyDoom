@@ -89,6 +89,31 @@ static void patchMap_AndHellFollowed() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP10: Industrial Zone
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_IndustrialZone() noexcept {
+    // Fix the switch past the gate leading up a secret section of the castle wall being usable through the metal bars.
+    // Seal up the bar gate completely (to make it block line activations) and adjust the texture coords to make it look prettier.
+    // This is a bug introduced by PsyDoom's improved 'use line' logic; the switch should have been technically usable through the bars
+    // previously (according to the game rules) but wasn't due to bugs in how the line activation logic worked (a happy coincidence).
+    modifySectors(
+        [](sector_t& sector) {
+            sector.floorheight = sector.ceilingheight;
+        },
+        260
+    );
+
+    modifyLinedefs(
+        [](line_t& line) {
+            gpSides[line.sidenum[0]].rowoffset = 0;
+            line.flags |= ML_VOID;
+        },
+        1113,
+        737
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP11: Betray
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Betray() noexcept {
@@ -764,6 +789,7 @@ static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, patchMap_SloughOfDespair },           // MAP05
     { 129546, 0x3B2546BA128349AE, 0xC4D9982A6D4C27DD, patchMap_AgainstTheeWickedly },       // MAP07
     { 141963, 0x0505711A9F4FB230, 0x86BDE1AB556902AC, patchMap_AndHellFollowed },           // MAP08
+    { 203154, 0x22FA09BAC6B1825B, 0x1192E3A6E42F100B, patchMap_IndustrialZone },            // MAP10
     {  96628, 0x808AD04C8D43EEC8, 0x73B0859F1115F292, patchMap_Betray },                    // MAP11
     { 125944, 0x2B2CE1174955191F, 0xDBDC93F792A48D6E, patchMap_TheChasm },                  // MAP13
     {  87975, 0x7CF1F4CF0C3427C5, 0x50A8701B4A994752, fixWrongREDROK01 },                   // MAP14
