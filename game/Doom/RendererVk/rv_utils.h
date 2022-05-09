@@ -50,4 +50,15 @@ bool RV_GetLineNdcBounds(
 void RV_ClearSubsecDrawIndexes() noexcept;
 void RV_DrawWidescreenStatusBarLetterbox() noexcept;
 
+bool RV_LinesIntersect(
+    const float a1x,
+    const float a1y,
+    const float a2x,
+    const float a2y,
+    const float b1x,
+    const float b1y,
+    const float b2x,
+    const float b2y
+) noexcept;
+
 #endif  // #if PSYDOOM_VULKAN_RENDERER

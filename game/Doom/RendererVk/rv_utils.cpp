@@ -290,4 +290,45 @@ void RV_DrawWidescreenStatusBarLetterbox() noexcept {
     );
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: tells if the specified lines intersect
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool RV_LinesIntersect(
+    const float a1x,
+    const float a1y,
+    const float a2x,
+    const float a2y,
+    const float b1x,
+    const float b1y,
+    const float b2x,
+    const float b2y
+) noexcept {
+    // Compute the intersection of two lines using the following method:
+    //  http://paulbourke.net/geometry/pointlineplane/
+    // See: "Intersection point of two line segments in 2 dimensions"
+    const float adx = a2x - a1x;
+    const float ady = a2y - a1y;
+    const float bdx = b2x - b1x;
+    const float bdy = b2y - b1y;
+
+    const float coef1 = a1y - b1y;
+    const float coef2 = a1x - b1x;
+
+    const float numerator1 = bdx * coef1 - bdy * coef2;
+    const float numerator2 = adx * coef1 - ady * coef2;
+    const float denominator = bdy * adx - bdx * ady;
+
+    // If the denominator is '0' then there is no intersection (parallel lines)
+    if (denominator == 0)
+        return true;
+
+    // Otherwise the finite line segments intersect if 'timeA' and 'timeB' (time along each intersection line) are both between 0 and 1.
+    // Note that these time values can be used with linear interpolation between the line points to get the actual intersect point.
+    // We don't need that here though so don't bother...
+    const float timeA = numerator1 / denominator;
+    const float timeB = numerator2 / denominator;
+    const bool bLinesIntersect = ((timeA >= 0.0f) && (timeA <= 1.0f) && (timeB >= 0.0f) && (timeB <= 1.0f));
+    return bLinesIntersect;
+}
+
 #endif  // #if PSYDOOM_VULKAN_RENDERER

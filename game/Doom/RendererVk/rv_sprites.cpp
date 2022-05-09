@@ -309,40 +309,14 @@ static void RV_SpriteFrag_VisitSubsector(const subsector_t& subsec, const Sprite
 // Returns 'true' if a sprite split is allowed to occur after testing against this seg.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine& splitLine) noexcept {
-    // Get the endpoints for the line segment
-    const float segX1 = seg.v1x;
-    const float segY1 = seg.v1y;
-    const float segX2 = seg.v2x;
-    const float segY2 = seg.v2y;
+    // If the split line does not intersect the seg's line then the seg does not prevent splitting
+    line_t& line = *seg.linedef;
+    const float lineV1x = RV_FixedToFloat(line.vertex1->x);
+    const float lineV1y = RV_FixedToFloat(line.vertex1->y);
+    const float lineV2x = RV_FixedToFloat(line.vertex2->x);
+    const float lineV2y = RV_FixedToFloat(line.vertex2->y);
 
-    // Compute the intersection of two lines using the following equation method:
-    //  http://paulbourke.net/geometry/pointlineplane/
-    // See: "Intersection point of two line segments in 2 dimensions"
-    const float segDx = segX2 - segX1;
-    const float segDy = segY2 - segY1;
-    const float splitLineDx = splitLine.x2 - splitLine.x1;
-    const float splitLineDy = splitLine.z2 - splitLine.z1;
-
-    const float a = splitLine.z1 - segY1;
-    const float b = splitLine.x1 - segX1;
-
-    const float numerator1 = (segDx * a) - (segDy * b);
-    const float numerator2 = (splitLineDx * a) - (splitLineDy * b);
-    const float denominator = segDy * splitLineDx - segDx * splitLineDy;
-
-    // If the denominator is '0' then there is no intersection (parallel lines) and a split can happen
-    if (denominator == 0)
-        return true;
-
-    // Otherwise the finite line segments intersect if 'tx' and 'ty' are between 0 and 1.
-    // Note that these time values can be used as linear interpolation values to get the actual x and y intersect point.
-    // We don't need that here though so don't bother...
-    const float tx = numerator1 / denominator;
-    const float ty = numerator2 / denominator;
-    const bool bLinesIntersect = ((tx >= 0.0f) && (tx <= 1.0f) && (ty >= 0.0f) && (ty <= 1.0f));
-
-    // Now: if the lines do not intersect then this seg does not prevent sprite splitting
-    if (!bLinesIntersect)
+    if (!RV_LinesIntersect(lineV1x, lineV1y, lineV2x, lineV2y, splitLine.x1, splitLine.z1, splitLine.x2, splitLine.z2))
         return true;
 
     // Otherwise if it is a one-sided line then it prevents splitting in all cases
@@ -353,7 +327,7 @@ static bool RV_SpriteSplitTest_VisitSeg(const rvseg_t& seg, const SplitTestLine&
 
     // If it's a two-sided line that is masked or translucent then do not allow sprite splitting across it.
     // Don't want sprites poking through mid wall textures like bars and so on.
-    if (seg.linedef->flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT))
+    if (line.flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT))
         return false;
 
     // If the seg is not visible then allow splitting across two sided lines to prevent sprite ordering problems.
@@ -506,8 +480,8 @@ static void RV_SpriteFrag_VisitBspNode(const int32_t nodeIdx, SpriteFrag& frag) 
             // I wish there was a better way to do this, but unfortunately the BSP tree doesn't contain any info about what lines originally
             // generated the splits, so we have no idea or way of telling whether a node line is solid/blocking or not.
             // This collision test is a workaround of sorts.
-            const float splitT1 = std::clamp(splitT * 0.999f, 0.0f, 1.0f);
-            const float splitT2 = std::clamp(splitT * 1.001f, 0.0f, 1.0f);
+            const float splitT1 = std::clamp(splitT * 0.99f, 0.0f, 1.0f);
+            const float splitT2 = std::clamp(splitT * 1.01f, 0.0f, 1.0f);
             const float splitT1_inv = (1.0f - splitT1);
             const float splitT2_inv = (1.0f - splitT2);
 
