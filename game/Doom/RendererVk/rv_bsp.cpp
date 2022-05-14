@@ -67,11 +67,17 @@ static bool RV_IsOccludingSeg(const rvseg_t& seg, const sector_t& frontSector) n
 // Check if the bounding box for the specified node is visible
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
-    // Get the bounds of the box in normalized device coords to see what area of the screen it occupies
-    const float nodeTy = RV_FixedToFloat(boxCoords[BOXTOP]);
-    const float nodeBy = RV_FixedToFloat(boxCoords[BOXBOTTOM]);
-    const float nodeLx = RV_FixedToFloat(boxCoords[BOXLEFT]);
-    const float nodeRx = RV_FixedToFloat(boxCoords[BOXRIGHT]);
+    // Get the bounds of the box in normalized device coords to see what area of the screen it occupies.
+    //
+    // Also artifically expand the bounds by a certain amount to account for cases where sprites inside an occluded BSP node extend into
+    // BSP nodes that ARE visible. This fudge helps prevent annoying pop-in of sprites and improves visual consistency. This does of course
+    // cost some performance, but it's worth it to help prevent pop in!
+    const float BOX_FUDGE = 128.0f;
+
+    const float nodeTy = RV_FixedToFloat(boxCoords[BOXTOP]) + BOX_FUDGE;
+    const float nodeBy = RV_FixedToFloat(boxCoords[BOXBOTTOM]) - BOX_FUDGE;
+    const float nodeLx = RV_FixedToFloat(boxCoords[BOXLEFT]) - BOX_FUDGE;
+    const float nodeRx = RV_FixedToFloat(boxCoords[BOXRIGHT]) + BOX_FUDGE;
 
     float nodeMinX = +1.0f;
     float nodeMaxX = -1.0f;
@@ -96,17 +102,8 @@ static bool RV_NodeBBVisible(const fixed_t boxCoords[4]) noexcept {
     addNodeLineToBounds(nodeRx, nodeBy, nodeLx, nodeBy);
     addNodeLineToBounds(nodeLx, nodeBy, nodeLx, nodeTy);
 
-    // Regard the node as visible if any of that area is unobscured.
-    // 
-    // Note: add in a 'fudge factor' extension of the test range on each end by 25% of it's length. This is to try and fix cases where sprites
-    // are inside a subsector that is technically not visible but are also jutting out into areas that ARE visible. The extra leniency fudge
-    // helps prevent 'pop-in' and sprites suddenly appearing out of nowhere once their parent subsector becomes visible. This does of course
-    // cost some performance, but it's worth it to help prevent annoying 'pop in' issues and improve consistency.
-    constexpr float FUDGE_FACTOR = 0.25f;
-    const float rangeLength = nodeMaxX - nodeMinX;
-    const float fudgeAmount = rangeLength * FUDGE_FACTOR;
-
-    return RV_IsRangeVisible(nodeMinX - fudgeAmount, nodeMaxX + fudgeAmount);
+    // Regard the node as visible if any of that area is unobscured
+    return RV_IsRangeVisible(nodeMinX, nodeMaxX);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
