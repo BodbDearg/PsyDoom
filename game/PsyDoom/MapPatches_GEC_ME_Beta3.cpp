@@ -366,6 +366,9 @@ static void patchMap_TEETH() noexcept {
         [](line_t& line) { line.tag = 50; },
         304
     );
+
+    // Hide a monster closet automap line that should be hidden
+    hideLinedefs(495);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
