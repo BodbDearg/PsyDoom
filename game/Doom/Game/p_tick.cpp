@@ -689,14 +689,20 @@ gameaction_t P_Ticker() noexcept {
 
     P_CheckCheats();
 
+    #if PSYDOOM_MODS
+        if (gGameTic > gPrevGameTic) {
+            // PsyDoom: the player's view has not been pushed by the world (yet) for this 15 Hz tick.
+            // The 'old' view z value also does not (yet) incorporate any pushing that may be done by the world this tick.
+            // Note: deliberately run this logic even when paused, since interpolation is still active for a short time while paused.
+            // This is because we are always a frame behind when interpolating...
+            gViewPushedZ = 0;
+            gbOldViewZIsPushed = false;
+        }
+    #endif
+
     // Run map entities and do status bar logic, if it's time
     if ((!gbGamePaused) && (gGameTic > gPrevGameTic)) {
         #if PSYDOOM_MODS
-            // PsyDoom: the player's view has not been pushed by the world (yet) for this 15 Hz tick.
-            // The 'old' view z value also does not (yet) incorporate any pushing that may be done by the world this tick.
-            gViewPushedZ = 0;
-            gbOldViewZIsPushed = false;
-
             // PsyDoom: execute any scheduled script actions and tick the external camera (if it's active)
             ScriptingEngine::runScheduledActions();
 
