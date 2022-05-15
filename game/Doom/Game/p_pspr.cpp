@@ -948,7 +948,22 @@ void P_MovePsprites(player_t& player) noexcept {
         }
     #endif
 
-    while (gTicRemainder[gPlayerNum] >= tickVblLength) {
+    // PsyDoom: slightly altered the logic for when a weapon update can happen.
+    // Only allow weapon updates to proceed in lockstep with world (15 Hz) ticks!
+    // 
+    // Doing this keeps weapon update timing predictable, and prevents weapon sway/bob interpolation from being broken and jittery.
+    // Previously sometimes weapon updates would get out of sync with world updates and this would mess up weapon interpolation.
+    // I made this a non-optional change since it doesn't affect classic demo behavior and is pretty much universally desirable.
+    // Making it non-optional also means we don't have to force interpolation settings to be synced in multiplayer games.
+    const auto canUpdateWeapons = [&]() {
+        #if PSYDOOM_MODS
+            return ((gTicRemainder[gPlayerNum] >= tickVblLength) && (gGameTic > gPrevGameTic));
+        #else
+            return (gTicRemainder[gPlayerNum] >= tickVblLength);
+        #endif
+    };
+
+    while (canUpdateWeapons()) {
         gTicRemainder[gPlayerNum] -= tickVblLength;
 
         // Tic all player sprites and advance them to the next state if required
