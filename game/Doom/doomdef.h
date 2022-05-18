@@ -141,7 +141,7 @@ enum : int32_t {
     BOXTOP,         // Top box coordinate (max y)
     BOXBOTTOM,      // Bottom box coordinate (min y)
     BOXLEFT,        // Left box coordinate (min x)
-    BOXRIGHT        // Right box coordinate (max y)
+    BOXRIGHT        // Right box coordinate (max x)
 };
 
 // Maximum number of ticks in a demo.
