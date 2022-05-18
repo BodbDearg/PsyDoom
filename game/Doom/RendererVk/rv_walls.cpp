@@ -194,8 +194,11 @@ static void RV_DrawSegSolid(const rvseg_t& seg, const subsector_t& subsec) noexc
         }
     }
 
-    // Draw the mid wall if the line is one sided and has a texture
-    if ((!bTwoSidedWall) && (side.midtexture >= 0)) {
+    // Draw the mid wall if the line is one sided, has a texture, and isn't masked or blended.
+    // Masked or blended walls are drawn by 'RV_DrawSegBlended' instead.
+    const bool bIsBlendedSeg = (line.flags & (ML_MIDTRANSLUCENT | ML_MIDMASKED));
+
+    if ((!bTwoSidedWall) && (side.midtexture >= 0) && (!bIsBlendedSeg)) {
         // Compute the top and bottom v coordinate
         const float wallH = RV_FixedToFloat(midTy - midBy);
         float vt;
@@ -236,9 +239,9 @@ static void RV_DrawSegBlended(const rvseg_t& seg, const subsector_t& subsec) noe
     if ((seg.flags & SGF_VISIBLE_COLS) == 0)
         return;
 
-    // Must have a back sector and be translucent or masked
+    // Must be translucent or masked
     line_t& line = *seg.linedef;
-    const bool bCanDraw = ((seg.backsector) && (line.flags & (ML_MIDTRANSLUCENT | ML_MIDMASKED)));
+    const bool bCanDraw = (line.flags & (ML_MIDTRANSLUCENT | ML_MIDMASKED));
 
     if (!bCanDraw)
         return;
@@ -274,15 +277,22 @@ static void RV_DrawSegBlended(const rvseg_t& seg, const subsector_t& subsec) noe
     const float u1 = uOffset;
     const float u2 = uOffset + segLen;
 
-    // Get the floor and ceiling heights for the back sector
-    const sector_t& backSec = *seg.backsector;
-    const fixed_t bty = backSec.ceilingDrawH;
-    const fixed_t bby = backSec.floorDrawH;
-
     // These are the y values for the top and bottom of the mid wall.
     // It occupies the gap between the front and back sectors.
-    fixed_t midTy = std::min(fty, bty);
-    fixed_t midBy = std::max(fby, bby);
+    fixed_t midTy = {};
+    fixed_t midBy = {};
+
+    if (sector_t* const pBackSec = seg.backsector) {
+        const fixed_t bty = pBackSec->ceilingDrawH;
+        const fixed_t bby = pBackSec->floorDrawH;
+
+        midTy = std::min(fty, bty);
+        midBy = std::max(fby, bby);
+    } else {
+        // No back sector, one sided line...
+        midTy = fty;
+        midBy = fby;
+    }
 
     // Final Doom: force the mid wall to be a fixed height (equal to the texture height) if this flag is specified.
     // This is used for masked fences and such, to stop them from repeating vertically - MAP23 (BALLISTYX) is a good example of this.
