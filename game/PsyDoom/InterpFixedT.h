@@ -32,6 +32,13 @@ struct InterpFixedT {
         oldGameTic = 0;
     }
 
+    // Set the value and snap to it immediately
+    inline void snapToValue(const fixed_t newValue) noexcept {
+        value = newValue;
+        oldValue = newValue;
+        oldGameTic = 0;
+    }
+
     // Returns the interpolated value used for rendering (if uncapped framerates are enabled) or just the value itself.
     // An optional overload allows the interpolation to be predicated on a condition.
     // May modify the old value to speed up future render value queries.

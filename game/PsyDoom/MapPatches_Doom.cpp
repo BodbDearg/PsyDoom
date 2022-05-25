@@ -61,7 +61,25 @@ static void patchMap_UnholyCathedral() noexcept {
         },
         950, 1078
     );
-}
+
+    // Fix the alignment of the scrolling skull wall textures
+    auto setLineFrontTexOffset = [](const int32_t lineNum, const int32_t offsetX, const int32_t offsetY) noexcept {
+        side_t& side = gpSides[gpLines[lineNum].sidenum[0]];
+        side.textureoffset.snapToValue(offsetX * FRACUNIT);
+        side.rowoffset.snapToValue(offsetY * FRACUNIT);
+    };
+
+    setLineFrontTexOffset(1113, 32, -48);   // Top skulls
+    setLineFrontTexOffset(1114,  0, -48);
+    setLineFrontTexOffset(1115, 32, -48);
+    
+    setLineFrontTexOffset(1118, 32,   0);   // Middle skulls
+    setLineFrontTexOffset(1119,  0,  48);
+    setLineFrontTexOffset(1120, 32,   0);
+
+    setLineFrontTexOffset(1123, 32, -48);   // Bottom Skulls
+    setLineFrontTexOffset(1125, 32, -48);
+}  
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP22: Limbo
