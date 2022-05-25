@@ -4,6 +4,7 @@
 #include "MapPatches.h"
 
 #include "DemoPlayer.h"
+#include "Doom/Renderer/r_data.h"
 
 BEGIN_NAMESPACE(MapPatches)
 
@@ -50,6 +51,15 @@ static void patchMap_UnholyCathedral() noexcept {
     modifySectors(
         [](sector_t& sector){ sector.floorpic = gpSectors[30].floorpic; },
         164, 165
+    );
+
+    // Fix a missing upper wall texture when the ceiling closes in the trap room with the BFG
+    modifyLinedefs(
+        [](line_t& line) {
+            gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE04");
+            gpSides[line.sidenum[1]].toptexture = R_TextureNumForName("MARBLE04");
+        },
+        950, 1078
     );
 }
 
