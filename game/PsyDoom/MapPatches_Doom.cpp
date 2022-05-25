@@ -3,6 +3,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
+#include "DemoPlayer.h"
+
 BEGIN_NAMESPACE(MapPatches)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,6 +32,25 @@ static void patchMap_HouseOfPain() noexcept {
     // Remove the line action that causes the bug.
     applyOriginalMapCommonPatches();
     gpLines[435].special = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP20: Unholy Cathedral
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_UnholyCathedral() noexcept {
+    applyOriginalMapCommonPatches();
+
+    // Fix a secret door not opening because it requires the player to walk across it's line.
+    // The door should be the yellow key also. Only apply this patch if not playing a classic demo because it affects gameplay!
+    if (!DemoPlayer::isPlayingAClassicDemo()) {
+        gpLines[505].special = 34;
+    }
+
+    // For the bug above make sure the floor texture matches the outside floor texture (like on PC)
+    modifySectors(
+        [](sector_t& sector){ sector.floorpic = gpSectors[30].floorpic; },
+        164, 165
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,7 +122,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  56466, 0x4F240435B71CA6CA, 0xFA106C3EC5548BF0, applyOriginalMapCommonPatches },      // MAP17
     {  71253, 0x0541C17B11B2DC05, 0x577D152A01E48073, applyOriginalMapCommonPatches },      // MAP18
     {  75515, 0xFE716B01FE414A2A, 0xA3A7AFA1956DF697, patchMap_HouseOfPain },               // MAP19
-    { 143483, 0x36A01960BAD36249, 0x2BC3BF03E0ED6D64, applyOriginalMapCommonPatches },      // MAP20
+    { 143483, 0x36A01960BAD36249, 0x2BC3BF03E0ED6D64, patchMap_UnholyCathedral },           // MAP20
     {  86538, 0x403A02FD929949E5, 0xB4185CB43CEA9B46, applyOriginalMapCommonPatches },      // MAP21
     { 109754, 0x1E3E66448FE6645C, 0x3DCA2CA78FC862F3, patchMap_Limbo },                     // MAP22
     {  32935, 0x55A24A4ED4053AC3, 0x636CDB24CE519EF8, applyOriginalMapCommonPatches },      // MAP23
