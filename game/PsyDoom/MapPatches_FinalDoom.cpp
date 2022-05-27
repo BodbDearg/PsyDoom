@@ -3,7 +3,19 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
+#include "Doom/Renderer/r_data.h"
+
 BEGIN_NAMESPACE(MapPatches)
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP21: Lunar Mining Project
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_LunarMiningProject() noexcept {
+    applyOriginalMapCommonPatches();
+
+    // Fix a missing texture on a small lip in the mines
+    gpSides[gpLines[718].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK06");
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP23: Ballistyx
@@ -47,7 +59,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 131823, 0xADD51543E9578AB7, 0xA3E479551A015464, applyOriginalMapCommonPatches },      // MAP18
     { 177868, 0x5BDC5BC7E62822C1, 0x3F374AD0091C79F1, applyOriginalMapCommonPatches },      // MAP19
     { 105404, 0x5849A9F98647AF13, 0x59C891E67F19FC69, applyOriginalMapCommonPatches },      // MAP20
-    { 162561, 0x5BA4490CA5C13E9A, 0x23D505C31AF4CADF, applyOriginalMapCommonPatches },      // MAP21
+    { 162561, 0x5BA4490CA5C13E9A, 0x23D505C31AF4CADF, patchMap_LunarMiningProject   },      // MAP21
     {  96826, 0x9B6446A94907229A, 0x6DC9F5EDDB9D4F2D, applyOriginalMapCommonPatches },      // MAP22
     { 167847, 0x3BC3E6570C2D06B3, 0x18756B0D2C98BE86, patchMap_Ballistyx },                 // MAP23
     { 121920, 0x445D7FDA25066B71, 0xAC3893B22E188D4D, applyOriginalMapCommonPatches },      // MAP24
