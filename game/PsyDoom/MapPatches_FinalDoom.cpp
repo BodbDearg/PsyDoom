@@ -8,6 +8,17 @@
 BEGIN_NAMESPACE(MapPatches)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP09: Nessus
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Nessus() noexcept {
+    applyOriginalMapCommonPatches();
+
+    // Fix the BFG secret being inaccessible - transfer it to a neighboring sector:
+    gpSectors[57].special = 0;
+    gpSectors[60].special = 9;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP21: Lunar Mining Project
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_LunarMiningProject() noexcept {
@@ -47,7 +58,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     {  88004, 0xC12D7BD6D414250C, 0xF981017C0C8ADF20, applyOriginalMapCommonPatches },      // MAP06
     { 165920, 0x903B721BA84B1FFD, 0xCED86BF62E5CE0BE, applyOriginalMapCommonPatches },      // MAP07
     { 151747, 0x93EA3A4DE9DA978B, 0x3D27F6255CA0B9CC, applyOriginalMapCommonPatches },      // MAP08
-    { 102104, 0x1504DC20E04BE8F1, 0x3A63FD22BC9C0D8C, applyOriginalMapCommonPatches },      // MAP09
+    { 102104, 0x1504DC20E04BE8F1, 0x3A63FD22BC9C0D8C, patchMap_Nessus               },      // MAP09
     { 139820, 0x5EDEF8B2A51779E8, 0x8D1314A4F889EFCC, applyOriginalMapCommonPatches },      // MAP10
     {  96211, 0x42B2A3CE9B37CA2A, 0x72D00C8E1681AEB4, applyOriginalMapCommonPatches },      // MAP11
     { 106776, 0xAD3AADE890018818, 0x7D70AC984E7211CC, applyOriginalMapCommonPatches },      // MAP12
