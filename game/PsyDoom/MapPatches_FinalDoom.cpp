@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
+#include "DemoPlayer.h"
 #include "Doom/Renderer/r_data.h"
 
 BEGIN_NAMESPACE(MapPatches)
@@ -43,6 +44,21 @@ static void patchMap_Ballistyx() noexcept {
         // Yellow key cage area: the outer wall floors sometimes don't render due to occluding sky walls; make them not occlude:
         1525, 1064, 1526, 1052, 371, 1053, 374, 1509, 373, 1054, 1524, 1055
     );
+
+    // Fix some monsters not teleporting in at the start: nudge the teleport destinations a little
+    if (!DemoPlayer::isPlayingAClassicDemo()) {
+        forAllThings(
+            [](mobj_t& mobj) noexcept {
+                const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
+
+                if (sectorIdx == 167) {
+                    mobj.y -= 24 * FRACUNIT;
+                } else if ((sectorIdx == 150) || (sectorIdx == 163) || (sectorIdx == 164)) {
+                    mobj.y += 24 * FRACUNIT;
+                }
+            }
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

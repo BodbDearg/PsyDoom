@@ -2,8 +2,8 @@
 
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
+#include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
-#include "Macros.h"
 
 #include <cstdint>
 
@@ -44,10 +44,10 @@ extern const PatchList gPatches_GEC_ME_Beta3;
 // Utility function: apply a transformation to a number of linedefs
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class ModFuncT>
-static inline void modifyLinedefs([[maybe_unused]] const ModFuncT & func) noexcept {}
+static inline void modifyLinedefs([[maybe_unused]] const ModFuncT& func) noexcept {}
 
 template <class ModFuncT, class ...Int32List>
-static inline void modifyLinedefs(const ModFuncT & func, const int32_t linedefIdx, Int32List... linedefIndexes) noexcept {
+static inline void modifyLinedefs(const ModFuncT& func, const int32_t linedefIdx, Int32List... linedefIndexes) noexcept {
     ASSERT(linedefIdx < gNumLines);
     func(gpLines[linedefIdx]);
     modifyLinedefs(func, linedefIndexes...);
@@ -57,10 +57,10 @@ static inline void modifyLinedefs(const ModFuncT & func, const int32_t linedefId
 // Utility function: apply a transformation to a number of sectors
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class ModFuncT>
-static inline void modifySectors([[maybe_unused]] const ModFuncT & func) noexcept {}
+static inline void modifySectors([[maybe_unused]] const ModFuncT& func) noexcept {}
 
 template <class ModFuncT, class ...Int32List>
-static inline void modifySectors(const ModFuncT & func, const int32_t sectorIdx, Int32List... sectorIndexes) noexcept {
+static inline void modifySectors(const ModFuncT& func, const int32_t sectorIdx, Int32List... sectorIndexes) noexcept {
     ASSERT(sectorIdx < gNumSectors);
     func(gpSectors[sectorIdx]);
     modifySectors(func, sectorIndexes...);
@@ -130,6 +130,18 @@ static inline void clearMysterySectorFlags() noexcept {
         // Originally this was the high 8-bits of the 'flags' field.
         // Original maps never use 2 colored lighting so just set it to the floor color.
         pSectors[i].ceilColorid = pSectors[i].colorid;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility function: calls the specified lambda for all things
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class FuncT>
+static inline void forAllThings(const FuncT& func) noexcept {
+    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead;) {
+        mobj_t* const pNextMobj = pMobj->next;
+        func(*pMobj);
+        pMobj = pNextMobj;
     }
 }
 
