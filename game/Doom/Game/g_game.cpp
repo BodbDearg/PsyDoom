@@ -585,11 +585,11 @@ void G_RunGame() noexcept {
 
         if (!bDoFinale) {
             // Not doing a finale, just go onto the next map.
-            // PsyDoom: also request an auto-save on starting the next level.
+            // PsyDoom: also request an auto-save on starting the next level if we're in single player mode (can't save in co-op mode).
             gGameMap = gNextMap;
 
             #if PSYDOOM_MODS
-                gbAutoSaveOnLevelStart = true;
+                gbAutoSaveOnLevelStart = (gNetGame == gt_single);
             #endif
 
             continue;
