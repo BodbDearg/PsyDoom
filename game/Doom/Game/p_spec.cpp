@@ -1150,6 +1150,19 @@ void P_ShootSpecialLine(mobj_t& mobj, line_t& line) noexcept {
 void P_PlayerInSpecialSector(player_t& player) noexcept {
     sector_t& sector = *player.mo->subsector->sector;
 
+    // Helper: triggers a face on the status bar
+    const auto doStatusBarFace = [&](const spclface_e face) noexcept {
+        // PsyDoom: fix a bug in co-op/dm where sector specials that cause pain also change the status bar face for the other player.
+        // Need to check if this user's player is being affected.
+        #if PSYDOOM_MODS
+            if (&player == &gPlayers[gCurPlayerIndex]) {
+                gStatusBar.specialFace = face;
+            }
+        #else
+            gStatusBar.specialFace = face;
+        #endif
+    };
+
     // Logic only runs when the player is on the floor
     if (player.mo->z != sector.floorheight)
         return;
@@ -1158,7 +1171,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
         // Hellslime damage
         case 5: {
             if (!player.powers[pw_ironfeet]) {
-                gStatusBar.specialFace = f_mowdown;
+                doStatusBarFace(f_mowdown);
 
                 if ((gGameTic > gPrevGameTic) && ((gGameTic & 0xF) == 0)) {     // Apply roughly every 1 second
                     P_DamageMobj(*player.mo, nullptr, nullptr, 10);
@@ -1169,7 +1182,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
         // Nukage damage
         case 7: {
             if (!player.powers[pw_ironfeet]) {
-                gStatusBar.specialFace = f_mowdown;
+                doStatusBarFace(f_mowdown);
 
                 if ((gGameTic > gPrevGameTic) && ((gGameTic & 0xF) == 0)) {     // Apply roughly every 1 second
                     P_DamageMobj(*player.mo, nullptr, nullptr, 5);
@@ -1188,7 +1201,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
     #endif
         {
             if ((!player.powers[pw_ironfeet]) || (P_Random() < 5)) {    // Occasionally damages even if a radiation suit is worn
-                gStatusBar.specialFace = f_mowdown;
+                doStatusBarFace(f_mowdown);
 
                 if ((gGameTic > gPrevGameTic) && ((gGameTic & 0xF) == 0)) {     // Apply roughly every 1 second
                     P_DamageMobj(*player.mo, nullptr, nullptr, 20);
