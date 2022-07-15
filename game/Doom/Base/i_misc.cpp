@@ -174,7 +174,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     // Print the minus symbol if the value was negative
     if (bNegativeVal) {
         spritePrim.x0 = (int16_t) curX;
-        spritePrim.u0 = gBigFontChars[BIG_FONT_EXCLAMATION].u;
+        spritePrim.u0 = gBigFontChars[BIG_FONT_MINUS].u;
         I_AddPrim(spritePrim);
     }
 }
