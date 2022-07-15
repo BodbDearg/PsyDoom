@@ -55,6 +55,7 @@ struct GameSettings {
     uint8_t     bFixOutdoorBulletPuffs;         // Fix a Doom engine bug where bullet puffs don't appear sometimes after shooting outdoor walls?
     uint8_t     bFixBlockingGibsBug;            // Fix an original bug where monster gibs can block the player if the enemy is crushed during it's death animation
     uint8_t     bFixSoundPropagation;           // Fix an original bug where sometimes sound propagates through closed doors that should block it?
+    uint8_t     bEnableMapPatches_GamePlay;     // Enable patches for original game maps that affect gameplay?
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength
 

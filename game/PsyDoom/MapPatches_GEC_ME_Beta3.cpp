@@ -15,6 +15,8 @@ BEGIN_NAMESPACE(MapPatches)
 // Switches the 'Final Doom' style of this texture with the original 'Doom' version.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void fixWrongREDROK01() noexcept {
+    // Note: making this patch unconditional since it's just how the 'GEC Master Edition' maps should look.
+    // It's a small issue introduced by the way this game is supported in PsyDoom.
     const int32_t numSides = gNumSides;
     const int32_t oldTexNum = R_TextureNumForName("REDROK01");
     const int32_t newTexNum = R_TextureNumForName("REDROKX1");
@@ -42,19 +44,23 @@ static void fixWrongREDROK01() noexcept {
 // Fix issues for MAP01: Phobos Mission Control
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_PhobosMissionControl() noexcept {
-    // Doorway has the wrong trim on one side near the end of the map
-    gpSides[gpLines[385].sidenum[0]].midtexture = R_TextureNumForName("SUPPORT1");
+    if (shouldApplyMapPatches_Visual()) {
+        // Doorway has the wrong trim on one side near the end of the map
+        gpSides[gpLines[385].sidenum[0]].midtexture = R_TextureNumForName("SUPPORT1");
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP02: Forgotten Sewers
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_ForgottenSewers() noexcept {
-    // Fix automap lines that should be visible
-    unhideLinedefs(969, 970, 971, 972, 973);
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix automap lines that should be visible
+        unhideLinedefs(969, 970, 971, 972, 973);
 
-    // Fix a zero brightness sector
-    gpSectors[153].lightlevel = 128;
+        // Fix a zero brightness sector
+        gpSectors[153].lightlevel = 128;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -63,135 +69,157 @@ static void patchMap_ForgottenSewers() noexcept {
 static void patchMap_SloughOfDespair() noexcept {
     fixWrongREDROK01();
 
-    // Fix the secret level exit not being marked as a secret.
-    // Move the strobe flash from the secret sector to the teleport also just to make the exit more obvious.
-    gpSectors[73].special = 9;
-    gpSectors[74].special = 202;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix the secret level exit not being marked as a secret.
+        // Move the strobe flash from the secret sector to the teleport also just to make the exit more obvious.
+        gpSectors[73].special = 9;
+        gpSectors[74].special = 202;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP07: Against Thee Wickedly
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_AgainstTheeWickedly() noexcept {
-    // Fix a sector which is marked as damaging that shouldn't be
-    gpSectors[95].special = 0;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a sector which is marked as damaging that shouldn't be
+        gpSectors[95].special = 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP08: And Hell Followed
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_AndHellFollowed() noexcept {
-    // Fix slime sectors that are supposed to be damaging but aren't
-    modifySectors(
-        [](sector_t& sector) { sector.special = 7; },   // Damage -2% or -5% health
-        213, 224, 225, 226, 227, 228
-    );
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix slime sectors that are supposed to be damaging but aren't
+        modifySectors(
+            [](sector_t& sector) { sector.special = 7; },   // Damage -2% or -5% health
+            213, 224, 225, 226, 227, 228
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP10: Industrial Zone
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_IndustrialZone() noexcept {
-    // Fix the switch past the gate leading up a secret section of the castle wall being usable through the metal bars.
-    // Seal up the bar gate completely (to make it block line activations) and adjust the texture coords to make it look prettier.
-    // This is a bug introduced by PsyDoom's improved 'use line' logic; the switch should have been technically usable through the bars
-    // previously (according to the game rules) but wasn't due to bugs in how the line activation logic worked (a happy coincidence).
-    modifySectors(
-        [](sector_t& sector) {
-            sector.floorheight = sector.ceilingheight;
-        },
-        260
-    );
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix the switch past the gate leading up a secret section of the castle wall being usable through the metal bars.
+        // Seal up the bar gate completely (to make it block line activations) and adjust the texture coords to make it look prettier.
+        // This is a bug introduced by PsyDoom's improved 'use line' logic; the switch should have been technically usable through the bars
+        // previously (according to the game rules) but wasn't due to bugs in how the line activation logic worked (a happy coincidence).
+        modifySectors(
+            [](sector_t& sector) {
+                sector.floorheight = sector.ceilingheight;
+            },
+            260
+        );
 
-    modifyLinedefs(
-        [](line_t& line) {
-            gpSides[line.sidenum[0]].rowoffset = 0;
-            line.flags |= ML_VOID;
-        },
-        1113,
-        737
-    );
+        modifyLinedefs(
+            [](line_t& line) {
+                gpSides[line.sidenum[0]].rowoffset = 0;
+                line.flags |= ML_VOID;
+            },
+            1113,
+            737
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP11: Betray
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Betray() noexcept {
-    // Fix sky walls rendering where they should not
-    addVoidFlagToLinedefs(
-        495, 496, 497, 498, 499, 500, 501, 502, 673, 674, 675, 676, 677, 678, 679, 680,     // Two teleporter pillars
-        356, 357, 358, 359, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606                // Cross
-    );
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix sky walls rendering where they should not
+        addVoidFlagToLinedefs(
+            495, 496, 497, 498, 499, 500, 501, 502, 673, 674, 675, 676, 677, 678, 679, 680,     // Two teleporter pillars
+            356, 357, 358, 359, 597, 598, 599, 600, 601, 602, 603, 604, 605, 606                // Cross
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP13: The Chasm
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheChasm() noexcept {
-    // Fix missing textures when a floor raises
-    modifyLinedefs(
-        [](line_t& line) { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("SKIN08"); },
-        211, 212, 213, 214
-    );
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix missing textures when a floor raises
+        modifyLinedefs(
+            [](line_t& line) { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("SKIN08"); },
+            211, 212, 213, 214
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP16: Icon Of Sin
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_IconOfSin() noexcept {
-    // Fix missing lower step textures in the exit tunnels
-    modifyLinedefs(
-        [](line_t& line) { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("BRICK09"); },
-        261, 287, 293,      // Left tunnel
-        366, 367, 368 
-    );
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix missing lower step textures in the exit tunnels
+        modifyLinedefs(
+            [](line_t& line) { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("BRICK09"); },
+            261, 287, 293,      // Left tunnel
+            366, 367, 368 
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP21: Vivisection
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Vivisection() noexcept {
-    // Fix a missing step texture
-    gpSides[gpLines[1134].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK09");
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a missing step texture
+        gpSides[gpLines[1134].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK09");
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP22: Inferno of Blood
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_InfernoOfBlood() noexcept {
-    // Fix very mismatched textures used: red brick instead of brown rock
-    modifyLinedefs(
-        [](line_t& line) { gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("ROCK03"); },
-        759, 762
-    );
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix very mismatched textures used: red brick instead of brown rock
+        modifyLinedefs(
+            [](line_t& line) { gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("ROCK03"); },
+            759, 762
+        );
 
-    // Fix missing step texture near the end
-    gpSides[gpLines[457].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK15");
+        // Fix missing step texture near the end
+        gpSides[gpLines[457].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK15");
 
-    // Fix a hidden automap line in the blood river
-    unhideLinedefs(888);
+        // Fix a hidden automap line in the blood river
+        unhideLinedefs(888);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP23: Barons Banquet
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_BaronsBanquet() noexcept {
-    // Fix a secret platform that won't lower: the special that triggers it is set to raise but it's already raised!
-    // Fix by adding another trigger that will lower the platform instead.
-    gpSectors[80].tag = 9;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a secret platform that won't lower: the special that triggers it is set to raise but it's already raised!
+        // Fix by adding another trigger that will lower the platform instead.
+        gpSectors[80].tag = 9;
 
-    modifyLinedefs(
-        [](line_t& line) {
-            line.special = 36;  // W1 Floor Lower to Lowest Floor
-            line.tag = 9;
-        },
-        565, 566, 567
-    );
+        modifyLinedefs(
+            [](line_t& line) {
+                line.special = 36;  // W1 Floor Lower to Lowest Floor
+                line.tag = 9;
+            },
+            565, 566, 567
+        );
+    }
 
-    // Fix an impaled corpse being translucent and rendered like a nightmare spectre
-    for (mobj_t* pMobj = gpSectors[75].thinglist; pMobj != nullptr; pMobj = pMobj->snext) {
-        if (pMobj->type == MT_MISC74) {
-            pMobj->flags &= ~MF_ALL_BLEND_FLAGS;
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix an impaled corpse being translucent and rendered like a nightmare spectre
+        for (mobj_t* pMobj = gpSectors[75].thinglist; pMobj != nullptr; pMobj = pMobj->snext) {
+            if (pMobj->type == MT_MISC74) {
+                pMobj->flags &= ~MF_ALL_BLEND_FLAGS;
+            }
         }
     }
 }
@@ -200,7 +228,8 @@ static void patchMap_BaronsBanquet() noexcept {
 // Fix issues for MAP24: Tomb Of Malevolence
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TombOfMalevolence() noexcept {
-    // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu
+    // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 31; },
         661, 662, 663, 664
@@ -211,26 +240,32 @@ static void patchMap_TombOfMalevolence() noexcept {
 // Fix issues for MAP25: Warrens
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Warrens() noexcept {
-    // Fix a missing step texture when a door opens near the start
-    gpSides[gpLines[91].sidenum[1]].bottomtexture = R_TextureNumForName("REDBR01");
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a missing step texture when a door opens near the start
+        gpSides[gpLines[91].sidenum[1]].bottomtexture = R_TextureNumForName("REDBR01");
 
-    // Fix a missing step texture near the red skull key
-    gpSides[gpLines[445].sidenum[1]].bottomtexture = R_TextureNumForName("GREY19");
+        // Fix a missing step texture near the red skull key
+        gpSides[gpLines[445].sidenum[1]].bottomtexture = R_TextureNumForName("GREY19");
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP26: Fear
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Fear() noexcept {
-    // Fix a small crate having the wrong floor texture
-    gpSectors[95].floorpic = R_FlatNumForName("GRAY01");
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a small crate having the wrong floor texture
+        gpSectors[95].floorpic = R_FlatNumForName("GRAY01");
 
-    // Fix windows that block projectiles (rockets and plasma etc.) but which strangely allow bullets and all other things to pass.
-    // These windows did not block in the original map, so removing the projectile blocking is the most faithful fix:
-    removeFlagsFromLinedefs(ML_BLOCKPRJECTILE, 1069, 1072, 1075, 1078, 1081);
-    
-    // Fix a secret door which looks odd (near the exit) when opening due to being upper unpegged
-    removeFlagsFromLinedefs(ML_DONTPEGTOP, 1041, 1058);
+        // Fix a secret door which looks odd (near the exit) when opening due to being upper unpegged
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 1041, 1058);
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix windows that block projectiles (rockets and plasma etc.) but which strangely allow bullets and all other things to pass.
+        // These windows did not block in the original map, so removing the projectile blocking is the most faithful fix:
+        removeFlagsFromLinedefs(ML_BLOCKPRJECTILE, 1069, 1072, 1075, 1078, 1081);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,23 +274,28 @@ static void patchMap_Fear() noexcept {
 static void patchMap_BaphometDemense() noexcept {
     fixWrongREDROK01();
 
-    // Fix glitches in the caged area where the soulsphere is.
-    // Create walls to cover the areas where the sky doesn't render; also fixes the sky flickering on and off!
-    gpSectors[174].ceilingheight = 136 * FRACUNIT;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix glitches in the caged area where the soulsphere is.
+        // Create walls to cover the areas where the sky doesn't render; also fixes the sky flickering on and off!
+        gpSectors[174].ceilingheight = 136 * FRACUNIT;
 
-    // Fix glitches in the caged area where the chaingun is: get rid of the sky and brighten up the newly showing skin wall a little
-    gpSectors[162].lightlevel = 104;
-    gpSectors[177].ceilingpic = gpSectors[178].ceilingpic;
-    gpSectors[178].lightlevel = 128;
+        // Fix thin wall-step sectors that shouldn't be marked as secret (near the end)
+        gpSectors[160].special = 0;
+        gpSectors[184].special = 0;
+    }
 
-    // Fix missing step texture near the end
-    gpSides[gpLines[1121].sidenum[1]].bottomtexture = R_TextureNumForName("METAL01");
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix glitches in the caged area where the chaingun is: get rid of the sky and brighten up the newly showing skin wall a little
+        gpSectors[162].lightlevel = 104;
+        gpSectors[177].ceilingpic = gpSectors[178].ceilingpic;
+        gpSectors[178].lightlevel = 128;
 
-    // Fix thin wall-step sectors that shouldn't be marked as secret (near the end)
-    gpSectors[160].special = 0;
-    gpSectors[184].special = 0;
+        // Fix missing step texture near the end
+        gpSides[gpLines[1121].sidenum[1]].bottomtexture = R_TextureNumForName("METAL01");
+    }
 
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 31; },
         683
@@ -266,122 +306,145 @@ static void patchMap_BaphometDemense() noexcept {
 // Fix issues for MAP31: Titan Manor
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TitanManor() noexcept {
-    // Make the main progression path more obvious and not like a well hidden secret.
-    // Change the texture of the hidden door in the fireplace and unmark it as a secret to make it stand out.
-    modifyLinedefs(
-        [](line_t& line) {
-            line.flags &= ~ML_SECRET;
-            gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE05");
-        },
-        482
-    );
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Make the main progression path more obvious and not like a well hidden secret.
+        // Change the texture of the hidden door in the fireplace and unmark it as a secret to make it stand out.
+        modifyLinedefs(
+            [](line_t& line) {
+                line.flags &= ~ML_SECRET;
+                gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE05");
+            },
+            482
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP32: Trapped On Titan
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TrappedOnTitan() noexcept {
-    // Fix the player being unable to escape the area with the rising stairs and overhead sky.
-    // Raise the ceiling by 64 for all sectors in that square, so the player can reach the top of the stairs.
-    modifySectors(
-        [](sector_t& sector) { sector.ceilingheight += 64 * FRACUNIT; },
-        25, 37, 28, 35, 27, 39, 30, 41, 32, 38, 29, 36, 33, 40, 31, 42, 34
-    );
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix some missing textures with a lift in the room with the blue door
+        gpSides[gpLines[212].sidenum[0]].bottomtexture = R_TextureNumForName("SUPPORT5");
+        gpSides[gpLines[212].sidenum[1]].bottomtexture = R_TextureNumForName("DOORTRAK");
+    }
 
-    // Fix some sides by the sky squares in the above area being cut off
-    gpSectors[25].ceilingheight -= 24 * FRACUNIT;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix the player being unable to escape the area with the rising stairs and overhead sky.
+        // Raise the ceiling by 64 for all sectors in that square, so the player can reach the top of the stairs.
+        modifySectors(
+            [](sector_t& sector) { sector.ceilingheight += 64 * FRACUNIT; },
+            25, 37, 28, 35, 27, 39, 30, 41, 32, 38, 29, 36, 33, 40, 31, 42, 34
+        );
 
-    // Fix some missing textures with a lift in the room with the blue door
-    gpSides[gpLines[212].sidenum[0]].bottomtexture = R_TextureNumForName("SUPPORT5");
-    gpSides[gpLines[212].sidenum[1]].bottomtexture = R_TextureNumForName("DOORTRAK");
+        // Fix some sides by the sky squares in the above area being cut off
+        gpSectors[25].ceilingheight -= 24 * FRACUNIT;
 
-    // Fix some steps being too high to climb up in the wooden building
-    gpSectors[194].floorheight += 2 * FRACUNIT;
-    gpSectors[195].floorheight += 4 * FRACUNIT;
+        // Fix some steps being too high to climb up in the wooden building
+        gpSectors[194].floorheight += 2 * FRACUNIT;
+        gpSectors[195].floorheight += 4 * FRACUNIT;
 
-    // Fix glitches when looking over one of the buildings outside: raise its sky level to be the same as the other buildings.
-    // This also makes the building more faithful to the PC original.
-    gpSectors[107].ceilingheight = 0;
+        // Fix glitches when looking over one of the buildings outside: raise its sky level to be the same as the other buildings.
+        // This also makes the building more faithful to the PC original.
+        gpSectors[107].ceilingheight = 0;
 
-    // Fix the area beyond the lift not lowering after the switch outside is pressed.
-    // An Imp stuck in the ceiling prevents this. Fix by raising the ceiling so it is not stuck.
-    gpSectors[270].ceilingheight += 64 * FRACUNIT;
+        // Fix the area beyond the lift not lowering after the switch outside is pressed.
+        // An Imp stuck in the ceiling prevents this. Fix by raising the ceiling so it is not stuck.
+        gpSectors[270].ceilingheight += 64 * FRACUNIT;
 
-    // Fix being able to get stuck in the area with the rocket launcher, in between its pedestal and some walls.
-    // Lower the pedestal once it is reached.
-    gpSectors[43].tag = 5;
+        // Fix being able to get stuck in the area with the rocket launcher, in between its pedestal and some walls.
+        // Lower the pedestal once it is reached.
+        gpSectors[43].tag = 5;
 
-    modifyLinedefs(
-        [](line_t& line) {
-            line.special = 36;  // W1 Floor Lower to 8 above Highest Floor
-            line.tag = 5;
-        },
-        162, 163, 164
-    );
+        modifyLinedefs(
+            [](line_t& line) {
+                line.special = 36;  // W1 Floor Lower to 8 above Highest Floor
+                line.tag = 5;
+            },
+            162, 163, 164
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP34: Black Tower
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_BlackTower() noexcept {
-    // Fix sky walls displaying over the pillars supporting a covering by the brown sludge
-    addVoidFlagToLinedefs(629, 627, 939, 624, 626, 704, 623, 622, 693, 632, 633, 680, 634, 1081, 834, 636, 637, 985);
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix sky walls displaying over the pillars supporting a covering by the brown sludge
+        addVoidFlagToLinedefs(629, 627, 939, 624, 626, 704, 623, 622, 693, 632, 633, 680, 634, 1081, 834, 636, 637, 985);
 
-    // Fix sky walls displaying over some of the tower side walls that shouldn't be there
-    addVoidFlagToLinedefs(79, 80, 105);
+        // Fix sky walls displaying over some of the tower side walls that shouldn't be there
+        addVoidFlagToLinedefs(79, 80, 105);
 
-    // Ensure there are sky walls displaying for some of the interior windows to block external geometry
-    gpSectors[189].ceilingheight = gpSectors[189].floorheight;
-    addVoidFlagToLinedefs(1126, 1152, 1159);
+        // Ensure there are sky walls displaying for some of the interior windows to block external geometry
+        if (shouldApplyMapPatches_GamePlay()) {
+            gpSectors[189].ceilingheight = gpSectors[189].floorheight;
+            addVoidFlagToLinedefs(1126, 1152, 1159);
+        }
+    }
 
-    // Remove a switch (which isn't really needed) that lowers pillars and can cause the player to get stuck.
-    // These pillars obscure another switch that is used to escape from the basement area when some walls raise.
-    modifyLinedefs(
-        [](line_t& line) {
-            gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("MARBLE06");
-            line.special = 0;
-            line.tag = 0;
-        },
-        1398
-    );
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Remove a switch (which isn't really needed) that lowers pillars and can cause the player to get stuck.
+        // These pillars obscure another switch that is used to escape from the basement area when some walls raise.
+        modifyLinedefs(
+            [](line_t& line) {
+                gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("MARBLE06");
+                line.special = 0;
+                line.tag = 0;
+            },
+            1398
+        );
+    }
 
-    // Remove a wall that shouldn't be rendered that sometimes causes streaks in the sky
-    gpSides[gpLines[961].sidenum[0]].toptexture = -1;
+    if (shouldApplyMapPatches_Visual()) {
+        // Remove a wall that shouldn't be rendered that sometimes causes streaks in the sky
+        gpSides[gpLines[961].sidenum[0]].toptexture = -1;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP35: BloodseaKeep
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_BloodseaKeep() noexcept {
-    // Fix the yellow door looking weird when opening due to the walls being unpegged (remove the unpegged flags)
-    removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 1074, 1080, 1082);
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix the yellow door looking weird when opening due to the walls being unpegged (remove the unpegged flags)
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 1074, 1080, 1082);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP36: TEETH
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TEETH() noexcept {
-    // Correct the target secret level number from '20' (map number within the episode) to '50' (global map number)
+    // Correct the target secret level number from '20' (map number within the episode) to '50' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 50; },
         304
     );
 
-    // Hide a monster closet automap line that should be hidden
-    hideLinedefs(495);
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide a monster closet automap line that should be hidden
+        hideLinedefs(495);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP40: Crossing Acheron
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_CrossingAcheron() noexcept {
-    // Fix a missing lower texture when a lift is used in the room with the altar surrounded by short green pillars
-    gpSides[gpLines[1083].sidenum[1]].bottomtexture = R_TextureNumForName("SUPPORT2");
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a missing lower texture when a lift is used in the room with the altar surrounded by short green pillars
+        gpSides[gpLines[1083].sidenum[1]].bottomtexture = R_TextureNumForName("SUPPORT2");
+    }
 
-    // Fix a secret that is almost impossible to register without using 'noclip' in the orange room near the start.
-    // Move which sector triggers the secret to fix the problem.
-    gpSectors[63].special = 9;
-    gpSectors[64].special = 0;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a secret that is almost impossible to register without using 'noclip' in the orange room near the start.
+        // Move which sector triggers the secret to fix the problem.
+        gpSectors[63].special = 9;
+        gpSectors[64].special = 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -389,6 +452,7 @@ static void patchMap_CrossingAcheron() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheImageOfEvil() noexcept {
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 51; },
         929, 936, 937, 938
@@ -399,7 +463,8 @@ static void patchMap_TheImageOfEvil() noexcept {
 // Fix issues for MAP50: Bad Dream
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_BadDream() noexcept {
-    // Correct the level to return to from '7' (map number within the episode) to '37' (global map number)
+    // Correct the level to return to from '7' (map number within the episode) to '37' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 37; },
         83
@@ -410,140 +475,167 @@ static void patchMap_BadDream() noexcept {
 // Fix issues for MAP53: Open Season
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_OpenSeason() noexcept {
-    // Fix a missing texture on a lift side at the start of the map
-    gpSides[gpLines[749].sidenum[0]].bottomtexture = R_TextureNumForName("SUPPORT3");
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix not being able to raise the starting platform if manually activating it just before crossing a line to raise it.
+        // Use the new repeatable version of the 'raise' action provided by PsyDoom:
+        gpLines[763].special = 128;
+    }
 
-    // Fix not being able to raise the starting platform if manually activating it just before crossing a line to raise it.
-    // Use the new repeatable version of the 'raise' action provided by PsyDoom:
-    gpLines[763].special = 128;
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a missing texture on a lift side at the start of the map
+        gpSides[gpLines[749].sidenum[0]].bottomtexture = R_TextureNumForName("SUPPORT3");
 
-    // Fix confusion over the color of a keycard where a yellow key is placed in a red sector.
-    // Shift the sector color more towards yellow/orange to avoid confusion, and alter the light level to make it blend better with nearby reds.
-    modifySectors(
-        [](sector_t& sector) {
-            sector.colorid = 45;
-            sector.lightlevel = 160;
-        },
-        43, 154, 161
-    );
+        // Fix confusion over the color of a keycard where a yellow key is placed in a red sector.
+        // Shift the sector color more towards yellow/orange to avoid confusion, and alter the light level to make it blend better with nearby reds.
+        modifySectors(
+            [](sector_t& sector) {
+                sector.colorid = 45;
+                sector.lightlevel = 160;
+            },
+            43, 154, 161
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP57: Redemption
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Redemption() noexcept {
-    // Fix a missing texture on a step side after it lowers
-    gpSides[gpLines[597].sidenum[1]].bottomtexture = R_TextureNumForName("METAL03");
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a missing texture on a step side after it lowers
+        gpSides[gpLines[597].sidenum[1]].bottomtexture = R_TextureNumForName("METAL03");
 
-    // Fix the red door being upper unpegged (looks weird in motion)
-    gpLines[189].flags &= ~ML_DONTPEGTOP;
-    gpSides[gpLines[189].sidenum[0]].rowoffset = 0;
+        // Fix the red door being upper unpegged (looks weird in motion)
+        gpLines[189].flags &= ~ML_DONTPEGTOP;
+        gpSides[gpLines[189].sidenum[0]].rowoffset = 0;
 
-    // Fix missing upper unpegged flag on a wall that is a deathmatch only door
-    gpLines[639].flags |= ML_DONTPEGTOP;
+        // Fix missing upper unpegged flag on a wall that is a deathmatch only door
+        gpLines[639].flags |= ML_DONTPEGTOP;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP58: Storage Facility
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_StorageFacility() noexcept {
-    // Hide a teleporter monster closet that sometimes shows outside: make its walls and ceilings invisible
-    modifySectors(
-        [](sector_t& sector) { sector.ceilingpic = -1; },
-        183, 184
-    );
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide a teleporter monster closet that sometimes shows outside: make its walls and ceilings invisible
+        modifySectors(
+            [](sector_t& sector) { sector.ceilingpic = -1; },
+            183, 184
+        );
 
-    modifyLinedefs(
-        [](line_t& line) { gpSides[line.sidenum[0]].midtexture = -1; },
-        1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083
-    );
+        modifyLinedefs(
+            [](line_t& line) { gpSides[line.sidenum[0]].midtexture = -1; },
+            1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP60: Dead Zone
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_DeadZone() noexcept {
-    // Correct the target secret level number from '19' (map number within the episode) to '69' (global map number)
+    // Correct the target secret level number from '19' (map number within the episode) to '69' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 69; },
         672
     );
 
-    // Fix some outer sky wall floors that should not render (make them sky too)
-    modifySectors(
-        [](sector_t& sector) { sector.floorpic = -1; },
-        220, 91, 219, 80
-    );
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix some outer sky wall floors that should not render (make them sky too)
+        modifySectors(
+            [](sector_t& sector) { sector.floorpic = -1; },
+            220, 91, 219, 80
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP61: Mill
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Mill() noexcept {
-    // Fix a missing step texture after lowering some walls near the end of the level
-    gpSides[gpLines[978].sidenum[1]].bottomtexture = R_TextureNumForName("BRICK19");
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a missing step texture after lowering some walls near the end of the level
+        gpSides[gpLines[978].sidenum[1]].bottomtexture = R_TextureNumForName("BRICK19");
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP62: Shipping Respawning
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_ShippingRespawning() noexcept {
-    // Fix some windows not showing any geometry past them due to a small completely closed sector in the middle - treat it as a void:
-    addVoidFlagToLinedefs(5, 8, 1189, 1568);
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix some windows not showing any geometry past them due to a small completely closed sector in the middle - treat it as a void:
+        addVoidFlagToLinedefs(5, 8, 1189, 1568);
 
-    // Fix sky walls being rendered for some pillars outside that shouldn't have them
-    addVoidFlagToLinedefs(20, 21, 22, 23, 14, 24, 25, 26, 16, 27, 28, 29, 18, 32, 31, 30);
+        // Fix sky walls being rendered for some pillars outside that shouldn't have them
+        addVoidFlagToLinedefs(20, 21, 22, 23, 14, 24, 25, 26, 16, 27, 28, 29, 18, 32, 31, 30);
+    }
 
-    // Fix being able to get stuck outside of the level bounds if rushing forward to collect the soulsphere.
-    // Don't allow the player to pass certain lines.
-    addFlagsToLinedefs(ML_BLOCKING, 60, 817, 186);
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix being able to get stuck outside of the level bounds if rushing forward to collect the soulsphere.
+        // Don't allow the player to pass certain lines.
+        addFlagsToLinedefs(ML_BLOCKING, 60, 817, 186);
 
-    // Fix being able to see past the end of the sky texture in the soulsphere area - raise the walls to cover it
-    modifySectors(
-        [](sector_t& sector) { sector.floorheight += 12 * FRACUNIT; },
-        12, 168
-    );
+        // Fix being able to see past the end of the sky texture in the soulsphere area - raise the walls to cover it
+        modifySectors(
+            [](sector_t& sector) { sector.floorheight += 12 * FRACUNIT; },
+            12, 168
+        );
+    }
     
-    // Fix an automap line not rendering at a computer console
-    unhideLinedefs(982);
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix an automap line not rendering at a computer console
+        unhideLinedefs(982);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP63: Central Processing
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_CentralProcessing() noexcept {
-    // Fix a linedef in a secret area that should be hidden (all the other lines are in this area)
-    hideLinedefs(926);
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a linedef in a secret area that should be hidden (all the other lines are in this area)
+        hideLinedefs(926);
 
-    // Fix a linedef that should not be hidden on the automap (in slime, at the west of the map)
-    unhideLinedefs(1254);
+        // Fix a linedef that should not be hidden on the automap (in slime, at the west of the map)
+        unhideLinedefs(1254);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP65: Habitat
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Habitat() noexcept {
-    // Fix the acid floor lift looking weird when moving - the lower wall should not be unpegged
-    removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 77);
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix the acid floor lift looking weird when moving - the lower wall should not be unpegged
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 77);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP67: Mount Pain
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_MountPain() noexcept {
-    // Fix being able to see bits of geometry that shouldn't be seen through some outside windows.
-    // Force the fully closed sector containing the sky to render, hence forcing a skywall to render too. Also remove its floor.
-    addVoidFlagToLinedefs(1360, 1412);
-    gpSectors[36].floorpic = -1;
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix being able to see bits of geometry that shouldn't be seen through some outside windows.
+        // Force the fully closed sector containing the sky to render, hence forcing a skywall to render too. Also remove its floor.
+        addVoidFlagToLinedefs(1360, 1412);
+        gpSectors[36].floorpic = -1;
+    }
 
-    // Remove a hook that floats in the sky outside
-    for (mobj_t* pMobj = gpSectors[81].thinglist; pMobj != nullptr;) {
-        if (pMobj->type == MT_MISC_BLOODHOOK) {
-            mobj_t* const pNextMobj = pMobj->snext;
-            P_RemoveMobj(*pMobj);
-            pMobj = pNextMobj;
-        } else {
-            pMobj = pMobj->snext;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Remove a hook that floats in the sky outside
+        for (mobj_t* pMobj = gpSectors[81].thinglist; pMobj != nullptr;) {
+            if (pMobj->type == MT_MISC_BLOODHOOK) {
+                mobj_t* const pNextMobj = pMobj->snext;
+                P_RemoveMobj(*pMobj);
+                pMobj = pNextMobj;
+            } else {
+                pMobj = pMobj->snext;
+            }
         }
     }
 }
@@ -553,6 +645,7 @@ static void patchMap_MountPain() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_RiverStyx() noexcept {
     // Set the next level to the start map of the next episode instead of '99', so the next episode is correctly selected on the main menu.
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 71; },
         1840
@@ -563,30 +656,35 @@ static void patchMap_RiverStyx() noexcept {
 // Fix issues for MAP69: Pharaoh
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Pharaoh() noexcept {
-    // Correct the level to return to from '11' (map number within the episode) to '61' (global map number)
+    // Correct the level to return to from '11' (map number within the episode) to '61' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 61; },
         162, 258, 259, 429, 573, 734, 929, 964
     );
 
-    // Correct the target secret level number from '20' (map number within the episode) to '70' (global map number)
+    // Correct the target secret level number from '20' (map number within the episode) to '70' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 70; },
         1323
     );
 
-    // Remove some skywalls that shouldn't be there for an outside box area
-    addVoidFlagToLinedefs(890, 910, 911, 912, 906, 907, 908, 909);
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Remove some skywalls that shouldn't be there for an outside box area
+        addVoidFlagToLinedefs(890, 910, 911, 912, 906, 907, 908, 909);
 
-    // Remove some skywalls around the ship near the exit area that shouldn't be there
-    addVoidFlagToLinedefs(1103, 293, 1091, 746, 1393);
+        // Remove some skywalls around the ship near the exit area that shouldn't be there
+        addVoidFlagToLinedefs(1103, 293, 1091, 746, 1393);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP70: Caribbean
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Caribbean() noexcept {
-    // Correct the level to return to from '11' (map number within the episode) to '61' (global map number)
+    // Correct the level to return to from '11' (map number within the episode) to '61' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 61; },
         662
@@ -597,36 +695,36 @@ static void patchMap_Caribbean() noexcept {
 // Fix issues for MAP71: Well Of Souls
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_WellOfSouls() noexcept {
-    // Fix not being able to reach the exit again if backtracking after raising the final lift to the exit.
-    // This line special would lower the lift permanently, preventing the player from reaching the exit.
-    // It's not needed for anything so just remove the special:
-    modifyLinedefs(
-        [](line_t& line) { line.special = 0; },
-        590
-    );
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix not being able to reach the exit again if backtracking after raising the final lift to the exit.
+        // This line special would lower the lift permanently, preventing the player from reaching the exit.
+        // It's not needed for anything so just remove the special:
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            590
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP73: Caughtyard
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Caughtyard() noexcept {
-    // Fix being able to climb over the fort walls: the step is 24 units tall and needs to be 25 as it was in Plutonia originally.
-    // Exception: leave this alone if playing the 'Caughtyard' classic demo from the Master Edition disc - will cause a desync otherwise.
-    if (!DemoPlayer::isPlayingAClassicDemo()) {
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix being able to climb over the fort walls: the step is 24 units tall and needs to be 25 as it was in Plutonia originally
         gpSectors[45].floorheight += 1 * FRACUNIT;
+
+        // Fix a monster teleporter not working if the initial teleporter attempt fails.
+        // Change the type of teleporter from 'once' to 'repeatable'.
+        gpLines[359].special = 126;
     }
 
-    // Fix two missing textures at the entraces to one of the huts
-    modifyLinedefs(
-        [](line_t& line) { gpSides[line.sidenum[0]].bottomtexture = R_TextureNumForName("WOOD06"); },
-        124, 136
-    );
-
-    // Fix a monster teleporter not working if the initial teleporter attempt fails.
-    // Change the type of teleporter from 'once' to 'repeatable'.
-    // Exception: leave this alone if playing the 'Caughtyard' classic demo from the Master Edition disc - might cause a desync otherwise.
-    if (!DemoPlayer::isPlayingAClassicDemo()) {
-        gpLines[359].special = 126;
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix two missing textures at the entraces to one of the huts
+        modifyLinedefs(
+            [](line_t& line) { gpSides[line.sidenum[0]].bottomtexture = R_TextureNumForName("WOOD06"); },
+            124, 136
+        );
     }
 }
 
@@ -634,67 +732,82 @@ static void patchMap_Caughtyard() noexcept {
 // Fix issues for MAP76: Speed
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Speed() noexcept {
-    // Fix the player being able to see past the end of the sky in various places: raise outer walls bordering the sky
-    modifySectors(
-        [](sector_t& sector) {
-            sector.floorheight += 16 * FRACUNIT;
-            sector.ceilingheight += 16 * FRACUNIT;
-        },
-        130, 156
-    );
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix the player being able to see past the end of the sky in various places: raise outer walls bordering the sky
+        modifySectors(
+            [](sector_t& sector) {
+                sector.floorheight += 16 * FRACUNIT;
+                sector.ceilingheight += 16 * FRACUNIT;
+            },
+            130, 156
+        );
+    }
     
-    // Fix floors of an outer sky sometimes glitching in and out for one of the windows: the floor shouldn't be drawn
-    gpSectors[12].floorpic = -1;
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix floors of an outer sky sometimes glitching in and out for one of the windows: the floor shouldn't be drawn
+        gpSectors[12].floorpic = -1;
     
-    // Fix some geometry showing through the sky.
-    // Make the outer edge of sky walls void so that the one-sided sky walls draw behind it.
-    addVoidFlagToLinedefs(1123, 1124, 1126, 1127, 1128, 1129, 1136, 1137, 1138);
+        // Fix some geometry showing through the sky.
+        // Make the outer edge of sky walls void so that the one-sided sky walls draw behind it.
+        addVoidFlagToLinedefs(1123, 1124, 1126, 1127, 1128, 1129, 1136, 1137, 1138);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP79: The Twilight
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheTwilight() noexcept {
-    // Correct the target secret level number from '23' (map number within the episode) to '93' (global map number)
+    // Correct the target secret level number from '23' (map number within the episode) to '93' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 93; },
         120, 309, 911, 919
     );
 
-    // Remove a secret that is easy to bypass, a small opening with a switch that opens another secret area.
-    // Unless you step into the opening when activating the switch you won't register the secret.
-    // Since it opens a secret area, registering the secret within that area will be enough.
-    gpSectors[3].special = 0;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Remove a secret that is easy to bypass, a small opening with a switch that opens another secret area.
+        // Unless you step into the opening when activating the switch you won't register the secret.
+        // Since it opens a secret area, registering the secret within that area will be enough.
+        gpSectors[3].special = 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP80: The Omen
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheOmen() noexcept {
-    // Fix a chunk of wall missing and replaced with sky near the gazebo
-    gpSectors[29].ceilingpic = R_GetOverrideFlatNum(R_FlatNumForName("GRASS03"));
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a chunk of wall missing and replaced with sky near the gazebo
+        gpSectors[29].ceilingpic = R_GetOverrideFlatNum(R_FlatNumForName("GRASS03"));
+    }
 
-    // Fix not being able to get into a switch area because the bars don't allow enough clearance once opened
-    gpSectors[93].ceilingheight += 24 * FRACUNIT;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix not being able to get into a switch area because the bars don't allow enough clearance once opened
+        gpSectors[93].ceilingheight += 24 * FRACUNIT;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP82: Neurosphere
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Neurosphere() noexcept {
-    // Fix a teleporter not working, trapping the player in a blood pit.
-    // For some reason a teleport destination marker seems to be missing - re-add it:
-    mobj_t* const pTeleDest = P_SpawnMobj(1024 * FRACUNIT, -2112 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
-    pTeleDest->angle = ANG180 + ANG45;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a teleporter not working, trapping the player in a blood pit.
+        // For some reason a teleport destination marker seems to be missing - re-add it:
+        mobj_t* const pTeleDest = P_SpawnMobj(1024 * FRACUNIT, -2112 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
+        pTeleDest->angle = ANG180 + ANG45;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP83: N-M-E
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_NME() noexcept {
-    // Remove sky walls around some pillars that shouldn't have them
-    for (int32_t lineIdx = 890; lineIdx <= 929; ++lineIdx) {
-        gpLines[lineIdx].flags |= ML_VOID;
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Remove sky walls around some pillars that shouldn't have them
+        for (int32_t lineIdx = 890; lineIdx <= 929; ++lineIdx) {
+            gpLines[lineIdx].flags |= ML_VOID;
+        }
     }
 }
 
@@ -702,80 +815,93 @@ static void patchMap_NME() noexcept {
 // Fix issues for MAP85: Impossible Mission
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_ImpossibleMission() noexcept {
-    // Fix ceilings that are level with the sky - lower them a little to create a lip
-    modifySectors(
-        [](sector_t& sector) {
-            sector.ceilingheight -= 22 * FRACUNIT;
-        },
-        145, 150, 152
-    );
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix ceilings that are level with the sky - lower them a little to create a lip
+        modifySectors(
+            [](sector_t& sector) {
+                sector.ceilingheight -= 22 * FRACUNIT;
+            },
+            145, 150, 152
+        );
 
-    // Fix the player being able to fall into pits that cannot be climbed out of.
-    // Add triggers to raise the pits if the player falls in.
-    modifyLinedefs(
-        [](line_t& line) {
-            line.special = 119;     // W1 Floor Raise to Next Higher Floor
-            line.tag = 8;
-        },
-        610, 582, 587, 591
-    );
+        // Fix the player being able to fall into pits that cannot be climbed out of.
+        // Add triggers to raise the pits if the player falls in.
+        modifyLinedefs(
+            [](line_t& line) {
+                line.special = 119;     // W1 Floor Raise to Next Higher Floor
+                line.tag = 8;
+            },
+            610, 582, 587, 591
+        );
 
-    gpSectors[58].floorheight = 19 * FRACUNIT;  // Raise the pits the full way the first time: don't create a lip and then remove it later...
+        gpSectors[58].floorheight = 19 * FRACUNIT;  // Raise the pits the full way the first time: don't create a lip and then remove it later...
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP89: Bunker
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Bunker() noexcept {
-    // Fix a 'P_PlayerInSpecialSector: unknown special 235' error when stepping onto a teleporter pad
-    gpSectors[176].special = 0;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a 'P_PlayerInSpecialSector: unknown special 235' error when stepping onto a teleporter pad
+        gpSectors[176].special = 0;
 
-    // Fix some missing textures in a monster closet that is normally inaccessible, but which might be reached if 'turbo' mode is enabled
-    modifyLinedefs(
-        [](line_t& line) {
-            gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("64DOOR07");
-        },
-        160, 170, 176
-    );
+        // Fix the Megasphere secret not registering.
+        // The secret sector is a small thin strip before the teleport to the Megasphere, but often it does not count.
+        // Shift the secret to where the Megasphere is instead, which is a much larger area...
+        gpSectors[156].special = 0;
+        gpSectors[86].special = 9;
+    }
 
-    // Fix the Megasphere secret not registering.
-    // The secret sector is a small thin strip before the teleport to the Megasphere, but often it does not count.
-    // Shift the secret to where the Megasphere is instead, which is a much larger area...
-    gpSectors[156].special = 0;
-    gpSectors[86].special = 9;
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix some missing textures in a monster closet that is normally inaccessible, but which might be reached if 'turbo' mode is enabled
+        modifyLinedefs(
+            [](line_t& line) {
+                gpSides[line.sidenum[0]].midtexture = R_TextureNumForName("64DOOR07");
+            },
+            160, 170, 176
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP91: The Sewers
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheSewers() noexcept {
-    // Fix sky walls that shouldn't be around the floating lights
-    addVoidFlagToLinedefs(
-        1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308,     // Outer edges
-        1434, 1435, 1436, 1437,                             // Top left light
-        1438, 1439, 1440, 1441,                             // Top right light
-        1426, 1427, 1428, 1429,                             // Center light
-        1430, 1431, 1432, 1433,                             // Bottom left light
-        1422, 1423, 1424, 1425                              // Bottom right light
-    );
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix sky walls that shouldn't be around the floating lights
+        addVoidFlagToLinedefs(
+            1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308,     // Outer edges
+            1434, 1435, 1436, 1437,                             // Top left light
+            1438, 1439, 1440, 1441,                             // Top right light
+            1426, 1427, 1428, 1429,                             // Center light
+            1430, 1431, 1432, 1433,                             // Bottom left light
+            1422, 1423, 1424, 1425                              // Bottom right light
+        );
+    }
 
-    // Fix missing automap lines on the south east side of the map (in metal area with cages)
-    unhideLinedefs(715, 1135, 1051, 1195, 1053, 1056, 1190);
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix missing automap lines on the south east side of the map (in metal area with cages)
+        unhideLinedefs(715, 1135, 1051, 1195, 1053, 1056, 1190);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP92: Odyssey of Noises
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_OdysseyOfNoises() noexcept {
-    // Fix automap lines that shouldn't be hidden
-    unhideLinedefs(187, 188, 202, 203);
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix automap lines that shouldn't be hidden
+        unhideLinedefs(187, 188, 202, 203);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP93: Cyberden
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Cyberden() noexcept {
-    // Correct the target secret level number from '24' (map number within the episode) to '94' (global map number)
+    // Correct the target secret level number from '24' (map number within the episode) to '94' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 94; },
         729, 732, 734, 735
@@ -786,14 +912,17 @@ static void patchMap_Cyberden() noexcept {
 // Fix issues for MAP94: Go 2 It
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Go2It() noexcept {
-    // Correct the level to return to from '10' (map number within the episode) to '80' (global map number)
+    // Correct the level to return to from '10' (map number within the episode) to '80' (global map number).
+    // Note: this patch is unconditional because it's required for the 'GEC Master Edition' to work correctly with PsyDoom.
     modifyLinedefs(
         [](line_t& line) { line.tag = 80; },
         880, 881, 882, 883
     );
 
-    // Fix a ceiling with the same height as a nearby sky - give it a small lip
-    gpSectors[69].ceilingheight -= 2 * FRACUNIT;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a ceiling with the same height as a nearby sky - give it a small lip
+        gpSectors[69].ceilingheight -= 2 * FRACUNIT;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

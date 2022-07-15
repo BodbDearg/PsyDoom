@@ -483,6 +483,9 @@ bool                    gbUseLineOfSightOverflowFix;
 bool                    gbFixOutdoorBulletPuffs;
 bool                    gbFixBlockingGibsBug;
 bool                    gbFixSoundPropagation;
+bool                    gbEnableMapPatches_GamePlay;
+bool                    gbEnableMapPatches_Visual;
+bool                    gbEnableMapPatches_PsyDoom;
 float                   gViewBobbingStrength;
 
 const char* getCueFilePath() noexcept { return gCueFilePath.c_str(); }
@@ -914,6 +917,41 @@ static const ConfigFieldHandler GAME_CFG_INI_HANDLERS[] = {
         "#---------------------------------------------------------------------------------------------------",
         "\n",
         [](const IniUtils::Entry& iniEntry) { gbFixSoundPropagation = iniEntry.getBoolValue(true); },
+        []() { return "1"; },
+    },
+    {
+        "EnableMapPatches_GamePlay",
+        "#---------------------------------------------------------------------------------------------------\n"
+        "# Whether to enable built-in fixes provided by PsyDoom for maps on various supported game discs.\n"
+        "# These patches will only be applied if the original map is unmodified.\n"
+        "# The categories of patches which can be enabled ('1') or disabled ('0') are:\n"
+        "#\n"
+        "# GamePlay:    Map patches that affect gameplay in some way.\n"
+        "#              Examples: fixing progression blockers, fixing broken secrets.\n"
+        "# Visual:      Map patches that affect just visual issues, having zero effect on gameplay.\n"
+        "#              Examples: fixing missing textures, fixing texture alignment.\n"
+        "# PsyDoom:     Patches issues unique to PsyDoom that do not occur in the original game.\n"
+        "#              These issues are mostly caused by differences in how skies are handled versus the\n"
+        "#              original PSX Doom. In order to fix many more problems, PsyDoom skies behave more\n"
+        "#              like PC Doom skies in that they do not let you see past them into the 'void' and\n"
+        "#              therefore (potentially) into other rooms past that. This works well most of the time\n"
+        "#              but occasionally slight tweaks are needed to adjust for PsyDoom. These patches\n"
+        "#              perform those tweaks.\n"
+        "#\n"
+        "# Note: the 'GamePlay' setting is ignored during demos and networked games where you not the host.\n"
+        "#---------------------------------------------------------------------------------------------------",
+        "",
+        [](const IniUtils::Entry& iniEntry) { gbEnableMapPatches_GamePlay = iniEntry.getBoolValue(true); },
+        []() { return "1"; },
+    },
+    {
+        "EnableMapPatches_Visual", "", "",
+        [](const IniUtils::Entry& iniEntry) { gbEnableMapPatches_Visual = iniEntry.getBoolValue(true); },
+        []() { return "1"; },
+    },
+    {
+        "EnableMapPatches_PsyDoom", "", "\n",
+        [](const IniUtils::Entry& iniEntry) { gbEnableMapPatches_PsyDoom = iniEntry.getBoolValue(true); },
         []() { return "1"; },
     },
     {

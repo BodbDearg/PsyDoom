@@ -14,9 +14,11 @@ BEGIN_NAMESPACE(MapPatches)
 static void patchMap_Nessus() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Fix the BFG secret being inaccessible - transfer it to a neighboring sector:
-    gpSectors[57].special = 0;
-    gpSectors[60].special = 9;
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix the BFG secret being inaccessible - transfer it to a neighboring sector:
+        gpSectors[57].special = 0;
+        gpSectors[60].special = 9;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -25,8 +27,10 @@ static void patchMap_Nessus() noexcept {
 static void patchMap_LunarMiningProject() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Fix a missing texture on a small lip in the mines
-    gpSides[gpLines[718].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK06");
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a missing texture on a small lip in the mines
+        gpSides[gpLines[718].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK06");
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -35,18 +39,20 @@ static void patchMap_LunarMiningProject() noexcept {
 static void patchMap_Ballistyx() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Make various linedefs not render sky walls or be see through for occlusion purposes
-    addVoidFlagToLinedefs(
-        // Altar hole: don't draw sky walls
-        1212, 1211, 1215, 1210, 1214, 1213,
-        // Altar pillars: don't occlude and prevent geometry behind from rendering (needed for floating platform hack)
-        1216, 1291, 1290, 1207, 1209, 1292, 1293, 1199,
-        // Yellow key cage area: the outer wall floors sometimes don't render due to occluding sky walls; make them not occlude:
-        1525, 1064, 1526, 1052, 371, 1053, 374, 1509, 373, 1054, 1524, 1055
-    );
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Make various linedefs not render sky walls or be see through for occlusion purposes
+        addVoidFlagToLinedefs(
+            // Altar hole: don't draw sky walls
+            1212, 1211, 1215, 1210, 1214, 1213,
+            // Altar pillars: don't occlude and prevent geometry behind from rendering (needed for floating platform hack)
+            1216, 1291, 1290, 1207, 1209, 1292, 1293, 1199,
+            // Yellow key cage area: the outer wall floors sometimes don't render due to occluding sky walls; make them not occlude:
+            1525, 1064, 1526, 1052, 371, 1053, 374, 1509, 373, 1054, 1524, 1055
+        );
+    }
 
     // Fix some monsters not teleporting in at the start: nudge the teleport destinations a little
-    if (!DemoPlayer::isPlayingAClassicDemo()) {
+    if (shouldApplyMapPatches_GamePlay()) {
         forAllThings(
             [](mobj_t& mobj) noexcept {
                 const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);

@@ -47,6 +47,7 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(bFixBlockingGibsBug);
     Endian::byteSwapInPlace(bFixSoundPropagation);
     Endian::byteSwapInPlace(lostSoulSpawnLimit);
+    Endian::byteSwapInPlace(bEnableMapPatches_GamePlay);
     Endian::byteSwapInPlace(viewBobbingStrengthFixed);
 }
 
@@ -206,14 +207,14 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.bAllowMovementCancellation = (Config::gAllowMovementCancellation != 0);
     }
 
-    settings.bAllowTurningCancellation = Config::gbAllowTurningCancellation;
-    settings.bFixViewBobStrength = Config::gbFixViewBobStrength;
-    settings.bFixGravityStrength = Config::gbFixGravityStrength;
-    settings.bNoMonsters = ProgArgs::gbNoMonsters;
-    settings.bPistolStart = ProgArgs::gbPistolStart;
-    settings.bTurboMode = ProgArgs::gbTurboMode;
-    settings.bUseLostSoulSpawnFix = Config::gbUseLostSoulSpawnFix;
-    settings.bUseLineOfSightOverflowFix = Config::gbUseLineOfSightOverflowFix;
+    settings.bAllowTurningCancellation      = Config::gbAllowTurningCancellation;
+    settings.bFixViewBobStrength            = Config::gbFixViewBobStrength;
+    settings.bFixGravityStrength            = Config::gbFixGravityStrength;
+    settings.bNoMonsters                    = ProgArgs::gbNoMonsters;
+    settings.bPistolStart                   = ProgArgs::gbPistolStart;
+    settings.bTurboMode                     = ProgArgs::gbTurboMode;
+    settings.bUseLostSoulSpawnFix           = Config::gbUseLostSoulSpawnFix;
+    settings.bUseLineOfSightOverflowFix     = Config::gbUseLineOfSightOverflowFix;
 
     // Note: not worth making this one a config option, just bake the choice into the binary based on whether limit removing is enabled or not.
     // In a multiplayer game or for demos however this setting will still be synchronized.
@@ -223,9 +224,10 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.bRemoveMaxCrossLinesLimit = false;
     #endif
 
-    settings.bFixOutdoorBulletPuffs = Config::gbFixOutdoorBulletPuffs;
-    settings.bFixBlockingGibsBug = Config::gbFixBlockingGibsBug;
-    settings.bFixSoundPropagation = Config::gbFixSoundPropagation;
+    settings.bFixOutdoorBulletPuffs         = Config::gbFixOutdoorBulletPuffs;
+    settings.bFixBlockingGibsBug            = Config::gbFixBlockingGibsBug;
+    settings.bFixSoundPropagation           = Config::gbFixSoundPropagation;
+    settings.bEnableMapPatches_GamePlay     = Config::gbEnableMapPatches_GamePlay;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game
@@ -267,8 +269,9 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bUseLineOfSightOverflowFix     = false;
     settings.bRemoveMaxCrossLinesLimit      = false;
     settings.bFixOutdoorBulletPuffs         = false;
-    settings.bFixSoundPropagation           = false;
     settings.bFixBlockingGibsBug            = false;
+    settings.bFixSoundPropagation           = false;
+    settings.bEnableMapPatches_GamePlay     = false;
     settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
 }

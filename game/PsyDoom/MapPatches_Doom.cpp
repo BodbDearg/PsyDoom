@@ -14,25 +14,30 @@ BEGIN_NAMESPACE(MapPatches)
 static void patchMap_CommandControl() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Fix bugs where step textures appear black: these steps need to have their 'lower unpegged' flag cleared
-    modifyLinedefs(
-        [](line_t& line) { line.flags &= ~ML_DONTPEGBOTTOM; },
-        337, 746, 747, 748
-    );
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix bugs where step textures appear black: these steps need to have their 'lower unpegged' flag cleared
+        modifyLinedefs(
+            [](line_t& line) { line.flags &= ~ML_DONTPEGBOTTOM; },
+            337, 746, 747, 748
+        );
 
-    // This step needs a texture coordinate adjustment
-    gpSides[253].rowoffset = 0;
-    gpSides[253].rowoffset.snap();
+        // This step needs a texture coordinate adjustment
+        gpSides[253].rowoffset = 0;
+        gpSides[253].rowoffset.snap();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP19: House Of Pain
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_HouseOfPain() noexcept {
-    // Fix a bug where an unintended door linedef causes one of the ceilings to collapse permanently.
-    // Remove the line action that causes the bug.
     applyOriginalMapCommonPatches();
-    gpLines[435].special = 0;
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a bug where an unintended door linedef causes one of the ceilings to collapse permanently.
+        // Remove the line action that causes the bug.
+        gpLines[435].special = 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -41,44 +46,46 @@ static void patchMap_HouseOfPain() noexcept {
 static void patchMap_UnholyCathedral() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Fix a secret door not opening because it requires the player to walk across it's line.
-    // The door should be the yellow key also. Only apply this patch if not playing a classic demo because it affects gameplay!
-    if (!DemoPlayer::isPlayingAClassicDemo()) {
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a secret door not opening because it requires the player to walk across it's line.
+        // The door should be the yellow key also. Only apply this patch if not playing a classic demo because it affects gameplay!
         gpLines[505].special = 34;
     }
 
-    // For the bug above make sure the floor texture matches the outside floor texture (like on PC)
-    modifySectors(
-        [](sector_t& sector){ sector.floorpic = gpSectors[30].floorpic; },
-        164, 165
-    );
+    if (shouldApplyMapPatches_Visual()) {
+        // For the secret door bug above make sure the floor texture matches the outside floor texture (like on PC)
+        modifySectors(
+            [](sector_t& sector){ sector.floorpic = gpSectors[30].floorpic; },
+            164, 165
+        );
 
-    // Fix a missing upper wall texture when the ceiling closes in the trap room with the BFG
-    modifyLinedefs(
-        [](line_t& line) {
-            gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE04");
-            gpSides[line.sidenum[1]].toptexture = R_TextureNumForName("MARBLE04");
-        },
-        950, 1078
-    );
+        // Fix a missing upper wall texture when the ceiling closes in the trap room with the BFG
+        modifyLinedefs(
+            [](line_t& line) {
+                gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE04");
+                gpSides[line.sidenum[1]].toptexture = R_TextureNumForName("MARBLE04");
+            },
+            950, 1078
+        );
 
-    // Fix the alignment of the scrolling skull wall textures
-    auto setLineFrontTexOffset = [](const int32_t lineNum, const int32_t offsetX, const int32_t offsetY) noexcept {
-        side_t& side = gpSides[gpLines[lineNum].sidenum[0]];
-        side.textureoffset.snapToValue(offsetX * FRACUNIT);
-        side.rowoffset.snapToValue(offsetY * FRACUNIT);
-    };
+        // Fix the alignment of the scrolling skull wall textures
+        auto setLineFrontTexOffset = [](const int32_t lineNum, const int32_t offsetX, const int32_t offsetY) noexcept {
+            side_t& side = gpSides[gpLines[lineNum].sidenum[0]];
+            side.textureoffset.snapToValue(offsetX * FRACUNIT);
+            side.rowoffset.snapToValue(offsetY * FRACUNIT);
+        };
 
-    setLineFrontTexOffset(1113, 32, -48);   // Top skulls
-    setLineFrontTexOffset(1114,  0, -48);
-    setLineFrontTexOffset(1115, 32, -48);
+        setLineFrontTexOffset(1113, 32, -48);   // Top skulls
+        setLineFrontTexOffset(1114,  0, -48);
+        setLineFrontTexOffset(1115, 32, -48);
     
-    setLineFrontTexOffset(1118, 32,   0);   // Middle skulls
-    setLineFrontTexOffset(1119,  0,  48);
-    setLineFrontTexOffset(1120, 32,   0);
+        setLineFrontTexOffset(1118, 32,   0);   // Middle skulls
+        setLineFrontTexOffset(1119,  0,  48);
+        setLineFrontTexOffset(1120, 32,   0);
 
-    setLineFrontTexOffset(1123, 32, -48);   // Bottom Skulls
-    setLineFrontTexOffset(1125, 32, -48);
+        setLineFrontTexOffset(1123, 32, -48);   // Bottom Skulls
+        setLineFrontTexOffset(1125, 32, -48);
+    }
 }  
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -87,11 +94,13 @@ static void patchMap_UnholyCathedral() noexcept {
 static void patchMap_Limbo() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Fix a bug where a single step/lower-wall is not rendered.
-    // This texture was not assigned in the original map, but was defaulted to texture index '0' by the original PSX Doom code in 'P_Init'.
-    // PsyDoom now allows walls to deliberately have no texture assigned so they can be invisible, but that change causes a bug with this
-    // step (beside the lift) not appearing in the room with the lift and the Baron. Fix by replicating the original PSX behavior.
-    gpSides[967].bottomtexture = 0;
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix a bug where a single step/lower-wall is not rendered.
+        // This texture was not assigned in the original map, but was defaulted to texture index '0' by the original PSX Doom code in 'P_Init'.
+        // PsyDoom now allows walls to deliberately have no texture assigned so they can be invisible, but that change causes a bug with this
+        // step (beside the lift) not appearing in the room with the lift and the Baron. Fix by replicating the original PSX behavior.
+        gpSides[967].bottomtexture = 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,11 +109,13 @@ static void patchMap_Limbo() noexcept {
 static void patchMap_Entryway() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Fix grass beyond the sky wall sometimes appearing - don't render it!
-    modifySectors(
-        [](sector_t& sector) { sector.floorpic = -1; },
-        3, 25
-    );
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix grass beyond the sky wall sometimes appearing - don't render it!
+        modifySectors(
+            [](sector_t& sector) { sector.floorpic = -1; },
+            3, 25
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,8 +124,10 @@ static void patchMap_Entryway() noexcept {
 static void patchMap_TheCitadel() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Fix the starting hut: make it so you can see past it, since it is shorter than buildings around it
-    addVoidFlagToLinedefs(170, 171, 172, 173, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix the starting hut: make it so you can see past it, since it is shorter than buildings around it
+        addVoidFlagToLinedefs(170, 171, 172, 173, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -123,8 +136,10 @@ static void patchMap_TheCitadel() noexcept {
 static void patchMap_TheCourtyard() noexcept {
     applyOriginalMapCommonPatches();
 
-    // Fix a wall top/floor sometimes not appearing: this wall is at the starting area and borders the sky
-    addVoidFlagToLinedefs(45, 17, 18, 51);
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix a wall top/floor sometimes not appearing: this wall is at the starting area and borders the sky
+        addVoidFlagToLinedefs(45, 17, 18, 51);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

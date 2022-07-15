@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Config.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
+#include "Game.h"
 
 #include <cstdint>
 
@@ -149,7 +151,24 @@ static inline void forAllThings(const FuncT& func) noexcept {
 // Helper: applies patches common to ALL original 'Doom' and 'Final Doom' maps
 //------------------------------------------------------------------------------------------------------------------------------------------
 static inline void applyOriginalMapCommonPatches() noexcept {
+    // Note: always apply this patch regardless of map patch settings.
+    // This one is CRITICAL to being able to play original game maps in PsyDoom!
     clearMysterySectorFlags();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helpers: check if various forms of map patches should be applied
+//------------------------------------------------------------------------------------------------------------------------------------------
+static inline bool shouldApplyMapPatches_GamePlay() noexcept {
+    return Game::gSettings.bEnableMapPatches_GamePlay;
+}
+
+static inline bool shouldApplyMapPatches_Visual() noexcept {
+    return Config::gbEnableMapPatches_Visual;
+}
+
+static inline bool shouldApplyMapPatches_PsyDoom() noexcept {
+    return Config::gbEnableMapPatches_PsyDoom;
 }
 
 END_NAMESPACE(MapPatches)
