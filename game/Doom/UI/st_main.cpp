@@ -577,9 +577,14 @@ void ST_Drawer() noexcept {
         I_AddPrim(spritePrim);
     }
 
-    // PsyDoom: draw level stats, if enabled
+    // PsyDoom: draw level stats if enabled, and if not deathmatch:
     #if PSYDOOM_MODS
-        if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::Kills) {
+        const bool bShowStats = (
+            (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::Kills) &&
+            (gNetGame != gt_deathmatch)
+        );
+
+        if (bShowStats) {
             // If using the Vulkan renderer, draw then as far as possible to the right, being widescreen aware
             int32_t widescreenAdjust = 0;
 
