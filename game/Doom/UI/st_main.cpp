@@ -598,14 +598,30 @@ void ST_Drawer() noexcept {
                 }
             #endif
 
-            ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'K', player.killcount, gTotalKills);
+            // Compute the kill, secret and item counts.
+            // In co-op games make this a joint count so that both players can see progress towards overall map completion.
+            // Note: at the end of a map in co-op players will get an opportunity to see individual counts.
+            uint32_t jointKillCount = player.killcount;
+            uint32_t jointSecretCount = player.secretcount;
+            uint32_t jointItemCount = player.itemcount;
+
+            if (gNetGame != gt_single) {
+                const player_t& otherPlayer = (gCurPlayerIndex == 0) ? gPlayers[1] : gPlayers[0];
+
+                jointKillCount += otherPlayer.killcount;
+                jointSecretCount += otherPlayer.secretcount;
+                jointItemCount += otherPlayer.itemcount;
+            }
+
+            // Show the stats!
+            ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'K', jointKillCount, gTotalKills);
 
             if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsAndSecrets) {
-                ST_DrawRightAlignedStat(2 + widescreenAdjust, 10, 'S', player.secretcount, gTotalSecret);
+                ST_DrawRightAlignedStat(2 + widescreenAdjust, 10, 'S', jointSecretCount, gTotalSecret);
             }
 
             if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsSecretsAndItems) {
-                ST_DrawRightAlignedStat(2 + widescreenAdjust, 18, 'I', player.itemcount, gTotalItems);
+                ST_DrawRightAlignedStat(2 + widescreenAdjust, 18, 'I', jointItemCount, gTotalItems);
             }
         }
     #endif  // #if PSYDOOM_MODS
