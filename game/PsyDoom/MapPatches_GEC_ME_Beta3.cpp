@@ -594,6 +594,19 @@ static void patchMap_Caribbean() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP71: Well Of Souls
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_WellOfSouls() noexcept {
+    // Fix not being able to reach the exit again if backtracking after raising the final lift to the exit.
+    // This line special would lower the lift permanently, preventing the player from reaching the exit.
+    // It's not needed for anything so just remove the special:
+    modifyLinedefs(
+        [](line_t& line) { line.special = 0; },
+        590
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP73: Caughtyard
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Caughtyard() noexcept {
@@ -824,6 +837,7 @@ static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     { 164989, 0x413FE3E56F2C2453, 0x9E047C4ECCB4FEA7, patchMap_RiverStyx },                 // MAP68
     { 167156, 0xE21C586BF2242082, 0xFA5D9C91DB288B5E, patchMap_Pharaoh },                   // MAP69
     { 120117, 0x475B5271367FB4C1, 0xF1D3C564A0145DA6, patchMap_Caribbean },                 // MAP70
+    {  91382, 0x9e5ddd89794b172c, 0x3a73d5aebf5566a5, patchMap_WellOfSouls },               // MAP71
     {  48509, 0x3C16F377EEB066E6, 0x728CF548925EBC4E, patchMap_Caughtyard },                // MAP73
     { 115075, 0x6A5BA4600D51FA60, 0x5E2B0CBCFBC0A065, patchMap_Speed },                     // MAP76
     {  95176, 0xA5DA6BC16E6BF2C2, 0xD8A4986E39B4EB00, patchMap_TheTwilight },               // MAP79
