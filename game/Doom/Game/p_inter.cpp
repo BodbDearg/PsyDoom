@@ -282,10 +282,20 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
     if (toucher.health <= 0)
         return;
 
-    // See what was picked up and play the item pickup sound by default
+    // The player touching the thing and the sound to play
     player_t& player = *toucher.player;
     sfxenum_t soundId = sfx_itemup;
 
+    // PsyDoom: helper that encapsulates the original logic for playing the item pickup sound
+    const auto playItemPickupSound = [&]() noexcept {
+        // Note: because no sound origin is passed in here, the item pickup sound will ALWAYS play with reverb.
+        // This is regardless of the reverb enabled setting for the sector. Unclear if this is a bug or intentional?
+        if (&player == &gPlayers[gCurPlayerIndex]) {
+            S_StartSound(nullptr, soundId);
+        }
+    };
+
+    // See what was picked up and play the item pickup sound by default
     switch (special.sprite) {
         //----------------------------------------------------------------------------------------------------------------------------------
         // Keys
@@ -296,9 +306,15 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_bluecard);
             }
 
-            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
-                return;
+            // Leave it around in co-op games for other players
+            if (gNetGame != gt_single) {
+                // PsyDoom: fix a bug where key pickup sounds are NOT played in co-op
+                #if PSYDOOM_MODS
+                    playItemPickupSound();
+                #endif
 
+                return;
+            }
         }   break;
 
         case SPR_RKEY: {
@@ -307,9 +323,15 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_redcard);
             }
 
-            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
-                return;
+            // Leave it around in co-op games for other players
+            if (gNetGame != gt_single) {
+                // PsyDoom: fix a bug where key pickup sounds are NOT played in co-op
+                #if PSYDOOM_MODS
+                    playItemPickupSound();
+                #endif
 
+                return;
+            }
         }   break;
 
         case SPR_YKEY: {
@@ -318,9 +340,15 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_yellowcard);
             }
 
-            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
-                return;
+            // Leave it around in co-op games for other players
+            if (gNetGame != gt_single) {
+                // PsyDoom: fix a bug where key pickup sounds are NOT played in co-op
+                #if PSYDOOM_MODS
+                    playItemPickupSound();
+                #endif
 
+                return;
+            }
         }   break;
 
         case SPR_BSKU: {
@@ -329,9 +357,15 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_blueskull);
             }
 
-            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
-                return;
+            // Leave it around in co-op games for other players
+            if (gNetGame != gt_single) {
+                // PsyDoom: fix a bug where key pickup sounds are NOT played in co-op
+                #if PSYDOOM_MODS
+                    playItemPickupSound();
+                #endif
 
+                return;
+            }
         }   break;
 
         case SPR_RSKU: {
@@ -340,9 +374,15 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_redskull);
             }
 
-            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
-                return;
+            // Leave it around in co-op games for other players
+            if (gNetGame != gt_single) {
+                // PsyDoom: fix a bug where key pickup sounds are NOT played in co-op
+                #if PSYDOOM_MODS
+                    playItemPickupSound();
+                #endif
 
+                return;
+            }
         }   break;
 
         case SPR_YSKU: {
@@ -351,9 +391,15 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_yellowskull);
             }
 
-            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
-                return;
+            // Leave it around in co-op games for other players
+            if (gNetGame != gt_single) {
+                // PsyDoom: fix a bug where key pickup sounds are NOT played in co-op
+                #if PSYDOOM_MODS
+                    playItemPickupSound();
+                #endif
 
+                return;
+            }
         }   break;
 
         //----------------------------------------------------------------------------------------------------------------------------------
@@ -618,15 +664,10 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         player.itemcount++;
     }
 
-    // Remove the item on pickup and increase the bonus flash amount
+    // Remove the item on pickup and increase the bonus flash amount and play the pickup sound
     P_RemoveMobj(special);
     player.bonuscount += BONUSADD;
-
-    // Note: because no sound origin is passed in here, the item pickup sound will ALWAYS play with reverb.
-    // This is regardless of the reverb enabled setting of the sector. Unclear if this is a bug or if this intentional...
-    if (&player == &gPlayers[gCurPlayerIndex]) {
-        S_StartSound(nullptr, soundId);
-    }
+    playItemPickupSound();
 }
 
 #if PSYDOOM_MODS
