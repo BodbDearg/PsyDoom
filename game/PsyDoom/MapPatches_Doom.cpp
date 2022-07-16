@@ -156,6 +156,20 @@ static void patchMap_TheCourtyard() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP58: The Mansion
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheMansion() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix the secret for the Club Doom exit often not registering.
+        // Shift the secret to a sector where it should always be counted.
+        gpSectors[63].special = 0;
+        gpSectors[84].special = 9;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // All of the map patches for this game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatchArray_Doom[] = {
@@ -216,7 +230,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  19237, 0xB5116FF7C0CBCF38, 0x7C6C9E29F2EA963B, applyOriginalMapCommonPatches },      // MAP55
     {  85042, 0x98C00035EA735BF3, 0x36C5C0BA592334C9, applyOriginalMapCommonPatches },      // MAP56
     {  58333, 0xBBE3159AAEE4F03D, 0x086F778E5A08DBAD, applyOriginalMapCommonPatches },      // MAP57
-    { 194653, 0x158C832CA1D1C539, 0x9C4ED57B29C13E66, applyOriginalMapCommonPatches },      // MAP58
+    { 194653, 0x158C832CA1D1C539, 0x9C4ED57B29C13E66, patchMap_TheMansion           },      // MAP58
     {  79441, 0x0ECE269F1AA74445, 0x0B254FDF53895D4F, applyOriginalMapCommonPatches },      // MAP59
 };
 
