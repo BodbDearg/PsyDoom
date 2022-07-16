@@ -51,8 +51,8 @@ static void patchMap_Ballistyx() noexcept {
         );
     }
 
-    // Fix some monsters not teleporting in at the start: nudge the teleport destinations a little
     if (shouldApplyMapPatches_GamePlay()) {
+        // Fix some monsters not teleporting in at the start: nudge the teleport destinations a little
         forAllThings(
             [](mobj_t& mobj) noexcept {
                 const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
@@ -64,6 +64,19 @@ static void patchMap_Ballistyx() noexcept {
                 }
             }
         );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP29: The Death Domain
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheDeathDomain() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix being able to close the blue door permanently from the opposite side of it.
+        // Change the line special from 'DR Door Open Wait Close (fast)' to 'D1 Door (Blue) Open Stay'.
+        gpLines[513].special = 32;
     }
 }
 
@@ -100,8 +113,8 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 127601, 0x1008C54A53E8B33E, 0x8E35C49173174DCD, applyOriginalMapCommonPatches },      // MAP26
     { 113829, 0x25A6925BB713C346, 0x7AF7C07603DEA325, applyOriginalMapCommonPatches },      // MAP27
     { 141807, 0x3461BD1E919965AB, 0x07C36C7B648205F6, applyOriginalMapCommonPatches },      // MAP28
-    { 107736, 0xD9789CCEA024CCCC, 0x61CCB6C421B65C47, applyOriginalMapCommonPatches },      // MAP29 (NTSC)
-    { 107736, 0x0599BE06504C6FAD, 0x1DCB1C8AD6410764, applyOriginalMapCommonPatches },      // MAP29 (PAL, why different?)
+    { 107736, 0xD9789CCEA024CCCC, 0x61CCB6C421B65C47, patchMap_TheDeathDomain       },      // MAP29 (NTSC)
+    { 107736, 0x0599BE06504C6FAD, 0x1DCB1C8AD6410764, patchMap_TheDeathDomain       },      // MAP29 (PAL, why different?)
     { 110131, 0x2C157281E504283E, 0x914845A33B9F0503, applyOriginalMapCommonPatches },      // MAP30
 };
 
