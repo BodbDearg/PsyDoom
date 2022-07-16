@@ -77,6 +77,18 @@ static void patchMap_TheDeathDomain() noexcept {
         // Fix being able to close the blue door permanently from the opposite side of it.
         // Change the line special from 'DR Door Open Wait Close (fast)' to 'D1 Door (Blue) Open Stay'.
         gpLines[513].special = 32;
+
+        // Fix a secret area containing Megaarmor armor being completely inaccessible.
+        // Provide a new way to trigger it by running over a linedef, and also provide a way to get back out of it.
+        gpLines[333].tag = 7;
+        gpLines[333].special = 105;     // WR Door Open Wait Close (fast)
+
+        modifyLinedefs(
+            [](line_t& line) {
+                line.special = 117;     // DR Door Open Wait Close (fast)
+            },
+            603, 604, 606
+        );
     }
 }
 
