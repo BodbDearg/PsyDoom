@@ -28,6 +28,19 @@ static void patchMap_CommandControl() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP13: Command Center
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_CommandCenter() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a trap pillar containing a Baron not lowering.
+        // The pillar doesn't lower because the Baron is stuck in the ceiling - fix by raising the ceiling.
+        gpSectors[71].ceilingheight = 232 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP19: House Of Pain
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_HouseOfPain() noexcept {
@@ -158,7 +171,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  97045, 0x48FFA0D005CB2DDA, 0x2631E9D5AB867200, applyOriginalMapCommonPatches },      // MAP10
     {  75368, 0x6D99C761DE799820, 0xAEDB0E4CA9441431, applyOriginalMapCommonPatches },      // MAP11
     { 119221, 0xB0E9622905A41337, 0xED94BA27D70017BF, applyOriginalMapCommonPatches },      // MAP12
-    {  83505, 0x8635E6DB6360B27C, 0xD5835A25E276A0C4, applyOriginalMapCommonPatches },      // MAP13
+    {  83505, 0x8635E6DB6360B27C, 0xD5835A25E276A0C4, patchMap_CommandCenter        },      // MAP13
     {  85802, 0x556287C93A6396F9, 0xC019D5F66797A596, applyOriginalMapCommonPatches },      // MAP14
     {  83539, 0xFDA28FD54C7E9A92, 0xE7F93F0E3C5C1D7F, applyOriginalMapCommonPatches },      // MAP15
     {  27956, 0x39B94C1CF5E19EB0, 0xE0A691816A8C166A, applyOriginalMapCommonPatches },      // MAP16
