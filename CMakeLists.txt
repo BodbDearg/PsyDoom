@@ -24,6 +24,7 @@ set(ASIO_TGT_NAME                   Asio)
 set(AUDIO_TOOLS_COMMON_TGT_NAME     AudioToolsCommon)
 set(BASELIB_TGT_NAME                BaseLib)
 set(DOOM_DISASM_TGT_NAME            DoomDisassemble)
+set(FLTK_TGT_NAME                   FLTK)
 set(GAME_TGT_NAME                   PsyDoom)
 set(HASH_LIBRARY_TGT_NAME           Hash-Library)
 set(LCD_TOOL_TGT_NAME               LcdTool)
@@ -58,6 +59,10 @@ set(PSYDOOM_INCLUDE_GAME TRUE CACHE BOOL
 "If TRUE include the game itself in the project tree.
 Optionally, you could remove the game if you just wanted to compile the audio tools for example.")
 
+set(PSYDOOM_INCLUDE_LAUNCHER TRUE CACHE BOOL 
+"If TRUE then an FLTK based launcher will be built into the PsyDoom executable.
+This launcher allows user configuration and launch parameters to be edited via the its GUI.")
+
 set(PSYDOOM_INCLUDE_AUDIO_TOOLS FALSE CACHE BOOL
 "If TRUE include PlayStation Doom audio related tools in the project tree.")
 
@@ -89,6 +94,10 @@ if (PSYDOOM_INCLUDE_GAME)
     add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/libsdl")
     add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/lua")
     add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/sol2")
+
+    if (PSYDOOM_INCLUDE_LAUNCHER)
+        add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/fltk")
+    endif()
 
     if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
         add_subdirectory("${PROJECT_SOURCE_DIR}/vulkan_gl")

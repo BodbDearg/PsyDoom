@@ -460,11 +460,12 @@ target_compile_definitions(${GAME_TGT_NAME} PRIVATE
 ) 
 
 # Various tweaks that can be applied
-target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_VULKAN_RENDERER         ${PSYDOOM_INCLUDE_VULKAN_RENDERER})
-target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_USE_NEW_I_ERROR         ${PSYDOOM_USE_NEW_I_ERROR})
 target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_FIX_UB                  ${PSYDOOM_FIX_UB})
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_LAUNCHER                ${PSYDOOM_INCLUDE_LAUNCHER})
 target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_LIMIT_REMOVING          ${PSYDOOM_LIMIT_REMOVING})
 target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_MISSING_TEX_WARNINGS    ${PSYDOOM_EMIT_MISSING_TEX_WARNINGS})
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_USE_NEW_I_ERROR         ${PSYDOOM_USE_NEW_I_ERROR})
+target_bool_compile_definition(${GAME_TGT_NAME} PRIVATE PSYDOOM_VULKAN_RENDERER         ${PSYDOOM_INCLUDE_VULKAN_RENDERER})
 
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})
@@ -480,6 +481,10 @@ target_link_libraries(${GAME_TGT_NAME}
     ${SIMPLE_SPU_TGT_NAME}
     ${SOL2_TGT_NAME}
 )
+
+if (PSYDOOM_INCLUDE_LAUNCHER)
+    target_link_libraries(${GAME_TGT_NAME} ${FLTK_TGT_NAME})
+endif()
 
 if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
     target_link_libraries(${GAME_TGT_NAME} ${VULKAN_GL_TGT_NAME})

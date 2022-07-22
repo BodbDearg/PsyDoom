@@ -1,0 +1,6 @@
+Note: I have stripped down this library to just the stuff needed for this project.
+The full version is available at the link below.
+
+Version 1.3.8:
+    https://www.fltk.org/pub/fltk/1.3.8/fltk-1.3.8-source.tar.gz
+    https://www.fltk.org/pub/fltk/1.3.8/fltk-1.3.8-docs-html.tar.gz
