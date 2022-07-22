@@ -19,7 +19,7 @@
 #include "Gpu.h"
 #include "LogicalDevice.h"
 #include "Pipeline.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Video.h"
 #include "VPipelines.h"
 #include "VRenderer.h"

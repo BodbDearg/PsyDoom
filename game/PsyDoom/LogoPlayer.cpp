@@ -5,7 +5,7 @@
 #include "LogoPlayer.h"
 
 #include "Asserts.h"
-#include "Config.h"
+#include "Config/Config.h"
 #include "Controls.h"
 #include "Input.h"
 #include "IVideoBackend.h"

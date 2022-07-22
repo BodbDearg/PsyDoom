@@ -17,7 +17,7 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_tick.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 
 #include <algorithm>
 

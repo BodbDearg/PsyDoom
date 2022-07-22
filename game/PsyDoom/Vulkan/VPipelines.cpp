@@ -11,7 +11,7 @@
 #include "PhysicalDevice.h"
 #include "Pipeline.h"
 #include "PipelineLayout.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "Sampler.h"
 #include "ShaderModule.h"
 #include "VRenderPath_Crossfade.h"

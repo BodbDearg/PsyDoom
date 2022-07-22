@@ -4,7 +4,7 @@
 #include "Video.h"
 
 #include "Asserts.h"
-#include "Config.h"
+#include "Config/Config.h"
 #include "Gpu.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"

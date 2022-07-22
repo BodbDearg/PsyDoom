@@ -11,7 +11,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/RendererVk/rv_automap.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
 #include "PsyDoom/Video.h"

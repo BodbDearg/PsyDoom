@@ -26,7 +26,7 @@
 #include "p_spec.h"
 #include "p_user.h"
 #include "PsyDoom/Cheats.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/DemoResult.h"

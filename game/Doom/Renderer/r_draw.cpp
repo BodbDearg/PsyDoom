@@ -3,7 +3,7 @@
 #include "Asserts.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/p_setup.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_local.h"

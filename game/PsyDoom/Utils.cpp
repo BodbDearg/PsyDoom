@@ -1,6 +1,6 @@
 #include "Utils.h"
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "Controls.h"
 #include "DiscInfo.h"
 #include "DiscReader.h"

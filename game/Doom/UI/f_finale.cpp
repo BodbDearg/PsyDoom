@@ -18,7 +18,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/RendererVk/rv_utils.h"
 #include "m_main.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapInfo.h"

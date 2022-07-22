@@ -5,7 +5,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
 #include "r_local.h"

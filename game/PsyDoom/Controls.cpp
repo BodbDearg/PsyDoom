@@ -1,6 +1,6 @@
 #include "Controls.h"
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "Input.h"
 #include "PsxPadButtons.h"
 
@@ -13,42 +13,11 @@
 
 BEGIN_NAMESPACE(Controls)
 
-// Holds a single button, key or axis that is bound to a particular action
-struct InputSrc {
-    // Where the input is coming from
-    enum : uint8_t {
-        NULL_DEVICE,        // Always generates no input
-        KEYBOARD_KEY,
-        MOUSE_BUTTON,
-        MOUSE_WHEEL,
-        GAMEPAD_AXIS,
-        GAMEPAD_BUTTON,
-        JOYSTICK_AXIS,
-        JOYSTICK_BUTTON,
-        JOYSTICK_HAT
-    } device;
+// The list of inputs that each control binding uses
+static BindingData gBindings[(uint16_t) Binding::NUM_BINDINGS];
 
-    // Modifiers to apply to the input
-    enum : uint8_t {
-        MOD_NONE,           // Don't modify the input
-        MOD_POS_SUBAXIS,    // Only use the 0.0 to +1.0 range of the axis and return it as a 0.0 to 1.0 axis
-        MOD_NEG_SUBAXIS,    // Only use the 0.0 to -1.0 range of the axis and return it as a 0.0 to 1.0 axis
-        MOD_INVERT,         // Invert/negate the axis inputs
-    } modifier;
-
-    // What particular button or axis is used
-    uint16_t input;
-};
-
-// Defines a range of input sources in the global list of input sources
-struct InputSrcRange {
-    uint16_t startIndex;
-    uint16_t size;
-};
-
-static std::vector<InputSrc>    gInputSources;                                  // The global list of input sources for all control bindings
-static InputSrcRange            gBindings[(uint16_t) Binding::NUM_BINDINGS];    // The inputs that each control binding uses
-static std::string              gCurInputName;                                  // Temporary string used to hold the current input name
+// Temporary string used to hold the current input name
+static std::string gCurInputName;
 
 // Use case insensitive matching for all regexes and use ECMAScript
 static constexpr auto REGEX_OPTIONS = std::regex_constants::ECMAScript | std::regex_constants::icase;
@@ -63,6 +32,9 @@ static const std::regex gRegex_JoystickHat_Up       = std::regex(R"(^JOYSTICK\s+
 static const std::regex gRegex_JoystickHat_Down     = std::regex(R"(^JOYSTICK\s+HAT(\d+)\s+DOWN$)", REGEX_OPTIONS);
 static const std::regex gRegex_JoystickHat_Left     = std::regex(R"(^JOYSTICK\s+HAT(\d+)\s+LEFT$)", REGEX_OPTIONS);
 static const std::regex gRegex_JoystickHat_Right    = std::regex(R"(^JOYSTICK\s+HAT(\d+)\s+RIGHT$)", REGEX_OPTIONS);
+
+// A struct returned when data for an invalid binding is requested
+static const BindingData INVALID_BINDING_DATA = {};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Is the character ASCII whitespace?
@@ -229,23 +201,26 @@ static bool isInputJustReleased(const InputSrc src) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the current input for a particular control binding in floating point format.
+// Get the current input value for a particular control binding in floating point format.
 // If there are multiple sources then their inputs are combined additively.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static float getInputForBinding(const Binding binding) noexcept {
-    float input = 0.0f;
-    uint16_t bindingIdx = (uint16_t) binding;
+    // Invalid bindings never have any inputs
+    const uint16_t bindingIdx = (uint16_t) binding;
 
-    if (bindingIdx < (uint16_t) Binding::NUM_BINDINGS) {
-        const InputSrcRange inputRange = gBindings[bindingIdx];
+    if (bindingIdx >= (uint16_t) Binding::NUM_BINDINGS)
+        return 0.0f;
 
-        for (uint16_t i = 0; i < inputRange.size; ++i) {
-            const InputSrc inputSrc = gInputSources[inputRange.startIndex + i];
-            input += getInputWithModifiers(inputSrc);
-        }
+    // Sum up the contribution from all the different input sources
+    const BindingData& bindingData = gBindings[bindingIdx];
+    const uint32_t numInputSources = bindingData.numInputSources;
+    float inputValue = 0.0f;
+
+    for (uint16_t i = 0; i < numInputSources; ++i) {
+        inputValue += getInputWithModifiers(bindingData.inputSources[i]);
     }
 
-    return input;
+    return inputValue;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -443,10 +418,20 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: adds an input source to the specified binding (if there is room)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addInputSourceToBinding(const InputSrc& inputSrc, BindingData& bindingData) noexcept {
+    if (bindingData.numInputSources < MAX_BINDING_INPUTS) {
+        bindingData.inputSources[bindingData.numInputSources] = inputSrc;
+        bindingData.numInputSources++;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Startup logic for the controls system
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
-    gInputSources.reserve(256);
+    clearAllBindings();
     gCurInputName.reserve(64);
 }
 
@@ -455,7 +440,6 @@ void init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
     clearAllBindings();
-    gInputSources.shrink_to_fit();
     gCurInputName.clear();
     gCurInputName.shrink_to_fit();
 }
@@ -464,11 +448,9 @@ void shutdown() noexcept {
 // Clear all control mappings
 //------------------------------------------------------------------------------------------------------------------------------------------
 void clearAllBindings() noexcept {
-    for (InputSrcRange& range : gBindings) {
-        range = {};
+    for (BindingData& bindingData : gBindings) {
+        bindingData = {};
     }
-
-    gInputSources.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -476,14 +458,14 @@ void clearAllBindings() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void parseBinding(const Binding binding, const char* const str) noexcept {
     // Ignore if the binding is not valid
-    uint16_t bindingIdx = (uint16_t) binding;
+    const uint16_t bindingIdx = (uint16_t) binding;
 
     if (bindingIdx >= (uint16_t) Binding::NUM_BINDINGS)
         return;
-
+    
     // Clear the binding
-    InputSrcRange& inputSrcRange = gBindings[bindingIdx];
-    inputSrcRange = {};
+    BindingData& bindingData = gBindings[bindingIdx];
+    bindingData = {};
 
     // Parse the inputs for this binding
     for (const char* pCurSubstr = str; *pCurSubstr != 0;) {
@@ -499,14 +481,17 @@ void parseBinding(const Binding binding, const char* const str) noexcept {
         if (!getInputSrcFromNameUpper(gCurInputName, inputSrc))
             continue;
 
-        // Save the input
-        if (inputSrcRange.size == 0) {
-            inputSrcRange.startIndex = (uint16_t) gInputSources.size();
-        }
-
-        inputSrcRange.size++;
-        gInputSources.push_back(inputSrc);
+        // Otherwise add the input source to the binding
+        addInputSourceToBinding(inputSrc, bindingData);
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the binding data for a particular control binding
+//------------------------------------------------------------------------------------------------------------------------------------------
+const BindingData& getBindingData(const Binding binding) noexcept {
+    const uint16_t bindingIdx = (uint16_t) binding;
+    return (bindingIdx < (uint16_t) Binding::NUM_BINDINGS) ? gBindings[bindingIdx] : INVALID_BINDING_DATA;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -527,17 +512,21 @@ bool getBool(const Binding binding) noexcept {
 // Tells if the given input binding has just been pressed - useful for toggle type actions
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool isJustPressed(const Binding binding) noexcept {
-    uint16_t bindingIdx = (uint16_t) binding;
+    // Invalid bindings are never just pressed
+    const uint16_t bindingIdx = (uint16_t) binding;
+    
+    if (bindingIdx >= (uint16_t) Binding::NUM_BINDINGS)
+        return false;
 
-    if (bindingIdx < (uint16_t) Binding::NUM_BINDINGS) {
-        const InputSrcRange inputRange = gBindings[bindingIdx];
+    // Check to see if any of the input sources are just pressed
+    const BindingData& bindingData = gBindings[bindingIdx];
+    const uint32_t numInputSources = bindingData.numInputSources;
 
-        for (uint16_t i = 0; i < inputRange.size; ++i) {
-            const InputSrc inputSrc = gInputSources[inputRange.startIndex + i];
+    for (uint32_t i = 0; i < numInputSources; ++i) {
+        const InputSrc inputSrc = bindingData.inputSources[i];
 
-            if (isInputJustPressed(inputSrc))
-                return true;
-        }
+        if (isInputJustPressed(inputSrc))
+            return true;
     }
 
     return false;
@@ -547,17 +536,21 @@ bool isJustPressed(const Binding binding) noexcept {
 // Tells if the given input binding has just been released - useful for toggle type actions
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool isJustReleased(const Binding binding) noexcept {
-    uint16_t bindingIdx = (uint16_t) binding;
+    // Invalid bindings are never just released
+    const uint16_t bindingIdx = (uint16_t) binding;
+    
+    if (bindingIdx >= (uint16_t) Binding::NUM_BINDINGS)
+        return false;
 
-    if (bindingIdx < (uint16_t) Binding::NUM_BINDINGS) {
-        const InputSrcRange inputRange = gBindings[bindingIdx];
+    // Check to see if any of the input sources are just released
+    const BindingData& bindingData = gBindings[bindingIdx];
+    const uint32_t numInputSources = bindingData.numInputSources;
 
-        for (uint16_t i = 0; i < inputRange.size; ++i) {
-            const InputSrc inputSrc = gInputSources[inputRange.startIndex + i];
+    for (uint32_t i = 0; i < numInputSources; ++i) {
+        const InputSrc inputSrc = bindingData.inputSources[i];
 
-            if (isInputJustReleased(inputSrc))
-                return true;
-        }
+        if (isInputJustReleased(inputSrc))
+            return true;
     }
 
     return false;
@@ -590,6 +583,190 @@ uint16_t getPSXCheatButtonBits() noexcept {
     addButtonBit(Binding::PSXCheatCode_R2, PAD_R2);
 
     return buttonBits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: converts an input source into a textual string representing that input source and appends it to the given string.
+// Note: if conversion fails then nothing will be appended.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept {
+    if (src.device == InputSrc::KEYBOARD_KEY) {
+        if (const char* const scancodeName = SDL_GetScancodeName((SDL_Scancode) src.input)) {
+            outputStr += scancodeName;
+        }
+    }
+    else if (src.device == InputSrc::MOUSE_BUTTON) {
+        switch ((MouseButton) src.input) {
+            case MouseButton::LEFT:     outputStr += "Mouse Left";      break;
+            case MouseButton::RIGHT:    outputStr += "Mouse Right";     break;
+            case MouseButton::MIDDLE:   outputStr += "Mouse Middle";    break;
+            case MouseButton::X1:       outputStr += "Mouse X1";        break;
+            case MouseButton::X2:       outputStr += "Mouse X2";        break;
+        }
+    }
+    else if (src.device == InputSrc::MOUSE_WHEEL) {
+        switch (src.modifier) {
+            case InputSrc::MOD_NONE:            outputStr += "Mouse Wheel";         break;
+            case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Mouse Wheel+";        break;
+            case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Mouse Wheel-";        break;
+            case InputSrc::MOD_INVERT:          outputStr += "Inv Mouse Wheel";     break;
+        }
+    }
+    else if (src.device == InputSrc::GAMEPAD_AXIS) {
+        switch ((GamepadInput) src.input) {
+            case GamepadInput::AXIS_LEFT_X: {
+                switch (src.modifier) {
+                    case InputSrc::MOD_NONE:            outputStr += "Gamepad LeftX";       break;
+                    case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Gamepad LeftX+";      break;
+                    case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Gamepad LeftX-";      break;
+                    case InputSrc::MOD_INVERT:          outputStr += "Inv Gamepad LeftX";   break;
+                }
+            }   break;
+
+            case GamepadInput::AXIS_LEFT_Y: {
+                switch (src.modifier) {
+                    case InputSrc::MOD_NONE:            outputStr += "Gamepad LeftY";       break;
+                    case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Gamepad LeftY+";      break;
+                    case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Gamepad LeftY-";      break;
+                    case InputSrc::MOD_INVERT:          outputStr += "Inv Gamepad LeftY";   break;
+                }
+            }   break;
+
+            case GamepadInput::AXIS_RIGHT_X: {
+                switch (src.modifier) {
+                    case InputSrc::MOD_NONE:            outputStr += "Gamepad RightX";       break;
+                    case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Gamepad RightX+";      break;
+                    case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Gamepad RightX-";      break;
+                    case InputSrc::MOD_INVERT:          outputStr += "Inv Gamepad RightX";   break;
+                }
+            }   break;
+
+            case GamepadInput::AXIS_RIGHT_Y: {
+                switch (src.modifier) {
+                    case InputSrc::MOD_NONE:            outputStr += "Gamepad RightY";       break;
+                    case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Gamepad RightY+";      break;
+                    case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Gamepad RightY-";      break;
+                    case InputSrc::MOD_INVERT:          outputStr += "Inv Gamepad RightY";   break;
+                }
+            }   break;
+
+            case GamepadInput::AXIS_TRIG_LEFT: {
+                if (src.modifier == InputSrc::MOD_NONE) {
+                    outputStr += "Gamepad LeftTrigger";
+                }
+            }   break;
+
+            case GamepadInput::AXIS_TRIG_RIGHT: {
+                if (src.modifier == InputSrc::MOD_NONE) {
+                    outputStr += "Gamepad RightTrigger";
+                }
+            }   break;
+        }
+    }
+    else if (src.device == InputSrc::GAMEPAD_BUTTON) {
+        switch ((GamepadInput) src.input) {
+            case GamepadInput::BTN_A:               outputStr += "Gamepad A";               break;
+            case GamepadInput::BTN_B:               outputStr += "Gamepad B";               break;
+            case GamepadInput::BTN_X:               outputStr += "Gamepad X";               break;
+            case GamepadInput::BTN_Y:               outputStr += "Gamepad Y";               break;
+            case GamepadInput::BTN_BACK:            outputStr += "Gamepad Back";            break;
+            case GamepadInput::BTN_GUIDE:           outputStr += "Gamepad Guide";           break;
+            case GamepadInput::BTN_START:           outputStr += "Gamepad Start";           break;
+            case GamepadInput::BTN_LEFT_STICK:      outputStr += "Gamepad LeftStick";       break;
+            case GamepadInput::BTN_RIGHT_STICK:     outputStr += "Gamepad RightStick";      break;
+            case GamepadInput::BTN_LEFT_SHOULDER:   outputStr += "Gamepad LeftShoulder";    break;
+            case GamepadInput::BTN_RIGHT_SHOULDER:  outputStr += "Gamepad RightShoulder";   break;
+            case GamepadInput::BTN_DPAD_UP:         outputStr += "Gamepad DpUp";            break;
+            case GamepadInput::BTN_DPAD_DOWN:       outputStr += "Gamepad DpDown";          break;
+            case GamepadInput::BTN_DPAD_LEFT:       outputStr += "Gamepad DpLeft";          break;
+            case GamepadInput::BTN_DPAD_RIGHT:      outputStr += "Gamepad DpRight";         break;
+        }
+    }
+    else if (src.device == InputSrc::JOYSTICK_AXIS) {
+        char axisNumStr[32];
+        std::snprintf(axisNumStr, C_ARRAY_SIZE(axisNumStr), "%d", (int) src.input + 1);
+
+        switch (src.modifier) {
+            case InputSrc::MOD_NONE:
+                outputStr += "Joystick Axis";
+                outputStr += axisNumStr;
+                break;
+
+            case InputSrc::MOD_POS_SUBAXIS:
+                outputStr += "Joystick Axis";
+                outputStr += axisNumStr;
+                outputStr += '+';
+                break;
+
+            case InputSrc::MOD_NEG_SUBAXIS:
+                outputStr += "Joystick Axis";
+                outputStr += axisNumStr;
+                outputStr += '-';
+                break;
+
+            case InputSrc::MOD_INVERT:
+                outputStr += "Inv Joystick Axis";
+                outputStr += axisNumStr;
+                break;
+        }
+    }
+    else if (src.device == InputSrc::JOYSTICK_BUTTON) {
+        char buttonNumStr[32];
+        std::snprintf(buttonNumStr, C_ARRAY_SIZE(buttonNumStr), "%d", (int) src.input + 1);
+        outputStr += "Joystick Button";
+        outputStr += buttonNumStr;
+    }
+    else if (src.device == InputSrc::JOYSTICK_HAT) {
+        const size_t origOutputStrSize = outputStr.size();
+        const Input::JoyHat hatInput = src.input;
+
+        char hatNumStr[32];
+        std::snprintf(hatNumStr, C_ARRAY_SIZE(hatNumStr), "%d", (int) hatInput.fields.hatNum + 1);
+        outputStr += " Joystick Hat";
+        outputStr += hatNumStr;
+        outputStr += ' ';
+        
+        switch (hatInput.fields.hatDir) {
+            case Input::JoyHatDir::Up:      outputStr += "Up";      break;
+            case Input::JoyHatDir::Down:    outputStr += "Down";    break;
+            case Input::JoyHatDir::Left:    outputStr += "Left";    break;
+            case Input::JoyHatDir::Right:   outputStr += "Right";   break;
+        }
+
+        // If the hat direction is invalid then roll back the output string to it's former state
+        if (outputStr.back() == ' ') {
+            outputStr.resize(origOutputStrSize);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: converts a control binding to a string representing 
+// Note: if conversion fails then an empty string is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void bindingToStr(const Binding binding, std::string& outputStr) noexcept {
+    // Add all input sources for the binding to the string
+    outputStr.clear();
+    const BindingData& bindingData = getBindingData(binding);
+
+    for (uint32_t i = 0; i < bindingData.numInputSources; ++i) {
+        const size_t oldOutputStrSize = outputStr.size();
+        appendInputSrcToStr(bindingData.inputSources[i], outputStr);
+        const size_t newOutputStrSize = outputStr.size();
+
+        // If we actually appended the input source then speculatively add a separator after it.
+        // This way further input sources can just be appended without any other checks.
+        if (newOutputStrSize > oldOutputStrSize) {
+            outputStr += ',';
+            outputStr += ' ';
+        }
+    }
+
+    // Remove any unused trailing input source separator at the end (that was added speculatively)
+    if (outputStr.size() >= 2) {
+        outputStr.pop_back();
+        outputStr.pop_back();
+    }
 }
 
 END_NAMESPACE(Controls)

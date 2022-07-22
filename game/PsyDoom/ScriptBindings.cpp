@@ -1,6 +1,6 @@
 #include "ScriptBindings.h"
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"

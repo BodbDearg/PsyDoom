@@ -14,7 +14,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_move.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
 
 bool gbNofit;           // If 'true' then one or more things in the test sector undergoing height changes do not fit

@@ -13,7 +13,7 @@
 #include "LogicalDevice.h"
 #include "PhysicalDevice.h"
 #include "PhysicalDeviceSelection.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/PsxVm.h"
 #include "PsyDoom/Video.h"
@@ -513,7 +513,7 @@ void init() noexcept {
 
     // Choose a device to use and try to use the preferred device regex if set.
     // If the regex is not specified or it does not produce a valid device selection then try selection against all devices.
-    const char* const preferredGpusRegexStr = Config::getVulkanPreferredDevicesRegex();
+    const char* const preferredGpusRegexStr = Config::gVulkanPreferredDevicesRegex.c_str();
 
     if (preferredGpusRegexStr && preferredGpusRegexStr[0]) {
         try {

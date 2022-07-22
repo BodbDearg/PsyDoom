@@ -25,7 +25,7 @@
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/ParserTokenizer.h"
 #include "PsyDoom/ScriptingEngine.h"

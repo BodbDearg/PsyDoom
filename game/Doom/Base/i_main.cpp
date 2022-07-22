@@ -12,7 +12,7 @@
 #include "FatalErrors.h"
 #include "i_drawcmds.h"
 #include "i_texcache.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/Game.h"

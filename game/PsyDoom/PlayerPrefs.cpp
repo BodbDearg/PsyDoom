@@ -115,18 +115,18 @@ static char pwCharIndexToChar(const int32_t pwCharIdx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Handle the loading of an entry in the .ini prefs file
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void loadPrefsFileIniEntry(const IniUtils::Entry& entry) noexcept {
+static void loadPrefsFileIniEntry(const IniUtils::IniEntry& entry) noexcept {
     if (entry.key == "soundVol") {
-        gSoundVol = std::clamp(entry.getIntValue(gSoundVol), VOLUME_MIN, VOLUME_MAX);
+        gSoundVol = std::clamp(entry.value.tryGetAsInt(gSoundVol), VOLUME_MIN, VOLUME_MAX);
     } 
     else if (entry.key == "musicVol") {
-        gMusicVol = std::clamp(entry.getIntValue(gMusicVol), VOLUME_MIN, VOLUME_MAX);
+        gMusicVol = std::clamp(entry.value.tryGetAsInt(gMusicVol), VOLUME_MIN, VOLUME_MAX);
     }
     else if ((entry.key == "lastPassword_Doom") || (entry.key == "lastPassword_FinalDoom")) {
         // Read the password field up to the password length
         Password& password = (entry.key == "lastPassword_Doom") ? gLastPassword_Doom : gLastPassword_FDoom;
         std::memset(&password, 0, sizeof(Password));
-        std::memcpy(&password, entry.value.c_str(), std::min((int32_t) entry.value.length(), PASSWORD_LEN));
+        std::memcpy(&password, entry.value.strValue.c_str(), std::min((int32_t) entry.value.strValue.length(), PASSWORD_LEN));
 
         // Sanitize the password chars: set unrecognised ones to null and uppercase everything
         for (char& c : password.pwChars) {
@@ -135,17 +135,17 @@ static void loadPrefsFileIniEntry(const IniUtils::Entry& entry) noexcept {
         }
     }
     else if (entry.key == "turnSpeedPercentMultiplier") {
-        gTurnSpeedMult100 = std::clamp(entry.getIntValue(gTurnSpeedMult100), TURN_SPEED_MULT_MIN, TURN_SPEED_MULT_MAX);
+        gTurnSpeedMult100 = std::clamp(entry.value.tryGetAsInt(gTurnSpeedMult100), TURN_SPEED_MULT_MIN, TURN_SPEED_MULT_MAX);
     }
     else if (entry.key == "alwaysRun") {
-        gbAlwaysRun = entry.getBoolValue(gbAlwaysRun);
+        gbAlwaysRun = entry.value.tryGetAsBool(gbAlwaysRun);
     }
     else if (entry.key == "statDisplayMode") {
-        gStatDisplayMode = (StatDisplayMode) entry.getIntValue((int32_t) gStatDisplayMode);
+        gStatDisplayMode = (StatDisplayMode) entry.value.tryGetAsInt((int32_t) gStatDisplayMode);
         gStatDisplayMode = std::clamp(gStatDisplayMode, StatDisplayMode::None, StatDisplayMode::KillsSecretsAndItems);  // Ensure it's in range
     }
     else if (entry.key == "startupWithVulkanRenderer") {
-        gbStartupWithVulkanRenderer = entry.getBoolValue(gbStartupWithVulkanRenderer);
+        gbStartupWithVulkanRenderer = entry.value.tryGetAsBool(gbStartupWithVulkanRenderer);
     }
 }
 

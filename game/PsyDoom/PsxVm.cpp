@@ -5,7 +5,7 @@
 
 #include "Asserts.h"
 #include "AudioCompressor.h"
-#include "Config.h"
+#include "Config/Config.h"
 #include "DiscInfo.h"
 #include "DiscReader.h"
 #include "Gpu.h"

@@ -4,7 +4,7 @@
 #include "cdmaptbl.h"
 #include "FatalErrors.h"
 #include "PsyDoom/Cheats.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
@@ -57,7 +57,7 @@ int psx_main(const int argc, const char** const argv) noexcept {
 
         // Initialize the emulated PSX components using the PSX Doom disc (supplied as a .cue file).
         // This must be provided in order for the game to run.
-        const char* const cueFilePath = (ProgArgs::gCueFileOverride) ? ProgArgs::gCueFileOverride : Config::getCueFilePath();
+        const char* const cueFilePath = (ProgArgs::gCueFileOverride) ? ProgArgs::gCueFileOverride : Config::gCueFilePath.c_str();
 
         if ((!cueFilePath) || (!cueFilePath[0])) {
             FatalErrors::raise(

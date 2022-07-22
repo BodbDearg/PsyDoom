@@ -54,7 +54,7 @@
 #include "Gpu.h"
 #include "i_drawcmds.h"
 #include "i_main.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/PsxVm.h"
 #include "PsyDoom/Video.h"
 #include "PsyDoom/Vulkan/VDrawing.h"

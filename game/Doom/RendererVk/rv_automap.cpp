@@ -16,7 +16,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/am_main.h"
 #include "Matrix4.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Utils.h"
 #include "PsyDoom/Vulkan/VDrawing.h"
 #include "PsyDoom/Vulkan/VRenderer.h"

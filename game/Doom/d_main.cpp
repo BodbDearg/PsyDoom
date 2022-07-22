@@ -18,7 +18,7 @@
 #include "Game/p_switch.h"
 #include "Game/p_tick.h"
 #include "Game/sprinfo.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/DemoRecorder.h"
 #include "PsyDoom/Game.h"

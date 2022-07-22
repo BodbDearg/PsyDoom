@@ -8,83 +8,116 @@
 BEGIN_NAMESPACE(IniUtils)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Represents an entry in an ini file
+// Stores the value for an entry in an INI file
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct Entry {
-    std::string section;
-    std::string key;
-    std::string value;
+struct IniValue {
+    std::string strValue;
 
     template <class T>
-    inline void setValue(const T& newValue) noexcept {
+    inline void set(const T& newValue) noexcept {
         if constexpr (std::is_same_v<T, std::string>) {
-            value = newValue;
+            strValue = newValue;
         } else if constexpr (std::is_same_v<T, bool>) {
             if (newValue) {
-                value = "1";
+                strValue = "1";
             } else {
-                value = "0";
+                strValue = "0";
             }
         } else {
-            value = std::to_string(newValue);
+            strValue = std::to_string(newValue);
         }
     }
 
-    inline bool getBoolValue(const bool bDefaultValue = false) const noexcept {
+    inline const std::string& getAsString() const noexcept {
+        return strValue;
+    }
+
+    inline bool getAsBool() const THROWS {
         const bool isLiteralTrue = (
-            (value[0] == 't' || value[0] == 'T') &&
-            (value[1] == 'r' || value[1] == 'R') &&
-            (value[2] == 'u' || value[2] == 'U') &&
-            (value[3] == 'e' || value[3] == 'E')
+            (strValue.length() == 4) &&
+            (strValue[0] == 't' || strValue[0] == 'T') &&
+            (strValue[1] == 'r' || strValue[1] == 'R') &&
+            (strValue[2] == 'u' || strValue[2] == 'U') &&
+            (strValue[3] == 'e' || strValue[3] == 'E')
         );
 
         if (isLiteralTrue)
             return true;
 
         const bool isLiteralFalse = (
-            (value[0] == 'f' || value[0] == 'F') &&
-            (value[1] == 'a' || value[1] == 'A') &&
-            (value[2] == 'l' || value[2] == 'L') &&
-            (value[3] == 's' || value[3] == 'S') &&
-            (value[4] == 'e' || value[4] == 'E')
+            (strValue.length() == 5) &&
+            (strValue[0] == 'f' || strValue[0] == 'F') &&
+            (strValue[1] == 'a' || strValue[1] == 'A') &&
+            (strValue[2] == 'l' || strValue[2] == 'L') &&
+            (strValue[3] == 's' || strValue[3] == 'S') &&
+            (strValue[4] == 'e' || strValue[4] == 'E')
         );
 
         if (isLiteralFalse)
             return false;
 
-        int32_t intValue = getIntValue(bDefaultValue ? 1 : 0);
+        const int32_t intValue = getAsInt();
         return (intValue > 0);
     }
 
-    inline int32_t getIntValue(const int32_t defaultValue = 0) const noexcept {
+    inline bool tryGetAsBool(const bool bDefaultValue) const noexcept {
         try {
-            return std::stoi(value);
+            return getAsBool();
+        } catch (...) {
+            return bDefaultValue;
+        }
+    }
+
+    inline int32_t getAsInt() const THROWS {
+        return std::stoi(strValue);
+    }
+
+    inline int32_t tryGetAsInt(const int32_t defaultValue) const noexcept {
+        try {
+            return getAsInt();
         } catch (...) {
             return defaultValue;
         }
     }
 
-    inline uint32_t getUintValue(const uint32_t defaultValue = 0) const noexcept {
+    inline uint32_t getAsUint() const THROWS {
+        return (uint32_t) std::stoul(strValue);
+    }
+
+    inline uint32_t tryGetAsUint(const uint32_t defaultValue) const noexcept {
         try {
-            return (uint32_t) std::stoul(value);
+            return getAsUint();
         } catch (...) {
             return defaultValue;
         }
     }
 
-    inline float getFloatValue(const float defaultValue = 0.0f) const noexcept {
+    inline float getAsFloat() const THROWS {
+        return std::stof(strValue);
+    }
+
+    inline float tryGetAsFloat(const float defaultValue) const noexcept {
         try {
-            return std::stof(value);
+            return getAsFloat();
         } catch (...) {
             return defaultValue;
         }
     }
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Represents an entry in an INI file
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct IniEntry {
+    std::string     section;
+    std::string     key;
+    IniValue        value;
+};
+
 // Represents a callback/handler that receives parsed ini entries (SAX style).
 // Note: I would make this function prototype 'noexcept' but std::function<> doesn't handle that so well currently...
-typedef std::function<void (const Entry& entry)> EntryHandler;
+typedef std::function<void (const IniEntry& entry)> IniEntryHandler;
 
-void parseIniFromString(const char* const pStr, const size_t len, const EntryHandler entryHandler) noexcept;
+void parseIniFromString(const char* const pStr, const size_t len, const IniEntryHandler entryHandler) noexcept;
 
 END_NAMESPACE(IniUtils)

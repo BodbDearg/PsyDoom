@@ -9,7 +9,7 @@
 #include "FatalErrors.h"
 #include "i_main.h"
 #include "m_fixed.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/DiscInfo.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/IsoFileSys.h"

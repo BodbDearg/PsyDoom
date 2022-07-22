@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"

@@ -12,7 +12,7 @@
 #include "DevMapAutoReloader.h"
 
 #include "Cheats.h"
-#include "Config.h"
+#include "Config/Config.h"
 #include "Doom/cdmaptbl.h"
 #include "Doom/Game/g_game.h"
 #include "ModMgr.h"

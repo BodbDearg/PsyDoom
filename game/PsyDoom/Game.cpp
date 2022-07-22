@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game.h"
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/UI/in_main.h"

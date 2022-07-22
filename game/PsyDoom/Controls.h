@@ -3,10 +3,13 @@
 #include "Macros.h"
 
 #include <cstdint>
+#include <string>
 
 BEGIN_NAMESPACE(Controls)
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 // All of the bindable controls/actions available
+//------------------------------------------------------------------------------------------------------------------------------------------
 enum class Binding : uint16_t {
     // Analog movement and turning: turning speed is subject to the gamepad turn speed settings
     Analog_MoveForwardBack,
@@ -81,14 +84,62 @@ enum class Binding : uint16_t {
     NUM_BINDINGS
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Holds a single button, key or axis that is bound to a particular action
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct InputSrc {
+    // Where the input is coming from
+    enum : uint8_t {
+        NULL_DEVICE,        // Always generates no input
+        KEYBOARD_KEY,
+        MOUSE_BUTTON,
+        MOUSE_WHEEL,
+        GAMEPAD_AXIS,
+        GAMEPAD_BUTTON,
+        JOYSTICK_AXIS,
+        JOYSTICK_BUTTON,
+        JOYSTICK_HAT
+    } device;
+
+    // Modifiers to apply to the input
+    enum : uint8_t {
+        MOD_NONE,           // Don't modify the input
+        MOD_POS_SUBAXIS,    // Only use the 0.0 to +1.0 range of the axis and return it as a 0.0 to 1.0 axis
+        MOD_NEG_SUBAXIS,    // Only use the 0.0 to -1.0 range of the axis and return it as a 0.0 to 1.0 axis
+        MOD_INVERT,         // Invert/negate the axis inputs
+    } modifier;
+
+    // What particular button or axis is used
+    uint16_t input;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// The maximum number of inputs per control binding
+//------------------------------------------------------------------------------------------------------------------------------------------
+static constexpr uint32_t MAX_BINDING_INPUTS = 15;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stores all of the input sources for a particular binding
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct BindingData {
+    uint32_t    numInputSources;
+    InputSrc    inputSources[MAX_BINDING_INPUTS];
+};
+
 void init() noexcept;
 void shutdown() noexcept;
+
 void clearAllBindings() noexcept;
-void parseBinding(const Binding binding, const char* str) noexcept;
+void parseBinding(const Binding binding, const char* const str) noexcept;
+const BindingData& getBindingData(const Binding binding) noexcept;
+
 float getFloat(const Binding binding) noexcept;
 bool getBool(const Binding binding) noexcept;
 bool isJustPressed(const Binding binding) noexcept;
 bool isJustReleased(const Binding binding) noexcept;
 uint16_t getPSXCheatButtonBits() noexcept;
+
+void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept;
+void bindingToStr(const Binding binding, std::string& outputStr) noexcept;
 
 END_NAMESPACE(Controls)

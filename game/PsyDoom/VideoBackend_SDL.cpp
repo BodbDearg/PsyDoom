@@ -1,7 +1,7 @@
 #include "VideoBackend_SDL.h"
 
 #include "Asserts.h"
-#include "Config.h"
+#include "Config/Config.h"
 #include "Gpu.h"
 #include "PsxVm.h"
 #include "Video.h"

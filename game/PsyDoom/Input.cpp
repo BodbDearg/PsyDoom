@@ -1,7 +1,7 @@
 #include "Input.h"
 
 #include "GamepadInput.h"
-#include "Config.h"
+#include "Config/Config.h"
 #include "Doom/Game/p_tick.h"
 #include "FatalErrors.h"
 #include "ProgArgs.h"

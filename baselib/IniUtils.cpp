@@ -26,10 +26,10 @@
 BEGIN_NAMESPACE(IniUtils)
 
 struct ParserState {
-    const char*     pCurChar;
-    const char*     pEndChar;
-    Entry           curEntry;
-    EntryHandler    entryHandler;
+    const char*         pCurChar;
+    const char*         pEndChar;
+    IniEntry            curEntry;
+    IniEntryHandler     entryHandler;
 };
 
 static inline bool isSpace(const char c) noexcept {
@@ -222,7 +222,7 @@ static void parseKeyValuePair(ParserState& state) noexcept {
 
     // Now at the end of the value. Trim, unescape and save the value:
     const char* const pValueEndChar = state.pCurChar;
-    trimUnescapeAndAssignStr(pValueStartChar, pValueEndChar, state.curEntry.value);
+    trimUnescapeAndAssignStr(pValueStartChar, pValueEndChar, state.curEntry.value.strValue);
 
     // Send the value to the entry handler
     state.entryHandler(state.curEntry);
@@ -232,7 +232,7 @@ static void parseKeyValuePair(ParserState& state) noexcept {
 // Parse an INI from a string in memory.
 // Does its best to try and recover from errors on each line.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void parseIniFromString(const char* const pStr, const size_t len, const EntryHandler entryHandler) noexcept {
+void parseIniFromString(const char* const pStr, const size_t len, const IniEntryHandler entryHandler) noexcept {
     ASSERT(entryHandler);
 
     ParserState state;
@@ -242,7 +242,7 @@ void parseIniFromString(const char* const pStr, const size_t len, const EntryHan
 
     state.curEntry.section.reserve(64);
     state.curEntry.key.reserve(64);
-    state.curEntry.value.reserve(128);
+    state.curEntry.value.strValue.reserve(128);
 
     while (state.pCurChar < state.pEndChar) {
         const char nextChar = state.pCurChar[0];

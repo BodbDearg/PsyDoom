@@ -3,7 +3,7 @@
 #include "Asserts.h"
 #include "CDXAFileStreamer.h"
 #include "Frame.h"
-#include "PsyDoom/Config.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/IVideoBackend.h"
