@@ -6,7 +6,7 @@
 #include "Cheats.h"
 
 #include "Asserts.h"
-#include "Config.h"
+#include "Config/Config.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
