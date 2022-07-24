@@ -1,19 +1,17 @@
 //
-// "$Id$"
-//
 // Menu button widget for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2019 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems on the following page:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
 #include <FL/Fl.H>
@@ -21,7 +19,7 @@
 #include <FL/fl_draw.H>
 
 
-static Fl_Menu_Button	*pressed_menu_button_ = 0;
+static Fl_Menu_Button   *pressed_menu_button_ = 0;
 
 
 void Fl_Menu_Button::draw() {
@@ -46,8 +44,14 @@ void Fl_Menu_Button::draw() {
   and if they pick one it sets value() and does the callback or
   sets changed() as described above.  The menu item is returned
   or NULL if the user dismisses the menu.
+
+  \note Since FLTK 1.4.0 Fl_Menu_::menu_end() is called before the menu
+    pops up to make sure the menu array is located in private storage.
+
+  \see Fl_Menu_::menu_end()
 */
 const Fl_Menu_Item* Fl_Menu_Button::popup() {
+  menu_end();
   const Fl_Menu_Item* m;
   pressed_menu_button_ = this;
   redraw();
@@ -102,14 +106,10 @@ int Fl_Menu_Button::handle(int e) {
 /**
   Creates a new Fl_Menu_Button widget using the given position,
   size, and label string. The default boxtype is FL_UP_BOX.
-  <P>The constructor sets menu() to NULL.  See 
+  <P>The constructor sets menu() to NULL.  See
   Fl_Menu_ for the methods to set or change the menu.
 */
 Fl_Menu_Button::Fl_Menu_Button(int X,int Y,int W,int H,const char *l)
 : Fl_Menu_(X,Y,W,H,l) {
   down_box(FL_NO_BOX);
 }
-
-//
-// End of "$Id$".
-//

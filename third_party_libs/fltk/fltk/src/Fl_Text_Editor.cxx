@@ -1,7 +1,6 @@
 //
-// "$Id$"
+// Copyright 2001-2018 by Bill Spitzak and others.
 //
-// Copyright 2001-2010 by Bill Spitzak and others.
 // Original code Copyright Mark Edel.  Permission to distribute under
 // the LGPL for the FLTK library granted by Mark Edel.
 //
@@ -9,11 +8,11 @@
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems on the following page:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
 #include <stdio.h>
@@ -23,15 +22,15 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Text_Editor.H>
+#include "Fl_Screen_Driver.H"
 #include <FL/fl_ask.H>
-
 
 /* Keyboard Control Matrix
 
-key\modifier   plain  Ctrl   Alt  Meta  
-  left          1/1  13/9   0/13  0/9  
-  right         2/2  14/10  0/14  0/10  
-  up            3/19 21/7   0/15  0/17 
+key\modifier   plain  Ctrl   Alt  Meta
+  left          1/1  13/9   0/13  0/9
+  right         2/2  14/10  0/14  0/10
+  up            3/19 21/7   0/15  0/17
   down          4/20 22/8   0/16  0/18
   home          9/5  17/0   0/0   0/0
   end          10/6  18/0   0/0   0/0
@@ -74,6 +73,7 @@ Fl_Text_Editor::Fl_Text_Editor(int X, int Y, int W, int H,  const char* l)
   insert_mode_ = 1;
   key_bindings = 0;
   set_flag(MAC_USE_ACCENTS_MENU);
+  set_flag(NEEDS_KEYBOARD);
 
   // handle the default key bindings
   add_default_key_bindings(&key_bindings);
@@ -130,9 +130,9 @@ static struct {
   { FL_Down,      FL_CTRL|FL_SHIFT,         Fl_Text_Editor::kf_c_s_move   },
   { FL_Page_Up,   FL_CTRL|FL_SHIFT,         Fl_Text_Editor::kf_c_s_move   },
   { FL_Page_Down, FL_CTRL|FL_SHIFT,         Fl_Text_Editor::kf_c_s_move   },
-//{ FL_Clear,	  0,                        Fl_Text_Editor::delete_to_eol },
-  { 'z',          FL_CTRL,                  Fl_Text_Editor::kf_undo	  },
-  { '/',          FL_CTRL,                  Fl_Text_Editor::kf_undo	  },
+//{ FL_Clear,     0,                        Fl_Text_Editor::delete_to_eol },
+  { 'z',          FL_CTRL,                  Fl_Text_Editor::kf_undo       },
+  { '/',          FL_CTRL,                  Fl_Text_Editor::kf_undo       },
   { 'x',          FL_CTRL,                  Fl_Text_Editor::kf_cut        },
   { FL_Delete,    FL_SHIFT,                 Fl_Text_Editor::kf_cut        },
   { 'c',          FL_CTRL,                  Fl_Text_Editor::kf_copy       },
@@ -140,24 +140,6 @@ static struct {
   { 'v',          FL_CTRL,                  Fl_Text_Editor::kf_paste      },
   { FL_Insert,    FL_SHIFT,                 Fl_Text_Editor::kf_paste      },
   { 'a',          FL_CTRL,                  Fl_Text_Editor::kf_select_all },
-
-#ifdef __APPLE__
-  // Define CMD+key accelerators...
-  { 'z',          FL_COMMAND,               Fl_Text_Editor::kf_undo       },
-  { 'x',          FL_COMMAND,               Fl_Text_Editor::kf_cut        },
-  { 'c',          FL_COMMAND,               Fl_Text_Editor::kf_copy       },
-  { 'v',          FL_COMMAND,               Fl_Text_Editor::kf_paste      },
-  { 'a',          FL_COMMAND,               Fl_Text_Editor::kf_select_all },
-  { FL_Left,      FL_COMMAND,               Fl_Text_Editor::kf_meta_move  },
-  { FL_Right,     FL_COMMAND,               Fl_Text_Editor::kf_meta_move  },
-  { FL_Up,        FL_COMMAND,               Fl_Text_Editor::kf_meta_move  },
-  { FL_Down,      FL_COMMAND,               Fl_Text_Editor::kf_meta_move  },
-  { FL_Left,      FL_COMMAND|FL_SHIFT,      Fl_Text_Editor::kf_m_s_move   },
-  { FL_Right,     FL_COMMAND|FL_SHIFT,      Fl_Text_Editor::kf_m_s_move   },
-  { FL_Up,        FL_COMMAND|FL_SHIFT,      Fl_Text_Editor::kf_m_s_move   },
-  { FL_Down,      FL_COMMAND|FL_SHIFT,      Fl_Text_Editor::kf_m_s_move   },
-#endif // __APPLE__
-
   { 0,            0,                        0                             }
 };
 
@@ -169,17 +151,19 @@ void Fl_Text_Editor::add_default_key_bindings(Key_Binding** list) {
                     default_key_bindings[i].func,
                     list);
   }
+  Key_Binding *extra_key_bindings = Fl::screen_driver()->text_editor_extra_key_bindings;
+  if (extra_key_bindings) { // add platform-specific key bindings, if any
+    for (int i = 0; extra_key_bindings[i].key; i++) {
+      add_key_binding(extra_key_bindings[i].key,
+                      extra_key_bindings[i].state,
+                      extra_key_bindings[i].function,
+                      list);
+    }
+  }
 }
 
 /**  Returns the function associated with a key binding.*/
-#if FLTK_ABI_VERSION < 10304
-// OLD - non-const
-Fl_Text_Editor::Key_Func Fl_Text_Editor::bound_key_function(int key, int state, Key_Binding* list)
-#else
-// NEW - const (STR#3306)
-Fl_Text_Editor::Key_Func Fl_Text_Editor::bound_key_function(int key, int state, Key_Binding* list) const
-#endif
-{
+Fl_Text_Editor::Key_Func Fl_Text_Editor::bound_key_function(int key, int state, Key_Binding* list) const {
   Key_Binding* cur;
   for (cur = list; cur; cur = cur->next)
     if (cur->key == key)
@@ -435,18 +419,18 @@ int Fl_Text_Editor::kf_meta_move(int c, Fl_Text_Editor* e) {
     e->show_insert_position();
   }
   switch (c) {
-    case FL_Up:				// top of buffer
+    case FL_Up:                         // top of buffer
       e->insert_position(0);
       e->scroll(0, 0);
       break;
-    case FL_Down:			// end of buffer
+    case FL_Down:                       // end of buffer
       e->insert_position(e->buffer()->length());
       e->scroll(e->count_lines(0, e->buffer()->length(), 1), 0);
       break;
-    case FL_Left:			// beginning of line
+    case FL_Left:                       // beginning of line
       kf_move(FL_Home, e);
       break;
-    case FL_Right:			// end of line
+    case FL_Right:                      // end of line
       kf_move(FL_End, e);
       break;
   }
@@ -642,12 +626,10 @@ int Fl_Text_Editor::handle_key() {
       if (insert_mode()) insert(Fl::event_text());
       else overstrike(Fl::event_text());
     }
-#ifdef __APPLE__
-    if (Fl::compose_state) {
+    if (Fl::screen_driver()->has_marked_text() && Fl::compose_state) {
       int pos = this->insert_position();
       this->buffer()->select(pos - Fl::compose_state, pos);
-      }
-#endif
+    }
     show_insert_position();
     set_changed();
     if (when()&FL_WHEN_CHANGED) do_callback();
@@ -673,7 +655,7 @@ void Fl_Text_Editor::maybe_do_callback() {
 
 int Fl_Text_Editor::handle(int event) {
   static int dndCursorPos;
-  
+
   if (!buffer()) return 0;
 
   switch (event) {
@@ -685,27 +667,26 @@ int Fl_Text_Editor::handle(int event) {
 
     case FL_UNFOCUS:
       show_cursor(mCursorOn); // redraws the cursor
-#ifdef __APPLE__
-      if (buffer()->selected() && Fl::compose_state) {
-	int pos = insert_position();
-	buffer()->select(pos, pos);
-	Fl::reset_marked_text();
+      if (Fl::screen_driver()->has_marked_text() && buffer()->selected() && Fl::compose_state) {
+        int pos = insert_position();
+        buffer()->select(pos, pos);
+        fl_reset_spot();
       }
-#endif
       if (buffer()->selected()) redraw(); // Redraw selections...
+      // FALLTHROUGH
     case FL_HIDE:
       if (when() & FL_WHEN_RELEASE) maybe_do_callback();
       return 1;
 
     case FL_KEYBOARD:
-      if (active_r() && window() && this == Fl::belowmouse()) 
+      if (active_r() && window() && this == Fl::belowmouse())
         window()->cursor(FL_CURSOR_NONE);
       return handle_key();
 
     case FL_PASTE:
       if (!Fl::event_text()) {
         fl_beep();
-	return 1;
+        return 1;
       }
       buffer()->remove_selection();
       if (insert_mode()) insert(Fl::event_text());
@@ -716,8 +697,8 @@ int Fl_Text_Editor::handle(int event) {
       return 1;
 
     case FL_ENTER:
-// MRS: WIN32 only?  Need to test!
-//    case FL_MOVE:
+// MRS: Windows only?  Need to test!
+//  case FL_MOVE:
       show_cursor(mCursorOn);
       return 1;
 
@@ -726,10 +707,10 @@ int Fl_Text_Editor::handle(int event) {
         // don't let the text_display see this event
         if (Fl_Group::handle(event)) return 1;
         dragType = DRAG_NONE;
-	if(buffer()->selected()) {
-	  buffer()->unselect();
-	  }
-	int pos = xy_to_position(Fl::event_x(), Fl::event_y(), CURSOR_POS);
+        if(buffer()->selected()) {
+          buffer()->unselect();
+          }
+        int pos = xy_to_position(Fl::event_x(), Fl::event_y(), CURSOR_POS);
         insert_position(pos);
         Fl::paste(*this, 0);
         Fl::focus(this);
@@ -747,8 +728,8 @@ int Fl_Text_Editor::handle(int event) {
         return 1;
       }
       break;
-      
-      // Handle drag'n'drop attempt by the user. This is a simplified 
+
+      // Handle drag'n'drop attempt by the user. This is a simplified
       // implementation which allows dnd operations onto the scroll bars.
     case FL_DND_ENTER: // save the current cursor position
       if (Fl::visible_focus() && handle(FL_FOCUS))
@@ -758,10 +739,10 @@ int Fl_Text_Editor::handle(int event) {
       /* fall through */
     case FL_DND_DRAG: // show a temporary insertion cursor
       insert_position(xy_to_position(Fl::event_x(), Fl::event_y(), CURSOR_POS));
-      return 1;      
+      return 1;
     case FL_DND_LEAVE: // restore original cursor
       insert_position(dndCursorPos);
-      return 1;      
+      return 1;
     case FL_DND_RELEASE: // keep insertion cursor and wait for the FL_PASTE event
       if (!dragging) buffer()->unselect(); // FL_PASTE must not destroy current selection if drag comes from outside
       return 1;
@@ -770,7 +751,6 @@ int Fl_Text_Editor::handle(int event) {
   return Fl_Text_Display::handle(event);
 }
 
-#if FLTK_ABI_VERSION >= 10304
 /**
 Enables or disables Tab key focus navigation.
 
@@ -788,7 +768,7 @@ detail may change in the future. Know that changing the editor's
 key bindings for Tab and Shift-Tab may affect tab navigation.
 
 \param [in] val If \p val is 0, Tab inserts a tab character (default).<br>
-		If \p val is 1, Tab navigates widget focus.
+                If \p val is 1, Tab navigates widget focus.
 
 \see tab_nav(), Fl::OPTION_ARROW_FOCUS.
 \version 1.3.4 ABI feature
@@ -809,9 +789,9 @@ editor buffer.
 If enabled, hitting Tab navigates focus to the next widget,
 and Shift-Tab navigates focus to the previous widget.
 
-\returns	if Tab inserts tab characters or moves the focus
-\retval	0	Tab inserts tab characters (default)
-\retval	1	Tab navigation is enabled.
+\returns        if Tab inserts tab characters or moves the focus
+\retval 0       Tab inserts tab characters (default)
+\retval 1       Tab navigation is enabled.
 
 \see tab_nav(int), Fl::OPTION_ARROW_FOCUS.
 \version 1.3.4 ABI feature
@@ -819,8 +799,3 @@ and Shift-Tab navigates focus to the previous widget.
 int Fl_Text_Editor::tab_nav() const {
   return (bound_key_function(FL_Tab,0)==kf_ignore) ? 1 : 0;
 }
-#endif
-
-//
-// End of "$Id$".
-//

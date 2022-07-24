@@ -1,66 +1,28 @@
 //
-// "$Id$"
-//
 // Font selection code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2016 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems on the following page:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
-#ifdef WIN32
-# ifndef WIN32_LEAN_AND_MEAN
-#  define WIN32_LEAN_AND_MEAN
-# endif
-/* We require Windows 2000 features such as GetGlyphIndices */
-# if !defined(WINVER) || (WINVER < 0x0500)
-#  ifdef WINVER
-#   undef WINVER
-#  endif
-#  define WINVER 0x0500
-# endif
-# if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-#  ifdef _WIN32_WINNT
-#   undef _WIN32_WINNT
-#  endif
-#  define _WIN32_WINNT 0x0500
-# endif
-#endif
 
 // Select fonts from the FLTK font table.
 #include "flstring.h"
-#include <FL/Fl.H>
 #include <FL/fl_draw.H>
-#include <FL/x.H>
-#include "Fl_Font.H"
+#include "Fl_Screen_Driver.H"
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#ifdef WIN32
-#  include "fl_font_win32.cxx"
-#elif defined(__APPLE__)
-#  include "fl_font_mac.cxx"
-#elif USE_XFT
-#  include "fl_font_xft.cxx"
-#else
-#  include "fl_font_x.cxx"
-#endif // WIN32
-
-#if ! (defined(WIN32) || defined(__APPLE__))
-XFontStruct *fl_X_core_font()
-{
-  return fl_xfont.value();
-}
-#endif
+// -----------------------------------------------------------------------------
+// all driver code is now in drivers/XXX/Fl_XXX_Graphics_Driver_xyz.cxx
+// -----------------------------------------------------------------------------
 
 double fl_width(const char* c) {
   if (c) return fl_width(c, (int) strlen(c));
@@ -85,12 +47,20 @@ void fl_text_extents(const char *c, int &dx, int &dy, int &w, int &h) {
 
 
 void fl_draw(const char* str, int l, float x, float y) {
-#ifdef __APPLE__
   fl_graphics_driver->draw(str, l, x, y);
-#else
-  fl_draw(str, l, (int)x, (int)y);
-#endif
 }
-//
-// End of "$Id$".
-//
+
+void fl_set_spot(int font, int size, int X, int Y, int W, int H, Fl_Window *win)
+{
+  Fl::screen_driver()->set_spot(font, size, X, Y, W, H, win);
+}
+
+void fl_reset_spot()
+{
+  Fl::screen_driver()->reset_spot();
+}
+
+void fl_set_status(int X, int Y, int W, int H)
+{
+  Fl::screen_driver()->set_status(X, Y, W, H);
+}

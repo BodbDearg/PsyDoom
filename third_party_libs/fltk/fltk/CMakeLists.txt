@@ -1,8 +1,8 @@
 #
 # Main CMakeLists.txt to build the FLTK project using CMake (www.cmake.org)
-# Written by Michael Surette
+# Originally written by Michael Surette
 #
-# Copyright 1998-2021 by Bill Spitzak and others.
+# Copyright 1998-2022 by Bill Spitzak and others.
 #
 # This library is free software. Distribution and use rights are outlined in
 # the file "COPYING" which should have been included with this file.  If this
@@ -18,12 +18,6 @@
 #######################################################################
 # set CMake minimum version (must be before `project()`
 #######################################################################
-
-# Note: previous (1.3.5) minimum version
-# cmake_minimum_required (VERSION 2.6.3)
-
-# Note: minimum CMake version required by GNUInstallDirs
-# cmake_minimum_required (VERSION 2.8.4)
 
 # Minimum CMake version required by FLTK 1.4 (06/2020, work in progress)
 cmake_minimum_required (VERSION 3.2.3 FATAL_ERROR)
@@ -47,21 +41,24 @@ set (OpenGL_GL_PREFERENCE LEGACY)
 # define the FLTK project and version
 #######################################################################
 
-project (FLTK VERSION 1.3.8)
+project (FLTK VERSION 1.4.0)
 
 #######################################################################
-# include macro definitions of generally used macros
+# include macro and function definitions for general usage
 #######################################################################
 
 include (CMake/fl_debug_var.cmake)
+include (CMake/fl_debug_pkg.cmake)
 include (CMake/fl_add_library.cmake)
+include (CMake/compatibility.cmake)
 
-if (false)
+if (0)
   fl_debug_var (FLTK_VERSION_MAJOR)
   fl_debug_var (FLTK_VERSION_MINOR)
   fl_debug_var (FLTK_VERSION_PATCH)
   fl_debug_var (FLTK_VERSION)
-endif (false)
+  fl_debug_var (CMAKE_VERSION)
+endif ()
 
 #######################################################################
 # basic setup
@@ -93,7 +90,6 @@ if (debug_build)
   fl_debug_var (MSVC)
   fl_debug_var (UNIX)
   fl_debug_var (APPLE)
-  fl_debug_var (ANDROID)
   fl_debug_var (CMAKE_BUILD_TYPE)
   fl_debug_var (CMAKE_SIZEOF_VOID_P)
   fl_debug_var (OPTION_OPTIM)
@@ -104,6 +100,18 @@ if (debug_build)
 endif (debug_build)
 
 unset (debug_build)
+
+#######################################################################
+# build the FLTK libraries
+#######################################################################
+
+add_subdirectory(src)
+
+#######################################################################
+# build fluid
+#######################################################################
+
+add_subdirectory(fluid)
 
 #######################################################################
 # variables shared by export and install
@@ -119,8 +127,8 @@ include (CMake/variables.cmake)
 include (CMake/export.cmake)
 
 configure_file (
-  ${CMAKE_CURRENT_SOURCE_DIR}/abi-version.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/FL/abi-version.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/fl_config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/FL/fl_config.h
   @ONLY
 )
 
@@ -142,6 +150,49 @@ endif (FLTK_BUILD_EXAMPLES)
 include (CMake/install.cmake)
 
 #######################################################################
+# Generate Library Export Headers          *** EXPERIMENTAL *** WIP ***
+#######################################################################
+
+# Enable (1) or disable (0) generation of experimental headers (WIP)
+set (GENERATE_EXPORT_HEADERS 0)
+
+if (OPTION_BUILD_SHARED_LIBS AND GENERATE_EXPORT_HEADERS)
+
+  include (GenerateExportHeader)
+
+  generate_export_header (fltk_SHARED
+    BASE_NAME fl
+    EXPORT_FILE_NAME FL/fltk_export.h
+    STATIC_DEFINE FL_STATIC_LIB
+  )
+
+  if (NOT MSVC)
+
+    # Visual Studio builds only one shared lib (DLL)
+
+    generate_export_header (fltk_images_SHARED
+      BASE_NAME fl_images
+      EXPORT_FILE_NAME FL/fltk_images_export.h
+      STATIC_DEFINE FL_STATIC_LIB
+    )
+
+    generate_export_header (fltk_forms_SHARED
+      BASE_NAME fl_forms
+      EXPORT_FILE_NAME FL/fltk_forms_export.h
+      STATIC_DEFINE FL_STATIC_LIB
+    )
+
+    generate_export_header (fltk_gl_SHARED
+      BASE_NAME fl_gl
+      EXPORT_FILE_NAME FL/fltk_gl_export.h
+      STATIC_DEFINE FL_STATIC_LIB
+    )
+
+  endif (NOT MSVC)
+
+endif (OPTION_BUILD_SHARED_LIBS AND GENERATE_EXPORT_HEADERS)
+
+#######################################################################
 # Output Configuration Summary
 #######################################################################
 
@@ -154,7 +205,7 @@ feature_summary (WHAT ALL DESCRIPTION "Configuration Summary for ${_descr} --\n"
 message (STATUS "Static libraries will be built in ${CMAKE_CURRENT_BINARY_DIR}/lib")
 
 if (OPTION_BUILD_SHARED_LIBS)
-  message (STATUS "Shared libraries will be built in  ${CMAKE_CURRENT_BINARY_DIR}/lib")
+  message (STATUS "Shared libraries will be built in ${CMAKE_CURRENT_BINARY_DIR}/lib")
 else ()
   message (STATUS "Shared libraries will not be built (set OPTION_BUILD_SHARED_LIBS=ON to build)")
 endif ()
@@ -167,6 +218,53 @@ if (FLTK_BUILD_EXAMPLES)
   message (STATUS "Example programs will be built in ${CMAKE_CURRENT_BINARY_DIR}/bin/examples")
 else ()
   message (STATUS "Example programs will not be built (set FLTK_BUILD_EXAMPLES=ON to build)")
+endif ()
+
+if (FLTK_USE_BUILTIN_JPEG)
+  message (STATUS "Image Libraries: JPEG = Builtin")
+else ()
+  message (STATUS "Image Libraries: JPEG = System")
+endif ()
+
+if (FLTK_USE_BUILTIN_PNG)
+  message (STATUS "                 PNG  = Builtin")
+else ()
+  message (STATUS "                 PNG  = System")
+endif ()
+
+if (FLTK_USE_BUILTIN_ZLIB)
+  message (STATUS "                 ZLIB = Builtin")
+else ()
+  message (STATUS "                 ZLIB = System")
+endif ()
+
+if (UNIX)
+
+  if (OPTION_USE_WAYLAND)
+    message (STATUS "Use Wayland:     Yes")
+  else ()
+    message (STATUS "Use Wayland:     No")
+  endif ()
+
+  if (USE_PANGO)
+    message (STATUS "Use Pango:       Yes")
+  else (USE_PANGO)
+    message (STATUS "Use Pango:       No")
+    if (USE_XFT)
+      message (STATUS "Use Xft:         Yes")
+    else ()
+      message (STATUS "Use Xft:         No")
+    endif (USE_XFT)
+  endif (USE_PANGO)
+
+endif (UNIX)
+
+if (FLTK_HAVE_CAIROEXT)
+  message (STATUS "Cairo support:   Yes (extended)")
+elseif (FLTK_HAVE_CAIRO)
+  message (STATUS "Cairo support:   Yes (standard)")
+else ()
+  message (STATUS "Cairo support:   No")
 endif ()
 
 message ("")

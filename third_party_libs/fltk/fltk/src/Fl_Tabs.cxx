@@ -1,19 +1,17 @@
 //
-// "$Id$"
-//
 // Tab widget for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2016 by Bill Spitzak and others.
+// Copyright 1998-2021 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems on the following page:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
 // This is the "file card tabs" interface to allow you to put lots and lots
@@ -22,11 +20,13 @@
 // Each child widget is a card, and its label() is printed on the card tab.
 // Clicking the tab makes that card visible.
 
-#include <stdio.h>
 #include <FL/Fl.H>
 #include <FL/Fl_Tabs.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Tooltip.H>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #define BORDER 2
 #define EXTRASPACE 10
@@ -46,7 +46,7 @@ int Fl_Tabs::tab_positions() {
     clear_tab_positions();
     if (nc) {
       tab_pos   = (int*)malloc((nc+1)*sizeof(int));
-      tab_width = (int*)malloc((nc+1)*sizeof(int));
+      tab_width = (int*)malloc((nc)*sizeof(int));
     }
     tab_count = nc;
   }
@@ -63,7 +63,15 @@ int Fl_Tabs::tab_positions() {
     if (o->visible()) selected = i;
 
     int wt = 0; int ht = 0;
+    Fl_Labeltype ot = o->labeltype();
+    Fl_Align oa = o->align();
+    if (ot == FL_NO_LABEL) {
+      o->labeltype(FL_NORMAL_LABEL);
+    }
+    o->align(tab_align());
     o->measure_label(wt,ht);
+    o->labeltype(ot);
+    o->align(oa);
 
     tab_width[i] = wt + EXTRASPACE;
     tab_pos[i+1] = tab_pos[i] + tab_width[i] + BORDER;
@@ -160,13 +168,15 @@ int Fl_Tabs::handle(int event) {
 
   switch (event) {
 
-  case FL_PUSH: {
-    int H = tab_height();
-    if (H >= 0) {
-      if (Fl::event_y() > y()+H) return Fl_Group::handle(event);
-    } else {
-      if (Fl::event_y() < y()+h()+H) return Fl_Group::handle(event);
-    }}
+  case FL_PUSH:
+    {
+      int H = tab_height();
+      if (H >= 0) {
+        if (Fl::event_y() > y()+H) return Fl_Group::handle(event);
+      } else {
+        if (Fl::event_y() < y()+h()+H) return Fl_Group::handle(event);
+      }
+    }
     /* FALLTHROUGH */
   case FL_DRAG:
   case FL_RELEASE:
@@ -179,13 +189,13 @@ int Fl_Tabs::handle(int event) {
       }
       if (o &&                              // Released on a tab and..
           (value(o) ||                      // tab changed value or..
-	   (when()&(FL_WHEN_NOT_CHANGED))   // ..no change but WHEN_NOT_CHANGED set,
-	  )                                 // handles FL_WHEN_RELEASE_ALWAYS too.
-	 ) {
+           (when()&(FL_WHEN_NOT_CHANGED))   // ..no change but WHEN_NOT_CHANGED set,
+          )                                 // handles FL_WHEN_RELEASE_ALWAYS too.
+         ) {
         Fl_Widget_Tracker wp(o);
         set_changed();
-	do_callback();
-	if (wp.deleted()) return 1;
+        do_callback();
+        if (wp.deleted()) return 1;
       }
       Fl_Tooltip::current(o);
     } else {
@@ -194,27 +204,28 @@ int Fl_Tabs::handle(int event) {
     return 1;
   case FL_MOVE: {
     int ret = Fl_Group::handle(event);
-    Fl_Widget *o = Fl_Tooltip::current(), *n = o;
+    Fl_Widget *tooltip_widget = Fl_Tooltip::current();
+    Fl_Widget *n; // initialized later
     int H = tab_height();
-    if ( (H>=0) && (Fl::event_y()>y()+H) )
+    if ( (H >= 0) && (Fl::event_y() > y()+H) )
       return ret;
-    else if ( (H<0) && (Fl::event_y() < y()+h()+H) )
+    else if ( (H < 0) && (Fl::event_y() < y()+h()+H) )
       return ret;
     else {
       n = which(Fl::event_x(), Fl::event_y());
       if (!n) n = this;
     }
-    if (n!=o)
+    if (n != tooltip_widget)
       Fl_Tooltip::enter(n);
     return ret; }
   case FL_FOCUS:
   case FL_UNFOCUS:
     if (!Fl::visible_focus()) return Fl_Group::handle(event);
     if (Fl::event() == FL_RELEASE ||
-	Fl::event() == FL_SHORTCUT ||
-	Fl::event() == FL_KEYBOARD ||
-	Fl::event() == FL_FOCUS ||
-	Fl::event() == FL_UNFOCUS) {
+        Fl::event() == FL_SHORTCUT ||
+        Fl::event() == FL_KEYBOARD ||
+        Fl::event() == FL_FOCUS ||
+        Fl::event() == FL_UNFOCUS) {
       redraw_tabs();
       if (Fl::event() == FL_FOCUS) return Fl_Group::handle(event);
       if (Fl::event() == FL_UNFOCUS) return 0;
@@ -223,22 +234,22 @@ int Fl_Tabs::handle(int event) {
   case FL_KEYBOARD:
     switch (Fl::event_key()) {
       case FL_Left:
-	if (!children()) return 0;
-	if (child(0)->visible()) return 0;
-	for (i = 1; i < children(); i ++)
-	  if (child(i)->visible()) break;
-	value(child(i - 1));
-	set_changed();
-	do_callback();
+        if (!children()) return 0;
+        if (child(0)->visible()) return 0;
+        for (i = 1; i < children(); i ++)
+          if (child(i)->visible()) break;
+        value(child(i - 1));
+        set_changed();
+        do_callback();
         return 1;
       case FL_Right:
-	if (!children()) return 0;
-	if (child(children() - 1)->visible()) return 0;
-	for (i = 0; i < children(); i ++)
-	  if (child(i)->visible()) break;
-	value(child(i + 1));
-	set_changed();
-	do_callback();
+        if (!children()) return 0;
+        if (child(children() - 1)->visible()) return 0;
+        for (i = 0; i < children(); i ++)
+          if (child(i)->visible()) break;
+        value(child(i + 1));
+        set_changed();
+        do_callback();
         return 1;
       case FL_Down:
         redraw();
@@ -377,7 +388,16 @@ void Fl_Tabs::draw_tab(int x1, int x2, int W, int H, Fl_Widget* o, int what) {
   char prev_draw_shortcut = fl_draw_shortcut;
   fl_draw_shortcut = 1;
 
-  Fl_Boxtype bt = (o==push_ &&!sel) ? fl_down(box()) : box();
+  Fl_Boxtype bt = (o == push_ && !sel) ? fl_down(box()) : box();
+  Fl_Color bc = sel ? selection_color() : o->selection_color();
+
+  // Save the label color and label type
+  Fl_Color oc = o->labelcolor();
+  Fl_Labeltype ot = o->labeltype();
+
+  // Set a labeltype that really draws a label
+  if (ot == FL_NO_LABEL)
+    o->labeltype(FL_NORMAL_LABEL);
 
   // compute offsets to make selected tab look bigger
   int yofs = sel ? 0 : BORDER;
@@ -390,22 +410,14 @@ void Fl_Tabs::draw_tab(int x1, int x2, int W, int H, Fl_Widget* o, int what) {
 
     H += dh;
 
-    Fl_Color c = sel ? selection_color() : o->selection_color();
-
-    draw_box(bt, x1, y() + yofs, W, H + 10 - yofs, c);
-
-    // Save the previous label color
-    Fl_Color oc = o->labelcolor();
+    draw_box(bt, x1, y() + yofs, W, H + 10 - yofs, bc);
 
     // Draw the label using the current color...
     o->labelcolor(sel ? labelcolor() : o->labelcolor());
-    o->draw_label(x1, y() + yofs, W, H - yofs, FL_ALIGN_CENTER);
-
-    // Restore the original label color...
-    o->labelcolor(oc);
+    o->draw_label(x1, y() + yofs, W, H - yofs, tab_align());
 
     if (Fl::focus() == this && o->visible())
-      draw_focus(box(), x1, y(), W, H);
+      draw_focus(bt, x1, y(), W, H, bc);
 
     fl_pop_clip();
   } else {
@@ -416,26 +428,22 @@ void Fl_Tabs::draw_tab(int x1, int x2, int W, int H, Fl_Widget* o, int what) {
 
     H += dh;
 
-    Fl_Color c = sel ? selection_color() : o->selection_color();
-
-    draw_box(bt, x1, y() + h() - H - 10, W, H + 10 - yofs, c);
-
-    // Save the previous label color
-    Fl_Color oc = o->labelcolor();
+    draw_box(bt, x1, y() + h() - H - 10, W, H + 10 - yofs, bc);
 
     // Draw the label using the current color...
     o->labelcolor(sel ? labelcolor() : o->labelcolor());
-    o->draw_label(x1, y() + h() - H, W, H - yofs, FL_ALIGN_CENTER);
-
-    // Restore the original label color...
-    o->labelcolor(oc);
+    o->draw_label(x1, y() + h() - H, W, H - yofs, tab_align());
 
     if (Fl::focus() == this && o->visible())
-      draw_focus(box(), x1, y() + h() - H, W, H);
+      draw_focus(bt, x1, y() + h() - H, W, H, bc);
 
     fl_pop_clip();
   }
   fl_draw_shortcut = prev_draw_shortcut;
+
+  // Restore the original label color and label type
+  o->labelcolor(oc);
+  o->labeltype(ot);
 }
 
 /**
@@ -459,20 +467,15 @@ void Fl_Tabs::draw_tab(int x1, int x2, int W, int H, Fl_Widget* o, int what) {
   can be automatic (local) variables, but you must declare the
   Fl_Tabs widget <I>first</I> so that it is destroyed last.
 */
-Fl_Tabs::Fl_Tabs(int X,int Y,int W, int H, const char *l) :
-  Fl_Group(X,Y,W,H,l)
+Fl_Tabs::Fl_Tabs(int X, int Y, int W, int H, const char *L) :
+  Fl_Group(X,Y,W,H,L)
 {
   box(FL_THIN_UP_BOX);
-#if FLTK_ABI_VERSION >= 10304
-  // NEW (nothing)
-#else
-  // OLD (init to prevent 'unused' warnings) -- STR #3169
-  value_ = 0;	// NOTE: this member unused -- STR #3169
-#endif
   push_ = 0;
   tab_pos = 0;
   tab_width = 0;
   tab_count = 0;
+  tab_align_ = FL_ALIGN_CENTER;
 }
 
 Fl_Tabs::~Fl_Tabs() {
@@ -497,39 +500,39 @@ Fl_Tabs::~Fl_Tabs() {
   \li >  0: use given \p tabh value, tabs on top (height = tabh)
   \li < -1: use given \p tabh value, tabs on bottom (height = -tabh)
 
-  \param[in]	tabh		position and optional height of tabs (see above)
-  \param[out]	rx,ry,rw,rh	(x,y,w,h) of client area for children
+  \param[in]    tabh            position and optional height of tabs (see above)
+  \param[out]   rx,ry,rw,rh     (x,y,w,h) of client area for children
 
-  \since	FLTK 1.3.0
+  \since        FLTK 1.3.0
 */
 void Fl_Tabs::client_area(int &rx, int &ry, int &rw, int &rh, int tabh) {
 
-  if (children()) {			// use existing values
+  if (children()) {                     // use existing values
 
     rx = child(0)->x();
     ry = child(0)->y();
     rw = child(0)->w();
     rh = child(0)->h();
 
-  } else {				// calculate values
+  } else {                              // calculate values
 
     int y_offset;
     int label_height = fl_height(labelfont(), labelsize()) + BORDER*2;
 
-    if (tabh == 0)			// use default (at top)
+    if (tabh == 0)                      // use default (at top)
       y_offset = label_height;
-    else if (tabh == -1)	 	// use default (at bottom)
+    else if (tabh == -1)                // use default (at bottom)
       y_offset = -label_height;
     else
-      y_offset = tabh;			// user given value
+      y_offset = tabh;                  // user given value
 
     rx = x();
     rw = w();
 
-    if (y_offset >= 0) {		// labels at top
+    if (y_offset >= 0) {                // labels at top
       ry = y() + y_offset;
       rh = h() - y_offset;
-    } else {				// labels at bottom
+    } else {                            // labels at bottom
       ry = y();
       rh = h() + y_offset;
     }
@@ -546,7 +549,3 @@ void Fl_Tabs::clear_tab_positions() {
     tab_width = 0;
   }
 }
-
-//
-// End of "$Id$".
-//

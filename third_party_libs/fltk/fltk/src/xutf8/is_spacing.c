@@ -1,5 +1,4 @@
-/* "$Id: $"
- *
+/*
  * Author: Jean-Marc Lienher ( http://oksid.ch )
  * Copyright 2000-2010 by O'ksi'D.
  *
@@ -7,24 +6,23 @@
  * the file "COPYING" which should have been included with this file.  If this
  * file is missing or damaged, see the license at:
  *
- *     http://www.fltk.org/COPYING.php
+ *     https://www.fltk.org/COPYING.php
  *
- * Please report all bugs and problems on the following page:
+ * Please see the following page on how to report bugs and issues:
  *
- *     http://www.fltk.org/str.php
+ *     https://www.fltk.org/bugs.php
  */
 
 /*
- * This file is required on all platforms for utf8 support
+ * This file is required on all platforms for UTF-8 support
  */
 
-#if !defined(WIN32) && !defined(__APPLE__)
-#  include "../Xutf8.h"
-#endif /* !defined(WIN32) && !defined(__APPLE__) */
+#include "../utf8_internal.h"
 
+/* include UCS tables */
 #include "headers/spacing.h"
 
-unsigned short 
+unsigned short
 XUtf8IsNonSpacing(unsigned int ucs) {
 
   if (ucs <= 0x0361) {
@@ -79,7 +77,3 @@ XUtf8IsNonSpacing(unsigned int ucs) {
 
   return 0;
 }
-
-/*
- * End of "$Id$".
- */

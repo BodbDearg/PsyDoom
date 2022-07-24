@@ -1,29 +1,29 @@
 //
-// "$Id$"
-//
 // Drag & Drop code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2018 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems on the following page:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
-// This file contains win32-specific code for fltk which is always linked
-// in.  Search other files for "WIN32" or filenames ending in _win32.cxx
+// This file contains Windows-specific code for FLTK which is always linked
+// in.  Search other files for "_WIN32" or filenames ending in _win32.cxx
 // for other system-specific code.
 
 #include <FL/Fl.H>
-#include <FL/x.H>
+#include <FL/platform.H>
 #include <FL/Fl_Window.H>
+#include "Fl_Window_Driver.H"
 #include <FL/fl_utf8.h>
+#include "drivers/WinAPI/Fl_WinAPI_Screen_Driver.H"
 #include "flstring.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,7 +50,7 @@ Fl_Window *fl_dnd_target_window = 0;
 
 
 /**
- * subclass the IDropTarget to receive data from DnD operations
+ subclass the IDropTarget to receive data from DnD operations
  */
 class FLDropTarget : public IDropTarget
 {
@@ -80,18 +80,6 @@ public:
   }
   HRESULT STDMETHODCALLTYPE DragEnter( IDataObject *pDataObj, DWORD /*grfKeyState*/, POINTL pt, DWORD *pdwEffect) {
     if( !pDataObj ) return E_INVALIDARG;
-    /* Tricky point here: Not DPI-aware applications use different units for the 'POINTL pt' argument
-     of the DragEnter, DragOver, and Drop member functions.
-     DragEnter receives the mouse coordinates in unscaled screen units,
-     whereas DragOver and Drop receive the mouse coordinates in scaled units.
-     This looks like a Windows bug because these apps are supposed to always receive
-     scaled units from the OS.
-     Therefore, we ask here for the mouse coordinates.
-    */
-    POINT mp;
-    GetCursorPos(&mp);
-    pt.x = mp.x; pt.y = mp.y;
-    
     // set e_modifiers here from grfKeyState, set e_x and e_root_x
     // check if FLTK handles this drag and return if it can't (i.e. BMP drag without filename)
     POINT ppt;
@@ -100,6 +88,9 @@ public:
     HWND hWnd = WindowFromPoint( ppt );
     Fl_Window *target = fl_find( hWnd );
     if (target) {
+      float s = Fl::screen_driver()->scale(Fl_Window_Driver::driver(target)->screen_num());
+      Fl::e_x_root = int(Fl::e_x_root / s);
+      Fl::e_y_root = int(Fl::e_y_root / s);
       Fl::e_x = Fl::e_x_root-target->x();
       Fl::e_y = Fl::e_y_root-target->y();
     }
@@ -132,6 +123,9 @@ public:
     Fl::e_x_root = pt.x;
     Fl::e_y_root = pt.y;
     if (fl_dnd_target_window) {
+      float s = Fl::screen_driver()->scale(Fl_Window_Driver::driver(fl_dnd_target_window)->screen_num());
+      Fl::e_x_root = int(Fl::e_x_root /s);
+      Fl::e_y_root = int(Fl::e_y_root /s);
       Fl::e_x = Fl::e_x_root-fl_dnd_target_window->x();
       Fl::e_y = Fl::e_y_root-fl_dnd_target_window->y();
     }
@@ -166,6 +160,9 @@ public:
     fl_dnd_target_window = 0;
     Fl::e_x_root = pt.x;
     Fl::e_y_root = pt.y;
+    float s = Fl::screen_driver()->scale(Fl_Window_Driver::driver(target)->screen_num());
+    Fl::e_x_root = int(Fl::e_x_root / s);
+    Fl::e_y_root = int(Fl::e_y_root / s);
     if (target) {
       Fl::e_x = Fl::e_x_root-target->x();
       Fl::e_y = Fl::e_y_root-target->y();
@@ -182,8 +179,8 @@ public:
       char *a, *b;
       a = b = currDragData;
       while (*a) { // strip the CRLF pairs
-	if (*a == '\r' && a[1] == '\n') a++;
-	else *b++ = *a++;
+        if (*a == '\r' && a[1] == '\n') a++;
+        else *b++ = *a++;
       }
       *b = 0;
       Fl::e_text = currDragData;
@@ -212,7 +209,7 @@ private:
   }
   static char fillCurrentDragData(IDataObject *data) {
     // shortcut through this whole procedure if there is no fresh data
-    if (!data) 
+    if (!data)
       return currDragResult;
     // shortcut through this whole procedure if this is still the same drag event
     // (* this is safe, because 'currDragRef' is cleared on Leave and Drop events)
@@ -221,7 +218,7 @@ private:
 
     // clear currDrag* for a new drag event
     clearCurrentDragData();
-    
+
     currDragRef = data;
     // fill currDrag* with UTF-8 data, if available
     FORMATETC fmt = { 0 };
@@ -256,15 +253,15 @@ private:
       unsigned u;
       void *stuff = GlobalLock( medium.hGlobal );
       currDragData = (char*)malloc(3 * strlen((char*)stuff) + 10);
-      p = (char*)stuff; 
+      p = (char*)stuff;
       last = p + strlen(p);
       q = currDragData;
       while (p < last) {
-	u = fl_utf8decode(p, last, &len);
-	p += len;
-	len = fl_utf8encode(u, q);
-	q += len;
-	}
+        u = fl_utf8decode(p, last, &len);
+        p += len;
+        len = fl_utf8encode(u, q);
+        q += len;
+        }
       *q = 0;
       currDragSize = (int) (q - currDragData);
       currDragData = (char*)realloc(currDragData, currDragSize + 1);
@@ -286,8 +283,8 @@ private:
       int i, n, nn = 0, nf = DragQueryFileW( hdrop, (UINT)-1, 0, 0 );
         for ( i=0; i<nf; i++ ) nn += DragQueryFileW( hdrop, i, 0, 0 );
       nn += nf;
-        xchar *dst = (xchar *)malloc(nn * sizeof(xchar));
-        xchar *bu = dst;
+        wchar_t *dst = (wchar_t *)malloc(nn * sizeof(wchar_t));
+        wchar_t *bu = dst;
       for ( i=0; i<nf; i++ ) {
           n = DragQueryFileW( hdrop, i, (WCHAR*)dst, nn );
           dst += n;
@@ -322,7 +319,7 @@ int FLDropTarget::currDragSize = 0;
 char FLDropTarget::currDragResult = 0;
 
 /**
- * this class is needed to allow FLTK apps to be a DnD source
+ this class is needed to allow FLTK apps to be a DnD source
  */
 class FLDropSource : public IDropSource
 {
@@ -409,8 +406,8 @@ public:
   }
 
   HRESULT __stdcall Reset(void) {
-	n = 0;
-	return S_OK;
+        n = 0;
+        return S_OK;
   }
 
   HRESULT __stdcall Clone(IEnumFORMATETC  **ppenum){
@@ -491,15 +488,15 @@ public:
 //
 //        df->fWide = TRUE;
 //        l = fl_utf2unicode((unsigned char*)fl_selection_buffer[0],
-//                             fl_selection_length[0], (xchar*)(((char*)pMem)
+//                             fl_selection_length[0], (wchar_t*)(((char*)pMem)
 //                              + sizeof(DROPFILES)));
 //
 //      pMem[l * sizeof(WCHAR) + sizeof(DROPFILES)] = 0;
 //      pMem[l * sizeof(WCHAR) + 1 + sizeof(DROPFILES)] = 0;
 //      pMem[l * sizeof(WCHAR) + 2 + sizeof(DROPFILES)] = 0;
 //      pMem[l * sizeof(WCHAR) + 3 + sizeof(DROPFILES)] = 0;
-      pmedium->tymed	      = TYMED_HGLOBAL;
-      pmedium->hGlobal	      = gh;
+      pmedium->tymed          = TYMED_HGLOBAL;
+      pmedium->hGlobal        = gh;
       pmedium->pUnkForRelease = NULL;
       GlobalUnlock( gh );
       return S_OK;
@@ -515,8 +512,8 @@ public:
     return DV_E_FORMATETC;
   }
 //  HRESULT STDMETHODCALLTYPE EnumFormatEtc( DWORD dir, IEnumFORMATETC** ppenumFormatEtc) {
-//	*ppenumFormatEtc = m_EnumF;
-//	return S_OK;
+//      *ppenumFormatEtc = m_EnumF;
+//      return S_OK;
 //  }
 
   // all the following methods are not really needed for a DnD object
@@ -532,7 +529,7 @@ public:
 };
 
 
-int Fl::dnd()
+int Fl_WinAPI_Screen_Driver::dnd(int unused)
 {
   DWORD dropEffect;
   ReleaseCapture();
@@ -558,7 +555,3 @@ int Fl::dnd()
   if ( ret==DRAGDROP_S_DROP ) return 1; // or DD_S_CANCEL
   return 0;
 }
-
-//
-// End of "$Id$".
-//

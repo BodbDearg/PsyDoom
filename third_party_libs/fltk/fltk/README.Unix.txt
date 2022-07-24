@@ -4,7 +4,7 @@ README.Unix.txt - 2010-11-14 - Building FLTK on Unix
 
 
  CONTENTS
-========== 
+==========
 
   1   INTRODUCTION
   2   PREREQUISITES
@@ -44,7 +44,7 @@ platforms:
     - gcc command line tools
     - Code::Blocks
     - ...
-    
+
 The Symbol font and the Zapf Dingbats font do not work on X11. This is correct
 behavior for UTF-8 platforms.
 
@@ -60,7 +60,7 @@ behavior for UTF-8 platforms.
 Ubuntu Linux can be downloaded here:
 
   http://www.ubuntu.com/
-  
+
 If you have not done so yet, download and install Ubuntu.
 
 Open a shell and install some software:
@@ -71,9 +71,9 @@ Open a shell and install some software:
   sudo apt-get install autoconf
   sudo apt-get install libx11-dev
   sudo apt-get install libglu1-mesa-dev
-  
-These two are optional, but highly recommended:  
-  
+
+These two are optional, but highly recommended:
+
   sudo apt-get install libasound2-dev
   sudo apt-get install libxft-dev
 
@@ -81,13 +81,11 @@ If you are planning to use the Code::Blocks IDE, also install this
 
   sudo apt-get install codeblocks
 
-I like to use git to install the latest FLTK-1.3.release:
+I like to use git to install the latest FLTK-X.Y.release:
 
-  git clone https://github.com/fltk/fltk fltk-1.3
-  cd fltk-1.3
-  git checkout branch-1.3
+  git clone --branch branch-X.Y https://github.com/fltk/fltk
 
-To update to the latest version, just go into the fltk-1.3 directory and type
+To update to the latest version, just go into the fltk directory and type
 
   git pull
 
@@ -98,7 +96,7 @@ To update to the latest version, just go into the fltk-1.3 directory and type
 Linux Mint 9 can be downloaded here:
 
   http://www.linuxmint.com/
-  
+
 If you have not done so yet, download and install Linux Mint.
 
 Open a shell and install some software:
@@ -109,9 +107,9 @@ Open a shell and install some software:
   sudo apt-get install autoconf
   sudo apt-get install libx11-dev
   sudo apt-get install libglu1-mesa-dev
-  
-These two are optional, but highly recommended:  
-  
+
+These two are optional, but highly recommended:
+
   sudo apt-get install libasound2-dev
   sudo apt-get install libxft-dev
 
@@ -119,15 +117,15 @@ If you are planning to use the Code::Blocks IDE, also install this
 
   sudo apt-get install codeblocks
 
-I like to use git to install the latest FLTK-1.3.release:
+I like to use git to install the latest FLTK-X.Y.release:
 
-  git clone https://github.com/fltk/fltk fltk-1.3
-  cd fltk-1.3
-  git checkout branch-1.3
+  git clone --branch branch-X.Y https://github.com/fltk/fltk
 
-To update to the latest version, just go into the fltk-1.3 directory and type
+To update to the latest version, just go into the fltk directory and type
 
   git pull
+
+FIXME: no FL_SYMBOL font (-*-symbol-*),  font 15 (Zapf-Dingbats)
 
 
  2.3  Fedora 13
@@ -136,10 +134,10 @@ To update to the latest version, just go into the fltk-1.3 directory and type
 Fedora 13 Linux can be downloaded here:
 
   http://fedoraproject.org/
-  
+
 If you have not done so yet, download and install Fedora.
 
-Open a terminal window and install some software. In Fedora, the default user 
+Open a terminal window and install some software. In Fedora, the default user
 has no permission to call "sudo", so we will change user a few times:
 
   su root
@@ -151,19 +149,19 @@ If you are planning to use the Code::Blocks IDE, also install this
 
   yum install codeblocks.i686  (for 64 bit machines)
 
-Don't forget to leave root status (Ctrl-D) before loading FLTK. To install FLTK 
-for every user, you either have to set root user again, or use "visudo" to add 
+Don't forget to leave root status (Ctrl-D) before loading FLTK. To install FLTK
+for every user, you either have to set root user again, or use "visudo" to add
 yourself to the "sudo" list.
 
-I like to use git to install the latest FLTK-1.3.release:
+I like to use git to install the latest FLTK-X.Y.release:
 
-  git clone https://github.com/fltk/fltk fltk-1.3
-  cd fltk-1.3
-  git checkout branch-1.3
+  git clone --branch branch-X.Y https://github.com/fltk/fltk
 
-To update to the latest version, just go into the fltk-1.3 directory and type
+To update to the latest version, just go into the fltk directory and type
 
   git pull
+
+FIXME: no FL_SYMBOL font (-*-symbol-*),  font 15 (Zapf-Dingbats)
 
 
  2.8  SunOS / Solaris
@@ -249,13 +247,11 @@ For the latest development snapshot, first install the git client from pkgsrc:
   cd /usr/pkgsrc/devel/git
   bmake install
 
-Now fetch the latest FLTK source code:
+Now fetch the latest FLTK X.Y.release source code:
 
-  git clone https://github.com/fltk/fltk fltk-1.3
-  cd fltk-1.3
-  git checkout branch-1.3
+  git clone --branch branch-X.Y https://github.com/fltk/fltk
 
-To update to the latest version, just go into the fltk-1.3 directory and type
+To update to the latest version, just go into the fltk directory and type
 
   git pull
 
@@ -282,9 +278,9 @@ Download FLTK from here:
 
   https://www.fltk.org/software.php
 
-If you are familiar with "git" and like to stay current with your 
-version, you will find the git access parameters at the bottom of that 
-page. Unpack FLTK into a convenient location. I like to have everything in my 
+If you are familiar with "git" and like to stay current with your
+version, you will find the git access parameters at the bottom of that
+page. Unpack FLTK into a convenient location. I like to have everything in my
 dev directory:
 
   cd
@@ -293,7 +289,7 @@ dev directory:
   mv ~/Downloads/fltk-1.3.xxxx.tar.gz .
   tar xvfz fltk-1.3.xxxx.tar.gz
   cd fltk-1.3.xxxx
-  
+
 
  3.2  Configuring FLTK
 -----------------------
@@ -302,15 +298,20 @@ If you got FLTK via git then you need one extra step. Otherwise skip
 over this part. Stay in your FLTK source-code directory and type the
 following:
 
-  NOCONFIGURE=1 ./autogen.sh
+  autoconf
 
 Now configure your FLTK installation:
 
   ./configure
-  
-ADVANCED: type "./configure --help" to get a complete list of optional 
+
+Hint: Instead of executing `autoconf` and `configure` followed by `make`
+to build FLTK (see next section) you can also run `make` directly which
+will create and execute the 'configure' script with default parameters
+and build FLTK with the default configuration.
+
+ADVANCED: type "./configure --help" to get a complete list of optional
 configuration parameters. These should be pretty self-explanatory. Some
-more details can be found in README. 
+more details can be found in README.
 :END_ADVANCED
 
 The configuration script will check your machine for the required resources
@@ -321,18 +322,16 @@ Review the Configuration Summary, maybe take some notes.
  3.3  Building FLTK
 --------------------
 
-Now this is easy. Stay in your FLTK source-code directory and type: 
+Now this is easy. Stay in your FLTK source-code directory and type:
 
   make
 
-The entire FLTK toolkit including many test programs will be built for you. No 
+The entire FLTK toolkit including many test programs will be built for you. No
 warnings should appear. If some do, please let the FLTK developer team know via
 the mailing list or the bug reporting template at www.fltk.org .
 
-Actually, as of Jan. 2019, one or two warnings will show, mostly about
-deprecated declarations. Please ignore them. If you see more warnings
-(depending on the compiler you are using) please consider upgrading to
-FLTK 1.4.
+Actually, as of Apr 13 2016, one or two warnings will show, mostly about
+deprecated declarations. Please ignore them.
 
 
  3.4  Testing FLTK
@@ -346,19 +345,19 @@ After a successful build, you can test FLTK's capabilities:
  3.5  Installing FLTK
 ----------------------
 
-If you did not change any of the configuration settings, FLTK will be installed 
+If you did not change any of the configuration settings, FLTK will be installed
 in "/usr/local/include" and "/usr/local/lib" by typing
 
   sudo make install
-  
+
 If you are using the KDE, GNOME or XFCE desktop environments and want to call
 "fluid" from the desktop menu, you will need to install additional files and
 icons under "/usr/share" by typing:
 
   sudo make install-desktop
-  
-It is possible to install FLTK without superuser privileges by changing the 
-installation path to a location within the user account by adding the 
+
+It is possible to install FLTK without superuser privileges by changing the
+installation path to a location within the user account by adding the
 "--prefix=PREFIX" parameters to the "./configure" command.
 
 
@@ -382,17 +381,17 @@ recommend that you add it to the command search path.
 ===========================================
 
 Code::Blocks is a free and popular C++ IDE in the Linux world. It also runs on
-macOS and Windows. Configured correctly, it can also cross-compile between
-these platforms. This chapter focuses on creating a new FLTK project for Linux, 
-assuming that FLTK 1.3 was previously built and installed in its default 
+OS X and Windows. Configured correctly, it can also cross-compile between
+these platforms. This chapter focuses on creating a new FLTK project for Linux,
+assuming that FLTK 1.3 was previously built and installed in its default
 location from the command line.
 
-If not done yet, install Code::Blocks as described in the Prerequisites chapter 
-above, or download it from their web site. This description is based on 
+If not done yet, install Code::Blocks as described in the Prerequisites chapter
+above, or download it from their web site. This description is based on
 version 10.05:
 
   http://www.codeblocks.org/
-  
+
 Start Code::Blocks. Select File > New > Project. In the "New from template"
 dialog box, click on "FLTK project" and follow the instructions.
 
@@ -406,7 +405,7 @@ compiler flags, select your project in the tree view, then select the
 `fltk-config --cxxflags` in front of the second "`".
 
 The linker flags are located in the "Linker Settings" tab under "Other Linker
-Options". Add the flags to `fltk-config --ldstaticflags` in front of the 
+Options". Add the flags to `fltk-config --ldstaticflags` in front of the
 second "`".
 
 CodeBlocks can be set up to use fluid to manage modules.
@@ -415,24 +414,24 @@ The following info is from mingodad@gmail.com posted on fltk.general 06/17/2013:
 """
     I have these settings in codeblocks on linux:
 
-    Settings -> 
+    Settings ->
       Compiler and debugging settings ->
-        Other settings -> 
-	  Advanced options:
+        Other settings ->
+          Advanced options:
 
     -- Add an extension (in my case "fl")
 
     -- On command line macro:
-		cd $file_dir;  fluid -c $file
+                cd $file_dir;  fluid -c $file
 
     -- Generated files  (to be further compiled):
-		$file_dir/$file_name.cxx
-		$file_dir/$file_name.h
+                $file_dir/$file_name.cxx
+                $file_dir/$file_name.h
 
     Settings -> Environment -> Files extension handling :
-		Wildcard : *.fl
-		To open file: Launch an external program
-		External program: fluid
+                Wildcard : *.fl
+                To open file: Launch an external program
+                External program: fluid
 
     With that I can double click on any fluid file I include on a project
     and it opens with fluid. When I press "run" or "build" codeblocks
@@ -448,3 +447,4 @@ Oct 30 2010 - matt: added Code::Blocks chapter
 Oct 28 2010 - matt: restructured entire document and verified instructions
 Nov 14 2010 - duncan: added install-desktop
 Jun 17 2013 - erco: added mingodad's CodeBlocks/Fluid recommendations
+Apr 13 2021 - giri: Replace svn instructions by git instructions

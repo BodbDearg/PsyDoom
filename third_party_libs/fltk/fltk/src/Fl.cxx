@@ -1,70 +1,32 @@
 //
-// "$Id$"
-//
 // Main event handling code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2018 by Bill Spitzak and others.
+// Copyright 1998-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems on the following page:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
-
-// warning: the Apple Quartz version still uses some Quickdraw calls,
-//          mostly to get around the single active context in QD and
-//          to implement clipping. This should be changed into pure
-//          Quartz calls in the near future.
-#include <config.h>
-
-/* We require Windows 2000 features (e.g. VK definitions) */
-#if defined(WIN32)
-# if !defined(WINVER) || (WINVER < 0x0500)
-#  ifdef WINVER
-#   undef WINVER
-#  endif
-#  define WINVER 0x0500
-# endif
-# if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-#  ifdef _WIN32_WINNT
-#   undef _WIN32_WINNT
-#  endif
-#  define _WIN32_WINNT 0x0500
-# endif
-#endif
-
-
-// STR #3454: We must #define FD_ISSET before we #include winsock2.h
-// to fix an undefined reference (__FD_ISSET). (AlbrechtS Feb 2018)
-// Other portions of the fix for STR #3454 are in src/Fl_win32.cxx.
-// This fix is only necessary for MinGW.
-
-#ifdef __MINGW32__
-static void * get_wsock_mod();
-typedef int(__stdcall *fl_wsk_fd_is_set_f)(unsigned int, void *);
-static fl_wsk_fd_is_set_f fl_wsk_fd_is_set = 0;
-
-#define FD_ISSET(S,SET) \
-  (get_wsock_mod() ? fl_wsk_fd_is_set(S, SET) : 0)
-#endif // __MINGW32__
-
-// recent versions of MinGW warn: "Please include winsock2.h before windows.h",
-// hence we must include winsock2.h before FL/Fl.H (A.S. Dec. 2010, IMM May 2011)
-
-#if defined(WIN32) && !defined(__CYGWIN__)
-#  include <winsock2.h>
-#endif
+/** \file
+ Implementation of the member functions of class Fl.
+ */
 
 #include <FL/Fl.H>
+#include <FL/platform.H>
+#include "Fl_Screen_Driver.H"
+#include "Fl_Window_Driver.H"
+#include "Fl_System_Driver.H"
+#include "Fl_Timeout.h"
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Tooltip.H>
-#include <FL/x.H>
+#include <FL/fl_draw.H>
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -74,70 +36,37 @@ static fl_wsk_fd_is_set_f fl_wsk_fd_is_set = 0;
 #  include <stdio.h>
 #endif // DEBUG || DEBUG_WATCH
 
-#ifdef WIN32
-#  include <ole2.h>
-void fl_free_fonts(void);
-HBRUSH fl_brush_action(int action);
-void fl_cleanup_pens(void);
-void fl_release_dc(HWND,HDC);
-void fl_cleanup_dc_list(void);
-#elif defined(__APPLE__)
-extern double fl_mac_flush_and_wait(double time_to_wait);
-#endif // WIN32
-
 //
 // Globals...
 //
 
-// Pointers you can use to change FLTK to a foreign language.
-// Note: Similar pointers are defined in FL/fl_ask.H and src/fl_ask.cxx
-#if !defined(__APPLE__) || defined(FL_DOXYGEN)
-  const char* fl_local_alt   = "Alt";	///< string pointer used in shortcuts, you can change it to another language
-  const char* fl_local_ctrl  = "Ctrl";	///< string pointer used in shortcuts, you can change it to another language
-  const char* fl_local_meta  = "Meta";	///< string pointer used in shortcuts, you can change it to another language
-  const char* fl_local_shift = "Shift";	///< string pointer used in shortcuts, you can change it to another language
-#else
-  const char* fl_local_alt   = "\xe2\x8c\xa5\\"; // U+2325 (option key)
-  const char* fl_local_ctrl  = "\xe2\x8c\x83\\"; // U+2303 (up arrowhead)
-  const char* fl_local_meta  = "\xe2\x8c\x98\\"; // U+2318 (place of interest sign)
-  const char* fl_local_shift = "\xe2\x87\xa7\\"; // U+21E7 (upwards white arrow)
-#endif
-
-// Apple App Menu
-#if defined(__APPLE__) || defined(FL_DOXYGEN)
-const char *Fl_Mac_App_Menu::about = "About %@";
-const char *Fl_Mac_App_Menu::print = "Print Front Window";
-const char *Fl_Mac_App_Menu::services = "Services";
-const char *Fl_Mac_App_Menu::hide = "Hide %@";
-const char *Fl_Mac_App_Menu::hide_others = "Hide Others";
-const char *Fl_Mac_App_Menu::show = "Show All";
-const char *Fl_Mac_App_Menu::quit = "Quit %@";
-#endif // __APPLE__
+Fl_Widget *fl_selection_requestor;
 
 #ifndef FL_DOXYGEN
-Fl_Widget	*Fl::belowmouse_,
-		*Fl::pushed_,
-		*Fl::focus_,
-		*Fl::selection_owner_;
-int		Fl::damage_,
-		Fl::e_number,
-		Fl::e_x,
-		Fl::e_y,
-		Fl::e_x_root,
-		Fl::e_y_root,
-		Fl::e_dx,
-		Fl::e_dy,
-		Fl::e_state,
-		Fl::e_clicks,
-		Fl::e_is_click,
-		Fl::e_keysym,
+Fl_Widget       *Fl::belowmouse_,
+                *Fl::pushed_,
+                *Fl::focus_,
+                *Fl::selection_owner_;
+int             Fl::damage_,
+                Fl::e_number,
+                Fl::e_x,
+                Fl::e_y,
+                Fl::e_x_root,
+                Fl::e_y_root,
+                Fl::e_dx,
+                Fl::e_dy,
+                Fl::e_state,
+                Fl::e_clicks,
+                Fl::e_is_click,
+                Fl::e_keysym,
                 Fl::e_original_keysym,
-		Fl::scrollbar_size_ = 16;
+                Fl::scrollbar_size_ = 16,
+                Fl::menu_linespacing_ = 4;      // 4: was a local macro in Fl_Menu.cxx called "LEADING"
 
-char		*Fl::e_text = (char *)"";
-int		Fl::e_length;
-const char*	Fl::e_clipboard_type = "";
-void *		Fl::e_clipboard_data = NULL;
+char            *Fl::e_text = (char *)"";
+int             Fl::e_length;
+const char      *Fl::e_clipboard_type = "";
+void            *Fl::e_clipboard_data = NULL;
 
 Fl_Event_Dispatch Fl::e_dispatch = 0;
 
@@ -145,15 +74,34 @@ unsigned char   Fl::options_[] = { 0, 0 };
 unsigned char   Fl::options_read_ = 0;
 
 
-Fl_Window *fl_xfocus = NULL;	// which window X thinks has focus
-Fl_Window *fl_xmousewin;// which window X thinks has FL_ENTER
-Fl_Window *Fl::grab_;	// most recent Fl::grab()
-Fl_Window *Fl::modal_;	// topmost modal() window
+Fl_Window       *fl_xfocus = NULL; // which window X thinks has focus
+Fl_Window       *fl_xmousewin;     // which window X thinks has FL_ENTER
+Fl_Window       *Fl::grab_;        // most recent Fl::grab()
+Fl_Window       *Fl::modal_;       // topmost modal() window
 
 #endif // FL_DOXYGEN
 
 char const * const Fl::clipboard_plain_text = "text/plain";
 char const * const Fl::clipboard_image = "image";
+
+
+//
+// Drivers
+//
+
+/** Returns a pointer to the unique Fl_Screen_Driver object of the platform */
+Fl_Screen_Driver *Fl::screen_driver()
+{
+  static  Fl_Screen_Driver* screen_driver_ = Fl_Screen_Driver::newScreenDriver();
+  return screen_driver_;
+}
+
+/** Returns a pointer to the unique Fl_System_Driver object of the platform */
+Fl_System_Driver *Fl::system_driver()
+{
+  static  Fl_System_Driver* system_driver_ = Fl_System_Driver::newSystemDriver();
+  return system_driver_;
+}
 
 //
 // 'Fl::version()' - Return the API version number...
@@ -163,25 +111,25 @@ char const * const Fl::clipboard_image = "image";
   Returns the compiled-in value of the FL_VERSION constant. This
   is useful for checking the version of a shared library.
 
-  \deprecated	Use int Fl::api_version() instead.
+  \deprecated   Use int Fl::api_version() instead.
 */
 double Fl::version() {
   return FL_VERSION;
 }
 
 /**
-  Returns the compiled-in value of the FL_API_VERSION constant. This
-  is useful for checking the version of a shared library.
+  Returns the compiled-in value of the FL_API_VERSION constant.
+  This is useful for checking the version of a shared library.
 */
 int Fl::api_version() {
   return FL_API_VERSION;
 }
 
 /**
-  Returns the compiled-in value of the FL_ABI_VERSION constant. This
-  is useful for checking the version of a shared library.
+  Returns the compiled-in value of the FL_ABI_VERSION constant.
+  This is useful for checking the version of a shared library.
 */
-int  Fl::abi_version() {
+int Fl::abi_version() {
   return FL_ABI_VERSION;
 }
 
@@ -209,6 +157,23 @@ void Fl::scrollbar_size(int W) {
   scrollbar_size_ = W;
 }
 
+/**
+  Gets the default line spacing used by menus.
+  \returns The default line spacing, in pixels.
+*/
+int Fl::menu_linespacing() {
+  return menu_linespacing_;
+}
+
+/**
+  Sets the default line spacing used by menus.
+  Default is 4.
+  \param[in] H The new default line spacing between menu items, in pixels.
+*/
+void Fl::menu_linespacing(int H) {
+  menu_linespacing_ = H;
+}
+
 
 /** Returns whether or not the mouse event is inside the given rectangle.
 
@@ -221,8 +186,8 @@ void Fl::scrollbar_size(int W) {
     To find out, whether the event is inside a child widget of the
     current window, you can use Fl::event_inside(const Fl_Widget *).
 
-    \param[in] xx,yy,ww,hh	bounding box
-    \return			non-zero, if mouse event is inside
+    \param[in] xx,yy,ww,hh      bounding box
+    \return                     non-zero, if mouse event is inside
 */
 int Fl::event_inside(int xx,int yy,int ww,int hh) /*const*/ {
   int mx = e_x - xx;
@@ -254,8 +219,8 @@ int Fl::event_inside(int xx,int yy,int ww,int hh) /*const*/ {
 
     \see Fl::event_inside(int, int, int, int)
 
-    \param[in] o	child widget to be tested
-    \return		non-zero, if mouse event is inside the widget
+    \param[in] o        child widget to be tested
+    \return             non-zero, if mouse event is inside the widget
 */
 int Fl::event_inside(const Fl_Widget *o) /*const*/ {
   int mx = e_x - o->x();
@@ -264,121 +229,36 @@ int Fl::event_inside(const Fl_Widget *o) /*const*/ {
 }
 
 //
+// cross-platform timer support
 //
-// timer support
-//
-
-#ifdef WIN32
-
-// implementation in Fl_win32.cxx
-
-#elif defined(__APPLE__)
-
-// implementation in Fl_cocoa.mm (was Fl_mac.cxx)
-
-#else
-
-//
-// X11 timers
-//
-
-
-////////////////////////////////////////////////////////////////////////
-// Timeouts are stored in a sorted list (*first_timeout), so only the
-// first one needs to be checked to see if any should be called.
-// Allocated, but unused (free) Timeout structs are stored in another
-// linked list (*free_timeout).
-
-struct Timeout {
-  double time;
-  void (*cb)(void*);
-  void* arg;
-  Timeout* next;
-};
-static Timeout* first_timeout, *free_timeout;
-
-#include <sys/time.h>
-
-// I avoid the overhead of getting the current time when we have no
-// timeouts by setting this flag instead of getting the time.
-// In this case calling elapse_timeouts() does nothing, but records
-// the current time, and the next call will actually elapse time.
-static char reset_clock = 1;
-
-static void elapse_timeouts() {
-  static struct timeval prevclock;
-  struct timeval newclock;
-  gettimeofday(&newclock, NULL);
-  double elapsed = newclock.tv_sec - prevclock.tv_sec +
-    (newclock.tv_usec - prevclock.tv_usec)/1000000.0;
-  prevclock.tv_sec = newclock.tv_sec;
-  prevclock.tv_usec = newclock.tv_usec;
-  if (reset_clock) {
-    reset_clock = 0;
-  } else if (elapsed > 0) {
-    for (Timeout* t = first_timeout; t; t = t->next) t->time -= elapsed;
-  }
-}
-
-// Continuously-adjusted error value, this is a number <= 0 for how late
-// we were at calling the last timeout. This appears to make repeat_timeout
-// very accurate even when processing takes a significant portion of the
-// time interval:
-static double missed_timeout_by;
 
 void Fl::add_timeout(double time, Fl_Timeout_Handler cb, void *argp) {
-  elapse_timeouts();
-  repeat_timeout(time, cb, argp);
+  Fl_Timeout::add_timeout(time, cb, argp);
 }
 
 void Fl::repeat_timeout(double time, Fl_Timeout_Handler cb, void *argp) {
-  time += missed_timeout_by; if (time < -.05) time = 0;
-  Timeout* t = free_timeout;
-  if (t) {
-      free_timeout = t->next;
-  } else {
-      t = new Timeout;
-  }
-  t->time = time;
-  t->cb = cb;
-  t->arg = argp;
-  // insert-sort the new timeout:
-  Timeout** p = &first_timeout;
-  while (*p && (*p)->time <= time) p = &((*p)->next);
-  t->next = *p;
-  *p = t;
+  Fl_Timeout::repeat_timeout(time, cb, argp);
 }
 
 /**
-  Returns true if the timeout exists and has not been called yet.
-*/
+ Returns true if the timeout exists and has not been called yet.
+ */
 int Fl::has_timeout(Fl_Timeout_Handler cb, void *argp) {
-  for (Timeout* t = first_timeout; t; t = t->next)
-    if (t->cb == cb && t->arg == argp) return 1;
-  return 0;
+  return Fl_Timeout::has_timeout(cb, argp);
 }
 
 /**
-  Removes a timeout callback. It is harmless to remove a timeout
-  callback that no longer exists.
+ Removes a timeout callback. It is harmless to remove a timeout
+ callback that no longer exists.
 
-  \note	This version removes all matching timeouts, not just the first one.
-	This may change in the future.
-*/
+ \note  This version removes all matching timeouts, not just the first one.
+        This may change in the future.
+ */
 void Fl::remove_timeout(Fl_Timeout_Handler cb, void *argp) {
-  for (Timeout** p = &first_timeout; *p;) {
-    Timeout* t = *p;
-    if (t->cb == cb && (t->arg == argp || !argp)) {
-      *p = t->next;
-      t->next = free_timeout;
-      free_timeout = t;
-    } else {
-      p = &(t->next);
-    }
-  }
+  Fl_Timeout::remove_timeout(cb, argp);
 }
 
-#endif
+
 
 ////////////////////////////////////////////////////////////////
 // Checks are just stored in a list. They are called in the reverse
@@ -417,7 +297,7 @@ static Check *first_check, *next_check, *free_check;
    if (!state_changed) return;
    state_changed = false;
    do_expensive_calculation();
-   widget-&gt;redraw();
+   widget->redraw();
   }
 
   main() {
@@ -470,7 +350,7 @@ int Fl::has_check(Fl_Timeout_Handler cb, void *argp) {
   return 0;
 }
 
-static void run_checks()
+void Fl::run_checks()
 {
   // checks are a bit messy so that add/remove and wait may be called
   // from inside them without causing an infinite loop:
@@ -484,9 +364,6 @@ static void run_checks()
   }
 }
 
-#if !defined(WIN32) && !defined(__APPLE__)
-static char in_idle;
-#endif
 
 ////////////////////////////////////////////////////////////////
 // Clipboard notifications
@@ -498,8 +375,6 @@ struct Clipboard_Notify {
 };
 
 static struct Clipboard_Notify *clip_notify_list = NULL;
-
-extern void fl_clipboard_notify_change(); // in Fl_<platform>.cxx
 
 void Fl::add_clipboard_notify(Fl_Clipboard_Notify_Handler h, void *data) {
   struct Clipboard_Notify *node;
@@ -514,7 +389,7 @@ void Fl::add_clipboard_notify(Fl_Clipboard_Notify_Handler h, void *data) {
 
   clip_notify_list = node;
 
-  fl_clipboard_notify_change();
+  Fl::screen_driver()->clipboard_notify_change();
 }
 
 void Fl::remove_clipboard_notify(Fl_Clipboard_Notify_Handler h) {
@@ -527,7 +402,7 @@ void Fl::remove_clipboard_notify(Fl_Clipboard_Notify_Handler h) {
       *prev = node->next;
       delete node;
 
-      fl_clipboard_notify_change();
+      Fl::screen_driver()->clipboard_notify_change();
 
       return;
     }
@@ -553,90 +428,75 @@ void fl_trigger_clipboard_notify(int source) {
 }
 
 ////////////////////////////////////////////////////////////////
-// wait/run/check/ready:
+// idle/wait/run/check/ready:
 
 void (*Fl::idle)(); // see Fl::add_idle.cxx for the add/remove functions
 
-extern int fl_ready(); // in Fl_<platform>.cxx
-extern int fl_wait(double time); // in Fl_<platform>.cxx
+/*
+  Private, undocumented method to run idle callbacks.
+
+  FLTK guarantees that idle callbacks will never be called recursively,
+  i.e. while an idle callback is being executed.
+
+  This method should (must) be the only way to run idle callbacks to
+  ensure that the `in_idle' flag is respected.
+
+  Idle callbacks are executed whenever Fl::wait() is called and no events
+  are waiting to be serviced.
+
+  If Fl::idle is set (non-NULL) this points at a function that executes
+  the first idle callback and appends it to the end of the list of idle
+  callbacks. For details see static function call_idle() in Fl_add_idle.cxx.
+
+  If it is NULL then no idle callbacks are active and Fl::run_idle() returns
+  immediately.
+
+  Note: idle callbacks can be queued in nested FLTK event loops like
+  ```
+    while (win->shown())
+      Fl::wait();
+  ```
+  if an event (timeout or button click etc.) handler calls Fl::add_idle()
+  or even in Fl::flush() if a draw() method calls Fl::add_idle().
+*/
+void Fl::run_idle() {
+  static char in_idle;
+  if (Fl::idle && !in_idle) {
+    in_idle = 1;
+    Fl::idle();
+    in_idle = 0;
+  }
+}
 
 /**
-  See int Fl::wait()
+ Waits a maximum of \p time_to_wait seconds or until "something happens".
+
+ See Fl::wait() for the description of operations performed when
+ "something happens".
+ \return Always 1 on Windows. Otherwise, it is positive
+ if an event or fd happens before the time elapsed.
+ It is zero if nothing happens.  It is negative if an error
+ occurs (this will happen on X11 if a signal happens).
 */
 double Fl::wait(double time_to_wait) {
-  // delete all widgets that were listed during callbacks
-  do_widget_deletion();
-
-#ifdef WIN32
-
-  return fl_wait(time_to_wait);
-
-#elif defined(__APPLE__)
-
-  run_checks();
-  return fl_mac_flush_and_wait(time_to_wait);
-
-#else
-
-  if (first_timeout) {
-    elapse_timeouts();
-    Timeout *t;
-    while ((t = first_timeout)) {
-      if (t->time > 0) break;
-      // The first timeout in the array has expired.
-      missed_timeout_by = t->time;
-      // We must remove timeout from array before doing the callback:
-      void (*cb)(void*) = t->cb;
-      void *argp = t->arg;
-      first_timeout = t->next;
-      t->next = free_timeout;
-      free_timeout = t;
-      // Now it is safe for the callback to do add_timeout:
-      cb(argp);
-    }
-  } else {
-    reset_clock = 1; // we are not going to check the clock
-  }
-  run_checks();
-//  if (idle && !fl_ready()) {
-  if (idle) {
-    if (!in_idle) {
-      in_idle = 1;
-      idle();
-      in_idle = 0;
-    }
-    // the idle function may turn off idle, we can then wait:
-    if (idle) time_to_wait = 0.0;
-  }
-  if (first_timeout && first_timeout->time < time_to_wait)
-    time_to_wait = first_timeout->time;
-  if (time_to_wait <= 0.0) {
-    // do flush second so that the results of events are visible:
-    int ret = fl_wait(0.0);
-    flush();
-    return ret;
-  } else {
-    // do flush first so that user sees the display:
-    flush();
-    if (idle && !in_idle) // 'idle' may have been set within flush()
-      time_to_wait = 0.0;
-    else if (first_timeout && first_timeout->time < time_to_wait) {
-      // another timeout may have been queued within flush(), see STR #3188
-      time_to_wait = first_timeout->time >= 0.0 ? first_timeout->time : 0.0;
-    }
-    return fl_wait(time_to_wait);
-  }
-#endif
+  return system_driver()->wait(time_to_wait);
 }
 
 #define FOREVER 1e20
 
 /**
-  As long as any windows are displayed this calls Fl::wait()
-  repeatedly.  When all the windows are closed it returns zero
+  Calls Fl::wait()repeatedly as long as any windows are displayed.
+  When all the windows are closed it returns zero
   (supposedly it would return non-zero on any errors, but FLTK calls
   exit directly for these).  A normal program will end main()
   with return Fl::run();.
+
+  \note Fl::run() and Fl::wait() (but not Fl::wait(double)) both
+  return when all FLTK windows are closed. Therefore, a MacOS FLTK
+  application possessing Fl_Sys_Menu_Bar items able to create new windows
+  and expected to keep running without any open window cannot use
+  these two functions. One solution is to run the event loop as follows:
+  \code    while (!Fl::program_should_quit()) Fl::wait(1e20); \endcode
 */
 int Fl::run() {
   while (Fl_X::first) wait(FOREVER);
@@ -656,16 +516,8 @@ int Fl::run() {
   any Fl::add_fd() callbacks.  It then handles the events and
   calls the callbacks and then returns.
 
-  The return value of Fl::wait() is non-zero if there are any
+  \return non-zero if there are any
   visible windows - this may change in future versions of FLTK.
-
-  Fl::wait(time) waits a maximum of \e time seconds.
-  <i>It can return much sooner if something happens.</i>
-
-  The return value is positive if an event or fd happens before the
-  time elapsed.  It is zero if nothing happens (on Win32 this will only
-  return zero if \e time is zero).  It is negative if an error
-  occurs (this will happen on UNIX if a signal happens).
 */
 int Fl::wait() {
   if (!Fl_X::first) return 0;
@@ -712,17 +564,12 @@ int Fl::check() {
   }
   \endcode
 */
-int Fl::ready() {
-#if ! defined( WIN32 )  &&  ! defined(__APPLE__)
-  if (first_timeout) {
-    elapse_timeouts();
-    if (first_timeout->time <= 0) return 1;
-  } else {
-    reset_clock = 1;
-  }
-#endif
-  return fl_ready();
+int Fl::ready()
+{
+  return system_driver()->ready();
 }
+
+int Fl::program_should_quit_ = 0;
 
 ////////////////////////////////////////////////////////////////
 // Window list management:
@@ -733,8 +580,8 @@ Fl_X* Fl_X::first;
 
 Fl_Window* fl_find(Window xid) {
   Fl_X *window;
-  for (Fl_X **pp = &Fl_X::first; (window = *pp); pp = &window->next)
-   if (window->xid == xid) {
+  for (Fl_X **pp = &Fl_X::first; (window = *pp); pp = &window->next) {
+    if (window->xid == xid) {
       if (window != Fl_X::first && !Fl::modal()) {
         // make this window be first to speed up searches
         // this is not done if modal is true to avoid messing up modal stack
@@ -744,6 +591,7 @@ Fl_Window* fl_find(Window xid) {
       }
       return window->w;
     }
+  }
   return 0;
 }
 
@@ -760,10 +608,15 @@ Fl_Window* Fl::first_window() {
 /**
   Returns the next top-level window in the list of shown() windows.
   You can use this call to iterate through all the windows that are shown().
-  \param[in] window	must be shown and not NULL
+  \param[in] window must be shown and not NULL
 */
 Fl_Window* Fl::next_window(const Fl_Window* window) {
-  Fl_X* i = Fl_X::i(window)->next;
+  Fl_X* i = window ? Fl_X::i(window) : 0;
+  if (!i) {
+    Fl::error("Fl::next_window() failed: window (%p) not shown.", window);
+    return 0;
+  }
+  i = i->next;
   return i ? i->w : 0;
 }
 
@@ -802,24 +655,21 @@ void Fl::flush() {
   if (damage()) {
     damage_ = 0;
     for (Fl_X* i = Fl_X::first; i; i = i->next) {
-      if (i->wait_for_expose) {damage_ = 1; continue;}
       Fl_Window* wi = i->w;
+      if (Fl_Window_Driver::driver(wi)->wait_for_expose_value) {damage_ = 1; continue;}
       if (!wi->visible_r()) continue;
-      if (wi->damage()) {i->flush(); wi->clear_damage();}
+      if (wi->damage()) {
+        Fl_Window_Driver::driver(wi)->flush();
+        wi->clear_damage();
+      }
       // destroy damage regions for windows that don't use them:
-      if (i->region) {XDestroyRegion(i->region); i->region = 0;}
+      if (i->region) {
+        fl_graphics_driver->XDestroyRegion(i->region);
+        i->region = 0;
+      }
     }
   }
-#if defined(USE_X11)
-  if (fl_display) XFlush(fl_display);
-#elif defined(WIN32)
-  GdiFlush();
-#elif defined (__APPLE_QUARTZ__)
-  if (fl_gc)
-    CGContextFlush(fl_gc);
-#else
-# error unsupported platform
-#endif
+  screen_driver()->flush();
 }
 
 
@@ -848,8 +698,7 @@ static handler_link *handlers = 0;
   - \ref FL_SCREEN_CONFIGURATION_CHANGED events.
     Under X11, this event requires the libXrandr.so shared library to be
     loadable at run-time and the X server to implement the RandR extension.
-  - \ref FL_FULLSCREEN events sent to a window that enters or leaves
-    fullscreen mode.
+  - \ref FL_ZOOM_EVENT events.
   - System events that FLTK does not recognize.  See fl_xevent.
   - \e Some other events when the widget FLTK selected returns
     zero from its handle() method.  Exactly which ones may change
@@ -875,7 +724,9 @@ void Fl::remove_handler(Fl_Event_Handler ha) {
   handler_link *l, *p;
 
   // Search for the handler in the list...
-  for (l = handlers, p = 0; l && l->handle != ha; p = l, l = l->next) {/*empty*/}
+  for (l = handlers, p = 0; l && l->handle != ha; p = l, l = l->next) {
+    /* empty */
+  }
 
   if (l) {
     // Found it, so remove it from the list...
@@ -951,7 +802,9 @@ void Fl::remove_system_handler(Fl_System_Handler ha) {
   system_handler_link *l, *p;
 
   // Search for the handler in the list...
-  for (l = sys_handlers, p = 0; l && l->handle != ha; p = l, l = l->next);
+  for (l = sys_handlers, p = 0; l && l->handle != ha; p = l, l = l->next) {
+    /* empty */
+  }
 
   if (l) {
     // Found it, so remove it from the list...
@@ -986,11 +839,27 @@ Fl_Widget* fl_oldfocus; // kludge for Fl_Group...
     \e test if the widget wants the focus (by it returning non-zero from
     handle()).
 
+    Widgets can set the NEEDS_KEYBOARD flag to indicate that a keyboard is
+    essential for the widget to function. Touchscreen devices will be sent a
+    request to show an on-screen keyboard if no hardware keyboard is
+    connected.
+
     \see Fl_Widget::take_focus()
 */
-void Fl::focus(Fl_Widget *o) {
-  if (o && !o->visible_focus()) return;
+void Fl::focus(Fl_Widget *o)
+{
   if (grab()) return; // don't do anything while grab is on
+
+  // request an on-screen keyboard on touch screen devices if needed
+  Fl_Widget *prevFocus = Fl::focus();
+  char hideKeyboard = ( prevFocus && (prevFocus->flags()&Fl_Widget::NEEDS_KEYBOARD) );
+  char showKeyboard = (o && (o->flags()&Fl_Widget::NEEDS_KEYBOARD));
+  if (hideKeyboard && !showKeyboard)
+    Fl::screen_driver()->release_keyboard();
+  if (showKeyboard && !hideKeyboard)
+    Fl::screen_driver()->request_keyboard();
+
+  if (o && !o->visible_focus()) return;
   Fl_Widget *p = focus_;
   if (o != p) {
     Fl::compose_reset();
@@ -1002,21 +871,10 @@ void Fl::focus(Fl_Widget *o) {
       if (!w1) w1 = o->window();
       while (w1) { win=w1; w1=win->window(); }
       if (win) {
-#ifdef __APPLE__
-	if (fl_xfocus != win) {
-	  Fl_X *x = Fl_X::i(win);
-	  if (x) x->set_key_window();
-	}
-#elif defined(USE_X11)
-	if (fl_xfocus != win) {
-	  Fl_X *x = Fl_X::i(win);
-	  if (!Fl_X::ewmh_supported())
-	    win->show(); // Old WMs, XMapRaised
-	  else if (x) // New WMs use the NETWM attribute:
-	    Fl_X::activate_window(x->xid);
-	}
-#endif
-	fl_xfocus = win;
+        if (fl_xfocus != win) {
+          Fl_Window_Driver::driver(win)->take_focus();
+          fl_xfocus = win;
+        }
       }
     }
     // take focus from the old focused window
@@ -1120,16 +978,16 @@ void fl_fix_focus() {
       if (Fl::modal()) w = Fl::modal();
       if (!w->contains(Fl::belowmouse())) {
         int old_event = Fl::e_number;
-	w->handle(Fl::e_number = FL_ENTER);
-	Fl::e_number = old_event;
-	if (!w->contains(Fl::belowmouse())) Fl::belowmouse(w);
+        w->handle(Fl::e_number = FL_ENTER);
+        Fl::e_number = old_event;
+        if (!w->contains(Fl::belowmouse())) Fl::belowmouse(w);
       } else {
-	// send a FL_MOVE event so the enter/leave state is up to date
-	Fl::e_x = Fl::e_x_root-fl_xmousewin->x();
-	Fl::e_y = Fl::e_y_root-fl_xmousewin->y();
+        // send a FL_MOVE event so the enter/leave state is up to date
+        Fl::e_x = Fl::e_x_root - fl_xmousewin->x();
+        Fl::e_y = Fl::e_y_root - fl_xmousewin->y();
         int old_event = Fl::e_number;
-	w->handle(Fl::e_number = FL_MOVE);
-	Fl::e_number = old_event;
+        w->handle(Fl::e_number = FL_MOVE);
+        Fl::e_number = old_event;
       }
     } else {
       Fl::belowmouse(0);
@@ -1138,9 +996,6 @@ void fl_fix_focus() {
   }
 }
 
-#if !(defined(WIN32) || defined(__APPLE__))
-extern Fl_Widget *fl_selection_requestor; // from Fl_x.cxx
-#endif
 
 // This function is called by ~Fl_Widget() and by Fl_Widget::deactivate()
 // and by Fl_Widget::hide().  It indicates that the widget does not want
@@ -1156,9 +1011,7 @@ void fl_throw_focus(Fl_Widget *o) {
 #endif // DEBUG
 
   if (o->contains(Fl::pushed())) Fl::pushed_ = 0;
-#if !(defined(WIN32) || defined(__APPLE__))
   if (o->contains(fl_selection_requestor)) fl_selection_requestor = 0;
-#endif
   if (o->contains(Fl::belowmouse())) Fl::belowmouse_ = 0;
   if (o->contains(Fl::focus())) Fl::focus_ = 0;
   if (o == fl_xfocus) fl_xfocus = 0;
@@ -1213,8 +1066,12 @@ static int send_event(int event, Fl_Widget* to, Fl_Window* window) {
   } else {
     dx = dy = 0;
   }
-  for (const Fl_Widget* w = to; w; w = w->parent())
-    if (w->type()>=FL_WINDOW) {dx -= w->x(); dy -= w->y();}
+  for (const Fl_Widget* w = to; w; w = w->parent()) {
+    if (w->type() >= FL_WINDOW) {
+      dx -= w->x();
+      dy -= w->y();
+    }
+  }
   int save_x = Fl::e_x; Fl::e_x += dx;
   int save_y = Fl::e_y; Fl::e_y += dy;
   int ret = to->handle(Fl::e_number = event);
@@ -1379,29 +1236,15 @@ int Fl::handle_(int e, Fl_Window* window)
     if (grab()) wi = grab();
     { int ret;
       Fl_Widget* pbm = belowmouse();
-#ifdef __APPLE__
-      if (fl_mac_os_version < 100500) {
-        // before 10.5, mouse moved events aren't sent to borderless windows such as tooltips
-	Fl_Window *tooltip = Fl_Tooltip::current_window();
-	int inside = 0;
-	if (tooltip && tooltip->shown() ) { // check if a tooltip window is currently opened
-	  // check if mouse is inside the tooltip
-	  inside = (Fl::event_x_root() >= tooltip->x() && Fl::event_x_root() < tooltip->x() + tooltip->w() &&
-	  Fl::event_y_root() >= tooltip->y() && Fl::event_y_root() < tooltip->y() + tooltip->h() );
-	}
-	// if inside, send event to tooltip window instead of background window
-	if (inside) ret = send_event(e, tooltip, window);
-	else ret = (wi && send_event(e, wi, window));
-      } else
-#endif
       ret = (wi && send_event(e, wi, window));
-   if (pbm != belowmouse()) {
+      if (pbm != belowmouse()) {
 #ifdef DEBUG
-      printf("Fl::handle(e=%d, window=%p);\n", e, window);
+        printf("Fl::handle(e=%d, window=%p);\n", e, window);
 #endif // DEBUG
-      Fl_Tooltip::enter(belowmouse());
+        Fl_Tooltip::enter(belowmouse());
+      }
+      return ret;
     }
-    return ret;}
 
   case FL_RELEASE: {
 //    printf("FL_RELEASE: window=%p, pushed() = %p, grab() = %p, modal() = %p\n",
@@ -1420,6 +1263,7 @@ int Fl::handle_(int e, Fl_Window* window)
 
   case FL_UNFOCUS:
     window = 0;
+      // FALLTHROUGH
   case FL_FOCUS:
     fl_xfocus = window;
     fl_fix_focus();
@@ -1435,8 +1279,10 @@ int Fl::handle_(int e, Fl_Window* window)
     // make sure that the widget still exists before sending
     // a KEYUP there. I believe that the current solution is
     // "close enough".
-    for (wi = grab() ? grab() : focus(); wi; wi = wi->parent())
-      if (send_event(FL_KEYUP, wi, window)) return 1;
+    for (wi = grab() ? grab() : focus(); wi; wi = wi->parent()) {
+      if (send_event(FL_KEYUP, wi, window))
+        return 1;
+    }
     return 0;
 
   case FL_KEYBOARD:
@@ -1449,17 +1295,20 @@ int Fl::handle_(int e, Fl_Window* window)
     fl_xfocus = window; // this should not happen!  But maybe it does:
 
     // Try it as keystroke, sending it to focus and all parents:
-    for (wi = grab() ? grab() : focus(); wi; wi = wi->parent())
+    for (wi = grab() ? grab() : focus(); wi; wi = wi->parent()) {
       if (send_event(FL_KEYBOARD, wi, window)) return 1;
+    }
 
     // recursive call to try shortcut:
     if (handle(FL_SHORTCUT, window)) return 1;
 
     // and then try a shortcut with the case of the text swapped, by
     // changing the text and falling through to FL_SHORTCUT case:
-    {unsigned char* c = (unsigned char*)event_text(); // cast away const
-    if (!isalpha(*c)) return 0;
-    *c = isupper(*c) ? tolower(*c) : toupper(*c);}
+    {
+      unsigned char* c = (unsigned char*)event_text(); // cast away const
+      if (!isalpha(*c)) return 0;
+      *c = isupper(*c) ? tolower(*c) : toupper(*c);
+    }
     e_number = e = FL_SHORTCUT;
 
   case FL_SHORTCUT:
@@ -1524,8 +1373,8 @@ int Fl::handle_(int e, Fl_Window* window)
       send_event(FL_MOUSEWHEEL, modal(), window);
       return 1;
     }
-    // Finally try sending it to the window, the event occured in
-    if (send_event(FL_MOUSEWHEEL, window, window)) return 1;
+    // Finally try sending it to the window, the event occurred in
+    if (send_event(FL_MOUSEWHEEL, window, window->top_window())) return 1;
   default:
     break;
   }
@@ -1537,199 +1386,6 @@ int Fl::handle_(int e, Fl_Window* window)
   return send_handlers(e);
 }
 
-////////////////////////////////////////////////////////////////
-// hide() destroys the X window, it does not do unmap!
-
-#if defined(WIN32)
-extern void fl_clipboard_notify_retarget(HWND wnd);
-extern void fl_update_clipboard(void);
-#elif USE_XFT
-extern void fl_destroy_xft_draw(Window);
-#endif
-
-void Fl_Window::hide() {
-#ifdef WIN32
-  // STR#3079: if there remains a window and a non-modal window, and the window is deleted,
-  // the app remains running without any apparent window.
-  // Bug mechanism: hiding an owner window unmaps the owned (non-modal) window(s)
-  // but does not delete it(them) in FLTK.
-  // Fix for it: 
-  // when hiding a window, build list of windows it owns, and do hide/show on them.
-  int count = 0;
-  Fl_Window *win, **doit = NULL;
-  for (win = Fl::first_window(); win && i; win = Fl::next_window(win)) {
-    if (win->non_modal() && GetWindow(fl_xid(win), GW_OWNER) == i->xid) {
-      count++;
-    }
-  }
-  if (count) {
-    doit = new Fl_Window*[count];
-    count = 0;
-    for (win = Fl::first_window(); win && i; win = Fl::next_window(win)) {
-      if (win->non_modal() && GetWindow(fl_xid(win), GW_OWNER) == i->xid) {
-	doit[count++] = win;
-      }
-    }
-  }
-#endif
-  clear_visible();
-
-  if (!shown()) return;
-
-  // remove from the list of windows:
-  Fl_X* ip = i;
-  Fl_X** pp = &Fl_X::first;
-  for (; *pp != ip; pp = &(*pp)->next) if (!*pp) return;
-  *pp = ip->next;
-#ifdef __APPLE__
-  // MacOS X manages a single pointer per application. Make sure that hiding
-  // a toplevel window will not leave us with some random pointer shape, or
-  // worst case, an invisible pointer
-  if (!parent()) cursor(FL_CURSOR_DEFAULT);
-#endif
-  i = 0;
-
-  // recursively remove any subwindows:
-  for (Fl_X *wi = Fl_X::first; wi;) {
-    Fl_Window* W = wi->w;
-    if (W->window() == this) {
-      W->hide();
-      W->set_visible();
-      wi = Fl_X::first;
-    } else wi = wi->next;
-  }
-
-  if (this == Fl::modal_) { // we are closing the modal window, find next one:
-    Fl_Window* W;
-    for (W = Fl::first_window(); W; W = Fl::next_window(W))
-      if (W->modal()) break;
-    Fl::modal_ = W;
-  }
-
-  // Make sure no events are sent to this window:
-  fl_throw_focus(this);
-  handle(FL_HIDE);
-
-#if defined(WIN32)
-  // make sure any custom icons get freed
-  icons(NULL, 0);
-  // this little trick keeps the current clipboard alive, even if we are about
-  // to destroy the window that owns the selection.
-  if (GetClipboardOwner()==ip->xid)
-    fl_update_clipboard();
-  // Make sure we unlink this window from the clipboard chain
-  fl_clipboard_notify_retarget(ip->xid);
-  // Send a message to myself so that I'll get out of the event loop...
-  PostMessage(ip->xid, WM_APP, 0, 0);
-  if (ip->private_dc) fl_release_dc(ip->xid, ip->private_dc);
-    if (ip->xid == fl_window && fl_gc) {
-      fl_release_dc(fl_window, fl_gc);
-      fl_window = (HWND)-1;
-      fl_gc = 0;
-# ifdef FLTK_USE_CAIRO
-      if (Fl::cairo_autolink_context()) Fl::cairo_make_current((Fl_Window*) 0);
-# endif
-    }
-#elif defined(__APPLE_QUARTZ__)
-  Fl_X::q_release_context(ip);
-  if ( ip->xid == fl_window )
-    fl_window = 0;
-#endif
-
-  if (ip->region) XDestroyRegion(ip->region);
-
-#if defined(USE_X11)
-# if USE_XFT
-  fl_destroy_xft_draw(ip->xid);
-# endif
-  // this test makes sure ip->xid has not been destroyed already
-  if (ip->xid) XDestroyWindow(fl_display, ip->xid);
-#elif defined(WIN32)
-  // this little trickery seems to avoid the popup window stacking problem
-  HWND p = GetForegroundWindow();
-  if (p==GetParent(ip->xid)) {
-    ShowWindow(ip->xid, SW_HIDE);
-    ShowWindow(p, SW_SHOWNA);
-  }
-  XDestroyWindow(fl_display, ip->xid);
-  // end of fix for STR#3079
-  if (count) {
-    int ii;
-    for (ii = 0; ii < count; ii++)  doit[ii]->hide();
-    for (ii = 0; ii < count; ii++)  {
-      if (ii != 0) doit[0]->show(); // Fix for STR#3165
-      doit[ii]->show();
-    }
-    delete[] doit;
-  }
-#elif defined(__APPLE_QUARTZ__)
-  ip->destroy();
-#else
-# error unsupported platform
-#endif
-
-#ifdef WIN32
-  // Try to stop the annoying "raise another program" behavior
-  if (non_modal() && Fl::first_window() && Fl::first_window()->shown())
-    Fl::first_window()->show();
-#endif
-  delete ip;
-}
-
-
-// FL_SHOW and FL_HIDE are called whenever the visibility of this widget
-// or any parent changes.  We must correctly map/unmap the system's window.
-
-// For top-level windows it is assumed the window has already been
-// mapped or unmapped!!!  This is because this should only happen when
-// Fl_Window::show() or Fl_Window::hide() is called, or in response to
-// iconize/deiconize events from the system.
-
-int Fl_Window::handle(int ev)
-{
-  if (parent()) {
-    switch (ev) {
-    case FL_SHOW:
-      if (!shown()) show();
-      else {
-#if defined(USE_X11) || defined(WIN32)
-        XMapWindow(fl_display, fl_xid(this)); // extra map calls are harmless
-#elif defined(__APPLE_QUARTZ__)
-	i->map();
-#else
-# error unsupported platform
-#endif // __APPLE__
-      }
-      break;
-    case FL_HIDE:
-      if (shown()) {
-	// Find what really turned invisible, if it was a parent window
-	// we do nothing.  We need to avoid unnecessary unmap calls
-	// because they cause the display to blink when the parent is
-	// remapped.  However if this or any intermediate non-window
-	// widget has really had hide() called directly on it, we must
-	// unmap because when the parent window is remapped we don't
-	// want to reappear.
-	if (visible()) {
-	 Fl_Widget* p = parent(); for (;p->visible();p = p->parent()) {}
-	 if (p->type() >= FL_WINDOW) break; // don't do the unmap
-	}
-#if defined(USE_X11) || defined(WIN32)
-	XUnmapWindow(fl_display, fl_xid(this));
-#elif defined(__APPLE_QUARTZ__)
-	i->unmap();
-#else
-# error platform unsupported
-#endif
-      }
-      break;
-    }
-//  } else if (ev == FL_FOCUS || ev == FL_UNFOCUS) {
-//    Fl_Tooltip::exit(Fl_Tooltip::current());
-  }
-
-  return Fl_Group::handle(ev);
-}
 
 ////////////////////////////////////////////////////////////////
 // Back compatibility cut & paste functions for fltk 1.1 only:
@@ -1765,23 +1421,15 @@ void Fl::selection(Fl_Widget &owner, const char* text, int len) {
   \see Fl::paste(Fl_Widget &receiver, int clipboard, const char* type)
 */
 void Fl::paste(Fl_Widget &receiver) {
-  Fl::paste(receiver, 0);
+  Fl::screen_driver()->paste(receiver, 0, Fl::clipboard_plain_text);
 }
-#if FLTK_ABI_VERSION >= 10303
-#elif !defined(FL_DOXYGEN)
-void Fl::paste(Fl_Widget &receiver, int source)
+
+void Fl::paste(Fl_Widget &receiver, int clipboard, const char *type)
 {
-  Fl::paste(receiver, source, Fl::clipboard_plain_text);
+  Fl::screen_driver()->paste(receiver, clipboard, type);
 }
 
-void Fl::copy(const char* stuff, int len, int destination) {
-  Fl::copy(stuff, len, destination, Fl::clipboard_plain_text);
-}
-
-#endif
 ////////////////////////////////////////////////////////////////
-
-#include <FL/fl_draw.H>
 
 void Fl_Widget::redraw() {
   damage(FL_DAMAGE_ALL);
@@ -1808,7 +1456,7 @@ void Fl_Widget::redraw_label() {
 
       // FIXME:
       // This assumes that measure() returns the correct outline, which it does
-      // not in all possible cases of alignment combinedwith image and symbols.
+      // not in all possible cases of alignment combined with image and symbols.
       switch (align() & 0x0f) {
         case FL_ALIGN_TOP_LEFT:
           window()->damage(FL_DAMAGE_EXPOSE, x(), y()-H, W, H); break;
@@ -1852,7 +1500,10 @@ void Fl_Widget::damage(uchar fl) {
     // damage entire window by deleting the region:
     Fl_X* i = Fl_X::i((Fl_Window*)this);
     if (!i) return; // window not mapped, so ignore it
-    if (i->region) {XDestroyRegion(i->region); i->region = 0;}
+    if (i->region) {
+      fl_graphics_driver->XDestroyRegion(i->region);
+      i->region = 0;
+    }
     damage_ |= fl;
     Fl::damage(FL_DAMAGE_CHILD);
   }
@@ -1886,49 +1537,17 @@ void Fl_Widget::damage(uchar fl, int X, int Y, int W, int H) {
   if (wi->damage()) {
     // if we already have damage we must merge with existing region:
     if (i->region) {
-#if defined(USE_X11)
-      XRectangle R;
-      R.x = X; R.y = Y; R.width = W; R.height = H;
-      XUnionRectWithRegion(&R, i->region, i->region);
-#elif defined(WIN32)
-      Fl_Region R = XRectangleRegion(X, Y, W, H);
-      CombineRgn(i->region, i->region, R, RGN_OR);
-      XDestroyRegion(R);
-#elif defined(__APPLE_QUARTZ__)
-      CGRect arg = fl_cgrectmake_cocoa(X, Y, W, H);
-      int j; // don't add a rectangle totally inside the Fl_Region
-      for(j = 0; j < i->region->count; j++) {
-        if(CGRectContainsRect(i->region->rects[j], arg)) break;
-      }
-      if( j >= i->region->count) {
-        i->region->rects = (CGRect*)realloc(i->region->rects, (++(i->region->count)) * sizeof(CGRect));
-        i->region->rects[i->region->count - 1] = arg;
-      }
-#else
-# error unsupported platform
-#endif
+      fl_graphics_driver->add_rectangle_to_region(i->region, X, Y, W, H);
     }
     wi->damage_ |= fl;
   } else {
     // create a new region:
-    if (i->region) XDestroyRegion(i->region);
-    i->region = XRectangleRegion(X,Y,W,H);
+    if (i->region) fl_graphics_driver->XDestroyRegion(i->region);
+    i->region = fl_graphics_driver->XRectangleRegion(X,Y,W,H);
     wi->damage_ = fl;
   }
   Fl::damage(FL_DAMAGE_CHILD);
 }
-void Fl_Window::flush() {
-  if (!shown()) return;
-  make_current();
-//if (damage() == FL_DAMAGE_EXPOSE && can_boxcheat(box())) fl_boxcheat = this;
-  fl_clip_region(i->region); i->region = 0;
-  draw();
-}
-
-#ifdef WIN32
-#  include "Fl_win32.cxx"
-//#elif defined(__APPLE__)
-#endif
 
 
 //
@@ -1937,8 +1556,8 @@ void Fl_Window::flush() {
 //
 
 
-static int		num_dwidgets = 0, alloc_dwidgets = 0;
-static Fl_Widget	**dwidgets = 0;
+static int        num_dwidgets = 0, alloc_dwidgets = 0;
+static Fl_Widget  **dwidgets = 0;
 
 
 /**
@@ -1981,7 +1600,7 @@ void Fl::delete_widget(Fl_Widget *wi) {
   }
 
   if (num_dwidgets >= alloc_dwidgets) {
-    Fl_Widget	**temp;
+    Fl_Widget **temp;
 
     temp = new Fl_Widget *[alloc_dwidgets + 10];
     if (alloc_dwidgets) {
@@ -2042,19 +1661,19 @@ static int max_widget_watch = 0;
 
   Example for a button that is clicked (from its handle() method):
   \code
-    Fl_Widget *wp = this;		// save 'this' in a pointer variable
-    Fl::watch_widget_pointer(wp);	// add the pointer to the watch list
-    set_changed();			// set the changed flag
-    do_callback();			// call the callback
-    if (!wp) {				// the widget has been deleted
+    Fl_Widget *wp = this;           // save 'this' in a pointer variable
+    Fl::watch_widget_pointer(wp);   // add the pointer to the watch list
+    set_changed();                  // set the changed flag
+    do_callback();                  // call the callback
+    if (!wp) {                      // the widget has been deleted
 
       // DO NOT ACCESS THE DELETED WIDGET !
 
-    } else {				// the widget still exists
-      clear_changed();			// reset the changed flag
+    } else {                        // the widget still exists
+      clear_changed();              // reset the changed flag
     }
 
-    Fl::release_widget_pointer(wp);	// remove the pointer from the watch list
+    Fl::release_widget_pointer(wp); // remove the pointer from the watch list
    \endcode
 
    This works, because all widgets call Fl::clear_widget_pointer() in their
@@ -2110,8 +1729,8 @@ void Fl::release_widget_pointer(Fl_Widget *&w)
     }
 #ifdef DEBUG_WATCH
     else { // found widget pointer
-      printf ("release_widget_pointer: (%d/%d) %8p => %8p\n",
-	i+1,num_widget_watch,wp,*wp);
+      printf("release_widget_pointer: (%d/%d) %8p => %8p\n",
+             i+1, num_widget_watch, wp, *wp);
     }
 #endif //DEBUG_WATCH
   }
@@ -2188,7 +1807,7 @@ bool Fl::option(Fl_Option opt)
   if (!options_read_) {
     int tmp;
     { // first, read the system wide preferences
-      Fl_Preferences prefs(Fl_Preferences::SYSTEM, "fltk.org", "fltk");
+      Fl_Preferences prefs(Fl_Preferences::CORE_SYSTEM, "fltk.org", "fltk");
       Fl_Preferences opt_prefs(prefs, "options");
       opt_prefs.get("ArrowFocus", tmp, 0);                      // default: off
       options_[OPTION_ARROW_FOCUS] = tmp;
@@ -2202,12 +1821,17 @@ bool Fl::option(Fl_Option opt)
       options_[OPTION_DND_TEXT] = tmp;
       opt_prefs.get("ShowTooltips", tmp, 1);                    // default: on
       options_[OPTION_SHOW_TOOLTIPS] = tmp;
-      opt_prefs.get("FNFCUsesGTK", tmp, 1);                    // default: on
+      opt_prefs.get("FNFCUsesGTK", tmp, 1);                     // default: on
       options_[OPTION_FNFC_USES_GTK] = tmp;
+      opt_prefs.get("PrintUsesGTK", tmp, 1);                     // default: on
+      options_[OPTION_PRINTER_USES_GTK] = tmp;
+
+      opt_prefs.get("ShowZoomFactor", tmp, 1);                  // default: on
+      options_[OPTION_SHOW_SCALING] = tmp;
     }
     { // next, check the user preferences
       // override system options only, if the option is set ( >= 0 )
-      Fl_Preferences prefs(Fl_Preferences::USER, "fltk.org", "fltk");
+      Fl_Preferences prefs(Fl_Preferences::CORE_USER, "fltk.org", "fltk");
       Fl_Preferences opt_prefs(prefs, "options");
       opt_prefs.get("ArrowFocus", tmp, -1);
       if (tmp >= 0) options_[OPTION_ARROW_FOCUS] = tmp;
@@ -2223,8 +1847,13 @@ bool Fl::option(Fl_Option opt)
       if (tmp >= 0) options_[OPTION_SHOW_TOOLTIPS] = tmp;
       opt_prefs.get("FNFCUsesGTK", tmp, -1);
       if (tmp >= 0) options_[OPTION_FNFC_USES_GTK] = tmp;
+      opt_prefs.get("PrintUsesGTK", tmp, -1);
+      if (tmp >= 0) options_[OPTION_PRINTER_USES_GTK] = tmp;
+
+      opt_prefs.get("ShowZoomFactor", tmp, -1);
+      if (tmp >= 0) options_[OPTION_SHOW_SCALING] = tmp;
     }
-    { // now, if the developer has registered this app, we could as for per-application preferences
+    { // now, if the developer has registered this app, we could ask for per-application preferences
     }
     options_read_ = 1;
   }
@@ -2281,6 +1910,197 @@ Fl_Widget_Tracker::~Fl_Widget_Tracker()
 }
 
 int Fl::use_high_res_GL_ = 0;
-//
-// End of "$Id$".
-//
+
+int Fl::draw_GL_text_with_textures_ = 1;
+
+int Fl::dnd()
+{
+  return Fl::screen_driver()->dnd();
+}
+
+int Fl::event_key(int k) {
+  return system_driver()->event_key(k);
+}
+
+int Fl::get_key(int k) {
+  return system_driver()->get_key(k);
+}
+
+void Fl::get_mouse(int &x, int &y) {
+  Fl::screen_driver()->get_mouse(x, y);
+}
+
+const char * fl_filename_name(const char *name) {
+  return Fl::system_driver()->filename_name(name);
+}
+
+void Fl::copy(const char *stuff, int len, int clipboard, const char *type) {
+  Fl::screen_driver()->copy(stuff, len, clipboard, type);
+}
+
+int Fl::clipboard_contains(const char *type)
+{
+  return Fl::screen_driver()->clipboard_contains(type);
+}
+
+
+/**
+ Adds file descriptor fd to listen to.
+
+ When the fd becomes ready for reading Fl::wait() will call the
+ callback and then return. The callback is passed the fd and the
+ arbitrary void* argument.
+
+ This version takes a when bitfield, with the bits
+ FL_READ, FL_WRITE, and FL_EXCEPT defined,
+ to indicate when the callback should be done.
+
+ There can only be one callback of each type for a file descriptor.
+ Fl::remove_fd() gets rid of <I>all</I> the callbacks for a given
+ file descriptor.
+
+ Under UNIX/Linux/MacOS <I>any</I> file descriptor can be monitored (files,
+ devices, pipes, sockets, etc.). Due to limitations in Microsoft Windows,
+ Windows applications can only monitor sockets.
+ */
+void Fl::add_fd(int fd, int when, Fl_FD_Handler cb, void *d)
+{
+  Fl::system_driver()->add_fd(fd, when, cb, d);
+}
+
+/** Adds file descriptor fd to listen to.
+ See Fl::add_fd(int fd, int when, Fl_FD_Handler cb, void* = 0)
+ for details */
+void Fl::add_fd(int fd, Fl_FD_Handler cb, void *d)
+{
+  Fl::system_driver()->add_fd(fd, cb, d);
+}
+
+void Fl::remove_fd(int fd, int when)
+{
+  Fl::system_driver()->remove_fd(fd, when);
+}
+
+void Fl::remove_fd(int fd)
+{
+  Fl::system_driver()->remove_fd(fd);
+}
+
+/**
+ Enables the system input methods facilities. This is the default.
+ \see disable_im()
+ */
+void Fl::enable_im()
+{
+  Fl::screen_driver()->enable_im();
+}
+
+/**
+ Disables the system input methods facilities.
+ \see enable_im()
+ */
+void Fl::disable_im()
+{
+  Fl::screen_driver()->disable_im();
+}
+
+/**
+ Opens the display.
+ Automatically called by the library when the first window is show()'n.
+ Does nothing if the display is already open.
+ */
+void fl_open_display()
+{
+  Fl::screen_driver()->open_display();
+}
+
+void fl_close_display()
+{
+  Fl::screen_driver()->close_display();
+}
+
+FL_EXPORT Window fl_xid_(const Fl_Window *w) {
+  Fl_X *temp = Fl_X::i(w);
+  return temp ? temp->xid : 0;
+}
+/** \addtogroup group_macosx
+ \{ */
+
+/** Register a function called for each file dropped onto an application icon.
+
+ This function is effective only on the Mac OS X platform.
+ \c cb will be called with a single Unix-style file name and path.
+ If multiple files were dropped, \c cb will be called multiple times.
+
+ This function should be called before \c fl_open_display() is called,
+ either directly or indirectly (this happens at the first \c show() of a window),
+ to be effective for files dropped on the application icon at launch time.
+ It can also be called at any point to change the function used to open dropped files.
+ A call with a NULL argument, after a previous call, makes the app ignore files dropped later.
+ */
+void fl_open_callback(void (*cb)(const char *))
+{
+  Fl::system_driver()->open_callback(cb);
+}
+/** @} */
+
+Fl_Font Fl::set_fonts(const char* xstarname) {
+  return Fl_Graphics_Driver::default_driver().set_fonts(xstarname);
+}
+
+const char* Fl::get_font_name(Fl_Font fnum, int* ap) {
+  return Fl_Graphics_Driver::default_driver().get_font_name(fnum, ap);
+}
+
+int Fl::get_font_sizes(Fl_Font fnum, int*& sizep) {
+  return Fl_Graphics_Driver::default_driver().get_font_sizes(fnum, sizep);
+}
+
+/** Current value of the GUI scaling factor for screen number \p n */
+float Fl::screen_scale(int n) {
+  if (!Fl::screen_scaling_supported() || n < 0 || n >= Fl::screen_count()) return 1.;
+  return Fl::screen_driver()->scale(n);
+}
+
+/** Sets the value of the GUI scaling factor for screen number \p n.
+ Also sets the scale factor value of all windows mapped to screen number \p n, if any.
+ */
+void Fl::screen_scale(int n, float factor) {
+  if (!Fl::screen_scaling_supported() || n < 0 || n >= Fl::screen_count()) return;
+  Fl::screen_driver()->rescale_all_windows_from_screen(n, factor);
+}
+
+/**
+  See if scaling factors are supported by this platform.
+ \return 0 if scaling factors are not supported by this platform,
+ 1 if a single scaling factor value is shared by all screens, 2 if each screen
+ can have its own scaling factor value.
+  \see Fl::screen_scale(int)
+ */
+int Fl::screen_scaling_supported() {
+  return Fl::screen_driver()->rescalable();
+}
+
+/** Controls the possibility to scale all windows by ctrl/+/-/0/ or cmd/+/-/0/.
+
+  This function \b should be called before fl_open_display() runs.
+  If it is not called, the default is to handle these keys for
+  window scaling.
+
+  \note This function can currently only be used to switch the internal
+    handler \b off, i.e. \p value must be 0 (zero) - all other values
+    result in undefined behavior and are reserved for future extension.
+
+  \param value 0 to stop recognition of ctrl/+/-/0/ (or cmd/+/-/0/ under macOS)
+    keys as window scaling.
+*/
+void Fl::keyboard_screen_scaling(int value) {
+  Fl_Screen_Driver::keyboard_screen_scaling = value;
+}
+
+// Pointers you can use to change FLTK to another language.
+// Note: Similar pointers are defined in FL/fl_ask.H and src/fl_ask.cxx
+FL_EXPORT const char* fl_local_shift = Fl::system_driver()->shift_name();
+FL_EXPORT const char* fl_local_meta  = Fl::system_driver()->meta_name();
+FL_EXPORT const char* fl_local_alt   = Fl::system_driver()->alt_name();
+FL_EXPORT const char* fl_local_ctrl  = Fl::system_driver()->control_name();

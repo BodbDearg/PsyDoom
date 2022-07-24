@@ -10,7 +10,7 @@ README.CMake.txt - Building and using FLTK with CMake
     2.1   Prerequisites
     2.2   Options
     2.3   Building under Linux with Unix Makefiles
-    2.4   Building under Windows with Visual Studio
+    2.4   Building under Windows with Visual Studio [SUGGESTED DOCS -erco]
     2.5   Building under Windows with MinGW using Makefiles
     2.6   Building under MacOS with Xcode
     2.7   Crosscompiling
@@ -92,6 +92,12 @@ CMAKE_INSTALL_PREFIX
     Where everything will go on install.  Defaults are /usr/local for Unix
     and C:\Program Files\FLTK for Windows.
 
+CMAKE_OSX_ARCHITECTURES (macOS only, ignored on other platforms)
+    Set this to either "arm64", "x86_64", or a list of both "arm64;x86_64".
+    The latter will build "universal apps" on macOS, whereas the former
+    will either build Intel (x86_64) or Apple Silicon aka M1 (arm64) apps.
+    The default is to build for the host processor architecture.
+
 The following are the FLTK specific options.  Platform specific options
 are ignored on other platforms.
 
@@ -134,20 +140,32 @@ OPTION_USE_THREADS - default ON
 OPTION_LARGE_FILE - default ON
    Enables large file (>2G) support.
 
-OPTION_USE_SYSTEM_LIBJPEG - default ON
-OPTION_USE_SYSTEM_ZLIB - default ON
-OPTION_USE_SYSTEM_LIBPNG - default ON
+OPTION_USE_SYSTEM_LIBJPEG - default ON (macOS: OFF)
+OPTION_USE_SYSTEM_LIBPNG  - default ON (macOS: OFF)
+OPTION_USE_SYSTEM_ZLIB    - default ON
    FLTK has built in jpeg, zlib, and png libraries.  These options let you
    use system libraries instead, unless CMake can't find them.  If you set
    any of these options to OFF, then the built in library will be used.
 
+OPTION_USE_SVG - default ON
+   FLTK has a built in SVG library and can create (write) SVG image files.
+   Turning this option off disables SVG (read and write) support.
+
 OPTION_USE_XINERAMA - default ON
 OPTION_USE_XFT      - default ON
-OPTION_USE_XDBE     - default ON
 OPTION_USE_XCURSOR  - default ON
 OPTION_USE_XRENDER  - default ON
    These are X11 extended libraries. These libs are used if found on the
    build system unless the respective option is turned off.
+
+OPTION_USE_PANGO - default OFF
+   Enables use of the Pango library for drawing text. Pango supports all
+   unicode-defined scripts with limited support of right-to-left scripts.
+   This option makes sense only under X11, and also requires Xft.
+
+OPTION_USE_WAYLAND - default OFF
+   Enables use of the Wayland system for all window operations.
+   This option requires a Wayland-equipped system, i.e., Linux or FreeBSD.
 
 OPTION_ABI_VERSION - default EMPTY
    Use a numeric value corresponding to the FLTK ABI version you want to
@@ -158,6 +176,12 @@ OPTION_ABI_VERSION - default EMPTY
    Please see README.abi-version.txt for more information about which
    ABI version to select.
 
+OPTION_PRINT_SUPPORT - default ON
+   When turned off, the Fl_Printer class does nothing and the
+   Fl_PostScript_File_Device class cannot be used, but the FLTK library
+   is somewhat smaller. This option makes sense only on the Unix/Linux
+   platform or when OPTION_APPLE_X11 is ON.
+
 
 Documentation options: these options are only available if `doxygen' is
    installed and found by CMake. PDF related options require also `latex'.
@@ -167,6 +191,11 @@ OPTION_BUILD_PDF_DOCUMENTATION  - default ON
    These options can be used to switch HTML documentation generation with
    doxygen on. The build targets ('html', 'pdf', or 'docs') need still to
    be executed explicitly.
+
+OPTION_INCLUDE_DRIVER_DOCUMENTATION - default OFF
+   This option adds driver documentation to HTML and PDF docs (if ON). This
+   option is marked as "advanced" since it is only useful for FLTK developers
+   or advanced users.
 
 OPTION_INSTALL_HTML_DOCUMENTATION - default OFF
 OPTION_INSTALL_PDF_DOCUMENTATION  - default OFF
@@ -230,7 +259,7 @@ in the GUI (cmake-gui).
        to where you've extracted an fltk distribution tar file (or
        snapshot tar file), and run the following commands:
 
-           cd C:\fltk-1.3.x             <-- change to your FLTK directory
+           cd C:\fltk-1.4.x             <-- change to your FLTK directory
            mkdir build                  <-- create an empty directory
            cd build
            cmake -G "Visual Studio 7" -D CMAKE_BUILD_TYPE=Release ..
@@ -259,20 +288,20 @@ in the GUI (cmake-gui).
 
        The test programs (*.exe) can be found in e.g.
 
-            Release: C:\fltk-1.3.x\build\bin\examples\release\*.exe
-              Debug: C:\fltk-1.3.x\build\bin\examples\debug\*.exe
+            Release: C:\fltk-1.4.x\build\bin\examples\release\*.exe
+              Debug: C:\fltk-1.4.x\build\bin\examples\debug\*.exe
 
        ..and the FLTK include files (*.H & *.h) your own apps can
        compile with can be found in:
 
-            Release & Debug: C:\fltk-1.3.x\build\FL
-            *and* [1] in:    C:\fltk-1.3.x\FL
+            Release & Debug: C:\fltk-1.4.x\build\FL
+            *and* [1] in:    C:\fltk-1.4.x\FL
 
        ..and the FLTK library files (*.lib) which your own apps can
        link with can be found in:
 
-            Release: C:\fltk-1.3.x\build\lib\release\*.lib
-              Debug: C:\fltk-1.3.x\build\lib\debug\*.lib
+            Release: C:\fltk-1.4.x\build\lib\release\*.lib
+              Debug: C:\fltk-1.4.x\build\lib\debug\*.lib
 
       [1] If you want to build your own FLTK application directly using
           the build directories (i.e. without "installation") you need
@@ -314,7 +343,7 @@ of the cmake related files are updated, Xcode will rerun cmake for you.
 1) Open the MacOS Terminal
 
 2) Change to the directory containing the FLTK project. For example:
-     > cd ~/dev/fltk-1.3.x
+     > cd ~/dev/fltk-1.4.x
 
 3) Create a build directory
      > mkdir build
@@ -328,7 +357,7 @@ of the cmake related files are updated, Xcode will rerun cmake for you.
 5) Let CMake create the required IDE files
      > cmake -G Xcode ../..
    This step should end in the message:
-     -- Build files have been written to: .../dev/fltk-1.3.x/build/Xcode
+     -- Build files have been written to: .../dev/fltk-1.4.x/build/Xcode
 
 5a) To build the Release version of FLTK, use
       > cmake -G Xcode -D CMAKE_BUILD_TYPE=Release ../..
@@ -482,7 +511,7 @@ libraries. Thus, you may have to add fltk_images, fltk_gl, etc…
 
 Note: the variable FLTK_USE_FILE used to include another file in
 previous FLTK versions was deprecated since FLTK 1.3.4 and will be
-removed in FLTK 1.4.0 or a later version.
+removed in FLTK 1.4.0 (this version) or later (maybe 1.4.1).
 
 
  3.1  Library Names
@@ -506,9 +535,10 @@ The built-in libraries (if built):
 ------------------------
 
 CMake has a command named fltk_wrap_ui which helps deal with fluid *.fl
-files. Unfortunately it is broken in CMake 3.4.x. You can however use
-add_custom_command to achieve the same result.
-This is a more basic approach and should work for all CMake versions.
+files. Unfortunately it is broken in CMake 3.4.x but it seems to work in
+3.5 and later CMake versions. You can however use add_custom_command()
+to achieve the same result. This is a more basic approach and should
+work for all CMake versions.
 
 Here is a sample CMakeLists.txt which compiles the CubeView example from
 a directory you've copied the test/Cube* files to.
@@ -564,3 +594,4 @@ Jan 31 2016 - msurette: custom command instead of fltk_wrap_ui
 Nov 01 2016 - AlbrechtS: remove deprecated FLTK_USE_FILE, add MinGW build
 Jul 05 2017 - matt: added instructions for MacOS and Xcode
 Dec 29 2018 - AlbrechtS: add documentation option descriptions
+Apr 29 2021 - AlbrechtS: document macOS "universal apps" build setup

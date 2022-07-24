@@ -1,27 +1,101 @@
 //
-// "$Id$"
-//
-// Encompasses platform-specific printing-support code and 
+// Encompasses platform-specific printing-support code and
 // PostScript output code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 2010 by Bill Spitzak and others.
+// Copyright 2010-2020 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems to:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
 #include <FL/Fl_Printer.H>
+#include <config.h>
 
-#if defined(WIN32)
-#include "Fl_GDI_Printer.cxx"
-#endif
+#if defined(FL_NO_PRINT_SUPPORT)
+#include <FL/Fl_PostScript.H>
+
+Fl_Printer::Fl_Printer(void) {
+  printer = NULL;
+}
+Fl_Paged_Device* Fl_Printer::newPrinterDriver(void) {
+  return NULL;
+}
+int Fl_Printer::begin_job(int pagecount, int *frompage, int *topage, char **perr_message) {return 2;}
+int Fl_Printer::begin_page(void) {return 1;}
+int Fl_Printer::printable_rect(int *w, int *h) {return 1;}
+void Fl_Printer::margins(int *left, int *top, int *right, int *bottom) {}
+void Fl_Printer::origin(int *x, int *y) {}
+void Fl_Printer::origin(int x, int y) {}
+void Fl_Printer::scale(float scale_x, float scale_y) {}
+void Fl_Printer::rotate(float angle) {}
+void Fl_Printer::translate(int x, int y) {}
+void Fl_Printer::untranslate(void) {}
+int Fl_Printer::end_page (void) {return 1;}
+void Fl_Printer::end_job (void) {}
+void Fl_Printer::set_current(void) {}
+bool Fl_Printer::is_current(void) {return false;}
+Fl_Printer::~Fl_Printer(void) {}
+
+const char *Fl_Printer::dialog_title = NULL;
+const char *Fl_Printer::dialog_printer = NULL;
+const char *Fl_Printer::dialog_range = NULL;
+const char *Fl_Printer::dialog_copies = NULL;
+const char *Fl_Printer::dialog_all = NULL;
+const char *Fl_Printer::dialog_pages = NULL;
+const char *Fl_Printer::dialog_from = NULL;
+const char *Fl_Printer::dialog_to = NULL;
+const char *Fl_Printer::dialog_properties = NULL;
+const char *Fl_Printer::dialog_copyNo = NULL;
+const char *Fl_Printer::dialog_print_button = NULL;
+const char *Fl_Printer::dialog_cancel_button = NULL;
+const char *Fl_Printer::dialog_print_to_file = NULL;
+const char *Fl_Printer::property_title = NULL;
+const char *Fl_Printer::property_pagesize = NULL;
+const char *Fl_Printer::property_mode = NULL;
+const char *Fl_Printer::property_use = NULL;
+const char *Fl_Printer::property_save = NULL;
+const char *Fl_Printer::property_cancel = NULL;
+
+Fl_PostScript_File_Device::Fl_PostScript_File_Device(void) {}
+int Fl_PostScript_File_Device::begin_job(int pagecount, int* from, int* to, char **perr_message) {return 2;}
+int Fl_PostScript_File_Device::begin_job(int pagecount, enum Fl_Paged_Device::Page_Format format,
+                                          enum Fl_Paged_Device::Page_Layout layout) {return 1;}
+int Fl_PostScript_File_Device::begin_job(FILE *ps_output, int pagecount, enum Fl_Paged_Device::Page_Format format,
+              enum Fl_Paged_Device::Page_Layout layout) {return 1;}
+int Fl_PostScript_File_Device::begin_page (void) {return 1;}
+int Fl_PostScript_File_Device::printable_rect(int *w, int *h) {return 1;}
+void Fl_PostScript_File_Device::margins(int *left, int *top, int *right, int *bottom) {}
+void Fl_PostScript_File_Device::origin(int *x, int *y) {}
+void Fl_PostScript_File_Device::origin(int x, int y) {}
+void Fl_PostScript_File_Device::scale (float scale_x, float scale_y) {}
+void Fl_PostScript_File_Device::rotate(float angle) {}
+void Fl_PostScript_File_Device::translate(int x, int y) {}
+void Fl_PostScript_File_Device::untranslate(void) {}
+int Fl_PostScript_File_Device::end_page (void) {return 1;}
+void Fl_PostScript_File_Device::end_job(void) {}
+FILE* Fl_PostScript_File_Device::file() {return NULL;}
+void Fl_PostScript_File_Device::close_command(Fl_PostScript_Close_Command cmd) {}
+Fl_PostScript_File_Device::~Fl_PostScript_File_Device(void) {}
+
+Fl_EPS_File_Surface::Fl_EPS_File_Surface(int width, int height, FILE *eps_output,
+                                         Fl_Color background, Fl_PostScript_Close_Command closef) : Fl_Widget_Surface(NULL) {}
+Fl_EPS_File_Surface::~Fl_EPS_File_Surface() {}
+void Fl_EPS_File_Surface::origin(int, int) {}
+void Fl_EPS_File_Surface::origin(int*, int*) {}
+int Fl_EPS_File_Surface::printable_rect(int*, int*) {return 1;}
+void Fl_EPS_File_Surface::translate(int, int) {}
+void Fl_EPS_File_Surface::untranslate() {}
+FILE* Fl_EPS_File_Surface::file() {return NULL;}
+int Fl_EPS_File_Surface::close() {return 1;}
+
+#else
 
 // print dialog customization strings
 /** [this text may be customized at run-time] */
@@ -63,61 +137,20 @@ const char *Fl_Printer::property_save = "Save";
 /** [this text may be customized at run-time] */
 const char *Fl_Printer::property_cancel = "Cancel";
 
-const char *Fl_Printer::class_id = "Fl_Printer";
-#if defined(__APPLE__) || defined(WIN32) || defined(FL_DOXYGEN)
-const char *Fl_System_Printer::class_id = Fl_Printer::class_id;
-#endif
-#if !( defined(__APPLE__) || defined(WIN32) )
-const char *Fl_PostScript_Printer::class_id = Fl_Printer::class_id;
-#endif
-
-#if defined(__APPLE__) || defined(WIN32)
-void Fl_System_Printer::set_current(void)
-{
-#ifdef __APPLE__
-  fl_gc = (CGContextRef)gc;
-#elif defined(WIN32)
-  fl_gc = (HDC)gc;
-#endif
-  this->Fl_Surface_Device::set_current();
-}
-
-void Fl_System_Printer::origin(int *x, int *y)
-{
-  Fl_Paged_Device::origin(x, y);
-}
-
-#endif
 
 Fl_Printer::Fl_Printer(void) {
-#if defined(WIN32) || defined(__APPLE__)
-  printer = new Fl_System_Printer();
-#else
-  printer = new Fl_PostScript_Printer();
-#endif
-  Fl_Surface_Device::driver(printer->driver());
+  printer = Fl_Printer::newPrinterDriver();
+  driver(printer->driver());
 }
 
-/**
- Starts a print job.
- Opens a platform-specific dialog window allowing the user to set several options including
- the desired printer and the page orientation. Optionally, the user can also select a range of pages to  be
- printed. This range is returned to the caller that is in charge of sending only these pages 
- for printing.
- 
- @param[in] pagecount the total number of pages of the job (or 0 if you don't know the number of pages)
- @param[out] frompage if non-null, *frompage is set to the first page the user wants printed
- @param[out] topage if non-null, *topage is set to the last page the user wants printed
- @return 0 if OK, non-zero if any error occurred or if the user cancelled the print request.
- */
-int Fl_Printer::start_job(int pagecount, int *frompage, int *topage)
+int Fl_Printer::begin_job(int pagecount, int *frompage, int *topage, char **perr_message)
 {
-  return printer->start_job(pagecount, frompage, topage);
+  return printer->begin_job(pagecount, frompage, topage, perr_message);
 }
 
-int Fl_Printer::start_page(void)
+int Fl_Printer::begin_page(void)
 {
-  return printer->start_page();
+  return printer->begin_page();
 }
 
 int Fl_Printer::printable_rect(int *w, int *h)
@@ -170,24 +203,13 @@ void Fl_Printer::end_job (void)
   printer->end_job();
 }
 
-void Fl_Printer::print_widget(Fl_Widget* widget, int delta_x, int delta_y)
-{
-  printer->print_widget(widget, delta_x, delta_y);
-}
-
-void Fl_Printer::print_window_part(Fl_Window *win, int x, int y, int w, int h, int delta_x, int delta_y)
-{
-  printer->print_window_part(win, x, y, w, h, delta_x, delta_y);
-}
-
 void Fl_Printer::set_current(void)
 {
   printer->set_current();
 }
 
-Fl_Graphics_Driver* Fl_Printer::driver(void)
-{
-  return printer->driver();
+bool Fl_Printer::is_current() {
+  return surface() == printer;
 }
 
 Fl_Printer::~Fl_Printer(void)
@@ -195,7 +217,4 @@ Fl_Printer::~Fl_Printer(void)
   delete printer;
 }
 
-
-//
-// End of "$Id$".
-//
+#endif // defined(FL_NO_PRINT_SUPPORT)

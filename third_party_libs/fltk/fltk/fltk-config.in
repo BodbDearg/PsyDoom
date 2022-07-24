@@ -2,7 +2,7 @@
 #
 # FLTK configuration utility.
 #
-# Copyright 2000-2021 by Bill Spitzak and others.
+# Copyright 2000-2016 by Bill Spitzak and others.
 # Original version Copyright 2000 by James Dean Palmer
 # Adapted by Vincent Penne and Michael Sweet
 #
@@ -49,6 +49,17 @@ LDLIBS="@LIBS@"
 OPTIM="@OPTIM@"
 CAIROFLAGS="@CAIROFLAGS@"
 
+# Config
+if ( ( test -f "$includedir/FL/fl_config.h" && \
+       grep -q '^#define FLTK_HAVE_CAIRO 1' "$includedir/FL/fl_config.h" ) \
+     || \
+     ( test -f "$selfdir/FL/fl_config.h" && \
+       grep -q '^#define FLTK_HAVE_CAIRO 1' "$selfdir/FL/fl_config.h" ) ) ; then
+    FLTK_HAVE_CAIRO=1
+else
+    FLTK_HAVE_CAIRO=0
+fi
+
 # Check for local invocation, and update paths accordingly...
 if test -f "$selfdir/FL/Fl_Window.H"; then
 	includedir="$selfdir"
@@ -75,7 +86,7 @@ if test -d $includedir/FL/images; then
 	CXXFLAGS="-I$includedir/FL/images $CXXFLAGS"
 fi
 
-if test -f "$libdir/libfltk_cairo.a"; then
+if [ $FLTK_HAVE_CAIRO = 1 ]; then
 	CFLAGS="$CAIROFLAGS $CFLAGS"
 	CXXFLAGS="$CAIROFLAGS $CXXFLAGS"
 fi
@@ -249,7 +260,7 @@ if test x$use_images = xyes; then
     LDSTATIC="$libdir/libfltk_images.a $STATICIMAGELIBS $LDSTATIC"
 fi
 
-if test x$use_cairo = xyes; then
+if test x$use_cairo = xyes -a $FLTK_HAVE_CAIRO = 1; then
     LDLIBS="-lfltk_cairo$SHAREDSUFFIX $CAIROLIBS $LDLIBS"
     LDSTATIC="$libdir/libfltk_cairo.a $CAIROLIBS $LDSTATIC"
 fi
@@ -291,10 +302,10 @@ fi
 if test -n "$post"; then
     running=`uname`
     if test "$running" = "Darwin"; then
-        # if FLTK targets MacOS+X11, apps need not be bundled
-        if test `echo $LDLIBS | fgrep -c -e " -lX11"` = 1; then
-            running=""
-        fi
+   	# if FLTK targets MacOS+X11, apps need not be bundled
+    	if test `echo $LDLIBS | fgrep -c -e " -lX11"` = 1; then
+    		running=""
+    	fi
     fi
     case $running in
 	Darwin)

@@ -1,77 +1,101 @@
 //
-// "$Id$"
+// implementation of classes Fl_Surface_Device and Fl_Display_Device for the Fast Light Tool Kit (FLTK).
 //
-// implementation of Fl_Device class for the Fast Light Tool Kit (FLTK).
-//
-// Copyright 2010-2012 by Bill Spitzak and others.
+// Copyright 2010-2022 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems to:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
+#include <config.h>
 #include <FL/Fl.H>
 #include <FL/Fl_Device.H>
-#include <FL/Fl_Image.H>
+#include <FL/Fl_Graphics_Driver.H>
 
-const char *Fl_Device::class_id = "Fl_Device";
-const char *Fl_Surface_Device::class_id = "Fl_Surface_Device";
-const char *Fl_Display_Device::class_id = "Fl_Display_Device";
-const char *Fl_Graphics_Driver::class_id = "Fl_Graphics_Driver";
-#if defined(__APPLE__) || defined(FL_DOXYGEN)
-const char *Fl_Quartz_Graphics_Driver::class_id = "Fl_Quartz_Graphics_Driver";
-#  ifndef FL_DOXYGEN
-   bool Fl_Display_Device::high_res_window_ = false;
-#  endif
-#endif
-#if defined(WIN32) || defined(FL_DOXYGEN)
-const char *Fl_GDI_Graphics_Driver::class_id = "Fl_GDI_Graphics_Driver";
-const char *Fl_GDI_Printer_Graphics_Driver::class_id = "Fl_GDI_Printer_Graphics_Driver";
-#endif
-#if !(defined(__APPLE__) || defined(WIN32))
-const char *Fl_Xlib_Graphics_Driver::class_id = "Fl_Xlib_Graphics_Driver";
-#endif
+/* Inheritance diagram.
 
+  +- Fl_Surface_Device: any kind of surface that we can draw onto -> uses an Fl_Graphics_Driver
+      |
+      +- Fl_Display_Device: some kind of video device (one object per app)
+      +- Fl_Widget_Surface: any FLTK widget can be drawn to it
+          |
+          +- Fl_Copy_Surface: draw into the clipboard (in vectorial form if the platform supports it)
+          +- Fl_Copy_Surface_Driver: helper class interfacing FLTK with draw-to-clipboard operations
+              |
+              +- Fl_..._Copy_Surface_Driver: platform-specific implementation of Fl_Copy_Surface_Driver
+          +- Fl_Image_Surface: draw into an RGB Image
+          +- Fl_Image_Surface_Driver: helper class interfacing FLTK with draw-to-image operations
+              |
+              +- Fl_..._Image_Surface_Driver: platform-specific implementation of Fl_Image_Surface_Driver
+          +- Fl_EPS_File_Surface: draw into an Encapsulated PostScript (.eps) file
+          +- Fl_SVG_File_Surface: draw into a Scalable Vector Graphics (.svg) file
+          +- Fl_Paged_Device: output to a page-structured surface
+              |
+              +- Fl_Printer: user can instantiate this to gain access to a printer
+              +- Fl_WinAPI_Printer_Driver: Windows-specific helper class interfacing FLTK with print operations
+              +- Fl_Cocoa_Printer_Driver: macOS-specific helper class interfacing FLTK with print operations
+              +- Fl_PostScript_File_Device: draw into a PostScript file
+                  |
+                  +- Fl_Posix_Printer_Driver: Fl_Printer uses that under Posix platforms
+                  +- Fl_GTK_Printer_Driver: Fl_Printer uses that under Posix+GTK platforms
 
-/** \brief Make this surface the current drawing surface.
- This surface will receive all future graphics requests. */
+  +- Fl_Graphics_Driver -> directed to an Fl_Surface_Device object
+      |
+      +- Fl_PostScript_Graphics_Driver: platform-independent graphics driver for PostScript drawing
+      +- Fl_SVG_Graphics_Driver: platform-independent graphics driver for Scalable Vector Graphics drawing
+      +- Fl_Quartz_Graphics_Driver: platform-specific graphics driver (MacOS)
+          +- Fl_Quartz_Printer_Graphics_Driver: MacOS-specific, for drawing to printers
+      +- Fl_Scalable_Graphics_Driver: helper class to support GUI scaling
+          +- Fl_Xlib_Graphics_Driver: X11-specific graphics driver
+          +- Fl_GDI_Graphics_Driver: Windows-specific graphics driver
+              +- Fl_GDI_Printer_Graphics_Driver: re-implements a few member functions especially for output to printer
+      +- Fl_Cairo_Graphics_Driver: for X11+Pango (PostScript) and Wayland platforms
+          +- Fl_Wayland_Graphics_Driver: Wayland-specific graphics driver
+          +- Fl_PostScript_Graphics_Driver: for PostScript drawing with X11+Pango platform
+      +- Fl_OpenGL_Graphics_Driver: draw to an Fl_Gl_Window (only partial implementation)
+
+*/
+
+/** Make this surface the current drawing surface.
+ This surface will receive all future graphics requests.
+ \p Starting from FLTK 1.4.0, the preferred API to change the current drawing surface
+ is Fl_Surface_Device::push_current( ) / Fl_Surface_Device::pop_current().
+ \note It's recommended to use this function only as follows :
+ \li The current drawing surface is the display;
+ \li make current another surface, e.g., an Fl_Printer or an Fl_Image_Surface object,  calling set_current() on this object;
+ \li draw to that surface;
+ \li make the display current again with Fl_Display_Device::display_device()->set_current();  . Don't do any other call to set_current() before this one.
+
+ Other scenarios of drawing surface changes should be performed via Fl_Surface_Device::push_current( ) / Fl_Surface_Device::pop_current().
+ */
 void Fl_Surface_Device::set_current(void)
 {
-  fl_graphics_driver = _driver;
-  _surface = this;
+  if (surface_) surface_->end_current();
+  fl_graphics_driver = pGraphicsDriver;
+  surface_ = this;
+  pGraphicsDriver->global_gc();
+  driver()->set_current_();
 }
 
-FL_EXPORT Fl_Graphics_Driver *fl_graphics_driver; // the current target device of graphics operations
-Fl_Surface_Device* Fl_Surface_Device::_surface; // the current target surface of graphics operations
+Fl_Surface_Device* Fl_Surface_Device::surface_; // the current target surface of graphics operations
 
-const Fl_Graphics_Driver::matrix Fl_Graphics_Driver::m0 = {1, 0, 0, 1, 0, 0};
+/** Is this surface the current drawing surface? */
+bool Fl_Surface_Device::is_current() {
+  return surface_ == this;
+}
 
-Fl_Graphics_Driver::Fl_Graphics_Driver() {
-  font_ = 0;
-  size_ = 0;
-  sptr=0; rstackptr=0; 
-  rstack[0] = NULL;
-  fl_clip_state_number=0;
-  m = m0; 
-  fl_matrix = &m; 
-  p = (XPOINT *)0;
-  font_descriptor_ = NULL;
-  p_size = 0;
-};
-
-void Fl_Graphics_Driver::text_extents(const char*t, int n, int& dx, int& dy, int& w, int& h)
+Fl_Surface_Device::~Fl_Surface_Device()
 {
-  w = (int)width(t, n);
-  h = - height();
-  dx = 0;
-  dy = descent();
+  if (surface_ == this) surface_ = NULL;
 }
+
 
 /**  A constructor that sets the graphics driver used by the display */
 Fl_Display_Device::Fl_Display_Device(Fl_Graphics_Driver *graphics_driver) : Fl_Surface_Device(graphics_driver) {
@@ -79,17 +103,9 @@ Fl_Display_Device::Fl_Display_Device(Fl_Graphics_Driver *graphics_driver) : Fl_S
 };
 
 
-/** Returns the platform display device. */
+/** Returns a pointer to the unique display device */
 Fl_Display_Device *Fl_Display_Device::display_device() {
-  static Fl_Display_Device *display = new Fl_Display_Device(new
-#if defined(__APPLE__)
-                                                                  Fl_Quartz_Graphics_Driver
-#elif defined(WIN32)
-                                                                  Fl_GDI_Graphics_Driver
-#else
-                                                                  Fl_Xlib_Graphics_Driver
-#endif
-                                                                 );
+  static Fl_Display_Device *display = new Fl_Display_Device(Fl_Graphics_Driver::newMainGraphicsDriver());
   return display;
 };
 
@@ -99,9 +115,41 @@ Fl_Surface_Device *Fl_Surface_Device::default_surface()
   return Fl_Display_Device::display_device();
 }
 
+static unsigned int surface_stack_height = 0;
+static Fl_Surface_Device *surface_stack[16];
 
-Fl_Display_Device *Fl_Display_Device::_display = Fl_Display_Device::display_device();
+/** Pushes \p new_current on top of the stack of current drawing surfaces, and makes it current.
+ \p new_current will receive all future graphics requests.
 
-//
-// End of "$Id$".
-//
+ Any call to push_current() must be matched by a subsequent call to Fl_Surface_Device::pop_current().
+ The max height of this stack is 16.
+ \version 1.4.0
+ */
+void Fl_Surface_Device::push_current(Fl_Surface_Device *new_current)
+{
+  if (surface_stack_height < sizeof(surface_stack)/sizeof(void*)) {
+    surface_stack[surface_stack_height++] = surface();
+  } else {
+    fprintf(stderr, "FLTK Fl_Surface_Device::push_current Stack overflow error\n");
+  }
+  new_current->set_current();
+}
+
+/** Removes the top element from the current drawing surface stack, and makes the new top element current.
+ \return A pointer to the new current drawing surface.
+ \see Fl_Surface_Device::push_current(Fl_Surface_Device *)
+ \version 1.4.0 */
+Fl_Surface_Device *Fl_Surface_Device::pop_current()
+{
+  if (surface_stack_height > 0) surface_stack[--surface_stack_height]->set_current();
+  return surface_;
+}
+
+Fl_Device_Plugin *Fl_Device_Plugin::opengl_plugin() {
+  static Fl_Device_Plugin *pi = NULL;
+  if (!pi) {
+    Fl_Plugin_Manager pm("fltk:device");
+    pi = (Fl_Device_Plugin*)pm.plugin("opengl.device.fltk.org");
+  }
+  return pi;
+}

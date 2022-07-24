@@ -1,7 +1,7 @@
 #
 # Make include file for the Fast Light Tool Kit (FLTK).
 #
-# Copyright 1998-2021 by Bill Spitzak and others.
+# Copyright 1998-2022 by Bill Spitzak and others.
 #
 # This library is free software. Distribution and use rights are outlined in
 # the file "COPYING" which should have been included with this file.  If this
@@ -24,6 +24,11 @@ FL_ABI_VERSION		= @FL_ABI_VERSION@
 
 FLTK_VERSION		= @FLTK_VERSION@
 
+# FLTK configuration options: BUILD = { WIN | OSX | X11 | XFT | WAYLAND }
+
+BUILD		= @BUILD@
+UNAME            = @UNAME@
+
 # Standard configure variables
 
 prefix		= @prefix@
@@ -37,7 +42,6 @@ mandir		= @mandir@
 srcdir		= @srcdir@
 docdir		= $(datadir)/doc/fltk
 VPATH		= @srcdir@
-USEMMFILES	= @USEMMFILES@
 
 # programs we use...
 DOXYDOC		= @DOXYDOC@
@@ -102,6 +106,9 @@ FLTKCAIROOPTION = @FLTKCAIROOPTION@
 LINKSHARED	= @DSOLINK@ @LINKSHARED@ $(IMAGELIBS) $(CAIROLIBS)
 IMAGELIBS	= -L../lib @IMAGELIBS@
 
+# optional extra build step for libdecor:
+LIBDECORDIR	= @LIBDECORDIR@
+
 # image libraries to build...
 IMAGEDIRS	= @JPEG@ @ZLIB@ @PNG@
 CAIRODIR	= @CAIRODIR@
@@ -109,7 +116,8 @@ CAIRODIR	= @CAIRODIR@
 EXEEXT		= @EXEEXT@
 
 # Do we build the OpenGL demos?
-GLDEMOS		= @GLDEMOS@
+GLDEMOS    = @GLDEMOS@
+GLWLDEMO   = @GLWLDEMO@
 
 # Do we build the threads demo?
 THREADS		= @THREADS@

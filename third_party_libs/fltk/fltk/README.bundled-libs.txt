@@ -5,24 +5,39 @@ This file is mainly intended for FLTK developers and contains information
 about the current versions of all bundled libraries and about how to
 upgrade these bundled libraries.
 
+Starting with FLTK 1.4.0 the bundled libraries jpeg, png, and zlib use
+"symbol prefixing" with the prefix 'fltk_' for all external symbols to
+distinguish the bundled libraries from existing system libraries and
+to avoid runtime errors.
 
-Current versions of bundled libraries (as of Nov. 5, 2021):
+User code compiled correctly with the header files provided by the
+bundled image libraries need not be changed.
+
+The nanosvg library is not affected.
+
+Current versions of bundled libraries (as of Sep 13, 2021):
 
   Library       Version            Release date         FLTK Version
   --------------------------------------------------------------------------
+  jpeg          jpeg-9d            2020-01-12           1.4.0
+  nanosvg       06a9113e29 [1]     2022-07-09           1.4.0
+  png           libpng-1.6.37      2019-04-14           1.4.0
+  zlib          zlib-1.2.11        2017-01-15           1.4.0
+  --------------------------------------------------------------------------
+
+Previous versions of bundled libraries (FLTK 1.3.x):
+
+  Library       Version            Release date         FLTK Version
+  ------------------------------------------------------------------
   jpeg          jpeg-9d            2020-01-12           1.3.6 - 1.3.8
   png           libpng-1.6.37      2019-04-14           1.3.6 - 1.3.8
   zlib          zlib-1.2.11        2017-01-15           1.3.6 - 1.3.8
   --------------------------------------------------------------------------
 
-Previous versions of bundled libraries:
 
-  Library       Version            Release date         FLTK Version
-  ------------------------------------------------------------------
-  jpeg          jpeg-9a            2014-01-19           1.3.5
-  png           libpng-1.6.16      2014-12-22           1.3.5
-  zlib          zlib-1.2.8         2013-04-28           1.3.5
-  --------------------------------------------------------------------------
+[1] Git commit in branch 'fltk' of https://github.com/fltk/nanosvg
+    See also git tag 'fltk_yyyy-mm-dd' where yyyy-mm-dd == "Release date"
+    and file nanosvg/README.txt.
 
 
 General information:
@@ -34,14 +49,18 @@ General information:
   We use our own build files, hence a few files MUST NOT be upgraded when
   the library source files are upgraded. We strive to keep changes to the
   library source files as small as possible. Patching library code to
-  work with FLTK should be a rare exception.
+  work with FLTK should be a rare exception. Symbol prefixing with prefix
+  'fltk_' is one such exception to the rule.
 
   If patches are necessary all changes in the library files should be
   marked with "FLTK" in a comment so a developer who upgrades the library
-  later is aware of changes in the source code for FLTK. Additional comments
-  should be added to show the rationale, i.e. why a particular change was
-  necessary. If applicable, add a reference to a Software Trouble Report,
-  GitHub Issue or PR like "STR 3456", "Issue #123", or "PR #234".
+  later is aware of changes in the source code for FLTK. Look for 'FLTK'
+  and/or 'fltk_' to find the differences.
+
+  Additional comments should be added to show the rationale, i.e. why
+  a particular change was necessary. If applicable, add a reference to
+  a Software Trouble Report, GitHub Issue or Pull Request (PR) like
+  "STR 3456", "Issue #123", or "PR #234".
 
 
 How to update the bundled libraries:
@@ -62,10 +81,11 @@ How to update the bundled libraries:
 Merging source files:
 
   Please check if some source and header files contain "FLTK" comments
-  to be aware of necessary merges. It is also good to get the distribution
-  tar ball of the previous version and to run a (graphical) diff or
-  merge tool on the previous version and the bundled version of FLTK
-  to see the "previous" differences.
+  and/or 'fltk_' symbol prefixing to be aware of necessary merges.
+  It is also good to download the distribution tar ball or Git source
+  files of the previous version and to run a (graphical) diff or merge
+  tool on the previous version and the bundled version of FLTK to see
+  the "previous" differences.
 
   Files that were not patched in previous versions should be copied to
   the new version w/o changes. Files that had FLTK specific patches must
@@ -96,9 +116,9 @@ Tests after merge:
 
 Upgrade notes for specific libraries:
 
-  The following chapters contain information of specific files and how
-  they are upgraded. Since the changes in all bundled libraries can't
-  be known in advance this information may change in the future. Please
+  The following chapters contain informations about specific files and
+  how they are upgraded. Since the changes in all bundled libraries are
+  not known in advance this information may change in the future. Please
   verify that no other changes are necessary.
 
 
@@ -108,6 +128,27 @@ zlib:
   Download:   See website and follow links.
   Repository: git clone https://github.com/madler/zlib.git
 
+  zlib should be upgraded first because libpng depends on zlib.
+
+  Download the latest zlib sources, `cd' to /path-to/zlib and run
+
+    $ ./configure --zprefix
+
+  This creates the header file 'zconf.h' with definitions to enable
+  the standard 'z_' symbol prefix.
+
+  Unfortunately zlib requires patching some source and header files to
+  convert this 'z_' prefix to 'fltk_z_' to be more specific. As of this
+  writing (Nov. 2021) three files need symbol prefix patches:
+
+    - gzread.c
+    - zconf.h
+    - zlib.h
+
+  You may want to compare these files and/or the previous version to
+  find out which changes are required. The general rule is to change
+  all occurrences of 'z_' to 'fltk_z_' but there *are* exceptions.
+
 
   The following files need special handling:
 
@@ -115,10 +156,9 @@ zlib:
 
     Makefile: Same as CMakeLists.txt.
 
-    zconf.h: Merge changes.
-
-      As of zlib 1.2.11: two small sections marked with "FLTK" comments
-      that need to be kept.
+    gzread.c: Merge changes (see above, manual merge recommended).
+    zconf.h:  Merge changes (see above, manual merge recommended).
+    zlib.h:   Merge changes (see above, manual merge recommended).
 
     makedepend: Keep this file.
 
@@ -134,13 +174,21 @@ png:
 
   libpng should be upgraded after zlib because it depends on zlib.
 
+  Download the latest libpng sources, `cd' to /path-to/libpng and run
+
+    $ ./configure --with-libpng-prefix=fltk_
+
+  This creates the header files 'pnglibconf.h' and 'pngprefix.h'
+  with the 'fltk_' symbol prefix.
+
   The following files need special handling:
 
     CMakeLists.txt: Keep FLTK version, update manually if necessary.
 
     Makefile: Same as CMakeLists.txt.
 
-    pnglibconf.h: Generate on a Linux system and merge.
+    pnglibconf.h: Generate on a Linux system and merge (see above).
+    pngprefix.h:  Generate on a Linux system and merge (see above).
 
     makedepend: Keep this file.
 
@@ -154,11 +202,32 @@ jpeg:
   Download:   See website and follow links.
   Repository: <unknown>
 
+  Download the latest jpeg-xy sources on a Linux (or Unix) system,
+  `cd' to /path-to/jpeg-xy and run
+
+    $ ./configure
+    $ make [-jN]
+
+  This builds the library and should create the static library file
+  '.libs/libjpeg.a'.
+
+  Execute the following command to extract the libjpeg symbol names
+  used to build the 'prefixed' libfltk_jpeg library:
+
+  $ nm --extern-only --defined-only .libs/libjpeg.a | awk '{print $3}' \
+    | sed '/^$/d' | sort -u | awk '{print "#define "$1" fltk_"$1}' \
+    > fltk_jpeg_prefix.h
+
+  This creates the header file 'fltk_jpeg_prefix.h' with the
+  '#define' statements using the 'fltk_' symbol prefix.
+
   The following files need special handling:
 
     CMakeLists.txt: Keep FLTK version, update manually if necessary.
 
     Makefile: Same as CMakeLists.txt.
+
+    fltk_jpeg_prefix.h:  Generate on a Linux system and merge (see above).
 
     Note: more to come...
 
@@ -166,3 +235,104 @@ jpeg:
 
       Run `make depend' in the jpeg folder on a Linux system after
       the upgrade to update this file.
+
+
+nanosvg:
+
+  Website:    https://github.com/memononen/nanosvg
+  Download:   See website and follow links.
+  Repository: git clone https://github.com/memononen/nanosvg.git
+  FLTK Fork:  git clone https://github.com/fltk/nanosvg.git
+
+  FLTK has its own GitHub fork of the original repository (see above).
+
+  The intention is to update this fork from time to time so the FLTK
+  specific patches are up-to-date with the original library. Hopefully
+  the FLTK patches will be accepted upstream at some time in the future
+  so we no longer need our own patches.
+  AlbrechtS, 04 Feb 2018.
+
+  Update (Feb 22, 2021): The upstream library is officially no longer
+  maintained (see README.md) although updates appear from time to time.
+
+  Use this fork (branch 'fltk') to get the nanosvg library with FLTK
+  specific patches:
+
+    $ git clone https://github.com/fltk/nanosvg.git nanosvg-fltk
+    $ cd nanosvg-fltk
+    $ git checkout fltk
+    $ cd src
+    $ cp nanosvg.h nanosvgrast.h /path/to/fltk-1.4/nanosvg/
+
+  This library does not have its own build files since it is a header-only
+  library. The headers are included in FLTK where necessary.
+
+  The following files need special handling:
+
+    nanosvg.h:     Merge or download from FLTK's fork (see above).
+    nanosvgrast.h: Merge or download from FLTK's fork (see above).
+
+  Maintaining branch 'fltk' in FLTK's fork of nanosvg (fltk/nanosvg):
+
+    Only maintainers with write access on fltk/nanosvg can do this.
+    Others can fork our fltk/nanosvg fork in their own GitHub account
+    and either open a PR on fltk/nanosvg or tell us about their
+    changes in fltk.development.
+
+    Use something similar to the following commands to update FLTK's
+    fork of nanosvg to the latest version. Commands are only examples,
+    you may need to change more or less, depending on the outstanding
+    updates.
+
+    Step 1: clone the fltk/nanosvg fork, set the remote 'upstream',
+    and update the 'master' branch:
+
+    $ cd /to/your/dev/dir
+    $ git clone https://github.com/fltk/nanosvg.git nanosvg-fltk
+    $ cd nanosvg-fltk
+    $ git remote add upstream https://github.com/memononen/nanosvg
+    $ git checkout master
+    $ git pull upstream master
+
+    Note: the 'master' branch must never be changed, i.e. it must
+    always be the same as 'upstream/master'. Never commit your own
+    (FLTK specific) changes to branch 'master'.
+
+    Step 2: rebase branch 'fltk' on the new master (upstream/master),
+    fix potential conflicts, and tag the new branch.
+
+    It is important to keep the individual FLTK specific patches intact
+    (one commit per patch) because this will preserve the history and
+    the committer and make it easier to skip single patches when they
+    are accepted upstream.
+
+    $ git checkout fltk
+    $ git rebase upstream/master
+
+    At this point you may need to fix conflicts! Do whatever is
+    necessary to update the branch 'fltk'.
+
+    Now `git tag' the 'fltk' branch for later reference.
+
+    Hint: use `git show <any-older-tag-name>' to see its contents.
+    I like to write a summary of commits in the tag comment.
+
+    $ git tag -a fltk_yyyy-mm-dd fltk
+
+    Replace 'yyyy-mm-dd' with the current date and add a comment
+    when asked for it (your editor will open an empty file).
+
+    Step 3: at this point it is recommended to copy the changed
+    header files to your working copy of the FLTK library and test
+    the changes. If anything is wrong, go back, fix the bugs
+    and change the git tag (delete and create a new one).
+
+    Step 4: push the new branch 'fltk' and the tag to the fltk/nanosvg
+    repository:
+
+    $ git push -f origin fltk
+    $ git push origin fltk_yyyy-mm-dd
+
+    Step 5: copy the changed files to your working copy of the FLTK
+    repository (if not done already), update this file accordingly,
+    and commit/push the update to the fltk/fltk repository.

@@ -1,6 +1,4 @@
 //
-// "$Id$"
-//
 // Circular dial widget for the Fast Light Tool Kit (FLTK).
 //
 // Copyright 1998-2010 by Bill Spitzak and others.
@@ -9,11 +7,11 @@
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems on the following page:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
 #include <FL/Fl.H>
@@ -103,10 +101,9 @@ void Fl_Dial::draw() {
 */
 int Fl_Dial::handle(int event, int X, int Y, int W, int H) {
   switch (event) {
-  case FL_PUSH: {
-    Fl_Widget_Tracker wp(this);  
+  case FL_PUSH:
     handle_push();
-    if (wp.deleted()) return 1; }
+    /* FALLTHROUGH */
   case FL_DRAG: {
     int mx = (Fl::event_x()-X-W/2)*H;
     int my = (Fl::event_y()-Y-H/2)*W;
@@ -124,12 +121,13 @@ int Fl_Dial::handle(int event, int X, int Y, int W, int H) {
       val = minimum() + (maximum()-minimum())*(angle-a1)/(a2-a1);
     }
     handle_drag(clamp(round(val)));
-  } return 1;
+    return 1;
+  } /* NOTREACHED */
   case FL_RELEASE:
     handle_release();
     return 1;
-  case FL_ENTER : /* FALLTHROUGH */
-  case FL_LEAVE :
+  case FL_ENTER: /* FALLTHROUGH */
+  case FL_LEAVE:
     return 1;
   default:
     return 0;
@@ -163,12 +161,6 @@ Fl_Fill_Dial::Fl_Fill_Dial(int X,int Y,int W,int H, const char *L)
 
 
 Fl_Line_Dial::Fl_Line_Dial(int X,int Y,int W,int H, const char *L)
-: Fl_Dial(X,Y,W,H,L) 
-{
+: Fl_Dial(X,Y,W,H,L) {
   type(FL_LINE_DIAL);
 }
-
-
-//
-// End of "$Id$".
-//

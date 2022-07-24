@@ -1,8 +1,41 @@
+/* PSYDOOM: copied this from 'configh.in' and changed manually! */
+
 /*
- * Manually generated config file added for PsyDoom.
- * Mostly copied from 'configh.in'.
+ * Configuration file for the Fast Light Tool Kit (FLTK).
+ *
+ * Copyright 1998-2021 by Bill Spitzak and others.
+ *
+ * This library is free software. Distribution and use rights are outlined in
+ * the file "COPYING" which should have been included with this file.  If this
+ * file is missing or damaged, see the license at:
+ *
+ *     https://www.fltk.org/COPYING.php
+ *
+ * Please see the following page on how to report bugs and issues:
+ *
+ *     https://www.fltk.org/bugs.php
  */
- #ifdef __cplusplus
+
+/*
+ * Note: configure syntax vs. CMake syntax in source files (examples):
+ *
+ *   configh.in               configh.cmake.in
+ *   ---------------------    ----------------------------
+ *   [#]define HAVE_GL 0      [#]cmakedefine01 HAVE_GL
+ *   [#]undef HAVE_SNPRINTF   [#]cmakedefine HAVE_SNPRINTF 1
+ *
+ *   The former defines the given macro either as 0 or 1,
+ *   the latter either does not define the macro or defines it as 1.
+ */
+
+/*
+ * Always include the public build configuration header
+ */
+
+#include <FL/fl_config.h>
+
+/* PSYDOOM MODS */
+#ifdef __cplusplus
     #include <cstdint>
 #else
     #include <stdint.h>
@@ -77,26 +110,18 @@
 /*
  * USE_XFT
  *
- * Use the new Xft library to draw anti-aliased text.
+ * Use the Xft library to draw anti-aliased text.
  */
 
 #define USE_XFT 0
 
 /*
- * HAVE_XDBE:
+ * USE_PANGO
  *
- * Do we have the X double-buffer extension?
+ * Use the pango library to draw UTF-8 text.
  */
 
-#define HAVE_XDBE 0
-
-/*
- * USE_XDBE:
- *
- * Actually try to use the double-buffer extension?
- */
-
-#define USE_XDBE HAVE_XDBE
+#define USE_PANGO 0
 
 /*
  * HAVE_XFIXES:
@@ -140,27 +165,6 @@
 
 #undef __APPLE_QUARTZ__
 
-
-/*
- * USE_X11
- *
- * Should we use X11 for the current platform
- *
- */
-
-#undef USE_X11
-
-/*
- * HAVE_OVERLAY:
- *
- * Use the X overlay extension?  FLTK will try to use an overlay
- * visual for Fl_Overlay_Window, the Gl_Window overlay, and for the
- * menus.  Setting this to zero will remove a substantial amount of
- * code from FLTK.  Overlays have only been tested on SGI servers!
- */
-
-#define HAVE_OVERLAY 0
-
 /*
  * HAVE_GL_OVERLAY:
  *
@@ -168,7 +172,7 @@
  * set this to 1.
  */
 
-#define HAVE_GL_OVERLAY HAVE_OVERLAY
+#define HAVE_GL_OVERLAY 0
 
 /*
  * WORDS_BIGENDIAN:
@@ -189,9 +193,9 @@
  * U16 is optional but FLTK will work better with it!
  */
 
-#define U16 uint16_t
-#define U32 uint32_t
-#define U64 uint64_t
+#define U16 uint16_t	/* PSYDOOM MODS */
+#define U32 uint32_t	/* PSYDOOM MODS */
+#define U64 uint64_t	/* PSYDOOM MODS */
 
 /*
  * HAVE_DIRENT_H, HAVE_SYS_NDIR_H, HAVE_SYS_DIR_H, HAVE_NDIR_H,
@@ -263,28 +267,13 @@
 #undef HAVE_LIBJPEG
 
 /*
- * FLTK_USE_CAIRO
- *
- * Do we have the cairo library available and want extended cairo use in FLTK ?
- * This implies to link cairo.lib in all FLTK based apps.
- */
-
-#undef FLTK_USE_CAIRO
-
-/*
- * FLTK_HAVE_CAIRO
- *
- * Do we have the cairo library available?
- */
-
-#undef FLTK_HAVE_CAIRO
-
-/*
  * Which header file do we include for libpng?
+ *   ifdef HAVE_PNG_H : <png.h>
+ *   else             : <libpng/png.h>
+ * There is no other choice.
  */
 
 #undef HAVE_PNG_H
-#undef HAVE_LIBPNG_PNG_H
 
 /*
  * Do we have the png_xyz() functions?
@@ -294,11 +283,25 @@
 #undef HAVE_PNG_SET_TRNS_TO_ALPHA
 
 /*
+* FLTK_USE_SVG
+*
+* Do we want FLTK to read and write SVG-formatted files ?
+*/
+
+#undef FLTK_USE_SVG
+
+/*
  * Do we have POSIX threading?
  */
 
 #undef HAVE_PTHREAD
 #undef HAVE_PTHREAD_H
+
+/*
+ * Do we have PTHREAD_MUTEX_RECURSIVE?
+ */
+
+#undef HAVE_PTHREAD_MUTEX_RECURSIVE
 
 /*
  * Do we have the ALSA library?
@@ -313,11 +316,11 @@
 #undef HAVE_LONG_LONG
 
 #ifdef HAVE_LONG_LONG
-#  define FLTK_LLFMT    "%lld"
-#  define FLTK_LLCAST   (long long)
+#  define FLTK_LLFMT	"%lld"
+#  define FLTK_LLCAST	(long long)
 #else
-#  define FLTK_LLFMT    "%ld"
-#  define FLTK_LLCAST   (long)
+#  define FLTK_LLFMT	"%ld"
+#  define FLTK_LLCAST	(long)
 #endif /* HAVE_LONG_LONG */
 
 /*
@@ -328,5 +331,28 @@
 #define HAVE_DLSYM 0
 
 /*
- * End of "$Id$".
+ * Do we want print support?
  */
+
+#undef FL_NO_PRINT_SUPPORT
+
+/*
+ * Do we use GDI+ to get antialiased graphics?
+ */
+
+#ifdef _WIN32
+#define USE_GDIPLUS 0
+#endif
+
+/*
+ * Do we want filename handling and a filechooser?
+ * *FIXME* FL_CFG_NO_FILESYSTEM_SUPPORT not yet implemented in configure !
+ */
+
+#undef FL_CFG_NO_FILESYSTEM_SUPPORT
+
+/*
+ * Do we want class Fl_Native_File_Chooser to run kdialog when desktop is KDE?
+ */
+
+#define USE_KDIALOG 1

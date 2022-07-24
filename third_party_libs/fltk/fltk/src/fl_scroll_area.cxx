@@ -1,28 +1,24 @@
 //
-// "$Id$"
-//
 // Scrolling routines for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2010 by Bill Spitzak and others.
+// Copyright 1998-2021 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
 // file is missing or damaged, see the license at:
 //
-//     http://www.fltk.org/COPYING.php
+//     https://www.fltk.org/COPYING.php
 //
-// Please report all bugs and problems on the following page:
+// Please see the following page on how to report bugs and issues:
 //
-//     http://www.fltk.org/str.php
+//     https://www.fltk.org/bugs.php
 //
 
 // Drawing function to move the contents of a rectangle.  This is passed
 // a "callback" which is called to draw rectangular areas that are moved
 // into the drawing area.
 
-#include <config.h>
-#include <FL/Fl.H>
-#include <FL/x.H>
+#include "Fl_Window_Driver.H"
 #include <FL/fl_draw.H>
 
 // scroll a rectangle and redraw the newly exposed portions:
@@ -75,88 +71,12 @@ void fl_scroll(int X, int Y, int W, int H, int dx, int dy,
     clip_h = H-src_h;
   }
 
-#if defined(USE_X11)
-  XCopyArea(fl_display, fl_window, fl_window, fl_gc,
-	    src_x, src_y, src_w, src_h, dest_x, dest_y);
-  // we have to sync the display and get the GraphicsExpose events! (sigh)
-  for (;;) {
-    XEvent e; XWindowEvent(fl_display, fl_window, ExposureMask, &e);
-    if (e.type == NoExpose) break;
-    // otherwise assume it is a GraphicsExpose event:
-    draw_area(data, e.xexpose.x, e.xexpose.y,
-	      e.xexpose.width, e.xexpose.height);
-    if (!e.xgraphicsexpose.count) break;
+  int retval = Fl_Window_Driver::driver(Fl_Window::current())->scroll(src_x, src_y, src_w, src_h,
+                                                      dest_x, dest_y, draw_area, data);
+  if (retval) {
+    draw_area(data,X,Y,W,H);
+    return;
   }
-#elif defined(WIN32)
-  typedef int (WINAPI* fl_GetRandomRgn_func)(HDC, HRGN, INT);
-  static fl_GetRandomRgn_func fl_GetRandomRgn = 0L;
-  static char first_time = 1;
-
-  // We will have to do some Region magic now, so let's see if the 
-  // required function is available (and it should be staring w/Win95)
-  if (first_time) {
-    HMODULE hMod = GetModuleHandle("GDI32.DLL");
-    if (hMod) {
-      fl_GetRandomRgn = (fl_GetRandomRgn_func)GetProcAddress(hMod, "GetRandomRgn");
-    }
-    first_time = 0;
-  }
-
-  // Now check if the source scrolling area is fully visible.
-  // If it is, we will do a quick scroll and just update the 
-  // newly exposed area. If it is not, we go the safe route and 
-  // re-render the full area instead.
-  // Note 1: we could go and find the areas that are actually
-  // obscured and recursively call fl_scroll for the newly found
-  // rectangles. However, this practice would rely on the 
-  // elements of the undocumented Rgn structure.
-  // Note 2: although this method should take care of most 
-  // multi-screen solutions, it will not solve issues scrolling
-  // from a different resolution screen onto another.
-  // Note 3: this has been tested with image maps, too.
-  if (fl_GetRandomRgn) {
-    // get the DC region minus all overlapping windows
-    HRGN sys_rgn = CreateRectRgn(0, 0, 0, 0);
-    fl_GetRandomRgn(fl_gc, sys_rgn, 4);
-    // now get the source scrolling rectangle 
-    HRGN src_rgn = CreateRectRgn(src_x, src_y, src_x+src_w, src_y+src_h);
-    POINT offset = { 0, 0 };
-    if (GetDCOrgEx(fl_gc, &offset)) {
-      OffsetRgn(src_rgn, offset.x, offset.y);
-    }
-    // see if all source pixels are available in the system region
-    // Note: we could be a bit more merciful and subtract the 
-    // scroll destination region as well.
-    HRGN dst_rgn = CreateRectRgn(0, 0, 0, 0);
-    int r = CombineRgn(dst_rgn, src_rgn, sys_rgn, RGN_DIFF);
-    DeleteObject(dst_rgn);
-    DeleteObject(src_rgn);
-    DeleteObject(sys_rgn);
-    if (r!=NULLREGION) {
-      draw_area(data,X,Y,W,H);
-      return;
-    }
-  }
-
-  // Great, we can do an accelerated scroll instead of re-rendering
-  BitBlt(fl_gc, dest_x, dest_y, src_w, src_h, fl_gc, src_x, src_y,SRCCOPY);
-
-#elif defined(__APPLE_QUARTZ__)
-  CGImageRef img = Fl_X::CGImage_from_window_rect(Fl_Window::current(), src_x, src_y, src_w, src_h);
-  if (img) {
-    CGRect rect = CGRectMake(dest_x, dest_y, src_w, src_h);
-    Fl_X::q_begin_image(rect, 0, 0, src_w, src_h);
-    CGContextDrawImage(fl_gc, rect, img);
-    Fl_X::q_end_image();
-    CFRelease(img);
-    }
-#else
-# error unsupported platform
-#endif
   if (dx) draw_area(data, clip_x, dest_y, clip_w, src_h);
   if (dy) draw_area(data, X, clip_y, W, clip_h);
 }
-
-//
-// End of "$Id$".
-//
