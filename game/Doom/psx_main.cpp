@@ -44,7 +44,7 @@
 //      It never once asked for memory from the PsyQ SDK, nor did any of the PsyQ functions used.
 //      Doom's own heap would have been corrupted if LIBAPI's heap was in conflicting use of the same memory.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int psx_main(const int argc, const char** const argv) noexcept {
+int psx_main(const int argc, const char* const* const argv) noexcept {
     // PsyDoom: setup logic for the new game host environment
     #if PSYDOOM_MODS
         // Parse command line arguments and configuration and initialize input systems

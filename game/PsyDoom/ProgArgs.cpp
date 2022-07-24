@@ -56,9 +56,9 @@ static std::vector<std::string> gUserWadFiles;
 // Format for a function that parses an argument.
 // Takes in the current arguments list pointer and the number of arguments left, which is always expected to be at least '1'.
 // Returns the number of arguments consumed.
-typedef int (*ArgParser)(const int argc, const char** const argv);
+typedef int (*ArgParser)(const int argc, const char* const* const argv);
 
-static int parseArg_cue([[maybe_unused]] const int argc, const char** const argv) {
+static int parseArg_cue([[maybe_unused]] const int argc, const char* const* const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-cue") == 0)) {
         gCueFileOverride = argv[1];
         return 2;
@@ -67,7 +67,7 @@ static int parseArg_cue([[maybe_unused]] const int argc, const char** const argv
     return 0;
 }
 
-static int parseArg_headless([[maybe_unused]] const int argc, const char** const argv) {
+static int parseArg_headless([[maybe_unused]] const int argc, const char* const* const argv) {
     if (std::strcmp(argv[0], "-headless") == 0) {
         gbHeadlessMode = true;
         return 1;
@@ -76,7 +76,7 @@ static int parseArg_headless([[maybe_unused]] const int argc, const char** const
     return 0;
 }
 
-static int parseArg_datadir(const int argc, const char** const argv) {
+static int parseArg_datadir(const int argc, const char* const* const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-datadir") == 0)) {
         gDataDirPath = argv[1];
         return 2;
@@ -85,7 +85,7 @@ static int parseArg_datadir(const int argc, const char** const argv) {
     return 0;
 }
 
-static int parseArg_playdemo(const int argc, const char** const argv) {
+static int parseArg_playdemo(const int argc, const char* const* const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-playdemo") == 0)) {
         gPlayDemoFilePath = argv[1];
         return 2;
@@ -94,7 +94,7 @@ static int parseArg_playdemo(const int argc, const char** const argv) {
     return 0;
 }
 
-static int parseArg_saveresult(const int argc, const char** const argv) {
+static int parseArg_saveresult(const int argc, const char* const* const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-saveresult") == 0)) {
         gSaveDemoResultFilePath = argv[1];
         return 2;
@@ -103,7 +103,7 @@ static int parseArg_saveresult(const int argc, const char** const argv) {
     return 0;
 }
 
-static int parseArg_checkresult(const int argc, const char** const argv) {
+static int parseArg_checkresult(const int argc, const char* const* const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-checkresult") == 0)) {
         gCheckDemoResultFilePath = argv[1];
         return 2;
@@ -112,7 +112,7 @@ static int parseArg_checkresult(const int argc, const char** const argv) {
     return 0;
 }
 
-static int parseArg_record([[maybe_unused]] const int argc, const char** const argv) {
+static int parseArg_record([[maybe_unused]] const int argc, const char* const* const argv) {
     if (std::strcmp(argv[0], "-record") == 0) {
         gbRecordDemos = true;
         return 1;
@@ -121,7 +121,7 @@ static int parseArg_record([[maybe_unused]] const int argc, const char** const a
     return 0;
 }
 
-static int parseArg_nomonsters(const int argc, const char** const argv) {
+static int parseArg_nomonsters(const int argc, const char* const* const argv) {
     if ((argc >= 1) && (std::strcmp(argv[0], "-nomonsters") == 0)) {
         gbNoMonsters = true;
         return 1;
@@ -130,7 +130,7 @@ static int parseArg_nomonsters(const int argc, const char** const argv) {
     return 0;
 }
 
-static int parseArg_pistolstart(const int argc, const char** const argv) {
+static int parseArg_pistolstart(const int argc, const char* const* const argv) {
     if ((argc >= 1) && (std::strcmp(argv[0], "-pistolstart") == 0)) {
         gbPistolStart = true;
         return 1;
@@ -139,7 +139,7 @@ static int parseArg_pistolstart(const int argc, const char** const argv) {
     return 0;
 }
 
-static int parseArg_turbo(const int argc, const char** const argv) {
+static int parseArg_turbo(const int argc, const char* const* const argv) {
     if ((argc >= 1) && (std::strcmp(argv[0], "-turbo") == 0)) {
         gbTurboMode = true;
         return 1;
@@ -148,7 +148,7 @@ static int parseArg_turbo(const int argc, const char** const argv) {
     return 0;
 }
 
-static int parseArg_server([[maybe_unused]] const int argc, const char** const argv) {
+static int parseArg_server([[maybe_unused]] const int argc, const char* const* const argv) {
     if (std::strcmp(argv[0], "-server") == 0) {
         gbIsNetServer = true;
 
@@ -180,7 +180,7 @@ static int parseArg_server([[maybe_unused]] const int argc, const char** const a
     return 0;
 }
 
-static int parseArg_client([[maybe_unused]] const int argc, const char** const argv) {
+static int parseArg_client([[maybe_unused]] const int argc, const char* const* const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-client") == 0)) {
         gbIsNetClient = true;
 
@@ -216,7 +216,7 @@ static int parseArg_client([[maybe_unused]] const int argc, const char** const a
     return 0;
 }
 
-static int parseArg_file(const int argc, const char** const argv) {
+static int parseArg_file(const int argc, const char* const* const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-file") == 0)) {
         gUserWadFiles.push_back(argv[1]);
         return 2;
@@ -275,11 +275,11 @@ static void validateAndSanitizeArgs() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the arguments parser and parses the given list of arguments
 //------------------------------------------------------------------------------------------------------------------------------------------
-void init(const int argc, const char** const argv) noexcept {
+void init(const int argc, const char* const* const argv) noexcept {
     // Consume all the arguments using parsers until there are none.
     // Note: first arg is the program name and that is always skipped.
     int argsLeft = argc - 1;
-    const char** pCurArgv = argv + 1;
+    const char* const* pCurArgv = argv + 1;
 
     while (argsLeft > 0) {
         // Run through all the parsers and handle the argument

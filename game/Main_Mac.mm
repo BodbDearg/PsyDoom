@@ -1,9 +1,10 @@
 #include "Doom/psx_main.h"
+#include "PsyDoom/Launcher/Launcher.h"
 
 #include <Foundation/Foundation.h>
 #include <cstdio>
 
-int main(const int argc, const char** const argv) noexcept {
+int main(const int argc, const char* const* const argv) noexcept {
     @autoreleasepool {
         // Set the working directory to the .app folder if we can't find Doom.cue:
         NSFileManager* fileMgr = [NSFileManager defaultManager];
@@ -24,6 +25,10 @@ int main(const int argc, const char** const argv) noexcept {
             [fileMgr changeCurrentDirectoryPath: appFolder.path];
         }
 
-        return psx_main(argc, argv);
+        #if PSYDOOM_LAUNCHER
+            return Launcher::launcherMain(argc, argv);
+        #else
+            return psx_main(argc, argv);
+        #endif
     }
 }

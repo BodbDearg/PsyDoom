@@ -21,7 +21,7 @@ extern bool         gbNoMonsters;
 extern bool         gbPistolStart;
 extern bool         gbTurboMode;
 
-void init(const int argc, const char** const argv) noexcept;
+void init(const int argc, const char* const* const argv) noexcept;
 void shutdown() noexcept;
 const char* getServerHost() noexcept;
 void addWadArgsToList(WadList& wadList) noexcept;

@@ -1,6 +1,5 @@
 ﻿#include "Doom/psx_main.h"
-
-#include "Macros.h"
+#include "PsyDoom/Launcher/Launcher.h"
 
 #include <memory>
 #include <string>
@@ -105,19 +104,22 @@ static void openDebugConsoleWindow() noexcept {
 // Windows entrypoint for PsyDoom
 //------------------------------------------------------------------------------------------------------------------------------------------
 int WINAPI wWinMain(
-    [[maybe_unused]] HINSTANCE hInstance,
-    [[maybe_unused]] HINSTANCE hPrevInstance,
-    PWSTR lpCmdLine,
-    [[maybe_unused]] int nShowCmd
+    [[maybe_unused]] const HINSTANCE hInstance,
+    [[maybe_unused]] const HINSTANCE hPrevInstance,
+    const PWSTR lpCmdLine,
+    [[maybe_unused]] const int nShowCmd
 ) {
-    // Get the arguments in a nice standard C like format
-    Args args = getCmdLineArgs(lpCmdLine);
-
     // In debug builds allocate a console window also and redirect the standard streams to it
     #if !NDEBUG
         openDebugConsoleWindow();
     #endif
 
-    // Run PsyDoom!
-    return psx_main((int) args.argv.size(), args.argv.data());
+    // Get the 'main' function arguments in standard C format and then run the game
+    const Args args = getCmdLineArgs(lpCmdLine);
+    
+    #if PSYDOOM_LAUNCHER
+        return Launcher::launcherMain((int) args.argv.size(), args.argv.data());
+    #else
+        return psx_main((int) args.argv.size(), args.argv.data());
+    #endif
 }

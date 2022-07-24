@@ -21,6 +21,7 @@ struct DiscFileData {
     uint32_t                        numBytes;
 };
 
+const char* getGameVersionString() noexcept;
 void installFatalErrorHandler() noexcept;
 void uninstallFatalErrorHandler() noexcept;
 std::string getOrCreateUserDataFolder() noexcept;

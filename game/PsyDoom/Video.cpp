@@ -124,13 +124,6 @@ void initVideo() noexcept {
     determineVideoBackend();
     ASSERT(gpVideoBackend);
 
-    // This is the window title to use
-    #ifdef GAME_VERSION_STR
-        constexpr const char* gameVersionStr = "PsyDoom " GAME_VERSION_STR;
-    #else
-        constexpr const char* gameVersionStr = "PsyDoom <UNKNOWN_VERSION>";
-    #endif
-
     // Set and sanitize overscan settings
     gTopOverscan = std::clamp(Config::gTopOverscanPixels, 0, ORIG_DRAW_RES_Y / 2 - 1);
     gBotOverscan = std::clamp(Config::gBottomOverscanPixels, 0, ORIG_DRAW_RES_Y / 2 - 1);
@@ -145,7 +138,7 @@ void initVideo() noexcept {
     const int32_t windowY = SDL_WINDOWPOS_CENTERED;
 
     gpSdlWindow = SDL_CreateWindow(
-        gameVersionStr,
+        Utils::getGameVersionString(),
         windowX,
         windowY,
         winSizeX,

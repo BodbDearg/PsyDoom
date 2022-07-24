@@ -38,6 +38,18 @@ typedef std::chrono::high_resolution_clock::time_point timepoint_t;
 static timepoint_t gLastPlatformUpdateTime = {};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Gets the game version string.
+// This is used for the window title.
+//------------------------------------------------------------------------------------------------------------------------------------------
+const char* getGameVersionString() noexcept {
+    #ifdef GAME_VERSION_STR
+        return "PsyDoom " GAME_VERSION_STR;
+    #else
+        return "PsyDoom <UNKNOWN_VERSION>";
+    #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // A custom handler for fatal errors and installing and uninstalling it
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void fatalErrorHandler(const char* const msg) noexcept {
