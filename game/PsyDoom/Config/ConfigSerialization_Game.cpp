@@ -31,6 +31,8 @@ void initCfgSerialization_Game() noexcept {
     cfg.cueFilePath = makeConfigField(
         "CueFilePath",
         "Path to the .cue file for the PlayStation 'Doom' or 'Final Doom' disc, or other supported mod.\n"
+        "See PsyDoom's main README.md file for a list of supported game discs.\n"
+        "\n"
         "A valid .cue (cue sheet) file for the desired game must be provided in order to run PsyDoom.\n"
         "A relative or absolute path can be used; relative paths are relative to the current OS working\n"
         "directory, which is normally the directory that the PsyDoom executable is found in.\n"

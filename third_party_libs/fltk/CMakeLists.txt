@@ -389,6 +389,7 @@ if (PLATFORM_WINDOWS)
         "${SRC_DIR}/drivers/WinAPI/Fl_WinAPI_Window_Driver.cxx"
         "${SRC_DIR}/drivers/WinAPI/Fl_WinAPI_Window_Driver.H"
         "${SRC_DIR}/fl_dnd_win32.cxx"
+        "${SRC_DIR}/Fl_Native_File_Chooser_WIN32.cxx"
         "${SRC_DIR}/Fl_win32.cxx"
         "${SRC_DIR}/scandir_win32.c"
     )
@@ -471,8 +472,7 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Image_Surface_Driver.H"
         "${SRC_DIR}/fl_dnd_x.cxx"
         "${SRC_DIR}/Fl_get_key.cxx"
-        "${SRC_DIR}/Fl_Native_File_Chooser_Kdialog.cxx"
-        "${SRC_DIR}/Fl_Native_File_Chooser_Kdialog.H"
+        "${SRC_DIR}/Fl_Native_File_Chooser_FLTK.cxx"
         "${SRC_DIR}/Fl_x.cxx"
         "${SRC_DIR}/Xutf8.h"
         "${SRC_DIR}/xutf8/utf8Input.c"

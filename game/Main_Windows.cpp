@@ -21,21 +21,20 @@ struct Args {
 // Converts the Windows style single arg list (wide character) to a standard C style argument list encoded in UTF-8
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Args getCmdLineArgs(const PWSTR lpCmdLine) {
-    // If the command line is an empty string then return no args.
-    // Otherwise 'CommandLineToArgvW' will give the path to the executable as an 'argument'.
-    if (!lpCmdLine[0])
-        return Args{};
+    const bool bHaveCmdLineArgs = (lpCmdLine[0] != 0);
 
-    // Split up the command line string
+    // Split up the command line string.
+    // Note that if the input string to 'CommandLineToArgvW' is empty then the program name will be returned instead.
     int argc = {};
     Args args = {};
     LPWSTR* const argvW = CommandLineToArgvW(lpCmdLine, &argc);
 
     // Makeup a combined argument string with all arguments separated by a null character.
-    // Add in the program name first of all, then the split up the arguments:
+    // Add in the program name first of all, unless it was already returned by 'CommandLineToArgvW' when no command line is provided.
+    // After that then split up the arguments.
     args.argStr.reserve(512);
 
-    {
+    if (bHaveCmdLineArgs) {
         // Get the name of the .exe: reserve initially MAX_PATH and keep doubling the buffer size until we have enough to hold the .exe path
         std::wstring exeFileName;
         exeFileName.resize(MAX_PATH);
