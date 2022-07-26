@@ -16,6 +16,7 @@ BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl.H>
     #include <FL/Fl_Box.H>
     #include <FL/Fl_Button.H>
+    #include <FL/Fl_Check_Button.H>
     #include <FL/Fl_Double_Window.H>
     #include <FL/Fl_Group.H>
     #include <FL/Fl_Input.H>
@@ -45,12 +46,22 @@ struct Widgets {
     Fl_Tabs*                        pTabs;
 
     struct Tab_Launcher {
-        Fl_Group*   pTab;
-        Fl_Box*     pLabel_cue;
-        Fl_Input*   pInput_cue;
-        Fl_Button*  pButton_cuePick;
-        Fl_Button*  pButton_cueClear;
-        Fl_Button*  pButton_launch;
+        Fl_Group*           pTab;
+        // Cue file selection
+        Fl_Box*             pLabel_cue;
+        Fl_Input*           pInput_cue;
+        Fl_Button*          pButton_cuePick;
+        Fl_Button*          pButton_cueClear;
+        // Mod data dir selection
+        Fl_Box*             pLabel_dataDir;
+        Fl_Input*           pInput_dataDir;
+        Fl_Button*          pButton_dataDirPick;
+        Fl_Button*          pButton_dataDirClear;
+        // Tweaks & cheats
+        Fl_Box*             pLabel_tweaksAndCheats;
+        Fl_Check_Button*    pCheck_pistolStart;
+        // Launch button
+        Fl_Button*          pButton_launch;
     } tab_launcher;
 
     struct Tab_Graphics {
@@ -184,6 +195,42 @@ static RectExtents getTextDrawExtents(const Fl_Widget& widget) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: makes a generic text input and styles it for this launcher
+//------------------------------------------------------------------------------------------------------------------------------------------
+static Fl_Input* makeFl_Input(const int x, const int y, const int w, const int h) noexcept {
+    Fl_Input* const pInput = new Fl_Input(x, y, w, h);
+    pInput->color(FL_DARK1, FL_DARK1);
+    pInput->selection_color(FL_LIGHT1);
+    return pInput;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: trims the specified text on both ends of the string and returns the result
+//------------------------------------------------------------------------------------------------------------------------------------------
+static std::string trimText(const char* const text) noexcept {
+    if (!text)
+        return std::string();
+
+    const auto isWhitespace = [](const char c) {
+        return ((c == ' ') || (c == '\t') || (c == '\n') || (c == '\r') || (c == '\v') || (c == '\f'));
+    };
+
+    const char* pStartChar = text;
+
+    while (isWhitespace(pStartChar[0])) {
+        ++pStartChar;
+    }
+
+    const char* pEndChar = pStartChar + std::strlen(pStartChar);
+
+    while ((pEndChar > pStartChar) && isWhitespace(pEndChar[-1])) {
+        --pEndChar;
+    }
+
+    return std::string(pStartChar, pEndChar - pStartChar);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes FLTK global style settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initFltkGlobalStyleSettings() noexcept {
@@ -222,7 +269,7 @@ static void populateLauncherTab(Widgets::Tab_Launcher& tab) noexcept {
 
     const RectExtents tabArea = getRectExtents(*tab.pTab);
 
-    // Cue file selection ('-cue' parameter)
+    // Cue file selection
     tab.pLabel_cue = new Fl_Box(FL_NO_BOX, tabArea.lx + 20, tabArea.ty + 20, 150, 30, "Game disc .cue file");
     tab.pLabel_cue->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     tab.pLabel_cue->tooltip(
@@ -236,7 +283,17 @@ static void populateLauncherTab(Widgets::Tab_Launcher& tab) noexcept {
         "   -cue <CUE_FILE_PATH>"
     );
 
-    tab.pButton_cuePick = new Fl_Button(tabArea.rx - 120, tabArea.ty + 20, 80, 30, "Browse");
+    tab.pButton_cueClear = new Fl_Button(tabArea.rx - 50, tabArea.ty + 50, 30, 30, "X");
+    tab.pButton_cueClear->callback(
+        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Widgets::Tab_Launcher& tab = *(Widgets::Tab_Launcher*) pUserData;
+            tab.pInput_cue->value("");
+        },
+        &tab
+    );
+
+    tab.pButton_cuePick = new Fl_Button(tabArea.rx - 130, tabArea.ty + 50, 80, 30, "Browse");
     tab.pButton_cuePick->callback(
         []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
             ASSERT(pUserData);
@@ -254,23 +311,52 @@ static void populateLauncherTab(Widgets::Tab_Launcher& tab) noexcept {
         &tab
     );
 
-    tab.pButton_cueClear = new Fl_Button(tabArea.rx - 40, tabArea.ty + 20, 30, 30, "X");
-    tab.pButton_cueClear->callback(
+    const int cueInputLx = tabArea.lx + 20;
+    const int cueInputRx = getRectExtents(*tab.pButton_cuePick).lx - 10;
+    tab.pInput_cue = makeFl_Input(cueInputLx, tabArea.ty + 50, cueInputRx - cueInputLx, 30);
+    tab.pInput_cue->tooltip(tab.pLabel_cue->tooltip());
+
+    // Mod data dir selection
+    tab.pLabel_dataDir = new Fl_Box(FL_NO_BOX, tabArea.lx + 20, tabArea.ty + 90, 150, 30, "Mod data dir");
+    tab.pLabel_dataDir->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    tab.pLabel_dataDir->tooltip(
+        "Path to a directory containing files for a user mod.\n"
+        "\n"
+        "Command line argument:\n"
+        "   -datadir <DIRECTORY_PATH>"
+    );
+
+    tab.pButton_dataDirClear = new Fl_Button(tabArea.rx - 50, tabArea.ty + 120, 30, 30, "X");
+    tab.pButton_dataDirClear->callback(
         []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Widgets::Tab_Launcher& tab = *(Widgets::Tab_Launcher*) pUserData;
-            tab.pInput_cue->value("");
+            tab.pInput_dataDir->value("");
         },
         &tab
     );
 
-    const int cueInputLx = getTextDrawExtents(*tab.pLabel_cue).rx + 20;
-    const int cueInputRx = getRectExtents(*tab.pButton_cuePick).lx - 10;
+    tab.pButton_dataDirPick = new Fl_Button(tabArea.rx - 130, tabArea.ty + 120, 80, 30, "Browse");
+    tab.pButton_dataDirPick->callback(
+        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Widgets::Tab_Launcher& tab = *(Widgets::Tab_Launcher*) pUserData;
 
-    tab.pInput_cue = new Fl_Input(cueInputLx, tabArea.ty + 20, cueInputRx - cueInputLx, 30);
-    tab.pInput_cue->color(FL_DARK1, FL_DARK1);
-    tab.pInput_cue->selection_color(FL_LIGHT1);
-    tab.pInput_cue->tooltip(tab.pLabel_cue->tooltip());
+            const auto pFileChooser = std::make_unique<Fl_Native_File_Chooser>();
+            pFileChooser->type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
+            pFileChooser->title("Choose a directory containing files for a PsyDoom mod");
+
+            if ((pFileChooser->show() == 0) && (pFileChooser->count() == 1)) {
+                tab.pInput_dataDir->value(pFileChooser->filename());
+            }
+        },
+        &tab
+    );
+
+    const int dataDirInputLx = tabArea.lx + 20;
+    const int dataDirInputRx = getRectExtents(*tab.pButton_dataDirPick).lx - 10;
+    tab.pInput_dataDir = makeFl_Input(cueInputLx, tabArea.ty + 120, cueInputRx - cueInputLx, 30);
+    tab.pInput_dataDir->tooltip(tab.pLabel_cue->tooltip());
 
     // Launch button
     tab.pButton_launch = new Fl_Button(tabArea.rx - 210, tabArea.by - 50, 200, 40, "Launch!");
@@ -357,6 +443,24 @@ static void makeLauncherWindow(Widgets& widgets, const int winW, const int winH)
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the command line arguments specified by the user (via the launcher) to the given list of arguments
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void addLauncherProgramArgs(std::vector<std::string>& args) noexcept {
+    const std::string cuePath = trimText(gWidgets.tab_launcher.pInput_cue->value());
+    const std::string dataDirPath = trimText(gWidgets.tab_launcher.pInput_dataDir->value());
+
+    if (!cuePath.empty()) {
+        args.push_back("-cue");
+        args.push_back(cuePath);
+    }
+
+    if (!dataDirPath.empty()) {
+        args.push_back("-datadir");
+        args.push_back(dataDirPath);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Runs the launcher dialog.
 // Returns 'true' if the main program should proceed afterwards, 'false' otherwise.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -373,15 +477,10 @@ static void runLauncher(const int argc, const char* const* const argv) noexcept 
     gWidgets.pWindow->show();
     Fl::run();
 
-    // TODO: makeup new program launch arguments (based on chosen settings)
-    // TODO: move this into a proper function
-    if (const char* const pCuePath = gWidgets.tab_launcher.pInput_cue->value()) {
-        // TODO: trim this argument
-        if (pCuePath[0]) {
-            gProgArgs.push_back("-cue");
-            gProgArgs.push_back(pCuePath);
-        }
-    }
+    // Add launch arguments specified by the user
+    addLauncherProgramArgs(gProgArgs);
+
+    // TODO: save edits to settings made in the launcher
 
     // Cleanup
     gWidgets = {};
