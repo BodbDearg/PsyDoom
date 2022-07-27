@@ -27,6 +27,7 @@ struct Tab_Launcher {
     Fl_Input*           pInput_dataDir;
     Fl_Check_Button*    pCheck_pistolStart;
     Fl_Check_Button*    pCheck_turbo;
+    Fl_Check_Button*    pCheck_recordDemos;
     Fl_Check_Button*    pCheck_noMonsters;
     Fl_Box*             pLabel_netHost;
     Fl_Input*           pInput_netHost;

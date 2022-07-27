@@ -237,6 +237,10 @@ static void addLauncherProgramArgs(Widgets& widgets, std::vector<std::string>& p
             }
         }
     }
+
+    if (widgets.tab_launcher.pCheck_recordDemos->value() != 0) {
+        programArgs.push_back("-record");
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

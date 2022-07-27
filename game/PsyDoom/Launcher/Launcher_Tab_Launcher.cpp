@@ -21,7 +21,7 @@ BEGIN_NAMESPACE(Launcher)
 // Makes the cue file selector
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeCueFileSelector(Tab_Launcher& tab, const int lx, const int rx, const int ty) noexcept {
-    const auto pLabel_cue = new Fl_Box(FL_NO_BOX, lx, ty, 150, 30, "Game disc .cue file");
+    const auto pLabel_cue = new Fl_Box(FL_NO_BOX, lx, ty, 150, 30, "Game disc");
     pLabel_cue->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     pLabel_cue->tooltip(
         "Path to the game disc's .cue file.\n"
@@ -109,11 +109,11 @@ static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Makes the 'tweaks and cheats' options section
+// Makes the 'Game options' section
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeTweaksAndCheatOptions(Tab_Launcher& tab, const int x, const int y) noexcept {
-    new Fl_Box(FL_NO_BOX, x, y, 170, 30, "Tweaks & cheats");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 170, 110, "");
+static void makeGameOptionsSection(Tab_Launcher& tab, const int x, const int y) noexcept {
+    new Fl_Box(FL_NO_BOX, x, y, 340, 30, "Game options");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 340, 110, "");
 
     tab.pCheck_pistolStart = makeFl_Check_Button(x + 10, y + 40, 150, 30, "  Force pistol starts");
     tab.pCheck_pistolStart->tooltip(
@@ -127,7 +127,14 @@ static void makeTweaksAndCheatOptions(Tab_Launcher& tab, const int x, const int 
         "Doors and platforms also move 2x as fast. Monsters are unaffected."
     );
 
-    tab.pCheck_noMonsters = makeFl_Check_Button(x + 10, y + 100, 150, 30, "  No monsters");
+    tab.pCheck_recordDemos = makeFl_Check_Button(x + 180, y + 40, 150, 30, "  Record demos");
+    tab.pCheck_recordDemos->tooltip(
+        "If enabled causes demos to be recorded for each map played.\n"
+        "Demos will be named `DEMO_MAP??.LMP` after the current map number.\n"
+        "All demos are output to the PsyDoom user settings and data directory."
+    );
+
+    tab.pCheck_noMonsters = makeFl_Check_Button(x + 180, y + 70, 150, 30, "  No monsters");
     tab.pCheck_noMonsters->tooltip(
         "Removes monsters from all levels.\n"
         "Note: this might make some maps impossible to complete without cheats!"
@@ -152,10 +159,10 @@ static void onNetPeerTypeUpdated(Tab_Launcher& tab) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Makes multiplayer related options
+// Makes network related options
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeMultiplayerOptions(Tab_Launcher& tab, const int x, const int y) noexcept {
-    new Fl_Box(FL_NO_BOX, x, y, 400, 30, "Network Settings");
+static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noexcept {
+    new Fl_Box(FL_NO_BOX, x, y, 400, 30, "Network settings");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 400, 110, "");
 
     tab.pLabel_netHost = new Fl_Box(FL_NO_BOX, x + 10, y + 45, 100, 30, "Host");
@@ -245,8 +252,8 @@ void populate(Tab_Launcher& tab) noexcept {
 
     makeCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 50);
     makeModDataDirSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 110);
-    makeTweaksAndCheatOptions(tab, tabRect.lx + 20, 180);
-    makeMultiplayerOptions(tab, tabRect.lx + 210, 180);
+    makeGameOptionsSection(tab, tabRect.lx + 20, 180);
+    makeNetworkOptions(tab, tabRect.lx + 400, 180);
     makeLaunchButton(tab, tabRect.rx - 210, tabRect.rx - 20, tabRect.by - 50);
 }
 
