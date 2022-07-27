@@ -9,8 +9,10 @@
 class Fl_Box;
 class Fl_Button;
 class Fl_Check_Button;
+class Fl_Choice;
 class Fl_Group;
 class Fl_Input;
+class Fl_Int_Input;
 class Fl_Tabs;
 class Fl_Window;
 
@@ -26,6 +28,11 @@ struct Tab_Launcher {
     Fl_Check_Button*    pCheck_pistolStart;
     Fl_Check_Button*    pCheck_turbo;
     Fl_Check_Button*    pCheck_noMonsters;
+    Fl_Box*             pLabel_netHost;
+    Fl_Input*           pInput_netHost;
+    Fl_Button*          pButton_clearNetHost;
+    Fl_Int_Input*       pInput_netPort;
+    Fl_Choice*          pChoice_netPeerType;
     Fl_Button*          pButton_launch;
 };
 

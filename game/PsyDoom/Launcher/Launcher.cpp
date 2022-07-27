@@ -22,6 +22,7 @@ BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Double_Window.H>
     #include <FL/Fl_Group.H>
     #include <FL/Fl_Input.H>
+    #include <FL/Fl_Int_Input.H>
     #include <FL/Fl_Native_File_Chooser.H>
     #include <FL/Fl_Tabs.H>
     #include <FL/Fl_Tooltip.H>
@@ -187,6 +188,8 @@ static void makeLauncherWindow(Widgets& widgets, const int winW, const int winH)
 static void addLauncherProgramArgs(Widgets& widgets, std::vector<std::string>& programArgs) noexcept {
     const std::string cuePath = trimText(widgets.tab_launcher.pInput_cue->value());
     const std::string dataDirPath = trimText(widgets.tab_launcher.pInput_dataDir->value());
+    const std::string netHost = trimText(widgets.tab_launcher.pInput_netHost->value());
+    const std::string netPort = trimText(widgets.tab_launcher.pInput_netPort->value());
 
     if (!cuePath.empty()) {
         programArgs.push_back("-cue");
@@ -208,6 +211,31 @@ static void addLauncherProgramArgs(Widgets& widgets, std::vector<std::string>& p
 
     if (widgets.tab_launcher.pCheck_noMonsters->value()) {
         programArgs.push_back("-nomonsters");
+    }
+
+    if (widgets.tab_launcher.pChoice_netPeerType->value() != 0) {
+        // Server peer
+        programArgs.push_back("-server");
+
+        if (!netPort.empty()) {
+            programArgs.push_back(netPort);
+        }
+    }
+    else {
+        // Client peer: a host or port must be specified however
+        if ((netHost.length() > 0) || (netPort.length() > 0)) {
+            programArgs.push_back("-client");
+
+            if (netPort.empty()) {
+                programArgs.push_back(netHost);
+            } else {
+                if (netHost.empty()) {
+                    programArgs.push_back("localhost:" + netPort);
+                } else {
+                    programArgs.push_back(netHost + ":" + netPort);
+                }
+            }
+        }
     }
 }
 

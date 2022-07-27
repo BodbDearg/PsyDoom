@@ -9,8 +9,10 @@
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Box.H>
+    #include <FL/Fl_Choice.H>
     #include <FL/Fl_Group.H>
     #include <FL/Fl_Native_File_Chooser.H>
+    #include <FL/Fl_Int_Input.H>
 END_DISABLE_HEADER_WARNINGS
 
 BEGIN_NAMESPACE(Launcher)
@@ -67,11 +69,11 @@ static void makeCueFileSelector(Tab_Launcher& tab, const int lx, const int rx, c
 // Makes the mod data dir selector
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx, const int ty) noexcept {
-    const auto pLabel_dataDir = new Fl_Box(FL_NO_BOX, lx, ty, 150, 30, "Mod data dir");
+    const auto pLabel_dataDir = new Fl_Box(FL_NO_BOX, lx, ty, 150, 30, "Mod directory");
     pLabel_dataDir->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     pLabel_dataDir->tooltip(
-        "Path to a directory containing files for a PsyDoom mod.\n"
-        "Use this to pick which mod is active.\n"
+        "Path to a directory containing data for a PsyDoom mod.\n"
+        "Use this field to pick which PsyDoom mod is active.\n"
     );
 
     const auto pButton_clearDataDir = new Fl_Button(rx - 30, ty + 30, 30, 30, "X");
@@ -107,9 +109,9 @@ static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Makes the 'tweaks and cheats' widgets
+// Makes the 'tweaks and cheats' options section
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeTweaksAndCheatsWidgets(Tab_Launcher& tab, const int x, const int y) noexcept {
+static void makeTweaksAndCheatOptions(Tab_Launcher& tab, const int x, const int y) noexcept {
     new Fl_Box(FL_NO_BOX, x, y, 170, 30, "Tweaks & cheats");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 170, 110, "");
 
@@ -129,6 +131,94 @@ static void makeTweaksAndCheatsWidgets(Tab_Launcher& tab, const int x, const int
     tab.pCheck_noMonsters->tooltip(
         "Removes monsters from all levels.\n"
         "Note: this might make some maps impossible to complete without cheats!"
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called when the net peer type setting is updated.
+// Updates whether the host name field is active.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void onNetPeerTypeUpdated(Tab_Launcher& tab) noexcept {
+    // Enable the host input box when the peer type is 'client'
+    if (tab.pChoice_netPeerType->value() == 0) {
+        tab.pLabel_netHost->activate();
+        tab.pInput_netHost->activate();
+        tab.pButton_clearNetHost->activate();
+    } else {
+        tab.pLabel_netHost->deactivate();
+        tab.pInput_netHost->deactivate();
+        tab.pButton_clearNetHost->deactivate();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Makes multiplayer related options
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void makeMultiplayerOptions(Tab_Launcher& tab, const int x, const int y) noexcept {
+    new Fl_Box(FL_NO_BOX, x, y, 400, 30, "Network Settings");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 400, 110, "");
+
+    tab.pLabel_netHost = new Fl_Box(FL_NO_BOX, x + 10, y + 45, 100, 30, "Host");
+    tab.pLabel_netHost->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    tab.pLabel_netHost->tooltip(
+        "Client: the hostname or IP address of the machine to connect to.\n"
+        "If unspecified then the client will try to connect to the local machine (localhost)."
+    );
+
+    tab.pInput_netHost = makeFl_Input(x + 60, y + 45, 290, 30);
+    tab.pInput_netHost->tooltip(tab.pLabel_netHost->tooltip());
+
+    tab.pButton_clearNetHost = new Fl_Button(x + 350, y + 45, 30, 30, "X");
+    tab.pButton_clearNetHost->callback(
+        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
+            tab.pInput_netHost->value("");
+        },
+        &tab
+    );
+
+    const auto pLabel_netPort = new Fl_Box(FL_NO_BOX, x + 10, y + 95, 90, 30, "Port");
+    pLabel_netPort->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    pLabel_netPort->tooltip(
+        "Client: specifies the port to connect to the server on.\n"
+        "Server: specifies the port to listen on for incoming connections.\n"
+        "Note: if port is unspecified, the default value of '666' is used."
+    );
+
+    tab.pInput_netPort = makeFl_Int_Input(x + 60, y + 95, 70, 30);
+    tab.pInput_netPort->tooltip(pLabel_netPort->tooltip());
+
+    const auto pButton_clearNetPort = new Fl_Button(x + 130, y + 95, 30, 30, "X");
+    pButton_clearNetPort->callback(
+        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
+            tab.pInput_netPort->value("");
+        },
+        &tab
+    );
+
+    const auto pLabel_netPeerType = new Fl_Box(FL_NO_BOX, x + 200, y + 95, 80, 30, "Peer type");
+    pLabel_netPeerType->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    pLabel_netPeerType->tooltip(
+        "Whether this machine is a client or server in a multiplayer game.\n"
+        "The server is the machine that listens and waits for incoming connections.\n"
+        "The server also determines the game rules and settings."
+    );
+
+    tab.pChoice_netPeerType = new Fl_Choice(x + 280, y + 95, 100, 30);
+    tab.pChoice_netPeerType->add("Client");
+    tab.pChoice_netPeerType->add("Server");
+    tab.pChoice_netPeerType->value(0);
+    tab.pChoice_netPeerType->tooltip(pLabel_netPeerType->tooltip());
+    tab.pChoice_netPeerType->callback(
+        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
+            onNetPeerTypeUpdated(tab);
+        },
+        &tab
     );
 }
 
@@ -155,7 +245,8 @@ void populate(Tab_Launcher& tab) noexcept {
 
     makeCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 50);
     makeModDataDirSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 110);
-    makeTweaksAndCheatsWidgets(tab, tabRect.lx + 20, 180);
+    makeTweaksAndCheatOptions(tab, tabRect.lx + 20, 180);
+    makeMultiplayerOptions(tab, tabRect.lx + 210, 180);
     makeLaunchButton(tab, tabRect.rx - 210, tabRect.rx - 20, tabRect.by - 50);
 }
 
