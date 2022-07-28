@@ -24,6 +24,7 @@ BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Input.H>
     #include <FL/Fl_Int_Input.H>
     #include <FL/Fl_Native_File_Chooser.H>
+    #include <FL/Fl_Pixmap.H>
     #include <FL/Fl_Tabs.H>
     #include <FL/Fl_Tooltip.H>
 END_DISABLE_HEADER_WARNINGS

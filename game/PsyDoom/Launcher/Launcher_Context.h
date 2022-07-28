@@ -14,6 +14,7 @@ class Fl_Choice;
 class Fl_Group;
 class Fl_Input;
 class Fl_Int_Input;
+class Fl_Pixmap;
 class Fl_Tabs;
 class Fl_Window;
 
@@ -23,21 +24,22 @@ BEGIN_NAMESPACE(Launcher)
 // Holds all of the widgets and state for the 'Launcher' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct Tab_Launcher {
-    Fl_Group*           pTab;
-    Fl_Input*           pInput_cue;
-    Fl_Input*           pInput_dataDir;
-    Fl_Check_Button*    pCheck_recordDemos;
-    Fl_Check_Button*    pCheck_pistolStart;
-    Fl_Check_Button*    pCheck_turbo;
-    Fl_Check_Button*    pCheck_noMonsters;
-    Fl_Box*             pLabel_netHost;
-    Fl_Input*           pInput_netHost;
-    Fl_Button*          pButton_clearNetHost;
-    Fl_Int_Input*       pInput_netPort;
-    Fl_Choice*          pChoice_netPeerType;
-    Fl_Button*          pButton_launch;
-    bool                bLaunchGame;                // If true actually run the game once the launcher exits
-    std::string         demoFileToPlay;             // If non empty: path to a demo file to play
+    Fl_Group*                       pTab;
+    Fl_Input*                       pInput_cue;
+    Fl_Input*                       pInput_dataDir;
+    Fl_Check_Button*                pCheck_recordDemos;
+    Fl_Check_Button*                pCheck_pistolStart;
+    Fl_Check_Button*                pCheck_turbo;
+    Fl_Check_Button*                pCheck_noMonsters;
+    Fl_Box*                         pLabel_netHost;
+    Fl_Input*                       pInput_netHost;
+    Fl_Button*                      pButton_clearNetHost;
+    Fl_Int_Input*                   pInput_netPort;
+    Fl_Choice*                      pChoice_netPeerType;
+    Fl_Button*                      pButton_launch;
+    std::unique_ptr<Fl_Pixmap>      pGameLogo;                  // Image data for the game's logo
+    bool                            bLaunchGame;                // If true actually run the game once the launcher exits
+    std::string                     demoFileToPlay;             // If non empty: path to a demo file to play
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
