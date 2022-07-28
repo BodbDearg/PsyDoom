@@ -4,8 +4,8 @@
 #if PSYDOOM_LAUNCHER
 
 #include "Asserts.h"
+#include "Launcher_Context.h"
 #include "Launcher_Utils.h"
-#include "Launcher_Widgets.h"
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Group.H>

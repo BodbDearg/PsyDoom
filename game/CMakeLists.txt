@@ -348,6 +348,7 @@ if (PSYDOOM_INCLUDE_LAUNCHER)
     list(APPEND SOURCE_FILES
         "PsyDoom/Launcher/Launcher.cpp"
         "PsyDoom/Launcher/Launcher.h"
+        "PsyDoom/Launcher/Launcher_Context.h"
         "PsyDoom/Launcher/Launcher_Tab_Audio.cpp"
         "PsyDoom/Launcher/Launcher_Tab_Cheats.cpp"
         "PsyDoom/Launcher/Launcher_Tab_Controls.cpp"
@@ -357,7 +358,6 @@ if (PSYDOOM_INCLUDE_LAUNCHER)
         "PsyDoom/Launcher/Launcher_Tab_Launcher.cpp"
         "PsyDoom/Launcher/Launcher_Utils.cpp"
         "PsyDoom/Launcher/Launcher_Utils.h"
-        "PsyDoom/Launcher/Launcher_Widgets.h"
     )    
 endif()
 

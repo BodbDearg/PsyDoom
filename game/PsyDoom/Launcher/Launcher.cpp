@@ -8,8 +8,8 @@
 
 #include "Asserts.h"
 #include "Doom/psx_main.h"
+#include "Launcher_Context.h"
 #include "Launcher_Utils.h"
-#include "Launcher_Widgets.h"
 #include "PsyDoom/Utils.h"
 
 #include <memory>
@@ -133,17 +133,17 @@ static void initFltkGlobalStyleSettings() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Makes all the tabs for the launcher window
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeLauncherTabs(Widgets& widgets) noexcept {
+static void makeLauncherTabs(Context& ctx) noexcept {
     // N.B: the window must be the 'current' group or the widgets below will leak
-    ASSERT(Fl_Group::current() == widgets.pWindow.get());
+    ASSERT(Fl_Group::current() == ctx.pWindow.get());
 
     // Create the tab container
-    Fl_Window& window = *widgets.pWindow;
+    Fl_Window& window = *ctx.pWindow;
     const int winW = window.w();
     const int winH = window.h();
 
-    widgets.pTabs = new Fl_Tabs(10, 10, winW - 20, winH - 20);
-    widgets.pTabs->color(FL_BACKGROUND_COLOR, FL_LIGHT1);
+    ctx.pTabs = new Fl_Tabs(10, 10, winW - 20, winH - 20);
+    ctx.pTabs->color(FL_BACKGROUND_COLOR, FL_LIGHT1);
 
     // Create and populate each individual tab (these will be added to the tab container)
     const auto makeTab = [=](auto& tabWidgets, const char* const label) noexcept {
@@ -152,44 +152,45 @@ static void makeLauncherTabs(Widgets& widgets) noexcept {
         tabWidgets.pTab->end();
     };
 
-    makeTab(widgets.tab_launcher, "  Launcher  ");
-    makeTab(widgets.tab_graphics, "  Graphics  ");
-    makeTab(widgets.tab_game, "  Game  ");
-    makeTab(widgets.tab_input, "  Input  ");
-    makeTab(widgets.tab_controls,  "  Controls  ");
-    makeTab(widgets.tab_audio, "  Audio  ");
-    makeTab(widgets.tab_cheats, "  Cheats  ");
+    makeTab(ctx.tab_launcher, "  Launcher  ");
+    makeTab(ctx.tab_graphics, "  Graphics  ");
+    makeTab(ctx.tab_game, "  Game  ");
+    makeTab(ctx.tab_input, "  Input  ");
+    makeTab(ctx.tab_controls,  "  Controls  ");
+    makeTab(ctx.tab_audio, "  Audio  ");
+    makeTab(ctx.tab_cheats, "  Cheats  ");
 
     // Done adding tabs to the tab container
-    widgets.pTabs->end();
+    ctx.pTabs->end();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Makes the window for the launcher and saves it inside the given Launcher widgets struct
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeLauncherWindow(Widgets& widgets, const int winW, const int winH) noexcept {
+static void makeLauncherWindow(Context& ctx, const int winW, const int winH) noexcept {
     // Get the screen dimensions
     int screenX = {}, screenY = {};
     int screenW = {}, screenH = {};
     Fl::screen_work_area(screenX, screenY, screenW, screenH);
 
     // Make the window center in the middle of the screen
-    widgets.pWindow = std::make_unique<Fl_Double_Window>((screenW - winW) / 2, (screenH - winH) / 2, winW, winH);
-    widgets.pWindow->label(Utils::getGameVersionString());
+    ctx.pWindow = std::make_unique<Fl_Double_Window>((screenW - winW) / 2, (screenH - winH) / 2, winW, winH);
+    ctx.pWindow->label(Utils::getGameVersionString());
 
     // Make all the tabs and finish up creating the window
-    makeLauncherTabs(widgets);
-    widgets.pWindow->end();
+    makeLauncherTabs(ctx);
+    ctx.pWindow->end();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Adds the program arguments specified by the user (via the launcher) to the given list of program arguments
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void addLauncherProgramArgs(Widgets& widgets, std::vector<std::string>& programArgs) noexcept {
-    const std::string cuePath = trimText(widgets.tab_launcher.pInput_cue->value());
-    const std::string dataDirPath = trimText(widgets.tab_launcher.pInput_dataDir->value());
-    const std::string netHost = trimText(widgets.tab_launcher.pInput_netHost->value());
-    const std::string netPort = trimText(widgets.tab_launcher.pInput_netPort->value());
+static void addLauncherProgramArgs(Context& ctx, std::vector<std::string>& programArgs) noexcept {
+    const std::string cuePath = trimText(ctx.tab_launcher.pInput_cue->value());
+    const std::string dataDirPath = trimText(ctx.tab_launcher.pInput_dataDir->value());
+    const std::string netHost = trimText(ctx.tab_launcher.pInput_netHost->value());
+    const std::string netPort = trimText(ctx.tab_launcher.pInput_netPort->value());
+    const std::string demoToPlay = trimText(ctx.tab_launcher.demoFileToPlay.c_str());
 
     if (!cuePath.empty()) {
         programArgs.push_back("-cue");
@@ -201,19 +202,19 @@ static void addLauncherProgramArgs(Widgets& widgets, std::vector<std::string>& p
         programArgs.push_back(dataDirPath);
     }
 
-    if (widgets.tab_launcher.pCheck_pistolStart->value()) {
+    if (ctx.tab_launcher.pCheck_pistolStart->value()) {
         programArgs.push_back("-pistolstart");
     }
 
-    if (widgets.tab_launcher.pCheck_turbo->value()) {
+    if (ctx.tab_launcher.pCheck_turbo->value()) {
         programArgs.push_back("-turbo");
     }
 
-    if (widgets.tab_launcher.pCheck_noMonsters->value()) {
+    if (ctx.tab_launcher.pCheck_noMonsters->value()) {
         programArgs.push_back("-nomonsters");
     }
 
-    if (widgets.tab_launcher.pChoice_netPeerType->value() != 0) {
+    if (ctx.tab_launcher.pChoice_netPeerType->value() != 0) {
         // Server peer
         programArgs.push_back("-server");
 
@@ -238,8 +239,13 @@ static void addLauncherProgramArgs(Widgets& widgets, std::vector<std::string>& p
         }
     }
 
-    if (widgets.tab_launcher.pCheck_recordDemos->value() != 0) {
+    if (ctx.tab_launcher.pCheck_recordDemos->value() != 0) {
         programArgs.push_back("-record");
+    }
+
+    if (demoToPlay.length() > 0) {
+        programArgs.push_back("-playdemo");
+        programArgs.push_back(demoToPlay);
     }
 }
 
@@ -251,19 +257,18 @@ static LauncherResult runLauncher(std::vector<std::string>& programArgs) noexcep
     initFltkGlobalStyleSettings();
 
     // Create and run the launcher window
-    Widgets widgets = {};
-    makeLauncherWindow(widgets, WINDOW_W, WINDOW_H);
-    widgets.pWindow->show();
+    Context ctx = {};
+    makeLauncherWindow(ctx, WINDOW_W, WINDOW_H);
+    ctx.pWindow->show();
     Fl::run();
 
     // Add launch arguments specified by the user via the UI
-    addLauncherProgramArgs(widgets, programArgs);
+    addLauncherProgramArgs(ctx, programArgs);
 
     // TODO: save edits to settings made in the launcher
 
     // Return whether to run the game or not
-    const bool bDidClickLaunch = (widgets.tab_launcher.pButton_launch->user_data() != nullptr);
-    return (bDidClickLaunch) ? LauncherResult::RunGame : LauncherResult::Exit;
+    return (ctx.tab_launcher.bLaunchGame) ? LauncherResult::RunGame : LauncherResult::Exit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

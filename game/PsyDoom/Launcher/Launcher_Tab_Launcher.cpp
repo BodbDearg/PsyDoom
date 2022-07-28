@@ -4,8 +4,9 @@
 #if PSYDOOM_LAUNCHER
 
 #include "Asserts.h"
+#include "Launcher_Context.h"
 #include "Launcher_Utils.h"
-#include "Launcher_Widgets.h"
+#include "PsyDoom/Utils.h"
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Box.H>
@@ -14,6 +15,8 @@ BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Native_File_Chooser.H>
     #include <FL/Fl_Int_Input.H>
 END_DISABLE_HEADER_WARNINGS
+
+#include <cstdlib>
 
 BEGIN_NAMESPACE(Launcher)
 
@@ -112,29 +115,31 @@ static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx
 // Makes the 'Game options' section
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeGameOptionsSection(Tab_Launcher& tab, const int x, const int y) noexcept {
-    new Fl_Box(FL_NO_BOX, x, y, 340, 30, "Game options");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 340, 110, "");
+    // Container frame
+    new Fl_Box(FL_NO_BOX, x, y, 170, 30, "Game options");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 170, 140, "");
 
-    tab.pCheck_pistolStart = makeFl_Check_Button(x + 10, y + 40, 150, 30, "  Force pistol starts");
-    tab.pCheck_pistolStart->tooltip(
-        "Forces pistol starts on all levels when enabled.\n"
-        "This setting also affects password generation and multiplayer.\n"
-    );
-
-    tab.pCheck_turbo = makeFl_Check_Button(x + 10, y + 70, 150, 30, "  Turbo mode");
-    tab.pCheck_turbo->tooltip(
-        "When enabled allows the player to move and fire 2x as fast.\n"
-        "Doors and platforms also move 2x as fast. Monsters are unaffected."
-    );
-
-    tab.pCheck_recordDemos = makeFl_Check_Button(x + 180, y + 40, 150, 30, "  Record demos");
+    // All the check boxes
+    tab.pCheck_recordDemos = makeFl_Check_Button(x + 10, y + 40, 150, 30, "  Record demos");
     tab.pCheck_recordDemos->tooltip(
         "If enabled causes demos to be recorded for each map played.\n"
         "Demos will be named `DEMO_MAP??.LMP` after the current map number.\n"
         "All demos are output to the PsyDoom user settings and data directory."
     );
 
-    tab.pCheck_noMonsters = makeFl_Check_Button(x + 180, y + 70, 150, 30, "  No monsters");
+    tab.pCheck_pistolStart = makeFl_Check_Button(x + 10, y + 70, 150, 30, "  Force pistol starts");
+    tab.pCheck_pistolStart->tooltip(
+        "Forces pistol starts on all levels when enabled.\n"
+        "This setting also affects password generation and multiplayer.\n"
+    );
+
+    tab.pCheck_turbo = makeFl_Check_Button(x + 10, y + 100, 150, 30, "  Turbo mode");
+    tab.pCheck_turbo->tooltip(
+        "When enabled allows the player to move and fire 2x as fast.\n"
+        "Doors and platforms also move 2x as fast. Monsters are unaffected."
+    );
+
+    tab.pCheck_noMonsters = makeFl_Check_Button(x + 10, y + 130, 150, 30, "  No monsters");
     tab.pCheck_noMonsters->tooltip(
         "Removes monsters from all levels.\n"
         "Note: this might make some maps impossible to complete without cheats!"
@@ -159,12 +164,23 @@ static void onNetPeerTypeUpdated(Tab_Launcher& tab) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Sets a flag to say that the game should be launched.
+// Then begins the process of launching the game by closing the launcher window.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void requestGameBeLaunched(Tab_Launcher& tab) noexcept {
+    tab.bLaunchGame = true;
+    tab.pTab->window()->hide();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Makes network related options
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noexcept {
+    // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 400, 30, "Network settings");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 400, 110, "");
 
+    // Host selection
     tab.pLabel_netHost = new Fl_Box(FL_NO_BOX, x + 10, y + 45, 100, 30, "Host");
     tab.pLabel_netHost->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     tab.pLabel_netHost->tooltip(
@@ -185,6 +201,7 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
         &tab
     );
 
+    // Port selection
     const auto pLabel_netPort = new Fl_Box(FL_NO_BOX, x + 10, y + 95, 90, 30, "Port");
     pLabel_netPort->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     pLabel_netPort->tooltip(
@@ -206,6 +223,7 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
         &tab
     );
 
+    // Peer type selection
     const auto pLabel_netPeerType = new Fl_Box(FL_NO_BOX, x + 200, y + 95, 80, 30, "Peer type");
     pLabel_netPeerType->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     pLabel_netPeerType->tooltip(
@@ -220,7 +238,7 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
     tab.pChoice_netPeerType->value(0);
     tab.pChoice_netPeerType->tooltip(pLabel_netPeerType->tooltip());
     tab.pChoice_netPeerType->callback(
-        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+        [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             onNetPeerTypeUpdated(tab);
@@ -234,11 +252,69 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeLaunchButton(Tab_Launcher& tab, const int lx, const int rx, const int ty) noexcept {
     tab.pButton_launch = new Fl_Button(lx, ty, rx - lx, 40, "Launch!");
-    tab.pButton_launch->callback([](Fl_Widget* const pWidget, [[maybe_unused]] void* const pUserData) noexcept {
-        // Note: set the button user data to '1' to signify that the game should be launched
-        pWidget->user_data((void*) 1);
-        pWidget->window()->hide();
-    });
+    tab.pButton_launch->callback(
+        [](Fl_Widget*, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
+            requestGameBeLaunched(tab);
+        },
+        &tab
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Makes the 'tools' section
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void makeToolsSection(Tab_Launcher& tab, const int x, const int y) noexcept {
+    // Container frame
+    new Fl_Box(FL_NO_BOX, x, y, 300, 30, "Tools");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 290, 110, "");
+
+    // Button to open the PsyDoom data directory
+    const auto pButton_openDataDir = new Fl_Button(x + 20, y + 50, 250, 30, "Open PsyDoom data directory");
+    pButton_openDataDir->callback(
+        [](Fl_Widget*, void*) noexcept {
+            const std::string userDataFolder = Utils::getOrCreateUserDataFolder();
+
+            #if WIN32
+                // Windows
+                const std::string shellCmd = std::string("explorer \"") + userDataFolder + "\"";
+            #elif __APPLE__
+                // MacOS
+                const std::string shellCmd = std::string("open \"") + userDataFolder + "\"";
+            #elif __linux__
+                // Linux
+                const std::string shellCmd = std::string("xdg-open \"") + userDataFolder + "\"";
+            #else
+                #error Need to implement opening the data directory for this platform!
+            #endif
+
+            std::system(shellCmd.c_str());
+        },
+        &tab
+    );
+
+    // A button to play a demo file
+    const auto pButton_playDemo = new Fl_Button(x + 20, y + 100, 250, 30, "Play a demo file");
+    pButton_playDemo->callback(
+        [](Fl_Widget*, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
+
+            const std::string userDataFolder = Utils::getOrCreateUserDataFolder();
+
+            const auto pFileChooser = std::make_unique<Fl_Native_File_Chooser>();
+            pFileChooser->type(Fl_Native_File_Chooser::BROWSE_FILE);
+            pFileChooser->title("Choose a demo file to play");
+            pFileChooser->directory(userDataFolder.c_str());
+
+            if ((pFileChooser->show() == 0) && (pFileChooser->count() == 1)) {
+                tab.demoFileToPlay = pFileChooser->filename();
+                requestGameBeLaunched(tab);
+            }
+        },
+        &tab
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -250,10 +326,11 @@ void populate(Tab_Launcher& tab) noexcept {
 
     const RectExtents tabRect = getRectExtents(*tab.pTab);
 
-    makeCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 50);
-    makeModDataDirSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 110);
-    makeGameOptionsSection(tab, tabRect.lx + 20, 180);
-    makeNetworkOptions(tab, tabRect.lx + 400, 180);
+    makeCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 230);
+    makeModDataDirSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 290);
+    makeGameOptionsSection(tab, tabRect.lx + 20, 360);
+    makeNetworkOptions(tab, tabRect.lx + 210, 360);
+    makeToolsSection(tab, tabRect.lx + 630, 360);
     makeLaunchButton(tab, tabRect.rx - 210, tabRect.rx - 20, tabRect.by - 50);
 }
 
