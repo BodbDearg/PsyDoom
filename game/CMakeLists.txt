@@ -358,6 +358,8 @@ if (PSYDOOM_INCLUDE_LAUNCHER)
         "PsyDoom/Launcher/Launcher_Tab_Launcher.cpp"
         "PsyDoom/Launcher/Launcher_Utils.cpp"
         "PsyDoom/Launcher/Launcher_Utils.h"
+        "PsyDoom/Launcher/LauncherPrefs.cpp"
+        "PsyDoom/Launcher/LauncherPrefs.h"
     )    
 endif()
 

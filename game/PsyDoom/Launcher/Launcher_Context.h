@@ -40,6 +40,9 @@ struct Tab_Launcher {
     std::unique_ptr<Fl_Pixmap>      pGameLogo;                  // Image data for the game's logo
     bool                            bLaunchGame;                // If true actually run the game once the launcher exits
     std::string                     demoFileToPlay;             // If non empty: path to a demo file to play
+
+    // A callback invoked when the net peer type is updated
+    void (*onNetPeerTypeUpdated)(Tab_Launcher& tab) noexcept;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

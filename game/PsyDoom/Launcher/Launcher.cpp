@@ -10,6 +10,7 @@
 #include "Doom/psx_main.h"
 #include "Launcher_Context.h"
 #include "Launcher_Utils.h"
+#include "LauncherPrefs.h"
 #include "PsyDoom/Utils.h"
 
 #include <memory>
@@ -257,16 +258,22 @@ static LauncherResult runLauncher(std::vector<std::string>& programArgs) noexcep
     // Some global FLTK setup
     initFltkGlobalStyleSettings();
 
-    // Create and run the launcher window
+    // Create the launcher window and load previous launcher settings
     Context ctx = {};
     makeLauncherWindow(ctx, WINDOW_W, WINDOW_H);
+    LauncherPrefs::load(ctx.tab_launcher);
+
+    // Run the launcher
     ctx.pWindow->show();
     Fl::run();
 
+    // Save any changes to launcher preferences
+    if (LauncherPrefs::shouldSave(ctx.tab_launcher)) {
+        LauncherPrefs::save(ctx.tab_launcher);
+    }
+
     // Add launch arguments specified by the user via the UI
     addLauncherProgramArgs(ctx, programArgs);
-
-    // TODO: save edits to settings made in the launcher
 
     // Return whether to run the game or not
     return (ctx.tab_launcher.bLaunchGame) ? LauncherResult::RunGame : LauncherResult::Exit;

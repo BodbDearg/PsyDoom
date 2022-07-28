@@ -53,16 +53,19 @@ static void makeCueFileSelector(Tab_Launcher& tab, const int lx, const int rx, c
     );
 
     const auto pButton_clearCue = new Fl_Button(rx - 30, ty + 30, 30, 30, "X");
+    pButton_clearCue->tooltip(pLabel_cue->tooltip());
     pButton_clearCue->callback(
         []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             tab.pInput_cue->value("");
+            tab.pInput_cue->set_changed();
         },
         &tab
     );
 
     const auto pButton_pickCue = new Fl_Button(rx - 110, ty + 30, 80, 30, "Browse");
+    pButton_pickCue->tooltip(pLabel_cue->tooltip());
     pButton_pickCue->callback(
         []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
             ASSERT(pUserData);
@@ -75,6 +78,7 @@ static void makeCueFileSelector(Tab_Launcher& tab, const int lx, const int rx, c
 
             if ((pFileChooser->show() == 0) && (pFileChooser->count() == 1)) {
                 tab.pInput_cue->value(pFileChooser->filename());
+                tab.pInput_cue->set_changed();
             }
         },
         &tab
@@ -97,16 +101,19 @@ static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx
     );
 
     const auto pButton_clearDataDir = new Fl_Button(rx - 30, ty + 30, 30, 30, "X");
+    pButton_clearDataDir->tooltip(pLabel_dataDir->tooltip());
     pButton_clearDataDir->callback(
         []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             tab.pInput_dataDir->value("");
+            tab.pInput_dataDir->set_changed();
         },
         &tab
     );
 
     const auto pButton_pickDataDir = new Fl_Button(rx - 110, ty + 30, 80, 30, "Browse");
+    pButton_pickDataDir->tooltip(pLabel_dataDir->tooltip());
     pButton_pickDataDir->callback(
         []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
             ASSERT(pUserData);
@@ -118,6 +125,7 @@ static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx
 
             if ((pFileChooser->show() == 0) && (pFileChooser->count() == 1)) {
                 tab.pInput_dataDir->value(pFileChooser->filename());
+                tab.pInput_dataDir->set_changed();
             }
         },
         &tab
@@ -209,11 +217,13 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
     tab.pInput_netHost->tooltip(tab.pLabel_netHost->tooltip());
 
     tab.pButton_clearNetHost = new Fl_Button(x + 350, y + 50, 30, 30, "X");
+    tab.pButton_clearNetHost->tooltip(tab.pLabel_netHost->tooltip());
     tab.pButton_clearNetHost->callback(
         []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             tab.pInput_netHost->value("");
+            tab.pInput_netHost->set_changed();
         },
         &tab
     );
@@ -224,18 +234,20 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
     pLabel_netPort->tooltip(
         "Client: specifies the port to connect to the server on.\n"
         "Server: specifies the port to listen on for incoming connections.\n"
-        "Note: if port is unspecified, the default value of '666' is used."
+        "Note: if no port is specified then the default value of '666' is used."
     );
 
     tab.pInput_netPort = makeFl_Int_Input(x + 60, y + 100, 70, 30);
     tab.pInput_netPort->tooltip(pLabel_netPort->tooltip());
 
     const auto pButton_clearNetPort = new Fl_Button(x + 130, y + 100, 30, 30, "X");
+    pButton_clearNetPort->tooltip(pLabel_netPort->tooltip());
     pButton_clearNetPort->callback(
         []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             tab.pInput_netPort->value("");
+            tab.pInput_netPort->set_changed();
         },
         &tab
     );
@@ -259,6 +271,10 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             onNetPeerTypeUpdated(tab);
+
+            // Note: because we use a non-default callback FLTK clears the 'changed' flag.
+            // Set it here instead as a minor workaround, so the launcher preferences are saved.
+            tab.pTab->set_changed();
         },
         &tab
     );
@@ -295,6 +311,7 @@ static void makeToolsSection(Tab_Launcher& tab, const int x, const int y) noexce
         },
         &tab
     );
+    pButton_openDataDir->tooltip("Opens the directory that PsyDoom stores preferences, savefiles and recorded demos to.");
 
     // A button to play a demo file
     const auto pButton_playDemo = new Fl_Button(x + 20, y + 100, 250, 30, "Play a demo file");
@@ -317,6 +334,7 @@ static void makeToolsSection(Tab_Launcher& tab, const int x, const int y) noexce
         },
         &tab
     );
+    pButton_openDataDir->tooltip("Play a demo file previously recorded by PsyDoom and then exit.");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,6 +360,7 @@ void populate(Tab_Launcher& tab) noexcept {
     ASSERT(Fl_Group::current() == tab.pTab);
 
     const RectExtents tabRect = getRectExtents(*tab.pTab);
+    tab.onNetPeerTypeUpdated = onNetPeerTypeUpdated;
 
     makeLogo(tab, tabRect.lx, tabRect.rx, tabRect.ty + 120);
     makeCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 230);
