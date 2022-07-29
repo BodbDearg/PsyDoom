@@ -50,8 +50,15 @@ int psx_main(const int argc, const char* const* const argv) noexcept {
         // Parse command line arguments and configuration and initialize input systems
         Utils::installFatalErrorHandler();
         ProgArgs::init(argc, argv);
-        Controls::init();
-        Config::init();
+
+        if (!Controls::didInit()) {
+            Controls::init();
+        }
+
+        if (!Config::didInit()) {
+            Config::init();
+        }
+
         Input::init();
         PlayerPrefs::load();
 

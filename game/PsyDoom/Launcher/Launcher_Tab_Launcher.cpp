@@ -55,7 +55,7 @@ static void makeCueFileSelector(Tab_Launcher& tab, const int lx, const int rx, c
     const auto pButton_clearCue = new Fl_Button(rx - 30, ty + 30, 30, 30, "X");
     pButton_clearCue->tooltip(pLabel_cue->tooltip());
     pButton_clearCue->callback(
-        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+        [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             tab.pInput_cue->value("");
@@ -67,7 +67,7 @@ static void makeCueFileSelector(Tab_Launcher& tab, const int lx, const int rx, c
     const auto pButton_pickCue = new Fl_Button(rx - 110, ty + 30, 80, 30, "Browse");
     pButton_pickCue->tooltip(pLabel_cue->tooltip());
     pButton_pickCue->callback(
-        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+        [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
 
@@ -103,7 +103,7 @@ static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx
     const auto pButton_clearDataDir = new Fl_Button(rx - 30, ty + 30, 30, 30, "X");
     pButton_clearDataDir->tooltip(pLabel_dataDir->tooltip());
     pButton_clearDataDir->callback(
-        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+        [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             tab.pInput_dataDir->value("");
@@ -115,7 +115,7 @@ static void makeModDataDirSelector(Tab_Launcher& tab, const int lx, const int rx
     const auto pButton_pickDataDir = new Fl_Button(rx - 110, ty + 30, 80, 30, "Browse");
     pButton_pickDataDir->tooltip(pLabel_dataDir->tooltip());
     pButton_pickDataDir->callback(
-        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+        [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
 
@@ -219,7 +219,7 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
     tab.pButton_clearNetHost = new Fl_Button(x + 350, y + 50, 30, 30, "X");
     tab.pButton_clearNetHost->tooltip(tab.pLabel_netHost->tooltip());
     tab.pButton_clearNetHost->callback(
-        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+        [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             tab.pInput_netHost->value("");
@@ -243,7 +243,7 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
     const auto pButton_clearNetPort = new Fl_Button(x + 130, y + 100, 30, 30, "X");
     pButton_clearNetPort->tooltip(pLabel_netPort->tooltip());
     pButton_clearNetPort->callback(
-        []([[maybe_unused]] Fl_Widget* const pWidget, void* const pUserData) noexcept {
+        [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
             tab.pInput_netPort->value("");
@@ -285,7 +285,7 @@ static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noex
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeToolsSection(Tab_Launcher& tab, const int x, const int y) noexcept {
     // Container frame
-    new Fl_Box(FL_NO_BOX, x, y, 300, 30, "Tools");
+    new Fl_Box(FL_NO_BOX, x, y, 290, 30, "Tools");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 290, 180, "");
 
     // Button to open the PsyDoom data directory
@@ -341,7 +341,7 @@ static void makeToolsSection(Tab_Launcher& tab, const int x, const int y) noexce
 // Makes the launch button
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeLaunchButton(Tab_Launcher& tab, const int x, const int y) noexcept {
-    tab.pButton_launch = new Fl_Button(x, y, 400, 40, "Launch Game!");
+    tab.pButton_launch = new Fl_Button(x, y, 400, 40, "Launch PsyDoom!");
     tab.pButton_launch->callback(
         [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);

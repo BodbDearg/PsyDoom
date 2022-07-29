@@ -128,6 +128,7 @@ struct BindingData {
 
 void init() noexcept;
 void shutdown() noexcept;
+bool didInit() noexcept;
 
 void clearAllBindings() noexcept;
 void parseBinding(const Binding binding, const char* const str) noexcept;

@@ -13,6 +13,9 @@
 
 BEGIN_NAMESPACE(Controls)
 
+// Whether this module has been initialized
+static bool gbDidInit = false;
+
 // The list of inputs that each control binding uses
 static BindingData gBindings[(uint16_t) Binding::NUM_BINDINGS];
 
@@ -431,6 +434,7 @@ static void addInputSourceToBinding(const InputSrc& inputSrc, BindingData& bindi
 // Startup logic for the controls system
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
+    gbDidInit = true;
     clearAllBindings();
     gCurInputName.reserve(64);
 }
@@ -442,6 +446,14 @@ void shutdown() noexcept {
     clearAllBindings();
     gCurInputName.clear();
     gCurInputName.shrink_to_fit();
+    gbDidInit = false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the controls module has been initialized
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool didInit() noexcept {
+    return gbDidInit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

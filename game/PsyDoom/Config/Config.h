@@ -131,6 +131,7 @@ extern bool     gbNeedSave_Input;
 
 void init() noexcept;
 void shutdown() noexcept;
+bool didInit() noexcept;
 void loadConfigFiles() noexcept;
 
 void setCheatKeySequence(CheatKeySequence& sequence, const char* const pKeysStr) noexcept;

@@ -11,6 +11,9 @@
 #include "Launcher_Context.h"
 #include "Launcher_Utils.h"
 #include "LauncherPrefs.h"
+#include "PsyDoom/Config/Config.h"
+#include "PsyDoom/Config/ConfigSerialization.h"
+#include "PsyDoom/Controls.h"
 #include "PsyDoom/Utils.h"
 
 #include <memory>
@@ -19,7 +22,6 @@ BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl.H>
     #include <FL/Fl_Box.H>
     #include <FL/Fl_Button.H>
-    #include <FL/Fl_Check_Button.H>
     #include <FL/Fl_Double_Window.H>
     #include <FL/Fl_Group.H>
     #include <FL/Fl_Input.H>
@@ -258,25 +260,41 @@ static LauncherResult runLauncher(std::vector<std::string>& programArgs) noexcep
     // Some global FLTK setup
     initFltkGlobalStyleSettings();
 
-    // Create the launcher window and load previous launcher settings
+    // Initialize controls and config subsystems first since they feed into the UI state
+    Controls::init();
+    Config::init();
+
+    // Create the launcher window
     Context ctx = {};
     makeLauncherWindow(ctx, WINDOW_W, WINDOW_H);
+
+    // Load previous launcher settings and apply them to the 'Launcher' page
     LauncherPrefs::load(ctx.tab_launcher);
 
     // Run the launcher
     ctx.pWindow->show();
     Fl::run();
 
-    // Save any changes to launcher preferences
+    // Save any changes to launcher preferences and to game config itself
     if (LauncherPrefs::shouldSave(ctx.tab_launcher)) {
         LauncherPrefs::save(ctx.tab_launcher);
     }
 
+    ConfigSerialization::writeAllConfigFiles(false);
+
     // Add launch arguments specified by the user via the UI
     addLauncherProgramArgs(ctx, programArgs);
 
-    // Return whether to run the game or not
-    return (ctx.tab_launcher.bLaunchGame) ? LauncherResult::RunGame : LauncherResult::Exit;
+    // Cleanup the controls and config systems if we are not going to launch the game.
+    // Normally the game handles cleaning up these, but if we are not launching the game then this module needs to handle that.
+    if (!ctx.tab_launcher.bLaunchGame) {
+        Config::shutdown();
+        Controls::shutdown();
+        return LauncherResult::Exit;
+    }
+
+    // If we get to here then we are launching the game!
+    return LauncherResult::RunGame;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
