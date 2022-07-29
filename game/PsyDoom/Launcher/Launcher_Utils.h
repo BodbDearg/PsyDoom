@@ -5,10 +5,12 @@
 #include "Macros.h"
 
 #include <cstdint>
+#include <cstdlib>
 #include <string>
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Check_Button.H>
+    #include <FL/Fl_Int_Input.H>
 END_DISABLE_HEADER_WARNINGS
 
 class Fl_Check_Button;
@@ -51,6 +53,22 @@ void bindConfigField(Fl_Check_Button& checkBtn) noexcept {
         }
     );
     checkBtn.value(configValue);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: binds an integer config value to the specified input.
+// If the value is changed then the specified dirty flag is also updated.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <int32_t& configValue, bool& configDirtyFlag>
+void bindConfigField(Fl_Int_Input& intInput) noexcept {
+    intInput.callback(
+        [](Fl_Widget* const pWidget, void*) noexcept {
+            Fl_Int_Input* const pIntInput = static_cast<Fl_Int_Input*>(pWidget);
+            configValue = std::atoi(pIntInput->value());
+            configDirtyFlag = true;
+        }
+    );
+    intInput.value(std::to_string(configValue).c_str());
 }
 
 END_NAMESPACE(Launcher)

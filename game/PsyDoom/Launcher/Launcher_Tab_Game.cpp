@@ -81,15 +81,16 @@ static void makeCountersSection(const int x, const int y) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Makes the section for timing related options
+// Makes the input for setting heap size
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeTimingsSection(const int x, const int y) noexcept {
-    // Container frame
-    new Fl_Box(FL_NO_BOX, x, y, 200, 30, "Timings");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 80, "");
+static void makeHeapSizeInput(const int x, const int y) noexcept {
+    const auto pLabel_heapSize = new Fl_Box(FL_NO_BOX, x, y + 40, 80, 30, "Heap Size");
+    pLabel_heapSize->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    pLabel_heapSize->tooltip(ConfigSerialization::gConfig_Game.mainMemoryHeapSize.comment);
 
-    // Various toggles
-    // TODO
+    const auto pInput_heapSize = new Fl_Int_Input(x + 90, y + 40, 110, 30);
+    bindConfigField<Config::gMainMemoryHeapSize, Config::gbNeedSave_Game>(*pInput_heapSize);
+    pInput_heapSize->tooltip(pLabel_heapSize->tooltip());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,7 +98,7 @@ static void makeTimingsSection(const int x, const int y) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeBugFixesSection(const int x, const int y) noexcept {
     // Container frame
-    new Fl_Box(FL_NO_BOX, x, y, 470, 30, "Bug fixes");
+    new Fl_Box(FL_NO_BOX, x, y, 470, 30, "Bug fixes to apply");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 470, 230, "");
 
     // Various toggles
@@ -108,13 +109,13 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 120, 30, "  Use item pickup fix");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 120, 30, "  Item pickup fix");
         bindConfigField<Config::gbUseItemPickupFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useItemPickupFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 120, 30, "  Fix multi line special crossing");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 120, 30, "  Fix multi-line special crossing");
         bindConfigField<Config::gbFixMultiLineSpecialCrossing, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixMultiLineSpecialCrossing.comment);
     }
@@ -126,7 +127,7 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 160, 120, 30, "  Use player rocket blast fix");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 160, 120, 30, "  Player rocket blast fix");
         bindConfigField<Config::gbUsePlayerRocketBlastFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.usePlayerRocketBlastFix.comment);
     }
@@ -144,13 +145,13 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 70, 120, 30, "  Use lost soul spawn fix");
+        const auto pCheck = makeFl_Check_Button(x + 250, y + 70, 120, 30, "  Lost soul spawn fix");
         bindConfigField<Config::gbUseLostSoulSpawnFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useLostSoulSpawnFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 100, 120, 30, "  Use line of sight overflow fix");
+        const auto pCheck = makeFl_Check_Button(x + 250, y + 100, 120, 30, "  Line of sight overflow fix");
         bindConfigField<Config::gbUseLineOfSightOverflowFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useLineOfSightOverflowFix.comment);
     }
@@ -171,6 +172,40 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
         const auto pCheck = makeFl_Check_Button(x + 250, y + 190, 120, 30, "  Fix sound propagation");
         bindConfigField<Config::gbFixSoundPropagation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixSoundPropagation.comment);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Makes the section for various gameplay tweaks
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void makeTweaksSection(const int x, const int y) noexcept {
+    // Container frame
+    new Fl_Box(FL_NO_BOX, x, y, 470, 30, "Tweaks");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 470, 150, "");
+
+    // Various toggles
+    {
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 120, 30, "  Use input latency tweak");
+        bindConfigField<Config::gbUseMoveInputLatencyTweak, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.useMoveInputLatencyTweak.comment);
+    }
+
+    {
+        const auto pCheck = makeFl_Check_Button(x + 250, y + 40, 120, 30, "  Use extended shoot range");
+        bindConfigField<Config::gbUseExtendedPlayerShootRange, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.useExtendedPlayerShootRange.comment);
+    }
+
+    {
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 120, 30, "  Use SSG delay tweak");
+        bindConfigField<Config::gbUseSuperShotgunDelayTweak, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.useSuperShotgunDelayTweak.comment);
+    }
+
+    {
+        const auto pCheck = makeFl_Check_Button(x + 250, y + 70, 120, 30, "  Allow turning cancellation");
+        bindConfigField<Config::gbAllowTurningCancellation, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.allowTurningCancellation.comment);
     }
 }
 
@@ -203,11 +238,11 @@ static void makeMapPatchesSection(const int x, const int y) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Makes the section for fast loading options
+// Makes the section for loading options
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeFastLoadingSection(const int x, const int y) noexcept {
+static void makeLoadingSection(const int x, const int y) noexcept {
     // Container frame
-    new Fl_Box(FL_NO_BOX, x, y, 190, 30, "Fast loading");
+    new Fl_Box(FL_NO_BOX, x, y, 190, 30, "Loading");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 190, 80, "");
 
     // Various toggles
@@ -221,6 +256,55 @@ static void makeFastLoadingSection(const int x, const int y) noexcept {
         const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Skip intros");
         bindConfigField<Config::gbSkipIntros, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.skipIntros.comment);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Makes the section for timing related options
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void makeTimingsSection(const int x, const int y) noexcept {
+    // Container frame
+    new Fl_Box(FL_NO_BOX, x, y, 190, 30, "Game tick rate");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 190, 90, "");
+
+    // Tick rate mode
+    const auto pLabel_mode = new Fl_Box(FL_NO_BOX, x + 20, y + 40, 80, 30, "Mode");
+    pLabel_mode->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    pLabel_mode->tooltip(ConfigSerialization::gConfig_Game.usePalTimings.comment);
+
+    const auto pChoice_mode = new Fl_Choice(x + 80, y + 40, 90, 30);
+    pChoice_mode->add("NTSC");
+    pChoice_mode->add("PAL");
+    pChoice_mode->add("Auto");
+    pChoice_mode->value(0);
+    pChoice_mode->tooltip(pLabel_mode->tooltip());
+    pChoice_mode->callback(
+        [](Fl_Widget* const pWidget, void*) noexcept {
+            Fl_Choice* const pChoice = static_cast<Fl_Choice*>(pWidget);
+
+            switch (pChoice->value()) {
+                case 0: Config::gUsePalTimings =  0; break;
+                case 1: Config::gUsePalTimings = +1; break;
+                case 2: Config::gUsePalTimings = -1; break;
+            }
+
+            Config::gbNeedSave_Game = true;
+        }
+    );
+
+    if (Config::gUsePalTimings < 0) {
+        pChoice_mode->value(2);
+    } else if (Config::gUsePalTimings > 0) {
+        pChoice_mode->value(1);
+    } else {
+        pChoice_mode->value(0);
+    }
+
+    // Whether to use demo timings
+    {
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 80, 150, 30, "  Use demo timings");
+        bindConfigField<Config::gbUseDemoTimings, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.useDemoTimings.comment);
     }
 }
 
@@ -283,10 +367,12 @@ void populate(Tab_Game& tab) noexcept {
 
     makeMotionSection(tabRect.lx + 20, tabRect.ty + 20);
     makeCountersSection(tabRect.lx + 20, tabRect.ty + 230);
-    makeTimingsSection(tabRect.lx + 20, tabRect.ty + 350);
+    makeHeapSizeInput(tabRect.lx + 20, tabRect.ty + 330);
     makeBugFixesSection(tabRect.lx + 240, tabRect.ty + 20);
+    makeTweaksSection(tabRect.lx + 240, tabRect.ty + 290);
     makeMapPatchesSection(tabRect.lx + 730, tabRect.ty + 20);
-    makeFastLoadingSection(tabRect.lx + 730, tabRect.ty + 170);
+    makeLoadingSection(tabRect.lx + 730, tabRect.ty + 170);
+    makeTimingsSection(tabRect.lx + 730, tabRect.ty + 290);
     makeDefaultCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 510);
 }
 

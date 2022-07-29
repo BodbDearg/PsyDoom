@@ -97,11 +97,14 @@ void initCfgSerialization_Game() noexcept {
 
     cfg.mainMemoryHeapSize = makeConfigField(
         "MainMemoryHeapSize",
-        "How much system RAM is available to Doom's 'Zone Memory' heap allocator.\n"
+        "How much system RAM is available to Doom's 'Zone Memory' heap allocator (in bytes).\n"
         "Many memory allocations in the game are serviced by this system so in effect this setting defines\n"
-        "one of the main memory limits for the game. If the value of this setting is <= 0 then PsyDoom will\n"
-        "reserve a default amount of memory - presently 64 MiB. This should be enough for even the most\n"
-        "demanding user maps. For reference, the original PSX Doom had about 1.3 MiB of heap space\n"
+        "one of the main memory limits for the game.\n"
+        "\n"
+        "If the value of this setting is <= 0 then PsyDoom will reserve a default amount of memory - presently\n"
+        "64 MiB. This should be enough for even the most demanding user maps.\n"
+        "\n"
+        "For reference, the original PSX Doom had about 1.3 MiB of heap space\n"
         "available, though it also used less RAM in general being a 32-bit program instead of 64-bit.\n"
         "WARNING: setting this value too low may result in the game crashing with an out of memory error!",
         gMainMemoryHeapSize,
@@ -146,15 +149,18 @@ void initCfgSerialization_Game() noexcept {
         "UsePalTimings",
         "Whether or not to use movement & timing code from the PAL version of the game.\n"
         "This does not alter the refresh rate of the game, just how the game logic is processed & advanced.\n"
+        "NTSC is the default since it offers the most responsive gameplay.\n"
+        "\n"
         "The PAL version simulates the world and enemies slightly faster but the player moves at a slower\n"
         "rate, making the game more difficult. View bobbing is also much stronger in the PAL version unless\n"
         "the 'view bob fix' is applied to make it more consistent with NTSC (PsyDoom default behavior).\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "\n"
         "Allowed values:\n"
-        "  0 = Use NTSC timings\n"
-        "  1 = Use PAL timings\n"
-        " -1 = Auto-decide based on the game disc region",
+        "- Use NTSC timings (0)\n"
+        "- Use PAL timings (1)\n"
+        "- Auto-decide based on the game disc region (-1)",
         gUsePalTimings,
         0
     );
@@ -164,11 +170,13 @@ void initCfgSerialization_Game() noexcept {
         "Whether to restrict player update logic to a consistent tick-rate that advances at the same speed\n"
         "as enemies and the game world; this forced tick-rate will be '15 Hz' when using NTSC timings.\n"
         "Normally player logic updates at 30 Hz when using NTSC timings, framerate permitting.\n"
+        "For PAL timings when this setting is enabled the forced player tick rate will be 12.5 Hz.\n"
         "\n"
-        "If this mode is enabled ('1') then input lag will be increased, and player physics will feel more\n"
+        "If this mode is enabled then input lag will be increased, and player physics will feel more\n"
         "'floaty' due to a bug in the original game which causes weaker gravity under lower framerates.\n"
         "Generally this setting should be left disabled, unless you are really curious...\n"
         "Its main use is to ensure consistent demo recording & playback, where it will be force enabled.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbUseDemoTimings,
         false
@@ -258,8 +266,11 @@ void initCfgSerialization_Game() noexcept {
         "This tweak makes it more responsive and useful during fast action by reducing input latency and\n"
         "brings it more in line with the feel of the PC Super Shotgun. The tweak shifts some of the initial\n"
         "firing delay to later in the animation sequence, so that the overall firing time does not take any\n"
-        "longer than it would normally. The tweak is disabled by default to preserve the original PSX feel\n"
-        "but may be desirable for users who prefer this weapon to handle more like the PC version.\n"
+        "longer than it would normally.\n"
+        "\n"
+        "The tweak is disabled by default to preserve the original PSX feel but may be desirable for users\n"
+        "who prefer this weapon to handle more like the PC version.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbUseSuperShotgunDelayTweak,
         false
@@ -301,8 +312,10 @@ void initCfgSerialization_Game() noexcept {
         "AllowTurningCancellation",
         "For digital turning only: whether doing opposite left/right turns at the same time causes the\n"
         "actions to cancel each other out. Both Doom and Final Doom did NOT do any form of cancellation\n"
-        "for conflicting digital turn movements, therefore if you want the original behavior set to '0'.\n"
+        "for conflicting digital turn movements. If you want the original behavior disable this setting.\n"
+        "\n"
         "This setting does not affect any turning other than digital, all other turning can always cancel.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbAllowTurningCancellation,
         true
@@ -430,6 +443,7 @@ void initCfgSerialization_Game() noexcept {
         "\n"
         "This setting enables patching of issues unique to PsyDoom that do not occur in the original game.\n"
         "These issues are mostly caused by differences in how skies are handled versus standard PSX Doom.\n"
+        "\n"
         "In order to fix many more problems, PsyDoom skies behave more like PC Doom skies in that they do\n"
         "not let you see past them into the 'void' and therefore (potentially) into other rooms past that.\n"
         "This works well most of the time but occasionally slight tweaks are needed to adjust for PsyDoom.\n"

@@ -198,9 +198,9 @@ static void requestGameBeLaunched(Tab_Launcher& tab) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Makes network related options
+// Makes the 'Network settings' section
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeNetworkOptions(Tab_Launcher& tab, const int x, const int y) noexcept {
+static void makeNetworkSettingsSection(Tab_Launcher& tab, const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 400, 30, "Network settings");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 400, 120, "");
@@ -362,11 +362,11 @@ void populate(Tab_Launcher& tab) noexcept {
     const RectExtents tabRect = getRectExtents(*tab.pTab);
     tab.onNetPeerTypeUpdated = onNetPeerTypeUpdated;
 
-    makeLogo(tab, tabRect.lx, tabRect.rx, tabRect.ty + 120);
+    makeLogo(tab, tabRect.lx, tabRect.rx, tabRect.ty + 110);
     makeCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 230);
     makeModDataDirSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 290);
     makeGameOptionsSection(tab, tabRect.lx + 330, 360);
-    makeNetworkOptions(tab, tabRect.lx + 520, 360);
+    makeNetworkSettingsSection(tab, tabRect.lx + 520, 360);
     makeToolsSection(tab, tabRect.lx + 20, 360);
     makeLaunchButton(tab, tabRect.rx - 420, tabRect.by - 60);
 }
