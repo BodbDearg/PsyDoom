@@ -38,7 +38,7 @@ BEGIN_NAMESPACE(Launcher)
 // Dimensions of the launcher window
 //------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr int WINDOW_W = 960;
-static constexpr int WINDOW_H = 600;
+static constexpr int WINDOW_H = 610;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // These are defined in the various launcher tab .cpp files

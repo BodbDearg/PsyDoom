@@ -6,10 +6,12 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Check_Button.H>
+    #include <FL/Fl_Float_Input.H>
     #include <FL/Fl_Int_Input.H>
 END_DISABLE_HEADER_WARNINGS
 
@@ -68,7 +70,29 @@ void bindConfigField(Fl_Int_Input& intInput) noexcept {
             configDirtyFlag = true;
         }
     );
-    intInput.value(std::to_string(configValue).c_str());
+
+    char configValueStr[64];
+    std::snprintf(configValueStr, sizeof(configValueStr), "%d", configValue);
+    intInput.value(configValueStr);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: binds a float config value to the specified input.
+// If the value is changed then the specified dirty flag is also updated.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <float& configValue, bool& configDirtyFlag>
+void bindConfigField(Fl_Float_Input& floatInput) noexcept {
+    floatInput.callback(
+        [](Fl_Widget* const pWidget, void*) noexcept {
+            Fl_Float_Input* const pFloatInput = static_cast<Fl_Float_Input*>(pWidget);
+            configValue = (float) std::atof(pFloatInput->value());
+            configDirtyFlag = true;
+        }
+    );
+
+    char configValueStr[128];
+    std::snprintf(configValueStr, sizeof(configValueStr), "%g", configValue);
+    floatInput.value(configValueStr);
 }
 
 END_NAMESPACE(Launcher)

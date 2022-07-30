@@ -364,10 +364,10 @@ void populate(Tab_Launcher& tab) noexcept {
 
     makeLogo(tab, tabRect.lx, tabRect.rx, tabRect.ty + 110);
     makeCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 230);
-    makeModDataDirSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 290);
-    makeGameOptionsSection(tab, tabRect.lx + 330, 360);
-    makeNetworkSettingsSection(tab, tabRect.lx + 520, 360);
-    makeToolsSection(tab, tabRect.lx + 20, 360);
+    makeModDataDirSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 300);
+    makeGameOptionsSection(tab, tabRect.lx + 330, 370);
+    makeNetworkSettingsSection(tab, tabRect.lx + 520, 370);
+    makeToolsSection(tab, tabRect.lx + 20, 370);
     makeLaunchButton(tab, tabRect.rx - 420, tabRect.by - 60);
 }
 

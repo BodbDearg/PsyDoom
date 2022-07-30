@@ -56,8 +56,13 @@ struct Tab_Graphics {
 // Holds all of the widgets and state for the 'Game' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct Tab_Game {
-    Fl_Group*       pTab;
-    Fl_Input*       pInput_cueFile;
+    Fl_Group*           pTab;
+    Fl_Input*           pInput_cueFile;
+    Fl_Check_Button*    pCheck_uncappedFramerate;
+    Fl_Check_Button*    pCheck_interpolateSectors;
+    Fl_Check_Button*    pCheck_interpolateMobj;
+    Fl_Check_Button*    pCheck_interpolateMonsters;
+    Fl_Check_Button*    pCheck_interpolateWeapon;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

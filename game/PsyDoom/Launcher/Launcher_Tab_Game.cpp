@@ -19,43 +19,77 @@ END_DISABLE_HEADER_WARNINGS
 BEGIN_NAMESPACE(Launcher)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Called when the uncapped framerate setting is updated.
+// Updates whether the interpolation fields are active.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void onUncappedFramerateSettingUpdated(Tab_Game& tab) noexcept {
+    // Can interpolation settings be used?
+    // We need to have uncapped framerates enabled in order for that to be the case.
+    const bool bCanUseInterpolation = (tab.pCheck_uncappedFramerate->value() != 0);
+
+    // Helper that activates or deactivates a check button
+    auto updateInterpolationCheckbox = [&](Fl_Check_Button& check, const bool bConfigValue) noexcept {
+        if (bCanUseInterpolation) {
+            check.value(bConfigValue);
+            check.activate();
+        } else {
+            check.value(0);
+            check.deactivate();
+        }
+    };
+
+    updateInterpolationCheckbox(*tab.pCheck_interpolateSectors,     Config::gbInterpolateSectors);
+    updateInterpolationCheckbox(*tab.pCheck_interpolateMobj,        Config::gbInterpolateMobj);
+    updateInterpolationCheckbox(*tab.pCheck_interpolateMonsters,    Config::gbInterpolateMonsters);
+    updateInterpolationCheckbox(*tab.pCheck_interpolateWeapon,      Config::gbInterpolateWeapon);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Makes the section for motion related options
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeMotionSection(const int x, const int y) noexcept {
+static void makeMotionSection(Tab_Game& tab, const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 200, 30, "Motion");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 170, "");
 
-    // Various toggles
-    {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 120, 30, "  Uncapped framerate");
-        bindConfigField<Config::gbUncapFramerate, Config::gbNeedSave_Game>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Game.uncapFramerate.comment);
-    }
+    // Uncapped framerate toggle
+    tab.pCheck_uncappedFramerate = makeFl_Check_Button(x + 20, y + 40, 160, 30, "  Uncapped framerate");
+    tab.pCheck_uncappedFramerate->callback(
+        [](Fl_Widget*, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Tab_Game& tab = *static_cast<Tab_Game*>(pUserData);
 
-    {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Interpolate sectors");
-        bindConfigField<Config::gbInterpolateSectors, Config::gbNeedSave_Game>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Game.interpolateSectors.comment);
-    }
+            Config::gbUncapFramerate = tab.pCheck_uncappedFramerate->value();
+            Config::gbNeedSave_Game = true;
+            onUncappedFramerateSettingUpdated(tab);
+        },
+        &tab
+    );
+    tab.pCheck_uncappedFramerate->value(Config::gbUncapFramerate);
+    tab.pCheck_uncappedFramerate->tooltip(ConfigSerialization::gConfig_Game.uncapFramerate.comment);
 
-    {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 120, 30, "  Interpolate things");
-        bindConfigField<Config::gbInterpolateMobj, Config::gbNeedSave_Game>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Game.interpolateMobj.comment);
-    }
+    // Interpolate sectors toggle
+    tab.pCheck_interpolateSectors = makeFl_Check_Button(x + 20, y + 70, 160, 30, "  Interpolate sectors");
+    bindConfigField<Config::gbInterpolateSectors, Config::gbNeedSave_Game>(*tab.pCheck_interpolateSectors);
+    tab.pCheck_interpolateSectors->tooltip(ConfigSerialization::gConfig_Game.interpolateSectors.comment);
 
-    {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 130, 120, 30, "  Interpolate monsters");
-        bindConfigField<Config::gbInterpolateMonsters, Config::gbNeedSave_Game>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Game.interpolateMonsters.comment);
-    }
+    // Interpolate things/mobj toggle
+    tab.pCheck_interpolateMobj = makeFl_Check_Button(x + 20, y + 100, 160, 30, "  Interpolate things");
+    bindConfigField<Config::gbInterpolateMobj, Config::gbNeedSave_Game>(*tab.pCheck_interpolateMobj);
+    tab.pCheck_interpolateMobj->tooltip(ConfigSerialization::gConfig_Game.interpolateMobj.comment);
 
-    {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 160, 120, 30, "  Interpolate weapon");
-        bindConfigField<Config::gbInterpolateWeapon, Config::gbNeedSave_Game>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Game.interpolateWeapon.comment);
-    }
+    // Interpolate monsters toggle
+    tab.pCheck_interpolateMonsters = makeFl_Check_Button(x + 20, y + 130, 160, 30, "  Interpolate monsters");
+    bindConfigField<Config::gbInterpolateMonsters, Config::gbNeedSave_Game>(*tab.pCheck_interpolateMonsters);
+    tab.pCheck_interpolateMonsters->tooltip(ConfigSerialization::gConfig_Game.interpolateMonsters.comment);
+
+    // Interpolate weapon toggle
+    tab.pCheck_interpolateWeapon = makeFl_Check_Button(x + 20, y + 160, 160, 30, "  Interpolate weapon");
+    bindConfigField<Config::gbInterpolateWeapon, Config::gbNeedSave_Game>(*tab.pCheck_interpolateWeapon);
+    tab.pCheck_interpolateWeapon->tooltip(ConfigSerialization::gConfig_Game.interpolateWeapon.comment);
+
+    // Disable interpolation checkboxes if uncapped framerates are disabled!
+    onUncappedFramerateSettingUpdated(tab);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -81,16 +115,34 @@ static void makeCountersSection(const int x, const int y) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Makes the input for setting heap size
+// Makes the section for miscellaneous options
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeHeapSizeInput(const int x, const int y) noexcept {
-    const auto pLabel_heapSize = new Fl_Box(FL_NO_BOX, x, y + 40, 80, 30, "Heap Size");
-    pLabel_heapSize->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-    pLabel_heapSize->tooltip(ConfigSerialization::gConfig_Game.mainMemoryHeapSize.comment);
+static void makeMiscellaneousSection(const int x, const int y) noexcept {
+    // Container frame
+    new Fl_Box(FL_NO_BOX, x, y, 200, 30, "Miscellaneous");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 90, "");
 
-    const auto pInput_heapSize = new Fl_Int_Input(x + 90, y + 40, 110, 30);
-    bindConfigField<Config::gMainMemoryHeapSize, Config::gbNeedSave_Game>(*pInput_heapSize);
-    pInput_heapSize->tooltip(pLabel_heapSize->tooltip());
+    // View bob strength
+    {
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 50, 80, 26, "Bob Strength");
+        pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        pLabel->tooltip(ConfigSerialization::gConfig_Game.viewBobbingStrength.comment);
+
+        const auto pInput = new Fl_Float_Input(x + 110, y + 50, 80, 26);
+        bindConfigField<Config::gViewBobbingStrength, Config::gbNeedSave_Game>(*pInput);
+        pInput->tooltip(pLabel->tooltip());
+    }
+
+    // Heap size
+    {
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 80, 80, 26, "Heap Size");
+        pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        pLabel->tooltip(ConfigSerialization::gConfig_Game.mainMemoryHeapSize.comment);
+
+        const auto pInput = new Fl_Int_Input(x + 110, y + 80, 80, 26);
+        bindConfigField<Config::gMainMemoryHeapSize, Config::gbNeedSave_Game>(*pInput);
+        pInput->tooltip(pLabel->tooltip());
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -99,7 +151,7 @@ static void makeHeapSizeInput(const int x, const int y) noexcept {
 static void makeBugFixesSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 470, 30, "Bug fixes to apply");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 470, 230, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 470, 200, "");
 
     // Various toggles
     {
@@ -181,7 +233,7 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
 static void makeTweaksSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 470, 30, "Tweaks");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 470, 150, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 470, 180, "");
 
     // Various toggles
     {
@@ -206,6 +258,85 @@ static void makeTweaksSection(const int x, const int y) noexcept {
         const auto pCheck = makeFl_Check_Button(x + 250, y + 70, 120, 30, "  Allow turning cancellation");
         bindConfigField<Config::gbAllowTurningCancellation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.allowTurningCancellation.comment);
+    }
+
+    // Movement cancellation
+    {
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 110, 120, 26, "Allow movement cancellation");
+        pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        pLabel->tooltip(ConfigSerialization::gConfig_Game.allowMovementCancellation.comment);
+
+        const auto pChoice = new Fl_Choice(x + 270, y + 110, 180, 26);
+        pChoice->add("Never");
+        pChoice->add("Always");
+        pChoice->add("Auto (Game accurate)");
+        pChoice->tooltip(pLabel->tooltip());
+        pChoice->callback(
+            [](Fl_Widget* const pWidget, void*) noexcept {
+                Fl_Choice* const pChoice = static_cast<Fl_Choice*>(pWidget);
+
+                switch (pChoice->value()) {
+                    case 0: Config::gAllowMovementCancellation =  0; break;
+                    case 1: Config::gAllowMovementCancellation = +1; break;
+                    case 2: Config::gAllowMovementCancellation = -1; break;
+                }
+
+                Config::gbNeedSave_Game = true;
+            }
+        );
+
+        if (Config::gAllowMovementCancellation < 0) {
+            pChoice->value(2);
+        } else if (Config::gAllowMovementCancellation > 0) {
+            pChoice->value(1);
+        } else {
+            pChoice->value(0);
+        }
+    }
+
+    // Use Final Doom player movement
+    {
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 140, 80, 26, "Use Final Doom player movement");
+        pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        pLabel->tooltip(ConfigSerialization::gConfig_Game.useFinalDoomPlayerMovement.comment);
+
+        const auto pChoice = new Fl_Choice(x + 270, y + 140, 180, 26);
+        pChoice->add("Never");
+        pChoice->add("Always");
+        pChoice->add("Auto (Game accurate)");
+        pChoice->tooltip(pLabel->tooltip());
+        pChoice->callback(
+            [](Fl_Widget* const pWidget, void*) noexcept {
+                Fl_Choice* const pChoice = static_cast<Fl_Choice*>(pWidget);
+
+                switch (pChoice->value()) {
+                    case 0: Config::gUseFinalDoomPlayerMovement =  0; break;
+                    case 1: Config::gUseFinalDoomPlayerMovement = +1; break;
+                    case 2: Config::gUseFinalDoomPlayerMovement = -1; break;
+                }
+
+                Config::gbNeedSave_Game = true;
+            }
+        );
+
+        if (Config::gUseFinalDoomPlayerMovement < 0) {
+            pChoice->value(2);
+        } else if (Config::gUseFinalDoomPlayerMovement > 0) {
+            pChoice->value(1);
+        } else {
+            pChoice->value(0);
+        }
+    }
+
+    // Lost soul spawn limit
+    {
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 170, 80, 26, "Lost Soul spawn limit");
+        pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        pLabel->tooltip(ConfigSerialization::gConfig_Game.lostSoulSpawnLimit.comment);
+
+        const auto pInput = new Fl_Int_Input(x + 270, y + 170, 180, 26);
+        bindConfigField<Config::gLostSoulSpawnLimit, Config::gbNeedSave_Game>(*pInput);
+        pInput->tooltip(pLabel->tooltip());
     }
 }
 
@@ -268,15 +399,14 @@ static void makeTimingsSection(const int x, const int y) noexcept {
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 190, 90, "");
 
     // Tick rate mode
-    const auto pLabel_mode = new Fl_Box(FL_NO_BOX, x + 20, y + 40, 80, 30, "Mode");
+    const auto pLabel_mode = new Fl_Box(FL_NO_BOX, x + 20, y + 40, 80, 26, "Mode");
     pLabel_mode->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     pLabel_mode->tooltip(ConfigSerialization::gConfig_Game.usePalTimings.comment);
 
-    const auto pChoice_mode = new Fl_Choice(x + 80, y + 40, 90, 30);
+    const auto pChoice_mode = new Fl_Choice(x + 80, y + 40, 90, 26);
     pChoice_mode->add("NTSC");
     pChoice_mode->add("PAL");
     pChoice_mode->add("Auto");
-    pChoice_mode->value(0);
     pChoice_mode->tooltip(pLabel_mode->tooltip());
     pChoice_mode->callback(
         [](Fl_Widget* const pWidget, void*) noexcept {
@@ -365,15 +495,15 @@ void populate(Tab_Game& tab) noexcept {
 
     const RectExtents tabRect = getRectExtents(*tab.pTab);
 
-    makeMotionSection(tabRect.lx + 20, tabRect.ty + 20);
+    makeMotionSection(tab, tabRect.lx + 20, tabRect.ty + 20);
     makeCountersSection(tabRect.lx + 20, tabRect.ty + 230);
-    makeHeapSizeInput(tabRect.lx + 20, tabRect.ty + 330);
+    makeMiscellaneousSection(tabRect.lx + 20, tabRect.ty + 350);
     makeBugFixesSection(tabRect.lx + 240, tabRect.ty + 20);
-    makeTweaksSection(tabRect.lx + 240, tabRect.ty + 290);
+    makeTweaksSection(tabRect.lx + 240, tabRect.ty + 260);
     makeMapPatchesSection(tabRect.lx + 730, tabRect.ty + 20);
     makeLoadingSection(tabRect.lx + 730, tabRect.ty + 170);
     makeTimingsSection(tabRect.lx + 730, tabRect.ty + 290);
-    makeDefaultCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 510);
+    makeDefaultCueFileSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 520);
 }
 
 END_NAMESPACE(Launcher)

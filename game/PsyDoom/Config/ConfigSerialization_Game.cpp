@@ -279,15 +279,17 @@ void initCfgSerialization_Game() noexcept {
     cfg.useFinalDoomPlayerMovement = makeConfigField(
         "UseFinalDoomPlayerMovement",
         "Whether to use player movement & turning logic from Final Doom rather than the original PSX Doom.\n"
+        "\n"
         "In the original PSX Doom, player forward move speed is slightly greater than side move speed.\n"
         "The way player logic is handled also produces slightly different results for the same inputs.\n"
         "In Final Doom, player forward move speed is changed to be the same as side move speed.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "\n"
         "Allowed values:\n"
-        "  0 = Always use the original PSX Doom player movement & turning logic\n"
-        "  1 = Always use the PSX Final Doom player movement & turning logic\n"
-        " -1 = Auto-decide based on the game being played",
+        " - Always use the original PSX Doom player movement & turning logic (0)\n"
+        " - Always use the PSX Final Doom player movement & turning logic (1)\n"
+        " - Auto-decide based on the game being played (-1) (default setting)",
         gUseFinalDoomPlayerMovement,
         -1
     );
@@ -295,15 +297,18 @@ void initCfgSerialization_Game() noexcept {
     cfg.allowMovementCancellation = makeConfigField(
         "AllowMovementCancellation",
         "For digital movement only: whether doing opposite movements (at the same time) such as forward and\n"
-        "back causes them to cancel each other out. In Final Doom this was the case, but not so for the\n"
-        "original PSX Doom which instead just picked one of the directions to move in.\n"
-        "This setting does not affect analog movement from game controllers which can always cancel.\n"
+        "back causes them to cancel each other out.\n"
+        "\n"
+        "In Final Doom this was the case, but not so for the original PSX Doom which instead just picked one\n"
+        "of the directions to move in. This setting does not affect analog movement from game controllers\n"
+        "which can always cancel.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "\n"
         "Allowed values:\n"
-        "  0 = Opposite movements never cancel each other out\n"
-        "  1 = Opposite movements always cancel each other out\n"
-        " -1 = Auto-decide based on the game being played",
+        " - Opposite movements never cancel each other out (0)\n"
+        " - Opposite movements always cancel each other out (1)\n"
+        " - Auto-decide based on the game being played (-1)",
         gAllowMovementCancellation,
         1
     );
@@ -353,15 +358,17 @@ void initCfgSerialization_Game() noexcept {
     cfg.lostSoulSpawnLimit = makeConfigField(
         "LostSoulSpawnLimit",
         "How many Lost Souls can be in a level before Pain Elementals stop spawning more?\n"
+        "\n"
         "The original PSX Doom intended to have a limit of 24 (like the PC version) but due to a bug there\n"
         "was actually no cap on the number of Lost Souls that could be spawned. PSX Final Doom fixed this\n"
         "bug however and introduced a limit of 16 Lost Souls, which in turn caused problems on some maps.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.\n"
         "\n"
         "Allowed values:\n"
         "   0 = Auto decide the limit based on the game (Doom vs Final Doom), in a faithful manner\n"
-        "  >0 = Limit the number of Lost Souls to this much\n"
-        "  <0 = Apply no limit",
+        " >0 = Limit the number of Lost Souls to this much\n"
+        " <0 = Apply no limit",
         gLostSoulSpawnLimit,
         0
     );
