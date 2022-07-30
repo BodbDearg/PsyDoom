@@ -191,7 +191,7 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 40, 120, 30, "  Fix gravitty strength");
+        const auto pCheck = makeFl_Check_Button(x + 250, y + 40, 120, 30, "  Fix gravity strength");
         bindConfigField<Config::gbFixGravityStrength, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixGravityStrength.comment);
     }

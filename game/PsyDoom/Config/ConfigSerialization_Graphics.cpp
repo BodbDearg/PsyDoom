@@ -23,16 +23,16 @@ void initCfgSerialization_Graphics() noexcept {
     cfg.fullscreen = makeConfigField(
         "Fullscreen",
         "Fullscreen or windowed mode toggle.\n"
-        "Set to '1' cause the PsyDoom to launch in fullscreen mode, and '0' to use windowed mode.",
+        "Enable make PsyDoom launch in fullscreen mode, disable to use windowed mode.",
         gbFullscreen,
         true
     );
 
     cfg.enableVSync = makeConfigField(
         "EnableVSync",
-        "If enabled ('1') then request that video output be synchronized with the display, to try and avoid\n"
-        "artifacts like tearing. Note that this setting might not be respected depending on the host OS and\n"
-        "display driver. It is just a request/hint only.",
+        "If enabled then request that video output be synchronized with the display to try and avoid\n"
+        "artifacts like tearing. Note that this setting might not be respected depending on the host OS\n"
+        "and display driver. It is just a request/hint only.",
         gbEnableVSync,
         true
     );
@@ -210,9 +210,9 @@ void initCfgSerialization_Graphics() noexcept {
 
     cfg.floorRenderGapFix = makeConfigField(
         "FloorRenderGapFix",
-        "Classic renderer only: enable/disable a precision fix for the floor renderer to prevent gaps in\n"
-        "the floor on some maps. This fix helps prevent some noticeable glitches on larger outdoor maps\n"
-        "like 'Tower Of Babel'. Set to '1' to enable the fix, and '0' to disable (original PSX behavior).",
+        "Classic renderer only: whether to enable a precision fix for the floor renderer to prevent gaps\n"
+        "in the floor on some maps. This fix helps prevent some noticeable glitches on larger outdoor maps\n"
+        "like 'Tower Of Babel'.",
         gbFloorRenderGapFix,
         true
     );
@@ -249,7 +249,7 @@ void initCfgSerialization_Graphics() noexcept {
         "huge amounts of enemies onscreen.\n"
         "\n"
         "Acceptable values are 1, 2, 4, 8, 16, 32, 64 and 128. Values in-between will be rounded up.\n"
-        "If <= 0 is specified then the default value will be used, which is presently 128 MiB.",
+        "If <= 0 is specified then the maximum amount possible will be used.\n",
         gVramSizeInMegabytes,
         -1
     );
