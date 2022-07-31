@@ -56,30 +56,34 @@ void initCfgSerialization_Cheats() noexcept {
     // Developer convenience stuff
     cfg.enableDevCheatShortcuts = makeConfigField(
         "EnableDevCheatShortcuts",
-        "Set to '1' to enable convenience single key cheats.\n"
+        "Enable to allow convenience single key cheats.\n"
+        "\n"
         "If you frequently use cheats for development purposes then these shortcuts might be useful.\n"
         "They are disabled by default since they can be accidentally invoked very easily.\n"
         "\n"
         "The cheat keys when this setting is enabled are as follows:\n"
         "\n"
-        "      F1: God mode\n"
-        "      F2: No-clip (new cheat for PC port!)\n"
-        "      F3: All weapons keys and ammo\n"
-        "      F4: Level warp (note: secret maps can now be warped to also)\n"
+        " F1: God mode\n"
+        " F2: No-clip (new cheat added by PsyDoom)\n"
+        " F3: All weapons keys and ammo\n"
+        " F4: Level warp (note: secret maps can now be warped to also)\n"
         "\n"
-        "      F6: X-ray vision\n"
-        "      F7: VRAM Viewer (functionality hidden in retail)\n"
-        "      F8: No-target (new cheat for PC port!)",
+        " F6: X-ray vision\n"
+        " F7: VRAM Viewer (functionality hidden in retail)\n"
+        " F8: No-target (new cheat added by PsyDoom)",
         gbEnableDevCheatShortcuts,
         false
     );
 
     cfg.enableDevInPlaceReloadFunctionKey = makeConfigField(
         "EnableDevInPlaceReloadFunctionKey",
-        "Set to '1' to enable a developer feature where the 'F11' key will do an 'in-place' reload of the\n"
+        "Enable to allow a developer feature where the 'F11' key will do an 'in-place' reload of the\n"
         "current map. An 'in-place' reload does a normal map reload but restores the player's position and\n"
-        "orientation to what they were prior to the reload. Using this feature allows the map to be\n"
-        "'refreshed' quickly and edits to be viewed in-engine quickly, enabling faster map iteration.\n"
+        "orientation to what they were prior to the reload.\n"
+        "\n"
+        "Using this feature allows the map to be 'refreshed' quickly and edits to be viewed in-engine\n"
+        "quickly, enabling faster map iteration.\n"
+        "\n"
         "Note: this function is disallowed in multiplayer games.",
         gbEnableDevInPlaceReloadFunctionKey,
         false
@@ -87,8 +91,9 @@ void initCfgSerialization_Cheats() noexcept {
 
     cfg.enableDevMapAutoReload = makeConfigField(
         "EnableDevMapAutoReload",
-        "Set to '1' to enable a developer feature where the game will automatically do an 'in-place' reload\n"
+        "Enable to activate a developer feature where the game will automatically do an 'in-place' reload\n"
         "of the current map if it has changed on-disk. Useful for instantly viewing map edits in-engine.\n"
+        "\n"
         "This feature only works for files overridden via the file overrides mechanism, only in single\n"
         "player mode and only on Windows.",
         gbEnableDevMapAutoReload,
@@ -109,18 +114,18 @@ void initCfgSerialization_Cheats() noexcept {
         "buttons on the pause menu. You can see which inputs map to original PSX buttons (for cheat entry)\n"
         "in the controls configuration .ini file. For reference, the original PSX cheat sequences were:\n"
         "\n"
-        "     God Mode:               Down, L2, Square, R1, Right, L1, Left, Circle\n"
-        "     Level Warp:             Right, Left, R2, R1, Triangle, L1, Circle, X\n"
-        "     Weapons, armor & keys:  X, Triangle, L1, Up, Down, R2, Left, Left\n"
-        "     Show all map lines:     Triangle, Triangle, L2, R2, L2, R2, R1, Square\n"
-        "     Show all map things:    Triangle, Triangle, L2, R2, L2, R2, R1, Circle\n"
-        "     X-Ray vision:           L1, R2, L2, R1, Right, Triangle, X, Right\n"
+        "     God Mode: Down, L2, Square, R1, Right, L1, Left, Circle\n"
+        "     Level Warp: Right, Left, R2, R1, Triangle, L1, Circle, X\n"
+        "     Weapons, armor & keys: X, Triangle, L1, Up, Down, R2, Left, Left\n"
+        "     Show all map lines: Triangle, Triangle, L2, R2, L2, R2, R1, Square\n"
+        "     Show all map things: Triangle, Triangle, L2, R2, L2, R2, R1, Circle\n"
+        "     X-Ray vision: L1, R2, L2, R1, Right, Triangle, X, Right\n"
         "\n"
         "The new cheats added to PsyDoom are assigned the following original PSX buttons:\n"
         "\n"
-        "     No-clip:                Up, Up, Up, Up, Up, Up, Up, R1\n"
-        "     VRAM viewer:            Triangle, Square, Up, Left, Down, Right, X, Circle\n"
-        "     No-target:              X, Up, X, Up, Square, Square, X, Square",        
+        "     No-clip: Up, Up, Up, Up, Up, Up, Up, R1\n"
+        "     VRAM viewer: Triangle, Square, Up, Left, Down, Right, X, Circle\n"
+        "     No-target: X, Up, X, Up, Square, Square, X, Square",
         gCheatKeys_GodMode,
         "iddqd"
     );
