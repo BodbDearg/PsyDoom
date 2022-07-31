@@ -30,6 +30,7 @@ void initCfgSerialization_Input() noexcept {
     cfg.gamepadDeadZone = makeConfigField(
         "GamepadDeadZone",
         "0-1 range: controls when minor controller inputs are discarded.\n"
+        "\n"
         "The default of '0.125' only registers movement if the stick is at least 12.5% moved.\n"
         "Setting too low may result in unwanted jitter and movement when the controller is resting.",
         gGamepadDeadZone,
@@ -39,11 +40,13 @@ void initCfgSerialization_Input() noexcept {
     cfg.gamepadFastTurnSpeed_High = makeConfigField(
         "GamepadFastTurnSpeed_High",
         "How fast to turn when running ('FastTurnSpeed') and when NOT running ('TurnSpeed').\n"
+        "\n"
         "The game will mix between the 'High' and 'Low' speed values for when running or walking depending\n"
         "on how far the stick is pushed, using the 'high' speed value completely when the gamepad axis\n"
         "fully pushed in it's move direction. This replaces the accelerating turning movement of the\n"
-        "original game and allows for more precise control. For reference, the original speed value ranges\n"
-        "with the PSX D-PAD were:\n"
+        "original game and allows for more precise control.\n"
+        "\n"
+        "For reference, the original speed value ranges with the PSX D-PAD were:\n"
         " Walk: 300 - 1000\n"
         " Run:  800 - 1400",
         gGamepadFastTurnSpeed_High,
@@ -75,6 +78,7 @@ void initCfgSerialization_Input() noexcept {
         "AnalogToDigitalThreshold",
         "0-1 range: controls the point at which an analog axis like a trigger, stick etc. is regarded\n"
         "as 'pressed' when treated as a digital input (e.g trigger used for 'shoot' action).\n"
+        "\n"
         "The default of '0.5' (halfway depressed) is probably reasonable for most users.",
         gAnalogToDigitalThreshold,
         0.5f

@@ -42,6 +42,7 @@ void initCfgSerialization_Graphics() noexcept {
         "Output resolution (width & height) for both the Vulkan and Classic renderers.\n"
         "In windowed mode this is the size of the window.\n"
         "In fullscreen mode this is the actual screen resolution to use.\n"
+        "\n"
         "If the values are '0' or less (auto resolution) then this means use the current (desktop)\n"
         "resolution in fullscreen mode, and auto-decide the window size in windowed mode.",
         gOutputResolutionW,
