@@ -121,9 +121,10 @@ CheatKeySequence gCheatKeys_NoTarget;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Config dynamic defaults: these can change depending on the host environment
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t     gDefaultAntiAliasingMultisamples = 4;
-int32_t     gDefaultVulkanRenderHeight = -1;
-bool        gbDefaultVulkanPixelStretch = false;
+bool        gbCouldDetermineVulkanConfigDefaults    = false;
+int32_t     gDefaultAntiAliasingMultisamples        = 4;
+int32_t     gDefaultVulkanRenderHeight              = -1;
+bool        gbDefaultVulkanPixelStretch             = false;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Which config files need re-saving
@@ -168,12 +169,15 @@ static void determineVulkanDynamicConfigDefaults() noexcept {
     bool bIsVulkanLowMemDevice = true;
     bool bIsVulkanRpiDevice = false;
 
+    gbCouldDetermineVulkanConfigDefaults = false;
+
     #if PSYDOOM_VULKAN_RENDERER
         Video::VideoBackend_Vulkan::withTempVkInstance([&](vgl::VulkanInstance& vkInstance) {
             const std::vector<vgl::PhysicalDevice>& gpus = vkInstance.getPhysicalDevices();
             const vgl::PhysicalDevice* const pGpu = vgl::PhysicalDeviceSelection::selectBestHeadlessDevice(gpus, nullptr);
 
             if (pGpu) {
+                gbCouldDetermineVulkanConfigDefaults = true;
                 bIsVulkanLowMemDevice = (pGpu->getDeviceMem() <= (uint64_t) 3u * 1024u * 1024u * 1024u);    // <= 3 GiB
                 const char* const gpuName = pGpu->getProps().deviceName;
                 bIsVulkanRpiDevice = (std::strstr(gpuName, "V3D") == gpuName);  // On Raspberry Pi the driver identifies the device starting with 'V3D'
@@ -190,9 +194,12 @@ static void determineVulkanDynamicConfigDefaults() noexcept {
         gDefaultVulkanRenderHeight = 480;
         gbDefaultVulkanPixelStretch = true;
     } else {
-        // For all other devices just set whether MSAA is enabled or not.
+        // For all other devices render at full resolution with no pixel stretch.
+        // Turn off MSAA however by default if the device is considered to be low powered.
         const bool bUseMsaa = ((!bIsHighDensityDisplay) && (!bIsVulkanLowMemDevice));
         gDefaultAntiAliasingMultisamples = (bUseMsaa) ? 4 : 1;
+        gDefaultVulkanRenderHeight = -1;
+        gbDefaultVulkanPixelStretch = false;
     }
 
     // Cleanup

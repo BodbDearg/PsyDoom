@@ -115,6 +115,7 @@ extern CheatKeySequence     gCheatKeys_NoTarget;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Config dynamic defaults: these can change depending on the host environment
 //------------------------------------------------------------------------------------------------------------------------------------------
+extern bool         gbCouldDetermineVulkanConfigDefaults;
 extern int32_t      gDefaultAntiAliasingMultisamples;
 extern int32_t      gDefaultVulkanRenderHeight;
 extern bool         gbDefaultVulkanPixelStretch;

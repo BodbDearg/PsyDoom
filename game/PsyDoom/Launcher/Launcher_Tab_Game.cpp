@@ -124,22 +124,22 @@ static void makeMiscellaneousSection(const int x, const int y) noexcept {
 
     // View bob strength
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 50, 80, 26, "Bob Strength");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 40, 80, 26, "Bob scale");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.viewBobbingStrength.comment);
 
-        const auto pInput = new Fl_Float_Input(x + 110, y + 50, 80, 26);
+        const auto pInput = new Fl_Float_Input(x + 100, y + 40, 80, 26);
         bindConfigField<Config::gViewBobbingStrength, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // Heap size
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 80, 80, 26, "Heap Size");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 70, 80, 26, "Heap size");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.mainMemoryHeapSize.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 110, y + 80, 80, 26);
+        const auto pInput = new Fl_Int_Input(x + 100, y + 70, 80, 26);
         bindConfigField<Config::gMainMemoryHeapSize, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }

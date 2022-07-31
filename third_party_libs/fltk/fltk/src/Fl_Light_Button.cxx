@@ -55,6 +55,11 @@ void Fl_Light_Button::draw() {
           // Check mark...
           if (Fl::is_scheme("gtk+")) {
             col = FL_SELECTION_COLOR;
+
+            // PSYDOOM: alter the checkmark color if the widget is inactive
+            if (!active()) {
+                col = FL_INACTIVE_COLOR;
+            }
           }
           // Calculate box position and size
           cx += Fl::box_dx(down_box());

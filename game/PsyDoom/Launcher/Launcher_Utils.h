@@ -54,6 +54,7 @@ void bindConfigField(Fl_Check_Button& checkBtn) noexcept {
             configDirtyFlag = true;
         }
     );
+
     checkBtn.value(configValue);
 }
 
@@ -93,6 +94,23 @@ void bindConfigField(Fl_Float_Input& floatInput) noexcept {
     char configValueStr[128];
     std::snprintf(configValueStr, sizeof(configValueStr), "%g", configValue);
     floatInput.value(configValueStr);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: binds a string config value to the specified input.
+// If the value is changed then the specified dirty flag is also updated.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <std::string& configValue, bool& configDirtyFlag>
+void bindConfigField(Fl_Input& input) noexcept {
+    input.callback(
+        [](Fl_Widget* const pWidget, void*) noexcept {
+            Fl_Input* const pInput = static_cast<Fl_Input*>(pWidget);
+            configValue = pInput->value();
+            configDirtyFlag = true;
+        }
+    );
+
+    input.value(configValue.c_str());
 }
 
 END_NAMESPACE(Launcher)

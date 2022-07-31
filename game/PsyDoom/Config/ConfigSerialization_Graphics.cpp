@@ -61,6 +61,7 @@ void initCfgSerialization_Graphics() noexcept {
         "Increasing the number of samples can help smooth edges and prevent texture shimmer, but can be\n"
         "costly to do at high resolutions or on weaker GPUs. 4x is probably reasonable for most GPUs and\n"
         "screen resolution combinations, given the low requirements of Doom.\n"
+        "\n"
         "Note: if the hardware is unable to support the number of samples specified then the next available\n"
         "sample count downwards will be selected.",
         gAAMultisamples,
@@ -96,8 +97,8 @@ void initCfgSerialization_Graphics() noexcept {
         "draw resolution not being an integer multiple of the original resolution.\n"
         "\n"
         "If you are rendering at modern resolutions like 1080p or 1440p however it is recommended that you\n"
-        "leave this setting off ('0') so that the Vulkan renderer can operate at the highest resolutions\n"
-        "and not suffer aliasing from having to stretch the framebuffer on output.",
+        "leave this setting off so that the Vulkan renderer can operate at the highest resolutions and not\n"
+        "suffer aliasing from having to stretch the framebuffer on output.",
         gbVulkanPixelStretch,
         false
     );
@@ -108,8 +109,8 @@ void initCfgSerialization_Graphics() noexcept {
         "buffering for output presentation. This setting affects both the classic renderer when it is\n"
         "output via Vulkan and the new Vulkan renderer itself.\n"
         "\n"
-        "If enabled ('1') the game will render frames as fast as possible and may possibly discard\n"
-        "previously rendered/queued frames while waiting for the display to become ready for output.\n"
+        "If enabled the game will render frames as fast as possible and may possibly discard previously\n"
+        "rendered/queued frames while waiting for the display to become ready for output.\n"
         "\n"
         "Enabling ensures the most up-to-date view is shown when the time comes to display and helps to\n"
         "reduce perceived input latency but will also greatly increase GPU and CPU usage.\n"
@@ -121,6 +122,7 @@ void initCfgSerialization_Graphics() noexcept {
     cfg.vulkanDrawExtendedStatusBar = makeConfigField(
         "VulkanDrawExtendedStatusBar",
         "Vulkan renderer only: draw extensions to the in-game status bar for widescreen mode?\n"
+        "\n"
         "PsyDoom can extend the original PSX status bar to 'support' widescreen mode by repeating the part\n"
         "of the bar which contains all the weapon numbers. If you disable this setting, then a black\n"
         "letterbox will be rendered instead. This setting is also ignored if Vulkan widescreen is disabled.",
@@ -131,8 +133,9 @@ void initCfgSerialization_Graphics() noexcept {
     cfg.vulkanWidescreenEnabled = makeConfigField(
         "VulkanWidescreenEnabled",
         "Vulkan renderer only: allow extended widescreen rendering?\n"
+        "\n"
         "The in-game Vulkan renderer is capable of a wider field of view than the classic renderer on\n"
-        "modern widescreen displays. If desired however you can disable this ('0') for an aspect ratio more\n"
+        "modern widescreen displays. If desired however you can disable this for an aspect ratio more\n"
         "like the original game with cropping at the sides of the screen.\n",
         gbVulkanWidescreenEnabled,
         true
@@ -141,20 +144,23 @@ void initCfgSerialization_Graphics() noexcept {
     cfg.useVulkan32BitShading = makeConfigField(
         "UseVulkan32BitShading",
         "Vulkan renderer only: whether higher precision 32-bit shading and framebuffers should be used.\n"
+        "\n"
         "The original PSX framebuffer was only 16-bit, and by default the Vulkan renderer also uses this\n"
         "color mode to replicate the original game's lighting and shading as closely as possible.\n"
-        "Setting this to '1' (enabled) will allow for smoother 32-bit shading with less color banding\n"
-        "artifacts, but will also increase the overall image brightness and reduce contrast - making the\n"
-        "display seem more 'washed out' and less atmospheric. It's recommended to leave this setting\n"
-        "disabled for better visuals, but if you dislike banding a lot then it can be enabled if needed.",
+        "\n"
+        "Enabling this will allow for smoother 32-bit shading with less color banding artifacts, but will\n"
+        "also increase the overall image brightness and reduce contrast - making the display seem more\n"
+        "'washed out' and less atmospheric. It's recommended to leave this setting disabled for better\n"
+        "visuals, but if you dislike banding a lot then it can be enabled if needed.",
         gbUseVulkan32BitShading,
         false
     );
 
     cfg.disableVulkanRenderer = makeConfigField(
         "DisableVulkanRenderer",
-        "If set to '1' then the new Vulkan/hardware renderer will be completely disabled and the game will\n"
+        "If enabled then the new Vulkan/hardware renderer will be completely disabled and the game will\n"
         "behave as if Vulkan is not available for use to PsyDoom, even if the opposite is true.\n"
+        "\n"
         "If you only want to run PsyDoom using the classic PSX renderer then enabling this setting will\n"
         "save on system & video RAM and other resources. By default if Vulkan rendering is possible then\n"
         "the Vulkan renderer always needs to be active and use memory in order to allow for fast toggling\n"
@@ -233,8 +239,9 @@ void initCfgSerialization_Graphics() noexcept {
 
     cfg.vulkanBrightenAutomap = makeConfigField(
         "VulkanBrightenAutomap",
-        "Vulkan renderer only: if '1' then automap lines will be brightened to compensate for them\n"
+        "Vulkan renderer only: if enabled then automap lines will be brightened to compensate for them\n"
         "appearing perceptually darker at higher resolutions, due to the lines being much thinner.\n"
+        "\n"
         "This tweak helps a high res Vulkan automap feel more like the original (low resolution) automap.\n"
         "If you are running the Vulkan renderer at low resolution however, you may want to disable this.",
         gbVulkanBrightenAutomap,
@@ -257,6 +264,7 @@ void initCfgSerialization_Graphics() noexcept {
     cfg.vulkanPreferredDevicesRegex = makeConfigField(
         "VulkanPreferredDevicesRegex",
         "Vulkan renderer: a case insensitive regex that can specify which GPUs are preferable to use.\n"
+        "\n"
         "Useful in multi-GPU systems where you want to override PsyDoom's default 'best' device selection\n"
         "and choose a particular GPU to render with. If the regex matches part of the device's name then it\n"
         "is considered 'preferred' and selected over all other devices. If no preferred device can be\n"

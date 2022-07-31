@@ -49,7 +49,23 @@ struct Tab_Launcher {
 // Holds all of the widgets and state for the 'Graphics' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct Tab_Graphics {
-    Fl_Group*       pTab;
+    Fl_Group*               pTab;
+    Fl_Box*                 pLabel_settingsPreset;
+    Fl_Choice*              pChoice_settingsPreset;
+    Fl_Button*              pButton_settingsPreset;
+    Fl_Box*                 pLabel_renderHeight;
+    Fl_Int_Input*           pInput_renderHeight;
+    Fl_Box*                 pLabel_aaMultisamples;
+    Fl_Int_Input*           pInput_aaMultisamples;
+    Fl_Check_Button*        pCheck_pixelStretch;
+    Fl_Check_Button*        pCheck_tripleBuffer;
+    Fl_Check_Button*        pCheck_widescreenEnabled;
+    Fl_Check_Button*        pCheck_32bitShading;
+    Fl_Check_Button*        pCheck_drawExtStatusBar;
+    Fl_Check_Button*        pCheck_brightenAutomap;
+    Fl_Check_Button*        pCheck_disableVkRenderer;
+    Fl_Box*                 pLabel_prefDevicesRegex;
+    Fl_Input*               pInput_prefDevicesRegex;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
