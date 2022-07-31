@@ -267,8 +267,12 @@ void setCheatKeySequence(CheatKeySequence& sequence, const char* const pKeysStr)
             sequence.keys[keyIdx] = key;
             ++keyIdx;
         }
-        else if (c >= '0' && c <= '9') {
-            const uint8_t key = (uint8_t) SDL_SCANCODE_0 + (uint8_t) c - '0';
+        else if (c == '0') {
+            sequence.keys[keyIdx] = SDL_SCANCODE_0;
+            ++keyIdx;
+        }
+        else if (c >= '1' && c <= '9') {
+            const uint8_t key = (uint8_t) SDL_SCANCODE_1 + (uint8_t) c - '1';
             sequence.keys[keyIdx] = key;
             ++keyIdx;
         }
@@ -291,8 +295,11 @@ void getCheatKeySequence(const CheatKeySequence& sequence, std::string& strOut) 
         if ((key >= SDL_SCANCODE_A) && (key <= SDL_SCANCODE_Z)) {
             strOut.push_back((char)('a' + key - SDL_SCANCODE_A));
         }
-        else if ((key >= SDL_SCANCODE_0) && (key <= SDL_SCANCODE_9)) {
-            strOut.push_back((char)('0' + key - SDL_SCANCODE_0));
+        else if (key == SDL_SCANCODE_0) {
+            strOut.push_back('0');
+        }
+        else if ((key >= SDL_SCANCODE_1) && (key <= SDL_SCANCODE_9)) {
+            strOut.push_back((char)('1' + key - SDL_SCANCODE_1));
         }
         else {
             break;  // Unsupported character, or null terminator - end the sequence
