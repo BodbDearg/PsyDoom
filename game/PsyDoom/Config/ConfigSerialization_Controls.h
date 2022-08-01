@@ -12,9 +12,12 @@ extern const char* const CONTROL_BINDINGS_INI_HEADER;
 
 // N.B: must ONLY contain 'ConfigField' entries!
 struct Config_Controls {
-    ConfigField     analog_moveForwardBack;
-    ConfigField     analog_moveLeftRight;
-    ConfigField     analog_turn;
+    ConfigField     analog_moveForward;
+    ConfigField     analog_moveBackward;
+    ConfigField     analog_strafeLeft;
+    ConfigField     analog_strafeRight;
+    ConfigField     analog_turnLeft;
+    ConfigField     analog_turnRight;
     ConfigField     digital_moveForward;
     ConfigField     digital_moveBackward;
     ConfigField     digital_strafeLeft;
@@ -33,7 +36,8 @@ struct Config_Controls {
     ConfigField     toggle_map;
     ConfigField     toggle_renderer;
     ConfigField     toggle_viewPlayer;
-    ConfigField     weapon_scroll;
+    ConfigField     weapon_scrollUp;
+    ConfigField     weapon_scrollDown;
     ConfigField     weapon_previous;
     ConfigField     weapon_next;
     ConfigField     weapon_fistChainsaw;

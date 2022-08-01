@@ -36,42 +36,33 @@ R"(#----------------------------------------------------------------------------
 #   (5) For a full list of available keyboard key names, including very uncommon ones, see:
 #         https://wiki.libsdl.org/SDL_Scancode
 #
-# Mouse Buttons:
+# Mouse buttons:
 #       Mouse Left              Mouse X1
 #       Mouse Right             Mouse X2
 #       Mouse Middle
 #
-# Mouse Wheel axis, normal and inverted (-N to +N range):
-#       Mouse Wheel
-#       Inv Mouse Wheel
-#
-# Mouse Wheel axis, positive or negative sub-axis only (0 to +N range):
+# Mouse wheel axes:
 #       Mouse Wheel+
 #       Mouse Wheel-
 #
-# SDL recognized gamepad: axes with a -1.0 to +1.0 range: normal & inverted
-#       Gamepad LeftX           Gamepad RightX          Inv Gamepad LeftX       Inv Gamepad RightX
-#       Gamepad LeftY           Gamepad RightY          Inv Gamepad LeftY       Inv Gamepad RightY
-#
-# SDL recognized gamepad: trigger axes and positive or negative axis subsets with a 0.0 to 1.0 range:
+# SDL recognized gamepad, axes:
 #       Gamepad LeftTrigger     Gamepad RightTrigger
 #       Gamepad LeftX-          Gamepad LeftX+          Gamepad LeftY-          Gamepad LeftY+
 #       Gamepad RightX-         Gamepad RightX+         Gamepad RightY-         Gamepad RightY+
 #
-# SDL recognized gamepad: buttons:
+# SDL recognized gamepad, buttons:
 #       Gamepad A               Gamepad DpUp            Gamepad LeftStick
 #       Gamepad B               Gamepad DpDown          Gamepad RightStick
 #       Gamepad X               Gamepad DpLeft          Gamepad LeftShoulder
 #       Gamepad Y               Gamepad DpRight         Gamepad RightShoulder
 #       Gamepad Back            Gamepad Start           Gamepad Guide
 #
-# Generic joystick inputs: axes, axis subsets or inversions, buttons and hat/d-pad directions.
-# Replace '1-99' with the desired button, hat or axis number:
-#       Joystick Button1-99     Joystick Axis1-99
-#       Joystick Hat1-99 Up     Joystick Axis1-99+
-#       Joystick Hat1-99 Down   Joystick Axis1-99-
-#       Joystick Hat1-99 Left   Inv Joystick Axis1-99
-#       Joystick Hat1-99 Right
+# Generic joystick inputs: axes, buttons and hat/d-pad directions.
+# Replace '[1-99]' with the desired button, hat or axis number:
+#       Joystick Button[1-99]   Joystick Hat[1-99] Up
+#       Joystick Axis[1-99]+    Joystick Hat[1-99] Down
+#       Joystick Axis[1-99]-    Joystick Hat[1-99] Left
+#                               Joystick Hat[1-99] Right
 #
 # Keyboard keys (commonly used, see link above for full list):
 #       A-Z                     Return                  Backspace               Home
@@ -132,15 +123,18 @@ void initCfgSerialization_Controls() noexcept {
         makeControlConfigField(COMMENT, #BINDING_NAME, Controls::Binding::BINDING_NAME, DEFAULT_VALUE)
 
     // Analog movement and turning actions
-    cfg.analog_moveForwardBack = CONTROL_FIELD_WITH_DOC(
-        "Analog movement and turning actions: these must a gamepad axis with a -1.0 to +1.0 range.\n"
+    cfg.analog_moveForward = CONTROL_FIELD_WITH_DOC(
+        "Analog movement and turning actions.\n"
         "Note: analog turn sensitivity is specified by the gamepad sensitivity values in input_cfg.ini.",
-        Analog_MoveForwardBack,
-        "Gamepad LeftY"
+        Analog_MoveForward,
+        "Gamepad LeftY-"
     );
-    
-    cfg.analog_moveLeftRight = CONTROL_FIELD(Analog_MoveLeftRight, "Gamepad LeftX");
-    cfg.analog_turn = CONTROL_FIELD(Analog_Turn, "Gamepad RightX");
+
+    cfg.analog_moveBackward = CONTROL_FIELD(Analog_MoveBackward, "Gamepad LeftY+");
+    cfg.analog_strafeLeft = CONTROL_FIELD(Analog_StrafeLeft, "Gamepad LeftX-");
+    cfg.analog_strafeRight = CONTROL_FIELD(Analog_StrafeRight, "Gamepad LeftX+");
+    cfg.analog_turnLeft = CONTROL_FIELD(Analog_TurnLeft, "Gamepad RightX-");
+    cfg.analog_turnRight = CONTROL_FIELD(Analog_TurnRight, "Gamepad RightX+");
 
     // Digital movement and turning actions
     cfg.digital_moveForward = CONTROL_FIELD_WITH_DOC(
@@ -184,12 +178,16 @@ void initCfgSerialization_Controls() noexcept {
     cfg.toggle_viewPlayer = CONTROL_FIELD(Toggle_ViewPlayer, "V");
 
     // Weapon switching
-    cfg.weapon_scroll = CONTROL_FIELD_WITH_DOC(
-        "Weapon switching: relative and absolute",
-        Weapon_Scroll,
-        "Mouse Wheel"
+    cfg.weapon_scrollUp = CONTROL_FIELD_WITH_DOC(
+        "Weapon switching: relative and absolute.\n"
+        "\n"
+        "Note that the weapon 'scrollUp/Down' actions work much better with the mouse wheel since they\n"
+        "allow multiple weapons to be scrolled past in one frame. This helps rapid scrolling feel much\n"
+        "more responsive.",
+        Weapon_ScrollUp,
+        "Mouse Wheel+"
     );
-
+    cfg.weapon_scrollDown = CONTROL_FIELD(Weapon_ScrollDown, "Mouse Wheel-");
     cfg.weapon_previous = CONTROL_FIELD(Weapon_Previous, "PageDown, \\[, Gamepad LeftShoulder");
     cfg.weapon_next = CONTROL_FIELD(Weapon_Next, "PageUp, \\], Gamepad RightShoulder");
     cfg.weapon_fistChainsaw = CONTROL_FIELD(Weapon_FistChainsaw, "1");

@@ -1,5 +1,6 @@
 #include "Controls.h"
 
+#include "Asserts.h"
 #include "Config/Config.h"
 #include "Input.h"
 #include "PsxPadButtons.h"
@@ -26,10 +27,8 @@ static std::string gCurInputName;
 static constexpr auto REGEX_OPTIONS = std::regex_constants::ECMAScript | std::regex_constants::icase;
 
 // Regexes for parsing generic joystick control bindings
-static const std::regex gRegex_JoystickAxis_Norm    = std::regex(R"(^JOYSTICK\s+AXIS(\d+)$)", REGEX_OPTIONS);
-static const std::regex gRegex_JoystickAxis_PosOnly = std::regex(R"(^JOYSTICK\s+AXIS(\d+)\+$)", REGEX_OPTIONS);
-static const std::regex gRegex_JoystickAxis_NegOnly = std::regex(R"(^JOYSTICK\s+AXIS(\d+)-$)", REGEX_OPTIONS);
-static const std::regex gRegex_JoystickAxis_Inv     = std::regex(R"(^INV\s+JOYSTICK\s+AXIS(\d+)$)", REGEX_OPTIONS);
+static const std::regex gRegex_JoystickAxis_Pos     = std::regex(R"(^JOYSTICK\s+AXIS(\d+)\+$)", REGEX_OPTIONS);
+static const std::regex gRegex_JoystickAxis_Neg     = std::regex(R"(^JOYSTICK\s+AXIS(\d+)-$)", REGEX_OPTIONS);
 static const std::regex gRegex_JoystickButton       = std::regex(R"(^JOYSTICK\s+BUTTON(\d+)$)", REGEX_OPTIONS);
 static const std::regex gRegex_JoystickHat_Up       = std::regex(R"(^JOYSTICK\s+HAT(\d+)\s+UP$)", REGEX_OPTIONS);
 static const std::regex gRegex_JoystickHat_Down     = std::regex(R"(^JOYSTICK\s+HAT(\d+)\s+DOWN$)", REGEX_OPTIONS);
@@ -121,27 +120,21 @@ static float getRawInput(const InputSrc src) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get an input with modifiers applied
+// Get an input restricted to the sub-axis specified by the input source
 //------------------------------------------------------------------------------------------------------------------------------------------
-static float getInputWithModifiers(const InputSrc src) noexcept {
-    const float rawValue = getRawInput(src);
+static float getSubAxisInput(const InputSrc inputSrc) noexcept {
+    const float rawInput = getRawInput(inputSrc);
 
-    if (src.modifier == InputSrc::MOD_INVERT) {
-        return -rawValue;
-    }
-    else if (src.modifier == InputSrc::MOD_POS_SUBAXIS) {
-        return std::clamp(rawValue, 0.0f, 1.0f);
-    }
-    else if (src.modifier == InputSrc::MOD_NEG_SUBAXIS) {
-        return -std::clamp(rawValue, -1.0f, 0.0f);
-    }
+    if (inputSrc.subaxis == InputSrc::SUBAXIS_NEG)
+        return -std::clamp(rawInput, -1.0f, 0.0f);;
 
-    return rawValue;
+    ASSERT(inputSrc.subaxis == InputSrc::SUBAXIS_POS);
+    return std::clamp(rawInput, 0.0f, 1.0f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the given input has just been pressed.
-// Note: doesn't need to consider modifiers for this particular query - we can just use the raw inputs.
+// Note: doesn't need to consider sub-axis filters for this particular query - we can just use the raw inputs.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool isInputJustPressed(const InputSrc src) noexcept {
     if (src.device == InputSrc::KEYBOARD_KEY) {
@@ -173,7 +166,7 @@ static bool isInputJustPressed(const InputSrc src) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the given input has just been released.
-// Note: doesn't need to consider modifiers for this particular query - we can just use the raw inputs.
+// Note: doesn't need to consider sub-axis filters for this particular query - we can just use the raw inputs.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool isInputJustReleased(const InputSrc src) noexcept {
     if (src.device == InputSrc::KEYBOARD_KEY) {
@@ -220,7 +213,7 @@ static float getInputForBinding(const Binding binding) noexcept {
     float inputValue = 0.0f;
 
     for (uint16_t i = 0; i < numInputSources; ++i) {
-        inputValue += getInputWithModifiers(bindingData.inputSources[i]);
+        inputValue += getSubAxisInput(bindingData.inputSources[i]);
     }
 
     return inputValue;
@@ -235,16 +228,13 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
 
     if (nameUpper.find("MOUSE ") == 0) {
         // Probably some sort of mouse input
-        if (nameUpper == "MOUSE WHEEL") {
+        if (nameUpper == "MOUSE WHEEL+") {
             inputSrc.device = InputSrc::MOUSE_WHEEL;
-        } 
-        else if (nameUpper == "MOUSE WHEEL+") {
-            inputSrc.device = InputSrc::MOUSE_WHEEL;
-            inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_POS;
         }
         else if (nameUpper == "MOUSE WHEEL-") {
             inputSrc.device = InputSrc::MOUSE_WHEEL;
-            inputSrc.modifier = InputSrc::MOD_NEG_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_NEG;
         }
         else if (nameUpper == "MOUSE LEFT") {
             inputSrc.device = InputSrc::MOUSE_BUTTON;
@@ -267,12 +257,8 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
             inputSrc.input = (uint16_t) MouseButton::X2;
         }
     }
-    else if (nameUpper == "INV MOUSE WHEEL") {
-        inputSrc.device = InputSrc::MOUSE_WHEEL;
-        inputSrc.modifier = InputSrc::MOD_INVERT;
-    }
     else if (nameUpper.find("GAMEPAD ") == 0) {
-        // Probably some sort of gamepad button or axis (not inverted)
+        // Probably some sort of gamepad button or axis
         constexpr size_t NAME_PREFIX_LEN = sizeof("GAMEPAD ") - 1;
         const SDL_GameControllerButton button = SDL_GameControllerGetButtonFromString(nameUpper.c_str() + NAME_PREFIX_LEN);
 
@@ -283,54 +269,53 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
         }
 
         // Maybe a gamepad axis
-        const SDL_GameControllerAxis axis = SDL_GameControllerGetAxisFromString(nameUpper.c_str() + NAME_PREFIX_LEN);
-
-        if (axis != SDL_CONTROLLER_AXIS_INVALID) {
-            inputSrc.device = InputSrc::GAMEPAD_AXIS;
-            inputSrc.input = (uint16_t) GamepadInputUtils::sdlAxisToInput((uint8_t) axis);
-            return true;
-        }
-
-        // Try one of the special axes
         if (nameUpper == "GAMEPAD LEFTX-") {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInput::AXIS_LEFT_X;
-            inputSrc.modifier = InputSrc::MOD_NEG_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_NEG;
         }
         else if (nameUpper == "GAMEPAD LEFTX+") {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInput::AXIS_LEFT_X;
-            inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_POS;
         }
         else if (nameUpper == "GAMEPAD LEFTY-") {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInput::AXIS_LEFT_Y;
-            inputSrc.modifier = InputSrc::MOD_NEG_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_NEG;
         }
         else if (nameUpper == "GAMEPAD LEFTY+") {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInput::AXIS_LEFT_Y;
-            inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_POS;
         }
         else if (nameUpper == "GAMEPAD RIGHTX-") {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInput::AXIS_RIGHT_X;
-            inputSrc.modifier = InputSrc::MOD_NEG_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_NEG;
         }
         else if (nameUpper == "GAMEPAD RIGHTX+") {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInput::AXIS_RIGHT_X;
-            inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_POS;
         }
         else if (nameUpper == "GAMEPAD RIGHTY-") {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInput::AXIS_RIGHT_Y;
-            inputSrc.modifier = InputSrc::MOD_NEG_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_NEG;
         }
         else if (nameUpper == "GAMEPAD RIGHTY+") {
             inputSrc.device = InputSrc::GAMEPAD_AXIS;
             inputSrc.input = (uint16_t) GamepadInput::AXIS_RIGHT_Y;
-            inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_POS;
+        }
+        else if (nameUpper == "GAMEPAD LEFTTRIGGER") {
+            inputSrc.device = InputSrc::GAMEPAD_AXIS;
+            inputSrc.input = (uint16_t) GamepadInput::AXIS_TRIG_LEFT;
+        }
+        else if (nameUpper == "GAMEPAD RIGHTTRIGGER") {
+            inputSrc.device = InputSrc::GAMEPAD_AXIS;
+            inputSrc.input = (uint16_t) GamepadInput::AXIS_TRIG_RIGHT;
         }
     }
     else if (nameUpper.find("JOYSTICK ") == 0) {
@@ -338,19 +323,15 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
         // Note: for axis, button etc. numbers they are '1' based to the user but '0' based in code - hence we subtract '1' everywhere here...
         std::smatch regexMatches;
 
-        if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickAxis_Norm)) {
+        if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickAxis_Pos)) {
             inputSrc.device = InputSrc::JOYSTICK_AXIS;
             inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
+            inputSrc.subaxis = InputSrc::SUBAXIS_POS;
         }
-        else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickAxis_PosOnly)) {
+        else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickAxis_Neg)) {
             inputSrc.device = InputSrc::JOYSTICK_AXIS;
             inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
-            inputSrc.modifier = InputSrc::MOD_POS_SUBAXIS;
-        }
-        else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickAxis_NegOnly)) {
-            inputSrc.device = InputSrc::JOYSTICK_AXIS;
-            inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
-            inputSrc.modifier = InputSrc::MOD_NEG_SUBAXIS;
+            inputSrc.subaxis = InputSrc::SUBAXIS_NEG;
         }
         else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickButton)) {
             inputSrc.device = InputSrc::JOYSTICK_BUTTON;
@@ -371,39 +352,6 @@ static bool getInputSrcFromNameUpper(const std::string& nameUpper, InputSrc& inp
         else if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickHat_Right)) {
             inputSrc.device = InputSrc::JOYSTICK_HAT;
             inputSrc.input = Input::JoyHat(Input::JoyHatDir::Right, (uint8_t)(std::stoi(regexMatches[1]) - 1));
-        }
-    }
-    else if (nameUpper.find("INV GAMEPAD ") == 0) {
-        // Probably an inverted gamepad axis
-        if (nameUpper == "INV GAMEPAD LEFTX") {
-            inputSrc.device = InputSrc::GAMEPAD_AXIS;
-            inputSrc.input = (uint16_t) GamepadInput::AXIS_LEFT_X;
-            inputSrc.modifier = InputSrc::MOD_INVERT;
-        }
-        else if (nameUpper == "INV GAMEPAD LEFTY") {
-            inputSrc.device = InputSrc::GAMEPAD_AXIS;
-            inputSrc.input = (uint16_t) GamepadInput::AXIS_LEFT_Y;
-            inputSrc.modifier = InputSrc::MOD_INVERT;
-        }
-        else if (nameUpper == "INV GAMEPAD RIGHTX") {
-            inputSrc.device = InputSrc::GAMEPAD_AXIS;
-            inputSrc.input = (uint16_t) GamepadInput::AXIS_RIGHT_X;
-            inputSrc.modifier = InputSrc::MOD_INVERT;
-        }
-        else if (nameUpper == "INV GAMEPAD RIGHTY") {
-            inputSrc.device = InputSrc::GAMEPAD_AXIS;
-            inputSrc.input = (uint16_t) GamepadInput::AXIS_RIGHT_Y;
-            inputSrc.modifier = InputSrc::MOD_INVERT;
-        }
-    }
-    else if (nameUpper.find("INV JOYSTICK ") == 0) {
-        // Probably an inverted joystick axis, try to match it
-        std::smatch regexMatches;
-
-        if (std::regex_search(nameUpper, regexMatches, gRegex_JoystickAxis_Inv)) {
-            inputSrc.device = InputSrc::JOYSTICK_AXIS;
-            inputSrc.input = (uint16_t)(std::stoi(regexMatches[1]) - 1);
-            inputSrc.modifier = InputSrc::MOD_INVERT;
         }
     }
     else {
@@ -617,62 +565,43 @@ void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept {
         }
     }
     else if (src.device == InputSrc::MOUSE_WHEEL) {
-        switch (src.modifier) {
-            case InputSrc::MOD_NONE:            outputStr += "Mouse Wheel";         break;
-            case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Mouse Wheel+";        break;
-            case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Mouse Wheel-";        break;
-            case InputSrc::MOD_INVERT:          outputStr += "Inv Mouse Wheel";     break;
+        switch (src.subaxis) {
+            case InputSrc::SUBAXIS_POS:     outputStr += "Mouse Wheel+";    break;
+            case InputSrc::SUBAXIS_NEG:     outputStr += "Mouse Wheel-";    break;
         }
     }
     else if (src.device == InputSrc::GAMEPAD_AXIS) {
         switch ((GamepadInput) src.input) {
             case GamepadInput::AXIS_LEFT_X: {
-                switch (src.modifier) {
-                    case InputSrc::MOD_NONE:            outputStr += "Gamepad LeftX";       break;
-                    case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Gamepad LeftX+";      break;
-                    case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Gamepad LeftX-";      break;
-                    case InputSrc::MOD_INVERT:          outputStr += "Inv Gamepad LeftX";   break;
+                switch (src.subaxis) {
+                    case InputSrc::SUBAXIS_POS:     outputStr += "Gamepad LeftX+";  break;
+                    case InputSrc::SUBAXIS_NEG:     outputStr += "Gamepad LeftX-";  break;
                 }
             }   break;
 
             case GamepadInput::AXIS_LEFT_Y: {
-                switch (src.modifier) {
-                    case InputSrc::MOD_NONE:            outputStr += "Gamepad LeftY";       break;
-                    case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Gamepad LeftY+";      break;
-                    case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Gamepad LeftY-";      break;
-                    case InputSrc::MOD_INVERT:          outputStr += "Inv Gamepad LeftY";   break;
+                switch (src.subaxis) {
+                    case InputSrc::SUBAXIS_POS:     outputStr += "Gamepad LeftY+";  break;
+                    case InputSrc::SUBAXIS_NEG:     outputStr += "Gamepad LeftY-";  break;
                 }
             }   break;
 
             case GamepadInput::AXIS_RIGHT_X: {
-                switch (src.modifier) {
-                    case InputSrc::MOD_NONE:            outputStr += "Gamepad RightX";       break;
-                    case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Gamepad RightX+";      break;
-                    case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Gamepad RightX-";      break;
-                    case InputSrc::MOD_INVERT:          outputStr += "Inv Gamepad RightX";   break;
+                switch (src.subaxis) {
+                    case InputSrc::SUBAXIS_POS:     outputStr += "Gamepad RightX+";     break;
+                    case InputSrc::SUBAXIS_NEG:     outputStr += "Gamepad RightX-";     break;
                 }
             }   break;
 
             case GamepadInput::AXIS_RIGHT_Y: {
-                switch (src.modifier) {
-                    case InputSrc::MOD_NONE:            outputStr += "Gamepad RightY";       break;
-                    case InputSrc::MOD_POS_SUBAXIS:     outputStr += "Gamepad RightY+";      break;
-                    case InputSrc::MOD_NEG_SUBAXIS:     outputStr += "Gamepad RightY-";      break;
-                    case InputSrc::MOD_INVERT:          outputStr += "Inv Gamepad RightY";   break;
+                switch (src.subaxis) {
+                    case InputSrc::SUBAXIS_POS:     outputStr += "Gamepad RightY+";     break;
+                    case InputSrc::SUBAXIS_NEG:     outputStr += "Gamepad RightY-";     break;
                 }
             }   break;
 
-            case GamepadInput::AXIS_TRIG_LEFT: {
-                if (src.modifier == InputSrc::MOD_NONE) {
-                    outputStr += "Gamepad LeftTrigger";
-                }
-            }   break;
-
-            case GamepadInput::AXIS_TRIG_RIGHT: {
-                if (src.modifier == InputSrc::MOD_NONE) {
-                    outputStr += "Gamepad RightTrigger";
-                }
-            }   break;
+            case GamepadInput::AXIS_TRIG_LEFT:      outputStr += "Gamepad LeftTrigger";     break;
+            case GamepadInput::AXIS_TRIG_RIGHT:     outputStr += "Gamepad RightTrigger";    break;
         }
     }
     else if (src.device == InputSrc::GAMEPAD_BUTTON) {
@@ -698,27 +627,17 @@ void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept {
         char axisNumStr[32];
         std::snprintf(axisNumStr, C_ARRAY_SIZE(axisNumStr), "%d", (int) src.input + 1);
 
-        switch (src.modifier) {
-            case InputSrc::MOD_NONE:
-                outputStr += "Joystick Axis";
-                outputStr += axisNumStr;
-                break;
-
-            case InputSrc::MOD_POS_SUBAXIS:
+        switch (src.subaxis) {
+            case InputSrc::SUBAXIS_POS:
                 outputStr += "Joystick Axis";
                 outputStr += axisNumStr;
                 outputStr += '+';
                 break;
 
-            case InputSrc::MOD_NEG_SUBAXIS:
+            case InputSrc::SUBAXIS_NEG:
                 outputStr += "Joystick Axis";
                 outputStr += axisNumStr;
                 outputStr += '-';
-                break;
-
-            case InputSrc::MOD_INVERT:
-                outputStr += "Inv Joystick Axis";
-                outputStr += axisNumStr;
                 break;
         }
     }
@@ -753,7 +672,7 @@ void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: converts a control binding to a string representing 
+// Helper: converts a control binding to a string representing the binding.
 // Note: if conversion fails then an empty string is returned.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void bindingToStr(const Binding binding, std::string& outputStr) noexcept {

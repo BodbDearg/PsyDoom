@@ -995,8 +995,18 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.reset();
 
     // Gather basic inputs
-    inputs.setAnalogForwardMove((fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveForwardBack) * (float) FRACUNIT));
-    inputs.setAnalogSideMove((fixed_t)(Controls::getFloat(Controls::Binding::Analog_MoveLeftRight) * (float) FRACUNIT));
+    const float analogForwardMove = (
+        Controls::getFloat(Controls::Binding::Analog_MoveForward) -
+        Controls::getFloat(Controls::Binding::Analog_MoveBackward)
+    );
+
+    const float analogSideMove = (
+        Controls::getFloat(Controls::Binding::Analog_StrafeRight) -
+        Controls::getFloat(Controls::Binding::Analog_StrafeLeft)
+    );
+
+    inputs.setAnalogForwardMove((fixed_t)(analogForwardMove * (float) FRACUNIT));
+    inputs.setAnalogSideMove((fixed_t)(analogSideMove * (float) FRACUNIT));
     inputs.fTurnLeft() = Controls::getBool(Controls::Binding::Digital_TurnLeft);
     inputs.fTurnRight() = Controls::getBool(Controls::Binding::Digital_TurnRight);
     inputs.fMoveForward() = Controls::getBool(Controls::Binding::Digital_MoveForward);
@@ -1070,7 +1080,10 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     if (Controls::getBool(Controls::Binding::Weapon_BFG))               { inputs.directSwitchToWeapon = wp_bfg;            }
 
     // Direct weapon switching via weapon scrolling - normally done with a mouse wheel
-    const int32_t weaponScroll = (int32_t) Controls::getFloat(Controls::Binding::Weapon_Scroll);
+    const int32_t weaponScroll = (int32_t)(
+        Controls::getFloat(Controls::Binding::Weapon_ScrollUp) -
+        Controls::getFloat(Controls::Binding::Weapon_ScrollDown)
+    );
 
     if (weaponScroll != 0) {
         // Get all of the owned weapons in a flat list in order of switching priority: this makes scrolling logic easier

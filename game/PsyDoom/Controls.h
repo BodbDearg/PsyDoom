@@ -11,11 +11,14 @@ BEGIN_NAMESPACE(Controls)
 // All of the bindable controls/actions available
 //------------------------------------------------------------------------------------------------------------------------------------------
 enum class Binding : uint16_t {
-    // Analog movement and turning: turning speed is subject to the gamepad turn speed settings
-    Analog_MoveForwardBack,
-    Analog_MoveLeftRight,
-    Analog_Turn,
-    // Digital movement and turning: turn acceleration is based on the classic controls
+    // Analog turning and movement: turning speed is subject to the gamepad turn speed settings
+    Analog_TurnLeft,
+    Analog_TurnRight,
+    Analog_MoveForward,
+    Analog_MoveBackward,
+    Analog_StrafeLeft,
+    Analog_StrafeRight,
+    // Digital turning and movement: turn acceleration is based on the classic controls
     Digital_TurnLeft,
     Digital_TurnRight,
     Digital_MoveForward,
@@ -23,7 +26,8 @@ enum class Binding : uint16_t {
     Digital_StrafeLeft,
     Digital_StrafeRight,
     // Weapon switching: relative and direct
-    Weapon_Scroll,
+    Weapon_ScrollUp,
+    Weapon_ScrollDown,
     Weapon_Previous,
     Weapon_Next,
     Weapon_FistChainsaw,
@@ -101,13 +105,11 @@ struct InputSrc {
         JOYSTICK_HAT
     } device;
 
-    // Modifiers to apply to the input
+    // Which portion of the axis to use, positive or negative
     enum : uint8_t {
-        MOD_NONE,           // Don't modify the input
-        MOD_POS_SUBAXIS,    // Only use the 0.0 to +1.0 range of the axis and return it as a 0.0 to 1.0 axis
-        MOD_NEG_SUBAXIS,    // Only use the 0.0 to -1.0 range of the axis and return it as a 0.0 to 1.0 axis
-        MOD_INVERT,         // Invert/negate the axis inputs
-    } modifier;
+        SUBAXIS_POS,        // Only use the 0.0 to +1.0 range of the axis and return it as a 0.0 to 1.0 axis
+        SUBAXIS_NEG         // Only use the 0.0 to -1.0 range of the axis and return it as a 0.0 to 1.0 axis
+    } subaxis;
 
     // What particular button or axis is used
     uint16_t input;

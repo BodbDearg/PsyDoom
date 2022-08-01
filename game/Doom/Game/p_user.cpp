@@ -482,13 +482,13 @@ static void P_BuildMove(player_t& player) noexcept {
         }
 
         if (bFinalDoomMovementMode) {
-            player.forwardmove -= FixedMul(inputs.getAnalogForwardMove(), FORWARD_MOVE_FDOOM[speedMode]);
+            player.forwardmove += FixedMul(inputs.getAnalogForwardMove(), FORWARD_MOVE_FDOOM[speedMode]);
             player.sidemove += FixedMul(inputs.getAnalogSideMove(), SIDE_MOVE_FDOOM[speedMode]);
         } else {
             const fixed_t forwardMove = FixedMul(inputs.getAnalogForwardMove(), FORWARD_MOVE_DOOM[speedMode]);
             const fixed_t sideMove = FixedMul(inputs.getAnalogSideMove(), SIDE_MOVE_DOOM[speedMode]);
 
-            player.forwardmove -= (forwardMove * elapsedVBlanks) / VBLANKS_PER_TIC;
+            player.forwardmove += (forwardMove * elapsedVBlanks) / VBLANKS_PER_TIC;
             player.sidemove += (sideMove * elapsedVBlanks) / VBLANKS_PER_TIC;
         }
     #endif
@@ -1154,7 +1154,10 @@ void P_PlayerDoTurning() noexcept {
         // Do analog controller turning from the gamepad
         {
             // Note: this axis value will be properly deadzone adjusted so that '0' starts at the end of the deadzone region
-            const float axis = Controls::getFloat(Controls::Binding::Analog_Turn);
+            const float axis = (
+                Controls::getFloat(Controls::Binding::Analog_TurnRight) -
+                Controls::getFloat(Controls::Binding::Analog_TurnLeft)
+            );
 
             // Figure out how much of the high and low turn speeds to use; use the higher turn speed as the stick is pressed more.
             // Note: again I'm not adjusting for PAL mode since turning is independent of framerate, maintain the same turn speed in both PAL and NSTC mode.
