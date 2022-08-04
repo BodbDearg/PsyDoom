@@ -16,6 +16,7 @@
 #include "WindowSurface.h"
 
 #include <algorithm>
+#include <memory>
 #include <SDL.h>
 #include <SDL_vulkan.h>
 
@@ -40,13 +41,13 @@ bool VideoBackend_Vulkan::withTempVkInstance(const std::function<void (vgl::Vulk
 
     // Create a temporary (headless) API instance
     vgl::VkFuncs vkFuncs = {};
-    vgl::VulkanInstance vulkanInstance(vkFuncs);
+    const auto pVulkanInstance = std::make_unique<vgl::VulkanInstance>(vkFuncs);
 
-    if (!vulkanInstance.init(nullptr))
+    if (!pVulkanInstance->init(nullptr))
         return false;
 
     // Do the given logic using the Vulkan instance
-    doLogic(vulkanInstance);
+    doLogic(*pVulkanInstance);
     return true;
 }
 

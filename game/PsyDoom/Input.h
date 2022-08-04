@@ -55,6 +55,12 @@ union JoyHat {
 
 static_assert(sizeof(JoyHat) == 2);
 
+// Holds the current state of a generic joystick axis
+struct JoystickAxis {
+    uint32_t    axis;
+    float       value;
+};
+
 void init() noexcept;
 void shutdown() noexcept;
 void update() noexcept;
@@ -92,6 +98,9 @@ const std::vector<uint32_t>& getJoystickButtonsJustReleased() noexcept;
 const std::vector<JoyHat>& getJoystickHatsPressed() noexcept;
 const std::vector<JoyHat>& getJoystickHatsJustPressed() noexcept;
 const std::vector<JoyHat>& getJoystickHatsJustReleased() noexcept;
+
+// Get joystick axes that currently have a non-zero value
+const std::vector<JoystickAxis>& getActiveJoystickAxes() noexcept;
 
 // Query input state and whether something is just pressed or released
 bool isKeyboardKeyPressed(const uint16_t key) noexcept;

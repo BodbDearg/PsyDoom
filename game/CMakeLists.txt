@@ -346,6 +346,8 @@ set(SOURCE_FILES
 
 if (PSYDOOM_INCLUDE_LAUNCHER)
     list(APPEND SOURCE_FILES
+        "PsyDoom/Launcher/AddInputPrompt.cpp"
+        "PsyDoom/Launcher/AddInputPrompt.h"
         "PsyDoom/Launcher/Launcher.cpp"
         "PsyDoom/Launcher/Launcher.h"
         "PsyDoom/Launcher/Launcher_Context.h"

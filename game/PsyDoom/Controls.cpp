@@ -552,6 +552,11 @@ uint16_t getPSXCheatButtonBits() noexcept {
 void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept {
     if (src.device == InputSrc::KEYBOARD_KEY) {
         if (const char* const scancodeName = SDL_GetScancodeName((SDL_Scancode) src.input)) {
+            // Note: need to escape the ',' character with backslash since that's a separator between input sources in an input source string
+            if (scancodeName[0] == ',') {
+                outputStr += '\\';
+            }
+
             outputStr += scancodeName;
         }
     }

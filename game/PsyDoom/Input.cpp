@@ -15,12 +15,6 @@
 
 BEGIN_NAMESPACE(Input)
 
-// Holds the current state of a generic joystick axis
-struct JoystickAxis {
-    uint32_t    axis;
-    float       value;
-};
-
 static bool                             gbIsQuitRequested;
 static const Uint8*                     gpKeyboardState;
 static int                              gNumKeyboardStateKeys;
@@ -555,7 +549,7 @@ void shutdown() noexcept {
     gpKeyboardState = nullptr;
     gbIsQuitRequested = false;
 
-    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -751,6 +745,10 @@ const std::vector<JoyHat>& getJoystickHatsJustPressed() noexcept {
 
 const std::vector<JoyHat>& getJoystickHatsJustReleased() noexcept {
     return gJoystickHatsJustReleased;
+}
+
+const std::vector<JoystickAxis>& getActiveJoystickAxes() noexcept {
+    return gJoystickAxes;
 }
 
 bool isKeyboardKeyPressed(const uint16_t key) noexcept {

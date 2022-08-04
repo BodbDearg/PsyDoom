@@ -30,8 +30,8 @@ R"(#----------------------------------------------------------------------------
 #       game controllers which are supported and recognized by the SDL library that PsyDoom uses.
 #       If you find your controller is not supported, use generic/numbered joystick inputs instead.
 #   (2) All input source names are case insensitive.
-#   (3) The following keyboard keys names must be escaped/prefixed with backslash (\) when used:
-#         = [ ] # ; ,
+#   (3) The ',' (comma) keyboard key must be escaped/prefixed by backslash (\) when used as an input:
+#           \,
 #   (4) Similar keyboard keys are collapsed into a range for brevity (e.g A-Z).
 #   (5) For a full list of available keyboard key names, including very uncommon ones, see:
 #         https://wiki.libsdl.org/SDL_Scancode
@@ -73,12 +73,11 @@ R"(#----------------------------------------------------------------------------
 #       Up                      Down                    ScrollLock              Numlock
 #       Left Ctrl               Left Shift              Left Alt                Application
 #       Right Ctrl              Right Shift             Right Alt               Menu
-#       Left GUI                Right GUI               VolumeUp                VolumeDown
-#       -                       \=                      \[                      \]
-#       \                       \#                      \;                      '
-#       \,                      `                       .                       /
-#       Keypad /                Keypad *                Keypad -                Keypad +
-#       Keypad Enter            Keypad .
+#       Left GUI                Right GUI               -                       = 
+#       [                       ]                       \                       #
+#       ;                       '                       \,                      `
+#       .                       /                       Keypad /                Keypad *
+#       Keypad -                Keypad +                Keypad Enter            Keypad .
 #---------------------------------------------------------------------------------------------------
 
 )";
@@ -125,7 +124,7 @@ void initCfgSerialization_Controls() noexcept {
     // Analog movement and turning actions
     cfg.analog_moveForward = CONTROL_FIELD_WITH_DOC(
         "Analog movement and turning actions.\n"
-        "Note: analog turn sensitivity is specified by the gamepad sensitivity values in input_cfg.ini.",
+        "Note: analog turn sensitivity can be modified via the 'Input' section.",
         Analog_MoveForward,
         "Gamepad LeftY-"
     );
@@ -232,8 +231,10 @@ void initCfgSerialization_Controls() noexcept {
     // PSX button bindings for cheat codes
     cfg.psxCheatCode_up = CONTROL_FIELD_WITH_DOC(
         "Mappings to the original PlayStation controller buttons for the sole purpose of entering cheat\n"
-        "code sequences on the pause menu, the original way. For example inputs mapped to the PSX 'Cross'\n"
-        "button will be interpreted as that while attempting to enter an original cheat code sequence.",
+        "code sequences on the pause menu, the original way.\n"
+        "\n"
+        "For example inputs mapped to the PSX 'Cross' button will be interpreted as that while attempting\n"
+        "to enter an original cheat code sequence.",
         PSXCheatCode_Up,
         "Up, W, Gamepad DpUp, Gamepad LeftY-, Gamepad RightY-"
     );
