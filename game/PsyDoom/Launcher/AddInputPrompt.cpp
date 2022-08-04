@@ -390,7 +390,9 @@ static void updatePrompt([[maybe_unused]] void* const pUserData) noexcept {
     std::snprintf(
         gPrompt.bodyMsg,
         sizeof(gPrompt.bodyMsg),
-        "Press a key or move a controller axis to add an input for this control binding.\n"
+        "Press a key, button, trigger, or move a controller axis.\n"
+        "The supplied input will be added to the control binding.\n"
+        "\n"
         "This prompt will self-cancel in %d second(s)...",
         (int)(gPrompt.duration - secondsElapsed)
     );
@@ -423,13 +425,13 @@ Controls::InputSrc show() noexcept {
     Fl::screen_work_area(screenX, screenY, screenW, screenH);
 
     // Make a small modal window to prompt the user for input and move it to the center of the screen
-    const auto pPromptWindow = std::make_unique<Fl_Double_Window>((screenW - 600) / 2, (screenH - 80) / 2, 600, 80, "Add control input");
+    const auto pPromptWindow = std::make_unique<Fl_Double_Window>((screenW - 500) / 2, (screenH - 80) / 2, 500, 120, "Add input");
     pPromptWindow->set_modal();
 
     // Setup the prompt global state and also allocate the body text for the dialog
     gPrompt = {};
     gPrompt.pWindow = pPromptWindow.get();
-    gPrompt.pBodyText = new Fl_Box(0, 0, 600, 80);
+    gPrompt.pBodyText = new Fl_Box(0, 0, 500, 120);
     gPrompt.startTime = timer_t::now();
     gPrompt.duration = 5;
 
