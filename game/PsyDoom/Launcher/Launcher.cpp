@@ -43,22 +43,13 @@ static constexpr int WINDOW_H = 610;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // These are defined in the various launcher tab .cpp files
 //------------------------------------------------------------------------------------------------------------------------------------------
-void populate(Tab_Launcher& tab) noexcept;
-void populate(Tab_Graphics& tab) noexcept;
-void populate(Tab_Game& tab) noexcept;
-void populate(Tab_Input& tab) noexcept;
-void populate(Tab_Controls& tab) noexcept;
-void populate(Tab_Audio& tab) noexcept;
-void populate(Tab_Cheats& tab) noexcept;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// The result of executing the launcher.
-// Tells whether the game itself should be run or whether the app should quit.
-//------------------------------------------------------------------------------------------------------------------------------------------
-enum class LauncherResult {
-    Exit,
-    RunGame
-};
+void populateLauncherTab(Context& ctx) noexcept;
+void populateGraphicsTab(Context& ctx) noexcept;
+void populateGameTab(Context& ctx) noexcept;
+void populateInputTab(Context& ctx) noexcept;
+void populateControlsTab(Context& ctx) noexcept;
+void populateAudioTab(Context& ctx) noexcept;
+void populateCheatsTab(Context& ctx) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Copies the given list of C-style program arguments, returning them in std::vector format
@@ -150,19 +141,24 @@ static void makeLauncherTabs(Context& ctx) noexcept {
     ctx.pTabs->color(FL_BACKGROUND_COLOR, FL_LIGHT1);
 
     // Create and populate each individual tab (these will be added to the tab container)
-    const auto makeTab = [=](auto& tabWidgets, const char* const label) noexcept {
+    const auto makeTab = [=](
+        Context& ctx,
+        auto& tabWidgets,
+        const auto& populateTabFunc,
+        const char* const label
+    ) noexcept {
         tabWidgets.pTab = new Fl_Group(10, 40, winW - 20, winH - 50, label);
-        populate(tabWidgets);
+        populateTabFunc(ctx);
         tabWidgets.pTab->end();
     };
 
-    makeTab(ctx.tab_launcher, "  Launcher  ");
-    makeTab(ctx.tab_graphics, "  Graphics  ");
-    makeTab(ctx.tab_game, "  Game  ");
-    makeTab(ctx.tab_input, "  Input  ");
-    makeTab(ctx.tab_controls,  "  Controls  ");
-    makeTab(ctx.tab_audio, "  Audio  ");
-    makeTab(ctx.tab_cheats, "  Cheats  ");
+    makeTab(ctx, ctx.tab_launcher, populateLauncherTab, "  Launcher  ");
+    makeTab(ctx, ctx.tab_graphics, populateGraphicsTab, "  Graphics  ");
+    makeTab(ctx, ctx.tab_game, populateGameTab, "  Game  ");
+    makeTab(ctx, ctx.tab_input, populateInputTab, "  Input  ");
+    makeTab(ctx, ctx.tab_controls, populateControlsTab,  "  Controls  ");
+    makeTab(ctx, ctx.tab_audio, populateAudioTab, "  Audio  ");
+    makeTab(ctx, ctx.tab_cheats, populateCheatsTab, "  Cheats  ");
 
     // Done adding tabs to the tab container
     ctx.pTabs->end();
@@ -194,7 +190,7 @@ static void addLauncherProgramArgs(Context& ctx, std::vector<std::string>& progr
     const std::string dataDirPath = trimText(ctx.tab_launcher.pInput_dataDir->value());
     const std::string netHost = trimText(ctx.tab_launcher.pInput_netHost->value());
     const std::string netPort = trimText(ctx.tab_launcher.pInput_netPort->value());
-    const std::string demoToPlay = trimText(ctx.tab_launcher.demoFileToPlay.c_str());
+    const std::string demoToPlay = trimText(ctx.demoFileToPlay.c_str());
 
     if (!cuePath.empty()) {
         programArgs.push_back("-cue");
@@ -264,8 +260,11 @@ static LauncherResult runLauncher(std::vector<std::string>& programArgs) noexcep
     Controls::init();
     Config::init();
 
-    // Create the launcher window
+    // Initialize the launcher's context and initially assume we will exit the game unless a command is issued otherwise
     Context ctx = {};
+    ctx.launcherResult = LauncherResult::Exit;
+
+    // Create the launcher window
     makeLauncherWindow(ctx, WINDOW_W, WINDOW_H);
 
     // Load previous launcher settings and apply them to the 'Launcher' page
@@ -287,14 +286,21 @@ static LauncherResult runLauncher(std::vector<std::string>& programArgs) noexcep
 
     // Cleanup the controls and config systems if we are not going to launch the game.
     // Normally the game handles cleaning up these, but if we are not launching the game then this module needs to handle that.
-    if (!ctx.tab_launcher.bLaunchGame) {
+    if (ctx.launcherResult != LauncherResult::RunGame) {
         Config::shutdown();
         Controls::shutdown();
-        return LauncherResult::Exit;
     }
 
-    // If we get to here then we are launching the game!
-    return LauncherResult::RunGame;
+    return ctx.launcherResult;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Runs the game and returns the exit code from it
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int runGame(const std::vector<std::string>& programArgs) noexcept {
+    // Need to convert the program arguments to C-style program arguments first!
+    const std::vector<const char*> cProgramArgs = toCProgramArgs(programArgs);
+    return psx_main((int) cProgramArgs.size(), cProgramArgs.data());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -303,19 +309,35 @@ static LauncherResult runLauncher(std::vector<std::string>& programArgs) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 int launcherMain(const int argc, const char* const* const argv) noexcept {
     // Copy the input program arguments: the launcher will append to this list if appropriate
-    std::vector<std::string> programArgs = copyCProgramArgs(argc, argv);
+    const std::vector<std::string> origProgramArgs = copyCProgramArgs(argc, argv);
 
-    // Run the launcher (if appropriate) and exit if it says so
-    if (shouldRunLauncher(programArgs)) {
-        if (runLauncher(programArgs) == LauncherResult::Exit)
+    // Run the game directly without showing the launcher?
+    if (!shouldRunLauncher(origProgramArgs))
+        return runGame(origProgramArgs);
+
+    // If we are running the launcher then always show it before the game.
+    // Also loop so that the launcher will show again after the game exits.
+    while (true) {
+        // Run the launcher and exit if it says so.
+        // Note that the launcher might append it's own program arguments to the list.
+        std::vector<std::string> programArgs = origProgramArgs;
+        const LauncherResult result = runLauncher(programArgs);
+
+        if (result == LauncherResult::Exit)
             return 0;
+
+        // Run the game using the program arguments determined, if requested:
+        if (result == LauncherResult::RunGame) {
+            const int gameResult = runGame(programArgs);
+
+            // Abort the launcher/game loop if an error happened
+            if (gameResult != 0)
+                return gameResult;
+        }
     }
 
-    // Convert the program arguments back to a C-style format
-    const std::vector<const char*> cProgramArgs = toCProgramArgs(programArgs);
-
-    // Run the game using the program arguments determined!
-    return psx_main((int) cProgramArgs.size(), cProgramArgs.data());
+    // Unreachable: if we do end up here then something has gone horribly wrong!
+    return -1;
 }
 
 END_NAMESPACE(Launcher)

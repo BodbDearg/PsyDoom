@@ -50,7 +50,8 @@ static void makeSettingSection(const int x, const int y) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the 'Audio' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
-void populate(Tab_Audio& tab) noexcept {
+void populateAudioTab(Context& ctx) noexcept {
+    Tab_Audio& tab = ctx.tab_audio;
     ASSERT(tab.pTab);
     ASSERT(Fl_Group::current() == tab.pTab);
 

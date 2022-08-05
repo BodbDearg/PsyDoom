@@ -373,7 +373,8 @@ static void makeClassicRendererSettingsSection(const int x, const int y) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the 'Graphics' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
-void populate(Tab_Graphics& tab) noexcept {
+void populateGraphicsTab(Context& ctx) noexcept {
+    Tab_Graphics& tab = ctx.tab_graphics;
     ASSERT(tab.pTab);
     ASSERT(Fl_Group::current() == tab.pTab);
 

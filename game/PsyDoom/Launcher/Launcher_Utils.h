@@ -109,7 +109,7 @@ void bindConfigField(Fl_Input& input) noexcept {
             configDirtyFlag = true;
         }
     );
-
+    
     input.value(configValue.c_str());
 }
 

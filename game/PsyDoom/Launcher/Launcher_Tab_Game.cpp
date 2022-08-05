@@ -489,7 +489,8 @@ static void makeDefaultCueFileSelector(Tab_Game& tab, const int lx, const int rx
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the 'Game' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
-void populate(Tab_Game& tab) noexcept {
+void populateGameTab(Context& ctx) noexcept {
+    Tab_Game& tab = ctx.tab_game;
     ASSERT(tab.pTab);
     ASSERT(Fl_Group::current() == tab.pTab);
 

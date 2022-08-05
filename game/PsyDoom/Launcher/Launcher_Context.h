@@ -21,6 +21,16 @@ class Fl_Window;
 BEGIN_NAMESPACE(Launcher)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Represents the result of executing the launcher.
+// Tells what should happen next.
+//------------------------------------------------------------------------------------------------------------------------------------------
+enum class LauncherResult : int32_t {
+    Exit,           // Exit the application entirely
+    RunLauncher,    // Re-run the launcher (used after config is reset back to defaults)
+    RunGame         // Run the game after running the launcher
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Holds widgets and state for the 'Launcher' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct Tab_Launcher {
@@ -36,10 +46,9 @@ struct Tab_Launcher {
     Fl_Button*                      pButton_clearNetHost;
     Fl_Int_Input*                   pInput_netPort;
     Fl_Choice*                      pChoice_netPeerType;
+    Fl_Choice*                      pChoice_resetCfgType;
     Fl_Button*                      pButton_launch;
     std::unique_ptr<Fl_Pixmap>      pGameLogo;                  // Image data for the game's logo
-    bool                            bLaunchGame;                // If true actually run the game once the launcher exits
-    std::string                     demoFileToPlay;             // If non empty: path to a demo file to play
 
     // A callback invoked when the net peer type is updated
     void (*onNetPeerTypeUpdated)(Tab_Launcher& tab) noexcept;
@@ -122,6 +131,8 @@ struct Context {
     Tab_Controls                    tab_controls;
     Tab_Audio                       tab_audio;
     Tab_Cheats                      tab_cheats;
+    LauncherResult                  launcherResult;
+    std::string                     demoFileToPlay;     // If non empty: path to a demo file to play
 };
 
 END_NAMESPACE(Launcher)

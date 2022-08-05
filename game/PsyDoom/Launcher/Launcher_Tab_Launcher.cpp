@@ -6,6 +6,13 @@
 #include "Asserts.h"
 #include "Launcher_Context.h"
 #include "Launcher_Utils.h"
+#include "PsyDoom/Config/Config.h"
+#include "PsyDoom/Config/ConfigSerialization_Audio.h"
+#include "PsyDoom/Config/ConfigSerialization_Cheats.h"
+#include "PsyDoom/Config/ConfigSerialization_Controls.h"
+#include "PsyDoom/Config/ConfigSerialization_Game.h"
+#include "PsyDoom/Config/ConfigSerialization_Graphics.h"
+#include "PsyDoom/Config/ConfigSerialization_Input.h"
 #include "PsyDoom/Utils.h"
 
 BEGIN_DISABLE_HEADER_WARNINGS
@@ -27,6 +34,76 @@ BEGIN_NAMESPACE(Launcher)
 static const char* const gLauncherLogo_xpm_data[] = {
     #include "Launcher_Logo.bin.h"
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Asks the user if it's desirable to reset the chosen config section and performs the reset if confirmed
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void doConfirmResetConfig(Context& ctx) noexcept {
+    // Get the name of the configuration to be reset and a list of config fields to be defaulted.
+    // Also get the flag for whether the config needs to be saved.
+    const char* cfgName = nullptr;
+    ConfigSerialization::ConfigFieldList cfgFieldList = {};
+    bool* pbConfigNeedsSaveFlag = nullptr;
+
+    switch (ctx.tab_launcher.pChoice_resetCfgType->value()) {
+        case 0:
+            cfgName = "Graphics";
+            cfgFieldList = ConfigSerialization::gConfig_Graphics.getFieldList();
+            pbConfigNeedsSaveFlag = &Config::gbNeedSave_Graphics;
+            break;
+
+        case 1:
+            cfgName = "Game";
+            cfgFieldList = ConfigSerialization::gConfig_Game.getFieldList();
+            pbConfigNeedsSaveFlag = &Config::gbNeedSave_Game;
+            break;
+
+        case 2:
+            cfgName = "Input";
+            cfgFieldList = ConfigSerialization::gConfig_Input.getFieldList();
+            pbConfigNeedsSaveFlag = &Config::gbNeedSave_Input;
+            break;
+
+        case 3:
+            cfgName = "Controls";
+            cfgFieldList = ConfigSerialization::gConfig_Controls.getFieldList();
+            pbConfigNeedsSaveFlag = &Config::gbNeedSave_Controls;
+            break;
+
+        case 4:
+            cfgName = "Audio";
+            cfgFieldList = ConfigSerialization::gConfig_Audio.getFieldList();
+            pbConfigNeedsSaveFlag = &Config::gbNeedSave_Audio;
+            break;
+
+        case 5:
+            cfgName = "Cheats";
+            cfgFieldList = ConfigSerialization::gConfig_Cheats.getFieldList();
+            pbConfigNeedsSaveFlag = &Config::gbNeedSave_Cheats;
+            break;
+    }
+
+    // Sanity check - if the choice is unrecognized then abort:
+    ASSERT(cfgName);
+
+    if (cfgName == nullptr)
+        return;
+
+    // First confirm whether the user wants to reset
+    const int result = fl_choice("Reset all settings in the '%s' tab to the defaults?\nWARNING: this action cannot be undone!", "Yes", "No", nullptr, cfgName);
+
+    // Do the reset if requested, save the results and restart the launcher to update the UI
+    if (result == 0) {
+        for (uint32_t i = 0; i < cfgFieldList.numFields; ++i) {
+            cfgFieldList.pFieldList[i].defInitFunc();
+        }
+
+        *pbConfigNeedsSaveFlag = true;
+        ConfigSerialization::writeAllConfigFiles(false);
+        ctx.launcherResult = LauncherResult::RunLauncher;
+        ctx.pWindow->hide();
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Makes the PsyDoom logo
@@ -192,9 +269,9 @@ static void onNetPeerTypeUpdated(Tab_Launcher& tab) noexcept {
 // Sets a flag to say that the game should be launched.
 // Then begins the process of launching the game by closing the launcher window.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void requestGameBeLaunched(Tab_Launcher& tab) noexcept {
-    tab.bLaunchGame = true;
-    tab.pTab->window()->hide();
+static void requestGameBeLaunched(Context& ctx) noexcept {
+    ctx.launcherResult = LauncherResult::RunGame;
+    ctx.tab_launcher.pTab->window()->hide();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -283,12 +360,13 @@ static void makeNetworkSettingsSection(Tab_Launcher& tab, const int x, const int
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Makes the 'tools' section
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeToolsSection(Tab_Launcher& tab, const int x, const int y) noexcept {
+static void makeToolsSection(Context& ctx, const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 290, 30, "Tools");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 290, 180, "");
 
     // Button to open the PsyDoom data directory
+    Tab_Launcher& tab = ctx.tab_launcher;
     const auto pButton_openDataDir = new Fl_Button(x + 20, y + 50, 250, 30, "Open PsyDoom data directory");
     pButton_openDataDir->callback(
         [](Fl_Widget*, void*) noexcept {
@@ -314,11 +392,11 @@ static void makeToolsSection(Tab_Launcher& tab, const int x, const int y) noexce
     pButton_openDataDir->tooltip("Opens the directory that PsyDoom stores preferences, savefiles and recorded demos to.");
 
     // A button to play a demo file
-    const auto pButton_playDemo = new Fl_Button(x + 20, y + 100, 250, 30, "Play a demo file");
+    const auto pButton_playDemo = new Fl_Button(x + 20, y + 90, 250, 30, "Play a demo file");
     pButton_playDemo->callback(
         [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
-            Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
+            Context& ctx = *(Context*) pUserData;
 
             const std::string userDataFolder = Utils::getOrCreateUserDataFolder();
 
@@ -328,34 +406,61 @@ static void makeToolsSection(Tab_Launcher& tab, const int x, const int y) noexce
             pFileChooser->directory(userDataFolder.c_str());
 
             if ((pFileChooser->show() == 0) && (pFileChooser->count() == 1)) {
-                tab.demoFileToPlay = pFileChooser->filename();
-                requestGameBeLaunched(tab);
+                ctx.demoFileToPlay = pFileChooser->filename();
+                requestGameBeLaunched(ctx);
             }
         },
-        &tab
+        &ctx
     );
     pButton_openDataDir->tooltip("Play a demo file previously recorded by PsyDoom and then exit.");
+
+    // A button to reset a particular config file, the choice of which config and a corresponding label
+    const auto pLabel_resetCfg = new Fl_Box(x + 20, y + 130, 100, 30, "Factory reset configuration");
+    pLabel_resetCfg->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    pLabel_resetCfg->tooltip("Resets the specified config section to the default settings.");
+
+    tab.pChoice_resetCfgType = new Fl_Choice(x + 20, y + 160, 140, 30);
+    tab.pChoice_resetCfgType->tooltip(pLabel_resetCfg->tooltip());
+    tab.pChoice_resetCfgType->add("Graphics");
+    tab.pChoice_resetCfgType->add("Game");
+    tab.pChoice_resetCfgType->add("Input");
+    tab.pChoice_resetCfgType->add("Controls");
+    tab.pChoice_resetCfgType->add("Audio");
+    tab.pChoice_resetCfgType->add("Cheats");
+    tab.pChoice_resetCfgType->value(0);
+
+    const auto pButton_resetCfg = new Fl_Button(x + 170, y + 160, 100, 30, "Reset");
+    pButton_resetCfg->tooltip(pLabel_resetCfg->tooltip());
+    pButton_resetCfg->callback(
+        [](Fl_Widget*, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            doConfirmResetConfig(*(Context*) pUserData);
+        },
+        &ctx
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Makes the launch button
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeLaunchButton(Tab_Launcher& tab, const int x, const int y) noexcept {
+static void makeLaunchButton(Context& ctx, const int x, const int y) noexcept {
+    Tab_Launcher& tab = ctx.tab_launcher;
     tab.pButton_launch = new Fl_Button(x, y, 400, 40, "Launch PsyDoom!");
     tab.pButton_launch->callback(
         [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
-            Tab_Launcher& tab = *(Tab_Launcher*) pUserData;
-            requestGameBeLaunched(tab);
+            Context& ctx = *(Context*) pUserData;
+            requestGameBeLaunched(ctx);
         },
-        &tab
+        &ctx
     );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the 'Launcher' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
-void populate(Tab_Launcher& tab) noexcept {
+void populateLauncherTab(Context& ctx) noexcept {
+    Tab_Launcher& tab = ctx.tab_launcher;
     ASSERT(tab.pTab);
     ASSERT(Fl_Group::current() == tab.pTab);
 
@@ -367,8 +472,8 @@ void populate(Tab_Launcher& tab) noexcept {
     makeModDataDirSelector(tab, tabRect.lx + 20, tabRect.rx - 20, 300);
     makeGameOptionsSection(tab, tabRect.lx + 330, 370);
     makeNetworkSettingsSection(tab, tabRect.lx + 520, 370);
-    makeToolsSection(tab, tabRect.lx + 20, 370);
-    makeLaunchButton(tab, tabRect.rx - 420, tabRect.by - 60);
+    makeToolsSection(ctx, tabRect.lx + 20, 370);
+    makeLaunchButton(ctx, tabRect.rx - 420, tabRect.by - 60);
 }
 
 END_NAMESPACE(Launcher)

@@ -173,7 +173,8 @@ static void makeCheatKeySequencesSection(const int x, const int y) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the 'Cheats' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
-void populate(Tab_Cheats& tab) noexcept {
+void populateCheatsTab(Context& ctx) noexcept {
+    Tab_Cheats& tab = ctx.tab_cheats;
     ASSERT(tab.pTab);
     ASSERT(Fl_Group::current() == tab.pTab);
 

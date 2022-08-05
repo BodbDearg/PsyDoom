@@ -312,7 +312,8 @@ static void makePSXCheatCodeButtonsSection(const int secLx, const int secRx, con
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the 'Controls' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
-void populate(Tab_Controls& tab) noexcept {
+void populateControlsTab(Context& ctx) noexcept {
+    Tab_Controls& tab = ctx.tab_controls;
     ASSERT(tab.pTab);
     ASSERT(Fl_Group::current() == tab.pTab);
 

@@ -114,7 +114,8 @@ static void makeGamepadSection(const int x, const int y) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the 'Input' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
-void populate(Tab_Input& tab) noexcept {
+void populateInputTab(Context& ctx) noexcept {
+    Tab_Input& tab = ctx.tab_input;
     ASSERT(tab.pTab);
     ASSERT(Fl_Group::current() == tab.pTab);
 
