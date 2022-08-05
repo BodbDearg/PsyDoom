@@ -172,6 +172,10 @@ void shutdownVideo() noexcept {
     if (ProgArgs::gbHeadlessMode)
         return;
 
+    // Turn off relative mouse mode and unhide the cursor
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+    SDL_ShowCursor(SDL_ENABLE);
+
     // Cleanup for the video backend
     if (gpVideoBackend) {
         gpVideoBackend->destroyRenderers();
@@ -186,7 +190,7 @@ void shutdownVideo() noexcept {
         SDL_DestroyWindow(gpSdlWindow);
         gpSdlWindow = nullptr;
     }
-
+    
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
