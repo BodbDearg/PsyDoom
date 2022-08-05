@@ -110,7 +110,7 @@ static void doConfirmResetConfig(Context& ctx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeLogo(Tab_Launcher& tab, const int lx, const int rx, const int ty) noexcept {
     tab.pGameLogo = std::make_unique<Fl_Pixmap>(gLauncherLogo_xpm_data);
-    const auto pImageBox = new Fl_Box(FL_NO_BOX, lx, ty, rx - lx, 0, "");
+    const auto pImageBox = new Fl_Box(FL_NO_BOX, lx, ty, rx - lx, 0, nullptr);
     pImageBox->image(tab.pGameLogo.get());
 }
 

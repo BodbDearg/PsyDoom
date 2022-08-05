@@ -139,6 +139,16 @@ static void makeLauncherTabs(Context& ctx) noexcept {
 
     ctx.pTabs = new Fl_Tabs(10, 10, winW - 20, winH - 20);
     ctx.pTabs->color(FL_BACKGROUND_COLOR, FL_LIGHT1);
+    ctx.pTabs->callback(
+        [](Fl_Widget*, void* const pUserData) noexcept {
+            // MacOS: workaround an FLTK bug where the logo does not appear sometimes after switching tabs.
+            // Force FLTK to redraw everything after a tab switch.
+            ASSERT(pUserData);
+            Context& ctx = *static_cast<Context*>(pUserData);
+            ctx.pWindow->damage(FL_DAMAGE_ALL);
+        },
+        &ctx
+    );
 
     // Create and populate each individual tab (these will be added to the tab container)
     const auto makeTab = [=](
@@ -162,6 +172,10 @@ static void makeLauncherTabs(Context& ctx) noexcept {
 
     // Done adding tabs to the tab container
     ctx.pTabs->end();
+    
+    // MacOS: workaround an FLTK bug where the logo does not appear sometimes on startup.
+    // Force FLTK to redraw everything.
+    ctx.pWindow->damage(FL_DAMAGE_ALL);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
