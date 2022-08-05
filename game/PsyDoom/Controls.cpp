@@ -567,6 +567,10 @@ void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept {
             case MouseButton::MIDDLE:   outputStr += "Mouse Middle";    break;
             case MouseButton::X1:       outputStr += "Mouse X1";        break;
             case MouseButton::X2:       outputStr += "Mouse X2";        break;
+            
+            default:
+                ASSERT_FAIL("This shouldn't happen - an unhandled mouse button!");
+                break;
         }
     }
     else if (src.device == InputSrc::MOUSE_WHEEL) {
@@ -607,6 +611,10 @@ void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept {
 
             case GamepadInput::AXIS_TRIG_LEFT:      outputStr += "Gamepad LeftTrigger";     break;
             case GamepadInput::AXIS_TRIG_RIGHT:     outputStr += "Gamepad RightTrigger";    break;
+            
+            default:
+                ASSERT_FAIL("This shouldn't happen - an unhandled gamepad axis!");
+                break;
         }
     }
     else if (src.device == InputSrc::GAMEPAD_BUTTON) {
@@ -626,6 +634,10 @@ void appendInputSrcToStr(const InputSrc& src, std::string& outputStr) noexcept {
             case GamepadInput::BTN_DPAD_DOWN:       outputStr += "Gamepad DpDown";          break;
             case GamepadInput::BTN_DPAD_LEFT:       outputStr += "Gamepad DpLeft";          break;
             case GamepadInput::BTN_DPAD_RIGHT:      outputStr += "Gamepad DpRight";         break;
+            
+            default:
+                ASSERT_FAIL("This shouldn't happen - an unhandled gamepad button!");
+                break;
         }
     }
     else if (src.device == InputSrc::JOYSTICK_AXIS) {

@@ -13,6 +13,7 @@
 #include "PsyDoom/Utils.h"
 
 #include <cstring>
+#include <vector>
 
 BEGIN_NAMESPACE(ConfigSerialization)
 

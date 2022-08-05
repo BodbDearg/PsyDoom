@@ -215,8 +215,8 @@
  * Possibly missing sprintf-style functions:
  */
 
-#undef HAVE_VSNPRINTF
-#undef HAVE_SNPRINTF
+#define HAVE_VSNPRINTF
+#define HAVE_SNPRINTF
 
 /*
  * String functions and headers...
@@ -224,8 +224,14 @@
 
 #undef HAVE_STRINGS_H
 #undef HAVE_STRCASECMP
-#undef HAVE_STRLCAT
-#undef HAVE_STRLCPY
+
+#ifdef _WIN32
+    #undef HAVE_STRLCAT
+    #undef HAVE_STRLCPY
+#else
+    #define HAVE_STRLCAT
+    #define HAVE_STRLCPY
+#endif
 
 /*
  * Do we have POSIX locale support?

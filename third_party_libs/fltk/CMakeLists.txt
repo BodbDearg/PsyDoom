@@ -222,7 +222,6 @@ set(SOURCE_FILES
     "${SRC_DIR}/Fl_File_Icon2.cxx"
     "${SRC_DIR}/Fl_File_Input.cxx"
     "${SRC_DIR}/fl_font.cxx"
-    "${SRC_DIR}/Fl_get_key_win32.cxx"
     "${SRC_DIR}/Fl_get_system_colors.cxx"
     "${SRC_DIR}/Fl_GIF_Image.cxx"
     "${SRC_DIR}/fl_gleam.cxx"
@@ -359,7 +358,6 @@ set(SOURCE_FILES
     "${SRC_DIR}/xutf8/headers/symbol_.h"
     "${SRC_DIR}/xutf8/is_right2left.c"
     "${SRC_DIR}/xutf8/is_spacing.c"
-    "${SRC_DIR}/xutf8/ucs2fontmap.c"
     "${SRC_DIR}/xutf8/Ximint.h"
     "${SRC_DIR}/xutf8/Xlibint.h"
 )
@@ -389,6 +387,7 @@ if (PLATFORM_WINDOWS)
         "${SRC_DIR}/drivers/WinAPI/Fl_WinAPI_Window_Driver.cxx"
         "${SRC_DIR}/drivers/WinAPI/Fl_WinAPI_Window_Driver.H"
         "${SRC_DIR}/fl_dnd_win32.cxx"
+        "${SRC_DIR}/Fl_get_key_win32.cxx"
         "${SRC_DIR}/Fl_Native_File_Chooser_WIN32.cxx"
         "${SRC_DIR}/Fl_win32.cxx"
         "${SRC_DIR}/scandir_win32.c"
@@ -413,7 +412,6 @@ if (PLATFORM_MAC)
         "${SRC_DIR}/drivers/Cocoa/Fl_Cocoa_Screen_Driver.H"
         "${SRC_DIR}/drivers/Cocoa/Fl_Cocoa_Window_Driver.cxx"
         "${SRC_DIR}/drivers/Cocoa/Fl_Cocoa_Window_Driver.H"
-        "${SRC_DIR}/drivers/Cocoa/fl_macOS_gl_platform_init.cxx"
         "${SRC_DIR}/drivers/Cocoa/Fl_MacOS_Sys_Menu_Bar_Driver.H"
         "${SRC_DIR}/drivers/Darwin/Fl_Darwin_System_Driver.cxx"
         "${SRC_DIR}/drivers/Darwin/Fl_Darwin_System_Driver.H"
@@ -475,6 +473,7 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/Fl_Native_File_Chooser_FLTK.cxx"
         "${SRC_DIR}/Fl_x.cxx"
         "${SRC_DIR}/Xutf8.h"
+        "${SRC_DIR}/xutf8/ucs2fontmap.c"
         "${SRC_DIR}/xutf8/utf8Input.c"
         "${SRC_DIR}/xutf8/utf8Utils.c"
         "${SRC_DIR}/xutf8/utf8Wrap.c"
@@ -492,4 +491,8 @@ if (PLATFORM_WINDOWS)
     target_link_libraries(${FLTK_TGT_NAME}
         Comctl32.lib
     )
+endif()
+
+if (COMPILER_CLANG OR COMPILER_GCC)
+    target_compile_options(${FLTK_TGT_NAME} PRIVATE -Wno-deprecated-declarations)       # No warnings about using deprecated library functions
 endif()
