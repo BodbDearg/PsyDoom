@@ -358,6 +358,10 @@ Cocoa_HandleTitleButtonEvent(_THIS, NSEvent *event)
 {
     SDL_Window *window;
     NSWindow *nswindow = [event window];
+    
+    // PSYDOOM: crash fix!
+    if (!_this)
+        return; /* Can happen if video was initialized and shutdown but events are still being sent for non SDL windows */
 
     for (window = _this->windows; window; window = window->next) {
         SDL_WindowData *data = (SDL_WindowData *)window->driverdata;
