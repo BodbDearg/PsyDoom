@@ -463,7 +463,7 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver.H"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_arci.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_color.cxx"
-        "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_font_x.cxx"
+        "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_font_xft.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_image.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_line_style.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_rect.cxx"
@@ -504,6 +504,12 @@ if (PLATFORM_LINUX)
     find_package(Freetype REQUIRED)
     target_link_libraries(${FLTK_TGT_NAME} ${FREETYPE_LIBRARIES})
     target_include_directories(${FLTK_TGT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
+
+    # Add other required libraries
+    target_link_libraries(${FLTK_TGT_NAME}
+        fontconfig
+        Xft
+    )
 endif()
 
 if (COMPILER_CLANG OR COMPILER_GCC)

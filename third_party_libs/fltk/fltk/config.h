@@ -115,8 +115,11 @@
  *
  * Use the Xft library to draw anti-aliased text.
  */
-
-#define USE_XFT 0
+#if defined(_WIN32) || defined(__APPLE__)
+    #define USE_XFT 0
+#else
+    #define USE_XFT 1
+#endif
 
 /*
  * USE_PANGO
@@ -302,9 +305,13 @@
 /*
  * Do we have POSIX threading?
  */
-
-#undef HAVE_PTHREAD
-#undef HAVE_PTHREAD_H
+#if defined(_WIN32)
+    #undef HAVE_PTHREAD
+    #undef HAVE_PTHREAD_H
+#else
+    #define HAVE_PTHREAD
+    #define HAVE_PTHREAD_H
+#endif
 
 /*
  * Do we have PTHREAD_MUTEX_RECURSIVE?

@@ -37,6 +37,8 @@
    /* Switch system headers into POSIX.1-1990 mode */
 #  define _POSIX_SOURCE
 #else  /* HAVE_PTHREAD */
+   /* PSYDOOM MODS - Fix a warning about this being redefined */
+   #undef _POSIX_C_SOURCE
    /* Switch system headers into POSIX.1c-1995 mode */
 #  define _POSIX_C_SOURCE  199506L
 #endif  /* HAVE_PTHREAD */
