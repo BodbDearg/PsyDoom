@@ -348,6 +348,8 @@ void RenderPass::destroy(const bool bForceIfInvalid) noexcept {
     if ((!mbIsValid) && (!bForceIfInvalid))
         return;
 
+    mbIsValid = false;
+
     // Do the cleanup
     mNumSubpasses = 0;
     mNumAttachments = 0;
