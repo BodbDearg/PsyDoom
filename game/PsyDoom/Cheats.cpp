@@ -44,6 +44,7 @@ static std::vector<Cheat> gCheats;
 // Registers a cheat key sequence
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void addCheat(const Config::CheatKeySequence& sequence, const CheatAction action) noexcept {
+    // Register the cheat
     Cheat& cheat = gCheats.emplace_back();
     cheat.pSequence = &sequence;
     cheat.pAction = action;
@@ -56,6 +57,11 @@ static void addCheat(const Config::CheatKeySequence& sequence, const CheatAction
         } else {
             break;
         }
+    }
+
+    // If there are no keys to type for the cheat then remove it entirely since it can never be triggered
+    if (cheat.sequenceLength == 0) {
+        gCheats.pop_back();
     }
 }
 
