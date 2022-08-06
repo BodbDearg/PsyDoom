@@ -51,8 +51,11 @@
  * Do we use X11 for the current platform?
  *
  */
-
-#undef FLTK_USE_X11
+#if defined(_WIN32) || defined(__APPLE__)
+    #undef FLTK_USE_X11
+#else
+    #define FLTK_USE_X11
+#endif
 
 
 /*

@@ -441,6 +441,9 @@ if (PLATFORM_LINUX)
     list(APPEND SOURCE_FILES
         "${INCLUDE_DIR}/wayland.H"
         "${INCLUDE_DIR}/x11.H"
+        "${SRC_DIR}/drivers/PostScript/Fl_PostScript.cxx"
+        "${SRC_DIR}/drivers/PostScript/Fl_PostScript_Graphics_Driver.H"
+        "${SRC_DIR}/drivers/PostScript/Fl_PostScript_image.cxx"
         "${SRC_DIR}/drivers/Unix/Fl_Unix_System_Driver.cxx"
         "${SRC_DIR}/drivers/Unix/Fl_Unix_System_Driver.H"
         "${SRC_DIR}/drivers/X11/fl_X11_gl_platform_init.cxx"
@@ -461,7 +464,6 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_arci.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_color.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_font_x.cxx"
-        "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_font_xft.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_image.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_line_style.cxx"
         "${SRC_DIR}/drivers/Xlib/Fl_Xlib_Graphics_Driver_rect.cxx"
@@ -471,8 +473,12 @@ if (PLATFORM_LINUX)
         "${SRC_DIR}/fl_dnd_x.cxx"
         "${SRC_DIR}/Fl_get_key.cxx"
         "${SRC_DIR}/Fl_Native_File_Chooser_FLTK.cxx"
+        "${SRC_DIR}/Fl_Native_File_Chooser_GTK.cxx"
+        "${SRC_DIR}/Fl_Native_File_Chooser_Kdialog.cxx"
+        "${SRC_DIR}/Fl_Native_File_Chooser_Kdialog.H"
         "${SRC_DIR}/Fl_x.cxx"
         "${SRC_DIR}/Xutf8.h"
+        "${SRC_DIR}/xutf8/keysym2Ucs.c"
         "${SRC_DIR}/xutf8/ucs2fontmap.c"
         "${SRC_DIR}/xutf8/utf8Input.c"
         "${SRC_DIR}/xutf8/utf8Utils.c"
@@ -491,6 +497,13 @@ if (PLATFORM_WINDOWS)
     target_link_libraries(${FLTK_TGT_NAME}
         Comctl32.lib
     )
+endif()
+
+if (PLATFORM_LINUX)
+    # Add Freetype2 include files and libraries
+    find_package(Freetype REQUIRED)
+    target_link_libraries(${FLTK_TGT_NAME} ${FREETYPE_LIBRARIES})
+    target_include_directories(${FLTK_TGT_NAME} PRIVATE ${FREETYPE_INCLUDE_DIRS})
 endif()
 
 if (COMPILER_CLANG OR COMPILER_GCC)

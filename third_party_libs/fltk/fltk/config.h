@@ -70,8 +70,11 @@
  * Do you have OpenGL? Set this to 0 if you don't have or plan to use
  * OpenGL, and FLTK will be smaller.
  */
-
-#define HAVE_GL 0
+#if defined(_WIN32) || defined(__APPLE__)
+    #define HAVE_GL 0
+#else
+    #define HAVE_GL 1
+#endif
 
 /*
  * HAVE_GL_GLU_H:
@@ -225,7 +228,7 @@
 #undef HAVE_STRINGS_H
 #undef HAVE_STRCASECMP
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__linux__)
     #undef HAVE_STRLCAT
     #undef HAVE_STRLCPY
 #else
@@ -332,9 +335,13 @@
 /*
  * Do we have the dlsym() function and header?
  */
-
-#define HAVE_DLFCN_H 0
-#define HAVE_DLSYM 0
+#if defined(_WIN32) || defined(__APPLE__)
+    #define HAVE_DLFCN_H 0
+    #define HAVE_DLSYM 0
+#else
+    #define HAVE_DLFCN_H 1
+    #define HAVE_DLSYM 1
+#endif
 
 /*
  * Do we want print support?
