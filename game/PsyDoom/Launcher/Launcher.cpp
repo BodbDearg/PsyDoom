@@ -329,25 +329,23 @@ int launcherMain(const int argc, const char* const* const argv) noexcept {
     if (!shouldRunLauncher(origProgramArgs))
         return runGame(origProgramArgs);
 
-    // If we are running the launcher then always show it before the game.
-    // Also loop so that the launcher will show again after the game exits.
+    // Keep running the launcher until starting the game is requested or quit is requested.
+    // The launcher can restart itself multiple times if config is reset back to 'factory defaults' via the UI.
     while (true) {
-        // Run the launcher and exit if it says so.
-        // Note that the launcher might append it's own program arguments to the list.
+        // Run the launcher: note that it might append it's own arguments to the original args list
         std::vector<std::string> programArgs = origProgramArgs;
         const LauncherResult result = runLauncher(programArgs);
 
+        // If the launcher wants to quit the app then do so now
         if (result == LauncherResult::Exit)
             return 0;
+        
+        // Run the game if that was requested, and finish up by returning the result of execution:
+        if (result == LauncherResult::RunGame)
+            return runGame(programArgs);
 
-        // Run the game using the program arguments determined, if requested:
-        if (result == LauncherResult::RunGame) {
-            const int gameResult = runGame(programArgs);
-
-            // Abort the launcher/game loop if an error happened
-            if (gameResult != 0)
-                return gameResult;
-        }
+        // Otherwise we run the launcher again
+        ASSERT(result == LauncherResult::RunLauncher);
     }
 
     // Unreachable: if we do end up here then something has gone horribly wrong!
