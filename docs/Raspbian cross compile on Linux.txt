@@ -36,7 +36,7 @@ Source: https://www.j1nx.nl/diy/crosscompiling-software-for-raspbian-in-a-chroot
 
 (8) Install all required packages for building inside the new environment and verify the correct GCC version (with corresponding architecture) is installed:
         sudo chroot "${CROSS_ROOT_DIR}"
-        apt-get install gcc g++ cmake libgl-dev libvulkan-dev libpulse-dev libx11-dev libxft-dev libxcursor-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev freetype-dev libfreetype6-dev libfontconfig1-dev
+        apt-get install gcc g++ cmake libgl-dev libvulkan-dev libpulse-dev libx11-dev libxft-dev libxcursor-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libfreetype-dev libfreetype6-dev libfontconfig1-dev
 	    gcc -v
         exit
 

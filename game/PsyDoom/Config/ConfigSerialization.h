@@ -2,7 +2,9 @@
 
 #include "Macros.h"
 
+#include <cstdint>
 #include <functional>
+#include <string>
 
 namespace IniUtils {
     struct IniValue;
