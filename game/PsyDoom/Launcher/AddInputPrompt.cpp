@@ -14,8 +14,7 @@ END_DISABLE_HEADER_WARNINGS
 
 #include <chrono>
 #include <memory>
-#include <SDL_events.h>
-#include <SDL_mouse.h>
+#include <SDL.h>
 
 BEGIN_NAMESPACE(AddInputPrompt)
 
@@ -419,6 +418,10 @@ static void updatePrompt([[maybe_unused]] void* const pUserData) noexcept {
 // If no input was supplied by the user then the input's device will be set to 'NULL_DEVICE'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 Controls::InputSrc show() noexcept {
+    // Need to initialize SDL video subsystem in order to get global mouse state without crashing on some platforms (Linux)
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0)
+        return {};
+
     // Get the screen dimensions
     int screenX = {}, screenY = {};
     int screenW = {}, screenH = {};
@@ -455,8 +458,10 @@ Controls::InputSrc show() noexcept {
 
     Fl::remove_handler(onAddInputPromptEvent);
 
-    // Done with input handling for now (the main game will setup this again later)
+    // Done with input handling for now (the main game will setup this again later).
+    // Also cleanup the previously initialized SDL video subsystem.
     Input::shutdown();
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
     // Return the input that the user provided, if any:
     return gPrompt.inputSrc;
