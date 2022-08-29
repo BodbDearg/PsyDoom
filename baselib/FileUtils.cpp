@@ -112,6 +112,10 @@ bool writeDataToFile(
 bool fileExists(const char* filePath) noexcept {
     ASSERT(filePath);
 
+    // Empty file paths can never exist!
+    if (!filePath[0])
+        return false;
+
     try {
         // MacOS: working around missing support for <filesystem> in everything except the latest bleeding edge OS and Xcode.
         // Use standard Unix file functions instead for now, but some day this can be removed.

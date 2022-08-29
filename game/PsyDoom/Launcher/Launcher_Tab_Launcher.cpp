@@ -4,6 +4,7 @@
 #if PSYDOOM_LAUNCHER
 
 #include "Asserts.h"
+#include "FileUtils.h"
 #include "Launcher_Context.h"
 #include "Launcher_Utils.h"
 #include "PsyDoom/Config/Config.h"
@@ -103,6 +104,28 @@ static void doConfirmResetConfig(Context& ctx) noexcept {
         ctx.launcherResult = LauncherResult::RunLauncher;
         ctx.pWindow->hide();
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Checks to see if the user has supplied a game disc to run PsyDoom with, in the form of a .cue file.
+// Verifies also that the .cue file specified actually exists.
+// If there is no valid cue file provided then an error prompt is shown to the user and 'false' returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool checkValidCueFileSpecified(Context& ctx) noexcept {
+    const bool bCueFileExists = (
+        FileUtils::fileExists(ctx.tab_launcher.pInput_cue->value()) ||
+        FileUtils::fileExists(Config::gCueFilePath.c_str())
+    );
+
+    if (!bCueFileExists) {
+        fl_alert(
+            "No game disc specified!\n"
+            "Please choose a .CUE file for PlayStation 'Doom', 'Final Doom' or any other supported disc.\n"
+            "See PsyDoom's main README.md file for a list of supported game discs."
+        );
+    }
+
+    return bCueFileExists;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -407,7 +430,10 @@ static void makeToolsSection(Context& ctx, const int x, const int y) noexcept {
 
             if ((pFileChooser->show() == 0) && (pFileChooser->count() == 1)) {
                 ctx.demoFileToPlay = pFileChooser->filename();
-                requestGameBeLaunched(ctx);
+
+                if (checkValidCueFileSpecified(ctx)) {
+                    requestGameBeLaunched(ctx);
+                }
             }
         },
         &ctx
@@ -450,7 +476,10 @@ static void makeLaunchButton(Context& ctx, const int x, const int y) noexcept {
         [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
             Context& ctx = *(Context*) pUserData;
-            requestGameBeLaunched(ctx);
+
+            if (checkValidCueFileSpecified(ctx)) {
+                requestGameBeLaunched(ctx);
+            }
         },
         &ctx
     );

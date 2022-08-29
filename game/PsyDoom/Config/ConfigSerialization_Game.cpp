@@ -9,14 +9,6 @@ BEGIN_NAMESPACE(ConfigSerialization)
 
 using namespace Config;
 
-// A default cue file path is NOT provided on MacOS because the user must input an absolute path.
-// We can't detect .cue files placed in the same directory as PsyDoom on MacOS due to the 'translocation' security feature.
-#if __APPLE__
-    static constexpr const char* const DEFAULT_CUE_FILE_PATH = "";
-#else
-    static constexpr const char* const DEFAULT_CUE_FILE_PATH = "Doom.cue";
-#endif
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Config field storage
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -31,20 +23,19 @@ void initCfgSerialization_Game() noexcept {
     cfg.cueFilePath = makeConfigField(
         "CueFilePath",
         "Default path to the .cue file for PlayStation 'Doom' or 'Final Doom', or other valid game disc.\n"
-        "This cue file path will be used when none is specified via the 'Launcher' tab or command line.\n"
         "See PsyDoom's main README.md file for a list of supported game discs.\n"
+        "\n"
+        "This cue file path will be used when none is specified via the 'Launcher' tab or manually via\n"
+        "the command line with the '-cue <CUE_PATH>' command-line argument.\n"
         "\n"
         "A valid .cue (cue sheet) file for the desired game must be provided in order to run PsyDoom.\n"
         "A relative or absolute path can be used; relative paths are relative to the current OS working\n"
         "directory, which is normally the directory that the PsyDoom executable is found in.\n"
         "\n"
-        "Notes:\n"
-        "(1) On MacOS the full path to this file MUST be specified because the working directory for\n"
-        "PsyDoom may be randomized due to OS security restrictions. A default cue file location will\n"
-        "also NOT be provided on MacOS for this same reason.\n"
-        "(2) This setting can also be overriden with the '-cue <CUE_PATH>' command-line argument.",
+        "Note: on MacOS the full path to this file MUST be specified because the working directory for\n"
+        "PsyDoom may be randomized due to OS security restrictions.\n",
         gCueFilePath,
-        DEFAULT_CUE_FILE_PATH
+        ""
     );
 
     cfg.uncapFramerate = makeConfigField(
