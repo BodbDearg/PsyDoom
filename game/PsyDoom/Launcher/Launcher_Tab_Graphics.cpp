@@ -237,7 +237,7 @@ static void makeVulkanRendererSettingsSection(Tab_Graphics& tab, const int x, co
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 580, 340, "");
 
     // Graphic presets
-    tab.pLabel_settingsPreset = new Fl_Box(FL_NO_BOX, x + 20, y + 40, 120, 26, "Settings preset");
+    tab.pLabel_settingsPreset = new Fl_Box(FL_NO_BOX, x + 20, y + 40, 120, 26, "Apply settings preset");
     tab.pLabel_settingsPreset->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     tab.pLabel_settingsPreset->tooltip(
         "Use the 'Apply' button to auto-configure the Vulkan renderer using the chosen settings preset.\n"
@@ -248,14 +248,14 @@ static void makeVulkanRendererSettingsSection(Tab_Graphics& tab, const int x, co
         " - Classic, double resolution: run at 2x the original PSX resolution and with widescreen.\n"
     );
 
-    tab.pChoice_settingsPreset = new Fl_Choice(x + 150, y + 40, 260, 26);
+    tab.pChoice_settingsPreset = new Fl_Choice(x + 210, y + 40, 240, 26);
     tab.pChoice_settingsPreset->tooltip(tab.pLabel_settingsPreset->tooltip());
     tab.pChoice_settingsPreset->add("Modern, high resolution");
     tab.pChoice_settingsPreset->add("Classic, low resolution");
     tab.pChoice_settingsPreset->add("Classic, double resolution");
     tab.pChoice_settingsPreset->value(0);
 
-    tab.pButton_settingsPreset = new Fl_Button(x + 430, y + 40, 100, 26, "Apply");
+    tab.pButton_settingsPreset = new Fl_Button(x + 460, y + 40, 100, 26, "Apply");
     tab.pButton_settingsPreset->tooltip(tab.pLabel_settingsPreset->tooltip());
     tab.pButton_settingsPreset->callback(
         [](Fl_Widget*, void* const pUserData) noexcept {
