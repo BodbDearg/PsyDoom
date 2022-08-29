@@ -320,7 +320,7 @@ bool RV_LinesIntersect(
 
     // If the denominator is '0' then there is no intersection (parallel lines)
     if (denominator == 0)
-        return true;
+        return false;
 
     // Otherwise the finite line segments intersect if 'timeA' and 'timeB' (time along each intersection line) are both between 0 and 1.
     // Note that these time values can be used with linear interpolation between the line points to get the actual intersect point.
