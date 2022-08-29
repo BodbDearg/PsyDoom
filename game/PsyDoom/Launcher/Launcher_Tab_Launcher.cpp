@@ -229,7 +229,7 @@ static void makeGameOptionsSection(Tab_Launcher& tab, const int x, const int y) 
         "All demos are output to the PsyDoom user settings and data directory."
     );
 
-    tab.pCheck_pistolStart = makeFl_Check_Button(x + 10, y + 70, 150, 30, "  Force pistol starts");
+    tab.pCheck_pistolStart = makeFl_Check_Button(x + 10, y + 70, 150, 30, "  Force pistol start");
     tab.pCheck_pistolStart->tooltip(
         "Forces pistol starts on all levels when enabled.\n"
         "This setting also affects password generation and multiplayer.\n"

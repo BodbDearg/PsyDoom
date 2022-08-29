@@ -180,7 +180,7 @@ static void makePictureCropAndStretchSection(const int x, const int y) noexcept 
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Graphics.topOverscanPixels.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 200, y + 40, 80, 26);
+        const auto pInput = new Fl_Int_Input(x + 210, y + 40, 70, 26);
         bindConfigField<Config::gTopOverscanPixels, Config::gbNeedSave_Graphics>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
@@ -191,7 +191,7 @@ static void makePictureCropAndStretchSection(const int x, const int y) noexcept 
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Graphics.topOverscanPixels.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 200, y + 70, 80, 26);
+        const auto pInput = new Fl_Int_Input(x + 210, y + 70, 70, 26);
         bindConfigField<Config::gBottomOverscanPixels, Config::gbNeedSave_Graphics>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
@@ -202,7 +202,7 @@ static void makePictureCropAndStretchSection(const int x, const int y) noexcept 
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Graphics.logicalDisplayWidth.comment);
 
-        const auto pInput = new Fl_Float_Input(x + 200, y + 100, 80, 26);
+        const auto pInput = new Fl_Float_Input(x + 210, y + 100, 70, 26);
         bindConfigField<Config::gLogicalDisplayW, Config::gbNeedSave_Graphics>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
@@ -280,7 +280,7 @@ static void makeVulkanRendererSettingsSection(Tab_Graphics& tab, const int x, co
     tab.pLabel_renderHeight->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     tab.pLabel_renderHeight->tooltip(ConfigSerialization::gConfig_Graphics.vulkanRenderHeight.comment);
 
-    tab.pInput_renderHeight = new Fl_Int_Input(x + 220, y + 100, 100, 26);
+    tab.pInput_renderHeight = new Fl_Int_Input(x + 240, y + 100, 100, 26);
     bindConfigField<Config::gVulkanRenderHeight, Config::gbNeedSave_Graphics>(*tab.pInput_renderHeight);
     tab.pInput_renderHeight->tooltip(tab.pLabel_renderHeight->tooltip());
 
@@ -289,7 +289,7 @@ static void makeVulkanRendererSettingsSection(Tab_Graphics& tab, const int x, co
     tab.pLabel_aaMultisamples->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     tab.pLabel_aaMultisamples->tooltip(ConfigSerialization::gConfig_Graphics.antiAliasingMultisamples.comment);
 
-    tab.pInput_aaMultisamples = new Fl_Int_Input(x + 220, y + 130, 100, 26);
+    tab.pInput_aaMultisamples = new Fl_Int_Input(x + 240, y + 130, 100, 26);
     bindConfigField<Config::gAAMultisamples, Config::gbNeedSave_Graphics>(*tab.pInput_aaMultisamples);
     tab.pInput_aaMultisamples->tooltip(tab.pLabel_aaMultisamples->tooltip());
 
@@ -339,7 +339,7 @@ static void makeVulkanRendererSettingsSection(Tab_Graphics& tab, const int x, co
     tab.pLabel_prefDevicesRegex->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     tab.pLabel_prefDevicesRegex->tooltip(ConfigSerialization::gConfig_Graphics.vulkanPreferredDevicesRegex.comment);
 
-    tab.pInput_prefDevicesRegex = new Fl_Input(x + 210, y + 330, 350, 26);
+    tab.pInput_prefDevicesRegex = new Fl_Input(x + 220, y + 330, 340, 26);
     bindConfigField<Config::gVulkanPreferredDevicesRegex, Config::gbNeedSave_Graphics>(*tab.pInput_prefDevicesRegex);
     tab.pInput_prefDevicesRegex->tooltip(tab.pLabel_prefDevicesRegex->tooltip());
 

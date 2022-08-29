@@ -76,7 +76,7 @@ static void makeBindingField(
     pButton->tooltip(tooltip);
 
     // How big should the text input field be for this control binding?
-    const int inputLx = pLabel->x() + pLabel->w() + 10;
+    const int inputLx = pLabel->x() + pLabel->w() + 20;
     const int inputRx = pButton->x() - 10;
     const int inputW = inputRx - inputLx;
 
@@ -210,7 +210,7 @@ static void makeMiscellaneousTogglesSection(const int secLx, const int secRx, co
     makeBindingField("Toggle pause", cfg.toggle_pause, tooltip, fieldLx, fieldRx, fieldY);
     makeBindingField("Toggle map", cfg.toggle_map, tooltip, fieldLx, fieldRx, fieldY + 30);
     makeBindingField("Toggle renderer", cfg.toggle_renderer, tooltip, fieldLx, fieldRx, fieldY + 60);
-    makeBindingField("Toggle demo view player", cfg.toggle_viewPlayer, tooltip, fieldLx, fieldRx, fieldY + 90);
+    makeBindingField("Toggle demo player", cfg.toggle_viewPlayer, tooltip, fieldLx, fieldRx, fieldY + 90);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

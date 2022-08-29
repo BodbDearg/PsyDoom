@@ -53,7 +53,7 @@ static void makeMotionSection(Tab_Game& tab, const int x, const int y) noexcept 
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 170, "");
 
     // Uncapped framerate toggle
-    tab.pCheck_uncappedFramerate = makeFl_Check_Button(x + 20, y + 40, 160, 30, "  Uncapped framerate");
+    tab.pCheck_uncappedFramerate = makeFl_Check_Button(x + 10, y + 40, 160, 30, "  Uncapped framerate");
     tab.pCheck_uncappedFramerate->callback(
         [](Fl_Widget*, void* const pUserData) noexcept {
             ASSERT(pUserData);
@@ -69,22 +69,22 @@ static void makeMotionSection(Tab_Game& tab, const int x, const int y) noexcept 
     tab.pCheck_uncappedFramerate->tooltip(ConfigSerialization::gConfig_Game.uncapFramerate.comment);
 
     // Interpolate sectors toggle
-    tab.pCheck_interpolateSectors = makeFl_Check_Button(x + 20, y + 70, 160, 30, "  Interpolate sectors");
+    tab.pCheck_interpolateSectors = makeFl_Check_Button(x + 10, y + 70, 160, 30, "  Interpolate sectors");
     bindConfigField<Config::gbInterpolateSectors, Config::gbNeedSave_Game>(*tab.pCheck_interpolateSectors);
     tab.pCheck_interpolateSectors->tooltip(ConfigSerialization::gConfig_Game.interpolateSectors.comment);
 
     // Interpolate things/mobj toggle
-    tab.pCheck_interpolateMobj = makeFl_Check_Button(x + 20, y + 100, 160, 30, "  Interpolate things");
+    tab.pCheck_interpolateMobj = makeFl_Check_Button(x + 10, y + 100, 160, 30, "  Interpolate things");
     bindConfigField<Config::gbInterpolateMobj, Config::gbNeedSave_Game>(*tab.pCheck_interpolateMobj);
     tab.pCheck_interpolateMobj->tooltip(ConfigSerialization::gConfig_Game.interpolateMobj.comment);
 
     // Interpolate monsters toggle
-    tab.pCheck_interpolateMonsters = makeFl_Check_Button(x + 20, y + 130, 160, 30, "  Interpolate monsters");
+    tab.pCheck_interpolateMonsters = makeFl_Check_Button(x + 10, y + 130, 160, 30, "  Interpolate monsters");
     bindConfigField<Config::gbInterpolateMonsters, Config::gbNeedSave_Game>(*tab.pCheck_interpolateMonsters);
     tab.pCheck_interpolateMonsters->tooltip(ConfigSerialization::gConfig_Game.interpolateMonsters.comment);
 
     // Interpolate weapon toggle
-    tab.pCheck_interpolateWeapon = makeFl_Check_Button(x + 20, y + 160, 160, 30, "  Interpolate weapon");
+    tab.pCheck_interpolateWeapon = makeFl_Check_Button(x + 10, y + 160, 160, 30, "  Interpolate weapon");
     bindConfigField<Config::gbInterpolateWeapon, Config::gbNeedSave_Game>(*tab.pCheck_interpolateWeapon);
     tab.pCheck_interpolateWeapon->tooltip(ConfigSerialization::gConfig_Game.interpolateWeapon.comment);
 
@@ -102,13 +102,13 @@ static void makeCountersSection(const int x, const int y) noexcept {
 
     // Various toggles
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 120, 30, "  Enable level timer");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 120, 30, "  Enable level timer");
         bindConfigField<Config::gbEnableSinglePlayerLevelTimer, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.enableSinglePlayerLevelTimer.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Show perf counters");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 150, 30, "  Show perf counters");
         bindConfigField<Config::gbShowPerfCounters, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.showPerfCounters.comment);
     }
@@ -155,73 +155,73 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
 
     // Various toggles
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 120, 30, "  Fix line activation");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 120, 30, "  Fix line activation");
         bindConfigField<Config::gbFixLineActivation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixLineActivation.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 120, 30, "  Item pickup fix");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 120, 30, "  Item pickup fix");
         bindConfigField<Config::gbUseItemPickupFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useItemPickupFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 120, 30, "  Fix multi-line special crossing");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 100, 120, 30, "  Fix multi-line activation");
         bindConfigField<Config::gbFixMultiLineSpecialCrossing, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixMultiLineSpecialCrossing.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 130, 120, 30, "  Fix kill count");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 130, 120, 30, "  Fix kill count");
         bindConfigField<Config::gbFixKillCount, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixKillCount.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 160, 120, 30, "  Player rocket blast fix");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 160, 120, 30, "  Player rocket blast fix");
         bindConfigField<Config::gbUsePlayerRocketBlastFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.usePlayerRocketBlastFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 190, 120, 30, "  Fix view bob strength");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 190, 120, 30, "  Fix view bob strength");
         bindConfigField<Config::gbFixViewBobStrength, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixViewBobStrength.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 40, 120, 30, "  Fix gravity strength");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 40, 120, 30, "  Fix gravity strength");
         bindConfigField<Config::gbFixGravityStrength, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixGravityStrength.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 70, 120, 30, "  Lost soul spawn fix");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 70, 120, 30, "  Lost soul spawn fix");
         bindConfigField<Config::gbUseLostSoulSpawnFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useLostSoulSpawnFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 100, 120, 30, "  Line of sight overflow fix");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 100, 120, 30, "  Line of sight overflow fix");
         bindConfigField<Config::gbUseLineOfSightOverflowFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useLineOfSightOverflowFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 130, 120, 30, "  Fix outdoor bullet puffs");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 130, 120, 30, "  Fix outdoor bullet puffs");
         bindConfigField<Config::gbFixOutdoorBulletPuffs, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixOutdoorBulletPuffs.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 160, 120, 30, "  Fix blocking gibs bug");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 160, 120, 30, "  Fix blocking gibs bug");
         bindConfigField<Config::gbFixBlockingGibsBug, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixBlockingGibsBug.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 190, 120, 30, "  Fix sound propagation");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 190, 120, 30, "  Fix sound propagation");
         bindConfigField<Config::gbFixSoundPropagation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixSoundPropagation.comment);
     }
@@ -237,36 +237,36 @@ static void makeTweaksSection(const int x, const int y) noexcept {
 
     // Various toggles
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 120, 30, "  Use input latency tweak");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 120, 30, "  Input latency tweak");
         bindConfigField<Config::gbUseMoveInputLatencyTweak, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useMoveInputLatencyTweak.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 40, 120, 30, "  Use extended shoot range");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 40, 120, 30, "  Extended shoot range");
         bindConfigField<Config::gbUseExtendedPlayerShootRange, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useExtendedPlayerShootRange.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 120, 30, "  Use SSG delay tweak");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 120, 30, "  SSG delay tweak");
         bindConfigField<Config::gbUseSuperShotgunDelayTweak, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useSuperShotgunDelayTweak.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 250, y + 70, 120, 30, "  Allow turning cancellation");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 70, 120, 30, "  Allow turning cancel");
         bindConfigField<Config::gbAllowTurningCancellation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.allowTurningCancellation.comment);
     }
 
     // Movement cancellation
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 110, 120, 26, "Allow movement cancellation");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 110, 120, 26, "Allow movement cancel");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.allowMovementCancellation.comment);
 
-        const auto pChoice = new Fl_Choice(x + 270, y + 110, 180, 26);
+        const auto pChoice = new Fl_Choice(x + 260, y + 110, 190, 26);
         pChoice->add("Never");
         pChoice->add("Always");
         pChoice->add("Auto (Game accurate)");
@@ -296,11 +296,11 @@ static void makeTweaksSection(const int x, const int y) noexcept {
 
     // Use Final Doom player movement
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 140, 80, 26, "Use Final Doom player movement");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 140, 80, 26, "Use Final Doom player physics");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.useFinalDoomPlayerMovement.comment);
 
-        const auto pChoice = new Fl_Choice(x + 270, y + 140, 180, 26);
+        const auto pChoice = new Fl_Choice(x + 260, y + 140, 190, 26);
         pChoice->add("Never");
         pChoice->add("Always");
         pChoice->add("Auto (Game accurate)");
@@ -330,11 +330,11 @@ static void makeTweaksSection(const int x, const int y) noexcept {
 
     // Lost soul spawn limit
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 170, 80, 26, "Lost Soul spawn limit");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 170, 80, 26, "Lost Soul spawn limit");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.lostSoulSpawnLimit.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 270, y + 170, 180, 26);
+        const auto pInput = new Fl_Int_Input(x + 260, y + 170, 190, 26);
         bindConfigField<Config::gLostSoulSpawnLimit, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
@@ -350,19 +350,19 @@ static void makeMapPatchesSection(const int x, const int y) noexcept {
 
     // Various toggles
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 120, 30, "  Gameplay fixes");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 120, 30, "  Gameplay fixes");
         bindConfigField<Config::gbEnableMapPatches_GamePlay, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.enableMapPatches_GamePlay.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 120, 30, "  Visual fixes");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 120, 30, "  Visual fixes");
         bindConfigField<Config::gbEnableMapPatches_Visual, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.enableMapPatches_Visual.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 120, 30, "  Fixes for PsyDoom");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 100, 120, 30, "  Fixes for PsyDoom");
         bindConfigField<Config::gbEnableMapPatches_PsyDoom, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.enableMapPatches_PsyDoom.comment);
     }
@@ -378,13 +378,13 @@ static void makeLoadingSection(const int x, const int y) noexcept {
 
     // Various toggles
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 150, 30, "  Use fast loading");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 150, 30, "  Use fast loading");
         bindConfigField<Config::gbUseFastLoading, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useFastLoading.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Skip intros");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 150, 30, "  Skip intros");
         bindConfigField<Config::gbSkipIntros, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.skipIntros.comment);
     }
@@ -399,7 +399,7 @@ static void makeTimingsSection(const int x, const int y) noexcept {
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 190, 90, "");
 
     // Tick rate mode
-    const auto pLabel_mode = new Fl_Box(FL_NO_BOX, x + 20, y + 40, 80, 26, "Mode");
+    const auto pLabel_mode = new Fl_Box(FL_NO_BOX, x + 10, y + 40, 80, 26, "Mode");
     pLabel_mode->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     pLabel_mode->tooltip(ConfigSerialization::gConfig_Game.usePalTimings.comment);
 
@@ -432,7 +432,7 @@ static void makeTimingsSection(const int x, const int y) noexcept {
 
     // Whether to use demo timings
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 80, 150, 30, "  Use demo timings");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 80, 150, 30, "  Use demo timings");
         bindConfigField<Config::gbUseDemoTimings, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useDemoTimings.comment);
     }

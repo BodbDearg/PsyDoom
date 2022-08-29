@@ -230,7 +230,8 @@ void initCfgSerialization_Game() noexcept {
 
     cfg.fixMultiLineSpecialCrossing = makeConfigField(
         "FixMultiLineSpecialCrossing",
-        "Fix a limitation where only 1 line special can be crossed per frame?\n"
+        "Fix a limitation where only 1 line special can be crossed/activated per frame?\n"
+        "\n"
         "If enabled then the player can potentially trigger multiple line specials at the same time.\n"
         "Removing this limitation may be important for new maps with many line triggers in close proximity.\n"
         "\n"
