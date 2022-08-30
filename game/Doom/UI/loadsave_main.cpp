@@ -607,12 +607,13 @@ void ClearLoadSaveOnLevelStartFlag() noexcept {
 // Displays a message for the specified save slot being saved to
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DisplaySavedHudMessage(const SaveFileSlot slot, const bool bSuccess) noexcept {
-    const char* saveFileName = SaveAndLoad::getSaveFileName(slot);
+    const char* const savePrefix = Game::gConstants.saveFilePrefix;
+    const char* const saveBaseName = SaveAndLoad::getSaveFileBaseName(slot);
 
     if (bSuccess) {
-        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Saved to %s", saveFileName);
+        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Saved to %s%s", savePrefix, saveBaseName);
     } else {
-        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Save to %s FAILED!", saveFileName);
+        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Save to %s%s FAILED!", savePrefix, saveBaseName);
     }
 
     gStatusBar.message = gLoadSaveHudMsg;
@@ -623,12 +624,13 @@ void DisplaySavedHudMessage(const SaveFileSlot slot, const bool bSuccess) noexce
 // Displays a HUD message for the specified save slot being loaded from
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DisplayLoadedHudMessage(const SaveFileSlot slot, const bool bSuccess) noexcept {
-    const char* saveFileName = SaveAndLoad::getSaveFileName(slot);
+    const char* const savePrefix = Game::gConstants.saveFilePrefix;
+    const char* const saveBaseName = SaveAndLoad::getSaveFileBaseName(slot);
 
     if (bSuccess) {
-        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Loaded %s", saveFileName);
+        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Loaded %s%s", savePrefix, saveBaseName);
     } else {
-        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Loading %s FAILED!", saveFileName);
+        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Loading %s%s FAILED!", savePrefix, saveBaseName);
     }
 
     gStatusBar.message = gLoadSaveHudMsg;

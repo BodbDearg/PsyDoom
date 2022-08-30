@@ -45,7 +45,7 @@ extern SaveFileSlot                             gCurSaveSlot;
 bool save(OutputStream& out) noexcept;
 ReadSaveResult read(InputStream& in) noexcept;
 LoadSaveResult load() noexcept;
-const char* getSaveFileName(const SaveFileSlot slot) noexcept;
+const char* getSaveFileBaseName(const SaveFileSlot slot) noexcept;
 std::string getSaveFilePath(const SaveFileSlot slot) noexcept;
 void clearBufferedSave() noexcept;
 int32_t getBufferedSaveMapNum() noexcept;

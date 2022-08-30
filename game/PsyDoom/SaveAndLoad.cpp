@@ -659,9 +659,10 @@ LoadSaveResult load() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get the name of the save file used for the specified save slot
+// Returns the base name of the save file used for the specified save slot.
+// The returned name does not have any game specific save file prefixes added.
 //------------------------------------------------------------------------------------------------------------------------------------------
-const char* getSaveFileName(const SaveFileSlot slot) noexcept {
+const char* getSaveFileBaseName(const SaveFileSlot slot) noexcept {
     switch (slot) {
         case SaveFileSlot::SAVE1:       return "Save1.sav";
         case SaveFileSlot::SAVE2:       return "Save2.sav";
@@ -680,7 +681,7 @@ const char* getSaveFileName(const SaveFileSlot slot) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 std::string getSaveFilePath(const SaveFileSlot slot) noexcept {
     const std::string userDataFolder = Utils::getOrCreateUserDataFolder();
-    return userDataFolder + getSaveFileName(slot);
+    return userDataFolder + Game::gConstants.saveFilePrefix + getSaveFileBaseName(slot);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
