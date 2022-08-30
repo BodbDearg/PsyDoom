@@ -225,6 +225,16 @@ static int parseArg_file(const int argc, const char* const* const argv) {
     return 0;
 }
 
+static int parseArg_nolauncher(const int argc, const char* const* const argv) {
+    // Note: '-nolauncher' is a dummy/null argument that doesn't actually do anything.
+    // It causes the launcher not to show simply because a command line argument has been specified.
+    // Any other command line argument can also have the same effect.
+    if ((argc >= 1) && (std::strcmp(argv[0], "-nolauncher") == 0))
+        return 1;
+
+    return 0;
+}
+
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_cue,
@@ -239,7 +249,8 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_turbo,
     parseArg_server,
     parseArg_client,
-    parseArg_file
+    parseArg_file,
+    parseArg_nolauncher
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
