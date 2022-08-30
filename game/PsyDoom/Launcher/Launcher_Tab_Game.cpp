@@ -484,6 +484,16 @@ static void makeDefaultCueFileSelector(Tab_Game& tab, const int lx, const int rx
     tab.pInput_cueFile = makeFl_Input(lx, ty + 30, cueFileInputRx - lx, 30);
     tab.pInput_cueFile->value(Config::gCueFilePath.c_str());
     tab.pInput_cueFile->tooltip(pLabel_cueFile->tooltip());
+    tab.pInput_cueFile->callback(
+        [](Fl_Widget*, void* const pUserData) noexcept {
+            ASSERT(pUserData);
+            Tab_Game& tab = *(Tab_Game*) pUserData;
+
+            Config::gCueFilePath = tab.pInput_cueFile->value();
+            Config::gbNeedSave_Game = true;
+        },
+        &tab
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
