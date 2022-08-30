@@ -32,7 +32,7 @@
 #include "PsyDoom/DemoResult.h"
 #include "PsyDoom/DevMapAutoReloader.h"
 #include "PsyDoom/Game.h"
-#include "PsyDoom/MapInfo.h"
+#include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxPadButtons.h"

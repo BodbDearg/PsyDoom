@@ -10,7 +10,7 @@
 #include "Endian.h"
 #include "FatalErrors.h"
 #include "IsoFileSys.h"
-#include "MapInfo.h"
+#include "MapInfo/MapInfo.h"
 #include "ProgArgs.h"
 #include "PsxVm.h"
 #include "Utils.h"

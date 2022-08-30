@@ -17,7 +17,7 @@
 #include "o_main.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
-#include "PsyDoom/MapInfo.h"
+#include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"

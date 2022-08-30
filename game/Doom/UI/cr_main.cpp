@@ -7,7 +7,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
-#include "PsyDoom/MapInfo.h"
+#include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/Utils.h"
 #include "ti_main.h"
 #include "Wess/psxcd.h"

@@ -29,7 +29,7 @@
 #include "PsyDoom/DevMapAutoReloader.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/MapHash.h"
-#include "PsyDoom/MapInfo.h"
+#include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/MapPatcher.h"
 #include "PsyDoom/MobjSpritePrecacher.h"
 #include "PsyDoom/ModMgr.h"

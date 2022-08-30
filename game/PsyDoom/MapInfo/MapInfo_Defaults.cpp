@@ -1,10 +1,10 @@
 #include "MapInfo_Defaults.h"
 
-#include "Game.h"
 #include "MapInfo.h"
 #include "MapInfo_Defaults_Doom.h"
 #include "MapInfo_Defaults_FinalDoom.h"
 #include "MapInfo_Defaults_GEC_ME.h"
+#include "PsyDoom/Game.h"
 
 BEGIN_NAMESPACE(MapInfo)
 

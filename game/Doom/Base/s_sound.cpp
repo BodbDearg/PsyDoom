@@ -13,7 +13,7 @@
 #include "PsyDoom/DiscInfo.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/IsoFileSys.h"
-#include "PsyDoom/MapInfo.h"
+#include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/ModMgr.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxVm.h"

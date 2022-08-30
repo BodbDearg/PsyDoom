@@ -13,9 +13,9 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/UI/cr_main.h"
 #include "Doom/UI/ti_main.h"
-#include "Game.h"
 #include "MapInfo_Defaults.h"
 #include "MapInfo_Parse.h"
+#include "PsyDoom/Game.h"
 #include "PsyQ/LIBSPU.h"
 
 #include <algorithm>

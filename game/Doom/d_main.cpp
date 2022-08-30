@@ -25,7 +25,7 @@
 #include "PsyDoom/GameConstants.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/IntroLogos.h"
-#include "PsyDoom/MapInfo.h"
+#include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/Movie/MoviePlayer.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
