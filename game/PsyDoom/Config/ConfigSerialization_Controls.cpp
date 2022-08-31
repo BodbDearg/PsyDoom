@@ -187,8 +187,8 @@ void initCfgSerialization_Controls() noexcept {
         "Mouse Wheel+"
     );
     cfg.weapon_scrollDown = CONTROL_FIELD(Weapon_ScrollDown, "Mouse Wheel-");
-    cfg.weapon_previous = CONTROL_FIELD(Weapon_Previous, "PageDown, \\[, Gamepad LeftShoulder");
-    cfg.weapon_next = CONTROL_FIELD(Weapon_Next, "PageUp, \\], Gamepad RightShoulder");
+    cfg.weapon_previous = CONTROL_FIELD(Weapon_Previous, "PageDown, [, Gamepad LeftShoulder");
+    cfg.weapon_next = CONTROL_FIELD(Weapon_Next, "PageUp, ], Gamepad RightShoulder");
     cfg.weapon_fistChainsaw = CONTROL_FIELD(Weapon_FistChainsaw, "1");
     cfg.weapon_pistol = CONTROL_FIELD(Weapon_Pistol, "2");
     cfg.weapon_shotgun = CONTROL_FIELD(Weapon_Shotgun, "3");
@@ -218,7 +218,7 @@ void initCfgSerialization_Controls() noexcept {
     cfg.automap_zoomIn = CONTROL_FIELD_WITH_DOC(
         "Automap controls",
         Automap_ZoomIn,
-        "\\=, Keypad +, Gamepad RightTrigger"
+        "=, Keypad +, Gamepad RightTrigger"
     );
 
     cfg.automap_zoomOut = CONTROL_FIELD(Automap_ZoomOut, "-, Keypad -, Gamepad LeftTrigger");
@@ -248,8 +248,8 @@ void initCfgSerialization_Controls() noexcept {
     cfg.psxCheatCode_square = CONTROL_FIELD(PSXCheatCode_Square, "Left Shift, Right Shift, Gamepad X");
     cfg.psxCheatCode_l1 = CONTROL_FIELD(PSXCheatCode_L1, "A, Gamepad LeftShoulder");
     cfg.psxCheatCode_r1 = CONTROL_FIELD(PSXCheatCode_R1, "D, Gamepad RightShoulder");
-    cfg.psxCheatCode_l2 = CONTROL_FIELD(PSXCheatCode_L2, "PageDown, \\[, Gamepad LeftTrigger");
-    cfg.psxCheatCode_r2 = CONTROL_FIELD(PSXCheatCode_R2, "PageUp, \\], Gamepad RightTrigger");
+    cfg.psxCheatCode_l2 = CONTROL_FIELD(PSXCheatCode_L2, "PageDown, [, Gamepad LeftTrigger");
+    cfg.psxCheatCode_r2 = CONTROL_FIELD(PSXCheatCode_R2, "PageUp, ], Gamepad RightTrigger");
 
     // Done with these
     #undef CONTROL_FIELD
