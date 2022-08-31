@@ -27,7 +27,6 @@ set(SOURCE_FILES
     "${INCLUDE_DIR}/SDL_blendmode.h"
     "${INCLUDE_DIR}/SDL_clipboard.h"
     "${INCLUDE_DIR}/SDL_config.h"
-    "${INCLUDE_DIR}/SDL_config_wiz.h"
     "${INCLUDE_DIR}/SDL_copying.h"
     "${INCLUDE_DIR}/SDL_cpuinfo.h"
     "${INCLUDE_DIR}/SDL_egl.h"
@@ -37,6 +36,7 @@ set(SOURCE_FILES
     "${INCLUDE_DIR}/SDL_filesystem.h"
     "${INCLUDE_DIR}/SDL_gamecontroller.h"
     "${INCLUDE_DIR}/SDL_gesture.h"
+    "${INCLUDE_DIR}/SDL_guid.h"
     "${INCLUDE_DIR}/SDL_haptic.h"
     "${INCLUDE_DIR}/SDL_hidapi.h"
     "${INCLUDE_DIR}/SDL_hints.h"
@@ -82,6 +82,8 @@ set(SOURCE_FILES
     "${SRC_DIR}/audio/dummy/SDL_dummyaudio.h"
     "${SRC_DIR}/audio/SDL_audio.c"
     "${SRC_DIR}/audio/SDL_audio_c.h"
+    "${SRC_DIR}/audio/SDL_audio_channel_converters.h"
+    "${SRC_DIR}/audio/SDL_audio_resampler_filter.h"
     "${SRC_DIR}/audio/SDL_audiocvt.c"
     "${SRC_DIR}/audio/SDL_audiodev.c"
     "${SRC_DIR}/audio/SDL_audiodev_c.h"
@@ -95,6 +97,7 @@ set(SOURCE_FILES
     "${SRC_DIR}/events/default_cursor.h"
     "${SRC_DIR}/events/imKStoUCS.c"
     "${SRC_DIR}/events/imKStoUCS.h"
+    "${SRC_DIR}/events/scancodes_ascii.h"
     "${SRC_DIR}/events/SDL_clipboardevents.c"
     "${SRC_DIR}/events/SDL_clipboardevents_c.h"
     "${SRC_DIR}/events/SDL_displayevents.c"
@@ -110,7 +113,6 @@ set(SOURCE_FILES
     "${SRC_DIR}/events/SDL_mouse.c"
     "${SRC_DIR}/events/SDL_mouse_c.h"
     "${SRC_DIR}/events/SDL_quit.c"
-    "${SRC_DIR}/events/SDL_sysevents.h"
     "${SRC_DIR}/events/SDL_touch.c"
     "${SRC_DIR}/events/SDL_touch_c.h"
     "${SRC_DIR}/events/SDL_windowevents.c"
@@ -121,6 +123,7 @@ set(SOURCE_FILES
     "${SRC_DIR}/haptic/SDL_haptic.c"
     "${SRC_DIR}/haptic/SDL_haptic_c.h"
     "${SRC_DIR}/haptic/SDL_syshaptic.h"
+    "${SRC_DIR}/joystick/controller_type.c"
     "${SRC_DIR}/joystick/controller_type.h"
     "${SRC_DIR}/joystick/dummy/SDL_sysjoystick.c"
     "${SRC_DIR}/joystick/SDL_gamecontroller.c"
@@ -149,22 +152,31 @@ set(SOURCE_FILES
     "${SRC_DIR}/SDL_dataqueue.h"
     "${SRC_DIR}/SDL_error.c"
     "${SRC_DIR}/SDL_error_c.h"
+    "${SRC_DIR}/SDL_guid.c"
     "${SRC_DIR}/SDL_hints.c"
     "${SRC_DIR}/SDL_internal.h"
+    "${SRC_DIR}/SDL_list.c"
+    "${SRC_DIR}/SDL_list.h"
     "${SRC_DIR}/SDL_log.c"
+    "${SRC_DIR}/SDL_log_c.h"
+    "${SRC_DIR}/SDL_utils.c"
+    "${SRC_DIR}/SDL_utils_c.h"
     "${SRC_DIR}/sensor/dummy/SDL_dummysensor.c"
     "${SRC_DIR}/sensor/dummy/SDL_dummysensor.h"
     "${SRC_DIR}/sensor/SDL_sensor.c"
     "${SRC_DIR}/sensor/SDL_sensor_c.h"
     "${SRC_DIR}/sensor/SDL_syssensor.h"
+    "${SRC_DIR}/stdlib/SDL_crc16.c"
     "${SRC_DIR}/stdlib/SDL_crc32.c"
     "${SRC_DIR}/stdlib/SDL_getenv.c"
     "${SRC_DIR}/stdlib/SDL_iconv.c"
     "${SRC_DIR}/stdlib/SDL_malloc.c"
+    "${SRC_DIR}/stdlib/SDL_mslibc.c"
     "${SRC_DIR}/stdlib/SDL_qsort.c"
     "${SRC_DIR}/stdlib/SDL_stdlib.c"
     "${SRC_DIR}/stdlib/SDL_string.c"
     "${SRC_DIR}/stdlib/SDL_strtokr.c"
+    "${SRC_DIR}/stdlib/SDL_vacopy.h"
     "${SRC_DIR}/thread/SDL_systhread.h"
     "${SRC_DIR}/thread/SDL_thread.c"
     "${SRC_DIR}/thread/SDL_thread_c.h"
@@ -183,6 +195,7 @@ set(SOURCE_FILES
     "${SRC_DIR}/video/SDL_pixels_c.h"
     "${SRC_DIR}/video/SDL_rect.c"
     "${SRC_DIR}/video/SDL_rect_c.h"
+    "${SRC_DIR}/video/SDL_rect_impl.h"
     "${SRC_DIR}/video/SDL_RLEaccel.c"
     "${SRC_DIR}/video/SDL_RLEaccel_c.h"
     "${SRC_DIR}/video/SDL_shape.c"
@@ -198,8 +211,6 @@ set(SOURCE_FILES
 set(OTHER_FILES
     "${SRC_DIR}/joystick/sort_controllers.py"
     "${SRC_DIR}/video/sdlgenblit.pl"
-    "${SRC_DIR}/video/yuv2rgb/LICENSE"
-    "${SRC_DIR}/video/yuv2rgb/README.md"
 )
 
 if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
@@ -216,6 +227,8 @@ if (PLATFORM_WINDOWS)
         "${SRC_DIR}/audio/wasapi/SDL_wasapi.h"
         "${SRC_DIR}/audio/wasapi/SDL_wasapi_win32.c"
         "${SRC_DIR}/core/windows/SDL_directx.h"
+        "${SRC_DIR}/core/windows/SDL_immdevice.c"
+        "${SRC_DIR}/core/windows/SDL_immdevice.h"
         "${SRC_DIR}/core/windows/SDL_windows.c"
         "${SRC_DIR}/core/windows/SDL_windows.h"
         "${SRC_DIR}/core/windows/SDL_xinput.c"
@@ -429,13 +442,12 @@ target_include_directories(${LIBSDL_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS
 target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_LEAN_AND_MEAN=1)
 
 if (PSYDOOM_INCLUDE_VULKAN_RENDERER)
-    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DPSYDOOM_VULKAN_RENDERER=1 -DVK_NO_PROTOTYPES)
+    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DPSYDOOM_VULKAN_RENDERER=1)
 else()
     target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DPSYDOOM_VULKAN_RENDERER=0)
 endif()
 
 if (PLATFORM_WINDOWS)
-    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC SDL_DISABLE_WINDOWS_IME)
     target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC HAVE_LIBC)     # Use standard C math libraries etc.
 
     target_link_libraries(${LIBSDL_TGT_NAME}
@@ -485,8 +497,6 @@ if (PLATFORM_MAC)
 endif()
 
 if (PLATFORM_LINUX)
-    include_directories("${BASE_DIR}/wayland-protocols")
-
     target_link_libraries(${LIBSDL_TGT_NAME}
         dl
         pthread

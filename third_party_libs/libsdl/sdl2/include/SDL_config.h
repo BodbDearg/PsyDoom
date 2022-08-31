@@ -33,6 +33,10 @@
 #include "SDL_config_windows.h"
 #elif defined(__WINRT__)
 #include "SDL_config_winrt.h"
+#elif defined(__WINGDK__)
+#include "SDL_config_wingdk.h"
+#elif defined(__XBOXONE__) || defined(__XBOXSERIES__)
+#include "SDL_config_xbox.h"
 #elif defined(__MACOSX__)
 #include "SDL_config_macosx.h"
 #elif defined(__IPHONEOS__)
@@ -42,12 +46,12 @@
 #include "SDL_config_linux.h"
 #elif defined(__ANDROID__)
 #include "SDL_config_android.h"
-#elif defined(__PSP__)
-#include "SDL_config_psp.h"
 #elif defined(__OS2__)
 #include "SDL_config_os2.h"
 #elif defined(__EMSCRIPTEN__)
 #include "SDL_config_emscripten.h"
+#elif defined(__NGAGE__)
+#include "SDL_config_ngage.h"
 #else
 /* This is a minimal configuration just to get SDL running on new platforms. */
 #include "SDL_config_minimal.h"

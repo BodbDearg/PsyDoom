@@ -107,8 +107,6 @@ static int (*PULSEAUDIO_pa_stream_connect_record) (pa_stream *, const char *,
 static pa_stream_state_t (*PULSEAUDIO_pa_stream_get_state) (const pa_stream *);
 static size_t (*PULSEAUDIO_pa_stream_writable_size) (const pa_stream *);
 static size_t (*PULSEAUDIO_pa_stream_readable_size) (const pa_stream *);
-static int (*PULSEAUDIO_pa_stream_begin_write) (pa_stream *, void **, size_t*);
-static int (*PULSEAUDIO_pa_stream_cancel_write) (pa_stream *);
 static int (*PULSEAUDIO_pa_stream_write) (pa_stream *, const void *, size_t,
     pa_free_cb_t, int64_t, pa_seek_mode_t);
 static pa_operation * (*PULSEAUDIO_pa_stream_drain) (pa_stream *,
@@ -119,6 +117,8 @@ static pa_operation * (*PULSEAUDIO_pa_stream_flush) (pa_stream *,
     pa_stream_success_cb_t, void *);
 static int (*PULSEAUDIO_pa_stream_disconnect) (pa_stream *);
 static void (*PULSEAUDIO_pa_stream_unref) (pa_stream *);
+static void (*PULSEAUDIO_pa_stream_set_write_callback)(pa_stream *, pa_stream_request_cb_t, void *);
+static pa_operation * (*PULSEAUDIO_pa_context_get_server_info)(pa_context *, pa_server_info_cb_t, void *);
 
 static int load_pulseaudio_syms(void);
 
@@ -222,8 +222,6 @@ load_pulseaudio_syms(void)
     SDL_PULSEAUDIO_SYM(pa_stream_writable_size);
     SDL_PULSEAUDIO_SYM(pa_stream_readable_size);
     SDL_PULSEAUDIO_SYM(pa_stream_write);
-    SDL_PULSEAUDIO_SYM(pa_stream_begin_write);
-    SDL_PULSEAUDIO_SYM(pa_stream_cancel_write);
     SDL_PULSEAUDIO_SYM(pa_stream_drain);
     SDL_PULSEAUDIO_SYM(pa_stream_disconnect);
     SDL_PULSEAUDIO_SYM(pa_stream_peek);
@@ -232,6 +230,8 @@ load_pulseaudio_syms(void)
     SDL_PULSEAUDIO_SYM(pa_stream_unref);
     SDL_PULSEAUDIO_SYM(pa_channel_map_init_auto);
     SDL_PULSEAUDIO_SYM(pa_strerror);
+    SDL_PULSEAUDIO_SYM(pa_stream_set_write_callback);
+    SDL_PULSEAUDIO_SYM(pa_context_get_server_info);
     return 0;
 }
 
@@ -359,51 +359,56 @@ ConnectToPulseServer(pa_mainloop **_mainloop, pa_context **_context)
 static void
 PULSEAUDIO_WaitDevice(_THIS)
 {
-    struct SDL_PrivateAudioData *h = this->hidden;
+    /* this is a no-op; we wait in PULSEAUDIO_PlayDevice now. */
+}
 
-    while (SDL_AtomicGet(&this->enabled)) {
+static void WriteCallback(pa_stream *p, size_t nbytes, void *userdata)
+{
+    struct SDL_PrivateAudioData *h = (struct SDL_PrivateAudioData *) userdata;
+    /*printf("PULSEAUDIO WRITE CALLBACK! nbytes=%u\n", (unsigned int) nbytes);*/
+    h->bytes_requested += nbytes;
+}
+
+static void
+PULSEAUDIO_PlayDevice(_THIS)
+{
+    struct SDL_PrivateAudioData *h = this->hidden;
+    int available = h->mixlen;
+    int written = 0;
+    int cpy;
+
+    /*printf("PULSEAUDIO PLAYDEVICE START! mixlen=%d\n", available);*/
+
+    while (SDL_AtomicGet(&this->enabled) && (available > 0)) {
+        cpy = SDL_min(h->bytes_requested, available);
+        if (cpy) {
+            if (PULSEAUDIO_pa_stream_write(h->stream, h->mixbuf + written, cpy, NULL, 0LL, PA_SEEK_RELATIVE) < 0) {
+                SDL_OpenedAudioDeviceDisconnected(this);
+                return;
+            }
+            /*printf("PULSEAUDIO FEED! nbytes=%u\n", (unsigned int) cpy);*/
+            h->bytes_requested -= cpy;
+            written += cpy;
+            available -= cpy;
+        }
+
+        /* let WriteCallback fire if necessary. */
+        /*printf("PULSEAUDIO ITERATE!\n");*/
         if (PULSEAUDIO_pa_context_get_state(h->context) != PA_CONTEXT_READY ||
             PULSEAUDIO_pa_stream_get_state(h->stream) != PA_STREAM_READY ||
             PULSEAUDIO_pa_mainloop_iterate(h->mainloop, 1, NULL) < 0) {
             SDL_OpenedAudioDeviceDisconnected(this);
             return;
         }
-        if (PULSEAUDIO_pa_stream_writable_size(h->stream) >= (h->mixlen/8)) {
-            return;
-        }
     }
-}
 
-static void
-PULSEAUDIO_PlayDevice(_THIS)
-{
-    /* Write the audio data */
-    struct SDL_PrivateAudioData *h = this->hidden;
-    if (SDL_AtomicGet(&this->enabled)) {
-        if (PULSEAUDIO_pa_stream_write(h->stream, h->pabuf, h->mixlen, NULL, 0LL, PA_SEEK_RELATIVE) < 0) {
-            SDL_OpenedAudioDeviceDisconnected(this);
-        }
-    }
+    /*printf("PULSEAUDIO PLAYDEVICE END! written=%d\n", written);*/
 }
 
 static Uint8 *
 PULSEAUDIO_GetDeviceBuf(_THIS)
 {
-    struct SDL_PrivateAudioData *h = this->hidden;
-    size_t nbytes = h->mixlen;
-    int ret;
-
-    ret = PULSEAUDIO_pa_stream_begin_write(h->stream, &h->pabuf, &nbytes);
-
-    if (ret != 0) {
-        /* fall back it intermediate buffer */
-        h->pabuf = h->mixbuf;
-    } else if (nbytes < h->mixlen) {
-        PULSEAUDIO_pa_stream_cancel_write(h->stream);
-        h->pabuf = h->mixbuf;
-    }
-
-    return (Uint8 *)h->pabuf;
+    return this->hidden->mixbuf;
 }
 
 
@@ -522,9 +527,9 @@ SourceDeviceNameCallback(pa_context *c, const pa_source_info *i, int is_last, vo
 }
 
 static SDL_bool
-FindDeviceName(struct SDL_PrivateAudioData *h, const int iscapture, void *handle)
+FindDeviceName(struct SDL_PrivateAudioData *h, const SDL_bool iscapture, void *handle)
 {
-    const uint32_t idx = ((uint32_t) ((size_t) handle)) - 1;
+    const uint32_t idx = ((uint32_t) ((intptr_t) handle)) - 1;
 
     if (handle == NULL) {  /* NULL == default device. */
         return SDL_TRUE;
@@ -544,16 +549,17 @@ FindDeviceName(struct SDL_PrivateAudioData *h, const int iscapture, void *handle
 }
 
 static int
-PULSEAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
+PULSEAUDIO_OpenDevice(_THIS, const char *devname)
 {
     struct SDL_PrivateAudioData *h = NULL;
-    Uint16 test_format = 0;
+    SDL_AudioFormat test_format;
     pa_sample_spec paspec;
     pa_buffer_attr paattr;
     pa_channel_map pacmap;
     pa_stream_flags_t flags = 0;
     const char *name = NULL;
-    int state = 0;
+    SDL_bool iscapture = this->iscapture;
+    int state = 0, format = PA_SAMPLE_INVALID;
     int rc = 0;
 
     /* Initialize all variables that we clean on shutdown */
@@ -564,53 +570,45 @@ PULSEAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
     }
     SDL_zerop(this->hidden);
 
-    paspec.format = PA_SAMPLE_INVALID;
-
     /* Try for a closest match on audio format */
-    for (test_format = SDL_FirstAudioFormat(this->spec.format);
-         (paspec.format == PA_SAMPLE_INVALID) && test_format;) {
+    for (test_format = SDL_FirstAudioFormat(this->spec.format); test_format; test_format = SDL_NextAudioFormat()) {
 #ifdef DEBUG_AUDIO
         fprintf(stderr, "Trying format 0x%4.4x\n", test_format);
 #endif
         switch (test_format) {
         case AUDIO_U8:
-            paspec.format = PA_SAMPLE_U8;
+            format = PA_SAMPLE_U8;
             break;
         case AUDIO_S16LSB:
-            paspec.format = PA_SAMPLE_S16LE;
+            format = PA_SAMPLE_S16LE;
             break;
         case AUDIO_S16MSB:
-            paspec.format = PA_SAMPLE_S16BE;
+            format = PA_SAMPLE_S16BE;
             break;
         case AUDIO_S32LSB:
-            paspec.format = PA_SAMPLE_S32LE;
+            format = PA_SAMPLE_S32LE;
             break;
         case AUDIO_S32MSB:
-            paspec.format = PA_SAMPLE_S32BE;
+            format = PA_SAMPLE_S32BE;
             break;
         case AUDIO_F32LSB:
-            paspec.format = PA_SAMPLE_FLOAT32LE;
+            format = PA_SAMPLE_FLOAT32LE;
             break;
         case AUDIO_F32MSB:
-            paspec.format = PA_SAMPLE_FLOAT32BE;
+            format = PA_SAMPLE_FLOAT32BE;
             break;
         default:
-            paspec.format = PA_SAMPLE_INVALID;
-            break;
+            continue;
         }
-        if (paspec.format == PA_SAMPLE_INVALID) {
-            test_format = SDL_NextAudioFormat();
-        }
+        break;
     }
-    if (paspec.format == PA_SAMPLE_INVALID) {
-        return SDL_SetError("Couldn't find any hardware audio formats");
+    if (!test_format) {
+        return SDL_SetError("%s: Unsupported audio format", "pulseaudio");
     }
     this->spec.format = test_format;
+    paspec.format = format;
 
     /* Calculate the final parameters for this audio specification */
-#ifdef PA_STREAM_ADJUST_LATENCY
-    this->spec.samples /= 2; /* Mix in smaller chunck to avoid underruns */
-#endif
     SDL_CalculateAudioSpec(&this->spec);
 
     /* Allocate mixing buffer */
@@ -627,28 +625,18 @@ PULSEAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
     paspec.rate = this->spec.freq;
 
     /* Reduced prebuffering compared to the defaults. */
-#ifdef PA_STREAM_ADJUST_LATENCY
     paattr.fragsize = this->spec.size;
-    /* 2x original requested bufsize */
-    paattr.tlength = h->mixlen * 4;
+    paattr.tlength = h->mixlen;
     paattr.prebuf = -1;
     paattr.maxlength = -1;
-    /* -1 can lead to pa_stream_writable_size() >= mixlen never being true */
-    paattr.minreq = h->mixlen;
-    flags = PA_STREAM_ADJUST_LATENCY;
-#else
-    paattr.fragsize = this->spec.size;
-    paattr.tlength = h->mixlen*2;
-    paattr.prebuf = h->mixlen*2;
-    paattr.maxlength = h->mixlen*2;
-    paattr.minreq = h->mixlen;
-#endif
+    paattr.minreq = -1;
+    flags |= PA_STREAM_ADJUST_LATENCY;
 
     if (ConnectToPulseServer(&h->mainloop, &h->context) < 0) {
         return SDL_SetError("Could not connect to PulseAudio server");
     }
 
-    if (!FindDeviceName(h, iscapture, handle)) {
+    if (!FindDeviceName(h, iscapture, this->handle)) {
         return SDL_SetError("Requested PulseAudio sink/source missing?");
     }
 
@@ -679,6 +667,7 @@ PULSEAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
     if (iscapture) {
         rc = PULSEAUDIO_pa_stream_connect_record(h->stream, h->device_name, &paattr, flags);
     } else {
+        PULSEAUDIO_pa_stream_set_write_callback(h->stream, WriteCallback, h);
         rc = PULSEAUDIO_pa_stream_connect_playback(h->stream, h->device_name, &paattr, flags, NULL, NULL);
     }
 
@@ -703,6 +692,13 @@ PULSEAUDIO_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
 static pa_mainloop *hotplug_mainloop = NULL;
 static pa_context *hotplug_context = NULL;
 static SDL_Thread *hotplug_thread = NULL;
+
+/* These are the OS identifiers (i.e. ALSA strings)... */
+static char *default_sink_path = NULL;
+static char *default_source_path = NULL;
+/* ... and these are the descriptions we use in GetDefaultAudioInfo. */
+static char *default_sink_name = NULL;
+static char *default_source_name = NULL;
 
 /* device handles are device index + 1, cast to void*, so we never pass a NULL. */
 
@@ -734,6 +730,7 @@ static void
 SinkInfoCallback(pa_context *c, const pa_sink_info *i, int is_last, void *data)
 {
     SDL_AudioSpec spec;
+    SDL_bool add = (SDL_bool) ((intptr_t) data);
     if (i) {
         spec.freq = i->sample_spec.rate;
         spec.channels = i->sample_spec.channels;
@@ -744,7 +741,16 @@ SinkInfoCallback(pa_context *c, const pa_sink_info *i, int is_last, void *data)
         spec.callback = NULL;
         spec.userdata = NULL;
 
-        SDL_AddAudioDevice(SDL_FALSE, i->description, &spec, (void *) ((size_t) i->index+1));
+        if (add) {
+            SDL_AddAudioDevice(SDL_FALSE, i->description, &spec, (void *) ((intptr_t) i->index+1));
+        }
+
+        if (default_sink_path != NULL && SDL_strcmp(i->name, default_sink_path) == 0) {
+            if (default_sink_name != NULL) {
+                SDL_free(default_sink_name);
+            }
+            default_sink_name = SDL_strdup(i->description);
+        }
     }
 }
 
@@ -753,6 +759,7 @@ static void
 SourceInfoCallback(pa_context *c, const pa_source_info *i, int is_last, void *data)
 {
     SDL_AudioSpec spec;
+    SDL_bool add = (SDL_bool) ((intptr_t) data);
     if (i) {
         /* Maybe skip "monitor" sources. These are just output from other sinks. */
         if (include_monitors || (i->monitor_of_sink == PA_INVALID_INDEX)) {
@@ -765,9 +772,31 @@ SourceInfoCallback(pa_context *c, const pa_source_info *i, int is_last, void *da
             spec.callback = NULL;
             spec.userdata = NULL;
 
-            SDL_AddAudioDevice(SDL_TRUE, i->description, &spec, (void *) ((size_t) i->index+1));
+            if (add) {
+                SDL_AddAudioDevice(SDL_TRUE, i->description, &spec, (void *) ((intptr_t) i->index+1));
+            }
+
+            if (default_source_path != NULL && SDL_strcmp(i->name, default_source_path) == 0) {
+                if (default_source_name != NULL) {
+                    SDL_free(default_source_name);
+                }
+                default_source_name = SDL_strdup(i->description);
+            }
         }
     }
+}
+
+static void
+ServerInfoCallback(pa_context *c, const pa_server_info *i, void *data)
+{
+    if (default_sink_path != NULL) {
+        SDL_free(default_sink_path);
+    }
+    if (default_source_path != NULL) {
+        SDL_free(default_source_path);
+    }
+    default_sink_path = SDL_strdup(i->default_sink_name);
+    default_source_path = SDL_strdup(i->default_source_name);
 }
 
 /* This is called when PulseAudio has a device connected/removed/changed. */
@@ -776,19 +805,26 @@ HotplugCallback(pa_context *c, pa_subscription_event_type_t t, uint32_t idx, voi
 {
     const SDL_bool added = ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_NEW);
     const SDL_bool removed = ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_REMOVE);
+    const SDL_bool changed = ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_CHANGE);
 
-    if (added || removed) {  /* we only care about add/remove events. */
+    if (added || removed || changed) {  /* we only care about add/remove events. */
         const SDL_bool sink = ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SINK);
         const SDL_bool source = ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SOURCE);
 
         /* adds need sink details from the PulseAudio server. Another callback... */
-        if (added && sink) {
-            PULSEAUDIO_pa_context_get_sink_info_by_index(hotplug_context, idx, SinkInfoCallback, NULL);
-        } else if (added && source) {
-            PULSEAUDIO_pa_context_get_source_info_by_index(hotplug_context, idx, SourceInfoCallback, NULL);
+        if ((added || changed) && sink) {
+            if (changed) {
+                PULSEAUDIO_pa_context_get_server_info(hotplug_context, ServerInfoCallback, NULL);
+            }
+            PULSEAUDIO_pa_context_get_sink_info_by_index(hotplug_context, idx, SinkInfoCallback, (void*) ((intptr_t) added));
+        } else if ((added || changed) && source) {
+            if (changed) {
+                PULSEAUDIO_pa_context_get_server_info(hotplug_context, ServerInfoCallback, NULL);
+            }
+            PULSEAUDIO_pa_context_get_source_info_by_index(hotplug_context, idx, SourceInfoCallback, (void*) ((intptr_t) added));
         } else if (removed && (sink || source)) {
             /* removes we can handle just with the device index. */
-            SDL_RemoveAudioDevice(source != 0, (void *) ((size_t) idx+1));
+            SDL_RemoveAudioDevice(source != 0, (void *) ((intptr_t) idx+1));
         }
     }
 }
@@ -809,11 +845,44 @@ HotplugThread(void *data)
 static void
 PULSEAUDIO_DetectDevices()
 {
-    WaitForPulseOperation(hotplug_mainloop, PULSEAUDIO_pa_context_get_sink_info_list(hotplug_context, SinkInfoCallback, NULL));
-    WaitForPulseOperation(hotplug_mainloop, PULSEAUDIO_pa_context_get_source_info_list(hotplug_context, SourceInfoCallback, NULL));
+    WaitForPulseOperation(hotplug_mainloop, PULSEAUDIO_pa_context_get_server_info(hotplug_context, ServerInfoCallback, NULL));
+    WaitForPulseOperation(hotplug_mainloop, PULSEAUDIO_pa_context_get_sink_info_list(hotplug_context, SinkInfoCallback, (void*) ((intptr_t) SDL_TRUE)));
+    WaitForPulseOperation(hotplug_mainloop, PULSEAUDIO_pa_context_get_source_info_list(hotplug_context, SourceInfoCallback, (void*) ((intptr_t) SDL_TRUE)));
 
     /* ok, we have a sane list, let's set up hotplug notifications now... */
     hotplug_thread = SDL_CreateThreadInternal(HotplugThread, "PulseHotplug", 256 * 1024, NULL);
+}
+
+static int
+PULSEAUDIO_GetDefaultAudioInfo(char **name, SDL_AudioSpec *spec, int iscapture)
+{
+    int i;
+    int numdevices;
+
+    char *target;
+    if (iscapture) {
+        if (default_source_name == NULL) {
+            return SDL_SetError("PulseAudio could not find a default source");
+        }
+        target = default_source_name;
+    } else {
+        if (default_sink_name == NULL) {
+            return SDL_SetError("PulseAudio could not find a default sink");
+        }
+        target = default_sink_name;
+    }
+
+    numdevices = SDL_GetNumAudioDevices(iscapture);
+    for (i = 0; i < numdevices; i += 1) {
+        if (SDL_strcmp(SDL_GetAudioDeviceName(i, iscapture), target) == 0) {
+            if (name != NULL) {
+                *name = SDL_strdup(target);
+            }
+            SDL_GetAudioDeviceSpec(i, iscapture, spec);
+            return 0;
+        }
+    }
+    return SDL_SetError("Could not find default PulseAudio device");
 }
 
 static void
@@ -829,19 +898,36 @@ PULSEAUDIO_Deinitialize(void)
     hotplug_mainloop = NULL;
     hotplug_context = NULL;
 
+    if (default_sink_path != NULL) {
+        SDL_free(default_sink_path);
+        default_sink_path = NULL;
+    }
+    if (default_source_path != NULL) {
+        SDL_free(default_source_path);
+        default_source_path = NULL;
+    }
+    if (default_sink_name != NULL) {
+        SDL_free(default_sink_name);
+        default_sink_name = NULL;
+    }
+    if (default_source_name != NULL) {
+        SDL_free(default_source_name);
+        default_source_name = NULL;
+    }
+
     UnloadPulseAudioLibrary();
 }
 
-static int
+static SDL_bool
 PULSEAUDIO_Init(SDL_AudioDriverImpl * impl)
 {
     if (LoadPulseAudioLibrary() < 0) {
-        return 0;
+        return SDL_FALSE;
     }
 
     if (ConnectToPulseServer(&hotplug_mainloop, &hotplug_context) < 0) {
         UnloadPulseAudioLibrary();
-        return 0;
+        return SDL_FALSE;
     }
 
     include_monitors = SDL_GetHintBoolean(SDL_HINT_AUDIO_INCLUDE_MONITORS, SDL_FALSE);
@@ -856,14 +942,16 @@ PULSEAUDIO_Init(SDL_AudioDriverImpl * impl)
     impl->Deinitialize = PULSEAUDIO_Deinitialize;
     impl->CaptureFromDevice = PULSEAUDIO_CaptureFromDevice;
     impl->FlushCapture = PULSEAUDIO_FlushCapture;
+    impl->GetDefaultAudioInfo = PULSEAUDIO_GetDefaultAudioInfo;
 
     impl->HasCaptureSupport = SDL_TRUE;
+    impl->SupportsNonPow2Samples = SDL_TRUE;
 
-    return 1;   /* this audio target is available. */
+    return SDL_TRUE;   /* this audio target is available. */
 }
 
 AudioBootStrap PULSEAUDIO_bootstrap = {
-    "pulseaudio", "PulseAudio", PULSEAUDIO_Init, 0
+    "pulseaudio", "PulseAudio", PULSEAUDIO_Init, SDL_FALSE
 };
 
 #endif /* SDL_AUDIO_DRIVER_PULSEAUDIO */

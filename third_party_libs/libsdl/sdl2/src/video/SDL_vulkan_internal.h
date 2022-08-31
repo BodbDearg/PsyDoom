@@ -25,12 +25,10 @@
 
 #include "SDL_stdinc.h"
 
-#if defined(SDL_LOADSO_DISABLED)
-#undef SDL_VIDEO_VULKAN
-#define SDL_VIDEO_VULKAN 0
-#endif
-
 #if SDL_VIDEO_VULKAN
+#if SDL_LOADSO_DISABLED || SDL_LOADSO_DUMMY
+#error You should not be here.
+#endif
 
 #if SDL_VIDEO_DRIVER_ANDROID
 #define VK_USE_PLATFORM_ANDROID_KHR
@@ -57,11 +55,7 @@
 #define VK_USE_PLATFORM_XCB_KHR
 #endif
 
-// PsyDoom: I'm already defining this as part of the project compiler flags, to avoid issues with including the vulkan header directly and not via SDL.
-// Therefore I added a check to see if it's already defined here:
-#ifndef VK_NO_PROTOTYPES
-    #define VK_NO_PROTOTYPES
-#endif
+#define VK_NO_PROTOTYPES
 #include "./khronos/vulkan/vulkan.h"
 
 #include "SDL_vulkan.h"

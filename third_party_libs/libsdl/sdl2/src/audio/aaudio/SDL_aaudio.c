@@ -71,9 +71,10 @@ void aaudio_errorCallback( AAudioStream *stream, void *userData, aaudio_result_t
 #define LIB_AAUDIO_SO "libaaudio.so"
 
 static int
-aaudio_OpenDevice(_THIS, void *handle, const char *devname, int iscapture)
+aaudio_OpenDevice(_THIS, const char *devname)
 {
     struct SDL_PrivateAudioData *private;
+    SDL_bool iscapture = this->iscapture;
     aaudio_result_t res;
     LOGI(__func__);
 
@@ -268,7 +269,7 @@ aaudio_Deinitialize(void)
     LOGI("End AAUDIO %s", SDL_GetError());
 }
 
-static int
+static SDL_bool
 aaudio_Init(SDL_AudioDriverImpl *impl)
 {
     aaudio_result_t res;
@@ -280,7 +281,7 @@ aaudio_Init(SDL_AudioDriverImpl *impl)
      * See https://github.com/google/oboe/issues/40 for more information.
      */
     if (SDL_GetAndroidSDKVersion() < 27) {
-        return 0;
+        return SDL_FALSE;
     }
 
     SDL_zero(ctx);
@@ -315,12 +316,12 @@ aaudio_Init(SDL_AudioDriverImpl *impl)
 
     /* and the capabilities */
     impl->HasCaptureSupport = SDL_TRUE;
-    impl->OnlyHasDefaultOutputDevice = 1;
-    impl->OnlyHasDefaultCaptureDevice = 1;
+    impl->OnlyHasDefaultOutputDevice = SDL_TRUE;
+    impl->OnlyHasDefaultCaptureDevice = SDL_TRUE;
 
     /* this audio target is available. */
     LOGI("SDL aaudio_Init OK");
-    return 1;
+    return SDL_TRUE;
 
 failure:
     if (ctx.handle) {
@@ -331,11 +332,11 @@ failure:
     }
     ctx.handle = NULL;
     ctx.builder = NULL;
-    return 0;
+    return SDL_FALSE;
 }
 
 AudioBootStrap aaudio_bootstrap = {
-    "AAudio", "AAudio audio driver", aaudio_Init, 0
+    "AAudio", "AAudio audio driver", aaudio_Init, SDL_FALSE
 };
 
 /* Pause (block) all non already paused audio devices by taking their mixer lock */
@@ -436,14 +437,17 @@ void aaudio_ResumeDevices(void)
 */
 SDL_bool aaudio_DetectBrokenPlayState( void )
 {
+    struct SDL_PrivateAudioData *private;
+    int64_t framePosition, timeNanoseconds;
+    aaudio_result_t res;
+
     if ( !audioDevice || !audioDevice->hidden ) {
         return SDL_FALSE;
     }
 
-    struct SDL_PrivateAudioData *private = audioDevice->hidden;
+    private = audioDevice->hidden;
 
-    int64_t framePosition, timeNanoseconds;
-    aaudio_result_t res = ctx.AAudioStream_getTimestamp( private->stream, CLOCK_MONOTONIC, &framePosition, &timeNanoseconds );
+    res = ctx.AAudioStream_getTimestamp( private->stream, CLOCK_MONOTONIC, &framePosition, &timeNanoseconds );
     if ( res == AAUDIO_ERROR_INVALID_STATE ) {
         aaudio_stream_state_t currentState = ctx.AAudioStream_getState( private->stream );
         /* AAudioStream_getTimestamp() will also return AAUDIO_ERROR_INVALID_STATE while the stream is still initially starting. But we only care if it silently went invalid while playing. */
