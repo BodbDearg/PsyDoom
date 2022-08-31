@@ -230,10 +230,10 @@ static void determineDynamicConfigDefaults() noexcept {
 // Read all config for the app, and write any config files that need to be updated with changed data
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
-    // Init all config serialization and determine some dynamic config defaults
+    // Determine dynamic config defaults and init config serialization
     gbDidInit = true;
-    ConfigSerialization::init();
     determineDynamicConfigDefaults();
+    ConfigSerialization::init();
 
     // Read all config files.
     // Also, if any files need saving after default initializing new fields then do that now.
