@@ -3,7 +3,6 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
-#include "DemoPlayer.h"
 #include "Doom/Renderer/r_data.h"
 
 BEGIN_NAMESPACE(MapPatches)

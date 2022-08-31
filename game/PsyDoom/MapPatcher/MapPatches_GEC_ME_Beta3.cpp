@@ -3,7 +3,6 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
-#include "DemoPlayer.h"
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_mobj.h"
 #include "Doom/Renderer/r_data.h"

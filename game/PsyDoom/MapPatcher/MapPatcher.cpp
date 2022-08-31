@@ -5,9 +5,9 @@
 #include "MapPatcher.h"
 
 #include "Doom/Base/i_main.h"
-#include "Game.h"
-#include "MapHash.h"
 #include "MapPatches.h"
+#include "PsyDoom/Game.h"
+#include "PsyDoom/MapHash.h"
 
 BEGIN_NAMESPACE(MapPatcher)
 

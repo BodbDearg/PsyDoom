@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Config/Config.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
-#include "Game.h"
+#include "PsyDoom/Config/Config.h"
+#include "PsyDoom/Game.h"
 
 #include <cstdint>
 
