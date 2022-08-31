@@ -121,6 +121,7 @@ CheatKeySequence gCheatKeys_NoTarget;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Config dynamic defaults: these can change depending on the host environment
 //------------------------------------------------------------------------------------------------------------------------------------------
+int32_t     gDefaultVramSizeInMegabytes             = -1;
 bool        gbCouldDetermineVulkanConfigDefaults    = false;
 int32_t     gDefaultAntiAliasingMultisamples        = 4;
 int32_t     gDefaultVulkanRenderHeight              = -1;
@@ -181,6 +182,12 @@ static void determineVulkanDynamicConfigDefaults() noexcept {
                 bIsVulkanLowMemDevice = (pGpu->getDeviceMem() <= (uint64_t) 3u * 1024u * 1024u * 1024u);    // <= 3 GiB
                 const char* const gpuName = pGpu->getProps().deviceName;
                 bIsVulkanRpiDevice = (std::strstr(gpuName, "V3D") == gpuName);  // On Raspberry Pi the driver identifies the device starting with 'V3D'
+
+                // The Raspberry Pi 4 only supports up to 4096x4096 textures, which restricts PsyDoom to a maximum VRAM size of 32 MiB.
+                // Use this as the default VRAM amount on the RPI for now... Perhaps this limit can be revisted for future RPI models?
+                if (bIsVulkanRpiDevice) {
+                    gDefaultVramSizeInMegabytes = 32;
+                }
             }
         });
     #endif  // #if PSYDOOM_VULKAN_RENDERER
@@ -210,6 +217,9 @@ static void determineVulkanDynamicConfigDefaults() noexcept {
 // Determines dynamic defaults for config values based on the host environment and hardware
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void determineDynamicConfigDefaults() noexcept {
+    // Default to the maximum possible VRAM size (128 MiB) unless we are running the Vulkan renderer on a Raspberry Pi
+    gDefaultVramSizeInMegabytes = -1;
+
     // Determine Vulkan defaults but skip if in headless mode - don't setup anything video related!
     if (!ProgArgs::gbHeadlessMode) {
         determineVulkanDynamicConfigDefaults();

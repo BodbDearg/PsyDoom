@@ -259,7 +259,7 @@ void initCfgSerialization_Graphics() noexcept {
         "Acceptable values are 1, 2, 4, 8, 16, 32, 64 and 128. Values in-between will be rounded up.\n"
         "If <= 0 is specified then the maximum amount possible will be used.\n",
         gVramSizeInMegabytes,
-        -1
+        gDefaultVramSizeInMegabytes
     );
 
     cfg.vulkanPreferredDevicesRegex = makeConfigField(
