@@ -250,7 +250,11 @@ SDL_bool Cocoa_Vulkan_CreateSurface(_THIS,
     createInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
     createInfo.pNext = NULL;
     createInfo.flags = 0;
-    createInfo.pLayer = (CAMetalLayer*)[((SDL_cocoametalview*) metalview) layer];
+    #if __MACOSX__
+        createInfo.pLayer = (CAMetalLayer*)[((__bridge NSView*) metalview) layer];  // macOS
+    #else
+        createInfo.pLayer = (CAMetalLayer*)[((__bridge UIView*) metalview) layer];  // iOS/tvOS
+    #endif
     result = vkCreateMetalSurfaceEXT(instance, &createInfo, NULL, surface);
 #else
     createInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;

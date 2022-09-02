@@ -488,7 +488,7 @@ if (PLATFORM_MAC)
     )
 
     target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC -DSDL_VIDEO_METAL=1)       # Enable Metal Video backend
-    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -fno-objc-arc)                # ARC must be disabled for SDL
+    target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -fobjc-arc)                   # Enable Objective-C automatic reference counting
     target_compile_options(${LIBSDL_TGT_NAME} PRIVATE -Wno-objc-method-access)      # No warnings about calling undeclared Objective C methods
     
     if (PSYDOOM_INCLUDE_VULKAN_RENDERER)

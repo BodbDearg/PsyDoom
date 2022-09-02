@@ -260,6 +260,8 @@ static void ConvertNSRect(NSScreen *screen, BOOL fullscreen, NSRect *r)
 static void
 ScheduleContextUpdates(SDL_WindowData *data)
 {
+// PsyDoom: disable this when OpenGL is not used (fixes compile errors)
+#if SDL_VIDEO_OPENGL_CGL
     NSOpenGLContext *currentContext;
     NSMutableArray *contexts;
     if (!data || !data.nscontexts) {
@@ -287,6 +289,7 @@ ScheduleContextUpdates(SDL_WindowData *data)
     #ifdef __clang__
     #pragma clang diagnostic pop
     #endif
+#endif  // PsyDoom: end of compile fix
 }
 
 /* !!! FIXME: this should use a hint callback. */
@@ -2330,10 +2333,14 @@ Cocoa_DestroyWindow(_THIS, SDL_Window * window)
         }
 
         contexts = [data.nscontexts copy];
+        
+    // PsyDoom: disable this when OpenGL is not used (fixes compile errors)
+    #if SDL_VIDEO_OPENGL_CGL
         for (SDLOpenGLContext *context in contexts) {
             /* Calling setWindow:NULL causes the context to remove itself from the context list. */            
             [context setWindow:NULL];
         }
+    #endif  // PsyDoom: end of compile fix
     }
     window->driverdata = NULL;
 }}
