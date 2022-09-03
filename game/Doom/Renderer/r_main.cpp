@@ -574,14 +574,19 @@ void R_CalcLerpFactors() noexcept {
         return;
     }
 
+    // The duration of a world frame (in seconds) for the PAL case.
+    // This can sometimes vary! For more info see the comments for 'gbIsLongGameTick'.
+    const double palWorldFrameTime = (D_GameTickDurationVaries()) ?
+        (gbIsLongGameTick ? 4 : 2) / 50.0:
+        3.0 / 50.0;
+
     // How long does a frame take for the current game?
     //  (1) For NTSC demo playback/recording the player sim is capped at 15 Hz for consistency, and the cap is 30 Hz for normal NTSC games.
     //  (2) World sim uses the demo tick rate (15 Hz in the NTSC case).
     //  (3) PAL mode has slightly different timings for player and world sim.
     const double normalPlayerFrameTime = (Game::gSettings.bUsePalTimings) ? 2.0 / 50.0 : 2.0 / 60.0;
-    const double demoFrameTime = (Game::gSettings.bUsePalTimings) ? 3.0 / 50.0 : 4.0 / 60.0;
-    const double playerFrameTime = (Game::gSettings.bUseDemoTimings) ? demoFrameTime : normalPlayerFrameTime;
-    const double worldFrameTime = demoFrameTime;
+    const double worldFrameTime = (Game::gSettings.bUsePalTimings) ? palWorldFrameTime : 4.0 / 60.0;
+    const double playerFrameTime = (Game::gSettings.bUseDemoTimings) ? worldFrameTime : normalPlayerFrameTime;
 
     // Get the elapsed player and world seconds
     const frametimer_t::time_point now = frametimer_t::now();

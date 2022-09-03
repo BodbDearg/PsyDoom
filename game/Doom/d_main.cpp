@@ -95,6 +95,24 @@ bool gbDidAbortGame = false;
     fixed_t     gInPlaceReloadPlayerY;      // Where to position the player after doing the 'in place' level reload (y)
     fixed_t     gInPlaceReloadPlayerZ;      // Where to position the player after doing the 'in place' level reload (z)
     angle_t     gInPlaceReloadPlayerAng;    // Angle of the player when doing an 'in place' level releoad
+
+    // When using PAL timings and NOT using demo timings this tells how many vblanks the current game/world tick will last for.
+    // If 'true' then the current world tick will last for 4 vblanks, otherwise it will last for 2 vblanks.
+    // 
+    // For PAL timings (without demo timings) the world tick duration varies because a world tick only fires when a player tick fires, which is
+    // every 2 vblanks. The world tick is INTENDED to trigger every 3 vblanks, but since it is tied to player ticks then the intervals between
+    // world ticks must be a multiple of the player tick interval (2 vblanks). Depending on timing, this sometimes means that world ticks last
+    // for 4 vblanks and sometimes just 2 vblanks. In this complex timing scenario world ticks should also normally switch between 4 and 2
+    // vblanks duration on each alternate frame, yielding a running average of ~3 vblanks duration...
+    //
+    // This variable is basically used to try and smooth out interpolation for the PAL (non demo-timing) case as much as possible.
+    // It's not possible to achieve totally smooth motion in this scenario because the interval between frames is constantly changing, which
+    // makes the animation speed seem inconsistent. At least it's an improvement in the right direction however, and the best we can do for
+    // this very complex scenario.
+    //
+    // Note also that we DON'T have to make this long vs short tick interpolation adjustment when we are using demo timings with PAL since
+    // player ticks are perfectly synchronized (they fire at the same time) as world ticks in that situation.
+    bool gbIsLongGameTick;
 #endif
 
 // Debug draw string position
@@ -213,6 +231,8 @@ void D_DoomMain() noexcept {
     gTicCon = 0;
 
     #if PSYDOOM_MODS
+        D_UpdateIsLongGameTick();   // Needs to be called whenever we start a new game tick
+
         for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
             gTickInputs[playerIdx] = {};
             gOldTickInputs[playerIdx] = {};
@@ -712,6 +732,7 @@ gameaction_t MiniLoop(
 
     #if PSYDOOM_MODS
         gbIsFirstTick = true;
+        D_UpdateIsLongGameTick();   // Needs to be called whenever we start a new game tick
         Input::consumeEvents();     // Clear any input events leftover
     #endif
 
@@ -918,6 +939,11 @@ gameaction_t MiniLoop(
             if (gLastTgtGameTicCount < tgtGameTicCount) {
                 gLastTgtGameTicCount = tgtGameTicCount;
                 gGameTic++;
+
+                // PsyDoom: update the adjustments we make to interpolation for the PAL case (outside of demo timings)
+                #if PSYDOOM_MODS
+                    D_UpdateIsLongGameTick();
+                #endif
             }
         }
 
@@ -1020,3 +1046,25 @@ gameaction_t MiniLoop(
     // Return the exit game action
     return exitAction;
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the duration of a game/world tick varies.
+// See the documentation of 'gbIsLongGameTick' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool D_GameTickDurationVaries() noexcept {
+    return (Game::gSettings.bUsePalTimings && (!Game::gSettings.bUseDemoTimings));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Updates whether the current game/world tick is a 'long' duration tick.
+// See the documentation of 'gbIsLongGameTick' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void D_UpdateIsLongGameTick() noexcept {
+    if (D_GameTickDurationVaries()) {
+        gbIsLongGameTick = (gTicCon % 3 == 0);
+    } else {
+        gbIsLongGameTick = false;
+    }
+}
+#endif  // #if PSYDOOM_MODS

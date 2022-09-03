@@ -44,6 +44,7 @@ extern bool         gbDidAbortGame;
     extern fixed_t      gInPlaceReloadPlayerY;
     extern fixed_t      gInPlaceReloadPlayerZ;
     extern angle_t      gInPlaceReloadPlayerAng;
+    extern bool         gbIsLongGameTick;
 #endif
 
 void D_DoomMain() noexcept;
@@ -76,3 +77,8 @@ gameaction_t MiniLoop(
     gameaction_t (*const pTicker)(),
     void (*const pDrawer)()
 ) noexcept;
+
+#if PSYDOOM_MODS
+    bool D_GameTickDurationVaries() noexcept;
+    void D_UpdateIsLongGameTick() noexcept;
+#endif

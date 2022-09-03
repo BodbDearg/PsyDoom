@@ -208,6 +208,11 @@ static void P_OnGameUnpause() noexcept {
     // Restore previous tick counters on unpause
     gTicCon = gTicConOnPause;
     gLastTgtGameTicCount = d_rshift<VBLANK_TO_TIC_SHIFT>(gTicConOnPause);
+
+    // PsyDoom: update the adjustments we make to interpolation for the PAL case (outside of demo timings)
+    #if PSYDOOM_MODS
+        D_UpdateIsLongGameTick();
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

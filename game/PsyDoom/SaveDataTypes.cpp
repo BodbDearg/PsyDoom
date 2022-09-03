@@ -1362,6 +1362,7 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
     gGameTic = gameTic;
     gTicCon = ticCon;
     gbIsFirstTick = (ticCon == 0);      // Not saved explicitly since it's redundant
+    D_UpdateIsLongGameTick();           // Needs to be updated any time we start a new game tick
 
     std::memset(gTicRemainder, 0, sizeof(gTicRemainder));   // Zero-init the bits we don't use
     gTicRemainder[0] = ticRemainder;
