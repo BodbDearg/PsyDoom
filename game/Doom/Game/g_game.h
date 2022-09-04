@@ -33,6 +33,7 @@ void G_PlayerFinishLevel(int32_t playerIdx) noexcept;
 void G_PlayerReborn(const int32_t playerIdx) noexcept;
 void G_DoReborn(const int32_t playerIdx) noexcept;
 void G_CompleteLevel() noexcept;
+void G_UpdateMobjInfoForSkill(const skill_t skill) noexcept;
 void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept;
 void G_RunGame() noexcept;
 gameaction_t G_PlayDemoPtr() noexcept;

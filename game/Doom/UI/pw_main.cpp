@@ -285,8 +285,10 @@ gameaction_t TIC_PasswordScreen() noexcept {
             gGameSkill = skill;
             gStartSkill = skill;
 
-            // PsyDoom: remember this password in player prefs, so it's restored on relaunch
+            // PsyDoom: remember this password in player prefs, so it's restored on relaunch.
+            // Also make sure that game settings which vary based on skill are now correct.
             #if PSYDOOM_MODS
+                G_UpdateMobjInfoForSkill(skill);
                 PlayerPrefs::pullLastPassword();
             #endif
 

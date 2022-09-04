@@ -639,7 +639,8 @@ LoadSaveResult load() noexcept {
     deserializeObjects(saveData.buttons, pButtons, hdr.numButtons);
     deserializeObjects(saveData.scheduledActions, ScriptingEngine::gScheduledActions.data(), hdr.numScheduledActions);
 
-    // Post load actions: adding map objects into the blockmap and sector lists, and associating thinkers with their sectors
+    // Post load actions: update skill based game settings, adding map objects into the blockmap and sector lists, and associating thinkers with their sectors
+    G_UpdateMobjInfoForSkill(gGameSkill);
     addMobjsToSectors();
     associateThinkersWithSectors(gVlDoors);
     associateThinkersWithSectors(gVlCustomDoors);

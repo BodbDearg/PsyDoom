@@ -336,6 +336,31 @@ void G_CompleteLevel() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: this code used to be inline in the original game; I made it a dedicated function for PsyDoom so it can be re-used elsewhere.
+// Performs tweaks to 'mobjinfo_t' and related data structures based on the current difficulty level.
+// Makes some monsters fire faster in nightmare mode for example.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void G_UpdateMobjInfoForSkill(const skill_t skill) noexcept {
+    if (skill == sk_nightmare) {
+        gStates[S_SARG_ATK1].tics = 2;
+        gStates[S_SARG_ATK2].tics = 2;
+        gStates[S_SARG_ATK3].tics = 2;
+        gMobjInfo[MT_SERGEANT].speed = 15;
+        gMobjInfo[MT_BRUISERSHOT].speed = 40 * FRACUNIT;
+        gMobjInfo[MT_HEADSHOT].speed = 40 * FRACUNIT;
+        gMobjInfo[MT_TROOPSHOT].speed = 40 * FRACUNIT;
+    } else {
+        gStates[S_SARG_ATK1].tics = 4;
+        gStates[S_SARG_ATK2].tics = 4;
+        gStates[S_SARG_ATK3].tics = 4;
+        gMobjInfo[MT_SERGEANT].speed = 10;
+        gMobjInfo[MT_BRUISERSHOT].speed = 30 * FRACUNIT;
+        gMobjInfo[MT_HEADSHOT].speed = 20 * FRACUNIT;
+        gMobjInfo[MT_TROOPSHOT].speed = 20 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Common game setup logic for both demos and regular gameplay
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept {
@@ -419,24 +444,9 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     gbDemoRecording = false;
     gbDemoPlayback = false;
 
-    // Patching some monster states depending on difficulty
-    if (skill == sk_nightmare) {
-        gStates[S_SARG_ATK1].tics = 2;
-        gStates[S_SARG_ATK2].tics = 2;
-        gStates[S_SARG_ATK3].tics = 2;
-        gMobjInfo[MT_SERGEANT].speed = 15;
-        gMobjInfo[MT_BRUISERSHOT].speed = 40 * FRACUNIT;
-        gMobjInfo[MT_HEADSHOT].speed = 40 * FRACUNIT;
-        gMobjInfo[MT_TROOPSHOT].speed = 40 * FRACUNIT;
-    } else {
-        gStates[S_SARG_ATK1].tics = 4;
-        gStates[S_SARG_ATK2].tics = 4;
-        gStates[S_SARG_ATK3].tics = 4;
-        gMobjInfo[MT_SERGEANT].speed = 10;
-        gMobjInfo[MT_BRUISERSHOT].speed = 30 * FRACUNIT;
-        gMobjInfo[MT_HEADSHOT].speed = 20 * FRACUNIT;
-        gMobjInfo[MT_TROOPSHOT].speed = 20 * FRACUNIT;
-    }
+    // Patching some enemy settings depending on difficulty.
+    // PsyDoom: this code used to be inline but I extracted it out to a function so it can be re-used elsewhere.
+    G_UpdateMobjInfoForSkill(skill);
 
     // PsyDoom: apply the Super Shotgun delay tweak if enabled, or otherwise undo it
     #if PSYDOOM_MODS
