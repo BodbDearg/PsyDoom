@@ -18,6 +18,10 @@
 
 #include <memory>
 
+#if WIN32
+    #include <Windows.h>
+#endif
+
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl.H>
     #include <FL/Fl_Box.H>
@@ -190,6 +194,13 @@ static void makeLauncherWindow(Context& ctx, const int winW, const int winH) noe
     // Make the window center in the middle of the screen
     ctx.pWindow = std::make_unique<Fl_Double_Window>((screenW - winW) / 2, (screenH - winH) / 2, winW, winH);
     ctx.pWindow->label(Utils::getGameVersionString());
+
+    // Windows: set the icon for the window
+    #if WIN32
+        if (ctx.pWindow) {
+            ctx.pWindow->icon(LoadIcon(GetModuleHandle(nullptr), L"IDI_ICON1"));
+        }
+    #endif
 
     // Make all the tabs and finish up creating the window
     makeLauncherTabs(ctx);

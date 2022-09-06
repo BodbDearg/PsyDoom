@@ -468,7 +468,10 @@ set(INCLUDE_PATHS
 
 # Platform specific sources
 if (PLATFORM_WINDOWS)
-    list(APPEND SOURCE_FILES "Main_Windows.cpp")
+    list(APPEND SOURCE_FILES
+        "Main_Windows.cpp"
+        "Resources/Windows/PsyDoom.rc"
+    )
 elseif(PLATFORM_MAC)
     list(APPEND SOURCE_FILES "Main_Mac.mm")
 else()
