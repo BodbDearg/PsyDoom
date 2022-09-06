@@ -468,14 +468,26 @@ set(INCLUDE_PATHS
 
 # Platform specific sources
 if (PLATFORM_WINDOWS)
+    # Windows
     list(APPEND SOURCE_FILES
         "Main_Windows.cpp"
         "Resources/Windows/PsyDoom.rc"
     )
 elseif(PLATFORM_MAC)
-    list(APPEND SOURCE_FILES "Main_Mac.mm")
+    # macOS
+    list(APPEND SOURCE_FILES
+        "Main_Mac.mm"
+        "Resources/macOS/icon.icns"
+    )
+
+    # Set the app icon and ensure it is bundled with the app
+    set(MACOSX_BUNDLE_ICON_FILE icon.icns)
+    set_source_files_properties("Resources/macOS/icon.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 else()
-    list(APPEND SOURCE_FILES "Main_StandardCpp.cpp")
+    # Linux or other platforms
+    list(APPEND SOURCE_FILES
+        "Main_StandardCpp.cpp"
+    )
 endif()
 
 # Build the executable and setup IDE folders
