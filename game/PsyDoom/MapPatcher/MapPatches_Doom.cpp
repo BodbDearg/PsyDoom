@@ -3,6 +3,9 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
+#include "Doom/Base/sounds.h"
+#include "Doom/Game/info.h"
+#include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
 
 BEGIN_NAMESPACE(MapPatches)
@@ -155,6 +158,23 @@ static void patchMap_Tenements() noexcept {
         // Shift the secret to a neighboring sector which the player is almost guaranteed to go through to reach the Megasphere.
         gpSectors[110].special = 9;
         gpSectors[112].special = 0;
+
+        // Fix some Imps on 'Ultra Violence' (and also 'Nightmare') being stuck in a wall and un-killable.
+        // Move them to the right so they are not stuck.
+        modifySectors(
+            [](sector_t& sector) noexcept {
+                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
+                    mobj_t* const pNextMobj = pMobj->snext;
+
+                    if ((pMobj->type == MT_TROOP) && (pMobj->x == -2272 * FRACUNIT)) {
+                        EV_TeleportTo(*pMobj, -2160 * FRACUNIT, pMobj->y, pMobj->angle, false, false, (mobjtype_t) 0, sfx_None);
+                    }
+
+                    pMobj = pNextMobj;
+                }
+            },
+            179, 182, 183, 184
+        );
     }
 }
 
