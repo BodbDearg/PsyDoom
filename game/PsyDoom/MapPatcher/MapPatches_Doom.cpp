@@ -145,6 +145,20 @@ static void patchMap_Entryway() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP45: Tenements
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Tenements() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a secret near the end being very easy to skip over.
+        // Shift the secret to a neighboring sector which the player is almost guaranteed to go through to reach the Megasphere.
+        gpSectors[110].special = 9;
+        gpSectors[112].special = 0;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP47: The Citadel
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheCitadel() noexcept {
@@ -230,7 +244,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 109934, 0x7E22F4311F3955D5, 0x16E918F5C11AD780, applyOriginalMapCommonPatches },      // MAP42
     { 192997, 0x7B86B9C35B754883, 0xD5F5CE44AB12898D, applyOriginalMapCommonPatches },      // MAP43
     { 110145, 0xE296122ADE38AB74, 0x13505BF841234D4C, applyOriginalMapCommonPatches },      // MAP44
-    { 158462, 0x37D6A1335F058A41, 0xA82656A6FDEB132B, applyOriginalMapCommonPatches },      // MAP45
+    { 158462, 0x37D6A1335F058A41, 0xA82656A6FDEB132B, patchMap_Tenements            },      // MAP45
     { 105883, 0x0CA0922874005BC1, 0x37173A0C68F8FA6A, patchMap_TheCourtyard         },      // MAP46
     { 186755, 0x73E10EF08AE21FD5, 0x8115F467FE2CD3CA, patchMap_TheCitadel           },      // MAP47
     {  54866, 0xF41440631C2B6FB2, 0x728E55510D5AE858, applyOriginalMapCommonPatches },      // MAP48
