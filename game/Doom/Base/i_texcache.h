@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 struct texture_t;
@@ -22,6 +23,12 @@ static constexpr uint32_t TCACHE_CELLS_Y        = TCACHE_PAGE_H / TCACHE_CELL_SI
 static constexpr uint32_t NUM_TCACHE_PAGE_CELLS = TCACHE_CELLS_X * TCACHE_CELLS_Y;
 
 #if PSYDOOM_MODS
+    // Simple pointer to texture data and its size
+    struct texdata_t {
+        std::byte*  pBytes;
+        size_t      size;
+    };
+
     void I_InitTexCache() noexcept;
     uint32_t I_GetNumTexCachePages() noexcept;
     uint32_t I_GetCurTexCacheFillPage() noexcept;

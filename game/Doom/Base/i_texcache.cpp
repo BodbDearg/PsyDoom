@@ -56,6 +56,7 @@
 #include "i_main.h"
 #include "PsyDoom/Config/Config.h"
 #include "PsyDoom/PsxVm.h"
+#include "PsyDoom/TexturePatcher.h"
 #include "PsyDoom/Video.h"
 #include "PsyDoom/Vulkan/VDrawing.h"
 #include "PsyDoom/Vulkan/VPipelines.h"
@@ -69,13 +70,6 @@
 #include <vector>
 
 #if PSYDOOM_MODS
-
-// Simple pointer to texture data and its size
-struct texdata_t {
-    const std::byte*    pBytes;
-    const size_t        size;
-};
-
 // Holds info for a single page in the texture cache.
 // Describes the pixel location in VRAM where the page is located (in 16-bit pixel coords) and the occupying textures for each cell.
 // Also has a boolean variable indicating whether the page is 'locked' for modification in on limit removing builds (classic way of marking VRAM areas as unusable).
@@ -344,7 +338,7 @@ static void TC_FillCacheCells(tcachepage_t& texPage, texture_t& tex) noexcept {
 static texdata_t TC_CacheTexData(const texture_t& tex) {
     // Make sure the texture's lump is loaded and get the bytes
     const WadLump& texLump = W_CacheLumpNum(tex.lumpNum, PU_CACHE, false);
-    const std::byte* pTexBytes = (const std::byte*) texLump.pCachedData;
+    std::byte* pTexBytes = (std::byte*) texLump.pCachedData;
     ASSERT(pTexBytes);
 
     // Do we need to decompress the texture first?
@@ -626,6 +620,11 @@ void I_CacheTex(texture_t& tex) noexcept {
     // Load the texture data and update the dimensions of the texture from the data header
     const texdata_t texData = TC_CacheTexData(tex);
     R_UpdateTexMetricsFromData(tex, texData.pBytes, (int32_t) texData.size);
+
+    // PsyDoom: patch this texture with bug fixes, if applicable
+    #if PSYDOOM_MODS
+        TexturePatcher::applyTexturePatches(tex, texData);
+    #endif
 
     // Move to a valid fill location for the texture and abort if failed.
     // This will also evict textures from previous frames along the way.

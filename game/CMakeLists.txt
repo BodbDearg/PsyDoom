@@ -290,6 +290,8 @@ set(SOURCE_FILES
     "PsyDoom/ScriptBindings.h"
     "PsyDoom/ScriptingEngine.cpp"
     "PsyDoom/ScriptingEngine.h"
+    "PsyDoom/TexturePatcher.cpp"
+    "PsyDoom/TexturePatcher.h"
     "PsyDoom/Utils.cpp"
     "PsyDoom/Utils.h"
     "PsyDoom/Video.cpp"
