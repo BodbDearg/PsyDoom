@@ -116,6 +116,20 @@ static void patchMap_Limbo() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP24: Hell Beneath
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_HellBeneath() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix a secret in the room with the red door being almost impossible to trigger.
+        // Shift the secret onto a neighboring blood sector which is much bigger.
+        gpSectors[26].special = 9;
+        gpSectors[27].special = 0;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP31: Entryway
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Entryway() noexcept {
@@ -175,7 +189,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  56435, 0x7921ADB466CEE45E, 0x4476F208866BF8A7, applyOriginalMapCommonPatches },      // MAP01
     { 119369, 0x4ED7CD6367900B52, 0x9609E85DB101DC09, applyOriginalMapCommonPatches },      // MAP02
     { 110284, 0x9BFF3A037128D1CA, 0x12F445D3F9B8BAC6, applyOriginalMapCommonPatches },      // MAP03
-    {  92341, 0x1D79B5BDE5426081, 0x4E9413A01EAF4B4A, patchMap_CommandControl },            // MAP04
+    {  92341, 0x1D79B5BDE5426081, 0x4E9413A01EAF4B4A, patchMap_CommandControl       },      // MAP04
     {  89865, 0x0A8ACFFC833D6E36, 0x070A7A5CDDEE1CE0, applyOriginalMapCommonPatches },      // MAP05
     { 124094, 0x2097E86807523FF3, 0xA2F0C52632B12372, applyOriginalMapCommonPatches },      // MAP06
     { 108814, 0xD89ECAA4823454FD, 0xC7C178FA280CA569, applyOriginalMapCommonPatches },      // MAP07
@@ -190,19 +204,19 @@ static const PatchDef gPatchArray_Doom[] = {
     {  27956, 0x39B94C1CF5E19EB0, 0xE0A691816A8C166A, applyOriginalMapCommonPatches },      // MAP16
     {  56466, 0x4F240435B71CA6CA, 0xFA106C3EC5548BF0, applyOriginalMapCommonPatches },      // MAP17
     {  71253, 0x0541C17B11B2DC05, 0x577D152A01E48073, applyOriginalMapCommonPatches },      // MAP18
-    {  75515, 0xFE716B01FE414A2A, 0xA3A7AFA1956DF697, patchMap_HouseOfPain },               // MAP19
-    { 143483, 0x36A01960BAD36249, 0x2BC3BF03E0ED6D64, patchMap_UnholyCathedral },           // MAP20
+    {  75515, 0xFE716B01FE414A2A, 0xA3A7AFA1956DF697, patchMap_HouseOfPain          },      // MAP19
+    { 143483, 0x36A01960BAD36249, 0x2BC3BF03E0ED6D64, patchMap_UnholyCathedral      },      // MAP20
     {  86538, 0x403A02FD929949E5, 0xB4185CB43CEA9B46, applyOriginalMapCommonPatches },      // MAP21
-    { 109754, 0x1E3E66448FE6645C, 0x3DCA2CA78FC862F3, patchMap_Limbo },                     // MAP22
+    { 109754, 0x1E3E66448FE6645C, 0x3DCA2CA78FC862F3, patchMap_Limbo                },      // MAP22
     {  32935, 0x55A24A4ED4053AC3, 0x636CDB24CE519EF8, applyOriginalMapCommonPatches },      // MAP23
-    {  52915, 0xA8CCE876F52671B2, 0xDA2BB82C5D03383C, applyOriginalMapCommonPatches },      // MAP24
+    {  52915, 0xA8CCE876F52671B2, 0xDA2BB82C5D03383C, patchMap_HellBeneath          },      // MAP24
     {  72352, 0x255311EE3A46B4F4, 0x30E325760C3C0D55, applyOriginalMapCommonPatches },      // MAP25
     { 111520, 0x85B038429CCD933B, 0x8488BBE9B15A5F8C, applyOriginalMapCommonPatches },      // MAP26
     {  82104, 0x52B9EDF6AA65FD8C, 0x3D965AFD07455BA6, applyOriginalMapCommonPatches },      // MAP27
     { 146652, 0x1C5AD3B2CC520748, 0x79223365451D6965, applyOriginalMapCommonPatches },      // MAP28
     { 163970, 0x85E5F59863FC567A, 0x825E1D627586324B, applyOriginalMapCommonPatches },      // MAP29
     { 146600, 0x0776A66BD2962C70, 0xEA25B44BFB2863F0, applyOriginalMapCommonPatches },      // MAP30
-    {  46210, 0x41EA6956972B2510, 0xE4760C46A4BBD40D, patchMap_Entryway     },              // MAP31
+    {  46210, 0x41EA6956972B2510, 0xE4760C46A4BBD40D, patchMap_Entryway             },      // MAP31
     {  63255, 0x787980722B2A3ABF, 0xDA758F7A7236BAD9, applyOriginalMapCommonPatches },      // MAP32
     {  71907, 0x9354072B9094E9BE, 0xFDA856CDE67680DC, applyOriginalMapCommonPatches },      // MAP33
     {  67614, 0xE36C70A633E0AE7D, 0x9223DF3ADFDF8808, applyOriginalMapCommonPatches },      // MAP34
@@ -217,8 +231,8 @@ static const PatchDef gPatchArray_Doom[] = {
     { 192997, 0x7B86B9C35B754883, 0xD5F5CE44AB12898D, applyOriginalMapCommonPatches },      // MAP43
     { 110145, 0xE296122ADE38AB74, 0x13505BF841234D4C, applyOriginalMapCommonPatches },      // MAP44
     { 158462, 0x37D6A1335F058A41, 0xA82656A6FDEB132B, applyOriginalMapCommonPatches },      // MAP45
-    { 105883, 0x0CA0922874005BC1, 0x37173A0C68F8FA6A, patchMap_TheCourtyard },              // MAP46
-    { 186755, 0x73E10EF08AE21FD5, 0x8115F467FE2CD3CA, patchMap_TheCitadel   },              // MAP47
+    { 105883, 0x0CA0922874005BC1, 0x37173A0C68F8FA6A, patchMap_TheCourtyard         },      // MAP46
+    { 186755, 0x73E10EF08AE21FD5, 0x8115F467FE2CD3CA, patchMap_TheCitadel           },      // MAP47
     {  54866, 0xF41440631C2B6FB2, 0x728E55510D5AE858, applyOriginalMapCommonPatches },      // MAP48
     {  74303, 0x522256004AD8E073, 0x2C190C108C98B31D, applyOriginalMapCommonPatches },      // MAP49
     {  64540, 0x47EA67DBBA5F33DC, 0x2280784D842FECC1, applyOriginalMapCommonPatches },      // MAP50
