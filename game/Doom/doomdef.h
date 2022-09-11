@@ -191,6 +191,11 @@ static constexpr uint32_t MF_BLEND_ON           = 0x10000000;   // PSX DOOM: PSX
 static constexpr uint32_t MF_BLEND_MODE_BIT1    = 0x20000000;   // PSX DOOM: 1 of 2 bits determining blend mode if blending is enabled. See 'MF_BLEND' flag combos below for more details.
 static constexpr uint32_t MF_BLEND_MODE_BIT2    = 0x40000000;   // PSX DOOM: 1 of 2 bits determining blend mode if blending is enabled. See 'MF_BLEND' flag combos below for more details.
 
+#if PSYDOOM_MODS
+    // New flag for PsyDoom: skips collisions against other things for this mobj_t
+    static constexpr uint32_t MF_NO_MOBJ_COLLIDE = 0x80000000;
+#endif
+
 // Blend modes - when thing flags are masked by 'MF_ALL_BLEND_FLAGS':
 static constexpr uint32_t MF_BLEND_ALPHA_50 = MF_BLEND_ON;                                              // 50% opacity alpha blend
 static constexpr uint32_t MF_BLEND_ADD      = MF_BLEND_ON | MF_BLEND_MODE_BIT1;                         // Additive blend at 100% opacity

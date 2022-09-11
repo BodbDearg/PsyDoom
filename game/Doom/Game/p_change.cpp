@@ -34,10 +34,29 @@ bool P_ThingHeightClip(mobj_t& mobj) noexcept {
     const fixed_t oldFloorZ = mobj.floorz;
     const bool bWasOnFloor = (oldFloorZ == mobj.z);
 
+    // PsyDoom: for the thing height clip don't collide with other map objects if the 'sprite vertical warp' bugfix is enabled.
+    // These inter-thing collisions can prevent the sprite from being at the correct height during this adjustment.
+    #if PSYDOOM_MODS
+        const bool bOld_NoMobjCollide = (mobj.flags & MF_NO_MOBJ_COLLIDE);  // Restore this flag's value later!
+
+        if (Game::gSettings.bFixSpriteVerticalWarp) {
+            mobj.flags |= MF_NO_MOBJ_COLLIDE;
+        }
+    #endif
+
     // Get the current floor/ceiling Z values for the thing and update
     P_CheckPosition(mobj, mobj.x, mobj.y);
     mobj.floorz = gTmFloorZ;
     mobj.ceilingz = gTmCeilingZ;
+
+    // PsyDoom: restore this flag if we modified it for the 'sprite vertical warp' bugfix
+    #if PSYDOOM_MODS
+        if (Game::gSettings.bFixSpriteVerticalWarp) {
+            if (!bOld_NoMobjCollide) {
+                mobj.flags &= ~MF_NO_MOBJ_COLLIDE;
+            }
+        }
+    #endif
 
     // Things that were on the floor previously rise and fall as the sector floor rises and falls.
     // Otherwise, if a floating thing, clip against the ceiling.

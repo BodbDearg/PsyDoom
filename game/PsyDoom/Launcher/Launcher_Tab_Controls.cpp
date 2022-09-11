@@ -321,7 +321,6 @@ void populateControlsTab(Context& ctx) noexcept {
     const RectExtents tabRect = getRectExtents(*tab.pTab);
     const auto pScroll = new Fl_Scroll(tabRect.lx + 1, tabRect.ty + 5, tabRect.rx - tabRect.lx - 1, tabRect.by - tabRect.ty - 6, "");
     pScroll->scrollbar.linesize(30 * 4);
-    tab.pTab->resizable(pScroll);
 
     // Make all the control sections
     makeAnalogMoveAndTurnSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 20);

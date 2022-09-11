@@ -42,6 +42,7 @@ struct Config_Game {
     ConfigField     fixOutdoorBulletPuffs;
     ConfigField     fixBlockingGibsBug;
     ConfigField     fixSoundPropagation;
+    ConfigField     fixSpriteVerticalWarp;
     ConfigField     enableMapPatches_GamePlay;
     ConfigField     enableMapPatches_Visual;
     ConfigField     enableMapPatches_PsyDoom;

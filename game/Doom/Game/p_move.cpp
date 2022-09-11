@@ -332,8 +332,15 @@ static void PM_CheckPosition() noexcept {
         return;
     }
 
-    // Do collisions against things
-    {
+    // Do collisions against things.
+    // PsyDoom: this can now be turned off now if required (used for the 'sprite vertical warp' bugfix).
+    #if PSYDOOM_MODS
+        const bool bDoThingCollisons = ((gTmFlags & MF_NO_MOBJ_COLLIDE) == 0);
+    #else
+        const bool bDoThingCollisions = true;
+    #endif
+
+    if (bDoThingCollisons) {
         // Compute the blockmap extents to check for collisions against other things and clamp to a valid range
         const int32_t bmapLx = std::max(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS), 0);
         const int32_t bmapRx = std::min(d_rshift<MAPBLOCKSHIFT>(gTestTmBBox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS), gBlockmapWidth - 1);

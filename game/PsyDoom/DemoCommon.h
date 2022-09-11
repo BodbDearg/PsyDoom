@@ -10,7 +10,7 @@ BEGIN_NAMESPACE(DemoCommon)
 // The current demo file format version.
 // This should be incremented whenever the contents of or expected behavior of the demo file changes.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static constexpr uint32_t DEMO_FILE_VERSION = 8;
+static constexpr uint32_t DEMO_FILE_VERSION = 9;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: calls 'byteSwap()' on the specified type if the host architecture is big endian.

@@ -411,6 +411,17 @@ void initCfgSerialization_Game() noexcept {
         true
     );
 
+    cfg.fixSpriteVerticalWarp = makeConfigField(
+        "FixSpriteVerticalWarp",
+        "If enabled then fix an original PSX Doom bug where sometimes sprites on the edge of ledges can\n"
+        "alternate suddenly between being at the top of the ledge and bottom of the ledge. The warping\n"
+        "would occur when blocking objects like the player or enemies would come into contact with the\n"
+        "object affected by the warping bug.\n"
+        "Note: this setting is ignored during demos and networked games where you are not the host/server.",
+        gbFixSpriteVerticalWarp,
+        true
+    );
+
     cfg.enableMapPatches_GamePlay = makeConfigField(
         "EnableMapPatches_GamePlay",
         "Whether to enable built-in fixes provided by PsyDoom for maps on various supported game discs.\n"

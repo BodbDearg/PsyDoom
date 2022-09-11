@@ -46,6 +46,7 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(bFixOutdoorBulletPuffs);
     Endian::byteSwapInPlace(bFixBlockingGibsBug);
     Endian::byteSwapInPlace(bFixSoundPropagation);
+    Endian::byteSwapInPlace(bFixSpriteVerticalWarp);
     Endian::byteSwapInPlace(lostSoulSpawnLimit);
     Endian::byteSwapInPlace(bEnableMapPatches_GamePlay);
     Endian::byteSwapInPlace(viewBobbingStrengthFixed);
@@ -227,6 +228,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bFixOutdoorBulletPuffs         = Config::gbFixOutdoorBulletPuffs;
     settings.bFixBlockingGibsBug            = Config::gbFixBlockingGibsBug;
     settings.bFixSoundPropagation           = Config::gbFixSoundPropagation;
+    settings.bFixSpriteVerticalWarp         = Config::gbFixSpriteVerticalWarp;
     settings.bEnableMapPatches_GamePlay     = Config::gbEnableMapPatches_GamePlay;
 
     if (Config::gLostSoulSpawnLimit == 0) {
@@ -271,6 +273,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bFixOutdoorBulletPuffs         = false;
     settings.bFixBlockingGibsBug            = false;
     settings.bFixSoundPropagation           = false;
+    settings.bFixSpriteVerticalWarp         = false;
     settings.bEnableMapPatches_GamePlay     = false;
     settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;

@@ -14,6 +14,7 @@ BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Check_Button.H>
     #include <FL/Fl_Group.H>
     #include <FL/Fl_Native_File_Chooser.H>
+    #include <FL/Fl_Scroll.H>
 END_DISABLE_HEADER_WARNINGS
 
 BEGIN_NAMESPACE(Launcher)
@@ -153,78 +154,98 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
     new Fl_Box(FL_NO_BOX, x, y, 470, 30, "Bug fixes to apply");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 470, 200, "");
 
-    // Various toggles
+    // Make the scroll view
+    const auto pScroll = new Fl_Scroll(x + 2, y + 32, 466, 196, "");
+    pScroll->scrollbar.linesize(30 * 4);
+
+    // Scrollbox padding: top
+    new Fl_Box(x + 10, y + 32, 440, 8);
+
+    // Various toggles: left column
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 120, 30, "  Fix line activation");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 210, 30, "  Fix line activation");
         bindConfigField<Config::gbFixLineActivation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixLineActivation.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 120, 30, "  Item pickup fix");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 210, 30, "  Item pickup fix");
         bindConfigField<Config::gbUseItemPickupFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useItemPickupFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 100, 120, 30, "  Fix multi-line activation");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 100, 210, 30, "  Fix multi-line activation");
         bindConfigField<Config::gbFixMultiLineSpecialCrossing, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixMultiLineSpecialCrossing.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 130, 120, 30, "  Fix kill count");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 130, 210, 30, "  Fix kill count");
         bindConfigField<Config::gbFixKillCount, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixKillCount.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 160, 120, 30, "  Player rocket blast fix");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 160, 210, 30, "  Player rocket blast fix");
         bindConfigField<Config::gbUsePlayerRocketBlastFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.usePlayerRocketBlastFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 190, 120, 30, "  Fix view bob strength");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 190, 210, 30, "  Fix sprite vertical warp");
+        bindConfigField<Config::gbFixSpriteVerticalWarp, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.fixSpriteVerticalWarp.comment);
+    }
+
+    {
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 220, 210, 30, "  Fix view bob strength");
         bindConfigField<Config::gbFixViewBobStrength, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixViewBobStrength.comment);
     }
 
+    // Various toggles: right column
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 40, 120, 30, "  Fix gravity strength");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 40, 210, 30, "  Fix gravity strength");
         bindConfigField<Config::gbFixGravityStrength, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixGravityStrength.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 70, 120, 30, "  Lost soul spawn fix");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 70, 210, 30, "  Lost soul spawn fix");
         bindConfigField<Config::gbUseLostSoulSpawnFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useLostSoulSpawnFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 100, 120, 30, "  Line of sight overflow fix");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 100, 210, 30, "  Line of sight overflow fix");
         bindConfigField<Config::gbUseLineOfSightOverflowFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useLineOfSightOverflowFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 130, 120, 30, "  Fix outdoor bullet puffs");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 130, 210, 30, "  Fix outdoor bullet puffs");
         bindConfigField<Config::gbFixOutdoorBulletPuffs, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixOutdoorBulletPuffs.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 160, 120, 30, "  Fix blocking gibs bug");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 160, 210, 30, "  Fix blocking gibs bug");
         bindConfigField<Config::gbFixBlockingGibsBug, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixBlockingGibsBug.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 190, 120, 30, "  Fix sound propagation");
+        const auto pCheck = makeFl_Check_Button(x + 240, y + 190, 210, 30, "  Fix sound propagation");
         bindConfigField<Config::gbFixSoundPropagation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixSoundPropagation.comment);
     }
+
+    // Scrollbox padding: bottom
+    new Fl_Box(x + 10, y + 250, 440, 10);
+
+    // Done making the scroll box
+    pScroll->end();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
