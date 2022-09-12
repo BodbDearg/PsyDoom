@@ -244,15 +244,6 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
     }
 
     #if PSYDOOM_MODS
-        // Ensure the old values we are interpolating from are clamped against the floor/ceiling bounds
-        if (mobj.z.oldValue < mobj.floorz) {
-            mobj.z.oldValue = mobj.floorz;
-        }
-
-        if (mobj.z.oldValue + mobj.height > mobj.ceilingz) {
-            mobj.z.oldValue = mobj.ceilingz - mobj.height;
-        }
-
         // PsyDoom: snap mobj z movements if interpolation of that is not enabled
         if (!Config::gbInterpolateMobj) {
             mobj.z.snap();

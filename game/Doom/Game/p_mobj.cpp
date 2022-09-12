@@ -489,7 +489,7 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
 
     // PsyDoom: fix puffs spawning beneath the floor (and potentially above the ceiling).
     // Causes sudden jumps in the puff position (on the next frame) and looks especially weird with interpolation.
-    // Making this fix non opitonal since it doesn't affect demo playback.
+    // Making this fix non optional since it doesn't affect demo playback.
     #if PSYDOOM_MODS
     {
         const sector_t& sector = *mobj.subsector->sector;
