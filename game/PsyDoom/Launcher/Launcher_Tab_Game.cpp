@@ -143,6 +143,12 @@ static void makeMiscellaneousSection(const int x, const int y) noexcept {
         const auto pInput = new Fl_Int_Input(x + 100, y + 70, 80, 26);
         bindConfigField<Config::gMainMemoryHeapSize, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
+
+        // This setting does nothing in a non-limit removing build
+        #if !PSYDOOM_LIMIT_REMOVING
+            pLabel->deactivate();
+            pInput->deactivate();
+        #endif
     }
 }
 

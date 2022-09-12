@@ -44,6 +44,12 @@ static void makeSettingSection(const int x, const int y) noexcept {
         const auto pInput = new Fl_Int_Input(x + 170, y + 80, 110, 26);
         bindConfigField<Config::gSpuRamSize, Config::gbNeedSave_Audio>(*pInput);
         pInput->tooltip(pLabel->tooltip());
+
+        // This setting does nothing in a non-limit removing build
+        #if !PSYDOOM_LIMIT_REMOVING
+            pLabel->deactivate();
+            pInput->deactivate();
+        #endif
     }
 }
 

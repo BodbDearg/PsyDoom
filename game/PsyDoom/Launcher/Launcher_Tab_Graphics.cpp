@@ -225,6 +225,12 @@ static void makeGeneralSettingsSection(const int x, const int y) noexcept {
         const auto pInput = new Fl_Int_Input(x + 200, y + 40, 80, 26);
         bindConfigField<Config::gVramSizeInMegabytes, Config::gbNeedSave_Graphics>(*pInput);
         pInput->tooltip(pLabel->tooltip());
+
+        // This setting does nothing in a non-limit removing build
+        #if !PSYDOOM_LIMIT_REMOVING
+            pLabel->deactivate();
+            pInput->deactivate();
+        #endif
     }
 }
 
@@ -367,6 +373,11 @@ static void makeClassicRendererSettingsSection(const int x, const int y) noexcep
         const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Use sky leak fix");
         bindConfigField<Config::gbSkyLeakFix, Config::gbNeedSave_Graphics>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Graphics.skyLeakFix.comment);
+
+        // This setting does nothing in a non-limit removing build
+        #if !PSYDOOM_LIMIT_REMOVING
+            pCheck->deactivate();
+        #endif
     }
 }
 
