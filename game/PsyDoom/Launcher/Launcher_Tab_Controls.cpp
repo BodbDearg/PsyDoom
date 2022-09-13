@@ -322,6 +322,9 @@ void populateControlsTab(Context& ctx) noexcept {
     const auto pScroll = new Fl_Scroll(tabRect.lx + 1, tabRect.ty + 5, tabRect.rx - tabRect.lx - 1, tabRect.by - tabRect.ty - 6, "");
     pScroll->scrollbar.linesize(30 * 4);
 
+    // Add a small bit of padding at the top
+    new Fl_Box(tabRect.lx + 20, tabRect.ty + 5, 100, 15);
+
     // Make all the control sections
     makeAnalogMoveAndTurnSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 20);
     makeDigitalMoveAndTurnSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 280);

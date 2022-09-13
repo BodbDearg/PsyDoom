@@ -212,37 +212,37 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
 
     // Various toggles: right column
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 40, 210, 30, "  Fix gravity strength");
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 40, 210, 30, "  Fix gravity strength");
         bindConfigField<Config::gbFixGravityStrength, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixGravityStrength.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 70, 210, 30, "  Lost soul spawn fix");
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 70, 210, 30, "  Lost soul spawn fix");
         bindConfigField<Config::gbUseLostSoulSpawnFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useLostSoulSpawnFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 100, 210, 30, "  Line of sight overflow fix");
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 100, 210, 30, "  Line of sight overflow fix");
         bindConfigField<Config::gbUseLineOfSightOverflowFix, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useLineOfSightOverflowFix.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 130, 210, 30, "  Fix outdoor bullet puffs");
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 130, 210, 30, "  Fix outdoor bullet puffs");
         bindConfigField<Config::gbFixOutdoorBulletPuffs, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixOutdoorBulletPuffs.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 160, 210, 30, "  Fix blocking gibs bug");
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 160, 210, 30, "  Fix blocking gibs bug");
         bindConfigField<Config::gbFixBlockingGibsBug, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixBlockingGibsBug.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 190, 210, 30, "  Fix sound propagation");
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 190, 210, 30, "  Fix sound propagation");
         bindConfigField<Config::gbFixSoundPropagation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixSoundPropagation.comment);
     }
@@ -264,25 +264,25 @@ static void makeTweaksSection(const int x, const int y) noexcept {
 
     // Various toggles
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 120, 30, "  Input latency tweak");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 210, 30, "  Input latency tweak");
         bindConfigField<Config::gbUseMoveInputLatencyTweak, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useMoveInputLatencyTweak.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 40, 120, 30, "  Extended shoot range");
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 40, 210, 30, "  Extended shoot range");
         bindConfigField<Config::gbUseExtendedPlayerShootRange, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useExtendedPlayerShootRange.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 120, 30, "  SSG delay tweak");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 210, 30, "  SSG delay tweak");
         bindConfigField<Config::gbUseSuperShotgunDelayTweak, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useSuperShotgunDelayTweak.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 240, y + 70, 120, 30, "  Allow turning cancel");
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 70, 210, 30, "  Allow turning cancel");
         bindConfigField<Config::gbAllowTurningCancellation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.allowTurningCancellation.comment);
     }
