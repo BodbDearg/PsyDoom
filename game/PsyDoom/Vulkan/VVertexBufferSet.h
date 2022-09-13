@@ -108,7 +108,10 @@ struct VVertexBufferSet {
     void ensureNumVerts(const uint32_t numVerts) noexcept {
         // The vertex buffer must be locked by 'beginFrame' and we must have a valid vertex size set
         ASSERT(vertexSize > 0);
-        ASSERT(pCurBuffer);
+        ASSERT((curSize > 0) || (!pCurBuffer));
+        
+        if (!pCurBuffer)
+            FatalErrors::raise("VVertexBufferSet::ensureNumVerts: attempting to draw without a valid framebuffer!");
 
         // What size would be good to hold this amount of vertices?
         uint32_t newSize = curSize;

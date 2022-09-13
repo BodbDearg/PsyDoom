@@ -60,6 +60,7 @@
 #include "PsyDoom/Video.h"
 #include "PsyDoom/Vulkan/VDrawing.h"
 #include "PsyDoom/Vulkan/VPipelines.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
 #include "PsyQ/LIBGPU.h"
 #include "w_wad.h"
 #include "z_zone.h"
@@ -734,11 +735,15 @@ void I_VramViewerDraw(const uint32_t texPageIdx) noexcept {
         // Otherwise at high resolution the bounding boxes can be inaccurate due to precision loss caused by the above scaling.
         #if PSYDOOM_VULKAN_RENDERER
             if (Video::isUsingVulkanRenderPath()) {
-                VDrawing::setDrawPipeline(VPipelineType::Lines);
-                VDrawing::addUILine(texLxf, texTyf, texRxf, texTyf, 255, 0, 0);
-                VDrawing::addUILine(texRxf, texTyf, texRxf, texByf, 255, 0, 0);
-                VDrawing::addUILine(texRxf, texByf, texLxf, texByf, 255, 0, 0);
-                VDrawing::addUILine(texLxf, texByf, texLxf, texTyf, 255, 0, 0);
+                // Only issue draw commands if rendering is allowed!
+                if (VRenderer::isRendering()) {
+                    VDrawing::setDrawPipeline(VPipelineType::Lines);
+                    VDrawing::addUILine(texLxf, texTyf, texRxf, texTyf, 255, 0, 0);
+                    VDrawing::addUILine(texRxf, texTyf, texRxf, texByf, 255, 0, 0);
+                    VDrawing::addUILine(texRxf, texByf, texLxf, texByf, 255, 0, 0);
+                    VDrawing::addUILine(texLxf, texByf, texLxf, texTyf, 255, 0, 0);
+                }
+
                 continue;
             }
         #endif

@@ -764,6 +764,8 @@ bool beginFrame() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if a render path is active for this frame and whether we are actually going to do some drawing.
 // This will be the case if we have a valid swapchain and render path framebuffers and have successfully started a frame.
+// 
+// IMPORTANT: if this function returns 'false' then NO draw commands should be issued!
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool isRendering() noexcept {
     return gCmdBufferRec.isRecording();

@@ -26,6 +26,7 @@
 #include "PsyDoom/Utils.h"
 #include "PsyDoom/Video.h"
 #include "PsyDoom/Vulkan/VDrawing.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
 #include "PsyDoom/Vulkan/VTypes.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/wessapi.h"
@@ -866,49 +867,52 @@ void F2_Drawer() noexcept {
             // This is needed to avoid artifacts when MSAA is enabled.
             #if PSYDOOM_VULKAN_RENDERER
                 if (Video::isUsingVulkanRenderPath()) {
-                    // Set the correct draw pipeline
-                    VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
+                    // Only issue draw commands if rendering is allowed!
+                    if (VRenderer::isRendering()) {
+                        // Set the correct draw pipeline
+                        VDrawing::setDrawPipeline(VPipelineType::UI_8bpp);
 
-                    // Decide on sprite position and texture coordinates
-                    float ul, ur;
-                    const int16_t ypos = 180 - spriteTex.offsetY;
-                    int16_t xpos;
+                        // Decide on sprite position and texture coordinates
+                        float ul, ur;
+                        const int16_t ypos = 180 - spriteTex.offsetY;
+                        int16_t xpos;
 
-                    if (!spriteFrame.flip[0]) {
-                        ul = 0.0f;
-                        ur = (float) spriteTex.width;
-                        xpos = HALF_SCREEN_W - spriteTex.offsetX;
-                    } else {
-                        ul = (float) spriteTex.width;
-                        ur = (float) 0.0f;
-                        xpos = HALF_SCREEN_W + spriteTex.offsetX - spriteTex.width;
+                        if (!spriteFrame.flip[0]) {
+                            ul = 0.0f;
+                            ur = (float) spriteTex.width;
+                            xpos = HALF_SCREEN_W - spriteTex.offsetX;
+                        } else {
+                            ul = (float) spriteTex.width;
+                            ur = (float) 0.0f;
+                            xpos = HALF_SCREEN_W + spriteTex.offsetX - spriteTex.width;
+                        }
+
+                        const float vt = 0.0f;
+                        const float vb = (float) spriteTex.height;
+                        const float xl = (float) xpos;
+                        const float xr = (float) xpos + (float) spriteTex.width;
+                        const float yt = (float) ypos;
+                        const float yb = (float) ypos + (float) spriteTex.height;
+
+                        // Get the sprite texture window and clut location.
+                        // Make sprite texture coordinates relative to a clamping texture window.
+                        uint16_t texWinX, texWinY, texWinW, texWinH;
+                        RV_GetTexWinXyWh(spriteTex, texWinX, texWinY, texWinW, texWinH);
+
+                        uint16_t clutX, clutY;
+                        RV_ClutIdToClutXy(gPaletteClutIds[MAINPAL], clutX, clutY);
+
+                        // Draw the sprite and skip the classic draw code
+                        VDrawing::addWorldQuad(
+                            { xl, yt, 0.0f, ul, vt, 128, 128, 128 },
+                            { xr, yt, 0.0f, ur, vt, 128, 128, 128 },
+                            { xr, yb, 0.0f, ur, vb, 128, 128, 128 },
+                            { xl, yb, 0.0f, ul, vb, 128, 128, 128 },
+                            clutX, clutY,
+                            texWinX, texWinY, texWinW, texWinH,
+                            VLightDimMode::None, 128, 128, 128, 128
+                        );
                     }
-
-                    const float vt = 0.0f;
-                    const float vb = (float) spriteTex.height;
-                    const float xl = (float) xpos;
-                    const float xr = (float) xpos + (float) spriteTex.width;
-                    const float yt = (float) ypos;
-                    const float yb = (float) ypos + (float) spriteTex.height;
-
-                    // Get the sprite texture window and clut location.
-                    // Make sprite texture coordinates relative to a clamping texture window.
-                    uint16_t texWinX, texWinY, texWinW, texWinH;
-                    RV_GetTexWinXyWh(spriteTex, texWinX, texWinY, texWinW, texWinH);
-
-                    uint16_t clutX, clutY;
-                    RV_ClutIdToClutXy(gPaletteClutIds[MAINPAL], clutX, clutY);
-
-                    // Draw the sprite and skip the classic draw code
-                    VDrawing::addWorldQuad(
-                        { xl, yt, 0.0f, ul, vt, 128, 128, 128 },
-                        { xr, yt, 0.0f, ur, vt, 128, 128, 128 },
-                        { xr, yb, 0.0f, ur, vb, 128, 128, 128 },
-                        { xl, yb, 0.0f, ul, vb, 128, 128, 128 },
-                        clutX, clutY,
-                        texWinX, texWinY, texWinW, texWinH,
-                        VLightDimMode::None, 128, 128, 128, 128
-                    );
 
                     break;
                 }

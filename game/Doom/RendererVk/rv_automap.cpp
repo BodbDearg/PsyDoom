@@ -289,6 +289,10 @@ static void RV_DrawAutomapPlayers() noexcept {
 // Draws the automap
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RV_DrawAutomap() noexcept {
+    // Do nothing if drawing is currently not allowed
+    if (!VRenderer::isRendering())
+        return;
+
     // Compute player map transforms, setup the draw transform matrix and switch to drawing lines
     RV_CalcPlayerMapTransforms();
     RV_SetupAutomapTransformMatrix();
