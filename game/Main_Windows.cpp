@@ -18,24 +18,30 @@ struct Args {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Appends a command line argument in wide character c-string format to the given 'std::string' (encoded as UTF-8).
+// Each argument will also have a null terminator at the end in the output string.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void appendCmdLineArg(const wchar_t* const wideStrArg, std::string& utf8ArgStrOut) noexcept {
+    // Figure out how much of a buffer is needed for this string in UTF-8 (including the null terminator, by specifying length '-1') and allocate it
+    const int bufferSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wideStrArg, -1, nullptr, 0, 0, 0);
+    const size_t argStrOldSize = utf8ArgStrOut.size();
+    utf8ArgStrOut.resize(argStrOldSize + bufferSizeNeeded);
+
+    // Convert the string to UTF-8 and include the null terminator
+    WideCharToMultiByte(CP_UTF8, 0, wideStrArg, -1, utf8ArgStrOut.data() + argStrOldSize, bufferSizeNeeded, 0, 0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Converts the Windows style single arg list (wide character) to a standard C style argument list encoded in UTF-8
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Args getCmdLineArgs(const PWSTR lpCmdLine) {
-    const bool bHaveCmdLineArgs = (lpCmdLine[0] != 0);
-
-    // Split up the command line string.
-    // Note that if the input string to 'CommandLineToArgvW' is empty then the program name will be returned instead.
-    int argc = {};
+    // Reserve some space for all the output arguments
     Args args = {};
-    LPWSTR* const argvW = CommandLineToArgvW(lpCmdLine, &argc);
+    args.argStr.reserve(1024);
 
-    // Makeup a combined argument string with all arguments separated by a null character.
-    // Add in the program name first of all, unless it was already returned by 'CommandLineToArgvW' when no command line is provided.
-    // After that then split up the arguments.
-    args.argStr.reserve(512);
-
-    if (bHaveCmdLineArgs) {
-        // Get the name of the .exe: reserve initially MAX_PATH and keep doubling the buffer size until we have enough to hold the .exe path
+    // Get the name of the .exe: reserve initially MAX_PATH and keep doubling the buffer size until we have enough to hold the .exe path.
+    // This will be the first of our output arguments.
+    {
         std::wstring exeFileName;
         exeFileName.resize(MAX_PATH);
 
@@ -43,23 +49,24 @@ static Args getCmdLineArgs(const PWSTR lpCmdLine) {
             exeFileName.resize(exeFileName.size() * 2);
         }
 
-        // Figure out how much of a buffer is needed for this string in UTF-8 (including the null terminator, by specifying length '-1') and allocate it
-        const int bufferSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, exeFileName.c_str(), -1, nullptr, 0, 0, 0);
-        const size_t argStrOldSize = args.argStr.size();
-        args.argStr.resize(argStrOldSize + bufferSizeNeeded);
-
-        // Convert the string to UTF-8 and include the null terminator
-        WideCharToMultiByte(CP_UTF8, 0, exeFileName.c_str(), -1, args.argStr.data() + argStrOldSize, bufferSizeNeeded, 0, 0);
+        appendCmdLineArg(exeFileName.c_str(), args.argStr);
     }
 
-    for (int argIdx = 0; argIdx < argc; ++argIdx) {
-        // Figure out how much of a buffer is needed for this string (including the null terminator, by specifying length '-1') and allocate it
-        const int bufferSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, argvW[argIdx], -1, nullptr, 0, 0, 0);
-        const size_t argStrOldSize = args.argStr.size();
-        args.argStr.resize(argStrOldSize + bufferSizeNeeded);
+    // Split up the command line string.
+    // 
+    // Note: if the input string to 'CommandLineToArgvW' is empty then the program path will be returned instead, so don't call it when we have no arguments!
+    // We don't need the program/.exe path since we got that already...
+    int argc = 0;
+    LPWSTR* argvW = nullptr;
 
-        // Convert the string to UTF-8 and include the null terminator
-        WideCharToMultiByte(CP_UTF8, 0, argvW[argIdx], -1, args.argStr.data() + argStrOldSize, bufferSizeNeeded, 0, 0);
+    if (lpCmdLine && lpCmdLine[0] != 0) {
+        argvW = CommandLineToArgvW(lpCmdLine, &argc);
+    }
+
+    // Makeup a combined argument string with all arguments separated by a null character.
+    // Note: the program/.exe path has already been added to the string before this, that's always the first argument.
+    for (int argIdx = 0; argIdx < argc; ++argIdx) {
+        appendCmdLineArg(argvW[argIdx], args.argStr);
     }
 
     // Now make a list of pointers to all the arguments
@@ -78,13 +85,16 @@ static Args getCmdLineArgs(const PWSTR lpCmdLine) {
         }
     }
 
-    // Free the temporary memory allocated by Windows for the split args and return the result
-    LocalFree(argvW);
+    // Free the temporary memory allocated by Windows for the separated args and return the result
+    if (argvW) {
+        LocalFree(argvW);
+        argvW = nullptr;
+    }
+
     return args;
 }
 
 #if !NDEBUG
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Allocates a debug console for the application and redirects standard streams to it
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -96,7 +106,6 @@ static void openDebugConsoleWindow() noexcept {
     freopen_s(&pDummyFile, "CONOUT$", "w", stderr);
     freopen_s(&pDummyFile, "CONOUT$", "w", stdout);
 }
-
 #endif  // #if !NDEBUG
 
 //------------------------------------------------------------------------------------------------------------------------------------------
