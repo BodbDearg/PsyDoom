@@ -13,6 +13,7 @@
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
+#include "PsyDoom/Game.h"
 
 #include <algorithm>
 
@@ -246,8 +247,15 @@ bool P_GivePower(player_t& player, const powertype_t power) noexcept {
             return true;
 
         case pw_allmap: {
-            if (player.powers[power])
-                return false;
+            // PsyDoom: the 'Computer Area Map' can now be obtained multiple times by a player if the 'multi map pickup' tweak is enabled.
+            // This fixes issues with some levels where 100% items cannot be achieved because there are multiple map powerups present.
+            #if PSYDOOM_MODS
+                if (player.powers[power] && (!Game::gSettings.bAllowMultiMapPickup))
+                    return false;
+            #else
+                if (player.powers[power])
+                    return false;
+            #endif
 
             player.powers[power] = 1;
             return true;
@@ -767,8 +775,10 @@ bool P_CanTouchSpecialThing(const mobj_t& special, const mobj_t& toucher) noexce
         case SPR_BPAK:
             return true;
 
-        // The map powerup can only be picked up once
-        case SPR_PMAP: return (!player.powers[pw_allmap]);
+        // In the original game the map powerup could only be picked up once.
+        // PsyDoom however can allow this if the 'multi map pickup' tweak is enabled.
+        case SPR_PMAP:
+            return (Game::gSettings.bAllowMultiMapPickup || (!player.powers[pw_allmap]));
 
         // Ammo can be picked up if you're not at the max cap
         case SPR_CLIP:

@@ -92,8 +92,8 @@ void initCfgSerialization_Game() noexcept {
         "Many memory allocations in the game are serviced by this system so in effect this setting defines\n"
         "one of the main memory limits for the game.\n"
         "\n"
-        "If the value of this setting is <= 0 then PsyDoom will reserve a default amount of memory - presently\n"
-        "64 MiB. This should be enough for even the most demanding user maps.\n"
+        "If the value of this setting is <= 0 then PsyDoom will reserve a default amount of memory which is\n"
+        "presently 64 MiB. This should be enough for even the most demanding user maps.\n"
         "\n"
         "For reference, the original PSX Doom had about 1.3 MiB of heap space\n"
         "available, though it also used less RAM in general being a 32-bit program instead of 64-bit.\n"
@@ -179,6 +179,7 @@ void initCfgSerialization_Game() noexcept {
         "spawned or respawned. Each time a monster gets spawned or respawned, the total is increased.\n"
         "The fix prevents the total kills from exceeding 100% when enemies like Pain Elementals appear in\n"
         "a map and allows the number of enemies remaining to be gauged more accurately.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbFixKillCount,
         true
@@ -188,6 +189,7 @@ void initCfgSerialization_Game() noexcept {
         "UseMoveInputLatencyTweak",
         "Whether to use a tweak to the original player movement code which attempts to reduce input latency\n"
         "for sideways and forward movement. The effect of this will be subtle but should improve gameplay.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbUseMoveInputLatencyTweak,
         true
@@ -214,6 +216,7 @@ void initCfgSerialization_Game() noexcept {
         " - Max BFG spray/tracer distance, from '1024' to '2048'.\n"
         "\n"
         "Extending these limits can make combat on large open maps less frustrating.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbUseExtendedPlayerShootRange,
         true
@@ -238,7 +241,9 @@ void initCfgSerialization_Game() noexcept {
     cfg.useItemPickupFix = makeConfigField(
         "UseItemPickupFix",
         "If enabled then fix a bug from the original game where sometimes the player is prevented\n"
-        "from picking up items if they are close to other items that cannot be picked up.",
+        "from picking up items if they are close to other items that cannot be picked up.\n"
+        "\n"
+        "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbUseItemPickupFix,
         true
     );
@@ -247,6 +252,7 @@ void initCfgSerialization_Game() noexcept {
         "UsePlayerRocketBlastFix",
         "Whether to apply a fix for a bug in the original games where sometimes the player would not take\n"
         "splash damage from rockets launched very close to walls.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbUsePlayerRocketBlastFix,
         true
@@ -324,6 +330,7 @@ void initCfgSerialization_Game() noexcept {
         "at 30 FPS versus 15 FPS? Enabling this setting will make view bobbing stronger, and much more\n"
         "like the original PC version. This fix also adjusts view bobbing when using PAL timings, so that\n"
         "it is not overly strong when walking.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbFixViewBobStrength,
         true
@@ -368,7 +375,9 @@ void initCfgSerialization_Game() noexcept {
     cfg.useLostSoulSpawnFix = makeConfigField(
         "UseLostSoulSpawnFix",
         "If enabled then apply a fix to the original game logic to try and prevent Lost Souls from being\n"
-        "occasionally spawned outside of level bounds.",
+        "occasionally spawned outside of level bounds.\n"
+        "\n"
+        "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbUseLostSoulSpawnFix,
         true
     );
@@ -378,6 +387,7 @@ void initCfgSerialization_Game() noexcept {
         "If enabled then apply a fix to the original game logic to prevent numeric overflows from occurring\n"
         "in the enemy 'line of sight' code. These errors make monsters unable to see the player sometimes,\n"
         "usually when there are large differences between sector floor and ceiling heights.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbUseLineOfSightOverflowFix,
         true
@@ -387,6 +397,7 @@ void initCfgSerialization_Game() noexcept {
         "FixOutdoorBulletPuffs",
         "If enabled then fix a Doom engine bug where bullet puffs don't appear sometimes when shooting\n"
         "certain walls outdoors.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbFixOutdoorBulletPuffs,
         true
@@ -396,6 +407,7 @@ void initCfgSerialization_Game() noexcept {
         "FixBlockingGibsBug",
         "If enabled then fix an original bug where sometimes monster gibs can block the player if an enemy\n"
         "is crushed while playing it's death animation sequence.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbFixBlockingGibsBug,
         true
@@ -406,6 +418,7 @@ void initCfgSerialization_Game() noexcept {
         "If enabled then fix an original PSX Doom bug where sound can travel through certain kinds of\n"
         "closed doors when it shouldn't be able to. This bug can be observed with the small window into the\n"
         "secret room, in MAP03 of Doom. It allows sound to pass through it even though it is closed.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbFixSoundPropagation,
         true
@@ -417,8 +430,20 @@ void initCfgSerialization_Game() noexcept {
         "alternate suddenly between being at the top of the ledge and bottom of the ledge. The warping\n"
         "would occur when blocking objects like the player or enemies would come into contact with the\n"
         "object affected by the warping bug.\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gbFixSpriteVerticalWarp,
+        true
+    );
+
+    cfg.allowMultiMapPickup = makeConfigField(
+        "AllowMultiMapPickup",
+        "If enabled then the player can pickup multiple 'Computer Area Map' powerups instead of just one.\n"
+        "This fixes issues with some maps where it is impossible to obtain 100% of items because there are\n"
+        "multiple 'Computer Area Map' powerups.\n"
+        "\n"
+        "Note: this setting is ignored during demos and networked games where you are not the host/server.",
+        gbAllowMultiMapPickup,
         true
     );
 
@@ -465,6 +490,7 @@ void initCfgSerialization_Game() noexcept {
     cfg.viewBobbingStrength = makeConfigField(
         "ViewBobbingStrength",
         "Multiplier for view bobbing strength, from 0.0 to 1.0 (or above, to make the walk bob stronger).\n"
+        "\n"
         "Note: this setting is ignored during demos and networked games where you are not the host/server.",
         gViewBobbingStrength,
         1.0f

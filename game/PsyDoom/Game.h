@@ -56,6 +56,7 @@ struct GameSettings {
     uint8_t     bFixBlockingGibsBug;            // Fix an original bug where monster gibs can block the player if the enemy is crushed during it's death animation
     uint8_t     bFixSoundPropagation;           // Fix an original bug where sometimes sound propagates through closed doors that should block it?
     uint8_t     bFixSpriteVerticalWarp;         // Fix an original bug where some sprites on the edge of ledges can alternate suddenly between the top and bottom of the ledge?
+    uint8_t     bAllowMultiMapPickup;           // If true then allow players to pickup more than one 'Computer Area Map'
     uint8_t     bEnableMapPatches_GamePlay;     // Enable patches for original game maps that affect gameplay?
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength

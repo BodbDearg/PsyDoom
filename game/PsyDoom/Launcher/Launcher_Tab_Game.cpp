@@ -262,23 +262,30 @@ static void makeTweaksSection(const int x, const int y) noexcept {
     new Fl_Box(FL_NO_BOX, x, y, 470, 30, "Tweaks");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 470, 180, "");
 
+    // Make the scroll view
+    const auto pScroll = new Fl_Scroll(x + 2, y + 32, 466, 176, "");
+    pScroll->scrollbar.linesize(30 * 4);
+
+    // Scrollbox padding: top
+    new Fl_Box(x + 10, y + 32, 440, 8);
+
     // Various toggles
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 210, 30, "  Input latency tweak");
-        bindConfigField<Config::gbUseMoveInputLatencyTweak, Config::gbNeedSave_Game>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Game.useMoveInputLatencyTweak.comment);
-    }
-
-    {
-        const auto pCheck = makeFl_Check_Button(x + 230, y + 40, 210, 30, "  Extended shoot range");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 210, 30, "  Extended shoot range");
         bindConfigField<Config::gbUseExtendedPlayerShootRange, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useExtendedPlayerShootRange.comment);
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 210, 30, "  SSG delay tweak");
-        bindConfigField<Config::gbUseSuperShotgunDelayTweak, Config::gbNeedSave_Game>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Game.useSuperShotgunDelayTweak.comment);
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 40, 210, 30, "  Allow multi map pickup");
+        bindConfigField<Config::gbAllowMultiMapPickup, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.allowMultiMapPickup.comment);
+    }
+
+    {
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 70, 210, 30, "  Input latency tweak");
+        bindConfigField<Config::gbUseMoveInputLatencyTweak, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.useMoveInputLatencyTweak.comment);
     }
 
     {
@@ -287,13 +294,19 @@ static void makeTweaksSection(const int x, const int y) noexcept {
         pCheck->tooltip(ConfigSerialization::gConfig_Game.allowTurningCancellation.comment);
     }
 
+    {
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 100, 210, 30, "  SSG delay tweak");
+        bindConfigField<Config::gbUseSuperShotgunDelayTweak, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.useSuperShotgunDelayTweak.comment);
+    }
+
     // Movement cancellation
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 110, 120, 26, "Allow movement cancel");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 140, 120, 26, "Allow movement cancel");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.allowMovementCancellation.comment);
 
-        const auto pChoice = new Fl_Choice(x + 260, y + 110, 190, 26);
+        const auto pChoice = new Fl_Choice(x + 250, y + 140, 190, 26);
         pChoice->add("Never");
         pChoice->add("Always");
         pChoice->add("Auto (Game accurate)");
@@ -323,11 +336,11 @@ static void makeTweaksSection(const int x, const int y) noexcept {
 
     // Use Final Doom player movement
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 140, 80, 26, "Use Final Doom player physics");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 170, 80, 26, "Use Final Doom player physics");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.useFinalDoomPlayerMovement.comment);
 
-        const auto pChoice = new Fl_Choice(x + 260, y + 140, 190, 26);
+        const auto pChoice = new Fl_Choice(x + 250, y + 170, 190, 26);
         pChoice->add("Never");
         pChoice->add("Always");
         pChoice->add("Auto (Game accurate)");
@@ -357,14 +370,20 @@ static void makeTweaksSection(const int x, const int y) noexcept {
 
     // Lost soul spawn limit
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 170, 80, 26, "Lost Soul spawn limit");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 200, 80, 26, "Lost Soul spawn limit");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.lostSoulSpawnLimit.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 260, y + 170, 190, 26);
+        const auto pInput = new Fl_Int_Input(x + 250, y + 200, 190, 26);
         bindConfigField<Config::gLostSoulSpawnLimit, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
+
+    // Scrollbox padding: bottom
+    new Fl_Box(x + 10, y + 230, 440, 10);
+
+    // Done making the scroll box
+    pScroll->end();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -56,6 +56,7 @@ bool            gbFixOutdoorBulletPuffs;
 bool            gbFixBlockingGibsBug;
 bool            gbFixSoundPropagation;
 bool            gbFixSpriteVerticalWarp;
+bool            gbAllowMultiMapPickup;
 bool            gbEnableMapPatches_GamePlay;
 bool            gbEnableMapPatches_Visual;
 bool            gbEnableMapPatches_PsyDoom;
