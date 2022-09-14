@@ -1182,6 +1182,12 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
             skull.health *= 2;
         }
     #endif
+
+    // PsyDoom: make the Lost Soul adopt the parent Pain Elemental's target player BEFORE potentially killing it for being spawned inside the wall.
+    // This change allows new co-op logic for assigning indirect monster kills to assign it to the player most likely responsible.
+    #if PSYDOOM_MODS
+        skull.target = actor.target;
+    #endif
     
     // If the skull can't move (is already stuck in a wall) then kill it immediately
     const bool bSpawnedInWall = (!P_TryMove(skull, skull.x, skull.y));

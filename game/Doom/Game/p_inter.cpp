@@ -855,6 +855,20 @@ void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept {
         // This is true even for kills caused by other monsters (infighting) and environmental stuff.
         gPlayers[0].killcount += 1;
     }
+#if PSYDOOM_MODS
+    else if ((gNetGame == gt_coop) && (target.flags & MF_COUNTKILL)) {
+        // PsyDoom: in co-op firstly try and credit the kill towards the player which is being targeted by the monster.
+        // Oftentimes this is most likely the player indirectly responsible for the creature's demise.
+        // If that fails then fall back to randomly assigning the kill to one player or another.
+        mobj_t* const pTargetOfTarget = target.target.get();
+
+        if (pTargetOfTarget && pTargetOfTarget->player) {
+            pTargetOfTarget->player->killcount += 1;
+        } else {
+            gPlayers[P_Random() & 1].killcount += 1;
+        }
+    }
+#endif
 
     // Player specific death logic
     bool bDoGibbing = false;
