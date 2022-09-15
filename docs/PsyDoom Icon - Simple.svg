@@ -7,11 +7,11 @@
    viewBox="0 0 238.125 238.125"
    version="1.1"
    id="svg8"
-   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
    sodipodi:docname="PsyDoom Icon - Simple.svg"
-   inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_24.png"
-   inkscape:export-xdpi="2.5599999"
-   inkscape:export-ydpi="2.5599999"
+   inkscape:export-filename="..\game\Resources\Generic\icon_1024.png"
+   inkscape:export-xdpi="109.22667"
+   inkscape:export-ydpi="109.22667"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -90,17 +90,6 @@
     <radialGradient
        inkscape:collect="always"
        xlink:href="#linearGradient82725"
-       id="radialGradient82591"
-       cx="293.49774"
-       cy="127.10513"
-       fx="293.49774"
-       fy="127.10513"
-       r="37.249321"
-       gradientTransform="matrix(-2.0321905,3.571778,-2.7442051,-1.5613362,1060.2129,-731.49616)"
-       gradientUnits="userSpaceOnUse" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient82725"
        id="radialGradient82591-0"
        cx="293.49774"
        cy="127.10513"
@@ -131,26 +120,37 @@
        r="37.249321"
        gradientTransform="matrix(-1.7618236,3.0965813,-2.3791103,-1.3536128,1112.9861,-609.68336)"
        gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient82725"
+       id="radialGradient82591-4"
+       cx="293.49774"
+       cy="127.10513"
+       fx="293.49774"
+       fy="127.10513"
+       r="37.249321"
+       gradientTransform="matrix(-2.0268807,3.5624456,-2.7370349,-1.5572567,1057.8612,-729.20258)"
+       gradientUnits="userSpaceOnUse" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient22482"
-       id="linearGradient115386"
+       id="linearGradient897"
        gradientUnits="userSpaceOnUse"
        x1="320.57175"
        y1="154.91666"
        x2="320.32202"
        y2="97.062233"
-       gradientTransform="matrix(1.1534585,0,0,1.1534585,-222.96094,-28.251614)" />
+       gradientTransform="matrix(1.1504447,0,0,1.1504447,-222.5676,-27.795573)" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient20871"
-       id="linearGradient115388"
+       id="linearGradient907"
        gradientUnits="userSpaceOnUse"
        x1="531.42816"
        y1="106.55203"
        x2="531.59473"
        y2="45.95055"
-       gradientTransform="matrix(1.1534585,0,0,1.1534585,-222.96094,-28.251614)" />
+       gradientTransform="matrix(1.1504447,0,0,1.1504447,-222.5676,-27.795573)" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -159,11 +159,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.70710678"
-     inkscape:cx="30.405591"
-     inkscape:cy="297.69195"
+     inkscape:zoom="0.35355339"
+     inkscape:cx="-207.88939"
+     inkscape:cy="-444.06306"
      inkscape:document-units="mm"
-     inkscape:current-layer="svg8"
+     inkscape:current-layer="layer6"
      showgrid="false"
      units="px"
      inkscape:window-width="2560"
@@ -174,7 +174,9 @@
      inkscape:pagecheckerboard="0"
      width="1000px"
      showguides="false"
-     inkscape:lockguides="true">
+     inkscape:lockguides="true"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1">
     <inkscape:grid
        type="xygrid"
        id="grid872" />
@@ -190,97 +192,71 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <rect
-     style="opacity:1;fill:#151519;fill-opacity:1;stroke:#000000;stroke-width:4.23333333;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
-     id="rect4581-1"
-     width="235.73212"
-     height="235.51408"
-     x="1.416292"
-     y="1.416388"
-     ry="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
-  <path
-     style="fill:url(#radialGradient82591);fill-opacity:1;stroke:#000000;stroke-width:0.610372;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="m 81.796648,203.45066 -6.165692,12.10016 81.849474,-64.12313 -3.23697,-3.23699 0.38535,-115.375336 -14.33522,-11.560661 -67.434053,-0.02262 9.476608,7.806788 z"
-     id="path1951"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
-  <path
-     style="fill:url(#linearGradient115386);fill-opacity:1;stroke:#000000;stroke-width:0.610372;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="m 88.001043,126.19417 19.619097,-14.82332 -0.32698,30.19161 22.12598,-17.76617 -0.218,-29.428619 20.70903,-15.913225 0.10903,72.372594 -62.018133,48.39375 z"
-     id="path1919"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
-  <path
-     style="font-variation-settings:normal;opacity:1;fill:url(#linearGradient115388);fill-opacity:1;stroke:#000000;stroke-width:0.610372;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000;stop-opacity:1"
-     d="m 88.001032,126.19417 0.272493,-98.149893 -3.651332,-2.670376 54.933467,0.16349 10.62701,8.828596 -0.2725,44.088459 -20.70903,15.913225 -0.0207,-46.369306 -21.57991,-0.07708 0.0196,63.449565 z"
-     id="path1931"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
-  <path
-     style="fill:none;stroke:#000000;stroke-width:0.305185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m 107.60048,47.92129 21.5799,0.07708 0.23876,75.79792 -22.12598,17.76617 0.30732,-93.641166"
-     id="path1939"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
-  <path
-     style="fill:none;stroke:#000000;stroke-width:0.305185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m 111.32596,51.205708 14.27835,-0.109 -0.10905,71.936612 -14.27834,11.22648 z"
-     id="path1941"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
-  <path
-     style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.610372;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="m 76.232535,215.55082 12.531457,11.46369 83.926128,-64.41602 -14.60811,-11.1708 z"
-     id="path1959"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
-  <path
-     style="fill:#0a090c;fill-opacity:1;stroke:#000000;stroke-width:0.305185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m 158.08201,151.42769 -3.83855,-3.23699 -0.0253,-5.87014 10.95135,8.56097 7.52065,10.30002 0.25368,1.04877 z"
-     id="path1961"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604"
-     sodipodi:nodetypes="ccccccc" />
-  <path
-     style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.305185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m 154.78639,32.748586 8.18964,6.309532 -0.14994,108.499072 1.86478,2.27127 0.4786,1.05307 -10.90066,-8.66626"
-     id="path1963"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604"
-     sodipodi:nodetypes="cccccc" />
-  <path
-     style="fill:#121118;fill-opacity:1;stroke:#000000;stroke-width:0.305185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m 111.32596,51.205708 14.2706,12.438084 0.008,-12.547088 z"
-     id="path1993"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
-  <path
-     style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.305185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="m 111.32596,51.205708 14.2706,12.438084 -0.10125,59.389528 -14.27834,11.22648 z"
-     id="path1999"
-     inkscape:connector-curvature="0"
-     inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
-     inkscape:export-xdpi="1.7066604"
-     inkscape:export-ydpi="1.7066604" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer6"
+     inkscape:label="Layer 1">
+    <rect
+       style="opacity:1;fill:#151519;fill-opacity:1;stroke:#000000;stroke-width:4.23333;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="rect4581-1"
+       width="235.73212"
+       height="235.51408"
+       x="1.416292"
+       y="1.416388"
+       ry="0"
+       inkscape:export-filename="C:\GIT\PsyDoom_Private\game\Resources\Generic\icon_16.png"
+       inkscape:export-xdpi="1.7066604"
+       inkscape:export-ydpi="1.7066604" />
+    <path
+       style="display:inline;fill:url(#radialGradient82591-4);fill-opacity:1;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       d="m 81.994349,203.30137 -6.149582,12.06855 81.635623,-63.95559 -3.22852,-3.22853 0.38435,-115.073948 -14.29777,-11.530449 -67.257861,-0.02252 9.45184,7.78639 z"
+       id="path1951-2"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccc" />
+    <path
+       id="path1919-4"
+       style="display:inline;fill:url(#linearGradient897);fill-opacity:1;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 129.94508,91.582576 0.17008,32.851304 c -8.17895,6.56786 -16.35789,13.13574 -24.53683,19.70361 0.11834,-11.09251 0.23667,-22.18501 0.35502,-33.27751 -5.70803,4.31267 -11.416076,8.62533 -17.124105,12.938 -0.0035,24.26195 -0.0059,48.52391 -0.0094,72.78585 19.806985,-15.45535 39.613945,-30.9107 59.420915,-46.36606 L 148.1152,77.962581 c -6.05676,4.54 -12.11351,9.079997 -18.17027,13.619995 z"
+       sodipodi:nodetypes="ccccccccc" />
+    <path
+       id="path1931-1"
+       style="display:inline;font-variation-settings:normal;fill:url(#linearGradient907);fill-opacity:1;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;stop-color:#000000"
+       d="m 89.052148,27.704783 0.01431,2.610132 -0.25713,93.483065 17.124062,-12.938 -0.0203,-63.903605 23.95936,0.08539 0.0726,44.540815 18.17052,-13.552964 0.2629,-42.804635 -9.81697,-8.154228 -50.606107,-0.152791 z"
+       sodipodi:nodetypes="cccccccccccc" />
+    <path
+       style="display:inline;fill:none;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 110.84649,51.454148 14.24104,-0.108726 -0.10873,71.748718 -14.24103,11.19715 z"
+       id="path1941-5"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       style="display:inline;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 75.844767,215.36992 12.498717,11.43374 83.706846,-64.24771 -14.56994,-11.14162 z"
+       id="path1959-1"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       style="display:inline;fill:#0a090c;fill-opacity:1;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1"
+       d="m 157.48039,151.41433 -3.22852,-3.22853 0.0787,-5.3064 10.21876,7.9902 7.501,10.2731 v 1.41325 z"
+       id="path1961-1"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccc" />
+    <path
+       style="display:inline;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 154.63622,33.111852 7.67754,6.22644 -0.10169,108.215648 1.85991,2.26534 0.47735,1.05032 -10.21876,-7.9902 0.30566,-109.767548"
+       id="path1963-3"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccc" />
+    <path
+       style="display:inline;fill:#121118;fill-opacity:1;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1"
+       d="m 110.84649,51.454148 14.23332,12.405585 0.008,-12.514299 z"
+       id="path1993-8"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
+    <path
+       id="path1999-1"
+       style="display:inline;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.21755;stroke-linecap:butt;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1"
+       d="m 110.84649,51.454148 14.23332,12.405585 -0.10098,59.234417 -14.24104,11.19715 z"
+       sodipodi:nodetypes="ccccc" />
+  </g>
 </svg>
