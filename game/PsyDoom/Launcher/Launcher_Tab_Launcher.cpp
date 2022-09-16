@@ -395,7 +395,7 @@ static void makeToolsSection(Context& ctx, const int x, const int y) noexcept {
         [](Fl_Widget*, void*) noexcept {
             const std::string userDataFolder = Utils::getOrCreateUserDataFolder();
 
-            #if WIN32
+            #if _WIN32
                 // Windows
                 const std::string shellCmd = std::string("explorer \"") + userDataFolder + "\"";
             #elif __APPLE__

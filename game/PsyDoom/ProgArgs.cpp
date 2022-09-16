@@ -11,8 +11,13 @@
 
 BEGIN_NAMESPACE(ProgArgs)
 
-// The default client and server port
-static constexpr uint16_t DEFAULT_NET_PORT = 666;
+// The default client and server port.
+// Note: on Unix type environments (except macOS) we typically can't bind ports 0..1024 as a non-root user so change the default there.
+#if defined(WIN32) || defined(__APPLE__)
+    static constexpr uint16_t DEFAULT_NET_PORT = 666;
+#else
+    static constexpr uint16_t DEFAULT_NET_PORT = 1666;
+#endif
 
 // Override path for the game's .cue file; this takes precedence over the setting in the game's config .ini files
 const char* gCueFileOverride;
