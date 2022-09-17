@@ -32,9 +32,7 @@ BEGIN_NAMESPACE(Launcher)
 //------------------------------------------------------------------------------------------------------------------------------------------
 // The PsyDoom logo in .xpm format
 //------------------------------------------------------------------------------------------------------------------------------------------
-static const char* const gLauncherLogo_xpm_data[] = {
-    #include "Launcher_Logo.xpm.h"
-};
+#include "Resources/Generic/Launcher_Logo.xpm"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Asks the user if it's desirable to reset the chosen config section and performs the reset if confirmed
