@@ -34,6 +34,14 @@ BackendType     gBackendType;   // Which type of video backend is in use
 int32_t         gTopOverscan;   // Sanitized config input: number of pixels to discard at the top of the screen in terms of the original 256x240 framebuffer
 int32_t         gBotOverscan;   // Sanitized config input: number of pixels to discard at the bottom of the screen in terms of the original 256x240 framebuffer
 
+#ifdef __linux__
+    // Linux only: an icon to use for the window (raw data)
+    #include "Resources/Linux/icon_64.raw_rgb888.c"
+
+    // Linux only: an icon to use for the window (SDL)
+    SDL_Surface* gpSdlWindowIcon;
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Pick which resolution to use for the game's window on startup
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -133,6 +141,11 @@ void initVideo() noexcept {
     int32_t winSizeY = 0;
     decideStartupResolution(winSizeX, winSizeY);
 
+    // Linux: create the icon for the window
+    #ifdef __linux__
+        gpSdlWindowIcon = SDL_CreateRGBSurfaceWithFormatFrom((void*) gIcon_64_raw_rgb888, 64, 64, 24, 64 * 3, SDL_PIXELFORMAT_RGB24);
+    #endif
+
     // Create the window
     const int32_t windowX = SDL_WINDOWPOS_CENTERED;
     const int32_t windowY = SDL_WINDOWPOS_CENTERED;
@@ -146,9 +159,15 @@ void initVideo() noexcept {
         getSdlWindowCreateFlags()
     );
 
-    if (!gpSdlWindow) {
+    if (!gpSdlWindow)
         FatalErrors::raise("Unable to create a window!");
-    }
+
+    // Linux: set the icon for the window
+    #ifdef __linux__
+        if (gpSdlWindowIcon) {
+            SDL_SetWindowIcon(gpSdlWindow, gpSdlWindowIcon);
+        }
+    #endif
 
     // Initialize the video backend
     gpVideoBackend->initRenderers(gpSdlWindow);
@@ -184,12 +203,19 @@ void shutdownVideo() noexcept {
 
     gBackendType = {};
 
-    // Destroy the SDL window and shutdown all SDL video
+    // Destroy the SDL window (and the icon on Linux) and shutdown all SDL video
     if (gpSdlWindow) {
         SDL_SetWindowGrab(gpSdlWindow, SDL_FALSE);
         SDL_DestroyWindow(gpSdlWindow);
         gpSdlWindow = nullptr;
     }
+
+    #ifdef __linux__
+        if (gpSdlWindowIcon) {
+            SDL_FreeSurface(gpSdlWindowIcon);
+            gpSdlWindowIcon = nullptr;
+        }
+    #endif
     
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
