@@ -39,6 +39,35 @@ END_DISABLE_HEADER_WARNINGS
 BEGIN_NAMESPACE(Launcher)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Linux: embedded icons
+//------------------------------------------------------------------------------------------------------------------------------------------
+#ifdef __linux__
+    #include "Resources/Linux/icon_8.raw_rgb888.c"
+    #include "Resources/Linux/icon_16.raw_rgb888.c"
+    #include "Resources/Linux/icon_20.raw_rgb888.c"
+    #include "Resources/Linux/icon_22.raw_rgb888.c"
+    #include "Resources/Linux/icon_24.raw_rgb888.c"
+    #include "Resources/Linux/icon_28.raw_rgb888.c"
+    #include "Resources/Linux/icon_30.raw_rgb888.c"
+    #include "Resources/Linux/icon_32.raw_rgb888.c"
+    #include "Resources/Linux/icon_36.raw_rgb888.c"
+    #include "Resources/Linux/icon_40.raw_rgb888.c"
+    #include "Resources/Linux/icon_42.raw_rgb888.c"
+    #include "Resources/Linux/icon_44.raw_rgb888.c"
+    #include "Resources/Linux/icon_48.raw_rgb888.c"
+    #include "Resources/Linux/icon_56.raw_rgb888.c"
+    #include "Resources/Linux/icon_60.raw_rgb888.c"
+    #include "Resources/Linux/icon_64.raw_rgb888.c"
+    #include "Resources/Linux/icon_72.raw_rgb888.c"
+    #include "Resources/Linux/icon_80.raw_rgb888.c"
+    #include "Resources/Linux/icon_96.raw_rgb888.c"
+    #include "Resources/Linux/icon_128.raw_rgb888.c"
+    #include "Resources/Linux/icon_160.raw_rgb888.c"
+    #include "Resources/Linux/icon_192.raw_rgb888.c"
+    #include "Resources/Linux/icon_256.raw_rgb888.c"
+#endif
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Dimensions of the launcher window
 //------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr int WINDOW_W = 960;
@@ -195,10 +224,51 @@ static void makeLauncherWindow(Context& ctx, const int winW, const int winH) noe
     ctx.pWindow = std::make_unique<Fl_Double_Window>((screenW - winW) / 2, (screenH - winH) / 2, winW, winH);
     ctx.pWindow->label(Utils::getGameVersionString());
 
-    // Windows: set the icon for the window
+    // Windows: set the icon for the window using the resource file
     #if _WIN32
         if (ctx.pWindow) {
             ctx.pWindow->icon(LoadIcon(GetModuleHandle(nullptr), L"IDI_ICON1"));
+        }
+    #endif
+
+    // Linux: set the icons for the window using embedded icon files.
+    // Use a ton of different sizes and let FLTK handle the details of chosing the best ones.
+    #ifdef __linux__
+        if (ctx.pWindow) {
+            const Fl_RGB_Image icon8(gIcon_8_raw_rgb888, 8, 8, 3);
+            const Fl_RGB_Image icon16(gIcon_16_raw_rgb888, 16, 16, 3);
+            const Fl_RGB_Image icon20(gIcon_20_raw_rgb888, 20, 20, 3);
+            const Fl_RGB_Image icon22(gIcon_22_raw_rgb888, 22, 22, 3);
+            const Fl_RGB_Image icon24(gIcon_24_raw_rgb888, 24, 24, 3);
+            const Fl_RGB_Image icon28(gIcon_28_raw_rgb888, 28, 28, 3);
+            const Fl_RGB_Image icon30(gIcon_30_raw_rgb888, 30, 30, 3);
+            const Fl_RGB_Image icon32(gIcon_32_raw_rgb888, 32, 32, 3);
+            const Fl_RGB_Image icon36(gIcon_36_raw_rgb888, 36, 36, 3);
+            const Fl_RGB_Image icon40(gIcon_40_raw_rgb888, 40, 40, 3);
+            const Fl_RGB_Image icon42(gIcon_42_raw_rgb888, 42, 42, 3);
+            const Fl_RGB_Image icon44(gIcon_44_raw_rgb888, 44, 44, 3);
+            const Fl_RGB_Image icon48(gIcon_48_raw_rgb888, 48, 48, 3);
+            const Fl_RGB_Image icon56(gIcon_56_raw_rgb888, 56, 56, 3);
+            const Fl_RGB_Image icon60(gIcon_60_raw_rgb888, 60, 60, 3);
+            const Fl_RGB_Image icon64(gIcon_64_raw_rgb888, 64, 64, 3);
+            const Fl_RGB_Image icon72(gIcon_72_raw_rgb888, 72, 72, 3);
+            const Fl_RGB_Image icon80(gIcon_80_raw_rgb888, 80, 80, 3);
+            const Fl_RGB_Image icon96(gIcon_96_raw_rgb888, 96, 96, 3);
+            const Fl_RGB_Image icon128(gIcon_128_raw_rgb888, 128, 128, 3);
+            const Fl_RGB_Image icon160(gIcon_160_raw_rgb888, 160, 160, 3);
+            const Fl_RGB_Image icon192(gIcon_192_raw_rgb888, 192, 192, 3);
+            const Fl_RGB_Image icon256(gIcon_256_raw_rgb888, 256, 256, 3);
+
+            const Fl_RGB_Image* iconPtrs[] = {
+                &icon8, &icon16, &icon20, &icon22,
+                &icon24, &icon28, &icon30, &icon32,
+                &icon36, &icon40, &icon42, &icon44,
+                &icon48, &icon56, &icon60, &icon64,
+                &icon72, &icon80, &icon96, &icon128,
+                &icon160, &icon192, &icon256
+            };
+
+            ctx.pWindow->icons(iconPtrs, C_ARRAY_SIZE(iconPtrs));
         }
     #endif
 
