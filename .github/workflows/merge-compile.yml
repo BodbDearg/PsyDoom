@@ -1,0 +1,101 @@
+name: Sync with Upstream Repository and Compile Nightly Builds for Windows and Linux
+
+on:
+  schedule:
+    - cron: '0 4/6 * * *'
+  workflow_dispatch:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sync and merge upstream repository with your current repository
+      uses: dabreadman/sync-upstream-repo@v1.0.0.b
+      with:
+        upstream_repo: "https://github.com/BodbDearg/PsyDoom.git"
+        upstream_branch: develop
+        downstream_branch: develop
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  build_win:
+    runs-on: windows-latest
+    if: github.event.pull_request.merged
+    needs: merge
+    steps:
+    - name: Prepare Checkout
+      uses: actions/checkout@v3
+    - name: Compile Latest Nightly
+      run: |
+        cmake -B build
+        cmake --build build --config Release
+    - name: Upload as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Windows
+        path: ${{ github.workspace }}\build\game\Release\PsyDoom.exe
+        retention-days: 1
+
+  build_linux:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged
+    needs: merge
+    steps:
+    - name: Prepare Checkout
+      uses: actions/checkout@v3
+    - name: Compile Latest Nightly
+      run: |
+        sudo apt-get install gcc g++ cmake libgl-dev libvulkan-dev libpulse-dev libx11-dev libxft-dev libxcursor-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libfreetype-dev libfreetype6-dev libfontconfig1-dev
+        mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        make
+        cd game
+        upx -9 PsyDoom
+    - name: Upload as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Linux
+        path: ${{ github.workspace }}/build/game/PsyDoom
+        retention-days: 1
+
+  create_release:
+    runs-on: ubuntu-latest
+    needs: [build_win, build_linux]
+    steps:
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v3
+    - name: Compress Artifacts
+      run: |
+        zip -j PsyDoom_Windows.zip Windows/PsyDoom.exe
+        zip -j PsyDoom_Linux.zip Linux/PsyDoom
+    - name: Generate Artifact Name
+      id: generate-name
+      run: |
+        echo "::set-output name=artifact::$(date +%Y%m%d)_$(date +%H)$(openssl rand -hex 2)"
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: nightlies/${{ steps.generate-name.outputs.artifact }}
+        release_name: Nightly ${{ steps.generate-name.outputs.artifact }}
+        draft: false
+        prerelease: true
+    - name: Upload Windows Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./PsyDoom_Windows.zip
+        asset_name: PsyDoom_${{ steps.generate-name.outputs.artifact }}_Windows_x86_64.zip
+        asset_content_type: application/zip
+    - name: Upload Linux Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./PsyDoom_Linux.zip
+        asset_name: PsyDoom_${{ steps.generate-name.outputs.artifact }}_Linux_x86_64.zip
+        asset_content_type: application/zip
