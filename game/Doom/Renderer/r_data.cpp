@@ -132,8 +132,8 @@ static void forEachLumpList(
 static void R_InitTextures() noexcept {
     // Count the number of textures overall in the game.
     // Note: could write specialized code to do this more efficiently but not it's not worth the effort, just re-use the 'for each' helper.
-    constexpr WadLumpName ln_T_START = WadUtils::makeUppercaseLumpName("T_START");
-    constexpr WadLumpName ln_T_END = WadUtils::makeUppercaseLumpName("T_END");
+    const WadLumpName ln_T_START = WadUtils::makeUppercaseLumpName("T_START");
+    const WadLumpName ln_T_END = WadUtils::makeUppercaseLumpName("T_END");
     gNumTexLumps = 0;
 
     forEachLumpList(
@@ -184,8 +184,8 @@ static void R_InitTextures() noexcept {
 static void R_InitFlats() noexcept {
     // Count the number of flats overall in the game.
     // Note: could write specialized code to do this more efficiently but not it's not worth the effort, just re-use the 'for each' helper.
-    constexpr WadLumpName ln_F_START = WadUtils::makeUppercaseLumpName("F_START");
-    constexpr WadLumpName ln_F_END = WadUtils::makeUppercaseLumpName("F_END");
+    const WadLumpName ln_F_START = WadUtils::makeUppercaseLumpName("F_START");
+    const WadLumpName ln_F_END = WadUtils::makeUppercaseLumpName("F_END");
     gNumFlatLumps = 0;
 
     forEachLumpList(
@@ -235,8 +235,8 @@ static void R_InitFlats() noexcept {
 static void R_InitSprites() noexcept {
     // Count the number of sprite lumps overall in the game.
     // Note: could write specialized code to do this more efficiently but not it's not worth the effort, just re-use the 'for each' helper.
-    constexpr WadLumpName ln_S_START = WadUtils::makeUppercaseLumpName("S_START");
-    constexpr WadLumpName ln_S_END = WadUtils::makeUppercaseLumpName("S_END");
+    const WadLumpName ln_S_START = WadUtils::makeUppercaseLumpName("S_START");
+    const WadLumpName ln_S_END = WadUtils::makeUppercaseLumpName("S_END");
     gNumSpriteLumps = 0;
 
     forEachLumpList(
