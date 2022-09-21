@@ -8,18 +8,28 @@ on:
 jobs:
   merge:
     runs-on: ubuntu-latest
+    outputs:
+      has-new-commits: ${{ steps.check-new-commits.outputs.has-new-commits }}
     steps:
     - name: Sync and merge upstream repository with your current repository
-      uses: dabreadman/sync-upstream-repo@v1.0.0.b
+      uses: dabreadman/sync-upstream-repo@v1.3.0
       with:
         upstream_repo: "https://github.com/BodbDearg/PsyDoom.git"
         upstream_branch: develop
         downstream_branch: develop
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Check for new commits
+      id: check-new-commits
+      uses: adriangl/check-new-commits-action@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        seconds: 10
+        branch: 'develop'
+
   build_win:
     runs-on: windows-latest
-    if: github.event.pull_request.merged
+    if: ${{ needs.merge.outputs.has-new-commits == 'true' }}
     needs: merge
     steps:
     - name: Prepare Checkout
@@ -37,7 +47,7 @@ jobs:
 
   build_linux:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged
+    if: ${{ needs.merge.outputs.has-new-commits == 'true' }}
     needs: merge
     steps:
     - name: Prepare Checkout
