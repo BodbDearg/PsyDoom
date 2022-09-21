@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#if WIN32
+#if _WIN32
     #include <Windows.h>
 #endif
 
@@ -196,7 +196,7 @@ static void makeLauncherWindow(Context& ctx, const int winW, const int winH) noe
     ctx.pWindow->label(Utils::getGameVersionString());
 
     // Windows: set the icon for the window
-    #if WIN32
+    #if _WIN32
         if (ctx.pWindow) {
             ctx.pWindow->icon(LoadIcon(GetModuleHandle(nullptr), L"IDI_ICON1"));
         }
