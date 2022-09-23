@@ -406,7 +406,9 @@ static void makeToolsSection(Context& ctx, const int x, const int y) noexcept {
                 #error Need to implement opening the data directory for this platform!
             #endif
 
-            std::system(shellCmd.c_str());
+            // Note: deliberately ignorning this result - best effort attempt only!
+            // Just doing this to silence 'unused result' warnings on some compilers...
+            [[maybe_unused]] int shellCmdResult = std::system(shellCmd.c_str());
         },
         &tab
     );

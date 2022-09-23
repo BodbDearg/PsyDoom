@@ -369,6 +369,9 @@ static LauncherResult runLauncher(std::vector<std::string>& programArgs) noexcep
     ctx.pWindow->show();
     Fl::run();
 
+    // This fixes a bug on Linux where the Window doesn't go away after being closed
+    Fl::flush();
+
     // Save any changes to launcher preferences and to game config itself
     if (LauncherPrefs::shouldSave(ctx.tab_launcher)) {
         LauncherPrefs::save(ctx.tab_launcher);

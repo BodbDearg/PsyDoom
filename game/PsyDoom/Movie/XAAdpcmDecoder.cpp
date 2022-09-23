@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <limits>
 
 BEGIN_NAMESPACE(movie)
 BEGIN_NAMESPACE(XAAdpcmDecoder)
