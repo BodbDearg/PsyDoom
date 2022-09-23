@@ -359,6 +359,14 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
 // This is the most common way of triggering a door.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
+    // PsyDoom crash fix: if the line is one-sided then ignore the request to activate this 'door' line - it's a mapping error.
+    // Door line specials always require two sided lines because the back side of the line is the sector which becomes the door.
+    // This fixes crashes when trying to activate lines 499 and 501 of MAP20, 'Unholy Cathedral' in 'Doom'.
+    #if PSYDOOM_FIX_UB
+        if (line.sidenum[1] <= -1)
+            return;
+    #endif
+
     // Try to activate an already existing door thinker if the sector already has that
     sector_t& doorSector = *gpSides[line.sidenum[1]].sector;
 
