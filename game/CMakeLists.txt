@@ -475,6 +475,16 @@ if (PLATFORM_WINDOWS)
         "Main_Windows.cpp"
         "Resources/Windows/PsyDoom.rc"
     )
+
+    # Generating the version info resource
+    configure_file(
+        "Resources/Windows/version.template.rc"
+        "${CMAKE_CURRENT_BINARY_DIR}/version.generated.rc"
+    )    
+
+    set(GENERATED_SOURCE_FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/version.generated.rc"
+    )
 elseif(PLATFORM_MAC)
     # macOS
     list(APPEND SOURCE_FILES
@@ -493,7 +503,7 @@ else()
 endif()
 
 # Build the executable and setup IDE folders
-add_executable(${GAME_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
+add_executable(${GAME_TGT_NAME} ${SOURCE_FILES} ${GENERATED_SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
 target_compile_definitions(${GAME_TGT_NAME} PRIVATE
