@@ -2,7 +2,7 @@ name: Sync with Upstream Repository and Compile Nightly Builds for Windows and L
 
 on:
   schedule:
-    - cron: '0 4/6 * * *'
+    - cron: '0 10/12 * * *'
   workflow_dispatch:
 
 jobs:
@@ -36,13 +36,13 @@ jobs:
       uses: actions/checkout@v3
     - name: Compile Latest Nightly
       run: |
-        cmake -B build
-        cmake --build build --config Release
+        cmake .
+        cmake --build . --config Release
     - name: Upload as Artifact
       uses: actions/upload-artifact@v3
       with:
         name: Windows
-        path: ${{ github.workspace }}\build\game\Release\PsyDoom.exe
+        path: ${{ github.workspace }}\game\Release\PsyDoom.exe
         retention-days: 1
 
   build_linux:
