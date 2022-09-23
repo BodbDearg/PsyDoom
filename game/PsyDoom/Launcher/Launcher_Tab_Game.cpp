@@ -181,7 +181,7 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
     }
 
     {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 100, 210, 30, "  Fix multi-line activation");
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 100, 210, 30, "  Fix multi-line crossing");
         bindConfigField<Config::gbFixMultiLineSpecialCrossing, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixMultiLineSpecialCrossing.comment);
     }
