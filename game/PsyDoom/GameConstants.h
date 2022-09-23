@@ -5,6 +5,10 @@
 enum class GameType : int32_t;
 struct palette_t;
 
+namespace PlayerPrefs {
+    struct Password;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Defines a demo in the classic PSX Doom or Final Doom format
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,6 +34,7 @@ struct GameConstants {
     String32                introMovies[3];                     // Intro movies to play for the game (up to 3, blank string terminated list)
     ClassicDemoDef          demos[8];                           // Demos to play for this game (up to 8, the list is terminated by an empty demo filename)
     const char*             saveFilePrefix;                     // Prefix added to all save files for this game type (like 'Doom_')
+    PlayerPrefs::Password*  pLastPasswordField;                 // Which player prefs field this game stores the last map password in
     const palette_t*        pExtraPalettes;                     // Extra palettes to load for this game on top of the 'PLAYPAL' lump
     uint8_t                 numExtraPalettes;                   // How many extra palettes there are in 'pExtraPalettes'
     uint8_t                 numPalettesRequired;                // How many palettes this game requires (at a minimum) to be available

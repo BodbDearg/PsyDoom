@@ -20,38 +20,36 @@
 
 BEGIN_NAMESPACE(PlayerPrefs)
 
+ // Sanity check!
+static_assert(C_ARRAY_SIZE(gPasswordCharBuffer) == C_ARRAY_SIZE(Password::pwChars));
+
 // Name of the user prefs file: it can reside in either the writable user data folder (default) or in the current working directory.
 // We save to the current working directory if the file is found existing there on launch.
 static constexpr const char* const PREFS_FILE_NAME = "saved_prefs.ini";
 
-// Holds the ASCII readable characters for a game password
-struct Password {
-    char pwChars[PASSWORD_LEN];
-
-    std::string getString() const noexcept {
-        char lastPasswordStr[PASSWORD_LEN + 1];
-        std::memcpy(lastPasswordStr, pwChars, sizeof(pwChars));
-        lastPasswordStr[PASSWORD_LEN] = 0;
-        return lastPasswordStr;
-    }
-};
-
-static_assert(C_ARRAY_SIZE(gPasswordCharBuffer) == C_ARRAY_SIZE(Password::pwChars));    // Sanity check!
-
 // Globally exposed settings
-int32_t             gTurnSpeedMult100;      // In-game tweakable turn speed multiplier expressed in integer percentage points (0-500)
-bool                gbAlwaysRun;            // If set then the player runs by default and the run action causes slower walking
-StatDisplayMode     gStatDisplayMode;       // Which stats should be displayed
+int32_t             gTurnSpeedMult100;          // In-game tweakable turn speed multiplier expressed in integer percentage points (0-500)
+bool                gbAlwaysRun;                // If set then the player runs by default and the run action causes slower walking
+StatDisplayMode     gStatDisplayMode;           // Which stats should be displayed
+Password            gLastPassword_Doom;         // Password for the current level the player is on: Doom
+Password            gLastPassword_FDoom;        // Password for the current level the player is on: Final Doom
+Password            gLastPassword_GecMe;        // Password for the current level the player is on: GEC Master Edition
 
 // Internally kept settings
 static int32_t      gSoundVol;                      // Option for sound volume
 static int32_t      gMusicVol;                      // Option for music volume
-static Password     gLastPassword_Doom;             // Password for the current level the player is on: Doom
-static Password     gLastPassword_FDoom;            // Password for the current level the player is on: Final Doom
 static bool         gbStartupWithVulkanRenderer;    // Startup using the Vulkan renderer? (if enabled, and the host machine is capable)
 
 // If true then we save the prefs file to the current working directory rather than to the user data folder
 static bool gbUseWorkingDirPrefsFile = false;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Converts a 'Password' object into a null terminated 'String16'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static String16 getPasswordCString(const Password& password) noexcept {
+    static_assert(sizeof(String16) > sizeof(Password));
+    return String16(password.pwChars, sizeof(password.pwChars));
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the path to the ini file used to hold player prefs
@@ -66,10 +64,19 @@ static std::string getPrefsFilePath() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Get which password setting to use for the current game
+// Returns the 'Password' struct associated with the specified preferences field name
 //------------------------------------------------------------------------------------------------------------------------------------------
-static Password& getCurGameLastPassword() noexcept {
-    return (Game::gConstants.bUseFinalDoomPasswordStorage) ? gLastPassword_FDoom : gLastPassword_Doom;
+static Password* getPasswordForPrefsFieldName(const char* const fieldName) noexcept {
+    if (std::strcmp(fieldName, "lastPassword_Doom") == 0)
+        return &gLastPassword_Doom;
+
+    if (std::strcmp(fieldName, "lastPassword_FinalDoom") == 0)
+        return &gLastPassword_FDoom;
+
+    if (std::strcmp(fieldName, "lastPassword_GecMe") == 0)
+        return &gLastPassword_GecMe;
+
+    return nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -122,14 +129,13 @@ static void loadPrefsFileIniEntry(const IniUtils::IniEntry& entry) noexcept {
     else if (entry.key == "musicVol") {
         gMusicVol = std::clamp(entry.value.tryGetAsInt(gMusicVol), VOLUME_MIN, VOLUME_MAX);
     }
-    else if ((entry.key == "lastPassword_Doom") || (entry.key == "lastPassword_FinalDoom")) {
+    else if (Password* const pPassword = getPasswordForPrefsFieldName(entry.key.c_str())) {
         // Read the password field up to the password length
-        Password& password = (entry.key == "lastPassword_Doom") ? gLastPassword_Doom : gLastPassword_FDoom;
-        std::memset(&password, 0, sizeof(Password));
-        std::memcpy(&password, entry.value.strValue.c_str(), std::min((int32_t) entry.value.strValue.length(), PASSWORD_LEN));
+        std::memset(pPassword, 0, sizeof(Password));
+        std::memcpy(pPassword->pwChars, entry.value.strValue.c_str(), std::min(entry.value.strValue.length(), (size_t) PASSWORD_LEN));
 
         // Sanitize the password chars: set unrecognised ones to null and uppercase everything
-        for (char& c : password.pwChars) {
+        for (char& c : pPassword->pwChars) {
             c = (char) std::toupper(c);
             c = (charToPwCharIndex(c) >= 0) ? c : 0;
         }
@@ -160,6 +166,7 @@ void setToDefaults() noexcept {
     // Password is empty by default
     std::memset(&gLastPassword_Doom, 0, sizeof(gLastPassword_Doom));
     std::memset(&gLastPassword_FDoom, 0, sizeof(gLastPassword_FDoom));
+    std::memset(&gLastPassword_GecMe, 0, sizeof(gLastPassword_GecMe));
 
     // Turn speed is normal by default, auto-run off and no stat display
     gTurnSpeedMult100 = 100;
@@ -205,8 +212,9 @@ void save() noexcept {
     std::fprintf(pFile, "; WARNING: this file is auto-generated by PsyDoom, it may be overwritten at any time!\n");
     std::fprintf(pFile, "soundVol = %d\n", gSoundVol);
     std::fprintf(pFile, "musicVol = %d\n", gMusicVol);
-    std::fprintf(pFile, "lastPassword_Doom = %s\n", gLastPassword_Doom.getString().c_str());
-    std::fprintf(pFile, "lastPassword_FinalDoom = %s\n", gLastPassword_FDoom.getString().c_str());
+    std::fprintf(pFile, "lastPassword_Doom = %s\n", getPasswordCString(gLastPassword_Doom).chars);
+    std::fprintf(pFile, "lastPassword_FinalDoom = %s\n", getPasswordCString(gLastPassword_FDoom).chars);
+    std::fprintf(pFile, "lastPassword_GecMe = %s\n", getPasswordCString(gLastPassword_GecMe).chars);
     std::fprintf(pFile, "turnSpeedPercentMultiplier = %d\n", gTurnSpeedMult100);
     std::fprintf(pFile, "alwaysRun = %d\n", (int) gbAlwaysRun);
     std::fprintf(pFile, "statDisplayMode = %d\n", (int) gStatDisplayMode);
@@ -250,7 +258,8 @@ void pushLastPassword() noexcept {
     std::memset(gPasswordCharBuffer, 0, sizeof(gPasswordCharBuffer));
 
     // Add in password characters to the buffer until we encounter an invalid one
-    Password& lastPassword = getCurGameLastPassword();
+    ASSERT(Game::gConstants.pLastPasswordField);
+    Password& lastPassword = *Game::gConstants.pLastPasswordField;
 
     for (const char pwChar : lastPassword.pwChars) {
         const int32_t pwCharIdx = charToPwCharIndex(pwChar);
@@ -267,7 +276,8 @@ void pushLastPassword() noexcept {
 // Remember current password input in the password system, so that it may be saved later to player preferences
 //------------------------------------------------------------------------------------------------------------------------------------------
 void pullLastPassword() noexcept {
-    Password& lastPassword = getCurGameLastPassword();
+    ASSERT(Game::gConstants.pLastPasswordField);
+    Password& lastPassword = *Game::gConstants.pLastPasswordField;
     std::memset(&lastPassword, 0, sizeof(lastPassword));
 
     for (int32_t i = 0; i < gNumPasswordCharsEntered; ++i) {

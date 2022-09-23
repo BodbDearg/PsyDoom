@@ -8,6 +8,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "FatalErrors.h"
 #include "Game.h"
+#include "PlayerPrefs.h"
 
 // Game ids for networking
 static constexpr uint32_t NET_GAMEID_DOOM                       = 0xAA11AA22;
@@ -138,6 +139,7 @@ static void populateConsts_Doom(GameConstants& consts, const bool bIsDemoVersion
     }
 
     consts.saveFilePrefix = "Doom_";
+    consts.pLastPasswordField = &PlayerPrefs::gLastPassword_Doom;
     consts.netGameId = NET_GAMEID_DOOM;
     consts.baseNumAnims = BASE_NUM_ANIMS_DOOM;
     consts.texPalette_BUTTONS = MAINPAL;
@@ -156,6 +158,7 @@ static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
     consts.demos[0] = ClassicDemoDef{ "DEMO1.LMP", true, (Game::gGameVariant == GameVariant::PAL), true  };
     consts.demos[1] = ClassicDemoDef{ "DEMO2.LMP", true, (Game::gGameVariant == GameVariant::PAL), false };
     consts.saveFilePrefix = "FDoom_";
+    consts.pLastPasswordField = &PlayerPrefs::gLastPassword_FDoom;
     consts.netGameId = NET_GAMEID_FINAL_DOOM;
     consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;
     consts.texPalette_BUTTONS = UIPAL2;
@@ -232,6 +235,7 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
     consts.introMovies[1] = "DATA/GEC.STR";
     consts.introMovies[2] = "DATA/DWORLD.STR";
     consts.saveFilePrefix = "GecMe_";
+    consts.pLastPasswordField = &PlayerPrefs::gLastPassword_GecMe;
     consts.netGameId = NET_GAMEID_GEC_ME_BETA3;
     consts.pExtraPalettes = GEC_ME_BETA3_EXTRA_PALETTES;
     consts.numExtraPalettes = C_ARRAY_SIZE(GEC_ME_BETA3_EXTRA_PALETTES);

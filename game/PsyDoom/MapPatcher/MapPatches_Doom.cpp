@@ -65,6 +65,11 @@ static void patchMap_UnholyCathedral() noexcept {
         // Fix a secret door not opening because it requires the player to walk across it's line.
         // The door should be the yellow key also. Only apply this patch if not playing a classic demo because it affects gameplay!
         gpLines[505].special = 34;
+
+        // Fix 2 one-sided lines by the north-east teleporter being incorrectly tagged as 'door' lines.
+        // In the original game activating these lines could cause a crash.
+        gpLines[499].special = 0;
+        gpLines[501].special = 0;
     }
 
     if (shouldApplyMapPatches_Visual()) {

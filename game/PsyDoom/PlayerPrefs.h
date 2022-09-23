@@ -17,6 +17,11 @@ BEGIN_NAMESPACE(PlayerPrefs)
 // Length of PSX Doom passwords
 constexpr int32_t PASSWORD_LEN = 10;
 
+// Holds the ASCII readable characters for a game password
+struct Password {
+    char pwChars[PASSWORD_LEN];
+};
+
 // Minimum and maximum values for sound and music volume
 constexpr int32_t VOLUME_MIN = 0;
 constexpr int32_t VOLUME_MAX = 100;
@@ -25,9 +30,12 @@ constexpr int32_t VOLUME_MAX = 100;
 constexpr int32_t TURN_SPEED_MULT_MIN = 1;
 constexpr int32_t TURN_SPEED_MULT_MAX = 500;
 
-extern int32_t          gTurnSpeedMult100;
-extern bool             gbAlwaysRun;
-extern StatDisplayMode  gStatDisplayMode;
+extern int32_t              gTurnSpeedMult100;
+extern bool                 gbAlwaysRun;
+extern StatDisplayMode      gStatDisplayMode;
+extern Password             gLastPassword_Doom;
+extern Password             gLastPassword_FDoom;
+extern Password             gLastPassword_GecMe;
 
 void setToDefaults() noexcept;
 void load() noexcept;
