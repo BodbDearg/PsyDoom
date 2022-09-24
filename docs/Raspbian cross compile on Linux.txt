@@ -9,7 +9,7 @@ Source: https://www.j1nx.nl/diy/crosscompiling-software-for-raspbian-in-a-chroot
         export CROSS_ROOT_DIR=~/build-envs/armhf
         #   Target CPU architecture (E.G 'armhf' or 'arm64')
         export CROSS_ARCH=armhf
-        #   Which version of Debian the target version of Raspbian is based on (E.G: 'bullseye', 'buster', 'stretch' etc.)
+        #   Which version of Debian the target version of Raspbian is based on (E.G: 'bullseye', 'buster' etc.)
         export CROSS_DEBIAN_VER=buster
         #   Where the PsyDoom GIT repository is located on your system
         export PSYDOOM_REPO_PATH=~/GIT/PsyDoom
@@ -36,7 +36,7 @@ Source: https://www.j1nx.nl/diy/crosscompiling-software-for-raspbian-in-a-chroot
 
 (8) Install all required packages for building inside the new environment and verify the correct GCC version (with corresponding architecture) is installed:
         sudo chroot "${CROSS_ROOT_DIR}"
-        apt-get install gcc g++ cmake libgl-dev libvulkan-dev libpulse-dev libx11-dev libxft-dev libxcursor-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libfreetype-dev libfreetype6-dev libfontconfig1-dev
+        apt-get install gcc g++ cmake libgl-dev libvulkan-dev libpulse-dev libx11-dev libxft-dev libxcursor-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libfreetype6-dev libfontconfig1-dev
 	    gcc -v
         exit
 
