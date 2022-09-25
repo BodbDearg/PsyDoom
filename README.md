@@ -82,6 +82,7 @@ Here is a recent video showing the port in action:
     - `-client 192.168.0.2:12345`
 - To add extra IWADs to the game, use the `-file <WAD_FILE_PATH>` argument.
     - See [Extension IWADS](docs/PsyDoom%20Modding%20Overview.md#Extension-IWADS) in the [PsyDoom Modding Overview](docs/PsyDoom%20Modding%20Overview.md) for more details on this.
+- To skip showing the launcher on startup specify `-nolauncher` or any other command line argument.
 
 ## How to build
 - Requires CMake 3.13.4 or higher to generate the platform specific project files and/or build scripts.
