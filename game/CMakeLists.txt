@@ -572,7 +572,14 @@ if (PLATFORM_WINDOWS)
     set_property(TARGET ${GAME_TGT_NAME} PROPERTY VS_DPI_AWARE "PerMonitor")    # Make the game DPI-aware so it correctly detects screen resolution
     target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DUNICODE -D_UNICODE)   # Use Unicode WinMain()
 elseif (PLATFORM_MAC)
-    SET_TARGET_PROPERTIES(${GAME_TGT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
+    set_target_properties(${GAME_TGT_NAME} PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_BUNDLE_NAME "PsyDoom"
+        MACOSX_BUNDLE_BUNDLE_VERSION ${GAME_VERSION_MAJOR}.${GAME_VERSION_MINOR}.${GAME_VERSION_BUILD}
+        MACOSX_BUNDLE_INFO_STRING "${GAME_VERSION_STR}"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${GAME_VERSION_STR}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${GAME_VERSION_STR}"
+    )
 elseif (PLATFORM_LINUX)
     target_compile_options(${GAME_TGT_NAME} PRIVATE -pthread)
 endif()
