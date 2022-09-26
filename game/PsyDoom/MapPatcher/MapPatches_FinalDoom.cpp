@@ -8,6 +8,19 @@
 BEGIN_NAMESPACE(MapPatches)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP07: Geryon
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Geryon() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a door leading to the secret area with the super shotgun not having it's texture move as it lowers
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 966);
+        gpSides[gpLines[966].sidenum[0]].rowoffset = 64 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP09: Nessus
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Nessus() noexcept {
@@ -17,6 +30,18 @@ static void patchMap_Nessus() noexcept {
         // Fix the BFG secret being inaccessible - transfer it to a neighboring sector:
         gpSectors[57].special = 0;
         gpSectors[60].special = 9;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP15: Human Barbeque
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_HumanBarbeque() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix the track on a door inside the secret room near the exit moving when it shouldn't
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 315, 317);
     }
 }
 
@@ -102,7 +127,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     {  88648, 0xCA130E217D79594D, 0x1241B18E3E7D8110, applyOriginalMapCommonPatches },      // MAP04
     { 132897, 0x2E8E3492E704154D, 0x0DE2F0470D62DDB8, applyOriginalMapCommonPatches },      // MAP05
     {  88004, 0xC12D7BD6D414250C, 0xF981017C0C8ADF20, applyOriginalMapCommonPatches },      // MAP06
-    { 165920, 0x903B721BA84B1FFD, 0xCED86BF62E5CE0BE, applyOriginalMapCommonPatches },      // MAP07
+    { 165920, 0x903B721BA84B1FFD, 0xCED86BF62E5CE0BE, patchMap_Geryon               },      // MAP07
     { 151747, 0x93EA3A4DE9DA978B, 0x3D27F6255CA0B9CC, applyOriginalMapCommonPatches },      // MAP08
     { 102104, 0x1504DC20E04BE8F1, 0x3A63FD22BC9C0D8C, patchMap_Nessus               },      // MAP09
     { 139820, 0x5EDEF8B2A51779E8, 0x8D1314A4F889EFCC, applyOriginalMapCommonPatches },      // MAP10
@@ -110,7 +135,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 106776, 0xAD3AADE890018818, 0x7D70AC984E7211CC, applyOriginalMapCommonPatches },      // MAP12
     { 152855, 0xD4905C759C1713E1, 0x1B78CCD5275A40EB, applyOriginalMapCommonPatches },      // MAP13
     {  54706, 0x979F686C4297312E, 0xB9EA33C07E20F4E3, applyOriginalMapCommonPatches },      // MAP14
-    {  77891, 0x20F93855131B2C1A, 0xD98E0D6C4EAEC765, applyOriginalMapCommonPatches },      // MAP15
+    {  77891, 0x20F93855131B2C1A, 0xD98E0D6C4EAEC765, patchMap_HumanBarbeque        },      // MAP15
     { 156972, 0xC4DF66BEDEE0E1C4, 0xFB56E82FA017FD9D, applyOriginalMapCommonPatches },      // MAP16
     { 179622, 0x97DFE2C07BE92D3C, 0xEC29BA71305623B3, applyOriginalMapCommonPatches },      // MAP17
     { 131823, 0xADD51543E9578AB7, 0xA3E479551A015464, applyOriginalMapCommonPatches },      // MAP18

@@ -250,6 +250,13 @@ void S_StartMusic() noexcept {
 
     S_StopMusic();
 
+    // PsyDoom: ignore the command to start sequencer music if we're already playing a CD audio track.
+    // This situation can happen if the game is loaded from a save file where a CD music track was playing.
+    // In that situation the load process will have already started the CD music playing by this point:
+    if (psxcd_get_playing_track() > 1)
+        return;
+
+    // Play the music sequence for this map if there is one:
     if (gCurMusicSeqIdx != 0) {
         const MapInfo::Map* const pMap = MapInfo::getMap(gGameMap);
         const bool bPlayCdMusic = (pMap) ? pMap->bPlayCdMusic : false;
