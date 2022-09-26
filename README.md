@@ -7,7 +7,7 @@ The port is very accurate in terms of its gameplay and has been verified to repr
 
 A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE) by [Erick Vásquez García (Erick194)](https://github.com/Erick194), also completely recreates the Doom source code for the actual PlayStation hardware and 'PsyQ' SDK. The reverse engineering work for that project was used to help accelerate the transition to native C++ code for this project and to cross verify the reverse engineering work in both projects.
 
-Here is a recent video showing the port in action:
+Here is a video showing the port in action:
 
 [![Alt text](https://img.youtube.com/vi/0miyRHptfeA/0.jpg)](https://youtu.be/0miyRHptfeA)
 
