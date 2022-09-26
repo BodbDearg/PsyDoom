@@ -34,6 +34,8 @@ jobs:
     steps:
     - name: Prepare Checkout
       uses: actions/checkout@v3
+      with:
+        ref: 'develop'
     - name: Compile Latest Nightly
       run: |
         cmake .
@@ -52,6 +54,8 @@ jobs:
     steps:
     - name: Prepare Checkout
       uses: actions/checkout@v3
+      with:
+        ref: 'develop'
     - name: Compile Latest Nightly
       run: |
         sudo apt-get install gcc g++ cmake libgl-dev libvulkan-dev libpulse-dev libx11-dev libxft-dev libxcursor-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libfreetype-dev libfreetype6-dev libfontconfig1-dev
