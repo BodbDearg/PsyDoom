@@ -433,15 +433,23 @@ static void deserializeObjects(const std::unique_ptr<SrcT>& pSrcObjs, const std:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Load helper: plays the specified CD track if not already playing
+// Load helper: if the specified CD track is valid, plays it if not already playing.
+// If the CD track given is NOT valid then this function will instead stop any currently playing CD track.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void playCdTrackIfNeeded(const int32_t cdTrackNum) noexcept {
-    if (cdTrackNum > 0) {
-        const int32_t playingCdTrack = psxcd_get_playing_track();
+static void playOrStopCdTrackIfNeeded(const int32_t cdTrackNum) noexcept {
+    const int32_t playingCdTrack = psxcd_get_playing_track();
 
+    if (cdTrackNum > 0) {
+        // Supposed to be playing a CD track, ensure it's playing now:
         if (playingCdTrack != cdTrackNum) {
             S_StopMusic();
             psxcd_play_at_andloop(cdTrackNum, gCdMusicVol, 0, 0, cdTrackNum, gCdMusicVol, 0, 0);
+        }
+    }
+    else {
+        // Not supposed to be playing a CD track, make sure one is not playing:
+        if (playingCdTrack > 0) {
+            psxcd_stop();
         }
     }
 }
@@ -649,8 +657,8 @@ LoadSaveResult load() noexcept {
     associateThinkersWithSectors(gPlats);
     addActiveCeilingsAndPlats();
 
-    // Post load actions: play CD music if required, kill interpolations and update sector draw params
-    playCdTrackIfNeeded(saveData.globals.curCDTrack);
+    // Post load actions: play or stop CD music if required, kill interpolations and update sector draw params
+    playOrStopCdTrackIfNeeded(saveData.globals.curCDTrack);
     R_SnapPlayerInterpolation();
     updateSectorDrawParams();
 
