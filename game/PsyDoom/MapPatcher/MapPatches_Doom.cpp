@@ -17,15 +17,29 @@ static void patchMap_CommandControl() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        // Fix bugs where step textures appear black: these steps need to have their 'lower unpegged' flag cleared
-        modifyLinedefs(
-            [](line_t& line) { line.flags &= ~ML_DONTPEGBOTTOM; },
-            337, 746, 747, 748
+        removeFlagsFromLinedefs(
+            ML_DONTPEGBOTTOM,
+            // Fix bugs where step textures appear black
+            337, 746, 747, 748,
+            // Fix the texture on the bridge near the exit not moving as it is raised:
+            433, 434
         );
 
         // This step needs a texture coordinate adjustment
         gpSides[253].rowoffset = 0;
         gpSides[253].rowoffset.snap();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP06: Central Processing
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_CentralProcessing() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix a door track for the southern red door unintentionally moving with the door
+        gpLines[964].flags |= ML_DONTPEGBOTTOM;
     }
 }
 
@@ -39,6 +53,18 @@ static void patchMap_CommandCenter() noexcept {
         // Fix a trap pillar containing a Baron not lowering.
         // The pillar doesn't lower because the Baron is stuck in the ceiling - fix by raising the ceiling.
         gpSectors[71].ceilingheight = 232 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP18: Pandemonium
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Pandemonium() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix the texture of pillars to the north of the start point not moving as they are lowered
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 529, 531, 533, 534, 540, 541);
     }
 }
 
@@ -153,6 +179,21 @@ static void patchMap_Entryway() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP44: Suburbs
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Suburbs() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix some textures by the secret exit door moving when they should not
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 573, 781, 782);
+
+        // Fix the texture of the elevator inside the secret area with the BFG not moving properly
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 598);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP45: Tenements
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Tenements() noexcept {
@@ -230,7 +271,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 110284, 0x9BFF3A037128D1CA, 0x12F445D3F9B8BAC6, applyOriginalMapCommonPatches },      // MAP03
     {  92341, 0x1D79B5BDE5426081, 0x4E9413A01EAF4B4A, patchMap_CommandControl       },      // MAP04
     {  89865, 0x0A8ACFFC833D6E36, 0x070A7A5CDDEE1CE0, applyOriginalMapCommonPatches },      // MAP05
-    { 124094, 0x2097E86807523FF3, 0xA2F0C52632B12372, applyOriginalMapCommonPatches },      // MAP06
+    { 124094, 0x2097E86807523FF3, 0xA2F0C52632B12372, patchMap_CentralProcessing    },      // MAP06
     { 108814, 0xD89ECAA4823454FD, 0xC7C178FA280CA569, applyOriginalMapCommonPatches },      // MAP07
     {  51882, 0x94BC7E609E1AC29A, 0xC1B6D482725C2C34, applyOriginalMapCommonPatches },      // MAP08
     {  47025, 0x492736BF0840ED38, 0x92A3AA841280B742, applyOriginalMapCommonPatches },      // MAP09
@@ -242,7 +283,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  83539, 0xFDA28FD54C7E9A92, 0xE7F93F0E3C5C1D7F, applyOriginalMapCommonPatches },      // MAP15
     {  27956, 0x39B94C1CF5E19EB0, 0xE0A691816A8C166A, applyOriginalMapCommonPatches },      // MAP16
     {  56466, 0x4F240435B71CA6CA, 0xFA106C3EC5548BF0, applyOriginalMapCommonPatches },      // MAP17
-    {  71253, 0x0541C17B11B2DC05, 0x577D152A01E48073, applyOriginalMapCommonPatches },      // MAP18
+    {  71253, 0x0541C17B11B2DC05, 0x577D152A01E48073, patchMap_Pandemonium          },      // MAP18
     {  75515, 0xFE716B01FE414A2A, 0xA3A7AFA1956DF697, patchMap_HouseOfPain          },      // MAP19
     { 143483, 0x36A01960BAD36249, 0x2BC3BF03E0ED6D64, patchMap_UnholyCathedral      },      // MAP20
     {  86538, 0x403A02FD929949E5, 0xB4185CB43CEA9B46, applyOriginalMapCommonPatches },      // MAP21
@@ -268,7 +309,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 116024, 0x59800E5259D02FD8, 0x28EB273CFC8E41CC, applyOriginalMapCommonPatches },      // MAP41
     { 109934, 0x7E22F4311F3955D5, 0x16E918F5C11AD780, applyOriginalMapCommonPatches },      // MAP42
     { 192997, 0x7B86B9C35B754883, 0xD5F5CE44AB12898D, applyOriginalMapCommonPatches },      // MAP43
-    { 110145, 0xE296122ADE38AB74, 0x13505BF841234D4C, applyOriginalMapCommonPatches },      // MAP44
+    { 110145, 0xE296122ADE38AB74, 0x13505BF841234D4C, patchMap_Suburbs              },      // MAP44
     { 158462, 0x37D6A1335F058A41, 0xA82656A6FDEB132B, patchMap_Tenements            },      // MAP45
     { 105883, 0x0CA0922874005BC1, 0x37173A0C68F8FA6A, patchMap_TheCourtyard         },      // MAP46
     { 186755, 0x73E10EF08AE21FD5, 0x8115F467FE2CD3CA, patchMap_TheCitadel           },      // MAP47
