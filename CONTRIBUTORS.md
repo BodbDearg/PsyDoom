@@ -1,12 +1,23 @@
 PsyDoom contributors (sorted alphabetically)
 ============================================
 
+* **[Akis-02](https://github.com/Akis-02)**
+    * Discovered issues with alt-tabbing out of the game:
+        https://github.com/BodbDearg/PsyDoom/issues/38
+
 * **[aybe](https://github.com/aybe)**
     * Ensure DPI aware for correct screen resolution detection:
         https://github.com/BodbDearg/PsyDoom/pull/13
 
-* **[Erick Vásquez García (Erick194)](https://github.com/Erick194)**
+* **[Ch0wW](https://github.com/BodbDearg/PsyDoom/issues/18)**
+    * Reporting co-op desync issues:
+        https://github.com/BodbDearg/PsyDoom/issues/18
 
+* **[DoktorCranium](https://github.com/DoktorCranium)**
+    * Testing the macOS ARM build and confirming it works:
+        https://github.com/BodbDearg/PsyDoom/issues/27
+
+* **[Erick Vásquez García (Erick194)](https://github.com/Erick194)**
     * Author of the sister project of PsyDoom: [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE)
         * This project which completely recreates the PSX Doom source code for the original hardware serves as an invaluable source of information for this project. It helped to greatly accelerate PsyDoom's transition to native C++.
         * Also, for the reversed Final Doom code also see: [PSXFINALDOOM-RE](https://github.com/Erick194/PSXFINALDOOM-RE)
@@ -54,7 +65,6 @@ PsyDoom contributors (sorted alphabetically)
             https://github.com/BodbDearg/PsyDoom/commit/7e97c311acd4b8528737d219c35ef8ad36608a34#commitcomment-52113983
 
 * **[fenderc01](https://github.com/fenderc01)**
-
     * Found and raised an issue with a 'ptrToVmAddr' error:
          https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2121606
     * Suggestion to make opposite movement directions cancel:
@@ -77,24 +87,55 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/BodbDearg/PsyDoom/issues/8
     * Updated Open PsyDoom Config Folder.bat:
         https://github.com/BodbDearg/PsyDoom/pull/9
+    * Discovered a bug with the pain face for both players in deathmatch:
+        https://github.com/BodbDearg/PsyDoom/issues/30
+    * Discovered a bug where negative frags do not display correctly:
+        https://github.com/BodbDearg/PsyDoom/issues/31
+    * Identified inconsistencies concerning co-op kill stats:
+        https://github.com/BodbDearg/PsyDoom/issues/32
+    * Discovered a co-op bug where players start with the fists selected:
+        https://github.com/BodbDearg/PsyDoom/issues/33
+    * Discovered a co-op bug where secrets only count for the player who finds them:
+        https://github.com/BodbDearg/PsyDoom/issues/34
+    * Discovered a co-op bug where keycards don't make the pickup sound:
+        https://github.com/BodbDearg/PsyDoom/issues/35
+    * Identified some map bugs in the 'GEC Master Edition: Beta 3'
+        https://github.com/BodbDearg/PsyDoom/issues/41
+    * Suggestion for per-game saves:
+        https://github.com/BodbDearg/PsyDoom/issues/42
+    * Map patches for various issues in 'Doom' and 'Final Doom':
+        https://github.com/BodbDearg/PsyDoom/pull/43
+        https://github.com/BodbDearg/PsyDoom/issues/51
+    * Identified a bug with loading saves when using the 'Nightmare' difficulty:
+        https://github.com/BodbDearg/PsyDoom/issues/44
+    * Identified kill count issues with spawned Lost Souls that die immediately in co-op:
+        https://github.com/BodbDearg/PsyDoom/issues/45
+    * Discovered a bug where the launcher sometimes does not start when it should:
+        https://github.com/BodbDearg/PsyDoom/issues/48
+    * Discovered crashes in MAP20 of Doom ('Unholy Cathedral'):
+        https://github.com/BodbDearg/PsyDoom/issues/53
+
+* **[getphobo](https://github.com/getphobo)**
+    * Raised a bug about not being able to achieve 100% items on some maps due to multiple 'Computer Area Maps':
+        https://github.com/BodbDearg/PsyDoom/issues/49
 
 * **[j0r9](https://github.com/j0r9)**
-
     * Suggestion to interpolate weapon bobbing:
         https://github.com/BodbDearg/PsyDoom/issues/2
 
 * **[Jakub Czekański (JaCzekanski)](https://github.com/JaCzekanski)**
-
     * Author of the excellent Avocado PlayStation 1 emulator, which PsyDoom used previously as a host and bootstrap environment in addition to emulating specific devices such as the SPU and GPU while the game was being transitioned to a fully native & standalone app:
         https://github.com/JaCzekanski/Avocado
 
 * **Martin Korth**
-
    * Author of the NO$PSX emulator and also of the NO$PSX specs, which have been extremely helpful during development:
         https://problemkaputt.de/psx-spx.htm
 
-* **[Samuel Villarreal (svkaiser)](https://github.com/svkaiser)**
+* **[minirop](https://github.com/minirop)**
+    * Compile fixes for Linux:
+        https://github.com/BodbDearg/PsyDoom/pull/21
 
+* **[Samuel Villarreal (svkaiser)](https://github.com/svkaiser)**
     * Console DOOM reverse engineering, specs & tools:
         https://www.doomworld.com/forum/topic/38608-the-console-doom-hacking-project-console-specs
     * Doom64-EX source code (DOOM 64 was based on PSX DOOM, thus can serve as a reference point for it):

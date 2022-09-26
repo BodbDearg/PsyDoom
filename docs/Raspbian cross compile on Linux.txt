@@ -46,7 +46,7 @@ Source: https://www.j1nx.nl/diy/crosscompiling-software-for-raspbian-in-a-chroot
 (10) Check the current cmake version using the following command:
         sudo chroot "${CROSS_ROOT_DIR}" cmake --version
 
-    At the time of writing for PsyDoom it should be >= 3.15. See PsyDoom's root 'CMakeLists.txt' to confirm this requirement.
+    At the time of writing for PsyDoom it should be >= 3.13.4. See PsyDoom's root 'CMakeLists.txt' to confirm this requirement.
 
 (11) If the CMake provided by the distribution is too old, then build and install it from source using steps similar to these:
         sudo chroot "${CROSS_ROOT_DIR}"

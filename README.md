@@ -19,6 +19,10 @@ Here is a recent video showing the port in action:
 - [Command line arguments](#Command-line-arguments)
 - [How to build](#How-to-build)
 
+## Other documents
+- [License](LICENSE)
+- [Contributors](CONTRIBUTORS.md)
+
 ## Requirements
 - Supported platforms are Windows, macOS or Linux.
   - Supported versions of Linux are Debian 'Buster' based distros or later. Other variants of Linux *may* work but have not been tested.
