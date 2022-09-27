@@ -376,17 +376,6 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
             return ga_nothing;
     #endif
 
-    // PsyDoom: set the info for the current classic demo in case we are playing one of those.
-    // Use the current game settings to determine the demo's game behavior and format.
-    #if PSYDOOM_MODS
-    {
-        ClassicDemoDef& demoDef = gCurClassicDemo;
-        demoDef = {};
-        demoDef.bFinalDoomDemo = (Game::gGameType != GameType::Doom);
-        demoDef.bPalDemo = (Game::gGameVariant == GameVariant::PAL);
-    }
-    #endif
-
     // Open the demo file
     const uint32_t openFileIdx = OpenFile(file);
 
