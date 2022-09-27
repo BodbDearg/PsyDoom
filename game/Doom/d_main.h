@@ -33,6 +33,7 @@ extern gametype_t   gStartGameType;
 extern bool         gbDidAbortGame;
 
 #if PSYDOOM_MODS
+    extern bool         gbStartupWarpToMap;
     extern double       gPrevFrameDuration;
     extern float        gPerfAvgFps;
     extern float        gPerfAvgUsec;

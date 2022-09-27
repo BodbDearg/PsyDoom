@@ -3,8 +3,10 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "ProgArgs.h"
 
+#include "Doom/doomdef.h"
 #include "WadList.h"
 
+#include <algorithm>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -49,6 +51,10 @@ bool gbPistolStart = false;
 // Cheat intended for speed running: player moves and fires 2x faster.
 // Doors and platforms also move 2x faster.
 bool gbTurboMode = false;
+
+// The map number and skill to use if warping on startup straight to a map.
+int32_t gWarpMap = 0;
+skill_t gWarpSkill = sk_hard;
 
 // Host that the client connects to: private so we don't expose std::string everywhere
 static std::string gServerHost;
@@ -240,6 +246,24 @@ static int parseArg_nolauncher(const int argc, const char* const* const argv) {
     return 0;
 }
 
+static int parseArg_warp(const int argc, const char* const* const argv) {
+    if ((argc >= 2) && (std::strcmp(argv[0], "-warp") == 0)) {
+        gWarpMap = std::atoi(argv[1]);
+        return 2;
+    }
+
+    return 0;
+}
+
+static int parseArg_skill(const int argc, const char* const* const argv) {
+    if ((argc >= 2) && (std::strcmp(argv[0], "-skill") == 0)) {
+        gWarpSkill = (skill_t) std::clamp(std::atoi(argv[1]), 0, (int) NUMSKILLS - 1);
+        return 2;
+    }
+
+    return 0;
+}
+
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_cue,
@@ -255,7 +279,9 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_server,
     parseArg_client,
     parseArg_file,
-    parseArg_nolauncher
+    parseArg_nolauncher,
+    parseArg_warp,
+    parseArg_skill
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,6 +311,11 @@ static void validateAndSanitizeArgs() noexcept {
     if (gbRecordDemos && gCheckDemoResultFilePath[0]) {
         std::printf("Can't use '-checkresult' in conjunction with '-record'! Arg will be ignored...\n");
         gCheckDemoResultFilePath = "";
+    }
+
+    if ((gWarpMap > 0) && gPlayDemoFilePath[0]) {
+        std::printf("The '-warp' argument conflicts with '-playdemo'! Arg will be ignored...\n");
+        gWarpMap = 0;
     }
 }
 

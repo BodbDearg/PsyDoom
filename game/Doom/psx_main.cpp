@@ -68,10 +68,12 @@ int psx_main(const int argc, const char* const* const argv) noexcept {
 
         if ((!cueFilePath) || (!cueFilePath[0])) {
             FatalErrors::raise(
-                "The path to the .cue file for the game disc is not specified; PsyDoom needs this in order to run!\n\n"
-                "You can set the path to the .cue file by changing the 'CueFilePath' setting in 'game_cfg.ini'.\n"
-                "This configuration file will be found in PsyDoom's configuration directory.\n\n"
-                "Alternatively, you can use the '-cue <CUE_FILE_PATH>' program argument to specify the .cue file also."
+                "The path to the .cue file for the game disc is not specified; PsyDoom needs this in order to run!\n"
+                "\n"
+                "You can set the path to the default .cue file by changing the 'CueFilePath' setting in 'game_cfg.ini'\n"
+                "or via the 'Game' settings tab in the launcher.\n"
+                "\n"
+                "Alternatively, you can use the '-cue <CUE_FILE_PATH>' program argument to specify the .cue file."
             );
         }
 

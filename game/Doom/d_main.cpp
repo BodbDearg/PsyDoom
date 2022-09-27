@@ -84,17 +84,18 @@ gametype_t  gStartGameType      = gt_single;
 bool gbDidAbortGame = false;
 
 #if PSYDOOM_MODS
-    double      gPrevFrameDuration;         // How long the previous frame took: used to try and provide more accurate interpolation
-    float       gPerfAvgFps;                // Performance counter: averaged FPS for the last few frames
-    float       gPerfAvgUsec;               // Performance counter: averaged microseconds duration for the last few frames
-    bool        gbIsFirstTick;              // Set to 'true' for the very first tick only, 'false' thereafter
-    bool        gbKeepInputEvents;          // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
-    std::byte*  gpDemoBufferEnd;            // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
-    bool        gbDoInPlaceLevelReload;     // PsyDoom developer feature: reload the map but preserve player position and orientation? Allows for fast preview of changes.
-    fixed_t     gInPlaceReloadPlayerX;      // Where to position the player after doing the 'in place' level reload (x)
-    fixed_t     gInPlaceReloadPlayerY;      // Where to position the player after doing the 'in place' level reload (y)
-    fixed_t     gInPlaceReloadPlayerZ;      // Where to position the player after doing the 'in place' level reload (z)
-    angle_t     gInPlaceReloadPlayerAng;    // Angle of the player when doing an 'in place' level releoad
+    bool        gbStartupWarpToMap = false;     // PsyDoom: warp straight to a map and bypass menus on starting a new game? (map development tool)
+    double      gPrevFrameDuration;             // How long the previous frame took: used to try and provide more accurate interpolation
+    float       gPerfAvgFps;                    // Performance counter: averaged FPS for the last few frames
+    float       gPerfAvgUsec;                   // Performance counter: averaged microseconds duration for the last few frames
+    bool        gbIsFirstTick;                  // Set to 'true' for the very first tick only, 'false' thereafter
+    bool        gbKeepInputEvents;              // Ticker request: if true then don't consume input events after invoking the current ticker in 'MiniLoop'
+    std::byte*  gpDemoBufferEnd;                // PsyDoom: save the end pointer for the buffer, so we know when to end the demo; do this instead of hardcoding the end
+    bool        gbDoInPlaceLevelReload;         // PsyDoom developer feature: reload the map but preserve player position and orientation? Allows for fast preview of changes.
+    fixed_t     gInPlaceReloadPlayerX;          // Where to position the player after doing the 'in place' level reload (x)
+    fixed_t     gInPlaceReloadPlayerY;          // Where to position the player after doing the 'in place' level reload (y)
+    fixed_t     gInPlaceReloadPlayerZ;          // Where to position the player after doing the 'in place' level reload (z)
+    angle_t     gInPlaceReloadPlayerAng;        // Angle of the player when doing an 'in place' level releoad
 
     // When using PAL timings and NOT using demo timings this tells how many vblanks the current game/world tick will last for.
     // If 'true' then the current world tick will last for 4 vblanks, otherwise it will last for 2 vblanks.
@@ -216,8 +217,17 @@ void D_DoomMain() noexcept {
             W_Shutdown();
         });
 
-        // PsyDoom: playing intro movies and logos unless disabled or if we want to jump straight into playing back a demo file
-        const bool bSkipIntros = (Config::gbSkipIntros || ProgArgs::gPlayDemoFilePath[0]);
+        // PsyDoom: are we warping straight to a map and bypassing menus?
+        if (ProgArgs::gWarpMap > 0) {
+            gbStartupWarpToMap = true;
+            gStartSkill = ProgArgs::gWarpSkill;
+            gStartMapOrEpisode = ProgArgs::gWarpMap;
+            gStartGameType = gt_single;
+        }
+
+        // PsyDoom: play intro movies and logos unless disabled.
+        // Note: also skip them if we are playing a demo file or warping directly to a map.
+        const bool bSkipIntros = (Config::gbSkipIntros || ProgArgs::gPlayDemoFilePath[0] || gbStartupWarpToMap);
 
         if (!bSkipIntros) {
             D_PlayIntros();
@@ -357,12 +367,17 @@ gameaction_t RunLegals() noexcept {
 // Runs the title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunTitle() noexcept {
+    // PsyDoom: if warping straight to a map then skip the title
+    #if PSYDOOM_MODS
+        if (gbStartupWarpToMap)
+            return ga_exit;
+    #endif
+
     return MiniLoop(START_Title, STOP_Title, TIC_Title, DRAW_Title);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Load and run the specified demo file.
-// The maximum allowed demo size to be handled by this function is 16 KiB.
+// Load and run the specified (built-in) demo file
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemo(const CdFileId file) noexcept {
     // PsyDoom: ensure this required graphic is loaded before starting the demo.
@@ -374,17 +389,6 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
 
         if (CdMapTbl_GetEntry(file).size <= 0)
             return ga_nothing;
-    #endif
-
-    // PsyDoom: set the info for the current classic demo in case we are playing one of those.
-    // Use the current game settings to determine the demo's game behavior and format.
-    #if PSYDOOM_MODS
-    {
-        ClassicDemoDef& demoDef = gCurClassicDemo;
-        demoDef = {};
-        demoDef.bFinalDoomDemo = (Game::gGameType != GameType::Doom);
-        demoDef.bPalDemo = (Game::gGameVariant == GameVariant::PAL);
-    }
     #endif
 
     // Open the demo file

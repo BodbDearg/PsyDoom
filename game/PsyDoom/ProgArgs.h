@@ -4,6 +4,7 @@
 #include <cstdint>
 
 class WadList;
+enum skill_t : int32_t;
 
 BEGIN_NAMESPACE(ProgArgs)
 
@@ -20,6 +21,8 @@ extern uint16_t     gServerPort;
 extern bool         gbNoMonsters;
 extern bool         gbPistolStart;
 extern bool         gbTurboMode;
+extern int32_t      gWarpMap;
+extern skill_t      gWarpSkill;
 
 void init(const int argc, const char* const* const argv) noexcept;
 void shutdown() noexcept;

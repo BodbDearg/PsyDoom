@@ -84,6 +84,27 @@ static const char gSkillNames[NUMSKILLS][16] = {
 // Restricts what maps or episodes the player can pick
 static int32_t gMaxStartEpisodeOrMap;
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom utility: loads and caches all important/required menu and UI related texture resources.
+// This needs to be called when we warp directly to a map on startup, since we miss important textures being cached via the skipped menus.
+// If these textures are not cached then there might be crashes later when we try to draw them...
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void M_LoadAndCacheRequiredUITextures() noexcept {
+    I_PurgeTexCache();
+    I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+    I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
+    I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
+    I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
+    I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
+    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg().c_str().data(), 0);
+
+    if (Game::gGameType == GameType::GEC_ME_Beta3) {
+        I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);
+    }
+}
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper: encapsulates the logic for drawing the 'DOOM' logo.
 // Also draws any additional elements, like 'MASTER EDITION' text for the GEC Master Edition.
@@ -106,8 +127,21 @@ static void M_DrawDoomLogo() noexcept {
 gameaction_t RunMenu() noexcept {
     do {
         // Run the menu: abort to the title screen & demos if the menu timed out.
-        // PsyDoom: also quit if app quit is requested.
-        const gameaction_t menuResult = MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
+        // PsyDoom: also quit if app quit is requested, and skip doing menus if we are warping directly to a map.
+        #if PSYDOOM_MODS
+            const gameaction_t menuResult = (gbStartupWarpToMap) ? ga_exit : MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
+
+            // If warping directly to a map then we need to still load some resources that would have been loaded had we ran the menus
+            if (gbStartupWarpToMap) {
+                M_LoadAndCacheRequiredUITextures();
+            }
+
+            // If the '-warp' command line argument was specified then only warp straight to a map (bypassing menus) once.
+            // After that the player has full control over the game flow:
+            gbStartupWarpToMap = false;
+        #else
+            const gameaction_t menuResult = MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
+        #endif
 
         #if PSYDOOM_MODS
             if ((menuResult == ga_timeout) || (menuResult == ga_quitapp))
