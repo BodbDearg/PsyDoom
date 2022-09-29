@@ -16,7 +16,7 @@ jobs:
       with:
         upstream_repo: "https://github.com/BodbDearg/PsyDoom.git"
         upstream_branch: develop
-        downstream_branch: develop
+        downstream_branch: nightlies
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Check for new commits
@@ -25,7 +25,7 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         seconds: 10
-        branch: 'develop'
+        branch: 'nightlies'
 
   build_win:
     runs-on: windows-latest
@@ -35,7 +35,7 @@ jobs:
     - name: Prepare Checkout
       uses: actions/checkout@v3
       with:
-        ref: 'develop'
+        ref: 'nightlies'
     - name: Compile Latest Nightly
       run: |
         cmake .
@@ -55,7 +55,7 @@ jobs:
     - name: Prepare Checkout
       uses: actions/checkout@v3
       with:
-        ref: 'develop'
+        ref: 'nightlies'
     - name: Compile Latest Nightly
       run: |
         sudo apt-get install gcc g++ cmake libgl-dev libvulkan-dev libpulse-dev libx11-dev libxft-dev libxcursor-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libfreetype-dev libfreetype6-dev libfontconfig1-dev
