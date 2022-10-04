@@ -623,7 +623,7 @@ void ST_Drawer() noexcept {
                 }
             } else {
                 // Show frags for deathmatch
-                ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'F', gPlayers[gCurPlayerIndex].frags, gPlayers[!gCurPlayerIndex].frags);
+                ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'F', gPlayers[gCurPlayerIndex].frags, gPlayers[gCurPlayerIndex ^ 1].frags);
             }
         }
     #endif  // #if PSYDOOM_MODS
