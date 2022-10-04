@@ -577,12 +577,9 @@ void ST_Drawer() noexcept {
         I_AddPrim(spritePrim);
     }
 
-    // PsyDoom: draw level stats if enabled, and if not deathmatch:
+    // PsyDoom: draw level stats if enabled, or frags if playing deathmatch:
     #if PSYDOOM_MODS
-        const bool bShowStats = (
-            (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::Kills) &&
-            (gNetGame != gt_deathmatch)
-        );
+        const bool bShowStats = (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::Kills);
 
         if (bShowStats) {
             // If using the Vulkan renderer, draw then as far as possible to the right, being widescreen aware
@@ -614,14 +611,19 @@ void ST_Drawer() noexcept {
             }
 
             // Show the stats!
-            ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'K', jointKillCount, gTotalKills);
+            if (gNetGame != gt_deathmatch) {
+                ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'K', jointKillCount, gTotalKills);
 
-            if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsAndSecrets) {
-                ST_DrawRightAlignedStat(2 + widescreenAdjust, 10, 'S', jointSecretCount, gTotalSecret);
-            }
+                if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsAndSecrets) {
+                    ST_DrawRightAlignedStat(2 + widescreenAdjust, 10, 'S', jointSecretCount, gTotalSecret);
+                }
 
-            if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsSecretsAndItems) {
-                ST_DrawRightAlignedStat(2 + widescreenAdjust, 18, 'I', jointItemCount, gTotalItems);
+                if (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::KillsSecretsAndItems) {
+                    ST_DrawRightAlignedStat(2 + widescreenAdjust, 18, 'I', jointItemCount, gTotalItems);
+                }
+            } else {
+                // Show frags for deathmatch
+                ST_DrawRightAlignedStat(2 + widescreenAdjust, 2, 'F', gPlayers[gCurPlayerIndex].frags, gPlayers[gCurPlayerIndex ^ 1].frags);
             }
         }
     #endif  // #if PSYDOOM_MODS
