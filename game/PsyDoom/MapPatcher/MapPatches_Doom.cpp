@@ -136,6 +136,21 @@ static void patchMap_UnholyCathedral() noexcept {
 
         setLineFrontTexOffset(1123, 32, -48);   // Bottom Skulls
         setLineFrontTexOffset(1125, 32, -48);
+
+        // Fix the track of some doorways moving when it should not
+        removeFlagsFromLinedefs(
+            ML_DONTPEGBOTTOM,
+            // Doorway to west green slime area
+            733, 736,
+            // Doorway to northmost room
+            815, 818
+        );
+
+        // Tweak the vertical alignment of the doorway track to the northmost room (adjustments following the 'lower unpegged' fix)
+        modifyLinedefs(
+            [](line_t& line) { gpSides[line.sidenum[0]].rowoffset = 16 * FRACUNIT; },
+            815, 818
+        );
     }
 }  
 
