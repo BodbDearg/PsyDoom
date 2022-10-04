@@ -18,3 +18,7 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
 target_compile_definitions(${ASIO_TGT_NAME} PUBLIC -DASIO_SEPARATE_COMPILATION)
 target_include_directories(${ASIO_TGT_NAME} PUBLIC ${INCLUDE_PATHS})
+
+if (PLATFORM_WINDOWS)
+    target_compile_definitions(${ASIO_TGT_NAME} PRIVATE -D_WIN32_WINNT=0x0603)  # Target Windows 8.1 minimum
+endif()

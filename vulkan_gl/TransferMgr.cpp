@@ -90,7 +90,7 @@ void TransferMgr::destroy(const bool bForceIfInvalid) noexcept {
 // Attempts to allocate a temporary raw staging buffer that can be used to schedule transfers.
 // The buffer is automatically destroyed the next time we start a frame on the current ringbuffer index.
 //------------------------------------------------------------------------------------------------------------------------------------------
-TransferMgr::StagingBuffer TransferMgr::allocTempStagingBuffer(const uint32_t numBytes) noexcept {
+TransferMgr::StagingBuffer TransferMgr::allocTempStagingBuffer(const uint64_t numBytes) noexcept {
     // Preconditions
     ASSERT(mbIsValid);
     ASSERT(mpDevice && mpDevice->getVkDevice());

@@ -872,11 +872,20 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
             break;
 
         // New for PSX: play the Club Doom CD audio!
-        case 142:
+        case 142: {
             S_StopMusic();
-            psxcd_play_at_andloop(gCDTrackNum[cdmusic_club_doom], gCdMusicVol, 0, 0, gCDTrackNum[cdmusic_club_doom], gCdMusicVol, 0, 0);
+
+            // PsyDoom: if this line has a tag then play that track number instead of the default 'Club Doom' track.
+            // This allows the correct track to play for the 'Icon of Sin' level in the GEC Master Edition.
+            #if PSYDOOM_MODS
+                const int32_t cdTrackNum = (line.tag <= 0) ? gCDTrackNum[cdmusic_club_doom] : line.tag;
+            #else
+                const int32_t cdTrackNum = gCDTrackNum[cdmusic_club_doom];
+            #endif
+
+            psxcd_play_at_andloop(cdTrackNum, gCdMusicVol, 0, 0, cdTrackNum, gCdMusicVol, 0, 0);
             line.special = 0;
-            break;
+        }   break;
 
         // PsyDoom: new line specials for triggering scripted actions
         #if PSYDOOM_MODS

@@ -37,8 +37,8 @@ public:
     // Typically this contains texture and vertex etc. buffer upload operations.
     inline TransferTask& getPreFrameTransferTask() noexcept { return mPreFrameTransferTask; }
 
-    StagingBuffer allocTempStagingBuffer(const uint32_t numBytes) noexcept;
-    bool executePreFrameTransferTask() noexcept;   
+    StagingBuffer allocTempStagingBuffer(const uint64_t numBytes) noexcept;
+    bool executePreFrameTransferTask() noexcept;
     void doCleanupForRingbufferIndex(const uint8_t ringbufferIndex) noexcept;
 
 private:

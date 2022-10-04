@@ -278,7 +278,7 @@ bool BaseTexture::createImageMemBuffer(const DeviceMemAllocMode deviceMemAllocMo
 
     // Try to do a device memory alloc and if that fails (size <= 0) bail out
     DeviceMemMgr& deviceMemMgr = mpDevice->getDeviceMemMgr();
-    deviceMemMgr.alloc(memReqs.size, memReqs.memoryTypeBits, memReqs.alignment, deviceMemAllocMode, mDeviceMemAlloc);
+    deviceMemMgr.alloc(memReqs.size, memReqs.memoryTypeBits, (uint32_t) memReqs.alignment, deviceMemAllocMode, mDeviceMemAlloc);
 
     if (mDeviceMemAlloc.size <= 0)
         return false;
