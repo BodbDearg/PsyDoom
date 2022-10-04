@@ -109,7 +109,7 @@ bool RawBuffer::init(
     vkFuncs.vkGetBufferMemoryRequirements(vkDevice, mVkBuffer, &memReqs);
 
     // Try to do a device memory alloc
-    deviceMemMgr.alloc(memReqs.size, memReqs.memoryTypeBits, memReqs.alignment, allocMode, mDeviceMemAlloc);
+    deviceMemMgr.alloc(memReqs.size, memReqs.memoryTypeBits, (uint32_t) memReqs.alignment, allocMode, mDeviceMemAlloc);
 
     // If that fails then bail out and return false for failure
     if (mDeviceMemAlloc.size <= 0)

@@ -37,7 +37,10 @@ target_link_libraries(${BASELIB_TGT_NAME}
 
 target_include_directories(${BASELIB_TGT_NAME} PUBLIC ${INCLUDE_PATHS})
 
-# GCC: fix linker errors about missing 'std::filesystem'
+if (COMPILER_MSVC)
+    target_compile_definitions(${BASELIB_TGT_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)   # Don't complain about using regular 'std::fopen()' etc.
+endif()
+
 if (COMPILER_GCC)
-    target_link_libraries(${BASELIB_TGT_NAME} stdc++fs)
+    target_link_libraries(${BASELIB_TGT_NAME} stdc++fs)     # Fix linker errors about missing 'std::filesystem'
 endif()

@@ -494,9 +494,8 @@ target_include_directories(${FLTK_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
 target_compile_definitions(${FLTK_TGT_NAME} PUBLIC -DFL_LIBRARY=1)
 
 if (PLATFORM_WINDOWS)
-    target_link_libraries(${FLTK_TGT_NAME}
-        Comctl32.lib
-    )
+    target_link_libraries(${FLTK_TGT_NAME} Comctl32.lib)
+    target_compile_definitions(${FLTK_TGT_NAME} PRIVATE -D_WIN32_WINNT=0x0603)  # Target Windows 8.1 minimum
 endif()
 
 if (PLATFORM_LINUX)
@@ -510,6 +509,11 @@ if (PLATFORM_LINUX)
         fontconfig
         Xft
     )
+endif()
+
+if (COMPILER_MSVC)
+    target_compile_options(${FLTK_TGT_NAME} PUBLIC /wd4101)                             # Disable warning: unreferenced local variables
+    target_compile_definitions(${FLTK_TGT_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)      # Don't complain about using regular 'std::fopen()' etc.
 endif()
 
 if (COMPILER_CLANG OR COMPILER_GCC)
