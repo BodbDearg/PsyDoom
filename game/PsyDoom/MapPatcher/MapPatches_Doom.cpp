@@ -92,10 +92,15 @@ static void patchMap_UnholyCathedral() noexcept {
         // The door should be the yellow key also. Only apply this patch if not playing a classic demo because it affects gameplay!
         gpLines[505].special = 34;
 
-        // Fix 2 one-sided lines by the north-east teleporter being incorrectly tagged as 'door' lines.
+        // Fix various one-sided lines being incorrectly tagged as 'door' lines.
         // In the original game activating these lines could cause a crash.
-        gpLines[499].special = 0;
-        gpLines[501].special = 0;
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            // Fix 2 one-sided lines by the north-east teleporter being incorrectly tagged as 'door' lines
+            499, 501,
+            // Fix another instance of one-sided lines being marked as 'door' lines (the track of the door leading to westernmost room)
+            217, 220
+        );
     }
 
     if (shouldApplyMapPatches_Visual()) {
