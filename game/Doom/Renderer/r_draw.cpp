@@ -166,6 +166,14 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
             if (pEdge->vertex->viewy <= NEAR_CLIP_DIST + 1) {
                 R_FrontZClip(pLeafs[curLeafIdx], pLeafs[curLeafIdx ^ 1]);
                 curLeafIdx ^= 1;
+
+                // PsyDoom: abort here in limit removing builds if we've clipped away the subsector to less than a triangle.
+                // This avoids invalid access of 'drawleaf.edges[0]' below when the edge list is empty.
+                #if PSYDOOM_LIMIT_REMOVING
+                    if (pLeafs[curLeafIdx].edges.size() < 3)
+                        return;
+                #endif
+
                 break;
             }
         }
