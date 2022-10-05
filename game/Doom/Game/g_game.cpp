@@ -157,7 +157,7 @@ void G_DoLoadLevel() noexcept {
 
             switch (loadResult) {
                 case LoadSaveResult::OK:
-                    DisplayLoadedHudMessage(SaveAndLoad::gCurSaveSlot, true);
+                    DisplayLoadedHudMessage(LoadGameContext::Menu, true);
                     break;
 
                 case LoadSaveResult::BAD_MAP_HASH:  RunLoadGameErrorMenu_BadMapHash(); break;

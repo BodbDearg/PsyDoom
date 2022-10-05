@@ -336,10 +336,10 @@ gameaction_t LoadSave_Update() noexcept {
 
             if (gMenuMode == LoadSaveMenuMode::Load) {
                 S_StartSound(nullptr, sfx_pistol);
-                action = LoadGameForSlot(saveSlot);
+                action = LoadGameForSlot(saveSlot, LoadGameContext::Menu);
             } else {
                 S_StartSound(nullptr, sfx_pistol);
-                action = SaveGameForSlot(saveSlot, false);
+                action = SaveGameForSlot(saveSlot, SaveGameContext::Menu);
             }
 
             if (action == ga_exitmenus) {
@@ -497,7 +497,7 @@ void LoadSave_Draw() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Save the game for the specified save slot
 //------------------------------------------------------------------------------------------------------------------------------------------
-gameaction_t SaveGameForSlot(const SaveFileSlot slot, const bool bIsAutoSaving) noexcept {
+gameaction_t SaveGameForSlot(const SaveFileSlot slot, const SaveGameContext saveContext) noexcept {
     ASSERT_LOG(gNetGame == gt_single, "Should only be called in single player games!");
 
     // Do the save and remember temporarily the slot being used
@@ -517,10 +517,11 @@ gameaction_t SaveGameForSlot(const SaveFileSlot slot, const bool bIsAutoSaving) 
     // Skip the HUD message however if the unusual situation arises where we are auto-saving on level start and there is already
     // a message being displayed. The message already being displayed is likely a warning of some sort, so it should get priority.
     const bool bHudAlreadyHasMessage = ((gStatusBar.message != nullptr) && (gStatusBar.messageTicsLeft > 0));
+    const bool bIsAutoSaving = (saveContext == SaveGameContext::Autosave);
     const bool bSkipHudMessage = (bHudAlreadyHasMessage && bIsAutoSaving);
 
     if (!bSkipHudMessage) {
-        DisplaySavedHudMessage(slot, bSuccess);
+        DisplaySavedHudMessage(saveContext, bSuccess);
     }
 
     SaveAndLoad::gCurSaveSlot = SaveFileSlot::NONE;
@@ -533,7 +534,7 @@ gameaction_t SaveGameForSlot(const SaveFileSlot slot, const bool bIsAutoSaving) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load the game for the specified save slot
 //------------------------------------------------------------------------------------------------------------------------------------------
-gameaction_t LoadGameForSlot(const SaveFileSlot slot) noexcept {
+gameaction_t LoadGameForSlot(const SaveFileSlot slot, const LoadGameContext loadContext) noexcept {
     // Initially assume we are not trying to load a save game when we load the next map.
     // Also remember the slot we are loading from.
     gbLoadSaveOnLevelStart = false;
@@ -584,7 +585,7 @@ gameaction_t LoadGameForSlot(const SaveFileSlot slot) noexcept {
     }
 
     // Display what was loaded when we are loading in place and clear the currently loading slot
-    DisplayLoadedHudMessage(slot, true);
+    DisplayLoadedHudMessage(loadContext, true);
     SaveAndLoad::gCurSaveSlot = SaveFileSlot::NONE;
 
     // Exit all menus and unpause the game
@@ -606,42 +607,58 @@ void ClearLoadSaveOnLevelStartFlag() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Displays a message for the specified save slot being saved to
 //------------------------------------------------------------------------------------------------------------------------------------------
-void DisplaySavedHudMessage(const SaveFileSlot slot, const bool bSuccess) noexcept {
-    const char* const savePrefix = Game::gConstants.saveFilePrefix;
-    const char* const saveBaseName = SaveAndLoad::getSaveFileBaseName(slot);
+void DisplaySavedHudMessage(const SaveGameContext saveContext, const bool bSuccess) noexcept {
+    const char* msg = nullptr;
 
     if (bSuccess) {
-        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Saved to %s%s", savePrefix, saveBaseName);
+        switch (saveContext) {
+            case SaveGameContext::Menu:         msg = "Game saved";         break;
+            case SaveGameContext::Autosave:     msg = "Game autosaved";     break;
+            case SaveGameContext::Quicksave:    msg = "Quicksaved";         break;
+        }
     } else {
-        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Save to %s%s FAILED!", savePrefix, saveBaseName);
+        switch (saveContext) {
+            case SaveGameContext::Menu:         msg = "Save failed!";       break;
+            case SaveGameContext::Autosave:     msg = "Autosave failed!";   break;
+            case SaveGameContext::Quicksave:    msg = "Quicksave failed!";  break;
+        }
     }
 
-    gStatusBar.message = gLoadSaveHudMsg;
-    gStatusBar.messageTicsLeft = 30;
+    if (msg) {
+        gStatusBar.message = msg;
+        gStatusBar.messageTicsLeft = 30;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Displays a HUD message for the specified save slot being loaded from
 //------------------------------------------------------------------------------------------------------------------------------------------
-void DisplayLoadedHudMessage(const SaveFileSlot slot, const bool bSuccess) noexcept {
-    const char* const savePrefix = Game::gConstants.saveFilePrefix;
-    const char* const saveBaseName = SaveAndLoad::getSaveFileBaseName(slot);
+void DisplayLoadedHudMessage(const LoadGameContext loadContext, const bool bSuccess) noexcept {
+    const char* msg = nullptr;
 
     if (bSuccess) {
-        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Loaded %s%s", savePrefix, saveBaseName);
+        switch (loadContext) {
+            case LoadGameContext::Menu:         msg = "Game loaded";        break;
+            case LoadGameContext::Quickload:    msg = "Quickloaded";        break;
+        }
     } else {
-        std::snprintf(gLoadSaveHudMsg, C_ARRAY_SIZE(gLoadSaveHudMsg), "Loading %s%s FAILED!", savePrefix, saveBaseName);
+        switch (loadContext) {
+            case LoadGameContext::Menu:         msg = "Load failed!";       break;
+            case LoadGameContext::Quickload:    msg = "Quickload failed!";  break;
+        }
     }
 
-    gStatusBar.message = gLoadSaveHudMsg;
-    gStatusBar.messageTicsLeft = 30;
+    if (msg) {
+        gStatusBar.message = msg;
+        gStatusBar.messageTicsLeft = 30;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: attempts to quicksave the game
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DoQuicksave() noexcept {
-    SaveGameForSlot(SaveFileSlot::QUICKSAVE, false);
+    SaveGameForSlot(SaveFileSlot::QUICKSAVE, SaveGameContext::Quicksave);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -652,7 +669,7 @@ gameaction_t DoQuickload() noexcept {
     const std::string saveFilePath = SaveAndLoad::getSaveFilePath(SaveFileSlot::QUICKSAVE);
 
     if (FileUtils::fileExists(saveFilePath.c_str())) {
-        return LoadGameForSlot(SaveFileSlot::QUICKSAVE);
+        return LoadGameForSlot(SaveFileSlot::QUICKSAVE, LoadGameContext::Quickload);
     } else {
         gStatusBar.message = "Quick.sav does not exist!";
         gStatusBar.messageTicsLeft = 30;

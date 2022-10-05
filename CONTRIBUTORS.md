@@ -135,6 +135,10 @@ PsyDoom contributors (sorted alphabetically)
     * Compile fixes for Linux:
         https://github.com/BodbDearg/PsyDoom/pull/21
 
+* **[OpenRift412](https://github.com/OpenRift412)**
+    * Simpler load/save messages suggestion:
+        https://github.com/BodbDearg/PsyDoom/issues/55
+
 * **[Samuel Villarreal (svkaiser)](https://github.com/svkaiser)**
     * Console DOOM reverse engineering, specs & tools:
         https://www.doomworld.com/forum/topic/38608-the-console-doom-hacking-project-console-specs
