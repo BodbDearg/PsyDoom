@@ -166,7 +166,7 @@ void initCfgSerialization_Controls() noexcept {
 
     // Toggles
     cfg.toggle_pause = CONTROL_FIELD_WITH_DOC(
-        "Toggle in-game pause, automap, and toggle between the Classic and Vulkan renderer (if possible).\n"
+        "Toggle in-game pause, automap, uncapped framerate, and between the Classic and Vulkan renderer (if possible).\n"
         "Also a control to toggle which player is viewed when playing back multiplayer demos.",
         Toggle_Pause,
         "Escape, P, Pause, Gamepad Start"
@@ -174,6 +174,7 @@ void initCfgSerialization_Controls() noexcept {
 
     cfg.toggle_map = CONTROL_FIELD(Toggle_Map, "Tab, M, Gamepad Back");
     cfg.toggle_renderer = CONTROL_FIELD(Toggle_Renderer, "`");
+    cfg.toggle_uncappedFps = CONTROL_FIELD(Toggle_UncappedFps, "");
     cfg.toggle_viewPlayer = CONTROL_FIELD(Toggle_ViewPlayer, "V");
 
     // Weapon switching

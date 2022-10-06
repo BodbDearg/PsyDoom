@@ -11,6 +11,7 @@
 #include "Doom/Game/p_user.h"
 #include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/PlayerPrefs.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_bsp.h"
@@ -147,7 +148,7 @@ void R_RenderPlayerView() noexcept {
 
     // PsyDoom: update the lerp factors and use interpolation to update the actual view if doing an uncapped framerate.
     #if PSYDOOM_MODS
-        const bool bInterpolateFrame = Config::gbUncapFramerate;
+        const bool bInterpolateFrame = PlayerPrefs::gbUncapFramerate;
         R_CalcLerpFactors();
     #else
         const bool bInterpolateFrame = false;
@@ -568,7 +569,7 @@ void R_SnapPsprInterpolation(pspdef_t& pspr) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_CalcLerpFactors() noexcept {
     // If the framerate is not uncapped then this is easy, always use the latest/current values:
-    if (!Config::gbUncapFramerate) {
+    if (!PlayerPrefs::gbUncapFramerate) {
         gPlayerLerpFactor = FRACUNIT;
         gWorldLerpFactor = FRACUNIT;
         return;

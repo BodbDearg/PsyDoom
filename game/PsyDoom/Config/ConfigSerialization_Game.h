@@ -11,7 +11,6 @@ BEGIN_NAMESPACE(ConfigSerialization)
 // N.B: must ONLY contain 'ConfigField' entries!
 struct Config_Game {
     ConfigField     cueFilePath;
-    ConfigField     uncapFramerate;
     ConfigField     showPerfCounters;
     ConfigField     interpolateSectors;
     ConfigField     interpolateMobj;

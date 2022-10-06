@@ -20,77 +20,32 @@ END_DISABLE_HEADER_WARNINGS
 BEGIN_NAMESPACE(Launcher)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Called when the uncapped framerate setting is updated.
-// Updates whether the interpolation fields are active.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void onUncappedFramerateSettingUpdated(Tab_Game& tab) noexcept {
-    // Can interpolation settings be used?
-    // We need to have uncapped framerates enabled in order for that to be the case.
-    const bool bCanUseInterpolation = (tab.pCheck_uncappedFramerate->value() != 0);
-
-    // Helper that activates or deactivates a check button
-    auto updateInterpolationCheckbox = [&](Fl_Check_Button& check, const bool bConfigValue) noexcept {
-        if (bCanUseInterpolation) {
-            check.value(bConfigValue);
-            check.activate();
-        } else {
-            check.value(0);
-            check.deactivate();
-        }
-    };
-
-    updateInterpolationCheckbox(*tab.pCheck_interpolateSectors,     Config::gbInterpolateSectors);
-    updateInterpolationCheckbox(*tab.pCheck_interpolateMobj,        Config::gbInterpolateMobj);
-    updateInterpolationCheckbox(*tab.pCheck_interpolateMonsters,    Config::gbInterpolateMonsters);
-    updateInterpolationCheckbox(*tab.pCheck_interpolateWeapon,      Config::gbInterpolateWeapon);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Makes the section for motion related options
+// Makes the section for interpolation related options
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeMotionSection(Tab_Game& tab, const int x, const int y) noexcept {
     // Container frame
-    new Fl_Box(FL_NO_BOX, x, y, 200, 30, "Motion");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 170, "");
-
-    // Uncapped framerate toggle
-    tab.pCheck_uncappedFramerate = makeFl_Check_Button(x + 10, y + 40, 160, 30, "  Uncapped framerate");
-    tab.pCheck_uncappedFramerate->callback(
-        [](Fl_Widget*, void* const pUserData) noexcept {
-            ASSERT(pUserData);
-            Tab_Game& tab = *static_cast<Tab_Game*>(pUserData);
-
-            Config::gbUncapFramerate = tab.pCheck_uncappedFramerate->value();
-            Config::gbNeedSave_Game = true;
-            onUncappedFramerateSettingUpdated(tab);
-        },
-        &tab
-    );
-    tab.pCheck_uncappedFramerate->value(Config::gbUncapFramerate);
-    tab.pCheck_uncappedFramerate->tooltip(ConfigSerialization::gConfig_Game.uncapFramerate.comment);
+    new Fl_Box(FL_NO_BOX, x, y, 200, 30, "Interpolation");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 140, "");
 
     // Interpolate sectors toggle
-    tab.pCheck_interpolateSectors = makeFl_Check_Button(x + 10, y + 70, 160, 30, "  Interpolate sectors");
+    tab.pCheck_interpolateSectors = makeFl_Check_Button(x + 10, y + 40, 160, 30, "  Interpolate sectors");
     bindConfigField<Config::gbInterpolateSectors, Config::gbNeedSave_Game>(*tab.pCheck_interpolateSectors);
     tab.pCheck_interpolateSectors->tooltip(ConfigSerialization::gConfig_Game.interpolateSectors.comment);
 
     // Interpolate things/mobj toggle
-    tab.pCheck_interpolateMobj = makeFl_Check_Button(x + 10, y + 100, 160, 30, "  Interpolate things");
+    tab.pCheck_interpolateMobj = makeFl_Check_Button(x + 10, y + 70, 160, 30, "  Interpolate things");
     bindConfigField<Config::gbInterpolateMobj, Config::gbNeedSave_Game>(*tab.pCheck_interpolateMobj);
     tab.pCheck_interpolateMobj->tooltip(ConfigSerialization::gConfig_Game.interpolateMobj.comment);
 
     // Interpolate monsters toggle
-    tab.pCheck_interpolateMonsters = makeFl_Check_Button(x + 10, y + 130, 160, 30, "  Interpolate monsters");
+    tab.pCheck_interpolateMonsters = makeFl_Check_Button(x + 10, y + 100, 160, 30, "  Interpolate monsters");
     bindConfigField<Config::gbInterpolateMonsters, Config::gbNeedSave_Game>(*tab.pCheck_interpolateMonsters);
     tab.pCheck_interpolateMonsters->tooltip(ConfigSerialization::gConfig_Game.interpolateMonsters.comment);
 
     // Interpolate weapon toggle
-    tab.pCheck_interpolateWeapon = makeFl_Check_Button(x + 10, y + 160, 160, 30, "  Interpolate weapon");
+    tab.pCheck_interpolateWeapon = makeFl_Check_Button(x + 10, y + 130, 160, 30, "  Interpolate weapon");
     bindConfigField<Config::gbInterpolateWeapon, Config::gbNeedSave_Game>(*tab.pCheck_interpolateWeapon);
     tab.pCheck_interpolateWeapon->tooltip(ConfigSerialization::gConfig_Game.interpolateWeapon.comment);
-
-    // Disable interpolation checkboxes if uncapped framerates are disabled!
-    onUncappedFramerateSettingUpdated(tab);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -121,26 +76,26 @@ static void makeCountersSection(const int x, const int y) noexcept {
 static void makeMiscellaneousSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 200, 30, "Miscellaneous");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 90, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 120, "");
 
     // View bob strength
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 40, 80, 26, "Bob scale");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 50, 80, 26, "Bob scale");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.viewBobbingStrength.comment);
 
-        const auto pInput = new Fl_Float_Input(x + 100, y + 40, 80, 26);
+        const auto pInput = new Fl_Float_Input(x + 100, y + 50, 80, 26);
         bindConfigField<Config::gViewBobbingStrength, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // Heap size
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 70, 80, 26, "Heap size");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 80, 80, 26, "Heap size");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.mainMemoryHeapSize.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 100, y + 70, 80, 26);
+        const auto pInput = new Fl_Int_Input(x + 100, y + 80, 80, 26);
         bindConfigField<Config::gMainMemoryHeapSize, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
 
@@ -553,8 +508,8 @@ void populateGameTab(Context& ctx) noexcept {
     const RectExtents tabRect = getRectExtents(*tab.pTab);
 
     makeMotionSection(tab, tabRect.lx + 20, tabRect.ty + 20);
-    makeCountersSection(tabRect.lx + 20, tabRect.ty + 230);
-    makeMiscellaneousSection(tabRect.lx + 20, tabRect.ty + 350);
+    makeCountersSection(tabRect.lx + 20, tabRect.ty + 200);
+    makeMiscellaneousSection(tabRect.lx + 20, tabRect.ty + 320);
     makeBugFixesSection(tabRect.lx + 240, tabRect.ty + 20);
     makeTweaksSection(tabRect.lx + 240, tabRect.ty + 260);
     makeMapPatchesSection(tabRect.lx + 730, tabRect.ty + 20);

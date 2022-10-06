@@ -136,6 +136,8 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/BodbDearg/PsyDoom/pull/21
 
 * **[OpenRift412](https://github.com/OpenRift412)**
+    * In-game uncapped framerate toggle suggestion:
+        https://github.com/BodbDearg/PsyDoom/issues/54
     * Simpler load/save messages suggestion:
         https://github.com/BodbDearg/PsyDoom/issues/55
 

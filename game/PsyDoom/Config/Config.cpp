@@ -24,7 +24,6 @@ BEGIN_NAMESPACE(Config)
 // Game config settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 std::string     gCueFilePath;
-bool            gbUncapFramerate;
 bool            gbShowPerfCounters;
 bool            gbInterpolateSectors;
 bool            gbInterpolateMobj;

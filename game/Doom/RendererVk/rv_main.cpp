@@ -17,6 +17,7 @@
 #include "Doom/Renderer/r_sky.h"
 #include "Doom/Renderer/r_things.h"
 #include "PsyDoom/Config/Config.h"
+#include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/Utils.h"
 #include "PsyDoom/Vulkan/VDrawing.h"
 #include "PsyDoom/Vulkan/VRenderer.h"
@@ -50,7 +51,7 @@ static void RV_DetermineDrawParams() noexcept {
     // If we are doing an uncapped frame-rate then use interpolation to determine these parameters.
     // Note that unlike the original renderer I am not discarding the fractional component of the player's position here.
     R_CalcLerpFactors();
-    const bool bInterpolateFrame = Config::gbUncapFramerate;
+    const bool bInterpolateFrame = PlayerPrefs::gbUncapFramerate;
     mobj_t& playerMobj = *player.mo;
 
     if (bInterpolateFrame) {

@@ -32,6 +32,7 @@ constexpr int32_t TURN_SPEED_MULT_MAX = 500;
 
 extern int32_t              gTurnSpeedMult100;
 extern bool                 gbAlwaysRun;
+extern bool                 gbUncapFramerate;
 extern StatDisplayMode      gStatDisplayMode;
 extern Password             gLastPassword_Doom;
 extern Password             gLastPassword_FDoom;

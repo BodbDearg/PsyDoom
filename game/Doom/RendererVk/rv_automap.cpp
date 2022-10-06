@@ -17,6 +17,7 @@
 #include "Doom/UI/am_main.h"
 #include "Matrix4.h"
 #include "PsyDoom/Config/Config.h"
+#include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/Utils.h"
 #include "PsyDoom/Vulkan/VDrawing.h"
 #include "PsyDoom/Vulkan/VRenderer.h"
@@ -48,7 +49,7 @@ static void RV_CalcPlayerMapTransforms() noexcept {
     const player_t& player = gPlayers[gCurPlayerIndex];
 
     R_CalcLerpFactors();
-    const bool bUncapFramerate = Config::gbUncapFramerate;
+    const bool bUncapFramerate = PlayerPrefs::gbUncapFramerate;
 
     if (bUncapFramerate) {
         const fixed_t lerpFactor = gPlayerLerpFactor;

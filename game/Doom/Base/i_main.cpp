@@ -12,13 +12,13 @@
 #include "FatalErrors.h"
 #include "i_drawcmds.h"
 #include "i_texcache.h"
-#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapHash.h"
 #include "PsyDoom/Network.h"
+#include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/PsxVm.h"
@@ -567,7 +567,7 @@ void I_DrawPresent() noexcept {
         // elapsed vblanks if we haven't passed the required interval (a 30 Hz tick for normal gameplay, a 15 Hz tick for demos).
         // This prevents the game from ticking if it hasn't met the time requirements.
         #if PSYDOOM_MODS
-            if (Config::gbUncapFramerate) {
+            if (PlayerPrefs::gbUncapFramerate) {
                 const int32_t minTickVBlanks = (Game::gSettings.bUseDemoTimings) ? demoTickVBlanks : 2;
 
                 if (elapsedVBlanks < minTickVBlanks) {

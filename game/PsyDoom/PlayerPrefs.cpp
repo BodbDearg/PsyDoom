@@ -30,6 +30,7 @@ static constexpr const char* const PREFS_FILE_NAME = "saved_prefs.ini";
 // Globally exposed settings
 int32_t             gTurnSpeedMult100;          // In-game tweakable turn speed multiplier expressed in integer percentage points (0-500)
 bool                gbAlwaysRun;                // If set then the player runs by default and the run action causes slower walking
+bool                gbUncapFramerate;           // Run the game with an uncapped framerate?
 StatDisplayMode     gStatDisplayMode;           // Which stats should be displayed
 Password            gLastPassword_Doom;         // Password for the current level the player is on: Doom
 Password            gLastPassword_FDoom;        // Password for the current level the player is on: Final Doom
@@ -146,6 +147,9 @@ static void loadPrefsFileIniEntry(const IniUtils::IniEntry& entry) noexcept {
     else if (entry.key == "alwaysRun") {
         gbAlwaysRun = entry.value.tryGetAsBool(gbAlwaysRun);
     }
+    else if (entry.key == "uncapFramerate") {
+        gbUncapFramerate = entry.value.tryGetAsBool(gbUncapFramerate);
+    }
     else if (entry.key == "statDisplayMode") {
         gStatDisplayMode = (StatDisplayMode) entry.value.tryGetAsInt((int32_t) gStatDisplayMode);
         gStatDisplayMode = std::clamp(gStatDisplayMode, StatDisplayMode::None, StatDisplayMode::KillsSecretsAndItems);  // Ensure it's in range
@@ -171,6 +175,7 @@ void setToDefaults() noexcept {
     // Turn speed is normal by default, auto-run off and no stat display
     gTurnSpeedMult100 = 100;
     gbAlwaysRun = false;
+    gbUncapFramerate = true;
     gStatDisplayMode = StatDisplayMode::None;
 
     // Prefer the Vulkan renderer by default
@@ -217,6 +222,7 @@ void save() noexcept {
     std::fprintf(pFile, "lastPassword_GecMe = %s\n", getPasswordCString(gLastPassword_GecMe).chars);
     std::fprintf(pFile, "turnSpeedPercentMultiplier = %d\n", gTurnSpeedMult100);
     std::fprintf(pFile, "alwaysRun = %d\n", (int) gbAlwaysRun);
+    std::fprintf(pFile, "uncapFramerate = %d\n", (int) gbUncapFramerate);
     std::fprintf(pFile, "statDisplayMode = %d\n", (int) gStatDisplayMode);
     std::fprintf(pFile, "startupWithVulkanRenderer = %d\n", (int) Video::isUsingVulkanRenderPath());
 

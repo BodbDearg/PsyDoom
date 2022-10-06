@@ -35,6 +35,7 @@ struct Config_Controls {
     ConfigField     toggle_pause;
     ConfigField     toggle_map;
     ConfigField     toggle_renderer;
+    ConfigField     toggle_uncappedFps;
     ConfigField     toggle_viewPlayer;
     ConfigField     weapon_scrollUp;
     ConfigField     weapon_scrollDown;

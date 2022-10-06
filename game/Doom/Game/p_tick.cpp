@@ -661,8 +661,15 @@ gameaction_t P_Ticker() noexcept {
             return gGameAction;
         }
 
+        // PsyDoom: check for uncapped framerate toggle
+        if (Controls::isJustPressed(Controls::Binding::Toggle_UncappedFps)) {
+            PlayerPrefs::gbUncapFramerate = (!PlayerPrefs::gbUncapFramerate);
+            gStatusBar.message = (PlayerPrefs::gbUncapFramerate) ? "Uncapped FPS" : "Original FPS";
+            gStatusBar.messageTicsLeft = 30;
+        }
+
         // PsyDoom: update the frame start times for interpolation and snap the player's position
-        if (Config::gbUncapFramerate) {
+        if (PlayerPrefs::gbUncapFramerate) {
             R_SnapPlayerInterpolation();
             R_InterpBeginPlayerFrame();
 
@@ -858,7 +865,7 @@ void P_Start() noexcept {
         gbIgnoreCurrentAttack = true;   // If fire is held while the level is loading then ignore the current attack
 
         // PsyDoom: don't interpolate the first draw frame if doing uncapped framerates
-        if (Config::gbUncapFramerate) {
+        if (PlayerPrefs::gbUncapFramerate) {
             R_InterpBeginPlayerFrame();
             R_InterpBeginWorldFrame();
             R_SnapPlayerInterpolation();

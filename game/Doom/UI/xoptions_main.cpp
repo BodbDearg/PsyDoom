@@ -30,6 +30,7 @@ enum MenuItem : int32_t {
     menu_turn_speed,
     menu_always_run,
     menu_stat_display,
+    menu_uncapped_framerate,
 #if PSYDOOM_VULKAN_RENDERER
     menu_renderer,
 #endif
@@ -191,6 +192,18 @@ gameaction_t XOptions_Update() noexcept {
             }
         }   break;
 
+        // Turn on/off uncapped framerate
+        case menu_uncapped_framerate: {
+            if (bMenuLeft && PlayerPrefs::gbUncapFramerate) {
+                PlayerPrefs::gbUncapFramerate = false;
+                S_StartSound(nullptr, sfx_swtchx);
+            }
+            else if (bMenuRight && (!PlayerPrefs::gbUncapFramerate)) {
+                PlayerPrefs::gbUncapFramerate = true;
+                S_StartSound(nullptr, sfx_swtchx);
+            }
+        }   break;
+
     #if PSYDOOM_VULKAN_RENDERER
         // Renderer toggle
         case menu_renderer: {
@@ -327,13 +340,20 @@ void XOptions_Draw() noexcept {
             cursorY = 115;
         }
 
+        // Draw the uncapped framerate option
+        I_DrawString(62, 140, (PlayerPrefs::gbUncapFramerate) ? "Uncapped FPS" : "Original FPS");
+
+        if (gCursorPos[gCurPlayerIndex] == menu_uncapped_framerate) {
+            cursorY = 140;
+        }
+
         #if PSYDOOM_VULKAN_RENDERER
             // Draw the renderer option
             const bool bIsUsingVulkan = Video::isUsingVulkanRenderPath();
-            I_DrawString(62, 140, (bIsUsingVulkan) ? "Vulkan Renderer" : "Classic Renderer");
+            I_DrawString(62, 165, (bIsUsingVulkan) ? "Vulkan Renderer" : "Classic Renderer");
 
             if (gCursorPos[gCurPlayerIndex] == menu_renderer) {
-                cursorY = 140;
+                cursorY = 165;
             }
         #endif
 

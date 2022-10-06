@@ -38,15 +38,6 @@ void initCfgSerialization_Game() noexcept {
         ""
     );
 
-    cfg.uncapFramerate = makeConfigField(
-        "UncapFramerate",
-        "Uncapped framerate toggle.\n"
-        "Enabling this setting allows PsyDoom to run beyond the original 30 FPS cap of PSX Doom.\n"
-        "Frames in between the original 30 FPS keyframes will have movements and rotations interpolated.",
-        gbUncapFramerate,
-        true
-    );
-
     cfg.showPerfCounters = makeConfigField(
         "ShowPerfCounters",
         "If enabled then show performance counters (FPS & frame duration) during gameplay and menus.",
