@@ -15,6 +15,7 @@
 #include "Doom/UI/f_finale.h"
 #include "Doom/UI/in_main.h"
 #include "Doom/UI/loadsave_main.h"
+#include "Doom/UI/st_main.h"
 #include "doomdata.h"
 #include "Endian.h"
 #include "info.h"
@@ -489,8 +490,10 @@ void G_RunGame() noexcept {
         #if PSYDOOM_MODS
             if (gGameAction != ga_restart) {
                 if (ProgArgs::gbRecordDemos && (!bLoadedSaveGame)) {
-                     DemoRecorder::begin();
-                     gbDemoRecording = true;
+                    DemoRecorder::begin();
+                    gbDemoRecording = true;
+                    gStatusBar.message = "Recording started";
+                    gStatusBar.messageTicsLeft = 30;
                 }
 
                 MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);

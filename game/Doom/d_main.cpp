@@ -857,9 +857,19 @@ gameaction_t MiniLoop(
                     const bool bDemoPlaybackFinished = (gbDemoPlayback && DemoPlayer::hasReachedDemoEnd());
 
                     if (bPausedDuringADemo || bExitDemoPlayback || bDemoPlaybackFinished) {
-                        exitAction = ga_exitdemo;
-                        gGameAction = ga_exitdemo;
-                        break;
+                        // If pausing while recording then just end recording and allow gameplay to proceed instead of quitting the game
+                        if (bPausedDuringADemo && gbNetIsGameBeingRecorded) {
+                            if (DemoRecorder::isRecording()) {
+                                DemoRecorder::end();
+                                gStatusBar.message = "Recording ended";
+                                gStatusBar.messageTicsLeft = 30;
+                            }
+                        }
+                        else {
+                            exitAction = ga_exitdemo;
+                            gGameAction = ga_exitdemo;
+                            break;
+                        }
                     }
                 #endif
             }
@@ -905,9 +915,18 @@ gameaction_t MiniLoop(
                 exitAction = ga_exitdemo;
 
                 #if PSYDOOM_MODS
+                    // PsyDoom: if pausing while recording then just end recording and allow gameplay to proceed instead of quitting the game
                     if (gTickInputs[gCurPlayerIndex].fTogglePause()) {
-                        gGameAction = ga_exitdemo;
-                        break;
+                        if (gbDemoRecording) {
+                            DemoRecorder::end();
+                            gbDemoRecording = false;
+                            gStatusBar.message = "Recording ended";
+                            gStatusBar.messageTicsLeft = 30;
+                        } 
+                        else {
+                            gGameAction = ga_exitdemo;
+                            break;
+                        }
                     }
                 #else
                     if (padBtns & PAD_START)
