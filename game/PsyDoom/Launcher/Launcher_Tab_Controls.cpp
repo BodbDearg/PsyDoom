@@ -199,7 +199,7 @@ static void makeInGameActionsAndModifiersSection(const int secLx, const int secR
 // Make the 'Miscellaneous toggles' controls section
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeMiscellaneousTogglesSection(const int secLx, const int secRx, const int secY) noexcept {
-    makeSectionTitleAndBox("Miscellaneous toggles", secLx, secRx, secY, secY + 180);
+    makeSectionTitleAndBox("Miscellaneous toggles", secLx, secRx, secY, secY + 210);
 
     auto& cfg = ConfigSerialization::gConfig_Controls;
     const char* const tooltip = cfg.toggle_pause.comment;
@@ -210,7 +210,8 @@ static void makeMiscellaneousTogglesSection(const int secLx, const int secRx, co
     makeBindingField("Toggle pause", cfg.toggle_pause, tooltip, fieldLx, fieldRx, fieldY);
     makeBindingField("Toggle map", cfg.toggle_map, tooltip, fieldLx, fieldRx, fieldY + 30);
     makeBindingField("Toggle renderer", cfg.toggle_renderer, tooltip, fieldLx, fieldRx, fieldY + 60);
-    makeBindingField("Toggle demo player", cfg.toggle_viewPlayer, tooltip, fieldLx, fieldRx, fieldY + 90);
+    makeBindingField("Toggle uncapped FPS", cfg.toggle_uncappedFps, tooltip, fieldLx, fieldRx, fieldY + 90);
+    makeBindingField("Toggle demo player", cfg.toggle_viewPlayer, tooltip, fieldLx, fieldRx, fieldY + 120);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -330,13 +331,13 @@ void populateControlsTab(Context& ctx) noexcept {
     makeDigitalMoveAndTurnSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 280);
     makeInGameActionsAndModifiersSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 540);
     makeMiscellaneousTogglesSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 860);
-    makeWeaponSwitchingSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 1060);
-    makeMenuAndUIControlsSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 1500);
-    makeAutomapControlsSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 1850);
-    makePSXCheatCodeButtonsSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 2140);
+    makeWeaponSwitchingSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 1090);
+    makeMenuAndUIControlsSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 1530);
+    makeAutomapControlsSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 1880);
+    makePSXCheatCodeButtonsSection(tabRect.lx + 20, tabRect.rx - 30, tabRect.ty + 2170);
     
     // Add a small bit of padding at the end and finish up making the scroll view
-    new Fl_Box(tabRect.lx + 20, tabRect.ty + 2560, 100, 20);
+    new Fl_Box(tabRect.lx + 20, tabRect.ty + 2590, 100, 20);
     pScroll->end();
 }
 
