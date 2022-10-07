@@ -380,6 +380,23 @@ void ST_Drawer() noexcept {
     const uint16_t uiPaletteClutId = Game::getTexPalette_STATUS();
     spritePrim.clut = uiPaletteClutId;
 
+    // PsyDoom: how much to adjust the coordinates of strings to properly left or right align them in widescreen mode (Vulkan renderer only)
+    #if PSYDOOM_MODS
+        int32_t widescreenAdjust = 0;
+
+        #if PSYDOOM_VULKAN_RENDERER
+            if (Video::isUsingVulkanRenderPath() && Config::gbVulkanWidescreenEnabled) {
+                // Compute the extra space/padding at the left and right sides of the screen (in PSX coords) due to widescreen.
+                // This is the same calculation used by the Vulkan renderer in 'VDrawing::computeTransformMatrixForUI'.
+                // Note: need to invert the adjustment for 'ST_DrawRightAlignedStat' since the margin is subtracted.
+                const float xPadding = (VRenderer::gPsxCoordsFbX / VRenderer::gPsxCoordsFbW) * (float) SCREEN_W;
+                widescreenAdjust = (int32_t) -xPadding;
+            }
+        #endif
+    #else
+        const int32_t widescreenAdjust = 0;
+    #endif
+
     // Draw the current status bar message, or the map name (if in the automap)
     player_t& player = gPlayers[gCurPlayerIndex];
 
@@ -582,19 +599,6 @@ void ST_Drawer() noexcept {
         const bool bShowStats = (PlayerPrefs::gStatDisplayMode >= StatDisplayMode::Kills);
 
         if (bShowStats) {
-            // If using the Vulkan renderer, draw then as far as possible to the right, being widescreen aware
-            int32_t widescreenAdjust = 0;
-
-            #if PSYDOOM_VULKAN_RENDERER
-                if (Video::isUsingVulkanRenderPath()) {
-                    // Compute the extra space/padding at the left and right sides of the screen (in PSX coords) due to widescreen.
-                    // This is the same calculation used by the Vulkan renderer in 'VDrawing::computeTransformMatrixForUI'.
-                    // Note: need to invert the adjustment for 'ST_DrawRightAlignedStat' since the margin is subtracted.
-                    const float xPadding = (VRenderer::gPsxCoordsFbX / VRenderer::gPsxCoordsFbW) * (float) SCREEN_W;
-                    widescreenAdjust = (int32_t) -xPadding;
-                }
-            #endif
-
             // Compute the kill, secret and item counts.
             // In co-op games make this a joint count so that both players can see progress towards overall map completion.
             // Note: at the end of a map in co-op players will get an opportunity to see individual counts.
