@@ -334,13 +334,14 @@ static void addLauncherProgramArgs(Context& ctx, std::vector<std::string>& progr
         }
     }
 
-    if (ctx.tab_launcher.pCheck_recordDemos->value() != 0) {
-        programArgs.push_back("-record");
-    }
-
+    // Note: '-playdemo' and '-record' are conflicting arguments.
+    // If playing a demo is specified then don't pass '-record', regardless of the UI toggle state.
     if (demoToPlay.length() > 0) {
         programArgs.push_back("-playdemo");
         programArgs.push_back(demoToPlay);
+    }
+    else if (ctx.tab_launcher.pCheck_recordDemos->value() != 0) {
+        programArgs.push_back("-record");
     }
 }
 

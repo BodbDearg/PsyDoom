@@ -60,7 +60,6 @@ static LoadSaveMenuMode     gMenuMode;                  // What mode the menu is
 static uint8_t              gSlotHighlightPhase;        // Current phase for the slot highlight effect
 static SaveFileInfo         gSaveFiles[5];              // The 5 save file slots
 static int32_t              gFocusedSaveSlot;           // Which save slot is currently focused (-1 if none)
-static char                 gLoadSaveHudMsg[32];        // A buffer to hold a message to display to the HUD when loading and saving
 static bool                 gbLoadSaveOnLevelStart;     // If true then load the currently buffered save on loading the next map
 
 //------------------------------------------------------------------------------------------------------------------------------------------

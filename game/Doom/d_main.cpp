@@ -563,7 +563,7 @@ void I_DrawEnabledPerfCounters() noexcept {
     int32_t widescreenAdjust = 0;
 
     #if PSYDOOM_VULKAN_RENDERER
-        if (Video::isUsingVulkanRenderPath()) {
+        if (Video::isUsingVulkanRenderPath() && Config::gbVulkanWidescreenEnabled) {
             // Compute the extra space/padding at the left and right sides of the screen (in PSX coords) due to widescreen.
             // This is the same calculation used by the Vulkan renderer in 'VDrawing::computeTransformMatrixForUI'.
             const float xPadding = (VRenderer::gPsxCoordsFbX / VRenderer::gPsxCoordsFbW) * (float) SCREEN_W;
