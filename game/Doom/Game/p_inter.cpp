@@ -955,11 +955,17 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
 
     // Do adjustments to damage for the player based on skill and special faces due to damage
     player_t* const pTargetPlayer = target.player;
+
     player_t& curPlayer = gPlayers[gCurPlayerIndex];
 
     int32_t damageAmt = baseDamageAmt;
 
     if (pTargetPlayer) {
+        // Ignore if friendly fire
+        const bool friendlyFire = (pSource && pSource->player) && (pTargetPlayer != pSource->player);
+        if (Game::gSettings.bNoFriendlyFire && (gNetGame == gt_coop) && friendlyFire)
+            return;
+
         // In the lowest skill mode only half damage is applied
         if (gGameSkill == sk_baby) {
             damageAmt = d_rshift<1>(damageAmt);

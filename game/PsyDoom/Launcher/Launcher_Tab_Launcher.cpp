@@ -14,6 +14,7 @@
 #include "PsyDoom/Config/ConfigSerialization_Game.h"
 #include "PsyDoom/Config/ConfigSerialization_Graphics.h"
 #include "PsyDoom/Config/ConfigSerialization_Input.h"
+#include "PsyDoom/Config/ConfigSerialization_Multiplayer.h"
 #include "PsyDoom/Utils.h"
 
 BEGIN_DISABLE_HEADER_WARNINGS
@@ -79,6 +80,11 @@ static void doConfirmResetConfig(Context& ctx) noexcept {
             cfgName = "Cheats";
             cfgFieldList = ConfigSerialization::gConfig_Cheats.getFieldList();
             pbConfigNeedsSaveFlag = &Config::gbNeedSave_Cheats;
+            break;
+        case 6:
+            cfgName = "Multiplayer";
+            cfgFieldList = ConfigSerialization::gConfig_Multiplayer.getFieldList();
+            pbConfigNeedsSaveFlag = &Config::gbNeedSave_Multiplayer;
             break;
     }
 

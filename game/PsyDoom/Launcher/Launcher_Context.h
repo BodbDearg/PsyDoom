@@ -119,6 +119,13 @@ struct Tab_Cheats {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Holds widgets and state for the 'Multiplayer' tab
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct Tab_Multiplayer {
+    Fl_Group*       pTab;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Holds widgets of interest and state for the launcher
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct Context {
@@ -131,6 +138,7 @@ struct Context {
     Tab_Controls                    tab_controls;
     Tab_Audio                       tab_audio;
     Tab_Cheats                      tab_cheats;
+    Tab_Multiplayer                 tab_multiplayer;
     LauncherResult                  launcherResult;
     std::string                     demoFileToPlay;     // If non empty: path to a demo file to play
 };

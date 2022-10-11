@@ -90,6 +90,12 @@ extern float        gGamepadTurnSpeed_Low;
 extern float        gAnalogToDigitalThreshold;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Multiplayer settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+extern bool             gbNoFriendlyFire;
+extern int32_t          gFragLimit;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Cheat settings
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -131,6 +137,7 @@ extern bool     gbNeedSave_Controls;
 extern bool     gbNeedSave_Game;
 extern bool     gbNeedSave_Graphics;
 extern bool     gbNeedSave_Input;
+extern bool     gbNeedSave_Multiplayer;
 
 void init() noexcept;
 void shutdown() noexcept;
