@@ -392,12 +392,6 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
         if (pShootMobj->flags & MF_NOBLOOD) {
             P_SpawnPuff(shootX, shootY, gShootZ);
         } else {
-            // Spawn puff for friendly fire
-            const bool ignoreFriendlyFire = (gNetGame == gt_coop) && Game::gSettings.bNoFriendlyFire;
-            if (ignoreFriendlyFire && gpShooter->player && pShootMobj->player) {
-                P_SpawnPuff(shootX, shootY, gShootZ);
-                return;
-            }
             P_SpawnBlood(shootX, shootY, gShootZ, damage);
         }
 
