@@ -13,10 +13,12 @@
 #include "p_ceiling.h"
 #include "p_doors.h"
 #include "p_floor.h"
+#include "g_game.h"
 #include "p_lights.h"
 #include "p_plats.h"
 #include "p_setup.h"
 #include "p_spec.h"
+#include "PsyDoom/Game.h"
 #include "PsyDoom/ParserTokenizer.h"
 #include "PsyDoom/ScriptingEngine.h"
 
@@ -660,6 +662,10 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
 
         // Exit level
         case 11: {
+            if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled) {
+                mobj.player->message = "Level exits are disabled.";
+                break;
+            }
             G_ExitLevel();
             P_ChangeSwitchTexture(line, false);
         }   break;
@@ -736,6 +742,10 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
 
         // Secret exit
         case 51: {
+            if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled) {
+                mobj.player->message = "Level exits are disabled.";
+                break;
+            }
             G_SecretExitLevel(line.tag);
             P_ChangeSwitchTexture(line, false);
         }   break;

@@ -27,6 +27,14 @@ void initCfgSerialization_Multiplayer() noexcept {
         true
     );
 
+        cfg.exitDisabled = makeConfigField(
+        "ExitDisabled",
+        "Disables exit switches. (Note: If frag limit is less than 1, you will\n"
+        "not be able to leave the level without quitting.\n",
+        gbExitDisabled,
+        false
+    );
+
     cfg.fragLimit = makeConfigField(
         "FragLimit",
         "Set Frag limit for death-match. Level will exit when limit is reached.\n"

@@ -234,6 +234,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bEnableMapPatches_GamePlay     = Config::gbEnableMapPatches_GamePlay;
     settings.bNoFriendlyFire                = Config::gbNoFriendlyFire;
     settings.fragLimit                      = Config::gFragLimit;
+    settings.bExitDisabled                  = Config::gbExitDisabled;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game

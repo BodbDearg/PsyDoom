@@ -12,6 +12,7 @@ BEGIN_NAMESPACE(ConfigSerialization)
 struct Config_Multiplayer {
     ConfigField     noFriendlyFire;
     ConfigField     fragLimit;
+    ConfigField     exitDisabled;
 
     inline ConfigFieldList getFieldList() noexcept {
         static_assert(sizeof(*this) % sizeof(ConfigField) == 0);
