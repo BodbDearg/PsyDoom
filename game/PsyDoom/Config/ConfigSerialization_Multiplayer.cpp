@@ -22,15 +22,15 @@ void initCfgSerialization_Multiplayer() noexcept {
 
     cfg.noFriendlyFire = makeConfigField(
         "NoFriendlyFire",
-        "Players to not take damage from other players when playing coop.",
+        "Players will not take damage from other players when playing coop.",
         gbNoFriendlyFire,
         true
     );
 
         cfg.exitDisabled = makeConfigField(
         "ExitDisabled",
-        "Disables exit switches. (Note: If frag limit is less than 1, you will\n"
-        "not be able to leave the level without quitting.\n",
+        "Disables exit switches.\n"
+        "(Note: If frag limit is less than 1, exits will not be disabled.\n",
         gbExitDisabled,
         false
     );

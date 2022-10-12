@@ -906,7 +906,7 @@ void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept {
 
         // Check if frag limit has been hit for deathmatch
         const int32_t fragLimit = Game::gSettings.fragLimit;
-        if ((gNetGame == gt_deathmatch) && (fragLimit && fragLimit > 0)) {
+        if ((gNetGame == gt_deathmatch) && (fragLimit)) {
             if ((gPlayers[0].frags >= fragLimit) || (gPlayers[1].frags >= fragLimit)) {
                 G_ExitLevel();
             }
