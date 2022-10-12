@@ -903,6 +903,14 @@ void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept {
 
         gDeadPlayerMobjRemovalQueue[gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS] = &target;
         gDeadPlayerRemovalQueueIdx++;
+
+        // Check if frag limit has been hit for deathmatch
+        const int32_t fragLimit = Game::gSettings.fragLimit;
+        if ((gNetGame == gt_deathmatch) && (fragLimit && fragLimit > 0)) {
+            if ((gPlayers[0].frags >= fragLimit) || (gPlayers[1].frags >= fragLimit)) {
+                G_ExitLevel();
+            }
+        }
     }
 
     // Monster gib triggering: trigger if end health is less than the negative amount of starting health
