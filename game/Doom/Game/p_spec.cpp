@@ -761,6 +761,13 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
 
         // Exit the level (regular)
         case 52:
+            #if PSYDOOM_MODS
+                if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled && Game::gSettings.fragLimit > 0) {
+                    mobj.player->message = "Exits are disabled.";
+                    S_StartSound(&mobj, sfx_getpow);
+                    break;
+                }
+            #endif // #if PSYDOOM_MODS
             G_ExitLevel();
             line.special = 0;
             break;
@@ -845,6 +852,13 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
 
         // Secret exit
         case 124:
+            #if PSYDOOM_MODS
+                if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled && Game::gSettings.fragLimit > 0) {
+                    mobj.player->message = "Exits are disabled.";
+                    S_StartSound(&mobj, sfx_getpow);
+                    break;
+                }
+            #endif // #if PSYDOOM_MODS
             G_SecretExitLevel(line.tag);
             break;
 

@@ -662,10 +662,13 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
 
         // Exit level
         case 11: {
-            if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled) {
-                mobj.player->message = "Level exits are disabled.";
-                break;
-            }
+            #if PSYDOOM_MODS
+                if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled && Game::gSettings.fragLimit > 0) {
+                    mobj.player->message = "Exits are disabled.";
+                    S_StartSound(&mobj, sfx_oof);
+                    break;
+                }
+            #endif  // #if PSYDOOM_MODS
             G_ExitLevel();
             P_ChangeSwitchTexture(line, false);
         }   break;
@@ -742,10 +745,13 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
 
         // Secret exit
         case 51: {
-            if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled) {
-                mobj.player->message = "Level exits are disabled.";
-                break;
-            }
+            #if PSYDOOM_MODS
+                if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled && Game::gSettings.fragLimit > 0) {
+                    mobj.player->message = "Exits are disabled.";
+                    S_StartSound(&mobj, sfx_oof);
+                    break;
+                }
+            #endif // #if PSYDOOM_MODS
             G_SecretExitLevel(line.tag);
             P_ChangeSwitchTexture(line, false);
         }   break;

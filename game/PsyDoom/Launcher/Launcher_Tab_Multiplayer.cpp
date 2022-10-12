@@ -53,7 +53,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
 
         // Disable Exit Switch
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Disable Exit Switches");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Disable Exits");
         bindConfigField<Config::gbExitDisabled, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.exitDisabled.comment);
     }

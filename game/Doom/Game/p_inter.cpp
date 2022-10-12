@@ -906,7 +906,7 @@ void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept {
 
         // Check if frag limit has been hit for deathmatch
         const int32_t fragLimit = Game::gSettings.fragLimit;
-        if ((gNetGame == gt_deathmatch) && (fragLimit && fragLimit > 0)) {
+        if ((gNetGame == gt_deathmatch) && (fragLimit > 0)) {
             if ((gPlayers[0].frags >= fragLimit) || (gPlayers[1].frags >= fragLimit)) {
                 G_ExitLevel();
             }
@@ -1019,6 +1019,7 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
 
     // Player specific logic
     if (pTargetPlayer) {
+        #if PSYDOOM_MODS
         // Ignore all damage (except barrel explosion) if friendly fire
         const bool playerToPlayerDmg = (pSource && pSource->player) && (pTargetPlayer != pSource->player);
         const bool noFriendlyFire = Game::gSettings.bNoFriendlyFire && (gNetGame == gt_coop);
@@ -1026,7 +1027,6 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
             return;
         }
         // PsyDoom: is the damaged player a 'Voodoo doll' of a real player?
-        #if PSYDOOM_MODS
             const bool bIsVoodooDoll = (pTargetPlayer->mo != &target);
         #endif
 

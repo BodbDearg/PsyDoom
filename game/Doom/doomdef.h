@@ -424,7 +424,7 @@ struct player_t {
     int32_t         powers[NUMPOWERS];              // How many ticks left for each power
     bool            cards[NUMCARDS];                // Which keycards the player has
     bool            backpack;                       // True if the player has a backpack
-    uint32_t        frags;                          // Player's frag count for deathmatch games
+    int32_t         frags;                          // Player's frag count for deathmatch games
     uint32_t        _unused;                        // An unknown/unused field: can't tell what it is for because there are no uses of it :(
     weapontype_t    readyweapon;                    // The currently equipped weapon
     weapontype_t    pendingweapon;                  // The weapon to equip next or 'wp_nochange' if no weapon change is pending
