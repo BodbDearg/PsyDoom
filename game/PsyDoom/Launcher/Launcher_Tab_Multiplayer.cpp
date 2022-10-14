@@ -77,7 +77,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
 
         // Frag limit
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 40, 140, 26, "Frag Limit");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 50, 140, 26, "Frag Limit");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Multiplayer.fragLimit.comment);
 
@@ -88,7 +88,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
 
         // Time limit
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 70, 140, 26, "Time Limit");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 80, 140, 26, "Time Limit (minutes)");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Multiplayer.timeLimit.comment);
 
@@ -99,7 +99,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
 
         // Disable Exit Switch
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 150, 30, "  Disable Exits");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 110, 150, 30, "  Disable Exits");
         bindConfigField<Config::gbExitDisabled, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.exitDisabled.comment);
     }
