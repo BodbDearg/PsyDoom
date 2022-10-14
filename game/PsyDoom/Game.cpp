@@ -237,6 +237,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bExitDisabled                  = Config::gbExitDisabled;
     settings.timeLimit                      = Config::gTimeLimit;
     settings.preserveAmmoFactor             = Config::gPreserveAmmoFactor;
+    settings.bPreserveKeys                  = Config::gbPreserveKeys;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game

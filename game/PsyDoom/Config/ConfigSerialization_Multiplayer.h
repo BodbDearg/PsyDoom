@@ -15,6 +15,7 @@ struct Config_Multiplayer {
     ConfigField     exitDisabled;
     ConfigField     timeLimit;
     ConfigField     preserveAmmoFactor;
+    ConfigField     preserveKeys;
 
     inline ConfigFieldList getFieldList() noexcept {
         static_assert(sizeof(*this) % sizeof(ConfigField) == 0);

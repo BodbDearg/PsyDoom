@@ -97,6 +97,7 @@ extern bool             gbExitDisabled;
 extern int32_t          gFragLimit;
 extern int32_t          gTimeLimit;
 extern int32_t          gPreserveAmmoFactor;
+extern bool             gbPreserveKeys;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cheat settings

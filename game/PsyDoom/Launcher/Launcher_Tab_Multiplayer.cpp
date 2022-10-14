@@ -23,7 +23,7 @@ BEGIN_NAMESPACE(Launcher)
 static void makeCoopSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 300, 30, "Cooperative");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 340, 120, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 336, 120, "");
     
         // Friendly fire toggle
     {
@@ -32,13 +32,20 @@ static void makeCoopSection(const int x, const int y) noexcept {
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.noFriendlyFire.comment);
     }
 
+        // Preserve keys on respawn
+    {
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Preserve Keys on Respawn");
+        bindConfigField<Config::gbPreserveKeys, Config::gbNeedSave_Multiplayer>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.preserveKeys.comment);
+    }
+
         // Preserve ammo on respawn
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 70, 120, 26, "Preserve Ammo on Respawn");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 100, 120, 26, "Preserve Ammo on Respawn");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Multiplayer.preserveAmmoFactor.comment);
 
-        const auto pChoice = new Fl_Choice(x + 210, y + 70, 100, 26);
+        const auto pChoice = new Fl_Choice(x + 210, y + 100, 100, 26);
         pChoice->add("None");
         pChoice->add("All");
         pChoice->add("Half");
@@ -73,7 +80,7 @@ static void makeCoopSection(const int x, const int y) noexcept {
 static void makeDeathmatchSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 300, 30, "Deathmatch");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 340, 120, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 336, 120, "");
 
         // Frag limit
     {
@@ -81,7 +88,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Multiplayer.fragLimit.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 200, y + 40, 110, 26);
+        const auto pInput = new Fl_Int_Input(x + 200, y + 50, 110, 26);
         bindConfigField<Config::gFragLimit, Config::gbNeedSave_Multiplayer>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
@@ -92,7 +99,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Multiplayer.timeLimit.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 200, y + 70, 110, 26);
+        const auto pInput = new Fl_Int_Input(x + 200, y + 80, 110, 26);
         bindConfigField<Config::gTimeLimit, Config::gbNeedSave_Multiplayer>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
@@ -114,8 +121,8 @@ void populateMultiplayerTab(Context& ctx) noexcept {
     ASSERT(Fl_Group::current() == tab.pTab);
 
     const RectExtents tabRect = getRectExtents(*tab.pTab);
-    makeCoopSection((tabRect.lx + tabRect.rx) / 2 - 170, tabRect.ty + 20);
-    makeDeathmatchSection((tabRect.lx + tabRect.rx) / 2 - 170, tabRect.ty + 190);
+    makeCoopSection((tabRect.lx + tabRect.rx) / 2 - 168, tabRect.ty + 20);
+    makeDeathmatchSection((tabRect.lx + tabRect.rx) / 2 - 168, tabRect.ty + 190);
 }
 
 END_NAMESPACE(Launcher)

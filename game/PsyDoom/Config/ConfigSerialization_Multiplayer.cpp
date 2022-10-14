@@ -27,6 +27,13 @@ void initCfgSerialization_Multiplayer() noexcept {
         false
     );
 
+    cfg.preserveKeys = makeConfigField(
+        "PreserveKeys",
+        "Upon death, user retains previously collected keys",
+        gbPreserveKeys,
+        false
+    );
+
         cfg.exitDisabled = makeConfigField(
         "ExitDisabled",
         "Prevents exiting the level when playing deathmatch.\n"

@@ -127,6 +127,7 @@ bool        gbExitDisabled;
 int32_t     gFragLimit;
 int32_t     gTimeLimit;
 int32_t     gPreserveAmmoFactor;
+bool        gbPreserveKeys;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Config dynamic defaults: these can change depending on the host environment

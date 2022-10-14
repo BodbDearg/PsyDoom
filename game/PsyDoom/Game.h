@@ -65,6 +65,7 @@ struct GameSettings {
     int32_t     bExitDisabled;                  // If true while playing deathmatch, exit will display message and do nothing. 
     int32_t     timeLimit;                      // If true while playing deathmatch, time will display in upper left and map will exit when it reaches 0.
     int32_t     preserveAmmoFactor;             // How much ammo a player keeps after dying in co-op. 0 = none | 1 = all | 2 = half
+    int32_t     bPreserveKeys;                  // If true while playing co-op a player will spawn with previously collected keys.
 
     // Byte swapping for Endian correction
     void byteSwap() noexcept;

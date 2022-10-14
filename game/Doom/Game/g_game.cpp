@@ -215,15 +215,32 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
         int32_t setShell = 0;
         int32_t setMisl = 0;
         int32_t setCell = 0;
+        bool setBlueCard = false;
+        bool setBlueSkull = false;
+        bool setYellowCard = false;
+        bool setYellowSkull = false;
+        bool setRedCard = false;
+        bool setRedSkull = false;
 
-        // Preserve from ammo and backpack from death if co-op and setting is toggled
+        // Preserve from ammo, keys, and backpack from death if co-op and setting is toggled
         if (gNetGame == gt_coop && Game::gSettings.preserveAmmoFactor) {
-            const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
-            spawnWithBackpack = player.backpack;
-            setClip = player.ammo[am_clip] / preserveAmmoFactor;
-            setShell = player.ammo[am_shell] / preserveAmmoFactor;
-            setMisl = player.ammo[am_misl] / preserveAmmoFactor;
-            setCell = player.ammo[am_cell] / preserveAmmoFactor;
+            if (Game::gSettings.preserveAmmoFactor) {
+                const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
+                spawnWithBackpack = player.backpack;
+                setClip = player.ammo[am_clip] / preserveAmmoFactor;
+                setShell = player.ammo[am_shell] / preserveAmmoFactor;
+                setMisl = player.ammo[am_misl] / preserveAmmoFactor;
+                setCell = player.ammo[am_cell] / preserveAmmoFactor;
+            }
+
+            // if (Game::gSettings.bPreserveKeys) {
+                setBlueCard = player.cards[it_bluecard];
+                setBlueSkull = player.cards[it_blueskull];
+                setYellowCard = player.cards[it_yellowcard];
+                setYellowSkull = player.cards[it_yellowskull];
+                setRedCard = player.cards[it_redcard];
+                setRedSkull = player.cards[it_redskull];
+            // }
         }
 
     #endif
@@ -268,6 +285,12 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
             player.ammo[am_shell] = setShell;
             player.ammo[am_misl] = setMisl;
             player.ammo[am_cell] = setCell;
+            player.cards[it_bluecard] = setBlueCard;
+            player.cards[it_blueskull] = setBlueSkull;
+            player.cards[it_yellowcard] = setYellowCard;
+            player.cards[it_yellowskull] = setYellowSkull;
+            player.cards[it_redcard] = setRedCard;
+            player.cards[it_redskull] = setRedSkull;
         }
     #endif
 }
