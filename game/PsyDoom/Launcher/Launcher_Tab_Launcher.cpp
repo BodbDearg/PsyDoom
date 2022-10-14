@@ -459,6 +459,7 @@ static void makeToolsSection(Context& ctx, const int x, const int y) noexcept {
     tab.pChoice_resetCfgType->add("Controls");
     tab.pChoice_resetCfgType->add("Audio");
     tab.pChoice_resetCfgType->add("Cheats");
+    tab.pChoice_resetCfgType->add("Multiplayer");
     tab.pChoice_resetCfgType->value(0);
 
     const auto pButton_resetCfg = new Fl_Button(x + 170, y + 160, 100, 30, "Reset");
