@@ -125,6 +125,8 @@ CheatKeySequence gCheatKeys_NoTarget;
 bool        gbNoFriendlyFire;
 bool        gbExitDisabled;
 int32_t     gFragLimit;
+int32_t     gTimeLimit;
+int32_t     gPreserveAmmoFactor;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Config dynamic defaults: these can change depending on the host environment
