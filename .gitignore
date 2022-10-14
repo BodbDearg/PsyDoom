@@ -4,3 +4,4 @@ build
 # QTCreator user project file
 /CMakeLists.txt.user*
 
+.dccache

@@ -633,8 +633,8 @@ void ST_Drawer() noexcept {
         }
 
         // PsyDoom: draw countdown timer for deathmatch, if enabled:
-        // if ((timeLimitMins > 0) && (gNetGame == gt_deathmatch)) {
-            int32_t timeLimitMins = 1;   // This is the time that will be specified in the launcher. Used for testing.
+        if ((gNetGame == gt_deathmatch) && (Game::gSettings.timeLimit > 0)) {
+            int32_t timeLimitMins = Game::gSettings.timeLimit;   // This is the time that will be specified in the launcher. Used for testing.
 
             // Convert time limit from minutes to seconds
             int32_t timeLimitSecs = timeLimitMins * 60;
@@ -646,6 +646,7 @@ void ST_Drawer() noexcept {
             // Exit the level once the timer has reached zero
             if (minutes <= 0 && seconds <= 0) {
                 G_ExitLevel();
+                return;
             }
 
             // Format the timer string
@@ -659,7 +660,7 @@ void ST_Drawer() noexcept {
             else {
                 I_DrawStringSmall(2 + widescreenAdjust, 2, timerString, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
             }
-        // }
+        }
     #endif  // #if PSYDOOM_MODS
 
     // Draw the paused overlay, level warp and vram viewer

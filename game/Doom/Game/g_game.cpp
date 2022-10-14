@@ -208,6 +208,24 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
 
     #if PSYDOOM_MODS
         const uint32_t cheatFlags = player.cheats;      // PsyDoom: preserve cheats on level warping
+        
+        // PsyDoom: set defaults
+        bool spawnWithBackpack = false;
+        int32_t setClip = 0;
+        int32_t setShell = 0;
+        int32_t setMisl = 0;
+        int32_t setCell = 0;
+
+        // Preserve from ammo and backpack from death if co-op and setting is toggled
+        if (gNetGame == gt_coop && Game::gSettings.preserveAmmoFactor) {
+            const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
+            spawnWithBackpack = player.backpack;
+            setClip = player.ammo[am_clip] / preserveAmmoFactor;
+            setShell = player.ammo[am_shell] / preserveAmmoFactor;
+            setMisl = player.ammo[am_misl] / preserveAmmoFactor;
+            setCell = player.ammo[am_cell] / preserveAmmoFactor;
+        }
+
     #endif
 
     D_memset(&player, std::byte(0), sizeof(player_t));
@@ -229,10 +247,28 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
 
     for (int32_t ammoIdx = 0; ammoIdx < NUMAMMO; ++ammoIdx) {
         player.maxammo[ammoIdx] = gMaxAmmo[ammoIdx];
+        #if PSYDOOM_MODS
+            // Add backpack if co-op, setting was toggled, and died with backpack
+            if (spawnWithBackpack) {
+                player.maxammo[ammoIdx] = gMaxAmmo[ammoIdx] * 2;
+            }
+        #endif
     }
 
     #if PSYDOOM_MODS
         player.cheats = cheatFlags;     // PsyDoom: preserve cheats on level warping
+
+        // Set using preserved settings
+        if (gNetGame == gt_coop) {
+            player.backpack = spawnWithBackpack;
+            // Player must start with at least 50 ammo for pistol
+            if (setClip > 50) {
+                player.ammo[am_clip] = setClip;
+            }
+            player.ammo[am_shell] = setShell;
+            player.ammo[am_misl] = setMisl;
+            player.ammo[am_cell] = setCell;
+        }
     #endif
 }
 
