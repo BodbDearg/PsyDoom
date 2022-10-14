@@ -233,14 +233,14 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
                 setCell = player.ammo[am_cell] / preserveAmmoFactor;
             }
 
-            // if (Game::gSettings.bPreserveKeys) {
+            if (Game::gSettings.bPreserveKeys) {
                 setBlueCard = player.cards[it_bluecard];
                 setBlueSkull = player.cards[it_blueskull];
                 setYellowCard = player.cards[it_yellowcard];
                 setYellowSkull = player.cards[it_yellowskull];
                 setRedCard = player.cards[it_redcard];
                 setRedSkull = player.cards[it_redskull];
-            // }
+            }
         }
 
     #endif
