@@ -223,7 +223,7 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
         bool setRedSkull = false;
 
         // Preserve from ammo, keys, and backpack from death if co-op and setting is toggled
-        if (gNetGame == gt_coop && Game::gSettings.preserveAmmoFactor) {
+        if (gNetGame == gt_coop) {
             if (Game::gSettings.preserveAmmoFactor) {
                 const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
                 spawnWithBackpack = player.backpack;
