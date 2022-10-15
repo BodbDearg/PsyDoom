@@ -633,34 +633,34 @@ void ST_Drawer() noexcept {
         }
 
         // PsyDoom: draw countdown timer for deathmatch, if enabled:
-        if ((gNetGame == gt_deathmatch) && (Game::gSettings.timeLimit > 0)) {
-            int32_t timeLimitMins = Game::gSettings.timeLimit;   // This is the time that will be specified in the launcher. Used for testing.
+        // if ((gNetGame == gt_deathmatch) && (Game::gSettings.timeLimit > 0)) {
+        //     int32_t timeLimitMins = Game::gSettings.timeLimit;   // This is the time that will be specified in the launcher. Used for testing.
 
-            // Convert time limit from minutes to seconds
-            int32_t timeLimitSecs = timeLimitMins * 60;
+        //     // Convert time limit from minutes to seconds
+        //     int32_t timeLimitSecs = timeLimitMins * 60;
 
-            // Get the components of time remaining
-            int32_t seconds = timeLimitSecs - ((int32_t)Game::getLevelElapsedTimeMicrosecs() / 1000000);
-            int32_t minutes = seconds / 60; seconds %= 60;
+        //     // Get the components of time remaining
+        //     int32_t seconds = timeLimitSecs - ((int32_t)Game::getLevelElapsedTimeMicrosecs() / 1000000);
+        //     int32_t minutes = seconds / 60; seconds %= 60;
 
-            // Exit the level once the timer has reached zero
-            if (minutes <= 0 && seconds <= 0) {
-                G_ExitLevel();
-                return;
-            }
+        //     // Exit the level once the timer has reached zero
+        //     if (minutes <= 0 && seconds <= 0) {
+        //         G_ExitLevel();
+        //         return;
+        //     }
 
-            // Format the timer string
-            char timerString[256];
-            std::snprintf(timerString, C_ARRAY_SIZE(timerString), "%d:%02d", minutes, seconds);
+        //     // Format the timer string
+        //     char timerString[256];
+        //     std::snprintf(timerString, C_ARRAY_SIZE(timerString), "%d:%02d", minutes, seconds);
 
-            // Show the timer on the screen (move down if perf counters are enabled)
-            if (Config::gbShowPerfCounters) {
-                I_DrawStringSmall(2 + widescreenAdjust, 18, timerString, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
-            }
-            else {
-                I_DrawStringSmall(2 + widescreenAdjust, 2, timerString, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
-            }
-        }
+        //     // Show the timer on the screen (move down if perf counters are enabled)
+        //     if (Config::gbShowPerfCounters) {
+        //         I_DrawStringSmall(2 + widescreenAdjust, 18, timerString, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+        //     }
+        //     else {
+        //         I_DrawStringSmall(2 + widescreenAdjust, 2, timerString, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+        //     }
+        // }
     #endif  // #if PSYDOOM_MODS
 
     // Draw the paused overlay, level warp and vram viewer
