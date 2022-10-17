@@ -224,8 +224,8 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
 
         // Preserve from ammo, keys, and backpack from death if co-op and setting is toggled
         if (gNetGame == gt_coop) {
-            if (Game::gSettings.preserveAmmoFactor) {
-                const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
+            const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
+            if ((preserveAmmoFactor > 0) && (preserveAmmoFactor <= 2)) {
                 spawnWithBackpack = player.backpack;
                 setClip = player.ammo[am_clip] / preserveAmmoFactor;
                 setShell = player.ammo[am_shell] / preserveAmmoFactor;
