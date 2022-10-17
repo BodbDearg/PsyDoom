@@ -22,7 +22,8 @@ void initCfgSerialization_Multiplayer() noexcept {
 
     cfg.noFriendlyFire = makeConfigField(
         "NoFriendlyFire",
-        "Players will not take damage from other players when playing co-op.",
+        "Players will not take damage from other players when playing co-op.\n"
+        "Note: players can still take damage from nearby exploding barrels.",
         gbNoFriendlyFire,
         false
     );

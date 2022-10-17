@@ -22,7 +22,7 @@ BEGIN_NAMESPACE(Launcher)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeCoopSection(const int x, const int y) noexcept {
     // Container frame
-    new Fl_Box(FL_NO_BOX, x, y, 300, 30, "Cooperative");
+    new Fl_Box(FL_NO_BOX, x, y, 336, 30, "Cooperative");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 336, 120, "");
     
         // Friendly fire toggle
@@ -79,7 +79,7 @@ static void makeCoopSection(const int x, const int y) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeDeathmatchSection(const int x, const int y) noexcept {
     // Container frame
-    new Fl_Box(FL_NO_BOX, x, y, 300, 30, "Deathmatch");
+    new Fl_Box(FL_NO_BOX, x, y, 336, 30, "Deathmatch");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 336, 100, "");
 
         // Frag limit

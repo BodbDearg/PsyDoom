@@ -123,7 +123,7 @@ texture_t gTex_CONNECT;
 
     // The current network protocol version.
     // Should be incremented whenever the data format being transmitted changes, or when updates might cause differences in game behavior.
-    static constexpr int32_t NET_PROTOCOL_VERSION = 28;
+    static constexpr int32_t NET_PROTOCOL_VERSION = 29;
 
     // Previous game error checking value when we last sent to the other player.
     // Have to store this because we always send 1 packet ahead for the next frame.
