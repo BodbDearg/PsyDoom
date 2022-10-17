@@ -284,12 +284,12 @@ void writeAllConfigFiles(const bool bWriteUnchangedConfig) noexcept {
         }
     };
 
-    maybeWriteConfig(CFG_FILE_AUDIO,    gConfig_Audio.getFieldList(),    Config::gbNeedSave_Audio,    nullptr);
-    maybeWriteConfig(CFG_FILE_CHEATS,   gConfig_Cheats.getFieldList(),   Config::gbNeedSave_Cheats,   nullptr);
-    maybeWriteConfig(CFG_FILE_CONTROLS, gConfig_Controls.getFieldList(), Config::gbNeedSave_Controls, CONTROL_BINDINGS_INI_HEADER);
-    maybeWriteConfig(CFG_FILE_GAME,     gConfig_Game.getFieldList(),     Config::gbNeedSave_Game,     nullptr);
-    maybeWriteConfig(CFG_FILE_GRAPHICS, gConfig_Graphics.getFieldList(), Config::gbNeedSave_Graphics, nullptr);
-    maybeWriteConfig(CFG_FILE_INPUT,    gConfig_Input.getFieldList(),    Config::gbNeedSave_Input,    nullptr);
+    maybeWriteConfig(CFG_FILE_AUDIO,       gConfig_Audio.getFieldList(),       Config::gbNeedSave_Audio,       nullptr);
+    maybeWriteConfig(CFG_FILE_CHEATS,      gConfig_Cheats.getFieldList(),      Config::gbNeedSave_Cheats,      nullptr);
+    maybeWriteConfig(CFG_FILE_CONTROLS,    gConfig_Controls.getFieldList(),    Config::gbNeedSave_Controls,    CONTROL_BINDINGS_INI_HEADER);
+    maybeWriteConfig(CFG_FILE_GAME,        gConfig_Game.getFieldList(),        Config::gbNeedSave_Game,        nullptr);
+    maybeWriteConfig(CFG_FILE_GRAPHICS,    gConfig_Graphics.getFieldList(),    Config::gbNeedSave_Graphics,    nullptr);
+    maybeWriteConfig(CFG_FILE_INPUT,       gConfig_Input.getFieldList(),       Config::gbNeedSave_Input,       nullptr);
     maybeWriteConfig(CFG_FILE_MULTIPLAYER, gConfig_Multiplayer.getFieldList(), Config::gbNeedSave_Multiplayer, nullptr);
 }
 

@@ -13,7 +13,6 @@ struct Config_Multiplayer {
     ConfigField     noFriendlyFire;
     ConfigField     fragLimit;
     ConfigField     exitDisabled;
-    ConfigField     timeLimit;
     ConfigField     preserveAmmoFactor;
     ConfigField     preserveKeys;
 

@@ -29,7 +29,7 @@ void initCfgSerialization_Multiplayer() noexcept {
 
     cfg.preserveKeys = makeConfigField(
         "PreserveKeys",
-        "Upon death, user retains previously collected keys",
+        "Players retain previously collected keys when respawning.",
         gbPreserveKeys,
         false
     );
@@ -50,22 +50,14 @@ void initCfgSerialization_Multiplayer() noexcept {
         0
     );
 
-    cfg.timeLimit = makeConfigField(
-        "TimeLimit",
-        "Sets a time limit for deathmatch. Level will exit when the time reaches 0.\n"
-        "0 = disabled",
-        gTimeLimit,
-        0
-    );
-
     cfg.preserveAmmoFactor = makeConfigField(
         "PreserveAmmoFactor",
         "Determines whether a player keeps collected ammo and backpack when respawning after death.\n"
         "\n"
         "Allowed values:\n"
-        " - None: Lose all ammo and backpack. This is the default (0)\n"
-        " - All: Retain all ammo and keep backpack. Bullets restored to at least 50 (1)\n"
-        " - Half: Reatain half ammo and keep backpack. Bullets restored  to at least 50 (2)",
+        " - None: Lose all ammo and backpack; bullets restored to 50 (0) (default setting)\n"
+        " - All: Retain all ammo and keep backpack; bullets restored to at least 50 (1)\n"
+        " - Half: Retain half ammo and keep backpack; bullets restored to at least 50 (2)",
         gPreserveAmmoFactor,
         0
     );

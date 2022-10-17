@@ -235,7 +235,6 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bNoFriendlyFire                = Config::gbNoFriendlyFire;
     settings.fragLimit                      = Config::gFragLimit;
     settings.bExitDisabled                  = Config::gbExitDisabled;
-    settings.timeLimit                      = Config::gTimeLimit;
     settings.preserveAmmoFactor             = Config::gPreserveAmmoFactor;
     settings.bPreserveKeys                  = Config::gbPreserveKeys;
 
