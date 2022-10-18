@@ -223,7 +223,8 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
         bool setRedSkull = false;
 
         // Preserve from ammo, keys, and backpack from death if co-op and setting is toggled
-        if (gNetGame == gt_coop) {
+        // This is ignored if advancing to next level and 'Force Pistol Start' is true
+        if (gNetGame == gt_coop && player.playerstate == PST_REBORN) {
             const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
             if ((preserveAmmoFactor > 0) && (preserveAmmoFactor <= 2)) {
                 spawnWithBackpack = player.backpack;
@@ -275,7 +276,7 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
     #if PSYDOOM_MODS
         player.cheats = cheatFlags;     // PsyDoom: preserve cheats on level warping
 
-        // Set using preserved settings
+        // Set using preserved state
         if (gNetGame == gt_coop) {
             player.backpack = spawnWithBackpack;
             // Player must start with at least 50 ammo for pistol
