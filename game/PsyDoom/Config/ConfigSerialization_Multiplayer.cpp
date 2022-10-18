@@ -35,7 +35,7 @@ void initCfgSerialization_Multiplayer() noexcept {
         false
     );
 
-        cfg.exitDisabled = makeConfigField(
+    cfg.exitDisabled = makeConfigField(
         "ExitDisabled",
         "Prevents exiting the level when playing deathmatch.\n"
         "Note: if frag limit is less than 1, exits will not be disabled.",

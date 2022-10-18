@@ -60,13 +60,13 @@ static void makeCoopSection(const int x, const int y) noexcept {
                     case 2: Config::gPreserveAmmoFactor = 2; break;
                 }
 
-                Config::gbNeedSave_Game = true;
+                Config::gbNeedSave_Multiplayer = true;
             }
         );
 
-        if (Config::gPreserveAmmoFactor < 0) {
+        if (Config::gPreserveAmmoFactor == 2) {
             pChoice->value(2);
-        } else if (Config::gPreserveAmmoFactor > 0) {
+        } else if (Config::gPreserveAmmoFactor == 1) {
             pChoice->value(1);
         } else {
             pChoice->value(0);
