@@ -99,6 +99,8 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
         bindConfigField<Config::gbExitDisabled, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.exitDisabled.comment);
     }
+
+    new Fl_Box(FL_NO_BOX, x, y + 160, 336, 30, "Note: These settings are ignored for client");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
