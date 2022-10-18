@@ -199,6 +199,24 @@ static void patchMap_Entryway() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP32: Underhalls
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Underhalls() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix red door bars; all sides should be the same special and tag
+        modifyLinedefs(
+            [](line_t& line) {
+                line.special = 135;
+                line.tag = 7;
+            },
+            111, 112, 113, 511, 513, 514, 516, 517, 518, 520, 521, 522
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP44: Suburbs
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Suburbs() noexcept {
@@ -317,7 +335,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 163970, 0x85E5F59863FC567A, 0x825E1D627586324B, applyOriginalMapCommonPatches },      // MAP29
     { 146600, 0x0776A66BD2962C70, 0xEA25B44BFB2863F0, applyOriginalMapCommonPatches },      // MAP30
     {  46210, 0x41EA6956972B2510, 0xE4760C46A4BBD40D, patchMap_Entryway             },      // MAP31
-    {  63255, 0x787980722B2A3ABF, 0xDA758F7A7236BAD9, applyOriginalMapCommonPatches },      // MAP32
+    {  63255, 0x787980722B2A3ABF, 0xDA758F7A7236BAD9, patchMap_Underhalls           },      // MAP32
     {  71907, 0x9354072B9094E9BE, 0xFDA856CDE67680DC, applyOriginalMapCommonPatches },      // MAP33
     {  67614, 0xE36C70A633E0AE7D, 0x9223DF3ADFDF8808, applyOriginalMapCommonPatches },      // MAP34
     { 114123, 0x52229ABCD304D8BA, 0x6EAEA8DB75133B5A, applyOriginalMapCommonPatches },      // MAP35
