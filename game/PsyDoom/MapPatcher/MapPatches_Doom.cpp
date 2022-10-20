@@ -184,6 +184,18 @@ static void patchMap_HellBeneath() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP25: Perfect Hatred
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_PerfectHatred() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix unpegged textures on hidden teleport
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 174);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP31: Entryway
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Entryway() noexcept {
@@ -328,7 +340,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 109754, 0x1E3E66448FE6645C, 0x3DCA2CA78FC862F3, patchMap_Limbo                },      // MAP22
     {  32935, 0x55A24A4ED4053AC3, 0x636CDB24CE519EF8, applyOriginalMapCommonPatches },      // MAP23
     {  52915, 0xA8CCE876F52671B2, 0xDA2BB82C5D03383C, patchMap_HellBeneath          },      // MAP24
-    {  72352, 0x255311EE3A46B4F4, 0x30E325760C3C0D55, applyOriginalMapCommonPatches },      // MAP25
+    {  72352, 0x255311EE3A46B4F4, 0x30E325760C3C0D55, patchMap_PerfectHatred        },      // MAP25
     { 111520, 0x85B038429CCD933B, 0x8488BBE9B15A5F8C, applyOriginalMapCommonPatches },      // MAP26
     {  82104, 0x52B9EDF6AA65FD8C, 0x3D965AFD07455BA6, applyOriginalMapCommonPatches },      // MAP27
     { 146652, 0x1C5AD3B2CC520748, 0x79223365451D6965, applyOriginalMapCommonPatches },      // MAP28
