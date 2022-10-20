@@ -381,6 +381,11 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
 // Assumes the line has a special and only attempts to activate the front side of the line, since that is all that is allowed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
+    // PsyDoom: disable exits for deathmatch, if set.
+    #if PSYDOOM_MODS
+        bool exitDisabled = (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled && Game::gSettings.fragLimit > 0);
+    #endif
+
     // For monsters only certain types of lines can be used
     if (!mobj.player) {
         // Monsters cannot activate lines that are marked as secrets
@@ -663,9 +668,9 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         // Exit level
         case 11: {
             #if PSYDOOM_MODS
-                if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled && Game::gSettings.fragLimit > 0) {
+                if (exitDisabled) {
                     mobj.player->message = "Exits are disabled.";
-                    S_StartSound(&mobj, sfx_oof);
+                    S_StartSound(&mobj, sfx_getpow);
                     break;
                 }
             #endif  // #if PSYDOOM_MODS
@@ -746,9 +751,9 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         // Secret exit
         case 51: {
             #if PSYDOOM_MODS
-                if (gNetGame == gt_deathmatch && Game::gSettings.bExitDisabled && Game::gSettings.fragLimit > 0) {
+                if (exitDisabled) {
                     mobj.player->message = "Exits are disabled.";
-                    S_StartSound(&mobj, sfx_oof);
+                    S_StartSound(&mobj, sfx_getpow);
                     break;
                 }
             #endif // #if PSYDOOM_MODS

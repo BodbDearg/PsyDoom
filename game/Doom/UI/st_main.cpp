@@ -10,7 +10,6 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
-#include "Doom/Game/p_spec.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"

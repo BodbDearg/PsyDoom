@@ -201,7 +201,7 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
     // Save the old player stats and reset player state completely
     player_t& player = gPlayers[playerIdx];
 
-    const uint32_t frags = player.frags;
+    const int32_t frags = player.frags;
     const uint32_t killcount = player.killcount;
     const uint32_t itemcount = player.itemcount;
     const uint32_t secretcount = player.secretcount;
