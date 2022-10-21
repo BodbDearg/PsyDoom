@@ -670,6 +670,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             #if PSYDOOM_MODS
                 if (exitDisabled) {
                     mobj.player->message = "Exits are disabled.";
+                    P_ChangeSwitchTexture(line, true);
                     S_StartSound(&mobj, sfx_getpow);
                     break;
                 }
@@ -753,6 +754,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             #if PSYDOOM_MODS
                 if (exitDisabled) {
                     mobj.player->message = "Exits are disabled.";
+                    P_ChangeSwitchTexture(line, true);
                     S_StartSound(&mobj, sfx_getpow);
                     break;
                 }
