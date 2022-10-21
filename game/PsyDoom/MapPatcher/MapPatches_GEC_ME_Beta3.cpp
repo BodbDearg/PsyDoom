@@ -204,6 +204,10 @@ static void patchMap_InfernoOfBlood() noexcept {
 
         // Fix a hidden automap line in the blood river
         unhideLinedefs(888);
+
+        // Fix door track textures that move at start of map
+        gpLines[1014].flags |= ML_DONTPEGBOTTOM;
+        gpLines[1015].flags |= ML_DONTPEGBOTTOM;
     }
 }
 
