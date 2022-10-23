@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Doom/Game/doomdata.h"
-#include "Doom/Game/p_doors.h"
-#include "Doom/Game/p_floor.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_local.h"
@@ -134,46 +132,6 @@ static inline void clearMysterySectorFlags() noexcept {
         // Originally this was the high 8-bits of the 'flags' field.
         // Original maps never use 2 colored lighting so just set it to the floor color.
         pSectors[i].ceilColorid = pSectors[i].colorid;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: trigger any special sectors (tag 666-672)
-//------------------------------------------------------------------------------------------------------------------------------------------
-static inline void triggerSpecialSectors() noexcept {
-    const int32_t numSectors = gNumSectors;
-    sector_t* const pSectors = gpSectors;
-
-    for (int32_t i = 0; i < numSectors; ++i) {
-        for (int32_t j = 666; j <= 672; ++j) {
-            if (pSectors[i].tag == j) {
-                line_t dummyLine = {};
-                dummyLine.tag = j;
-                switch (dummyLine.tag) {
-                case 666:
-                    EV_DoFloor(dummyLine, lowerFloorToLowest);
-                    break;
-                case 667:
-                    EV_DoFloor(dummyLine, raiseFloor24);
-                    break;
-                case 668:
-                    EV_DoFloor(dummyLine, lowerFloorToLowest);
-                    break;
-                case 669:
-                    EV_DoFloor(dummyLine, lowerFloorToLowest);
-                    break;
-                case 670:
-                    EV_DoDoor(dummyLine, Open);
-                    break;
-                case 671:
-                    EV_DoFloor(dummyLine, lowerFloorToLowest);
-                    break;
-                case 672:
-                    EV_DoDoor(dummyLine, Open);
-                    break;
-                }
-            }
-        }
     }
 }
 
