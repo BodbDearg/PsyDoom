@@ -379,9 +379,15 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
         return;
     }
 
-    // Ignore if it's a deathmatch only thing and this is not deathmatch
-    if ((mapthing.options & MTF_DEATHMATCH) && (gNetGame != gt_deathmatch))
-        return;
+    #if PSYDOOM_MODS
+        // Ignore if it's a deathmatch only thing and this is not deathmatch (or cooperative, if configured)
+        if ((mapthing.options & MTF_DEATHMATCH) && ((gNetGame == gt_single) || ((gNetGame == gt_coop) && (!Game::gSettings.bMPThings))))
+            return;
+    #else
+        // Ignore if it's a deathmatch only thing and this is not deathmatch
+        if ((mapthing.options & MTF_DEATHMATCH) && (gNetGame != gt_deathmatch))
+            return;
+    #endif
 
     // Ignore the thing if it's not for this skill level.
     // Note: 'bSkillMatch' was undefined in the original code if the game skill was greater than nightmare but I'm defaulting it here.
