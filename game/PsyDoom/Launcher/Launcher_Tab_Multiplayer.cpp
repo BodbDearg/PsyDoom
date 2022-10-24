@@ -23,7 +23,7 @@ BEGIN_NAMESPACE(Launcher)
 static void makeCoopSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 336, 30, "Cooperative");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 336, 120, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 336, 160, "");
     
         // Friendly fire toggle
     {
@@ -32,20 +32,27 @@ static void makeCoopSection(const int x, const int y) noexcept {
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.noFriendlyFire.comment);
     }
 
+    // Enable multiplayer-only things
+    {
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Spawn Multiplayer-Only Things");
+        bindConfigField<Config::gbMPThings, Config::gbNeedSave_Multiplayer>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.mpThings.comment);
+    }
+
         // Preserve keys on respawn
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Preserve Keys on Respawn");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 150, 30, "  Preserve Keys on Respawn");
         bindConfigField<Config::gbPreserveKeys, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.preserveKeys.comment);
     }
 
         // Preserve ammo on respawn
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 100, 120, 26, "Preserve Ammo on Respawn");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 140, 120, 26, "Preserve Ammo on Respawn");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Multiplayer.preserveAmmoFactor.comment);
 
-        const auto pChoice = new Fl_Choice(x + 210, y + 100, 100, 26);
+        const auto pChoice = new Fl_Choice(x + 210, y + 140, 100, 26);
         pChoice->add("None");
         pChoice->add("All");
         pChoice->add("Half");
@@ -113,7 +120,7 @@ void populateMultiplayerTab(Context& ctx) noexcept {
 
     const RectExtents tabRect = getRectExtents(*tab.pTab);
     makeCoopSection((tabRect.lx + tabRect.rx) / 2 - 168, tabRect.ty + 20);
-    makeDeathmatchSection((tabRect.lx + tabRect.rx) / 2 - 168, tabRect.ty + 190);
+    makeDeathmatchSection((tabRect.lx + tabRect.rx) / 2 - 168, tabRect.ty + 220);
 }
 
 END_NAMESPACE(Launcher)

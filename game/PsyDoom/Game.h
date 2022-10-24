@@ -65,6 +65,7 @@ struct GameSettings {
     int32_t     bExitDisabled;                  // If true while playing deathmatch, exit will display message and do nothing. 
     int32_t     preserveAmmoFactor;             // How much ammo a player keeps after dying in co-op. 0 = none | 1 = all | 2 = half
     int32_t     bPreserveKeys;                  // If true while playing co-op a player will spawn with previously collected keys.
+    int32_t     bMPThings;                      // Enable multiplayer-only things in co-op.
 
     // Byte swapping for Endian correction
     void byteSwap() noexcept;
