@@ -39,7 +39,7 @@ void initCfgSerialization_Multiplayer() noexcept {
         "The additional monsters were possibly intended for another game mode that was\n"
         "never implemented or carried over from PC Doom and never removed.",
         gbMPThings,
-        0
+        false
     );
 
     cfg.preserveKeys = makeConfigField(
