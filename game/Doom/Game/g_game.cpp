@@ -210,24 +210,24 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
         const uint32_t cheatFlags = player.cheats;      // PsyDoom: preserve cheats on level warping
         
         // PsyDoom: set defaults
-        bool spawnWithBackpack = false;
+        bool bSpawnWithBackpack = false;
         int32_t setClip = 0;
         int32_t setShell = 0;
         int32_t setMisl = 0;
         int32_t setCell = 0;
-        bool setBlueCard = false;
-        bool setBlueSkull = false;
-        bool setYellowCard = false;
-        bool setYellowSkull = false;
-        bool setRedCard = false;
-        bool setRedSkull = false;
+        bool bSetBlueCard = false;
+        bool bSetBlueSkull = false;
+        bool bSetYellowCard = false;
+        bool bSetYellowSkull = false;
+        bool bSetRedCard = false;
+        bool bSetRedSkull = false;
 
         // Preserve from ammo, keys, and backpack from death if co-op and setting is toggled
         // This is ignored if advancing to next level and 'Force Pistol Start' is true
         if (gNetGame == gt_coop && player.playerstate == PST_REBORN) {
             const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
             if ((preserveAmmoFactor > 0) && (preserveAmmoFactor <= 2)) {
-                spawnWithBackpack = player.backpack;
+                bSpawnWithBackpack = player.backpack;
                 setClip = player.ammo[am_clip] / preserveAmmoFactor;
                 setShell = player.ammo[am_shell] / preserveAmmoFactor;
                 setMisl = player.ammo[am_misl] / preserveAmmoFactor;
@@ -235,12 +235,12 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
             }
 
             if (Game::gSettings.bPreserveKeys) {
-                setBlueCard = player.cards[it_bluecard];
-                setBlueSkull = player.cards[it_blueskull];
-                setYellowCard = player.cards[it_yellowcard];
-                setYellowSkull = player.cards[it_yellowskull];
-                setRedCard = player.cards[it_redcard];
-                setRedSkull = player.cards[it_redskull];
+                bSetBlueCard = player.cards[it_bluecard];
+                bSetBlueSkull = player.cards[it_blueskull];
+                bSetYellowCard = player.cards[it_yellowcard];
+                bSetYellowSkull = player.cards[it_yellowskull];
+                bSetRedCard = player.cards[it_redcard];
+                bSetRedSkull = player.cards[it_redskull];
             }
         }
 
@@ -267,7 +267,7 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
         player.maxammo[ammoIdx] = gMaxAmmo[ammoIdx];
         #if PSYDOOM_MODS
             // Add backpack if co-op, setting was toggled, and died with backpack
-            if (spawnWithBackpack) {
+            if (bSpawnWithBackpack) {
                 player.maxammo[ammoIdx] = gMaxAmmo[ammoIdx] * 2;
             }
         #endif
@@ -278,7 +278,7 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
 
         // Set using preserved state
         if (gNetGame == gt_coop) {
-            player.backpack = spawnWithBackpack;
+            player.backpack = bSpawnWithBackpack;
             // Player must start with at least 50 ammo for pistol
             if (setClip > 50) {
                 player.ammo[am_clip] = setClip;
@@ -286,12 +286,12 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
             player.ammo[am_shell] = setShell;
             player.ammo[am_misl] = setMisl;
             player.ammo[am_cell] = setCell;
-            player.cards[it_bluecard] = setBlueCard;
-            player.cards[it_blueskull] = setBlueSkull;
-            player.cards[it_yellowcard] = setYellowCard;
-            player.cards[it_yellowskull] = setYellowSkull;
-            player.cards[it_redcard] = setRedCard;
-            player.cards[it_redskull] = setRedSkull;
+            player.cards[it_bluecard] = bSetBlueCard;
+            player.cards[it_blueskull] = bSetBlueSkull;
+            player.cards[it_yellowcard] = bSetYellowCard;
+            player.cards[it_yellowskull] = bSetYellowSkull;
+            player.cards[it_redcard] = bSetRedCard;
+            player.cards[it_redskull] = bSetRedSkull;
         }
     #endif
 }

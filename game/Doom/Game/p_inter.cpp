@@ -1021,10 +1021,10 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
     if (pTargetPlayer) {
         #if PSYDOOM_MODS
             // Ignore all damage if friendly fire (except barrel explosion and telefrag)
-            const bool playerToPlayerDmg = (pSource && pSource->player) && (pTargetPlayer != pSource->player);
-            const bool noFriendlyFire = Game::gSettings.bNoFriendlyFire && (gNetGame == gt_coop);
-            const bool exception = (pInflictor && pInflictor->type == MT_BARREL) || (baseDamageAmt > 9000);
-            if (playerToPlayerDmg && noFriendlyFire && !exception) {
+            const bool bPlayerToPlayerDmg = (pSource && pSource->player) && (pTargetPlayer != pSource->player);
+            const bool bNoFriendlyFire = Game::gSettings.bNoFriendlyFire && (gNetGame == gt_coop);
+            const bool bException = (pInflictor && pInflictor->type == MT_BARREL) || (baseDamageAmt > 9000);
+            if (bPlayerToPlayerDmg && bNoFriendlyFire && !bException) {
                 return;
             }
             // PsyDoom: is the damaged player a 'Voodoo doll' of a real player?
