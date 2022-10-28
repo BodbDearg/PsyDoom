@@ -1024,7 +1024,7 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
             const bool bPlayerToPlayerDmg = (pSource && pSource->player) && (pTargetPlayer != pSource->player);
             const bool bNoFriendlyFire = Game::gSettings.bNoFriendlyFire && (gNetGame == gt_coop);
             const bool bException = (pInflictor && pInflictor->type == MT_BARREL) || (baseDamageAmt > 9000);
-            if (bPlayerToPlayerDmg && bNoFriendlyFire && !bException) {
+            if ((bPlayerToPlayerDmg) && (bNoFriendlyFire) && (!bException)) {
                 return;
             }
             // PsyDoom: is the damaged player a 'Voodoo doll' of a real player?
