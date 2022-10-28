@@ -51,6 +51,12 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(lostSoulSpawnLimit);
     Endian::byteSwapInPlace(bEnableMapPatches_GamePlay);
     Endian::byteSwapInPlace(viewBobbingStrengthFixed);
+    Endian::byteSwapInPlace(bNoFriendlyFire);
+    Endian::byteSwapInPlace(fragLimit);
+    Endian::byteSwapInPlace(bExitDisabled);
+    Endian::byteSwapInPlace(preserveAmmoFactor);
+    Endian::byteSwapInPlace(bPreserveKeys);
+    Endian::byteSwapInPlace(bMPThings);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -284,8 +290,14 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bFixSpriteVerticalWarp         = false;
     settings.bAllowMultiMapPickup           = false;
     settings.bEnableMapPatches_GamePlay     = false;
+    settings.bNoFriendlyFire                = false;
+    settings.bExitDisabled                  = false;
+    settings.bPreserveKeys                  = false;
+    settings.bMPThings                      = false;
     settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
+    settings.fragLimit                      = 0;
+    settings.preserveAmmoFactor             = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
