@@ -10,12 +10,12 @@ BEGIN_NAMESPACE(ConfigSerialization)
 
 // N.B: must ONLY contain 'ConfigField' entries!
 struct Config_Multiplayer {
-    ConfigField     noFriendlyFire;
-    ConfigField     fragLimit;
-    ConfigField     exitDisabled;
-    ConfigField     preserveAmmoFactor;
-    ConfigField     preserveKeys;
-    ConfigField     mpThings;
+    ConfigField     coopNoFriendlyFire;
+    ConfigField     dmFragLimit;
+    ConfigField     dmExitDisabled;
+    ConfigField     coopPreserveAmmoFactor;
+    ConfigField     coopPreserveKeys;
+    ConfigField     coopForceSpawnMpThings;
 
     inline ConfigFieldList getFieldList() noexcept {
         static_assert(sizeof(*this) % sizeof(ConfigField) == 0);
