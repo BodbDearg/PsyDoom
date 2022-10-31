@@ -905,9 +905,9 @@ void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept {
 
         #if PSYDOOM_MODS
             // Check if frag limit has been hit for deathmatch
-            const int32_t fragLimit = Game::gSettings.fragLimit;
-            if ((gNetGame == gt_deathmatch) && (fragLimit > 0)) {
-                if ((gPlayers[0].frags >= fragLimit) || (gPlayers[1].frags >= fragLimit)) {
+            const int32_t dmFragLimit = Game::gSettings.dmFragLimit;
+            if ((gNetGame == gt_deathmatch) && (dmFragLimit > 0)) {
+                if ((gPlayers[0].frags >= dmFragLimit) || (gPlayers[1].frags >= dmFragLimit)) {
                     G_ExitLevel();
                 }
             }
@@ -1022,7 +1022,7 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
         #if PSYDOOM_MODS
             // Ignore all damage if friendly fire (except barrel explosion and telefrag)
             const bool bPlayerToPlayerDmg = (pSource && pSource->player) && (pTargetPlayer != pSource->player);
-            const bool bNoFriendlyFire = Game::gSettings.bNoFriendlyFire && (gNetGame == gt_coop);
+            const bool bNoFriendlyFire = Game::gSettings.bCoopNoFriendlyFire && (gNetGame == gt_coop);
             const bool bException = (pInflictor && pInflictor->type == MT_BARREL) || (baseDamageAmt > 9000);
             if ((bPlayerToPlayerDmg) && (bNoFriendlyFire) && (!bException)) {
                 return;

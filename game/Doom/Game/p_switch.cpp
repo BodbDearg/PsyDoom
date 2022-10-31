@@ -383,7 +383,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
 bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
     // PsyDoom: disable exits for deathmatch, if set.
     #if PSYDOOM_MODS
-        bool bExitDisabled = (gNetGame == gt_deathmatch && (Game::gSettings.bExitDisabled) && Game::gSettings.fragLimit > 0);
+        const bool bDmExitDisabled = (gNetGame == gt_deathmatch && (Game::gSettings.bDmExitDisabled) && Game::gSettings.dmFragLimit > 0);
     #endif
 
     // For monsters only certain types of lines can be used
@@ -668,7 +668,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         // Exit level
         case 11: {
             #if PSYDOOM_MODS
-                if (bExitDisabled) {
+                if (bDmExitDisabled) {
                     mobj.player->message = "Exits are disabled.";
                     P_ChangeSwitchTexture(line, true);
                     S_StartSound(&mobj, sfx_getpow);
@@ -752,7 +752,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
         // Secret exit
         case 51: {
             #if PSYDOOM_MODS
-                if (bExitDisabled) {
+                if (bDmExitDisabled) {
                     mobj.player->message = "Exits are disabled.";
                     P_ChangeSwitchTexture(line, true);
                     S_StartSound(&mobj, sfx_getpow);

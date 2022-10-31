@@ -51,12 +51,12 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(lostSoulSpawnLimit);
     Endian::byteSwapInPlace(bEnableMapPatches_GamePlay);
     Endian::byteSwapInPlace(viewBobbingStrengthFixed);
-    Endian::byteSwapInPlace(bNoFriendlyFire);
-    Endian::byteSwapInPlace(fragLimit);
-    Endian::byteSwapInPlace(bExitDisabled);
-    Endian::byteSwapInPlace(preserveAmmoFactor);
-    Endian::byteSwapInPlace(bPreserveKeys);
-    Endian::byteSwapInPlace(bMPThings);
+    Endian::byteSwapInPlace(bCoopNoFriendlyFire);
+    Endian::byteSwapInPlace(dmFragLimit);
+    Endian::byteSwapInPlace(bDmExitDisabled);
+    Endian::byteSwapInPlace(coopPreserveAmmoFactor);
+    Endian::byteSwapInPlace(bCoopPreserveKeys);
+    Endian::byteSwapInPlace(bCoopForceSpawnMpThings);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -238,12 +238,12 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bFixSpriteVerticalWarp         = Config::gbFixSpriteVerticalWarp;
     settings.bAllowMultiMapPickup           = Config::gbAllowMultiMapPickup;
     settings.bEnableMapPatches_GamePlay     = Config::gbEnableMapPatches_GamePlay;
-    settings.bNoFriendlyFire                = Config::gbCoopNoFriendlyFire;
-    settings.fragLimit                      = Config::gDmFragLimit;
-    settings.bExitDisabled                  = Config::gbDmExitDisabled;
-    settings.preserveAmmoFactor             = Config::gCoopPreserveAmmoFactor;
-    settings.bPreserveKeys                  = Config::gbCoopPreserveKeys;
-    settings.bMPThings                      = Config::gbCoopForceSpawnMpThings;
+    settings.bCoopNoFriendlyFire            = Config::gbCoopNoFriendlyFire;
+    settings.dmFragLimit                    = Config::gDmFragLimit;
+    settings.bDmExitDisabled                = Config::gbDmExitDisabled;
+    settings.coopPreserveAmmoFactor         = Config::gCoopPreserveAmmoFactor;
+    settings.bCoopPreserveKeys              = Config::gbCoopPreserveKeys;
+    settings.bCoopForceSpawnMpThings        = Config::gbCoopForceSpawnMpThings;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game
@@ -290,14 +290,14 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bFixSpriteVerticalWarp         = false;
     settings.bAllowMultiMapPickup           = false;
     settings.bEnableMapPatches_GamePlay     = false;
-    settings.bNoFriendlyFire                = false;
-    settings.bExitDisabled                  = false;
-    settings.bPreserveKeys                  = false;
-    settings.bMPThings                      = false;
+    settings.bCoopNoFriendlyFire            = false;
+    settings.bDmExitDisabled                = false;
+    settings.bCoopPreserveKeys              = false;
+    settings.bCoopForceSpawnMpThings        = false;
     settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
-    settings.fragLimit                      = 0;
-    settings.preserveAmmoFactor             = 0;
+    settings.dmFragLimit                    = 0;
+    settings.coopPreserveAmmoFactor         = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

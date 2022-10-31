@@ -225,16 +225,16 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
         // Preserve from ammo, keys, and backpack from death if co-op and setting is toggled
         // This is ignored if advancing to next level and 'Force Pistol Start' is true
         if (gNetGame == gt_coop && player.playerstate == PST_REBORN) {
-            const int32_t preserveAmmoFactor = Game::gSettings.preserveAmmoFactor;
-            if ((preserveAmmoFactor > 0) && (preserveAmmoFactor <= 2)) {
+            const int32_t coopPreserveAmmoFactor = Game::gSettings.coopPreserveAmmoFactor;
+            if ((coopPreserveAmmoFactor > 0) && (coopPreserveAmmoFactor <= 2)) {
                 bSpawnWithBackpack = player.backpack;
-                setClip = player.ammo[am_clip] / preserveAmmoFactor;
-                setShell = player.ammo[am_shell] / preserveAmmoFactor;
-                setMisl = player.ammo[am_misl] / preserveAmmoFactor;
-                setCell = player.ammo[am_cell] / preserveAmmoFactor;
+                setClip = player.ammo[am_clip] / coopPreserveAmmoFactor;
+                setShell = player.ammo[am_shell] / coopPreserveAmmoFactor;
+                setMisl = player.ammo[am_misl] / coopPreserveAmmoFactor;
+                setCell = player.ammo[am_cell] / coopPreserveAmmoFactor;
             }
 
-            if (Game::gSettings.bPreserveKeys) {
+            if (Game::gSettings.bCoopPreserveKeys) {
                 bSetBlueCard = player.cards[it_bluecard];
                 bSetBlueSkull = player.cards[it_blueskull];
                 bSetYellowCard = player.cards[it_yellowcard];

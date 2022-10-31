@@ -32,8 +32,8 @@ void initCfgSerialization_Multiplayer() noexcept {
 
     cfg.coopForceSpawnMpThings = makeConfigField(
         "MPThings",
-        "Cooperative: This will add things to the map that are tagged for multiplayer only\,\n"
-        "such as: additional monsters\, weapons\, and powerups.\n"
+        "Cooperative: This will add things to the map that are tagged for multiplayer only,\n"
+        "such as: additional monsters, weapons, and powerups.\n"
         "\n"
         "Note: the additional weapons and powerups are normally only found in deathmatch.\n"
         "The additional monsters were possibly intended for another game mode that was\n"

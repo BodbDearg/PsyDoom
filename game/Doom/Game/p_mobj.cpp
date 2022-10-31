@@ -381,7 +381,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 
     #if PSYDOOM_MODS
         // Ignore if it's a deathmatch only thing and this is not deathmatch (or cooperative, if configured)
-        if ((mapthing.options & MTF_DEATHMATCH) && ((gNetGame == gt_single) || ((gNetGame == gt_coop) && (!Game::gSettings.bMPThings))))
+        if ((mapthing.options & MTF_DEATHMATCH) && ((gNetGame == gt_single) || ((gNetGame == gt_coop) && (!Game::gSettings.bCoopForceSpawnMpThings))))
             return;
     #else
         // Ignore if it's a deathmatch only thing and this is not deathmatch
