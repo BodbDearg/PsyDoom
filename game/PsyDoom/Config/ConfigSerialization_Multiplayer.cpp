@@ -21,7 +21,7 @@ void initCfgSerialization_Multiplayer() noexcept {
     auto& cfg = gConfig_Multiplayer;
 
     cfg.coopNoFriendlyFire = makeConfigField(
-        "NoFriendlyFire",
+        "CoopNoFriendlyFire",
         "Cooperative: Players will not take damage from other players.\n"
         "\n"
         "Note: players can still take damage from nearby exploding barrels\n"
@@ -31,7 +31,7 @@ void initCfgSerialization_Multiplayer() noexcept {
     );
 
     cfg.coopForceSpawnMpThings = makeConfigField(
-        "MPThings",
+        "CoopForceSpawnMpThings",
         "Cooperative: This will add things to the map that are tagged for multiplayer only,\n"
         "such as: additional monsters, weapons, and powerups.\n"
         "\n"
@@ -43,14 +43,14 @@ void initCfgSerialization_Multiplayer() noexcept {
     );
 
     cfg.coopPreserveKeys = makeConfigField(
-        "PreserveKeys",
+        "CoopPreserveKeys",
         "Cooperative: Players retain previously collected keys when respawning.",
         gbCoopPreserveKeys,
         false
     );
 
     cfg.coopPreserveAmmoFactor = makeConfigField(
-        "PreserveAmmoFactor",
+        "CoopPreserveAmmoFactor",
         "Cooperative: Players retain previously collected ammo and backpack when respawning.\n"
         "\n"
         "Allowed values:\n"
@@ -62,7 +62,7 @@ void initCfgSerialization_Multiplayer() noexcept {
     );
 
     cfg.dmFragLimit = makeConfigField(
-        "FragLimit",
+        "DmFragLimit",
         "Deathmatch: Sets the frag limit. Map will exit when limit is reached.\n"
         "\n"
         "0 = disabled",
@@ -71,7 +71,7 @@ void initCfgSerialization_Multiplayer() noexcept {
     );
 
     cfg.dmExitDisabled = makeConfigField(
-        "ExitDisabled",
+        "DmExitDisabled",
         "Deathmatch: Prevents exiting the map.\n"
         "\n"
         "Note: if the frag limit is less than 1, exits will not be disabled.",
