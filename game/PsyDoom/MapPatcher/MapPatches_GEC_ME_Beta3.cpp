@@ -249,6 +249,13 @@ static void patchMap_TombOfMalevolence() noexcept {
         [](line_t& line) { line.tag = 31; },
         661, 662, 663, 664
     );
+    
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Adjust the height of the stairs in the middle of the main area, to allow room for the co-op only cyberdemon to teleport.
+        gpSectors[146].floorheight -= 16 * FRACUNIT;
+        gpSectors[149].floorheight -= 32 * FRACUNIT;
+        gpSectors[148].floorheight -= 48 * FRACUNIT;
+    };
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
