@@ -78,6 +78,16 @@ void initCfgSerialization_Multiplayer() noexcept {
         gbDmExitDisabled,
         false
     );
+
+    cfg.dmActivateSpecialSectors = makeConfigField(
+        "DmActivateSpecialSectors",
+        "Deathmatch: Automatically activate special sectors upon entering a map.\n"
+        "\n"
+        "Note: this will lower any platforms and open any doors that normally activate\n"
+        "when killing the final boss enemy in a map (e.g. barons on Phobos Anomaly).",
+        gbDmActivateSpecialSectors,
+        false
+    );
 }
 
 END_NAMESPACE(ConfigSerialization)

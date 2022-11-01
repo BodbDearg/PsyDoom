@@ -1649,7 +1649,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         MapHash::finalize();                            // PsyDoom: compute the final map hash
         MapPatcher::applyPatches();                     // PsyDoom: apply any patches to original map data that are relevant at this point, once all things have been loaded
         // PsyDoom: if playing deathmatch or 'no monsters' setting is set, activate all special tagged boss sectors
-        if (gNetGame == gt_deathmatch || Game::gSettings.bNoMonsters) {
+        if (gNetGame == gt_deathmatch && (Game::gSettings.bDmActivateSpecialSectors)) {
             for (int32_t i = 666; i <= 672; ++i) {
                 line_t dummyLine = {};
                 dummyLine.tag = i;

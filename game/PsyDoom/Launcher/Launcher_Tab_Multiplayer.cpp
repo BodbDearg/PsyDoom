@@ -87,7 +87,7 @@ static void makeCoopSection(const int x, const int y) noexcept {
 static void makeDeathmatchSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 376, 30, "Deathmatch");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 376, 100, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 376, 130, "");
 
     // Frag limit
     {
@@ -107,7 +107,14 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.dmExitDisabled.comment);
     }
 
-    new Fl_Box(FL_NO_BOX, x, y + 160, 336, 30, "Note: These settings are ignored for client");
+    // Automatically activate all special sectors upon entering a map
+    {
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 110, 150, 30, "  Auto-Activate Special Sectors");
+        bindConfigField<Config::gbDmActivateSpecialSectors, Config::gbNeedSave_Multiplayer>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.dmActivateSpecialSectors.comment);
+    }
+
+    new Fl_Box(FL_NO_BOX, x, y + 190, 336, 30, "Note: These settings are ignored for client");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

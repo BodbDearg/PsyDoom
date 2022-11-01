@@ -128,6 +128,7 @@ int32_t     gDmFragLimit;
 int32_t     gCoopPreserveAmmoFactor;
 bool        gbCoopPreserveKeys;
 bool        gbCoopForceSpawnMpThings;
+bool        gbDmActivateSpecialSectors;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Config dynamic defaults: these can change depending on the host environment

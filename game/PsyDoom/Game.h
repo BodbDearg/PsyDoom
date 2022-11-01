@@ -62,6 +62,7 @@ struct GameSettings {
     uint8_t     bCoopForceSpawnMpThings;        // Enable multiplayer-only things in co-op.
     uint8_t     bDmExitDisabled;                // If true while playing deathmatch, exit will display message and do nothing. 
     uint8_t     bCoopPreserveKeys;              // If true while playing co-op a player will spawn with previously collected keys.
+    uint8_t     bDmActivateSpecialSectors;      // If true while playing deathmatch, all special sectors will active automatcally upon entering a map.
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength
     int32_t     dmFragLimit;                    // If playing deathmatch, level will exit when this number of frags is reached. <0 = infinite.

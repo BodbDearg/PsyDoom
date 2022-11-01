@@ -57,6 +57,7 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(coopPreserveAmmoFactor);
     Endian::byteSwapInPlace(bCoopPreserveKeys);
     Endian::byteSwapInPlace(bCoopForceSpawnMpThings);
+    Endian::byteSwapInPlace(bDmActivateSpecialSectors);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -244,6 +245,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.coopPreserveAmmoFactor         = Config::gCoopPreserveAmmoFactor;
     settings.bCoopPreserveKeys              = Config::gbCoopPreserveKeys;
     settings.bCoopForceSpawnMpThings        = Config::gbCoopForceSpawnMpThings;
+    settings.bDmActivateSpecialSectors      = Config::gbDmActivateSpecialSectors;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game
@@ -294,6 +296,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bDmExitDisabled                = false;
     settings.bCoopPreserveKeys              = false;
     settings.bCoopForceSpawnMpThings        = false;
+    settings.bDmActivateSpecialSectors      = false;
     settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
     settings.viewBobbingStrengthFixed       = FRACUNIT;
     settings.dmFragLimit                    = 0;
