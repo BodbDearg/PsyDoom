@@ -25,7 +25,7 @@ static void makeCoopSection(const int x, const int y) noexcept {
     new Fl_Box(FL_NO_BOX, x, y, 376, 30, "Cooperative");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 376, 160, "");
     
-        // Friendly fire toggle
+    // Friendly fire toggle
     {
         const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 150, 30, "  No Friendly Fire");
         bindConfigField<Config::gbCoopNoFriendlyFire, Config::gbNeedSave_Multiplayer>(*pCheck);
@@ -39,14 +39,14 @@ static void makeCoopSection(const int x, const int y) noexcept {
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.coopForceSpawnMpThings.comment);
     }
 
-        // Preserve keys on respawn
+    // Preserve keys on respawn
     {
         const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 150, 30, "  Preserve Keys on Respawn");
         bindConfigField<Config::gbCoopPreserveKeys, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.coopPreserveKeys.comment);
     }
 
-        // Preserve ammo on respawn
+    // Preserve ammo on respawn
     {
         const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 140, 120, 26, "Preserve Ammo on Respawn");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
@@ -89,7 +89,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
     new Fl_Box(FL_NO_BOX, x, y, 376, 30, "Deathmatch");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 376, 100, "");
 
-        // Frag limit
+    // Frag limit
     {
         const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 50, 140, 26, "Frag Limit");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
@@ -100,7 +100,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
         pInput->tooltip(pLabel->tooltip());
     }
 
-        // Disable Exit Switch
+    // Disable Exit Switch
     {
         const auto pCheck = makeFl_Check_Button(x + 20, y + 80, 150, 30, "  Disable Exits");
         bindConfigField<Config::gbDmExitDisabled, Config::gbNeedSave_Multiplayer>(*pCheck);
