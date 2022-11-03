@@ -255,7 +255,11 @@ void M_Start() noexcept {
     if (gStartGameType == gt_single) {
         gMaxStartEpisodeOrMap = Game::getNumEpisodes();
     } else {
-        gMaxStartEpisodeOrMap = Game::getNumRegularMaps();  // For multiplayer any of the normal (non secret) maps can be selected
+        #if PSYDOOM_MODS
+            gMaxStartEpisodeOrMap = Game::getNumMaps();  // For multiplayer any of the maps (including secret maps) can be selected
+        #else   
+            gMaxStartEpisodeOrMap = Game::getNumRegularMaps();  // For multiplayer any of the normal (non secret) maps can be selected
+        #endif
     }
 
     if (gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
@@ -495,7 +499,12 @@ gameaction_t M_Ticker() noexcept {
         if (gStartGameType == gt_single) {
             gMaxStartEpisodeOrMap = Game::getNumEpisodes();
         } else {
-            gMaxStartEpisodeOrMap = Game::getNumRegularMaps();
+            #if PSYDOOM_MODS
+                // PsyDoom: allow selection of all maps, including secrets ones
+                gMaxStartEpisodeOrMap = Game::getNumMaps();
+            #else
+                gMaxStartEpisodeOrMap = Game::getNumRegularMaps();
+            #endif
         }
 
         if (gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
@@ -512,7 +521,13 @@ gameaction_t M_Ticker() noexcept {
             if (gStartMapOrEpisode <= gMaxStartEpisodeOrMap) {
                 S_StartSound(nullptr, sfx_swtchx);
             } else {
-                gStartMapOrEpisode = gMaxStartEpisodeOrMap;
+                #if PSYDOOM_MODS
+                    // PsyDoom: loop around to the beginning
+                    S_StartSound(nullptr, sfx_swtchx);
+                    gStartMapOrEpisode = 1;
+                #else
+                    gStartMapOrEpisode = gMaxStartEpisodeOrMap;
+                #endif
             }
         }
         else if (bMenuLeft) {
@@ -521,7 +536,13 @@ gameaction_t M_Ticker() noexcept {
             if (gStartMapOrEpisode > 0) {
                 S_StartSound(nullptr, sfx_swtchx);
             } else {
-                gStartMapOrEpisode = 1;
+                #if PSYDOOM_MODS
+                    // PsyDoom: loop around to the end
+                    S_StartSound(nullptr, sfx_swtchx);
+                    gStartMapOrEpisode = gMaxStartEpisodeOrMap;
+                #else
+                    gStartMapOrEpisode = 1;
+                #endif
             }
         }
 

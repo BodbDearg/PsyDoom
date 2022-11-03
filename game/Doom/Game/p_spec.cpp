@@ -572,6 +572,11 @@ int32_t P_FindMinSurroundingLight(sector_t& sector, const int32_t maxLightLevel)
 // Assumes the special for the line is not '0' and that the line has already been crossed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
+    // PsyDoom: disable exits for deathmatch, if set.
+    #if PSYDOOM_MODS
+        const bool bDmExitDisabled = (gNetGame == gt_deathmatch && (Game::gSettings.bDmExitDisabled) && Game::gSettings.dmFragLimit > 0);
+    #endif
+
     // If the object triggering the special is not a player then only certain specials can be triggered.
     // Some things like projectiles are also not allowed to trigger specials.
     if (!mobj.player) {
@@ -761,6 +766,13 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
 
         // Exit the level (regular)
         case 52:
+            #if PSYDOOM_MODS
+                if (bDmExitDisabled) {
+                    mobj.player->message = "Exits are disabled.";
+                    S_StartSound(&mobj, sfx_getpow);
+                    break;
+                }
+            #endif // #if PSYDOOM_MODS
             G_ExitLevel();
             line.special = 0;
             break;
@@ -845,6 +857,13 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
 
         // Secret exit
         case 124:
+            #if PSYDOOM_MODS
+                if (bDmExitDisabled) {
+                    mobj.player->message = "Exits are disabled.";
+                    S_StartSound(&mobj, sfx_getpow);
+                    break;
+                }
+            #endif // #if PSYDOOM_MODS
             G_SecretExitLevel(line.tag);
             break;
 

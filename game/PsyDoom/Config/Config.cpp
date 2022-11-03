@@ -120,6 +120,17 @@ CheatKeySequence gCheatKeys_VramViewer;
 CheatKeySequence gCheatKeys_NoTarget;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Multiplayer settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool        gbCoopNoFriendlyFire;
+bool        gbDmExitDisabled;
+int32_t     gDmFragLimit;
+int32_t     gCoopPreserveAmmoFactor;
+bool        gbCoopPreserveKeys;
+bool        gbCoopForceSpawnMpThings;
+bool        gbDmActivateSpecialSectors;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Config dynamic defaults: these can change depending on the host environment
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t     gDefaultVramSizeInMegabytes             = -1;
@@ -137,6 +148,7 @@ bool    gbNeedSave_Controls;
 bool    gbNeedSave_Game;
 bool    gbNeedSave_Graphics;
 bool    gbNeedSave_Input;
+bool    gbNeedSave_Multiplayer;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Whether the config system was initialized

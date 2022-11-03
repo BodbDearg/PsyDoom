@@ -13,10 +13,12 @@
 #include "p_ceiling.h"
 #include "p_doors.h"
 #include "p_floor.h"
+#include "g_game.h"
 #include "p_lights.h"
 #include "p_plats.h"
 #include "p_setup.h"
 #include "p_spec.h"
+#include "PsyDoom/Game.h"
 #include "PsyDoom/ParserTokenizer.h"
 #include "PsyDoom/ScriptingEngine.h"
 
@@ -379,6 +381,11 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
 // Assumes the line has a special and only attempts to activate the front side of the line, since that is all that is allowed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
+    // PsyDoom: disable exits for deathmatch, if set.
+    #if PSYDOOM_MODS
+        const bool bDmExitDisabled = (gNetGame == gt_deathmatch && (Game::gSettings.bDmExitDisabled) && Game::gSettings.dmFragLimit > 0);
+    #endif
+
     // For monsters only certain types of lines can be used
     if (!mobj.player) {
         // Monsters cannot activate lines that are marked as secrets
@@ -660,6 +667,14 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
 
         // Exit level
         case 11: {
+            #if PSYDOOM_MODS
+                if (bDmExitDisabled) {
+                    mobj.player->message = "Exits are disabled.";
+                    P_ChangeSwitchTexture(line, true);
+                    S_StartSound(&mobj, sfx_getpow);
+                    break;
+                }
+            #endif  // #if PSYDOOM_MODS
             G_ExitLevel();
             P_ChangeSwitchTexture(line, false);
         }   break;
@@ -736,6 +751,14 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
 
         // Secret exit
         case 51: {
+            #if PSYDOOM_MODS
+                if (bDmExitDisabled) {
+                    mobj.player->message = "Exits are disabled.";
+                    P_ChangeSwitchTexture(line, true);
+                    S_StartSound(&mobj, sfx_getpow);
+                    break;
+                }
+            #endif // #if PSYDOOM_MODS
             G_SecretExitLevel(line.tag);
             P_ChangeSwitchTexture(line, false);
         }   break;

@@ -3,4 +3,8 @@ build
 
 # QTCreator user project file
 /CMakeLists.txt.user*
+CMakeSettings.json
 
+# Visual Studio Files
+.vs/
+.dccache

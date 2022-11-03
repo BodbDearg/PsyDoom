@@ -58,8 +58,15 @@ struct GameSettings {
     uint8_t     bFixSpriteVerticalWarp;         // Fix an original bug where some sprites on the edge of ledges can alternate suddenly between the top and bottom of the ledge?
     uint8_t     bAllowMultiMapPickup;           // If true then allow players to pickup more than one 'Computer Area Map'
     uint8_t     bEnableMapPatches_GamePlay;     // Enable patches for original game maps that affect gameplay?
+    uint8_t     bCoopNoFriendlyFire;            // If true then players are not able to damage each other in coop.
+    uint8_t     bCoopForceSpawnMpThings;        // Enable multiplayer-only things in co-op.
+    uint8_t     bDmExitDisabled;                // If true while playing deathmatch, exit will display message and do nothing. 
+    uint8_t     bCoopPreserveKeys;              // If true while playing co-op a player will spawn with previously collected keys.
+    uint8_t     bDmActivateSpecialSectors;      // If true while playing deathmatch, all special sectors will active automatcally upon entering a map.
     int32_t     lostSoulSpawnLimit;             // How many lost souls to limit a level to when Pain Elementals try to spawn one. -1 means no limit.
     int32_t     viewBobbingStrengthFixed;       // 16.16 multiplier for view bobbing strength
+    int32_t     dmFragLimit;                    // If playing deathmatch, level will exit when this number of frags is reached. <0 = infinite.
+    int32_t     coopPreserveAmmoFactor;         // How much ammo a player keeps after dying in co-op. 0 = none | 1 = all | 2 = half
 
     // Byte swapping for Endian correction
     void byteSwap() noexcept;
