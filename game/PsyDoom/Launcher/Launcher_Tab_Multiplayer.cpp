@@ -27,28 +27,28 @@ static void makeCoopSection(const int x, const int y) noexcept {
     
     // Friendly fire toggle
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 150, 30, "  No Friendly Fire");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 150, 30, "  No friendly fire");
         bindConfigField<Config::gbCoopNoFriendlyFire, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.coopNoFriendlyFire.comment);
     }
 
     // Enable multiplayer-only things
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Spawn Multiplayer-Only Things");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Spawn deathmatch-only things");
         bindConfigField<Config::gbCoopForceSpawnMpThings, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.coopForceSpawnMpThings.comment);
     }
 
     // Preserve keys on respawn
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 150, 30, "  Preserve Keys on Respawn");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 150, 30, "  Preserve keys on respawn");
         bindConfigField<Config::gbCoopPreserveKeys, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.coopPreserveKeys.comment);
     }
 
     // Preserve ammo on respawn
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 140, 120, 26, "Preserve Ammo on Respawn");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 140, 120, 26, "Preserve ammo on respawn");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Multiplayer.coopPreserveAmmoFactor.comment);
 
@@ -91,7 +91,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
 
     // Frag limit
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 50, 140, 26, "Frag Limit");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 50, 140, 26, "Frag limit");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Multiplayer.dmFragLimit.comment);
 
@@ -102,14 +102,14 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
 
     // Disable Exit Switch
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 80, 150, 30, "  Disable Exits");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 80, 150, 30, "  Disable exits");
         bindConfigField<Config::gbDmExitDisabled, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.dmExitDisabled.comment);
     }
 
     // Automatically activate all special sectors upon entering a map
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 110, 150, 30, "  Auto-Activate Special Sectors");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 110, 150, 30, "  Auto-activate boss special sectors");
         bindConfigField<Config::gbDmActivateSpecialSectors, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.dmActivateSpecialSectors.comment);
     }
