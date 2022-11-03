@@ -35,8 +35,8 @@ static void makeCoopSection(const int x, const int y) noexcept {
     // Enable multiplayer-only things
     {
         const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Spawn deathmatch-only things");
-        bindConfigField<Config::gbCoopForceSpawnMpThings, Config::gbNeedSave_Multiplayer>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.coopForceSpawnMpThings.comment);
+        bindConfigField<Config::gbCoopForceSpawnDeathmatchThings, Config::gbNeedSave_Multiplayer>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.coopForceSpawnDeathmatchThings.comment);
     }
 
     // Preserve keys on respawn
@@ -110,8 +110,8 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
     // Automatically activate all special sectors upon entering a map
     {
         const auto pCheck = makeFl_Check_Button(x + 20, y + 110, 150, 30, "  Auto-activate boss special sectors");
-        bindConfigField<Config::gbDmActivateSpecialSectors, Config::gbNeedSave_Multiplayer>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.dmActivateSpecialSectors.comment);
+        bindConfigField<Config::gbDmActivateBossSpecialSectors, Config::gbNeedSave_Multiplayer>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.dmActivateBossSpecialSectors.comment);
     }
 
     new Fl_Box(FL_NO_BOX, x, y + 190, 336, 30, "Note: These settings are ignored for client");

@@ -384,7 +384,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
             // Ignore if it's a deathmatch only thing and this is not deathmatch (or cooperative, if configured)
             const bool bAllowDmThings = (
                 (gNetGame == gt_deathmatch) ||
-                ((gNetGame == gt_coop) && Game::gSettings.bCoopForceSpawnMpThings)
+                ((gNetGame == gt_coop) && Game::gSettings.bCoopForceSpawnDeathmatchThings)
             );
         #else
             // Ignore if it's a deathmatch only thing and this is not deathmatch

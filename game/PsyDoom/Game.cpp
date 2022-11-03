@@ -50,10 +50,10 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(bAllowMultiMapPickup);
     Endian::byteSwapInPlace(bEnableMapPatches_GamePlay);
     Endian::byteSwapInPlace(bCoopNoFriendlyFire);
-    Endian::byteSwapInPlace(bCoopForceSpawnMpThings);
+    Endian::byteSwapInPlace(bCoopForceSpawnDeathmatchThings);
     Endian::byteSwapInPlace(bDmExitDisabled);
     Endian::byteSwapInPlace(bCoopPreserveKeys);
-    Endian::byteSwapInPlace(bDmActivateSpecialSectors);
+    Endian::byteSwapInPlace(bDmActivateBossSpecialSectors);
     Endian::byteSwapInPlace(lostSoulSpawnLimit);
     Endian::byteSwapInPlace(viewBobbingStrengthFixed);
     Endian::byteSwapInPlace(dmFragLimit);
@@ -233,17 +233,17 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.bRemoveMaxCrossLinesLimit = false;
     #endif
 
-    settings.bFixOutdoorBulletPuffs         = Config::gbFixOutdoorBulletPuffs;
-    settings.bFixBlockingGibsBug            = Config::gbFixBlockingGibsBug;
-    settings.bFixSoundPropagation           = Config::gbFixSoundPropagation;
-    settings.bFixSpriteVerticalWarp         = Config::gbFixSpriteVerticalWarp;
-    settings.bAllowMultiMapPickup           = Config::gbAllowMultiMapPickup;
-    settings.bEnableMapPatches_GamePlay     = Config::gbEnableMapPatches_GamePlay;
-    settings.bCoopNoFriendlyFire            = Config::gbCoopNoFriendlyFire;
-    settings.bCoopForceSpawnMpThings        = Config::gbCoopForceSpawnMpThings;
-    settings.bDmExitDisabled                = Config::gbDmExitDisabled;
-    settings.bCoopPreserveKeys              = Config::gbCoopPreserveKeys;
-    settings.bDmActivateSpecialSectors      = Config::gbDmActivateSpecialSectors;
+    settings.bFixOutdoorBulletPuffs             = Config::gbFixOutdoorBulletPuffs;
+    settings.bFixBlockingGibsBug                = Config::gbFixBlockingGibsBug;
+    settings.bFixSoundPropagation               = Config::gbFixSoundPropagation;
+    settings.bFixSpriteVerticalWarp             = Config::gbFixSpriteVerticalWarp;
+    settings.bAllowMultiMapPickup               = Config::gbAllowMultiMapPickup;
+    settings.bEnableMapPatches_GamePlay         = Config::gbEnableMapPatches_GamePlay;
+    settings.bCoopNoFriendlyFire                = Config::gbCoopNoFriendlyFire;
+    settings.bCoopForceSpawnDeathmatchThings    = Config::gbCoopForceSpawnDeathmatchThings;
+    settings.bDmExitDisabled                    = Config::gbDmExitDisabled;
+    settings.bCoopPreserveKeys                  = Config::gbCoopPreserveKeys;
+    settings.bDmActivateBossSpecialSectors      = Config::gbDmActivateBossSpecialSectors;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game
@@ -265,42 +265,42 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     const bool bFinalDoomRules = gCurClassicDemo.bFinalDoomDemo;
 
     settings = {};
-    settings.bUsePalTimings                 = gCurClassicDemo.bPalDemo;
-    settings.bUseDemoTimings                = true;
-    settings.bFixKillCount                  = false;
-    settings.bFixLineActivation             = false;
-    settings.bUseExtendedPlayerShootRange   = false;
-    settings.bFixMultiLineSpecialCrossing   = false;
-    settings.bUsePlayerRocketBlastFix       = false;
-    settings.bUseSuperShotgunDelayTweak     = false;
-    settings.bUseMoveInputLatencyTweak      = false;
-    settings.bUseItemPickupFix              = false;
-    settings.bUseFinalDoomPlayerMovement    = bFinalDoomRules;
-    settings.bAllowMovementCancellation     = bFinalDoomRules;
-    settings.bAllowTurningCancellation      = false;
-    settings.bFixViewBobStrength            = false;
-    settings.bFixGravityStrength            = false;
-    settings.bNoMonsters                    = false;
-    settings.bPistolStart                   = false;
-    settings.bTurboMode                     = false;
-    settings.bUseLostSoulSpawnFix           = false;
-    settings.bUseLineOfSightOverflowFix     = false;
-    settings.bRemoveMaxCrossLinesLimit      = false;
-    settings.bFixOutdoorBulletPuffs         = false;
-    settings.bFixBlockingGibsBug            = false;
-    settings.bFixSoundPropagation           = false;
-    settings.bFixSpriteVerticalWarp         = false;
-    settings.bAllowMultiMapPickup           = false;
-    settings.bEnableMapPatches_GamePlay     = false;
-    settings.bCoopNoFriendlyFire            = false;
-    settings.bCoopForceSpawnMpThings        = false;
-    settings.bDmExitDisabled                = false;
-    settings.bCoopPreserveKeys              = false;
-    settings.bDmActivateSpecialSectors      = false;
-    settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
-    settings.viewBobbingStrengthFixed       = FRACUNIT;
-    settings.dmFragLimit                    = 0;
-    settings.coopPreserveAmmoFactor         = 0;
+    settings.bUsePalTimings                     = gCurClassicDemo.bPalDemo;
+    settings.bUseDemoTimings                    = true;
+    settings.bFixKillCount                      = false;
+    settings.bFixLineActivation                 = false;
+    settings.bUseExtendedPlayerShootRange       = false;
+    settings.bFixMultiLineSpecialCrossing       = false;
+    settings.bUsePlayerRocketBlastFix           = false;
+    settings.bUseSuperShotgunDelayTweak         = false;
+    settings.bUseMoveInputLatencyTweak          = false;
+    settings.bUseItemPickupFix                  = false;
+    settings.bUseFinalDoomPlayerMovement        = bFinalDoomRules;
+    settings.bAllowMovementCancellation         = bFinalDoomRules;
+    settings.bAllowTurningCancellation          = false;
+    settings.bFixViewBobStrength                = false;
+    settings.bFixGravityStrength                = false;
+    settings.bNoMonsters                        = false;
+    settings.bPistolStart                       = false;
+    settings.bTurboMode                         = false;
+    settings.bUseLostSoulSpawnFix               = false;
+    settings.bUseLineOfSightOverflowFix         = false;
+    settings.bRemoveMaxCrossLinesLimit          = false;
+    settings.bFixOutdoorBulletPuffs             = false;
+    settings.bFixBlockingGibsBug                = false;
+    settings.bFixSoundPropagation               = false;
+    settings.bFixSpriteVerticalWarp             = false;
+    settings.bAllowMultiMapPickup               = false;
+    settings.bEnableMapPatches_GamePlay         = false;
+    settings.bCoopNoFriendlyFire                = false;
+    settings.bCoopForceSpawnDeathmatchThings    = false;
+    settings.bDmExitDisabled                    = false;
+    settings.bCoopPreserveKeys                  = false;
+    settings.bDmActivateBossSpecialSectors      = false;
+    settings.lostSoulSpawnLimit                 = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
+    settings.viewBobbingStrengthFixed           = FRACUNIT;
+    settings.dmFragLimit                        = 0;
+    settings.coopPreserveAmmoFactor             = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

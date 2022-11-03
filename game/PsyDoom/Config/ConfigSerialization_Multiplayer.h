@@ -15,8 +15,8 @@ struct Config_Multiplayer {
     ConfigField     dmExitDisabled;
     ConfigField     coopPreserveAmmoFactor;
     ConfigField     coopPreserveKeys;
-    ConfigField     coopForceSpawnMpThings;
-    ConfigField     dmActivateSpecialSectors;
+    ConfigField     coopForceSpawnDeathmatchThings;
+    ConfigField     dmActivateBossSpecialSectors;
 
     inline ConfigFieldList getFieldList() noexcept {
         static_assert(sizeof(*this) % sizeof(ConfigField) == 0);

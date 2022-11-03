@@ -30,15 +30,15 @@ void initCfgSerialization_Multiplayer() noexcept {
         false
     );
 
-    cfg.coopForceSpawnMpThings = makeConfigField(
-        "CoopForceSpawnMpThings",
-        "Cooperative: This will add things to the map that are tagged for multiplayer only,\n"
-        "such as: additional monsters, weapons, and powerups.\n"
+    cfg.coopForceSpawnDeathmatchThings = makeConfigField(
+        "CoopForceSpawnDeathmatchThings",
+        "Cooperative: This will add things to the map that are tagged for deathmatch only\n"
+        "such as additional monsters, weapons, and powerups.\n"
         "\n"
         "Note: the additional weapons and powerups are normally only found in deathmatch.\n"
         "The additional monsters were possibly intended for another game mode that was\n"
         "never implemented or carried over from PC Doom and never removed.",
-        gbCoopForceSpawnMpThings,
+        gbCoopForceSpawnDeathmatchThings,
         false
     );
 
@@ -79,13 +79,13 @@ void initCfgSerialization_Multiplayer() noexcept {
         false
     );
 
-    cfg.dmActivateSpecialSectors = makeConfigField(
-        "DmActivateSpecialSectors",
-        "Deathmatch: Automatically activate special sectors upon entering a map.\n"
+    cfg.dmActivateBossSpecialSectors = makeConfigField(
+        "DmActivateBossSpecialSectors",
+        "Deathmatch: Automatically activate boss-related special sectors upon entering a map?\n"
         "\n"
         "Note: this will lower any platforms and open any doors that normally activate\n"
         "when killing the final boss enemy in a map (e.g. barons on Phobos Anomaly).",
-        gbDmActivateSpecialSectors,
+        gbDmActivateBossSpecialSectors,
         false
     );
 }

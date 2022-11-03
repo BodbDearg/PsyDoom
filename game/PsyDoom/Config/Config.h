@@ -97,8 +97,8 @@ extern bool         gbDmExitDisabled;
 extern int32_t      gDmFragLimit;
 extern int32_t      gCoopPreserveAmmoFactor;
 extern bool         gbCoopPreserveKeys;
-extern bool         gbCoopForceSpawnMpThings;
-extern bool         gbDmActivateSpecialSectors;
+extern bool         gbCoopForceSpawnDeathmatchThings;
+extern bool         gbDmActivateBossSpecialSectors;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cheat settings

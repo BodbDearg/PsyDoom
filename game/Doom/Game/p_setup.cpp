@@ -1697,7 +1697,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         MapPatcher::applyPatches();                     // PsyDoom: apply any patches to original map data that are relevant at this point, once all things have been loaded
 
         // PsyDoom: forcing open boss triggered doors etc. in deathmatch mode if that setting is enabled:
-        if ((gNetGame == gt_deathmatch) && Game::gSettings.bDmActivateSpecialSectors) {
+        if ((gNetGame == gt_deathmatch) && Game::gSettings.bDmActivateBossSpecialSectors) {
             P_ActivateAllBossSpecials();
         }
     #else
