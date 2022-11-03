@@ -92,13 +92,13 @@ extern float        gAnalogToDigitalThreshold;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Multiplayer settings
 //------------------------------------------------------------------------------------------------------------------------------------------
-extern bool             gbCoopNoFriendlyFire;
-extern bool             gbDmExitDisabled;
-extern int32_t          gDmFragLimit;
-extern int32_t          gCoopPreserveAmmoFactor;
-extern bool             gbCoopPreserveKeys;
-extern bool             gbCoopForceSpawnMpThings;
-extern bool             gbDmActivateSpecialSectors;
+extern bool         gbCoopNoFriendlyFire;
+extern bool         gbDmExitDisabled;
+extern int32_t      gDmFragLimit;
+extern int32_t      gCoopPreserveAmmoFactor;
+extern bool         gbCoopPreserveKeys;
+extern bool         gbCoopForceSpawnMpThings;
+extern bool         gbDmActivateSpecialSectors;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Cheat settings

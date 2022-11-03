@@ -10,8 +10,6 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/cdmaptbl.h"
 #include "Doom/d_main.h"
-#include "Doom/Game/p_doors.h"
-#include "Doom/Game/p_floor.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
@@ -19,7 +17,9 @@
 #include "doomdata.h"
 #include "g_game.h"
 #include "info.h"
+#include "p_doors.h"
 #include "p_firesky.h"
+#include "p_floor.h"
 #include "p_inter.h"
 #include "p_local.h"
 #include "p_maputl.h"
@@ -147,7 +147,54 @@ static bool isSkyFlatPic(const int32_t picNum) noexcept {
 
     return false;
 }
-#endif
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: activates all boss related specials in the map
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_ActivateAllBossSpecials() noexcept {
+    for (int32_t i = 666; i <= 672; ++i) {
+        line_t dummyLine = {};
+        dummyLine.tag = i;
+
+        switch (dummyLine.tag) {
+            case 666:
+                gMapBossSpecialFlags &= ~0x1;   // Don't attempt to trigger this special again!
+                EV_DoFloor(dummyLine, lowerFloorToLowest);
+                break;
+
+            case 667:
+                gMapBossSpecialFlags &= ~0x2;
+                EV_DoFloor(dummyLine, raiseFloor24);
+                break;
+
+            case 668:
+                gMapBossSpecialFlags &= ~0x4;
+                EV_DoFloor(dummyLine, lowerFloorToLowest);
+                break;
+
+            case 669:
+                gMapBossSpecialFlags &= ~0x8;
+                EV_DoFloor(dummyLine, lowerFloorToLowest);
+                break;
+
+            case 670:
+                gMapBossSpecialFlags &= ~0x10;
+                EV_DoDoor(dummyLine, Open);
+                break;
+
+            case 671:
+                gMapBossSpecialFlags &= ~0x20;
+                EV_DoFloor(dummyLine, lowerFloorToLowest);
+                break;
+
+            case 672:
+                gMapBossSpecialFlags &= ~0x40;
+                EV_DoDoor(dummyLine, Open);
+                break;
+        }
+    }
+}
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
@@ -1648,35 +1695,10 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         ScriptingEngine::init();                        // PsyDoom: initialize the scripting engine if the map has Lua scripted actions
         MapHash::finalize();                            // PsyDoom: compute the final map hash
         MapPatcher::applyPatches();                     // PsyDoom: apply any patches to original map data that are relevant at this point, once all things have been loaded
-        // PsyDoom: if playing deathmatch or 'no monsters' setting is set, activate all special tagged boss sectors
-        if (gNetGame == gt_deathmatch && (Game::gSettings.bDmActivateSpecialSectors)) {
-            for (int32_t i = 666; i <= 672; ++i) {
-                line_t dummyLine = {};
-                dummyLine.tag = i;
-                switch (dummyLine.tag) {
-                case 666:
-                    EV_DoFloor(dummyLine, lowerFloorToLowest);
-                    break;
-                case 667:
-                    EV_DoFloor(dummyLine, raiseFloor24);
-                    break;
-                case 668:
-                    EV_DoFloor(dummyLine, lowerFloorToLowest);
-                    break;
-                case 669:
-                    EV_DoFloor(dummyLine, lowerFloorToLowest);
-                    break;
-                case 670:
-                    EV_DoDoor(dummyLine, Open);
-                    break;
-                case 671:
-                    EV_DoFloor(dummyLine, lowerFloorToLowest);
-                    break;
-                case 672:
-                    EV_DoDoor(dummyLine, Open);
-                    break;
-                }
-            }
+
+        // PsyDoom: forcing open boss triggered doors etc. in deathmatch mode if that setting is enabled:
+        if ((gNetGame == gt_deathmatch) && Game::gSettings.bDmActivateSpecialSectors) {
+            P_ActivateAllBossSpecials();
         }
     #else
         P_LoadThings(mapStartLump + ML_THINGS);

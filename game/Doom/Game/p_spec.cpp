@@ -574,7 +574,7 @@ int32_t P_FindMinSurroundingLight(sector_t& sector, const int32_t maxLightLevel)
 void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
     // PsyDoom: disable exits for deathmatch, if set.
     #if PSYDOOM_MODS
-        const bool bDmExitDisabled = (gNetGame == gt_deathmatch && (Game::gSettings.bDmExitDisabled) && Game::gSettings.dmFragLimit > 0);
+        const bool bDmExitDisabled = ((gNetGame == gt_deathmatch) && Game::gSettings.bDmExitDisabled && (Game::gSettings.dmFragLimit > 0));
     #endif
 
     // If the object triggering the special is not a player then only certain specials can be triggered.
