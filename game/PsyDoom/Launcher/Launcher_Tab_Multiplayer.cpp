@@ -121,7 +121,7 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
 // Populates the 'Multiplayer' tab
 //------------------------------------------------------------------------------------------------------------------------------------------
 void populateMultiplayerTab(Context& ctx) noexcept {
-    Tab_Audio& tab = ctx.tab_audio;
+    Tab_Multiplayer& tab = ctx.tab_multiplayer;
     ASSERT(tab.pTab);
     ASSERT(Fl_Group::current() == tab.pTab);
 
