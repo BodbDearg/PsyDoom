@@ -8,6 +8,7 @@
 #include "ConfigSerialization_Game.h"
 #include "ConfigSerialization_Graphics.h"
 #include "ConfigSerialization_Input.h"
+#include "ConfigSerialization_Multiplayer.h"
 #include "FileUtils.h"
 #include "IniUtils.h"
 #include "PsyDoom/Utils.h"
@@ -52,6 +53,7 @@ static constexpr const char* const CFG_FILE_CONTROLS    = "control_bindings.ini"
 static constexpr const char* const CFG_FILE_GAME        = "game_cfg.ini";
 static constexpr const char* const CFG_FILE_GRAPHICS    = "graphics_cfg.ini";
 static constexpr const char* const CFG_FILE_INPUT       = "input_cfg.ini";
+static constexpr const char* const CFG_FILE_MULTIPLAYER = "multiplayer_cfg.ini";
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the config field defines a comment
@@ -224,6 +226,7 @@ void init() noexcept {
     initCfgSerialization_Game();
     initCfgSerialization_Graphics();
     initCfgSerialization_Input();
+    initCfgSerialization_Multiplayer();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -236,6 +239,7 @@ void shutdown() noexcept {
     gConfig_Game = {};
     gConfig_Graphics = {};
     gConfig_Input = {};
+    gConfig_Multiplayer = {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -244,19 +248,21 @@ void shutdown() noexcept {
 void readAllConfigFiles() noexcept {
     const std::string cfgDir = Utils::getOrCreateUserDataFolder();
 
-    const bool bNeedSave_Audio      = readConfigFile(cfgDir, CFG_FILE_AUDIO,    gConfig_Audio.getFieldList());
-    const bool bNeedSave_Cheats     = readConfigFile(cfgDir, CFG_FILE_CHEATS,   gConfig_Cheats.getFieldList());
-    const bool bNeedSave_Controls   = readConfigFile(cfgDir, CFG_FILE_CONTROLS, gConfig_Controls.getFieldList());
-    const bool bNeedSave_Game       = readConfigFile(cfgDir, CFG_FILE_GAME,     gConfig_Game.getFieldList());
-    const bool bNeedSave_Graphics   = readConfigFile(cfgDir, CFG_FILE_GRAPHICS, gConfig_Graphics.getFieldList());
-    const bool bNeedSave_Input      = readConfigFile(cfgDir, CFG_FILE_INPUT,    gConfig_Input.getFieldList());
+    const bool bNeedSave_Audio          = readConfigFile(cfgDir, CFG_FILE_AUDIO,        gConfig_Audio.getFieldList());
+    const bool bNeedSave_Cheats         = readConfigFile(cfgDir, CFG_FILE_CHEATS,       gConfig_Cheats.getFieldList());
+    const bool bNeedSave_Controls       = readConfigFile(cfgDir, CFG_FILE_CONTROLS,     gConfig_Controls.getFieldList());
+    const bool bNeedSave_Game           = readConfigFile(cfgDir, CFG_FILE_GAME,         gConfig_Game.getFieldList());
+    const bool bNeedSave_Graphics       = readConfigFile(cfgDir, CFG_FILE_GRAPHICS,     gConfig_Graphics.getFieldList());
+    const bool bNeedSave_Input          = readConfigFile(cfgDir, CFG_FILE_INPUT,        gConfig_Input.getFieldList());
+    const bool bNeedSave_Multiplayer    = readConfigFile(cfgDir, CFG_FILE_MULTIPLAYER,  gConfig_Multiplayer.getFieldList());
 
-    Config::gbNeedSave_Audio    |= bNeedSave_Audio;
-    Config::gbNeedSave_Cheats   |= bNeedSave_Cheats;
-    Config::gbNeedSave_Controls |= bNeedSave_Controls;
-    Config::gbNeedSave_Game     |= bNeedSave_Game;
-    Config::gbNeedSave_Graphics |= bNeedSave_Graphics;
-    Config::gbNeedSave_Input    |= bNeedSave_Input;
+    Config::gbNeedSave_Audio        |= bNeedSave_Audio;
+    Config::gbNeedSave_Cheats       |= bNeedSave_Cheats;
+    Config::gbNeedSave_Controls     |= bNeedSave_Controls;
+    Config::gbNeedSave_Game         |= bNeedSave_Game;
+    Config::gbNeedSave_Graphics     |= bNeedSave_Graphics;
+    Config::gbNeedSave_Input        |= bNeedSave_Input;
+    Config::gbNeedSave_Multiplayer  |= bNeedSave_Multiplayer;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -278,12 +284,13 @@ void writeAllConfigFiles(const bool bWriteUnchangedConfig) noexcept {
         }
     };
 
-    maybeWriteConfig(CFG_FILE_AUDIO,    gConfig_Audio.getFieldList(),    Config::gbNeedSave_Audio,    nullptr);
-    maybeWriteConfig(CFG_FILE_CHEATS,   gConfig_Cheats.getFieldList(),   Config::gbNeedSave_Cheats,   nullptr);
-    maybeWriteConfig(CFG_FILE_CONTROLS, gConfig_Controls.getFieldList(), Config::gbNeedSave_Controls, CONTROL_BINDINGS_INI_HEADER);
-    maybeWriteConfig(CFG_FILE_GAME,     gConfig_Game.getFieldList(),     Config::gbNeedSave_Game,     nullptr);
-    maybeWriteConfig(CFG_FILE_GRAPHICS, gConfig_Graphics.getFieldList(), Config::gbNeedSave_Graphics, nullptr);
-    maybeWriteConfig(CFG_FILE_INPUT,    gConfig_Input.getFieldList(),    Config::gbNeedSave_Input,    nullptr);
+    maybeWriteConfig(CFG_FILE_AUDIO,       gConfig_Audio.getFieldList(),       Config::gbNeedSave_Audio,       nullptr);
+    maybeWriteConfig(CFG_FILE_CHEATS,      gConfig_Cheats.getFieldList(),      Config::gbNeedSave_Cheats,      nullptr);
+    maybeWriteConfig(CFG_FILE_CONTROLS,    gConfig_Controls.getFieldList(),    Config::gbNeedSave_Controls,    CONTROL_BINDINGS_INI_HEADER);
+    maybeWriteConfig(CFG_FILE_GAME,        gConfig_Game.getFieldList(),        Config::gbNeedSave_Game,        nullptr);
+    maybeWriteConfig(CFG_FILE_GRAPHICS,    gConfig_Graphics.getFieldList(),    Config::gbNeedSave_Graphics,    nullptr);
+    maybeWriteConfig(CFG_FILE_INPUT,       gConfig_Input.getFieldList(),       Config::gbNeedSave_Input,       nullptr);
+    maybeWriteConfig(CFG_FILE_MULTIPLAYER, gConfig_Multiplayer.getFieldList(), Config::gbNeedSave_Multiplayer, nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

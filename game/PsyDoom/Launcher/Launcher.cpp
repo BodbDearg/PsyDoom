@@ -83,6 +83,7 @@ void populateInputTab(Context& ctx) noexcept;
 void populateControlsTab(Context& ctx) noexcept;
 void populateAudioTab(Context& ctx) noexcept;
 void populateCheatsTab(Context& ctx) noexcept;
+void populateMultiplayerTab(Context& ctx) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Copies the given list of C-style program arguments, returning them in std::vector format
@@ -202,6 +203,7 @@ static void makeLauncherTabs(Context& ctx) noexcept {
     makeTab(ctx, ctx.tab_controls, populateControlsTab,  "  Controls  ");
     makeTab(ctx, ctx.tab_audio, populateAudioTab, "  Audio  ");
     makeTab(ctx, ctx.tab_cheats, populateCheatsTab, "  Cheats  ");
+    makeTab(ctx, ctx.tab_multiplayer, populateMultiplayerTab, "  Multiplayer  ");
 
     // Done adding tabs to the tab container
     ctx.pTabs->end();

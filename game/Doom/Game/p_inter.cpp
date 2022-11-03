@@ -13,6 +13,7 @@
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
+#include "p_spec.h"
 #include "PsyDoom/Game.h"
 
 #include <algorithm>
@@ -901,6 +902,16 @@ void P_KillMobj(mobj_t* const pKiller, mobj_t& target) noexcept {
 
         gDeadPlayerMobjRemovalQueue[gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS] = &target;
         gDeadPlayerRemovalQueueIdx++;
+
+        #if PSYDOOM_MODS
+            // Check if frag limit has been hit for deathmatch
+            const int32_t dmFragLimit = Game::gSettings.dmFragLimit;
+            if ((gNetGame == gt_deathmatch) && (dmFragLimit > 0)) {
+                if ((gPlayers[0].frags >= dmFragLimit) || (gPlayers[1].frags >= dmFragLimit)) {
+                    G_ExitLevel();
+                }
+            }
+        #endif
     }
 
     // Monster gib triggering: trigger if end health is less than the negative amount of starting health
@@ -1008,8 +1019,15 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
 
     // Player specific logic
     if (pTargetPlayer) {
-        // PsyDoom: is the damaged player a 'Voodoo doll' of a real player?
         #if PSYDOOM_MODS
+            // Ignore all damage if friendly fire (except barrel explosion and telefrag)
+            const bool bPlayerToPlayerDmg = (pSource && pSource->player) && (pTargetPlayer != pSource->player);
+            const bool bNoFriendlyFire = Game::gSettings.bCoopNoFriendlyFire && (gNetGame == gt_coop);
+            const bool bException = (pInflictor && pInflictor->type == MT_BARREL) || (baseDamageAmt > 9000);
+            if ((bPlayerToPlayerDmg) && (bNoFriendlyFire) && (!bException)) {
+                return;
+            }
+            // PsyDoom: is the damaged player a 'Voodoo doll' of a real player?
             const bool bIsVoodooDoll = (pTargetPlayer->mo != &target);
         #endif
 
