@@ -113,8 +113,6 @@ static void makeDeathmatchSection(const int x, const int y) noexcept {
         bindConfigField<Config::gbDmActivateBossSpecialSectors, Config::gbNeedSave_Multiplayer>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Multiplayer.dmActivateBossSpecialSectors.comment);
     }
-
-    new Fl_Box(FL_NO_BOX, x, y + 190, 336, 30, "Note: These settings are ignored for client");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
