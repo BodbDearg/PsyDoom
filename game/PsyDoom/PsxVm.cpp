@@ -170,9 +170,7 @@ bool init(const char* const doomCdCuePath) noexcept {
     }
 
     // Setup sound
-    SDL_InitSubSystem(SDL_INIT_AUDIO);
-
-    {
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) >= 0) {
         // Firstly try to open an audio device sampling at 44,100 Hz stereo in floating point mode.
         // Note that if initialization succeeds then we've got our requested format, since we ask SDL not to allow any deviation.
         SDL_AudioSpec wantFmt = {};
@@ -193,6 +191,8 @@ bool init(const char* const doomCdCuePath) noexcept {
 
         if (gSdlAudioDeviceId != 0) {
             SDL_PauseAudioDevice(gSdlAudioDeviceId, false);
+        } else {
+            SDL_QuitSubSystem(SDL_INIT_AUDIO);
         }
     }
 
@@ -208,11 +208,16 @@ void shutdown() noexcept {
     if (gSdlAudioDeviceId != 0) {
         SDL_PauseAudioDevice(gSdlAudioDeviceId, true);
         SDL_CloseAudioDevice(gSdlAudioDeviceId);
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
         gSdlAudioDeviceId = 0;
     }
 
     Spu::destroyCore(gSpu);     // Note: no locking of the SPU here because all threads should be done with it at this point
     Gpu::destroyCore(gGpu);
+}
+
+bool haveAudioOutputDevice() noexcept {
+    return (gSdlAudioDeviceId != 0);
 }
 
 void lockSpu() noexcept {

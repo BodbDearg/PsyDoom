@@ -127,8 +127,8 @@ bool        gbDmExitDisabled;
 int32_t     gDmFragLimit;
 int32_t     gCoopPreserveAmmoFactor;
 bool        gbCoopPreserveKeys;
-bool        gbCoopForceSpawnMpThings;
-bool        gbDmActivateSpecialSectors;
+bool        gbCoopForceSpawnDeathmatchThings;
+bool        gbDmActivateBossSpecialSectors;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Config dynamic defaults: these can change depending on the host environment

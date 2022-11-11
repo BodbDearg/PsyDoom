@@ -81,6 +81,7 @@ static void doConfirmResetConfig(Context& ctx) noexcept {
             cfgFieldList = ConfigSerialization::gConfig_Cheats.getFieldList();
             pbConfigNeedsSaveFlag = &Config::gbNeedSave_Cheats;
             break;
+
         case 6:
             cfgName = "Multiplayer";
             cfgFieldList = ConfigSerialization::gConfig_Multiplayer.getFieldList();

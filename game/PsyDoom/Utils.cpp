@@ -179,9 +179,14 @@ bool waitForSeconds(const float seconds) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool waitForCdAudioPlaybackStart() noexcept {
     return waitForCond([]() noexcept {
-        // PsyDoom: skip the wait if there isn't a valid track playing
+        // PsyDoom: skip the wait if there isn't a valid track playing.
+        // Also avoid an infinite wait if we don't have a valid audio output device, since CD audio will never be consumed in that case.
         #if PSYDOOM_MODS
-            return ((PsxVm::gDiscInfo.getTrack(psxcd_get_playing_track()) == nullptr) || (psxcd_elapsed_sectors() != 0));
+            return (
+                (PsxVm::gDiscInfo.getTrack(psxcd_get_playing_track()) == nullptr) ||
+                (psxcd_elapsed_sectors() != 0) ||
+                (!PsxVm::haveAudioOutputDevice())
+            );
         #else
             return (psxcd_elapsed_sectors() != 0);
         #endif

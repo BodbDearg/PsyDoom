@@ -256,7 +256,7 @@ void M_Start() noexcept {
         gMaxStartEpisodeOrMap = Game::getNumEpisodes();
     } else {
         #if PSYDOOM_MODS
-            gMaxStartEpisodeOrMap = Game::getNumMaps();  // For multiplayer any of the maps (including secret maps) can be selected
+            gMaxStartEpisodeOrMap = Game::getNumMaps();         // For multiplayer any of the maps (including secret maps) can be selected
         #else   
             gMaxStartEpisodeOrMap = Game::getNumRegularMaps();  // For multiplayer any of the normal (non secret) maps can be selected
         #endif
@@ -500,7 +500,7 @@ gameaction_t M_Ticker() noexcept {
             gMaxStartEpisodeOrMap = Game::getNumEpisodes();
         } else {
             #if PSYDOOM_MODS
-                // PsyDoom: allow selection of all maps, including secrets ones
+                // PsyDoom: allow selection of all maps for co-op/dm, including secret ones:
                 gMaxStartEpisodeOrMap = Game::getNumMaps();
             #else
                 gMaxStartEpisodeOrMap = Game::getNumRegularMaps();

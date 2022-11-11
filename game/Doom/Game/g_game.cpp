@@ -207,44 +207,44 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
     const uint32_t secretcount = player.secretcount;
 
     #if PSYDOOM_MODS
-        const uint32_t cheatFlags = player.cheats;      // PsyDoom: preserve cheats on level warping
-        
-        // PsyDoom: set defaults
-        bool bSpawnWithBackpack = false;
-        int32_t setClip = 0;
-        int32_t setShell = 0;
-        int32_t setMisl = 0;
-        int32_t setCell = 0;
-        bool bSetBlueCard = false;
-        bool bSetBlueSkull = false;
-        bool bSetYellowCard = false;
-        bool bSetYellowSkull = false;
-        bool bSetRedCard = false;
-        bool bSetRedSkull = false;
+        // PsyDoom: preserve cheats on level warping
+        const uint32_t cheatFlags = player.cheats;
 
-        // Preserve from ammo, keys, and backpack from death if co-op and setting is toggled
-        // This is ignored if advancing to next level and 'Force Pistol Start' is true
-        if (gNetGame == gt_coop && player.playerstate == PST_REBORN) {
+        // PsyDoom: what stuff to give back to the player after respawning in co-op
+        bool bCoopSpawnWithBackpack = false;
+        int32_t coopSetClips = 0;
+        int32_t coopSetShells = 0;
+        int32_t coopSetMissiles = 0;
+        int32_t coopSetCells = 0;
+        bool bCoopSetBlueCard = false;
+        bool bCoopSetBlueSkull = false;
+        bool bCoopSetYellowCard = false;
+        bool bCoopSetYellowSkull = false;
+        bool bCoopSetRedCard = false;
+        bool bCoopSetRedSkull = false;
+
+        // Co-op: preserve ammo, keys, and the backpack after death and respawn if the appropriate settings are enabled
+        if ((gNetGame == gt_coop) && (player.playerstate == PST_REBORN)) {
             const int32_t coopPreserveAmmoFactor = Game::gSettings.coopPreserveAmmoFactor;
+
             if ((coopPreserveAmmoFactor > 0) && (coopPreserveAmmoFactor <= 2)) {
-                bSpawnWithBackpack = player.backpack;
-                setClip = player.ammo[am_clip] / coopPreserveAmmoFactor;
-                setShell = player.ammo[am_shell] / coopPreserveAmmoFactor;
-                setMisl = player.ammo[am_misl] / coopPreserveAmmoFactor;
-                setCell = player.ammo[am_cell] / coopPreserveAmmoFactor;
+                bCoopSpawnWithBackpack = player.backpack;
+                coopSetClips = player.ammo[am_clip] / coopPreserveAmmoFactor;
+                coopSetShells = player.ammo[am_shell] / coopPreserveAmmoFactor;
+                coopSetMissiles = player.ammo[am_misl] / coopPreserveAmmoFactor;
+                coopSetCells = player.ammo[am_cell] / coopPreserveAmmoFactor;
             }
 
             if (Game::gSettings.bCoopPreserveKeys) {
-                bSetBlueCard = player.cards[it_bluecard];
-                bSetBlueSkull = player.cards[it_blueskull];
-                bSetYellowCard = player.cards[it_yellowcard];
-                bSetYellowSkull = player.cards[it_yellowskull];
-                bSetRedCard = player.cards[it_redcard];
-                bSetRedSkull = player.cards[it_redskull];
+                bCoopSetBlueCard = player.cards[it_bluecard];
+                bCoopSetBlueSkull = player.cards[it_blueskull];
+                bCoopSetYellowCard = player.cards[it_yellowcard];
+                bCoopSetYellowSkull = player.cards[it_yellowskull];
+                bCoopSetRedCard = player.cards[it_redcard];
+                bCoopSetRedSkull = player.cards[it_redskull];
             }
         }
-
-    #endif
+    #endif  // #if PSYDOOM_MODS
 
     D_memset(&player, std::byte(0), sizeof(player_t));
 
@@ -265,35 +265,39 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
 
     for (int32_t ammoIdx = 0; ammoIdx < NUMAMMO; ++ammoIdx) {
         player.maxammo[ammoIdx] = gMaxAmmo[ammoIdx];
+
         #if PSYDOOM_MODS
-            // Add backpack if co-op, setting was toggled, and died with backpack
-            if (bSpawnWithBackpack) {
+            // Add the backpack if appropriate in co-op
+            if (bCoopSpawnWithBackpack) {
                 player.maxammo[ammoIdx] = gMaxAmmo[ammoIdx] * 2;
             }
         #endif
     }
 
     #if PSYDOOM_MODS
-        player.cheats = cheatFlags;     // PsyDoom: preserve cheats on level warping
+        // PsyDoom: preserve cheats on level warping
+        player.cheats = cheatFlags;
 
-        // Set using preserved state
+        // PsyDoom: give the player whatever ammo etc. is being preserved in co-op mode:
         if (gNetGame == gt_coop) {
-            player.backpack = bSpawnWithBackpack;
+            player.backpack = bCoopSpawnWithBackpack;
+
             // Player must start with at least 50 ammo for pistol
-            if (setClip > 50) {
-                player.ammo[am_clip] = setClip;
+            if (coopSetClips > 50) {
+                player.ammo[am_clip] = coopSetClips;
             }
-            player.ammo[am_shell] = setShell;
-            player.ammo[am_misl] = setMisl;
-            player.ammo[am_cell] = setCell;
-            player.cards[it_bluecard] = bSetBlueCard;
-            player.cards[it_blueskull] = bSetBlueSkull;
-            player.cards[it_yellowcard] = bSetYellowCard;
-            player.cards[it_yellowskull] = bSetYellowSkull;
-            player.cards[it_redcard] = bSetRedCard;
-            player.cards[it_redskull] = bSetRedSkull;
+
+            player.ammo[am_shell] = coopSetShells;
+            player.ammo[am_misl] = coopSetMissiles;
+            player.ammo[am_cell] = coopSetCells;
+            player.cards[it_bluecard] = bCoopSetBlueCard;
+            player.cards[it_blueskull] = bCoopSetBlueSkull;
+            player.cards[it_yellowcard] = bCoopSetYellowCard;
+            player.cards[it_yellowskull] = bCoopSetYellowSkull;
+            player.cards[it_redcard] = bCoopSetRedCard;
+            player.cards[it_redskull] = bCoopSetRedSkull;
         }
-    #endif
+    #endif  // #if PSYDOOM_MODS
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

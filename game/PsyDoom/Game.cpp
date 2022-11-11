@@ -48,16 +48,16 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(bFixSoundPropagation);
     Endian::byteSwapInPlace(bFixSpriteVerticalWarp);
     Endian::byteSwapInPlace(bAllowMultiMapPickup);
-    Endian::byteSwapInPlace(lostSoulSpawnLimit);
     Endian::byteSwapInPlace(bEnableMapPatches_GamePlay);
-    Endian::byteSwapInPlace(viewBobbingStrengthFixed);
     Endian::byteSwapInPlace(bCoopNoFriendlyFire);
-    Endian::byteSwapInPlace(dmFragLimit);
+    Endian::byteSwapInPlace(bCoopForceSpawnDeathmatchThings);
     Endian::byteSwapInPlace(bDmExitDisabled);
-    Endian::byteSwapInPlace(coopPreserveAmmoFactor);
     Endian::byteSwapInPlace(bCoopPreserveKeys);
-    Endian::byteSwapInPlace(bCoopForceSpawnMpThings);
-    Endian::byteSwapInPlace(bDmActivateSpecialSectors);
+    Endian::byteSwapInPlace(bDmActivateBossSpecialSectors);
+    Endian::byteSwapInPlace(lostSoulSpawnLimit);
+    Endian::byteSwapInPlace(viewBobbingStrengthFixed);
+    Endian::byteSwapInPlace(dmFragLimit);
+    Endian::byteSwapInPlace(coopPreserveAmmoFactor);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,19 +233,17 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.bRemoveMaxCrossLinesLimit = false;
     #endif
 
-    settings.bFixOutdoorBulletPuffs         = Config::gbFixOutdoorBulletPuffs;
-    settings.bFixBlockingGibsBug            = Config::gbFixBlockingGibsBug;
-    settings.bFixSoundPropagation           = Config::gbFixSoundPropagation;
-    settings.bFixSpriteVerticalWarp         = Config::gbFixSpriteVerticalWarp;
-    settings.bAllowMultiMapPickup           = Config::gbAllowMultiMapPickup;
-    settings.bEnableMapPatches_GamePlay     = Config::gbEnableMapPatches_GamePlay;
-    settings.bCoopNoFriendlyFire            = Config::gbCoopNoFriendlyFire;
-    settings.dmFragLimit                    = Config::gDmFragLimit;
-    settings.bDmExitDisabled                = Config::gbDmExitDisabled;
-    settings.coopPreserveAmmoFactor         = Config::gCoopPreserveAmmoFactor;
-    settings.bCoopPreserveKeys              = Config::gbCoopPreserveKeys;
-    settings.bCoopForceSpawnMpThings        = Config::gbCoopForceSpawnMpThings;
-    settings.bDmActivateSpecialSectors      = Config::gbDmActivateSpecialSectors;
+    settings.bFixOutdoorBulletPuffs             = Config::gbFixOutdoorBulletPuffs;
+    settings.bFixBlockingGibsBug                = Config::gbFixBlockingGibsBug;
+    settings.bFixSoundPropagation               = Config::gbFixSoundPropagation;
+    settings.bFixSpriteVerticalWarp             = Config::gbFixSpriteVerticalWarp;
+    settings.bAllowMultiMapPickup               = Config::gbAllowMultiMapPickup;
+    settings.bEnableMapPatches_GamePlay         = Config::gbEnableMapPatches_GamePlay;
+    settings.bCoopNoFriendlyFire                = Config::gbCoopNoFriendlyFire;
+    settings.bCoopForceSpawnDeathmatchThings    = Config::gbCoopForceSpawnDeathmatchThings;
+    settings.bDmExitDisabled                    = Config::gbDmExitDisabled;
+    settings.bCoopPreserveKeys                  = Config::gbCoopPreserveKeys;
+    settings.bDmActivateBossSpecialSectors      = Config::gbDmActivateBossSpecialSectors;
 
     if (Config::gLostSoulSpawnLimit == 0) {
         settings.lostSoulSpawnLimit = (bFinalDoomDefaultRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;   // Auto set the spawn limit based on the game
@@ -253,7 +251,9 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.lostSoulSpawnLimit = Config::gLostSoulSpawnLimit;
     }
 
-    settings.viewBobbingStrengthFixed = (int32_t)(std::clamp(Config::gViewBobbingStrength, 0.0f, 64.0f) * (float) FRACUNIT);    // Cap this to a reasonable number, won't make much difference going above this!
+    settings.viewBobbingStrengthFixed   = (int32_t)(std::clamp(Config::gViewBobbingStrength, 0.0f, 64.0f) * (float) FRACUNIT);    // Cap this to a reasonable number, won't make much difference going above this!
+    settings.dmFragLimit                = Config::gDmFragLimit;
+    settings.coopPreserveAmmoFactor     = Config::gCoopPreserveAmmoFactor;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -265,42 +265,42 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     const bool bFinalDoomRules = gCurClassicDemo.bFinalDoomDemo;
 
     settings = {};
-    settings.bUsePalTimings                 = gCurClassicDemo.bPalDemo;
-    settings.bUseDemoTimings                = true;
-    settings.bFixKillCount                  = false;
-    settings.bFixLineActivation             = false;
-    settings.bUseExtendedPlayerShootRange   = false;
-    settings.bFixMultiLineSpecialCrossing   = false;
-    settings.bUsePlayerRocketBlastFix       = false;
-    settings.bUseSuperShotgunDelayTweak     = false;
-    settings.bUseMoveInputLatencyTweak      = false;
-    settings.bUseItemPickupFix              = false;
-    settings.bUseFinalDoomPlayerMovement    = bFinalDoomRules;
-    settings.bAllowMovementCancellation     = bFinalDoomRules;
-    settings.bAllowTurningCancellation      = false;
-    settings.bFixViewBobStrength            = false;
-    settings.bFixGravityStrength            = false;
-    settings.bNoMonsters                    = false;
-    settings.bPistolStart                   = false;
-    settings.bTurboMode                     = false;
-    settings.bUseLostSoulSpawnFix           = false;
-    settings.bUseLineOfSightOverflowFix     = false;
-    settings.bRemoveMaxCrossLinesLimit      = false;
-    settings.bFixOutdoorBulletPuffs         = false;
-    settings.bFixBlockingGibsBug            = false;
-    settings.bFixSoundPropagation           = false;
-    settings.bFixSpriteVerticalWarp         = false;
-    settings.bAllowMultiMapPickup           = false;
-    settings.bEnableMapPatches_GamePlay     = false;
-    settings.bCoopNoFriendlyFire            = false;
-    settings.bDmExitDisabled                = false;
-    settings.bCoopPreserveKeys              = false;
-    settings.bCoopForceSpawnMpThings        = false;
-    settings.bDmActivateSpecialSectors      = false;
-    settings.lostSoulSpawnLimit             = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
-    settings.viewBobbingStrengthFixed       = FRACUNIT;
-    settings.dmFragLimit                    = 0;
-    settings.coopPreserveAmmoFactor         = 0;
+    settings.bUsePalTimings                     = gCurClassicDemo.bPalDemo;
+    settings.bUseDemoTimings                    = true;
+    settings.bFixKillCount                      = false;
+    settings.bFixLineActivation                 = false;
+    settings.bUseExtendedPlayerShootRange       = false;
+    settings.bFixMultiLineSpecialCrossing       = false;
+    settings.bUsePlayerRocketBlastFix           = false;
+    settings.bUseSuperShotgunDelayTweak         = false;
+    settings.bUseMoveInputLatencyTweak          = false;
+    settings.bUseItemPickupFix                  = false;
+    settings.bUseFinalDoomPlayerMovement        = bFinalDoomRules;
+    settings.bAllowMovementCancellation         = bFinalDoomRules;
+    settings.bAllowTurningCancellation          = false;
+    settings.bFixViewBobStrength                = false;
+    settings.bFixGravityStrength                = false;
+    settings.bNoMonsters                        = false;
+    settings.bPistolStart                       = false;
+    settings.bTurboMode                         = false;
+    settings.bUseLostSoulSpawnFix               = false;
+    settings.bUseLineOfSightOverflowFix         = false;
+    settings.bRemoveMaxCrossLinesLimit          = false;
+    settings.bFixOutdoorBulletPuffs             = false;
+    settings.bFixBlockingGibsBug                = false;
+    settings.bFixSoundPropagation               = false;
+    settings.bFixSpriteVerticalWarp             = false;
+    settings.bAllowMultiMapPickup               = false;
+    settings.bEnableMapPatches_GamePlay         = false;
+    settings.bCoopNoFriendlyFire                = false;
+    settings.bCoopForceSpawnDeathmatchThings    = false;
+    settings.bDmExitDisabled                    = false;
+    settings.bCoopPreserveKeys                  = false;
+    settings.bDmActivateBossSpecialSectors      = false;
+    settings.lostSoulSpawnLimit                 = (bFinalDoomRules) ? SOUL_LIMIT_FINAL_DOOM : SOUL_LIMIT_DOOM;
+    settings.viewBobbingStrengthFixed           = FRACUNIT;
+    settings.dmFragLimit                        = 0;
+    settings.coopPreserveAmmoFactor             = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

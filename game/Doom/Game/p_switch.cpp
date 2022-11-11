@@ -9,11 +9,11 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "g_game.h"
 #include "Macros.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
 #include "p_floor.h"
-#include "g_game.h"
 #include "p_lights.h"
 #include "p_plats.h"
 #include "p_setup.h"
@@ -383,7 +383,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
 bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
     // PsyDoom: disable exits for deathmatch, if set.
     #if PSYDOOM_MODS
-        const bool bDmExitDisabled = (gNetGame == gt_deathmatch && (Game::gSettings.bDmExitDisabled) && Game::gSettings.dmFragLimit > 0);
+        const bool bDmExitDisabled = ((gNetGame == gt_deathmatch) && Game::gSettings.bDmExitDisabled && (Game::gSettings.dmFragLimit > 0));
     #endif
 
     // For monsters only certain types of lines can be used
@@ -675,6 +675,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
                     break;
                 }
             #endif  // #if PSYDOOM_MODS
+
             G_ExitLevel();
             P_ChangeSwitchTexture(line, false);
         }   break;
@@ -759,6 +760,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
                     break;
                 }
             #endif // #if PSYDOOM_MODS
+
             G_SecretExitLevel(line.tag);
             P_ChangeSwitchTexture(line, false);
         }   break;
