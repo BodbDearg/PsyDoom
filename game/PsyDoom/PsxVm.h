@@ -28,6 +28,9 @@ extern Spu::Core    gSpu;
 bool init(const char* const doomCdCuePath) noexcept;
 void shutdown() noexcept;
 
+// Returns 'true' if there is valid audio output device
+bool haveAudioOutputDevice() noexcept;
+
 // Fire timer (root counter) related events if appropriate.
 // Note: this is implemented in LIBAPI, where timers are handled.
 void generateTimerEvents() noexcept;

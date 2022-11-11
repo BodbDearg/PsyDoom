@@ -30,6 +30,7 @@ Here is a video showing the port in action:
 - On Windows make sure to have the latest Visual C redistributable installed:
     - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 - On MacOS you must manually allow the .app through Gatekeeper in order to run the game, as the code is not signed.
+- On Linux you must have 'PulseAudio' installed to hear sound.
 
 ## Running the game
 - Download the latest release build from here: https://github.com/BodbDearg/PsyDoom/releases
