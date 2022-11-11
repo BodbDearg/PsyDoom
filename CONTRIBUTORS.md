@@ -65,6 +65,8 @@ PsyDoom contributors (sorted alphabetically)
             https://github.com/BodbDearg/PsyDoom/commit/7e97c311acd4b8528737d219c35ef8ad36608a34#commitcomment-52113983
 
 * **[fenderc01](https://github.com/fenderc01)**
+    * Various multiplayer quality of life improvements:
+        https://github.com/BodbDearg/PsyDoom/pull/64
     * Found and raised an issue with a 'ptrToVmAddr' error:
          https://www.doomworld.com/forum/topic/111024-psydoom-060-psx-doom-port-reverse-engineered-for-pc/?do=findComment&comment=2121606
     * Suggestion to make opposite movement directions cancel:
@@ -146,3 +148,8 @@ PsyDoom contributors (sorted alphabetically)
         https://www.doomworld.com/forum/topic/38608-the-console-doom-hacking-project-console-specs
     * Doom64-EX source code (DOOM 64 was based on PSX DOOM, thus can serve as a reference point for it):
         https://github.com/svkaiser/Doom64EX
+
+* **[ts-miller](https://github.com/ts-miller)**
+    * Various multiplayer quality of life improvements:
+        https://github.com/BodbDearg/PsyDoom/pull/64
+
