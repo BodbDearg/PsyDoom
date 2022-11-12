@@ -471,7 +471,8 @@ void ST_Drawer() noexcept {
         if (Video::isUsingVulkanRenderPath() && Config::gbVulkanWidescreenEnabled && Config::gbVulkanDrawExtendedStatusBar) {
             // Note: adjusting the calculation slightly by 1 pixel to account for the adjustment by 1 pixel below (left status bar drawing)
             constexpr int16_t EXT_PIECE_WIDTH = 62;
-            const int32_t numExtensionPieces = (int32_t) std::ceil((1 + VRenderer::gPsxCoordsFbW - (float) Video::ORIG_DRAW_RES_X) / (float) EXT_PIECE_WIDTH);
+            const int32_t extraSpaceAtSides = (int32_t) std::max(std::floor(VRenderer::gPsxCoordsFbX), 0.0f);
+            const int32_t numExtensionPieces = std::min((extraSpaceAtSides + EXT_PIECE_WIDTH - 1) / EXT_PIECE_WIDTH, 64);
 
             LIBGPU_setUV0(spritePrim, 194, 0);
             LIBGPU_setWH(spritePrim, EXT_PIECE_WIDTH, 40);
