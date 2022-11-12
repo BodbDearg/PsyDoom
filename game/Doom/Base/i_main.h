@@ -96,6 +96,7 @@ void I_PSXInit() noexcept;
 uint32_t I_ReadGamepad() noexcept;
 void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpNum) noexcept;
 void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
+void I_CacheAndDrawBackgroundSprite(texture_t& tex, const int16_t clutId) noexcept;
 
 void I_DrawSprite(
     const uint16_t texPageId,

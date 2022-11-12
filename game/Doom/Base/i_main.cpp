@@ -394,6 +394,25 @@ void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: a new helper that caches and draws a background sprite centered in the middle of the screen.
+// Enables the use of widescreen background assets.
+// 
+// Note: the original behavior in any place this is called was to draw at 0,0 (see below).
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_CacheAndDrawBackgroundSprite(texture_t& tex, const int16_t clutId) noexcept {
+    #if PSYDOOM_MODS
+        // Cache the sprite, then figure out the position to draw it at in order to center:
+        I_CacheTex(tex);
+        const int16_t x = (int16_t)((SCREEN_W - tex.width) / 2);
+        const int16_t y = (int16_t)((SCREEN_H - tex.height) / 2);
+        I_DrawSprite(tex.texPageId, clutId, x, y, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
+    #else
+        // In the original game background sprites were always drawn at 0,0
+        I_CacheAndDrawSprite(tex, 0, 0, clutId);
+    #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Draws a sprite to the screen with the specified texture coords, position and palette.
 // The sprite is drawn without any scaling or rotation, just a very basic 1:1 blit is done.
 //------------------------------------------------------------------------------------------------------------------------------------------
