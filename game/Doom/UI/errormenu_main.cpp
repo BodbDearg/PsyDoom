@@ -212,22 +212,10 @@ gameaction_t ErrorMenu_Update() noexcept {
 // Draws the error menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ErrorMenu_Draw() noexcept {
-    // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
+    // Increment the frame count for the texture cache and draw the background
     I_IncDrawnFrameCount();
-
-    #if PSYDOOM_MODS
-        Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
-    #endif
-
-    {
-        const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();
-
-        for (int16_t y = 0; y < 4; ++y) {
-            for (int16_t x = 0; x < 4; ++x) {
-                I_CacheAndDrawSprite(gTex_OptionsBg, x * 64, y * 64, bgPaletteClutId);
-            }
-        }
-    }
+    Utils::onBeginUIDrawing();
+    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), 128, 128, 128);
 
     // Don't do any rendering if we are about to exit the menu
     if (gGameAction == ga_nothing) {

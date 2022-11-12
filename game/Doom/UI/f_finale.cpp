@@ -384,9 +384,9 @@ void F1_Drawer() noexcept {
 
     // PsyDoom: the background for the finale can now be anything as it is sourced from MAPINFO.
     #if PSYDOOM_MODS
-        I_CacheAndDrawSprite(gFinaleBgTex, 0, 0, gPaletteClutIds[gpCluster->picPal]);
+        I_CacheAndDrawBackgroundSprite(gFinaleBgTex, gPaletteClutIds[gpCluster->picPal]);
     #else
-        I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
     #endif
 
     // Show both the incoming and fully displayed text lines.
@@ -784,9 +784,9 @@ void F2_Drawer() noexcept {
 
     // PsyDoom: the background for the finale can now be anything as it is sourced from MAPINFO
     #if PSYDOOM_MODS
-        I_CacheAndDrawSprite(gFinaleBgTex, 0, 0, gPaletteClutIds[gpCluster->picPal]);
+        I_CacheAndDrawBackgroundSprite(gFinaleBgTex, gPaletteClutIds[gpCluster->picPal]);
     #else
-        I_CacheAndDrawSprite(gTex_DEMON, 0, 0, gPaletteClutIds[MAINPAL]);
+        I_CacheAndDrawBackgroundSprite(gTex_DEMON, gPaletteClutIds[MAINPAL]);
     #endif
 
     // See whether we are drawing the text or the cast of characters

@@ -394,6 +394,31 @@ void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: a new helper that caches and draws a background sprite centered in the middle of the screen.
+// Enables the use of widescreen background assets.
+// 
+// Note: the original behavior in any place this is called was to draw at 0,0 (see below).
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_CacheAndDrawBackgroundSprite(texture_t& tex, const int16_t clutId) noexcept {
+    #if PSYDOOM_MODS
+        I_CacheTex(tex);
+        I_DrawSprite(
+            tex.texPageId,
+            clutId,
+            I_GetCenteredDrawPos_X(tex),
+            I_GetCenteredDrawPos_Y(tex),
+            tex.texPageCoordX,
+            tex.texPageCoordY,
+            tex.width,
+            tex.height
+        );
+    #else
+        // In the original game background sprites were always drawn at 0,0
+        I_CacheAndDrawSprite(tex, 0, 0, clutId);
+    #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Draws a sprite to the screen with the specified texture coords, position and palette.
 // The sprite is drawn without any scaling or rotation, just a very basic 1:1 blit is done.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -474,6 +499,21 @@ void I_DrawColoredSprite(
 
     I_AddPrim(spritePrim);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: figures out the X position to draw the sprite at in order to center it in the middle of the screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+int16_t  I_GetCenteredDrawPos_X(texture_t& tex) noexcept {
+    return (int16_t)((SCREEN_W - tex.width) / 2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: figures out the Y position to draw the sprite at in order to center it in the middle of the screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+int16_t  I_GetCenteredDrawPos_Y(texture_t& tex) noexcept {
+    return (int16_t)((SCREEN_H - tex.height) / 2);
+}
+
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -775,7 +815,7 @@ bool I_NetUpdate() noexcept {
     if (gbDemoPlayback) {
         if (Controls::isJustReleased(Controls::Binding::Toggle_ViewPlayer)) {
             gCurPlayerIndex ^= 1;
-            gPlayers[gCurPlayerIndex].message = (gCurPlayerIndex == 0) ? "Viewing player 1" : "Viewing player 2";
+            gPlayers[gCurPlayerIndex].message = (gCurPlayerIndex == 0) ? "Viewing player 1." : "Viewing player 2.";
         }
 
         return (!DemoPlayer::readTickInputs());

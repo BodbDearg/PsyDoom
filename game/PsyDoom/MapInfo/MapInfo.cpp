@@ -156,6 +156,8 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.numRegularMaps = block.getSingleIntValue("NumRegularMaps", gameInfo.numRegularMaps);
     gameInfo.bDisableMultiplayer = (block.getSingleIntValue("DisableMultiplayer", gameInfo.bDisableMultiplayer) > 0);
     gameInfo.bFinalDoomGameRules = (block.getSingleIntValue("FinalDoomGameRules", gameInfo.bFinalDoomGameRules) > 0);
+    gameInfo.bAllowWideTitleScreenFire = (block.getSingleIntValue("AllowWideTitleScreenFire", gameInfo.bAllowWideTitleScreenFire) > 0);
+    gameInfo.bAllowWideOptionsBg = (block.getSingleIntValue("AllowWideOptionsBg", gameInfo.bAllowWideOptionsBg) > 0);
     gameInfo.titleScreenStyle = (TitleScreenStyle) block.getSingleIntValue("TitleScreenStyle", (int32_t) gameInfo.titleScreenStyle);
     gameInfo.creditsScreenStyle = (CreditsScreenStyle) block.getSingleIntValue("CreditsScreenStyle", (int32_t) gameInfo.creditsScreenStyle);
     gameInfo.texPalette_STATUS = (uint8_t) block.getSingleIntValue("TexPalette_STATUS", gameInfo.texPalette_STATUS);

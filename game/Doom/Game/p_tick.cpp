@@ -664,7 +664,7 @@ gameaction_t P_Ticker() noexcept {
         // PsyDoom: check for uncapped framerate toggle
         if (Controls::isJustPressed(Controls::Binding::Toggle_UncappedFps)) {
             PlayerPrefs::gbUncapFramerate = (!PlayerPrefs::gbUncapFramerate);
-            gStatusBar.message = (PlayerPrefs::gbUncapFramerate) ? "Uncapped FPS" : "Original FPS";
+            gStatusBar.message = (PlayerPrefs::gbUncapFramerate) ? "Uncapped FPS." : "Original FPS.";
             gStatusBar.messageTicsLeft = 30;
         }
 
@@ -1057,7 +1057,7 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     if (Controls::isJustPressed(Controls::Binding::Toggle_Autorun)) {
         PlayerPrefs::gbAlwaysRun = (!PlayerPrefs::gbAlwaysRun);
         gStatusBar.messageTicsLeft = 15;
-        gStatusBar.message = (PlayerPrefs::gbAlwaysRun) ? "Autorun On" : "Autorun Off";
+        gStatusBar.message = (PlayerPrefs::gbAlwaysRun) ? "Autorun ON." : "Autorun OFF.";
     }
 
     // If we're always running then this gets inverted

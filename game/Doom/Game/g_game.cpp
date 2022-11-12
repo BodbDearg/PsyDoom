@@ -556,7 +556,7 @@ void G_RunGame() noexcept {
                 if (ProgArgs::gbRecordDemos && (!bLoadedSaveGame)) {
                     DemoRecorder::begin();
                     gbDemoRecording = true;
-                    gStatusBar.message = "Recording started";
+                    gStatusBar.message = "Recording started.";
                     gStatusBar.messageTicsLeft = 30;
                 }
 

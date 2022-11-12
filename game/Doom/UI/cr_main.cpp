@@ -197,26 +197,26 @@ void DRAW_Credits() noexcept {
     if (screenStyle == CreditsScreenStyle::Doom) {
         // Regular Doom: there are 2 pages: ID and Williams credits
         if (gCreditsPage == 0) {
-            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
+            I_CacheAndDrawBackgroundSprite(gTex_IDCRED1, Game::getTexPalette_IDCRED1());
             I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
         }
         else if (gCreditsPage == 1) {
-            I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
+            I_CacheAndDrawBackgroundSprite(gTex_WMSCRED1, Game::getTexPalette_WMSCRED1());
             I_CacheAndDrawSprite(gTex_WMSCRED2, xpos_WMSCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
         }
     }
     else if (screenStyle == CreditsScreenStyle::FinalDoom) {
         // Final Doom: there are 3 pages: level, ID and Williams credits
         if (gCreditsPage == 0) {
-            I_CacheAndDrawSprite(gTex_TITLE, 0, 0, Game::getTexPalette_TITLE());
+            I_CacheAndDrawBackgroundSprite(gTex_TITLE, Game::getTexPalette_TITLE());
             I_CacheAndDrawSprite(gTex_LEVCRED2, xpos_LEVCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_LEVCRED2());
         }
         else if (gCreditsPage == 1) {
-            I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
+            I_CacheAndDrawBackgroundSprite(gTex_WMSCRED1, Game::getTexPalette_WMSCRED1());
             I_CacheAndDrawSprite(gTex_WMSCRED2, xpos_WMSCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
         }
         else if (gCreditsPage == 2) {
-            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
+            I_CacheAndDrawBackgroundSprite(gTex_IDCRED1, Game::getTexPalette_IDCRED1());
             I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
         }
     }
@@ -224,23 +224,23 @@ void DRAW_Credits() noexcept {
     else if (screenStyle == CreditsScreenStyle::GEC_ME) {
         // GEC Master Edition: there are 5 pages: GEC, Doomworld, Final Doom level, ID and Williams credits
         if (gCreditsPage == 0) {
-            I_CacheAndDrawSprite(gTex_GEC, 0, 0, Game::getTexPalette_GEC());
+            I_CacheAndDrawBackgroundSprite(gTex_GEC, Game::getTexPalette_GEC());
             I_CacheAndDrawSprite(gTex_GECCRED, xpos_GECCRED, (int16_t) gCreditsScrollYPos, Game::getTexPalette_GECCRED());
         }
         else if (gCreditsPage == 1) {
-            I_CacheAndDrawSprite(gTex_DWOLRD, 0, 0, Game::getTexPalette_DWOLRD());
+            I_CacheAndDrawBackgroundSprite(gTex_DWOLRD, Game::getTexPalette_DWOLRD());
             I_CacheAndDrawSprite(gTex_DWCRED, xpos_DWCRED, (int16_t) gCreditsScrollYPos, Game::getTexPalette_DWCRED());
         }
         else if (gCreditsPage == 2) {
-            I_CacheAndDrawSprite(gTex_TITLE, 0, 0, Game::getTexPalette_TITLE());
+            I_CacheAndDrawBackgroundSprite(gTex_TITLE, Game::getTexPalette_TITLE());
             I_CacheAndDrawSprite(gTex_LEVCRED2, xpos_LEVCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_LEVCRED2());
         }
         else if (gCreditsPage == 3) {
-            I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, Game::getTexPalette_WMSCRED1());
+            I_CacheAndDrawBackgroundSprite(gTex_WMSCRED1, Game::getTexPalette_WMSCRED1());
             I_CacheAndDrawSprite(gTex_WMSCRED2, xpos_WMSCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_WMSCRED2());
         }
         else if (gCreditsPage == 4) {
-            I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, Game::getTexPalette_IDCRED1());
+            I_CacheAndDrawBackgroundSprite(gTex_IDCRED1, Game::getTexPalette_IDCRED1());
             I_CacheAndDrawSprite(gTex_IDCRED2, xpos_IDCRED2, (int16_t) gCreditsScrollYPos, Game::getTexPalette_IDCRED2());
         }
     }

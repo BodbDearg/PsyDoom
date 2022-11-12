@@ -409,7 +409,7 @@ void IN_Drawer() noexcept {
 // Draws the single player intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_SingleDrawer() noexcept {
-    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
 
     // PsyDoom: should we show the time taken to complete the level?
     #if PSYDOOM_MODS
@@ -515,7 +515,7 @@ void IN_SingleDrawer() noexcept {
 // Draws the cooperative mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_CoopDrawer() noexcept {
-    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
@@ -607,7 +607,7 @@ void IN_CoopDrawer() noexcept {
 // Draws the deathmatch mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_DeathmatchDrawer() noexcept {
-    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
 
     I_DrawString(-1, 20, Game::getMapName(gGameMap).c_str().data());
     I_DrawString(-1, 36, "Finished");

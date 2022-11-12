@@ -96,6 +96,7 @@ void I_PSXInit() noexcept;
 uint32_t I_ReadGamepad() noexcept;
 void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpNum) noexcept;
 void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
+void I_CacheAndDrawBackgroundSprite(texture_t& tex, const int16_t clutId) noexcept;
 
 void I_DrawSprite(
     const uint16_t texPageId,
@@ -123,6 +124,9 @@ void I_DrawSprite(
         const uint8_t b,
         const bool bSemiTransparent
     ) noexcept;
+
+    int16_t I_GetCenteredDrawPos_X(texture_t& tex) noexcept;
+    int16_t I_GetCenteredDrawPos_Y(texture_t& tex) noexcept;
 #endif
 
 void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;

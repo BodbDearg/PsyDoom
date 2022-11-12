@@ -861,7 +861,7 @@ gameaction_t MiniLoop(
                         if (bPausedDuringADemo && gbNetIsGameBeingRecorded) {
                             if (DemoRecorder::isRecording()) {
                                 DemoRecorder::end();
-                                gStatusBar.message = "Recording ended";
+                                gStatusBar.message = "Recording ended.";
                                 gStatusBar.messageTicsLeft = 30;
                             }
                         }
@@ -920,7 +920,7 @@ gameaction_t MiniLoop(
                         if (gbDemoRecording) {
                             DemoRecorder::end();
                             gbDemoRecording = false;
-                            gStatusBar.message = "Recording ended";
+                            gStatusBar.message = "Recording ended.";
                             gStatusBar.messageTicsLeft = 30;
                         } 
                         else {

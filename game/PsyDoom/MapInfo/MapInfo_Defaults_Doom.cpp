@@ -22,6 +22,8 @@ void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
     gameInfo.numRegularMaps = 54;
     gameInfo.bDisableMultiplayer = false;
     gameInfo.bFinalDoomGameRules = false;
+    gameInfo.bAllowWideTitleScreenFire = false;
+    gameInfo.bAllowWideOptionsBg = false;
     gameInfo.titleScreenStyle = TitleScreenStyle::Doom;
     gameInfo.creditsScreenStyle = CreditsScreenStyle::Doom;
     gameInfo.texPalette_STATUS = UIPAL;

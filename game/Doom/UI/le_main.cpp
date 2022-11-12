@@ -121,7 +121,12 @@ void DRAW_Legals() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
-    I_CacheAndDrawSprite(gTex_LEGALS, 0, (int16_t) gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
+    // PsyDoom: make sure this is drawn centered horizontally (allows for widescreen assets)
+    #if PSYDOOM_MODS
+        I_CacheAndDrawSprite(gTex_LEGALS, I_GetCenteredDrawPos_X(gTex_LEGALS), (int16_t) gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
+    #else
+        I_CacheAndDrawSprite(gTex_LEGALS, 0, (int16_t) gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
+    #endif
 
     // PsyDoom: draw any enabled performance counters
     #if PSYDOOM_MODS

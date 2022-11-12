@@ -10,13 +10,20 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
+#include "PsyDoom/Video.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
 #include "saveroot_main.h"
 #include "Wess/psxspu.h"
 #include "xoptions_main.h"
+
+#include <algorithm>
+#include <cmath>
 
 // Available options and their names
 enum option_t : int32_t {
@@ -421,36 +428,7 @@ void O_Drawer() noexcept {
     #endif
 
     // Draw the options screen background
-    {
-        const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();
-        texture_t& bgTex = gTex_OptionsBg;
-
-        for (int16_t y = 0; y < 4; ++y) {
-            for (int16_t x = 0; x < 4; ++x) {
-                // PsyDoom: restrict these tiles to being drawn at a maximum size of 64x64.
-                // This helps to prevent slight seams between the tiles when using MSAA with the Final Doom options menu.
-                //
-                // The Final Doom background tile unfortunately has some black/empty rows and columns at the edges of the texture,
-                // and when MSAA is enabled these tend to work their way into the rendered image as seams. Restricting the draw area
-                // of the sprite to a maximum of 64x64 avoids including these unwanted pixels when MSAA is on.
-                #if PSYDOOM_MODS
-                    I_CacheTex(bgTex);
-                    I_DrawSprite(
-                        bgTex.texPageId,
-                        bgPaletteClutId,
-                        x * 64,
-                        y * 64,
-                        bgTex.texPageCoordX,
-                        bgTex.texPageCoordY,
-                        std::min((uint16_t) bgTex.width, uint16_t(64)),
-                        std::min((uint16_t) bgTex.height, uint16_t(64))
-                    );
-                #else
-                    I_CacheAndDrawSprite(bgTex, x * 64, y * 64, bgPaletteClutId);
-                #endif
-            }
-        }
-    }
+    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), 128, 128, 128);
 
     // Don't do any rendering if we are about to exit the menu
     if (gGameAction == ga_nothing) {
@@ -537,4 +515,95 @@ void O_Drawer() noexcept {
     // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A helper that encapsulates the logic for drawing the background in the options menu and other menus
+//------------------------------------------------------------------------------------------------------------------------------------------
+void O_DrawBackground(
+    texture_t& bgTex,
+    const uint16_t bgTexClutId,
+    const uint8_t colR,
+    const uint8_t colG,
+    const uint8_t colB
+) noexcept {
+    // PsyDoom: some additional enhancements over the original background drawing code.
+    // 
+    // (1) Add support for color tinting the background.
+    // (2) For the Vulkan renderer add support for widescreen tiling if the current game or mod has this feature enabled.
+    // (3) Fix slight seams when MSAA is enabled for the Vulkan Renderer by restricting the drawing area to powers of two.
+    //     The Final Doom background tile unfortunately has some black/empty rows and columns at the edges of the texture (beyond the intended 64x64 area).
+    //     When MSAA is enabled these bogus rows and columns tend to work their way into the rendered image as seams.
+    //     Restricting the draw area to powers of two fixes this particular issue for Final Doom while avoiding hard-coding the tile size to 64x64 (useful for user mods).
+    //
+    #if PSYDOOM_MODS
+        // Make sure the texture is cached first
+        I_CacheTex(bgTex);
+
+        // Abort if the background texture is junk!
+        if ((bgTex.width <= 0) || (bgTex.height <= 0))
+            return;
+
+        // Helper to floor the specified dimension down to a power of two
+        const auto pow2Floor = [](uint16_t value) noexcept {
+            uint32_t highestSetBit = 0;
+            value >>= 1;
+
+            while (value > 0) {
+                value >>= 1;
+                highestSetBit++;
+            }
+
+            return (uint16_t)(1u << highestSetBit);
+        };
+
+        // Figure out how many tiles we need
+        const uint16_t tileW = pow2Floor(bgTex.width);
+        const uint16_t tileH = pow2Floor(bgTex.height);
+        int32_t numTilesX = (SCREEN_W + tileW - 1) / tileW;
+        int32_t numTilesY = (SCREEN_H + tileH - 1) / tileH;
+
+        // Support widescreen if widescreen options menu tiling is enabled.
+        // This allows user mods or new game types to implement menus that fully support widescreen.
+        if (Video::isUsingVulkanRenderPath() && Config::gbVulkanWidescreenEnabled && MapInfo::getGameInfo().bAllowWideOptionsBg) {
+            const int32_t extraSpaceAtSides = (int32_t) std::max(std::floor(VRenderer::gPsxCoordsFbX), 0.0f);
+            const int32_t numExtraTilesAtSides = (extraSpaceAtSides + tileW - 1) / tileW;
+            numTilesX += numExtraTilesAtSides * 2;
+        }
+
+        // Don't let this get too out of hand!
+        numTilesX = std::min(numTilesX, 64);
+        numTilesY = std::min(numTilesX, 16);
+
+        // Figure out the x position to center all these tiles
+        const int32_t startX = (SCREEN_W - numTilesX * tileW) / 2;
+        const int32_t startY = 0;
+
+        // Draw all the tiles!
+        for (int tileY = 0; tileY < numTilesY; ++tileY) {
+            for (int tileX = 0; tileX < numTilesX; ++tileX) {
+                I_DrawColoredSprite(
+                    bgTex.texPageId,
+                    bgTexClutId,
+                    (int16_t)(startX + tileX * tileW),
+                    (int16_t)(startY + tileY * tileH),
+                    bgTex.texPageCoordX,
+                    bgTex.texPageCoordY,
+                    tileW,
+                    tileH,
+                    colR,
+                    colG,
+                    colB,
+                    false
+                );
+            }
+        }
+    #else
+        // This is the original background drawing code
+        for (int16_t y = 0; y < 4; ++y) {
+            for (int16_t x = 0; x < 4; ++x) {
+                I_CacheAndDrawSprite(bgTex, x * 64, y * 64, bgTexClutId);
+            }
+        }
+    #endif
 }

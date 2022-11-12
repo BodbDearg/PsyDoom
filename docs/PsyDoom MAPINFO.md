@@ -158,6 +158,8 @@ GameInfo {
     NumRegularMaps = 54
     DisableMultiplayer = false
     FinalDoomGameRules = false
+    AllowWideTitleScreenFire = false
+    AllowWideOptionsBg = false
     TitleScreenStyle = 0
     CreditsScreenStyle = 0
     TexPalette_STATUS = 16
@@ -183,6 +185,8 @@ Internal Fields:
 - `NumRegularMaps`: the number of non-secret maps in the game. Any maps after the last non-secret map are assumed to be secret maps. Affects when the game detects the last (normal) level of the game has been completed and which levels can be used as the starting point for a multiplayer game. For Doom and Final Doom this value was `54` and `30` respectively. Must be between 1 and 255.
 - `DisableMultiplayer`: whether multiplayer game modes should be disallowed. Disabling multiplayer can be useful for mods that do tricks like Doom 64's faux-3D bridges, or 'silent teleporters' which would break in a multiplayer game.
 - `FinalDoomGameRules`: whether Final Doom style game rules should be used. Final Doom forward movement is slightly slower, and only 16 Lost Souls can spawn from Pain Elementals.
+- `AllowWideTitleScreenFire`: if enabled then the fire sky on the title screen can tile/repeat taking widescreen into account (beyond the original UI area).
+- `AllowWideOptionsBg`: if enabled then the options menu background can tile/repeat taking widescreen into account (beyond the original UI area).
 - `TitleScreenStyle`: what style of title screen to use. Valid values are currently:
   - `0` = Doom: the 'DOOM' logo rises up above the fire.
   - `1` = Final Doom: the 'TITLE' image displays over the fire at all times and fades in from black.

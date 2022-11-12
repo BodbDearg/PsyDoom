@@ -15,12 +15,18 @@
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
 #include "o_main.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/Utils.h"
+#include "PsyDoom/Video.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
+
+#include <algorithm>
+#include <cmath>
 
 // Doom: current position of the DOOM logo; also adopted by the 'legals' screen for the same purpose.
 // Final Doom: this is repurposed as the current fade/color-multiplier for the title screen image.
@@ -278,12 +284,13 @@ void DRAW_Title() noexcept {
     if (screenStyle == TitleScreenStyle::Doom) {
         const int16_t titleY = (int16_t) gTitleScreenSpriteY;
 
-        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe).
+        // PsyDoom: also ensure the TITLE logo is centered horizontally - enables widescreen assets to be used.
         #if PSYDOOM_MODS
             I_DrawSprite(
                 gTex_TITLE.texPageId,
                 Game::getTexPalette_TITLE(),
-                0,
+                I_GetCenteredDrawPos_X(gTex_TITLE),
                 titleY,
                 gTex_TITLE.texPageCoordX,
                 gTex_TITLE.texPageCoordY,
@@ -328,9 +335,21 @@ void DRAW_Title() noexcept {
         const auto texV = skyTex.texPageCoordY;
 
         int16_t x = 0;
+        int32_t numSkyPieces = 4;
+
+        #if PSYDOOM_VULKAN_RENDERER
+            // PsyDoom: make the fire sky support widescreen if this game or mod allows it:
+            if (Video::isUsingVulkanRenderPath() && Config::gbVulkanWidescreenEnabled && MapInfo::getGameInfo().bAllowWideTitleScreenFire) {
+                const int32_t extraSpaceAtSides = (int32_t) std::max(std::floor(VRenderer::gPsxCoordsFbX), 0.0f);
+                const int32_t numExtraPiecesAtSides = std::min((extraSpaceAtSides + SKY_W - 1) / SKY_W, 64);
+                x -= (int16_t)(SKY_W * numExtraPiecesAtSides);
+                numSkyPieces += numExtraPiecesAtSides * 2;
+            }
+        #endif
+
         const int16_t y = (screenStyle == TitleScreenStyle::FinalDoom) ? 112 : 116;
 
-        for (int32_t i = 0; i < 4; ++i) {
+        for (int32_t i = 0; i < numSkyPieces; ++i) {
             I_DrawSprite(skyTex.texPageId, gPaletteClutId_CurMapSky, x, y, texU, texV, SKY_W, SKY_H);
             x += SKY_W;
         }
@@ -340,13 +359,14 @@ void DRAW_Title() noexcept {
     if (screenStyle == TitleScreenStyle::FinalDoom) {
         const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
 
-        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe).
+        // PsyDoom: also ensure the TITLE logo is centered horizontally and vertically - enables widescreen assets to be used.
         #if PSYDOOM_MODS
             I_DrawColoredSprite(
                 gTex_TITLE.texPageId,
                 Game::getTexPalette_TITLE(),
-                0,
-                0,
+                I_GetCenteredDrawPos_X(gTex_TITLE),
+                I_GetCenteredDrawPos_Y(gTex_TITLE),
                 gTex_TITLE.texPageCoordX,
                 gTex_TITLE.texPageCoordY,
                 SCREEN_W,

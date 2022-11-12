@@ -157,7 +157,7 @@ gameaction_t RunMenu() noexcept {
         #endif
 
         I_IncDrawnFrameCount();
-        I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
         M_DrawDoomLogo();
         I_SubmitGpuCmds();
         I_DrawPresent();
@@ -182,7 +182,7 @@ gameaction_t RunMenu() noexcept {
         #endif
 
         I_IncDrawnFrameCount();
-        I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
         M_DrawDoomLogo();
         I_SubmitGpuCmds();
         I_DrawPresent();
@@ -593,7 +593,7 @@ void M_Drawer() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
-    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
     M_DrawDoomLogo();
 
     // Draw the skull cursor
@@ -657,7 +657,7 @@ void M_DrawNetworkConnectDisplay() noexcept {
     I_IncDrawnFrameCount();
     Utils::onBeginUIDrawing();
 
-    I_CacheAndDrawSprite(gTex_BACK, 0, 0, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
     M_DrawDoomLogo();
     I_CacheAndDrawSprite(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());
 
