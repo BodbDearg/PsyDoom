@@ -24,7 +24,7 @@ void initCfgSerialization_Input() noexcept {
         "MouseTurnSpeed",
         "How much turning movement to apply per pixel of mouse movement",
         gMouseTurnSpeed,
-        12.0f
+        7.0f
     );
 
     cfg.gamepadDeadZone = makeConfigField(
