@@ -40,7 +40,7 @@ void initCfgSerialization_Multiplayer() noexcept {
         "(1) The additional weapons and items are normally only found in deathmatch.\n"
         "(2) The additional monsters were possibly intended for another game mode that was\n"
         "never implemented or carried over from PC Doom and never removed.\n"
-        "(2) This setting is ignored during demos and networked games where you are not the host/server.",
+        "(3) This setting is ignored during demos and networked games where you are not the host/server.",
         gbCoopForceSpawnDeathmatchThings,
         false
     );
