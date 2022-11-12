@@ -406,37 +406,14 @@ gameaction_t LoadSave_Update() noexcept {
 // Draws the menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LoadSave_Draw() noexcept {
-    // Increment the frame count for the texture cache 
+    // Increment the frame count for the texture cache and begin drawing
     I_IncDrawnFrameCount();
-    Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
+    Utils::onBeginUIDrawing();
 
-    // Draw the background using the 'MARB01' sprite, draw it dimmed if a save slot is focused
+    // Draw the background
     const bool bSaveSlotFocused = IsSaveSlotFocused();
-
-    {
-        I_CacheTex(gTex_OptionsBg);
-        const uint16_t bgClutId = Game::getTexPalette_OptionsBg();
-        const uint8_t colRGB = (bSaveSlotFocused) ? 64 : 128;
-
-        for (int16_t y = 0; y < 4; ++y) {
-            for (int16_t x = 0; x < 4; ++x) {
-                I_DrawColoredSprite(
-                    gTex_OptionsBg.texPageId,
-                    bgClutId,
-                    x * 64,
-                    y * 64,
-                    gTex_OptionsBg.texPageCoordX,
-                    gTex_OptionsBg.texPageCoordY,
-                    64,
-                    64,
-                    colRGB,
-                    colRGB,
-                    colRGB,
-                    false
-                );
-            }
-        }
-    }
+    const uint8_t colRGB = (bSaveSlotFocused) ? 64 : 128;
+    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), colRGB, colRGB, colRGB);
 
     // Draw the save slots
     constexpr auto doDimSlot = [=](const int32_t slotNum) noexcept {

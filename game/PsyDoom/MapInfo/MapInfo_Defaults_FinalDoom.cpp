@@ -21,6 +21,8 @@ void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
     gameInfo.numRegularMaps = 30;
     gameInfo.bDisableMultiplayer = false;
     gameInfo.bFinalDoomGameRules = true;
+    gameInfo.bAllowWideTitleScreenFire = false;
+    gameInfo.bAllowWideOptionsBg = false;
     gameInfo.titleScreenStyle = TitleScreenStyle::FinalDoom;
     gameInfo.creditsScreenStyle = CreditsScreenStyle::FinalDoom;
     gameInfo.texPalette_STATUS = UIPAL;

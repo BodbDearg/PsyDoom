@@ -15,12 +15,18 @@
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
 #include "o_main.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
 #include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/Utils.h"
+#include "PsyDoom/Video.h"
+#include "PsyDoom/Vulkan/VRenderer.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
+
+#include <algorithm>
+#include <cmath>
 
 // Doom: current position of the DOOM logo; also adopted by the 'legals' screen for the same purpose.
 // Final Doom: this is repurposed as the current fade/color-multiplier for the title screen image.
@@ -329,9 +335,21 @@ void DRAW_Title() noexcept {
         const auto texV = skyTex.texPageCoordY;
 
         int16_t x = 0;
+        int32_t numSkyPieces = 4;
+
+        #if PSYDOOM_VULKAN_RENDERER
+            // PsyDoom: make the fire sky support widescreen if this game or mod allows it:
+            if (Video::isUsingVulkanRenderPath() && Config::gbVulkanWidescreenEnabled && MapInfo::getGameInfo().bAllowWideTitleScreenFire) {
+                const int32_t extraSpaceAtSides = (int32_t) std::max(std::floor(VRenderer::gPsxCoordsFbX), 0.0f);
+                const int32_t numExtraPiecesAtSides = std::min((extraSpaceAtSides + SKY_W - 1) / SKY_W, 64);
+                x -= (int16_t)(SKY_W * numExtraPiecesAtSides);
+                numSkyPieces += numExtraPiecesAtSides * 2;
+            }
+        #endif
+
         const int16_t y = (screenStyle == TitleScreenStyle::FinalDoom) ? 112 : 116;
 
-        for (int32_t i = 0; i < 4; ++i) {
+        for (int32_t i = 0; i < numSkyPieces; ++i) {
             I_DrawSprite(skyTex.texPageId, gPaletteClutId_CurMapSky, x, y, texU, texV, SKY_W, SKY_H);
             x += SKY_W;
         }

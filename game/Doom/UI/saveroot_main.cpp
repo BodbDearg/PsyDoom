@@ -214,19 +214,10 @@ gameaction_t SaveRoot_Update() noexcept {
 // Draws the menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SaveRoot_Draw() noexcept {
-    // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
+    // Increment the frame count for the texture cache and draw the background
     I_IncDrawnFrameCount();
-    Utils::onBeginUIDrawing();      // PsyDoom: UI drawing setup for the new Vulkan renderer
-
-    {
-        const uint16_t bgPaletteClutId = Game::getTexPalette_OptionsBg();
-
-        for (int16_t y = 0; y < 4; ++y) {
-            for (int16_t x = 0; x < 4; ++x) {
-                I_CacheAndDrawSprite(gTex_OptionsBg, x * 64, y * 64, bgPaletteClutId);
-            }
-        }
-    }
+    Utils::onBeginUIDrawing();
+    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), 128, 128, 128);
 
     // Draw the menu title
     I_DrawString(-1, 20, "Load And Save");
