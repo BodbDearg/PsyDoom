@@ -401,11 +401,17 @@ void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_CacheAndDrawBackgroundSprite(texture_t& tex, const int16_t clutId) noexcept {
     #if PSYDOOM_MODS
-        // Cache the sprite, then figure out the position to draw it at in order to center:
         I_CacheTex(tex);
-        const int16_t x = (int16_t)((SCREEN_W - tex.width) / 2);
-        const int16_t y = (int16_t)((SCREEN_H - tex.height) / 2);
-        I_DrawSprite(tex.texPageId, clutId, x, y, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
+        I_DrawSprite(
+            tex.texPageId,
+            clutId,
+            I_GetCenteredDrawPos_X(tex),
+            I_GetCenteredDrawPos_Y(tex),
+            tex.texPageCoordX,
+            tex.texPageCoordY,
+            tex.width,
+            tex.height
+        );
     #else
         // In the original game background sprites were always drawn at 0,0
         I_CacheAndDrawSprite(tex, 0, 0, clutId);
@@ -493,6 +499,21 @@ void I_DrawColoredSprite(
 
     I_AddPrim(spritePrim);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: figures out the X position to draw the sprite at in order to center it in the middle of the screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+int16_t  I_GetCenteredDrawPos_X(texture_t& tex) noexcept {
+    return (int16_t)((SCREEN_W - tex.width) / 2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: figures out the Y position to draw the sprite at in order to center it in the middle of the screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+int16_t  I_GetCenteredDrawPos_Y(texture_t& tex) noexcept {
+    return (int16_t)((SCREEN_H - tex.height) / 2);
+}
+
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------

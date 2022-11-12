@@ -278,12 +278,13 @@ void DRAW_Title() noexcept {
     if (screenStyle == TitleScreenStyle::Doom) {
         const int16_t titleY = (int16_t) gTitleScreenSpriteY;
 
-        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe).
+        // PsyDoom: also ensure the TITLE logo is centered horizontally - enables widescreen assets to be used.
         #if PSYDOOM_MODS
             I_DrawSprite(
                 gTex_TITLE.texPageId,
                 Game::getTexPalette_TITLE(),
-                0,
+                I_GetCenteredDrawPos_X(gTex_TITLE),
                 titleY,
                 gTex_TITLE.texPageCoordX,
                 gTex_TITLE.texPageCoordY,
@@ -340,13 +341,14 @@ void DRAW_Title() noexcept {
     if (screenStyle == TitleScreenStyle::FinalDoom) {
         const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;
 
-        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
+        // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe).
+        // PsyDoom: also ensure the TITLE logo is centered horizontally and vertically - enables widescreen assets to be used.
         #if PSYDOOM_MODS
             I_DrawColoredSprite(
                 gTex_TITLE.texPageId,
                 Game::getTexPalette_TITLE(),
-                0,
-                0,
+                I_GetCenteredDrawPos_X(gTex_TITLE),
+                I_GetCenteredDrawPos_Y(gTex_TITLE),
                 gTex_TITLE.texPageCoordX,
                 gTex_TITLE.texPageCoordY,
                 SCREEN_W,

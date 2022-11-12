@@ -124,6 +124,9 @@ void I_DrawSprite(
         const uint8_t b,
         const bool bSemiTransparent
     ) noexcept;
+
+    int16_t I_GetCenteredDrawPos_X(texture_t& tex) noexcept;
+    int16_t I_GetCenteredDrawPos_Y(texture_t& tex) noexcept;
 #endif
 
 void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
