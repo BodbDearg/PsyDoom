@@ -201,6 +201,11 @@ static void makeBugFixesSection(const int x, const int y) noexcept {
         bindConfigField<Config::gbFixSoundPropagation, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.fixSoundPropagation.comment);
     }
+    {
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 220, 210, 30, "  Fixes for No Monsters");
+        bindConfigField<Config::gbEnableMapPatches_Nomo, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.enableMapPatches_Nomo.comment);
+    }
 
     // Scrollbox padding: bottom
     new Fl_Box(x + 10, y + 250, 440, 10);
@@ -367,11 +372,7 @@ static void makeMapPatchesSection(const int x, const int y) noexcept {
         bindConfigField<Config::gbEnableMapPatches_PsyDoom, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.enableMapPatches_PsyDoom.comment);
     }
-    {
-        const auto pCheck = makeFl_Check_Button(x + 10, y + 130, 120, 30, "Fixes for Nomonsters");
-        bindConfigField<Config::gbEnableMapPatches_Nomo, Config::gbNeedSave_Game>(*pCheck);
-        pCheck->tooltip(ConfigSerialization::gConfig_Game.enableMapPatches_Nomo.comment);
-    }
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

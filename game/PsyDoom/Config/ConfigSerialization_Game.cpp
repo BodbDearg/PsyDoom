@@ -484,12 +484,12 @@ void initCfgSerialization_Game() noexcept {
         "These patches will only be applied if the original map is unmodified.\n"
         "\n"
         "This setting enables patching of issues unique to PsyDoom that do not occur in the original game.\n"
-        "These issues are mostly caused by differences in how skies are handled versus standard PSX Doom.\n"
+        "This removes monster death triggers on certain maps allowing them to be completed in No Monster mode!\n"
         "\n"
-        "In order to fix many more problems, PsyDoom skies behave more like PC Doom skies in that they do\n"
-        "not let you see past them into the 'void' and therefore (potentially) into other rooms past that.\n"
-        "This works well most of the time but occasionally slight tweaks are needed to adjust for PsyDoom.\n"
-        "These patches perform those tweaks.",
+        "This will allow Phobos Anomaly , Tower of Babel , Unto The Cruel , Dead Simple , Redemption\n"
+        "Denied. To all be completable on No Monsters by removing the special triggers related to monster\n"
+        "death and setting doors/corridors to their open state.\n"
+        "It is recommended to only use this when No Monsters is set to enabled.\n",
         gbEnableMapPatches_Nomo,
         true
         );
