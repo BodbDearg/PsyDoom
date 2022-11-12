@@ -7,8 +7,12 @@
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
+#include "Psydoom/Game.h"
+#include "PsyDoom/ProgArgs.h"
+
 
 BEGIN_NAMESPACE(MapPatches)
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP04: Command Control
@@ -40,6 +44,23 @@ static void patchMap_CentralProcessing() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a door track for the southern red door unintentionally moving with the door
         gpLines[964].flags |= ML_DONTPEGBOTTOM;
+    }
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP08: Phobos Anomaly
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_PhobosAnomaly() noexcept {
+    applyOriginalMapCommonPatches();
+  {
+
+        if (shouldApplyMapPatches_Nomo())
+        {
+            //lowers sector immediately to allow exit access.
+            
+
+            gpSectors[65].floorheight = 0 * FRACUNIT;
+            gpSectors[65].tag = 0;
+        }
     }
 }
 
@@ -168,6 +189,18 @@ static void patchMap_Limbo() noexcept {
         gpSides[967].bottomtexture = 0;
     }
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP23: Tower of Babel
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TowerOfBabel() noexcept {
+    applyOriginalMapCommonPatches();
+    if (shouldApplyMapPatches_Nomo()) {
+        //Open the door without the need for killing the Cyberdemon in Nomonsters Mode!
+        gpSectors[30].tag = 0;
+        gpSectors[30].ceilingheight = 128 * FRACUNIT;
+    }
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP24: Hell Beneath
@@ -182,7 +215,19 @@ static void patchMap_HellBeneath() noexcept {
         gpSectors[27].special = 0;
     }
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP28: Unto the Cruel
+//------------------------------------------------------------------------------------------------------------------------------------------
 
+static void patchMap_UntoTheCruel() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Nomo()) {
+        gpSectors[156].tag = 0;
+        gpSectors[156].floorheight = -80 * FRACUNIT;
+        
+    }
+}
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP31: Entryway
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -196,6 +241,18 @@ static void patchMap_Entryway() noexcept {
             3, 25
         );
     }
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP37: Dead Simple
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_DeadSimple() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Nomo()) {
+        gpSectors[1].floorheight = 20 * FRACUNIT;
+        gpSectors[1].tag = 0;
+    }
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -267,6 +324,16 @@ static void patchMap_TheCourtyard() noexcept {
         addVoidFlagToLinedefs(45, 17, 18, 51);
     }
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP54: Redemption Denied
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+static void patchMap_RedemptionDenied() noexcept {
+    applyOriginalMapCommonPatches();
+    if (shouldApplyMapPatches_Nomo()) {
+        gpSectors[55].floorheight = 0 * FRACUNIT;
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP58: The Mansion
@@ -293,7 +360,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  89865, 0x0A8ACFFC833D6E36, 0x070A7A5CDDEE1CE0, applyOriginalMapCommonPatches },      // MAP05
     { 124094, 0x2097E86807523FF3, 0xA2F0C52632B12372, patchMap_CentralProcessing    },      // MAP06
     { 108814, 0xD89ECAA4823454FD, 0xC7C178FA280CA569, applyOriginalMapCommonPatches },      // MAP07
-    {  51882, 0x94BC7E609E1AC29A, 0xC1B6D482725C2C34, applyOriginalMapCommonPatches },      // MAP08
+    {  51882, 0x94BC7E609E1AC29A, 0xC1B6D482725C2C34, patchMap_PhobosAnomaly },      // MAP08
     {  47025, 0x492736BF0840ED38, 0x92A3AA841280B742, applyOriginalMapCommonPatches },      // MAP09
     {  97045, 0x48FFA0D005CB2DDA, 0x2631E9D5AB867200, applyOriginalMapCommonPatches },      // MAP10
     {  75368, 0x6D99C761DE799820, 0xAEDB0E4CA9441431, applyOriginalMapCommonPatches },      // MAP11
@@ -308,12 +375,12 @@ static const PatchDef gPatchArray_Doom[] = {
     { 143483, 0x36A01960BAD36249, 0x2BC3BF03E0ED6D64, patchMap_UnholyCathedral      },      // MAP20
     {  86538, 0x403A02FD929949E5, 0xB4185CB43CEA9B46, applyOriginalMapCommonPatches },      // MAP21
     { 109754, 0x1E3E66448FE6645C, 0x3DCA2CA78FC862F3, patchMap_Limbo                },      // MAP22
-    {  32935, 0x55A24A4ED4053AC3, 0x636CDB24CE519EF8, applyOriginalMapCommonPatches },      // MAP23
+    {  32935, 0x55A24A4ED4053AC3, 0x636CDB24CE519EF8, patchMap_TowerOfBabel },      // MAP23
     {  52915, 0xA8CCE876F52671B2, 0xDA2BB82C5D03383C, patchMap_HellBeneath          },      // MAP24
     {  72352, 0x255311EE3A46B4F4, 0x30E325760C3C0D55, applyOriginalMapCommonPatches },      // MAP25
     { 111520, 0x85B038429CCD933B, 0x8488BBE9B15A5F8C, applyOriginalMapCommonPatches },      // MAP26
     {  82104, 0x52B9EDF6AA65FD8C, 0x3D965AFD07455BA6, applyOriginalMapCommonPatches },      // MAP27
-    { 146652, 0x1C5AD3B2CC520748, 0x79223365451D6965, applyOriginalMapCommonPatches },      // MAP28
+    { 146652, 0x1C5AD3B2CC520748, 0x79223365451D6965, patchMap_UntoTheCruel },      // MAP28
     { 163970, 0x85E5F59863FC567A, 0x825E1D627586324B, applyOriginalMapCommonPatches },      // MAP29
     { 146600, 0x0776A66BD2962C70, 0xEA25B44BFB2863F0, applyOriginalMapCommonPatches },      // MAP30
     {  46210, 0x41EA6956972B2510, 0xE4760C46A4BBD40D, patchMap_Entryway             },      // MAP31
@@ -322,7 +389,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  67614, 0xE36C70A633E0AE7D, 0x9223DF3ADFDF8808, applyOriginalMapCommonPatches },      // MAP34
     { 114123, 0x52229ABCD304D8BA, 0x6EAEA8DB75133B5A, applyOriginalMapCommonPatches },      // MAP35
     { 129248, 0xE2245D687CCABC7C, 0x01497DF00B763463, applyOriginalMapCommonPatches },      // MAP36
-    {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, applyOriginalMapCommonPatches },      // MAP37
+    {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, patchMap_DeadSimple },      // MAP37
     {  82063, 0xBFEDBDE9F8B8CCE2, 0x78D6E2C3A9AB74AB, applyOriginalMapCommonPatches },      // MAP38
     {  91388, 0x22B7D106F531FB4E, 0xFE3FAB276C892BD4, applyOriginalMapCommonPatches },      // MAP39
     { 130676, 0xD84B13024E326B64, 0x548472C7F8B24A27, applyOriginalMapCommonPatches },      // MAP40
@@ -339,7 +406,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 106555, 0x9FCBB09C2A8C8B67, 0xF00080B9655646C8, applyOriginalMapCommonPatches },      // MAP51
     { 117839, 0x67138B444A196EC4, 0x229285E95F31ADE4, applyOriginalMapCommonPatches },      // MAP52
     { 131947, 0xC966739D25AC3FFD, 0xB7CDA8E3CF9A5186, applyOriginalMapCommonPatches },      // MAP53
-    {  45962, 0x27D515F2A59962E3, 0x3E35ABAD09E87EA1, applyOriginalMapCommonPatches },      // MAP54
+    {  45962, 0x27D515F2A59962E3, 0x3E35ABAD09E87EA1, patchMap_RedemptionDenied},      // MAP54
     {  19237, 0xB5116FF7C0CBCF38, 0x7C6C9E29F2EA963B, applyOriginalMapCommonPatches },      // MAP55
     {  85042, 0x98C00035EA735BF3, 0x36C5C0BA592334C9, applyOriginalMapCommonPatches },      // MAP56
     {  58333, 0xBBE3159AAEE4F03D, 0x086F778E5A08DBAD, applyOriginalMapCommonPatches },      // MAP57

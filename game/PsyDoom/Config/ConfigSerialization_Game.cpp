@@ -478,6 +478,22 @@ void initCfgSerialization_Game() noexcept {
         true
     );
 
+    cfg.enableMapPatches_Nomo = makeConfigField(
+        "EnableMapPatches_Nomo",
+        "Whether to enable built-in fixes provided by PsyDoom for maps on various supported game discs.\n"
+        "These patches will only be applied if the original map is unmodified.\n"
+        "\n"
+        "This setting enables patching of issues unique to PsyDoom that do not occur in the original game.\n"
+        "These issues are mostly caused by differences in how skies are handled versus standard PSX Doom.\n"
+        "\n"
+        "In order to fix many more problems, PsyDoom skies behave more like PC Doom skies in that they do\n"
+        "not let you see past them into the 'void' and therefore (potentially) into other rooms past that.\n"
+        "This works well most of the time but occasionally slight tweaks are needed to adjust for PsyDoom.\n"
+        "These patches perform those tweaks.",
+        gbEnableMapPatches_Nomo,
+        true
+        );
+
     cfg.viewBobbingStrength = makeConfigField(
         "ViewBobbingStrength",
         "Multiplier for view bobbing strength, from 0.0 to 1.0 (or above, to make the walk bob stronger).\n"

@@ -14,6 +14,7 @@
 #include "Doom/Game/g_game.h"
 #include "FileUtils.h"
 #include "Finally.h"
+#include "Doom/UI/in_main.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/filewritestream.h>
@@ -156,6 +157,8 @@ static void addPlayerToJson(
     }
 
     // Level stats
+
+  
     playerJson.AddMember("killcount", player.killcount, jsonAllocator);
     playerJson.AddMember("itemcount", player.itemcount, jsonAllocator);
     playerJson.AddMember("secretcount", player.secretcount, jsonAllocator);

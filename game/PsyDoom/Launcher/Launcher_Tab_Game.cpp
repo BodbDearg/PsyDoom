@@ -367,6 +367,11 @@ static void makeMapPatchesSection(const int x, const int y) noexcept {
         bindConfigField<Config::gbEnableMapPatches_PsyDoom, Config::gbNeedSave_Game>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Game.enableMapPatches_PsyDoom.comment);
     }
+    {
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 130, 120, 30, "Fixes for Nomonsters");
+        bindConfigField<Config::gbEnableMapPatches_Nomo, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.enableMapPatches_Nomo.comment);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

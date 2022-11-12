@@ -6,8 +6,11 @@
 #include "Doom/Renderer/r_local.h"
 #include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
-
+#include "PsyDoom/ProgArgs.h"
 #include <cstdint>
+
+
+extern bool gbNoMonsters;
 
 BEGIN_NAMESPACE(MapPatches)
 
@@ -170,5 +173,7 @@ static inline bool shouldApplyMapPatches_Visual() noexcept {
 static inline bool shouldApplyMapPatches_PsyDoom() noexcept {
     return Config::gbEnableMapPatches_PsyDoom;
 }
-
+static inline bool shouldApplyMapPatches_Nomo() noexcept {
+    return Config::gbEnableMapPatches_Nomo;
+}
 END_NAMESPACE(MapPatches)

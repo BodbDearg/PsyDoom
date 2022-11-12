@@ -46,6 +46,7 @@ struct Config_Game {
     ConfigField     enableMapPatches_GamePlay;
     ConfigField     enableMapPatches_Visual;
     ConfigField     enableMapPatches_PsyDoom;
+    ConfigField     enableMapPatches_Nomo;
     ConfigField     viewBobbingStrength;
 
     inline ConfigFieldList getFieldList() noexcept {

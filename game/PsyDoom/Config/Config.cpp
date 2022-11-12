@@ -59,6 +59,7 @@ bool            gbAllowMultiMapPickup;
 bool            gbEnableMapPatches_GamePlay;
 bool            gbEnableMapPatches_Visual;
 bool            gbEnableMapPatches_PsyDoom;
+bool            gbEnableMapPatches_Nomo;
 float           gViewBobbingStrength;
 
 //------------------------------------------------------------------------------------------------------------------------------------------

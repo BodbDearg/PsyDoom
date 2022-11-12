@@ -46,6 +46,7 @@ extern bool             gbAllowMultiMapPickup;
 extern bool             gbEnableMapPatches_GamePlay;
 extern bool             gbEnableMapPatches_Visual;
 extern bool             gbEnableMapPatches_PsyDoom;
+extern bool             gbEnableMapPatches_Nomo;
 extern float            gViewBobbingStrength;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
