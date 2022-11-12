@@ -282,7 +282,7 @@ void checkForRendererToggleInput() noexcept {
             VRenderer::switchToPsxRenderPath();
         }
 
-        gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer" : "Classic Renderer";
+        gStatusBar.message = (bUseVulkan) ? "Vulkan Renderer." : "Classic Renderer.";
         gStatusBar.messageTicsLeft = 30;
     #endif
 }

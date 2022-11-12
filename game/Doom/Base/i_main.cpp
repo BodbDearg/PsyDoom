@@ -775,7 +775,7 @@ bool I_NetUpdate() noexcept {
     if (gbDemoPlayback) {
         if (Controls::isJustReleased(Controls::Binding::Toggle_ViewPlayer)) {
             gCurPlayerIndex ^= 1;
-            gPlayers[gCurPlayerIndex].message = (gCurPlayerIndex == 0) ? "Viewing player 1" : "Viewing player 2";
+            gPlayers[gCurPlayerIndex].message = (gCurPlayerIndex == 0) ? "Viewing player 1." : "Viewing player 2.";
         }
 
         return (!DemoPlayer::readTickInputs());

@@ -611,9 +611,9 @@ void DisplaySavedHudMessage(const SaveGameContext saveContext, const bool bSucce
 
     if (bSuccess) {
         switch (saveContext) {
-            case SaveGameContext::Menu:         msg = "Game saved";         break;
-            case SaveGameContext::Autosave:     msg = "Game autosaved";     break;
-            case SaveGameContext::Quicksave:    msg = "Quicksaved";         break;
+            case SaveGameContext::Menu:         msg = "Game saved.";        break;
+            case SaveGameContext::Autosave:     msg = "Game autosaved.";    break;
+            case SaveGameContext::Quicksave:    msg = "Quicksaved.";        break;
         }
     } else {
         switch (saveContext) {
@@ -637,8 +637,8 @@ void DisplayLoadedHudMessage(const LoadGameContext loadContext, const bool bSucc
 
     if (bSuccess) {
         switch (loadContext) {
-            case LoadGameContext::Menu:         msg = "Game loaded";        break;
-            case LoadGameContext::Quickload:    msg = "Quickloaded";        break;
+            case LoadGameContext::Menu:         msg = "Game loaded.";       break;
+            case LoadGameContext::Quickload:    msg = "Quickloaded.";       break;
         }
     } else {
         switch (loadContext) {
