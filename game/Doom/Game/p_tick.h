@@ -57,6 +57,7 @@ extern int32_t      gTicConOnPause;
     extern bool         gbIgnoreCurrentAttack;
     extern bool         gbDoQuicksave;
     extern bool         gbDoQuickload;
+    extern int64_t      gLevelTimerStartElapsedUsecs;
 #else
     extern uint32_t     gTicButtons[MAXPLAYERS];
     extern uint32_t     gOldTicButtons[MAXPLAYERS];

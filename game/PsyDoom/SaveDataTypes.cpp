@@ -1349,7 +1349,8 @@ void SavedGlobals::deserializeToGlobals() const noexcept {
     gGameMap = gameMap;
     gNextMap = nextMap;
     gGameSkill = gameSkill;
-    Game::setLevelElapsedTimeMicrosecs(levelElapsedTime);
+    gLevelTimerStartElapsedUsecs = levelElapsedTime;
+    Game::setLevelElapsedTimeMicrosecs(levelElapsedTime);   // Note: this might also be set again using 'gLevelStartElapsedUsec' if we are doing a full map load (from the menu or another map)
     gTotalKills = totalKills;
     gTotalItems = totalItems;
     gTotalSecret = totalSecret;
