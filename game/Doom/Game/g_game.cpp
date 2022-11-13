@@ -148,8 +148,11 @@ void G_DoLoadLevel() noexcept {
     // No action set upon starting a level
     gGameAction = ga_nothing;
 
-    // PsyDoom: do we need to load a save on starting a level?
     #if PSYDOOM_MODS
+        // PsyDoom: initialize the level timer later on with an elapsed microsecond count of '0' (unless a save file being loaded overrides this)
+        gLevelTimerStartElapsedUsecs = 0;
+
+        // PsyDoom: do we need to load a save on starting a level?
         if (ShouldLoadSaveOnLevelStart()) {
             // Load the game, and if that fails trigger a restart of the map (don't leave it half setup)
             ClearLoadSaveOnLevelStartFlag();
@@ -167,6 +170,7 @@ void G_DoLoadLevel() noexcept {
 
             if (loadResult != LoadSaveResult::OK) {
                 gGameAction = ga_restart;
+                gLevelTimerStartElapsedUsecs = 0;     // If loading failed don't use the time value from the save file, it's invalid.
             }
 
             SaveAndLoad::gCurSaveSlot = SaveFileSlot::NONE;

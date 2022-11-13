@@ -97,6 +97,7 @@ int32_t     gTicConOnPause;                         // What 1 vblank tick we pau
     bool        gbIgnoreCurrentAttack;          // A flag set to prevent accidental firing on returning to the game - causes attack to be ignored until the key is released
     bool        gbDoQuicksave;                  // A flag set to perform a quicksave at the next available opportunity (15 Hz tick)
     bool        gbDoQuickload;                  // A flag set to perform a quicksave at the next available opportunity (15 Hz tick)
+    int64_t     gLevelTimerStartElapsedUsecs;   // After the level is loaded how many microseconds should be elapsed on the level timer (as a starting point)
 #else
     uint32_t    gTicButtons[MAXPLAYERS];        // Currently pressed buttons by all players
     uint32_t    gOldTicButtons[MAXPLAYERS];     // Previously pressed buttons by all players
@@ -901,6 +902,10 @@ void P_Start() noexcept {
     // PsyDoom: start the level timer and auto save if requested
     #if PSYDOOM_MODS
         Game::startLevelTimer();
+
+        if (gLevelTimerStartElapsedUsecs != 0) {
+            Game::setLevelElapsedTimeMicrosecs(gLevelTimerStartElapsedUsecs);
+        }
 
         if (gbAutoSaveOnLevelStart) {
             gbAutoSaveOnLevelStart = false;
