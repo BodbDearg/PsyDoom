@@ -223,6 +223,14 @@ void AM_Control(player_t& player) noexcept {
         inputs.setAnalogForwardMove(0);
         inputs.setAnalogSideMove(0);
         inputs.setAnalogTurn(0);
+
+        // If zooming in and out then don't allow weapons to be changed.
+        // This fixes situations where for example the mouse wheel is bound to both switch weapons and zoom in/out.
+        if (bAutomapZoomIn || bAutomapZoomOut) {
+            inputs.directSwitchToWeapon = wp_nochange;
+            inputs.fNextWeapon() = false;
+            inputs.fPrevWeapon() = false;
+        }
     #else
         gTicButtons[gPlayerNum] &= ~(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_R1 | PAD_L1);
     #endif
