@@ -34,13 +34,6 @@ static fixed_t gRvMap_AutomapX;
 static fixed_t gRvMap_AutomapY;
 static fixed_t gRvMap_AutomapScale;
 
-// Automap colors to use if deliberately brightening automap lines for the Vulkan renderer.
-// The brightening is done to compensate for lines appearing dimmer, due to them being thinner at high resolutions.
-static constexpr uint32_t BRIGHT_AM_COLOR_RED       = 0xFF0000;
-static constexpr uint32_t BRIGHT_AM_COLOR_BROWN     = 0xFFAA59;
-static constexpr uint32_t BRIGHT_AM_COLOR_YELLOW    = 0xFFFF00;
-static constexpr uint32_t BRIGHT_AM_COLOR_GREY      = 0xBBBBBB;
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Compute the position and rotation to use for the automap for the player, taking into account framerate independent movement.
 // Also does the same for the 'free camera' automap position that is used when the player is manually panning over the map.
@@ -219,10 +212,13 @@ static void RV_DrawAutomapShowAllThingsCheat() noexcept {
         const float x3 = tx + cos3 * (float) AM_THING_TRI_SIZE;
         const float y3 = ty + sin3 * (float) AM_THING_TRI_SIZE;
 
+        // Get the color to draw with
+        const uint32_t color = AM_GetMobjColor(mobj, Config::gbVulkanBrightenAutomap);
+
         // Draw the triangle
-        RV_AddAutomapLine(AM_COLOR_AQUA, x1, y1, x2, y2);
-        RV_AddAutomapLine(AM_COLOR_AQUA, x2, y2, x3, y3);
-        RV_AddAutomapLine(AM_COLOR_AQUA, x1, y1, x3, y3);
+        RV_AddAutomapLine(color, x1, y1, x2, y2);
+        RV_AddAutomapLine(color, x2, y2, x3, y3);
+        RV_AddAutomapLine(color, x1, y1, x3, y3);
     }
 }
 
@@ -242,12 +238,8 @@ static void RV_DrawAutomapPlayers() noexcept {
         if ((player.playerstate == PST_LIVE) && (gGameTic & 2))
             continue;
 
-        // Change the colors of this player in COOP to distinguish
-        uint32_t color = AM_COLOR_GREEN;
-
-        if ((gNetGame == gt_coop) && (playerIdx == gCurPlayerIndex)) {
-            color = AM_COLOR_YELLOW;
-        }
+        // Get the color to draw the player with
+        const uint32_t color = AM_GetPlayerColor(playerIdx, Config::gbVulkanBrightenAutomap);
 
         // Compute the the sine and cosines for the angles of the 3 points in the triangle.
         // Use a (potentially) framerate uncapped rotation if it is the local player.

@@ -28,6 +28,7 @@ struct Config_Graphics {
     ConfigField     floorRenderGapFix;
     ConfigField     skyLeakFix;
     ConfigField     vulkanBrightenAutomap;
+    ConfigField     useExtendedAutomapColors;
     ConfigField     vramSizeInMegabytes;
     ConfigField     vulkanPreferredDevicesRegex;
 

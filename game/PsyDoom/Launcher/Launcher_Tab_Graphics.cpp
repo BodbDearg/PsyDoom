@@ -211,7 +211,7 @@ static void makePictureCropAndStretchSection(const int x, const int y) noexcept 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Makes the general settings section
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void makeGeneralSettingsSection(const int x, const int y) noexcept {
+static void makeGeneralSettingsSection(Tab_Graphics& tab, const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 300, 30, "General");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 300, 90, "");
@@ -232,6 +232,11 @@ static void makeGeneralSettingsSection(const int x, const int y) noexcept {
             pInput->deactivate();
         #endif
     }
+
+    // Extended automap colors cheat
+    tab.pCheck_useExtendedAutomapColors = makeFl_Check_Button(x + 20, y + 80, 220, 30, "  Use extended automap colors");
+    bindConfigField<Config::gbUseExtendedAutomapColors, Config::gbNeedSave_Graphics>(*tab.pCheck_useExtendedAutomapColors);
+    tab.pCheck_useExtendedAutomapColors->tooltip(ConfigSerialization::gConfig_Graphics.useExtendedAutomapColors.comment);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -393,7 +398,7 @@ void populateGraphicsTab(Context& ctx) noexcept {
 
     makeOutputOptionsSection(tabRect.lx + 20, tabRect.ty + 20);
     makePictureCropAndStretchSection(tabRect.lx + 20, tabRect.ty + 240);
-    makeGeneralSettingsSection(tabRect.lx + 20, tabRect.ty + 420);
+    makeGeneralSettingsSection(tab, tabRect.lx + 20, tabRect.ty + 420);
     makeVulkanRendererSettingsSection(tab, tabRect.lx + 340, tabRect.ty + 20);
     makeClassicRendererSettingsSection(tabRect.lx + 340, tabRect.ty + 400);
 }

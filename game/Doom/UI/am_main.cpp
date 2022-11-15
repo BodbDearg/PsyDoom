@@ -11,6 +11,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/RendererVk/rv_automap.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/PsxPadButtons.h"
 #include "PsyDoom/Utils.h"
@@ -396,10 +397,17 @@ void AM_Drawer() noexcept {
                 const int32_t y3 = d_fixed_to_int(((vy + sin3 * AM_THING_TRI_SIZE) / SCREEN_W) * scale);
             #endif
 
+            // Figure out what color to draw with
+            #if PSYDOOM_MODS
+                const uint32_t color = AM_GetMobjColor(*pMobj, false);
+            #else
+                const uint32_t color = AM_COLOR_AQUA;
+            #endif
+
             // Draw the triangle
-            DrawLine(AM_COLOR_AQUA, x1, y1, x2, y2);
-            DrawLine(AM_COLOR_AQUA, x2, y2, x3, y3);
-            DrawLine(AM_COLOR_AQUA, x1, y1, x3, y3);
+            DrawLine(color, x1, y1, x2, y2);
+            DrawLine(color, x2, y2, x3, y3);
+            DrawLine(color, x1, y1, x3, y3);
         }
     }
 
@@ -419,12 +427,17 @@ void AM_Drawer() noexcept {
         if ((player.playerstate == PST_LIVE) && (gGameTic & 2))
             continue;
 
-        // Change the colors of this player in COOP to distinguish
-        uint32_t color = AM_COLOR_GREEN;
+        // Figure out what color to draw with
+        #if PSYDOOM_MODS
+            const uint32_t color = AM_GetPlayerColor(playerIdx, false);
+        #else
+            // Change the colors of this player in COOP to distinguish
+            uint32_t color = AM_COLOR_GREEN;
 
-        if ((gNetGame == gt_coop) && (playerIdx == gCurPlayerIndex)) {
-            color = AM_COLOR_YELLOW;
-        }
+            if ((gNetGame == gt_coop) && (playerIdx == gCurPlayerIndex)) {
+                color = AM_COLOR_YELLOW;
+            }
+        #endif
 
         // Compute the the sine and cosines for the angles of the 3 points in the triangle.
         // PsyDoom: use a (potentially) framerate uncapped rotation if it is the local player.
@@ -484,6 +497,52 @@ void AM_Drawer() noexcept {
         DrawLine(color, x1, y1, x3, y3);
     }
 }
+
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom specific helper: gets the color to draw the specified player in
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t AM_GetPlayerColor(const int32_t playerIdx, const bool bBrighten) noexcept {
+    // Change the colors of this player in COOP to distinguish from the other player
+    const bool bUseAltPlayerColor = ((gNetGame == gt_coop) && (playerIdx == gCurPlayerIndex));
+
+    if (bUseAltPlayerColor) {
+        return (bBrighten) ? BRIGHT_AM_COLOR_YELLOW : AM_COLOR_YELLOW;
+    } else {
+        return (bBrighten) ? BRIGHT_AM_COLOR_GREEN : AM_COLOR_GREEN;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom specific helper: gets the color to draw the specified map object in
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t AM_GetMobjColor(const mobj_t& mobj, const bool bBrighten) noexcept {
+    // A live enemy?
+    if ((mobj.flags & MF_COUNTKILL) && (mobj.health > 0)) {
+        if (Config::gbUseExtendedAutomapColors) {
+            return (bBrighten) ? BRIGHT_AM_COLOR_RED : AM_COLOR_RED;
+        } else {
+            return (bBrighten) ? BRIGHT_AM_COLOR_AQUA : AM_COLOR_AQUA;
+        }
+    }
+    
+    // Item?
+    if (mobj.flags & MF_COUNTITEM) {
+        if (Config::gbUseExtendedAutomapColors) {
+            return (bBrighten) ? BRIGHT_AM_COLOR_MAGENTA : AM_COLOR_MAGENTA;
+        } else {
+            return (bBrighten) ? BRIGHT_AM_COLOR_AQUA : AM_COLOR_AQUA;
+        }
+    }
+
+    // Player?
+    if (mobj.player)
+        return (bBrighten) ? BRIGHT_AM_COLOR_GREEN : AM_COLOR_GREEN;
+
+    // All other map objects
+    return (bBrighten) ? BRIGHT_AM_COLOR_AQUA : AM_COLOR_AQUA;
+}
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw an automap line in the specified color

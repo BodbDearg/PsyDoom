@@ -74,6 +74,7 @@ struct Tab_Graphics {
     Fl_Check_Button*        pCheck_drawExtStatusBar;
     Fl_Check_Button*        pCheck_brightenAutomap;
     Fl_Check_Button*        pCheck_disableVkRenderer;
+    Fl_Check_Button*        pCheck_useExtendedAutomapColors;
     Fl_Box*                 pLabel_prefDevicesRegex;
     Fl_Input*               pInput_prefDevicesRegex;
 };
