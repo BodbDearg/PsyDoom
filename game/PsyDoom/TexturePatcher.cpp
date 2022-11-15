@@ -55,6 +55,15 @@ void patchTex_GRATE(const texture_t& tex, const texdata_t texData) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Final Doom: patches the 'STATUS' texture to fix unintended pixels on the keycards
+//------------------------------------------------------------------------------------------------------------------------------------------
+void patchTex_FinalDoom_STATUS(const texture_t& tex, const texdata_t texData) noexcept {
+    uint8_t* const pTexPixels = (uint8_t*)(texData.pBytes + sizeof(texlump_header_t));
+    pTexPixels[49031] = 0;
+    pTexPixels[49032] = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Applies patches to the specified texture, if appropriate
 //------------------------------------------------------------------------------------------------------------------------------------------
 void applyTexturePatches(const texture_t& tex, const texdata_t texData) noexcept {
@@ -70,6 +79,11 @@ void applyTexturePatches(const texture_t& tex, const texdata_t texData) noexcept
     if (lumpName == "GRATE") {
         if (md5HashMatches(texData, 0x57EC4B1EF4567271, 0xA097852AE0E5C725)) {
             patchTex_GRATE(tex, texData);
+        }
+    } 
+    else if (lumpName == "STATUS") {
+        if (md5HashMatches(texData, 0xD35CCD07913A9366, 0xC1B0D65C90757FAA)) {
+            patchTex_FinalDoom_STATUS(tex, texData);
         }
     }
 }
