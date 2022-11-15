@@ -82,6 +82,7 @@ bool            gbFloorRenderGapFix;
 bool            gbSkyLeakFix;
 bool            gbVulkanBrightenAutomap;
 bool            gbUseVulkan32BitShading;
+bool            gbUseExtendedAutomapColors;
 int32_t         gVramSizeInMegabytes;
 std::string     gVulkanPreferredDevicesRegex;
 

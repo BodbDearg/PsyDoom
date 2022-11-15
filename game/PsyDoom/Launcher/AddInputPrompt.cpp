@@ -32,6 +32,7 @@ struct AddInputPromptState {
     int                     duration;
     Controls::InputSrc      inputSrc;
     uint16_t                keyboardKeyPressed;
+    int                     mouseWheelMoveAmount;
 } gPrompt;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -286,17 +287,27 @@ static uint16_t convertCurrentFltkEventKeyToSdlScancode(const int fltkKey) noexc
 // This is used to get keyboard key pressed events from FLTK.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static int onAddInputPromptEvent(const int event) noexcept {
-    // Ignore non keyboard pressed events and don't consume when ignoring
-    if ((event != FL_KEYDOWN) && (event != FL_SHORTCUT))
-        return 0;
+    if ((event == FL_KEYDOWN) || (event == FL_SHORTCUT)) {
+        // Keyboard event: translate from an FLTK key to an SDL scancode since PsyDoom uses those internally
+        const int fltkKey = Fl::event_original_key();
+        const uint16_t sdlScancode = convertCurrentFltkEventKeyToSdlScancode(fltkKey);
 
-    // Translate from an FLTK key to an SDL scancode since PsyDoom uses those internally:
-    const int fltkKey = Fl::event_original_key();
-    const uint16_t sdlScancode = convertCurrentFltkEventKeyToSdlScancode(fltkKey);
+        // Save and consume the keyboard event
+        gPrompt.keyboardKeyPressed = sdlScancode;
+        return 1;
+    }
+    else if (event == FL_MOUSEWHEEL) {
+        // Mouse wheel event: note that only the vertical mouse wheel is handled here, PsyDoom doesn't support using the horizontal mouse wheel.
+        const int wheelDy = Fl::event_dy();
 
-    // Save and consume the keyboard event
-    gPrompt.keyboardKeyPressed = sdlScancode;
-    return 1;
+        if (wheelDy != 0) {
+            gPrompt.mouseWheelMoveAmount = wheelDy;
+            return 1;
+        }
+    }
+
+    // This event is ignored
+    return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -311,9 +322,13 @@ static Controls::InputSrc getCurrentInput() noexcept {
 
     // Pressing a keyboard key?
     // We receive those via callbacks from FLTK.
-    if ((gPrompt.keyboardKeyPressed != 0) && (gPrompt.keyboardKeyPressed < SDL_NUM_SCANCODES)) {
+    if ((gPrompt.keyboardKeyPressed != 0) && (gPrompt.keyboardKeyPressed < SDL_NUM_SCANCODES))
         return InputSrc{ InputSrc::KEYBOARD_KEY, InputSrc::SUBAXIS_POS, gPrompt.keyboardKeyPressed };
-    }
+
+    // Moving the mouse wheel?
+    // We receive those via callbacks from FLTK.
+    if ((gPrompt.mouseWheelMoveAmount != 0))
+        return InputSrc{ InputSrc::MOUSE_WHEEL, (gPrompt.mouseWheelMoveAmount < 0) ? InputSrc::SUBAXIS_POS : InputSrc::SUBAXIS_NEG, 0 };
 
     // Pressing a mouse button?
     // Note that we need to poll SDL in this way because we don't yet have an SDL window to receive mouse events.

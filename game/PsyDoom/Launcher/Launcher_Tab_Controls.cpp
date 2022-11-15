@@ -275,13 +275,13 @@ static void makeAutomapControlsSection(const int secLx, const int secRx, const i
     const int fieldLx = secLx + 20;
     const int fieldRx = secRx - 20;
 
-    makeBindingField("Zoom in", cfg.automap_zoomIn, tooltip, fieldLx, fieldRx, fieldY);
-    makeBindingField("Zoom out", cfg.automap_zoomOut, tooltip, fieldLx, fieldRx, fieldY + 30);
-    makeBindingField("Move up", cfg.automap_moveUp, tooltip, fieldLx, fieldRx, fieldY + 60);
-    makeBindingField("Move down", cfg.automap_moveDown, tooltip, fieldLx, fieldRx, fieldY + 90);
-    makeBindingField("Move left", cfg.automap_moveLeft, tooltip, fieldLx, fieldRx, fieldY + 120);
-    makeBindingField("Move right", cfg.automap_moveRight, tooltip, fieldLx, fieldRx, fieldY + 150);
-    makeBindingField("Pan", cfg.automap_pan, tooltip, fieldLx, fieldRx, fieldY + 180);
+    makeBindingField("Move up", cfg.automap_moveUp, tooltip, fieldLx, fieldRx, fieldY + 0);
+    makeBindingField("Move down", cfg.automap_moveDown, tooltip, fieldLx, fieldRx, fieldY + 30);
+    makeBindingField("Move left", cfg.automap_moveLeft, tooltip, fieldLx, fieldRx, fieldY + 60);
+    makeBindingField("Move right", cfg.automap_moveRight, tooltip, fieldLx, fieldRx, fieldY + 90);
+    makeBindingField("Pan", cfg.automap_pan, tooltip, fieldLx, fieldRx, fieldY + 120);
+    makeBindingField("Pan mode: zoom in", cfg.automap_zoomIn, tooltip, fieldLx, fieldRx, fieldY + 150);
+    makeBindingField("Pan mode: zoom out", cfg.automap_zoomOut, tooltip, fieldLx, fieldRx, fieldY + 180);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

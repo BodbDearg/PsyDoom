@@ -41,6 +41,7 @@ struct Tab_Launcher {
     Fl_Check_Button*                pCheck_pistolStart;
     Fl_Check_Button*                pCheck_turbo;
     Fl_Check_Button*                pCheck_noMonsters;
+    Fl_Check_Button*                pCheck_nmBossFixup;
     Fl_Box*                         pLabel_netHost;
     Fl_Input*                       pInput_netHost;
     Fl_Button*                      pButton_clearNetHost;
@@ -73,6 +74,7 @@ struct Tab_Graphics {
     Fl_Check_Button*        pCheck_drawExtStatusBar;
     Fl_Check_Button*        pCheck_brightenAutomap;
     Fl_Check_Button*        pCheck_disableVkRenderer;
+    Fl_Check_Button*        pCheck_useExtendedAutomapColors;
     Fl_Box*                 pLabel_prefDevicesRegex;
     Fl_Input*               pInput_prefDevicesRegex;
 };

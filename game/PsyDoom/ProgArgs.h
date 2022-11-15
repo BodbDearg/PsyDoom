@@ -19,6 +19,7 @@ extern bool         gbIsNetServer;
 extern bool         gbIsNetClient;
 extern uint16_t     gServerPort;
 extern bool         gbNoMonsters;
+extern bool         gbNoMonstersBossFixup;
 extern bool         gbPistolStart;
 extern bool         gbTurboMode;
 extern int32_t      gWarpMap;

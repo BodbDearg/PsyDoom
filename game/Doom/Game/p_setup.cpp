@@ -1696,8 +1696,15 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         MapHash::finalize();                            // PsyDoom: compute the final map hash
         MapPatcher::applyPatches();                     // PsyDoom: apply any patches to original map data that are relevant at this point, once all things have been loaded
 
-        // PsyDoom: forcing open boss triggered doors etc. in deathmatch mode if that setting is enabled:
-        if ((gNetGame == gt_deathmatch) && Game::gSettings.bDmActivateBossSpecialSectors) {
+        // PsyDoom: forcing open boss triggered doors etc. if appropriate:
+        const bool bIsDeathmatch = (gNetGame == gt_deathmatch);
+        const bool bUsingNoMonsters = ((!bIsDeathmatch) && Game::gSettings.bNoMonsters);
+        const bool bActivateBossSpecials = (
+            (bIsDeathmatch && Game::gSettings.bDmActivateBossSpecialSectors) || 
+            (bUsingNoMonsters && Game::gSettings.bNoMonstersBossFixup)
+        );
+
+        if (bActivateBossSpecials) {
             P_ActivateAllBossSpecials();
         }
     #else

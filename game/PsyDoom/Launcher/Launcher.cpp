@@ -311,6 +311,10 @@ static void addLauncherProgramArgs(Context& ctx, std::vector<std::string>& progr
         programArgs.push_back("-nomonsters");
     }
 
+    if (ctx.tab_launcher.pCheck_nmBossFixup->value()) {
+        programArgs.push_back("-nmbossfixup");
+    }
+
     if (ctx.tab_launcher.pChoice_netPeerType->value() != 0) {
         // Server peer
         programArgs.push_back("-server");

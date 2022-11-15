@@ -69,6 +69,7 @@ extern bool             gbFloorRenderGapFix;
 extern bool             gbSkyLeakFix;
 extern bool             gbVulkanBrightenAutomap;
 extern bool             gbUseVulkan32BitShading;
+extern bool             gbUseExtendedAutomapColors;
 extern int32_t          gVramSizeInMegabytes;
 extern std::string      gVulkanPreferredDevicesRegex;
 

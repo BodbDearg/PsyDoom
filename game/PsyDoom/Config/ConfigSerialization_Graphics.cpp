@@ -249,6 +249,15 @@ void initCfgSerialization_Graphics() noexcept {
         true
     );
 
+    cfg.useExtendedAutomapColors = makeConfigField(
+        "UseExtendedAutomapColors",
+        "If enabled then live enemies and special bonus items (that count towards the player's item total)\n"
+        "will be colored differently when displayed on the automap via the 'Map All Things' cheat.\n"
+        "This makes identifying all remaining enemies and bonus items easier.\n",
+        gbUseExtendedAutomapColors,
+        false
+    );
+
     cfg.vramSizeInMegabytes = makeConfigField(
         "VramSizeInMegabytes",
         "Specifies how many megabytes of video RAM are available to hold sprites and textures in the game.\n"
