@@ -271,8 +271,18 @@ static void makeGameOptionsSection(Tab_Launcher& tab, const int x, const int y) 
 
     tab.pCheck_noMonsters = makeFl_Check_Button(x + 10, y + 130, 150, 30, "  No monsters");
     tab.pCheck_noMonsters->tooltip(
-        "Removes monsters from all levels.\n"
-        "Note: this might make some maps impossible to complete without cheats!"
+        "Single player and co-op: removes monsters from all levels.\n"
+        "Note: this might make some maps impossible to complete without using cheats or the no monsters 'boss fixup'."
+    );
+
+    tab.pCheck_nmBossFixup = makeFl_Check_Button(x + 10, y + 160, 150, 30, "  NM boss fixup");
+    tab.pCheck_nmBossFixup->tooltip(
+        "Single player and co-op: trigger boss related specials on starting a map when the 'No Monsters' cheat is active?\n"
+        "For example: open the doors in 'Phobos Anomaly' which require all Barons Of Hell to be killed?\n"
+        "\n"
+        "Notes:\n"
+        "(1) It's possible this fixup may cause sequence breaking bugs, depending on the map.\n"
+        "(2) This setting is ignored if 'No Monsters' is NOT specified."
     );
 }
 

@@ -38,6 +38,7 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(bFixViewBobStrength);
     Endian::byteSwapInPlace(bFixGravityStrength);
     Endian::byteSwapInPlace(bNoMonsters);
+    Endian::byteSwapInPlace(bNoMonstersBossFixup);
     Endian::byteSwapInPlace(bPistolStart);
     Endian::byteSwapInPlace(bTurboMode);
     Endian::byteSwapInPlace(bUseLostSoulSpawnFix);
@@ -220,6 +221,7 @@ void getUserGameSettings(GameSettings& settings) noexcept {
     settings.bFixViewBobStrength            = Config::gbFixViewBobStrength;
     settings.bFixGravityStrength            = Config::gbFixGravityStrength;
     settings.bNoMonsters                    = ProgArgs::gbNoMonsters;
+    settings.bNoMonstersBossFixup           = ProgArgs::gbNoMonstersBossFixup;
     settings.bPistolStart                   = ProgArgs::gbPistolStart;
     settings.bTurboMode                     = ProgArgs::gbTurboMode;
     settings.bUseLostSoulSpawnFix           = Config::gbUseLostSoulSpawnFix;
@@ -281,6 +283,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.bFixViewBobStrength                = false;
     settings.bFixGravityStrength                = false;
     settings.bNoMonsters                        = false;
+    settings.bNoMonstersBossFixup               = false;
     settings.bPistolStart                       = false;
     settings.bTurboMode                         = false;
     settings.bUseLostSoulSpawnFix               = false;

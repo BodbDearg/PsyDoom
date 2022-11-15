@@ -66,6 +66,9 @@ static void loadPrefsFileIniEntry(const IniUtils::IniEntry& entry) noexcept {
     else if (entry.key == "check_no_monsters") {
         pCurLauncherTab->pCheck_noMonsters->value(entry.value.tryGetAsInt(0));
     }
+    else if (entry.key == "check_nm_boss_fixup") {
+        pCurLauncherTab->pCheck_nmBossFixup->value(entry.value.tryGetAsInt(0));
+    }
     else if (entry.key == "input_net_host") {
         pCurLauncherTab->pInput_netHost->value(entry.value.strValue.c_str());
     }
@@ -129,6 +132,7 @@ void save(Tab_Launcher& tab) noexcept {
     std::fprintf(pFile, "check_pistol_start = %d\n", (tab.pCheck_pistolStart->value()) ? 1 : 0);
     std::fprintf(pFile, "check_turbo = %d\n", (tab.pCheck_turbo->value()) ? 1 : 0);
     std::fprintf(pFile, "check_no_monsters = %d\n", (tab.pCheck_noMonsters->value()) ? 1 : 0);
+    std::fprintf(pFile, "check_nm_boss_fixup = %d\n", (tab.pCheck_nmBossFixup->value()) ? 1 : 0);
     std::fprintf(pFile, "input_net_host = %s\n", input_net_host.c_str());
     std::fprintf(pFile, "input_net_port = %s\n", input_net_port.c_str());
     std::fprintf(pFile, "choice_net_peer_type = %d\n", tab.pChoice_netPeerType->value());

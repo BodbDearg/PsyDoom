@@ -68,6 +68,7 @@ Here is a video showing the port in action:
 - To add extra IWADs to the game, use the `-file <WAD_FILE_PATH>` argument.
     - See [Extension IWADS](docs/PsyDoom%20Modding%20Overview.md#Extension-IWADS) in the [PsyDoom Modding Overview](docs/PsyDoom%20Modding%20Overview.md) for more details on this.
 - For a 'no monsters' cheat similar to PC Doom use the `-nomonsters` switch.
+- To trigger (otherwise broken) boss related special actions at the start of maps when the 'no monsters' cheat is active, use the '-nmbossfixup' switch. This for example will open the doors in 'Phobos Anomaly' which require all Barons Of Hell to be killed.
 - To force pistol starts on all levels, use the `-pistolstart` switch. This setting also affects password generation and multiplayer.
 - To enable the 'turbo mode' cheat, use the `-turbo` switch. This setting allows the player to move and fire 2x as fast. Doors and platforms also move 2x as fast. Monsters are unaffected.
 - To warp directly to a specified map on startup use `-warp <MAP_NUMBER>`.

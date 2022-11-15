@@ -41,8 +41,8 @@ bool        gbIsNetServer   = false;                // True if this peer is a se
 bool        gbIsNetClient   = false;                // True if this peer is a client in a networked game (player 2, connects to waiting server)
 uint16_t    gServerPort     = DEFAULT_NET_PORT;     // Port that the server listens on or that the client connects to
 
-// Cheat: if true then do not spawn any monsters
-bool gbNoMonsters = false;
+bool gbNoMonsters           = false;    // Cheat: if true then do not spawn any monsters
+bool gbNoMonstersBossFixup  = false;    // Cheat: if 'no monsters' is active then try to fix broken boss specials by triggering them at the start of the map
 
 // If true then start each level with just a pistol and 50 rounds, and full health.
 // Basically the exact same player state as if the level had been restarted.
@@ -135,6 +135,15 @@ static int parseArg_record([[maybe_unused]] const int argc, const char* const* c
 static int parseArg_nomonsters(const int argc, const char* const* const argv) {
     if ((argc >= 1) && (std::strcmp(argv[0], "-nomonsters") == 0)) {
         gbNoMonsters = true;
+        return 1;
+    }
+
+    return 0;
+}
+
+static int parseArg_nmbossfixup(const int argc, const char* const* const argv) {
+    if ((argc >= 1) && (std::strcmp(argv[0], "-nmbossfixup") == 0)) {
+        gbNoMonstersBossFixup = true;
         return 1;
     }
 
@@ -274,6 +283,7 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_checkresult,
     parseArg_record,
     parseArg_nomonsters,
+    parseArg_nmbossfixup,
     parseArg_pistolstart,
     parseArg_turbo,
     parseArg_server,
@@ -370,6 +380,7 @@ void shutdown() noexcept {
     gbIsNetClient = false;
     gServerPort = DEFAULT_NET_PORT;
     gbNoMonsters = false;
+    gbNoMonstersBossFixup = false;
     gbPistolStart = false;
     gbTurboMode = false;
     gUserWadFiles.clear();
