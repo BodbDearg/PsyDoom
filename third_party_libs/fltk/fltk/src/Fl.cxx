@@ -1370,8 +1370,18 @@ int Fl::handle_(int e, Fl_Window* window)
     }
     // Now try sending it to the "modal" window
     if (modal()) {
-      send_event(FL_MOUSEWHEEL, modal(), window);
-      return 1;
+      // PSYDOOM: allow custom handlers to process the mouse wheel event if the top modal window doesn't want it.
+      // This allows PsyDoom to intercept mouse wheel events for the purposes of control binding.
+      //
+      // This code was previously:
+      //    send_event(FL_MOUSEWHEEL, modal(), window);
+      //    return 1;
+      //
+      if (send_event(FL_MOUSEWHEEL, modal(), window))
+        return 1;
+
+      dnd_flag = 0;
+      return send_handlers(e);
     }
     // Finally try sending it to the window, the event occurred in
     if (send_event(FL_MOUSEWHEEL, window, window->top_window())) return 1;
