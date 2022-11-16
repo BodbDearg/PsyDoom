@@ -30,6 +30,7 @@ extern bool             gbFixMultiLineSpecialCrossing;
 extern bool             gbUseItemPickupFix;
 extern bool             gbUsePlayerRocketBlastFix;
 extern bool             gbUseSuperShotgunDelayTweak;
+extern bool             gbSinglePlayerForceSpawnDmThings;
 extern int32_t          gUseFinalDoomPlayerMovement;
 extern int32_t          gAllowMovementCancellation;
 extern bool             gbAllowTurningCancellation;

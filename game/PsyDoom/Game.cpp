@@ -59,6 +59,7 @@ void GameSettings::byteSwap() noexcept {
     Endian::byteSwapInPlace(viewBobbingStrengthFixed);
     Endian::byteSwapInPlace(dmFragLimit);
     Endian::byteSwapInPlace(coopPreserveAmmoFactor);
+    Endian::byteSwapInPlace(bSinglePlayerForceSpawnDmThings);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -253,9 +254,10 @@ void getUserGameSettings(GameSettings& settings) noexcept {
         settings.lostSoulSpawnLimit = Config::gLostSoulSpawnLimit;
     }
 
-    settings.viewBobbingStrengthFixed   = (int32_t)(std::clamp(Config::gViewBobbingStrength, 0.0f, 64.0f) * (float) FRACUNIT);    // Cap this to a reasonable number, won't make much difference going above this!
-    settings.dmFragLimit                = Config::gDmFragLimit;
-    settings.coopPreserveAmmoFactor     = Config::gCoopPreserveAmmoFactor;
+    settings.viewBobbingStrengthFixed           = (int32_t)(std::clamp(Config::gViewBobbingStrength, 0.0f, 64.0f) * (float) FRACUNIT);    // Cap this to a reasonable number, won't make much difference going above this!
+    settings.dmFragLimit                        = Config::gDmFragLimit;
+    settings.coopPreserveAmmoFactor             = Config::gCoopPreserveAmmoFactor;
+    settings.bSinglePlayerForceSpawnDmThings    = Config::gbSinglePlayerForceSpawnDmThings;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -304,6 +306,7 @@ void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     settings.viewBobbingStrengthFixed           = FRACUNIT;
     settings.dmFragLimit                        = 0;
     settings.coopPreserveAmmoFactor             = 0;
+    settings.bSinglePlayerForceSpawnDmThings    = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
