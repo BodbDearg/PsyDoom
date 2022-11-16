@@ -43,6 +43,7 @@ bool            gbFixMultiLineSpecialCrossing;
 bool            gbUseItemPickupFix;
 bool            gbUsePlayerRocketBlastFix;
 bool            gbUseSuperShotgunDelayTweak;
+bool            gbSinglePlayerForceSpawnDmThings;
 int32_t         gUseFinalDoomPlayerMovement;
 int32_t         gAllowMovementCancellation;
 bool            gbAllowTurningCancellation;

@@ -255,6 +255,12 @@ static void makeTweaksSection(const int x, const int y) noexcept {
         pCheck->tooltip(ConfigSerialization::gConfig_Game.useSuperShotgunDelayTweak.comment);
     }
 
+    {
+        const auto pCheck = makeFl_Check_Button(x + 230, y + 100, 210, 30, "  SP force spawn DM things");
+        bindConfigField<Config::gbSinglePlayerForceSpawnDmThings, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.singlePlayerForceSpawnDmThings.comment);
+    }
+
     // Movement cancellation
     {
         const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 140, 120, 26, "Allow movement cancel");

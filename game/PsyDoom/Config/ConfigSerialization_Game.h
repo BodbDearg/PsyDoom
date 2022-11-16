@@ -30,6 +30,7 @@ struct Config_Game {
     ConfigField     useItemPickupFix;
     ConfigField     usePlayerRocketBlastFix;
     ConfigField     useSuperShotgunDelayTweak;
+    ConfigField     singlePlayerForceSpawnDmThings;
     ConfigField     useFinalDoomPlayerMovement;
     ConfigField     allowMovementCancellation;
     ConfigField     allowTurningCancellation;

@@ -265,6 +265,16 @@ void initCfgSerialization_Game() noexcept {
         false
     );
 
+    cfg.singlePlayerForceSpawnDmThings = makeConfigField(
+        "SinglePlayerForceSpawnDmThings",
+        "If enabled then things flagged 'deathmatch only' will be allowed to spawn in single player mode.\n"
+        "This includes extra weapons and items, but also (oddly!) extra enemies on some maps.\n"
+        "\n"
+        "Note: this setting is ignored during demos and networked games where you are not the host/server.",
+        gbSinglePlayerForceSpawnDmThings,
+        false
+    );
+
     cfg.useFinalDoomPlayerMovement = makeConfigField(
         "UseFinalDoomPlayerMovement",
         "Whether to use player movement & turning logic from Final Doom rather than the original PSX Doom.\n"

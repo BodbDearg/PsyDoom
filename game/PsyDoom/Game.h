@@ -68,6 +68,7 @@ struct GameSettings {
     int32_t     viewBobbingStrengthFixed;           // 16.16 multiplier for view bobbing strength
     int32_t     dmFragLimit;                        // If playing deathmatch, level will exit when this number of frags is reached. <0 = infinite.
     int32_t     coopPreserveAmmoFactor;             // How much ammo a player keeps after dying in co-op. 0 = none | 1 = all | 2 = half
+    uint8_t     bSinglePlayerForceSpawnDmThings;    // Enable multiplayer-only things in single player?
 
     // Byte swapping for Endian correction
     void byteSwap() noexcept;
