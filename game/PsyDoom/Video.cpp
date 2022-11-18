@@ -14,6 +14,7 @@
 #include "Vulkan/VRenderer.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <SDL.h>
 
 BEGIN_NAMESPACE(Video)
@@ -43,14 +44,33 @@ int32_t         gBotOverscan;   // Sanitized config input: number of pixels to d
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Utility: determines which display to run PsyDoom on
+//------------------------------------------------------------------------------------------------------------------------------------------
+static uint8_t pickStartupDisplay() noexcept {
+    // How many displays are there?
+    // Note: if an error occurs (negative return value) then just assume 1; also clamp the display count to a sane amount.
+    const int numDisplays = std::clamp(SDL_GetNumVideoDisplays(), 1, 256);
+
+    // If a valid display is specified manually then just use that:
+    if ((Config::gOutputDisplayIndex >= 0) && (Config::gOutputDisplayIndex < numDisplays))
+        return (uint8_t) Config::gOutputDisplayIndex;
+
+    // Get the current mouse position and determine the display index from that.
+    // Note: if an error occurs determining the display (negative return value) then just default to the first display.
+    SDL_Point mousePos = {};
+    SDL_GetGlobalMouseState(&mousePos.x, &mousePos.y);
+    return (uint8_t) std::clamp(SDL_GetPointDisplayIndex(&mousePos), 0, numDisplays - 1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Pick which resolution to use for the game's window on startup
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
+static void decideStartupResolution(const uint8_t displayIndex, int32_t& w, int32_t& h) noexcept {
     // Get the screen resolution.
     // On high DPI screens like MacOS retina the resolution returned will be virtual not physical resolution.
     SDL_DisplayMode displayMode;
 
-    if (SDL_GetCurrentDisplayMode(0, &displayMode) != 0) {
+    if (SDL_GetCurrentDisplayMode(displayIndex, &displayMode) != 0) {
         FatalErrors::raise("Failed to determine current screen video mode!");
     }
 
@@ -136,10 +156,13 @@ void initVideo() noexcept {
     gTopOverscan = std::clamp(Config::gTopOverscanPixels, 0, ORIG_DRAW_RES_Y / 2 - 1);
     gBotOverscan = std::clamp(Config::gBottomOverscanPixels, 0, ORIG_DRAW_RES_Y / 2 - 1);
 
+    // Decide what display to use
+    const uint8_t displayIndex = pickStartupDisplay();
+
     // Decide what window size to use
     int32_t winSizeX = 0;
     int32_t winSizeY = 0;
-    decideStartupResolution(winSizeX, winSizeY);
+    decideStartupResolution(displayIndex, winSizeX, winSizeY);
 
     // Linux: create the icon for the window
     #ifdef __linux__
@@ -147,8 +170,8 @@ void initVideo() noexcept {
     #endif
 
     // Create the window
-    const int32_t windowX = SDL_WINDOWPOS_CENTERED;
-    const int32_t windowY = SDL_WINDOWPOS_CENTERED;
+    const int32_t windowX = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
+    const int32_t windowY = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
 
     gpSdlWindow = SDL_CreateWindow(
         Utils::getGameVersionString(),

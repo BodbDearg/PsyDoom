@@ -164,6 +164,17 @@ static void makeOutputOptionsSection(const int x, const int y) noexcept {
         bindConfigField<Config::gOutputResolutionH, Config::gbNeedSave_Graphics>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
+
+    // Output display index
+    {
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 170, 80, 26, "Output display index");
+        pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        pLabel->tooltip(ConfigSerialization::gConfig_Graphics.outputDisplayIndex.comment);
+
+        const auto pInput = new Fl_Int_Input(x + 200, y + 170, 80, 26);
+        bindConfigField<Config::gOutputDisplayIndex, Config::gbNeedSave_Graphics>(*pInput);
+        pInput->tooltip(pLabel->tooltip());
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -172,7 +183,7 @@ static void makeOutputOptionsSection(const int x, const int y) noexcept {
 static void makePictureCropAndStretchSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 300, 30, "Picture crop & stretch");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 300, 140, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 300, 110, "");
 
     // Top overscan pixels
     {
@@ -214,7 +225,7 @@ static void makePictureCropAndStretchSection(const int x, const int y) noexcept 
 static void makeGeneralSettingsSection(Tab_Graphics& tab, const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 300, 30, "General");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 300, 90, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 300, 120, "");
 
     // VRAM size in MB
     {
@@ -245,7 +256,7 @@ static void makeGeneralSettingsSection(Tab_Graphics& tab, const int x, const int
 static void makeVulkanRendererSettingsSection(Tab_Graphics& tab, const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 580, 30, (Config::gbCouldDetermineVulkanConfigDefaults) ? "Vulkan renderer" : "Vulkan renderer (unavailable)");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 580, 340, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 580, 330, "");
 
     // Graphic presets
     tab.pLabel_settingsPreset = new Fl_Box(FL_NO_BOX, x + 20, y + 40, 120, 26, "Apply settings preset");
@@ -346,11 +357,11 @@ static void makeVulkanRendererSettingsSection(Tab_Graphics& tab, const int x, co
     tab.pCheck_disableVkRenderer->tooltip(ConfigSerialization::gConfig_Graphics.disableVulkanRenderer.comment);
 
     // Preferred devices regex
-    tab.pLabel_prefDevicesRegex = new Fl_Box(FL_NO_BOX, x + 20, y + 330, 200, 26, "Preferred devices regex");
+    tab.pLabel_prefDevicesRegex = new Fl_Box(FL_NO_BOX, x + 20, y + 320, 200, 26, "Preferred devices regex");
     tab.pLabel_prefDevicesRegex->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     tab.pLabel_prefDevicesRegex->tooltip(ConfigSerialization::gConfig_Graphics.vulkanPreferredDevicesRegex.comment);
 
-    tab.pInput_prefDevicesRegex = new Fl_Input(x + 220, y + 330, 340, 26);
+    tab.pInput_prefDevicesRegex = new Fl_Input(x + 220, y + 320, 340, 26);
     bindConfigField<Config::gVulkanPreferredDevicesRegex, Config::gbNeedSave_Graphics>(*tab.pInput_prefDevicesRegex);
     tab.pInput_prefDevicesRegex->tooltip(tab.pLabel_prefDevicesRegex->tooltip());
 
@@ -364,7 +375,7 @@ static void makeVulkanRendererSettingsSection(Tab_Graphics& tab, const int x, co
 static void makeClassicRendererSettingsSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 580, 30, "Classic renderer");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 580, 110, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 580, 120, "");
 
     // Floor render gap fix
     {
@@ -398,9 +409,9 @@ void populateGraphicsTab(Context& ctx) noexcept {
 
     makeOutputOptionsSection(tabRect.lx + 20, tabRect.ty + 20);
     makePictureCropAndStretchSection(tabRect.lx + 20, tabRect.ty + 240);
-    makeGeneralSettingsSection(tab, tabRect.lx + 20, tabRect.ty + 420);
+    makeGeneralSettingsSection(tab, tabRect.lx + 20, tabRect.ty + 390);
     makeVulkanRendererSettingsSection(tab, tabRect.lx + 340, tabRect.ty + 20);
-    makeClassicRendererSettingsSection(tabRect.lx + 340, tabRect.ty + 400);
+    makeClassicRendererSettingsSection(tabRect.lx + 340, tabRect.ty + 390);
 }
 
 END_NAMESPACE(Launcher)

@@ -55,6 +55,17 @@ void initCfgSerialization_Graphics() noexcept {
         gOutputResolutionH,
         -1
     );
+
+    cfg.outputDisplayIndex = makeConfigField(
+        "OutputDisplayIndex",
+        "Which display to use for PsyDoom for both fullscreen and windowed modes.\n"
+        "If '-1' or an invalid index is specified then PsyDoom will auto-decide based on which display the\n"
+        "mouse is within at game launch time.\n"
+        "\n"
+        "Note: display index '0' is the 1st display, '1' the 2nd display and so on.\n",
+        gOutputDisplayIndex,
+        -1
+    );
     
     cfg.antiAliasingMultisamples = makeConfigField(
         "AntiAliasingMultisamples",
