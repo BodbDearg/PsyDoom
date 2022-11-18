@@ -16,6 +16,7 @@
 #include "PsyDoom/Controls.h"
 #include "PsyDoom/Utils.h"
 
+#include <algorithm>
 #include <memory>
 
 #if _WIN32
@@ -214,16 +215,40 @@ static void makeLauncherTabs(Context& ctx) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Determines which display to create the Launcher window within
+//------------------------------------------------------------------------------------------------------------------------------------------
+static uint8_t determineLauncherStartDisplay() noexcept {
+    // How many displays are there? (clamp to a sane amount also)
+    const int numDisplays = std::clamp(Fl::screen_count(), 1, 256);
+
+    // Get the current mouse position and determine the display index from that.
+    // Also ensure the index is mapped to a valid range.
+    int mouseX = {};
+    int mouseY = {};
+    Fl::get_mouse(mouseX, mouseY);
+    return (uint8_t) std::clamp(Fl::screen_num(mouseX, mouseY), 0, numDisplays - 1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Makes the window for the launcher and saves it inside the given Launcher widgets struct
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void makeLauncherWindow(Context& ctx, const int winW, const int winH) noexcept {
+    // Get which display to create the launcher window within
+    const uint8_t startDisplay = determineLauncherStartDisplay();
+
     // Get the screen dimensions
     int screenX = {}, screenY = {};
     int screenW = {}, screenH = {};
-    Fl::screen_work_area(screenX, screenY, screenW, screenH);
+    Fl::screen_work_area(screenX, screenY, screenW, screenH, startDisplay);
 
     // Make the window center in the middle of the screen
-    ctx.pWindow = std::make_unique<Fl_Double_Window>((screenW - winW) / 2, (screenH - winH) / 2, winW, winH);
+    ctx.pWindow = std::make_unique<Fl_Double_Window>(
+        screenX + (screenW - winW) / 2,
+        screenY + (screenH - winH) / 2,
+        winW,
+        winH
+    );
+
     ctx.pWindow->label(Utils::getGameVersionString());
 
     // Windows: set the icon for the window using the resource file

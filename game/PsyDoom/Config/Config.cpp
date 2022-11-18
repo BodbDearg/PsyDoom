@@ -69,6 +69,7 @@ bool            gbFullscreen;
 bool            gbEnableVSync;
 int32_t         gOutputResolutionW;
 int32_t         gOutputResolutionH;
+int32_t         gOutputDisplayIndex;
 float           gLogicalDisplayW;
 bool            gbDisableVulkanRenderer;
 int32_t         gVulkanRenderHeight;
