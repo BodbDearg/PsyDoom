@@ -229,6 +229,21 @@ static void patchMap_Underhalls() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP34: The Focus
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheFocus() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        removeFlagsFromLinedefs(
+            ML_DONTPEGBOTTOM,
+            // Fix the texture on the bridge near the exit not moving as it is raised:
+            511, 515
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP44: Suburbs
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Suburbs() noexcept {
@@ -349,7 +364,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  46210, 0x41EA6956972B2510, 0xE4760C46A4BBD40D, patchMap_Entryway             },      // MAP31
     {  63255, 0x787980722B2A3ABF, 0xDA758F7A7236BAD9, patchMap_Underhalls           },      // MAP32
     {  71907, 0x9354072B9094E9BE, 0xFDA856CDE67680DC, applyOriginalMapCommonPatches },      // MAP33
-    {  67614, 0xE36C70A633E0AE7D, 0x9223DF3ADFDF8808, applyOriginalMapCommonPatches },      // MAP34
+    {  67614, 0xE36C70A633E0AE7D, 0x9223DF3ADFDF8808, patchMap_TheFocus             },      // MAP34
     { 114123, 0x52229ABCD304D8BA, 0x6EAEA8DB75133B5A, applyOriginalMapCommonPatches },      // MAP35
     { 129248, 0xE2245D687CCABC7C, 0x01497DF00B763463, applyOriginalMapCommonPatches },      // MAP36
     {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, applyOriginalMapCommonPatches },      // MAP37
