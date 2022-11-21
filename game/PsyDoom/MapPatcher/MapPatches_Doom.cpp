@@ -244,6 +244,18 @@ static void patchMap_TheFocus() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP35: The Waste Tunnels
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheWasteTunnels() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix the texture on the secret elevator in the first area
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 329);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP44: Suburbs
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Suburbs() noexcept {
@@ -365,7 +377,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  63255, 0x787980722B2A3ABF, 0xDA758F7A7236BAD9, patchMap_Underhalls           },      // MAP32
     {  71907, 0x9354072B9094E9BE, 0xFDA856CDE67680DC, applyOriginalMapCommonPatches },      // MAP33
     {  67614, 0xE36C70A633E0AE7D, 0x9223DF3ADFDF8808, patchMap_TheFocus             },      // MAP34
-    { 114123, 0x52229ABCD304D8BA, 0x6EAEA8DB75133B5A, applyOriginalMapCommonPatches },      // MAP35
+    { 114123, 0x52229ABCD304D8BA, 0x6EAEA8DB75133B5A, patchMap_TheWasteTunnels      },      // MAP35
     { 129248, 0xE2245D687CCABC7C, 0x01497DF00B763463, applyOriginalMapCommonPatches },      // MAP36
     {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, applyOriginalMapCommonPatches },      // MAP37
     {  82063, 0xBFEDBDE9F8B8CCE2, 0x78D6E2C3A9AB74AB, applyOriginalMapCommonPatches },      // MAP38
