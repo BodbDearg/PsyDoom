@@ -212,6 +212,29 @@ static void doWeaponsKeysAndArmorCheat() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Executes the cheat to give weapons, ammo, and armor (no keys)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void doWeaponsAndArmorCheat() noexcept {
+    player_t& player = gPlayers[gCurPlayerIndex];
+
+    // Grant mega armor
+    player.armorpoints = 200;
+    player.armortype = 2;
+
+    // Grant all weapons and max ammo
+    for (uint32_t weaponIdx = 0; weaponIdx < NUMWEAPONS; ++weaponIdx) {
+        player.weaponowned[weaponIdx] = true;
+    }
+
+    for (uint32_t ammoIdx = 0; ammoIdx < NUMAMMO; ++ammoIdx) {
+        player.ammo[ammoIdx] = player.maxammo[ammoIdx];
+    }
+
+    gStatusBar.messageTicsLeft = 30;
+    gStatusBar.message = "Lots Of Goodies! (No Keys)";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Executes the cheat to toggle the display of all map lines
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doToggleAllMapLinesCheat() noexcept {
@@ -288,6 +311,7 @@ void init() noexcept {
     addCheat(Config::gCheatKeys_NoClip,                 doToggleNoClipCheat);
     addCheat(Config::gCheatKeys_LevelWarp,              doOpenLevelWarpCheat);
     addCheat(Config::gCheatKeys_WeaponsKeysAndArmor,    doWeaponsKeysAndArmorCheat);
+    addCheat(Config::gCheatKeys_WeaponsAndArmor,        doWeaponsAndArmorCheat);
     addCheat(Config::gCheatKeys_AllMapLinesOn,          doToggleAllMapLinesCheat);
     addCheat(Config::gCheatKeys_AllMapThingsOn,         doToggleAllMapThingsCheat);
     addCheat(Config::gCheatKeys_XRayVision,             doToggleXRayVisionCheat);

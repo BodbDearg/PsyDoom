@@ -116,6 +116,7 @@ CheatKeySequence gCheatKeys_GodMode;
 CheatKeySequence gCheatKeys_NoClip;
 CheatKeySequence gCheatKeys_LevelWarp;
 CheatKeySequence gCheatKeys_WeaponsKeysAndArmor;
+CheatKeySequence gCheatKeys_WeaponsAndArmor;
 CheatKeySequence gCheatKeys_AllMapLinesOn;
 CheatKeySequence gCheatKeys_AllMapThingsOn;
 CheatKeySequence gCheatKeys_XRayVision;
