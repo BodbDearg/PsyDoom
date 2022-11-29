@@ -256,6 +256,18 @@ static void patchMap_TheWasteTunnels() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP38: Tricks And Traps
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TricksAndTraps() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix the texture on the two gun activated doors
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 281, 282, 286, 287);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP44: Suburbs
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Suburbs() noexcept {
@@ -380,7 +392,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 114123, 0x52229ABCD304D8BA, 0x6EAEA8DB75133B5A, patchMap_TheWasteTunnels      },      // MAP35
     { 129248, 0xE2245D687CCABC7C, 0x01497DF00B763463, applyOriginalMapCommonPatches },      // MAP36
     {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, applyOriginalMapCommonPatches },      // MAP37
-    {  82063, 0xBFEDBDE9F8B8CCE2, 0x78D6E2C3A9AB74AB, applyOriginalMapCommonPatches },      // MAP38
+    {  82063, 0xBFEDBDE9F8B8CCE2, 0x78D6E2C3A9AB74AB, patchMap_TricksAndTraps       },      // MAP38
     {  91388, 0x22B7D106F531FB4E, 0xFE3FAB276C892BD4, applyOriginalMapCommonPatches },      // MAP39
     { 130676, 0xD84B13024E326B64, 0x548472C7F8B24A27, applyOriginalMapCommonPatches },      // MAP40
     { 116024, 0x59800E5259D02FD8, 0x28EB273CFC8E41CC, applyOriginalMapCommonPatches },      // MAP41
