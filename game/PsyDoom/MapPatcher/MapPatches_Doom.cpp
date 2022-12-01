@@ -292,12 +292,19 @@ static void patchMap_TheFactory() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Remove the 'hidden' flag from linedefs that shouldn't be hidden on the automap
         removeFlagsFromLinedefs(ML_DONTDRAW, 260, 540, 547, 548, 549);
+
+        // Fix door tracks on imp building door
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 113, 114);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
         // Remove tag from teleporter sector in the south building that causing the ceiling to
         // raise when activating a switch intended for the door in the super shotgun room
         gpSectors[63].tag = 0;
+
+        // Remove unneeded actions from walls next to switch in slime floor room
+        gpLines[520].special = 0;
+        gpLines[775].special = 0;
     }
 }
 
