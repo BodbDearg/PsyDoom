@@ -18,59 +18,6 @@
 #include <algorithm>
 #include <chrono>
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Byte swaps all fields in the 'GameSettings' structure
-//------------------------------------------------------------------------------------------------------------------------------------------
-void GameSettings::byteSwap() noexcept {
-    Endian::byteSwapInPlace(bUsePalTimings);
-    Endian::byteSwapInPlace(bUseDemoTimings);
-    Endian::byteSwapInPlace(bFixKillCount);
-    Endian::byteSwapInPlace(bFixLineActivation);
-    Endian::byteSwapInPlace(bUseExtendedPlayerShootRange);
-    Endian::byteSwapInPlace(bFixMultiLineSpecialCrossing);
-    Endian::byteSwapInPlace(bUsePlayerRocketBlastFix);
-    Endian::byteSwapInPlace(bUseSuperShotgunDelayTweak);
-    Endian::byteSwapInPlace(bUseMoveInputLatencyTweak);
-    Endian::byteSwapInPlace(bUseItemPickupFix);
-    Endian::byteSwapInPlace(bUseFinalDoomPlayerMovement);
-    Endian::byteSwapInPlace(bAllowMovementCancellation);
-    Endian::byteSwapInPlace(bAllowTurningCancellation);
-    Endian::byteSwapInPlace(bFixViewBobStrength);
-    Endian::byteSwapInPlace(bFixGravityStrength);
-    Endian::byteSwapInPlace(bNoMonsters);
-    Endian::byteSwapInPlace(bNoMonstersBossFixup);
-    Endian::byteSwapInPlace(bPistolStart);
-    Endian::byteSwapInPlace(bTurboMode);
-    Endian::byteSwapInPlace(bUseLostSoulSpawnFix);
-    Endian::byteSwapInPlace(bUseLineOfSightOverflowFix);
-    Endian::byteSwapInPlace(bRemoveMaxCrossLinesLimit);
-    Endian::byteSwapInPlace(bFixOutdoorBulletPuffs);
-    Endian::byteSwapInPlace(bFixBlockingGibsBug);
-    Endian::byteSwapInPlace(bFixSoundPropagation);
-    Endian::byteSwapInPlace(bFixSpriteVerticalWarp);
-    Endian::byteSwapInPlace(bAllowMultiMapPickup);
-    Endian::byteSwapInPlace(bEnableMapPatches_GamePlay);
-    Endian::byteSwapInPlace(bCoopNoFriendlyFire);
-    Endian::byteSwapInPlace(bCoopForceSpawnDeathmatchThings);
-    Endian::byteSwapInPlace(bDmExitDisabled);
-    Endian::byteSwapInPlace(bCoopPreserveKeys);
-    Endian::byteSwapInPlace(bDmActivateBossSpecialSectors);
-    Endian::byteSwapInPlace(lostSoulSpawnLimit);
-    Endian::byteSwapInPlace(viewBobbingStrengthFixed);
-    Endian::byteSwapInPlace(dmFragLimit);
-    Endian::byteSwapInPlace(coopPreserveAmmoFactor);
-    Endian::byteSwapInPlace(bSinglePlayerForceSpawnDmThings);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Bytes swaps from little to big endian or big endian to little if the host architecture is big-endian
-//------------------------------------------------------------------------------------------------------------------------------------------
-void GameSettings::endianCorrect() noexcept {
-    if constexpr (Endian::isBig()) {
-        byteSwap();
-    }
-}
-
 BEGIN_NAMESPACE(Game)
 
 // The Lost Soul spawn limit for Doom and Final Doom (-1 means no limit)

@@ -51,13 +51,19 @@ static void restoreModifiedGameSettings() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Verification of various demo properties
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool verifyDemoFileVersion(const uint32_t version) noexcept {
-    if (version == DEMO_FILE_VERSION) {
-        return true;
-    } else {
-        RunDemoErrorMenu_InvalidDemoVersion();
-        return false;
+static bool verifyDemoFileVersion(const uint32_t demoFileVersion) noexcept {
+    // For now this is all we need to determine if a demo file version is supported.
+    // If there is a valid 'GameSettings' version mapping and size then we should be good to read the demo.
+    const int32_t gameSettingsVersion = GameSettingUtils::getGameSettingsVersionForDemoFileVersion(demoFileVersion);
+
+    if (gameSettingsVersion >= 1) {
+        if (GameSettingUtils::getGameSettingsSize(gameSettingsVersion) >= 1)
+            return true;
     }
+
+    // Invalid demo version!
+    RunDemoErrorMenu_InvalidDemoVersion();
+    return false;
 }
 
 static bool verifyDemoSkill(const skill_t skill) noexcept {
@@ -176,6 +182,20 @@ static void demo_read(T* const pElems, const uint32_t numElems) THROWS {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper function for skipping past multiple values in the demo buffer
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void demo_skip(const uint32_t numElems) THROWS {
+    ASSERT(gpDemo_p);
+    const size_t numBytes = sizeof(T) * numElems;
+
+    if (gpDemo_p + numBytes > gpDemoBufferEnd)
+        throw "Unexpected EOF!";
+    
+    gpDemo_p += numBytes;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: initializes the previous tick inputs set at the start of demo recording
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initPrevTickInputs() noexcept {
@@ -213,9 +233,26 @@ static bool onBeforeMapLoad_newDemoFormat() noexcept {
         if (!bValidDemoProperties)
             return false;
 
-        // Read the game settings
-        GameSettings settings = demo_read<GameSettings>();
-        settings.endianCorrect();
+        // Make sure there is enough data to read all the game settings.
+        // Note that 'verifyDemoFileVersion()' should have validated both the game settings version and size already.
+        const int32_t gameSettingsVersion = GameSettingUtils::getGameSettingsVersionForDemoFileVersion(demoFileVersion);
+        const int32_t gameSettingsSize = GameSettingUtils::getGameSettingsSize(gameSettingsVersion);
+        ASSERT(gameSettingsVersion >= 1);
+        ASSERT(gameSettingsSize >= 1);
+
+        if (!demo_canRead<std::byte>(gameSettingsSize))
+            "Unexpected EOF!";
+
+        // Read (and migrate, if needed) the game settings and skip past those bytes.
+        // Note that 'readAndMigrateGameSettings' is always expected to succeed here: if it doesn't then that is an internal logic error.
+        GameSettings settings = {};
+
+        if (!GameSettingUtils::readAndMigrateGameSettings(gameSettingsVersion, gpDemo_p, settings)) {
+            RunDemoErrorMenu_UnexpectedError();
+            return false;
+        }
+
+        demo_skip<std::byte>(gameSettingsSize);
         Game::gSettings = settings;
 
         // Set the current player index (important for multiplayer demos)

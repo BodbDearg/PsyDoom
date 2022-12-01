@@ -149,6 +149,10 @@ gameaction_t RunDemoErrorMenu_BadMapHash() noexcept {
     return RunLoadGameErrorMenu("Bad map hash!\nThe map data has\nchanged since the\ndemo was made.");
 }
 
+gameaction_t RunDemoErrorMenu_UnexpectedError() noexcept {
+    return RunDemoErrorMenu("Unexpected error!");
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the error menu
 //------------------------------------------------------------------------------------------------------------------------------------------

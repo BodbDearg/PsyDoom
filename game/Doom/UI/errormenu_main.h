@@ -24,6 +24,7 @@ gameaction_t RunDemoErrorMenu_InvalidMapNumber() noexcept;
 gameaction_t RunDemoErrorMenu_InvalidGameType() noexcept;
 gameaction_t RunDemoErrorMenu_InvalidPlayerNum() noexcept;
 gameaction_t RunDemoErrorMenu_BadMapHash() noexcept;
+gameaction_t RunDemoErrorMenu_UnexpectedError() noexcept;
 
 void ErrorMenu_Init() noexcept;
 void ErrorMenu_Shutdown(const gameaction_t exitAction) noexcept;
