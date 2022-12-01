@@ -118,6 +118,8 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/BodbDearg/PsyDoom/issues/53
     * Discovered a minor documentation error for a multiplayer setting:
         https://github.com/BodbDearg/PsyDoom/commit/a930796fc19a65f737cf9d1bdb1bd5744cd19180#r89654841
+    * Added "IDFA" cheat for "Lots Of Goodies! (No Keys)
+        https://github.com/BodbDearg/PsyDoom/pull/78
 
 * **[getphobo](https://github.com/getphobo)**
     * Raised a bug about not being able to achieve 100% items on some maps due to multiple 'Computer Area Maps':

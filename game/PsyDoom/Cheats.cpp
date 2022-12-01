@@ -119,6 +119,43 @@ static void ensureGamePaused() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Grants the specified player all weapons, max ammo and full armor
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void grantAllWeaponsAmmoAndArmor(player_t& player) noexcept {
+    // Grant mega armor
+    player.armorpoints = 200;
+    player.armortype = 2;
+
+    // Grant all weapons and max ammo
+    for (uint32_t weaponIdx = 0; weaponIdx < NUMWEAPONS; ++weaponIdx) {
+        player.weaponowned[weaponIdx] = true;
+    }
+
+    for (uint32_t ammoIdx = 0; ammoIdx < NUMAMMO; ++ammoIdx) {
+        player.ammo[ammoIdx] = player.maxammo[ammoIdx];
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Grants the specified player all keys currently in the level
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void grantAllKeys(player_t& player) noexcept {
+    // Run through the list of keys that are sitting around and give any found to the player:
+    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
+        switch (pMobj->type) {
+            case MT_MISC4: player.cards[it_bluecard]    = true; break;
+            case MT_MISC5: player.cards[it_redcard]     = true; break;
+            case MT_MISC6: player.cards[it_yellowcard]  = true; break;
+            case MT_MISC7: player.cards[it_yellowskull] = true; break;
+            case MT_MISC8: player.cards[it_redskull]    = true; break;
+            case MT_MISC9: player.cards[it_blueskull]   = true; break;
+
+            default: break;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Executes the toggle god mode cheat
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doToggleGodModeCheat() noexcept {
@@ -174,38 +211,12 @@ static void doOpenLevelWarpCheat() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Executes the cheat to give weapons, ammo, keys and armor
+// Executes the cheat to give all weapons, max ammo, all keys and max armor
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doWeaponsKeysAndArmorCheat() noexcept {
-    // Grant any keys that are present in the level.
-    // Run through the list of keys that are sitting around and give to the player...
     player_t& player = gPlayers[gCurPlayerIndex];
-
-    for (mobj_t* pMobj = gMobjHead.next; pMobj != &gMobjHead; pMobj = pMobj->next) {
-        switch (pMobj->type) {
-            case MT_MISC4: player.cards[it_bluecard]    = true; break;
-            case MT_MISC5: player.cards[it_redcard]     = true; break;
-            case MT_MISC6: player.cards[it_yellowcard]  = true; break;
-            case MT_MISC7: player.cards[it_yellowskull] = true; break;
-            case MT_MISC8: player.cards[it_redskull]    = true; break;
-            case MT_MISC9: player.cards[it_blueskull]   = true; break;
-
-            default: break;
-        }
-    }
-
-    // Grant mega armor
-    player.armorpoints = 200;
-    player.armortype = 2;
-
-    // Grant all weapons and max ammo
-    for (uint32_t weaponIdx = 0; weaponIdx < NUMWEAPONS; ++weaponIdx) {
-        player.weaponowned[weaponIdx] = true;
-    }
-
-    for (uint32_t ammoIdx = 0; ammoIdx < NUMAMMO; ++ammoIdx) {
-        player.ammo[ammoIdx] = player.maxammo[ammoIdx];
-    }
+    grantAllWeaponsAmmoAndArmor(player);
+    grantAllKeys(player);
 
     gStatusBar.messageTicsLeft = 30;
     gStatusBar.message = "Lots Of Goodies!";
@@ -288,6 +299,7 @@ void init() noexcept {
     addCheat(Config::gCheatKeys_NoClip,                 doToggleNoClipCheat);
     addCheat(Config::gCheatKeys_LevelWarp,              doOpenLevelWarpCheat);
     addCheat(Config::gCheatKeys_WeaponsKeysAndArmor,    doWeaponsKeysAndArmorCheat);
+    addCheat(Config::gCheatKeys_WeaponsAndArmor,        doWeaponsAndArmorCheat);
     addCheat(Config::gCheatKeys_AllMapLinesOn,          doToggleAllMapLinesCheat);
     addCheat(Config::gCheatKeys_AllMapThingsOn,         doToggleAllMapThingsCheat);
     addCheat(Config::gCheatKeys_XRayVision,             doToggleXRayVisionCheat);
@@ -350,6 +362,16 @@ void update() noexcept {
         Input::consumeEvents();
         gTickInputs[gCurPlayerIndex].reset();
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Executes the cheat to give all weapons, max ammo, and max armor
+//------------------------------------------------------------------------------------------------------------------------------------------
+void doWeaponsAndArmorCheat() noexcept {
+    grantAllWeaponsAmmoAndArmor(gPlayers[gCurPlayerIndex]);
+
+    gStatusBar.messageTicsLeft = 30;
+    gStatusBar.message = "Lots Of Goodies! (No Keys)";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

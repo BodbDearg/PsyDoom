@@ -124,6 +124,7 @@ void initCfgSerialization_Cheats() noexcept {
         "The new cheats added to PsyDoom are assigned the following original PSX buttons:\n"
         "\n"
         "     No-clip: Up, Up, Up, Up, Up, Up, Up, R1\n"
+        "     Weapons and armor: X, Triangle, L1, Up, Down, R2, Right, Right\n"
         "     VRAM viewer: Triangle, Square, Up, Left, Down, Right, X, Circle\n"
         "     No-target: X, Up, X, Up, Square, Square, X, Square",
         gCheatKeys_GodMode,
@@ -146,6 +147,12 @@ void initCfgSerialization_Cheats() noexcept {
         "CheatKeySequence_WeaponsKeysAndArmor",
         gCheatKeys_WeaponsKeysAndArmor,
         "idkfa"
+    );
+
+    cfg.cheatKeys_weaponsAndArmor = makeCheatKeySequenceConfigField(
+        "CheatKeySequence_WeaponsAndArmor",
+        gCheatKeys_WeaponsAndArmor,
+        "idfa"
     );
 
     cfg.cheatKeys_allMapLinesOn = makeCheatKeySequenceConfigField(

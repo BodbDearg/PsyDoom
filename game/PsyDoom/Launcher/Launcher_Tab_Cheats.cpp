@@ -12,6 +12,7 @@
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <FL/Fl_Box.H>
     #include <FL/Fl_Group.H>
+    #include <FL/Fl_Scroll.H>
 END_DISABLE_HEADER_WARNINGS
 
 BEGIN_NAMESPACE(Launcher)
@@ -40,7 +41,7 @@ void bindConfigField(Fl_Input& input) noexcept {
 static void makeGeneralSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 500, 30, "General");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 500, 120, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 500, 110, "");
 
     // Various toggles
     {
@@ -68,7 +69,14 @@ static void makeGeneralSection(const int x, const int y) noexcept {
 static void makeCheatKeySequencesSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 500, 30, "Cheat key sequences");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 500, 310, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 500, 332, "");
+
+    // Make the scroll view
+    const auto pScroll = new Fl_Scroll(x + 2, y + 32, 496, 328, "");
+    pScroll->scrollbar.linesize(30 * 4);
+
+    // Scrollbox padding: top
+    new Fl_Box(x + 10, y + 32, 470, 8);
 
     // God mode
     {
@@ -114,60 +122,77 @@ static void makeCheatKeySequencesSection(const int x, const int y) noexcept {
         pInput->tooltip(pLabel->tooltip());
     }
 
-    // All map lines on
+    // Weapons and armor
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 170, 80, 26, "All map lines on");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 170, 80, 26, "Weapons and armor");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Cheats.cheatKeys_godMode.comment);
 
         const auto pInput = new Fl_Input(x + 270, y + 170, 200, 26);
+        bindConfigField<Config::gCheatKeys_WeaponsAndArmor>(*pInput);
+        pInput->tooltip(pLabel->tooltip());
+    }
+
+    // All map lines on
+    {
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 200, 80, 26, "All map lines on");
+        pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        pLabel->tooltip(ConfigSerialization::gConfig_Cheats.cheatKeys_godMode.comment);
+
+        const auto pInput = new Fl_Input(x + 270, y + 200, 200, 26);
         bindConfigField<Config::gCheatKeys_AllMapLinesOn>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // All map things on
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 200, 80, 26, "All map things on");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 230, 80, 26, "All map things on");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Cheats.cheatKeys_godMode.comment);
 
-        const auto pInput = new Fl_Input(x + 270, y + 200, 200, 26);
+        const auto pInput = new Fl_Input(x + 270, y + 230, 200, 26);
         bindConfigField<Config::gCheatKeys_AllMapThingsOn>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // X-ray vision
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 230, 80, 26, "X-ray vision");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 260, 80, 26, "X-ray vision");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Cheats.cheatKeys_godMode.comment);
 
-        const auto pInput = new Fl_Input(x + 270, y + 230, 200, 26);
+        const auto pInput = new Fl_Input(x + 270, y + 260, 200, 26);
         bindConfigField<Config::gCheatKeys_XRayVision>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // VRAM viewer
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 260, 80, 26, "VRAM viewer");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 290, 80, 26, "VRAM viewer");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Cheats.cheatKeys_godMode.comment);
 
-        const auto pInput = new Fl_Input(x + 270, y + 260, 200, 26);
+        const auto pInput = new Fl_Input(x + 270, y + 290, 200, 26);
         bindConfigField<Config::gCheatKeys_VramViewer>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // No-target
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 290, 80, 26, "No-target");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 20, y + 320, 80, 26, "No-target");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Cheats.cheatKeys_godMode.comment);
 
-        const auto pInput = new Fl_Input(x + 270, y + 290, 200, 26);
+        const auto pInput = new Fl_Input(x + 270, y + 320, 200, 26);
         bindConfigField<Config::gCheatKeys_NoTarget>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
+
+    // Scrollbox padding: bottom
+    new Fl_Box(x + 10, y + 350, 440, 10);
+
+    // Done making the scroll box
+    pScroll->end();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -181,7 +206,7 @@ void populateCheatsTab(Context& ctx) noexcept {
     const RectExtents tabRect = getRectExtents(*tab.pTab);
 
     makeGeneralSection((tabRect.lx + tabRect.rx) / 2 - 250, tabRect.ty + 20);
-    makeCheatKeySequencesSection((tabRect.lx + tabRect.rx) / 2 - 250, tabRect.ty + 190);
+    makeCheatKeySequencesSection((tabRect.lx + tabRect.rx) / 2 - 250, tabRect.ty + 178);
 }
 
 END_NAMESPACE(Launcher)

@@ -17,6 +17,7 @@ struct Config_Cheats {
     ConfigField     cheatKeys_noClip;
     ConfigField     cheatKeys_levelWarp;
     ConfigField     cheatKeys_weaponsKeysAndArmor;
+    ConfigField     cheatKeys_weaponsAndArmor;
     ConfigField     cheatKeys_allMapLinesOn;
     ConfigField     cheatKeys_allMapThingsOn;
     ConfigField     cheatKeys_xrayVision;

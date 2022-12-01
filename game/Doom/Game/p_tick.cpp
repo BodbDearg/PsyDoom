@@ -70,7 +70,12 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
     { PAD_CROSS,    PAD_CROSS,    PAD_CROSS,  PAD_CROSS,  PAD_CROSS,    PAD_CROSS,    PAD_CROSS,  PAD_CROSS  },     // CHT_SEQ_UNUSED_08
 #endif
     { PAD_L1,       PAD_R2,       PAD_L2,     PAD_R1,     PAD_RIGHT,    PAD_TRIANGLE, PAD_CROSS,  PAD_RIGHT  },     // CHT_SEQ_XRAY_VISION
+// PsyDoom: added a PC style 'Weapons and armor' cheat without keys
+#if PSYDOOM_MODS
+    { PAD_CROSS,    PAD_TRIANGLE, PAD_L1,     PAD_UP,     PAD_DOWN,     PAD_R2,       PAD_RIGHT,  PAD_RIGHT  },     // CHT_SEQ_WEAPONS_AND_AMMO_NO_KEYS
+#else
     { PAD_CIRCLE,   PAD_CIRCLE,   PAD_CIRCLE, PAD_CIRCLE, PAD_CIRCLE,   PAD_CIRCLE,   PAD_CIRCLE, PAD_CIRCLE },     // CHT_SEQ_UNUSED_10
+#endif
     { PAD_SQUARE,   PAD_SQUARE,   PAD_SQUARE, PAD_SQUARE, PAD_SQUARE,   PAD_SQUARE,   PAD_SQUARE, PAD_SQUARE }      // CHT_SEQ_UNUSED_11
 };
 
@@ -631,6 +636,11 @@ void P_CheckCheats() noexcept {
                     } else {
                         gStatusBar.message = "Unperceivable Mode OFF.";
                     }
+                }   break;
+
+                // Weapons and armor (no keys) cheat:
+                case CHT_SEQ_WEAPONS_AND_AMMO_NO_KEYS: {
+                    Cheats::doWeaponsAndArmorCheat();
                 }   break;
             #endif
             }
