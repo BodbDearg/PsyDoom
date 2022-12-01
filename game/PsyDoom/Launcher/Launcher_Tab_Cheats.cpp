@@ -41,7 +41,7 @@ void bindConfigField(Fl_Input& input) noexcept {
 static void makeGeneralSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 500, 30, "General");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 500, 120, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 500, 110, "");
 
     // Various toggles
     {
@@ -69,10 +69,10 @@ static void makeGeneralSection(const int x, const int y) noexcept {
 static void makeCheatKeySequencesSection(const int x, const int y) noexcept {
     // Container frame
     new Fl_Box(FL_NO_BOX, x, y, 500, 30, "Cheat key sequences");
-    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 500, 310, "");
+    new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 500, 332, "");
 
     // Make the scroll view
-    const auto pScroll = new Fl_Scroll(x + 2, y + 32, 496, 306, "");
+    const auto pScroll = new Fl_Scroll(x + 2, y + 32, 496, 328, "");
     pScroll->scrollbar.linesize(30 * 4);
 
     // Scrollbox padding: top
@@ -206,7 +206,7 @@ void populateCheatsTab(Context& ctx) noexcept {
     const RectExtents tabRect = getRectExtents(*tab.pTab);
 
     makeGeneralSection((tabRect.lx + tabRect.rx) / 2 - 250, tabRect.ty + 20);
-    makeCheatKeySequencesSection((tabRect.lx + tabRect.rx) / 2 - 250, tabRect.ty + 190);
+    makeCheatKeySequencesSection((tabRect.lx + tabRect.rx) / 2 - 250, tabRect.ty + 178);
 }
 
 END_NAMESPACE(Launcher)
