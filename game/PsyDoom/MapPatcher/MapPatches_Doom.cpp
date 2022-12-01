@@ -430,7 +430,6 @@ static const PatchDef gPatchArray_Doom[] = {
     {  91388, 0x22B7D106F531FB4E, 0xFE3FAB276C892BD4, applyOriginalMapCommonPatches },      // MAP39
     { 130676, 0xD84B13024E326B64, 0x548472C7F8B24A27, patchMap_RefuelingBase        },      // MAP40
     { 116024, 0x59800E5259D02FD8, 0x28EB273CFC8E41CC, applyOriginalMapCommonPatches },      // MAP41
-    { 109934, 0x7E22F4311F3955D5, 0x16E918F5C11AD780, applyOriginalMapCommonPatches },      // MAP42
     { 109934, 0x7E22F4311F3955D5, 0x16E918F5C11AD780, patchMap_TheFactory           },      // MAP42
     { 192997, 0x7B86B9C35B754883, 0xD5F5CE44AB12898D, applyOriginalMapCommonPatches },      // MAP43
     { 110145, 0xE296122ADE38AB74, 0x13505BF841234D4C, patchMap_Suburbs              },      // MAP44
