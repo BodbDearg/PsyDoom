@@ -284,6 +284,24 @@ static void patchMap_RefuelingBase() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP42: The Factory
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheFactory() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Remove the 'hidden' flag from linedefs that shouldn't be hidden on the automap
+        removeFlagsFromLinedefs(ML_DONTDRAW, 260, 540, 547, 548, 549);
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Remove tag from teleporter sector in the south building that causing the ceiling to
+        // raise when activating a switch intended for the door in the super shotgun room
+        gpSectors[63].tag = 0;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP44: Suburbs
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Suburbs() noexcept {
@@ -413,6 +431,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 130676, 0xD84B13024E326B64, 0x548472C7F8B24A27, patchMap_RefuelingBase        },      // MAP40
     { 116024, 0x59800E5259D02FD8, 0x28EB273CFC8E41CC, applyOriginalMapCommonPatches },      // MAP41
     { 109934, 0x7E22F4311F3955D5, 0x16E918F5C11AD780, applyOriginalMapCommonPatches },      // MAP42
+    { 109934, 0x7E22F4311F3955D5, 0x16E918F5C11AD780, patchMap_TheFactory           },      // MAP42
     { 192997, 0x7B86B9C35B754883, 0xD5F5CE44AB12898D, applyOriginalMapCommonPatches },      // MAP43
     { 110145, 0xE296122ADE38AB74, 0x13505BF841234D4C, patchMap_Suburbs              },      // MAP44
     { 158462, 0x37D6A1335F058A41, 0xA82656A6FDEB132B, patchMap_Tenements            },      // MAP45
