@@ -33,7 +33,12 @@ enum cheatseq_t : int32_t {
     CHT_SEQ_UNUSED_08,
 #endif
     CHT_SEQ_XRAY_VISION,
-    CHT_SEQ_UNUSED_10,
+// PsyDoom: added a PC style 'Weapons and Armor' cheat without keys
+#if PSYDOOM_MODS
+    CHT_SEQ_WEAPONS_AND_AMMO_NO_KEYS,
+#else
+    CHT_SEQ_UNUSED_10
+#endif
     CHT_SEQ_UNUSED_11,
     NUM_CHEAT_SEQ
 };

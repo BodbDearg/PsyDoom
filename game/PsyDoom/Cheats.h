@@ -7,6 +7,7 @@ BEGIN_NAMESPACE(Cheats)
 void init() noexcept;
 void shutdown() noexcept;
 void update() noexcept;
+void doWeaponsAndArmorCheat() noexcept;
 void doInPlaceReloadCheat() noexcept;
 
 END_NAMESPACE(Cheats)

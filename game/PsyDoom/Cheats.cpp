@@ -211,16 +211,6 @@ static void doOpenLevelWarpCheat() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Executes the cheat to give all weapons, max ammo, and max armor
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void doWeaponsAndArmorCheat() noexcept {
-    grantAllWeaponsAmmoAndArmor(gPlayers[gCurPlayerIndex]);
-
-    gStatusBar.messageTicsLeft = 30;
-    gStatusBar.message = "Lots Of Goodies! (No Keys)";
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Executes the cheat to give all weapons, max ammo, all keys and max armor
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doWeaponsKeysAndArmorCheat() noexcept {
@@ -372,6 +362,16 @@ void update() noexcept {
         Input::consumeEvents();
         gTickInputs[gCurPlayerIndex].reset();
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Executes the cheat to give all weapons, max ammo, and max armor
+//------------------------------------------------------------------------------------------------------------------------------------------
+void doWeaponsAndArmorCheat() noexcept {
+    grantAllWeaponsAmmoAndArmor(gPlayers[gCurPlayerIndex]);
+
+    gStatusBar.messageTicsLeft = 30;
+    gStatusBar.message = "Lots Of Goodies! (No Keys)";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
