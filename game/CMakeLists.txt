@@ -217,6 +217,8 @@ set(SOURCE_FILES
     "PsyDoom/GameFileReader.h"
     "PsyDoom/GamepadInput.cpp"
     "PsyDoom/GamepadInput.h"
+    "PsyDoom/GameSettings.cpp"
+    "PsyDoom/GameSettings.h"
     "PsyDoom/Input.cpp"
     "PsyDoom/Input.h"
     "PsyDoom/InterpFixedT.cpp"
