@@ -148,6 +148,12 @@ void initCfgSerialization_Cheats() noexcept {
         "idkfa"
     );
 
+    cfg.cheatKeys_weaponsAndArmor = makeCheatKeySequenceConfigField(
+        "CheatKeySequence_WeaponsAndArmor",
+        gCheatKeys_WeaponsAndArmor,
+        "idfa"
+    );
+
     cfg.cheatKeys_allMapLinesOn = makeCheatKeySequenceConfigField(
         "CheatKeySequence_AllMapLinesOn",
         gCheatKeys_AllMapLinesOn,

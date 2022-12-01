@@ -121,6 +121,7 @@ extern CheatKeySequence     gCheatKeys_GodMode;
 extern CheatKeySequence     gCheatKeys_NoClip;
 extern CheatKeySequence     gCheatKeys_LevelWarp;
 extern CheatKeySequence     gCheatKeys_WeaponsKeysAndArmor;
+extern CheatKeySequence     gCheatKeys_WeaponsAndArmor;
 extern CheatKeySequence     gCheatKeys_AllMapLinesOn;
 extern CheatKeySequence     gCheatKeys_AllMapThingsOn;
 extern CheatKeySequence     gCheatKeys_XRayVision;
