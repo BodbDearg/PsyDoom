@@ -61,6 +61,7 @@ bool            gbEnableMapPatches_GamePlay;
 bool            gbEnableMapPatches_Visual;
 bool            gbEnableMapPatches_PsyDoom;
 float           gViewBobbingStrength;
+bool            gbPauseOnWindowFocusLost;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Graphics config settings

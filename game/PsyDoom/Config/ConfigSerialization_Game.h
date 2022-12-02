@@ -48,6 +48,7 @@ struct Config_Game {
     ConfigField     enableMapPatches_Visual;
     ConfigField     enableMapPatches_PsyDoom;
     ConfigField     viewBobbingStrength;
+    ConfigField     pauseOnWindowFocusLost;
 
     inline ConfigFieldList getFieldList() noexcept {
         static_assert(sizeof(*this) % sizeof(ConfigField) == 0);

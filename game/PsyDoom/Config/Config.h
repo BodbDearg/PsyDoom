@@ -48,6 +48,7 @@ extern bool             gbEnableMapPatches_GamePlay;
 extern bool             gbEnableMapPatches_Visual;
 extern bool             gbEnableMapPatches_PsyDoom;
 extern float            gViewBobbingStrength;
+extern bool             gbPauseOnWindowFocusLost;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Video settings

@@ -49,6 +49,9 @@ static float gMouseMovementX;
 static float gMouseMovementY;
 static float gMouseWheelAxisMovements[NUM_MOUSE_WHEEL_AXES];
 
+// Did the window just lose focus?
+static bool gbWindowFocusJustLost;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Vector utility functions
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -243,6 +246,7 @@ static void handleSdlEvents() noexcept {
                         SDL_ShowCursor(SDL_ENABLE);
                         SDL_SetWindowGrab(Video::gpSdlWindow, SDL_FALSE);
                         SDL_SetRelativeMouseMode(SDL_FALSE);
+                        gbWindowFocusJustLost = true;
                         break;
                 }
             }   break;
@@ -507,6 +511,8 @@ void init() noexcept {
     gMouseMovementX = 0.0f;
     gMouseMovementY = 0.0f;
 
+    gbWindowFocusJustLost = false;
+
     rescanGameControllers();
 }
 
@@ -516,6 +522,8 @@ void init() noexcept {
 void shutdown() noexcept {
     consumeEvents();
     closeCurrentGameController();
+
+    gbWindowFocusJustLost = false;
 
     gMouseMovementX = 0.0f;
     gMouseMovementY = 0.0f;
@@ -590,6 +598,9 @@ void consumeEvents() noexcept {
     gMouseWheelAxisMovements[1] = 0.0f;
 
     consumeMouseMovements();
+
+    // Clear other events
+    gbWindowFocusJustLost = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -919,6 +930,13 @@ float getMouseYMovement() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 float getMouseWheelAxisMovement(const uint8_t axis) noexcept {
     return (axis < 2) ? gMouseWheelAxisMovements[axis] : 0.0f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the game window has just lost focus
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isWindowFocusJustLost() noexcept {
+    return gbWindowFocusJustLost;
 }
 
 END_NAMESPACE(Input)

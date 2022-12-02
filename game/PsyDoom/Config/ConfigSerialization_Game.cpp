@@ -496,6 +496,18 @@ void initCfgSerialization_Game() noexcept {
         gViewBobbingStrength,
         1.0f
     );
+
+    cfg.pauseOnWindowFocusLost = makeConfigField(
+        "PauseOnWindowFocusLost",
+        "Automatically pause the game once the PsyDoom window loses focus?\n"
+        "\n"
+        "Notes:\n"
+        "(1) This setting only concerns in-game pause, menus are unaffected.\n"
+        "(2) This setting is ignored for demo playback & recording.\n"
+        "    Pause is not allowed in either of those cases.",
+        gbPauseOnWindowFocusLost,
+        true
+    );
 }
 
 END_NAMESPACE(ConfigSerialization)
