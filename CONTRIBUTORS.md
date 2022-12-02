@@ -141,6 +141,10 @@ PsyDoom contributors (sorted alphabetically)
     * Compile fixes for Linux:
         https://github.com/BodbDearg/PsyDoom/pull/21
 
+* **[Chris Staples (ObsidianCarnageX12)](https://github.com/ObsidianCarnageX12)**
+    * Suggestion to add the intermission screen at the end of demo playback:
+        https://github.com/BodbDearg/PsyDoom/issues/75
+
 * **[OpenRift412](https://github.com/OpenRift412)**
     * In-game uncapped framerate toggle suggestion:
         https://github.com/BodbDearg/PsyDoom/issues/54

@@ -1556,9 +1556,10 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     Z_CheckHeap(*gpMainMemZone);
     M_ClearRandom();
 
-    // PsyDoom: initialize the map object weak referencing system
+    // PsyDoom: initialize the map object weak referencing system and mark the level as not complete
     #if PSYDOOM_MODS
         P_InitWeakRefs();
+        gbDidCompleteLevel = false;
     #endif
 
     // PsyDoom limit removing: init the sets of wall and flat textures to be loaded

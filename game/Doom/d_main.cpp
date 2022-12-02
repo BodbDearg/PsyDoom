@@ -36,6 +36,7 @@
 #include "Renderer/r_data.h"
 #include "Renderer/r_main.h"
 #include "UI/cr_main.h"
+#include "UI/in_main.h"
 #include "UI/le_main.h"
 #include "UI/m_main.h"
 #include "UI/o_main.h"
@@ -456,9 +457,28 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
 
     const gameaction_t exitAction = G_PlayDemoPtr();
 
-    // Cleanup after we are done and return the exit action
+    // Cleanup after we are done
     gpDemoBuffer = nullptr;
     gpDemoBufferEnd = nullptr;
+
+    // After user requested demo playback has finished show the intermission screen, if applicable, so that stats can be examined.
+    // We allow the intermission to be shown if not in headless mode and if the end of the level was actually reached (didn't die, quit, restart etc.).
+    const bool bDidCompleteLevel = DemoPlayer::wasLevelCompleted();
+    const bool bShowIntermissionScreen = (bDidCompleteLevel && (!Input::isQuitRequested()) && (!ProgArgs::gbHeadlessMode));
+
+    if (bShowIntermissionScreen) {
+        // Never show the next map when playing a demo, because we immediately quit after this
+        gbIntermissionHideNextMap = true;
+
+        // Force the game into single player mode for the intermission screen since we've got no more inputs from other players (demo end reached).
+        // Display the intermission screen using whatever network game type the demo contained, however:
+        gIntermissionNetGameTypeOverride = gNetGame;
+        gNetGame = gt_single;
+
+        // Show the intermission screen and cleanup the network game type override once done:
+        MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
+        gIntermissionNetGameTypeOverride = gt_none;
+    }
 
     return exitAction;
 }

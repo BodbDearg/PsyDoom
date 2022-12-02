@@ -21,6 +21,7 @@ extern bool             gbIsLevelBeingRestarted;
 
 #if PSYDOOM_MODS
     extern bool         gbAutoSaveOnLevelStart;
+    extern bool         gbDidCompleteLevel;
     extern uint32_t     gExtCameraTicsLeft;
     extern fixed_t      gExtCameraX;
     extern fixed_t      gExtCameraY;

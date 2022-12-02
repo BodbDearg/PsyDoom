@@ -152,7 +152,25 @@ static int32_t  gIntermissionStage;
 #if PSYDOOM_MODS
     // PsyDoom: a flag which allows hiding of the 'Entering <MAP_NAME>' message and the password
     bool gbIntermissionHideNextMap;
+
+    // PsyDoom: an override for which network game type is displayed on the intermission screen.
+    // If not specified ('gt_none') then the actual network game type will be shown.
+    // Used by demo playback so that it can operate the game in single player mode on the intermission screen but still show multiplayer results.
+    gametype_t gIntermissionNetGameTypeOverride = gt_none;
 #endif
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: encapsulates the logic for getting the network game type to show on the intermission screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+static gametype_t IN_GetNetGameType() noexcept {
+    // PsyDoom: demo playback can make the intermission display a different (than real) network game type
+    #if PSYDOOM_MODS
+        if (gIntermissionNetGameTypeOverride != gt_none)
+            return gIntermissionNetGameTypeOverride;
+    #endif
+
+    return gNetGame;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialization/setup logic for the intermission screen
@@ -190,7 +208,7 @@ void IN_Start() noexcept {
             pstats.secretpercent = 100;
         }
 
-        if (gNetGame == gt_deathmatch) {
+        if (IN_GetNetGameType() == gt_deathmatch) {
             pstats.fragcount = player.frags;
         }
     }
@@ -258,6 +276,8 @@ gameaction_t IN_Ticker() noexcept {
         return ga_nothing;
 
     // Checking for inputs from all players to speed up the intermission
+    const gametype_t netGameType = IN_GetNetGameType();
+
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
         #if PSYDOOM_MODS
             const TickInputs& inputs = gTickInputs[playerIdx];
@@ -296,7 +316,7 @@ gameaction_t IN_Ticker() noexcept {
         }
 
         // If a single player game only check the first player for skip inputs
-        if (gNetGame == gt_single)
+        if (netGameType == gt_single)
             break;
     }
 
@@ -311,7 +331,7 @@ gameaction_t IN_Ticker() noexcept {
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
         const pstats_t& stats = gPStats[playerIdx];
 
-        if (gNetGame == gt_deathmatch) {
+        if (netGameType == gt_deathmatch) {
             // Deathmatch game: note that frag count can count both downwards and upwards
             if (stats.fragcount < 0) {
                 if (gFragValue[playerIdx] > stats.fragcount) {
@@ -388,9 +408,11 @@ void IN_Drawer() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
-    if (gNetGame == gt_coop) {
+    const gametype_t netGameType = IN_GetNetGameType();
+
+    if (netGameType == gt_coop) {
         IN_CoopDrawer();
-    } else if (gNetGame == gt_deathmatch) {
+    } else if (netGameType == gt_deathmatch) {
         IN_DeathmatchDrawer();
     } else {
         IN_SingleDrawer();
