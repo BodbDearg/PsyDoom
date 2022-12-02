@@ -78,24 +78,31 @@ static void makeMiscellaneousSection(const int x, const int y) noexcept {
     new Fl_Box(FL_NO_BOX, x, y, 200, 30, "Miscellaneous");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 200, 120, "");
 
+    // Pause on window focus lost
+    {
+        const auto pCheck = makeFl_Check_Button(x + 10, y + 40, 120, 30, "  Pause on focus lost");
+        bindConfigField<Config::gbPauseOnWindowFocusLost, Config::gbNeedSave_Game>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Game.pauseOnWindowFocusLost.comment);
+    }
+
     // View bob strength
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 50, 80, 26, "Bob scale");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 80, 80, 26, "Bob scale");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.viewBobbingStrength.comment);
 
-        const auto pInput = new Fl_Float_Input(x + 100, y + 50, 80, 26);
+        const auto pInput = new Fl_Float_Input(x + 100, y + 80, 80, 26);
         bindConfigField<Config::gViewBobbingStrength, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
     }
 
     // Heap size
     {
-        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 80, 80, 26, "Heap size");
+        const auto pLabel = new Fl_Box(FL_NO_BOX, x + 10, y + 110, 80, 26, "Heap size");
         pLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         pLabel->tooltip(ConfigSerialization::gConfig_Game.mainMemoryHeapSize.comment);
 
-        const auto pInput = new Fl_Int_Input(x + 100, y + 80, 80, 26);
+        const auto pInput = new Fl_Int_Input(x + 100, y + 110, 80, 26);
         bindConfigField<Config::gMainMemoryHeapSize, Config::gbNeedSave_Game>(*pInput);
         pInput->tooltip(pLabel->tooltip());
 

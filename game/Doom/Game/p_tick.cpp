@@ -32,6 +32,7 @@
 #include "PsyDoom/DemoResult.h"
 #include "PsyDoom/DevMapAutoReloader.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/Input.h"
 #include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/PlayerPrefs.h"
 #include "PsyDoom/ProgArgs.h"
@@ -1067,6 +1068,19 @@ void P_GatherTickInputs(TickInputs& inputs) noexcept {
     inputs.fDeletePasswordChar() = Controls::getBool(Controls::Binding::Menu_DeletePasswordChar);
     inputs.fQuicksave() = Controls::getBool(Controls::Binding::Quicksave);
     inputs.fQuickload() = Controls::getBool(Controls::Binding::Quickload);
+
+    // Auto-pause the game and synthesize a pause button press in certain circumstances when window focus has been lost
+    const bool bAutoPause = (
+        Input::isWindowFocusJustLost() &&
+        (!gbGamePaused) &&
+        Config::gbPauseOnWindowFocusLost &&
+        (!gbDemoRecording) &&
+        (!gbDemoPlayback)
+    );
+
+    if (bAutoPause) {
+        inputs.fTogglePause() = true;
+    }
 
     // Allow toggle of autorun if the right button is pressed
     if (Controls::isJustPressed(Controls::Binding::Toggle_Autorun)) {

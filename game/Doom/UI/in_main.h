@@ -9,7 +9,8 @@
 #endif
 
 #if PSYDOOM_MODS
-    extern bool gbIntermissionHideNextMap;
+    extern bool         gbIntermissionHideNextMap;
+    extern gametype_t   gIntermissionNetGameTypeOverride;
 #endif
 
 void IN_Start() noexcept;

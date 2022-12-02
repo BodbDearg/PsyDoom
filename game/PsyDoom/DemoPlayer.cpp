@@ -8,6 +8,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_spec.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/UI/errormenu_main.h"
 #include "Game.h"
@@ -470,6 +471,31 @@ bool hasReachedDemoEnd() noexcept {
     } else {
         return (!demo_canRead<padbuttons_t>());
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if level in the demo being played was completed (intermission screen reached)
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool wasLevelCompleted() noexcept {
+    // The demo player should always exit before this flag has been set, so this case should never be true.
+    // If we DO see the flag set for some reason however, then that's the best indication the level was completed.
+    if (gbDidCompleteLevel)
+        return true;
+
+    // This is the normal situation with demos.
+    // We have to go through all the thinkers and find a scheduled delayed 'exit' action.
+    // That indicates level exit to the intermission screen is just about to take place.
+    for (thinker_t* pThinker = gThinkerCap.next; pThinker != &gThinkerCap; pThinker = pThinker->next) {
+        if ((void*) pThinker->function == (void*) &T_DelayedAction) {
+            delayaction_t& delayedAction = reinterpret_cast<delayaction_t&>(*pThinker);
+
+            if (delayedAction.actionfunc == G_CompleteLevel)
+                return true;
+        }
+    }
+
+    // Level wasn't finished!
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -120,6 +120,8 @@ PsyDoom contributors (sorted alphabetically)
         https://github.com/BodbDearg/PsyDoom/commit/a930796fc19a65f737cf9d1bdb1bd5744cd19180#r89654841
     * Added "IDFA" cheat for "Lots Of Goodies! (No Keys)
         https://github.com/BodbDearg/PsyDoom/pull/78
+    * Suggestion to auto-pause the game when the window loses focus:
+        https://github.com/BodbDearg/PsyDoom/issues/79
 
 * **[getphobo](https://github.com/getphobo)**
     * Raised a bug about not being able to achieve 100% items on some maps due to multiple 'Computer Area Maps':
@@ -140,6 +142,10 @@ PsyDoom contributors (sorted alphabetically)
 * **[minirop](https://github.com/minirop)**
     * Compile fixes for Linux:
         https://github.com/BodbDearg/PsyDoom/pull/21
+
+* **[Chris Staples (ObsidianCarnageX12)](https://github.com/ObsidianCarnageX12)**
+    * Suggestion to add the intermission screen at the end of demo playback:
+        https://github.com/BodbDearg/PsyDoom/issues/75
 
 * **[OpenRift412](https://github.com/OpenRift412)**
     * In-game uncapped framerate toggle suggestion:

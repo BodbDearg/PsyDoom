@@ -141,4 +141,7 @@ float getMouseXMovement() noexcept;
 float getMouseYMovement() noexcept;
 float getMouseWheelAxisMovement(const uint8_t axis) noexcept;
 
+// Other events
+bool isWindowFocusJustLost() noexcept;
+
 END_NAMESPACE(Input)

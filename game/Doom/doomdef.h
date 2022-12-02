@@ -97,11 +97,14 @@ static constexpr int32_t VBLANK_TO_TIC_SHIFT = 2;   // How many bits to shift ri
 
 // What type of game is being played
 enum gametype_t : int32_t {
+#if PSYDOOM_MODS
+    gt_none = -1,       // PsyDoom: special value indicating the abscence of a game type
+#endif
     gt_single,
     gt_coop,
     gt_deathmatch,
-#if PSYDOOM_MODS        // PsyDoom: adding for convenience
-    NUMGAMETYPES
+#if PSYDOOM_MODS
+    NUMGAMETYPES        // PsyDoom: adding for convenience
 #endif
 };
 

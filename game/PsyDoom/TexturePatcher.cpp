@@ -57,7 +57,7 @@ void patchTex_GRATE(const texture_t& tex, const texdata_t texData) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Final Doom: patches the 'STATUS' texture to fix unintended pixels on the keycards
 //------------------------------------------------------------------------------------------------------------------------------------------
-void patchTex_FinalDoom_STATUS(const texture_t& tex, const texdata_t texData) noexcept {
+void patchTex_FinalDoom_STATUS([[maybe_unused]] const texture_t& tex, const texdata_t texData) noexcept {
     uint8_t* const pTexPixels = (uint8_t*)(texData.pBytes + sizeof(texlump_header_t));
     pTexPixels[49031] = 0;
     pTexPixels[49032] = 0;

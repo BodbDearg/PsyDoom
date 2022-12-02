@@ -73,7 +73,10 @@ bool gbIsLevelBeingRestarted;
 #if PSYDOOM_MODS
     // PsyDoom: whether to auto-save on starting the next level.
     // Set to true after the player successfully completes the previous level.
-    bool gbAutoSaveOnLevelStart;
+    bool gbAutoSaveOnLevelStart = false;
+
+    // PsyDoom: was the current level completed? (intermission screen reached)
+    bool gbDidCompleteLevel = false;
 
     // PsyDoom: external camera for cutscenes showing doors opening etc.
     // How many tics it has left, the camera position and angle.
@@ -402,6 +405,11 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_CompleteLevel() noexcept {
     gGameAction = ga_completed;
+
+    // PsyDoom: mark the level as done
+    #if PSYDOOM_MODS
+        gbDidCompleteLevel = true;
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
