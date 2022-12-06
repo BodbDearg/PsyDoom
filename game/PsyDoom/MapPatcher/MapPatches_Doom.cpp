@@ -352,6 +352,19 @@ static void patchMap_Tenements() noexcept {
             179, 182, 183, 184
         );
     }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix the track of some doorways moving when it should not
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 
+            // First room, door on the left
+            128, 130,
+            // Blood floor room, door on the right
+            275, 276
+        );
+
+        // Unhide linedefs that shouldn't be hidden
+        removeFlagsFromLinedefs(ML_DONTDRAW, 1128, 1129);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
