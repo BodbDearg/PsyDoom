@@ -4,6 +4,7 @@
 #include "MapPatches.h"
 
 #include "Doom/Base/sounds.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
@@ -376,6 +377,19 @@ static void patchMap_TheCitadel() noexcept {
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix the starting hut: make it so you can see past it, since it is shorter than buildings around it
         addVoidFlagToLinedefs(170, 171, 172, 173, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Raise elevator to same floor height as neighboring sector in NE corner so it functions like it should
+        gpSectors[8].floorheight = 176 * FRACUNIT;
+    }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix wall texture moving that shouldn't on barrier in yellow key room
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 509);
+
+        // Fix door tracks in "imp room"; probably never seen, but fixing to satisify my ocd :)
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 922, 923);
     }
 }
 
