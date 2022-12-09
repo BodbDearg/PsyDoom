@@ -368,6 +368,18 @@ static void patchMap_Tenements() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP46: The Courtyard
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheCourtyard() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_PsyDoom()) {
+        // Fix a wall top/floor sometimes not appearing: this wall is at the starting area and borders the sky
+        addVoidFlagToLinedefs(45, 17, 18, 51);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP47: The Citadel
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheCitadel() noexcept {
@@ -389,18 +401,6 @@ static void patchMap_TheCitadel() noexcept {
 
         // Fix door tracks in "imp room"; probably never seen, but fixing to satisify my ocd :)
         addFlagsToLinedefs(ML_DONTPEGBOTTOM, 922, 923);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Fix issues for MAP46: The Courtyard
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void patchMap_TheCourtyard() noexcept {
-    applyOriginalMapCommonPatches();
-
-    if (shouldApplyMapPatches_PsyDoom()) {
-        // Fix a wall top/floor sometimes not appearing: this wall is at the starting area and borders the sky
-        addVoidFlagToLinedefs(45, 17, 18, 51);
     }
 }
 
