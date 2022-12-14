@@ -405,6 +405,30 @@ static void patchMap_TheCitadel() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP53: Monster Condo
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_MonsterCondo() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix wall textures moving that shouldn't move
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 
+            // Hidden passage in SE corner of map
+            226, 230,
+            // Wall opening in NE corner of map
+            567, 568,
+            // West doors in starting room
+            172, 176, 177, 179, 182, 184, 188, 190
+        );
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Remove a redundant switch action from linedef that doesn't have a switch texture in the SE corner of map
+        gpLines[201].special = 0;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP58: The Mansion
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheMansion() noexcept {
@@ -474,7 +498,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  64540, 0x47EA67DBBA5F33DC, 0x2280784D842FECC1, applyOriginalMapCommonPatches },      // MAP50
     { 106555, 0x9FCBB09C2A8C8B67, 0xF00080B9655646C8, applyOriginalMapCommonPatches },      // MAP51
     { 117839, 0x67138B444A196EC4, 0x229285E95F31ADE4, applyOriginalMapCommonPatches },      // MAP52
-    { 131947, 0xC966739D25AC3FFD, 0xB7CDA8E3CF9A5186, applyOriginalMapCommonPatches },      // MAP53
+    { 131947, 0xC966739D25AC3FFD, 0xB7CDA8E3CF9A5186, patchMap_MonsterCondo         },      // MAP53
     {  45962, 0x27D515F2A59962E3, 0x3E35ABAD09E87EA1, applyOriginalMapCommonPatches },      // MAP54
     {  19237, 0xB5116FF7C0CBCF38, 0x7C6C9E29F2EA963B, applyOriginalMapCommonPatches },      // MAP55
     {  85042, 0x98C00035EA735BF3, 0x36C5C0BA592334C9, applyOriginalMapCommonPatches },      // MAP56
