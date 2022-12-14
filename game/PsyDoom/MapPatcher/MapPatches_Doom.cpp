@@ -425,6 +425,9 @@ static void patchMap_MonsterCondo() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Remove a redundant switch action from linedef that doesn't have a switch texture in the SE corner of map
         gpLines[201].special = 0;
+
+        // Linedef is flagged as impassable in NE room when it should not be
+        removeFlagsFromLinedefs(ML_BLOCKING, 342);
     }
 }
 
