@@ -4,7 +4,9 @@
 #include "MapPatches.h"
 
 #include "Doom/Base/sounds.h"
+#include "Doom/Game/g_game.h"
 #include "Doom/Game/info.h"
+#include "Doom/Game/p_mobj.h"
 #include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
 
@@ -393,6 +395,12 @@ static void patchMap_TheCitadel() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Raise elevator to same floor height as neighboring sector in NE corner so it functions like it should
         gpSectors[8].floorheight = 176 * FRACUNIT;
+
+        // Fix SW teleporter in teleporter room not working on easier skills
+        if (gGameSkill <= sk_easy) {
+            mobj_t* const pTeleDest = P_SpawnMobj(-912 * FRACUNIT, -880 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
+            pTeleDest->angle = ANG270;
+        }
     }
 
     if (shouldApplyMapPatches_Visual()) {
