@@ -407,7 +407,7 @@ static void patchMap_TheCitadel() noexcept {
         // Fix wall texture moving that shouldn't on barrier in yellow key room
         removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 509);
 
-        // Fix door tracks in "imp room"; probably never seen, but fixing to satisify my ocd :)
+        // Fix door tracks in "imp room"
         addFlagsToLinedefs(ML_DONTPEGBOTTOM, 922, 923);
     }
 }

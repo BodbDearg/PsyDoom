@@ -17,6 +17,14 @@ static void patchMap_Geryon() noexcept {
         // Fix a door leading to the secret area with the super shotgun not having it's texture move as it lowers
         removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 966);
         gpSides[gpLines[966].sidenum[0]].rowoffset = 64 * FRACUNIT;
+
+        // In the room immediately after the blue door, fix the wall textures so they move when the wall does and re-align
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 710, 712, 723, 726);
+        gpSides[gpLines[710].sidenum[0]].rowoffset = -50 * FRACUNIT;
+        gpSides[gpLines[712].sidenum[0]].rowoffset = -50 * FRACUNIT;
+        gpSides[gpLines[723].sidenum[0]].rowoffset = -34 * FRACUNIT;
+        gpSides[gpLines[726].sidenum[0]].rowoffset = -34 * FRACUNIT;
+        gpSides[gpLines[733].sidenum[0]].rowoffset = 0 * FRACUNIT;
     }
 }
 
