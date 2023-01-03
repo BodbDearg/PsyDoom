@@ -29,6 +29,22 @@ static void patchMap_Geryon() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP08: Minos
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Minos() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM,
+            // Fix hidden door tracks in north central hallway that move when they shouldn't
+            727, 729,
+            // Fix door tracks in NE corner of blue door room that move when they shouldn't
+            639, 641, 642, 644
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP09: Nessus
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Nessus() noexcept {
@@ -136,7 +152,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 132897, 0x2E8E3492E704154D, 0x0DE2F0470D62DDB8, applyOriginalMapCommonPatches },      // MAP05
     {  88004, 0xC12D7BD6D414250C, 0xF981017C0C8ADF20, applyOriginalMapCommonPatches },      // MAP06
     { 165920, 0x903B721BA84B1FFD, 0xCED86BF62E5CE0BE, patchMap_Geryon               },      // MAP07
-    { 151747, 0x93EA3A4DE9DA978B, 0x3D27F6255CA0B9CC, applyOriginalMapCommonPatches },      // MAP08
+    { 151747, 0x93EA3A4DE9DA978B, 0x3D27F6255CA0B9CC, patchMap_Minos                },      // MAP08
     { 102104, 0x1504DC20E04BE8F1, 0x3A63FD22BC9C0D8C, patchMap_Nessus               },      // MAP09
     { 139820, 0x5EDEF8B2A51779E8, 0x8D1314A4F889EFCC, applyOriginalMapCommonPatches },      // MAP10
     {  96211, 0x42B2A3CE9B37CA2A, 0x72D00C8E1681AEB4, applyOriginalMapCommonPatches },      // MAP11
