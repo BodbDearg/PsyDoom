@@ -58,6 +58,29 @@ static void patchMap_Nessus() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP10: Paradox
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Paradox() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix texture on hidden elevator in castle so it moved with the platform and shift texture
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 325);
+        gpSides[gpLines[325].sidenum[0]].rowoffset = 65 * FRACUNIT;
+
+        // Hide opening to monster closet and fix texture alignment
+        addFlagsToLinedefs(ML_DONTDRAW, 552, 554, 555);
+        addFlagsToLinedefs(ML_SECRET | ML_MIDMASKED, 553);
+        gpSides[gpLines[553].sidenum[0]].midtexture = R_TextureNumForName("ROCK03");
+        gpSides[gpLines[553].sidenum[0]].textureoffset = -16 * FRACUNIT;
+
+        // Fix texture alignment on deathmatch only hidden door
+        gpSides[1743].textureoffset = 8 * FRACUNIT;
+        gpSides[1743].rowoffset = -29 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP15: Human Barbeque
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_HumanBarbeque() noexcept {
@@ -154,7 +177,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 165920, 0x903B721BA84B1FFD, 0xCED86BF62E5CE0BE, patchMap_Geryon               },      // MAP07
     { 151747, 0x93EA3A4DE9DA978B, 0x3D27F6255CA0B9CC, patchMap_Minos                },      // MAP08
     { 102104, 0x1504DC20E04BE8F1, 0x3A63FD22BC9C0D8C, patchMap_Nessus               },      // MAP09
-    { 139820, 0x5EDEF8B2A51779E8, 0x8D1314A4F889EFCC, applyOriginalMapCommonPatches },      // MAP10
+    { 139820, 0x5EDEF8B2A51779E8, 0x8D1314A4F889EFCC, patchMap_Paradox              },      // MAP10
     {  96211, 0x42B2A3CE9B37CA2A, 0x72D00C8E1681AEB4, applyOriginalMapCommonPatches },      // MAP11
     { 106776, 0xAD3AADE890018818, 0x7D70AC984E7211CC, applyOriginalMapCommonPatches },      // MAP12
     { 152855, 0xD4905C759C1713E1, 0x1B78CCD5275A40EB, applyOriginalMapCommonPatches },      // MAP13
