@@ -81,6 +81,26 @@ static void patchMap_Paradox() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP11: Subspace
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Subspace() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Remove actions from neighboring lindefs that lower blue key platform that shouldn't have actions assigned to them
+        gpLines[852].special = 0;
+        gpLines[892].special = 0;
+        gpLines[893].special = 0;
+    }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Shift textures on secret doors to make them possible to discover by observation instead of by chance only
+        gpSides[236].rowoffset += 16 * FRACUNIT;
+        gpSides[240].rowoffset += 16 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP15: Human Barbeque
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_HumanBarbeque() noexcept {
@@ -178,7 +198,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 151747, 0x93EA3A4DE9DA978B, 0x3D27F6255CA0B9CC, patchMap_Minos                },      // MAP08
     { 102104, 0x1504DC20E04BE8F1, 0x3A63FD22BC9C0D8C, patchMap_Nessus               },      // MAP09
     { 139820, 0x5EDEF8B2A51779E8, 0x8D1314A4F889EFCC, patchMap_Paradox              },      // MAP10
-    {  96211, 0x42B2A3CE9B37CA2A, 0x72D00C8E1681AEB4, applyOriginalMapCommonPatches },      // MAP11
+    {  96211, 0x42B2A3CE9B37CA2A, 0x72D00C8E1681AEB4, patchMap_Subspace             },      // MAP11
     { 106776, 0xAD3AADE890018818, 0x7D70AC984E7211CC, applyOriginalMapCommonPatches },      // MAP12
     { 152855, 0xD4905C759C1713E1, 0x1B78CCD5275A40EB, applyOriginalMapCommonPatches },      // MAP13
     {  54706, 0x979F686C4297312E, 0xB9EA33C07E20F4E3, applyOriginalMapCommonPatches },      // MAP14
