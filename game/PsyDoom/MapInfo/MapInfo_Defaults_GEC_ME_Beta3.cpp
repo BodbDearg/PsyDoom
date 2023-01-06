@@ -1,14 +1,13 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// MapInfo defaults for 'GEC Master Edition (various game types)'
+// MapInfo defaults for 'GEC Master Edition (Beta 3)'
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "MapInfo_Defaults_GEC_ME.h"
+#include "MapInfo_Defaults_GEC_ME_Beta3.h"
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/UI/cr_main.h"
 #include "Doom/UI/ti_main.h"
 #include "MapInfo.h"
 #include "MapInfo_Defaults.h"
-#include "MapInfo_Defaults_Doom.h"
 #include "MapInfo_Defaults_FinalDoom.h"
 #include "PsyQ/LIBSPU.h"
 
@@ -18,7 +17,9 @@ BEGIN_NAMESPACE(MapInfo)
 // Initializes a 'GameInfo' struct for 'GEC Master Edition (Beta 3)'
 //------------------------------------------------------------------------------------------------------------------------------------------
 void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
-    initGameInfo_FinalDoom(gameInfo);       // Uses Final Doom values for most settings
+    // Use Final Doom values for most settings
+    initGameInfo_FinalDoom(gameInfo);
+
     gameInfo.numMaps = 94;
     gameInfo.numRegularMaps = 92;           // Last two maps are secret: stops the game ending on completing 'Go 2 It'
     gameInfo.bFinalDoomGameRules = false;   // Some maps might rely on the extra forward speed of 'Doom'
@@ -37,24 +38,6 @@ void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes a 'GameInfo' struct for '[GEC] Master Edition tools: single map test disc (Doom format)'
-//------------------------------------------------------------------------------------------------------------------------------------------
-void initGameInfo_GEC_ME_TestMap_Doom(GameInfo& gameInfo) noexcept {
-    initGameInfo_Doom(gameInfo);
-    gameInfo.numMaps = 1;
-    gameInfo.numRegularMaps = 1;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes a 'GameInfo' struct for '[GEC] Master Edition tools: single map test disc (Final Doom format)'
-//------------------------------------------------------------------------------------------------------------------------------------------
-void initGameInfo_GEC_ME_TestMap_FinalDoom(GameInfo& gameInfo) noexcept {
-    initGameInfo_FinalDoom(gameInfo);
-    gameInfo.numMaps = 1;
-    gameInfo.numRegularMaps = 1;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Adds all the default episodes for 'GEC Master Edition (Beta 3)' to the given list
 //------------------------------------------------------------------------------------------------------------------------------------------
 void addEpisodes_GEC_ME_Beta3(std::vector<Episode>& episodes) noexcept {
@@ -62,13 +45,6 @@ void addEpisodes_GEC_ME_Beta3(std::vector<Episode>& episodes) noexcept {
     addEpisode(episodes, 2, 31,  "Master Levels");
     addEpisode(episodes, 3, 51,  "TNT");
     addEpisode(episodes, 4, 71,  "Plutonia");
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Adds all the default episodes for '[GEC] Master Edition tools: single map test disc' to the given list
-//------------------------------------------------------------------------------------------------------------------------------------------
-void addEpisodes_GEC_ME_TestMap(std::vector<Episode>& episodes) noexcept {
-    addEpisode(episodes, 1,  1,  "Test Map");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,17 +88,6 @@ void addClusters_GEC_ME_Beta3(std::vector<Cluster>& clusters) noexcept {
         clus.clusterNum = 4;
         clusTemplate.bHideNextMapForFinale = true;
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Adds all the default clusters for '[GEC] Master Edition tools: single map test disc' to the given list
-//------------------------------------------------------------------------------------------------------------------------------------------
-void addClusters_GEC_ME_TestMap(std::vector<Cluster>& clusters) noexcept {
-    Cluster& clus = clusters.emplace_back();
-    clus.clusterNum = 1;
-    clus.bSkipFinale = true;
-    clus.bHideNextMapForFinale = true;
-    clus.bEnableCast = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,13 +192,6 @@ void addMaps_GEC_ME_Beta3(std::vector<Map>& maps) noexcept {
     addMap(maps, 92, 4, "Odyssey of Noises",        26,   SPU_REV_MODE_SPACE,     0x0FFF);
     addMap(maps, 93, 4, "Cyberden",                 8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
     addMap(maps, 94, 4, "Go 2 It",                  17,   SPU_REV_MODE_HALL,      0x1FFF);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Adds the default maps for '[GEC] Master Edition tools: single map test disc' to the given list
-//------------------------------------------------------------------------------------------------------------------------------------------
-void addMaps_GEC_ME_TestMap(std::vector<Map>& maps) noexcept {
-    addMap(maps, 1 , 1, "Test Map", 1, SPU_REV_MODE_SPACE, 0x0FFF);
 }
 
 END_NAMESPACE(MapInfo)

@@ -3,7 +3,8 @@
 #include "MapInfo.h"
 #include "MapInfo_Defaults_Doom.h"
 #include "MapInfo_Defaults_FinalDoom.h"
-#include "MapInfo_Defaults_GEC_ME.h"
+#include "MapInfo_Defaults_GEC_ME_Beta3.h"
+#include "MapInfo_Defaults_GEC_ME_TestMap.h"
 #include "PsyDoom/Game.h"
 
 BEGIN_NAMESPACE(MapInfo)
