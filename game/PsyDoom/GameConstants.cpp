@@ -14,6 +14,7 @@
 static constexpr uint32_t NET_GAMEID_DOOM                       = 0xAA11AA22;
 static constexpr uint32_t NET_GAMEID_FINAL_DOOM                 = 0xAB11AB22;
 static constexpr uint32_t NET_GAMEID_GEC_ME_BETA3               = 0xAB00AB22;
+static constexpr uint32_t NET_GAMEID_GEC_ME_BETA4               = 0xAB00AB23;
 static constexpr uint32_t NET_GAMEID_GEC_ME_TESTMAP_DOOM        = 0xBB00BB22;
 static constexpr uint32_t NET_GAMEID_GEC_ME_TESTMAP_FINAL_DOOM  = 0xBB00BB23;
 
@@ -145,7 +146,6 @@ static void populateConsts_Doom(GameConstants& consts, const bool bIsDemoVersion
     consts.texPalette_BUTTONS = MAINPAL;
     consts.numPalettesRequired = NUMPALETTES_DOOM;
     consts.bUseFinalDoomSkyPalettes = false;
-    consts.bUseFinalDoomPasswordStorage = false;
     consts.doomLogoYPos = DOOM_LOGO_YPOS;
 }
 
@@ -164,7 +164,6 @@ static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
     consts.texPalette_BUTTONS = UIPAL2;
     consts.numPalettesRequired = NUMPALETTES_FINAL_DOOM;
     consts.bUseFinalDoomSkyPalettes = true;
-    consts.bUseFinalDoomPasswordStorage = true;
     consts.doomLogoYPos = DOOM_LOGO_YPOS;
 }
 
@@ -172,7 +171,7 @@ static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
 // Set the values of all constants for 'GEC Master Edition (Beta 3)'
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
-    // Use the settings for Final Doom in most cases
+    // Default to the settings used by Final Doom for any unspecified fields
     populateConsts_FinalDoom(consts);
 
     // Quick hack to support the Master Edition:
@@ -265,6 +264,32 @@ static void populateConsts_GEC_ME_TestMap_FinalDoom(GameConstants& consts) noexc
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Set the values of all constants for 'GEC Master Edition (Beta 4)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
+    consts.mainWads[0] = CdFile::PSXDOOM_WAD;
+    consts.introMovies[0] = "DATA/MOVIE.STR";
+    consts.introMovies[1] = "DATA/GEC.STR";
+    consts.introMovies[2] = "DATA/DWORLD.STR";
+    consts.demos[0] = ClassicDemoDef{ "NDEMO1.LMP", true, false, true  };   // TODO: GEC ME BETA 4: Verify these demos
+    consts.demos[1] = ClassicDemoDef{ "NDEMO2.LMP", true, false, true  };
+    consts.demos[2] = ClassicDemoDef{ "NDEMO3.LMP", true, false, true  };
+    consts.demos[3] = ClassicDemoDef{ "NDEMO4.LMP", true, false, true  };
+    consts.demos[4] = ClassicDemoDef{ "NDEMO5.LMP", true, false, true  };
+    consts.demos[5] = ClassicDemoDef{ "NDEMO6.LMP", true, false, true  };
+    consts.demos[6] = ClassicDemoDef{ "NDEMO7.LMP", true, false, true  };
+    consts.demos[7] = ClassicDemoDef{ "NDEMO8.LMP", true, false, false };
+    consts.saveFilePrefix = "GecMe_";
+    consts.pLastPasswordField = &PlayerPrefs::gLastPassword_GecMe;
+    consts.numPalettesRequired = 31;
+    consts.netGameId = NET_GAMEID_GEC_ME_BETA4;
+    consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;     // TODO: GEC ME BETA 4: check this
+    consts.texPalette_BUTTONS = UIPAL2;             // TODO: GEC ME BETA 4: check this
+    consts.bUseFinalDoomSkyPalettes = true;         // TODO: GEC ME BETA 4: check this
+    consts.doomLogoYPos = DOOM_LOGO_YPOS_GEC_ME;    // TODO: GEC ME BETA 4: check this
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Populates the set of game constants for the current game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 void GameConstants::populate(const GameType gameType, const bool bIsDemoVersion) noexcept {
@@ -276,6 +301,7 @@ void GameConstants::populate(const GameType gameType, const bool bIsDemoVersion)
         case GameType::Doom:                        populateConsts_Doom(*this, bIsDemoVersion);         break;
         case GameType::FinalDoom:                   populateConsts_FinalDoom(*this);                    break;
         case GameType::GEC_ME_Beta3:                populateConsts_GEC_ME_Beta3(*this);                 break;
+        case GameType::GEC_ME_Beta4:                populateConsts_GEC_ME_Beta4(*this);                 break;
         case GameType::GEC_ME_TestMap_Doom:         populateConsts_GEC_ME_TestMap_Doom(*this);          break;
         case GameType::GEC_ME_TestMap_FinalDoom:    populateConsts_GEC_ME_TestMap_FinalDoom(*this);     break;
 

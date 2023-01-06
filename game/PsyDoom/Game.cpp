@@ -97,6 +97,11 @@ void determineGameTypeAndVariant() noexcept {
         gGameType = GameType::GEC_ME_Beta3;
         gGameVariant = GameVariant::NTSC_U;
     }
+    else if (discFileExists("SLUS_666.02", 0x97BB6F2D22E807E0, 0x6D818DA45FF98708)) {
+        // [GEC] Master Edition PSX Doom for the PlayStation (Beta 4)
+        gGameType = GameType::GEC_ME_Beta4;
+        gGameVariant = GameVariant::NTSC_U;
+    }
     else if (discFileExists("PSXDOOM/ABIN/PSXDOOM.EXE") && discFileExists("PSXDOOM/MAPDIR0/MAP01.WAD") && (!discFileExists("PSXDOOM/MAPDIR0/MAP02.WAD"))) {
         // [GEC] Master Edition tools: single map test disc ('Doom' format)
         gGameType = GameType::GEC_ME_TestMap_Doom;
