@@ -151,6 +151,26 @@ static void patchMap_Vesperas() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP14: System Control
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_SystemControl() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix door tracks
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM,
+            // Door to outside
+            346, 348,
+            // Blue key door
+            397, 398
+        );
+
+        // Align texture above outside door
+        gpSides[483].rowoffset = -16 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP15: Human Barbeque
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_HumanBarbeque() noexcept {
@@ -251,7 +271,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     {  96211, 0x42B2A3CE9B37CA2A, 0x72D00C8E1681AEB4, patchMap_Subspace             },      // MAP11
     { 106776, 0xAD3AADE890018818, 0x7D70AC984E7211CC, applyOriginalMapCommonPatches },      // MAP12
     { 152855, 0xD4905C759C1713E1, 0x1B78CCD5275A40EB, patchMap_Vesperas             },      // MAP13
-    {  54706, 0x979F686C4297312E, 0xB9EA33C07E20F4E3, applyOriginalMapCommonPatches },      // MAP14
+    {  54706, 0x979F686C4297312E, 0xB9EA33C07E20F4E3, patchMap_SystemControl        },      // MAP14
     {  77891, 0x20F93855131B2C1A, 0xD98E0D6C4EAEC765, patchMap_HumanBarbeque        },      // MAP15
     { 156972, 0xC4DF66BEDEE0E1C4, 0xFB56E82FA017FD9D, applyOriginalMapCommonPatches },      // MAP16
     { 179622, 0x97DFE2C07BE92D3C, 0xEC29BA71305623B3, applyOriginalMapCommonPatches },      // MAP17
