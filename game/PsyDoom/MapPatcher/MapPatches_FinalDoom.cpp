@@ -101,6 +101,56 @@ static void patchMap_Subspace() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP13: Vesperas
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Vesperas() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix door tracks on north door in starting room
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 16, 18);
+
+        // Fix wall texture on hidden wall in NW room with hell knights
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 696);
+        gpSides[gpLines[696].sidenum[0]].rowoffset = 31 * FRACUNIT;
+
+        // Hide various linedefs from automap
+        addFlagsToLinedefs(ML_DONTDRAW,
+            // Hell Knight monster closet in blue key room
+            1165, 1522, 1523, 1524,
+            // Dummy sector in NE blood room
+            1493, 1494, 1495,
+            // Dummy sector in west hallway
+            659, 660, 662,
+            // Cacodemon monster closet in SW hallway
+            1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1245, 1246
+        );
+
+        // Mark various linedefs as secret on automap
+        addFlagsToLinedefs(ML_SECRET,
+            // South monster closet in courtyard
+            571,
+            // Dummy sector in west hallway
+            663,
+            // Dummy sectors in NW hallway
+            1155, 1159,
+            // Dummy sector in west caco room
+            1240,
+            // Monster closet in NW room
+            1269,
+            // Dummy sector in SW hallway
+            1387,
+            // Dummy sectors in NW room
+            1444, 1462, 1492,
+            // Cacodemon monster closet in SW hallway
+            280, 300, 452,
+            // Dummy sector in west alcove of slime room
+            596
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP15: Human Barbeque
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_HumanBarbeque() noexcept {
@@ -200,7 +250,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 139820, 0x5EDEF8B2A51779E8, 0x8D1314A4F889EFCC, patchMap_Paradox              },      // MAP10
     {  96211, 0x42B2A3CE9B37CA2A, 0x72D00C8E1681AEB4, patchMap_Subspace             },      // MAP11
     { 106776, 0xAD3AADE890018818, 0x7D70AC984E7211CC, applyOriginalMapCommonPatches },      // MAP12
-    { 152855, 0xD4905C759C1713E1, 0x1B78CCD5275A40EB, applyOriginalMapCommonPatches },      // MAP13
+    { 152855, 0xD4905C759C1713E1, 0x1B78CCD5275A40EB, patchMap_Vesperas             },      // MAP13
     {  54706, 0x979F686C4297312E, 0xB9EA33C07E20F4E3, applyOriginalMapCommonPatches },      // MAP14
     {  77891, 0x20F93855131B2C1A, 0xD98E0D6C4EAEC765, patchMap_HumanBarbeque        },      // MAP15
     { 156972, 0xC4DF66BEDEE0E1C4, 0xFB56E82FA017FD9D, applyOriginalMapCommonPatches },      // MAP16
