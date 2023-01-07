@@ -221,6 +221,7 @@ void DRAW_Credits() noexcept {
         }
     }
 #if PSYDOOM_MODS
+    // TODO: GEC ME BETA 4: work here needed!
     else if (screenStyle == CreditsScreenStyle::GEC_ME) {
         // GEC Master Edition: there are 5 pages: GEC, Doomworld, Final Doom level, ID and Williams credits
         if (gCreditsPage == 0) {

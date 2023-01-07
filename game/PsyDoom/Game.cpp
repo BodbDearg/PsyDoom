@@ -124,7 +124,7 @@ void determineGameTypeAndVariant() noexcept {
             "The disc must be one of the following:\n\n"
             "   - Doom: NTSC-U, NTSC-J or PAL version (original or re-release editions).\n"
             "   - Final Doom: NTSC-U, NTSC-J or PAL version.\n"
-            "   - [GEC] Master Edition PSX Doom (Beta 3).\n"
+            "   - [GEC] Master Edition PSX Doom (Beta 3 or 4).\n"
             "   - [GEC] Master Edition tools: single map test disc.\n"
             "   - PSX Doom Forever (ROM hack).\n"
             "   - Doom single level PAL demo (standalone disc, or in a demo collection)."

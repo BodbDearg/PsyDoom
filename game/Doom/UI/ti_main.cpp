@@ -48,6 +48,8 @@ static int32_t gVBlanksUntilTitleFireMove;
 // Initialization logic for the main title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_Title() noexcept {
+    // TODO: GEC ME BETA 4: work here needed!
+    
     // Cleanup the texture cache and remove anything we can
     I_PurgeTexCache();
 
@@ -147,6 +149,8 @@ void STOP_Title([[maybe_unused]] const gameaction_t exitAction) noexcept {
 // Update logic for the main title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Title() noexcept {
+    // TODO: GEC ME BETA 4: work here needed!
+
     // End the title screen if any buttons are pressed.
     // PsyDoom: just accept menu start/ok/back but require them to be just released:
     #if PSYDOOM_MODS
@@ -271,6 +275,7 @@ gameaction_t TIC_Title() noexcept {
 // I also fixed issues with gaps at the side of the screen due to bad spacing of the firesky tiles.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_Title() noexcept {
+    // TODO: GEC ME BETA 4: work here needed!
     I_IncDrawnFrameCount();
     
     #if PSYDOOM_MODS
@@ -382,6 +387,7 @@ void DRAW_Title() noexcept {
     }
 
     // GEC Master Edition: draw the 'DOOM', 'Final DOOM' and 'Master Edition' logos
+    // TODO: GEC ME BETA 4: work here needed for new logos
     #if PSYDOOM_MODS
         if (screenStyle == TitleScreenStyle::GEC_ME) {
             const uint8_t rgb = (uint8_t) gTitleScreenSpriteY;

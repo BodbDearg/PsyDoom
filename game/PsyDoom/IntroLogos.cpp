@@ -305,6 +305,7 @@ static LogoPlayer::Logo getSonyLogo_FromBootExe() noexcept {
 // Helper: gets the Sony intro logo for the 'GEC Master Edition (Beta 3)' disc
 //------------------------------------------------------------------------------------------------------------------------------------------
 static LogoPlayer::Logo getSonyLogo_GEC_ME_Beta3() noexcept {
+    // TODO: GEC ME BETA 4: implement for BETA 4
     LogoPlayer::Logo logo = decodeWadLogo("SONY", readWadPalette("GECINPAL", 3).get());
     logo.holdTime = 3.0f;
     logo.fadeOutTime = 0.5f;
@@ -338,6 +339,7 @@ LogoList getLegalLogos_FromBootExe() noexcept {
 // Helper: gets the legals/copyright intro logos for 'GEC Master Edition (Beta 3)' disc
 //------------------------------------------------------------------------------------------------------------------------------------------
 LogoList getLegalLogos_GEC_ME_Beta3() noexcept {
+    // TODO: GEC ME BETA 4: implement for BETA 4
     LogoList logoList = {};
     logoList.logos[0] = decodeWadLogo("LEGALS", readWadPalette("GECINPAL", 3).get());
     logoList.logos[1] = decodeWadLogo("LEGALS2", readWadPalette("GECINPAL", 3).get());

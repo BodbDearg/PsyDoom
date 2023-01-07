@@ -38,7 +38,7 @@ Here is a video showing the port in action:
     - Doom (all regions & editions)
     - Final Doom (all regions & editions)
     - Doom: single level demo (standalone and magazine demo disc)
-    - [GEC Master Edition Beta 3](https://www.doomworld.com/forum/topic/101161-gec-master-edition-psx-doom-for-the-playstation-1102019-beta-3-release-now-are-you-ready-for-more-action)
+    - [GEC Master Edition Beta 3 or 4](https://www.doomworld.com/forum/topic/101161-gec-master-edition-psx-doom-for-the-playstation-1102019-beta-3-release-now-are-you-ready-for-more-action)
 - Note: for the best audio quality, set your audio device's sample rate to 44.1 kHz (44,100 Hz or 'CD Quality').
     - Sometimes using different sample rates like 48 kHz can result in strange noise/artifacts when the audio stream is resampled to a different rate by the host system.
     - 44.1 kHz is the sample rate originally used by the PS1 SPU and the native sample rate of PsyDoom.

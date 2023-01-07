@@ -219,6 +219,8 @@ gameaction_t RunMenu() noexcept {
 // Setup/init logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Start() noexcept {
+    // TODO: GEC ME BETA 4: work here needed!
+
     // Assume no networked game initially
     gNetGame = gt_single;
     gCurPlayerIndex = 0;
@@ -586,6 +588,8 @@ gameaction_t M_Ticker() noexcept {
 // Renders the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Drawer() noexcept {
+    // TODO: GEC ME BETA 4: work here needed!
+
     // Draw the menu background and increment frame count for the texture cache.
     I_IncDrawnFrameCount();
 

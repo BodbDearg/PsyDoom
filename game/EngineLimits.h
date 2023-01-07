@@ -28,6 +28,8 @@ static constexpr bool IS_64_BIT_BUILD = (sizeof(void*) > 4);
 // 
 // Note: I've raised this slightly for non-limit removing builds to account for PsyDoom's increased memory usage on some data structures.
 // The new limit of 1430 KiB (1,464,320 bytes) is *just* about enough to run all the maps from 'GEC Master Edition Beta 3'.
+// 
+// TODO: GEC ME BETA 4: verify heap size requirements for non-limit removing builds
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PSYDOOM_LIMIT_REMOVING
     static constexpr uint32_t Z_HEAP_DEFAULT_SIZE = 64 * 1024 * 1024;
