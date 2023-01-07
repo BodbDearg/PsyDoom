@@ -168,36 +168,50 @@ static const Token* skipCurrentLineData(const Token* const pStartToken) noexcept
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Attempt to parse assigning to a single value (numeric or string) to a field and return the next token after parsing.
+// Attempt to parse assigning to a single number to a field and return the next token after parsing.
 // Expects the identifier for the field to be first, followed (optionally) by '=' and then by value token itself.
 // Note: if there are additional tokens on the same line then they will be skipped also.
 //------------------------------------------------------------------------------------------------------------------------------------------
-template <bool ASSIGN_NUMBER, class ValueT>
-static const Token* parseSingleValueAssign(const Token* const pStartToken, ValueT& outputValue) noexcept {
+template <class ValueT>
+static const Token* parseSingleNumberAssign(const Token* const pStartToken, ValueT& outputValue) noexcept {
     const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
 
     if (pToken->type == TokenType::Equals) {
         pToken++;
     }
 
-    if constexpr (ASSIGN_NUMBER) {
-        ensureTokenType(pToken, TokenType::Number);
-        outputValue = static_cast<ValueT>(pToken->number);
-    } else {
-        outputValue = pToken->text();
-    }
-
+    ensureTokenType(pToken, TokenType::Number);
+    outputValue = static_cast<ValueT>(pToken->number);
     return skipCurrentLineData(pToken);
 }
 
-template <class ValueT>
-static const Token* parseSingleNumberAssign(const Token* const pStartToken, ValueT& outputValue) noexcept {
-    return parseSingleValueAssign<true>(pStartToken, outputValue);
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Assign text to the specified 'SmallString', filtering out non ASCII characters like UTF-8 byte order marks (0xEF, 0xBB, 0xBF).
+// The filtering is used to fix UTF-8 BOM being present in some of the map names for Beta 4 of the Master Edition.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class SmallStringT>
+static void assignAsciiTextToSmallString(SmallStringT& dst, std::string_view src) {
+    const char* const pSrcChars = src.data();
+    const size_t srcLen = src.length();
+    
+    uint32_t srcIdx = 0;
+    uint32_t dstIdx = 0;
 
-template <class ValueT>
-static const Token* parseSingleStringAssign(const Token* const pStartToken, ValueT& outputValue) noexcept {
-    return parseSingleValueAssign<false>(pStartToken, outputValue);
+    while ((dstIdx < SmallStringT::MAX_LEN) && (srcIdx < srcLen)) {
+        const uint8_t c = (uint8_t) pSrcChars[srcIdx];
+
+        if (c <= 0x7F) {
+            dst.chars[dstIdx] = (char) c;
+            dstIdx++;
+        }
+
+        srcIdx++;
+    }
+
+    // Null terminate if we didn't reach the end
+    if (dstIdx < SmallStringT::MAX_LEN) {
+        dst.chars[dstIdx] = 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -212,8 +226,7 @@ static const Token* parseEpisode(const Token* const pStartToken) noexcept {
     episode.episodeNum = (int32_t) gpDefaultMapInfo->episodes.size();
 
     // Parse episode name
-    const std::string_view episodeName = pToken->text();
-    episode.name = String32(episodeName.data(), (uint32_t) episodeName.size());
+    assignAsciiTextToSmallString(episode.name, pToken->text());
     pToken++;
 
     // Episode start map
@@ -327,8 +340,7 @@ static const Token* parseMap(const Token* const pStartToken) noexcept {
 
     // Parse the map name
     ensureTokenType(pToken, TokenType::String);
-    const std::string_view mapName = pToken->text();
-    map.name = String32(mapName.data(), (uint32_t) mapName.size());
+    assignAsciiTextToSmallString(map.name, pToken->text());
     pToken++;
 
     // Parse the data inside the map block
