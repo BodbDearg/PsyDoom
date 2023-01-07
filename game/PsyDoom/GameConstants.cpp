@@ -14,9 +14,9 @@
 static constexpr uint32_t NET_GAMEID_DOOM                       = 0xAA11AA22;
 static constexpr uint32_t NET_GAMEID_FINAL_DOOM                 = 0xAB11AB22;
 static constexpr uint32_t NET_GAMEID_GEC_ME_BETA3               = 0xAB00AB22;
-static constexpr uint32_t NET_GAMEID_GEC_ME_BETA4               = 0xAB00AB23;
 static constexpr uint32_t NET_GAMEID_GEC_ME_TESTMAP_DOOM        = 0xBB00BB22;
 static constexpr uint32_t NET_GAMEID_GEC_ME_TESTMAP_FINAL_DOOM  = 0xBB00BB23;
+static constexpr uint32_t NET_GAMEID_GEC_ME_BETA4               = 0xAB00AB23;
 
 // Doom logo Y positions
 #if PSYDOOM_MODS
@@ -301,9 +301,9 @@ void GameConstants::populate(const GameType gameType, const bool bIsDemoVersion)
         case GameType::Doom:                        populateConsts_Doom(*this, bIsDemoVersion);         break;
         case GameType::FinalDoom:                   populateConsts_FinalDoom(*this);                    break;
         case GameType::GEC_ME_Beta3:                populateConsts_GEC_ME_Beta3(*this);                 break;
-        case GameType::GEC_ME_Beta4:                populateConsts_GEC_ME_Beta4(*this);                 break;
         case GameType::GEC_ME_TestMap_Doom:         populateConsts_GEC_ME_TestMap_Doom(*this);          break;
         case GameType::GEC_ME_TestMap_FinalDoom:    populateConsts_GEC_ME_TestMap_FinalDoom(*this);     break;
+        case GameType::GEC_ME_Beta4:                populateConsts_GEC_ME_Beta4(*this);                 break;
 
         default:
             FatalErrors::raise("GameConstants::populate(): unhandled game type!");

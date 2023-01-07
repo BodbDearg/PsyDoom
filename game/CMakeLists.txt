@@ -245,6 +245,8 @@ set(SOURCE_FILES
     "PsyDoom/MapInfo/MapInfo_Defaults_FinalDoom.h"
     "PsyDoom/MapInfo/MapInfo_Defaults_GEC_ME_Beta3.cpp"
     "PsyDoom/MapInfo/MapInfo_Defaults_GEC_ME_Beta3.h"
+    "PsyDoom/MapInfo/MapInfo_Defaults_GEC_ME_Dynamic.cpp"
+    "PsyDoom/MapInfo/MapInfo_Defaults_GEC_ME_Dynamic.h"
     "PsyDoom/MapInfo/MapInfo_Defaults_GEC_ME_TestMap.cpp"
     "PsyDoom/MapInfo/MapInfo_Defaults_GEC_ME_TestMap.h"
     "PsyDoom/MapInfo/MapInfo_Parse.cpp"

@@ -4,6 +4,7 @@
 #include "MapInfo_Defaults_Doom.h"
 #include "MapInfo_Defaults_FinalDoom.h"
 #include "MapInfo_Defaults_GEC_ME_Beta3.h"
+#include "MapInfo_Defaults_GEC_ME_Dynamic.h"
 #include "MapInfo_Defaults_GEC_ME_TestMap.h"
 #include "PsyDoom/Game.h"
 
@@ -70,6 +71,10 @@ static void initGameInfo(GameInfo& gameInfo) noexcept {
         case GameType::GEC_ME_TestMap_Doom:         initGameInfo_GEC_ME_TestMap_Doom(gameInfo);         break;
         case GameType::GEC_ME_TestMap_FinalDoom:    initGameInfo_GEC_ME_TestMap_FinalDoom(gameInfo);    break;
 
+        case GameType::GEC_ME_Beta4:
+            initGameInfo_GEC_ME_Dynamic(gameInfo);
+            break;
+
         default:
             FatalErrors::raise("MapInfo::initGameInfo(): unhandled game type!");
     }
@@ -87,6 +92,10 @@ static void initEpisodes(std::vector<Episode>& episodes) noexcept {
         case GameType::GEC_ME_Beta3:                addEpisodes_GEC_ME_Beta3(episodes);     break;
         case GameType::GEC_ME_TestMap_Doom:         addEpisodes_GEC_ME_TestMap(episodes);   break;
         case GameType::GEC_ME_TestMap_FinalDoom:    addEpisodes_GEC_ME_TestMap(episodes);   break;
+
+        case GameType::GEC_ME_Beta4:
+            addEpisodes_GEC_ME_Dynamic(episodes);
+            break;
 
         default:
             FatalErrors::raise("MapInfo::initEpisodes(): unhandled game type!");
@@ -106,6 +115,10 @@ static void initClusters(std::vector<Cluster>& clusters) noexcept {
         case GameType::GEC_ME_TestMap_Doom:         addClusters_GEC_ME_TestMap(clusters);   break;
         case GameType::GEC_ME_TestMap_FinalDoom:    addClusters_GEC_ME_TestMap(clusters);   break;
 
+        case GameType::GEC_ME_Beta4:
+            addClusters_GEC_ME_Dynamic(clusters);
+            break;
+
         default:
             FatalErrors::raise("MapInfo::initClusters(): unhandled game type!");
     }
@@ -123,6 +136,10 @@ static void initMaps(std::vector<Map>& maps) noexcept {
         case GameType::GEC_ME_Beta3:                addMaps_GEC_ME_Beta3(maps);     break;
         case GameType::GEC_ME_TestMap_Doom:         addMaps_GEC_ME_TestMap(maps);   break;
         case GameType::GEC_ME_TestMap_FinalDoom:    addMaps_GEC_ME_TestMap(maps);   break;
+
+        case GameType::GEC_ME_Beta4:
+            addMaps_GEC_ME_Dynamic(maps);
+            break;
 
         default:
             FatalErrors::raise("MapInfo::initMaps(): unhandled game type!");
@@ -153,11 +170,25 @@ void setMapInfoToDefaults(
     std::vector<Map>& maps,
     std::vector<MusicTrack>& musicTracks
 ) noexcept {
+    // Read dynamic MapInfo defaults used by the GEC Master Edition (Beta 4 or later), if required:
+    const GameType gameType = Game::gGameType;
+    const bool bUsingGecDynamicDefaults = (gameType == GameType::GEC_ME_Beta4);
+
+    if (bUsingGecDynamicDefaults) {
+        loadDefaults_GEC_ME_Dynamic();
+    }
+
+    // Init the defaults
     initGameInfo(gameInfo);
     initEpisodes(episodes);
     initClusters(clusters);
     initMaps(maps);
     initMusicTracks(musicTracks);
+
+    // Free up the GEC dynamic MapInfo defaults if previously loaded (no longer needed)
+    if (bUsingGecDynamicDefaults) {
+        freeDefaults_GEC_ME_Dynamic();
+    }
 }
 
 END_NAMESPACE(MapInfo)
