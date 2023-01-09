@@ -1,5 +1,6 @@
 #include "in_main.h"
 
+#include "Doom/Base/i_drawstringex.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/i_texcache.h"
@@ -450,8 +451,7 @@ void IN_SingleDrawer() noexcept {
     // These are most of the coordinates for the regular/original menu layout
     int32_t percentSignX = 182;
     int32_t percentValueX = 170;
-    int32_t mapNameY = 20;
-    int32_t finishedY = 36;
+    int32_t mapNameAndFinishedMsgY = 36;
     int32_t killsY = 65;
     int32_t itemsY = 91;
     int32_t secretsY = 117;
@@ -462,18 +462,37 @@ void IN_SingleDrawer() noexcept {
         if (bShowTime) {
             percentSignX = 202;
             percentValueX = 190;
-            mapNameY = 10;
-            finishedY = 26;
-            killsY = 55;
-            itemsY = 75;
-            secretsY = 95;
+            mapNameAndFinishedMsgY = 30;
+            killsY = 60;
+            itemsY = 80;
+            secretsY = 100;
         }
 
-        const int32_t timeY = 115;
+        const int32_t timeY = 120;
     #endif
 
-    I_DrawString(-1, mapNameY, Game::getMapName(gGameMap).c_str().data());
-    I_DrawString(-1, finishedY, "Finished");
+    #if PSYDOOM_MODS
+        // PsyDoom: new drawing method that supports multi-line map names with line break commands in them ("\n")
+        {
+            char mapNameText[256];
+            std::snprintf(mapNameText, C_ARRAY_SIZE(mapNameText), "%s\\nFinished", Game::getMapName(gGameMap).c_str().data());
+
+            // Note: nudge the text up a bit if showing 2 lines for the map name (makes it not so close to the stats)
+            int32_t textNudgeUp = 0;
+
+            if (I_DrawStringEx_CountNumLines(mapNameText) > 2) {
+                textNudgeUp = (bShowTime) ? 2 : 7;
+            }
+
+            DrawStringParams drawStrParams = {};
+            drawStrParams.xAnchorMode = DrawStringAnchorMode::CENTER;
+            drawStrParams.yAnchorMode = DrawStringAnchorMode::CENTER;
+            I_DrawStringEx(SCREEN_W / 2, mapNameAndFinishedMsgY - textNudgeUp, drawStrParams, mapNameText);
+        }
+    #else
+        I_DrawString(-1, 20, Game::getMapName(gGameMap).c_str().data());
+        I_DrawString(-1, 36, "Finished");
+    #endif
 
     I_DrawString(57, killsY, "Kills");
     I_DrawString(percentSignX, killsY, "%");
@@ -518,8 +537,27 @@ void IN_SingleDrawer() noexcept {
 
         if (bShowNextMap) {
             I_DrawString(-1, 145, "Entering");
-            I_DrawString(-1, 161, Game::getMapName(gNextMap).c_str().data());
-            I_DrawString(-1, 187, "Password");
+
+            #if PSYDOOM_MODS
+                int32_t passwordYOffset = 0;
+
+                // PsyDoom: new drawing method that supports multi-line map names with line break commands in them ("\n")
+                {
+                    DrawStringParams drawStrParams = {};
+                    drawStrParams.xAnchorMode = DrawStringAnchorMode::CENTER;
+                    I_DrawStringEx(SCREEN_W / 2, 161, drawStrParams, Game::getMapName(gNextMap).c_str().data());
+
+                    // Move the password down a bit if the map name is on 2 or more lines instead of 1
+                    if (gDrawStringEx_metrics.numLines >= 2) {
+                        passwordYOffset += 12;
+                    }
+                }
+            #else
+                constexpr int32_t passwordYOffset = 0;
+                I_DrawString(-1, 161, Game::getMapName(gNextMap).c_str().data());
+            #endif
+
+            I_DrawString(-1, 187 + passwordYOffset, "Password");
 
             char passwordStr[PW_SEQ_LEN + 1];
 
@@ -528,7 +566,7 @@ void IN_SingleDrawer() noexcept {
             }
 
             passwordStr[PW_SEQ_LEN] = 0;
-            I_DrawString(-1, 203, passwordStr);
+            I_DrawString(-1, 203 + passwordYOffset, passwordStr);
         }
     }
 }
@@ -539,11 +577,18 @@ void IN_SingleDrawer() noexcept {
 void IN_CoopDrawer() noexcept {
     I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
 
+    // PsyDoom: nudge everything up to make room if showing 2 lines or more for the map name
+    #if PSYDOOM_MODS
+        const int32_t layoutNudgeUp = (I_DrawStringEx_CountNumLines(Game::getMapName(gNextMap).c_str().data()) >= 2) ? BIG_FONT_LINE_HEIGHT : 0;
+    #else
+        constexpr int32_t layoutNudgeUp = 0;
+    #endif
+
     I_DrawSprite(
         gTex_STATUS.texPageId,
         Game::getTexPalette_STATUS(),
         139,
-        20,
+        (int16_t)(20 - layoutNudgeUp),
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
         #if PSYDOOM_MODS
             (int16_t)(gTex_STATUS.texPageCoordX + gFaceSprites[0].texU),
@@ -556,13 +601,13 @@ void IN_CoopDrawer() noexcept {
         gFaceSprites[0].h
     );
 
-    I_DrawString(130, 52, "you");
+    I_DrawString(130, 52 - layoutNudgeUp, "you");
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
         Game::getTexPalette_STATUS(),
         213,
-        20,
+        (int16_t)(20 - layoutNudgeUp),
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
         #if PSYDOOM_MODS
             (int16_t)(gTex_STATUS.texPageCoordX + gFaceSprites[0].texU),
@@ -575,25 +620,25 @@ void IN_CoopDrawer() noexcept {
         gFaceSprites[0].h
     );
 
-    I_DrawString(208, 52, "him");
+    I_DrawString(208, 52 - layoutNudgeUp, "him");
 
-    I_DrawString(57, 79, "Kills");
-    I_DrawString(155, 79, "%");
-    I_DrawString(228, 79, "%");
-    I_DrawNumber(143, 79, gKillValue[gCurPlayerIndex]);
-    I_DrawNumber(216, 79, gKillValue[(gCurPlayerIndex == 0) ? 1 : 0]);
+    I_DrawString(57, 79 - layoutNudgeUp, "Kills");
+    I_DrawString(155, 79 - layoutNudgeUp, "%");
+    I_DrawString(228, 79 - layoutNudgeUp, "%");
+    I_DrawNumber(143, 79 - layoutNudgeUp, gKillValue[gCurPlayerIndex]);
+    I_DrawNumber(216, 79 - layoutNudgeUp, gKillValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
-    I_DrawString(53, 101, "Items");
-    I_DrawString(155, 101, "%");
-    I_DrawString(228, 101, "%");
-    I_DrawNumber(143, 101, gItemValue[gCurPlayerIndex]);
-    I_DrawNumber(216, 101, gItemValue[(gCurPlayerIndex == 0) ? 1 : 0]);
+    I_DrawString(53, 101 - layoutNudgeUp, "Items");
+    I_DrawString(155, 101 - layoutNudgeUp, "%");
+    I_DrawString(228, 101 - layoutNudgeUp, "%");
+    I_DrawNumber(143, 101 - layoutNudgeUp, gItemValue[gCurPlayerIndex]);
+    I_DrawNumber(216, 101 - layoutNudgeUp, gItemValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
-    I_DrawString(26, 123, "Secrets");
-    I_DrawString(155, 123, "%");
-    I_DrawString(228, 123, "%");
-    I_DrawNumber(143, 123, gSecretValue[gCurPlayerIndex]);
-    I_DrawNumber(216, 123, gSecretValue[(gCurPlayerIndex == 0) ? 1 : 0]);
+    I_DrawString(26, 123 - layoutNudgeUp, "Secrets");
+    I_DrawString(155, 123 - layoutNudgeUp, "%");
+    I_DrawString(228, 123 - layoutNudgeUp, "%");
+    I_DrawNumber(143, 123 - layoutNudgeUp, gSecretValue[gCurPlayerIndex]);
+    I_DrawNumber(216, 123 - layoutNudgeUp, gSecretValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     // Only draw the next map and password if there is a next map
     if (gNextMap <= Game::getNumMaps()) {
@@ -605,8 +650,18 @@ void IN_CoopDrawer() noexcept {
         #endif
 
         if (bShowNextMap) {
-            I_DrawString(-1, 149, "Entering");
-            I_DrawString(-1, 165, Game::getMapName(gNextMap).c_str().data());
+            I_DrawString(-1, 149 - layoutNudgeUp, "Entering");
+
+            // PsyDoom: new drawing method that supports multi-line map names with line break commands in them ("\n")
+            #if PSYDOOM_MODS
+            {
+                DrawStringParams drawStrParams = {};
+                drawStrParams.xAnchorMode = DrawStringAnchorMode::CENTER;
+                I_DrawStringEx(SCREEN_W / 2, 165 - layoutNudgeUp, drawStrParams, Game::getMapName(gNextMap).c_str().data());
+            }
+            #else
+                I_DrawString(-1, 165 - layoutNudgeUp, Game::getMapName(gNextMap).c_str().data());
+            #endif
 
             // Well this is mean! The current player only gets to see a password if not dead :(
             if (gPlayers[gCurPlayerIndex].health > 0) {
@@ -631,8 +686,24 @@ void IN_CoopDrawer() noexcept {
 void IN_DeathmatchDrawer() noexcept {
     I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
 
-    I_DrawString(-1, 20, Game::getMapName(gGameMap).c_str().data());
-    I_DrawString(-1, 36, "Finished");
+    // PsyDoom: new drawing method that supports multi-line map names with line break commands in them ("\n")
+    #if PSYDOOM_MODS
+    {
+        const auto mapName = Game::getMapName(gGameMap).c_str();
+        char drawStr[256];
+        std::snprintf(drawStr, C_ARRAY_SIZE(drawStr), "%s\\nFinished", mapName.data());
+
+        const int32_t textNudgeUp = (I_DrawStringEx_CountNumLines(mapName.data()) >= 2) ? 5 : 0;
+        DrawStringParams drawStrParams = {};
+        drawStrParams.xAnchorMode = DrawStringAnchorMode::CENTER;
+        drawStrParams.yAnchorMode = DrawStringAnchorMode::CENTER;
+
+        I_DrawStringEx(SCREEN_W / 2, 36 - textNudgeUp, drawStrParams, drawStr);
+    }
+    #else
+        I_DrawString(-1, 20, Game::getMapName(gGameMap).c_str().data());
+        I_DrawString(-1, 36, "Finished");
+    #endif
 
     const facesprite_t* pFaceSpriteP1;
     const facesprite_t* pFaceSpriteP2;
@@ -717,8 +788,22 @@ void IN_DeathmatchDrawer() noexcept {
         #endif
 
         if (bShowNextMap) {
-            I_DrawString(-1, 190, "Entering");
-            I_DrawString(-1, 206, Game::getMapName(gNextMap).c_str().data());
+            // PsyDoom: new drawing method that supports multi-line map names with line break commands in them ("\n")
+            #if PSYDOOM_MODS
+                const auto mapName = Game::getMapName(gNextMap).c_str();
+                char drawStr[256];
+                std::snprintf(drawStr, C_ARRAY_SIZE(drawStr), "Entering\\n%s", mapName.data());
+
+                const int32_t textNudgeUp = (I_DrawStringEx_CountNumLines(mapName.data()) >= 2) ? 7 : 0;
+                DrawStringParams drawStrParams = {};
+                drawStrParams.xAnchorMode = DrawStringAnchorMode::CENTER;
+                drawStrParams.yAnchorMode = DrawStringAnchorMode::CENTER;
+
+                I_DrawStringEx(SCREEN_W / 2, 206 - textNudgeUp, drawStrParams, drawStr);
+            #else
+                I_DrawString(-1, 190, "Entering");
+                I_DrawString(-1, 206, Game::getMapName(gNextMap).c_str().data());
+            #endif
         }
     }
 }
