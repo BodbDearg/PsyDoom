@@ -183,6 +183,22 @@ static void patchMap_HumanBarbeque() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP16: Wormhole
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Wormhole() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide 2 linedefs from automap in starting room to match those in the alternate version
+        addFlagsToLinedefs(ML_DONTDRAW, 1425, 1426);
+
+        // Change brightness of half of central elevator in starting room and alternate version to be the same on both halves
+        gpSectors[185].lightlevel = 95;
+        gpSectors[243].lightlevel = 95;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP21: Lunar Mining Project
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_LunarMiningProject() noexcept {
@@ -273,7 +289,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 152855, 0xD4905C759C1713E1, 0x1B78CCD5275A40EB, patchMap_Vesperas             },      // MAP13
     {  54706, 0x979F686C4297312E, 0xB9EA33C07E20F4E3, patchMap_SystemControl        },      // MAP14
     {  77891, 0x20F93855131B2C1A, 0xD98E0D6C4EAEC765, patchMap_HumanBarbeque        },      // MAP15
-    { 156972, 0xC4DF66BEDEE0E1C4, 0xFB56E82FA017FD9D, applyOriginalMapCommonPatches },      // MAP16
+    { 156972, 0xC4DF66BEDEE0E1C4, 0xFB56E82FA017FD9D, patchMap_Wormhole             },      // MAP16
     { 179622, 0x97DFE2C07BE92D3C, 0xEC29BA71305623B3, applyOriginalMapCommonPatches },      // MAP17
     { 131823, 0xADD51543E9578AB7, 0xA3E479551A015464, applyOriginalMapCommonPatches },      // MAP18
     { 177868, 0x5BDC5BC7E62822C1, 0x3F374AD0091C79F1, applyOriginalMapCommonPatches },      // MAP19
