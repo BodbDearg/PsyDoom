@@ -199,6 +199,27 @@ static void patchMap_Wormhole() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP18: Nukage Processing
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_NukageProcessing() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide multiplayer-only areas from computer map to match others of the same type
+        addFlagsToLinedefs(ML_DONTDRAW, 
+            // Blue Armor room
+            1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079,
+            // Nukage tank in north area
+            1158, 1162, 1166, 1163, 1161, 1231, 1233, 1232, 1230, 1160, 1167, 1165, 1164);
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix nukage tank in the east area of the map so it damages the player
+        gpSectors[174].special = 7;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP21: Lunar Mining Project
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_LunarMiningProject() noexcept {
@@ -291,7 +312,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     {  77891, 0x20F93855131B2C1A, 0xD98E0D6C4EAEC765, patchMap_HumanBarbeque        },      // MAP15
     { 156972, 0xC4DF66BEDEE0E1C4, 0xFB56E82FA017FD9D, patchMap_Wormhole             },      // MAP16
     { 179622, 0x97DFE2C07BE92D3C, 0xEC29BA71305623B3, applyOriginalMapCommonPatches },      // MAP17
-    { 131823, 0xADD51543E9578AB7, 0xA3E479551A015464, applyOriginalMapCommonPatches },      // MAP18
+    { 131823, 0xADD51543E9578AB7, 0xA3E479551A015464, patchMap_NukageProcessing     },      // MAP18
     { 177868, 0x5BDC5BC7E62822C1, 0x3F374AD0091C79F1, applyOriginalMapCommonPatches },      // MAP19
     { 105404, 0x5849A9F98647AF13, 0x59C891E67F19FC69, applyOriginalMapCommonPatches },      // MAP20
     { 162561, 0x5BA4490CA5C13E9A, 0x23D505C31AF4CADF, patchMap_LunarMiningProject   },      // MAP21
