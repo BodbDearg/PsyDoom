@@ -230,6 +230,21 @@ static void patchMap_NukageProcessing() noexcept {
 static void patchMap_DeepestReaches() noexcept {
     applyOriginalMapCommonPatches();
 
+    if (shouldApplyMapPatches_Visual()) {
+        // Change texture for secret door in blue door area to make it stand out (same as PC Doom)
+        gpSides[786].toptexture = R_TextureNumForName("ROCK16");
+        gpSides[792].toptexture = R_TextureNumForName("ROCK16");
+
+        // Fix inside texture for secret door in blue door area
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 1380, 1381);
+
+        // Fix texture for megasphere door in secret area
+        removeFlagsFromLinedefs(ML_DONTPEGTOP | ML_DONTPEGBOTTOM, 773, 776);
+        gpSides[gpLines[776].sidenum[0]].rowoffset = 63 * FRACUNIT;
+
+        // Unhide linedefs that shouldn't be hidden from automap
+        removeFlagsFromLinedefs(ML_DONTDRAW, 706, 707, 1438, 1439, 1440, 1441);
+    }
     if (shouldApplyMapPatches_GamePlay()) {
         // Move stuck imps in order to fix platform in the west-most room that lowers when picking up rocket launcher or BFG9000
         modifySectors(
