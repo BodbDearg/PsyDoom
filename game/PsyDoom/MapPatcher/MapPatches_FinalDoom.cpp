@@ -3,6 +3,11 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapPatches.h"
 
+#include "Doom/Base/sounds.h"
+#include "Doom/Game/g_game.h"
+#include "Doom/Game/info.h"
+#include "Doom/Game/p_mobj.h"
+#include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
 
 BEGIN_NAMESPACE(MapPatches)
@@ -220,6 +225,33 @@ static void patchMap_NukageProcessing() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP19: Deepest Reaches
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_DeepestReaches() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Move stuck imps in order to fix platform in the west-most room that lowers when picking up rocket launcher or BFG9000
+        modifySectors(
+            [](sector_t& sector) noexcept {
+                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
+                    mobj_t* const pNextMobj = pMobj->snext;
+
+                    if ((pMobj->type == MT_TROOP) && (pMobj->x == -1704 * FRACUNIT)) {
+                        pMobj->x -= 8 * FRACUNIT;
+                    }
+                    if ((pMobj->type == MT_TROOP) && (pMobj->x == -1776 * FRACUNIT)) {
+                        pMobj->y += 16 * FRACUNIT;
+                    }
+
+                    pMobj = pNextMobj;
+                }
+            }, 143, 145
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP21: Lunar Mining Project
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_LunarMiningProject() noexcept {
@@ -259,8 +291,8 @@ static void patchMap_Ballistyx() noexcept {
                     mobj.y -= 24 * FRACUNIT;
                 } else if ((sectorIdx == 150) || (sectorIdx == 163) || (sectorIdx == 164)) {
                     mobj.y += 24 * FRACUNIT;
+                    }
                 }
-            }
         );
     }
 }
@@ -313,7 +345,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 156972, 0xC4DF66BEDEE0E1C4, 0xFB56E82FA017FD9D, patchMap_Wormhole             },      // MAP16
     { 179622, 0x97DFE2C07BE92D3C, 0xEC29BA71305623B3, applyOriginalMapCommonPatches },      // MAP17
     { 131823, 0xADD51543E9578AB7, 0xA3E479551A015464, patchMap_NukageProcessing     },      // MAP18
-    { 177868, 0x5BDC5BC7E62822C1, 0x3F374AD0091C79F1, applyOriginalMapCommonPatches },      // MAP19
+    { 177868, 0x5BDC5BC7E62822C1, 0x3F374AD0091C79F1, patchMap_DeepestReaches       },      // MAP19
     { 105404, 0x5849A9F98647AF13, 0x59C891E67F19FC69, applyOriginalMapCommonPatches },      // MAP20
     { 162561, 0x5BA4490CA5C13E9A, 0x23D505C31AF4CADF, patchMap_LunarMiningProject   },      // MAP21
     {  96826, 0x9B6446A94907229A, 0x6DC9F5EDDB9D4F2D, applyOriginalMapCommonPatches },      // MAP22
