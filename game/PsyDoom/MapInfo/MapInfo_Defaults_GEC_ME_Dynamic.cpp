@@ -168,21 +168,92 @@ static const Token* skipCurrentLineData(const Token* const pStartToken) noexcept
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Attempt to parse assigning to a single number to a field and return the next token after parsing.
-// Expects the identifier for the field to be first, followed (optionally) by '=' and then by value token itself.
-// Note: if there are additional tokens on the same line then they will be skipped also.
+// Attempt to parse assigning to a single number to a field and return the next token after parsing
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class ValueT>
 static const Token* parseSingleNumberAssign(const Token* const pStartToken, ValueT& outputValue) noexcept {
+    // A value should always start with an identifier
     const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
 
+    // Consume any '=' sign
     if (pToken->type == TokenType::Equals) {
         pToken++;
     }
 
-    ensureTokenType(pToken, TokenType::Number);
-    outputValue = static_cast<ValueT>(pToken->number);
-    return skipCurrentLineData(pToken);
+    // Is there a number following?
+    if (pToken->type == TokenType::Number) {
+        outputValue = static_cast<ValueT>(pToken->number);
+        return pToken + 1;
+    }
+
+    // Is there a 'true' or 'false' value following? (1.0 or 0.0)
+    if (pToken->type == TokenType::True) {
+        outputValue = ValueT(1);
+        return pToken + 1;
+    }
+
+    if (pToken->type == TokenType::False) {
+        outputValue = ValueT(0);
+        return pToken + 1;
+    }
+
+    // If there is no number or boolean following the identifier then interpret it as being a flag set to 'true' or '1.0'.
+    // Example: 'EnableCast' or 'HideNextMapForFinale' tokens on their own without any value.
+    outputValue = ValueT(1);
+    return pToken;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempt to parse assigning to a single boolean value to a field and return the next token after parsing
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const Token* parseSingleBoolAssign(const Token* const pStartToken, bool& outputValue) noexcept {
+    // A value should always start with an identifier
+    const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
+
+    // Consume any '=' sign
+    if (pToken->type == TokenType::Equals) {
+        pToken++;
+    }
+
+    // Is there a number following?
+    if (pToken->type == TokenType::Number) {
+        outputValue = (pToken->number > 0);
+        return pToken + 1;
+    }
+
+    // Is there a 'true' or 'false' value following? (1.0 or 0.0)
+    if (pToken->type == TokenType::True) {
+        outputValue = true;
+        return pToken + 1;
+    }
+
+    if (pToken->type == TokenType::False) {
+        outputValue = false;
+        return pToken + 1;
+    }
+
+    // If there is no number or boolean following the identifier then interpret it as being a flag set to 'true'.
+    // Example: 'EnableCast' or 'HideNextMapForFinale' tokens on their own without any value.
+    outputValue = true;
+    return pToken;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempt to parse assigning to a single string to a field and return the next token after parsing
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class StringT>
+static const Token* parseSingleStringAssign(const Token* const pStartToken, StringT& outputValue) noexcept {
+    // A value should always start with an identifier
+    const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
+
+    // Consume any '=' sign and save the string
+    if (pToken->type == TokenType::Equals) {
+        pToken++;
+    }
+
+    const std::string_view text = pToken->text();
+    outputValue.assign(text.data(), (uint32_t) text.size());
+    return pToken + 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -290,15 +361,17 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
     return parseUntilEndOfBlock(
         skipBlockOpening(pStartToken),
         [](const Token* pToken) noexcept {
+            GameInfo& gameInfo = gpDefaultMapInfo->gameInfo;
+
             // Lets see if we recognize this data:
             if (pToken->type == TokenType::Identifier) {
                 const std::string_view fieldId = pToken->text();
 
                 if (fieldId == "NumMaps")
-                    return parseSingleNumberAssign(pToken, gpDefaultMapInfo->gameInfo.numMaps);
+                    return parseSingleNumberAssign(pToken, gameInfo.numMaps);
                 
                 if (fieldId == "NumRegularMaps")
-                    return parseSingleNumberAssign(pToken, gpDefaultMapInfo->gameInfo.numRegularMaps);
+                    return parseSingleNumberAssign(pToken, gameInfo.numRegularMaps);
 
                 if (fieldId == "Episodes")
                     return parseEpisodesBlock(pToken);
@@ -361,6 +434,14 @@ static const Token* parseMap(const Token* const pStartToken) noexcept {
 
                     return pNextToken;
                 }
+
+                // Cluster
+                if (fieldId == "Cluster")
+                    return parseSingleNumberAssign(pToken, map.cluster);
+
+                // Play CD music?
+                if (fieldId == "PlayCdMusic")
+                    return parseSingleBoolAssign(pToken, map.bPlayCdMusic);
                 
                 // Map reverb mode
                 if (fieldId == "ReverbMode") {
@@ -381,6 +462,111 @@ static const Token* parseMap(const Token* const pStartToken) noexcept {
                     map.reverbDepthL = (int16_t) reverbDepth;
                     map.reverbDepthR = (int16_t) reverbDepth;
                     return pNextToken;
+                }
+
+                // TODO: GEC ME BETA 4: parse 'NoIntermission'
+            }
+
+            // Unhandled or unwanted line of data - skip it!
+            return skipCurrentLineData(pToken);
+        }
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Parses a single cluster definition and returns the next token after that
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const Token* parseCluster(const Token* const pStartToken) noexcept {
+    ASSERT(gpDefaultMapInfo);
+
+    // Create a new Cluster and initialize with the defaults for the GEC ME
+    Cluster& cluster = gpDefaultMapInfo->clusters.emplace_back();
+    cluster.castLcdFile = "CAST.LCD";
+    cluster.bSkipFinale = false;
+
+    // Parse the cluster number
+    const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
+    ensureTokenType(pToken, TokenType::Number);
+    cluster.clusterNum = (int32_t) pToken->number;
+
+    if ((cluster.clusterNum < 1) || (cluster.clusterNum > 255)) {
+        error(pToken->begin, "Cluster: cluster number must be between 1 and 255!");
+    }
+
+    pToken++;
+
+    // Parse the data inside the cluster block
+    return parseUntilEndOfBlock(
+        skipBlockOpening(pToken),
+        [&cluster](const Token* pToken) noexcept {
+            // Lets see if we recognize this data:
+            if (pToken->type == TokenType::Identifier) {
+                const std::string_view fieldId = pToken->text();
+
+                if (fieldId == "CastLcdFile")
+                    return parseSingleStringAssign(pToken, cluster.castLcdFile);
+
+                if (fieldId == "Pic")
+                    return parseSingleStringAssign(pToken, cluster.pic);
+
+                if (fieldId == "PicPal")
+                    return parseSingleNumberAssign(pToken, cluster.picPal);
+
+                if (fieldId == "CdMusicA")
+                    return parseSingleNumberAssign(pToken, cluster.cdMusicA);
+
+                if (fieldId == "CdMusicB")
+                    return parseSingleNumberAssign(pToken, cluster.cdMusicB);
+
+                if (fieldId == "TextX")
+                    return parseSingleNumberAssign(pToken, cluster.textX);
+
+                if (fieldId == "TextY")
+                    return parseSingleNumberAssign(pToken, cluster.textY);
+
+                if (fieldId == "SkipFinale")
+                    return parseSingleBoolAssign(pToken, cluster.bSkipFinale);
+
+                if (fieldId == "HideNextMapForFinale")
+                    return parseSingleBoolAssign(pToken, cluster.bHideNextMapForFinale);
+
+                if (fieldId == "EnableCast")
+                    return parseSingleBoolAssign(pToken, cluster.bEnableCast);
+
+                if (fieldId == "NoCenterText")
+                    return parseSingleBoolAssign(pToken, cluster.bNoCenterText);
+
+                if (fieldId == "SmallFont")
+                    return parseSingleBoolAssign(pToken, cluster.bSmallFont);
+
+                if (fieldId == "Text") {
+                    // Skip the 'Text' identifier and any '=' sign
+                    pToken++;
+
+                    if (pToken->type == TokenType::Equals) {
+                        pToken++;
+                    }
+
+                    // Parse all the lines of text
+                    constexpr int32_t MAX_TEXT_LINES = C_ARRAY_SIZE(cluster.text);
+                    int32_t lineIdx = 0;
+
+                    while (pToken->type == TokenType::String) {
+                        if (lineIdx < MAX_TEXT_LINES) {
+                            const std::string_view text = pToken->text();
+                            cluster.text[lineIdx].assign(text.data(), (uint32_t) text.size());
+                            lineIdx++;
+                        }
+
+                        pToken++;
+
+                        // Consume any ',' separator between this and the next text line
+                        if (pToken->type == TokenType::NextValue) {
+                            pToken++;
+                        }
+                    }
+
+                    return pToken;
                 }
             }
 
@@ -413,6 +599,8 @@ static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
             pToken = parseGameInfo(pToken);
         } else if (blockId == "Map") {
             pToken = parseMap(pToken);
+        } else if (blockId == "Cluster") {
+            pToken = parseCluster(pToken);
         } else {
             // Unhandled or unwanted block of data - skip it!
             pToken = skipBlock(pToken);
@@ -431,11 +619,9 @@ void loadDefaults_GEC_ME_Dynamic() noexcept {
     gpDefaultMapInfo = std::make_unique<DynamicMapInfoDefaults>();
     initGameInfo_FinalDoom(gpDefaultMapInfo->gameInfo);
 
-    // Parse the MAPINFO
+    // Parse the MAPINFO and auto-generate the list of clusters
     parseMapInfoFileOnDisk("PSXDOOM/ABIN/PSXGMINF.TXT");
     parseMapInfoFileOnDisk("PSXDOOM/ABIN/PSXMPINF.TXT");
-
-    // TODO: GEC ME BETA 4: auto-generate clusters
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
