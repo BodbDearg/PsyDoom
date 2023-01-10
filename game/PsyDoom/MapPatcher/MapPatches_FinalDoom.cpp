@@ -267,6 +267,27 @@ static void patchMap_DeepestReaches() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP20: Processing Area
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_ProcessingArea() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide linedef on east wall of south courtyard
+        addFlagsToLinedefs(ML_DONTDRAW, 953);
+
+        // Fix texture alignment on secret door of south courtyard
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 202);
+
+        // Prevent textures in north tunnel from moving when passage opens and realign
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 572, 664);
+        gpSides[gpLines[572].sidenum[0]].rowoffset = -8 * FRACUNIT;
+        gpSides[gpLines[664].sidenum[0]].textureoffset = -16 * FRACUNIT;
+        gpSides[gpLines[664].sidenum[0]].rowoffset = -8 * FRACUNIT;  
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP21: Lunar Mining Project
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_LunarMiningProject() noexcept {
@@ -361,7 +382,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 179622, 0x97DFE2C07BE92D3C, 0xEC29BA71305623B3, applyOriginalMapCommonPatches },      // MAP17
     { 131823, 0xADD51543E9578AB7, 0xA3E479551A015464, patchMap_NukageProcessing     },      // MAP18
     { 177868, 0x5BDC5BC7E62822C1, 0x3F374AD0091C79F1, patchMap_DeepestReaches       },      // MAP19
-    { 105404, 0x5849A9F98647AF13, 0x59C891E67F19FC69, applyOriginalMapCommonPatches },      // MAP20
+    { 105404, 0x5849A9F98647AF13, 0x59C891E67F19FC69, patchMap_ProcessingArea       },      // MAP20
     { 162561, 0x5BA4490CA5C13E9A, 0x23D505C31AF4CADF, patchMap_LunarMiningProject   },      // MAP21
     {  96826, 0x9B6446A94907229A, 0x6DC9F5EDDB9D4F2D, applyOriginalMapCommonPatches },      // MAP22
     { 167847, 0x3BC3E6570C2D06B3, 0x18756B0D2C98BE86, patchMap_Ballistyx },                 // MAP23
