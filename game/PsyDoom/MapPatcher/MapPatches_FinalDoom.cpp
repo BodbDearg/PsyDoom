@@ -8,7 +8,6 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_mobj.h"
-//#include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
 
