@@ -366,8 +366,8 @@ static void patchMap_Ballistyx() noexcept {
                     mobj.y -= 24 * FRACUNIT;
                 } else if ((sectorIdx == 150) || (sectorIdx == 163) || (sectorIdx == 164)) {
                     mobj.y += 24 * FRACUNIT;
-                    }
                 }
+            }
         );
     }
 }
