@@ -349,8 +349,8 @@ static void readMap(const Block& block) noexcept {
         error(block, "Map: 'Cluster' must be specified and be between 1 and 255!");
     }
 
-    if ((map.skyPaletteOverride < -1) || (map.skyPaletteOverride > 32)) {
-        error(block, "Map: 'SkyPaletteOverride' must be between -1 and 32!");
+    if ((map.skyPaletteOverride < -1) || (map.skyPaletteOverride > 31)) {
+        error(block, "Map: 'SkyPaletteOverride' must be between -1 and 31!");
     }
 
     if ((map.reverbMode < SpuReverbMode::SPU_REV_MODE_OFF) || (map.reverbMode > SpuReverbMode::SPU_REV_MODE_PIPE)) {

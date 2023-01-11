@@ -40,7 +40,7 @@ Header fields:
 Internal Fields:
 - `Music`: Which sequencer music track to play for the map, or '0' if none. If 'PlayCdMusic' is enabled then this specifies a CD track instead. Must be between 0 and 1024.
 - `Cluster`: Which cluster of maps the map belongs to. Determines when finale screens are shown; if the next map has a different cluster number then this will trigger the non-cast call finale.
-- `SkyPal`: Can be used to override the palette used for the map's sky. Doom has 20 built-in palettes; Final Doom has 26. The engine can support up to 32 palettes in PLAYERPAL, so 6 additional user palettes can be defined. Specify `-1` (the default) to have the engine automatically determine the sky palette from the sky texture number. This field must be between -1 and 32. Built in palettes are as follows:
+- `SkyPal`: Can be used to override the palette used for the map's sky. Doom has 20 built-in palettes; Final Doom has 26. The engine can support up to 32 palettes in PLAYERPAL, so 6 additional user palettes can be defined. Specify `-1` (the default) to have the engine automatically determine the sky palette from the sky texture number. This field must be between -1 and 31. Built in palettes are as follows:
     ```
     MAINPAL               = 0       // Used for most sprites and textures in the game
     REDPALS (0-7)         = 1-8     // Pain palettes (red shift)
