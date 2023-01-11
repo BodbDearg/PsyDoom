@@ -4,9 +4,11 @@
 #include "MapPatches.h"
 
 #include "Doom/Base/sounds.h"
+#include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/info.h"
 #include "Doom/Game/p_mobj.h"
+//#include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_telept.h"
 #include "Doom/Renderer/r_data.h"
 
@@ -296,6 +298,44 @@ static void patchMap_LunarMiningProject() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix a missing texture on a small lip in the mines
         gpSides[gpLines[718].sidenum[1]].bottomtexture = R_TextureNumForName("ROCK06");
+
+        // Mark linedef for south monster closet as secret and fix texture alignment
+        addFlagsToLinedefs(ML_SECRET, 1);
+        gpSides[gpLines[1].sidenum[0]].rowoffset = 0 * FRACUNIT;
+        gpSectors[162].floorheight = 0 * FRACUNIT;
+
+        // Hide courtyard teleport destination sectors
+        addFlagsToLinedefs(ML_DONTDRAW, 972, 973, 974, 975, 976, 977, 978, 979, 980, 981, 982, 983);
+
+        // Change texture of co-op only closet door
+        gpSides[1735].toptexture = R_TextureNumForName("BRONZE05");
+
+        // Hide north monster closet
+        addFlagsToLinedefs(ML_SECRET | ML_MIDMASKED, 919);
+        addFlagsToLinedefs(ML_DONTDRAW, 1051, 1052);
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Two monsters are in a closet that is only accessible in co-op; remove and subtract from total monsters count in single player
+        if (gStartGameType == gt_single) {
+            for (mobj_t* pMobj = gpSectors[237].thinglist; pMobj != nullptr; pMobj = pMobj->snext) {
+                P_RemoveMobj(*pMobj);
+                gTotalKills--;
+            }
+        }
+
+        // Move one of the courtyard teleport destinations; it is in the wrong spot
+        forAllThings(
+            [](mobj_t& mobj) noexcept {
+                const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
+
+                if ((sectorIdx == 75) &&  (mobj.x == -536 * FRACUNIT)) {
+                    P_RemoveMobj(mobj);
+                }
+            }
+        );
+        mobj_t* const pTeleDest = P_SpawnMobj(-592 * FRACUNIT, -1040 * FRACUNIT, INT32_MIN, MT_TELEPORTMAN);
+        pTeleDest->angle = ANG45;
     }
 }
 
