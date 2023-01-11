@@ -384,7 +384,7 @@ void F1_Drawer() noexcept {
 
     // PsyDoom: the background for the finale can now be anything as it is sourced from MAPINFO.
     #if PSYDOOM_MODS
-        I_CacheAndDrawBackgroundSprite(gFinaleBgTex, gPaletteClutIds[gpCluster->picPal]);
+        I_CacheAndDrawBackgroundSprite(gFinaleBgTex, R_GetPaletteClutId(gpCluster->picPal));
     #else
         I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
     #endif
@@ -784,7 +784,7 @@ void F2_Drawer() noexcept {
 
     // PsyDoom: the background for the finale can now be anything as it is sourced from MAPINFO
     #if PSYDOOM_MODS
-        I_CacheAndDrawBackgroundSprite(gFinaleBgTex, gPaletteClutIds[gpCluster->picPal]);
+        I_CacheAndDrawBackgroundSprite(gFinaleBgTex, R_GetPaletteClutId(gpCluster->picPal));
     #else
         I_CacheAndDrawBackgroundSprite(gTex_DEMON, gPaletteClutIds[MAINPAL]);
     #endif

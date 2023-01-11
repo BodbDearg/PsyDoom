@@ -151,6 +151,7 @@ void R_InitData() noexcept;
     texture_t& R_GetTexForLump(const int32_t lumpIdx) noexcept;
     int32_t R_GetOverrideFlatNum(const int32_t origFlatNum) noexcept;
     int32_t R_GetOverrideTexNum(const int32_t origTexNum) noexcept;
+    uint16_t R_GetPaletteClutId(const uint32_t paletteNum) noexcept;
 #else
     int32_t R_TextureNumForName(const char* const name) noexcept;
     int32_t R_FlatNumForName(const char* const name) noexcept;

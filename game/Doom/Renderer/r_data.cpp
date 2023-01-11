@@ -380,6 +380,14 @@ int32_t R_GetOverrideTexNum(const int32_t origTexNum) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: looks up the PSX clut id for a given palette index
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t R_GetPaletteClutId(const uint32_t paletteNum) noexcept {
+    ASSERT(paletteNum < C_ARRAY_SIZE(gPaletteClutIds));
+    return gPaletteClutIds[paletteNum % MAXPALETTES];       // Includes runtime safety in case MAPINFO is bad
+}
+
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------

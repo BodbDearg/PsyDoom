@@ -1358,7 +1358,7 @@ static void P_Init() noexcept {
             }
         }
 
-        // PsyDoom: MAPINFO allows the sky palette to be overriden
+        // PsyDoom: MAPINFO also allows the sky palette to be overriden for a specific map
         #if PSYDOOM_MODS
             const MapInfo::Map* const pMap = MapInfo::getMap(gGameMap);
 
@@ -1366,7 +1366,7 @@ static void P_Init() noexcept {
                 const int32_t skyPalOverride = pMap->skyPaletteOverride;
 
                 if ((skyPalOverride >= 0) && ((uint32_t) skyPalOverride < MAXPALETTES)) {
-                    gPaletteClutId_CurMapSky = gPaletteClutIds[skyPalOverride];
+                    gPaletteClutId_CurMapSky = R_GetPaletteClutId(skyPalOverride);
                 }
             }
         #endif
