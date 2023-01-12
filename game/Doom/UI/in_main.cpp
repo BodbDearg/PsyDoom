@@ -179,7 +179,7 @@ static gametype_t IN_GetNetGameType() noexcept {
 void IN_Start() noexcept {
     // Clear out purgable textures and cache the background for the intermission
     I_PurgeTexCache();
-    I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
+    I_LoadAndCacheTexLump(gTex_BACK, Game::getTexLumpName_Inter_BACK());
 
     // Initialize final and displayed stats for all players
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
@@ -432,7 +432,7 @@ void IN_Drawer() noexcept {
 // Draws the single player intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_SingleDrawer() noexcept {
-    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_Inter_BACK());
 
     // PsyDoom: should we show the time taken to complete the level?
     #if PSYDOOM_MODS
@@ -575,7 +575,7 @@ void IN_SingleDrawer() noexcept {
 // Draws the cooperative mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_CoopDrawer() noexcept {
-    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_Inter_BACK());
 
     // PsyDoom: nudge everything up to make room if showing 2 lines or more for the map name
     #if PSYDOOM_MODS
@@ -684,7 +684,7 @@ void IN_CoopDrawer() noexcept {
 // Draws the deathmatch mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_DeathmatchDrawer() noexcept {
-    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_Inter_BACK());
 
     // PsyDoom: new drawing method that supports multi-line map names with line break commands in them ("\n")
     #if PSYDOOM_MODS

@@ -41,6 +41,9 @@ struct GameInfo {
     uint8_t                 texPalette_STATUS;              // Palette index to use for the 'STATUS' image lump
     uint8_t                 texPalette_TITLE;               // Palette index to use for the 'TITLE' image lump
     uint8_t                 texPalette_BACK;                // Palette index to use for the 'BACK' image lump
+    String8                 texLumpName_BACK;               // Which texture lump to use instead of the 'BACK' texture lump
+    uint8_t                 texPalette_Inter_BACK;          // Palette index to use for the 'BACK' image lump on the intermission screen specifically (if using a specific graphic for this screen)
+    String8                 texLumpName_Inter_BACK;         // Which texture lump to use instead of the 'BACK' texture lump on the intermission screen specifically (if empty, use the regular version of 'BACK')
     uint8_t                 texPalette_LOADING;             // Palette index to use for the 'LOADING' image lump
     uint8_t                 texPalette_PAUSE;               // Palette index to use for the 'PAUSE' image lump
     uint8_t                 texPalette_NETERR;              // Palette index to use for the 'NETERR' image lump

@@ -165,6 +165,9 @@ GameInfo {
     TexPalette_STATUS = 16
     TexPalette_TITLE = 17
     TexPalette_BACK = 0
+    TexLumpName_BACK = "BACK"
+    TexPalette_Inter_BACK = 0
+    TexLumpName_Inter_BACK = ""
     TexPalette_LOADING = 16
     TexPalette_PAUSE = 0
     TexPalette_NETERR = 0
@@ -198,6 +201,9 @@ Internal Fields:
 - `TexPalette_STATUS`: palette index to use for the `STATUS` image lump. Must be between 0 and 31.
 - `TexPalette_TITLE`: palette index to use for the `TITLE` image lump. Must be between 0 and 31.
 - `TexPalette_BACK`: palette index to use for the `BACK` image lump. Must be between 0 and 31.
+- `TexLumpName_BACK`: which texture lump to use instead of the `BACK` texture lump.
+- `TexPalette_Inter_BACK`: palette index to use for the `BACK` image lump on the intermission screen specifically. Only used if `TexLumpName_Inter_BACK` is defined. Must be between 0 and 31.
+- `TexLumpName_Inter_BACK`: which texture lump to use instead of the `BACK` texture lump on the intermission screen specifically. If unspecified (empty string) then `TexLumpName_BACK` will be used instead.
 - `TexPalette_LOADING`: palette index to use for the `LOADING` image lump. Must be between 0 and 31.
 - `TexPalette_PAUSE`: palette index to use for the `PAUSE` image lump. Must be between 0 and 31.
 - `TexPalette_NETERR`: palette index to use for the `NETERR` image lump. Must be between 0 and 31.

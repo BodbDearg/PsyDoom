@@ -48,9 +48,13 @@ int32_t getNumEpisodes() noexcept;
 const String32& getEpisodeName(const int32_t episodeNum) noexcept;
 int32_t getEpisodeStartMap(const int32_t episodeNum) noexcept;
 int32_t getMapEpisode(const int32_t mapNum) noexcept;
+// TODO: rename these palette functions to include clut id (name might cause confusion and indicate a palette index is being returned)
 uint16_t getTexPalette_STATUS() noexcept;
 uint16_t getTexPalette_TITLE() noexcept;
 uint16_t getTexPalette_BACK() noexcept;
+String8 getTexLumpName_BACK() noexcept;
+uint16_t getTexPalette_Inter_BACK() noexcept;
+String8 getTexLumpName_Inter_BACK() noexcept;
 uint16_t getTexPalette_LOADING() noexcept;
 uint16_t getTexPalette_PAUSE() noexcept;
 uint16_t getTexPalette_NETERR() noexcept;

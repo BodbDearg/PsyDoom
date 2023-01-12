@@ -23,7 +23,7 @@
 
 #include <algorithm>
 
-texture_t   gTex_BACK;                  // The background texture for the main menu
+texture_t   gTex_BACK;                  // The background texture for the main menu (and intermission)
 texture_t   gTex_DOOM;                  // The texture for the DOOM logo
 int32_t     gCursorPos[MAXPLAYERS];     // Which of the menu options each player's cursor is over (see 'menu_t')
 int32_t     gCursorFrame;               // Current frame that the menu cursor is displaying
@@ -95,7 +95,7 @@ static void M_LoadAndCacheRequiredUITextures() noexcept {
     I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
     I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
-    I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
+    I_LoadAndCacheTexLump(gTex_BACK, Game::getTexLumpName_BACK());
     I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
     I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg());
 
@@ -238,7 +238,7 @@ void M_Start() noexcept {
     S_LoadMapSoundAndMusic(0);
 
     // Load and cache some commonly used UI textures
-    I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
+    I_LoadAndCacheTexLump(gTex_BACK, Game::getTexLumpName_BACK());
     I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
     I_LoadAndCacheTexLump(gTex_CONNECT, "CONNECT", 0);
 

@@ -26,6 +26,9 @@ void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
     gameInfo.titleScreenStyle = TitleScreenStyle::GEC_ME;
     gameInfo.creditsScreenStyle = CreditsScreenStyle::GEC_ME;
     gameInfo.texPalette_BACK = 29;
+    gameInfo.texLumpName_BACK = "BACK";
+    gameInfo.texPalette_Inter_BACK = {};    // Default: use the same 'BACK' graphic as the main menu
+    gameInfo.texLumpName_Inter_BACK = {};
     gameInfo.texPalette_DOOM = 29;
     gameInfo.texPalette_GEC  = 26;
     gameInfo.texPalette_GECCRED  = 28;

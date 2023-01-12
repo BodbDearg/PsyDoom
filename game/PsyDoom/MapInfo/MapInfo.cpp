@@ -70,6 +70,9 @@ GameInfo::GameInfo() noexcept
     , texPalette_STATUS(UIPAL)
     , texPalette_TITLE(TITLEPAL)
     , texPalette_BACK(MAINPAL)
+    , texLumpName_BACK("BACK")
+    , texPalette_Inter_BACK(MAINPAL)
+    , texLumpName_Inter_BACK()          // Default: use 'texLumpName_BACK' instead (same behavior as older PsyDoom versions)
     , texPalette_LOADING(UIPAL)
     , texPalette_PAUSE(MAINPAL)
     , texPalette_NETERR(UIPAL)
@@ -164,6 +167,9 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.texPalette_STATUS = (uint8_t) block.getSingleIntValue("TexPalette_STATUS", gameInfo.texPalette_STATUS);
     gameInfo.texPalette_TITLE = (uint8_t) block.getSingleIntValue("TexPalette_TITLE", gameInfo.texPalette_TITLE);
     gameInfo.texPalette_BACK = (uint8_t) block.getSingleIntValue("TexPalette_BACK", gameInfo.texPalette_BACK);
+    gameInfo.texLumpName_BACK = block.getSingleSmallStringValue("TexLumpName_BACK", gameInfo.texLumpName_BACK);
+    gameInfo.texPalette_Inter_BACK = (uint8_t) block.getSingleIntValue("TexPalette_Inter_BACK", gameInfo.texPalette_Inter_BACK);
+    gameInfo.texLumpName_Inter_BACK = block.getSingleSmallStringValue("TexLumpName_Inter_BACK", gameInfo.texLumpName_Inter_BACK);
     gameInfo.texPalette_LOADING = (uint8_t) block.getSingleIntValue("TexPalette_LOADING", gameInfo.texPalette_LOADING);
     gameInfo.texPalette_PAUSE = (uint8_t) block.getSingleIntValue("TexPalette_PAUSE", gameInfo.texPalette_PAUSE);
     gameInfo.texPalette_NETERR = (uint8_t) block.getSingleIntValue("TexPalette_NETERR", gameInfo.texPalette_NETERR);

@@ -28,6 +28,9 @@ void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
     gameInfo.texPalette_STATUS = UIPAL;
     gameInfo.texPalette_TITLE = TITLEPAL;
     gameInfo.texPalette_BACK = TITLEPAL;
+    gameInfo.texLumpName_BACK = "BACK";
+    gameInfo.texPalette_Inter_BACK = {};    // Default: use the same 'BACK' graphic as the main menu
+    gameInfo.texLumpName_Inter_BACK = {};
     gameInfo.texPalette_LOADING = UIPAL2;
     gameInfo.texPalette_PAUSE = UIPAL2;
     gameInfo.texPalette_NETERR = UIPAL2;
