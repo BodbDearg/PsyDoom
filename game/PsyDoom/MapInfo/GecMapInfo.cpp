@@ -395,6 +395,18 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                 if (fieldId == "Episodes")
                     return parseEpisodesBlock(pToken);
 
+                if (fieldId == "PalUI") {
+                    uint8_t uiPalette = 0;
+                    const Token* const pNextToken = parseSingleNumberAssign(pToken, uiPalette);
+
+                    gGameInfo.texPalette_LOADING = uiPalette;
+                    gGameInfo.texPalette_PAUSE = uiPalette;
+                    gGameInfo.texPalette_NETERR = uiPalette;
+                    gGameInfo.texPalette_CONNECT = uiPalette;
+
+                    return pNextToken;
+                }
+
                 // TODO: GEC ME BETA 4: parse 'Title'
                 // TODO: GEC ME BETA 4: parse 'Credits'
                 // TODO: GEC ME BETA 4: parse 'NumDemos'
@@ -403,7 +415,6 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                 // TODO: GEC ME BETA 4: parse 'PicBack'
                 // TODO: GEC ME BETA 4: parse 'PicInter'
                 // TODO: GEC ME BETA 4: parse 'PicTitleLogo'
-                // TODO: GEC ME BETA 4: parse 'PalUI'
             }
 
             // Unhandled or unwanted line of data - skip it!
