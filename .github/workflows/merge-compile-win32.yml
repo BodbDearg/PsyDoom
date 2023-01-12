@@ -1,0 +1,55 @@
+name: Compile Nightly Build for Window 32-bit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_win:
+    runs-on: windows-latest
+    steps:
+    - name: Prepare Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: 'nightlies'
+    - name: Compile Latest Nightly
+      run: |
+        cmake .
+        cmake --build . --config Release x86
+    - name: Upload as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Windows
+        path: ${{ github.workspace }}\game\Release\PsyDoom.exe
+        retention-days: 1
+
+  create_release:
+    runs-on: ubuntu-latest
+    needs: build_win
+    steps:
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v3
+    - name: Compress Artifacts
+      run: zip -j PsyDoom_Windows.zip Windows/PsyDoom.exe
+    - name: Generate Artifact Name
+      id: generate-name
+      run: |
+        echo "::set-output name=artifact::$(date +%Y%m%d)_$(date +%H)$(openssl rand -hex 2)"
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: nightlies (win x86)/${{ steps.generate-name.outputs.artifact }}
+        release_name: Nightly (Win 32-bit) ${{ steps.generate-name.outputs.artifact }}
+        draft: false
+        prerelease: true
+    - name: Upload Windows Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./PsyDoom_Windows.zip
+        asset_name: PsyDoom_${{ steps.generate-name.outputs.artifact }}_Windows_x86.zip
+        asset_content_type: application/zip
