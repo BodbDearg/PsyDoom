@@ -13,8 +13,9 @@ jobs:
         ref: 'nightlies'
     - name: Compile Latest Nightly
       run: |
-        cmake .
-        cmake --build . --config Release -A Win32
+        # cmake .
+        # cmake --build . --config Release -A Win32
+        cmake --version
     - name: Upload as Artifact
       uses: actions/upload-artifact@v3
       with:
