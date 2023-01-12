@@ -14,7 +14,7 @@ jobs:
     - name: Compile Latest Nightly
       run: |
         cmake .
-        cmake --build . --config Release x86
+        cmake --build . --config Release -A Win32
     - name: Upload as Artifact
       uses: actions/upload-artifact@v3
       with:
