@@ -163,7 +163,7 @@ void ErrorMenu_Init() noexcept {
     gCursorFrame = 0;
 
     // This lump needs to be cached for the error menu!
-    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg().c_str().data(), 0);
+    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg());
 
     // Split up the error message into lines
     {

@@ -248,7 +248,7 @@ void F1_Start() noexcept {
 
     // PsyDoom: the background texture for the finale can now be anything
     #if PSYDOOM_MODS
-        I_LoadAndCacheTexLump(gFinaleBgTex, gpCluster->pic.c_str().data(), 0);
+        I_LoadAndCacheTexLump(gFinaleBgTex, gpCluster->pic);
     #else
         I_CacheTex(gTex_BACK);
     #endif
@@ -468,7 +468,7 @@ void F2_Start() noexcept {
     // Load the background and sprites needed.
     // PsyDoom: the background texture for the finale can now be anything.
     #if PSYDOOM_MODS
-        I_LoadAndCacheTexLump(gFinaleBgTex, gpCluster->pic.c_str().data(), 0);
+        I_LoadAndCacheTexLump(gFinaleBgTex, gpCluster->pic);
     #else
         I_LoadAndCacheTexLump(gTex_DEMON, "DEMON", 0);
     #endif

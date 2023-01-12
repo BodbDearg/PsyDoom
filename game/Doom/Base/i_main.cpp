@@ -384,6 +384,15 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     I_CacheTex(tex);
 }
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: helper overload which accepts a small string
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_LoadAndCacheTexLump(texture_t& tex, const String8& name) noexcept {
+    I_LoadAndCacheTexLump(tex, nullptr, W_GetNumForName(name));
+}
+#endif  // #if PSYDOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Similar to 'I_DrawSprite' except the image being drawn is added to VRAM first before drawing.
 // Because a texture object is specified also, less parameters are required.

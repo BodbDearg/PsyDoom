@@ -97,7 +97,7 @@ static void M_LoadAndCacheRequiredUITextures() noexcept {
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
     I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
     I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
-    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg().c_str().data(), 0);
+    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg());
 
     if (Game::gGameType == GameType::GEC_ME_Beta3) {
         I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);

@@ -66,7 +66,7 @@ void START_Title() noexcept {
     W_CacheLumpName("NETERR", PU_STATIC, false);
     W_CacheLumpName("PAUSE", PU_STATIC, false);
 
-    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg().c_str().data(), 0);
+    I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg());
     I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
 
