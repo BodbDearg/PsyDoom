@@ -6,6 +6,7 @@
 #include "GecMapInfo.h"
 
 #include "Asserts.h"
+#include "Doom/Renderer/r_data.h"
 #include "MapInfo.h"
 #include "MapInfo_Defaults_FinalDoom.h"
 #include "MapInfo_Parse.h"
@@ -63,6 +64,35 @@ static void removeSkyLumpNameF_Prefix(String8& skyLumpName) noexcept {
 
         skyLumpName.chars[6] = 0;
         skyLumpName.chars[7] = 0;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: assigns text to the specified 'SmallString', filtering out non ASCII characters like UTF-8 byte order marks (0xEF, 0xBB, 0xBF).
+// The filtering is used to fix UTF-8 BOM being present in some of the map names for Beta 4 of the Master Edition.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class SmallStringT>
+static void assignAsciiTextToSmallString(SmallStringT& dst, std::string_view src) {
+    const char* const pSrcChars = src.data();
+    const size_t srcLen = src.length();
+    
+    uint32_t srcIdx = 0;
+    uint32_t dstIdx = 0;
+
+    while ((dstIdx < SmallStringT::MAX_LEN) && (srcIdx < srcLen)) {
+        const uint8_t c = (uint8_t) pSrcChars[srcIdx];
+
+        if (c <= 0x7F) {
+            dst.chars[dstIdx] = (char) c;
+            dstIdx++;
+        }
+
+        srcIdx++;
+    }
+
+    // Null terminate if we didn't reach the end
+    if (dstIdx < SmallStringT::MAX_LEN) {
+        dst.chars[dstIdx] = 0;
     }
 }
 
@@ -281,32 +311,68 @@ static const Token* parseSingleStringAssign(const Token* const pStartToken, Stri
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Assign text to the specified 'SmallString', filtering out non ASCII characters like UTF-8 byte order marks (0xEF, 0xBB, 0xBF).
-// The filtering is used to fix UTF-8 BOM being present in some of the map names for Beta 4 of the Master Edition.
+// Attempt to parse a lump name and optional palette for a graphic, followed by an optional x/y offset.
+// Returns the next token after parsing.
 //------------------------------------------------------------------------------------------------------------------------------------------
-template <class SmallStringT>
-static void assignAsciiTextToSmallString(SmallStringT& dst, std::string_view src) {
-    const char* const pSrcChars = src.data();
-    const size_t srcLen = src.length();
-    
-    uint32_t srcIdx = 0;
-    uint32_t dstIdx = 0;
+static const Token* parseGraphicLumpNamePalAndOffset(
+    const Token* const pStartToken,
+    String8& lumpName,
+    uint8_t& pal,
+    int16_t& offsetX,
+    int16_t& offsetY
+) noexcept {
+    // A value should always start with an identifier
+    const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
 
-    while ((dstIdx < SmallStringT::MAX_LEN) && (srcIdx < srcLen)) {
-        const uint8_t c = (uint8_t) pSrcChars[srcIdx];
+    // Default these in case they are not present
+    pal = MAINPAL;
+    offsetX = 0;
+    offsetY = 0;
 
-        if (c <= 0x7F) {
-            dst.chars[dstIdx] = (char) c;
-            dstIdx++;
-        }
-
-        srcIdx++;
+    // Consume any '=' sign
+    if (pToken->type == TokenType::Equals) {
+        pToken++;
     }
 
-    // Null terminate if we didn't reach the end
-    if (dstIdx < SmallStringT::MAX_LEN) {
-        dst.chars[dstIdx] = 0;
-    }
+    // Lump name
+    ensureTokenType(pToken, TokenType::String);
+    assignAsciiTextToSmallString(lumpName, pToken->text());
+    pToken++;
+
+    // Palette
+    if (pToken->type != TokenType::Number)
+        return pToken;
+
+    pal = (uint8_t) pToken->number;
+    pToken++;
+
+    // Offset X
+    if (pToken->type != TokenType::Number)
+        return pToken;
+
+    offsetX = (int16_t) pToken->number;
+    pToken++;
+
+    // Offset Y
+    if (pToken->type != TokenType::Number)
+        return pToken;
+
+    offsetY = (int16_t) pToken->number;
+    pToken++;
+    return pToken;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Same as 'parseGraphicLumpNamePalAndOffset', except the offset is discarded
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const Token* parseGraphicLumpNameAndPal(
+    const Token* const pStartToken,
+    String8& lumpName,
+    uint8_t& pal
+) noexcept {
+    int16_t unusedOffsetX;
+    int16_t unusedOffsetY;
+    return parseGraphicLumpNamePalAndOffset(pStartToken, lumpName, pal, unusedOffsetX, unusedOffsetY);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -407,10 +473,12 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                     return pNextToken;
                 }
 
+                if (fieldId == "PicTile")
+                    return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_OptionsBG, gGameInfo.texPalette_OptionsBG);
+
                 // TODO: GEC ME BETA 4: parse 'Title'
                 // TODO: GEC ME BETA 4: parse 'Credits'
                 // TODO: GEC ME BETA 4: parse 'NumDemos'
-                // TODO: GEC ME BETA 4: parse 'PicTile'
                 // TODO: GEC ME BETA 4: parse 'PicStatus'
                 // TODO: GEC ME BETA 4: parse 'PicBack'
                 // TODO: GEC ME BETA 4: parse 'PicInter'
@@ -658,6 +726,9 @@ static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
         // What type of block is it?
         const std::string_view blockId = pToken->text();
 
+        // TODO: GEC ME BETA 4: parse 'FAnimPic'
+        // TODO: GEC ME BETA 4: parse 'TAnimPic'
+        // TODO: GEC ME BETA 4: parse 'SwTexPic'
         if (blockId == "GameInfo") {
             pToken = parseGameInfo(pToken);
         } else if (blockId == "Map") {
