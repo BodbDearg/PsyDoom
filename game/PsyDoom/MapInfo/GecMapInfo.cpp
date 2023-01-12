@@ -1,21 +1,24 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Dynamically loaded MAPINFO defaults for 'GEC Master Edition' (Beta 4 and later).
-// These defaults are loaded from MAPINFO style text files, so could change depending if the disk image is altered.
+// Dynamically loaded MAPINFO for the 'GEC Master Edition' (Beta 4 and later).
+// These defaults are loaded from MAPINFO style text files, so could change if the disk image is altered.
+// Much of this data is just copied to the regular MAPINFO structs that PsyDoom uses, but some of it is specific to this game type.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "MapInfo_Defaults_GEC_ME_Dynamic.h"
+#include "GecMapInfo.h"
 
 #include "Asserts.h"
 #include "MapInfo.h"
 #include "MapInfo_Defaults_FinalDoom.h"
 #include "MapInfo_Parse.h"
+#include "PsyDoom/Game.h"
 #include "PsyDoom/PsxVm.h"
 #include "PsyDoom/Utils.h"
 #include "PsyQ/LIBSPU.h"
 
 #include <algorithm>
-#include <memory>
 
-BEGIN_NAMESPACE(MapInfo)
+BEGIN_NAMESPACE(GecMapInfo)
+
+using namespace MapInfo;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Holds a tokenized MAPINFO file and it's backing text storage
@@ -26,21 +29,42 @@ struct MapInfoTokens {
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Holds the defaults loaded from GEC format MAPINFO files
+// All of the loaded MAPINFO
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct DynamicMapInfoDefaults {
-    GameInfo                gameInfo;
-    std::vector<Episode>    episodes;
-    std::vector<Cluster>    clusters;
-    std::vector<Map>        maps;
-};
-
-static std::unique_ptr<DynamicMapInfoDefaults> gpDefaultMapInfo;
+static GameInfo                 gGameInfo;
+static std::vector<Episode>     gEpisodes;
+static std::vector<Cluster>     gClusters;
+static std::vector<Map>         gMaps;
+static std::vector<Sky>         gSkies;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Context: which MAPINFO file is currently being parsed
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const char* gCurMapInfoFilePath = nullptr;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: removes the 'F_' prefix for a sky lump name if it starts with 'F_SKY'.
+// Useful to get the actual lump name to load from the WAD.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void removeSkyLumpNameF_Prefix(String8& skyLumpName) noexcept {
+    const bool bIsFSkyLumpName = (
+        (skyLumpName.chars[0] == 'F') &&
+        (skyLumpName.chars[1] == '_') &&
+        (skyLumpName.chars[2] == 'S') &&
+        (skyLumpName.chars[3] == 'K') &&
+        (skyLumpName.chars[4] == 'Y')
+    );
+
+    if (bIsFSkyLumpName) {
+        // Remove the 'F_' prefix from the lump name
+        for (int32_t i = 0; i < 6; ++i) {
+            skyLumpName.chars[i] = skyLumpName.chars[i + 2];
+        }
+
+        skyLumpName.chars[6] = 0;
+        skyLumpName.chars[7] = 0;
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the specified text file on disc and performs MAPINFO tokenization.
@@ -289,12 +313,11 @@ static void assignAsciiTextToSmallString(SmallStringT& dst, std::string_view src
 // Parses a single episode definition and returns the next token after that
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const Token* parseEpisode(const Token* const pStartToken) noexcept {
-    ASSERT(gpDefaultMapInfo);
     const Token* pToken = pStartToken;
 
     // Episode number is auto-determined
-    Episode& episode = gpDefaultMapInfo->episodes.emplace_back();
-    episode.episodeNum = (int32_t) gpDefaultMapInfo->episodes.size();
+    Episode& episode = gEpisodes.emplace_back();
+    episode.episodeNum = (int32_t) gEpisodes.size();
 
     // Parse episode name
     assignAsciiTextToSmallString(episode.name, pToken->text());
@@ -356,22 +379,18 @@ static const Token* parseEpisodesBlock(const Token* const pStartToken) noexcept 
 // Parses a 'GameInfo' block and returns the next token after that
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
-    ASSERT(gpDefaultMapInfo);
-
     return parseUntilEndOfBlock(
         skipBlockOpening(pStartToken),
         [](const Token* pToken) noexcept {
-            GameInfo& gameInfo = gpDefaultMapInfo->gameInfo;
-
             // Lets see if we recognize this data:
             if (pToken->type == TokenType::Identifier) {
                 const std::string_view fieldId = pToken->text();
 
                 if (fieldId == "NumMaps")
-                    return parseSingleNumberAssign(pToken, gameInfo.numMaps);
+                    return parseSingleNumberAssign(pToken, gGameInfo.numMaps);
                 
                 if (fieldId == "NumRegularMaps")
-                    return parseSingleNumberAssign(pToken, gameInfo.numRegularMaps);
+                    return parseSingleNumberAssign(pToken, gGameInfo.numRegularMaps);
 
                 if (fieldId == "Episodes")
                     return parseEpisodesBlock(pToken);
@@ -397,8 +416,7 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
 // Parses a single map definition and returns the next token after that
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const Token* parseMap(const Token* const pStartToken) noexcept {
-    ASSERT(gpDefaultMapInfo);
-    Map& map = gpDefaultMapInfo->maps.emplace_back();
+    Map& map = gMaps.emplace_back();
 
     // Parse the map number
     const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
@@ -477,10 +495,8 @@ static const Token* parseMap(const Token* const pStartToken) noexcept {
 // Parses a single cluster definition and returns the next token after that
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const Token* parseCluster(const Token* const pStartToken) noexcept {
-    ASSERT(gpDefaultMapInfo);
-
     // Create a new Cluster and initialize with the defaults for the GEC ME
-    Cluster& cluster = gpDefaultMapInfo->clusters.emplace_back();
+    Cluster& cluster = gClusters.emplace_back();
     cluster.castLcdFile = "CAST.LCD";
     cluster.bSkipFinale = false;
 
@@ -577,6 +593,42 @@ static const Token* parseCluster(const Token* const pStartToken) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Parses a single sky definition and returns the next token after that
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const Token* parseSky(const Token* const pStartToken) noexcept {
+    // Create a new sky and parse the lump name
+    Sky& sky = gSkies.emplace_back();
+    
+    const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
+    ensureTokenType(pToken, TokenType::String);
+    assignAsciiTextToSmallString(sky.lumpName, pToken->text());
+    pToken++;
+
+    // Remove the 'F_' prefix from the sky lump name (so it contains the real lump name)
+    removeSkyLumpNameF_Prefix(sky.lumpName);
+
+    // Parse the data inside the sky block
+    return parseUntilEndOfBlock(
+        skipBlockOpening(pToken),
+        [&sky](const Token* pToken) noexcept {
+            // Lets see if we recognize this data:
+            if (pToken->type == TokenType::Identifier) {
+                const std::string_view fieldId = pToken->text();
+
+                if (fieldId == "Pal")
+                    return parseSingleNumberAssign(pToken, sky.paletteIdx);
+
+                if (fieldId == "Fire")
+                    return parseSingleBoolAssign(pToken, sky.bIsFireSky);
+            }
+
+            // Unhandled or unwanted line of data - skip it!
+            return skipCurrentLineData(pToken);
+        }
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses a GEC format MAPINFO file on disk from the specified path
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
@@ -601,6 +653,8 @@ static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
             pToken = parseMap(pToken);
         } else if (blockId == "Cluster") {
             pToken = parseCluster(pToken);
+        } else if (blockId == "Sky") {
+            pToken = parseSky(pToken);
         } else {
             // Unhandled or unwanted block of data - skip it!
             pToken = skipBlock(pToken);
@@ -612,47 +666,75 @@ static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Loads all dynamic MapInfo defaults for the GEC Master Edition
+// Tells if GEC format MAPINFO should be loaded and used 
 //------------------------------------------------------------------------------------------------------------------------------------------
-void loadDefaults_GEC_ME_Dynamic() noexcept {
+bool shouldUseGecMapInfo() noexcept {
+    return (Game::gGameType == GameType::GEC_ME_Beta4);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Loads the GEC format MAPINFO
+//------------------------------------------------------------------------------------------------------------------------------------------
+void init() noexcept {
     // Note: default to Final Doom settings if something isn't otherwise specified
-    gpDefaultMapInfo = std::make_unique<DynamicMapInfoDefaults>();
-    initGameInfo_FinalDoom(gpDefaultMapInfo->gameInfo);
+    initGameInfo_FinalDoom(gGameInfo);
 
     // Parse the MAPINFO and auto-generate the list of clusters
     parseMapInfoFileOnDisk("PSXDOOM/ABIN/PSXGMINF.TXT");
     parseMapInfoFileOnDisk("PSXDOOM/ABIN/PSXMPINF.TXT");
+    parseMapInfoFileOnDisk("PSXDOOM/ABIN/PSXTXINF.TXT");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Releases all of the dynamic MapInfo defaults dynamically loaded by this module
+// Releases all of the GEC format MAPINFO
 //------------------------------------------------------------------------------------------------------------------------------------------
-void freeDefaults_GEC_ME_Dynamic() noexcept {
-    gpDefaultMapInfo.reset();
+void shutdown() noexcept {
+    gCurMapInfoFilePath = nullptr;
+    gSkies.clear();
+    gMaps.clear();
+    gClusters.clear();
+    gEpisodes.clear();
+    gGameInfo = {};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Return the defaults for various types of structs.
-// Note: the caller is expected to have called 'loadDefaults_GEC_ME_Dynamic()' first!
+// Basic access to various types of structs (for the purposes of copying)
 //------------------------------------------------------------------------------------------------------------------------------------------
-void initGameInfo_GEC_ME_Dynamic(GameInfo& gameInfo) noexcept {
-    ASSERT(gpDefaultMapInfo);
-    gameInfo = gpDefaultMapInfo->gameInfo;
+const GameInfo& getGameInfo() noexcept {
+    return gGameInfo;
 }
 
-void addEpisodes_GEC_ME_Dynamic(std::vector<Episode>& episodes) noexcept {
-    ASSERT(gpDefaultMapInfo);
-    episodes = gpDefaultMapInfo->episodes;
+const std::vector<Episode>& allEpisodes() noexcept {
+    return gEpisodes;
 }
 
-void addClusters_GEC_ME_Dynamic(std::vector<Cluster>& clusters) noexcept {
-    ASSERT(gpDefaultMapInfo);
-    clusters = gpDefaultMapInfo->clusters;
+const std::vector<Cluster>& allClusters() noexcept {
+    return gClusters;
 }
 
-void addMaps_GEC_ME_Dynamic(std::vector<Map>& maps) noexcept {
-    ASSERT(gpDefaultMapInfo);
-    maps = gpDefaultMapInfo->maps;
+const std::vector<Map>& allMaps() noexcept {
+    return gMaps;
 }
 
-END_NAMESPACE(MapInfo)
+const std::vector<Sky>& allSkies() noexcept {
+    return gSkies;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Find a 'Sky' structure by lump name or return all skies
+//------------------------------------------------------------------------------------------------------------------------------------------
+const Sky* getSky(const String8& lumpName) noexcept {
+    // For the input name remove the special 'compressed' flag from first character of the lump name, if present:
+    String8 lumpNameNoCompressionFlag = lumpName;
+    lumpNameNoCompressionFlag.chars[0] &= 0x7Fu;
+
+    // Try to find the sky by lump name
+    for (const Sky& sky : gSkies) {
+        if (sky.lumpName == lumpNameNoCompressionFlag)
+            return &sky;
+    }
+
+    return nullptr;
+}
+
+END_NAMESPACE(GecMapInfo)

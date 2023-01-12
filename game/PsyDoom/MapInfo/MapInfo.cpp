@@ -8,6 +8,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapInfo.h"
 
+#include "GecMapInfo.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Renderer/r_data.h"
@@ -428,6 +429,11 @@ static void readMapInfoFromIWAD() noexcept {
 // Otherwise initializes MAPINFO to the appropriate settings for the current game (Doom or Final Doom).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
+    // Read GEC format MAPINFO if required (will become the default MAPINFO if appropriate)
+    if (GecMapInfo::shouldUseGecMapInfo()) {
+        GecMapInfo::init();
+    }
+
     // Set MAPINFO to the default values then read overrides from one of the IWADs
     setMapInfoToDefaults(gGameInfo, gEpisodes, gClusters, gMaps, gMusicTracks);
     readMapInfoFromIWAD();
@@ -446,7 +452,9 @@ void shutdown() noexcept {
     gMaps.clear();
     gClusters.clear();
     gEpisodes.clear();
+    gGameInfo = {};
     gMusicTracks.clear();
+    GecMapInfo::shutdown();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

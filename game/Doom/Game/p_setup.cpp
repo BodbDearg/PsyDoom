@@ -28,9 +28,11 @@
 #include "p_switch.h"
 #include "p_tick.h"
 #include "p_weak.h"
+#include "PsyDoom/BuiltInPaletteData.h"
 #include "PsyDoom/DevMapAutoReloader.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/MapHash.h"
+#include "PsyDoom/MapInfo/GecMapInfo.h"
 #include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/MapPatcher/MapPatcher.h"
 #include "PsyDoom/MobjSpritePrecacher.h"
@@ -1326,9 +1328,11 @@ static void P_Init() noexcept {
             const lumpname_t& skyTexName = skyTexLump.name;
         #endif
 
-        if (skyTexName.chars[4] == '9') {
+        // PsyDoom: the logic for initializing the fire sky.
+        // Making it a lambda since it's now reused in multiple places.
+        const auto initFireSky = [&](const uint8_t skyPaletteIdx) noexcept {
             W_CacheLumpNum(skyTex.lumpNum, PU_ANIMATION, true);
-            gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
+            gPaletteClutId_CurMapSky = gPaletteClutIds[skyPaletteIdx];
             gUpdateFireSkyFunc = P_UpdateFireSky;
 
             // PsyDoom: updates to work with the new WAD management code - ensure texture metrics are up-to-date!
@@ -1345,16 +1349,47 @@ static void P_Init() noexcept {
             for (int32_t i = 0; i < 64; ++i) {
                 P_UpdateFireSky(skyTex);
             }
-        }
+        };
 
-        // Final Doom: if the last digit in 'SKYXX' matches one of these digits, then use whatever palette is for that sky:
-        if (Game::gConstants.bUseFinalDoomSkyPalettes) {
-            switch (skyTexName.chars[4]) {
-                case '2':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL1];    break;
-                case '3':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL2];    break;
-                case '4':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL3];    break;
-                case '5':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL4];    break;
-                case '6':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL5];    break;
+        // PsyDoom: if there is a GEC MAPINFO 'Sky' entry for this sky texture then load the palette for that and use that sky.
+        // Also initialize it as a fire sky, if appropriate.
+        #if PSYDOOM_MODS
+            const GecMapInfo::Sky* const pGecSky = GecMapInfo::getSky(skyTexName);
+
+            if (pGecSky) {
+                // Load the palette for the sky into the 'dynamic' palette slot reserved for GEC map sky palettes.
+                // If the palette is invalid however then fall back to using the main palette.
+                if (pGecSky->paletteIdx < BuiltInPaletteData::NUM_GEC_ME_MAP_SKY_PALETTES) {
+                    gPaletteClutId_CurMapSky = R_UploadPalette(BuiltInPaletteData::GEC_ME_MAP_SKY_PALETTES[pGecSky->paletteIdx], GECSKYPAL);
+                } else {
+                    std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad GEC skypal %d!", pGecSky->paletteIdx);
+                    gPaletteClutId_CurMapSky = gPaletteClutIds[MAINPAL];
+                }
+
+                // If it's a fire sky then initialize the fire
+                if (pGecSky->bIsFireSky) {
+                    initFireSky(GECSKYPAL);
+                }
+            }
+        #else
+            constexpr const void* const pGecSky = nullptr;
+        #endif
+
+        // Regular (non GEC specific sky setup)
+        if (!pGecSky) {
+            if (skyTexName.chars[4] == '9') {
+                initFireSky(FIRESKYPAL);
+            }
+
+            // Final Doom: if the last digit in 'SKYXX' matches one of these digits, then use whatever palette is for that sky:
+            if (Game::gConstants.bUseFinalDoomSkyPalettes) {
+                switch (skyTexName.chars[4]) {
+                    case '2':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL1];    break;
+                    case '3':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL2];    break;
+                    case '4':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL3];    break;
+                    case '5':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL4];    break;
+                    case '6':   gPaletteClutId_CurMapSky = gPaletteClutIds[SKYPAL5];    break;
+                }
             }
         }
 

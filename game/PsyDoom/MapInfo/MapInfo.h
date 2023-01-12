@@ -140,6 +140,7 @@ struct Map {
     }
 };
 
+bool shouldUse() noexcept;
 void init() noexcept;
 void shutdown() noexcept;
 

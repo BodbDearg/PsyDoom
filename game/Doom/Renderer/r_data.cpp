@@ -72,6 +72,32 @@ void R_InitData() noexcept {
     R_InitSprites();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Uploads the data for 1 palette to VRAM and returns the PSX clut id for the palette.
+// PsyDoom: this logic was originally all within 'R_InitPalette'; it's now extracted out here so it can be reused.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t R_UploadPalette(const palette_t& palette, const uint32_t palIdx) noexcept {
+    ASSERT(palIdx < MAXPALETTES);
+
+    // How many palettes we can squeeze onto a VRAM texture page that also has a framebuffer.
+    // The palettes for the game are packed into some of the unused rows of the framebuffer.
+    constexpr int32_t PAL_ROWS_PER_TPAGE = 256 - SCREEN_H;
+
+    // Set the destination location in VRAM for the palette
+    const int32_t palRow = palIdx;
+    const int32_t palTPage = palRow / PAL_ROWS_PER_TPAGE;
+
+    SRECT dstVramRect = {};
+    dstVramRect.x = (int16_t)(palTPage * 256);
+    dstVramRect.y = (int16_t)(palRow - palTPage * PAL_ROWS_PER_TPAGE + SCREEN_H);
+    dstVramRect.w = 256;
+    dstVramRect.h = 1;
+
+    // Upload the palette to VRAM and return the CLUT id for this location
+    LIBGPU_LoadImage(dstVramRect, (const uint16_t*) palette.colors);
+    return LIBGPU_GetClut(dstVramRect.x, dstVramRect.y);
+}
+
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Allocates the 'lump to texture' list used to map from lump indexes to wall, floor or sprite textures.
@@ -463,31 +489,9 @@ static void R_InitPalette() noexcept {
         std::memset(gPaletteClutIds, 0, sizeof(gPaletteClutIds));
     #endif
 
-    // Upload all the palettes into VRAM
-    {
-        SRECT dstVramRect = {};
-        dstVramRect.w = 256;
-        dstVramRect.h = 1;
-
-        const palette_t* pPalette = pGamePalettes;
-        uint16_t* pClutId = gPaletteClutIds;
-
-        for (uint32_t palIdx = 0; palIdx < numPalettes; ++palIdx, ++pPalette, ++pClutId) {
-            // How many palettes we can squeeze onto a VRAM texture page that also has a framebuffer.
-            // The palettes for the game are packed into some of the unused rows of the framebuffer.
-            constexpr int32_t PAL_ROWS_PER_TPAGE = 256 - SCREEN_H;
-
-            // Set the destination location in VRAM for the palette
-            const int32_t palRow = palIdx;
-            const int32_t palTPage = palRow / PAL_ROWS_PER_TPAGE;
-
-            dstVramRect.x = (int16_t)(palTPage * 256);
-            dstVramRect.y = (int16_t)(palRow - palTPage * PAL_ROWS_PER_TPAGE + SCREEN_H);
-
-            // Upload the palette to VRAM and save the CLUT id for this location
-            LIBGPU_LoadImage(dstVramRect, (const uint16_t*) pPalette->colors);
-            *pClutId = LIBGPU_GetClut(dstVramRect.x, dstVramRect.y);
-        }
+    // Upload all the palettes into VRAM and save their CLUT ids
+    for (uint32_t palIdx = 0; palIdx < numPalettes; ++palIdx) {
+        gPaletteClutIds[palIdx] = R_UploadPalette(pGamePalettes[palIdx], palIdx);
     }
 
     // Set the initial palette to use for the 3d view: use the regular palette
