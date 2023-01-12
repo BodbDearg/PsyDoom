@@ -339,6 +339,28 @@ static void patchMap_LunarMiningProject() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP22: Quarry
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Quarry() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Mark linedefs as secret for SW gun triggered secret
+        addFlagsToLinedefs(ML_SECRET, 167, 191);
+
+        // Unhide linedef in SE tunnel
+        removeFlagsFromLinedefs(ML_DONTDRAW, 276);
+
+        // Hide zero height sectors in eastern cavern
+        addFlagsToLinedefs(ML_DONTDRAW, 846, 847, 849, 850, 851, 852);
+        addFlagsToLinedefs(ML_SECRET, 716, 720, 726, 799);
+
+        // Hide west elevator walk-over linedefs
+        addFlagsToLinedefs(ML_DONTDRAW, 111, 112);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP23: Ballistyx
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Ballistyx() noexcept {
@@ -423,8 +445,8 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 177868, 0x5BDC5BC7E62822C1, 0x3F374AD0091C79F1, patchMap_DeepestReaches       },      // MAP19
     { 105404, 0x5849A9F98647AF13, 0x59C891E67F19FC69, patchMap_ProcessingArea       },      // MAP20
     { 162561, 0x5BA4490CA5C13E9A, 0x23D505C31AF4CADF, patchMap_LunarMiningProject   },      // MAP21
-    {  96826, 0x9B6446A94907229A, 0x6DC9F5EDDB9D4F2D, applyOriginalMapCommonPatches },      // MAP22
-    { 167847, 0x3BC3E6570C2D06B3, 0x18756B0D2C98BE86, patchMap_Ballistyx },                 // MAP23
+    {  96826, 0x9B6446A94907229A, 0x6DC9F5EDDB9D4F2D, patchMap_Quarry               },      // MAP22
+    { 167847, 0x3BC3E6570C2D06B3, 0x18756B0D2C98BE86, patchMap_Ballistyx            },      // MAP23
     { 121920, 0x445D7FDA25066B71, 0xAC3893B22E188D4D, applyOriginalMapCommonPatches },      // MAP24
     { 113719, 0xFBA63EF7487AB574, 0xE21B77623A0DE2AA, applyOriginalMapCommonPatches },      // MAP25
     { 127601, 0x1008C54A53E8B33E, 0x8E35C49173174DCD, applyOriginalMapCommonPatches },      // MAP26
