@@ -92,7 +92,7 @@ static int32_t gMaxStartEpisodeOrMap;
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void M_LoadAndCacheRequiredUITextures() noexcept {
     I_PurgeTexCache();
-    I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+    I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
     I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
     I_LoadAndCacheTexLump(gTex_BACK, Game::getTexLumpName_BACK());
@@ -231,7 +231,7 @@ void M_Start() noexcept {
     I_PurgeTexCache();
 
     // Show the loading plaque
-    I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+    I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
 
     // Load sounds for the menu

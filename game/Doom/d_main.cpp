@@ -385,7 +385,7 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
     // Also skip running the demo if the file does not exist.
     #if PSYDOOM_MODS
         if (!gTex_LOADING.bIsCached) {
-            I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+            I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
         }
 
         if (CdMapTbl_GetEntry(file).size <= 0)
@@ -434,7 +434,7 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
     // Ensure this required graphic is loaded before starting the demo.
     // PsyDoom: the meaning of 'texPageId' has changed slightly, '0' is now the 1st page and 'bIsCached' is used check cache residency.
     if (!gTex_LOADING.bIsCached) {
-        I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+        I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
     }
 
     // Read the demo file into memory

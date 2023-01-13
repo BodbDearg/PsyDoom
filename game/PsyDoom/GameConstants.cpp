@@ -190,6 +190,7 @@ static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
     consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;     // TODO: GEC ME BETA 4: check this
     consts.texPalette_BUTTONS = UIPAL2;             // TODO: GEC ME BETA 4: check this
     consts.doomLogoYPos = DOOM_LOGO_YPOS_GEC_ME;    // TODO: GEC ME BETA 4: check this
+    consts.bRemove_LOADING_progressBar = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

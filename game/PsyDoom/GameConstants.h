@@ -44,5 +44,11 @@ struct GameConstants {
     bool                    bUseFinalDoomSkyPalettes;           // Use Final Doom style sky palettes for certain skies?
     int16_t                 doomLogoYPos;                       // Y position to render the 'DOOM' logo at in menus
 
+    // GEC ME Beta 4 and later: activate a hack to choose the right 'LOADING' plaque graphic?
+    // In GEC ME Beta 4 the 'LOADING' graphic has a progress bar baked into it, but we don't want that for PsyDoom.
+    // The lump immediately after it is also called 'LOADING' but does not have the progress bar.
+    // Enabling this hack makes PsyDoom choose the version of the progress bar without the loading bar, if detected next to the other version.
+    bool bRemove_LOADING_progressBar;
+
     void populate(const GameType gameType, const bool bIsDemoVersion) noexcept;
 };

@@ -55,7 +55,7 @@ void START_Title() noexcept {
 
     // Show the loading plaque
     W_CacheLumpName("LOADING", PU_STATIC, false);
-    I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+    I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
     I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
 
     // Load sounds for the menu

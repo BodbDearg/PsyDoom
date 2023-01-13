@@ -76,7 +76,7 @@ const WadLump& W_GetLump(const int32_t lumpIdx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return the name for the specified main WAD lump
 //------------------------------------------------------------------------------------------------------------------------------------------
-const WadLumpName W_GetLumpName(const int32_t lumpIdx) noexcept {
+WadLumpName W_GetLumpName(const int32_t lumpIdx) noexcept {
     return gMainWadList.getLumpName(lumpIdx);
 }
 
