@@ -38,12 +38,13 @@ struct GameInfo {
     bool                    bAllowWideOptionsBg;            // Vulkan renderer: if 'true' then the options menu background can tile/repeat taking widescreen into account (beyond the original UI area)
     TitleScreenStyle        titleScreenStyle;               // What style of title screen to use
     CreditsScreenStyle      creditsScreenStyle;             // What style of credits screen to use
+    int8_t                  titleScreenCdTrackOverride;     // If >= 2 then play this cd track on the title screen instead of the regular one
+    uint8_t                 texPalette_titleScreenFire;     // Palette index to use for the fire on the title screen
     uint8_t                 texPalette_STATUS;              // Palette index to use for the 'STATUS' image lump
     uint8_t                 texPalette_TITLE;               // Palette index to use for the 'TITLE' image lump
+    uint8_t                 texPalette_TITLE2;              // Palette index to use for the 'TITLE2' image lump (GEC ME specific)
     uint8_t                 texPalette_BACK;                // Palette index to use for the 'BACK' image lump
-    String8                 texLumpName_BACK;               // Which texture lump to use instead of the 'BACK' texture lump
     uint8_t                 texPalette_Inter_BACK;          // Palette index to use for the 'BACK' image lump on the intermission screen specifically (if using a specific graphic for this screen)
-    String8                 texLumpName_Inter_BACK;         // Which texture lump to use instead of the 'BACK' texture lump on the intermission screen specifically (if empty, use the regular version of 'BACK')
     uint8_t                 texPalette_LOADING;             // Palette index to use for the 'LOADING' image lump
     uint8_t                 texPalette_PAUSE;               // Palette index to use for the 'PAUSE' image lump
     uint8_t                 texPalette_NETERR;              // Palette index to use for the 'NETERR' image lump
@@ -61,7 +62,11 @@ struct GameInfo {
     uint8_t                 texPalette_DATA;                // Palette index to use for the 'DATA' image lump (GEC Master Edition addition)
     uint8_t                 texPalette_FINAL;               // Palette index to use for the 'FINAL' image lump (GEC Master Edition addition)
     uint8_t                 texPalette_OptionsBG;           // Palette index to use for the options menu tiled background
-    String8                 texLumpName_OptionsBG;          // Which texture lump to use for the options menu tile background
+    String8                 texLumpName_TITLE;              // Which texture lump name to load wherever the 'TITLE' texture is used
+    String8                 texLumpName_TITLE2;             // Which texture lump name to load wherever the 'TITLE2' texture is used (GEC ME specific)
+    String8                 texLumpName_BACK;               // Which texture lump name to load wherever the 'BACK' texture is used
+    String8                 texLumpName_Inter_BACK;         // Which texture lump name to load for the 'BACK' on the intermission screen specifically (if empty, use 'texLumpName_BACK')
+    String8                 texLumpName_OptionsBG;          // Which texture lump name to load for the options menu tiled background
     int16_t                 creditsXPos_IDCRED2;            // X position of the 'IDCRED2' graphic on the credits screen
     int16_t                 creditsXPos_WMSCRED2;           // X position of the 'WMSCRED2' graphic on the credits screen
     int16_t                 creditsXPos_LEVCRED2;           // X position of the 'LEVCRED2' graphic on the credits screen

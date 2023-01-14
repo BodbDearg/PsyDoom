@@ -6,7 +6,9 @@
 #include "GecMapInfo.h"
 
 #include "Asserts.h"
+#include "Doom/Base/s_sound.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/UI/ti_main.h"
 #include "MapInfo.h"
 #include "MapInfo_Defaults_FinalDoom.h"
 #include "MapInfo_Parse.h"
@@ -433,7 +435,57 @@ static const Token* parseEpisodesBlock(const Token* const pStartToken) noexcept 
             if (pToken->type == TokenType::String)
                 return parseEpisode(pToken);
 
-            // TODO: GEC ME BETA 4: parse 'PicSecret'?
+            // TODO: GEC ME BETA 4: parse 'PicSecret'
+
+            // Unhandled or unwanted line of data - skip it!
+            return skipCurrentLineData(pToken);
+        }
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Parses the 'Title' block and returns the next token after that
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const Token* parseTitleBlock(const Token* const pStartToken) noexcept {
+    // Parse the title screen type
+    const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
+    ensureTokenType(pToken, TokenType::Number);
+    gGameInfo.titleScreenStyle = (TitleScreenStyle) pToken->number;
+
+    if ((uint32_t) gGameInfo.titleScreenStyle >= NUM_TITLE_SCREEN_STYLES) {
+        error(pToken->begin, "GameInfo: 'TitleScreenStyle' must be between 0 and %u!", NUM_TITLE_SCREEN_STYLES - 1u);
+    }
+
+    pToken++;
+
+    // Parse the values inside the block
+    return parseUntilEndOfBlock(
+        skipBlockOpening(pToken),
+        [](const Token* pToken) noexcept {
+            // Lets see if we recognize this data:
+            if (pToken->type == TokenType::Identifier) {
+                const std::string_view fieldId = pToken->text();
+                
+                if (fieldId == "PicTitle")
+                    return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_TITLE, gGameInfo.texPalette_TITLE);
+
+                if (fieldId == "PicTitle2")
+                    return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_TITLE2, gGameInfo.texPalette_TITLE2);
+
+                if (fieldId == "CdMusic") {
+                    int32_t cdTrackIndex = {};
+                    const Token* const pNextToken = parseSingleNumberAssign(pToken, cdTrackIndex);
+
+                    if ((cdTrackIndex < 0) || (cdTrackIndex >= NUM_CD_MUSIC_TRACKS))
+                        error(pToken->begin, "CdMusic: track index '%d' is out of range! Allowed range: 0 to %d", cdTrackIndex, NUM_CD_MUSIC_TRACKS - 1);
+
+                    gGameInfo.titleScreenCdTrackOverride = (int8_t) gCDTrackNum[cdTrackIndex];
+                    return pNextToken;
+                }
+
+                if (fieldId == "PalFire")
+                    return parseSingleNumberAssign(pToken, gGameInfo.texPalette_titleScreenFire);
+            }
 
             // Unhandled or unwanted line of data - skip it!
             return skipCurrentLineData(pToken);
@@ -461,6 +513,9 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                 if (fieldId == "Episodes")
                     return parseEpisodesBlock(pToken);
 
+                if (fieldId == "Title")
+                    return parseTitleBlock(pToken);
+
                 if (fieldId == "PicBack")
                     return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_BACK, gGameInfo.texPalette_BACK);
 
@@ -482,7 +537,6 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                 if (fieldId == "PicTile")
                     return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_OptionsBG, gGameInfo.texPalette_OptionsBG);
 
-                // TODO: GEC ME BETA 4: parse 'Title'
                 // TODO: GEC ME BETA 4: parse 'Credits'
                 // TODO: GEC ME BETA 4: parse 'NumDemos'
                 // TODO: GEC ME BETA 4: parse 'PicStatus'

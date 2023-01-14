@@ -162,12 +162,13 @@ GameInfo {
     AllowWideOptionsBg = false
     TitleScreenStyle = 0
     CreditsScreenStyle = 0
+    TitleScreenCdTrackOverride = -1
+    TexPalette_TitleScreenFire = 15
     TexPalette_STATUS = 16
     TexPalette_TITLE = 17
+    TexPalette_TITLE2 = 17
     TexPalette_BACK = 0
-    TexLumpName_BACK = "BACK"
     TexPalette_Inter_BACK = 0
-    TexLumpName_Inter_BACK = ""
     TexPalette_LOADING = 16
     TexPalette_PAUSE = 0
     TexPalette_NETERR = 0
@@ -178,6 +179,10 @@ GameInfo {
     TexPalette_WMSCRED1 = 19
     TexPalette_WMSCRED2 = 16
     TexPalette_OptionsBG = 0
+    TexLumpName_TITLE = "TITLE"
+    TexLumpName_TITLE2 = "TITLE2"
+    TexLumpName_BACK = "BACK"
+    TexLumpName_Inter_BACK = ""
     TexLumpName_OptionsBG = "MARB01"
     CreditsXPos_IDCRED2 = 9
     CreditsXPos_WMSCRED2 = 7
@@ -193,17 +198,19 @@ Internal Fields:
 - `TitleScreenStyle`: what style of title screen to use. Valid values are currently:
   - `0` = Doom: the 'DOOM' logo rises up above the fire.
   - `1` = Final Doom: the 'TITLE' image displays over the fire at all times and fades in from black.
-  - `2` = GEC Master Edition: the `DOOM` and `FINAL` images display side-by-side over the fire at all times, fading in from black. The 'Master Edition' text from the 'DATA' lump also displays on top.
+  - `2` = GEC Master Edition Beta 3: the `DOOM` and `FINAL` images display side-by-side over the fire at all times, fading in from black. The 'Master Edition' text from the 'DATA' lump also displays on top.
+  - `3` = GEC Master Edition Beta 4: show transparent fire over the `COVER` image and then the logos from `TITLE2` on top of that. Fade in the background and logos.
 - `CreditsScreenStyle`: what style of credits screen to use. Valid values are currently:
   - `0` = Doom: 2 pages, ID and Williams.
   - `1` = Final Doom: 3 pages, level, Williams and ID credits.
-  - `2` = GEC Master Edition: 5 pages, GEC, Doomworld, and Final Doom credits. 
+  - `2` = GEC Master Edition: 5 pages, GEC, Doomworld, and Final Doom credits.
+- `TitleScreenCdTrackOverride`: if >= 2 then play this CD track on the title screen instead of the default one.
+- `TexPalette_TitleScreenFire`: palette index to use for the fire on the title screen. Must be between 0 and 31.
 - `TexPalette_STATUS`: palette index to use for the `STATUS` image lump. Must be between 0 and 31.
 - `TexPalette_TITLE`: palette index to use for the `TITLE` image lump. Must be between 0 and 31.
+- `TexPalette_TITLE2`: palette index to use for the `TITLE2` image lump (GEC ME specific). Must be between 0 and 31.
 - `TexPalette_BACK`: palette index to use for the `BACK` image lump. Must be between 0 and 31.
-- `TexLumpName_BACK`: which texture lump to use instead of the `BACK` texture lump.
 - `TexPalette_Inter_BACK`: palette index to use for the `BACK` image lump on the intermission screen specifically. Only used if `TexLumpName_Inter_BACK` is defined. Must be between 0 and 31.
-- `TexLumpName_Inter_BACK`: which texture lump to use instead of the `BACK` texture lump on the intermission screen specifically. If unspecified (empty string) then `TexLumpName_BACK` will be used instead.
 - `TexPalette_LOADING`: palette index to use for the `LOADING` image lump. Must be between 0 and 31.
 - `TexPalette_PAUSE`: palette index to use for the `PAUSE` image lump. Must be between 0 and 31.
 - `TexPalette_NETERR`: palette index to use for the `NETERR` image lump. Must be between 0 and 31.
@@ -221,7 +228,11 @@ Internal Fields:
 - `TexPalette_DATA`: palette index to use for the `DATA` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_FINAL`: palette index to use for the `FINAL` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
-- `TexLumpName_OptionsBG`: which texture lump to use for the options menu tiled background.
+- `TexLumpName_TITLE`: which texture lump name to load wherever the `TITLE` texture is used.
+- `TexLumpName_TITLE2`: which texture lump name to load wherever the `TITLE2` texture (GEC ME specific) is used.
+- `TexLumpName_BACK`: which texture lump name to load wherever the `BACK` texture is used.
+- `TexLumpName_Inter_BACK`: which texture lump name to load for the `BACK` texture on the intermission screen specifically. If unspecified (empty string) then `TexLumpName_BACK` will be used instead.
+- `TexLumpName_OptionsBG`: which texture lump name to load for the options menu tiled background.
 - `CreditsXPos_IDCRED2`: X position/offset of the `IDCRED2` image (text overlay) on the credits screen.
 - `CreditsXPos_WMSCRED2`: X position/offset of the `WMSCRED2` image (text overlay) on the credits screen.
 - `CreditsXPos_LEVCRED2`: X position/offset of the `LEVCRED2` image (text overlay) on the credits screen.

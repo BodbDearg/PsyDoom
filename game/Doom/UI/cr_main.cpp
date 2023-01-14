@@ -47,7 +47,7 @@ void START_Credits() noexcept {
     const CreditsScreenStyle screenStyle = MapInfo::getGameInfo().creditsScreenStyle;
 
     if (screenStyle != CreditsScreenStyle::Doom) {
-        I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
+        I_LoadAndCacheTexLump(gTex_TITLE, Game::getTexLumpName_TITLE());
         I_LoadAndCacheTexLump(gTex_LEVCRED2, "LEVCRED2", 0);
     }
 

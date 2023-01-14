@@ -26,6 +26,7 @@ void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
     gameInfo.bAllowWideOptionsBg = false;
     gameInfo.titleScreenStyle = TitleScreenStyle::Doom;
     gameInfo.creditsScreenStyle = CreditsScreenStyle::Doom;
+    gameInfo.texPalette_titleScreenFire = FIRESKYPAL;
     gameInfo.texPalette_STATUS = UIPAL;
     gameInfo.texPalette_TITLE = TITLEPAL;
     gameInfo.texPalette_BACK = MAINPAL;

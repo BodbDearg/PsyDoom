@@ -324,6 +324,10 @@ int32_t getMapEpisode(const int32_t mapNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the palette (PSX Clut ID) or lump name to use for various textures
 //------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t getTexPalette_TitleScreenFire() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_titleScreenFire);
+}
+
 uint16_t getTexPalette_STATUS() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_STATUS);
 }
@@ -332,12 +336,12 @@ uint16_t getTexPalette_TITLE() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_TITLE);
 }
 
-uint16_t getTexPalette_BACK() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_BACK);
+uint16_t getTexPalette_TITLE2() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_TITLE2);
 }
 
-String8 getTexLumpName_BACK() noexcept {
-    return MapInfo::getGameInfo().texLumpName_BACK;
+uint16_t getTexPalette_BACK() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_BACK);
 }
 
 uint16_t getTexPalette_Inter_BACK() noexcept {
@@ -345,12 +349,6 @@ uint16_t getTexPalette_Inter_BACK() noexcept {
     const MapInfo::GameInfo& gameInfo = MapInfo::getGameInfo();
     const uint8_t palIdx = (gameInfo.texLumpName_Inter_BACK.chars[0]) ? gameInfo.texPalette_Inter_BACK : gameInfo.texPalette_BACK;
     return R_GetPaletteClutId(palIdx);
-}
-
-String8 getTexLumpName_Inter_BACK() noexcept {
-    // Only use the intermission specific version of 'BACK' if available
-    const MapInfo::GameInfo& gameInfo = MapInfo::getGameInfo();
-    return (gameInfo.texLumpName_Inter_BACK.chars[0]) ? gameInfo.texLumpName_Inter_BACK : gameInfo.texLumpName_BACK;
 }
 
 uint16_t getTexPalette_LOADING() noexcept {
@@ -424,6 +422,24 @@ uint16_t getTexPalette_FINAL() noexcept {
 
 uint16_t getTexPalette_OptionsBg() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_OptionsBG);
+}
+
+String8 getTexLumpName_TITLE() noexcept {
+    return MapInfo::getGameInfo().texLumpName_TITLE;
+}
+
+String8 getTexLumpName_TITLE2() noexcept {
+    return MapInfo::getGameInfo().texLumpName_TITLE2;
+}
+
+String8 getTexLumpName_BACK() noexcept {
+    return MapInfo::getGameInfo().texLumpName_BACK;
+}
+
+String8 getTexLumpName_Inter_BACK() noexcept {
+    // Only use the intermission specific version of 'BACK' if available
+    const MapInfo::GameInfo& gameInfo = MapInfo::getGameInfo();
+    return (gameInfo.texLumpName_Inter_BACK.chars[0]) ? gameInfo.texLumpName_Inter_BACK : gameInfo.texLumpName_BACK;
 }
 
 String8 getTexLumpName_OptionsBg() noexcept {

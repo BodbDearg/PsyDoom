@@ -67,12 +67,13 @@ GameInfo::GameInfo() noexcept
     , bFinalDoomGameRules(false)
     , titleScreenStyle(TitleScreenStyle::Doom)
     , creditsScreenStyle(CreditsScreenStyle::Doom)
+    , titleScreenCdTrackOverride(-1)
+    , texPalette_titleScreenFire(FIRESKYPAL)
     , texPalette_STATUS(UIPAL)
     , texPalette_TITLE(TITLEPAL)
+    , texPalette_TITLE2(TITLEPAL)
     , texPalette_BACK(MAINPAL)
-    , texLumpName_BACK("BACK")
     , texPalette_Inter_BACK(MAINPAL)
-    , texLumpName_Inter_BACK()          // Default: use 'texLumpName_BACK' instead (same behavior as older PsyDoom versions)
     , texPalette_LOADING(UIPAL)
     , texPalette_PAUSE(MAINPAL)
     , texPalette_NETERR(UIPAL)
@@ -90,6 +91,10 @@ GameInfo::GameInfo() noexcept
     , texPalette_DATA()
     , texPalette_FINAL()
     , texPalette_OptionsBG(MAINPAL)
+    , texLumpName_TITLE("TITLE")
+    , texLumpName_TITLE2("TITLE2")
+    , texLumpName_BACK("BACK")
+    , texLumpName_Inter_BACK()          // Default: use 'texLumpName_BACK' instead (same behavior as older PsyDoom versions)
     , texLumpName_OptionsBG("MARB01")
     , creditsXPos_IDCRED2(9)
     , creditsXPos_WMSCRED2(7)
@@ -164,12 +169,13 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.bAllowWideOptionsBg = (block.getSingleIntValue("AllowWideOptionsBg", gameInfo.bAllowWideOptionsBg) > 0);
     gameInfo.titleScreenStyle = (TitleScreenStyle) block.getSingleIntValue("TitleScreenStyle", (int32_t) gameInfo.titleScreenStyle);
     gameInfo.creditsScreenStyle = (CreditsScreenStyle) block.getSingleIntValue("CreditsScreenStyle", (int32_t) gameInfo.creditsScreenStyle);
+    gameInfo.titleScreenCdTrackOverride = (int8_t) block.getSingleIntValue("TitleScreenCdTrackOverride", gameInfo.titleScreenCdTrackOverride);
+    gameInfo.texPalette_titleScreenFire = (uint8_t) block.getSingleIntValue("TexPalette_TitleScreenFire", gameInfo.texPalette_titleScreenFire);
     gameInfo.texPalette_STATUS = (uint8_t) block.getSingleIntValue("TexPalette_STATUS", gameInfo.texPalette_STATUS);
     gameInfo.texPalette_TITLE = (uint8_t) block.getSingleIntValue("TexPalette_TITLE", gameInfo.texPalette_TITLE);
+    gameInfo.texPalette_TITLE2 = (uint8_t) block.getSingleIntValue("TexPalette_TITLE2", gameInfo.texPalette_TITLE2);
     gameInfo.texPalette_BACK = (uint8_t) block.getSingleIntValue("TexPalette_BACK", gameInfo.texPalette_BACK);
-    gameInfo.texLumpName_BACK = block.getSingleSmallStringValue("TexLumpName_BACK", gameInfo.texLumpName_BACK);
     gameInfo.texPalette_Inter_BACK = (uint8_t) block.getSingleIntValue("TexPalette_Inter_BACK", gameInfo.texPalette_Inter_BACK);
-    gameInfo.texLumpName_Inter_BACK = block.getSingleSmallStringValue("TexLumpName_Inter_BACK", gameInfo.texLumpName_Inter_BACK);
     gameInfo.texPalette_LOADING = (uint8_t) block.getSingleIntValue("TexPalette_LOADING", gameInfo.texPalette_LOADING);
     gameInfo.texPalette_PAUSE = (uint8_t) block.getSingleIntValue("TexPalette_PAUSE", gameInfo.texPalette_PAUSE);
     gameInfo.texPalette_NETERR = (uint8_t) block.getSingleIntValue("TexPalette_NETERR", gameInfo.texPalette_NETERR);
@@ -187,6 +193,10 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.texPalette_DATA = (uint8_t) block.getSingleIntValue("TexPalette_DATA", gameInfo.texPalette_DATA);
     gameInfo.texPalette_FINAL = (uint8_t) block.getSingleIntValue("TexPalette_FINAL", gameInfo.texPalette_FINAL);
     gameInfo.texPalette_OptionsBG = (uint8_t) block.getSingleIntValue("TexPalette_OptionsBG", gameInfo.texPalette_OptionsBG);
+    gameInfo.texLumpName_TITLE = block.getSingleSmallStringValue("TexLumpName_TITLE", gameInfo.texLumpName_TITLE);
+    gameInfo.texLumpName_TITLE2 = block.getSingleSmallStringValue("TexLumpName_TITLE2", gameInfo.texLumpName_TITLE2);
+    gameInfo.texLumpName_BACK = block.getSingleSmallStringValue("TexLumpName_BACK", gameInfo.texLumpName_BACK);
+    gameInfo.texLumpName_Inter_BACK = block.getSingleSmallStringValue("TexLumpName_Inter_BACK", gameInfo.texLumpName_Inter_BACK);
     gameInfo.texLumpName_OptionsBG = block.getSingleSmallStringValue("TexLumpName_OptionsBG", gameInfo.texLumpName_OptionsBG);
     gameInfo.creditsXPos_IDCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_IDCRED2", gameInfo.creditsXPos_IDCRED2);
     gameInfo.creditsXPos_WMSCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_WMSCRED2", gameInfo.creditsXPos_WMSCRED2);
@@ -219,26 +229,28 @@ static void readGameInfo(const Block& block) noexcept {
         }
     };
 
-    checkPalette(gameInfo.texPalette_STATUS,        "TexPalette_STATUS");
-    checkPalette(gameInfo.texPalette_TITLE,         "TexPalette_TITLE");
-    checkPalette(gameInfo.texPalette_BACK,          "TexPalette_BACK");
-    checkPalette(gameInfo.texPalette_LOADING,       "TexPalette_LOADING");
-    checkPalette(gameInfo.texPalette_PAUSE,         "TexPalette_PAUSE");
-    checkPalette(gameInfo.texPalette_NETERR,        "TexPalette_NETERR");
-    checkPalette(gameInfo.texPalette_DOOM,          "TexPalette_DOOM");
-    checkPalette(gameInfo.texPalette_CONNECT,       "TexPalette_CONNECT");
-    checkPalette(gameInfo.texPalette_IDCRED1,       "TexPalette_IDCRED1");
-    checkPalette(gameInfo.texPalette_IDCRED2,       "TexPalette_IDCRED2");
-    checkPalette(gameInfo.texPalette_WMSCRED1,      "TexPalette_WMSCRED1");
-    checkPalette(gameInfo.texPalette_WMSCRED2,      "TexPalette_WMSCRED2");
-    checkPalette(gameInfo.texPalette_LEVCRED2,      "TexPalette_LEVCRED2");
-    checkPalette(gameInfo.texPalette_GEC,           "TexPalette_GEC");
-    checkPalette(gameInfo.texPalette_GECCRED,       "TexPalette_GECCRED");
-    checkPalette(gameInfo.texPalette_DWOLRD,        "TexPalette_DWOLRD");
-    checkPalette(gameInfo.texPalette_DWCRED,        "TexPalette_DWCRED");
-    checkPalette(gameInfo.texPalette_DATA,          "TexPalette_DATA");
-    checkPalette(gameInfo.texPalette_FINAL,         "TexPalette_FINAL");
-    checkPalette(gameInfo.texPalette_OptionsBG,     "TexPalette_OptionsBG");
+    checkPalette(gameInfo.texPalette_titleScreenFire,   "TexPalette_TitleScreenFire");
+    checkPalette(gameInfo.texPalette_STATUS,            "TexPalette_STATUS");
+    checkPalette(gameInfo.texPalette_TITLE,             "TexPalette_TITLE");
+    checkPalette(gameInfo.texPalette_TITLE2,            "TexPalette_TITLE2");
+    checkPalette(gameInfo.texPalette_BACK,              "TexPalette_BACK");
+    checkPalette(gameInfo.texPalette_LOADING,           "TexPalette_LOADING");
+    checkPalette(gameInfo.texPalette_PAUSE,             "TexPalette_PAUSE");
+    checkPalette(gameInfo.texPalette_NETERR,            "TexPalette_NETERR");
+    checkPalette(gameInfo.texPalette_DOOM,              "TexPalette_DOOM");
+    checkPalette(gameInfo.texPalette_CONNECT,           "TexPalette_CONNECT");
+    checkPalette(gameInfo.texPalette_IDCRED1,           "TexPalette_IDCRED1");
+    checkPalette(gameInfo.texPalette_IDCRED2,           "TexPalette_IDCRED2");
+    checkPalette(gameInfo.texPalette_WMSCRED1,          "TexPalette_WMSCRED1");
+    checkPalette(gameInfo.texPalette_WMSCRED2,          "TexPalette_WMSCRED2");
+    checkPalette(gameInfo.texPalette_LEVCRED2,          "TexPalette_LEVCRED2");
+    checkPalette(gameInfo.texPalette_GEC,               "TexPalette_GEC");
+    checkPalette(gameInfo.texPalette_GECCRED,           "TexPalette_GECCRED");
+    checkPalette(gameInfo.texPalette_DWOLRD,            "TexPalette_DWOLRD");
+    checkPalette(gameInfo.texPalette_DWCRED,            "TexPalette_DWCRED");
+    checkPalette(gameInfo.texPalette_DATA,              "TexPalette_DATA");
+    checkPalette(gameInfo.texPalette_FINAL,             "TexPalette_FINAL");
+    checkPalette(gameInfo.texPalette_OptionsBG,         "TexPalette_OptionsBG");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
