@@ -159,9 +159,9 @@ static void populateConsts_GEC_ME_TestMap_FinalDoom(GameConstants& consts) noexc
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
     consts.mainWads[0] = CdFile::PSXDOOM_WAD;
-    consts.introMovies[0] = "DATA/MOVIE.STR";
-    consts.introMovies[1] = "DATA/GEC.STR";
-    consts.introMovies[2] = "DATA/DWORLD.STR";
+    consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE_N.STR";
+    consts.introMovies[1] = "PSXDOOM/ABIN/GEC_N.STR";
+    consts.introMovies[2] = "PSXDOOM/ABIN/DWORLD_N.STR";
     consts.demos[0] = ClassicDemoDef{ "NDEMO1.LMP", true, false, true  };   // TODO: GEC ME BETA 4: Verify these demos
     consts.demos[1] = ClassicDemoDef{ "NDEMO2.LMP", true, false, true  };
     consts.demos[2] = ClassicDemoDef{ "NDEMO3.LMP", true, false, true  };
