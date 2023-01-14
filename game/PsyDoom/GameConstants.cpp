@@ -19,14 +19,6 @@ static constexpr uint32_t NET_GAMEID_GEC_ME_TESTMAP_DOOM        = 0xBB00BB22;
 static constexpr uint32_t NET_GAMEID_GEC_ME_TESTMAP_FINAL_DOOM  = 0xBB00BB23;
 static constexpr uint32_t NET_GAMEID_GEC_ME_BETA4               = 0xAB00AB23;
 
-// Doom logo Y positions
-#if PSYDOOM_MODS
-    static constexpr int16_t DOOM_LOGO_YPOS = 10;           // Normal case: PsyDoom moves this up slightly to make room for the 'quit' option.
-    static constexpr int16_t DOOM_LOGO_YPOS_GEC_ME = 12;    // GEC Master Edition.
-#else
-    static constexpr int16_t DOOM_LOGO_YPOS = 20;
-#endif
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the values of all constants for 'Doom'
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,7 +40,6 @@ static void populateConsts_Doom(GameConstants& consts, const bool bIsDemoVersion
     consts.texPalette_BUTTONS = MAINPAL;
     consts.numPalettesRequired = NUMPALETTES_DOOM;
     consts.bUseFinalDoomSkyPalettes = false;
-    consts.doomLogoYPos = DOOM_LOGO_YPOS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,7 +57,6 @@ static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
     consts.texPalette_BUTTONS = UIPAL2;
     consts.numPalettesRequired = NUMPALETTES_FINAL_DOOM;
     consts.bUseFinalDoomSkyPalettes = true;
-    consts.doomLogoYPos = DOOM_LOGO_YPOS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -140,7 +130,6 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
     consts.netGameId = NET_GAMEID_GEC_ME_BETA3;
     consts.pExtraPalettes = BuiltInPaletteData::GEC_ME_BETA3_EXTRA_PALETTES;
     consts.numExtraPalettes = BuiltInPaletteData::NUM_GEC_ME_BETA3_EXTRA_PALETTES;
-    consts.doomLogoYPos = DOOM_LOGO_YPOS_GEC_ME;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -187,9 +176,8 @@ static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
     consts.numExtraPalettes = BuiltInPaletteData::NUM_GEC_ME_DYNAMIC_PALETTE_PLACEHOLDERS;
     consts.numPalettesRequired = 31;
     consts.netGameId = NET_GAMEID_GEC_ME_BETA4;
-    consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;     // TODO: GEC ME BETA 4: check this
-    consts.texPalette_BUTTONS = UIPAL2;             // TODO: GEC ME BETA 4: check this
-    consts.doomLogoYPos = DOOM_LOGO_YPOS_GEC_ME;    // TODO: GEC ME BETA 4: check this
+    consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;     // TODO: GEC ME BETA 4: check this this count
+    consts.texPalette_BUTTONS = UIPAL2;             // TODO: GEC ME BETA 4: check this palette
     consts.bRemove_LOADING_progressBar = true;
 }
 

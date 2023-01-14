@@ -45,17 +45,44 @@ enum menu_t : int32_t {
     NUMMENUITEMS
 };
 
-// The position of each main menu option.
-// PsyDoom: had to move everything up to make room for 'quit'
 #if PSYDOOM_MODS
-    static const int16_t gMenuYPos[NUMMENUITEMS] = {
-        81,     // gamemode
-        123,    // level
-        145,    // difficulty
-        187,    // options
-        209     // quit
-    };
-#else
+// PsyDoom: represents a menu element for dynamic layout purposes.
+// Defines the y position and height of the element.
+struct MenuElem {
+    int32_t height;
+    int32_t yPos;
+};
+
+// What types of menu elements there are for dynamic layout
+enum MenuElemType : uint32_t {
+    MenuElem_MasterEditionSpritePrePad = 0,
+    MenuElem_MasterEditionSprite,
+    MenuElem_LogoPrePad,
+    MenuElem_Logo,
+    MenuElem_TextPrePad,
+    MenuElem_GameMode_Line1,
+    MenuElem_GameMode_Line2,
+    MenuElem_Level,
+    MenuElem_Difficulty_Line1,
+    MenuElem_Difficulty_Line2,
+    MenuElem_Options,
+    MenuElem_Quit,
+    MenuElem_TextPostPad,
+    NUM_MENU_ELEM_TYPES
+};
+
+// Layout data for all the menu elements
+static MenuElem gMenuElems[NUM_MENU_ELEM_TYPES] = {};
+
+// The minimum and maximum spacing between options
+static constexpr int32_t MAX_OPTION_SPACING = 22;
+static constexpr int32_t MIN_OPTION_SPACING = 17;
+
+#endif  // #if PSYDOOM_MODS
+
+// The position of each main menu option.
+// PsyDoom: this is replaced by the 'gMenuElems' array and dynamic layout.
+#if !PSYDOOM_MODS
     static const int16_t gMenuYPos[NUMMENUITEMS] = {
         91,     // gamemode
         133,    // level
@@ -86,6 +113,61 @@ static int32_t gMaxStartEpisodeOrMap;
 
 #if PSYDOOM_MODS
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: performs layout for the menu using the specified spacing between the options.
+// If the layout doesn't fit then tries a more compact layout, if possible.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void M_DoMenuLayout(const int32_t optionSpacing) noexcept {
+    // Default init all menu elements
+    for (MenuElem& menuElem : gMenuElems) {
+        menuElem = {};
+    }
+
+    // The size of menu elements that are always present
+    gMenuElems[MenuElem_LogoPrePad].height = 8;
+    gMenuElems[MenuElem_Logo].height = 70;  // Allow 70px maximum height for the logo
+    gMenuElems[MenuElem_TextPrePad].height = 4;
+    gMenuElems[MenuElem_GameMode_Line1].height = optionSpacing;
+    gMenuElems[MenuElem_GameMode_Line2].height = std::min(optionSpacing, 20);
+    gMenuElems[MenuElem_Level].height = optionSpacing;
+    gMenuElems[MenuElem_Difficulty_Line1].height = optionSpacing;
+    gMenuElems[MenuElem_Difficulty_Line2].height = std::min(optionSpacing, 20);
+    gMenuElems[MenuElem_Options].height = optionSpacing;
+    gMenuElems[MenuElem_Quit].height = optionSpacing;
+    gMenuElems[MenuElem_TextPostPad].height = 8;
+
+    // Allocate room for the 'Master Edition' sprite logo for the GEC ME (8px maximum height).
+    // Also reduce the padding before the logo to make more room for it.
+    if (Game::isGameTypeGecMe()) {
+        gMenuElems[MenuElem_MasterEditionSpritePrePad].height = 2;
+        gMenuElems[MenuElem_MasterEditionSprite].height = 8;
+        gMenuElems[MenuElem_LogoPrePad].height = 2;
+    }
+
+    // Determine the height of all the elements
+    int32_t allElemsH = 0;
+
+    for (const MenuElem& menuElem : gMenuElems) {
+        allElemsH += menuElem.height;
+    }
+
+    // If it doesn't all fit then try and do tighter spacing (if possible)
+    if (allElemsH > SCREEN_H) {
+        if (optionSpacing > MIN_OPTION_SPACING) {
+            M_DoMenuLayout(optionSpacing - 1);
+            return;
+        }
+    }
+
+    // Center all the content in the middle of the screen and begin positioning the elements
+    int32_t y = (SCREEN_H - allElemsH) / 2;
+
+    for (MenuElem& menuElem : gMenuElems) {
+        menuElem.yPos = y;
+        y += menuElem.height;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom utility: loads and caches all important/required menu and UI related texture resources.
 // This needs to be called when we warp directly to a map on startup, since we miss important textures being cached via the skipped menus.
 // If these textures are not cached then there might be crashes later when we try to draw them...
@@ -110,13 +192,35 @@ static void M_LoadAndCacheRequiredUITextures() noexcept {
 // Also draws any additional elements, like 'MASTER EDITION' text for the GEC Master Edition.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void M_DrawDoomLogo() noexcept {
-    I_CacheAndDrawSprite(gTex_DOOM, 75, Game::gConstants.doomLogoYPos, Game::getTexPalette_DOOM());
+    // Draw the 'DOOM' or episode logo
+    #if PSYDOOM_MODS
+        const int32_t logoYPos = gMenuElems[MenuElem_Logo].yPos;
+    #else
+        constexpr int32_t logoYPos = 20;
+    #endif
+
+    I_CacheAndDrawSprite(gTex_DOOM, 75, (int16_t) logoYPos, Game::getTexPalette_DOOM());
 
     // PsyDoom: cache and draw the 'MASTER EDITION' text in addition to the DOOM logo if we're playing the GEC Master Edition
     #if PSYDOOM_MODS
-        if (Game::gGameType == GameType::GEC_ME_Beta3) {
-            I_CacheTex(gTex_DATA);
-            I_DrawSprite(gTex_DATA.texPageId, Game::getTexPalette_DATA(), 48, 2, gTex_DATA.texPageCoordX + 1, gTex_DATA.texPageCoordY + 1, 157, 8);
+        if (Game::isGameTypeGecMe()) {
+            if (Game::gGameType == GameType::GEC_ME_Beta3) {
+                // Beta 3 'MASTER EDITION' text is in this sprite atlas
+                I_CacheTex(gTex_DATA);
+                I_DrawSprite(
+                    gTex_DATA.texPageId,
+                    Game::getTexPalette_DATA(),
+                    48,
+                    (int16_t) gMenuElems[MenuElem_MasterEditionSprite].yPos,
+                    gTex_DATA.texPageCoordX + 1,
+                    gTex_DATA.texPageCoordY + 1,
+                    157,
+                    8
+                );
+            }
+            else {
+                // TODO: GEC ME BETA 4: draw the 'MASTER EDITION' text for beta 4
+            }
         }
     #endif
 }
@@ -219,8 +323,6 @@ gameaction_t RunMenu() noexcept {
 // Setup/init logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Start() noexcept {
-    // TODO: GEC ME BETA 4: work here needed!
-
     // Assume no networked game initially
     gNetGame = gt_single;
     gCurPlayerIndex = 0;
@@ -242,11 +344,16 @@ void M_Start() noexcept {
     I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
     I_LoadAndCacheTexLump(gTex_CONNECT, "CONNECT", 0);
 
-    // PsyDoom: cache the 'DATA' sprite atlas if we're playing the GEC Master Edition since we'll be using it later:
     #if PSYDOOM_MODS
+        // PsyDoom: cache the 'DATA' sprite atlas if we're playing the GEC Master Edition (Beta 3) since we'll be using it later:
         if (Game::gGameType == GameType::GEC_ME_Beta3) {
             I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);
         }
+
+        // TODO: GEC ME BETA 4: load the lump for the 'MASTER EDITION' text
+
+        // PsyDoom: layout the menu and try to space it out as much as possible initially
+        M_DoMenuLayout(MAX_OPTION_SPACING);
     #endif
 
     // Some basic menu setup
@@ -600,12 +707,48 @@ void M_Drawer() noexcept {
     I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
     M_DrawDoomLogo();
 
+    // Figure out the y positions for everything
+    #if PSYDOOM_MODS
+        int32_t skullCursorY = {};
+        
+        switch (gCursorPos[0]) {
+            case gamemode:      skullCursorY = gMenuElems[MenuElem_GameMode_Line1].yPos;    break;
+            case level:         skullCursorY = gMenuElems[MenuElem_Level].yPos;             break;
+            case difficulty:    skullCursorY = gMenuElems[MenuElem_Difficulty_Line1].yPos;  break;
+            case options:       skullCursorY = gMenuElems[MenuElem_Options].yPos;           break;
+            case menu_quit:     skullCursorY = gMenuElems[MenuElem_Quit].yPos;              break;
+
+            default:
+                ASSERT_FAIL("Bad menu option!");
+                skullCursorY = 2;
+                break;
+        }
+
+        skullCursorY -= 2;
+
+        const int32_t gameModeLine1Y = gMenuElems[MenuElem_GameMode_Line1].yPos;
+        const int32_t gameModeLine2Y = gMenuElems[MenuElem_GameMode_Line2].yPos;
+        const int32_t levelY = gMenuElems[MenuElem_Level].yPos;
+        const int32_t difficultyLine1Y = gMenuElems[MenuElem_Difficulty_Line1].yPos;
+        const int32_t difficultyLine2Y = gMenuElems[MenuElem_Difficulty_Line2].yPos;
+        const int32_t optionsY = gMenuElems[MenuElem_Options].yPos;
+        const int32_t quitY = gMenuElems[MenuElem_Quit].yPos;
+    #else
+        const int32_t skullCursorY = gMenuYPos[gCursorPos[0]] - 2;
+        const int32_t gameModeLine1Y = gMenuYPos[gamemode];
+        const int32_t gameModeLine2Y = gMenuYPos[gamemode] + 20;
+        const int32_t levelY = gMenuYPos[level];
+        const int32_t difficultyLine1Y = gMenuYPos[difficulty];
+        const int32_t difficultyLine2Y = gMenuYPos[difficulty] + 20;
+        const int32_t optionsY = gMenuYPos[options];
+    #endif
+
     // Draw the skull cursor
     I_DrawSprite(
         gTex_STATUS.texPageId,
         Game::getTexPalette_STATUS(),
         50,
-        gMenuYPos[gCursorPos[0]] - 2,
+        (int16_t) skullCursorY,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
         #if PSYDOOM_MODS
             (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
@@ -619,26 +762,26 @@ void M_Drawer() noexcept {
     );
 
     // Draw the text for the various menu entries
-    I_DrawString(74, gMenuYPos[gamemode], "Game Mode");
-    I_DrawString(90, gMenuYPos[gamemode] + 20, gGameTypeNames[gStartGameType]);
+    I_DrawString(74, gameModeLine1Y, "Game Mode");
+    I_DrawString(90, gameModeLine2Y, gGameTypeNames[gStartGameType]);
 
     if (gStartGameType == gt_single) {
-        I_DrawString(74, gMenuYPos[level], Game::getEpisodeName(gStartMapOrEpisode).c_str().data());
+        I_DrawString(74, levelY, Game::getEpisodeName(gStartMapOrEpisode).c_str().data());
     } else {
         // Coop or deathmatch game, draw the level number rather than episode
-        I_DrawString(74, gMenuYPos[level], "Level");
+        I_DrawString(74, levelY, "Level");
 
         const int32_t xpos = (gStartMapOrEpisode >= 10) ? 148 : 136;
-        I_DrawNumber(xpos, gMenuYPos[level], gStartMapOrEpisode);
+        I_DrawNumber(xpos, levelY, gStartMapOrEpisode);
     }
 
-    I_DrawString(74, gMenuYPos[difficulty], "Difficulty");
-    I_DrawString(90, gMenuYPos[difficulty] + 20, gSkillNames[gStartSkill]);
-    I_DrawString(74, gMenuYPos[options], "Options");
+    I_DrawString(74, difficultyLine1Y, "Difficulty");
+    I_DrawString(90, difficultyLine2Y, gSkillNames[gStartSkill]);
+    I_DrawString(74, optionsY, "Options");
 
     // PsyDoom: adding a 'Quit' option
     #if PSYDOOM_MODS
-        I_DrawString(74, gMenuYPos[menu_quit], "Quit");
+        I_DrawString(74, quitY, "Quit");
     #endif
 
     // PsyDoom: draw any enabled performance counters

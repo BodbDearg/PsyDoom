@@ -39,6 +39,7 @@ extern bool             gbIsDemoVersion;
 extern bool             gbIsPsxDoomForever;
 
 void determineGameTypeAndVariant() noexcept;
+bool isGameTypeGecMe() noexcept;
 void getUserGameSettings(GameSettings& settings) noexcept;
 void getClassicDemoGameSettings(GameSettings& settings) noexcept;
 int32_t getNumMaps() noexcept;

@@ -136,6 +136,16 @@ void determineGameTypeAndVariant() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: tells if the game type is one of the 'GEC Master Edition' versions
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isGameTypeGecMe() noexcept {
+    return (
+        (gGameType == GameType::GEC_ME_Beta3) ||
+        (gGameType == GameType::GEC_ME_Beta4)
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Get the game settings as specified by the user's configuration files and command line arguments
 //------------------------------------------------------------------------------------------------------------------------------------------
 void getUserGameSettings(GameSettings& settings) noexcept {

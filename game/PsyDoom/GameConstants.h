@@ -42,7 +42,6 @@ struct GameConstants {
     uint32_t                baseNumAnims;                       // How many animated floor and wall textures are built into the game by default? (ignoring any loaded user mods)
     uint8_t                 texPalette_BUTTONS;                 // Which palette to use for the 'BUTTONS' lump? (Note: this lump is non longer used by PsyDoom, here just for historical reference)
     bool                    bUseFinalDoomSkyPalettes;           // Use Final Doom style sky palettes for certain skies?
-    int16_t                 doomLogoYPos;                       // Y position to render the 'DOOM' logo at in menus
 
     // GEC ME Beta 4 and later: activate a hack to choose the right 'LOADING' plaque graphic?
     // In GEC ME Beta 4 the 'LOADING' graphic has a progress bar baked into it, but we don't want that for PsyDoom.
