@@ -10,6 +10,7 @@ namespace MapInfo {
     struct Episode;
     struct GameInfo;
     struct Map;
+    struct MenuSprite;
 }
 
 BEGIN_NAMESPACE(GecMapInfo)
@@ -41,6 +42,7 @@ void init() noexcept;
 void shutdown() noexcept;
 
 const MapInfo::GameInfo& getGameInfo() noexcept;
+const MapInfo::MenuSprite& getTitleLogo() noexcept;
 const std::vector<MapInfo::Episode>& allEpisodes() noexcept;
 const std::vector<MapInfo::Cluster>& allClusters() noexcept;
 const std::vector<MapInfo::Map>& allMaps() noexcept;

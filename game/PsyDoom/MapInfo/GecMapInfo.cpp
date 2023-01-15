@@ -35,6 +35,7 @@ struct MapInfoTokens {
 // All of the loaded MAPINFO
 //------------------------------------------------------------------------------------------------------------------------------------------
 static GameInfo                 gGameInfo;
+static MenuSprite               gTitleLogo;     // Definition for the "MASTER EDITION" logo that appears at the top of the screen
 static std::vector<Episode>     gEpisodes;
 static std::vector<Cluster>     gClusters;
 static std::vector<Map>         gMaps;
@@ -522,6 +523,9 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                 if (fieldId == "PicInter")
                     return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_Inter_BACK, gGameInfo.texPalette_Inter_BACK);
 
+                if (fieldId == "PicTitleLogo")
+                    return parseGraphicLumpNamePalAndOffset(pToken, gTitleLogo.lumpName, gTitleLogo.paletteIdx, gTitleLogo.xPos, gTitleLogo.yPos);
+
                 if (fieldId == "PalUI") {
                     uint8_t uiPalette = 0;
                     const Token* const pNextToken = parseSingleNumberAssign(pToken, uiPalette);
@@ -540,7 +544,6 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                 // TODO: GEC ME BETA 4: parse 'Credits'
                 // TODO: GEC ME BETA 4: parse 'NumDemos'
                 // TODO: GEC ME BETA 4: parse 'PicStatus'
-                // TODO: GEC ME BETA 4: parse 'PicTitleLogo'
             }
 
             // Unhandled or unwanted line of data - skip it!
@@ -842,6 +845,10 @@ void shutdown() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 const GameInfo& getGameInfo() noexcept {
     return gGameInfo;
+}
+
+const MenuSprite& getTitleLogo() noexcept {
+    return gTitleLogo;
 }
 
 const std::vector<Episode>& allEpisodes() noexcept {

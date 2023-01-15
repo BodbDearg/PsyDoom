@@ -13,6 +13,7 @@
 #include "o_main.h"
 #include "PsyDoom/Game.h"
 #include "PsyDoom/Input.h"
+#include "PsyDoom/MapInfo/GecMapInfo.h"
 #include "PsyDoom/MapInfo/MapInfo.h"
 #include "PsyDoom/Network.h"
 #include "PsyDoom/PsxPadButtons.h"
@@ -31,6 +32,7 @@ int32_t     gMenuTimeoutStartTicCon;    // Tick that we start checking for menu 
 
 #if PSYDOOM_MODS
     texture_t gTex_DATA;     // GEC Master Edition (Beta 3): sprite atlas for the title screen containing the text 'MASTER EDITION'
+    texture_t gTex_MELOGO;   // GEC Master Edition (Beta 4 and later): sprite logo saying "MASTER EDITION", which is shown on the main menu
 #endif
 
 // Main menu options
@@ -124,7 +126,7 @@ static void M_DoMenuLayout(const int32_t optionSpacing) noexcept {
 
     // The size of menu elements that are always present
     gMenuElems[MenuElem_LogoPrePad].height = 8;
-    gMenuElems[MenuElem_Logo].height = 70;  // Allow 70px maximum height for the logo
+    gMenuElems[MenuElem_Logo].height = 70;  // Allow a fixed 70px maximum height for the logo (stays constant no matter the content)
     gMenuElems[MenuElem_TextPrePad].height = 4;
     gMenuElems[MenuElem_GameMode_Line1].height = optionSpacing;
     gMenuElems[MenuElem_GameMode_Line2].height = std::min(optionSpacing, 20);
@@ -138,8 +140,9 @@ static void M_DoMenuLayout(const int32_t optionSpacing) noexcept {
     // Allocate room for the 'Master Edition' sprite logo for the GEC ME (8px maximum height).
     // Also reduce the padding before the logo to make more room for it.
     if (Game::isGameTypeGecMe()) {
+        const int32_t spriteH = (GecMapInfo::shouldUseGecMapInfo()) ? gTex_MELOGO.height : 8;   // For GEC ME Beta 3 we have to hard code the height of this sprite!
         gMenuElems[MenuElem_MasterEditionSpritePrePad].height = 2;
-        gMenuElems[MenuElem_MasterEditionSprite].height = 8;
+        gMenuElems[MenuElem_MasterEditionSprite].height = spriteH;
         gMenuElems[MenuElem_LogoPrePad].height = 2;
     }
 
@@ -181,11 +184,18 @@ static void M_LoadAndCacheRequiredUITextures() noexcept {
     I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
     I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg());
 
-    if (Game::gGameType == GameType::GEC_ME_Beta3) {
-        I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);
+    // Assets specific to the GEC Master Edition
+    if (Game::isGameTypeGecMe()) {
+        if (GecMapInfo::shouldUseGecMapInfo()) {
+            // GEC ME Beta 4 and later
+            I_LoadAndCacheTexLump(gTex_MELOGO, GecMapInfo::getTitleLogo().lumpName);
+        } else {
+            // GEC ME Beta 3
+            I_LoadAndCacheTexLump(gTex_DATA, "DATA");
+        }
     }
 }
-#endif
+#endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PsyDoom helper: encapsulates the logic for drawing the 'DOOM' logo.
@@ -201,10 +211,17 @@ static void M_DrawDoomLogo() noexcept {
 
     I_CacheAndDrawSprite(gTex_DOOM, 75, (int16_t) logoYPos, Game::getTexPalette_DOOM());
 
-    // PsyDoom: cache and draw the 'MASTER EDITION' text in addition to the DOOM logo if we're playing the GEC Master Edition
+    // PsyDoom: cache and draw the 'MASTER EDITION' text if we're playing the GEC Master Edition
     #if PSYDOOM_MODS
         if (Game::isGameTypeGecMe()) {
-            if (Game::gGameType == GameType::GEC_ME_Beta3) {
+            if (GecMapInfo::shouldUseGecMapInfo()) {
+                // Beta 4 (and later): this text is stored as a full sprite pointed to by GEC MAPINFO.
+                // Note: the y position in the MAPINFO is converted to an offset to PsyDoom's own automatic layout here.
+                const MapInfo::MenuSprite& sprite = GecMapInfo::getTitleLogo();
+                const int32_t yOffset = sprite.yPos - 10;
+                I_CacheAndDrawSprite(gTex_MELOGO, sprite.xPos, (int16_t)(gMenuElems[MenuElem_MasterEditionSprite].yPos + yOffset), R_GetPaletteClutId(sprite.paletteIdx));
+            }
+            else {
                 // Beta 3 'MASTER EDITION' text is in this sprite atlas
                 I_CacheTex(gTex_DATA);
                 I_DrawSprite(
@@ -217,9 +234,6 @@ static void M_DrawDoomLogo() noexcept {
                     157,
                     8
                 );
-            }
-            else {
-                // TODO: GEC ME BETA 4: draw the 'MASTER EDITION' text for beta 4
             }
         }
     #endif
@@ -345,12 +359,16 @@ void M_Start() noexcept {
     I_LoadAndCacheTexLump(gTex_CONNECT, "CONNECT", 0);
 
     #if PSYDOOM_MODS
-        // PsyDoom: cache the 'DATA' sprite atlas if we're playing the GEC Master Edition (Beta 3) since we'll be using it later:
-        if (Game::gGameType == GameType::GEC_ME_Beta3) {
-            I_LoadAndCacheTexLump(gTex_DATA, "DATA", 0);
+        // Load and cache assets specific to the GEC Master Edition
+        if (Game::isGameTypeGecMe()) {
+            if (GecMapInfo::shouldUseGecMapInfo()) {
+                // GEC ME Beta 4 and later
+                I_LoadAndCacheTexLump(gTex_MELOGO, GecMapInfo::getTitleLogo().lumpName);
+            } else {
+                // GEC ME Beta 3
+                I_LoadAndCacheTexLump(gTex_DATA, "DATA");
+            }
         }
-
-        // TODO: GEC ME BETA 4: load the lump for the 'MASTER EDITION' text
 
         // PsyDoom: layout the menu and try to space it out as much as possible initially
         M_DoMenuLayout(MAX_OPTION_SPACING);
