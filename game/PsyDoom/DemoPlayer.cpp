@@ -241,8 +241,10 @@ static bool onBeforeMapLoad_newDemoFormat() noexcept {
         ASSERT(gameSettingsVersion >= 1);
         ASSERT(gameSettingsSize >= 1);
 
-        if (!demo_canRead<std::byte>(gameSettingsSize))
-            "Unexpected EOF!";
+        if (!demo_canRead<std::byte>(gameSettingsSize)) {
+            RunDemoErrorMenu_UnexpectedEOF();
+            return false;
+        }
 
         // Read (and migrate, if needed) the game settings and skip past those bytes.
         // Note that 'readAndMigrateGameSettings' is always expected to succeed here: if it doesn't then that is an internal logic error.
