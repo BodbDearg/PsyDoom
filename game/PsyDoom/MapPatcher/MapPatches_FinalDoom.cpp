@@ -391,6 +391,51 @@ static void patchMap_Ballistyx() noexcept {
                 }
             }
         );
+
+        // Fix door that is supposed to open when going up the first steps
+        gpLines[637].special = 109;
+        gpLines[637].tag = 18;
+    }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide monster closet
+        addFlagsToLinedefs(ML_DONTDRAW, 1098, 1101, 1102);
+        addFlagsToLinedefs(ML_SECRET | ML_MIDMASKED | ML_DONTPEGTOP, 1100);
+        gpSides[gpLines[1100].sidenum[0]].midtexture = R_TextureNumForName("SUPPORT3");
+        gpSides[gpLines[1100].sidenum[0]].textureoffset = 8 * FRACUNIT;
+
+        // Fix door tracks on soulsphere/lite amp goggles secret door
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 1479, 1480);
+
+        // Remove upper unpegged flag and shift texture for 7 door in northmost room
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 305, 306, 312, 316, 320, 324, 336);
+        gpSides[gpLines[305].sidenum[0]].rowoffset = 16 * FRACUNIT;
+        gpSides[gpLines[306].sidenum[0]].rowoffset = 16 * FRACUNIT;
+        gpSides[gpLines[312].sidenum[0]].rowoffset = 16 * FRACUNIT;
+        gpSides[gpLines[316].sidenum[0]].rowoffset = 16 * FRACUNIT;
+        gpSides[gpLines[320].sidenum[0]].rowoffset = 16 * FRACUNIT;
+        gpSides[gpLines[324].sidenum[0]].rowoffset = 16 * FRACUNIT;
+        gpSides[gpLines[336].sidenum[0]].rowoffset = 32 * FRACUNIT;
+
+        // Fix textures on doors for 2 south room closets
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 863, 865, 873, 875);
+        gpSides[gpLines[865].sidenum[1]].rowoffset = -48 * FRACUNIT;
+        gpSides[gpLines[873].sidenum[1]].rowoffset = -48 * FRACUNIT;
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 862, 864, 872, 874);
+
+        // Remove actions from door tracks for south room closet
+        gpLines[862].special = 0;
+        gpLines[864].special = 0;
+
+        // Fix textures on red key platform
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 841, 842, 843, 844);
+
+        // Fix door tracks on cage hallway
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 216, 219);
+        gpSides[gpLines[215].sidenum[0]].textureoffset = 8 * FRACUNIT;
+        gpSides[gpLines[216].sidenum[0]].textureoffset = 8 * FRACUNIT;
+        gpSides[gpLines[216].sidenum[0]].rowoffset = -26 * FRACUNIT;
+        gpSides[gpLines[219].sidenum[0]].rowoffset = -26 * FRACUNIT;
     }
 }
 
