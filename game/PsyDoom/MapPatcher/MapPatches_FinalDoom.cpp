@@ -440,6 +440,40 @@ static void patchMap_Ballistyx() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP24: Heck
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Heck() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix texture on elevator in southwest room
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 550);
+        gpSides[gpLines[550].sidenum[0]].textureoffset = 0 * FRACUNIT;
+        gpSides[gpLines[550].sidenum[0]].rowoffset = 64 * FRACUNIT;
+
+        // Hide linedefs in front of teleporters in starting area
+        addFlagsToLinedefs(ML_DONTDRAW, 1128, 1129, 1130, 1131, 1132, 1133, 1134, 1135);
+
+        // Remove all chain hook with blood decorations; these were archviles carried over from PC Doom; most only appear in deathmatch
+        forAllThings(
+            [](mobj_t& mobj) noexcept {
+                const uint32_t sectorIdx = (uint32_t)(mobj.subsector->sector - gpSectors);
+
+                if (mobj.type == MT_MISC_BLOODHOOK) {
+                    P_RemoveMobj(mobj);
+                }
+            }
+        );
+
+        // Restore false walls in marble maze
+        addFlagsToLinedefs(ML_MIDMASKED, 419, 425, 429, 481);
+
+        // Fix texture on doors that open when picking up the yellow key
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 657, 658, 758, 760, 762, 764, 766);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP29: The Death Domain
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheDeathDomain() noexcept {
@@ -492,7 +526,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 162561, 0x5BA4490CA5C13E9A, 0x23D505C31AF4CADF, patchMap_LunarMiningProject   },      // MAP21
     {  96826, 0x9B6446A94907229A, 0x6DC9F5EDDB9D4F2D, patchMap_Quarry               },      // MAP22
     { 167847, 0x3BC3E6570C2D06B3, 0x18756B0D2C98BE86, patchMap_Ballistyx            },      // MAP23
-    { 121920, 0x445D7FDA25066B71, 0xAC3893B22E188D4D, applyOriginalMapCommonPatches },      // MAP24
+    { 121920, 0x445D7FDA25066B71, 0xAC3893B22E188D4D, patchMap_Heck                 },      // MAP24
     { 113719, 0xFBA63EF7487AB574, 0xE21B77623A0DE2AA, applyOriginalMapCommonPatches },      // MAP25
     { 127601, 0x1008C54A53E8B33E, 0x8E35C49173174DCD, applyOriginalMapCommonPatches },      // MAP26
     { 113829, 0x25A6925BB713C346, 0x7AF7C07603DEA325, applyOriginalMapCommonPatches },      // MAP27
