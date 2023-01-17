@@ -507,6 +507,21 @@ static void patchMap_Aztec() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP27: Ghost Town
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_GhostTown() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix texture on blue key room monster closet
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 595);
+
+        // Fix textures on southeast arena monster closets
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 507, 505, 506, 502, 503, 504);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP29: The Death Domain
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheDeathDomain() noexcept {
@@ -562,7 +577,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 121920, 0x445D7FDA25066B71, 0xAC3893B22E188D4D, patchMap_Heck                 },      // MAP24
     { 113719, 0xFBA63EF7487AB574, 0xE21B77623A0DE2AA, applyOriginalMapCommonPatches },      // MAP25
     { 127601, 0x1008C54A53E8B33E, 0x8E35C49173174DCD, patchMap_Aztec                },      // MAP26
-    { 113829, 0x25A6925BB713C346, 0x7AF7C07603DEA325, applyOriginalMapCommonPatches },      // MAP27
+    { 113829, 0x25A6925BB713C346, 0x7AF7C07603DEA325, patchMap_GhostTown            },      // MAP27
     { 141807, 0x3461BD1E919965AB, 0x07C36C7B648205F6, applyOriginalMapCommonPatches },      // MAP28
     { 107736, 0xD9789CCEA024CCCC, 0x61CCB6C421B65C47, patchMap_TheDeathDomain       },      // MAP29 (NTSC)
     { 107736, 0x0599BE06504C6FAD, 0x1DCB1C8AD6410764, patchMap_TheDeathDomain       },      // MAP29 (PAL, why different?)
