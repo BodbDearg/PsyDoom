@@ -474,6 +474,39 @@ static void patchMap_Heck() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP26: Aztec
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Aztec() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Restore hidden textures on glowing floor room
+        addFlagsToLinedefs(ML_MIDMASKED, 199, 1203, 194, 1206);
+
+        // Fix textures on monster closet in glowing floor room
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 196, 197, 225, 226);
+
+        // Fix texture on teleport that lowers when entering large southeast room
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 1171);
+
+        // Restore hidden textures in large southeast room
+        addFlagsToLinedefs(ML_MIDMASKED, 363, 367, 369, 370, 374, 432, 414, 1188);
+
+        // Hide linedef for trap in red key room
+        addFlagsToLinedefs(ML_DONTDRAW, 1003);
+
+        // Fix texture on southern-most chaingunner trap door
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 478);
+        gpSides[gpLines[478].sidenum[0]].rowoffset = -1 * FRACUNIT;
+
+        // Fix textures on northern-most hell knight trap doors
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 715, 922);
+        gpSides[gpLines[715].sidenum[0]].rowoffset = 20 * FRACUNIT;
+        gpSides[gpLines[922].sidenum[0]].rowoffset = 20 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP29: The Death Domain
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheDeathDomain() noexcept {
@@ -528,7 +561,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 167847, 0x3BC3E6570C2D06B3, 0x18756B0D2C98BE86, patchMap_Ballistyx            },      // MAP23
     { 121920, 0x445D7FDA25066B71, 0xAC3893B22E188D4D, patchMap_Heck                 },      // MAP24
     { 113719, 0xFBA63EF7487AB574, 0xE21B77623A0DE2AA, applyOriginalMapCommonPatches },      // MAP25
-    { 127601, 0x1008C54A53E8B33E, 0x8E35C49173174DCD, applyOriginalMapCommonPatches },      // MAP26
+    { 127601, 0x1008C54A53E8B33E, 0x8E35C49173174DCD, patchMap_Aztec                },      // MAP26
     { 113829, 0x25A6925BB713C346, 0x7AF7C07603DEA325, applyOriginalMapCommonPatches },      // MAP27
     { 141807, 0x3461BD1E919965AB, 0x07C36C7B648205F6, applyOriginalMapCommonPatches },      // MAP28
     { 107736, 0xD9789CCEA024CCCC, 0x61CCB6C421B65C47, patchMap_TheDeathDomain       },      // MAP29 (NTSC)
