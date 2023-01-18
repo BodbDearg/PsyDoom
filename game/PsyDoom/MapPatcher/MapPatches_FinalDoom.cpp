@@ -522,6 +522,73 @@ static void patchMap_GhostTown() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP28: Baron's Lair
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_BaronsLair() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Shift floor and ceiling flats for exit; they are misaligned
+        gpSectors[124].ceilTexOffsetX = 32 * FRACUNIT;
+        gpSectors[124].floorTexOffsetX = 32 * FRACUNIT;
+        
+        // Shift ceiling flats for lights in north room; they are misaligned
+        gpSectors[273].ceilTexOffsetY = 32 * FRACUNIT;
+        gpSectors[278].ceilTexOffsetY = 32 * FRACUNIT;
+
+        // Increase light level for deathmatch start closets
+        modifySectors(
+            [](sector_t& sector) { sector.lightlevel = 32; },
+            13, 14, 42, 103, 220, 222, 251, 254
+        );
+
+        // Align switch textures in deathmatch start closets
+        modifyLinedefs(
+            [](line_t& line) {
+                gpSides[line.sidenum[0]].rowoffset = 0;
+            }, 579, 591, 585, 619, 622, 624, 1214, 1226
+        );
+
+        // Hide deathmatch start closets from automap & computer map
+        addFlagsToLinedefs(ML_SECRET, 1225, 1215, 620, 621, 623, 562, 569, 572);
+        addFlagsToLinedefs(ML_DONTDRAW,
+            1219, 1220, 1221, 1222, 1223, 1226,
+            1208, 1209, 1210, 1211, 1212, 1214,
+            604, 605, 616, 617, 618, 619,
+            601, 602, 612, 613, 614, 622,
+            598, 599, 608, 609, 610, 624,
+            586, 587, 588, 589, 590, 591,
+            574, 575, 576, 577, 578, 579,
+            580, 581, 582, 583, 584, 585
+        );
+
+        // Hide pillars that lower in deathmatch from automap & computer map
+        // Fix texture alignment
+        addFlagsToLinedefs(ML_DONTDRAW, 704, 705, 706, 707, 708, 709);
+        modifyLinedefs(
+            [](line_t& line) {
+                line.flags &= ~ML_DONTPEGTOP;
+                line.flags |= ML_SECRET;
+            }, 0, 6, 9, 15, 20, 26, 29, 35, 74, 76, 77, 79
+        );
+        modifyLinedefs(
+            [](line_t& line) {
+                gpSides[line.sidenum[0]].rowoffset = -24 * FRACUNIT;
+                line.flags &= ~ML_DONTPEGTOP;
+                line.flags |= ML_SECRET;
+            }, 7, 16, 27, 38, 75, 78, 482, 483, 486, 487, 488, 489
+        );
+
+        // Fix door tracks on some of the deathmatch doors
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 580, 584, 574, 578, 586, 590);
+
+        // Hide monster closet tunnels
+        addFlagsToLinedefs(ML_SECRET, 295, 1097);
+        addFlagsToLinedefs(ML_DONTDRAW, 1089, 1090, 1091, 1098, 1099, 1100);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP29: The Death Domain
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheDeathDomain() noexcept {
@@ -578,7 +645,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 113719, 0xFBA63EF7487AB574, 0xE21B77623A0DE2AA, applyOriginalMapCommonPatches },      // MAP25
     { 127601, 0x1008C54A53E8B33E, 0x8E35C49173174DCD, patchMap_Aztec                },      // MAP26
     { 113829, 0x25A6925BB713C346, 0x7AF7C07603DEA325, patchMap_GhostTown            },      // MAP27
-    { 141807, 0x3461BD1E919965AB, 0x07C36C7B648205F6, applyOriginalMapCommonPatches },      // MAP28
+    { 141807, 0x3461BD1E919965AB, 0x07C36C7B648205F6, patchMap_BaronsLair           },      // MAP28
     { 107736, 0xD9789CCEA024CCCC, 0x61CCB6C421B65C47, patchMap_TheDeathDomain       },      // MAP29 (NTSC)
     { 107736, 0x0599BE06504C6FAD, 0x1DCB1C8AD6410764, patchMap_TheDeathDomain       },      // MAP29 (PAL, why different?)
     { 110131, 0x2C157281E504283E, 0x914845A33B9F0503, applyOriginalMapCommonPatches },      // MAP30
