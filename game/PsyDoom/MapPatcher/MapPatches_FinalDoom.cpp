@@ -610,6 +610,37 @@ static void patchMap_TheDeathDomain() noexcept {
             },
             603, 604, 606
         );
+
+        // Fix the railing next to the stairs being walk-through in the northeast room
+        addFlagsToLinedefs(ML_BLOCKING, 691, 692, 693, 694, 695);
+
+        // The blue key is virutally impossible to get to without strafe jumping
+        // Tag the barrier to the trench the same as the barrier on the platform and add texture to backside
+        gpSectors[39].tag = 27;
+        gpSides[gpLines[80].sidenum[1]].bottomtexture = R_TextureNumForName("BRICK12");
+    }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Prevent railing texture around the invisibility sphere from repeating vertically in the northeast room
+        addFlagsToLinedefs(ML_MID_FIXED_HEIGHT, 916, 917, 918);
+
+        // Hide linedef around invisiblity sphere
+        hideLinedefs(935);
+
+        // Hide linedefs for east room window skybox
+        hideLinedefs(833, 834, 835, 836, 837, 838);
+
+        // Realign switch texture on south hallway barrier
+        gpSides[gpLines[911].sidenum[0]].textureoffset = -16 * FRACUNIT;
+        gpSides[gpLines[911].sidenum[0]].rowoffset = 0 * FRACUNIT;
+
+        // Realign texture above and below the inside of northeast courtyard window 
+        addFlagsToLinedefs(ML_DONTPEGTOP, 456);
+        gpSides[gpLines[456].sidenum[0]].rowoffset = 57 * FRACUNIT;
+
+        // Fix texture on hidden elevator close to exit
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 805);
+        gpSides[gpLines[805].sidenum[0]].rowoffset = 64 * FRACUNIT;
     }
 }
 
