@@ -25,7 +25,8 @@
 
 BEGIN_NAMESPACE(MapInfo)
 
-// All of the main MAPINFO data structures
+// All of the main MAPINFO data structures.
+// Note that all of the vector lists are sorted in ascending order of element (map, episode etc.) number.
 static std::vector<MusicTrack>  gMusicTracks;
 static GameInfo                 gGameInfo;
 static std::vector<Episode>     gEpisodes;
@@ -276,9 +277,18 @@ static void readEpisode(const Block& block) noexcept {
     Episode& episode = getOrCreateStructWithIntKey(episodeNum, gEpisodes, &Episode::episodeNum);
     episode.name = block.getSingleSmallStringValue("Name", episode.name);
     episode.startMap = block.getSingleIntValue("StartMap", episode.startMap);
+    episode.logoPic = block.getSingleSmallStringValue("LogoPic", episode.logoPic);
+    episode.logoPal = (int16_t) block.getSingleIntValue("LogoPal", episode.logoPal);
+    episode.logoX = (int16_t) block.getSingleIntValue("LogoX", episode.logoX);
+    episode.logoYOffset = (int16_t) block.getSingleIntValue("LogoYOffset", episode.logoYOffset);
+    episode.bIsHidden = (block.getSingleIntValue("IsHidden", episode.bIsHidden) > 0);
 
     if ((episode.startMap < 1) || (episode.startMap > 255)) {
         error(block, "Episode: 'StartMap' must be specified and be between 1 and 255!");
+    }
+
+    if (episode.logoPal > 31) {
+        error(block, "Episode: 'LogoPal' must from 0-31 for a valid palette, or < 0 to use the default 'DOOM' logo palette!");
     }
 }
 
@@ -443,6 +453,24 @@ static void readMapInfoFromIWAD() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Sorts the map info so that maps and episodes are in ascending order
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void sortMapInfo() noexcept {
+    const auto sortListBasedOnField = [](auto& listToSort, const auto fieldPtr) noexcept {
+        std::sort(
+            listToSort.begin(),
+            listToSort.end(),
+            [fieldPtr](const auto& obj1, const auto& obj2) noexcept { return (obj1.*fieldPtr < obj2.*fieldPtr); }
+        );
+    };
+
+    sortListBasedOnField(gMusicTracks, &MusicTrack::trackNum);
+    sortListBasedOnField(gEpisodes, &Episode::episodeNum);
+    sortListBasedOnField(gClusters, &Cluster::clusterNum);
+    sortListBasedOnField(gMaps, &Map::mapNum);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the MAPINFO lump, if present from one of the main IWAD files.
 // Otherwise initializes MAPINFO to the appropriate settings for the current game (Doom or Final Doom).
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -452,9 +480,11 @@ void init() noexcept {
         GecMapInfo::init();
     }
 
-    // Set MAPINFO to the default values then read overrides from one of the IWADs
+    // Set MAPINFO to the default values then read overrides from one of the IWADs.
+    // Also sort it all so it's in a good order, once we're done reading.
     setMapInfoToDefaults(gGameInfo, gEpisodes, gClusters, gMaps, gMusicTracks);
     readMapInfoFromIWAD();
+    sortMapInfo();
 
     // Clear the cached search result for 'getMap'
     gLastGetMap = -1;
@@ -516,6 +546,28 @@ int32_t getNumEpisodes() noexcept {
     }
 
     return maxEpisodeNum;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the next episode (if any) after the given episode in the MapInfo episode list
+//------------------------------------------------------------------------------------------------------------------------------------------
+const Episode* getNextEpisode(const Episode& episode) noexcept {
+    const Episode* const pNextEpisode = &episode + 1;
+    const Episode* const pBegEpisode = gEpisodes.data();
+    const Episode* const pEndEpisode = pBegEpisode + gEpisodes.size();
+
+    return ((pNextEpisode >= pBegEpisode) && (pNextEpisode < pEndEpisode)) ? pNextEpisode : nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the previous episode (if any) before the given episode in the MapInfo episode list
+//------------------------------------------------------------------------------------------------------------------------------------------
+const Episode* getPrevEpisode(const Episode& episode) noexcept {
+    const Episode* const pPrevEpisode = &episode - 1;
+    const Episode* const pBegEpisode = gEpisodes.data();
+    const Episode* const pEndEpisode = pBegEpisode + gEpisodes.size();
+
+    return ((pPrevEpisode >= pBegEpisode) && (pPrevEpisode < pEndEpisode)) ? pPrevEpisode : nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

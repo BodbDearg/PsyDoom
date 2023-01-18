@@ -25,7 +25,7 @@
 #include <algorithm>
 
 texture_t   gTex_BACK;                  // The background texture for the main menu (and intermission)
-texture_t   gTex_DOOM;                  // The texture for the DOOM logo
+texture_t   gTex_DOOM;                  // The texture for the 'DOOM' logo (PsyDoom: this is now only used for the GEC ME Beta 3 title screen, usage here is replaced by the episode logo list)
 int32_t     gCursorPos[MAXPLAYERS];     // Which of the menu options each player's cursor is over (see 'menu_t')
 int32_t     gCursorFrame;               // Current frame that the menu cursor is displaying
 int32_t     gMenuTimeoutStartTicCon;    // Tick that we start checking for menu timeouts from
@@ -79,6 +79,15 @@ static MenuElem gMenuElems[NUM_MENU_ELEM_TYPES] = {};
 // The minimum and maximum spacing between options
 static constexpr int32_t MAX_OPTION_SPACING = 22;
 static constexpr int32_t MIN_OPTION_SPACING = 17;
+
+// PsyDoom: holds info for an episode logo (lump name and texture)
+struct EpisodeLogo {
+    String8     lumpName;
+    texture_t   tex;
+};
+
+// PsyDoom: a list of all episode logos (only 1 entry per unique lump name)
+static std::vector<EpisodeLogo> gEpisodeLogos;
 
 #endif  // #if PSYDOOM_MODS
 
@@ -181,7 +190,16 @@ static void M_LoadAndCacheRequiredUITextures() noexcept {
     I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
     I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
     I_LoadAndCacheTexLump(gTex_BACK, Game::getTexLumpName_BACK());
-    I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
+
+    #if PSYDOOM_MODS
+        // PsyDoom: there is now a list of episode logos instead of just 1
+        for (EpisodeLogo& episodeLogo : gEpisodeLogos) {
+            I_LoadAndCacheTexLump(episodeLogo.tex, episodeLogo.lumpName);
+        }
+    #else
+        I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
+    #endif
+
     I_LoadAndCacheTexLump(gTex_OptionsBg, Game::getTexLumpName_OptionsBg());
 
     // Assets specific to the GEC Master Edition
@@ -195,10 +213,124 @@ static void M_LoadAndCacheRequiredUITextures() noexcept {
         }
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom utility: attempts to find the episode logo with the specified lump name
+//------------------------------------------------------------------------------------------------------------------------------------------
+static EpisodeLogo* M_FindEpisodeLogo(const String8& lumpName) noexcept {
+    for (EpisodeLogo& logo : gEpisodeLogos) {
+        if (logo.lumpName == lumpName)
+            return &logo;
+    }
+
+    return nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: builds a list of all the episode logos, made unique by their lump name.
+// Note: this is only done once since the list must live for the duration of the app's lifetime (due to texture cache back references).
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void M_BuildOnceEpisodeLogoList() noexcept {
+    // Already built the logo list?
+    // Can't touch the list once it's built, since the texture cache may reference entries within the list.
+    if (!gEpisodeLogos.empty())
+        return;
+
+    for (const MapInfo::Episode& episode : MapInfo::allEpisodes()) {
+        // Skip this logo if we already added it to the list, otherwise add an entry for it:
+        if (M_FindEpisodeLogo(episode.logoPic))
+            continue;
+
+        EpisodeLogo& logo = gEpisodeLogos.emplace_back();
+        logo.lumpName = episode.logoPic;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: returns which episode is currently selected on the main menu
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const MapInfo::Episode* M_GetSelectedEpisode() noexcept {
+    const int32_t episodeNum = (gStartGameType == gt_single) ? gStartMapOrEpisode : Game::getMapEpisode(gStartMapOrEpisode);
+    return MapInfo::getEpisode(episodeNum);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: searches for the next non-hidden episode number after the specified one.
+// Returns '-1' if there is no such episode.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t const M_NextNonHiddenEpisodeNum(const int32_t afterEpisodeNum) noexcept {
+    for (const MapInfo::Episode& episode : MapInfo::allEpisodes()) {
+        // Note: the episode list is in order, so stop the search once we find the first episode number which is greater:
+        if ((episode.episodeNum > afterEpisodeNum) && (!episode.bIsHidden))
+            return episode.episodeNum;
+    }
+
+    return -1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: searches for the previous non-hidden episode number before the specified one.
+// Returns '-1' if there is no such episode.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t const M_PrevNonHiddenEpisodeNum(const int32_t beforeEpisodeNum) noexcept {
+    int32_t prevEpisodeNum = -1;
+
+    for (const MapInfo::Episode& episode : MapInfo::allEpisodes()) {
+        // Note: the episode list is in order, so stop the search once we find the first episode number which is greater than or equal:
+        if (episode.episodeNum >= beforeEpisodeNum)
+            break;
+
+        if (!episode.bIsHidden) {
+            prevEpisodeNum = episode.episodeNum;
+        }
+    }
+
+    return prevEpisodeNum;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom helper: fixes up the start episode number to point to a valid and non hidden episode.
+// Used to skip past 'hidden' secret episodes after making an episode selection, or after initializing the menu.
+// Will either fix up by chosing a valid next episode (forward direction) or chosing a valid previous episode (reverse direction).
+// Will also loop around to the beginning if required.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void M_FixupStartEpisodeNumber(const bool bForwardDir) noexcept {
+    // Only do this when we are selecting episodes and not maps (single player mode only)
+    if (gStartGameType != gt_single)
+        return;
+
+    const MapInfo::Episode* const pCurEpisode = MapInfo::getEpisode(gStartMapOrEpisode);
+    const bool bCurEpisodeValid = (pCurEpisode && (!pCurEpisode->bIsHidden));
+
+    if (!bCurEpisodeValid) {
+        if (bForwardDir) {
+            gStartMapOrEpisode = M_NextNonHiddenEpisodeNum(gStartMapOrEpisode);
+
+            if (gStartMapOrEpisode < 0) {
+                gStartMapOrEpisode = M_NextNonHiddenEpisodeNum(0);
+
+                if (gStartMapOrEpisode < 0) {
+                    I_Error("M_FixupStartEpisodeNumber: unable to find an episode which isn't hidden!");
+                }
+            }
+        }
+        else {
+            gStartMapOrEpisode = M_PrevNonHiddenEpisodeNum(gStartMapOrEpisode);
+
+            if (gStartMapOrEpisode < 0) {
+                gStartMapOrEpisode = M_PrevNonHiddenEpisodeNum(gMaxStartEpisodeOrMap + 1);
+
+                if (gStartMapOrEpisode < 0) {
+                    I_Error("M_FixupStartEpisodeNumber: unable to find an episode which isn't hidden!");
+                }
+            }
+        }
+    }
+}
 #endif  // #if PSYDOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// PsyDoom helper: encapsulates the logic for drawing the 'DOOM' logo.
+// Encapsulates the logic for drawing the 'DOOM' logo.
 // Also draws any additional elements, like 'MASTER EDITION' text for the GEC Master Edition.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void M_DrawDoomLogo() noexcept {
@@ -209,7 +341,17 @@ static void M_DrawDoomLogo() noexcept {
         constexpr int32_t logoYPos = 20;
     #endif
 
-    I_CacheAndDrawSprite(gTex_DOOM, 75, (int16_t) logoYPos, Game::getTexPalette_DOOM());
+    // PsyDoom: the episode logo can now change dynamically depending on which episode is selected
+    #if PSYDOOM_MODS
+        if (const MapInfo::Episode* const pEpisode = M_GetSelectedEpisode()) {
+            if (EpisodeLogo* const pEpisodeLogo = M_FindEpisodeLogo(pEpisode->logoPic)) {
+                const uint16_t logoPaletteClut = (pEpisode->logoPal >= 0) ? R_GetPaletteClutId(pEpisode->logoPal) : Game::getTexPalette_DOOM();
+                I_CacheAndDrawSprite(pEpisodeLogo->tex, pEpisode->logoX, (int16_t)(logoYPos + pEpisode->logoYOffset), logoPaletteClut);
+            }
+        }
+    #else
+        I_CacheAndDrawSprite(gTex_DOOM, 75, (int16_t) logoYPos, Game::getTexPalette_DOOM());
+    #endif
 
     // PsyDoom: cache and draw the 'MASTER EDITION' text if we're playing the GEC Master Edition
     #if PSYDOOM_MODS
@@ -337,6 +479,11 @@ gameaction_t RunMenu() noexcept {
 // Setup/init logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Start() noexcept {
+    // PsyDoom: build (once only) a list of all the episode logos
+    #if PSYDOOM_MODS
+        M_BuildOnceEpisodeLogoList();
+    #endif
+
     // Assume no networked game initially
     gNetGame = gt_single;
     gCurPlayerIndex = 0;
@@ -355,7 +502,16 @@ void M_Start() noexcept {
 
     // Load and cache some commonly used UI textures
     I_LoadAndCacheTexLump(gTex_BACK, Game::getTexLumpName_BACK());
-    I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
+
+    #if PSYDOOM_MODS
+        // PsyDoom: there is now a list of episode logos instead of just 1
+        for (EpisodeLogo& episodeLogo : gEpisodeLogos) {
+            I_LoadAndCacheTexLump(episodeLogo.tex, episodeLogo.lumpName);
+        }
+    #else
+        I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
+    #endif
+
     I_LoadAndCacheTexLump(gTex_CONNECT, "CONNECT", 0);
 
     #if PSYDOOM_MODS
@@ -384,7 +540,7 @@ void M_Start() noexcept {
     } else {
         #if PSYDOOM_MODS
             gMaxStartEpisodeOrMap = Game::getNumMaps();         // For multiplayer any of the maps (including secret maps) can be selected
-        #else   
+        #else
             gMaxStartEpisodeOrMap = Game::getNumRegularMaps();  // For multiplayer any of the normal (non secret) maps can be selected
         #endif
     }
@@ -403,6 +559,11 @@ void M_Start() noexcept {
             gStartMapOrEpisode = std::min(gStartMapOrEpisode, gMaxStartEpisodeOrMap);
         #endif
     }
+
+    // PsyDoom: make sure the start episode is valid in single player and skip past hidden ones
+    #if PSYDOOM_MODS
+        M_FixupStartEpisodeNumber(true);
+    #endif
 
     // Play the main menu music
     psxcd_play_at_andloop(
@@ -638,6 +799,11 @@ gameaction_t M_Ticker() noexcept {
             gStartMapOrEpisode = 1;
         }
 
+        // PsyDoom: make sure the start episode is valid in single player and skip past hidden ones
+        #if PSYDOOM_MODS
+            M_FixupStartEpisodeNumber(true);
+        #endif
+
         return ga_nothing;
     }
     else if (gCursorPos[0] == level) {
@@ -656,6 +822,11 @@ gameaction_t M_Ticker() noexcept {
                     gStartMapOrEpisode = gMaxStartEpisodeOrMap;
                 #endif
             }
+
+            // PsyDoom: make sure the start episode is valid in single player and skip past hidden ones
+            #if PSYDOOM_MODS
+                M_FixupStartEpisodeNumber(true);
+            #endif
         }
         else if (bMenuLeft) {
             gStartMapOrEpisode -= 1;
@@ -671,6 +842,11 @@ gameaction_t M_Ticker() noexcept {
                     gStartMapOrEpisode = 1;
                 #endif
             }
+
+            // PsyDoom: make sure the start episode is valid in single player and skip past hidden ones
+            #if PSYDOOM_MODS
+                M_FixupStartEpisodeNumber(false);
+            #endif
         }
 
         return ga_nothing;
@@ -713,8 +889,6 @@ gameaction_t M_Ticker() noexcept {
 // Renders the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Drawer() noexcept {
-    // TODO: GEC ME BETA 4: work here needed!
-
     // Draw the menu background and increment frame count for the texture cache.
     I_IncDrawnFrameCount();
 
@@ -786,11 +960,17 @@ void M_Drawer() noexcept {
     if (gStartGameType == gt_single) {
         I_DrawString(74, levelY, Game::getEpisodeName(gStartMapOrEpisode).c_str().data());
     } else {
-        // Coop or deathmatch game, draw the level number rather than episode
-        I_DrawString(74, levelY, "Level");
-
-        const int32_t xpos = (gStartMapOrEpisode >= 10) ? 148 : 136;
-        I_DrawNumber(xpos, levelY, gStartMapOrEpisode);
+        // Coop or deathmatch game, draw the level number rather than episode.
+        // PsyDoom: use a more flexible drawing method that can accomodate any number of digits.
+        #if PSYDOOM_MODS
+            char levelNumStr[64];
+            std::snprintf(levelNumStr, C_ARRAY_SIZE(levelNumStr), "Level %d", gStartMapOrEpisode);
+            I_DrawString(74, levelY, levelNumStr);
+        #else
+            I_DrawString(74, levelY, "Level");
+            const int32_t xpos = (gStartMapOrEpisode >= 10) ? 148 : 136;
+            I_DrawNumber(xpos, levelY, gStartMapOrEpisode);
+        #endif
     }
 
     I_DrawString(74, difficultyLine1Y, "Difficulty");

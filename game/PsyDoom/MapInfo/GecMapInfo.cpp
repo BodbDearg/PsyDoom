@@ -381,44 +381,58 @@ static const Token* parseGraphicLumpNameAndPal(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Parses a single episode definition and returns the next token after that
 //------------------------------------------------------------------------------------------------------------------------------------------
-static const Token* parseEpisode(const Token* const pStartToken) noexcept {
+static const Token* parseEpisode(const Token* const pStartToken, const bool bIsSecretEpisode) noexcept {
     const Token* pToken = pStartToken;
 
     // Episode number is auto-determined
     Episode& episode = gEpisodes.emplace_back();
     episode.episodeNum = (int32_t) gEpisodes.size();
 
+    // If it's a secret episode then don't show it on the main menu
+    episode.bIsHidden = bIsSecretEpisode;
+
     // Parse episode name
     assignAsciiTextToSmallString(episode.name, pToken->text());
     pToken++;
 
-    // Episode start map
-    ensureTokenType(pToken, TokenType::Number);
-    episode.startMap = (int32_t) pToken->number;
+    // Episode start map (only for regular episodes)
+    if (!bIsSecretEpisode) {
+        ensureTokenType(pToken, TokenType::Number);
+        episode.startMap = (int32_t) pToken->number;
 
-    if ((episode.startMap < 1) || (episode.startMap > 255)) {
-        error(pToken->begin, "Episode: 'StartMap' must be specified and be between 1 and 255!");
+        if ((episode.startMap < 1) || (episode.startMap > 255)) {
+            error(pToken->begin, "Episode: 'StartMap' must be specified and be between 1 and 255!");
+        }
+
+        pToken++;
     }
 
-    pToken++;
-
-    // TODO: GEC ME BETA 4: parse 'PicLogo'
+    // Parse 'PicLogo'
     if (pToken->type == TokenType::String) {
+        assignAsciiTextToSmallString(episode.logoPic, pToken->text());
         pToken++;
     } 
  
-    // TODO: GEC ME BETA 4: parse 'PalLogo'
+    // Parse 'PalLogo'
     if (pToken->type == TokenType::Number) {
+        episode.logoPal = (int16_t) pToken->number;
+
+        if (episode.logoPal > 31) {
+            error(pToken->begin, "Episode: 'PalLogo' must from 0-31 for a valid palette, or < 0 to use the default 'DOOM' logo palette!");
+        }
+
         pToken++;
     }
 
-    // TODO: GEC ME BETA 4: parse 'LogoX'
+    // Parse 'LogoX'
     if (pToken->type == TokenType::Number) {
+        episode.logoX = (int16_t) pToken->number;
         pToken++;
     }
     
-    // TODO: GEC ME BETA 4: parse 'LogoY'
+    // Parse 'LogoY'
     if (pToken->type == TokenType::Number) {
+        episode.logoYOffset = (int16_t)(pToken->number - 20);   // A y value of '20' is the natural position for these logos: interpret anything other than that as an offset...
         pToken++;
     }
 
@@ -434,9 +448,11 @@ static const Token* parseEpisodesBlock(const Token* const pStartToken) noexcept 
         [](const Token* pToken) noexcept {
             // Episode definition?
             if (pToken->type == TokenType::String)
-                return parseEpisode(pToken);
+                return parseEpisode(pToken, false);
 
-            // TODO: GEC ME BETA 4: parse 'PicSecret'
+            // Parse the secret episode definition if there:
+            if ((pToken->type == TokenType::Identifier) && (pToken->text() == "PicSecret"))
+                return parseEpisode(pToken, true);
 
             // Unhandled or unwanted line of data - skip it!
             return skipCurrentLineData(pToken);
@@ -819,13 +835,21 @@ bool shouldUseGecMapInfo() noexcept {
 // Loads the GEC format MAPINFO
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
-    // Note: default to Final Doom settings if something isn't otherwise specified
+    // Note: default to Final Doom settings if something isn't otherwise specified (with a few tweaks)
     initGameInfo_FinalDoom(gGameInfo);
+    gGameInfo.texPalette_DOOM = 21;
 
     // Parse the MAPINFO and auto-generate the list of clusters
     parseMapInfoFileOnDisk("PSXDOOM/ABIN/PSXGMINF.TXT");
     parseMapInfoFileOnDisk("PSXDOOM/ABIN/PSXMPINF.TXT");
     parseMapInfoFileOnDisk("PSXDOOM/ABIN/PSXTXINF.TXT");
+
+    // If there is a 'secret' episode then assign its start map as the 1st secret map
+    for (Episode& episode : gEpisodes) {
+        if (episode.bIsHidden) {
+            episode.startMap = gGameInfo.numRegularMaps + 1;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

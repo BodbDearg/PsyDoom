@@ -84,6 +84,11 @@ Defines an episode which can be selected on the main menu. Note: the game's epis
 Episode 1 { 
     Name = "Hell To Pay!"
     StartMap = 1
+    LogoPic = "DOOM"
+    LogoPal = -1
+    LogoX = 75
+    LogoYOffset = 0
+    IsHidden = false
 }
 Episode 2 { 
     Name = "Doomed..."
@@ -96,6 +101,11 @@ Header fields:
 Internal Fields:
 - `Name`: Name of the episode which is displayed on the main menu.
 - `StartMap`: Which map to load when starting a new game with this episode selected. Must be between 1 and 255.
+- `LogoPic`: which lump to show for the episode logo. Defaults to `DOOM` if not specified.
+- `LogoPal`: which palette to use for the episode logo. Should be 0-31 or `-1` to use whatever palette is defined globally for the `DOOM` graphic. Defaults to `-1` if not specified.
+- `LogoX`: The horizontal/x position to display the episode logo at on the main menu. Defaults to `75` if not specified (original position for Doom & Final Doom).
+- `LogoYOffset`: An additional y offset that can be added to the episode logo's position when rendering on the main menu. Defaults to `0` if not specified.
+- `IsHidden`: if `true` then the episode is not a selectable single player episode (used to define an episode logo for secret maps in multiplayer only). The default value is `false` (normal episode).
 
 ## `ClearEpisodes` definition
 When this definition is encountered it instructs the game to clear the current list of episodes. You can use it for example to remove unwanted episodes from Doom or Final Doom. Note: the definition doesn't have any other information associated with it, it's just a simple command/instruction:

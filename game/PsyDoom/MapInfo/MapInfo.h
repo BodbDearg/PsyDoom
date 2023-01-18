@@ -101,11 +101,21 @@ struct Episode {
     int32_t     episodeNum;     // Which episode number this is
     int32_t     startMap;       // Starting map for the episode
     String32    name;           // Name of the episode shown in the main menu
+    String8     logoPic;        // Episode logo lump name (shown on the main menu)
+    int16_t     logoPal;        // Which palette to use for 'logoPic' (if < 0 then use the global palette for the 'DOOM' lump)
+    int16_t     logoX;          // Horizontal position for the episode logo
+    int16_t     logoYOffset;    // Additional y offset that can be added to the episode logo position
+    bool        bIsHidden;      // If 'true' then the episode is not a selectable single player episode (used to define an episode logo for secret maps in multiplayer only)
 
     inline constexpr Episode() noexcept
         : episodeNum(-1)            // Not yet defined
         , startMap(-1)              // Not yet defined
         , name("Unnamed Episode")   // Not yet defined
+        , logoPic("DOOM")           // This is what displayed on the main menu for 'Doom' and 'Final Doom' originally
+        , logoPal(-1)               // Use whatever palette is used for the 'DOOM' lump
+        , logoX(75)                 // This was the original x position the 'DOOM' image was shown at
+        , logoYOffset(0)
+        , bIsHidden(false)
     {
     }
 };
@@ -178,6 +188,8 @@ const GameInfo& getGameInfo() noexcept;
 const Episode* getEpisode(const int32_t episodeNum) noexcept;
 const std::vector<Episode>& allEpisodes() noexcept;
 int32_t getNumEpisodes() noexcept;
+const Episode* getNextEpisode(const Episode& episode) noexcept;
+const Episode* getPrevEpisode(const Episode& episode) noexcept;
 
 const Cluster* getCluster(const int32_t clusterNum) noexcept;
 const std::vector<Cluster>& allClusters() noexcept;
