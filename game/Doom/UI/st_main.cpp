@@ -113,7 +113,7 @@ static void ST_DrawRightAlignedStat(const int32_t xMargin, const int32_t y, cons
 
     // Figure out the x position to right align the string (taking into account the margin) and then draw
     const int32_t x = SCREEN_W - ((int32_t) std::strlen(strBuffer) * 8) - xMargin;
-    I_DrawStringSmall(x, y, strBuffer, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+    I_DrawStringSmall(x, y, strBuffer, Game::getTexClut_STATUS(), 128, 128, 128, false, true);
 }
 #endif  // #if PSYDOOM_MODS
 
@@ -378,7 +378,7 @@ void ST_Drawer() noexcept {
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(spritePrim, true);
 
-    const uint16_t uiPaletteClutId = Game::getTexPalette_STATUS();
+    const uint16_t uiPaletteClutId = Game::getTexClut_STATUS();
     spritePrim.clut = uiPaletteClutId;
 
     // PsyDoom: how much to adjust the coordinates of strings to properly left or right align them in widescreen mode (Vulkan renderer only)

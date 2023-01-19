@@ -39,7 +39,7 @@ static std::vector<std::string> gErrorLines;
 static void DrawCursor(const int16_t cursorX, const int16_t cursorY) noexcept {
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        Game::getTexPalette_STATUS(),
+        Game::getTexClut_STATUS(),
         (int16_t) cursorX - 24,
         (int16_t) cursorY - 2,
         (int16_t)(gTex_STATUS.texPageCoordX + M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W),
@@ -219,7 +219,7 @@ void ErrorMenu_Draw() noexcept {
     // Increment the frame count for the texture cache and draw the background
     I_IncDrawnFrameCount();
     Utils::onBeginUIDrawing();
-    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), 128, 128, 128);
+    O_DrawBackground(gTex_OptionsBg, Game::getTexClut_OptionsBg(), 128, 128, 128);
 
     // Don't do any rendering if we are about to exit the menu
     if (gGameAction == ga_nothing) {

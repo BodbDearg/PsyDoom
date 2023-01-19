@@ -243,7 +243,7 @@ void F1_Start() noexcept {
     #endif
 
     // Draw the loading plaque, purge the texture cache and load up the background needed
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexClut_LOADING());
     I_PurgeTexCache();
 
     // PsyDoom: the background texture for the finale can now be anything
@@ -386,7 +386,7 @@ void F1_Drawer() noexcept {
     #if PSYDOOM_MODS
         I_CacheAndDrawBackgroundSprite(gFinaleBgTex, R_GetPaletteClutId(gpCluster->picPal));
     #else
-        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
+        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexClut_BACK());
     #endif
 
     // Show both the incoming and fully displayed text lines.
@@ -410,7 +410,7 @@ void F1_Drawer() noexcept {
             const int32_t xpos = F_GetLineXPos(textLineChars.data());
 
             if (gpCluster->bSmallFont) {
-                I_DrawStringSmall(xpos, ypos, textLineChars.data(), Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+                I_DrawStringSmall(xpos, ypos, textLineChars.data(), Game::getTexClut_STATUS(), 128, 128, 128, false, true);
             } else {
                 I_DrawString(xpos, ypos, textLineChars.data());
             }
@@ -422,7 +422,7 @@ void F1_Drawer() noexcept {
         const int32_t lastLineXPos = F_GetLineXPos(gFinIncomingLine);
 
         if (gpCluster->bSmallFont) {
-            I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+            I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, Game::getTexClut_STATUS(), 128, 128, 128, false, true);
         } else {
             I_DrawString(lastLineXPos, ypos, gFinIncomingLine);
         }
@@ -462,7 +462,7 @@ void F2_Start() noexcept {
     #endif
 
     // Show the loading plaque and purge the texture cache
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexClut_LOADING());
     I_PurgeTexCache();
 
     // Load the background and sprites needed.
@@ -557,7 +557,7 @@ void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     // PsyDoom: wait for barrel and pistol sounds to stop in addition to cd music and draw a loading plaque while we wait.
     // Also kill all sounds before exiting back to the main menu - fixes a bug where a strange sound plays on returning to the main menu.
     #if PSYDOOM_MODS
-        I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
+        I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexClut_LOADING());
         Utils::waitUntilSeqExitedStatus(sfx_barexp, SequenceStatus::SEQUENCE_PLAYING);
         Utils::waitUntilSeqExitedStatus(sfx_pistol, SequenceStatus::SEQUENCE_PLAYING);
         S_StopAll();
@@ -812,7 +812,7 @@ void F2_Drawer() noexcept {
                 const int32_t xpos = F_GetLineXPos(textLineChars.data());
 
                 if (gpCluster->bSmallFont) {
-                    I_DrawStringSmall(xpos, ypos, textLineChars.data(), Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+                    I_DrawStringSmall(xpos, ypos, textLineChars.data(), Game::getTexClut_STATUS(), 128, 128, 128, false, true);
                 } else {
                     I_DrawString(xpos, ypos, textLineChars.data());
                 }
@@ -824,7 +824,7 @@ void F2_Drawer() noexcept {
             const int32_t lastLineXPos = F_GetLineXPos(gFinIncomingLine);
 
             if (gpCluster->bSmallFont) {
-                I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+                I_DrawStringSmall(lastLineXPos, ypos, gFinIncomingLine, Game::getTexClut_STATUS(), 128, 128, 128, false, true);
             } else {
                 I_DrawString(lastLineXPos, ypos, gFinIncomingLine);
             }

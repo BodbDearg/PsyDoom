@@ -96,7 +96,7 @@ static mobj_t gEmptyMobj;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_DoLoadLevel() noexcept {
     // Draw the loading plaque
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexClut_LOADING());
 
     // Wait for the pistol and barrel explode menu sounds to stop playing.
     // PsyDoom: this can now be optionally skipped if fast loading is enabled.

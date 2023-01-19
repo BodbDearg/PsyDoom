@@ -345,12 +345,12 @@ static void M_DrawDoomLogo() noexcept {
     #if PSYDOOM_MODS
         if (const MapInfo::Episode* const pEpisode = M_GetSelectedEpisode()) {
             if (EpisodeLogo* const pEpisodeLogo = M_FindEpisodeLogo(pEpisode->logoPic)) {
-                const uint16_t logoPaletteClut = (pEpisode->logoPal >= 0) ? R_GetPaletteClutId(pEpisode->logoPal) : Game::getTexPalette_DOOM();
+                const uint16_t logoPaletteClut = (pEpisode->logoPal >= 0) ? R_GetPaletteClutId(pEpisode->logoPal) : Game::getTexClut_DOOM();
                 I_CacheAndDrawSprite(pEpisodeLogo->tex, pEpisode->logoX, (int16_t)(logoYPos + pEpisode->logoYOffset), logoPaletteClut);
             }
         }
     #else
-        I_CacheAndDrawSprite(gTex_DOOM, 75, (int16_t) logoYPos, Game::getTexPalette_DOOM());
+        I_CacheAndDrawSprite(gTex_DOOM, 75, (int16_t) logoYPos, Game::getTexClut_DOOM());
     #endif
 
     // PsyDoom: cache and draw the 'MASTER EDITION' text if we're playing the GEC Master Edition
@@ -368,7 +368,7 @@ static void M_DrawDoomLogo() noexcept {
                 I_CacheTex(gTex_DATA);
                 I_DrawSprite(
                     gTex_DATA.texPageId,
-                    Game::getTexPalette_DATA(),
+                    Game::getTexClut_DATA(),
                     48,
                     (int16_t) gMenuElems[MenuElem_MasterEditionSprite].yPos,
                     gTex_DATA.texPageCoordX + 1,
@@ -417,7 +417,7 @@ gameaction_t RunMenu() noexcept {
         #endif
 
         I_IncDrawnFrameCount();
-        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
+        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexClut_BACK());
         M_DrawDoomLogo();
         I_SubmitGpuCmds();
         I_DrawPresent();
@@ -427,7 +427,7 @@ gameaction_t RunMenu() noexcept {
         if (gStartGameType == gt_single)
             break;
 
-        I_DrawLoadingPlaque(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());
+        I_DrawLoadingPlaque(gTex_CONNECT, 54, 103, Game::getTexClut_CONNECT());
         I_NetSetup();
 
         // PsyDoom: abort if app quit was requested
@@ -442,7 +442,7 @@ gameaction_t RunMenu() noexcept {
         #endif
 
         I_IncDrawnFrameCount();
-        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
+        I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexClut_BACK());
         M_DrawDoomLogo();
         I_SubmitGpuCmds();
         I_DrawPresent();
@@ -495,7 +495,7 @@ void M_Start() noexcept {
 
     // Show the loading plaque
     I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexClut_LOADING());
 
     // Load sounds for the menu
     S_LoadMapSoundAndMusic(0);
@@ -896,7 +896,7 @@ void M_Drawer() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
-    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexClut_BACK());
     M_DrawDoomLogo();
 
     // Figure out the y positions for everything
@@ -938,7 +938,7 @@ void M_Drawer() noexcept {
     // Draw the skull cursor
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        Game::getTexPalette_STATUS(),
+        Game::getTexClut_STATUS(),
         50,
         (int16_t) skullCursorY,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -1002,9 +1002,9 @@ void M_DrawNetworkConnectDisplay() noexcept {
     I_IncDrawnFrameCount();
     Utils::onBeginUIDrawing();
 
-    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexClut_BACK());
     M_DrawDoomLogo();
-    I_CacheAndDrawSprite(gTex_CONNECT, 54, 103, Game::getTexPalette_CONNECT());
+    I_CacheAndDrawSprite(gTex_CONNECT, 54, 103, Game::getTexClut_CONNECT());
 
     I_SubmitGpuCmds();
     I_DrawPresent();

@@ -124,7 +124,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
 
         LIBGPU_SetSprt(spritePrim);
         LIBGPU_SetShadeTex(spritePrim, true);
-        spritePrim.clut = Game::getTexPalette_STATUS();
+        spritePrim.clut = Game::getTexClut_STATUS();
     #endif
 
     spritePrim.y0 = (int16_t) y;            // Always on the same row
@@ -259,7 +259,7 @@ void I_DrawPausedOverlay() noexcept {
     const player_t& player = gPlayers[gCurPlayerIndex];
 
     if ((player.cheats & CF_NOPAUSEMSG) == 0) {
-        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, Game::getTexPalette_PAUSE());
+        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, Game::getTexClut_PAUSE());
     }
 
     if (player.cheats & CF_WARPMENU) {
@@ -501,7 +501,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(spritePrim, true);
-    spritePrim.clut = Game::getTexPalette_STATUS();
+    spritePrim.clut = Game::getTexClut_STATUS();
 
     // Decide on starting x position: can either be so the string is centered in the screen, or just the value verbatim
     int32_t curX = (x != -1) ? x : I_GetStringXPosToCenter(str);

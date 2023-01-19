@@ -174,13 +174,13 @@ static void TI_DrawGecMeBeta3Logos() noexcept {
     const int32_t finalLogoY = (SCREEN_H - skyTex.height / 3 - gTex_FINAL.height) / 2;
 
     // Draw the 'DOOM' and 'FINAL DOOM' logos
-    TI_DrawSpriteTexture(gTex_DOOM,  Game::getTexPalette_DOOM(), doomLogoX, doomLogoY, rgb);
-    TI_DrawSpriteTexture(gTex_FINAL, Game::getTexPalette_FINAL(), finalLogoX, finalLogoY, rgb);
+    TI_DrawSpriteTexture(gTex_DOOM,  Game::getTexClut_DOOM(), doomLogoX, doomLogoY, rgb);
+    TI_DrawSpriteTexture(gTex_FINAL, Game::getTexClut_FINAL(), finalLogoX, finalLogoY, rgb);
 
     // Draw the 'Master Edition' logo: this one is more complex since the texcoords need to be specified manually
     I_DrawColoredSprite(
         gTex_DATA.texPageId,
-        Game::getTexPalette_DATA(),
+        Game::getTexClut_DATA(),
         49,
         12,
         gTex_DATA.texPageCoordX + 1,
@@ -205,7 +205,7 @@ static void DRAW_Title_Doom() noexcept {
     #if PSYDOOM_MODS
         // PsyDoom: the TITLE logo might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe).
         // PsyDoom: also ensure the TITLE logo is centered horizontally - enables widescreen assets to be used.
-        TI_DrawSpriteTexture(gTex_TITLE, Game::getTexPalette_TITLE(), I_GetCenteredDrawPos_X(gTex_TITLE), titleY);
+        TI_DrawSpriteTexture(gTex_TITLE, Game::getTexClut_TITLE(), I_GetCenteredDrawPos_X(gTex_TITLE), titleY);
     #else
         I_DrawSprite(gTex_TITLE.texPageId, gPaletteClutIds[TITLEPAL], 0, titleY, 0, 0, SCREEN_W, SCREEN_H);
     #endif
@@ -226,7 +226,7 @@ static void DRAW_Title_FinalDoom() noexcept {
         // PsyDoom: also ensure the TITLE logo is centered horizontally and vertically - enables widescreen assets to be used.
         TI_DrawSpriteTexture(
             gTex_TITLE,
-            Game::getTexPalette_TITLE(),
+            Game::getTexClut_TITLE(),
             I_GetCenteredDrawPos_X(gTex_TITLE),
             I_GetCenteredDrawPos_Y(gTex_TITLE),
             rgb
@@ -248,9 +248,9 @@ static void DRAW_Title_GecMeBeta4() noexcept {
     const uint8_t title1Rgb = (uint8_t) std::clamp(elapsedVBlanks - 60, 0, 128);
     const uint8_t title2Rgb = (uint8_t) std::clamp(elapsedVBlanks - 180, 0, 128);
 
-    TI_DrawSpriteTexture(gTex_TITLE, Game::getTexPalette_TITLE(), I_GetCenteredDrawPos_X(gTex_TITLE2), 0, title1Rgb);
+    TI_DrawSpriteTexture(gTex_TITLE, Game::getTexClut_TITLE(), I_GetCenteredDrawPos_X(gTex_TITLE2), 0, title1Rgb);
     TI_DrawFire(false, true);
-    TI_DrawSpriteTexture(gTex_TITLE2, Game::getTexPalette_TITLE2(), I_GetCenteredDrawPos_X(gTex_TITLE2), 0, title2Rgb, true, 1);
+    TI_DrawSpriteTexture(gTex_TITLE2, Game::getTexClut_TITLE2(), I_GetCenteredDrawPos_X(gTex_TITLE2), 0, title2Rgb, true, 1);
 }
 #endif  // #if PSYDOOM_MODS
 
@@ -412,7 +412,7 @@ void START_Title() noexcept {
     // Show the loading plaque
     W_CacheLumpName("LOADING", PU_STATIC, false);
     I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
-    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexPalette_LOADING());
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, Game::getTexClut_LOADING());
 
     // Load sounds for the menu
     S_LoadMapSoundAndMusic(0);
@@ -463,7 +463,7 @@ void START_Title() noexcept {
 
         texture_t& skyTex = gpTextures[skyTexIdx];
         gpSkyTexture = &skyTex;
-        gPaletteClutId_CurMapSky = Game::getTexPalette_TitleScreenFire();
+        gPaletteClutId_CurMapSky = Game::getTexClut_TitleScreenFire();
 
         W_CacheLumpNum(skyTex.lumpNum, PU_CACHE, true);
         I_CacheTex(skyTex);

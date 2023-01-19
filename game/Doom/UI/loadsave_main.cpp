@@ -125,7 +125,7 @@ static void DrawStatusSprite(
 ) noexcept {
     const LibGpuUV tpU = (LibGpuUV)(gTex_STATUS.texPageCoordX + u);
     const LibGpuUV tpV = (LibGpuUV)(gTex_STATUS.texPageCoordY + v);
-    I_DrawColoredSprite(gTex_STATUS.texPageId, Game::getTexPalette_STATUS(), x, y, tpU, tpV, w, h, r, g, b, false);
+    I_DrawColoredSprite(gTex_STATUS.texPageId, Game::getTexClut_STATUS(), x, y, tpU, tpV, w, h, r, g, b, false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -198,14 +198,14 @@ static void DrawSaveSlot(const SaveFileInfo& save, const int16_t slotX, const in
             std::snprintf(strBuffer, C_ARRAY_SIZE(strBuffer), "-");
         }
 
-        I_DrawStringSmall(slotX + 24, slotY + 6, strBuffer, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+        I_DrawStringSmall(slotX + 24, slotY + 6, strBuffer, Game::getTexClut_STATUS(), 128, 128, 128, false, true);
     }
 
     // Draw the map name
     if (save.mapNum > 0) {
-        I_DrawStringSmall(slotX + 24, slotY + 19, save.mapName.c_str().data(), Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+        I_DrawStringSmall(slotX + 24, slotY + 19, save.mapName.c_str().data(), Game::getTexClut_STATUS(), 128, 128, 128, false, true);
     } else {
-        I_DrawStringSmall(slotX + 24, slotY + 19, "-", Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+        I_DrawStringSmall(slotX + 24, slotY + 19, "-", Game::getTexClut_STATUS(), 128, 128, 128, false, true);
     }
 }
 
@@ -413,7 +413,7 @@ void LoadSave_Draw() noexcept {
     // Draw the background
     const bool bSaveSlotFocused = IsSaveSlotFocused();
     const uint8_t colRGB = (bSaveSlotFocused) ? 64 : 128;
-    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), colRGB, colRGB, colRGB);
+    O_DrawBackground(gTex_OptionsBg, Game::getTexClut_OptionsBg(), colRGB, colRGB, colRGB);
 
     // Draw the save slots
     constexpr auto doDimSlot = [=](const int32_t slotNum) noexcept {

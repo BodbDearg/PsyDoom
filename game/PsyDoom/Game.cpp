@@ -334,103 +334,103 @@ int32_t getMapEpisode(const int32_t mapNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the palette (PSX Clut ID) or lump name to use for various textures
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint16_t getTexPalette_TitleScreenFire() noexcept {
+uint16_t getTexClut_TitleScreenFire() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_titleScreenFire);
 }
 
-uint16_t getTexPalette_STATUS() noexcept {
+uint16_t getTexClut_STATUS() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_STATUS);
 }
 
-uint16_t getTexPalette_TITLE() noexcept {
+uint16_t getTexClut_TITLE() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_TITLE);
 }
 
-uint16_t getTexPalette_TITLE2() noexcept {
+uint16_t getTexClut_TITLE2() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_TITLE2);
 }
 
-uint16_t getTexPalette_BACK() noexcept {
+uint16_t getTexClut_BACK() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_BACK);
 }
 
-uint16_t getTexPalette_Inter_BACK() noexcept {
+uint16_t getTexClut_Inter_BACK() noexcept {
     // Only use the intermission specific version of 'BACK' if available
     const MapInfo::GameInfo& gameInfo = MapInfo::getGameInfo();
     const uint8_t palIdx = (gameInfo.texLumpName_Inter_BACK.chars[0]) ? gameInfo.texPalette_Inter_BACK : gameInfo.texPalette_BACK;
     return R_GetPaletteClutId(palIdx);
 }
 
-uint16_t getTexPalette_LOADING() noexcept {
+uint16_t getTexClut_LOADING() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_LOADING);
 }
 
-uint16_t getTexPalette_PAUSE() noexcept {
+uint16_t getTexClut_PAUSE() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_PAUSE);
 }
 
-uint16_t getTexPalette_NETERR() noexcept {
+uint16_t getTexClut_NETERR() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_NETERR);
 }
 
-uint16_t getTexPalette_DOOM() noexcept {
+uint16_t getTexClut_DOOM() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DOOM);
 }
 
-uint16_t getTexPalette_CONNECT() noexcept {
+uint16_t getTexClut_CONNECT() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_CONNECT);
 }
 
-uint16_t getTexPalette_BUTTONS() noexcept {
+uint16_t getTexClut_BUTTONS() noexcept {
     // Note: don't bother making this configurable via MAPINFO since it's not used anymore
     return R_GetPaletteClutId(Game::gConstants.texPalette_BUTTONS);
 }
 
-uint16_t getTexPalette_IDCRED1() noexcept {
+uint16_t getTexClut_IDCRED1() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_IDCRED1);
 }
 
-uint16_t getTexPalette_IDCRED2() noexcept {
+uint16_t getTexClut_IDCRED2() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_IDCRED2);
 }
 
-uint16_t getTexPalette_WMSCRED1() noexcept {
+uint16_t getTexClut_WMSCRED1() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_WMSCRED1);
 }
 
-uint16_t getTexPalette_WMSCRED2() noexcept {
+uint16_t getTexClut_WMSCRED2() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_WMSCRED2);
 }
 
-uint16_t getTexPalette_LEVCRED2() noexcept {
+uint16_t getTexClut_LEVCRED2() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_LEVCRED2);
 }
 
-uint16_t getTexPalette_GEC() noexcept {
+uint16_t getTexClut_GEC() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_GEC);
 }
 
-uint16_t getTexPalette_GECCRED() noexcept {
+uint16_t getTexClut_GECCRED() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_GECCRED);
 }
 
-uint16_t getTexPalette_DWOLRD() noexcept {
+uint16_t getTexClut_DWOLRD() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DWOLRD);
 }
 
-uint16_t getTexPalette_DWCRED() noexcept {
+uint16_t getTexClut_DWCRED() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DWCRED);
 }
 
-uint16_t getTexPalette_DATA() noexcept {
+uint16_t getTexClut_DATA() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DATA);
 }
 
-uint16_t getTexPalette_FINAL() noexcept {
+uint16_t getTexClut_FINAL() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_FINAL);
 }
 
-uint16_t getTexPalette_OptionsBg() noexcept {
+uint16_t getTexClut_OptionsBg() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_OptionsBG);
 }
 

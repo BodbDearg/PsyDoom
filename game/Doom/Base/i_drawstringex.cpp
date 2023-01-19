@@ -302,7 +302,7 @@ void I_DrawStringEx_PostLayoutDraw(const DrawStringParams& params) noexcept {
     LIBGPU_SetShadeTex(spritePrim, (!params.bEnableShading));
     LIBGPU_setRGB0(spritePrim, params.colR, params.colG, params.colB);
     LIBGPU_SetSemiTrans(spritePrim, params.bSemiTransparent);
-    spritePrim.clut = (params.clutId == 0) ? Game::getTexPalette_STATUS() : params.clutId;
+    spritePrim.clut = (params.clutId == 0) ? Game::getTexClut_STATUS() : params.clutId;
 
     if (params.bUseSmallFont) {
         LIBGPU_setWH(spritePrim, 8, 8);

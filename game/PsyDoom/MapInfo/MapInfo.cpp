@@ -44,7 +44,7 @@ static int32_t  gLastGetMapIndex    = -1;
 Cluster::Cluster() noexcept
     : castLcdFile(S_GetSoundLcdFileId(60))
     , pic("BACK")
-    , picPal(Game::getTexPalette_BACK())
+    , picPal(Game::getTexClut_BACK())
     , cdMusicA((int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom])
     , cdMusicB((int16_t) gCDTrackNum[cdmusic_credits_demo])
     , textX(0)

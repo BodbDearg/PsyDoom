@@ -528,7 +528,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         LIBGPU_SetSemiTrans(spritePrim, false);
         LIBGPU_SetShadeTex(spritePrim, false);
         LIBGPU_setRGB0(spritePrim, 128, 128, 128);
-        spritePrim.clut = Game::getTexPalette_DebugFontSmall();
+        spritePrim.clut = Game::getTexClut_DebugFontSmall();
     }
     #endif  // #if !PSYDOOM_MODS
 
@@ -555,7 +555,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
             gDebugDrawStringXPos,
             gDebugDrawStringYPos,
             msgBuffer,
-            Game::getTexPalette_STATUS(),
+            Game::getTexClut_STATUS(),
             128,
             128,
             128,
@@ -602,11 +602,11 @@ void I_DrawEnabledPerfCounters() noexcept {
     // Show average frame microseconds elapsed
     char msgBuffer[256];
     std::snprintf(msgBuffer, sizeof(msgBuffer), "USEC: %zu", (size_t)(gPerfAvgUsec + 0.5f));
-    I_DrawStringSmall(2 + widescreenAdjust, 2, msgBuffer, Game::getTexPalette_STATUS(), 128, 255, 255, false, false);
+    I_DrawStringSmall(2 + widescreenAdjust, 2, msgBuffer, Game::getTexClut_STATUS(), 128, 255, 255, false, false);
 
     // Show average FPS counter
     std::snprintf(msgBuffer, sizeof(msgBuffer), "FPS:  %.1f", gPerfAvgFps);
-    I_DrawStringSmall(2 + widescreenAdjust, 10, msgBuffer, Game::getTexPalette_STATUS(), 128, 255, 255, false, false);
+    I_DrawStringSmall(2 + widescreenAdjust, 10, msgBuffer, Game::getTexClut_STATUS(), 128, 255, 255, false, false);
 }
 #endif  // #if PSYDOOM_MODS
 

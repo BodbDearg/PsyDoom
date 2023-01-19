@@ -432,7 +432,7 @@ void IN_Drawer() noexcept {
 // Draws the single player intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_SingleDrawer() noexcept {
-    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_Inter_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexClut_Inter_BACK());
 
     // PsyDoom: should we show the time taken to complete the level?
     #if PSYDOOM_MODS
@@ -575,7 +575,7 @@ void IN_SingleDrawer() noexcept {
 // Draws the cooperative mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_CoopDrawer() noexcept {
-    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_Inter_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexClut_Inter_BACK());
 
     // PsyDoom: nudge everything up to make room if showing 2 lines or more for the map name
     #if PSYDOOM_MODS
@@ -586,7 +586,7 @@ void IN_CoopDrawer() noexcept {
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        Game::getTexPalette_STATUS(),
+        Game::getTexClut_STATUS(),
         139,
         (int16_t)(20 - layoutNudgeUp),
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -605,7 +605,7 @@ void IN_CoopDrawer() noexcept {
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        Game::getTexPalette_STATUS(),
+        Game::getTexClut_STATUS(),
         213,
         (int16_t)(20 - layoutNudgeUp),
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -684,7 +684,7 @@ void IN_CoopDrawer() noexcept {
 // Draws the deathmatch mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_DeathmatchDrawer() noexcept {
-    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexPalette_Inter_BACK());
+    I_CacheAndDrawBackgroundSprite(gTex_BACK, Game::getTexClut_Inter_BACK());
 
     // PsyDoom: new drawing method that supports multi-line map names with line break commands in them ("\n")
     #if PSYDOOM_MODS
@@ -738,7 +738,7 @@ void IN_DeathmatchDrawer() noexcept {
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        Game::getTexPalette_STATUS(),
+        Game::getTexClut_STATUS(),
         127,
         70,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -757,7 +757,7 @@ void IN_DeathmatchDrawer() noexcept {
 
     I_DrawSprite(
         gTex_STATUS.texPageId,
-        Game::getTexPalette_STATUS(),
+        Game::getTexClut_STATUS(),
         200,
         70,
         // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)

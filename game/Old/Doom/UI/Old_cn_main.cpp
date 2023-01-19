@@ -244,7 +244,7 @@ void DRAW_ControlsScreen() noexcept {
 
                 I_DrawSprite(
                     gTex_BUTTONS.texPageId,
-                    Game::getTexPalette_BUTTONS(),
+                    Game::getTexClut_BUTTONS(),
                     38,
                     ypos,
                     gTex_BUTTONS.texPageCoordX + (uint8_t) bindableBtnIdx * BTN_SPRITE_SIZE,

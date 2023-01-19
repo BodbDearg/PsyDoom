@@ -325,7 +325,7 @@ void DRAW_PasswordScreen() noexcept {
         Utils::onBeginUIDrawing();  // PsyDoom: UI drawing setup for the new Vulkan renderer
     #endif
 
-    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), 128, 128, 128);
+    O_DrawBackground(gTex_OptionsBg, Game::getTexClut_OptionsBg(), 128, 128, 128);
 
     // Setup the draw mode
     {
@@ -352,7 +352,7 @@ void DRAW_PasswordScreen() noexcept {
     #endif
 
     LIBGPU_SetSprt(spritePrim);
-    spritePrim.clut = Game::getTexPalette_STATUS();
+    spritePrim.clut = Game::getTexClut_STATUS();
 
     // Draw the array of password characters
     for (int32_t pwCharIdx = 0; pwCharIdx < NUM_PW_CHARS; ++pwCharIdx) {

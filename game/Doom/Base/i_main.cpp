@@ -970,7 +970,7 @@ bool I_NetUpdate() noexcept {
         I_CacheTex(gTex_NETERR);
         I_DrawSprite(
             gTex_NETERR.texPageId,
-            Game::getTexPalette_NETERR(),
+            Game::getTexClut_NETERR(),
             84,
             109,
             gTex_NETERR.texPageCoordX,
