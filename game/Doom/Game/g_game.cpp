@@ -654,8 +654,16 @@ void G_RunGame() noexcept {
         // It can be inhibited if mapinfo says so, but only for the finale:
         gbIntermissionHideNextMap = (bDoFinale && pCluster && pCluster->bHideNextMapForFinale);
 
-        // Do the intermission
-        MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
+        // Do the intermission, unless the map specifies to skip it:
+        #if PSYDOOM_MODS
+            const bool bSkipIntermission = pMap->bNoIntermission;
+        #else
+            constexpr bool bSkipIntermission = false;
+        #endif
+
+        if (!bSkipIntermission) {
+            MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
+        }
 
         // PsyDoom: if app quit was requested then exit immediately
         if (Input::isQuitRequested())

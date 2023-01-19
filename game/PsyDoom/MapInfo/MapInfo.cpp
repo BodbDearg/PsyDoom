@@ -364,6 +364,7 @@ static void readMap(const Block& block) noexcept {
     map.cluster = block.getSingleIntValue("Cluster", map.cluster);
     map.skyPaletteOverride = block.getSingleIntValue("SkyPal", map.skyPaletteOverride);
     map.bPlayCdMusic = (block.getSingleIntValue("PlayCdMusic", map.bPlayCdMusic) > 0);
+    map.bNoIntermission = (block.getSingleIntValue("NoIntermission", map.bNoIntermission) > 0);
     map.reverbMode = (SpuReverbMode) block.getSingleIntValue("ReverbMode", map.reverbMode);
     map.reverbDepthL = (int16_t) std::clamp<int32_t>(block.getSingleIntValue("ReverbDepthL", map.reverbDepthL), INT16_MIN, INT16_MAX);
     map.reverbDepthR = (int16_t) std::clamp<int32_t>(block.getSingleIntValue("ReverbDepthR", map.reverbDepthR), INT16_MIN, INT16_MAX);

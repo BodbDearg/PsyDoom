@@ -27,6 +27,7 @@ Map 3 "My Cool Map" {
     Cluster = 1
     SkyPal = -1
     PlayCdMusic = 0
+    NoIntermission = false
     ReverbMode = 6
     ReverbDepth = 0x27FF
     ReverbDelay = 0
@@ -59,7 +60,8 @@ Internal Fields:
     SKYPAL4               = 24      // PSX Final Doom: additional sky palette
     SKYPAL5               = 25      // PSX Final Doom: additional sky palette
     ```
-- `PlayCdMusic`: If `1` or greater then `Music` is interpreted as a CD track to play instead of a music sequence. You can use this to play CD audio for the map instead of sequencer music.
+- `PlayCdMusic`: If `1` or greater then `Music` is interpreted as a CD track to play instead of a music sequence. You can use this to play CD audio for the map instead of sequencer music. Default is value is `0`.
+- `NoIntermission`: If `1` or greater then the intermission screen is skipped for this map. Default is value is `0`.
 - `ReverbMode`: Defines the type of reverb effect used for the map. Allowed reverb type numbers are:
     ```
     OFF        = 0      // No reverb

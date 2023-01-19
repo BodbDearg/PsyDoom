@@ -153,6 +153,7 @@ struct Map {
     int32_t         cluster;                // Which cluster the map belongs to
     int32_t         skyPaletteOverride;     // Overrides the sky palette to use for the map ('-1' if no override)
     bool            bPlayCdMusic;           // If 'true' then 'music' indicates a CDDA track to play, instead of a sequencer track
+    bool            bNoIntermission;        // If 'true' then skip the intermission for this map
     SpuReverbMode   reverbMode;             // Which reverb mode to use
     int16_t         reverbDepthL;           // Reverb effect depth for most reverb modes (left)
     int16_t         reverbDepthR;           // Reverb effect depth for most reverb modes (right)
@@ -167,6 +168,7 @@ struct Map {
         , cluster(-1)                   // Not yet defined
         , skyPaletteOverride(-1)        // No override
         , bPlayCdMusic(false)
+        , bNoIntermission(false)
         , reverbMode(SpuReverbMode{})
         , reverbDepthL(0)
         , reverbDepthR(0)

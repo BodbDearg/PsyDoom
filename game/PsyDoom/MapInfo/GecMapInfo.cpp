@@ -620,6 +620,10 @@ static const Token* parseMap(const Token* const pStartToken) noexcept {
                 // Play CD music?
                 if (fieldId == "PlayCdMusic")
                     return parseSingleBoolAssign(pToken, map.bPlayCdMusic);
+
+                // No intermission?
+                if (fieldId == "NoIntermission")
+                    return parseSingleBoolAssign(pToken, map.bNoIntermission);
                 
                 // Map reverb mode
                 if (fieldId == "ReverbMode") {
@@ -641,8 +645,6 @@ static const Token* parseMap(const Token* const pStartToken) noexcept {
                     map.reverbDepthR = (int16_t) reverbDepth;
                     return pNextToken;
                 }
-
-                // TODO: GEC ME BETA 4: parse 'NoIntermission'
             }
 
             // Unhandled or unwanted line of data - skip it!
