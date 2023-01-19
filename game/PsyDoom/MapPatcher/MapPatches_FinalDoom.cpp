@@ -645,6 +645,53 @@ static void patchMap_TheDeathDomain() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP30: Onslaught
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_Onslaught() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix door tracks on northeast monster closet
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 535, 539);
+
+        // Fix textures on other northeast monster closets
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 400, 407, 796);
+        
+        // Fix textures on hidden passage on central tunnel
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 108, 121);
+
+        // Fix textures on doors that open when walking into cyberdemon room
+        modifyLinedefs(
+            [](line_t& line) {
+                gpSides[line.sidenum[0]].rowoffset = -8 * FRACUNIT;
+                line.flags &= ~(ML_DONTPEGTOP | ML_DONTPEGBOTTOM);
+            },
+            0, 1, 2, 3, 4, 5
+        );
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 32, 40, 42, 48);
+
+        // Hide unused areas in cyberdemon room
+        addFlagsToLinedefs(ML_MIDMASKED | ML_SECRET, 29, 41);
+        addFlagsToLinedefs(ML_DONTDRAW, 30, 33, 36, 37, 38, 79, 80, 81, 183, 544, 545, 546);
+
+        // Fix textures on south monster closet in final area
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 686, 687);
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 753, 757);
+
+        // Fix textures on doors inside red key room (never seen moving on single player)
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 707, 786, 787);
+        removeFlagsFromLinedefs(ML_DONTPEGTOP | ML_DONTPEGBOTTOM, 668, 696);
+        gpSides[gpLines[668].sidenum[0]].rowoffset = -58 * FRACUNIT;
+        gpSides[gpLines[696].sidenum[0]].rowoffset = 45 * FRACUNIT;
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Restore secret to megaarmor sector as is on PC
+        gpSectors[41].special = 9;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // All of the map patches for this game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatchArray_FinalDoom[] = {
@@ -679,7 +726,7 @@ static const PatchDef gPatchArray_FinalDoom[] = {
     { 141807, 0x3461BD1E919965AB, 0x07C36C7B648205F6, patchMap_BaronsLair           },      // MAP28
     { 107736, 0xD9789CCEA024CCCC, 0x61CCB6C421B65C47, patchMap_TheDeathDomain       },      // MAP29 (NTSC)
     { 107736, 0x0599BE06504C6FAD, 0x1DCB1C8AD6410764, patchMap_TheDeathDomain       },      // MAP29 (PAL, why different?)
-    { 110131, 0x2C157281E504283E, 0x914845A33B9F0503, applyOriginalMapCommonPatches },      // MAP30
+    { 110131, 0x2C157281E504283E, 0x914845A33B9F0503, patchMap_Onslaught            },      // MAP30
 };
 
 const PatchList gPatches_FinalDoom = { gPatchArray_FinalDoom, C_ARRAY_SIZE(gPatchArray_FinalDoom) };
