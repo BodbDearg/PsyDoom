@@ -7,6 +7,7 @@
 
 #include "Asserts.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Game/p_switch.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/UI/ti_main.h"
 #include "MapInfo.h"
@@ -34,12 +35,13 @@ struct MapInfoTokens {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // All of the loaded MAPINFO
 //------------------------------------------------------------------------------------------------------------------------------------------
-static GameInfo                 gGameInfo;
-static MenuSprite               gTitleLogo;     // Definition for the "MASTER EDITION" logo that appears at the top of the screen
-static std::vector<Episode>     gEpisodes;
-static std::vector<Cluster>     gClusters;
-static std::vector<Map>         gMaps;
-static std::vector<Sky>         gSkies;
+static GameInfo                     gGameInfo;
+static MenuSprite                   gTitleLogo;         // Definition for the "MASTER EDITION" logo that appears at the top of the screen
+static std::vector<Episode>         gEpisodes;
+static std::vector<Cluster>         gClusters;
+static std::vector<Map>             gMaps;
+static std::vector<Sky>             gSkies;
+static std::vector<switchlist_t>    gBaseSwitchList;    // Built-in switch definitions, read from text files
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Context: which MAPINFO file is currently being parsed
@@ -785,6 +787,35 @@ static const Token* parseSky(const Token* const pStartToken) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Parses a single switch definition and returns the next token after that
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const Token* parseSwitch(const Token* const pStartToken) noexcept {
+    // Skip the 'SwTexPic' token
+    const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
+
+    // Get the lump names for the switch definition
+    ensureTokenType(pToken, TokenType::String);
+    const std::string_view name1 = pToken->text();
+    pToken++;
+
+    ensureTokenType(pToken, TokenType::String);
+    const std::string_view name2 = pToken->text();
+    pToken++;
+
+    // Save the lump names to a new 'switchlist_t' definition
+    constexpr size_t MAX_NAME_LEN1 = C_ARRAY_SIZE(switchlist_t::name1) - 1;
+    constexpr size_t MAX_NAME_LEN2 = C_ARRAY_SIZE(switchlist_t::name2) - 1;
+
+    switchlist_t& sw = gBaseSwitchList.emplace_back();
+    std::memcpy(sw.name1, name1.data(), std::min(name1.length(), MAX_NAME_LEN1));
+    std::memcpy(sw.name2, name2.data(), std::min(name2.length(), MAX_NAME_LEN2));
+    sw.name1[MAX_NAME_LEN1] = 0;
+    sw.name2[MAX_NAME_LEN2] = 0;
+
+    return pToken;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Parses a GEC format MAPINFO file on disk from the specified path
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
@@ -797,26 +828,30 @@ static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
     const Token* pToken = mapInfoTokens.tokens.data();
 
     while (pToken->type != TokenType::Null) {
-        // Expect start of value block
-        ensureTokenType(pToken, TokenType::Identifier);
+        // Start of value block or value line?
+        if (pToken->type == TokenType::Identifier) {
+            // What type of block or value line is it?
+            const std::string_view blockId = pToken->text();
 
-        // What type of block is it?
-        const std::string_view blockId = pToken->text();
-
-        // TODO: GEC ME BETA 4: parse 'FAnimPic'
-        // TODO: GEC ME BETA 4: parse 'TAnimPic'
-        // TODO: GEC ME BETA 4: parse 'SwTexPic'
-        if (blockId == "GameInfo") {
-            pToken = parseGameInfo(pToken);
-        } else if (blockId == "Map") {
-            pToken = parseMap(pToken);
-        } else if (blockId == "Cluster") {
-            pToken = parseCluster(pToken);
-        } else if (blockId == "Sky") {
-            pToken = parseSky(pToken);
+            // TODO: GEC ME BETA 4: parse 'FAnimPic'
+            // TODO: GEC ME BETA 4: parse 'TAnimPic'
+            if (blockId == "GameInfo") {
+                pToken = parseGameInfo(pToken);
+            } else if (blockId == "Map") {
+                pToken = parseMap(pToken);
+            } else if (blockId == "Cluster") {
+                pToken = parseCluster(pToken);
+            } else if (blockId == "Sky") {
+                pToken = parseSky(pToken);
+            } else if (blockId == "SwTexPic") {
+                pToken = parseSwitch(pToken);
+            } else {
+                // Unhandled or unwanted line of data - skip it!
+                pToken = skipCurrentLineData(pToken);
+            }
         } else {
-            // Unhandled or unwanted block of data - skip it!
-            pToken = skipBlock(pToken);
+            // Unhandled or unwanted line of data - skip it!
+            pToken = skipCurrentLineData(pToken);
         }
     }
 
@@ -857,6 +892,7 @@ void init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
     gCurMapInfoFilePath = nullptr;
+    gBaseSwitchList.clear();
     gSkies.clear();
     gMaps.clear();
     gClusters.clear();
@@ -889,6 +925,10 @@ const std::vector<Map>& allMaps() noexcept {
 
 const std::vector<Sky>& allSkies() noexcept {
     return gSkies;
+}
+
+const std::vector<switchlist_t>& getBaseSwitchList() noexcept {
+    return gBaseSwitchList;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

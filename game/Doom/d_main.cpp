@@ -202,11 +202,11 @@ void D_DoomMain() noexcept {
     // PsyDoom: build the (now) dynamically generated lists of sprites, map objects, animated textures and switches for the game.
     // User mods can add new entries to any of these lists. Also initialize MAPINFO.
     #if PSYDOOM_MODS
+        MapInfo::init();        // Do this first since GEC MAPINFO can affect the base lists of animations and switches
         P_InitSprites();
         P_InitMobjInfo();
         P_InitAnimDefs();
         P_InitSwitchDefs();
-        MapInfo::init();
     #endif
 
     ST_Init();
