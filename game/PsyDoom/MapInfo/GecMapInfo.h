@@ -5,6 +5,7 @@
 
 #include <vector>
 
+struct animdef_t;
 struct switchlist_t;
 
 namespace MapInfo {
@@ -50,6 +51,7 @@ const std::vector<MapInfo::Cluster>& allClusters() noexcept;
 const std::vector<MapInfo::Map>& allMaps() noexcept;
 const std::vector<Sky>& allSkies() noexcept;
 const std::vector<switchlist_t>& getBaseSwitchList() noexcept;
+const std::vector<animdef_t>& getBaseAnimDefs() noexcept;
 
 const Sky* getSky(const String8& lumpName) noexcept;
 

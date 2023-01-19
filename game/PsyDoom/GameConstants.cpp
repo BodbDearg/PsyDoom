@@ -176,7 +176,7 @@ static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
     consts.numExtraPalettes = BuiltInPaletteData::NUM_GEC_ME_DYNAMIC_PALETTE_PLACEHOLDERS;
     consts.numPalettesRequired = 31;
     consts.netGameId = NET_GAMEID_GEC_ME_BETA4;
-    consts.baseNumAnims = BASE_NUM_ANIMS_FDOOM;     // TODO: GEC ME BETA 4: check this this count
+    consts.baseNumAnims = 0;                        // We don't use built-in hardcoded anims for this mod (they're loaded via GEC MAPINFO instead)
     consts.texPalette_BUTTONS = UIPAL2;             // TODO: GEC ME BETA 4: check this palette
     consts.bRemove_LOADING_progressBar = true;
 }

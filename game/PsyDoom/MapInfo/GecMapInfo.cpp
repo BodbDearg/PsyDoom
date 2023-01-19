@@ -7,6 +7,7 @@
 
 #include "Asserts.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Game/p_spec.h"
 #include "Doom/Game/p_switch.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/UI/ti_main.h"
@@ -41,7 +42,8 @@ static std::vector<Episode>         gEpisodes;
 static std::vector<Cluster>         gClusters;
 static std::vector<Map>             gMaps;
 static std::vector<Sky>             gSkies;
-static std::vector<switchlist_t>    gBaseSwitchList;    // Built-in switch definitions, read from text files
+static std::vector<switchlist_t>    gBaseSwitchList;    // Built-in switch definitions, read from the MAPINFO text files
+static std::vector<animdef_t>       gBaseAnimDefs;      // Built-in anim definitions, read from the MAPINFO text files
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Context: which MAPINFO file is currently being parsed
@@ -803,14 +805,52 @@ static const Token* parseSwitch(const Token* const pStartToken) noexcept {
     pToken++;
 
     // Save the lump names to a new 'switchlist_t' definition
-    constexpr size_t MAX_NAME_LEN1 = C_ARRAY_SIZE(switchlist_t::name1) - 1;
-    constexpr size_t MAX_NAME_LEN2 = C_ARRAY_SIZE(switchlist_t::name2) - 1;
+    const size_t name1Len = std::min(name1.length(), (size_t)(C_ARRAY_SIZE(switchlist_t::name1) - 1));
+    const size_t name2Len = std::min(name2.length(), (size_t)(C_ARRAY_SIZE(switchlist_t::name2) - 1));
 
     switchlist_t& sw = gBaseSwitchList.emplace_back();
-    std::memcpy(sw.name1, name1.data(), std::min(name1.length(), MAX_NAME_LEN1));
-    std::memcpy(sw.name2, name2.data(), std::min(name2.length(), MAX_NAME_LEN2));
-    sw.name1[MAX_NAME_LEN1] = 0;
-    sw.name2[MAX_NAME_LEN2] = 0;
+    std::memcpy(sw.name1, name1.data(), name1Len);
+    std::memcpy(sw.name2, name2.data(), name2Len);
+    sw.name1[name1Len] = 0;
+    sw.name2[name2Len] = 0;
+
+    return pToken;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Parses a single animated texture or flat definition and returns the next token after that
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const Token* parseAnimDef(const Token* const pStartToken, const bool bIsTexture) noexcept {
+    // Skip the 'FAnimPic' or 'TAnimPic' token
+    const Token* pToken = ensureTokenTypeAndSkip(pStartToken, TokenType::Identifier);
+
+    // Get the 'start' and 'end' lump names for the anim definition
+    ensureTokenType(pToken, TokenType::String);
+    const std::string_view startName = pToken->text();
+    pToken++;
+
+    ensureTokenType(pToken, TokenType::String);
+    const std::string_view endName = pToken->text();
+    pToken++;
+
+    // Get the update 'tick mask' controlling how fast the animation is
+    ensureTokenType(pToken, TokenType::Number);
+    const uint32_t updateTickMask = (uint32_t) pToken->number;
+    pToken++;
+
+    // Save basic info for the new animation
+    animdef_t& anim = gBaseAnimDefs.emplace_back();
+    anim.istexture = bIsTexture;
+    anim.ticmask = updateTickMask;
+
+    // Save the start and end lump names for the new animation
+    const size_t startNameLen = std::min(startName.length(), (size_t)(C_ARRAY_SIZE(animdef_t::startname) - 1));
+    const size_t endNameLen = std::min(endName.length(), (size_t)(C_ARRAY_SIZE(animdef_t::endname) - 1));
+
+    std::memcpy(anim.startname, startName.data(), startNameLen);
+    std::memcpy(anim.endname, endName.data(), endNameLen);
+    anim.startname[startNameLen] = 0;
+    anim.endname[endNameLen] = 0;
 
     return pToken;
 }
@@ -833,8 +873,6 @@ static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
             // What type of block or value line is it?
             const std::string_view blockId = pToken->text();
 
-            // TODO: GEC ME BETA 4: parse 'FAnimPic'
-            // TODO: GEC ME BETA 4: parse 'TAnimPic'
             if (blockId == "GameInfo") {
                 pToken = parseGameInfo(pToken);
             } else if (blockId == "Map") {
@@ -845,6 +883,10 @@ static void parseMapInfoFileOnDisk(const char* const filePath) noexcept {
                 pToken = parseSky(pToken);
             } else if (blockId == "SwTexPic") {
                 pToken = parseSwitch(pToken);
+            } else if (blockId == "FAnimPic") {
+                pToken = parseAnimDef(pToken, false);
+            } else if (blockId == "TAnimPic") {
+                pToken = parseAnimDef(pToken, true);
             } else {
                 // Unhandled or unwanted line of data - skip it!
                 pToken = skipCurrentLineData(pToken);
@@ -892,6 +934,7 @@ void init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void shutdown() noexcept {
     gCurMapInfoFilePath = nullptr;
+    gBaseAnimDefs.clear();
     gBaseSwitchList.clear();
     gSkies.clear();
     gMaps.clear();
@@ -929,6 +972,10 @@ const std::vector<Sky>& allSkies() noexcept {
 
 const std::vector<switchlist_t>& getBaseSwitchList() noexcept {
     return gBaseSwitchList;
+}
+
+const std::vector<animdef_t>& getBaseAnimDefs() noexcept {
+    return gBaseAnimDefs;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
