@@ -92,6 +92,7 @@ GameInfo::GameInfo() noexcept
     , texPalette_DATA()
     , texPalette_FINAL()
     , texPalette_OptionsBG(MAINPAL)
+    , texLumpName_STATUS("STATUS")
     , texLumpName_TITLE("TITLE")
     , texLumpName_TITLE2("TITLE2")
     , texLumpName_BACK("BACK")
@@ -194,6 +195,7 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.texPalette_DATA = (uint8_t) block.getSingleIntValue("TexPalette_DATA", gameInfo.texPalette_DATA);
     gameInfo.texPalette_FINAL = (uint8_t) block.getSingleIntValue("TexPalette_FINAL", gameInfo.texPalette_FINAL);
     gameInfo.texPalette_OptionsBG = (uint8_t) block.getSingleIntValue("TexPalette_OptionsBG", gameInfo.texPalette_OptionsBG);
+    gameInfo.texLumpName_STATUS = block.getSingleSmallStringValue("TexLumpName_STATUS", gameInfo.texLumpName_STATUS);
     gameInfo.texLumpName_TITLE = block.getSingleSmallStringValue("TexLumpName_TITLE", gameInfo.texLumpName_TITLE);
     gameInfo.texLumpName_TITLE2 = block.getSingleSmallStringValue("TexLumpName_TITLE2", gameInfo.texLumpName_TITLE2);
     gameInfo.texLumpName_BACK = block.getSingleSmallStringValue("TexLumpName_BACK", gameInfo.texLumpName_BACK);

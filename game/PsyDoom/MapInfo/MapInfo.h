@@ -62,6 +62,7 @@ struct GameInfo {
     uint8_t                 texPalette_DATA;                // Palette index to use for the 'DATA' image lump (GEC Master Edition addition)
     uint8_t                 texPalette_FINAL;               // Palette index to use for the 'FINAL' image lump (GEC Master Edition addition)
     uint8_t                 texPalette_OptionsBG;           // Palette index to use for the options menu tiled background
+    String8                 texLumpName_STATUS;             // Which texture lump name to load wherever the 'STATUS' texture is used
     String8                 texLumpName_TITLE;              // Which texture lump name to load wherever the 'TITLE' texture is used
     String8                 texLumpName_TITLE2;             // Which texture lump name to load wherever the 'TITLE2' texture is used (GEC ME specific)
     String8                 texLumpName_BACK;               // Which texture lump name to load wherever the 'BACK' texture is used

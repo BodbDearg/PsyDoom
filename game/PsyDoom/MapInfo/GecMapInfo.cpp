@@ -537,6 +537,9 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                 if (fieldId == "Title")
                     return parseTitleBlock(pToken);
 
+                if (fieldId == "PicStatus")
+                    return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_STATUS, gGameInfo.texPalette_STATUS);
+
                 if (fieldId == "PicBack")
                     return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_BACK, gGameInfo.texPalette_BACK);
 
@@ -563,7 +566,6 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
 
                 // TODO: GEC ME BETA 4: parse 'Credits'
                 // TODO: GEC ME BETA 4: parse 'NumDemos'
-                // TODO: GEC ME BETA 4: parse 'PicStatus'
             }
 
             // Unhandled or unwanted line of data - skip it!

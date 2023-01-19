@@ -434,6 +434,10 @@ uint16_t getTexClut_OptionsBg() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_OptionsBG);
 }
 
+String8 getTexLumpName_STATUS() noexcept {
+    return MapInfo::getGameInfo().texLumpName_STATUS;
+}
+
 String8 getTexLumpName_TITLE() noexcept {
     return MapInfo::getGameInfo().texLumpName_TITLE;
 }

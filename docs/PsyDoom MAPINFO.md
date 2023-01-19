@@ -191,6 +191,7 @@ GameInfo {
     TexPalette_WMSCRED1 = 19
     TexPalette_WMSCRED2 = 16
     TexPalette_OptionsBG = 0
+    TexLumpName_STATUS = "STATUS"
     TexLumpName_TITLE = "TITLE"
     TexLumpName_TITLE2 = "TITLE2"
     TexLumpName_BACK = "BACK"
@@ -240,6 +241,7 @@ Internal Fields:
 - `TexPalette_DATA`: palette index to use for the `DATA` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_FINAL`: palette index to use for the `FINAL` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
+- `TexLumpName_STATUS`: which texture lump name to load wherever the `STATUS` texture is used.
 - `TexLumpName_TITLE`: which texture lump name to load wherever the `TITLE` texture is used.
 - `TexLumpName_TITLE2`: which texture lump name to load wherever the `TITLE2` texture (GEC ME specific) is used.
 - `TexLumpName_BACK`: which texture lump name to load wherever the `BACK` texture is used.

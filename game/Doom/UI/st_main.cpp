@@ -134,7 +134,7 @@ void ST_Init() noexcept {
     #endif
 
     // Load this into the first texture cache page and expect it to be resident there
-    I_LoadAndCacheTexLump(gTex_STATUS, "STATUS", 0);
+    I_LoadAndCacheTexLump(gTex_STATUS, Game::getTexLumpName_STATUS());
 
     #if PSYDOOM_MODS
         if (I_GetCurTexCacheFillPage() != 0) {

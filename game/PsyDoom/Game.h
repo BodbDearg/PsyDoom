@@ -73,6 +73,7 @@ uint16_t getTexClut_DWCRED() noexcept;
 uint16_t getTexClut_DATA() noexcept;
 uint16_t getTexClut_FINAL() noexcept;
 uint16_t getTexClut_OptionsBg() noexcept;
+String8 getTexLumpName_STATUS() noexcept;
 String8 getTexLumpName_TITLE() noexcept;
 String8 getTexLumpName_TITLE2() noexcept;
 String8 getTexLumpName_BACK() noexcept;
