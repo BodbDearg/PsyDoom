@@ -159,6 +159,13 @@ static void populateConsts_GEC_ME_TestMap_FinalDoom(GameConstants& consts) noexc
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
     consts.mainWads[0] = CdFile::PSXDOOM_WAD;
+    consts.mainWads[1] = CdFile::LEGALS_WAD;
+
+    consts.mainWadLumpRemappers[1] = [](const WadLumpName& oldName) noexcept -> WadLumpName {
+        // Need to access this palette in 'LEGALS.WAD' separately to 'PLAYPAL' in 'PSXDOOM.WAD' for decoding intro logos
+        return (oldName == "PLAYPAL") ? "GECINPAL" : oldName;
+    };
+
     consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE_N.STR";
     consts.introMovies[1] = "PSXDOOM/ABIN/GEC_N.STR";
     consts.introMovies[2] = "PSXDOOM/ABIN/DWORLD_N.STR";

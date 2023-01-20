@@ -21,6 +21,7 @@ namespace CdFile {
     constexpr CdFileId PSXDOOM_WAD  = "PSXDOOM.WAD";
     constexpr CdFileId PSXFINAL_WAD = "PSXFINAL.WAD";   // GEC ME (Beta 3)
     constexpr CdFileId MEDOOM_WAD   = "MEDOOM.WAD";     // GEC ME (Beta 3)
+    constexpr CdFileId LEGALS_WAD   = "LEGALS.WAD";     // GEC ME (Beta 4)
     constexpr CdFileId DOOMSFX_LCD  = "DOOMSFX.LCD";
     constexpr CdFileId DOOMSND_WMD  = "DOOMSND.WMD";
     constexpr CdFileId DEMO1_LMP    = "DEMO1.LMP";

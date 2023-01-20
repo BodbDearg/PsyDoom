@@ -302,10 +302,9 @@ static LogoPlayer::Logo getSonyLogo_FromBootExe() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: gets the Sony intro logo for the 'GEC Master Edition (Beta 3)' disc
+// Helper: gets the Sony intro logo for a 'GEC Master Edition' disc
 //------------------------------------------------------------------------------------------------------------------------------------------
-static LogoPlayer::Logo getSonyLogo_GEC_ME_Beta3() noexcept {
-    // TODO: GEC ME BETA 4: implement for BETA 4
+static LogoPlayer::Logo getSonyLogo_GEC_ME() noexcept {
     LogoPlayer::Logo logo = decodeWadLogo("SONY", readWadPalette("GECINPAL", 3).get());
     logo.holdTime = 3.0f;
     logo.fadeOutTime = 0.5f;
@@ -315,7 +314,7 @@ static LogoPlayer::Logo getSonyLogo_GEC_ME_Beta3() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: gets the single PSX Doom legals/copyright intro logo by extracting it from the boot executable
 //------------------------------------------------------------------------------------------------------------------------------------------
-LogoList getLegalLogos_FromBootExe() noexcept {
+static LogoList getLegalLogos_FromBootExe() noexcept {
     // Only if there are embedded logos defined for this version of the game
     const PsxDoomBootExeLogos* const pLogos = getPsxDoomBootExeLogos();
 
@@ -336,10 +335,9 @@ LogoList getLegalLogos_FromBootExe() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: gets the legals/copyright intro logos for 'GEC Master Edition (Beta 3)' disc
+// Helper: gets the legals/copyright intro logos for a 'GEC Master Edition' disc
 //------------------------------------------------------------------------------------------------------------------------------------------
-LogoList getLegalLogos_GEC_ME_Beta3() noexcept {
-    // TODO: GEC ME BETA 4: implement for BETA 4
+static LogoList getLegalLogos_GEC_ME() noexcept {
     LogoList logoList = {};
     logoList.logos[0] = decodeWadLogo("LEGALS", readWadPalette("GECINPAL", 3).get());
     logoList.logos[1] = decodeWadLogo("LEGALS2", readWadPalette("GECINPAL", 3).get());
@@ -370,8 +368,8 @@ void shutdown() noexcept {
 // Helper: gets the Sony intro logo for the current game
 //------------------------------------------------------------------------------------------------------------------------------------------
 LogoPlayer::Logo getSonyLogo() noexcept {
-    if (Game::gGameType == GameType::GEC_ME_Beta3) {
-        return getSonyLogo_GEC_ME_Beta3();
+    if (Game::isGameTypeGecMe()) {
+        return getSonyLogo_GEC_ME();
     } else {
         return getSonyLogo_FromBootExe();
     }
@@ -381,8 +379,8 @@ LogoPlayer::Logo getSonyLogo() noexcept {
 // Helper: gets the PSX Doom legals/copyright intro logos for the current game
 //------------------------------------------------------------------------------------------------------------------------------------------
 LogoList getLegalLogos() noexcept {
-    if (Game::gGameType == GameType::GEC_ME_Beta3) {
-        return getLegalLogos_GEC_ME_Beta3();
+    if (Game::isGameTypeGecMe()) {
+        return getLegalLogos_GEC_ME();
     } else {
         return getLegalLogos_FromBootExe();
     }

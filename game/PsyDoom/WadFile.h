@@ -72,6 +72,7 @@ public:
 
     void purgeCachedLump(const int32_t lumpIdx) noexcept;
     void purgeAllLumps() noexcept;
+    int32_t getRawSize(const int32_t lumpIdx) noexcept;
     const WadLump& cacheLump(const int32_t lumpIdx, const int16_t allocTag, const bool bDecompress) noexcept;
     void readLump(const int32_t lumpIdx, void* const pDest, const bool bDecompress) noexcept;
 
@@ -84,6 +85,7 @@ private:
     void readLumpInfo(const RemapWadLumpNameFn lumpNameRemapFn) noexcept;
 
     int32_t                         mNumLumps;          // The number of lumps in the WAD
+    int32_t                         mSizeInBytes;       // The total size (in bytes) of the entire WAD file
     std::unique_ptr<WadLumpName[]>  mLumpNames;         // Store names in their own list for cache-friendly search
     std::unique_ptr<WadLump[]>      mLumps;             // The details and data for each lump
     GameFileReader                  mFileReader;        // Responsible for reading from the WAD file

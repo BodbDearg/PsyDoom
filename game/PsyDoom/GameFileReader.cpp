@@ -56,22 +56,25 @@ void GameFileReader::close() noexcept {
 // Tries to open the specified file for reading.
 // Note: it is illegal/undefined behavior to try to open another file while one is already open.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void GameFileReader::open(const char* const filePath) noexcept {
+FILE* GameFileReader::open(const char* const filePath) noexcept {
     ASSERT(!isOpen());
     mpFile = std::fopen(filePath, "rb");
 
     if (!mpFile) {
         FatalErrors::raiseF("GameFileReader::open: error opening file '%s'!", filePath);
     }
+
+    return mpFile;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tries to open the specified file for reading.
 // Note: it is illegal/undefined behavior to try to open another file while one is already open.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void GameFileReader::open(const CdFileId fileId) noexcept {
+const PsxCd_File& GameFileReader::open(const CdFileId fileId) noexcept {
     ASSERT(!isOpen());
     mCdFile = *psxcd_open(fileId);      // Note: will always return a valid pointer or fail with a fatal error!
+    return mCdFile;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -29,6 +29,7 @@ public:
 
     void purgeCachedLump(const int32_t lumpIdx) noexcept;
     void purgeAllLumps() noexcept;
+    int32_t getRawSize(const int32_t lumpIdx) noexcept;
     const WadLump& cacheLump(const int32_t lumpIdx, const int16_t allocTag, const bool bDecompress) noexcept;
     void readLump(const int32_t lumpIdx, void* const pDest, const bool bDecompress) noexcept;
 
