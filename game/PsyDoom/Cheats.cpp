@@ -242,41 +242,27 @@ static void doToggleAllMapThingsCheat() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Executes the cheat to toggle computer map
+// Executes the cheat to toggle x-ray vision
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doToggleXRayVisionCheat() noexcept {
     player_t& player = gPlayers[gCurPlayerIndex];
-    player.powers[pw_allmap] ^= 1;
+    player.cheats ^= CF_XRAYVISION;
     gStatusBar.messageTicsLeft = 30;
 
-    if (player.powers[pw_allmap]) {
-        gStatusBar.message = "Computer Area Map ON.";
+    if (player.cheats & CF_XRAYVISION) {
+        gStatusBar.message = "X-Ray Vision ON.";
     } else {
-        gStatusBar.message = "Computer Area Map OFF.";
+        gStatusBar.message = "X-Ray Vision OFF.";
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Executes the to cheat to toggle light amplification goggles
+// Executes the to cheat to open the VRAM viewer
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void doToggleVramViewerCheat() noexcept {
+    ensureGamePaused();
     player_t& player = gPlayers[gCurPlayerIndex];
-    if (player.powers[pw_infrared] == 0) {
-        player.powers[pw_infrared] = INFRATICS;
-    }
-    else {
-        player.powers[pw_infrared] = 0;
-    }
-    
-    gStatusBar.messageTicsLeft = 30;
-
-    if (player.powers[pw_infrared]) {
-        gStatusBar.message = "Light Amplification Goggles ON.";
-    }
-    else {
-        gStatusBar.message = "Light Amplification Goggles OFF.";
-    }
-    
+    player.cheats ^= CF_VRAMVIEWER;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

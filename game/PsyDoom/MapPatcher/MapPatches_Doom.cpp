@@ -13,53 +13,6 @@
 BEGIN_NAMESPACE(MapPatches)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Fix issues for MAP01: Hangar
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void patchMap_Hangar() noexcept {
-    applyOriginalMapCommonPatches();
-
-    if (shouldApplyMapPatches_Visual()) {
-        // Hide linedefs in central courtyard
-        addFlagsToLinedefs(ML_DONTDRAW, 234, 236, 237);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Fix issues for MAP02: Plant
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void patchMap_Plant() noexcept {
-    applyOriginalMapCommonPatches();
-
-    if (shouldApplyMapPatches_Visual()) {
-        // Hide linedefs in east courtyard
-        addFlagsToLinedefs(ML_DONTDRAW, 935, 936, 937);
-
-        // Replace texture in opening behind red key
-        gpSides[gpLines[943].sidenum[0]].midtexture = R_TextureNumForName("LITE01");
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Fix issues for MAP03: Toxin Refinery
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void patchMap_ToxinRefinery() noexcept {
-    applyOriginalMapCommonPatches();
-
-    if (shouldApplyMapPatches_Visual()) {
-        // Hide linedef in secret exit hallway
-        addFlagsToLinedefs(ML_DONTDRAW, 646);
-
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
-        modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
-            // Blue key room
-            895, 896, 897
-        );
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP04: Command Control
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_CommandControl() noexcept {
@@ -77,26 +30,6 @@ static void patchMap_CommandControl() noexcept {
         // This step needs a texture coordinate adjustment
         gpSides[253].rowoffset = 0;
         gpSides[253].rowoffset.snap();
-
-        // Hide linedefs
-        addFlagsToLinedefs(ML_DONTDRAW,
-            // East central hallway
-            692,
-            // Maze
-            228
-        );
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Fix issues for MAP05: Phobos Lab
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void patchMap_PhobosLab() noexcept {
-    applyOriginalMapCommonPatches();
-
-    if (shouldApplyMapPatches_Visual()) {
-        // Hide linedefs in east window
-        addFlagsToLinedefs(ML_DONTDRAW, 503, 504);
     }
 }
 
@@ -113,62 +46,6 @@ static void patchMap_CentralProcessing() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Fix issues for MAP10: Containment Area
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void patchMap_ContainmentArea() noexcept {
-    applyOriginalMapCommonPatches();
-
-    if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
-        modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
-            // Blue doors hallway
-            357, 504,
-            // South central hallway
-            683, 684, 703, 704,
-            // Exit room
-            685
-        );
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Fix issues for MAP11: Refinery
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void patchMap_Refinery() noexcept {
-    applyOriginalMapCommonPatches();
-
-    if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
-        modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
-            69, 70, 217, 366, 367, 451, 495, 496
-        );
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Fix issues for MAP12: Deimos Lab
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void patchMap_DeimosLab() noexcept {
-    applyOriginalMapCommonPatches();
-
-    if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
-        modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
-            187, 200, 267, 641, 554, 555, 556, 622, 100, 130
-        );
-
-        // Add missing texture to back side of linedef on platform that raises up when you step off of it
-        gpSides[gpLines[297].sidenum[1]].bottomtexture = R_TextureNumForName("METAL01");
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP13: Command Center
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_CommandCenter() noexcept {
@@ -178,12 +55,6 @@ static void patchMap_CommandCenter() noexcept {
         // Fix a trap pillar containing a Baron not lowering.
         // The pillar doesn't lower because the Baron is stuck in the ceiling - fix by raising the ceiling.
         gpSectors[71].ceilingheight = 232 * FRACUNIT;
-    }
-
-    if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedef. This was left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
-        gpLines[383].special = 0;
     }
 }
 
@@ -586,18 +457,18 @@ static void patchMap_TheMansion() noexcept {
 // All of the map patches for this game type
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const PatchDef gPatchArray_Doom[] = {
-    {  56435, 0x7921ADB466CEE45E, 0x4476F208866BF8A7, patchMap_Hangar               },      // MAP01
-    { 119369, 0x4ED7CD6367900B52, 0x9609E85DB101DC09, patchMap_Plant                },      // MAP02
-    { 110284, 0x9BFF3A037128D1CA, 0x12F445D3F9B8BAC6, patchMap_ToxinRefinery        },      // MAP03
+    {  56435, 0x7921ADB466CEE45E, 0x4476F208866BF8A7, applyOriginalMapCommonPatches },      // MAP01
+    { 119369, 0x4ED7CD6367900B52, 0x9609E85DB101DC09, applyOriginalMapCommonPatches },      // MAP02
+    { 110284, 0x9BFF3A037128D1CA, 0x12F445D3F9B8BAC6, applyOriginalMapCommonPatches },      // MAP03
     {  92341, 0x1D79B5BDE5426081, 0x4E9413A01EAF4B4A, patchMap_CommandControl       },      // MAP04
-    {  89865, 0x0A8ACFFC833D6E36, 0x070A7A5CDDEE1CE0, patchMap_PhobosLab            },      // MAP05
+    {  89865, 0x0A8ACFFC833D6E36, 0x070A7A5CDDEE1CE0, applyOriginalMapCommonPatches },      // MAP05
     { 124094, 0x2097E86807523FF3, 0xA2F0C52632B12372, patchMap_CentralProcessing    },      // MAP06
     { 108814, 0xD89ECAA4823454FD, 0xC7C178FA280CA569, applyOriginalMapCommonPatches },      // MAP07
     {  51882, 0x94BC7E609E1AC29A, 0xC1B6D482725C2C34, applyOriginalMapCommonPatches },      // MAP08
     {  47025, 0x492736BF0840ED38, 0x92A3AA841280B742, applyOriginalMapCommonPatches },      // MAP09
-    {  97045, 0x48FFA0D005CB2DDA, 0x2631E9D5AB867200, patchMap_ContainmentArea      },      // MAP10
-    {  75368, 0x6D99C761DE799820, 0xAEDB0E4CA9441431, patchMap_Refinery             },      // MAP11
-    { 119221, 0xB0E9622905A41337, 0xED94BA27D70017BF, patchMap_DeimosLab            },      // MAP12
+    {  97045, 0x48FFA0D005CB2DDA, 0x2631E9D5AB867200, applyOriginalMapCommonPatches },      // MAP10
+    {  75368, 0x6D99C761DE799820, 0xAEDB0E4CA9441431, applyOriginalMapCommonPatches },      // MAP11
+    { 119221, 0xB0E9622905A41337, 0xED94BA27D70017BF, applyOriginalMapCommonPatches },      // MAP12
     {  83505, 0x8635E6DB6360B27C, 0xD5835A25E276A0C4, patchMap_CommandCenter        },      // MAP13
     {  85802, 0x556287C93A6396F9, 0xC019D5F66797A596, applyOriginalMapCommonPatches },      // MAP14
     {  83539, 0xFDA28FD54C7E9A92, 0xE7F93F0E3C5C1D7F, applyOriginalMapCommonPatches },      // MAP15
