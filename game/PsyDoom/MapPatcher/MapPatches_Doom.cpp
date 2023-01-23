@@ -278,6 +278,18 @@ static void patchMap_HellGate() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP17: Hell Keep
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_HellKeep() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Unhide linedefs that shouldn't be hidden
+        removeFlagsFromLinedefs(ML_DONTDRAW, 41, 42, 77, 78, 83, 84);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP18: Pandemonium
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Pandemonium() noexcept {
@@ -692,7 +704,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  85802, 0x556287C93A6396F9, 0xC019D5F66797A596, patchMap_HallsOfTheDamned     },      // MAP14
     {  83539, 0xFDA28FD54C7E9A92, 0xE7F93F0E3C5C1D7F, patchMap_SpawningVats         },      // MAP15
     {  27956, 0x39B94C1CF5E19EB0, 0xE0A691816A8C166A, patchMap_HellGate             },      // MAP16
-    {  56466, 0x4F240435B71CA6CA, 0xFA106C3EC5548BF0, applyOriginalMapCommonPatches },      // MAP17
+    {  56466, 0x4F240435B71CA6CA, 0xFA106C3EC5548BF0, patchMap_HellKeep             },      // MAP17
     {  71253, 0x0541C17B11B2DC05, 0x577D152A01E48073, patchMap_Pandemonium          },      // MAP18
     {  75515, 0xFE716B01FE414A2A, 0xA3A7AFA1956DF697, patchMap_HouseOfPain          },      // MAP19
     { 143483, 0x36A01960BAD36249, 0x2BC3BF03E0ED6D64, patchMap_UnholyCathedral      },      // MAP20
