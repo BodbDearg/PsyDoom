@@ -259,6 +259,25 @@ static void patchMap_SpawningVats() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP16: Hell Gate
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_HellGate() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide skybox for window
+        addFlagsToLinedefs(ML_DONTDRAW, 27, 28, 29, 30, 31, 32, 33, 34, 35, 42);
+
+        // Remove unused actions from linedefs.
+        // Note: This does not affect gameplay.
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            72, 87
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP18: Pandemonium
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Pandemonium() noexcept {
@@ -672,7 +691,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  83505, 0x8635E6DB6360B27C, 0xD5835A25E276A0C4, patchMap_CommandCenter        },      // MAP13
     {  85802, 0x556287C93A6396F9, 0xC019D5F66797A596, patchMap_HallsOfTheDamned     },      // MAP14
     {  83539, 0xFDA28FD54C7E9A92, 0xE7F93F0E3C5C1D7F, patchMap_SpawningVats         },      // MAP15
-    {  27956, 0x39B94C1CF5E19EB0, 0xE0A691816A8C166A, applyOriginalMapCommonPatches },      // MAP16
+    {  27956, 0x39B94C1CF5E19EB0, 0xE0A691816A8C166A, patchMap_HellGate             },      // MAP16
     {  56466, 0x4F240435B71CA6CA, 0xFA106C3EC5548BF0, applyOriginalMapCommonPatches },      // MAP17
     {  71253, 0x0541C17B11B2DC05, 0x577D152A01E48073, patchMap_Pandemonium          },      // MAP18
     {  75515, 0xFE716B01FE414A2A, 0xA3A7AFA1956DF697, patchMap_HouseOfPain          },      // MAP19
