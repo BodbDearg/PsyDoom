@@ -312,6 +312,16 @@ static void patchMap_HouseOfPain() noexcept {
         // Remove the line action that causes the bug.
         gpLines[435].special = 0;
     }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
+        // Note: This does not affect gameplay.
+        gpLines[88].special = 0;
+        gpLines[450].special = 0;
+
+        // Hide linedefs
+        addFlagsToLinedefs(ML_DONTDRAW, 90, 91, 518, 519, 520, 524, 525, 526, 527);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
