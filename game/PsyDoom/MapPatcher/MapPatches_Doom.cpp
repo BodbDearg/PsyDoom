@@ -166,6 +166,11 @@ static void patchMap_Refinery() noexcept {
             69, 70, 217, 366, 367, 451, 495, 496
         );
     }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Restored secret to stairs leading from southwest lava room; same as PC Doom.
+        gpSectors[88].special = 9;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
