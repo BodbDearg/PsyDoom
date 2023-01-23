@@ -4,6 +4,9 @@
 
 struct player_t;
 
+// How many bits to left shift a turn amount to convert it to an angle
+static constexpr int32_t TURN_TO_ANGLE_SHIFT = 17;
+
 #if PSYDOOM_MODS
     extern angle_t gPlayerUncommittedTurning;
     extern angle_t gPlayerNextTickViewAngle;

@@ -228,10 +228,10 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     // Note: ignore MAPINFO defaults and user settings for game rules when it comes to classic demos.
     // Use the rules associated with the base game that the demo was recorded against in order to reproduce the same behavior and avoid desync...
-    const bool bFinalDoomRules = gCurClassicDemo.bFinalDoomDemo;
+    const bool bFinalDoomRules = gCurBuiltInDemo.bFinalDoomDemo;
 
     settings = {};
-    settings.bUsePalTimings                     = gCurClassicDemo.bPalDemo;
+    settings.bUsePalTimings                     = gCurBuiltInDemo.bPalDemo;
     settings.bUseDemoTimings                    = true;
     settings.bFixKillCount                      = false;
     settings.bFixLineActivation                 = false;

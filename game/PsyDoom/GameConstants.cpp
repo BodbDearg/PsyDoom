@@ -27,10 +27,10 @@ static void populateConsts_Doom(GameConstants& consts, const bool bIsDemoVersion
     consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE.STR";
 
     if (!bIsDemoVersion) {
-        consts.demos[0] = ClassicDemoDef{ "DEMO1.LMP", false, (Game::gGameVariant == GameVariant::PAL), true  };
-        consts.demos[1] = ClassicDemoDef{ "DEMO2.LMP", false, (Game::gGameVariant == GameVariant::PAL), false };
+        consts.demos[0] = BuiltInDemoDef{ "DEMO1.LMP", false, (Game::gGameVariant == GameVariant::PAL), true  };
+        consts.demos[1] = BuiltInDemoDef{ "DEMO2.LMP", false, (Game::gGameVariant == GameVariant::PAL), false };
     } else {
-        consts.demos[0] = ClassicDemoDef{ "DEMO2.LMP", false, (Game::gGameVariant == GameVariant::PAL), true  };    // Demo only uses 'DEMO2.LMP'!
+        consts.demos[0] = BuiltInDemoDef{ "DEMO2.LMP", false, (Game::gGameVariant == GameVariant::PAL), true  };    // Demo only uses 'DEMO2.LMP'!
     }
 
     consts.saveFilePrefix = "Doom_";
@@ -48,8 +48,8 @@ static void populateConsts_Doom(GameConstants& consts, const bool bIsDemoVersion
 static void populateConsts_FinalDoom(GameConstants& consts) noexcept {
     consts.mainWads[0] = CdFile::PSXDOOM_WAD;
     consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE.STR";
-    consts.demos[0] = ClassicDemoDef{ "DEMO1.LMP", true, (Game::gGameVariant == GameVariant::PAL), true  };
-    consts.demos[1] = ClassicDemoDef{ "DEMO2.LMP", true, (Game::gGameVariant == GameVariant::PAL), false };
+    consts.demos[0] = BuiltInDemoDef{ "DEMO1.LMP", true, (Game::gGameVariant == GameVariant::PAL), true  };
+    consts.demos[1] = BuiltInDemoDef{ "DEMO2.LMP", true, (Game::gGameVariant == GameVariant::PAL), false };
     consts.saveFilePrefix = "FDoom_";
     consts.pLastPasswordField = &PlayerPrefs::gLastPassword_FDoom;
     consts.netGameId = NET_GAMEID_FINAL_DOOM;
@@ -107,18 +107,18 @@ static void populateConsts_GEC_ME_Beta3(GameConstants& consts) noexcept {
 
     // Demo files: note that we have to remap the map numbers for the 'Final Doom' episodes!
     {
-        const ClassicDemoDef::MapNumOverrideFn remapMasterLevelsMapNum = [](const int32_t mapNum) noexcept { return mapNum + 30; };
-        const ClassicDemoDef::MapNumOverrideFn remapTntMapNum          = [](const int32_t mapNum) noexcept { return mapNum + 50; };
-        const ClassicDemoDef::MapNumOverrideFn remapPlutoniaMapNum     = [](const int32_t mapNum) noexcept { return mapNum + 70; };
+        const BuiltInDemoDef::MapNumOverrideFn remapMasterLevelsMapNum = [](const int32_t mapNum) noexcept { return mapNum + 30; };
+        const BuiltInDemoDef::MapNumOverrideFn remapTntMapNum          = [](const int32_t mapNum) noexcept { return mapNum + 50; };
+        const BuiltInDemoDef::MapNumOverrideFn remapPlutoniaMapNum     = [](const int32_t mapNum) noexcept { return mapNum + 70; };
 
-        consts.demos[0] = ClassicDemoDef{ "DEMO1.LMP", false, false, true                           };
-        consts.demos[1] = ClassicDemoDef{ "DEMO2.LMP", false, false, true                           };
-        consts.demos[2] = ClassicDemoDef{ "DEMO3.LMP", true,  false, true,  remapMasterLevelsMapNum };
-        consts.demos[3] = ClassicDemoDef{ "DEMO4.LMP", true,  false, true,  remapMasterLevelsMapNum };
-        consts.demos[4] = ClassicDemoDef{ "DEMO5.LMP", true,  false, true,  remapTntMapNum          };
-        consts.demos[5] = ClassicDemoDef{ "DEMO6.LMP", true,  false, true,  remapTntMapNum          };
-        consts.demos[6] = ClassicDemoDef{ "DEMO7.LMP", true,  false, true,  remapPlutoniaMapNum     };
-        consts.demos[7] = ClassicDemoDef{ "DEMO8.LMP", true,  false, false, remapPlutoniaMapNum     };
+        consts.demos[0] = BuiltInDemoDef{ "DEMO1.LMP", false, false, true                           };
+        consts.demos[1] = BuiltInDemoDef{ "DEMO2.LMP", false, false, true                           };
+        consts.demos[2] = BuiltInDemoDef{ "DEMO3.LMP", true,  false, true,  remapMasterLevelsMapNum };
+        consts.demos[3] = BuiltInDemoDef{ "DEMO4.LMP", true,  false, true,  remapMasterLevelsMapNum };
+        consts.demos[4] = BuiltInDemoDef{ "DEMO5.LMP", true,  false, true,  remapTntMapNum          };
+        consts.demos[5] = BuiltInDemoDef{ "DEMO6.LMP", true,  false, true,  remapTntMapNum          };
+        consts.demos[6] = BuiltInDemoDef{ "DEMO7.LMP", true,  false, true,  remapPlutoniaMapNum     };
+        consts.demos[7] = BuiltInDemoDef{ "DEMO8.LMP", true,  false, false, remapPlutoniaMapNum     };
     }
 
     // All other differing constants
@@ -169,14 +169,13 @@ static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
     consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE_N.STR";
     consts.introMovies[1] = "PSXDOOM/ABIN/GEC_N.STR";
     consts.introMovies[2] = "PSXDOOM/ABIN/DWORLD_N.STR";
-    consts.demos[0] = ClassicDemoDef{ "NDEMO1.LMP", true, false, true  };   // TODO: GEC ME BETA 4: Verify these demos
-    consts.demos[1] = ClassicDemoDef{ "NDEMO2.LMP", true, false, true  };
-    consts.demos[2] = ClassicDemoDef{ "NDEMO3.LMP", true, false, true  };
-    consts.demos[3] = ClassicDemoDef{ "NDEMO4.LMP", true, false, true  };
-    consts.demos[4] = ClassicDemoDef{ "NDEMO5.LMP", true, false, true  };
-    consts.demos[5] = ClassicDemoDef{ "NDEMO6.LMP", true, false, true  };
-    consts.demos[6] = ClassicDemoDef{ "NDEMO7.LMP", true, false, true  };
-    consts.demos[7] = ClassicDemoDef{ "NDEMO8.LMP", true, false, false };
+    consts.demos[0] = BuiltInDemoDef{ "NDEMO1.LMP", true, false, true  };   // TODO: GEC ME BETA 4: Verify these demos
+    consts.demos[1] = BuiltInDemoDef{ "NDEMO2.LMP", true, false, true  };
+    consts.demos[2] = BuiltInDemoDef{ "NDEMO3.LMP", true, false, true  };
+    consts.demos[3] = BuiltInDemoDef{ "NDEMO4.LMP", true, false, true  };
+    consts.demos[4] = BuiltInDemoDef{ "NDEMO5.LMP", true, false, true  };
+    consts.demos[5] = BuiltInDemoDef{ "NDEMO6.LMP", true, false, true  };
+    consts.demos[6] = BuiltInDemoDef{ "NDEMO7.LMP", true, false, true  };
     consts.saveFilePrefix = "GecMe_";
     consts.pLastPasswordField = &PlayerPrefs::gLastPassword_GecMe;
     consts.pExtraPalettes = BuiltInPaletteData::GEC_ME_DYNAMIC_PALETTE_PLACEHOLDERS;

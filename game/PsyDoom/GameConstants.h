@@ -10,15 +10,16 @@ namespace PlayerPrefs {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Defines a demo in the classic PSX Doom or Final Doom format
+// Defines a built-in demo for the current game type which is present on the game disc.
+// The demo will normally be in the classic PSX Doom or Final Doom format, but can also be in the 'GEC Master Edition' format.
 //------------------------------------------------------------------------------------------------------------------------------------------
-struct ClassicDemoDef {
+struct BuiltInDemoDef {
     // Definition for a function that can override the map number contained in the demo file.
     // Needed if the map numbers for the current game are remapped, like with the '[GEC] Master Edition (Beta 3)' disc.
     typedef int32_t (*MapNumOverrideFn)(const int32_t) noexcept;
 
     String16            filename;               // Name of the demo file on the disc (just the filename, not the full path)
-    bool                bFinalDoomDemo;         // Is the demo file in the Final Doom format, and with Final Doom game rules?
+    bool                bFinalDoomDemo;         // Is the demo file in the Final Doom format, and with Final Doom game rules? (note: this field is ignored for the GEC demo format)
     bool                bPalDemo;               // Is the demo for the PAL version of the game? (if not then it's NTSC)
     bool                bShowCreditsAfter;      // Show the credits screen after this demo finishes?
     MapNumOverrideFn    mapNumOverrider;        // A function that remaps the map number referenced by the demo file (if required)
@@ -32,7 +33,7 @@ struct GameConstants {
     String16                mainWads[4];                        // The list of main resource WADS to load for this game (terminated by an empty string, earlier WADs take precedence).
     RemapWadLumpNameFn      mainWadLumpRemappers[4];            // Optional remappers that change/remap the names of the lumps in each main wad
     String32                introMovies[3];                     // Intro movies to play for the game (up to 3, blank string terminated list)
-    ClassicDemoDef          demos[8];                           // Demos to play for this game (up to 8, the list is terminated by an empty demo filename)
+    BuiltInDemoDef          demos[8];                           // Demos to play for this game (up to 8, the list is terminated by an empty demo filename)
     const char*             saveFilePrefix;                     // Prefix added to all save files for this game type (like 'Doom_')
     PlayerPrefs::Password*  pLastPasswordField;                 // Which player prefs field this game stores the last map password in
     const palette_t*        pExtraPalettes;                     // Extra palettes to load for this game on top of the 'PLAYPAL' lump

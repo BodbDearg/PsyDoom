@@ -890,7 +890,7 @@ void P_Start() noexcept {
     // Play music: for classic demos (only!) play the credits music cd track.
     // Otherwise play some sequencer music for the level.
     #if PSYDOOM_MODS
-        const bool bPlayNormalMapMusic = (!DemoPlayer::isPlayingAClassicDemo());
+        const bool bPlayNormalMapMusic = (!DemoPlayer::shouldOverrideMapMusicForDemo());
     #else
         const bool bPlayNormalMapMusic = (!gbDemoPlayback);
     #endif

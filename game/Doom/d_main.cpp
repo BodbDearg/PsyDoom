@@ -72,8 +72,8 @@ std::byte*  gpDemoBuffer;
 std::byte*  gpDemo_p;
 
 #if PSYDOOM_MODS
-    // PsyDoom: info about the current classic demo being played (what game mode to use etc.)
-    ClassicDemoDef gCurClassicDemo;
+    // PsyDoom: info about the current built-in demo being played (what game mode to use etc.)
+    BuiltInDemoDef gCurBuiltInDemo;
 #endif
 
 // Game start parameters
@@ -305,21 +305,21 @@ void D_DoomMain() noexcept {
 
                 for (uint32_t demoIdx = 0; demoIdx < C_ARRAY_SIZE(GameConstants::demos); ++demoIdx) {
                     // Grab the details for the current demo; if there are no more demos then playback stops:
-                    gCurClassicDemo = Game::gConstants.demos[demoIdx];
+                    gCurBuiltInDemo = Game::gConstants.demos[demoIdx];
 
-                    if (gCurClassicDemo.filename.length() <= 0)
+                    if (gCurBuiltInDemo.filename.length() <= 0)
                         break;
 
                     // Run the demo itself
                     bGotoTitle = true;
 
-                    if (didExit(RunDemo(gCurClassicDemo.filename))) {
+                    if (didExit(RunDemo(gCurBuiltInDemo.filename))) {
                         bGotoTitle = false;
                         break;
                     }
 
                     // Show a credits screen after this demo?
-                    if (gCurClassicDemo.bShowCreditsAfter) {
+                    if (gCurBuiltInDemo.bShowCreditsAfter) {
                         if (didExit(RunCredits())) {
                             bGotoTitle = false;
                             break;
@@ -444,9 +444,9 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
         FatalErrors::raiseF("Unable to read demo file '%s'! Is the file path valid?", filePath);
     }
 
-    // Set the info for the current classic demo in case we are playing one of those.
+    // Set the info for the current built-in demo in case we are playing one of those.
     // Use the current game settings to determine the demo's game behavior and format.
-    ClassicDemoDef& demoDef = gCurClassicDemo;
+    BuiltInDemoDef& demoDef = gCurBuiltInDemo;
     demoDef = {};
     demoDef.bFinalDoomDemo = (Game::gGameType != GameType::Doom);
     demoDef.bPalDemo = (Game::gGameVariant == GameVariant::PAL);
