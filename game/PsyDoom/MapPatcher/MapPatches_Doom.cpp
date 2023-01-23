@@ -212,6 +212,39 @@ static void patchMap_CommandCenter() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP14: Halls of the Damned
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_HallsOfTheDamned() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix stuck demons and baron of hell in south monster closet in central hallway on harder skills
+        if (gGameSkill >= sk_hard) {
+            modifySectors(
+                [](sector_t& sector) noexcept {
+                    for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
+                        mobj_t* const pNextMobj = pMobj->snext;
+
+                        if ((pMobj->type == MT_SERGEANT) && (pMobj->y == -128 * FRACUNIT)) {
+                            P_RemoveMobj(*pMobj);
+                        }
+                        if (pMobj->type == MT_BRUISER) {
+                            EV_TeleportTo(*pMobj, pMobj->x, -232 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t) 0, sfx_None);
+                        }
+
+                        pMobj = pNextMobj;
+                    }
+                }, 88
+            );
+            (P_SpawnMobj(992 * FRACUNIT, -124 * FRACUNIT, INT32_MIN, MT_SERGEANT))->angle = ANG90;
+            (P_SpawnMobj(992 * FRACUNIT, -184 * FRACUNIT, INT32_MIN, MT_SERGEANT))->angle = ANG90;
+            (P_SpawnMobj(1056 * FRACUNIT, -124 * FRACUNIT, INT32_MIN, MT_SERGEANT))->angle = ANG90;
+            (P_SpawnMobj(1056 * FRACUNIT, -184 * FRACUNIT, INT32_MIN, MT_SERGEANT))->angle = ANG90;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP18: Pandemonium
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Pandemonium() noexcept {
@@ -623,7 +656,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  75368, 0x6D99C761DE799820, 0xAEDB0E4CA9441431, patchMap_Refinery             },      // MAP11
     { 119221, 0xB0E9622905A41337, 0xED94BA27D70017BF, patchMap_DeimosLab            },      // MAP12
     {  83505, 0x8635E6DB6360B27C, 0xD5835A25E276A0C4, patchMap_CommandCenter        },      // MAP13
-    {  85802, 0x556287C93A6396F9, 0xC019D5F66797A596, applyOriginalMapCommonPatches },      // MAP14
+    {  85802, 0x556287C93A6396F9, 0xC019D5F66797A596, patchMap_HallsOfTheDamned     },      // MAP14
     {  83539, 0xFDA28FD54C7E9A92, 0xE7F93F0E3C5C1D7F, applyOriginalMapCommonPatches },      // MAP15
     {  27956, 0x39B94C1CF5E19EB0, 0xE0A691816A8C166A, applyOriginalMapCommonPatches },      // MAP16
     {  56466, 0x4F240435B71CA6CA, 0xFA106C3EC5548BF0, applyOriginalMapCommonPatches },      // MAP17
