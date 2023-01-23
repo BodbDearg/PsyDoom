@@ -113,6 +113,25 @@ static void patchMap_CentralProcessing() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP09: Deimos Anomaly
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_DeimosAnomaly() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Add missing textures to back side of wall that lowers around final teleport
+        modifyLinedefs(
+            [](line_t& line) { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("BRONZE01"); },
+            243, 244
+        );
+
+        // Move secret flags to outer wall of final teleport to better match the PC version
+        removeFlagsFromLinedefs(ML_SECRET, 243, 244);
+        addFlagsToLinedefs(ML_SECRET, 356, 357);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP10: Containment Area
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_ContainmentArea() noexcept {
@@ -594,7 +613,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 124094, 0x2097E86807523FF3, 0xA2F0C52632B12372, patchMap_CentralProcessing    },      // MAP06
     { 108814, 0xD89ECAA4823454FD, 0xC7C178FA280CA569, applyOriginalMapCommonPatches },      // MAP07
     {  51882, 0x94BC7E609E1AC29A, 0xC1B6D482725C2C34, applyOriginalMapCommonPatches },      // MAP08
-    {  47025, 0x492736BF0840ED38, 0x92A3AA841280B742, applyOriginalMapCommonPatches },      // MAP09
+    {  47025, 0x492736BF0840ED38, 0x92A3AA841280B742, patchMap_DeimosAnomaly        },      // MAP09
     {  97045, 0x48FFA0D005CB2DDA, 0x2631E9D5AB867200, patchMap_ContainmentArea      },      // MAP10
     {  75368, 0x6D99C761DE799820, 0xAEDB0E4CA9441431, patchMap_Refinery             },      // MAP11
     { 119221, 0xB0E9622905A41337, 0xED94BA27D70017BF, patchMap_DeimosLab            },      // MAP12
