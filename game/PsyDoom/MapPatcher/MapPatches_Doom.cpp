@@ -357,10 +357,10 @@ static void patchMap_UnholyCathedral() noexcept {
         modifyLinedefs(
             [](line_t& line) {
                 gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE04");
-        gpSides[line.sidenum[1]].toptexture = R_TextureNumForName("MARBLE04");
+                gpSides[line.sidenum[1]].toptexture = R_TextureNumForName("MARBLE04");
             },
             950, 1078
-                );
+        );
 
         // Fix the alignment of the scrolling skull wall textures
         auto setLineFrontTexOffset = [](const int32_t lineNum, const int32_t offsetX, const int32_t offsetY) noexcept {
@@ -401,6 +401,34 @@ static void patchMap_UnholyCathedral() noexcept {
             [](line_t& line) { line.special = 0; },
             426, 431, 538, 550, 819, 820, 1068
         );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP21: Mt. Erebus
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_MtErebus() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
+        // Note: This does not affect gameplay.
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            48, 66, 246, 247, 248, 293, 325, 333
+        );
+
+        // Unhide linedefs that shouldn't be hidden
+        removeFlagsFromLinedefs(ML_DONTDRAW, 385, 396, 407, 410, 443, 516);
+
+        // Fix texture alignment for doors in Y-shaped building
+        gpSides[gpLines[403].sidenum[0]].textureoffset = -16 * FRACUNIT;
+        gpSides[gpLines[404].sidenum[0]].textureoffset = -16 * FRACUNIT;
+        gpSides[gpLines[405].sidenum[0]].textureoffset = -7 * FRACUNIT;
+        gpSides[gpLines[406].sidenum[0]].textureoffset = -11 * FRACUNIT;
+
+        // Fix Texture alignment for platform that lowers in Y-shaped building
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 408, 409);
     }
 }
 
@@ -471,10 +499,10 @@ static void patchMap_Underhalls() noexcept {
         modifyLinedefs(
             [](line_t& line) {
                 line.special = 135;
-        line.tag = 7;
+                line.tag = 7;
             },
             111, 112, 113, 511, 513, 514, 516, 517, 518, 520, 521, 522
-                );
+        );
     }
 }
 
@@ -600,7 +628,7 @@ static void patchMap_Tenements() noexcept {
                 }
             },
             179, 182, 183, 184
-                );
+        );
     }
 
     if (shouldApplyMapPatches_Visual()) {
@@ -725,7 +753,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  71253, 0x0541C17B11B2DC05, 0x577D152A01E48073, patchMap_Pandemonium          },      // MAP18
     {  75515, 0xFE716B01FE414A2A, 0xA3A7AFA1956DF697, patchMap_HouseOfPain          },      // MAP19
     { 143483, 0x36A01960BAD36249, 0x2BC3BF03E0ED6D64, patchMap_UnholyCathedral      },      // MAP20
-    {  86538, 0x403A02FD929949E5, 0xB4185CB43CEA9B46, applyOriginalMapCommonPatches },      // MAP21
+    {  86538, 0x403A02FD929949E5, 0xB4185CB43CEA9B46, patchMap_MtErebus             },      // MAP21
     { 109754, 0x1E3E66448FE6645C, 0x3DCA2CA78FC862F3, patchMap_Limbo                },      // MAP22
     {  32935, 0x55A24A4ED4053AC3, 0x636CDB24CE519EF8, applyOriginalMapCommonPatches },      // MAP23
     {  52915, 0xA8CCE876F52671B2, 0xDA2BB82C5D03383C, patchMap_HellBeneath          },      // MAP24
