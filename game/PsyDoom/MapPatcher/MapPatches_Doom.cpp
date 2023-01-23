@@ -394,6 +394,13 @@ static void patchMap_UnholyCathedral() noexcept {
             [](line_t& line) { gpSides[line.sidenum[0]].rowoffset = 16 * FRACUNIT; },
             815, 818
         );
+
+        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
+        // Note: This does not affect gameplay.
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            426, 431, 538, 550, 819, 820, 1068
+        );
     }
 }
 
