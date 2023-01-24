@@ -471,7 +471,9 @@ static void patchMap_HellBeneath() noexcept {
         // Add hidden switch to excape blue key alcove if you get trapped
         gpLines[294].special = 60;
         gpLines[294].tag = 8;
+    }
 
+    if (shouldApplyMapPatches_Visual()) {
         // Flag linedefs as secret in blue key room
         addFlagsToLinedefs(ML_SECRET, 263, 266);
     }
@@ -486,6 +488,30 @@ static void patchMap_PerfectHatred() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix unpegged textures on hidden teleport
         removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 174);
+
+        // Remove unused action from linedef. This was left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            117
+        );
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Move tall green firestick that's stuck in the wall
+        modifySectors(
+            [](sector_t& sector) noexcept {
+                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
+                    mobj_t* const pNextMobj = pMobj->snext;
+
+                    if ((pMobj->type == MT_MISC42) && (pMobj->y == 1712 * FRACUNIT)) {
+                        EV_TeleportTo(*pMobj, -304 * FRACUNIT, pMobj->y, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
+                    }
+
+                    pMobj = pNextMobj;
+                }
+            }, 98
+        );
     }
 }
 
