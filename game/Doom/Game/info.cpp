@@ -904,30 +904,30 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_VILE, 5,                    1,   A_VileChase,      S_VILE_RUN12,     0,  0 },  // S_VILE_RUN11
     { SPR_VILE, 5,                    1,   A_VileChase,      S_VILE_RUN1,      0,  0 },  // S_VILE_RUN12
     { SPR_VILE, 6 | FF_FULLBRIGHT,    0,   A_VileStart,      S_VILE_ATK2,      0,  0 },  // S_VILE_ATK1
-    { SPR_VILE, 6 | FF_FULLBRIGHT,    4,   A_FaceTarget,     S_VILE_ATK3,      0,  0 },  // S_VILE_ATK2
-    { SPR_VILE, 7 | FF_FULLBRIGHT,    3,   A_VileTarget,     S_VILE_ATK4,      0,  0 },  // S_VILE_ATK3
+    { SPR_VILE, 6 | FF_FULLBRIGHT,    5,   A_FaceTarget,     S_VILE_ATK3,      0,  0 },  // S_VILE_ATK2
+    { SPR_VILE, 7 | FF_FULLBRIGHT,    4,   A_VileTarget,     S_VILE_ATK4,      0,  0 },  // S_VILE_ATK3
     { SPR_VILE, 8 | FF_FULLBRIGHT,    4,   A_FaceTarget,     S_VILE_ATK5,      0,  0 },  // S_VILE_ATK4
-    { SPR_VILE, 9 | FF_FULLBRIGHT,    3,   A_FaceTarget,     S_VILE_ATK6,      0,  0 },  // S_VILE_ATK5
+    { SPR_VILE, 9 | FF_FULLBRIGHT,    4,   A_FaceTarget,     S_VILE_ATK6,      0,  0 },  // S_VILE_ATK5
     { SPR_VILE, 10 | FF_FULLBRIGHT,   4,   A_FaceTarget,     S_VILE_ATK7,      0,  0 },  // S_VILE_ATK6
-    { SPR_VILE, 11 | FF_FULLBRIGHT,   3,   A_FaceTarget,     S_VILE_ATK8,      0,  0 },  // S_VILE_ATK7
+    { SPR_VILE, 11 | FF_FULLBRIGHT,   4,   A_FaceTarget,     S_VILE_ATK8,      0,  0 },  // S_VILE_ATK7
     { SPR_VILE, 12 | FF_FULLBRIGHT,   4,   A_FaceTarget,     S_VILE_ATK9,      0,  0 },  // S_VILE_ATK8
-    { SPR_VILE, 13 | FF_FULLBRIGHT,   3,   A_FaceTarget,     S_VILE_ATK10,     0,  0 },  // S_VILE_ATK9
+    { SPR_VILE, 13 | FF_FULLBRIGHT,   4,   A_FaceTarget,     S_VILE_ATK10,     0,  0 },  // S_VILE_ATK9
     { SPR_VILE, 14 | FF_FULLBRIGHT,   4,   A_VileAttack,     S_VILE_ATK11,     0,  0 },  // S_VILE_ATK10
-    { SPR_VILE, 15 | FF_FULLBRIGHT,   9,   nullptr,          S_VILE_RUN1,      0,  0 },  // S_VILE_ATK11
-    { SPR_VILE, 26 | FF_FULLBRIGHT,   4,   nullptr,          S_VILE_HEAL2,     0,  0 },  // S_VILE_HEAL1
+    { SPR_VILE, 15 | FF_FULLBRIGHT,   10,   nullptr,          S_VILE_RUN1,      0,  0 },  // S_VILE_ATK11
+    { SPR_VILE, 26 | FF_FULLBRIGHT,   5,   nullptr,          S_VILE_HEAL2,     0,  0 },  // S_VILE_HEAL1
     { SPR_VILE, 27 | FF_FULLBRIGHT,   5,   nullptr,          S_VILE_HEAL3,     0,  0 },  // S_VILE_HEAL2
-    { SPR_VILE, 28 | FF_FULLBRIGHT,   4,   nullptr,          S_VILE_RUN1,      0,  0 },  // S_VILE_HEAL3
+    { SPR_VILE, 28 | FF_FULLBRIGHT,   5,   nullptr,          S_VILE_RUN1,      0,  0 },  // S_VILE_HEAL3
     { SPR_VILE, 16,                   2,   nullptr,          S_VILE_PAIN2,     0,  0 },  // S_VILE_PAIN
-    { SPR_VILE, 16,                   3,   A_Pain,           S_VILE_RUN1,      0,  0 },  // S_VILE_PAIN2
-    { SPR_VILE, 16,                   2,   nullptr,          S_VILE_DIE2,      0,  0 },  // S_VILE_DIE1
+    { SPR_VILE, 16,                   2,   A_Pain,           S_VILE_RUN1,      0,  0 },  // S_VILE_PAIN2
+    { SPR_VILE, 16,                   3,   nullptr,          S_VILE_DIE2,      0,  0 },  // S_VILE_DIE1
     { SPR_VILE, 17,                   3,   A_Scream,         S_VILE_DIE3,      0,  0 },  // S_VILE_DIE2
     { SPR_VILE, 18,                   3,   A_Fall,           S_VILE_DIE4,      0,  0 },  // S_VILE_DIE3
-    { SPR_VILE, 19,                   2,   nullptr,          S_VILE_DIE5,      0,  0 },  // S_VILE_DIE4
+    { SPR_VILE, 19,                   3,   nullptr,          S_VILE_DIE5,      0,  0 },  // S_VILE_DIE4
     { SPR_VILE, 20,                   3,   nullptr,          S_VILE_DIE6,      0,  0 },  // S_VILE_DIE5
     { SPR_VILE, 21,                   3,   nullptr,          S_VILE_DIE7,      0,  0 },  // S_VILE_DIE6
-    { SPR_VILE, 22,                   2,   nullptr,          S_VILE_DIE8,      0,  0 },  // S_VILE_DIE7
-    { SPR_VILE, 23,                   3,   nullptr,          S_VILE_DIE9,      0,  0 },  // S_VILE_DIE8
-    { SPR_VILE, 24,                   3,   nullptr,          S_VILE_DIE10,     0,  0 },  // S_VILE_DIE9
+    { SPR_VILE, 22,                   3,   nullptr,          S_VILE_DIE8,      0,  0 },  // S_VILE_DIE7
+    { SPR_VILE, 23,                   2,   nullptr,          S_VILE_DIE9,      0,  0 },  // S_VILE_DIE8
+    { SPR_VILE, 24,                   2,   nullptr,          S_VILE_DIE10,     0,  0 },  // S_VILE_DIE9
     { SPR_VILE, 25,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_VILE_DIE10
     { SPR_FIRE, 0 | FF_FULLBRIGHT,    1,   A_StartFire,      S_FIRE2,          0,  0 },  // S_FIRE1
     { SPR_FIRE, 1 | FF_FULLBRIGHT,    1,   A_Fire,           S_FIRE3,          0,  0 },  // S_FIRE2
@@ -961,28 +961,28 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_FIRE, 7 | FF_FULLBRIGHT,    1,   A_Fire,           S_NULL,           0,  0 },  // S_FIRE30
     { SPR_SSWV, 0,                    5,   A_Look,           S_SSWV_STND2,     0,  0 },  // S_SSWV_STND
     { SPR_SSWV, 1,                    5,   A_Look,           S_SSWV_STND,      0,  0 },  // S_SSWV_STND2
-    { SPR_SSWV, 0,                    2,   A_Chase,          S_SSWV_RUN2,      0,  0 },  // S_SSWV_RUN1
-    { SPR_SSWV, 0,                    1,   A_Chase,          S_SSWV_RUN3,      0,  0 },  // S_SSWV_RUN2
-    { SPR_SSWV, 1,                    2,   A_Chase,          S_SSWV_RUN4,      0,  0 },  // S_SSWV_RUN3
-    { SPR_SSWV, 1,                    1,   A_Chase,          S_SSWV_RUN5,      0,  0 },  // S_SSWV_RUN4
-    { SPR_SSWV, 2,                    2,   A_Chase,          S_SSWV_RUN6,      0,  0 },  // S_SSWV_RUN5
-    { SPR_SSWV, 2,                    1,   A_Chase,          S_SSWV_RUN7,      0,  0 },  // S_SSWV_RUN6
-    { SPR_SSWV, 3,                    2,   A_Chase,          S_SSWV_RUN8,      0,  0 },  // S_SSWV_RUN7
-    { SPR_SSWV, 3,                    1,   A_Chase,          S_SSWV_RUN1,      0,  0 },  // S_SSWV_RUN8
-    { SPR_SSWV, 4,                    4,   A_FaceTarget,     S_SSWV_ATK2,      0,  0 },  // S_SSWV_ATK1
-    { SPR_SSWV, 5,                    4,   A_FaceTarget,     S_SSWV_ATK3,      0,  0 },  // S_SSWV_ATK2
+    { SPR_SSWV, 0,                    1,   A_Chase,          S_SSWV_RUN2,      0,  0 },  // S_SSWV_RUN1
+    { SPR_SSWV, 0,                    2,   A_Chase,          S_SSWV_RUN3,      0,  0 },  // S_SSWV_RUN2
+    { SPR_SSWV, 1,                    1,   A_Chase,          S_SSWV_RUN4,      0,  0 },  // S_SSWV_RUN3
+    { SPR_SSWV, 1,                    2,   A_Chase,          S_SSWV_RUN5,      0,  0 },  // S_SSWV_RUN4
+    { SPR_SSWV, 2,                    1,   A_Chase,          S_SSWV_RUN6,      0,  0 },  // S_SSWV_RUN5
+    { SPR_SSWV, 2,                    2,   A_Chase,          S_SSWV_RUN7,      0,  0 },  // S_SSWV_RUN6
+    { SPR_SSWV, 3,                    1,   A_Chase,          S_SSWV_RUN8,      0,  0 },  // S_SSWV_RUN7
+    { SPR_SSWV, 3,                    2,   A_Chase,          S_SSWV_RUN1,      0,  0 },  // S_SSWV_RUN8
+    { SPR_SSWV, 4,                    5,   A_FaceTarget,     S_SSWV_ATK2,      0,  0 },  // S_SSWV_ATK1
+    { SPR_SSWV, 5,                    5,   A_FaceTarget,     S_SSWV_ATK3,      0,  0 },  // S_SSWV_ATK2
     { SPR_SSWV, 6 | FF_FULLBRIGHT,    2,   A_CPosAttack,     S_SSWV_ATK4,      0,  0 },  // S_SSWV_ATK3
     { SPR_SSWV, 5,                    3,   A_FaceTarget,     S_SSWV_ATK5,      0,  0 },  // S_SSWV_ATK4
     { SPR_SSWV, 6 | FF_FULLBRIGHT,    2,   A_CPosAttack,     S_SSWV_ATK6,      0,  0 },  // S_SSWV_ATK5
-    { SPR_SSWV, 5,                    1,   A_CPosRefire,     S_SSWV_ATK2,      0,  0 },  // S_SSWV_ATK6
+    { SPR_SSWV, 5,                    0,   A_CPosRefire,     S_SSWV_ATK2,      0,  0 },  // S_SSWV_ATK6
     { SPR_SSWV, 7,                    1,   nullptr,          S_SSWV_PAIN2,     0,  0 },  // S_SSWV_PAIN
-    { SPR_SSWV, 7,                    2,   A_Pain,           S_SSWV_RUN1,      0,  0 },  // S_SSWV_PAIN2
+    { SPR_SSWV, 7,                    1,   A_Pain,           S_SSWV_RUN1,      0,  0 },  // S_SSWV_PAIN2
     { SPR_SSWV, 8,                    2,   nullptr,          S_SSWV_DIE2,      0,  0 },  // S_SSWV_DIE1
     { SPR_SSWV, 9,                    2,   A_Scream,         S_SSWV_DIE3,      0,  0 },  // S_SSWV_DIE2
     { SPR_SSWV, 10,                   2,   A_Fall,           S_SSWV_DIE4,      0,  0 },  // S_SSWV_DIE3
-    { SPR_SSWV, 11,                   3,   nullptr,          S_SSWV_DIE5,      0,  0 },  // S_SSWV_DIE4
+    { SPR_SSWV, 11,                   2,   nullptr,          S_SSWV_DIE5,      0,  0 },  // S_SSWV_DIE4
     { SPR_SSWV, 12,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_SSWV_DIE5
-    { SPR_SSWV, 13,                   3,   nullptr,          S_SSWV_XDIE2,     0,  0 },  // S_SSWV_XDIE1
+    { SPR_SSWV, 13,                   2,   nullptr,          S_SSWV_XDIE2,     0,  0 },  // S_SSWV_XDIE1
     { SPR_SSWV, 14,                   2,   A_XScream,        S_SSWV_XDIE3,     0,  0 },  // S_SSWV_XDIE2
     { SPR_SSWV, 15,                   2,   A_Fall,           S_SSWV_XDIE4,     0,  0 },  // S_SSWV_XDIE3
     { SPR_SSWV, 16,                   2,   nullptr,          S_SSWV_XDIE5,     0,  0 },  // S_SSWV_XDIE4
@@ -992,22 +992,22 @@ const state_t gBaseStates[BASE_NUM_STATES] = {
     { SPR_SSWV, 20,                   2,   nullptr,          S_SSWV_XDIE9,     0,  0 },  // S_SSWV_XDIE8
     { SPR_SSWV, 21,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_SSWV_XDIE9
     { SPR_SSWV, 12,                   2,   nullptr,          S_SSWV_RAISE2,    0,  0 },  // S_SSWV_RAISE1
-    { SPR_SSWV, 11,                   3,   nullptr,          S_SSWV_RAISE3,    0,  0 },  // S_SSWV_RAISE2
+    { SPR_SSWV, 11,                   2,   nullptr,          S_SSWV_RAISE3,    0,  0 },  // S_SSWV_RAISE2
     { SPR_SSWV, 10,                   2,   nullptr,          S_SSWV_RAISE4,    0,  0 },  // S_SSWV_RAISE3
     { SPR_SSWV, 9,                    2,   nullptr,          S_SSWV_RAISE5,    0,  0 },  // S_SSWV_RAISE4
     { SPR_SSWV, 8,                    2,   nullptr,          S_SSWV_RUN1,      0,  0 },  // S_SSWV_RAISE5
     { SPR_KEEN, 0,                   -1,   nullptr,          S_KEENSTND,       0,  0 },  // S_KEENSTND
-    { SPR_KEEN, 0,                    3,   nullptr,          S_COMMKEEN2,      0,  0 },  // S_COMMKEEN
+    { SPR_KEEN, 0,                    1,   nullptr,          S_COMMKEEN2,      0,  0 },  // S_COMMKEEN
     { SPR_KEEN, 1,                    3,   nullptr,          S_COMMKEEN3,      0,  0 },  // S_COMMKEEN2
-    { SPR_KEEN, 2,                    3,   A_Scream,         S_COMMKEEN4,      0,  0 },  // S_COMMKEEN3
+    { SPR_KEEN, 2,                    2,   A_Scream,         S_COMMKEEN4,      0,  0 },  // S_COMMKEEN3
     { SPR_KEEN, 3,                    3,   nullptr,          S_COMMKEEN5,      0,  0 },  // S_COMMKEEN4
-    { SPR_KEEN, 4,                    3,   nullptr,          S_COMMKEEN6,      0,  0 },  // S_COMMKEEN5
+    { SPR_KEEN, 4,                    2,   nullptr,          S_COMMKEEN6,      0,  0 },  // S_COMMKEEN5
     { SPR_KEEN, 5,                    3,   nullptr,          S_COMMKEEN7,      0,  0 },  // S_COMMKEEN6
-    { SPR_KEEN, 6,                    3,   nullptr,          S_COMMKEEN8,      0,  0 },  // S_COMMKEEN7
+    { SPR_KEEN, 6,                    2,   nullptr,          S_COMMKEEN8,      0,  0 },  // S_COMMKEEN7
     { SPR_KEEN, 7,                    3,   nullptr,          S_COMMKEEN9,      0,  0 },  // S_COMMKEEN8
-    { SPR_KEEN, 8,                    3,   nullptr,          S_COMMKEEN10,     0,  0 },  // S_COMMKEEN9
+    { SPR_KEEN, 8,                    2,   nullptr,          S_COMMKEEN10,     0,  0 },  // S_COMMKEEN9
     { SPR_KEEN, 9,                    3,   nullptr,          S_COMMKEEN11,     0,  0 },  // S_COMMKEEN10
-    { SPR_KEEN, 10,                   3,   A_KeenDie,        S_COMMKEEN12,     0,  0 },  // S_COMMKEEN11
+    { SPR_KEEN, 10,                   2,   A_KeenDie,        S_COMMKEEN12,     0,  0 },  // S_COMMKEEN11
     { SPR_KEEN, 11,                  -1,   nullptr,          S_NULL,           0,  0 },  // S_COMMKEEN12
     { SPR_KEEN, 12,                   2,   nullptr,          S_KEENPAIN2,      0,  0 },  // S_KEENPAIN
     { SPR_KEEN, 12,                   4,   A_Pain,           S_KEENSTND,       0,  0 },  // S_KEENPAIN2
