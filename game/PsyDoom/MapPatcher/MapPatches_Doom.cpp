@@ -516,6 +516,48 @@ static void patchMap_PerfectHatred() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP27: Unruly Evil
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_UnrulyEvil() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Move vertexes temporarily to allow moving cacodemons
+        gpVertexes[479].y += 8 * FRACUNIT;
+        gpVertexes[480].y += 8 * FRACUNIT;
+        gpVertexes[472].y += 8 * FRACUNIT;
+        gpVertexes[473].y += 8 * FRACUNIT;
+
+        // Fix monsters that are stuck in north-most monster closets
+        modifySectors(
+            [](sector_t& sector) noexcept {
+                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
+                    mobj_t* const pNextMobj = pMobj->snext;
+
+                    // Move cacodemons on hard
+                    if ((pMobj->type == MT_HEAD) && (pMobj->y == -96 * FRACUNIT)) {
+                        EV_TeleportTo(*pMobj, pMobj->x, -80 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
+                    }
+
+                    // Move spectres on easy
+                    if (pMobj->type == MT_SERGEANT) {
+                        EV_TeleportTo(*pMobj, pMobj->x, -144 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
+                    }
+
+                    pMobj = pNextMobj;
+                }
+            }, 89, 95
+        );
+
+        // Move vertexes back to original locations
+        gpVertexes[479].y -= 8 * FRACUNIT;
+        gpVertexes[480].y -= 8 * FRACUNIT;
+        gpVertexes[472].y -= 8 * FRACUNIT;
+        gpVertexes[473].y -= 8 * FRACUNIT;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP31: Entryway
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Entryway() noexcept {
@@ -801,7 +843,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  52915, 0xA8CCE876F52671B2, 0xDA2BB82C5D03383C, patchMap_HellBeneath          },      // MAP24
     {  72352, 0x255311EE3A46B4F4, 0x30E325760C3C0D55, patchMap_PerfectHatred        },      // MAP25
     { 111520, 0x85B038429CCD933B, 0x8488BBE9B15A5F8C, applyOriginalMapCommonPatches },      // MAP26
-    {  82104, 0x52B9EDF6AA65FD8C, 0x3D965AFD07455BA6, applyOriginalMapCommonPatches },      // MAP27
+    {  82104, 0x52B9EDF6AA65FD8C, 0x3D965AFD07455BA6, patchMap_UnrulyEvil           },      // MAP27
     { 146652, 0x1C5AD3B2CC520748, 0x79223365451D6965, applyOriginalMapCommonPatches },      // MAP28
     { 163970, 0x85E5F59863FC567A, 0x825E1D627586324B, applyOriginalMapCommonPatches },      // MAP29
     { 146600, 0x0776A66BD2962C70, 0xEA25B44BFB2863F0, applyOriginalMapCommonPatches },      // MAP30
