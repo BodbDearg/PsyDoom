@@ -467,6 +467,13 @@ static void patchMap_HellBeneath() noexcept {
         // Shift the secret onto a neighboring blood sector which is much bigger.
         gpSectors[26].special = 9;
         gpSectors[27].special = 0;
+
+        // Add hidden switch to excape blue key alcove if you get trapped
+        gpLines[294].special = 60;
+        gpLines[294].tag = 8;
+
+        // Flag linedefs as secret in blue key room
+        addFlagsToLinedefs(ML_SECRET, 263, 266);
     }
 }
 
