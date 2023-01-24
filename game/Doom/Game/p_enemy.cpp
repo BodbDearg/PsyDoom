@@ -1511,9 +1511,9 @@ static bool PIT_VileCheck(mobj_t& thing) noexcept {
 
     // Check to make sure the enemy fits here if resurrected.
     // Need to expand it's height x4 also, since it is reduced that much on death, and will be expanded that much again on resurrection.
-    thing.height = d_lshift<4>(thing.height);
+    thing.height = d_lshift<2>(thing.height);
     const bool bCorpseFits = P_CheckPosition(thing, thing.x, thing.y);
-    thing.height = d_rshift<4>(thing.height);
+    thing.height = d_rshift<2>(thing.height);
 
     // Continue the search if the corpse doesn't fit, otherwise stop it
     return (!bCorpseFits);
