@@ -581,6 +581,34 @@ static void patchMap_UntoTheCruel() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP29: Twilight Descends
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TwilightDescends() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Unhide linedefs that don't need to be hidden
+        removeFlagsFromLinedefs(ML_DONTDRAW,
+            // Secret doorway in north hallway
+            853, 871,
+            // South tunnels
+            297, 304, 302, 316,
+            // West stairs
+            69, 71, 73, 75, 77, 79, 81,
+            // West building doorway
+            98, 106
+        );
+
+        // Hide linedefs that should be hidden
+        addFlagsToLinedefs(ML_DONTDRAW,
+            // North tunnel (hide remaining structures to match the rest that are already hidden)
+            502, 503, 504, 505, 506, 507, 508, 511, 515, 516, 520, 523, 634, 644, 645, 813, 814,
+            815, 816, 817, 818, 819, 820, 823, 824, 825, 826, 828, 829, 830, 1237, 1239
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP31: Entryway
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Entryway() noexcept {
@@ -868,7 +896,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 111520, 0x85B038429CCD933B, 0x8488BBE9B15A5F8C, applyOriginalMapCommonPatches },      // MAP26
     {  82104, 0x52B9EDF6AA65FD8C, 0x3D965AFD07455BA6, patchMap_UnrulyEvil           },      // MAP27
     { 146652, 0x1C5AD3B2CC520748, 0x79223365451D6965, patchMap_UntoTheCruel         },      // MAP28
-    { 163970, 0x85E5F59863FC567A, 0x825E1D627586324B, applyOriginalMapCommonPatches },      // MAP29
+    { 163970, 0x85E5F59863FC567A, 0x825E1D627586324B, patchMap_TwilightDescends     },      // MAP29
     { 146600, 0x0776A66BD2962C70, 0xEA25B44BFB2863F0, applyOriginalMapCommonPatches },      // MAP30
     {  46210, 0x41EA6956972B2510, 0xE4760C46A4BBD40D, patchMap_Entryway             },      // MAP31
     {  63255, 0x787980722B2A3ABF, 0xDA758F7A7236BAD9, patchMap_Underhalls           },      // MAP32
