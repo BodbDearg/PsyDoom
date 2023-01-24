@@ -25,6 +25,7 @@
 #include "p_telept.h"
 #include "p_tick.h"
 #include "PsyDoom/Config/Config.h"
+#include "PsyDoom/DemoPlayer.h"
 #include "PsyDoom/Game.h"
 #include "sprinfo.h"
 
@@ -604,6 +605,15 @@ void A_Chase(mobj_t& actor) noexcept {
     // See if it's time to move in a different direction.
     // Change direction every so often, or if the monster becomes blocked:
     actor.movecount--;
+
+    #if PSYDOOM_MODS
+        // PsyDoom: compatibility hack for when demos from the 'GEC Master Edition' (Beta 4 or later) are being played.
+        // GEC ME uses a 'signed char' to store 'movecount' instead of 'int', which can occasionally result in wraparound (PSX Doom originally used 'int').
+        // When wraparound occurs, stuck monsters with ranged attacks sometimes get a fleeting chance to fire on the player.
+        if (DemoPlayer::getPlayingDemoFormat() == DemoFormat::GecMe) {
+            actor.movecount = (int8_t) actor.movecount;
+        }
+    #endif
 
     if ((actor.movecount < 0) || (!P_Move(actor))) {
         P_NewChaseDir(actor);
