@@ -49,8 +49,8 @@ static void patchMap_ToxinRefinery() noexcept {
         // Hide linedef in secret exit hallway
         addFlagsToLinedefs(ML_DONTDRAW, 646);
 
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
             [](line_t& line) { line.special = 0; },
             // Blue key room
@@ -138,8 +138,8 @@ static void patchMap_ContainmentArea() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
             [](line_t& line) { line.special = 0; },
             // Blue doors hallway
@@ -159,8 +159,8 @@ static void patchMap_Refinery() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
             [](line_t& line) { line.special = 0; },
             69, 70, 217, 366, 367, 451, 495, 496
@@ -180,8 +180,8 @@ static void patchMap_DeimosLab() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
             [](line_t& line) { line.special = 0; },
             187, 200, 267, 641, 554, 555, 556, 622, 100, 130
@@ -205,8 +205,8 @@ static void patchMap_CommandCenter() noexcept {
     }
 
     if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedef. This was left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
+        // Remove unused action from linedef. This was left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         gpLines[383].special = 0;
     }
 }
@@ -268,8 +268,8 @@ static void patchMap_HellGate() noexcept {
         // Hide skybox for window
         addFlagsToLinedefs(ML_DONTDRAW, 27, 28, 29, 30, 31, 32, 33, 34, 35, 42);
 
-        // Remove unused actions from linedefs.
-        // Note: This does not affect gameplay.
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
             [](line_t& line) { line.special = 0; },
             72, 87
@@ -314,8 +314,8 @@ static void patchMap_HouseOfPain() noexcept {
     }
 
     if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         gpLines[88].special = 0;
         gpLines[450].special = 0;
 
@@ -395,8 +395,8 @@ static void patchMap_UnholyCathedral() noexcept {
             815, 818
         );
 
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
             [](line_t& line) { line.special = 0; },
             426, 431, 538, 550, 819, 820, 1068
@@ -411,8 +411,8 @@ static void patchMap_MtErebus() noexcept {
     applyOriginalMapCommonPatches();
 
     if (shouldApplyMapPatches_Visual()) {
-        // Remove unused actions from linedefs. These were left over from PC Doom but no longer used.
-        // Note: This does not affect gameplay.
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
             [](line_t& line) { line.special = 0; },
             48, 66, 246, 247, 248, 293, 325, 333
@@ -444,6 +444,15 @@ static void patchMap_Limbo() noexcept {
         // PsyDoom now allows walls to deliberately have no texture assigned so they can be invisible, but that change causes a bug with this
         // step (beside the lift) not appearing in the room with the lift and the Baron. Fix by replicating the original PSX behavior.
         gpSides[967].bottomtexture = 0;
+    }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            235, 236, 237
+        );
     }
 }
 
