@@ -558,6 +558,29 @@ static void patchMap_UnrulyEvil() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP28: Unto the Cruel
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_UntoTheCruel() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Unhide linedefs that don't need to be hidden
+        removeFlagsFromLinedefs(ML_DONTDRAW, 
+            // Bridge area (except bridge itself)
+            581, 582, 583, 585, 601, 602,
+            // Final area stairs
+            632, 633, 634, 640, 641, 642, 653, 654, 678, 687, 688, 695, 696, 697, 707, 706,
+            // Final area walkways
+            643, 644, 676, 677,
+            // Final area windows
+            709, 710, 711, 712,
+            // Exit teleporter
+            726, 727, 728, 729
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP31: Entryway
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_Entryway() noexcept {
@@ -844,7 +867,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  72352, 0x255311EE3A46B4F4, 0x30E325760C3C0D55, patchMap_PerfectHatred        },      // MAP25
     { 111520, 0x85B038429CCD933B, 0x8488BBE9B15A5F8C, applyOriginalMapCommonPatches },      // MAP26
     {  82104, 0x52B9EDF6AA65FD8C, 0x3D965AFD07455BA6, patchMap_UnrulyEvil           },      // MAP27
-    { 146652, 0x1C5AD3B2CC520748, 0x79223365451D6965, applyOriginalMapCommonPatches },      // MAP28
+    { 146652, 0x1C5AD3B2CC520748, 0x79223365451D6965, patchMap_UntoTheCruel         },      // MAP28
     { 163970, 0x85E5F59863FC567A, 0x825E1D627586324B, applyOriginalMapCommonPatches },      // MAP29
     { 146600, 0x0776A66BD2962C70, 0xEA25B44BFB2863F0, applyOriginalMapCommonPatches },      // MAP30
     {  46210, 0x41EA6956972B2510, 0xE4760C46A4BBD40D, patchMap_Entryway             },      // MAP31
