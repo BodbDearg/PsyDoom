@@ -878,6 +878,16 @@ static void patchMap_Tenements() noexcept {
 
         // Unhide linedefs that shouldn't be hidden
         removeFlagsFromLinedefs(ML_DONTDRAW, 1128, 1129);
+
+        // Fix door textures
+        removeFlagsFromLinedefs(ML_DONTPEGTOP,
+            // Top of the first stairs on the right
+            159, 160,
+            // Inside of right shutter at start
+            120,
+            // Shutters in east room
+            391, 441, 1109
+        );
     }
 }
 
