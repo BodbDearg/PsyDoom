@@ -796,6 +796,9 @@ static void patchMap_TheFactory() noexcept {
 
         // Fix door tracks on imp building door
         removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 113, 114);
+
+        // Hide linedefs around perimeter of map
+        addFlagsToLinedefs(ML_DONTDRAW, 63, 64, 65, 66);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
