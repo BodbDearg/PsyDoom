@@ -666,6 +666,24 @@ static void patchMap_TheWasteTunnels() noexcept {
         // Fix the texture on the secret elevator in the first area
         removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 329);
     }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Move one of two lost souls that are stuck togther on the hard skill level in the eastmost passage
+        modifySectors(
+            [](sector_t& sector) noexcept {
+                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
+                    mobj_t* const pNextMobj = pMobj->snext;
+
+                    if ((pMobj->type == MT_SKULL) && (pMobj->x == 2848 * FRACUNIT) && (pMobj->y == -400 * FRACUNIT)) {
+                        EV_TeleportTo(*pMobj, pMobj->x, -320 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
+                        break;  // Exit loop so only one lost soul is moved
+                    }
+
+                    pMobj = pNextMobj;
+                }
+            }, 65
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
