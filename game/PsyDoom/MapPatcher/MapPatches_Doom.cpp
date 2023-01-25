@@ -824,6 +824,16 @@ static void patchMap_Suburbs() noexcept {
 
         // Fix the texture of the elevator inside the secret area with the BFG not moving properly
         removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 598);
+
+        // Hide linedefs in west and southwest perimeter
+        addFlagsToLinedefs(ML_DONTDRAW, 537, 538, 539);
+
+        // Change floor texture in southwest monster closet; you can see through the opening in the wall
+        gpSectors[14].floorpic = R_FlatNumForName("SLIME01");
+
+        // Change ceiling texture in southwest slime pit inlets; you can see when you die
+        gpSectors[12].ceilingpic = R_FlatNumForName("ROK02");
+        gpSectors[17].ceilingpic = R_FlatNumForName("ROK02");
     }
 }
 
