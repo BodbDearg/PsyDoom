@@ -765,6 +765,26 @@ static void patchMap_RefuelingBase() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP41: O of Destruction!
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_OofDestruction() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix dummy sector on south wall
+        addFlagsToLinedefs(ML_SECRET, 374, 375, 376, 377, 378, 793);
+        addFlagsToLinedefs(ML_DONTDRAW, 788, 789, 790, 791, 792, 794);
+        gpSectors[83].ceilingheight = 136 * FRACUNIT;
+        gpSectors[83].ceilingpic = R_FlatNumForName("BRN14");
+        modifyLinedefs(
+            [](line_t& line) { gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("ROCK06"); },
+            374, 375, 376, 377, 378
+        );
+        gpSides[gpLines[793].sidenum[0]].toptexture = R_TextureNumForName("ROCK10");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP42: The Factory
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheFactory() noexcept {
@@ -976,7 +996,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  82063, 0xBFEDBDE9F8B8CCE2, 0x78D6E2C3A9AB74AB, patchMap_TricksAndTraps       },      // MAP38
     {  91388, 0x22B7D106F531FB4E, 0xFE3FAB276C892BD4, patchMap_ThePit               },      // MAP39
     { 130676, 0xD84B13024E326B64, 0x548472C7F8B24A27, patchMap_RefuelingBase        },      // MAP40
-    { 116024, 0x59800E5259D02FD8, 0x28EB273CFC8E41CC, applyOriginalMapCommonPatches },      // MAP41
+    { 116024, 0x59800E5259D02FD8, 0x28EB273CFC8E41CC, patchMap_OofDestruction       },      // MAP41
     { 109934, 0x7E22F4311F3955D5, 0x16E918F5C11AD780, patchMap_TheFactory           },      // MAP42
     { 192997, 0x7B86B9C35B754883, 0xD5F5CE44AB12898D, applyOriginalMapCommonPatches },      // MAP43
     { 110145, 0xE296122ADE38AB74, 0x13505BF841234D4C, patchMap_Suburbs              },      // MAP44
