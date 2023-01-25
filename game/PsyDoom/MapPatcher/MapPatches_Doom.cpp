@@ -734,6 +734,18 @@ static void patchMap_TricksAndTraps() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP39: The Pit
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_ThePit() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide dummy sector on east elevator
+        addFlagsToLinedefs(ML_SECRET, 9, 71);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP40: Refueling Base
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_RefuelingBase() noexcept {
@@ -959,7 +971,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 129248, 0xE2245D687CCABC7C, 0x01497DF00B763463, patchMap_TheCrusher           },      // MAP36
     {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, patchMap_DeadSimple           },      // MAP37
     {  82063, 0xBFEDBDE9F8B8CCE2, 0x78D6E2C3A9AB74AB, patchMap_TricksAndTraps       },      // MAP38
-    {  91388, 0x22B7D106F531FB4E, 0xFE3FAB276C892BD4, applyOriginalMapCommonPatches },      // MAP39
+    {  91388, 0x22B7D106F531FB4E, 0xFE3FAB276C892BD4, patchMap_ThePit               },      // MAP39
     { 130676, 0xD84B13024E326B64, 0x548472C7F8B24A27, patchMap_RefuelingBase        },      // MAP40
     { 116024, 0x59800E5259D02FD8, 0x28EB273CFC8E41CC, applyOriginalMapCommonPatches },      // MAP41
     { 109934, 0x7E22F4311F3955D5, 0x16E918F5C11AD780, patchMap_TheFactory           },      // MAP42
