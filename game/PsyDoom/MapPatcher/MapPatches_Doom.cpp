@@ -727,6 +727,9 @@ static void patchMap_TricksAndTraps() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix the texture on the two gun activated doors
         removeFlagsFromLinedefs(ML_DONTPEGTOP, 281, 282, 286, 287);
+
+        // Flag corner wall in southeast room as secret
+        addFlagsToLinedefs(ML_SECRET, 263, 645, 646);
     }
 }
 
