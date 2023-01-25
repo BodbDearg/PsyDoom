@@ -373,7 +373,7 @@ static void P_BuildMove(player_t& player) noexcept {
         }
 
         // Handle Final Doom psx mouse movements that become strafing
-        player.sidemove -= psxMouseMoveX;
+        player.sidemove += psxMouseMoveX;
     }
     else {
         // No strafe button held: do normal turning.
@@ -422,7 +422,7 @@ static void P_BuildMove(player_t& player) noexcept {
             player.angleturn = (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
 
             // Apply Final Doom mouse turning also
-            player.angleturn += psxMouseMoveX;
+            player.angleturn -= psxMouseMoveX;
         }
     }
 
@@ -470,7 +470,7 @@ static void P_BuildMove(player_t& player) noexcept {
     }
 
     // Apply Final Doom mouse movement also
-    player.forwardmove += psxMouseMoveY;
+    player.forwardmove -= psxMouseMoveY;
 
     // PsyDoom: do analog movements and also cancel any digital movement if using the analog controller
     #if PSYDOOM_MODS

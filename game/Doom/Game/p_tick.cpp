@@ -1178,8 +1178,8 @@ void P_PsxButtonsToTickInputs(const padbuttons_t buttons, const padbuttons_t* co
     ASSERT(pControlBindings);
     inputs.reset();
 
-    inputs.psxMouseDx = -(int8_t)(buttons >> 16);
-    inputs.psxMouseDy = -(int8_t)(buttons >> 24);
+    inputs.psxMouseDx = (int8_t)(buttons >> 16);
+    inputs.psxMouseDy = (int8_t)(buttons >> 24);
 
     if (buttons & PAD_UP) {
         inputs.fMoveForward() = true;

@@ -169,7 +169,7 @@ static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
     consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE_N.STR";
     consts.introMovies[1] = "PSXDOOM/ABIN/GEC_N.STR";
     consts.introMovies[2] = "PSXDOOM/ABIN/DWORLD_N.STR";
-    consts.demos[0] = BuiltInDemoDef{ "NDEMO1.LMP", true, false, true  };   // TODO: GEC ME BETA 4: Verify these demos
+    consts.demos[0] = BuiltInDemoDef{ "NDEMO1.LMP", true, false, true  };
     consts.demos[1] = BuiltInDemoDef{ "NDEMO2.LMP", true, false, true  };
     consts.demos[2] = BuiltInDemoDef{ "NDEMO3.LMP", true, false, true  };
     consts.demos[3] = BuiltInDemoDef{ "NDEMO4.LMP", true, false, true  };
