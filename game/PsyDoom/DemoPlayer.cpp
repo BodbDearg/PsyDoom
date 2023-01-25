@@ -556,9 +556,9 @@ static bool readTickInputs_gecDemoFormat() noexcept {
 
         if (isAnalog127OutsideDeadzone(analogSideMove127) || isAnalog127OutsideDeadzone(analogForwardMove127)) {
             // Convert the analog input to PsyDoom's own single byte encoding
-            tickInputs._analogSideMove = std::abs(analogSideMove127);
+            tickInputs._analogSideMove = (uint8_t) std::abs(analogSideMove127);
             tickInputs._analogSideMove |= (analogSideMove127 < 0) ? 0x80 : 0x00;
-            tickInputs._analogForwardMove = std::abs(analogForwardMove127);
+            tickInputs._analogForwardMove = (uint8_t) std::abs(analogForwardMove127);
             tickInputs._analogForwardMove |= (analogForwardMove127 >= 0) ? 0x80 : 0x00;     // Note: invert forward movement by checking '>= 0' instead of '< 0'
 
             // In the GEC demo format any digital movement gets cancelled when making analog movements
