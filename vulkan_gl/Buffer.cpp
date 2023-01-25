@@ -421,7 +421,7 @@ bool Buffer::resizeToByteCount(
 
         if (bCopyRamImmediate && oldBuffer.getBytes() && mBuffer.getBytes()) {
             bDidCopyRamImmediate = true;
-            std::memcpy(mBuffer.getBytes(), oldBuffer.getBytes(), sizeToPreserve);
+            std::memcpy(mBuffer.getBytes(), oldBuffer.getBytes(), (size_t) sizeToPreserve);
         }
         else {
             TransferTask& transferTask = pDevice->getTransferMgr().getPreFrameTransferTask();
@@ -451,7 +451,7 @@ bool Buffer::resizeToByteCount(
             const std::byte* const pSrc = (pOldLockedBytes - oldLockedOffset + overlapMin);
             std::byte* const pDst = (mpLockedBytes - mLockedOffset + overlapMin);
 
-            std::memcpy(pDst, pSrc, overlapSize);
+            std::memcpy(pDst, pSrc, (size_t) overlapSize);
         }
     }
 
