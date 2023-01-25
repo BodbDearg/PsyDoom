@@ -758,6 +758,9 @@ static void patchMap_RefuelingBase() noexcept {
             [](line_t& line) { gpSides[line.sidenum[0]].rowoffset = -16 * FRACUNIT; },
             656
         );
+
+        // Hide monsters only teleport linedefs in exit area
+        addFlagsToLinedefs(ML_DONTDRAW, 894, 895, 897, 1060);
     }
 }
 
