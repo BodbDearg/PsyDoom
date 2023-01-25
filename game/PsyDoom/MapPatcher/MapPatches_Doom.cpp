@@ -687,6 +687,23 @@ static void patchMap_TheWasteTunnels() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP36: The Crusher
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheCrusher() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Fix one-sided lines being incorrectly tagged as 'door' lines.
+        // In the original game activating these lines could cause a crash.
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            // Fix 2 one-sided lines on the red door being incorrectly tagged as 'door' lines
+            24, 25
+        );
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP38: Tricks And Traps
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TricksAndTraps() noexcept {
@@ -921,7 +938,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  71907, 0x9354072B9094E9BE, 0xFDA856CDE67680DC, applyOriginalMapCommonPatches },      // MAP33
     {  67614, 0xE36C70A633E0AE7D, 0x9223DF3ADFDF8808, patchMap_TheFocus             },      // MAP34
     { 114123, 0x52229ABCD304D8BA, 0x6EAEA8DB75133B5A, patchMap_TheWasteTunnels      },      // MAP35
-    { 129248, 0xE2245D687CCABC7C, 0x01497DF00B763463, applyOriginalMapCommonPatches },      // MAP36
+    { 129248, 0xE2245D687CCABC7C, 0x01497DF00B763463, patchMap_TheCrusher           },      // MAP36
     {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, applyOriginalMapCommonPatches },      // MAP37
     {  82063, 0xBFEDBDE9F8B8CCE2, 0x78D6E2C3A9AB74AB, patchMap_TricksAndTraps       },      // MAP38
     {  91388, 0x22B7D106F531FB4E, 0xFE3FAB276C892BD4, applyOriginalMapCommonPatches },      // MAP39
