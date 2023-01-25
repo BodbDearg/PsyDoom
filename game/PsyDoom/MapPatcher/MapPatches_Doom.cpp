@@ -704,6 +704,21 @@ static void patchMap_TheCrusher() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP37: Dead Simple
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_DeadSimple() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide deathmatch only door
+        addFlagsToLinedefs(ML_SECRET, 168);
+
+        // Fix texture on deathmatch only door
+        removeFlagsFromLinedefs(ML_DONTPEGTOP, 168);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP38: Tricks And Traps
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TricksAndTraps() noexcept {
@@ -939,7 +954,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  67614, 0xE36C70A633E0AE7D, 0x9223DF3ADFDF8808, patchMap_TheFocus             },      // MAP34
     { 114123, 0x52229ABCD304D8BA, 0x6EAEA8DB75133B5A, patchMap_TheWasteTunnels      },      // MAP35
     { 129248, 0xE2245D687CCABC7C, 0x01497DF00B763463, patchMap_TheCrusher           },      // MAP36
-    {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, applyOriginalMapCommonPatches },      // MAP37
+    {  26682, 0x2B0A8D80B5411593, 0x3A427EE05B7353F6, patchMap_DeadSimple           },      // MAP37
     {  82063, 0xBFEDBDE9F8B8CCE2, 0x78D6E2C3A9AB74AB, patchMap_TricksAndTraps       },      // MAP38
     {  91388, 0x22B7D106F531FB4E, 0xFE3FAB276C892BD4, applyOriginalMapCommonPatches },      // MAP39
     { 130676, 0xD84B13024E326B64, 0x548472C7F8B24A27, patchMap_RefuelingBase        },      // MAP40
