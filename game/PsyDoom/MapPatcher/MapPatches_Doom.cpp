@@ -1015,7 +1015,24 @@ static void patchMap_BarrelsOfFun() noexcept {
 
         // Fix textures on large door in east outdoor area
         addFlagsToLinedefs(ML_DONTPEGBOTTOM, 144, 161);
-        //removeFlagsFromLinedefs(ML_DONTPEGTOP, 125, 162);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP52: The Abandoned Mines
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheAbandonedMines() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix textures on lava room monster closet door
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 805, 808);
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 803);
+
+        // Fix textures on secret doors in central area
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 91, 337);
+        gpSides[gpLines[91].sidenum[0]].rowoffset = -8 * FRACUNIT;
+        gpSides[gpLines[337].sidenum[0]].rowoffset = 24 * FRACUNIT;
     }
 }
 
@@ -1115,7 +1132,7 @@ static const PatchDef gPatchArray_Doom[] = {
     {  74303, 0x522256004AD8E073, 0x2C190C108C98B31D, patchMap_TheCatacombs         },      // MAP49
     {  64540, 0x47EA67DBBA5F33DC, 0x2280784D842FECC1, patchMap_BarrelsOfFun         },      // MAP50
     { 106555, 0x9FCBB09C2A8C8B67, 0xF00080B9655646C8, applyOriginalMapCommonPatches },      // MAP51
-    { 117839, 0x67138B444A196EC4, 0x229285E95F31ADE4, applyOriginalMapCommonPatches },      // MAP52
+    { 117839, 0x67138B444A196EC4, 0x229285E95F31ADE4, patchMap_TheAbandonedMines    },      // MAP52
     { 131947, 0xC966739D25AC3FFD, 0xB7CDA8E3CF9A5186, patchMap_MonsterCondo         },      // MAP53
     {  45962, 0x27D515F2A59962E3, 0x3E35ABAD09E87EA1, applyOriginalMapCommonPatches },      // MAP54
     {  19237, 0xB5116FF7C0CBCF38, 0x7C6C9E29F2EA963B, applyOriginalMapCommonPatches },      // MAP55
