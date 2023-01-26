@@ -564,8 +564,14 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                 if (fieldId == "PicTile")
                     return parseGraphicLumpNameAndPal(pToken, gGameInfo.texLumpName_OptionsBG, gGameInfo.texPalette_OptionsBG);
 
+                if (fieldId == "NumDemos") {
+                    int32_t numDemos = 0;
+                    const Token* const pNextToken = parseSingleNumberAssign(pToken, numDemos);
+                    Game::gConstants.SetNumDemos_GecMe_Beta4OrLater(numDemos);
+                    return pNextToken;
+                }
+
                 // TODO: GEC ME BETA 4: parse 'Credits'
-                // TODO: GEC ME BETA 4: parse 'NumDemos'
             }
 
             // Unhandled or unwanted line of data - skip it!

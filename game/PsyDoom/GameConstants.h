@@ -51,4 +51,6 @@ struct GameConstants {
     bool bRemove_LOADING_progressBar;
 
     void populate(const GameType gameType, const bool bIsDemoVersion) noexcept;
+
+    void SetNumDemos_GecMe_Beta4OrLater(const int32_t numDemos) noexcept;
 };

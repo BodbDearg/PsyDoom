@@ -11,6 +11,8 @@
 #include "Game.h"
 #include "PlayerPrefs.h"
 
+#include <cstdio>
+
 // Game ids for networking
 static constexpr uint32_t NET_GAMEID_DOOM                       = 0xAA11AA22;
 static constexpr uint32_t NET_GAMEID_FINAL_DOOM                 = 0xAB11AB22;
@@ -169,13 +171,7 @@ static void populateConsts_GEC_ME_Beta4(GameConstants& consts) noexcept {
     consts.introMovies[0] = "PSXDOOM/ABIN/MOVIE_N.STR";
     consts.introMovies[1] = "PSXDOOM/ABIN/GEC_N.STR";
     consts.introMovies[2] = "PSXDOOM/ABIN/DWORLD_N.STR";
-    consts.demos[0] = BuiltInDemoDef{ "NDEMO1.LMP", true, false, true  };
-    consts.demos[1] = BuiltInDemoDef{ "NDEMO2.LMP", true, false, true  };
-    consts.demos[2] = BuiltInDemoDef{ "NDEMO3.LMP", true, false, true  };
-    consts.demos[3] = BuiltInDemoDef{ "NDEMO4.LMP", true, false, true  };
-    consts.demos[4] = BuiltInDemoDef{ "NDEMO5.LMP", true, false, true  };
-    consts.demos[5] = BuiltInDemoDef{ "NDEMO6.LMP", true, false, true  };
-    consts.demos[6] = BuiltInDemoDef{ "NDEMO7.LMP", true, false, true  };
+    consts.SetNumDemos_GecMe_Beta4OrLater(7);               // Assume '7' until we read the GEC MAPINFO field for this
     consts.saveFilePrefix = "GecMe_";
     consts.pLastPasswordField = &PlayerPrefs::gLastPassword_GecMe;
     consts.pExtraPalettes = BuiltInPaletteData::GEC_ME_DYNAMIC_PALETTE_PLACEHOLDERS;
@@ -205,5 +201,30 @@ void GameConstants::populate(const GameType gameType, const bool bIsDemoVersion)
 
         default:
             FatalErrors::raise("GameConstants::populate(): unhandled game type!");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the number of demos for 'GEC Master Edition' (Beta 4 or later).
+// Populates the 'demos' field according to the specified number of demos.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void GameConstants::SetNumDemos_GecMe_Beta4OrLater(const int32_t numDemos) noexcept {
+    for (int32_t i = 0; i < C_ARRAY_SIZE(demos); ++i) {
+        // Default init this demo slot to begin with
+        BuiltInDemoDef& demo = demos[i];
+        demo = {};
+
+        // Reached the end of the populated demo slots?
+        if (i + 1 > numDemos)
+            continue;
+
+        // Populate this demo slot
+        const bool bIsLastDemo = (i + 1 == numDemos);
+        const bool bIsOnlyDemo = (numDemos == 1);
+
+        std::snprintf(demo.filename.chars, C_ARRAY_SIZE(demo.filename.chars), "NDEMO%d.LMP", (int)(i + 1));
+        demo.bFinalDoomDemo = true;
+        demo.bPalDemo = false;
+        demo.bShowCreditsAfter = ((!bIsLastDemo) || bIsOnlyDemo);
     }
 }
