@@ -1004,6 +1004,22 @@ static void patchMap_TheCatacombs() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP50: Barrels of Fun
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_BarrelsOfFun() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide linedefs
+        addFlagsToLinedefs(ML_DONTDRAW, 394, 395, 396, 397, 400, 403, 404, 405, 408);
+
+        // Fix textures on large door in east outdoor area
+        addFlagsToLinedefs(ML_DONTPEGBOTTOM, 144, 161);
+        //removeFlagsFromLinedefs(ML_DONTPEGTOP, 125, 162);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP53: Monster Condo
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_MonsterCondo() noexcept {
@@ -1097,7 +1113,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 186755, 0x73E10EF08AE21FD5, 0x8115F467FE2CD3CA, patchMap_TheCitadel           },      // MAP47
     {  54866, 0xF41440631C2B6FB2, 0x728E55510D5AE858, applyOriginalMapCommonPatches },      // MAP48
     {  74303, 0x522256004AD8E073, 0x2C190C108C98B31D, patchMap_TheCatacombs         },      // MAP49
-    {  64540, 0x47EA67DBBA5F33DC, 0x2280784D842FECC1, applyOriginalMapCommonPatches },      // MAP50
+    {  64540, 0x47EA67DBBA5F33DC, 0x2280784D842FECC1, patchMap_BarrelsOfFun         },      // MAP50
     { 106555, 0x9FCBB09C2A8C8B67, 0xF00080B9655646C8, applyOriginalMapCommonPatches },      // MAP51
     { 117839, 0x67138B444A196EC4, 0x229285E95F31ADE4, applyOriginalMapCommonPatches },      // MAP52
     { 131947, 0xC966739D25AC3FFD, 0xB7CDA8E3CF9A5186, patchMap_MonsterCondo         },      // MAP53
