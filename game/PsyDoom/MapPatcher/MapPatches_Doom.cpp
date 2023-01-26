@@ -978,6 +978,15 @@ static void patchMap_TheCitadel() noexcept {
 
         // Fix door tracks in "imp room"
         addFlagsToLinedefs(ML_DONTPEGBOTTOM, 922, 923);
+
+        // Hide linedefs
+        addFlagsToLinedefs(ML_DONTDRAW, 1130, 1218, 1219, 1220);
+    }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // The cacodemon (hard skill) is stuck in the ceiling in the northwest building; raising the ceiling
+        gpSectors[91].ceilingheight = 328 * FRACUNIT;
+        gpSectors[92].ceilingheight = 328 * FRACUNIT;
     }
 }
 
