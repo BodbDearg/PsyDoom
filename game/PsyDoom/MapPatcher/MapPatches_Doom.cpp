@@ -1052,6 +1052,19 @@ static void patchMap_MonsterCondo() noexcept {
             // West doors in starting room
             172, 176, 177, 179, 182, 184, 188, 190
         );
+
+        // Hide linedefs in northeast room
+        addFlagsToLinedefs(ML_DONTDRAW, 
+            // Secret elevator
+            490, 491, 492, 493, 494,
+            // North elevator
+            454, 455, 456, 457, 458,
+            // Ceiling structure/linedef actions
+            477, 478, 479, 480, 481, 482, 483, 484, 571, 572, 573, 574, 575
+        );
+
+        // Remove secret flag from switch in northeast room
+        removeFlagsFromLinedefs(ML_SECRET, 7);
     }
 
     if (shouldApplyMapPatches_GamePlay()) {
