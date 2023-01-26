@@ -220,26 +220,33 @@ static void patchMap_HallsOfTheDamned() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix stuck demons and baron of hell in south monster closet in central hallway on harder skills
         if (gGameSkill >= sk_hard) {
+            // Monster closet needs to be slightly lengthened to make room for all monsters
+            gpVertexes[352].y -= 16 * FRACUNIT;
+            gpVertexes[353].y -= 16 * FRACUNIT;
+            
             modifySectors(
                 [](sector_t& sector) noexcept {
                     for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
                         mobj_t* const pNextMobj = pMobj->snext;
 
-                        if ((pMobj->type == MT_SERGEANT) && (pMobj->y == -128 * FRACUNIT)) {
-                            P_RemoveMobj(*pMobj);
-                        }
                         if (pMobj->type == MT_BRUISER) {
-                            EV_TeleportTo(*pMobj, pMobj->x, -232 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t) 0, sfx_None);
+                            EV_TeleportTo(*pMobj, pMobj->x, -248 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t) 0, sfx_None);
+                        }
+
+                        if ((pMobj->type == MT_SERGEANT) && (pMobj->x == 992 * FRACUNIT) && (pMobj->y == -128 * FRACUNIT)) {
+                            // This will only move one of the two demons since the other one will fail to teleport to the same spot
+                            EV_TeleportTo(*pMobj, pMobj->x, -192 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
+                        }
+
+                        if ((pMobj->type == MT_SERGEANT) && (pMobj->x == 1056 * FRACUNIT) && (pMobj->y == -128 * FRACUNIT)) {
+                            // This will only move one of the two demons since the other one will fail to teleport to the same spot
+                            EV_TeleportTo(*pMobj, pMobj->x, -192 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
                         }
 
                         pMobj = pNextMobj;
                     }
                 }, 88
             );
-            (P_SpawnMobj(992 * FRACUNIT, -124 * FRACUNIT, INT32_MIN, MT_SERGEANT))->angle = ANG90;
-            (P_SpawnMobj(992 * FRACUNIT, -184 * FRACUNIT, INT32_MIN, MT_SERGEANT))->angle = ANG90;
-            (P_SpawnMobj(1056 * FRACUNIT, -124 * FRACUNIT, INT32_MIN, MT_SERGEANT))->angle = ANG90;
-            (P_SpawnMobj(1056 * FRACUNIT, -184 * FRACUNIT, INT32_MIN, MT_SERGEANT))->angle = ANG90;
         }
     }
 }
@@ -468,7 +475,7 @@ static void patchMap_HellBeneath() noexcept {
         gpSectors[26].special = 9;
         gpSectors[27].special = 0;
 
-        // Add hidden switch to excape blue key alcove if you get trapped
+        // Add hidden switch to escape blue key alcove if you get trapped
         gpLines[294].special = 60;
         gpLines[294].tag = 8;
     }
@@ -675,8 +682,8 @@ static void patchMap_TheWasteTunnels() noexcept {
                     mobj_t* const pNextMobj = pMobj->snext;
 
                     if ((pMobj->type == MT_SKULL) && (pMobj->x == 2848 * FRACUNIT) && (pMobj->y == -400 * FRACUNIT)) {
+                        // This will only move one of the two lost souls since the other one will fail to teleport to the same spot
                         EV_TeleportTo(*pMobj, pMobj->x, -320 * FRACUNIT, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
-                        break;  // Exit loop so only one lost soul is moved
                     }
 
                     pMobj = pNextMobj;
