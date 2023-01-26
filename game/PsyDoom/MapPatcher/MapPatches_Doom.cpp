@@ -991,6 +991,19 @@ static void patchMap_TheCitadel() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP49: The Catacombs
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_TheCatacombs() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Add missing texture to back sidedef on bridge that raises when you use the switch two times
+        gpSides[gpLines[54].sidenum[1]].bottomtexture = R_TextureNumForName("METAL03");
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 54);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP53: Monster Condo
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_MonsterCondo() noexcept {
@@ -1083,7 +1096,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 105883, 0x0CA0922874005BC1, 0x37173A0C68F8FA6A, patchMap_TheCourtyard         },      // MAP46
     { 186755, 0x73E10EF08AE21FD5, 0x8115F467FE2CD3CA, patchMap_TheCitadel           },      // MAP47
     {  54866, 0xF41440631C2B6FB2, 0x728E55510D5AE858, applyOriginalMapCommonPatches },      // MAP48
-    {  74303, 0x522256004AD8E073, 0x2C190C108C98B31D, applyOriginalMapCommonPatches },      // MAP49
+    {  74303, 0x522256004AD8E073, 0x2C190C108C98B31D, patchMap_TheCatacombs         },      // MAP49
     {  64540, 0x47EA67DBBA5F33DC, 0x2280784D842FECC1, applyOriginalMapCommonPatches },      // MAP50
     { 106555, 0x9FCBB09C2A8C8B67, 0xF00080B9655646C8, applyOriginalMapCommonPatches },      // MAP51
     { 117839, 0x67138B444A196EC4, 0x229285E95F31ADE4, applyOriginalMapCommonPatches },      // MAP52
