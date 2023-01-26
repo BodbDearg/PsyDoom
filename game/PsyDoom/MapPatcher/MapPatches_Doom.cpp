@@ -908,6 +908,46 @@ static void patchMap_TheCourtyard() noexcept {
         // Fix a wall top/floor sometimes not appearing: this wall is at the starting area and borders the sky
         addVoidFlagToLinedefs(45, 17, 18, 51);
     }
+
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Move stuck spectre in west passage on easier skills
+        modifySectors(
+            [](sector_t& sector) noexcept {
+                for (mobj_t* pMobj = sector.thinglist; pMobj != nullptr;) {
+                    mobj_t* const pNextMobj = pMobj->snext;
+
+                    if ((pMobj->type == MT_SERGEANT) && (pMobj->y == 992 * FRACUNIT)) {
+                        EV_TeleportTo(*pMobj, -2050 * FRACUNIT, pMobj->y, pMobj->angle, false, false, (mobjtype_t)0, sfx_None);
+                    }
+
+                    pMobj = pNextMobj;
+                }
+            }, 16
+        );
+    }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Fix door/platform textures
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 
+            // North building
+            622, 623, 625, 627,
+            // Northeast courtyard door
+            535, 536,
+            // West courtyard door
+            552, 573,
+            // Southwest courtyard door
+            451, 459,
+            // Northwest buildings
+            480, 486, 497, 502,
+            // Southwest monster closet
+            543, 547,
+            // Southwest blue armor area
+            742, 743
+        );
+
+        // Hide linedefs
+        addFlagsToLinedefs(ML_DONTDRAW, 413, 647, 447);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
