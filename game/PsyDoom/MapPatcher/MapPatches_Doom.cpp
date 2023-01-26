@@ -1077,6 +1077,21 @@ static void patchMap_MonsterCondo() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP54: Redemption Denied
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_RedemptionDenied() noexcept {
+    applyOriginalMapCommonPatches();
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide lines that activate platforms beside south teleporter
+        addFlagsToLinedefs(ML_DONTDRAW, 299, 300, 301);
+
+        // Flag exit door as secret
+        addFlagsToLinedefs(ML_SECRET, 160);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP58: The Mansion
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_TheMansion() noexcept {
@@ -1147,7 +1162,7 @@ static const PatchDef gPatchArray_Doom[] = {
     { 106555, 0x9FCBB09C2A8C8B67, 0xF00080B9655646C8, applyOriginalMapCommonPatches },      // MAP51
     { 117839, 0x67138B444A196EC4, 0x229285E95F31ADE4, patchMap_TheAbandonedMines    },      // MAP52
     { 131947, 0xC966739D25AC3FFD, 0xB7CDA8E3CF9A5186, patchMap_MonsterCondo         },      // MAP53
-    {  45962, 0x27D515F2A59962E3, 0x3E35ABAD09E87EA1, applyOriginalMapCommonPatches },      // MAP54
+    {  45962, 0x27D515F2A59962E3, 0x3E35ABAD09E87EA1, patchMap_RedemptionDenied     },      // MAP54
     {  19237, 0xB5116FF7C0CBCF38, 0x7C6C9E29F2EA963B, applyOriginalMapCommonPatches },      // MAP55
     {  85042, 0x98C00035EA735BF3, 0x36C5C0BA592334C9, applyOriginalMapCommonPatches },      // MAP56
     {  58333, 0xBBE3159AAEE4F03D, 0x086F778E5A08DBAD, applyOriginalMapCommonPatches },      // MAP57
