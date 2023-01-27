@@ -32,14 +32,8 @@ void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
     gameInfo.texPalette_Inter_BACK = {};    // Default: use the same 'BACK' graphic as the main menu
     gameInfo.texLumpName_Inter_BACK = {};
     gameInfo.texPalette_DOOM = 29;
-    gameInfo.texPalette_GEC  = 26;
-    gameInfo.texPalette_GECCRED  = 28;
-    gameInfo.texPalette_DWOLRD = 27;
-    gameInfo.texPalette_DWCRED = 28;
     gameInfo.texPalette_DATA = 30;
     gameInfo.texPalette_FINAL = 29;
-    gameInfo.creditsXPos_GECCRED = 0;
-    gameInfo.creditsXPos_DWCRED = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,6 +191,17 @@ void addMaps_GEC_ME_Beta3(std::vector<Map>& maps) noexcept {
     addMap(maps, 92, 4, "Odyssey of Noises",        26,   SPU_REV_MODE_SPACE,     0x0FFF);
     addMap(maps, 93, 4, "Cyberden",                 8,    SPU_REV_MODE_STUDIO_B,  0x2DFF);
     addMap(maps, 94, 4, "Go 2 It",                  17,   SPU_REV_MODE_HALL,      0x1FFF);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the credit pages for 'GEC Master Edition (Beta 3)' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addCredits_GEC_ME_Beta3(std::vector<CreditsPage>& credits) noexcept {
+    addCreditsPage(credits, "GEC",       "GECCRED",   26,             28,            0,   256);
+    addCreditsPage(credits, "DWOLRD",    "DWCRED",    27,             28,            0,   256);
+    addCreditsPage(credits, "TITLE",     "LEVCRED2",  TITLEPAL,       WCREDITS1PAL,  11,  256);
+    addCreditsPage(credits, "WMSCRED1",  "WMSCRED2",  WCREDITS1PAL,   WCREDITS1PAL,  5,   256);
+    addCreditsPage(credits, "IDCRED1",   "IDCRED2",   IDCREDITS1PAL,  WCREDITS1PAL,  9,   256);
 }
 
 END_NAMESPACE(MapInfo)

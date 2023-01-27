@@ -10,6 +10,7 @@ struct switchlist_t;
 
 namespace MapInfo {
     struct Cluster;
+    struct CreditsPage;
     struct Episode;
     struct GameInfo;
     struct Map;
@@ -50,6 +51,7 @@ const std::vector<MapInfo::Episode>& allEpisodes() noexcept;
 const std::vector<MapInfo::Cluster>& allClusters() noexcept;
 const std::vector<MapInfo::Map>& allMaps() noexcept;
 const std::vector<Sky>& allSkies() noexcept;
+const std::vector<MapInfo::CreditsPage>& allCreditPages() noexcept;
 const std::vector<switchlist_t>& getBaseSwitchList() noexcept;
 const std::vector<animdef_t>& getBaseAnimDefs() noexcept;
 

@@ -7,6 +7,8 @@ Table of contents:
 - [`Cluster` definition](#Cluster-definition)
 - [`GameInfo` definition](#GameInfo-definition)
 - [`MusicTrack` definition](#MusicTrack-definition)
+- [`CreditsPage` definition](#CreditsPage-definition)
+- [`ClearCredits` definition](#ClearCredits-definition)
 
 ## Overview
 To help modding, PsyDoom supports a 'MAPINFO' lump which allows information like level & episode names, music selection and so on to be defined. The purpose of this document is to list the definition types supported and fields within those definitions.
@@ -186,10 +188,6 @@ GameInfo {
     TexPalette_NETERR = 0
     TexPalette_DOOM = 17
     TexPalette_CONNECT = 0
-    TexPalette_IDCRED1 = 18
-    TexPalette_IDCRED2 = 16
-    TexPalette_WMSCRED1 = 19
-    TexPalette_WMSCRED2 = 16
     TexPalette_OptionsBG = 0
     TexLumpName_STATUS = "STATUS"
     TexLumpName_TITLE = "TITLE"
@@ -197,8 +195,6 @@ GameInfo {
     TexLumpName_BACK = "BACK"
     TexLumpName_Inter_BACK = ""
     TexLumpName_OptionsBG = "MARB01"
-    CreditsXPos_IDCRED2 = 9
-    CreditsXPos_WMSCRED2 = 7
 }
 ```
 Internal Fields:
@@ -229,15 +225,6 @@ Internal Fields:
 - `TexPalette_NETERR`: palette index to use for the `NETERR` image lump. Must be between 0 and 31.
 - `TexPalette_DOOM`: palette index to use for the `DOOM` image lump. Must be between 0 and 31.
 - `TexPalette_CONNECT`: palette index to use for the `CONNECT` image lump. Must be between 0 and 31.
-- `TexPalette_IDCRED1`: palette index to use for the `IDCRED1` image lump. Must be between 0 and 31.
-- `TexPalette_IDCRED2`: palette index to use for the `IDCRED2` image lump. Must be between 0 and 31.
-- `TexPalette_WMSCRED1`: palette index to use for the `WMSCRED1` image lump. Must be between 0 and 31.
-- `TexPalette_WMSCRED2`: palette index to use for the `WMSCRED2` image lump. Must be between 0 and 31.
-- `TexPalette_LEVCRED2`: palette index to use for the `LEVCRED2` image lump. Must be between 0 and 31.
-- `TexPalette_GEC`: palette index to use for the `GEC` image lump (GEC Master Edition addition). Must be between 0 and 31.
-- `TexPalette_GECCRED`: palette index to use for the `GECCRED` image lump (GEC Master Edition addition). Must be between 0 and 31.
-- `TexPalette_DWOLRD`: palette index to use for the `DWOLRD` image lump (GEC Master Edition addition). Must be between 0 and 31.
-- `TexPalette_DWCRED`: palette index to use for the `DWCRED` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_DATA`: palette index to use for the `DATA` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_FINAL`: palette index to use for the `FINAL` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
@@ -247,11 +234,6 @@ Internal Fields:
 - `TexLumpName_BACK`: which texture lump name to load wherever the `BACK` texture is used.
 - `TexLumpName_Inter_BACK`: which texture lump name to load for the `BACK` texture on the intermission screen specifically. If unspecified (empty string) then `TexLumpName_BACK` will be used instead.
 - `TexLumpName_OptionsBG`: which texture lump name to load for the options menu tiled background.
-- `CreditsXPos_IDCRED2`: X position/offset of the `IDCRED2` image (text overlay) on the credits screen.
-- `CreditsXPos_WMSCRED2`: X position/offset of the `WMSCRED2` image (text overlay) on the credits screen.
-- `CreditsXPos_LEVCRED2`: X position/offset of the `LEVCRED2` image (text overlay) on the credits screen.
-- `CreditsXPos_GECCRED`: X position/offset of the `GECCRED` image (text overlay) on the credits screen (GEC Master Edition addition).
-- `CreditsXPos_DWCRED`: X position/offset of the `DWCRED` image (text overlay) on the credits screen (GEC Master Edition addition).
 
 ## `MusicTrack` definition
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:
@@ -265,3 +247,39 @@ Header fields:
 
 Internal Fields:
 - `Sequence`: The index of this music track's sequence in the Williams Module File (.WMD). This is the sequence number which will be played by the sequencer system. Must be between 0 and 16384.
+
+## `CreditsPage` definition
+Defines a single credits page/screen. The pages will appear in the order that they are defined. Examples:
+```
+CreditsPage {
+    BgPic = "IDCRED1"
+    FgPic = "IDCRED2"
+    BgPal = 18
+    FgPal = 16
+    FgXPos = 9
+    MaxScroll = 182
+    FgAdditive = false
+}
+CreditsPage {
+    BgPic = "WMSCRED1"
+    FgPic = "WMSCRED2"
+    BgPal = 19
+    FgPal = 16
+    FgXPos = 7
+    MaxScroll = 228
+    FgAdditive = false
+}
+```
+Internal Fields:
+- `BgPic`: Which lump to show for the background of this credits page.
+- `FgPic`: Which lump to show for the foreground/text of this credits page.
+- `BgPal`: which palette to use for the background. Should be 0-31.
+- `FgPal`: which palette to use for the foreground/text. Should be 0-31.
+- `FgXPos`: which x position to display the foreground/text image at. Default value is `0`.
+- `MaxScroll`: how many pixels up should the text scroll before switching to the next credits page. Default value is `256`.
+- `FgAdditive`: if 'true' then the foreground/text is blended additively against the background. Default value is `false`.
+
+## `ClearCredits` definition
+When this definition is encountered it instructs the game to clear the current list of credit pages. You can use it to create an entirely new set of credit pages from scratch. Note: the definition doesn't have any other information associated with it, it's just a simple command/instruction:
+```
+ClearEpisodes {}

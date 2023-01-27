@@ -37,16 +37,8 @@ void initGameInfo_FinalDoom(GameInfo& gameInfo) noexcept {
     gameInfo.texPalette_NETERR = UIPAL2;
     gameInfo.texPalette_DOOM = UIPAL;
     gameInfo.texPalette_CONNECT = UIPAL2;
-    gameInfo.texPalette_IDCRED1 = IDCREDITS1PAL;
-    gameInfo.texPalette_IDCRED2 = WCREDITS1PAL;
-    gameInfo.texPalette_WMSCRED1 = WCREDITS1PAL;
-    gameInfo.texPalette_WMSCRED2 = WCREDITS1PAL;
-    gameInfo.texPalette_LEVCRED2 = WCREDITS1PAL;
     gameInfo.texPalette_OptionsBG = UIPAL2;
     gameInfo.texLumpName_OptionsBG = "TILE";
-    gameInfo.creditsXPos_IDCRED2 = 9;
-    gameInfo.creditsXPos_WMSCRED2 = 5;
-    gameInfo.creditsXPos_LEVCRED2 = 11;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -182,6 +174,15 @@ void addMaps_FinalDoom(std::vector<Map>& maps) noexcept {
     addMap(maps, 28, 3, "Baron's Lair",             18,   SPU_REV_MODE_SPACE,     0x0FFF);
     addMap(maps, 29, 3, "The Death Domain",         22,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
     addMap(maps, 30, 3, "Onslaught",                26,   SPU_REV_MODE_STUDIO_C,  0x2FFF);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the credit pages for 'Final Doom' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addCredits_FinalDoom(std::vector<CreditsPage>& credits) noexcept {
+    addCreditsPage(credits, "TITLE",     "LEVCRED2",  TITLEPAL,       WCREDITS1PAL,  11,  256);
+    addCreditsPage(credits, "WMSCRED1",  "WMSCRED2",  WCREDITS1PAL,   WCREDITS1PAL,  5,   256);
+    addCreditsPage(credits, "IDCRED1",   "IDCRED2",   IDCREDITS1PAL,  WCREDITS1PAL,  9,   256);
 }
 
 END_NAMESPACE(MapInfo)

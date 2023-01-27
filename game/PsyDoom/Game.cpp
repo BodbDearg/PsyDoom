@@ -386,42 +386,6 @@ uint16_t getTexClut_BUTTONS() noexcept {
     return R_GetPaletteClutId(Game::gConstants.texPalette_BUTTONS);
 }
 
-uint16_t getTexClut_IDCRED1() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_IDCRED1);
-}
-
-uint16_t getTexClut_IDCRED2() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_IDCRED2);
-}
-
-uint16_t getTexClut_WMSCRED1() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_WMSCRED1);
-}
-
-uint16_t getTexClut_WMSCRED2() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_WMSCRED2);
-}
-
-uint16_t getTexClut_LEVCRED2() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_LEVCRED2);
-}
-
-uint16_t getTexClut_GEC() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_GEC);
-}
-
-uint16_t getTexClut_GECCRED() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_GECCRED);
-}
-
-uint16_t getTexClut_DWOLRD() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DWOLRD);
-}
-
-uint16_t getTexClut_DWCRED() noexcept {
-    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DWCRED);
-}
-
 uint16_t getTexClut_DATA() noexcept {
     return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DATA);
 }

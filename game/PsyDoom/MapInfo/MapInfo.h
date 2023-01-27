@@ -50,15 +50,6 @@ struct GameInfo {
     uint8_t                 texPalette_NETERR;              // Palette index to use for the 'NETERR' image lump
     uint8_t                 texPalette_DOOM;                // Palette index to use for the 'DOOM' image lump
     uint8_t                 texPalette_CONNECT;             // Palette index to use for the 'CONNECT' image lump
-    uint8_t                 texPalette_IDCRED1;             // Palette index to use for the 'IDCRED1' image lump
-    uint8_t                 texPalette_IDCRED2;             // Palette index to use for the 'IDCRED2' image lump
-    uint8_t                 texPalette_WMSCRED1;            // Palette index to use for the 'WMSCRED1' image lump
-    uint8_t                 texPalette_WMSCRED2;            // Palette index to use for the 'WMSCRED2' image lump
-    uint8_t                 texPalette_LEVCRED2;            // Palette index to use for the 'LEVCRED2' image lump
-    uint8_t                 texPalette_GEC;                 // Palette index to use for the 'GEC' image lump (GEC Master Edition addition)
-    uint8_t                 texPalette_GECCRED;             // Palette index to use for the 'GECCRED' image lump (GEC Master Edition addition)
-    uint8_t                 texPalette_DWOLRD;              // Palette index to use for the 'DWOLRD' image lump (GEC Master Edition addition)
-    uint8_t                 texPalette_DWCRED;              // Palette index to use for the 'DWCRED' image lump (GEC Master Edition addition)
     uint8_t                 texPalette_DATA;                // Palette index to use for the 'DATA' image lump (GEC Master Edition addition)
     uint8_t                 texPalette_FINAL;               // Palette index to use for the 'FINAL' image lump (GEC Master Edition addition)
     uint8_t                 texPalette_OptionsBG;           // Palette index to use for the options menu tiled background
@@ -68,11 +59,6 @@ struct GameInfo {
     String8                 texLumpName_BACK;               // Which texture lump name to load wherever the 'BACK' texture is used
     String8                 texLumpName_Inter_BACK;         // Which texture lump name to load for the 'BACK' on the intermission screen specifically (if empty, use 'texLumpName_BACK')
     String8                 texLumpName_OptionsBG;          // Which texture lump name to load for the options menu tiled background
-    int16_t                 creditsXPos_IDCRED2;            // X position of the 'IDCRED2' graphic on the credits screen
-    int16_t                 creditsXPos_WMSCRED2;           // X position of the 'WMSCRED2' graphic on the credits screen
-    int16_t                 creditsXPos_LEVCRED2;           // X position of the 'LEVCRED2' graphic on the credits screen
-    int16_t                 creditsXPos_GECCRED;            // X position of the 'GECCRED' graphic on the credits screen (GEC Master Edition addition)
-    int16_t                 creditsXPos_DWCRED;             // X position of the 'DWCRED' graphic on the credits screen (GEC Master Edition addition)
 
     GameInfo() noexcept;
 };
@@ -179,6 +165,21 @@ struct Map {
     }
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Defines the settings for one page/screen of the credits
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct CreditsPage {
+    String8     bgPic;          // Which image (specified by lumpname) to display for the background of this credits screen page
+    String8     fgPic;          // Which image (specified by lumpname) to display for the foreground/text of this credits screen page
+    uint8_t     bgPal;          // Which palette to use for the background image of this credits screen page
+    uint8_t     fgPal;          // Which palette to use for the foreground/text of this credits screen page
+    int16_t     fgXPos;         // X position to display the foreground/text at for this credits screen page
+    int16_t     maxScroll;      // How many pixels offscreen can the text go before we switch to the next page
+    bool        bFgAdditive;    // If 'true' use additive blending for the foreground/text of this credits screen page
+
+    CreditsPage() noexcept;
+};
+
 bool shouldUse() noexcept;
 void init() noexcept;
 void shutdown() noexcept;
@@ -199,5 +200,7 @@ const std::vector<Cluster>& allClusters() noexcept;
 
 const Map* getMap(const int32_t mapNum) noexcept;
 const std::vector<Map>& allMaps() noexcept;
+
+const std::vector<CreditsPage>& getCredits() noexcept;
 
 END_NAMESPACE(MapInfo)

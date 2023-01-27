@@ -453,6 +453,7 @@ if (PSYDOOM_INCLUDE_OLD_CODE)
         "Old/Doom/Renderer/Old_r_data.cpp"
         "Old/Doom/UI/Old_cn_main.cpp"
         "Old/Doom/UI/Old_cn_main.h"
+        "Old/Doom/UI/Old_cr_main.cpp"
         "Old/Doom/UI/Old_ti_main.cpp"
         "Old/Old_cdmaptbl.cpp"
         "Old/Old_cdmaptbl.h"

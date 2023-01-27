@@ -54,4 +54,18 @@ void addMaps_GEC_ME_TestMap(std::vector<Map>& maps) noexcept {
     addMap(maps, 1 , 1, "Test Map", 1, SPU_REV_MODE_SPACE, 0x0FFF);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the credit pages for '[GEC] Master Edition tools: single map test disc (Doom format)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addCredits_GEC_ME_TestMap_Doom(std::vector<CreditsPage>& credits) noexcept {
+    addCredits_Doom(credits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the credit pages for '[GEC] Master Edition tools: single map test disc (Final Doom format)'
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addCredits_GEC_ME_TestMap_FinalDoom(std::vector<CreditsPage>& credits) noexcept {
+    addCredits_FinalDoom(credits);
+}
+
 END_NAMESPACE(MapInfo)

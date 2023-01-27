@@ -42,6 +42,7 @@ static std::vector<Episode>         gEpisodes;
 static std::vector<Cluster>         gClusters;
 static std::vector<Map>             gMaps;
 static std::vector<Sky>             gSkies;
+static std::vector<CreditsPage>     gCredits;
 static std::vector<switchlist_t>    gBaseSwitchList;    // Built-in switch definitions, read from the MAPINFO text files
 static std::vector<animdef_t>       gBaseAnimDefs;      // Built-in anim definitions, read from the MAPINFO text files
 
@@ -97,9 +98,11 @@ static void assignAsciiTextToSmallString(SmallStringT& dst, std::string_view src
         srcIdx++;
     }
 
-    // Null terminate if we didn't reach the end
-    if (dstIdx < SmallStringT::MAX_LEN) {
+    // Zero fill the remaining characters if we didn't reach the end.
+    // This is required for WAD lumpname chunked comparisons (64-bit word compare) to work.
+    while (dstIdx < SmallStringT::MAX_LEN) {
         dst.chars[dstIdx] = 0;
+        dstIdx++;
     }
 }
 
@@ -465,7 +468,7 @@ static const Token* parseEpisodesBlock(const Token* const pStartToken) noexcept 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Parses the 'Title' block and returns the next token after that
+// Parses a 'Title' block and returns the next token after that
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const Token* parseTitleBlock(const Token* const pStartToken) noexcept {
     // Parse the title screen type
@@ -510,6 +513,62 @@ static const Token* parseTitleBlock(const Token* const pStartToken) noexcept {
 
             // Unhandled or unwanted line of data - skip it!
             return skipCurrentLineData(pToken);
+        }
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Parses a 'Credits' block and returns the next token after that
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const Token* parseCreditsBlock(const Token* const pStartToken) noexcept {
+    return parseUntilEndOfBlock(
+        skipBlockOpening(pStartToken),
+        [](const Token* pToken) noexcept {
+            // Init basic credits page properties (hardcoded)
+            CreditsPage& page = gCredits.emplace_back();
+            page.maxScroll = 256;
+
+            // Parse 'bgPic'
+            ensureTokenType(pToken, TokenType::String);
+            assignAsciiTextToSmallString(page.bgPic, pToken->text());
+            pToken++;
+
+            // Parse 'bgPal'
+            ensureTokenType(pToken, TokenType::Number);
+            page.bgPal = (uint8_t) pToken->number;
+            pToken++;
+
+            // Parse 'fgPic'
+            ensureTokenType(pToken, TokenType::String);
+            assignAsciiTextToSmallString(page.fgPic, pToken->text());
+            pToken++;
+
+            // Parse 'fgPal'
+            ensureTokenType(pToken, TokenType::Number);
+            page.fgPal = (uint8_t) pToken->number;
+            pToken++;
+
+            // Optional: 'fgXPos'
+            if (pToken->type != TokenType::Number)
+                return pToken;
+
+            page.fgXPos = (int16_t) pToken->number;
+            pToken++;
+
+            // Optional: 'bFgAdditive'
+            if ((pToken->type != TokenType::Number) && (pToken->type != TokenType::True) && (pToken->type != TokenType::False))
+                return pToken;
+
+            if (pToken->type == TokenType::Number) {
+                page.bFgAdditive = (pToken->number > 0);
+            } else if (pToken->type == TokenType::True) {
+                page.bFgAdditive = true;
+            } else {
+                page.bFgAdditive = false;
+            }
+
+            pToken++;
+            return pToken;
         }
     );
 }
@@ -571,7 +630,8 @@ static const Token* parseGameInfo(const Token* const pStartToken) noexcept {
                     return pNextToken;
                 }
 
-                // TODO: GEC ME BETA 4: parse 'Credits'
+                if (fieldId == "Credits")
+                    return parseCreditsBlock(pToken);
             }
 
             // Unhandled or unwanted line of data - skip it!
@@ -946,6 +1006,7 @@ void shutdown() noexcept {
     gCurMapInfoFilePath = nullptr;
     gBaseAnimDefs.clear();
     gBaseSwitchList.clear();
+    gCredits.clear();
     gSkies.clear();
     gMaps.clear();
     gClusters.clear();
@@ -978,6 +1039,10 @@ const std::vector<Map>& allMaps() noexcept {
 
 const std::vector<Sky>& allSkies() noexcept {
     return gSkies;
+}
+
+const std::vector<CreditsPage>& allCreditPages() noexcept {
+    return gCredits;
 }
 
 const std::vector<switchlist_t>& getBaseSwitchList() noexcept {

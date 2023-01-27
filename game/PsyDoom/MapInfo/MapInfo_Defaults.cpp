@@ -50,6 +50,29 @@ void addMap(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: defines a built-in credits screen page and adds it to the given list.
+// Defaults fields that are not relevant to the credit screen pages for most game types.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addCreditsPage(
+    std::vector<CreditsPage>& credits,
+    const String8& bgPic,
+    const String8& fgPic,
+    const uint8_t bgPal,
+    const uint8_t fgPal,
+    const int16_t fgXPos,
+    const int16_t maxScroll
+) noexcept {
+    CreditsPage& page = credits.emplace_back();
+    page.bgPic = bgPic;
+    page.fgPic = fgPic;
+    page.bgPal = bgPal;
+    page.fgPal = fgPal;
+    page.fgXPos = fgXPos;
+    page.maxScroll = maxScroll;
+    page.bFgAdditive = false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: defines a music track and adds it to the given list
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void addMusicTrack(std::vector<MusicTrack>& musicTracks, const int32_t trackNum, const int32_t sequenceNum) noexcept {
@@ -147,6 +170,28 @@ static void initMaps(std::vector<Map>& maps) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the list of credit pages for the game to the defaults for the current game type
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void initCredits(std::vector<CreditsPage>& credits) noexcept {
+    credits.clear();
+
+    switch (Game::gGameType) {
+        case GameType::Doom:                        addCredits_Doom(credits);                       break;
+        case GameType::FinalDoom:                   addCredits_FinalDoom(credits);                  break;
+        case GameType::GEC_ME_Beta3:                addCredits_GEC_ME_Beta3(credits);               break;
+        case GameType::GEC_ME_TestMap_Doom:         addCredits_GEC_ME_TestMap_Doom(credits);        break;
+        case GameType::GEC_ME_TestMap_FinalDoom:    addCredits_GEC_ME_TestMap_FinalDoom(credits);   break;
+
+        case GameType::GEC_ME_Beta4:
+            credits = GecMapInfo::allCreditPages();
+            break;
+
+        default:
+            FatalErrors::raise("MapInfo::initCredits(): unhandled game type!");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the list of music tracks for the game to the default list
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void initMusicTracks(std::vector<MusicTrack>& musicTracks) noexcept {
@@ -168,6 +213,7 @@ void setMapInfoToDefaults(
     std::vector<Episode>& episodes,
     std::vector<Cluster>& clusters,
     std::vector<Map>& maps,
+    std::vector<CreditsPage>& credits,
     std::vector<MusicTrack>& musicTracks
 ) noexcept {
     // Init the defaults
@@ -175,6 +221,7 @@ void setMapInfoToDefaults(
     initEpisodes(episodes);
     initClusters(clusters);
     initMaps(maps);
+    initCredits(credits);
     initMusicTracks(musicTracks);
 }
 
