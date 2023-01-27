@@ -1103,6 +1103,40 @@ static void patchMap_TheMansion() noexcept {
         gpSectors[63].special = 0;
         gpSectors[84].special = 9;
     }
+
+    if (shouldApplyMapPatches_Visual()) {
+        // Hide linedefs
+        addFlagsToLinedefs(ML_DONTDRAW,
+            // Secret exit room
+            1236, 1237, 1240, 1243, 1244, 1250, 1251, 1252, 1254, 1264, 1265, 1266, 1267,
+            // North window skybox and hallway
+            278, 277, 276, 282, 365, 368, 369, 1015, 1021, 1022, 1023, 1024, 1027, 1028, 1031, 1032,
+            // Library
+            873, 882, 1307,
+            // East skybox
+            495, 496, 497, 498, 499, 500, 832, 833,
+            // Southeast skybox
+            746, 747, 748, 752, 753, 754, 836, 837, 839, 751, 980,
+            // Yellow door nook
+            1334,
+            // Secret passage
+            648, 649
+        );
+
+        // Unhide linedefs in north window
+        removeFlagsFromLinedefs(ML_DONTDRAW, 1019, 1020, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066);
+
+        // Remove secret flag from south bookshelf in library
+        removeFlagsFromLinedefs(ML_SECRET, 7, 1229);
+
+        // Remove unused actions from linedefs.
+        // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
+        modifyLinedefs(
+            [](line_t& line) { line.special = 0; },
+            // Soulsphere platform
+            513, 514, 515, 516
+        );
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
