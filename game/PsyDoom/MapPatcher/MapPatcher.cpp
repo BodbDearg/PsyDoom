@@ -21,7 +21,7 @@ static MapPatches::PatchList getGamePatchList() noexcept {
         case GameType::GEC_ME_Beta3:                return MapPatches::gPatches_GEC_ME_Beta3;
         case GameType::GEC_ME_TestMap_Doom:         return {};
         case GameType::GEC_ME_TestMap_FinalDoom:    return {};
-        case GameType::GEC_ME_Beta4:                return {};  // TODO: GEC ME BETA 4: implement map patches
+        case GameType::GEC_ME_Beta4:                return MapPatches::gPatches_GEC_ME_Beta4;
     }
 
     I_Error("MapPatcher: getGamePatchList(): unhandled game type!");

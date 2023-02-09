@@ -261,6 +261,7 @@ set(SOURCE_FILES
     "PsyDoom/MapPatcher/MapPatches_Doom.cpp"
     "PsyDoom/MapPatcher/MapPatches_FinalDoom.cpp"
     "PsyDoom/MapPatcher/MapPatches_GEC_ME_Beta3.cpp"
+    "PsyDoom/MapPatcher/MapPatches_GEC_ME_Beta4.cpp"
     "PsyDoom/MobjSpritePrecacher.cpp"
     "PsyDoom/MobjSpritePrecacher.h"
     "PsyDoom/ModMgr.cpp"
