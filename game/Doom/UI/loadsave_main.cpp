@@ -56,6 +56,12 @@ struct SaveFileInfo {
     String32        mapName;    // Name of the map
 };
 
+// Holds the map name displayed for a save slot
+struct SaveSlotMapName {
+    static constexpr uint32_t MAX_DISPLAY_CHARS = 25;
+    char chars[MAX_DISPLAY_CHARS + 1];
+};
+
 static LoadSaveMenuMode     gMenuMode;                  // What mode the menu is operating in
 static uint8_t              gSlotHighlightPhase;        // Current phase for the slot highlight effect
 static SaveFileInfo         gSaveFiles[5];              // The 5 save file slots
@@ -107,6 +113,46 @@ static void ReadSaveHeader(SaveFileInfo& save) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool IsSaveSlotFocused() noexcept {
     return ((gFocusedSaveSlot >= 0) && (gFocusedSaveSlot < (int32_t) C_ARRAY_SIZE(gSaveFiles)));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Formats a map name for display on a save slot, truncating if neccessary.
+// Returns the name to display;
+//------------------------------------------------------------------------------------------------------------------------------------------
+static SaveSlotMapName FormatSaveSlotMapName(const SaveFileInfo& save) noexcept {
+    // First truncate the display name by the length limit.
+    // Then truncate at the first newline character found, if any.
+    const uint32_t realNameLen = save.mapName.length();
+    uint32_t dispNameLen = std::min(realNameLen, SaveSlotMapName::MAX_DISPLAY_CHARS);
+
+    for (uint32_t i = 0; i < dispNameLen; ++i) {
+        const char c = save.mapName.chars[dispNameLen];
+        const bool bIsNewLineChar = ((c == '\n') || (c == '\r') || (c == '\v') || (c == '\f'));
+
+        if (bIsNewLineChar) {
+            dispNameLen = i;
+            break;
+        }
+    }
+
+    // Copy the map name characters to be displayed
+    SaveSlotMapName mapName;
+    std::strncpy(mapName.chars, save.mapName.chars, dispNameLen);
+
+    // Show a truncation pattern/indicator if the string was cut short
+    constexpr const char TRUNC_PATTERN[] = "..";
+    constexpr const uint32_t TRUNC_PATTERN_LEN = C_ARRAY_SIZE(TRUNC_PATTERN) - 1;
+    static_assert(TRUNC_PATTERN_LEN <= SaveSlotMapName::MAX_DISPLAY_CHARS);
+
+    if (dispNameLen < realNameLen) {
+        const uint32_t truncPatternEnd = std::min(dispNameLen + TRUNC_PATTERN_LEN, SaveSlotMapName::MAX_DISPLAY_CHARS);
+        const uint32_t truncPatternBeg = truncPatternEnd - TRUNC_PATTERN_LEN;
+        std::strncpy(mapName.chars + truncPatternBeg, TRUNC_PATTERN, TRUNC_PATTERN_LEN);
+    }
+
+    // Null terminate the map name string to finish up
+    mapName.chars[dispNameLen] = 0;
+    return mapName;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -203,7 +249,8 @@ static void DrawSaveSlot(const SaveFileInfo& save, const int16_t slotX, const in
 
     // Draw the map name
     if (save.mapNum > 0) {
-        I_DrawStringSmall(slotX + 24, slotY + 19, save.mapName.c_str().data(), Game::getTexClut_STATUS(), 128, 128, 128, false, true);
+        const SaveSlotMapName mapName = FormatSaveSlotMapName(save);
+        I_DrawStringSmall(slotX + 24, slotY + 19, mapName.chars, Game::getTexClut_STATUS(), 128, 128, 128, false, true);
     } else {
         I_DrawStringSmall(slotX + 24, slotY + 19, "-", Game::getTexClut_STATUS(), 128, 128, 128, false, true);
     }
