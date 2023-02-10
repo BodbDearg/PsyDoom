@@ -147,6 +147,11 @@ static const castinfo_t gCastOrder[] = {
     { "Pain Elemental",         MT_PAIN         },
     { "Revenant",               MT_UNDEAD       },
     { "Mancubus",               MT_FATSO        },
+// PsyDoom: show the Arch-vile in the cast if we have the assets for it.
+// N.B: this can't be the 1st cast member due to the way the logic to skip over it works!
+#if PSYDOOM_MODS
+    { "Arch-vile",              MT_VILE         },
+#endif
     { "The Spider Mastermind",  MT_SPIDER       },
     { "The Cyberdemon",         MT_CYBORG       },
     { "Our Hero",               MT_PLAYER       },
@@ -663,6 +668,13 @@ gameaction_t F2_Ticker() noexcept {
                 gCastNum++;
                 gbCastDeath = false;
 
+                // PsyDoom: skip the Arch-vile if there are no assets for it
+                #if PSYDOOM_MODS
+                    if ((gCastOrder[gCastNum].type == MT_VILE) && (!gbHaveSprites_ArchVile)) {
+                        gCastNum++;
+                    }
+                #endif
+
                 // Loop back around to the first character when we reach the end
                 if (gCastOrder[gCastNum].name  == nullptr) {
                     gCastNum = 0;
@@ -715,6 +727,10 @@ gameaction_t F2_Ticker() noexcept {
                     case S_CYBER_ATK4:
                     case S_CYBER_ATK6:  soundId = sfx_rlaunc;   break;
                     case S_PAIN_ATK3:   soundId = sfx_sklatk;   break;
+                // PsyDoom: play the attack sound for the Arch-vile
+                #if PSYDOOM_MODS
+                    case S_VILE_ATK2:   soundId = sfx_vilatk;   break;
+                #endif
 
                     default: soundId = sfx_None;
                 }
