@@ -28,6 +28,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/st_main.h"
+#include "Game.h"
 #include "ScriptingEngine.h"
 
 #include <algorithm>
@@ -601,7 +602,17 @@ mobj_t* Script_P_SpawnMobj(const float x, const float y, const float z, const ui
     if (type >= (uint32_t) gNumMobjInfo)
         return nullptr;
 
-    return P_SpawnMobj(xfrac, yfrac, zfrac, (mobjtype_t) type);
+    mobj_t* const pMobj = P_SpawnMobj(xfrac, yfrac, zfrac, (mobjtype_t) type);
+    ASSERT(pMobj);
+
+    // If the object spawned is an enemy then count it towards the total kill count, if the kill count fix is enabled
+    if (pMobj->flags & MF_COUNTKILL) {
+        if (Game::gSettings.bFixKillCount) {
+            gTotalKills++;
+        }
+    }
+
+    return pMobj;
 }
 
 mobj_t* Script_P_SpawnMissile(mobj_t& src, mobj_t& dst, const uint32_t type) noexcept {
