@@ -1878,6 +1878,11 @@ void A_SpawnFly(mobj_t& actor) noexcept {
             P_SetMobjState(spawned, spawned.info->seestate);
         }
 
+        // Increment the total kill count if the kill count fix is enabled
+        if (Game::gSettings.bFixKillCount) {
+            gTotalKills++;
+        }
+
         // Telefrag anything where the enemy spawned and remove the cube.
         // Note: do not allow self-telefragging!
         P_Telefrag(spawned, spawned.x, spawned.y, false);
