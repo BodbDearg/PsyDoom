@@ -76,7 +76,7 @@ const WadLump& W_GetLump(const int32_t lumpIdx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return the name for the specified main WAD lump
 //------------------------------------------------------------------------------------------------------------------------------------------
-const WadLumpName W_GetLumpName(const int32_t lumpIdx) noexcept {
+WadLumpName W_GetLumpName(const int32_t lumpIdx) noexcept {
     return gMainWadList.getLumpName(lumpIdx);
 }
 
@@ -109,6 +109,14 @@ int32_t W_GetNumForName(const WadLumpName lumpName) noexcept {
 int32_t W_LumpLength(const int32_t lumpIdx) noexcept {
     const WadLump& lump = gMainWadList.getLump(lumpIdx);
     return lump.uncompressedSize;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gives the raw size (in bytes) of the given main WAD lump (specified by lump index).
+// For a compressed lump this will be the compressed size, otherwise it will be just the actual size of the lump.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_RawLumpLength(const int32_t lumpIdx) noexcept {
+    return gMainWadList.getRawSize(lumpIdx);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -178,6 +186,14 @@ int32_t W_MapGetNumForName(const WadLumpName lumpName) noexcept {
 int32_t W_MapLumpLength(const int32_t lumpIdx) noexcept {
     const WadLump& lump = gMapWad.getLump(lumpIdx);
     return lump.uncompressedSize;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gives the raw size (in bytes) of the given map WAD lump (specified by lump index).
+// For a compressed lump this will be the compressed size, otherwise it will be just the actual size of the lump.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_RawMapLumpLength(const int32_t lumpIdx) noexcept {
+    return gMapWad.getRawSize(lumpIdx);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

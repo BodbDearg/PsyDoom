@@ -6,6 +6,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/in_main.h"
 #include "i_drawcmds.h"
+#include "i_drawstringex.h"
 #include "i_main.h"
 #include "i_texcache.h"
 #include "PsyDoom/Game.h"
@@ -114,7 +115,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         // They must have produced primitive state changes that we actually desired for this function...
         // Relying on external draw code and ordering however is brittle, so be explicit here and set exactly what we need:
         {
-            // Set the draw mode to disable wrapping (zero sized text window) and texture page to the STATUS graphic
+            // Set the draw mode to disable wrapping (zero sized text window) and set texture page to that of the STATUS graphic
             DR_MODE drawModePrim = {};
             const SRECT texWindow = { (int16_t) gTex_STATUS.texPageCoordX, (int16_t) gTex_STATUS.texPageCoordY, 256, 256 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
@@ -123,7 +124,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
 
         LIBGPU_SetSprt(spritePrim);
         LIBGPU_SetShadeTex(spritePrim, true);
-        spritePrim.clut = Game::getTexPalette_STATUS();
+        spritePrim.clut = Game::getTexClut_STATUS();
     #endif
 
     spritePrim.y0 = (int16_t) y;            // Always on the same row
@@ -223,30 +224,30 @@ void I_DrawStringSmall(
 
     for (char c = *pCurChar; c != 0; ++pCurChar, c = *pCurChar) {
         // Uppercase the character if lowercase: the small font only has uppercase defined
-        if (c >= 'a' && c <= 'z') {
+        if ((c >= 'a') && (c <= 'z')) {
             c += 'A' - 'a';
         }
 
         // Figure out the font character index.
         // Note that the first 33 characters (control characters and space) are just printed as 8px whitespace.
-        int32_t charIdx = (int32_t) c - 33;
+        const int32_t charIdx = (int32_t) c - 33;
 
         // Only 64 ascii characters (after whitespace) are supported by this font
         if (charIdx >= 0 && charIdx < 64) {
             // Figure out the u and v texture coordinates to use based on the font character: each character is 8x8 px
             const int32_t fontRow = charIdx / 32;
             const int32_t fontCol = charIdx - fontRow * 32;
-            const int32_t texU = fontCol * 8;
-            const int32_t texV = fontRow * 8 - 88;
+            const int32_t texU = fontCol * SMALL_FONT_SIZE;
+            const int32_t texV = fontRow * SMALL_FONT_SIZE + SMALL_FONT_V_MIN;
 
             // Populate and submit the primitive
-            LIBGPU_setUV0(spritePrim, (uint8_t) texU, (uint8_t) texV);  // N.B: bit truncation to 'uint8_t' instead of 'LibGpuUV' is deliberate here and needed for correct display
+            LIBGPU_setUV0(spritePrim, (uint8_t) texU, (uint8_t) texV);
             spritePrim.x0 = (int16_t) curX;
 
             I_AddPrim(spritePrim);
         }
 
-        curX += 8;
+        curX += SMALL_FONT_SIZE;
     }
 }
 
@@ -258,7 +259,7 @@ void I_DrawPausedOverlay() noexcept {
     const player_t& player = gPlayers[gCurPlayerIndex];
 
     if ((player.cheats & CF_NOPAUSEMSG) == 0) {
-        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, Game::getTexPalette_PAUSE());
+        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, Game::getTexClut_PAUSE());
     }
 
     if (player.cheats & CF_WARPMENU) {
@@ -266,7 +267,17 @@ void I_DrawPausedOverlay() noexcept {
         char warpmsg[64];
         std::sprintf(warpmsg, "warp to level %d", gMapNumToCheatWarpTo);
         I_DrawString(-1, 40, warpmsg);
-        I_DrawString(-1, 60, Game::getMapName(gMapNumToCheatWarpTo).c_str().data());
+
+        #if PSYDOOM_MODS
+            // PsyDoom: support map names that are multi-line (have newline characters)
+            {
+                DrawStringParams drawStrParams = {};
+                drawStrParams.xAnchorMode = DrawStringAnchorMode::CENTER;
+                I_DrawStringEx(SCREEN_W / 2, 60, drawStrParams, Game::getMapName(gMapNumToCheatWarpTo).c_str().data());
+            }
+        #else
+            I_DrawString(-1, 60, Game::getMapName(gMapNumToCheatWarpTo).c_str().data());
+        #endif
     }
     else if (player.cheats & CF_VRAMVIEWER) {
         // Draw the vram viewer: first clear the background to black and then draw it.
@@ -399,7 +410,7 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
             charIdx = BIG_FONT_MINUS;
         }
         else {
-            width += 6;     // Whitespace
+            width += BIG_FONT_WHITESPACE_CHAR_WIDTH;
             continue;
         }
 
@@ -463,7 +474,8 @@ int32_t I_GetStringWidth(const char* const str) noexcept {
 // If '-1' is specified for the x coordinate, the string is drawn centered horizontally in the middle of the screen.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexcept {
-    // Set the draw mode to remove the current texture window and texture page to the STATUS graphic
+    // Set the draw mode to remove the current texture window (set it to the max size).
+    // Also set the current texture page to that of the STATUS graphic.
     {
         // PsyDoom: define the texture window while we are at it, rather than relying on the one set externally
         // PsyDoom: use local instead of scratchpad draw primitives; compiler can optimize better, and removes reliance on global state
@@ -489,7 +501,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(spritePrim, true);
-    spritePrim.clut = Game::getTexPalette_STATUS();
+    spritePrim.clut = Game::getTexClut_STATUS();
 
     // Decide on starting x position: can either be so the string is centered in the screen, or just the value verbatim
     int32_t curX = (x != -1) ? x : I_GetStringXPosToCenter(str);

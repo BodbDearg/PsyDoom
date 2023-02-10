@@ -82,6 +82,21 @@ static constexpr int16_t MTF_BLEND_ON           = 0x20;     // PSX DOOM: if set 
 static constexpr int16_t MTF_BLEND_MODE_BIT1    = 0x40;     // PSX DOOM: 1 of 2 bits determining blend mode if blending is enabled. See 'MF_BLEND' mobj flags for more details.
 static constexpr int16_t MTF_BLEND_MODE_BIT2    = 0x80;     // PSX DOOM: 1 of 2 bits determining blend mode if blending is enabled. See 'MF_BLEND' mobj flags for more details.
 
+#if PSYDOOM_MODS
+    // PsyDoom: this is a map thing flag used by the 'GEC Master Edition' (Beta 4 and later).
+    // It's used to specify the roster of enemies which can be spawned by the Icon Of Sin.
+    // 
+    // When PsyDoom sees any thing in a map using this flag it will do the following:
+    //  (1) Not spawn that thing.
+    //  (2) Add it to the manual roster of enemies for spawning by the Icon Of Sin.
+    //  (3) Use the manually specified roster of enemies when doing spawning for the Icon Of Sin (instead of the original Doom II roster).
+    //
+    // Note that the same enemy can also be added to the roster more than once to increase its probability weighting.
+    // This allows crude control over how often certain enemy types appear.
+    //
+    static constexpr int16_t MTF_SPAWN_BY_IOS = 0x100;
+#endif
+
 // If this flag is set for a BSP node child in a wad then it means the child is a subsector.
 // This flag should be removed when retrieving the actual subsector number.
 static constexpr uint32_t NF_SUBSECTOR = 0x8000;

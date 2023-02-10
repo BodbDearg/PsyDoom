@@ -7,6 +7,8 @@ Table of contents:
 - [`Cluster` definition](#Cluster-definition)
 - [`GameInfo` definition](#GameInfo-definition)
 - [`MusicTrack` definition](#MusicTrack-definition)
+- [`CreditsPage` definition](#CreditsPage-definition)
+- [`ClearCredits` definition](#ClearCredits-definition)
 
 ## Overview
 To help modding, PsyDoom supports a 'MAPINFO' lump which allows information like level & episode names, music selection and so on to be defined. The purpose of this document is to list the definition types supported and fields within those definitions.
@@ -27,6 +29,7 @@ Map 3 "My Cool Map" {
     Cluster = 1
     SkyPal = -1
     PlayCdMusic = 0
+    NoIntermission = false
     ReverbMode = 6
     ReverbDepth = 0x27FF
     ReverbDelay = 0
@@ -40,7 +43,7 @@ Header fields:
 Internal Fields:
 - `Music`: Which sequencer music track to play for the map, or '0' if none. If 'PlayCdMusic' is enabled then this specifies a CD track instead. Must be between 0 and 1024.
 - `Cluster`: Which cluster of maps the map belongs to. Determines when finale screens are shown; if the next map has a different cluster number then this will trigger the non-cast call finale.
-- `SkyPal`: Can be used to override the palette used for the map's sky. Doom has 20 built-in palettes; Final Doom has 26. The engine can support up to 32 palettes in PLAYERPAL, so 6 additional user palettes can be defined. Specify `-1` (the default) to have the engine automatically determine the sky palette from the sky texture number. This field must be between -1 and 32. Built in palettes are as follows:
+- `SkyPal`: Can be used to override the palette used for the map's sky. Doom has 20 built-in palettes; Final Doom has 26. The engine can support up to 32 palettes in PLAYERPAL, so 6 additional user palettes can be defined. Specify `-1` (the default) to have the engine automatically determine the sky palette from the sky texture number. This field must be between -1 and 31. Built in palettes are as follows:
     ```
     MAINPAL               = 0       // Used for most sprites and textures in the game
     REDPALS (0-7)         = 1-8     // Pain palettes (red shift)
@@ -59,7 +62,8 @@ Internal Fields:
     SKYPAL4               = 24      // PSX Final Doom: additional sky palette
     SKYPAL5               = 25      // PSX Final Doom: additional sky palette
     ```
-- `PlayCdMusic`: If `1` or greater then `Music` is interpreted as a CD track to play instead of a music sequence. You can use this to play CD audio for the map instead of sequencer music.
+- `PlayCdMusic`: If `1` or greater then `Music` is interpreted as a CD track to play instead of a music sequence. You can use this to play CD audio for the map instead of sequencer music. Default is value is `0`.
+- `NoIntermission`: If `1` or greater then the intermission screen is skipped for this map. Default is value is `0`.
 - `ReverbMode`: Defines the type of reverb effect used for the map. Allowed reverb type numbers are:
     ```
     OFF        = 0      // No reverb
@@ -84,6 +88,11 @@ Defines an episode which can be selected on the main menu. Note: the game's epis
 Episode 1 { 
     Name = "Hell To Pay!"
     StartMap = 1
+    LogoPic = "DOOM"
+    LogoPal = -1
+    LogoX = 75
+    LogoYOffset = 0
+    IsHidden = false
 }
 Episode 2 { 
     Name = "Doomed..."
@@ -96,6 +105,11 @@ Header fields:
 Internal Fields:
 - `Name`: Name of the episode which is displayed on the main menu.
 - `StartMap`: Which map to load when starting a new game with this episode selected. Must be between 1 and 255.
+- `LogoPic`: which lump to show for the episode logo. Defaults to `DOOM` if not specified.
+- `LogoPal`: which palette to use for the episode logo. Should be 0-31 or `-1` to use whatever palette is defined globally for the `DOOM` graphic. Defaults to `-1` if not specified.
+- `LogoX`: The horizontal/x position to display the episode logo at on the main menu. Defaults to `75` if not specified (original position for Doom & Final Doom).
+- `LogoYOffset`: An additional y offset that can be added to the episode logo's position when rendering on the main menu. Defaults to `0` if not specified.
+- `IsHidden`: if `true` then the episode is not a selectable single player episode (used to define an episode logo for secret maps in multiplayer only). The default value is `false` (normal episode).
 
 ## `ClearEpisodes` definition
 When this definition is encountered it instructs the game to clear the current list of episodes. You can use it for example to remove unwanted episodes from Doom or Final Doom. Note: the definition doesn't have any other information associated with it, it's just a simple command/instruction:
@@ -162,22 +176,25 @@ GameInfo {
     AllowWideOptionsBg = false
     TitleScreenStyle = 0
     CreditsScreenStyle = 0
+    TitleScreenCdTrackOverride = -1
+    TexPalette_TitleScreenFire = 15
     TexPalette_STATUS = 16
     TexPalette_TITLE = 17
+    TexPalette_TITLE2 = 17
     TexPalette_BACK = 0
+    TexPalette_Inter_BACK = 0
     TexPalette_LOADING = 16
     TexPalette_PAUSE = 0
     TexPalette_NETERR = 0
     TexPalette_DOOM = 17
     TexPalette_CONNECT = 0
-    TexPalette_IDCRED1 = 18
-    TexPalette_IDCRED2 = 16
-    TexPalette_WMSCRED1 = 19
-    TexPalette_WMSCRED2 = 16
     TexPalette_OptionsBG = 0
+    TexLumpName_STATUS = "STATUS"
+    TexLumpName_TITLE = "TITLE"
+    TexLumpName_TITLE2 = "TITLE2"
+    TexLumpName_BACK = "BACK"
+    TexLumpName_Inter_BACK = ""
     TexLumpName_OptionsBG = "MARB01"
-    CreditsXPos_IDCRED2 = 9
-    CreditsXPos_WMSCRED2 = 7
 }
 ```
 Internal Fields:
@@ -190,37 +207,33 @@ Internal Fields:
 - `TitleScreenStyle`: what style of title screen to use. Valid values are currently:
   - `0` = Doom: the 'DOOM' logo rises up above the fire.
   - `1` = Final Doom: the 'TITLE' image displays over the fire at all times and fades in from black.
-  - `2` = GEC Master Edition: the `DOOM` and `FINAL` images display side-by-side over the fire at all times, fading in from black. The 'Master Edition' text from the 'DATA' lump also displays on top.
+  - `2` = GEC Master Edition Beta 3: the `DOOM` and `FINAL` images display side-by-side over the fire at all times, fading in from black. The 'Master Edition' text from the 'DATA' lump also displays on top.
+  - `3` = GEC Master Edition Beta 4: show transparent fire over the `COVER` image and then the logos from `TITLE2` on top of that. Fade in the background and logos.
 - `CreditsScreenStyle`: what style of credits screen to use. Valid values are currently:
   - `0` = Doom: 2 pages, ID and Williams.
   - `1` = Final Doom: 3 pages, level, Williams and ID credits.
-  - `2` = GEC Master Edition: 5 pages, GEC, Doomworld, and Final Doom credits. 
+  - `2` = GEC Master Edition: 5 pages, GEC, Doomworld, and Final Doom credits.
+- `TitleScreenCdTrackOverride`: if >= 2 then play this CD track on the title screen instead of the default one.
+- `TexPalette_TitleScreenFire`: palette index to use for the fire on the title screen. Must be between 0 and 31.
 - `TexPalette_STATUS`: palette index to use for the `STATUS` image lump. Must be between 0 and 31.
 - `TexPalette_TITLE`: palette index to use for the `TITLE` image lump. Must be between 0 and 31.
+- `TexPalette_TITLE2`: palette index to use for the `TITLE2` image lump (GEC ME specific). Must be between 0 and 31.
 - `TexPalette_BACK`: palette index to use for the `BACK` image lump. Must be between 0 and 31.
+- `TexPalette_Inter_BACK`: palette index to use for the `BACK` image lump on the intermission screen specifically. Only used if `TexLumpName_Inter_BACK` is defined. Must be between 0 and 31.
 - `TexPalette_LOADING`: palette index to use for the `LOADING` image lump. Must be between 0 and 31.
 - `TexPalette_PAUSE`: palette index to use for the `PAUSE` image lump. Must be between 0 and 31.
 - `TexPalette_NETERR`: palette index to use for the `NETERR` image lump. Must be between 0 and 31.
 - `TexPalette_DOOM`: palette index to use for the `DOOM` image lump. Must be between 0 and 31.
 - `TexPalette_CONNECT`: palette index to use for the `CONNECT` image lump. Must be between 0 and 31.
-- `TexPalette_IDCRED1`: palette index to use for the `IDCRED1` image lump. Must be between 0 and 31.
-- `TexPalette_IDCRED2`: palette index to use for the `IDCRED2` image lump. Must be between 0 and 31.
-- `TexPalette_WMSCRED1`: palette index to use for the `WMSCRED1` image lump. Must be between 0 and 31.
-- `TexPalette_WMSCRED2`: palette index to use for the `WMSCRED2` image lump. Must be between 0 and 31.
-- `TexPalette_LEVCRED2`: palette index to use for the `LEVCRED2` image lump. Must be between 0 and 31.
-- `TexPalette_GEC`: palette index to use for the `GEC` image lump (GEC Master Edition addition). Must be between 0 and 31.
-- `TexPalette_GECCRED`: palette index to use for the `GECCRED` image lump (GEC Master Edition addition). Must be between 0 and 31.
-- `TexPalette_DWOLRD`: palette index to use for the `DWOLRD` image lump (GEC Master Edition addition). Must be between 0 and 31.
-- `TexPalette_DWCRED`: palette index to use for the `DWCRED` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_DATA`: palette index to use for the `DATA` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_FINAL`: palette index to use for the `FINAL` image lump (GEC Master Edition addition). Must be between 0 and 31.
 - `TexPalette_OptionsBG`: palette index to use for the options menu tiled background. Must be between 0 and 31.
-- `TexLumpName_OptionsBG`: which texture lump to use for the options menu tiled background.
-- `CreditsXPos_IDCRED2`: X position/offset of the `IDCRED2` image (text overlay) on the credits screen.
-- `CreditsXPos_WMSCRED2`: X position/offset of the `WMSCRED2` image (text overlay) on the credits screen.
-- `CreditsXPos_LEVCRED2`: X position/offset of the `LEVCRED2` image (text overlay) on the credits screen.
-- `CreditsXPos_GECCRED`: X position/offset of the `GECCRED` image (text overlay) on the credits screen (GEC Master Edition addition).
-- `CreditsXPos_DWCRED`: X position/offset of the `DWCRED` image (text overlay) on the credits screen (GEC Master Edition addition).
+- `TexLumpName_STATUS`: which texture lump name to load wherever the `STATUS` texture is used.
+- `TexLumpName_TITLE`: which texture lump name to load wherever the `TITLE` texture is used.
+- `TexLumpName_TITLE2`: which texture lump name to load wherever the `TITLE2` texture (GEC ME specific) is used.
+- `TexLumpName_BACK`: which texture lump name to load wherever the `BACK` texture is used.
+- `TexLumpName_Inter_BACK`: which texture lump name to load for the `BACK` texture on the intermission screen specifically. If unspecified (empty string) then `TexLumpName_BACK` will be used instead.
+- `TexLumpName_OptionsBG`: which texture lump name to load for the options menu tiled background.
 
 ## `MusicTrack` definition
 This defines a sequencer (non-CDDA) music track. It can be used to add new music tracks, provided they exist in the game's WMD file. Example:
@@ -234,3 +247,39 @@ Header fields:
 
 Internal Fields:
 - `Sequence`: The index of this music track's sequence in the Williams Module File (.WMD). This is the sequence number which will be played by the sequencer system. Must be between 0 and 16384.
+
+## `CreditsPage` definition
+Defines a single credits page/screen. The pages will appear in the order that they are defined. Examples:
+```
+CreditsPage {
+    BgPic = "IDCRED1"
+    FgPic = "IDCRED2"
+    BgPal = 18
+    FgPal = 16
+    FgXPos = 9
+    MaxScroll = 182
+    FgAdditive = false
+}
+CreditsPage {
+    BgPic = "WMSCRED1"
+    FgPic = "WMSCRED2"
+    BgPal = 19
+    FgPal = 16
+    FgXPos = 7
+    MaxScroll = 228
+    FgAdditive = false
+}
+```
+Internal Fields:
+- `BgPic`: Which lump to show for the background of this credits page.
+- `FgPic`: Which lump to show for the foreground/text of this credits page.
+- `BgPal`: which palette to use for the background. Should be 0-31.
+- `FgPal`: which palette to use for the foreground/text. Should be 0-31.
+- `FgXPos`: which x position to display the foreground/text image at. Default value is `0`.
+- `MaxScroll`: how many pixels up should the text scroll before switching to the next credits page. Default value is `256`.
+- `FgAdditive`: if 'true' then the foreground/text is blended additively against the background. Default value is `false`.
+
+## `ClearCredits` definition
+When this definition is encountered it instructs the game to clear the current list of credit pages. You can use it to create an entirely new set of credit pages from scratch. Note: the definition doesn't have any other information associated with it, it's just a simple command/instruction:
+```
+ClearEpisodes {}

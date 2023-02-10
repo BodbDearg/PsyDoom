@@ -8,6 +8,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "MapInfo.h"
 
+#include "GecMapInfo.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Renderer/r_data.h"
@@ -24,12 +25,14 @@
 
 BEGIN_NAMESPACE(MapInfo)
 
-// All of the main MAPINFO data structures
-static std::vector<MusicTrack>  gMusicTracks;
-static GameInfo                 gGameInfo;
-static std::vector<Episode>     gEpisodes;
-static std::vector<Cluster>     gClusters;
-static std::vector<Map>         gMaps;
+// All of the main MAPINFO data structures.
+// Note that all of the vector lists are sorted in ascending order of element (map, episode etc.) number.
+static std::vector<MusicTrack>      gMusicTracks;
+static GameInfo                     gGameInfo;
+static std::vector<Episode>         gEpisodes;
+static std::vector<Cluster>         gClusters;
+static std::vector<Map>             gMaps;
+static std::vector<CreditsPage>     gCredits;
 
 // Used to speed up repeated searches for the same 'Map' data structure.
 // Cache which map was queried and where it is in the maps array, so we can do O(1) lookup for repeat queries.
@@ -42,7 +45,7 @@ static int32_t  gLastGetMapIndex    = -1;
 Cluster::Cluster() noexcept
     : castLcdFile(S_GetSoundLcdFileId(60))
     , pic("BACK")
-    , picPal(Game::getTexPalette_BACK())
+    , picPal(Game::getTexClut_BACK())
     , cdMusicA((int16_t) gCDTrackNum[cdmusic_finale_doom1_final_doom])
     , cdMusicB((int16_t) gCDTrackNum[cdmusic_credits_demo])
     , textX(0)
@@ -57,7 +60,7 @@ Cluster::Cluster() noexcept
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Zero initializes a game info struct
+// Default initializes a game info struct
 //------------------------------------------------------------------------------------------------------------------------------------------
 GameInfo::GameInfo() noexcept
     : numMaps(0)
@@ -66,32 +69,41 @@ GameInfo::GameInfo() noexcept
     , bFinalDoomGameRules(false)
     , titleScreenStyle(TitleScreenStyle::Doom)
     , creditsScreenStyle(CreditsScreenStyle::Doom)
+    , titleScreenCdTrackOverride(-1)
+    , texPalette_titleScreenFire(FIRESKYPAL)
     , texPalette_STATUS(UIPAL)
     , texPalette_TITLE(TITLEPAL)
+    , texPalette_TITLE2(TITLEPAL)
     , texPalette_BACK(MAINPAL)
+    , texPalette_Inter_BACK(MAINPAL)
     , texPalette_LOADING(UIPAL)
     , texPalette_PAUSE(MAINPAL)
     , texPalette_NETERR(UIPAL)
     , texPalette_DOOM(TITLEPAL)
     , texPalette_CONNECT(MAINPAL)
-    , texPalette_IDCRED1(IDCREDITS1PAL)
-    , texPalette_IDCRED2(UIPAL)
-    , texPalette_WMSCRED1(WCREDITS1PAL)
-    , texPalette_WMSCRED2(UIPAL)
-    , texPalette_LEVCRED2(WCREDITS1PAL)
-    , texPalette_GEC()
-    , texPalette_GECCRED()
-    , texPalette_DWOLRD()
-    , texPalette_DWCRED()
     , texPalette_DATA()
     , texPalette_FINAL()
     , texPalette_OptionsBG(MAINPAL)
+    , texLumpName_STATUS("STATUS")
+    , texLumpName_TITLE("TITLE")
+    , texLumpName_TITLE2("TITLE2")
+    , texLumpName_BACK("BACK")
+    , texLumpName_Inter_BACK()          // Default: use 'texLumpName_BACK' instead (same behavior as older PsyDoom versions)
     , texLumpName_OptionsBG("MARB01")
-    , creditsXPos_IDCRED2(9)
-    , creditsXPos_WMSCRED2(7)
-    , creditsXPos_LEVCRED2(11)
-    , creditsXPos_GECCRED()
-    , creditsXPos_DWCRED()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Default initializes a credits page struct
+//------------------------------------------------------------------------------------------------------------------------------------------
+CreditsPage::CreditsPage() noexcept
+    : bgPic("IDCRED1")
+    , fgPic("IDCRED2")
+    , bgPal(IDCREDITS1PAL)
+    , fgPal(UIPAL)
+    , fgXPos(0)
+    , maxScroll(256)
+    , bFgAdditive(false)
 {
 }
 
@@ -126,23 +138,16 @@ static DataT& getOrCreateStructWithIntKey(const int32_t key, ListT& list, int32_
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Reads a music track from the specicified value block
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void readMusicTrack(const Block& block) noexcept {
-    // Read and validate the track header
-    block.ensureMinHeaderTokenCount(1);
-    const int32_t trackNum = block.getRequiredHeaderInt(0);
-
-    if ((trackNum < 1) || (trackNum > 1024)) {
-        error(block, "MusicTrack: track number must be between 1 and 1024!");
-    }
-
-    // Read and validate track properties
-    MusicTrack& track = getOrCreateStructWithIntKey(trackNum, gMusicTracks, &MusicTrack::trackNum);
-    track.sequenceNum = block.getSingleIntValue("Sequence", track.sequenceNum);
-
-    if ((track.sequenceNum < 0) || (track.sequenceNum > 16384)) {
-        error(block, "MusicTrack: 'Sequence' must be specified and be between 0 and 16384!");
+// Helper: checks if a palette is valid and issues a fatal error if not
+//-----------------------------------------------------------------------------------------------------------------------------------------
+static void ensureValidPalette(
+    const Block& block,
+    const char* const fieldName,
+    const uint8_t paletteIdx
+) noexcept {
+    if (paletteIdx >= MAXPALETTES) {
+        const std::string blockTypeName(block.pType->token.text());
+        error(block, "%s: '%s' must be between 0 and 31!", blockTypeName.c_str(), fieldName);
     }
 }
 
@@ -160,32 +165,27 @@ static void readGameInfo(const Block& block) noexcept {
     gameInfo.bAllowWideOptionsBg = (block.getSingleIntValue("AllowWideOptionsBg", gameInfo.bAllowWideOptionsBg) > 0);
     gameInfo.titleScreenStyle = (TitleScreenStyle) block.getSingleIntValue("TitleScreenStyle", (int32_t) gameInfo.titleScreenStyle);
     gameInfo.creditsScreenStyle = (CreditsScreenStyle) block.getSingleIntValue("CreditsScreenStyle", (int32_t) gameInfo.creditsScreenStyle);
+    gameInfo.titleScreenCdTrackOverride = (int8_t) block.getSingleIntValue("TitleScreenCdTrackOverride", gameInfo.titleScreenCdTrackOverride);
+    gameInfo.texPalette_titleScreenFire = (uint8_t) block.getSingleIntValue("TexPalette_TitleScreenFire", gameInfo.texPalette_titleScreenFire);
     gameInfo.texPalette_STATUS = (uint8_t) block.getSingleIntValue("TexPalette_STATUS", gameInfo.texPalette_STATUS);
     gameInfo.texPalette_TITLE = (uint8_t) block.getSingleIntValue("TexPalette_TITLE", gameInfo.texPalette_TITLE);
+    gameInfo.texPalette_TITLE2 = (uint8_t) block.getSingleIntValue("TexPalette_TITLE2", gameInfo.texPalette_TITLE2);
     gameInfo.texPalette_BACK = (uint8_t) block.getSingleIntValue("TexPalette_BACK", gameInfo.texPalette_BACK);
+    gameInfo.texPalette_Inter_BACK = (uint8_t) block.getSingleIntValue("TexPalette_Inter_BACK", gameInfo.texPalette_Inter_BACK);
     gameInfo.texPalette_LOADING = (uint8_t) block.getSingleIntValue("TexPalette_LOADING", gameInfo.texPalette_LOADING);
     gameInfo.texPalette_PAUSE = (uint8_t) block.getSingleIntValue("TexPalette_PAUSE", gameInfo.texPalette_PAUSE);
     gameInfo.texPalette_NETERR = (uint8_t) block.getSingleIntValue("TexPalette_NETERR", gameInfo.texPalette_NETERR);
     gameInfo.texPalette_DOOM = (uint8_t) block.getSingleIntValue("TexPalette_DOOM", gameInfo.texPalette_DOOM);
     gameInfo.texPalette_CONNECT = (uint8_t) block.getSingleIntValue("TexPalette_CONNECT", gameInfo.texPalette_CONNECT);
-    gameInfo.texPalette_IDCRED1 = (uint8_t) block.getSingleIntValue("TexPalette_IDCRED1", gameInfo.texPalette_IDCRED1);
-    gameInfo.texPalette_IDCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_IDCRED2", gameInfo.texPalette_IDCRED2);
-    gameInfo.texPalette_WMSCRED1 = (uint8_t) block.getSingleIntValue("TexPalette_WMSCRED1", gameInfo.texPalette_WMSCRED1);
-    gameInfo.texPalette_WMSCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_WMSCRED2", gameInfo.texPalette_WMSCRED2);
-    gameInfo.texPalette_LEVCRED2 = (uint8_t) block.getSingleIntValue("TexPalette_LEVCRED2", gameInfo.texPalette_LEVCRED2);
-    gameInfo.texPalette_GEC = (uint8_t) block.getSingleIntValue("TexPalette_GEC", gameInfo.texPalette_GEC);
-    gameInfo.texPalette_GECCRED = (uint8_t) block.getSingleIntValue("TexPalette_GECCRED", gameInfo.texPalette_GECCRED);
-    gameInfo.texPalette_DWOLRD = (uint8_t) block.getSingleIntValue("TexPalette_DWOLRD", gameInfo.texPalette_DWOLRD);
-    gameInfo.texPalette_DWCRED = (uint8_t) block.getSingleIntValue("TexPalette_DWCRED", gameInfo.texPalette_DWCRED);
     gameInfo.texPalette_DATA = (uint8_t) block.getSingleIntValue("TexPalette_DATA", gameInfo.texPalette_DATA);
     gameInfo.texPalette_FINAL = (uint8_t) block.getSingleIntValue("TexPalette_FINAL", gameInfo.texPalette_FINAL);
     gameInfo.texPalette_OptionsBG = (uint8_t) block.getSingleIntValue("TexPalette_OptionsBG", gameInfo.texPalette_OptionsBG);
+    gameInfo.texLumpName_STATUS = block.getSingleSmallStringValue("TexLumpName_STATUS", gameInfo.texLumpName_STATUS);
+    gameInfo.texLumpName_TITLE = block.getSingleSmallStringValue("TexLumpName_TITLE", gameInfo.texLumpName_TITLE);
+    gameInfo.texLumpName_TITLE2 = block.getSingleSmallStringValue("TexLumpName_TITLE2", gameInfo.texLumpName_TITLE2);
+    gameInfo.texLumpName_BACK = block.getSingleSmallStringValue("TexLumpName_BACK", gameInfo.texLumpName_BACK);
+    gameInfo.texLumpName_Inter_BACK = block.getSingleSmallStringValue("TexLumpName_Inter_BACK", gameInfo.texLumpName_Inter_BACK);
     gameInfo.texLumpName_OptionsBG = block.getSingleSmallStringValue("TexLumpName_OptionsBG", gameInfo.texLumpName_OptionsBG);
-    gameInfo.creditsXPos_IDCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_IDCRED2", gameInfo.creditsXPos_IDCRED2);
-    gameInfo.creditsXPos_WMSCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_WMSCRED2", gameInfo.creditsXPos_WMSCRED2);
-    gameInfo.creditsXPos_LEVCRED2 = (int16_t) block.getSingleIntValue("CreditsXPos_LEVCRED2", gameInfo.creditsXPos_LEVCRED2);
-    gameInfo.creditsXPos_GECCRED = (int16_t) block.getSingleIntValue("CreditsXPos_GECCRED", gameInfo.creditsXPos_GECCRED);
-    gameInfo.creditsXPos_DWCRED = (int16_t) block.getSingleIntValue("CreditsXPos_DWCRED", gameInfo.creditsXPos_DWCRED);
 
     // Check the map numbers are in range
     if ((gameInfo.numMaps < 1) || (gameInfo.numMaps > 255)) {
@@ -206,32 +206,19 @@ static void readGameInfo(const Block& block) noexcept {
     }
 
     // Check all palettes are in range
-    const auto checkPalette = [&](const uint8_t paletteIdx, const char* const name) noexcept{
-        if (paletteIdx >= MAXPALETTES) {
-            error(block, "GameInfo: '%s' must be between 0 and 31!", name);
-        }
-    };
-
-    checkPalette(gameInfo.texPalette_STATUS,        "TexPalette_STATUS");
-    checkPalette(gameInfo.texPalette_TITLE,         "TexPalette_TITLE");
-    checkPalette(gameInfo.texPalette_BACK,          "TexPalette_BACK");
-    checkPalette(gameInfo.texPalette_LOADING,       "TexPalette_LOADING");
-    checkPalette(gameInfo.texPalette_PAUSE,         "TexPalette_PAUSE");
-    checkPalette(gameInfo.texPalette_NETERR,        "TexPalette_NETERR");
-    checkPalette(gameInfo.texPalette_DOOM,          "TexPalette_DOOM");
-    checkPalette(gameInfo.texPalette_CONNECT,       "TexPalette_CONNECT");
-    checkPalette(gameInfo.texPalette_IDCRED1,       "TexPalette_IDCRED1");
-    checkPalette(gameInfo.texPalette_IDCRED2,       "TexPalette_IDCRED2");
-    checkPalette(gameInfo.texPalette_WMSCRED1,      "TexPalette_WMSCRED1");
-    checkPalette(gameInfo.texPalette_WMSCRED2,      "TexPalette_WMSCRED2");
-    checkPalette(gameInfo.texPalette_LEVCRED2,      "TexPalette_LEVCRED2");
-    checkPalette(gameInfo.texPalette_GEC,           "TexPalette_GEC");
-    checkPalette(gameInfo.texPalette_GECCRED,       "TexPalette_GECCRED");
-    checkPalette(gameInfo.texPalette_DWOLRD,        "TexPalette_DWOLRD");
-    checkPalette(gameInfo.texPalette_DWCRED,        "TexPalette_DWCRED");
-    checkPalette(gameInfo.texPalette_DATA,          "TexPalette_DATA");
-    checkPalette(gameInfo.texPalette_FINAL,         "TexPalette_FINAL");
-    checkPalette(gameInfo.texPalette_OptionsBG,     "TexPalette_OptionsBG");
+    ensureValidPalette(block, "TexPalette_TitleScreenFire",   gameInfo.texPalette_titleScreenFire);
+    ensureValidPalette(block, "TexPalette_STATUS",            gameInfo.texPalette_STATUS);
+    ensureValidPalette(block, "TexPalette_TITLE",             gameInfo.texPalette_TITLE);
+    ensureValidPalette(block, "TexPalette_TITLE2",            gameInfo.texPalette_TITLE2);
+    ensureValidPalette(block, "TexPalette_BACK",              gameInfo.texPalette_BACK);
+    ensureValidPalette(block, "TexPalette_LOADING",           gameInfo.texPalette_LOADING);
+    ensureValidPalette(block, "TexPalette_PAUSE",             gameInfo.texPalette_PAUSE);
+    ensureValidPalette(block, "TexPalette_NETERR",            gameInfo.texPalette_NETERR);
+    ensureValidPalette(block, "TexPalette_DOOM",              gameInfo.texPalette_DOOM);
+    ensureValidPalette(block, "TexPalette_CONNECT",           gameInfo.texPalette_CONNECT);
+    ensureValidPalette(block, "TexPalette_DATA",              gameInfo.texPalette_DATA);
+    ensureValidPalette(block, "TexPalette_FINAL",             gameInfo.texPalette_FINAL);
+    ensureValidPalette(block, "TexPalette_OptionsBG",         gameInfo.texPalette_OptionsBG);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,6 +226,13 @@ static void readGameInfo(const Block& block) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void readClearEpisodes([[maybe_unused]] const Block& block) noexcept {
     gEpisodes.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads the 'clear credits' command: just clears the credits list, does nothing else
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readClearCredits([[maybe_unused]] const Block& block) noexcept {
+    gCredits.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -257,9 +251,18 @@ static void readEpisode(const Block& block) noexcept {
     Episode& episode = getOrCreateStructWithIntKey(episodeNum, gEpisodes, &Episode::episodeNum);
     episode.name = block.getSingleSmallStringValue("Name", episode.name);
     episode.startMap = block.getSingleIntValue("StartMap", episode.startMap);
+    episode.logoPic = block.getSingleSmallStringValue("LogoPic", episode.logoPic);
+    episode.logoPal = (int16_t) block.getSingleIntValue("LogoPal", episode.logoPal);
+    episode.logoX = (int16_t) block.getSingleIntValue("LogoX", episode.logoX);
+    episode.logoYOffset = (int16_t) block.getSingleIntValue("LogoYOffset", episode.logoYOffset);
+    episode.bIsHidden = (block.getSingleIntValue("IsHidden", episode.bIsHidden) > 0);
 
     if ((episode.startMap < 1) || (episode.startMap > 255)) {
         error(block, "Episode: 'StartMap' must be specified and be between 1 and 255!");
+    }
+
+    if (episode.logoPal > 31) {
+        error(block, "Episode: 'LogoPal' must from 0-31 for a valid palette, or < 0 to use the default 'DOOM' logo palette!");
     }
 }
 
@@ -335,6 +338,7 @@ static void readMap(const Block& block) noexcept {
     map.cluster = block.getSingleIntValue("Cluster", map.cluster);
     map.skyPaletteOverride = block.getSingleIntValue("SkyPal", map.skyPaletteOverride);
     map.bPlayCdMusic = (block.getSingleIntValue("PlayCdMusic", map.bPlayCdMusic) > 0);
+    map.bNoIntermission = (block.getSingleIntValue("NoIntermission", map.bNoIntermission) > 0);
     map.reverbMode = (SpuReverbMode) block.getSingleIntValue("ReverbMode", map.reverbMode);
     map.reverbDepthL = (int16_t) std::clamp<int32_t>(block.getSingleIntValue("ReverbDepthL", map.reverbDepthL), INT16_MIN, INT16_MAX);
     map.reverbDepthR = (int16_t) std::clamp<int32_t>(block.getSingleIntValue("ReverbDepthR", map.reverbDepthR), INT16_MIN, INT16_MAX);
@@ -349,8 +353,8 @@ static void readMap(const Block& block) noexcept {
         error(block, "Map: 'Cluster' must be specified and be between 1 and 255!");
     }
 
-    if ((map.skyPaletteOverride < -1) || (map.skyPaletteOverride > 32)) {
-        error(block, "Map: 'SkyPaletteOverride' must be between -1 and 32!");
+    if ((map.skyPaletteOverride < -1) || (map.skyPaletteOverride > 31)) {
+        error(block, "Map: 'SkyPaletteOverride' must be between -1 and 31!");
     }
 
     if ((map.reverbMode < SpuReverbMode::SPU_REV_MODE_OFF) || (map.reverbMode > SpuReverbMode::SPU_REV_MODE_PIPE)) {
@@ -366,6 +370,45 @@ static void readMap(const Block& block) noexcept {
             map.reverbDepthR = (int16_t) std::clamp<int32_t>(depth, INT16_MIN, INT16_MAX);
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads a music track from the specicified value block
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readMusicTrack(const Block& block) noexcept {
+    // Read and validate the track header
+    block.ensureMinHeaderTokenCount(1);
+    const int32_t trackNum = block.getRequiredHeaderInt(0);
+
+    if ((trackNum < 1) || (trackNum > 1024)) {
+        error(block, "MusicTrack: track number must be between 1 and 1024!");
+    }
+
+    // Read and validate track properties
+    MusicTrack& track = getOrCreateStructWithIntKey(trackNum, gMusicTracks, &MusicTrack::trackNum);
+    track.sequenceNum = block.getSingleIntValue("Sequence", track.sequenceNum);
+
+    if ((track.sequenceNum < 0) || (track.sequenceNum > 16384)) {
+        error(block, "MusicTrack: 'Sequence' must be specified and be between 0 and 16384!");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads a credits page from the specicified value block
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void readCreditsPage(const Block& block) noexcept {
+    CreditsPage& page = gCredits.emplace_back();
+
+    page.bgPic = block.getSingleSmallStringValue("BgPic", page.bgPic);
+    page.fgPic = block.getSingleSmallStringValue("FgPic", page.fgPic);
+    page.bgPal = (uint8_t) block.getSingleIntValue("BgPal", page.bgPal);
+    page.fgPal = (uint8_t) block.getSingleIntValue("FgPal", page.fgPal);
+    page.fgXPos = (int16_t) block.getSingleIntValue("FgXPos", page.fgXPos);
+    page.maxScroll = (int16_t) block.getSingleIntValue("MaxScroll", page.maxScroll);
+    page.bFgAdditive = (block.getSingleIntValue("FgAdditive", page.bFgAdditive) > 0);
+
+    ensureValidPalette(block, "BgPal", page.bgPal);
+    ensureValidPalette(block, "FgPal", page.fgPal);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -405,11 +448,13 @@ static void readMapInfoFromIWAD() noexcept {
 
     constexpr BlockReader BLOCK_READERS[] = {
         { "ClearEpisodes",  readClearEpisodes   },
+        { "ClearCredits",   readClearCredits    },
         { "Cluster",        readCluster         },
         { "Episode",        readEpisode         },
         { "GameInfo",       readGameInfo        },
         { "Map",            readMap             },
         { "MusicTrack",     readMusicTrack      },
+        { "CreditsPage",    readCreditsPage     },
     };
 
     // Read all supported block types, ignore unsupported ones
@@ -424,13 +469,38 @@ static void readMapInfoFromIWAD() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Sorts the map info so that maps and episodes are in ascending order
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void sortMapInfo() noexcept {
+    const auto sortListBasedOnField = [](auto& listToSort, const auto fieldPtr) noexcept {
+        std::sort(
+            listToSort.begin(),
+            listToSort.end(),
+            [fieldPtr](const auto& obj1, const auto& obj2) noexcept { return (obj1.*fieldPtr < obj2.*fieldPtr); }
+        );
+    };
+
+    sortListBasedOnField(gMusicTracks, &MusicTrack::trackNum);
+    sortListBasedOnField(gEpisodes, &Episode::episodeNum);
+    sortListBasedOnField(gClusters, &Cluster::clusterNum);
+    sortListBasedOnField(gMaps, &Map::mapNum);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the MAPINFO lump, if present from one of the main IWAD files.
 // Otherwise initializes MAPINFO to the appropriate settings for the current game (Doom or Final Doom).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void init() noexcept {
-    // Set MAPINFO to the default values then read overrides from one of the IWADs
-    setMapInfoToDefaults(gGameInfo, gEpisodes, gClusters, gMaps, gMusicTracks);
+    // Read GEC format MAPINFO if required (will become the default MAPINFO if appropriate)
+    if (GecMapInfo::shouldUseGecMapInfo()) {
+        GecMapInfo::init();
+    }
+
+    // Set MAPINFO to the default values then read overrides from one of the IWADs.
+    // Also sort it all so it's in a good order, once we're done reading.
+    setMapInfoToDefaults(gGameInfo, gEpisodes, gClusters, gMaps, gCredits, gMusicTracks);
     readMapInfoFromIWAD();
+    sortMapInfo();
 
     // Clear the cached search result for 'getMap'
     gLastGetMap = -1;
@@ -443,10 +513,13 @@ void init() noexcept {
 void shutdown() noexcept {
     gLastGetMapIndex = -1;
     gLastGetMap = -1;
+    gCredits.clear();
     gMaps.clear();
     gClusters.clear();
     gEpisodes.clear();
+    gGameInfo = {};
     gMusicTracks.clear();
+    GecMapInfo::shutdown();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -493,6 +566,28 @@ int32_t getNumEpisodes() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Get the next episode (if any) after the given episode in the MapInfo episode list
+//------------------------------------------------------------------------------------------------------------------------------------------
+const Episode* getNextEpisode(const Episode& episode) noexcept {
+    const Episode* const pNextEpisode = &episode + 1;
+    const Episode* const pBegEpisode = gEpisodes.data();
+    const Episode* const pEndEpisode = pBegEpisode + gEpisodes.size();
+
+    return ((pNextEpisode >= pBegEpisode) && (pNextEpisode < pEndEpisode)) ? pNextEpisode : nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the previous episode (if any) before the given episode in the MapInfo episode list
+//------------------------------------------------------------------------------------------------------------------------------------------
+const Episode* getPrevEpisode(const Episode& episode) noexcept {
+    const Episode* const pPrevEpisode = &episode - 1;
+    const Episode* const pBegEpisode = gEpisodes.data();
+    const Episode* const pEndEpisode = pBegEpisode + gEpisodes.size();
+
+    return ((pPrevEpisode >= pBegEpisode) && (pPrevEpisode < pEndEpisode)) ? pPrevEpisode : nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Find a 'Cluster' structure by cluster number or return all clusters
 //------------------------------------------------------------------------------------------------------------------------------------------
 const Cluster* getCluster(const int32_t clusterNum) noexcept {
@@ -522,6 +617,10 @@ const Map* getMap(const int32_t mapNum) noexcept {
 
 const std::vector<Map>& allMaps() noexcept {
     return gMaps;
+}
+
+const std::vector<CreditsPage>& getCredits() noexcept {
+    return gCredits;
 }
 
 END_NAMESPACE(MapInfo)

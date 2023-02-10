@@ -41,7 +41,7 @@ struct CueParseCtx {
 };
 
 static bool isNewline(const char c) noexcept {
-    return ((c == '\r') || (c == '\n') || (c == '\v'));
+    return ((c == '\r') || (c == '\n') || (c == '\v') || (c == '\f'));
 }
 
 static bool isSpace(const char c) noexcept {

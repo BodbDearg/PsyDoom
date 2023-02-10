@@ -6,10 +6,13 @@
 
 #include "DemoCommon.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Base/m_fixed.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_spec.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/Game/p_user.h"
+#include "Doom/Renderer/r_main.h"
 #include "Doom/UI/errormenu_main.h"
 #include "Game.h"
 #include "MapHash.h"
@@ -24,8 +27,21 @@ BEGIN_NAMESPACE(DemoPlayer)
 static GameSettings     gPrevGameSettings;                          // The game settings used prior to demo playback (used to restore later)
 static padbuttons_t     gPrevPsxCtrlBindings[NUM_BINDABLE_BTNS];    // The previous original PSX gamepad control bindings (used to restore later)
 static int32_t          gPrevPsxMouseSensitivity;                   // The previous original PSX mouse sensitivity (used to restore later)
-static bool             gbUsingNewDemoFormat;                       // If 'true' then the new PsyDoom demo format is being played
+static DemoFormat       gPlayingDemoFormat;                         // Which format of demo is currently being played
 static DemoTickInputs   gPrevTickInputs[MAXPLAYERS];                // The previous inputs of each player: used to avoid encoding repeats
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tick inputs for the 'GEC Master Edition' demo format
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct GecDemoTickInputs {
+    uint32_t    buttons;
+    uint8_t     analogTurn;
+    uint8_t     analogTurnStickY;   // Unused currently: y-axis motion for the analog turn stick
+    uint8_t     analogSideMove;
+    uint8_t     analogForwardMove;
+};
+
+static_assert(sizeof(GecDemoTickInputs) == 8);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Save game settings modified by demo playback (for later restoration)
@@ -208,10 +224,65 @@ static void initPrevTickInputs() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Does the logic for before map load for the new demo format.
+// Does the logic for before map load for the original PSX Doom demo format.
 // Returns 'false' if the demo should not be played due to some kind of error.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool onBeforeMapLoad_newDemoFormat() noexcept {
+static bool onBeforeMapLoad_classicDemoFormat() noexcept {
+    try {
+        // Read and verify the demo skill and map number.
+        // Note: the map number can be remapped depending on the current game constants.
+        const skill_t skill = Endian::littleToHost(demo_read<skill_t>());
+        const int32_t origMapNum = Endian::littleToHost(demo_read<int32_t>());
+        const int32_t mapNum = (gCurBuiltInDemo.mapNumOverrider) ? gCurBuiltInDemo.mapNumOverrider(origMapNum) : origMapNum;
+        const bool bValidDemoProperties = (verifyDemoSkill(skill) && verifyDemoMapNum(mapNum));
+
+        if (!bValidDemoProperties)
+            return false;
+
+        // Read the control bindings for the demo: for original PSX Doom there are 8 bindings, for Final Doom there are 10.
+        // Need to adjust demo reading accordingly depending on which game version we are dealing with.
+        if (gCurBuiltInDemo.bFinalDoomDemo) {
+            demo_read(gCtrlBindings, NUM_BINDABLE_BTNS);
+        } else {
+            // Note: original Doom did not have the move forward/backward bindings (due to no mouse support) - hence they are zeroed here:
+            demo_read(gCtrlBindings, 8);
+            gCtrlBindings[8] = 0;
+            gCtrlBindings[9] = 0;
+        }
+
+        // Endian correct the controls read from the demo
+        if constexpr (!Endian::isLittle()) {
+            for (uint32_t i = 0; i < NUM_BINDABLE_BTNS; ++i) {
+                gCtrlBindings[i] = Endian::littleToHost(gCtrlBindings[i]);
+            }
+        }
+
+        // For Final Doom read the mouse sensitivity
+        if (gCurBuiltInDemo.bFinalDoomDemo) {
+            gPsxMouseSensitivity = Endian::littleToHost(demo_read<int32_t>());
+        }
+
+        // Determine the game settings to play back this classic demo correctly, depending on what game is being used.
+        // N.B: this *MUST* be done before loading the level, as some of the settings (e.g nomonsters) affect level loading.
+        Game::getClassicDemoGameSettings(Game::gSettings);
+
+        // Basic game initialization prior to map loading
+        G_InitNew(skill, mapNum, gt_single);
+    }
+    catch (...) {
+        // Reached an unexpected end to the demo file!
+        RunDemoErrorMenu_UnexpectedEOF();
+        return false;
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the logic for before map load for PsyDoom's new demo format.
+// Returns 'false' if the demo should not be played due to some kind of error.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool onBeforeMapLoad_psydoomDemoFormat() noexcept {
     try {
         // Consume the '-1' signature (32-bit integer) for the new demo format
         demo_read<int32_t>();
@@ -241,8 +312,10 @@ static bool onBeforeMapLoad_newDemoFormat() noexcept {
         ASSERT(gameSettingsVersion >= 1);
         ASSERT(gameSettingsSize >= 1);
 
-        if (!demo_canRead<std::byte>(gameSettingsSize))
-            "Unexpected EOF!";
+        if (!demo_canRead<std::byte>(gameSettingsSize)) {
+            RunDemoErrorMenu_UnexpectedEOF();
+            return false;
+        }
 
         // Read (and migrate, if needed) the game settings and skip past those bytes.
         // Note that 'readAndMigrateGameSettings' is always expected to succeed here: if it doesn't then that is an internal logic error.
@@ -272,31 +345,69 @@ static bool onBeforeMapLoad_newDemoFormat() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Does the logic for before map load for the old demo format.
+// Does the logic for before map load for the 'GEC Master Edition' demo format.
 // Returns 'false' if the demo should not be played due to some kind of error.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool onBeforeMapLoad_oldDemoFormat() noexcept {
+static bool onBeforeMapLoad_gecFormat() noexcept {
     try {
+        // Consume the demo signature word
+        demo_read<int32_t>();
+
+        // Read the game flags word and apply the appropriate game settings based on this.
+        {
+            const uint32_t gameFlags = demo_read<uint32_t>();
+
+            // Start by using the classic Doom settings
+            GameSettings& settings = Game::gSettings;
+            Game::getClassicDemoGameSettings(settings);
+
+            // Apply the game flags to the game settings.
+            // Note that the following flags are unused due to them being user preferences which don't affect gameplay:
+            // 
+            //  ShowFPS                 0x2
+            //  UseLoadingBar           0x4
+            //  ControllerVibration     0x8
+            //
+            const auto applyGameFlag = [&](uint8_t& bSettingsField, const uint32_t gameFlagMask) noexcept {
+                bSettingsField = ((gameFlags & gameFlagMask) != 0);
+            };
+
+            applyGameFlag(settings.bUsePalTimings,                  0x1);
+            applyGameFlag(settings.bUseFinalDoomPlayerMovement,     0x10);
+            applyGameFlag(settings.bUsePlayerRocketBlastFix,        0x20);
+            applyGameFlag(settings.bUseSuperShotgunDelayTweak,      0x40);
+            applyGameFlag(settings.bUseMoveInputLatencyTweak,       0x80);
+            applyGameFlag(settings.bUseItemPickupFix,               0x100);
+            applyGameFlag(settings.bFixViewBobStrength,             0x200);
+            applyGameFlag(settings.bFixGravityStrength,             0x400);
+            applyGameFlag(settings.bUseLostSoulSpawnFix,            0x800);
+            applyGameFlag(settings.bUseLineOfSightOverflowFix,      0x1000);
+            applyGameFlag(settings.bFixOutdoorBulletPuffs,          0x2000);
+            applyGameFlag(settings.bFixLineActivation,              0x4000);
+            applyGameFlag(settings.bFixBlockingGibsBug,             0x8000);
+            applyGameFlag(settings.bFixSoundPropagation,            0x10000);
+            applyGameFlag(settings.bAllowMultiMapPickup,            0x20000);
+            applyGameFlag(settings.bFixSpriteVerticalWarp,          0x40000);
+            applyGameFlag(settings.bFixKillCount,                   0x80000);
+
+            // Tweaks specifically to match the behavior of GEC ME
+            settings.lostSoulSpawnLimit = 16;
+            settings.bAllowMovementCancellation = settings.bUseFinalDoomPlayerMovement;
+        }
+
         // Read and verify the demo skill and map number.
         // Note: the map number can be remapped depending on the current game constants.
         const skill_t skill = Endian::littleToHost(demo_read<skill_t>());
         const int32_t origMapNum = Endian::littleToHost(demo_read<int32_t>());
-        const int32_t mapNum = (gCurClassicDemo.mapNumOverrider) ? gCurClassicDemo.mapNumOverrider(origMapNum) : origMapNum;
+        const int32_t mapNum = (gCurBuiltInDemo.mapNumOverrider) ? gCurBuiltInDemo.mapNumOverrider(origMapNum) : origMapNum;
         const bool bValidDemoProperties = (verifyDemoSkill(skill) && verifyDemoMapNum(mapNum));
 
         if (!bValidDemoProperties)
             return false;
 
-        // Read the control bindings for the demo: for original PSX Doom there are 8 bindings, for Final Doom there are 10.
-        // Need to adjust demo reading accordingly depending on which game version we are dealing with.
-        if (gCurClassicDemo.bFinalDoomDemo) {
-            demo_read(gCtrlBindings, NUM_BINDABLE_BTNS);
-        } else {
-            // Note: original Doom did not have the move forward/backward bindings (due to no mouse support) - hence they are zeroed here:
-            demo_read(gCtrlBindings, 8);
-            gCtrlBindings[8] = 0;
-            gCtrlBindings[9] = 0;
-        }
+        // Read the control bindings for the demo.
+        // Note: this is the 'Final Doom' format where there are 10 bindings.
+        demo_read(gCtrlBindings, NUM_BINDABLE_BTNS);
 
         // Endian correct the controls read from the demo
         if constexpr (!Endian::isLittle()) {
@@ -305,14 +416,8 @@ static bool onBeforeMapLoad_oldDemoFormat() noexcept {
             }
         }
 
-        // For Final Doom read the mouse sensitivity
-        if (gCurClassicDemo.bFinalDoomDemo) {
-            gPsxMouseSensitivity = Endian::littleToHost(demo_read<int32_t>());
-        }
-
-        // Determine the game settings to play back this classic demo correctly, depending on what game is being used.
-        // N.B: this *MUST* be done before loading the level, as some of the settings (e.g nomonsters) affect level loading.
-        Game::getClassicDemoGameSettings(Game::gSettings);
+        // Read the mouse sensitivity
+        gPsxMouseSensitivity = Endian::littleToHost(demo_read<int32_t>());
 
         // Basic game initialization prior to map loading
         G_InitNew(skill, mapNum, gt_single);
@@ -327,10 +432,27 @@ static bool onBeforeMapLoad_oldDemoFormat() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Reads the tick inputs for the new demo format.
+// Reads the tick inputs for the original PSX Doom demo format.
 // Returns 'false' if the demo should not be played due to some kind of error.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool readTickInputs_newDemoFormat() noexcept {
+static bool readTickInputs_classicDemoFormat() noexcept {
+    try {
+        const padbuttons_t padBtns = Endian::littleToHost(demo_read<uint32_t>());
+        gTicButtons = padBtns;
+        P_PsxButtonsToTickInputs(padBtns, gCtrlBindings, gTickInputs[gCurPlayerIndex]);
+        return true;
+    }
+    catch (...) {
+        RunDemoErrorMenu_UnexpectedEOF();
+        return false;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads the tick inputs for PsyDoom's new demo format.
+// Returns 'false' if the demo should not be played due to some kind of error.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool readTickInputs_psydoomDemoFormat() noexcept {
     try {
         // Firstly read the status byte.
         // This will contain the following info for the following bits:
@@ -371,14 +493,94 @@ static bool readTickInputs_newDemoFormat() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Reads the tick inputs for the old demo format.
+// Reads the tick inputs for the 'GEC Master Edition' demo format.
 // Returns 'false' if the demo should not be played due to some kind of error.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool readTickInputs_oldDemoFormat() noexcept {
+static bool readTickInputs_gecDemoFormat() noexcept {
     try {
-        const padbuttons_t padBtns = Endian::littleToHost(demo_read<uint32_t>());
-        gTicButtons = padBtns;
-        P_PsxButtonsToTickInputs(padBtns, gCtrlBindings, gTickInputs[gCurPlayerIndex]);
+        // Read and endian correct the inputs
+        GecDemoTickInputs gecInputs = demo_read<GecDemoTickInputs>();
+        endianCorrect(gecInputs.buttons);
+        endianCorrect(gecInputs.analogTurn);
+        endianCorrect(gecInputs.analogTurnStickY);
+        endianCorrect(gecInputs.analogSideMove);
+        endianCorrect(gecInputs.analogForwardMove);
+
+        // Convert digital and mouse inputs to PsyDoom's tick format
+        TickInputs& tickInputs = gTickInputs[gCurPlayerIndex];
+        P_PsxButtonsToTickInputs(gecInputs.buttons, gCtrlBindings, tickInputs);
+
+        // Helper: converts a byte for an analog input to the range -127 to +127
+        const auto analogByteTo127 = [](const uint8_t analogInputByte) noexcept -> int32_t {
+            return (analogInputByte & 0x80) ? (int32_t) analogInputByte - 0x80 : (int32_t) analogInputByte - 0x7F;
+        };
+
+        // Helper: tells if the specified analog input (in the range -127 to +127) is outside of the deadzone
+        const auto isAnalog127OutsideDeadzone = [](const int32_t analogInput127) noexcept -> bool {
+            return (std::abs(analogInput127) >= 24);
+        };
+
+        // Helper: converts from an analog input in the range -127 to +127 to the range -1 to +1 in 16.16 format
+        const auto normalizeAnalog127 = [](const int32_t analogInput127) noexcept -> fixed_t {
+            return d_lshift<FRACBITS>(analogInput127) / 127;
+        };
+
+        // Convert analog turning to PsyDoom's format
+        const int32_t analogTurning127 = analogByteTo127(gecInputs.analogTurn);
+
+        if (isAnalog127OutsideDeadzone(analogTurning127)) {
+            // Slow and fast turning speeds (when not running and running respectively)
+            constexpr fixed_t TURN_SPEED[2]      = { 600, 1000 };
+            constexpr fixed_t FAST_TURN_SPEED[2] = { 800, 1400 };
+
+            // Compute the turning amount and save
+            const fixed_t analogSensitivity = d_lshift<FRACBITS>(d_lshift<1>(gPsxMouseSensitivity)) / 100;
+            const fixed_t slowTurnSpeed = TURN_SPEED[tickInputs.fRun() ? 1 : 0];
+            const fixed_t fastTurnSpeed = FAST_TURN_SPEED[tickInputs.fRun() ? 1 : 0];
+
+            const fixed_t analogTurnFrac = normalizeAnalog127(analogTurning127);
+            const fixed_t turnSpeedMix = std::abs(analogTurnFrac);
+            const fixed_t turnSpeedUnscaled = slowTurnSpeed * (FRACUNIT - turnSpeedMix) + fastTurnSpeed * turnSpeedMix;
+            const fixed_t turnSpeed = d_rshift<FRACBITS>(FixedMul(turnSpeedUnscaled, analogSensitivity));
+            const angle_t turnAmount = d_rshift<2>(FixedMul(turnSpeed, analogTurnFrac));
+
+            tickInputs.setAnalogTurn(d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmount));
+        }
+        else {
+            tickInputs.setAnalogTurn(0);
+        }
+
+        // Convert analog movement for the tick to PsyDoom's format
+        const int32_t analogSideMove127 = analogByteTo127(gecInputs.analogSideMove);
+        const int32_t analogForwardMove127 = analogByteTo127(gecInputs.analogForwardMove);
+
+        if (isAnalog127OutsideDeadzone(analogSideMove127) || isAnalog127OutsideDeadzone(analogForwardMove127)) {
+            // Convert the analog input to PsyDoom's own single byte encoding
+            tickInputs._analogSideMove = (uint8_t) std::abs(analogSideMove127);
+            tickInputs._analogSideMove |= (analogSideMove127 < 0) ? 0x80 : 0x00;
+            tickInputs._analogForwardMove = (uint8_t) std::abs(analogForwardMove127);
+            tickInputs._analogForwardMove |= (analogForwardMove127 >= 0) ? 0x80 : 0x00;     // Note: invert forward movement by checking '>= 0' instead of '< 0'
+
+            // In the GEC demo format any digital movement gets cancelled when making analog movements
+            tickInputs.fStrafeLeft() = false;
+            tickInputs.fStrafeRight() = false;
+            tickInputs.fMoveForward() = false;
+            tickInputs.fMoveBackward() = false;
+            tickInputs.psxMouseDy = 0;
+
+            if (tickInputs.fStrafe()) {
+                // When strafing is enabled then cancel all digital and mouse turning too (since they become movements).
+                // Note that analog turning is left alone however, since it's not affected by this modifier.
+                tickInputs.fTurnLeft() = false;
+                tickInputs.fTurnRight() = false;
+                tickInputs.psxMouseDx = 0;
+            }
+        }
+        else {
+            tickInputs.setAnalogSideMove(0);
+            tickInputs.setAnalogForwardMove(0);
+        }
+
         return true;
     }
     catch (...) {
@@ -398,14 +600,25 @@ bool onBeforeMapLoad() noexcept {
     gpDemo_p = gpDemoBuffer;
 
     // Which demo format are we dealing with?
-    // The first 32-bit integer in the stream tells us this:
+    // The first 32-bit integer in the stream tells us this, depending on whether it matches certain format signatures:
     try {
-        gbUsingNewDemoFormat = (demo_peek<int32_t>() == -1);
+        constexpr int32_t PSYDOOM_DEMO_SIGNATURE = -1;
+        constexpr int32_t GEC_ME_DEMO_SIGNATURE = 0x454D5644;   // 'DVME' in little endian
 
-        if (gbUsingNewDemoFormat) {
-            return onBeforeMapLoad_newDemoFormat();
-        } else {
-            return onBeforeMapLoad_oldDemoFormat();
+        const int32_t firstDemoWord = Endian::littleToHost(demo_peek<int32_t>());
+
+        if (firstDemoWord == PSYDOOM_DEMO_SIGNATURE) {
+            gPlayingDemoFormat = DemoFormat::PsyDoom;
+            return onBeforeMapLoad_psydoomDemoFormat();
+        }
+        else if (firstDemoWord == GEC_ME_DEMO_SIGNATURE) {
+            gPlayingDemoFormat = DemoFormat::GecMe;
+            return onBeforeMapLoad_gecFormat();
+        }
+        else {
+            // If we don't find a matching format signature then it must be a classic demo (first word is 'skill')
+            gPlayingDemoFormat = DemoFormat::Classic;
+            return onBeforeMapLoad_classicDemoFormat();
         }
     }
     catch (...) {
@@ -420,8 +633,8 @@ bool onBeforeMapLoad() noexcept {
 // Returns 'false' if the demo should not be played due to some kind of error.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool onAfterMapLoad() noexcept {
-    // This only does stuff for the new demo format!
-    if (!gbUsingNewDemoFormat)
+    // This only does stuff for PsyDoom's new demo format!
+    if (gPlayingDemoFormat != DemoFormat::PsyDoom)
         return true;
 
     try {
@@ -466,11 +679,14 @@ bool hasReachedDemoEnd() noexcept {
     if (!gpDemo_p)
         return true;
 
-    if (gbUsingNewDemoFormat) {
-        return (!demo_canRead<DemoTickInputs>());
-    } else {
-        return (!demo_canRead<padbuttons_t>());
+    switch (gPlayingDemoFormat) {
+        case DemoFormat::None:      return true;
+        case DemoFormat::Classic:   return (!demo_canRead<padbuttons_t>());
+        case DemoFormat::PsyDoom:   return (!demo_canRead<DemoTickInputs>());
+        case DemoFormat::GecMe:     return (!demo_canRead<GecDemoTickInputs>());
     }
+
+    FatalErrors::raise("DemoPlayer::hasReachedDemoEnd: unhandled demo format!");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -499,17 +715,32 @@ bool wasLevelCompleted() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tells if the current demo being played is in the new demo format
+// Tells which format of demo is currently being played ('None' if no demo is being played)
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool isUsingNewDemoFormat() noexcept {
-    return gbUsingNewDemoFormat;
+DemoFormat getPlayingDemoFormat() noexcept {
+    return gPlayingDemoFormat;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Helper: tells if playback of a classic format demo is currently underway
+// Tells if the music which normally plays for a map should be overriden due to a demo being played.
+// If this is the case then the credits music should play instead.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool isPlayingAClassicDemo() noexcept {
-    return (gbDemoPlayback && (!gbUsingNewDemoFormat));
+bool shouldOverrideMapMusicForDemo() noexcept {
+    // Classic and GEC ME demos override map music
+    return (
+        (gPlayingDemoFormat == DemoFormat::Classic) ||
+        (gPlayingDemoFormat == DemoFormat::GecMe)
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if player turning actions should be capped to 30 Hz
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isPlayerTurning30HzCapped() noexcept {
+    return (
+        (gPlayingDemoFormat == DemoFormat::Classic) ||
+        (gPlayingDemoFormat == DemoFormat::GecMe)
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -517,11 +748,14 @@ bool isPlayingAClassicDemo() noexcept {
 // Returns 'false' if the demo should not be played due to some kind of error.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool readTickInputs() noexcept {
-    if (gbUsingNewDemoFormat) {
-        return readTickInputs_newDemoFormat();
-    } else {
-        return readTickInputs_oldDemoFormat();
+    switch (gPlayingDemoFormat) {
+        case DemoFormat::None:      return false;
+        case DemoFormat::Classic:   return readTickInputs_classicDemoFormat();
+        case DemoFormat::PsyDoom:   return readTickInputs_psydoomDemoFormat();
+        case DemoFormat::GecMe:     return readTickInputs_gecDemoFormat();
     }
+
+    FatalErrors::raise("DemoPlayer::readTickInputs: unhandled demo format!");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -534,7 +768,7 @@ void onPlaybackDone() noexcept {
 
     // Cleanup all globals and reset them to a default state
     std::memset(gPrevTickInputs, 0, sizeof(gPrevTickInputs));
-    gbUsingNewDemoFormat = false;
+    gPlayingDemoFormat = DemoFormat::None;
     gPrevPsxMouseSensitivity = {};
     std::memset(gPrevPsxCtrlBindings, 0, sizeof(gPrevPsxCtrlBindings));
     gPrevGameSettings = {};

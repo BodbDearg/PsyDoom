@@ -41,6 +41,7 @@ struct PatchList {
 extern const PatchList gPatches_Doom;
 extern const PatchList gPatches_FinalDoom;
 extern const PatchList gPatches_GEC_ME_Beta3;
+extern const PatchList gPatches_GEC_ME_Beta4;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Utility function: apply a transformation to a number of linedefs

@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
+#include "FileUtils.h"
 #include "WadUtils.h"
 
 #include <cctype>
@@ -34,6 +35,7 @@ static_assert(sizeof(WadLumpHdr) == 16);
 //------------------------------------------------------------------------------------------------------------------------------------------
 WadFile::WadFile() noexcept
     : mNumLumps(0)
+    , mSizeInBytes(0)
     , mLumpNames{}
     , mLumps{}
     , mFileReader()
@@ -45,11 +47,13 @@ WadFile::WadFile() noexcept
 //------------------------------------------------------------------------------------------------------------------------------------------
 WadFile::WadFile(WadFile&& other) noexcept 
     : mNumLumps(other.mNumLumps)
+    , mSizeInBytes(other.mSizeInBytes)
     , mLumpNames(std::move(other.mLumpNames))
     , mLumps(std::move(other.mLumps))
     , mFileReader(std::move(other.mFileReader))
 {
     other.mNumLumps = 0;
+    other.mSizeInBytes = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,6 +72,7 @@ void WadFile::close() noexcept {
     mFileReader.close();
     mLumps.reset();
     mLumpNames.reset();
+    mSizeInBytes = 0;
     mNumLumps = 0;
 }
 
@@ -77,6 +82,18 @@ void WadFile::close() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void WadFile::open(const char* const filePath, const RemapWadLumpNameFn lumpNameRemapFn) noexcept {
     close();
+
+    // Sanity check the size of the WAD file
+    const int64_t fileSize = FileUtils::getFileSize(filePath);
+
+    if (fileSize <= 0)
+        FatalErrors::raiseF("WadFile::open: error opening file '%s'!", filePath);
+
+    if (fileSize > INT32_MAX)
+        FatalErrors::raiseF("WadFile::open: file '%s' is too big!", filePath);
+
+    // Open the WAD file and perform all other initialization
+    mSizeInBytes = (int32_t) fileSize;
     mFileReader.open(filePath);
     initAfterOpen(lumpNameRemapFn);
 }
@@ -87,7 +104,16 @@ void WadFile::open(const char* const filePath, const RemapWadLumpNameFn lumpName
 //------------------------------------------------------------------------------------------------------------------------------------------
 void WadFile::open(const CdFileId fileId, const RemapWadLumpNameFn lumpNameRemapFn) noexcept {
     close();
-    mFileReader.open(fileId);
+    
+    // Open the WAD file and sanity check its size
+    const PsxCd_File& file = mFileReader.open(fileId);
+    
+    if (file.size <= 0)
+        FatalErrors::raiseF("WadFile::open: bad file size (<= 0) for wad file '%s'!", fileId.c_str().data());
+    
+    mSizeInBytes = file.size;
+
+    // Perform all other initialization
     initAfterOpen(lumpNameRemapFn);
 }
 
@@ -144,6 +170,22 @@ void WadFile::purgeAllLumps() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the size in bytes that the lump occupies in the WAD file.
+// If the lump is uncompressed then this will be the actual lump size.
+// If the lump is compressed then this will be the compressed size.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t WadFile::getRawSize(const int32_t lumpIdx) noexcept {
+    ASSERT(isValidLumpIdx(lumpIdx));
+
+    // In most cases use the distance between the specified lump and the next one to tell the raw size.
+    // If there is no next lump however then use the distance to the end of the WAD file instead.
+    const int32_t thisLumpOffset = mLumps[lumpIdx].wadFileOffset;
+    const int32_t nextLumpOffset = (lumpIdx + 1 < mNumLumps) ? mLumps[lumpIdx + 1].wadFileOffset : mSizeInBytes;
+
+    return (nextLumpOffset > thisLumpOffset) ? (int32_t)(nextLumpOffset - thisLumpOffset) : 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Cache/load the specified lump index and return all of the lump information, including the cached data for the lump.
 // Optionally, the lump can also be decompressed.
 // 
@@ -154,13 +196,6 @@ void WadFile::purgeAllLumps() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 const WadLump& WadFile::cacheLump(const int32_t lumpIdx, const int16_t allocTag, const bool bDecompress) noexcept {
     ASSERT(isValidLumpIdx(lumpIdx));
-
-    // Sanity check the lump number is range.
-    // Note: we disallow reading the last lump since the next lump after the current is required to exist.
-    // We require the next lump to exist in order to determine the lump's compressed size in the WAD, since the lump header has the uncompressed size.
-    if (lumpIdx + 1 >= mNumLumps) {
-        I_Error("WadFile::cacheLump: %i + 1 >= numLumps", lumpIdx);
-    }
 
     // See if the lump is already loaded.
     // If that is the case then this call might just be a no-op.
@@ -192,10 +227,7 @@ const WadLump& WadFile::cacheLump(const int32_t lumpIdx, const int16_t allocTag,
     if (bDecompress) {
         sizeToRead = lump.uncompressedSize;
     } else {
-        // If not decompressing we must use the distance to the next lump in the file to get the compressed size (it's not specified explicitly):
-        const WadLump& nextLump = mLumps[lumpIdx + 1];
-        const int32_t lumpCompressedSize = nextLump.wadFileOffset - lump.wadFileOffset;
-        sizeToRead = lumpCompressedSize;
+        sizeToRead = getRawSize(lumpIdx);
     }
 
     // Alloc RAM for the lump and read it
@@ -220,21 +252,13 @@ const WadLump& WadFile::cacheLump(const int32_t lumpIdx, const int16_t allocTag,
 void WadFile::readLump(const int32_t lumpIdx, void* const pDest, const bool bDecompress) noexcept {
     ASSERT(isValidLumpIdx(lumpIdx));
 
-    // Sanity check the lump number is range.
-    // Note: we disallow reading the last lump since the next lump after the current is required to exist.
-    // We require the next lump to exist in order to determine the lump's compressed size in the WAD, since the lump header has the uncompressed size.
-    if (lumpIdx + 1 >= mNumLumps) {
-        I_Error("WadFile::readLump: %i + 1 >= numLumps", lumpIdx);
-    }
-
     // Get info for the lump requested and the one following it
     const WadLump& lump = mLumps[lumpIdx];
-    const WadLump& nextLump = mLumps[lumpIdx + 1];
     const WadLumpName& lumpName = mLumpNames[lumpIdx];
 
     // Do we need to decompress?
     // Decompress if specified and if the lumpname has the special bit set in the first character, indicating that the lump is compressed.
-    const uint32_t sizeToRead = nextLump.wadFileOffset - lump.wadFileOffset;
+    const uint32_t sizeToRead = getRawSize(lumpIdx);
     const bool bIsLumpCompressed = ((uint8_t) lumpName.chars[0] & 0x80u);
 
     if (bDecompress && bIsLumpCompressed) {

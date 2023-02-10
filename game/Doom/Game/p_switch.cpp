@@ -19,16 +19,11 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/MapInfo/GecMapInfo.h"
 #include "PsyDoom/ParserTokenizer.h"
 #include "PsyDoom/ScriptingEngine.h"
 
 #include <vector>
-
-// Defines the two textures used by a switch
-struct switchlist_t {
-    char    name1[9];
-    char    name2[9];
-};
 
 // Definitions for all of the switch textures built into the game
 static const switchlist_t gBaseAlphSwitchList[] = {
@@ -176,12 +171,20 @@ static void P_ReadUserSwitchDefs(const char* const lumpName) noexcept {
 // This is called once on startup.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitSwitchDefs() noexcept {
-    // Add base switch definitions
+    // Add base switch definitions.
+    // Note that for 'GEC Master Edition Beta 4' (and later) the base switch list is defined via it's own MAPINFO.
     gAlphSwitchList.clear();
     gAlphSwitchList.reserve(128);
 
-    for (int32_t i = 0; i < BASE_NUM_SWITCHES; ++i) {
-        gAlphSwitchList.push_back(gBaseAlphSwitchList[i]);
+    if (GecMapInfo::shouldUseGecMapInfo()) {
+        // GEC Master Edition Beta 4 or later
+        gAlphSwitchList = GecMapInfo::getBaseSwitchList();
+    }
+    else {
+        // Normal case: Doom, Final Doom and so on - use a hardcoded set of base switch types:
+        for (int32_t i = 0; i < BASE_NUM_SWITCHES; ++i) {
+            gAlphSwitchList.push_back(gBaseAlphSwitchList[i]);
+        }
     }
 
     // Read user switch definitions

@@ -1,6 +1,7 @@
 #include "st_main.h"
 
 #include "Doom/Base/i_drawcmds.h"
+#include "Doom/Base/i_drawstringex.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/i_texcache.h"
@@ -112,7 +113,7 @@ static void ST_DrawRightAlignedStat(const int32_t xMargin, const int32_t y, cons
 
     // Figure out the x position to right align the string (taking into account the margin) and then draw
     const int32_t x = SCREEN_W - ((int32_t) std::strlen(strBuffer) * 8) - xMargin;
-    I_DrawStringSmall(x, y, strBuffer, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+    I_DrawStringSmall(x, y, strBuffer, Game::getTexClut_STATUS(), 128, 128, 128, false, true);
 }
 #endif  // #if PSYDOOM_MODS
 
@@ -133,7 +134,7 @@ void ST_Init() noexcept {
     #endif
 
     // Load this into the first texture cache page and expect it to be resident there
-    I_LoadAndCacheTexLump(gTex_STATUS, "STATUS", 0);
+    I_LoadAndCacheTexLump(gTex_STATUS, Game::getTexLumpName_STATUS());
 
     #if PSYDOOM_MODS
         if (I_GetCurTexCacheFillPage() != 0) {
@@ -377,7 +378,7 @@ void ST_Drawer() noexcept {
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(spritePrim, true);
 
-    const uint16_t uiPaletteClutId = Game::getTexPalette_STATUS();
+    const uint16_t uiPaletteClutId = Game::getTexClut_STATUS();
     spritePrim.clut = uiPaletteClutId;
 
     // PsyDoom: how much to adjust the coordinates of strings to properly left or right align them in widescreen mode (Vulkan renderer only)
@@ -417,20 +418,41 @@ void ST_Drawer() noexcept {
 
         if (bShowAutomap) {
             constexpr const char* const MAP_TITLE_FMT = "LEVEL %d:%s";
-            char mapTitle[64];
+            char drawStr[64];
 
             // PsyDoom: use 'snprintf' just to be safe here
             #if PSYDOOM_MODS
-                std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, gGameMap, Game::getMapName(gGameMap).c_str().data());
+                std::snprintf(drawStr, C_ARRAY_SIZE(drawStr), MAP_TITLE_FMT, gGameMap, Game::getMapName(gGameMap).c_str().data());
             #else
-                std::sprintf(mapTitle, MAP_TITLE_FMT, gGameMap, gMapNames[gGameMap - 1]);
+                std::sprintf(drawStr, MAP_TITLE_FMT, gGameMap, gMapNames[gGameMap - 1]);
             #endif
 
-            // PsyDooom: have to explicitly specify sprite shading parameters now for 'draw string' rather than relying on global state
+            // PsyDooom: handle longer map names that have a newline in the middle of them or which exceed the display area.
+            // When we find this case then draw the level number on one line and the map name on the next line down.
+            // Note that the map name should always fit on the 2nd line in this situation due to the 32 character limit and 8 pixel font size.
             #if PSYDOOM_MODS
-                I_DrawStringSmall(7, 193, mapTitle, uiPaletteClutId, 128, 128, 128, false, true);
+                DrawStringParams drawStrParams = {};
+                drawStrParams.bUseSmallFont = true;
+                I_DrawStringEx_LayoutText(7, 193, drawStrParams, drawStr);
+
+                // Does it fit?
+                if ((gDrawStringEx_metrics.numLines <= 1) && (gDrawStringEx_metrics.endX <= SCREEN_W)) {
+                    // Yes it does, just draw what we already laid out:
+                    I_DrawStringEx_PostLayoutDraw(drawStrParams);
+                }
+                else {
+                    // No fit, split the render up into two lines and center the text.
+                    // First draw the level number:
+                    std::snprintf(drawStr, C_ARRAY_SIZE(drawStr), "LEVEL %d", gGameMap);
+                    drawStrParams.xAnchorMode = DrawStringAnchorMode::CENTER;
+                    I_DrawStringEx(SCREEN_W / 2, 185, drawStrParams, drawStr);
+
+                    // Next draw the map name itself and treat any new line commands as spaces instead (single line only)
+                    drawStrParams.bRemoveNewlines = true;
+                    I_DrawStringEx(SCREEN_W / 2, 193, drawStrParams, Game::getMapName(gGameMap).c_str().data());
+                }
             #else
-                I_DrawStringSmall(7, 193, mapTitle);
+                I_DrawStringSmall(7, 193, drawStr);
             #endif
         }
     }
@@ -438,9 +460,10 @@ void ST_Drawer() noexcept {
     // PsyDoom: draw the new alert message centered (in the small 8x8 px font) if active
     #if PSYDOOM_MODS
         if (gStatusBar.alertMessageTicsLeft > 0) {
-            const int32_t msgLen = (int32_t) std::strlen(gStatusBar.alertMessage);
-            const int32_t msgPixelW = msgLen * 8;
-            I_DrawStringSmall((SCREEN_W - msgPixelW) / 2, 96, gStatusBar.alertMessage, uiPaletteClutId, 128, 128, 128, false, true);
+            DrawStringParams drawStrParams = {};
+            drawStrParams.xAnchorMode = DrawStringAnchorMode::CENTER;
+            drawStrParams.bUseSmallFont = true;
+            I_DrawStringEx(SCREEN_W / 2, 96, drawStrParams, gStatusBar.alertMessage);
         }
     #endif
 

@@ -384,6 +384,45 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     I_CacheTex(tex);
 }
 
+#if PSYDOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyDoom: helper overload which accepts a small string
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_LoadAndCacheTexLump(texture_t& tex, const String8& name) noexcept {
+    I_LoadAndCacheTexLump(tex, nullptr, W_GetNumForName(name));
+}
+#endif  // #if PSYDOOM_MODS
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Encapsulates the logic for loading and caching the LOADING texture lump.
+// We have to do some specific hacks here to support 'GEC Master Edition (Beta 4)'.
+//-----------------------------------------------------------------------------------------------------------------------------------------
+void I_LoadAndCache_LOADING_TexLump(texture_t& tex) noexcept {
+    // PsyDoom: hack for 'GEC Master Edition (Beta 4)' and later.
+    // Check for an alternate version of the 'LOADING' graphic next to the first one found in the wad.
+    // For GEC ME Beta 4 the main version of 'LOADING' has a loading bar baked into it which we don't want, but the alternate version does not.
+    #if PSYDOOM_MODS
+        int32_t lumpNum = W_GetNumForName("LOADING");
+
+        // Look for an alternate version of the lump next to this one?
+        if (Game::gConstants.bRemove_LOADING_progressBar) {
+            if (lumpNum + 1 < W_NumLumps()) {
+                WadLumpName nextLumpName = W_GetLumpName(lumpNum + 1);
+                nextLumpName.chars[0] &= 0x7F;  // Remove the 'compressed lump' flag for the purposes of name comparsion
+
+                if (nextLumpName == "LOADING") {
+                    // Found an alternate version of 'LOADING' that should have the loading bar removed, use that one instead:
+                    lumpNum++;
+                }
+            }
+        }
+        
+        I_LoadAndCacheTexLump(tex, nullptr, lumpNum);
+    #else
+        I_LoadAndCacheTexLump(tex, "LOADING", 0);
+    #endif
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Similar to 'I_DrawSprite' except the image being drawn is added to VRAM first before drawing.
 // Because a texture object is specified also, less parameters are required.
@@ -931,7 +970,7 @@ bool I_NetUpdate() noexcept {
         I_CacheTex(gTex_NETERR);
         I_DrawSprite(
             gTex_NETERR.texPageId,
-            Game::getTexPalette_NETERR(),
+            Game::getTexClut_NETERR(),
             84,
             109,
             gTex_NETERR.texPageCoordX,

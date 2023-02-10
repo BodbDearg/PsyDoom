@@ -5,6 +5,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
@@ -1021,6 +1022,15 @@ void P_DamageMobj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
     // Player specific logic
     if (pTargetPlayer) {
         #if PSYDOOM_MODS
+            // Hack for the sector special which kills the player to end the level.
+            // Don't allow the player to be killed by any damage other than that of the sector special.
+            // This ensures the player will reach the intermission screen once in this sector type, regardless of any damage being taken.
+            if (target.subsector->sector->special == 11) {
+                if (damageAmt >= target.health) {
+                    damageAmt = std::max(target.health - 1, 0);
+                }
+            }
+
             // Ignore all damage if friendly fire (except barrel explosion and telefrag)
             const bool bIsPlayerToPlayerDamage = ((pSource && pSource->player) && (pTargetPlayer != pSource->player));
             const bool bIsBarrelDamage = (pInflictor && (pInflictor->type == MT_BARREL));

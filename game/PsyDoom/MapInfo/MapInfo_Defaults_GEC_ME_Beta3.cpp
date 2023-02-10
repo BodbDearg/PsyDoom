@@ -1,14 +1,14 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// MapInfo defaults for 'GEC Master Edition (various game types)'
+// MapInfo defaults for 'GEC Master Edition (Beta 3)'
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "MapInfo_Defaults_GEC_ME.h"
+#include "MapInfo_Defaults_GEC_ME_Beta3.h"
 
 #include "Doom/Base/s_sound.h"
+#include "Doom/Renderer/r_data.h"
 #include "Doom/UI/cr_main.h"
 #include "Doom/UI/ti_main.h"
 #include "MapInfo.h"
 #include "MapInfo_Defaults.h"
-#include "MapInfo_Defaults_Doom.h"
 #include "MapInfo_Defaults_FinalDoom.h"
 #include "PsyQ/LIBSPU.h"
 
@@ -18,40 +18,22 @@ BEGIN_NAMESPACE(MapInfo)
 // Initializes a 'GameInfo' struct for 'GEC Master Edition (Beta 3)'
 //------------------------------------------------------------------------------------------------------------------------------------------
 void initGameInfo_GEC_ME_Beta3(GameInfo& gameInfo) noexcept {
-    initGameInfo_FinalDoom(gameInfo);       // Uses Final Doom values for most settings
+    // Use Final Doom values for most settings
+    initGameInfo_FinalDoom(gameInfo);
+
     gameInfo.numMaps = 94;
     gameInfo.numRegularMaps = 92;           // Last two maps are secret: stops the game ending on completing 'Go 2 It'
     gameInfo.bFinalDoomGameRules = false;   // Some maps might rely on the extra forward speed of 'Doom'
-    gameInfo.titleScreenStyle = TitleScreenStyle::GEC_ME;
+    gameInfo.titleScreenStyle = TitleScreenStyle::GEC_ME_BETA3;
     gameInfo.creditsScreenStyle = CreditsScreenStyle::GEC_ME;
+    gameInfo.texPalette_titleScreenFire = FIRESKYPAL;
     gameInfo.texPalette_BACK = 29;
+    gameInfo.texLumpName_BACK = "BACK";
+    gameInfo.texPalette_Inter_BACK = {};    // Default: use the same 'BACK' graphic as the main menu
+    gameInfo.texLumpName_Inter_BACK = {};
     gameInfo.texPalette_DOOM = 29;
-    gameInfo.texPalette_GEC  = 26;
-    gameInfo.texPalette_GECCRED  = 28;
-    gameInfo.texPalette_DWOLRD = 27;
-    gameInfo.texPalette_DWCRED = 28;
     gameInfo.texPalette_DATA = 30;
     gameInfo.texPalette_FINAL = 29;
-    gameInfo.creditsXPos_GECCRED = 0;
-    gameInfo.creditsXPos_DWCRED = 0;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes a 'GameInfo' struct for '[GEC] Master Edition tools: single map test disc (Doom format)'
-//------------------------------------------------------------------------------------------------------------------------------------------
-void initGameInfo_GEC_ME_TestMap_Doom(GameInfo& gameInfo) noexcept {
-    initGameInfo_Doom(gameInfo);
-    gameInfo.numMaps = 1;
-    gameInfo.numRegularMaps = 1;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Initializes a 'GameInfo' struct for '[GEC] Master Edition tools: single map test disc (Final Doom format)'
-//------------------------------------------------------------------------------------------------------------------------------------------
-void initGameInfo_GEC_ME_TestMap_FinalDoom(GameInfo& gameInfo) noexcept {
-    initGameInfo_FinalDoom(gameInfo);
-    gameInfo.numMaps = 1;
-    gameInfo.numRegularMaps = 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -62,13 +44,6 @@ void addEpisodes_GEC_ME_Beta3(std::vector<Episode>& episodes) noexcept {
     addEpisode(episodes, 2, 31,  "Master Levels");
     addEpisode(episodes, 3, 51,  "TNT");
     addEpisode(episodes, 4, 71,  "Plutonia");
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Adds all the default episodes for '[GEC] Master Edition tools: single map test disc' to the given list
-//------------------------------------------------------------------------------------------------------------------------------------------
-void addEpisodes_GEC_ME_TestMap(std::vector<Episode>& episodes) noexcept {
-    addEpisode(episodes, 1,  1,  "Test Map");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,17 +87,6 @@ void addClusters_GEC_ME_Beta3(std::vector<Cluster>& clusters) noexcept {
         clus.clusterNum = 4;
         clusTemplate.bHideNextMapForFinale = true;
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Adds all the default clusters for '[GEC] Master Edition tools: single map test disc' to the given list
-//------------------------------------------------------------------------------------------------------------------------------------------
-void addClusters_GEC_ME_TestMap(std::vector<Cluster>& clusters) noexcept {
-    Cluster& clus = clusters.emplace_back();
-    clus.clusterNum = 1;
-    clus.bSkipFinale = true;
-    clus.bHideNextMapForFinale = true;
-    clus.bEnableCast = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -230,10 +194,14 @@ void addMaps_GEC_ME_Beta3(std::vector<Map>& maps) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Adds the default maps for '[GEC] Master Edition tools: single map test disc' to the given list
+// Adds the credit pages for 'GEC Master Edition (Beta 3)' to the given list
 //------------------------------------------------------------------------------------------------------------------------------------------
-void addMaps_GEC_ME_TestMap(std::vector<Map>& maps) noexcept {
-    addMap(maps, 1 , 1, "Test Map", 1, SPU_REV_MODE_SPACE, 0x0FFF);
+void addCredits_GEC_ME_Beta3(std::vector<CreditsPage>& credits) noexcept {
+    addCreditsPage(credits, "GEC",       "GECCRED",   26,             28,            0,   256);
+    addCreditsPage(credits, "DWOLRD",    "DWCRED",    27,             28,            0,   256);
+    addCreditsPage(credits, "TITLE",     "LEVCRED2",  TITLEPAL,       WCREDITS1PAL,  11,  256);
+    addCreditsPage(credits, "WMSCRED1",  "WMSCRED2",  WCREDITS1PAL,   WCREDITS1PAL,  5,   256);
+    addCreditsPage(credits, "IDCRED1",   "IDCRED2",   IDCREDITS1PAL,  WCREDITS1PAL,  9,   256);
 }
 
 END_NAMESPACE(MapInfo)

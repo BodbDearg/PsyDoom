@@ -56,6 +56,12 @@ struct SaveFileInfo {
     String32        mapName;    // Name of the map
 };
 
+// Holds the map name displayed for a save slot
+struct SaveSlotMapName {
+    static constexpr uint32_t MAX_DISPLAY_CHARS = 25;
+    char chars[MAX_DISPLAY_CHARS + 1];
+};
+
 static LoadSaveMenuMode     gMenuMode;                  // What mode the menu is operating in
 static uint8_t              gSlotHighlightPhase;        // Current phase for the slot highlight effect
 static SaveFileInfo         gSaveFiles[5];              // The 5 save file slots
@@ -110,6 +116,46 @@ static bool IsSaveSlotFocused() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Formats a map name for display on a save slot, truncating if neccessary.
+// Returns the name to display;
+//------------------------------------------------------------------------------------------------------------------------------------------
+static SaveSlotMapName FormatSaveSlotMapName(const SaveFileInfo& save) noexcept {
+    // First truncate the display name by the length limit.
+    // Then truncate at the first newline character found, if any.
+    const uint32_t realNameLen = save.mapName.length();
+    uint32_t dispNameLen = std::min(realNameLen, SaveSlotMapName::MAX_DISPLAY_CHARS);
+
+    for (uint32_t i = 0; i < dispNameLen; ++i) {
+        const char c = save.mapName.chars[dispNameLen];
+        const bool bIsNewLineChar = ((c == '\n') || (c == '\r') || (c == '\v') || (c == '\f'));
+
+        if (bIsNewLineChar) {
+            dispNameLen = i;
+            break;
+        }
+    }
+
+    // Copy the map name characters to be displayed
+    SaveSlotMapName mapName;
+    std::strncpy(mapName.chars, save.mapName.chars, dispNameLen);
+
+    // Show a truncation pattern/indicator if the string was cut short
+    constexpr const char TRUNC_PATTERN[] = "..";
+    constexpr const uint32_t TRUNC_PATTERN_LEN = C_ARRAY_SIZE(TRUNC_PATTERN) - 1;
+    static_assert(TRUNC_PATTERN_LEN <= SaveSlotMapName::MAX_DISPLAY_CHARS);
+
+    if (dispNameLen < realNameLen) {
+        const uint32_t truncPatternEnd = std::min(dispNameLen + TRUNC_PATTERN_LEN, SaveSlotMapName::MAX_DISPLAY_CHARS);
+        const uint32_t truncPatternBeg = truncPatternEnd - TRUNC_PATTERN_LEN;
+        std::strncpy(mapName.chars + truncPatternBeg, TRUNC_PATTERN, TRUNC_PATTERN_LEN);
+    }
+
+    // Null terminate the map name string to finish up
+    mapName.chars[dispNameLen] = 0;
+    return mapName;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Draws a sprite from the STATUS image
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void DrawStatusSprite(
@@ -125,7 +171,7 @@ static void DrawStatusSprite(
 ) noexcept {
     const LibGpuUV tpU = (LibGpuUV)(gTex_STATUS.texPageCoordX + u);
     const LibGpuUV tpV = (LibGpuUV)(gTex_STATUS.texPageCoordY + v);
-    I_DrawColoredSprite(gTex_STATUS.texPageId, Game::getTexPalette_STATUS(), x, y, tpU, tpV, w, h, r, g, b, false);
+    I_DrawColoredSprite(gTex_STATUS.texPageId, Game::getTexClut_STATUS(), x, y, tpU, tpV, w, h, r, g, b, false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -198,14 +244,15 @@ static void DrawSaveSlot(const SaveFileInfo& save, const int16_t slotX, const in
             std::snprintf(strBuffer, C_ARRAY_SIZE(strBuffer), "-");
         }
 
-        I_DrawStringSmall(slotX + 24, slotY + 6, strBuffer, Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+        I_DrawStringSmall(slotX + 24, slotY + 6, strBuffer, Game::getTexClut_STATUS(), 128, 128, 128, false, true);
     }
 
     // Draw the map name
     if (save.mapNum > 0) {
-        I_DrawStringSmall(slotX + 24, slotY + 19, save.mapName.c_str().data(), Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+        const SaveSlotMapName mapName = FormatSaveSlotMapName(save);
+        I_DrawStringSmall(slotX + 24, slotY + 19, mapName.chars, Game::getTexClut_STATUS(), 128, 128, 128, false, true);
     } else {
-        I_DrawStringSmall(slotX + 24, slotY + 19, "-", Game::getTexPalette_STATUS(), 128, 128, 128, false, true);
+        I_DrawStringSmall(slotX + 24, slotY + 19, "-", Game::getTexClut_STATUS(), 128, 128, 128, false, true);
     }
 }
 
@@ -413,7 +460,7 @@ void LoadSave_Draw() noexcept {
     // Draw the background
     const bool bSaveSlotFocused = IsSaveSlotFocused();
     const uint8_t colRGB = (bSaveSlotFocused) ? 64 : 128;
-    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), colRGB, colRGB, colRGB);
+    O_DrawBackground(gTex_OptionsBg, Game::getTexClut_OptionsBg(), colRGB, colRGB, colRGB);
 
     // Draw the save slots
     constexpr auto doDimSlot = [=](const int32_t slotNum) noexcept {

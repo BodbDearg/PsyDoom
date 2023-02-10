@@ -293,7 +293,7 @@ template <class ...FmtStrArgs>
 [[noreturn]] inline void error(const Block& block, const char* const errorFmtStr, FmtStrArgs... fmtStrArgs) noexcept {
     error(block.pType->token.begin, errorFmtStr, fmtStrArgs...);
 }
-
+std::vector<Token> tokenizeMapInfo(const char* const mapInfoStr) noexcept;
 MapInfo parseMapInfo(const char* const mapInfoStr) noexcept;
 
 END_NAMESPACE(MapInfo)

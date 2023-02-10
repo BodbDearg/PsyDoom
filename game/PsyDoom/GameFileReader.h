@@ -20,8 +20,8 @@ public:
     
     bool isOpen() noexcept;
     void close() noexcept;
-    void open(const char* const filePath) noexcept;
-    void open(const CdFileId fileId) noexcept;
+    FILE* open(const char* const filePath) noexcept;
+    const PsxCd_File& open(const CdFileId fileId) noexcept;
     void seekRelative(const int32_t offset) noexcept;
     void seekAbsolute(const int32_t offset) noexcept;
     void read(void* const pBuffer, const int32_t numBytes) noexcept;

@@ -72,8 +72,8 @@ std::byte*  gpDemoBuffer;
 std::byte*  gpDemo_p;
 
 #if PSYDOOM_MODS
-    // PsyDoom: info about the current classic demo being played (what game mode to use etc.)
-    ClassicDemoDef gCurClassicDemo;
+    // PsyDoom: info about the current built-in demo being played (what game mode to use etc.)
+    BuiltInDemoDef gCurBuiltInDemo;
 #endif
 
 // Game start parameters
@@ -202,11 +202,11 @@ void D_DoomMain() noexcept {
     // PsyDoom: build the (now) dynamically generated lists of sprites, map objects, animated textures and switches for the game.
     // User mods can add new entries to any of these lists. Also initialize MAPINFO.
     #if PSYDOOM_MODS
+        MapInfo::init();        // Do this first since GEC MAPINFO can affect the base lists of animations and switches
         P_InitSprites();
         P_InitMobjInfo();
         P_InitAnimDefs();
         P_InitSwitchDefs();
-        MapInfo::init();
     #endif
 
     ST_Init();
@@ -305,21 +305,21 @@ void D_DoomMain() noexcept {
 
                 for (uint32_t demoIdx = 0; demoIdx < C_ARRAY_SIZE(GameConstants::demos); ++demoIdx) {
                     // Grab the details for the current demo; if there are no more demos then playback stops:
-                    gCurClassicDemo = Game::gConstants.demos[demoIdx];
+                    gCurBuiltInDemo = Game::gConstants.demos[demoIdx];
 
-                    if (gCurClassicDemo.filename.length() <= 0)
+                    if (gCurBuiltInDemo.filename.length() <= 0)
                         break;
 
                     // Run the demo itself
                     bGotoTitle = true;
 
-                    if (didExit(RunDemo(gCurClassicDemo.filename))) {
+                    if (didExit(RunDemo(gCurBuiltInDemo.filename))) {
                         bGotoTitle = false;
                         break;
                     }
 
                     // Show a credits screen after this demo?
-                    if (gCurClassicDemo.bShowCreditsAfter) {
+                    if (gCurBuiltInDemo.bShowCreditsAfter) {
                         if (didExit(RunCredits())) {
                             bGotoTitle = false;
                             break;
@@ -385,7 +385,7 @@ gameaction_t RunDemo(const CdFileId file) noexcept {
     // Also skip running the demo if the file does not exist.
     #if PSYDOOM_MODS
         if (!gTex_LOADING.bIsCached) {
-            I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+            I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
         }
 
         if (CdMapTbl_GetEntry(file).size <= 0)
@@ -434,7 +434,7 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
     // Ensure this required graphic is loaded before starting the demo.
     // PsyDoom: the meaning of 'texPageId' has changed slightly, '0' is now the 1st page and 'bIsCached' is used check cache residency.
     if (!gTex_LOADING.bIsCached) {
-        I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+        I_LoadAndCache_LOADING_TexLump(gTex_LOADING);
     }
 
     // Read the demo file into memory
@@ -444,9 +444,9 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
         FatalErrors::raiseF("Unable to read demo file '%s'! Is the file path valid?", filePath);
     }
 
-    // Set the info for the current classic demo in case we are playing one of those.
+    // Set the info for the current built-in demo in case we are playing one of those.
     // Use the current game settings to determine the demo's game behavior and format.
-    ClassicDemoDef& demoDef = gCurClassicDemo;
+    BuiltInDemoDef& demoDef = gCurBuiltInDemo;
     demoDef = {};
     demoDef.bFinalDoomDemo = (Game::gGameType != GameType::Doom);
     demoDef.bPalDemo = (Game::gGameVariant == GameVariant::PAL);
@@ -528,7 +528,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         LIBGPU_SetSemiTrans(spritePrim, false);
         LIBGPU_SetShadeTex(spritePrim, false);
         LIBGPU_setRGB0(spritePrim, 128, 128, 128);
-        spritePrim.clut = Game::getTexPalette_DebugFontSmall();
+        spritePrim.clut = Game::getTexClut_DebugFontSmall();
     }
     #endif  // #if !PSYDOOM_MODS
 
@@ -555,7 +555,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
             gDebugDrawStringXPos,
             gDebugDrawStringYPos,
             msgBuffer,
-            Game::getTexPalette_STATUS(),
+            Game::getTexClut_STATUS(),
             128,
             128,
             128,
@@ -602,11 +602,11 @@ void I_DrawEnabledPerfCounters() noexcept {
     // Show average frame microseconds elapsed
     char msgBuffer[256];
     std::snprintf(msgBuffer, sizeof(msgBuffer), "USEC: %zu", (size_t)(gPerfAvgUsec + 0.5f));
-    I_DrawStringSmall(2 + widescreenAdjust, 2, msgBuffer, Game::getTexPalette_STATUS(), 128, 255, 255, false, false);
+    I_DrawStringSmall(2 + widescreenAdjust, 2, msgBuffer, Game::getTexClut_STATUS(), 128, 255, 255, false, false);
 
     // Show average FPS counter
     std::snprintf(msgBuffer, sizeof(msgBuffer), "FPS:  %.1f", gPerfAvgFps);
-    I_DrawStringSmall(2 + widescreenAdjust, 10, msgBuffer, Game::getTexPalette_STATUS(), 128, 255, 255, false, false);
+    I_DrawStringSmall(2 + widescreenAdjust, 10, msgBuffer, Game::getTexClut_STATUS(), 128, 255, 255, false, false);
 }
 #endif  // #if PSYDOOM_MODS
 

@@ -6,11 +6,13 @@
 #include <vector>
 
 enum SpuReverbMode : int32_t;
+struct String8;
 struct String32;
 
 BEGIN_NAMESPACE(MapInfo)
 
 struct Cluster;
+struct CreditsPage;
 struct Episode;
 struct GameInfo;
 struct Map;
@@ -33,11 +35,22 @@ void addMap(
     const int16_t reverbDepth
 ) noexcept;
 
+void addCreditsPage(
+    std::vector<CreditsPage>& credits,
+    const String8& bgPic,
+    const String8& fgPic,
+    const uint8_t bgPal,
+    const uint8_t fgPal,
+    const int16_t fgXPos,
+    const int16_t maxScroll
+) noexcept;
+
 void setMapInfoToDefaults(
     GameInfo& gameInfo,
     std::vector<Episode>& episodes,
     std::vector<Cluster>& clusters,
     std::vector<Map>& maps,
+    std::vector<CreditsPage>& credits,
     std::vector<MusicTrack>& musicTracks
 ) noexcept;
 

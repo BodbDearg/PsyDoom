@@ -97,6 +97,11 @@ void determineGameTypeAndVariant() noexcept {
         gGameType = GameType::GEC_ME_Beta3;
         gGameVariant = GameVariant::NTSC_U;
     }
+    else if (discFileExists("SLUS_666.02", 0x97BB6F2D22E807E0, 0x6D818DA45FF98708)) {
+        // [GEC] Master Edition PSX Doom for the PlayStation (Beta 4)
+        gGameType = GameType::GEC_ME_Beta4;
+        gGameVariant = GameVariant::NTSC_U;
+    }
     else if (discFileExists("PSXDOOM/ABIN/PSXDOOM.EXE") && discFileExists("PSXDOOM/MAPDIR0/MAP01.WAD") && (!discFileExists("PSXDOOM/MAPDIR0/MAP02.WAD"))) {
         // [GEC] Master Edition tools: single map test disc ('Doom' format)
         gGameType = GameType::GEC_ME_TestMap_Doom;
@@ -119,7 +124,7 @@ void determineGameTypeAndVariant() noexcept {
             "The disc must be one of the following:\n\n"
             "   - Doom: NTSC-U, NTSC-J or PAL version (original or re-release editions).\n"
             "   - Final Doom: NTSC-U, NTSC-J or PAL version.\n"
-            "   - [GEC] Master Edition PSX Doom (Beta 3).\n"
+            "   - [GEC] Master Edition PSX Doom (Beta 3 or 4).\n"
             "   - [GEC] Master Edition tools: single map test disc.\n"
             "   - PSX Doom Forever (ROM hack).\n"
             "   - Doom single level PAL demo (standalone disc, or in a demo collection)."
@@ -128,6 +133,16 @@ void determineGameTypeAndVariant() noexcept {
 
     // Populate constants that vary from game to game
     gConstants.populate(gGameType, gbIsDemoVersion);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: tells if the game type is one of the 'GEC Master Edition' versions
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool isGameTypeGecMe() noexcept {
+    return (
+        (gGameType == GameType::GEC_ME_Beta3) ||
+        (gGameType == GameType::GEC_ME_Beta4)
+    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -213,10 +228,10 @@ void getUserGameSettings(GameSettings& settings) noexcept {
 void getClassicDemoGameSettings(GameSettings& settings) noexcept {
     // Note: ignore MAPINFO defaults and user settings for game rules when it comes to classic demos.
     // Use the rules associated with the base game that the demo was recorded against in order to reproduce the same behavior and avoid desync...
-    const bool bFinalDoomRules = gCurClassicDemo.bFinalDoomDemo;
+    const bool bFinalDoomRules = gCurBuiltInDemo.bFinalDoomDemo;
 
     settings = {};
-    settings.bUsePalTimings                     = gCurClassicDemo.bPalDemo;
+    settings.bUsePalTimings                     = gCurBuiltInDemo.bPalDemo;
     settings.bUseDemoTimings                    = true;
     settings.bFixKillCount                      = false;
     settings.bFixLineActivation                 = false;
@@ -319,89 +334,90 @@ int32_t getMapEpisode(const int32_t mapNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the palette (PSX Clut ID) or lump name to use for various textures
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint16_t getTexPalette_STATUS() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_STATUS];
+uint16_t getTexClut_TitleScreenFire() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_titleScreenFire);
 }
 
-uint16_t getTexPalette_TITLE() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_TITLE];
+uint16_t getTexClut_STATUS() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_STATUS);
 }
 
-uint16_t getTexPalette_BACK() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_BACK];
+uint16_t getTexClut_TITLE() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_TITLE);
 }
 
-uint16_t getTexPalette_LOADING() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_LOADING];
+uint16_t getTexClut_TITLE2() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_TITLE2);
 }
 
-uint16_t getTexPalette_PAUSE() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_PAUSE];
+uint16_t getTexClut_BACK() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_BACK);
 }
 
-uint16_t getTexPalette_NETERR() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_NETERR];
+uint16_t getTexClut_Inter_BACK() noexcept {
+    // Only use the intermission specific version of 'BACK' if available
+    const MapInfo::GameInfo& gameInfo = MapInfo::getGameInfo();
+    const uint8_t palIdx = (gameInfo.texLumpName_Inter_BACK.chars[0]) ? gameInfo.texPalette_Inter_BACK : gameInfo.texPalette_BACK;
+    return R_GetPaletteClutId(palIdx);
 }
 
-uint16_t getTexPalette_DOOM() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DOOM];
+uint16_t getTexClut_LOADING() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_LOADING);
 }
 
-uint16_t getTexPalette_CONNECT() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_CONNECT];
+uint16_t getTexClut_PAUSE() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_PAUSE);
 }
 
-uint16_t getTexPalette_BUTTONS() noexcept {
+uint16_t getTexClut_NETERR() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_NETERR);
+}
+
+uint16_t getTexClut_DOOM() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DOOM);
+}
+
+uint16_t getTexClut_CONNECT() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_CONNECT);
+}
+
+uint16_t getTexClut_BUTTONS() noexcept {
     // Note: don't bother making this configurable via MAPINFO since it's not used anymore
-    return gPaletteClutIds[Game::gConstants.texPalette_BUTTONS];
+    return R_GetPaletteClutId(Game::gConstants.texPalette_BUTTONS);
 }
 
-uint16_t getTexPalette_IDCRED1() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_IDCRED1];
+uint16_t getTexClut_DATA() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_DATA);
 }
 
-uint16_t getTexPalette_IDCRED2() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_IDCRED2];
+uint16_t getTexClut_FINAL() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_FINAL);
 }
 
-uint16_t getTexPalette_WMSCRED1() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_WMSCRED1];
+uint16_t getTexClut_OptionsBg() noexcept {
+    return R_GetPaletteClutId(MapInfo::getGameInfo().texPalette_OptionsBG);
 }
 
-uint16_t getTexPalette_WMSCRED2() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_WMSCRED2];
+String8 getTexLumpName_STATUS() noexcept {
+    return MapInfo::getGameInfo().texLumpName_STATUS;
 }
 
-uint16_t getTexPalette_LEVCRED2() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_LEVCRED2];
+String8 getTexLumpName_TITLE() noexcept {
+    return MapInfo::getGameInfo().texLumpName_TITLE;
 }
 
-uint16_t getTexPalette_GEC() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_GEC];
+String8 getTexLumpName_TITLE2() noexcept {
+    return MapInfo::getGameInfo().texLumpName_TITLE2;
 }
 
-uint16_t getTexPalette_GECCRED() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_GECCRED];
+String8 getTexLumpName_BACK() noexcept {
+    return MapInfo::getGameInfo().texLumpName_BACK;
 }
 
-uint16_t getTexPalette_DWOLRD() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DWOLRD];
-}
-
-uint16_t getTexPalette_DWCRED() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DWCRED];
-}
-
-uint16_t getTexPalette_DATA() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_DATA];
-}
-
-uint16_t getTexPalette_FINAL() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_FINAL];
-}
-
-uint16_t getTexPalette_OptionsBg() noexcept {
-    return gPaletteClutIds[MapInfo::getGameInfo().texPalette_OptionsBG];
+String8 getTexLumpName_Inter_BACK() noexcept {
+    // Only use the intermission specific version of 'BACK' if available
+    const MapInfo::GameInfo& gameInfo = MapInfo::getGameInfo();
+    return (gameInfo.texLumpName_Inter_BACK.chars[0]) ? gameInfo.texLumpName_Inter_BACK : gameInfo.texLumpName_BACK;
 }
 
 String8 getTexLumpName_OptionsBg() noexcept {

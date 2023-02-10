@@ -24,7 +24,7 @@ extern std::byte*   gpDemoBuffer;
 extern std::byte*   gpDemo_p;
 
 #if PSYDOOM_MODS
-    extern struct ClassicDemoDef gCurClassicDemo;
+    extern struct BuiltInDemoDef gCurBuiltInDemo;
 #endif
 
 extern skill_t      gStartSkill;

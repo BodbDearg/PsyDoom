@@ -110,9 +110,32 @@ static TextLoc nextChar(TextLoc loc) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Skips past all whitespace starting at the specified text location
+// Skips the rest of the current text line
 //------------------------------------------------------------------------------------------------------------------------------------------
-static TextLoc skipWhitespace(TextLoc loc) noexcept {
+static TextLoc skipCurrentLine(TextLoc loc) noexcept {
+    while (const char c = loc.pStr[0]) {
+        // Did we hit a newline?
+        const bool bReachedLineEnd = (
+            (c == '\r') ||
+            (c == '\n') ||
+            (c == '\v') ||
+            (c == '\f')
+        );
+
+        // Move onto the next character and finish skipping if we reached a newline
+        loc = nextChar(loc);
+
+        if (bReachedLineEnd)
+            break;
+    }
+
+    return loc;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Skips past all whitespace and comments starting at the specified text location
+//------------------------------------------------------------------------------------------------------------------------------------------
+static TextLoc skipWhitespaceAndComments(TextLoc loc) noexcept {
     while (true) {
         switch (loc.pStr[0]) {
             // Whitespace character? If so then skip:
@@ -125,7 +148,15 @@ static TextLoc skipWhitespace(TextLoc loc) noexcept {
                 loc = nextChar(loc);
                 break;
 
-            // Not a whitespace character?
+            // If there is a comment ahead skip past the entire line:
+            case '/': {
+                if (loc.pStr[1] == '/') {
+                    loc = skipCurrentLine(loc);
+                }
+            }   break;
+
+            // Not a whitespace character or the start of a comment?
+            // If so then we are done skipping...
             default:
                 return loc;
         }
@@ -277,8 +308,8 @@ static Token parseIdentifier(const TextLoc startLoc) noexcept {
 // Extracts the next MAPINFO token from a text stream, starting at the given location
 //------------------------------------------------------------------------------------------------------------------------------------------
 static Token nextToken(TextLoc startLoc) noexcept {
-    // Skip whitespace then peek and parse what's ahead
-    startLoc = skipWhitespace(startLoc);
+    // Skip whitespace and comments, then peek and parse what's ahead:
+    startLoc = skipWhitespaceAndComments(startLoc);
     const char charAhead = startLoc.pStr[0];
 
     switch (charAhead) {
@@ -341,10 +372,10 @@ static Token nextTokenAfter(const Token& afterToken) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tokenizes the specified MAPINFO string.
+// Tokenizes the specified MAPINFO string into a series of 'LinkedToken' structs.
 // The returned list always has a null token at the end to delimit.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static std::vector<LinkedToken> tokenizeMapInfoStr(const char* const mapInfoStr) noexcept {
+static std::vector<LinkedToken> tokenizeMapInfoToLinkedTokens(const char* const mapInfoStr) noexcept {
     std::vector<LinkedToken> tokens;
     tokens.reserve(2048);
 
@@ -463,12 +494,31 @@ static LinkedToken* parseBlock(LinkedToken* pCurToken, Block& block) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Performs a simple tokenize of a MAPINFO style string, returning a list of tokens with no links between them.
+// Useful for implementing alternative methods of MAPINFO parsing elsewhere.
+//------------------------------------------------------------------------------------------------------------------------------------------
+std::vector<Token> tokenizeMapInfo(const char* const mapInfoStr) noexcept {
+    std::vector<Token> tokens;
+    tokens.reserve(4096);
+
+    Token curToken = nextToken(TextLoc{ 0, 0, mapInfoStr });
+
+    while (curToken.type != TokenType::Null) {
+        tokens.push_back(curToken);
+        curToken = nextTokenAfter(curToken);
+    }
+
+    tokens.push_back(curToken);     // Add the null token at the end
+    return tokens;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Tokenizes and parses the specified MAPINFO into a series of value blocks
 //------------------------------------------------------------------------------------------------------------------------------------------
 MapInfo parseMapInfo(const char* const mapInfoStr) noexcept {
     // Tokenize the string first, this will always produce a list terminated by the null token
     MapInfo mapInfo;
-    mapInfo.tokens = tokenizeMapInfoStr(mapInfoStr);
+    mapInfo.tokens = tokenizeMapInfoToLinkedTokens(mapInfoStr);
     ASSERT(mapInfo.tokens.size() > 0);
     
     // Parse each value block and return the result

@@ -428,7 +428,7 @@ void O_Drawer() noexcept {
     #endif
 
     // Draw the options screen background
-    O_DrawBackground(gTex_OptionsBg, Game::getTexPalette_OptionsBg(), 128, 128, 128);
+    O_DrawBackground(gTex_OptionsBg, Game::getTexClut_OptionsBg(), 128, 128, 128);
 
     // Don't do any rendering if we are about to exit the menu
     if (gGameAction == ga_nothing) {
@@ -448,7 +448,7 @@ void O_Drawer() noexcept {
                 // Draw the slider backing/container
                 I_DrawSprite(
                     gTex_STATUS.texPageId,
-                    Game::getTexPalette_STATUS(),
+                    Game::getTexClut_STATUS(),
                     (int16_t)(pMenuItem->x + 13),
                     (int16_t)(pMenuItem->y + 20),
                     // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -468,7 +468,7 @@ void O_Drawer() noexcept {
 
                 I_DrawSprite(
                     gTex_STATUS.texPageId,
-                    Game::getTexPalette_STATUS(),
+                    Game::getTexClut_STATUS(),
                     (int16_t)(pMenuItem->x + 14 + sliderVal),
                     (int16_t)(pMenuItem->y + 20),
                     // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)
@@ -491,7 +491,7 @@ void O_Drawer() noexcept {
 
         I_DrawSprite(
             gTex_STATUS.texPageId,
-            Game::getTexPalette_STATUS(),
+            Game::getTexClut_STATUS(),
             (int16_t) menuItem.x - 24,
             (int16_t) menuItem.y - 2,
             // PsyDoom: the STATUS texture atlas might not be at UV 0,0 anymore! (if limit removing, but always offset to be safe)

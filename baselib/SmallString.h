@@ -8,7 +8,7 @@
 // Base generic type for small string classes.
 // Used to help eliminate redundancy between each small string type.
 //------------------------------------------------------------------------------------------------------------------------------------------
-template <typename WordT, uint32_t NumWords> 
+template <typename WordT, uint32_t NumWords>
 struct TSmallString {
     // Maximum length of this string (in characters)
     static constexpr uint32_t MAX_LEN = sizeof(WordT) * NumWords;

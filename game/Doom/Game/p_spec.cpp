@@ -27,6 +27,7 @@
 #include "p_tick.h"
 #include "PsyDoom/Config/Config.h"
 #include "PsyDoom/Game.h"
+#include "PsyDoom/MapInfo/GecMapInfo.h"
 #include "PsyDoom/ParserTokenizer.h"
 #include "PsyDoom/ScriptingEngine.h"
 
@@ -34,14 +35,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-// Definition for a flat or texture animation
-struct animdef_t {
-    bool        istexture;      // False for flats
-    char        startname[9];   // Name of the first lump in the animation
-    char        endname[9];     // Name of the last lump in the animation
-    uint32_t    ticmask;        // New field for PSX: controls which game tics the animation will advance on
-};
 
 // Mask applied to offsets for scrolling walls (wrap every 128 units)
 static constexpr int32_t SCROLLMASK = 0xFF7F0000;
@@ -174,13 +167,21 @@ static void P_ReadUserAnimDefs(const char* const lumpName, const bool bWallAnims
 // Uses the list of base animations appropriate to the game being played, plus any anims defined in user mods.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitAnimDefs() noexcept {
-    // Add base animation definitions
+    // Add base animation definitions.
+    // Note that for 'GEC Master Edition Beta 4' (and later) the animation definitions are defined via it's own MAPINFO.
     gAnimDefs.clear();
     gAnimDefs.reserve(128);
     const int32_t baseNumAnims = Game::gConstants.baseNumAnims;
 
-    for (int32_t i = 0; i < baseNumAnims; ++i) {
-        gAnimDefs.push_back(gBaseAnimDefs[i]);
+    if (GecMapInfo::shouldUseGecMapInfo()) {
+        // GEC Master Edition Beta 4 or later
+        gAnimDefs = GecMapInfo::getBaseAnimDefs();
+    }
+    else {
+        // Normal case: Doom, Final Doom and so on - use a hardcoded set of base animation definitions:
+        for (int32_t i = 0; i < baseNumAnims; ++i) {
+            gAnimDefs.push_back(gBaseAnimDefs[i]);
+        }
     }
 
     // Read user animation definitions

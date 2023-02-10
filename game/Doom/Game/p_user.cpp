@@ -65,7 +65,6 @@ static constexpr fixed_t FORWARD_MOVE_FDOOM[2]  = { 0x0E000, 0x16000 };         
 static constexpr fixed_t SIDE_MOVE_DOOM[2]      = { 0x38000, 0x58000 };             // Movement speeds (Doom, for 4 vblanks): strafe left/right
 static constexpr fixed_t SIDE_MOVE_FDOOM[2]     = { 0x0E000, 0x16000 };             // Movement speeds (Final Doom, for 1 vblank): strafe left/right
 static constexpr int32_t TURN_ACCEL_TICS        = C_ARRAY_SIZE(ANGLE_TURN_DOOM);    // Number of tics/stages in turn acceleration before it hits max speed
-static constexpr int32_t TURN_TO_ANGLE_SHIFT    = 17;                               // How many bits to shift the turn amount left to scale it to an angle
 static constexpr fixed_t MAXBOB                 = 16 * FRACUNIT;                    // Maximum amount of view bobbing per frame (16 pixels)
 
 // Flag set to true when the player is on the ground
@@ -374,13 +373,15 @@ static void P_BuildMove(player_t& player) noexcept {
         }
 
         // Handle Final Doom psx mouse movements that become strafing
-        player.sidemove -= psxMouseMoveX;
+        player.sidemove += psxMouseMoveX;
     }
     else {
         // No strafe button held: do normal turning.
-        // PsyDoom: we now only do this if playing back a classic demo, turning movements are now done outside of 30 Hz ticks and only committed here.
+        // 
+        // PsyDoom: we now only do this if playing back a demo which restricts turning to 30 Hz ticks (classic, GEC demo formats).
+        // In all other cases turning movements are now done outside of 30 Hz ticks and only committed here.
         #if PSYDOOM_MODS
-            const bool bDoTurning = DemoPlayer::isPlayingAClassicDemo();
+            const bool bDoTurning = DemoPlayer::isPlayerTurning30HzCapped();
         #else
             const bool bDoTurning = true;
         #endif
@@ -421,7 +422,7 @@ static void P_BuildMove(player_t& player) noexcept {
             player.angleturn = (angle_t) d_lshift<TURN_TO_ANGLE_SHIFT>(turnAmt);
 
             // Apply Final Doom mouse turning also
-            player.angleturn += psxMouseMoveX;
+            player.angleturn -= psxMouseMoveX;
         }
     }
 
@@ -443,7 +444,7 @@ static void P_BuildMove(player_t& player) noexcept {
     // PsyDoom: apply analog turning movements; this has already been adjusted for framerate, so is applied directly.
     // We ignore the new turning system however when playing back classic demos.
     #if PSYDOOM_MODS
-        if (!DemoPlayer::isPlayingAClassicDemo()) {
+        if (DemoPlayer::getPlayingDemoFormat() != DemoFormat::Classic) {
             player.angleturn += inputs.getAnalogTurn();
         }
     #endif
@@ -469,7 +470,7 @@ static void P_BuildMove(player_t& player) noexcept {
     }
 
     // Apply Final Doom mouse movement also
-    player.forwardmove += psxMouseMoveY;
+    player.forwardmove -= psxMouseMoveY;
 
     // PsyDoom: do analog movements and also cancel any digital movement if using the analog controller
     #if PSYDOOM_MODS
@@ -683,13 +684,12 @@ static void P_MovePlayer(player_t& player) noexcept {
     mobj_t& mobj = *player.mo;
 
     if (Game::gSettings.bUseFinalDoomPlayerMovement) {
-        // PsyDoom: we only need to apply the vblank scale if playing back a classic demo.
-        // If not playing a demo then it has already been applied.
+        // PsyDoom: we only need to apply the vblank scale if playing back a demo which restricts turning to be within 30 Hz ticks
         #if PSYDOOM_MODS
-            if (!DemoPlayer::isPlayingAClassicDemo()) {
-                mobj.angle += player.angleturn;
-            } else {
+            if (DemoPlayer::isPlayerTurning30HzCapped()) {
                 mobj.angle += player.angleturn * gPlayersElapsedVBlanks[gPlayerNum];
+            } else {
+                mobj.angle += player.angleturn;
             }
         #else
             mobj.angle += player.angleturn * gPlayersElapsedVBlanks[gPlayerNum];

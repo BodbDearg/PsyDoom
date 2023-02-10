@@ -26,23 +26,20 @@ void initGameInfo_Doom(GameInfo& gameInfo) noexcept {
     gameInfo.bAllowWideOptionsBg = false;
     gameInfo.titleScreenStyle = TitleScreenStyle::Doom;
     gameInfo.creditsScreenStyle = CreditsScreenStyle::Doom;
+    gameInfo.texPalette_titleScreenFire = FIRESKYPAL;
     gameInfo.texPalette_STATUS = UIPAL;
     gameInfo.texPalette_TITLE = TITLEPAL;
     gameInfo.texPalette_BACK = MAINPAL;
+    gameInfo.texLumpName_BACK = "BACK";
+    gameInfo.texPalette_Inter_BACK = {};    // Default: use the same 'BACK' graphic as the main menu
+    gameInfo.texLumpName_Inter_BACK = {};
     gameInfo.texPalette_LOADING = UIPAL;
     gameInfo.texPalette_PAUSE = MAINPAL;
     gameInfo.texPalette_NETERR = UIPAL;
     gameInfo.texPalette_DOOM = TITLEPAL;
     gameInfo.texPalette_CONNECT = MAINPAL;
-    gameInfo.texPalette_IDCRED1 = IDCREDITS1PAL;
-    gameInfo.texPalette_IDCRED2 = UIPAL;
-    gameInfo.texPalette_WMSCRED1 = WCREDITS1PAL;
-    gameInfo.texPalette_WMSCRED2 = UIPAL;
-    gameInfo.texPalette_LEVCRED2 = WCREDITS1PAL;
     gameInfo.texPalette_OptionsBG = MAINPAL;
     gameInfo.texLumpName_OptionsBG = "MARB01";
-    gameInfo.creditsXPos_IDCRED2 = 9;
-    gameInfo.creditsXPos_WMSCRED2 = 7;
 
     // Doom one level demo: don't allow going past 'The Gantlet'
     if (Game::gbIsDemoVersion) {
@@ -205,6 +202,14 @@ void addMaps_Doom(std::vector<Map>& maps) noexcept {
         map.bPlayCdMusic = true;
         map.music = gCDTrackNum[cdmusic_credits_demo];
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds the credit pages for 'Doom' to the given list
+//------------------------------------------------------------------------------------------------------------------------------------------
+void addCredits_Doom(std::vector<CreditsPage>& credits) noexcept {
+    addCreditsPage(credits, "IDCRED1",   "IDCRED2",   IDCREDITS1PAL,  UIPAL,  9,  182);
+    addCreditsPage(credits, "WMSCRED1",  "WMSCRED2",  WCREDITS1PAL,   UIPAL,  7,  228);
 }
 
 END_NAMESPACE(MapInfo)

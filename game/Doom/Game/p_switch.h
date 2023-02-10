@@ -6,6 +6,12 @@
 
 struct line_t;
 
+// Defines the two textures used by a switch
+struct switchlist_t {
+    char    name1[9];
+    char    name2[9];
+};
+
 // Identifies which part of a line/wall has a button texture on it (top / middle / bottom)
 enum bwhere_e : int32_t {
     top,

@@ -14,6 +14,7 @@
 #include "doomdata.h"
 #include "g_game.h"
 #include "info.h"
+#include "p_enemy.h"
 #include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -433,6 +434,14 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
         I_Error("P_SpawnMapThing: Unknown doomednum %d at (%d, %d)", (int) mapthing.type, (int) mapthing.x, (int) mapthing.y);
         return;
     }
+
+    // PsyDoom: is the thing just intended to be added to the roster of 'Icon Of Sin' enemies and not spawned?
+    #if PSYDOOM_MODS
+        if (mapthing.options & MTF_SPAWN_BY_IOS) {
+            P_AddToIosEnemyRoster(thingType);
+            return;
+        }
+    #endif
 
     // Do not spawn monsters and keycards in deathmatch
     const mobjinfo_t& info = gMobjInfo[thingType];

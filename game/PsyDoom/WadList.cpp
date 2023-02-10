@@ -126,6 +126,18 @@ void WadList::purgeAllLumps() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the size in bytes that the lump occupies in the WAD file.
+// If the lump is uncompressed then this will be the actual lump size.
+// If the lump is compressed then this will be the compressed size.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t WadList::getRawSize(const int32_t lumpIdx) noexcept {
+    ASSERT(isValidLumpIdx(lumpIdx));
+    const LumpHandle& lumpHandle = mLumpHandles[lumpIdx];
+    WadFile& wadFile = mWadFiles[lumpHandle.wadFileIdx];
+    return wadFile.getRawSize(lumpHandle.wadLumpIdx);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Cache/load the specified lump index and return all of the lump information, including the cached data for the lump.
 // Optionally, the lump can also be decompressed.
 // 

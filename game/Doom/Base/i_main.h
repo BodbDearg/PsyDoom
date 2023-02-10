@@ -8,6 +8,7 @@
 
 struct DISPENV;
 struct DRAWENV;
+struct String8;
 struct texture_t;
 
 // Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB.
@@ -95,6 +96,12 @@ void I_PSXInit() noexcept;
 
 uint32_t I_ReadGamepad() noexcept;
 void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpNum) noexcept;
+
+#if PSYDOOM_MODS
+    void I_LoadAndCacheTexLump(texture_t& tex, const String8& name) noexcept;
+#endif
+
+void I_LoadAndCache_LOADING_TexLump(texture_t& tex) noexcept;
 void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
 void I_CacheAndDrawBackgroundSprite(texture_t& tex, const int16_t clutId) noexcept;
 

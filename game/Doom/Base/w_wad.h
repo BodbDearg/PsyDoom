@@ -28,10 +28,11 @@ void W_Shutdown() noexcept;
 #endif
 
 const WadLump& W_GetLump(const int32_t lumpIdx) noexcept;
-const WadLumpName W_GetLumpName(const int32_t lumpIdx) noexcept;
+WadLumpName W_GetLumpName(const int32_t lumpIdx) noexcept;
 int32_t W_CheckNumForName(const WadLumpName lumpName, const int32_t searchStartIdx = 0) noexcept;
 int32_t W_GetNumForName(const WadLumpName lumpName) noexcept;
 int32_t W_LumpLength(const int32_t lumpIdx) noexcept;
+int32_t W_RawLumpLength(const int32_t lumpIdx) noexcept;
 void W_ReadLump(const int32_t lumpIdx, void* const pDest, const bool bDecompress) noexcept;
 const WadLump& W_CacheLumpNum(const int32_t lumpIdx, const int16_t allocTag, const bool bDecompress) noexcept;
 const WadLump& W_CacheLumpName(const WadLumpName lumpName, const int16_t allocTag, const bool bDecompress) noexcept;
@@ -40,6 +41,7 @@ void W_CloseMapWad() noexcept;
 int32_t W_MapCheckNumForName(const WadLumpName lumpName) noexcept;
 int32_t W_MapGetNumForName(const WadLumpName lumpName) noexcept;
 int32_t W_MapLumpLength(const int32_t lumpIdx) noexcept;
+int32_t W_RawMapLumpLength(const int32_t lumpIdx) noexcept;
 void W_ReadMapLump(const int32_t lumpIdx, void* const pDest, const bool bDecompress) noexcept;
 void decode(const void* pSrc, void* pDst) noexcept;
 uint32_t getDecodedSize(const void* const pSrc) noexcept;

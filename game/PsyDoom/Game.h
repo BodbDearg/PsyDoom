@@ -15,6 +15,7 @@ enum class GameType : int32_t {
     GEC_ME_Beta3,               // [GEC] Master Edition PSX Doom for the PlayStation (Beta 3)
     GEC_ME_TestMap_Doom,        // [GEC] Master Edition tools: single map test disc ('Doom' format)
     GEC_ME_TestMap_FinalDoom,   // [GEC] Master Edition tools: single map test disc ('Final Doom' format)
+    GEC_ME_Beta4,               // [GEC] Master Edition PSX Doom for the PlayStation (Beta 4)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -38,6 +39,7 @@ extern bool             gbIsDemoVersion;
 extern bool             gbIsPsxDoomForever;
 
 void determineGameTypeAndVariant() noexcept;
+bool isGameTypeGecMe() noexcept;
 void getUserGameSettings(GameSettings& settings) noexcept;
 void getClassicDemoGameSettings(GameSettings& settings) noexcept;
 int32_t getNumMaps() noexcept;
@@ -47,27 +49,26 @@ int32_t getNumEpisodes() noexcept;
 const String32& getEpisodeName(const int32_t episodeNum) noexcept;
 int32_t getEpisodeStartMap(const int32_t episodeNum) noexcept;
 int32_t getMapEpisode(const int32_t mapNum) noexcept;
-uint16_t getTexPalette_STATUS() noexcept;
-uint16_t getTexPalette_TITLE() noexcept;
-uint16_t getTexPalette_BACK() noexcept;
-uint16_t getTexPalette_LOADING() noexcept;
-uint16_t getTexPalette_PAUSE() noexcept;
-uint16_t getTexPalette_NETERR() noexcept;
-uint16_t getTexPalette_DOOM() noexcept;
-uint16_t getTexPalette_CONNECT() noexcept;
-uint16_t getTexPalette_BUTTONS() noexcept;
-uint16_t getTexPalette_IDCRED1() noexcept;
-uint16_t getTexPalette_IDCRED2() noexcept;
-uint16_t getTexPalette_WMSCRED1() noexcept;
-uint16_t getTexPalette_WMSCRED2() noexcept;
-uint16_t getTexPalette_LEVCRED2() noexcept;
-uint16_t getTexPalette_GEC() noexcept;
-uint16_t getTexPalette_GECCRED() noexcept;
-uint16_t getTexPalette_DWOLRD() noexcept;
-uint16_t getTexPalette_DWCRED() noexcept;
-uint16_t getTexPalette_DATA() noexcept;
-uint16_t getTexPalette_FINAL() noexcept;
-uint16_t getTexPalette_OptionsBg() noexcept;
+uint16_t getTexClut_TitleScreenFire() noexcept;
+uint16_t getTexClut_STATUS() noexcept;
+uint16_t getTexClut_TITLE() noexcept;
+uint16_t getTexClut_TITLE2() noexcept;
+uint16_t getTexClut_BACK() noexcept;
+uint16_t getTexClut_Inter_BACK() noexcept;
+uint16_t getTexClut_LOADING() noexcept;
+uint16_t getTexClut_PAUSE() noexcept;
+uint16_t getTexClut_NETERR() noexcept;
+uint16_t getTexClut_DOOM() noexcept;
+uint16_t getTexClut_CONNECT() noexcept;
+uint16_t getTexClut_BUTTONS() noexcept;
+uint16_t getTexClut_DATA() noexcept;
+uint16_t getTexClut_FINAL() noexcept;
+uint16_t getTexClut_OptionsBg() noexcept;
+String8 getTexLumpName_STATUS() noexcept;
+String8 getTexLumpName_TITLE() noexcept;
+String8 getTexLumpName_TITLE2() noexcept;
+String8 getTexLumpName_BACK() noexcept;
+String8 getTexLumpName_Inter_BACK() noexcept;
 String8 getTexLumpName_OptionsBg() noexcept;
 void startLevelTimer() noexcept;
 void stopLevelTimer() noexcept;

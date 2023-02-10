@@ -36,14 +36,14 @@
 
 // Assert with a formatted message on failure
 #if ASSERTS_ENABLED == 1
-    #define ASSERT_LOG_F(Condition, MessageFormat, ...)\
+    #define ASSERT_LOG_F(Condition, MessageFormatStr, ...)\
         do {\
             if (!(Condition)) {\
-                FatalErrors::raiseF("Assert failed! Condition: %s\n" ## MessageFormat ## "\n", #Condition, __VA_ARGS__);\
+                FatalErrors::raiseF("Assert failed! Condition: %s\n" MessageFormatStr "\n", #Condition, __VA_ARGS__);\
             }\
         } while (0)
 #else
-    #define ASSERT_LOG_F(Condition, MessageFormat, ...)
+    #define ASSERT_LOG_F(Condition, MessageFormatStr, ...)
 #endif
 
 // Raise a failed assertion
@@ -53,9 +53,9 @@
             FatalErrors::raiseF("Assert failed!\n%s\n", Message);\
         } while (0)
 
-    #define ASSERT_FAIL_F(MessageFormat, ...)\
+    #define ASSERT_FAIL_F(MessageFormatStr, ...)\
         do {\
-            FatalErrors::raiseF("Assert failed!\n" ## MessageFormat ## "\n", __VA_ARGS__);\
+            FatalErrors::raiseF("Assert failed!\n" MessageFormatStr "\n", __VA_ARGS__);\
         } while (0)
 #else
     #define ASSERT_FAIL(Message)

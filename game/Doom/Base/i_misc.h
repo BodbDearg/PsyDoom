@@ -25,6 +25,14 @@ enum : int32_t {
     BIG_FONT_LCASE_ALPHA    = 40
 };
 
+// The size in pixels (width and height) of the small font and top V coordinate for all it's characters
+static constexpr int32_t SMALL_FONT_SIZE = 8;
+static constexpr int32_t SMALL_FONT_V_MIN = 168;
+
+// How high each line is for the big font and the width of a single space
+static constexpr int32_t BIG_FONT_LINE_HEIGHT = 16;
+static constexpr int32_t BIG_FONT_WHITESPACE_CHAR_WIDTH = 6;
+
 void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcept;
 
 #if PSYDOOM_MODS

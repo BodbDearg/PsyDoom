@@ -37,6 +37,7 @@ static constexpr uint32_t SKYPAL2               = 22;   // PSX Final Doom: addit
 static constexpr uint32_t SKYPAL3               = 23;   // PSX Final Doom: additional sky palette
 static constexpr uint32_t SKYPAL4               = 24;   // PSX Final Doom: additional sky palette
 static constexpr uint32_t SKYPAL5               = 25;   // PSX Final Doom: additional sky palette
+static constexpr uint32_t GECSKYPAL             = 31;   // GEC Master Edition Beta 4 (and later): a dynamic palette slot which receives a new palette on each map load (for the sky)
 
 // Structure for a palette in the game: contains 256 XBGR1555 color values.
 struct palette_t {
@@ -144,6 +145,7 @@ extern int32_t      gNumSpriteLumps;
 #endif
 
 void R_InitData() noexcept;
+uint16_t R_UploadPalette(const palette_t& palette, const uint32_t palIdx) noexcept;
 
 #if PSYDOOM_MODS
     int32_t R_TextureNumForName(const char* const name, const bool bMustExist = false) noexcept;
@@ -151,6 +153,7 @@ void R_InitData() noexcept;
     texture_t& R_GetTexForLump(const int32_t lumpIdx) noexcept;
     int32_t R_GetOverrideFlatNum(const int32_t origFlatNum) noexcept;
     int32_t R_GetOverrideTexNum(const int32_t origTexNum) noexcept;
+    uint16_t R_GetPaletteClutId(const uint32_t paletteNum) noexcept;
 #else
     int32_t R_TextureNumForName(const char* const name) noexcept;
     int32_t R_FlatNumForName(const char* const name) noexcept;
