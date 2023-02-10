@@ -46,8 +46,8 @@ void A_BabyMetal(mobj_t& actor) noexcept;
 void L_MissileHit(mobj_t& missile) noexcept;
 void L_SkullBash(mobj_t& actor) noexcept;
 
-// PsyDoom: adding support for missing PC Doom II actors
 #if PSYDOOM_MODS
+    // PsyDoom: adding support for missing PC Doom II actors
     void A_VileChase(mobj_t& actor) noexcept;
     void A_VileStart(mobj_t& actor) noexcept;
     void A_VileTarget(mobj_t& actor) noexcept;
@@ -64,4 +64,8 @@ void L_SkullBash(mobj_t& actor) noexcept;
     void A_BrainSpit(mobj_t& actor) noexcept;
     void A_SpawnSound(mobj_t& actor) noexcept;
     void A_SpawnFly(mobj_t& actor) noexcept;
+
+    // PsyDoom: controlling the manually specified roster of enemies for the 'Icon Of Sin' boss
+    void P_ResetIosEnemyRoster() noexcept;
+    void P_AddToIosEnemyRoster(const mobjtype_t enemyType) noexcept;
 #endif

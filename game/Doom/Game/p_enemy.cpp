@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 static constexpr angle_t TRACEANGLE = 0xC000000;        // How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)
 static constexpr angle_t FATSPREAD  = ANG90 / 8;        // Angle adjustment increment for the Mancubus when attacking; varies it's shoot direction in multiples of this constant
@@ -73,10 +74,15 @@ constexpr static dirtype_t gDiagonalDirs[4] = {
 
 // PsyDoom: Icon Of Sin related globals
 #if PSYDOOM_MODS
-    static constexpr int32_t MAX_BRAIN_TARGETS = 64;        // Note: this is double the PC limit, should be more than enough...
+    // Note: this is double the PC limit, should be more than enough...
+    static constexpr int32_t MAX_BRAIN_TARGETS = 64; 
 
-    static mobj_t*  gpBrainTargets[MAX_BRAIN_TARGETS];      // Target points for the Icon Of Sin spawner
-    static int32_t  gNumBrainTargets;                       // How many target points there are for the Icon Of Sin spawner
+    // Target points for the Icon Of Sin spawner and how of them there are
+    static mobj_t* gpBrainTargets[MAX_BRAIN_TARGETS];
+    static int32_t gNumBrainTargets;
+    
+    // A manually specified roster of enemies which can be spawned by the Icon Of Sin
+    static std::vector<mobjtype_t> gIosEnemyRoster;
 #endif
 
 #if PSYDOOM_MODS
@@ -1844,31 +1850,62 @@ void A_SpawnFly(mobj_t& actor) noexcept {
         mobj_t& fireFx = *P_SpawnMobj(pTarget->x, pTarget->y, pTarget->z, MT_SPAWNFIRE);
         S_StartSound(&fireFx, sfx_telept);
 
+        // Blend flags to use for the newly spawned enemy or thing.
+        // Only set in the case of a manually specified enemy roster.
+        uint32_t spawnBlendFlags = 0;
+
         // Randomly decide which enemy to spawn.
         // Lower level enemies are generally weighted higher in terms of probability.
-        const int32_t randNum = P_Random();
+        // Note: use the manual roster of enemies if that is available, instead of the original Doom II roster.
         mobjtype_t spawnType;
 
-        if (randNum < 50) {
-            spawnType = MT_TROOP;
-        } else if (randNum < 120) {
-            spawnType = MT_SERGEANT;
-        } else if (randNum < 130) {
-            spawnType = MT_PAIN;
-        } else if (randNum < 160) {
-            spawnType = MT_HEAD;
-        } else if ((randNum < 162) && gbHaveSprites_ArchVile) {     // Pass over the Arch-vile if we haven't got the sprites available...
-            spawnType = MT_VILE;
-        } else if (randNum < 172) {
-            spawnType = MT_UNDEAD;
-        } else if (randNum < 192) {
-            spawnType = MT_BABY;
-        } else if (randNum < 222) {
-            spawnType = MT_FATSO;
-        } else if (randNum < 246) {
-            spawnType = MT_KNIGHT;
-        } else {
-            spawnType = MT_BRUISER;
+        if (gIosEnemyRoster.empty()) {
+            // Use the original Doom II roster of enemies
+            const int32_t randNum = P_Random();
+
+            if (randNum < 50) {
+                spawnType = MT_TROOP;
+            } else if (randNum < 120) {
+                spawnType = MT_SERGEANT;
+            } else if (randNum < 130) {
+                spawnType = MT_PAIN;
+            } else if (randNum < 160) {
+                spawnType = MT_HEAD;
+            } else if ((randNum < 162) && gbHaveSprites_ArchVile) {     // Pass over the Arch-vile if we haven't got the sprites available...
+                spawnType = MT_VILE;
+            } else if (randNum < 172) {
+                spawnType = MT_UNDEAD;
+            } else if (randNum < 192) {
+                spawnType = MT_BABY;
+            } else if (randNum < 222) {
+                spawnType = MT_FATSO;
+            } else if (randNum < 246) {
+                spawnType = MT_KNIGHT;
+            } else {
+                spawnType = MT_BRUISER;
+            }
+        }
+        else {
+            // Use the manually specified roster of enemies since that is available.
+            // Note: use a 16-bit random number if the roster is large.
+            uint32_t randNum = P_Random();
+
+            if (gIosEnemyRoster.size() > 256) {
+                randNum <<= 8;
+                randNum |= (uint8_t) P_Random();
+            }
+
+            spawnType = gIosEnemyRoster[randNum % gIosEnemyRoster.size()];
+
+            // Ocassionally apply special blending to add more variety
+            if ((randNum % 256) >= 192) {
+                switch (randNum & 3) {
+                    case 0: spawnBlendFlags = MF_BLEND_ALPHA_50;    break;
+                    case 1: spawnBlendFlags = MF_BLEND_ADD;         break;
+                    case 2: spawnBlendFlags = MF_BLEND_ADD_25;      break;
+                    case 3: spawnBlendFlags = MF_BLEND_SUBTRACT;    break;
+                }
+            }
         }
 
         // Spawn the enemy and alert it immediately
@@ -1876,6 +1913,13 @@ void A_SpawnFly(mobj_t& actor) noexcept {
 
         if (P_LookForPlayers(spawned, true)) {
             P_SetMobjState(spawned, spawned.info->seestate);
+        }
+
+        // Apply special blending (if any) and nightmare health adjustments
+        spawned.flags |= spawnBlendFlags;
+
+        if (spawnBlendFlags == MF_BLEND_SUBTRACT) {
+            spawned.health *= 2;
         }
 
         // Increment the total kill count if the kill count fix is enabled
@@ -1891,4 +1935,32 @@ void A_SpawnFly(mobj_t& actor) noexcept {
     // Remove the spawner cube
     P_RemoveMobj(actor);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clears the manually specified roster of enemies which can be spawned by the Icon Of Sin.
+// Until an enemy type is added to this roster then the original Doom II roster of enemies will be used.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_ResetIosEnemyRoster() noexcept {
+    gIosEnemyRoster.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Adds an enemy type to the manually specified roster of enemies which can be spawned by the icon of sin.
+// Note: only monsters and shootable type things can be added to the roster.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_AddToIosEnemyRoster(const mobjtype_t enemyType) noexcept {
+    // Get the details for this enemy type
+    const uint32_t mobjTypeIdx = (uint32_t) enemyType;
+    ASSERT(mobjTypeIdx < (uint32_t) gNumMobjInfo);
+    const mobjinfo_t& mobjInfo = gMobjInfo[mobjTypeIdx];
+
+    // Ignore the request if it's not an enemy or thing that can be shot (might be a mapping mistake)
+    if ((mobjInfo.flags & (MF_COUNTKILL | MF_SHOOTABLE)) == 0)
+        return;
+
+    // Add it! Note that I deliberately don't check for duplicate entries.
+    // This allows for crude probability weighting, if certain enemies are in the roster more often.
+    gIosEnemyRoster.push_back(enemyType);
+}
+
 #endif  // #if PSYDOOM_MODS

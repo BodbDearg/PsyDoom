@@ -18,6 +18,7 @@
 #include "g_game.h"
 #include "info.h"
 #include "p_doors.h"
+#include "p_enemy.h"
 #include "p_firesky.h"
 #include "p_floor.h"
 #include "p_inter.h"
@@ -1727,6 +1728,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     gpDeathmatchP = &gDeathmatchStarts[0];
 
     #if PSYDOOM_MODS
+        P_ResetIosEnemyRoster();                        // PsyDoom: reset the manually specified roster of enemies for the Icon Of Sin boss
         P_LoadThings(W_MapGetNumForName("THINGS"));     // PsyDoom: not using relative indexing anymore to load map lumps, search for the lump names instead
         ScriptingEngine::init();                        // PsyDoom: initialize the scripting engine if the map has Lua scripted actions
         MapHash::finalize();                            // PsyDoom: compute the final map hash
