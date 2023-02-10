@@ -1571,13 +1571,16 @@ void A_VileChase(mobj_t& actor) noexcept {
                 raiseMobj.health = raiseObjInfo.spawnhealth;
                 raiseMobj.target = nullptr;
 
+                // Nightmare monsters get 2x health on respawn
+                if ((raiseMobj.flags & MF_ALL_BLEND_FLAGS) == MF_BLEND_SUBTRACT) {
+                    raiseMobj.health *= 2;
+                }
+
                 // PsyDoom: increment the total enemy count if fixing the kill count is enabled.
                 // This stops the player from exceeding 100% kills and gives the user more accurate stats.
-                #if PSYDOOM_MODS
-                    if (Game::gSettings.bFixKillCount) {
-                        gTotalKills++;
-                    }
-                #endif
+                if (Game::gSettings.bFixKillCount) {
+                    gTotalKills++;
+                }
 
                 // Done! Don't do any chasing while raising...
                 return;
