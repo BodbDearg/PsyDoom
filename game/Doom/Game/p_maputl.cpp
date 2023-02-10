@@ -259,7 +259,7 @@ bool P_BlockLinesIterator(const int32_t x, const int32_t y, bool (*pFunc)(line_t
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Visit all things in the specified blockmap cell, calling the given function for each line in the cell.
+// Visit all things in the specified blockmap cell, calling the given function for each thing in the cell.
 // The called function can abort iteration by returning 'false'.
 // This function returns 'false' if iteration was aborted.
 //------------------------------------------------------------------------------------------------------------------------------------------
