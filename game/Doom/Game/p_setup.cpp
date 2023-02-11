@@ -1360,8 +1360,12 @@ static void P_Init() noexcept {
             if (pGecSky) {
                 // Load the palette for the sky into the 'dynamic' palette slot reserved for GEC map sky palettes.
                 // If the palette is invalid however then fall back to using the main palette.
-                if (pGecSky->paletteIdx < BuiltInPaletteData::NUM_GEC_ME_MAP_SKY_PALETTES) {
-                    gPaletteClutId_CurMapSky = R_UploadPalette(BuiltInPaletteData::GEC_ME_MAP_SKY_PALETTES[pGecSky->paletteIdx], GECSKYPAL);
+                const WadLump& lump = W_CacheLumpName("SKYPALS", PU_CACHE, true);
+                const palette_t* const pPalettes = reinterpret_cast<const palette_t*>(lump.pCachedData);
+                const uint32_t numPalettes = lump.uncompressedSize / sizeof(palette_t);
+
+                if (pGecSky->paletteIdx < numPalettes) {
+                    gPaletteClutId_CurMapSky = R_UploadPalette(pPalettes[pGecSky->paletteIdx], GECSKYPAL);
                 } else {
                     std::snprintf(gLevelStartupWarning, C_ARRAY_SIZE(gLevelStartupWarning), "W:bad GEC skypal %d!", pGecSky->paletteIdx);
                     gPaletteClutId_CurMapSky = gPaletteClutIds[MAINPAL];
