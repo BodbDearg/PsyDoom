@@ -226,6 +226,15 @@ void initCfgSerialization_Graphics() noexcept {
         6
     );
 
+    cfg.enhanceWallDrawPrecision = makeConfigField(
+        "EnhanceWallDrawPrecision",
+        "Classic renderer only: whether to enable a new enhanced precision mode when rendering walls.\n"
+        "Helps prevent textures from stretching and sliding horizontally and makes texture mapping much\n"
+        "more temporally stable when using an uncapped framerate.",
+        gbEnhanceWallDrawPrecision,
+        true
+    );
+
     cfg.floorRenderGapFix = makeConfigField(
         "FloorRenderGapFix",
         "Classic renderer only: whether to enable a precision fix for the floor renderer to prevent gaps\n"

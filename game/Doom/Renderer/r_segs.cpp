@@ -5,12 +5,65 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
+#include "PsyDoom/Config/Config.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
 #include "r_local.h"
 #include "r_main.h"
 
 #include <algorithm>
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Decompress and upload the specified wall texture to VRAM if we haven't already done so.
+// Used to update animated walls like blood or slime textures.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void R_UploadWallTexToVram(texture_t& tex) noexcept {
+    // This code gets invoked constantly for animated textures like the blood or slime fall textures.
+    // Only one frame of the animated texture stays in VRAM at a time!
+    if (tex.uploadFrameNum != TEX_INVALID_UPLOAD_FRAME_NUM)
+        return;
+
+    // Decompress (PsyDoom: if required) and get a pointer to the texture data.
+    // PsyDoom: also made updates here to work with the new WAD management code.
+    #if PSYDOOM_MODS
+        const WadLump& texLump = W_GetLump(tex.lumpNum);
+        const void* const pLumpData = texLump.pCachedData;
+    #else
+        const void* const pLumpData = gpLumpCache[tex.lumpNum];
+    #endif
+
+    const std::byte* pTexData;
+
+    #if PSYDOOM_LIMIT_REMOVING
+        if (texLump.bIsUncompressed) {
+            pTexData = (const std::byte*) pLumpData;
+        } else {
+            gTmpBuffer.ensureSize(texLump.uncompressedSize);
+            decode(pLumpData, gTmpBuffer.bytes());
+            pTexData = gTmpBuffer.bytes();
+        }
+    #else
+        // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
+        #if PSYDOOM_MODS
+            if (getDecodedSize(pLumpData) > TMP_BUFFER_SIZE) {
+                I_Error("R_DrawWallPiece: lump %d size > 64 KiB!", tex.lumpNum);
+            }
+        #endif
+
+        decode(pLumpData, gTmpBuffer);
+        pTexData = gTmpBuffer;
+    #endif
+
+    // Upload to the GPU and mark the texture as loaded this frame.
+    // PsyDoom: also ensure texture metrics are up-to-date.
+    #if PSYDOOM_MODS
+        R_UpdateTexMetricsFromData(tex, pTexData, texLump.uncompressedSize);
+    #endif
+
+    const SRECT texRect = getTextureVramRect(tex);
+    LIBGPU_LoadImage(texRect, (const uint16_t*)(pTexData + sizeof(texlump_header_t)));
+    tex.uploadFrameNum = gNumFramesDrawn;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the upper, lower and middle walls for the given leaf edge
@@ -251,8 +304,12 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws the given upper, lower or middle wall piece for a leaf edge.
 // Draws all of the columns in the wall.
+// 
+// Optionally, can use an enhanced 64-bit precision mode to calculate the 'U' texture coordinate.
+// This helps prevent wall texture coordinates from 'drifting'.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void R_DrawWallPiece(
+template <bool ExtendedPrecision>
+static void R_DrawWallPieceImpl(
     const leafedge_t& edge,
     texture_t& tex,
     const int32_t yt,
@@ -261,6 +318,11 @@ void R_DrawWallPiece(
     const int32_t vb,
     bool bTransparent
 ) noexcept {
+    // Extended precision helpers
+    typedef std::conditional_t<ExtendedPrecision, int64_t, fixed_t> fixed_varp_t;       // A fixed_t which is 64 bit if using extended precision
+    constexpr uint8_t HIP_TO_LOWP_SHIFT = (ExtendedPrecision) ? 0 : 8;                  // A shift to go from 16.16 fixed point to a lower precision fixed point number (how many bits to chop)
+    constexpr uint8_t LOWP_FRAC_BITS = 16 - HIP_TO_LOWP_SHIFT;                          // How many fractional bits are in lower precision fixed point numbers
+
     // Firstly determine the x size of the leaf edge onscreen: if zero or negative sized (back facing?) then ignore
     const leafedge_t& nextEdge = (&edge)[1];
     const vertex_t& vert1 = *edge.vertex;
@@ -299,51 +361,8 @@ void R_DrawWallPiece(
         bTransparent = true;
     }
 
-    // Decompress and upload the wall texture to VRAM if we haven't already done so.
-    // This code gets invoked constantly for animated textures like the blood or slime fall textures.
-    // Only one frame of the animated texture stays in VRAM at a time!
-    if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
-        // Decompress (PsyDoom: if required) and get a pointer to the texture data.
-        // PsyDoom: also made updates here to work with the new WAD management code.
-        #if PSYDOOM_MODS
-            const WadLump& texLump = W_GetLump(tex.lumpNum);
-            const void* const pLumpData = texLump.pCachedData;
-        #else
-            const void* const pLumpData = gpLumpCache[tex.lumpNum];
-        #endif
-
-        const std::byte* pTexData;
-
-        #if PSYDOOM_LIMIT_REMOVING
-            if (texLump.bIsUncompressed) {
-                pTexData = (const std::byte*) pLumpData;
-            } else {
-                gTmpBuffer.ensureSize(texLump.uncompressedSize);
-                decode(pLumpData, gTmpBuffer.bytes());
-                pTexData = gTmpBuffer.bytes();
-            }
-        #else
-            // PsyDoom: check for buffer overflows and issue an error if we exceed the limits
-            #if PSYDOOM_MODS
-                if (getDecodedSize(pLumpData) > TMP_BUFFER_SIZE) {
-                    I_Error("R_DrawWallPiece: lump %d size > 64 KiB!", tex.lumpNum);
-                }
-            #endif
-
-            decode(pLumpData, gTmpBuffer);
-            pTexData = gTmpBuffer;
-        #endif
-
-        // Upload to the GPU and mark the texture as loaded this frame.
-        // PsyDoom: also ensure texture metrics are up-to-date.
-        #if PSYDOOM_MODS
-            R_UpdateTexMetricsFromData(tex, pTexData, texLump.uncompressedSize);
-        #endif
-
-        const SRECT texRect = getTextureVramRect(tex);
-        LIBGPU_LoadImage(texRect, (const uint16_t*)(pTexData + sizeof(texlump_header_t)));
-        tex.uploadFrameNum = gNumFramesDrawn;
-    }
+    // Upload the wall texture to VRAM if needed
+    R_UploadWallTexToVram(tex);
 
     // Set the texture window - the area of VRAM used for texturing
     {
@@ -412,16 +431,16 @@ void R_DrawWallPiece(
     const uint32_t segFineAngle = seg.angle >> ANGLETOFINESHIFT;
     const uint32_t segViewFineAngle = (seg.angle - gViewAngle + ANG90) >> ANGLETOFINESHIFT;
 
-    const fixed_t segSin = d_rshift<8>(gFineSine[segFineAngle]);
-    const fixed_t segCos = d_rshift<8>(gFineCosine[segFineAngle]);
-    const fixed_t segViewSin = d_rshift<8>(gFineSine[segViewFineAngle]);
-    const fixed_t segViewCos = d_rshift<8>(gFineCosine[segViewFineAngle]);
-    const fixed_t segP1ViewX = d_rshift<8>(segv1.x - gViewX);
-    const fixed_t segP1ViewY = d_rshift<8>(segv1.y - gViewY);
+    const fixed_varp_t segSin = d_rshift<HIP_TO_LOWP_SHIFT>(gFineSine[segFineAngle]);
+    const fixed_varp_t segCos = d_rshift<HIP_TO_LOWP_SHIFT>(gFineCosine[segFineAngle]);
+    const fixed_varp_t segViewSin = d_rshift<HIP_TO_LOWP_SHIFT>(gFineSine[segViewFineAngle]);
+    const fixed_varp_t segViewCos = d_rshift<HIP_TO_LOWP_SHIFT>(gFineCosine[segViewFineAngle]);
+    const fixed_varp_t segP1ViewX = d_rshift<HIP_TO_LOWP_SHIFT>(segv1.x - gViewX);
+    const fixed_varp_t segP1ViewY = d_rshift<HIP_TO_LOWP_SHIFT>(segv1.y - gViewY);
 
     // Compute perpendicular distance to the line segment.
     // Should be negative if we are on the inside of the line segment:
-    const fixed_t segViewDot = d_rshift<8>(segP1ViewX * segSin - segP1ViewY * segCos);
+    const fixed_varp_t segViewDot = d_rshift<LOWP_FRAC_BITS>(segP1ViewX * segSin - segP1ViewY * segCos);
 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // 'U' texture coordinate calculation stuff:
@@ -464,11 +483,16 @@ void R_DrawWallPiece(
     //--------------------------------------------------------------------------------------------------------------------------------------
 
     // Compute the stepping values used in the loop to compute u coords and also the initial components of the interesection equation
-    const fixed_t isectNumStep = d_rshift<4>(segViewDot * segViewCos);
-    const fixed_t isectDivStep = d_rshift<4>(segViewSin);
+    const fixed_varp_t isectNumStep = d_rshift<(ExtendedPrecision) ? 0 : 4>(segViewDot * segViewCos);
+    const fixed_varp_t isectDivStep = d_rshift<(ExtendedPrecision) ? 0 : 4>(segViewSin);
 
-    fixed_t isectNum = (x1 - HALF_SCREEN_W) * isectNumStep + (segViewSin * 8 * segViewDot);
-    fixed_t isectDiv = (x1 - HALF_SCREEN_W) * isectDivStep - (segViewCos * 8);
+    fixed_varp_t isectNum = (ExtendedPrecision) ?
+        (x1 - HALF_SCREEN_W) * isectNumStep + segViewSin * segViewDot * HALF_SCREEN_W :
+        (x1 - HALF_SCREEN_W) * isectNumStep + segViewSin * segViewDot * 8;
+
+    fixed_varp_t isectDiv = (ExtendedPrecision) ?
+        (x1 - HALF_SCREEN_W) * isectDivStep - segViewCos * HALF_SCREEN_W :
+        (x1 - HALF_SCREEN_W) * isectDivStep - segViewCos * 8;
 
     // Compute the constant 'u' texture offset for the seg, in pixels.
     // This offset is based on the texture offset, as well as the viewpoint's distance along the seg.
@@ -478,10 +502,10 @@ void R_DrawWallPiece(
         const fixed_t segTextureOffset = seg.sidedef->textureoffset;
     #endif
 
-    const int32_t segStartU = d_rshift<8>(
-        (seg.offset + FRACUNIT + segTextureOffset) -
-        (segP1ViewX * segCos + segP1ViewY * segSin)
-    );
+    // PsyDoom: made slight alterations here to the calculation for start 'u' value when using enhanced precision
+    const fixed_varp_t segStartU = (ExtendedPrecision) ?
+        d_rshift<HIP_TO_LOWP_SHIFT>(seg.offset + FRACUNIT / 2 + segTextureOffset) - d_rshift<LOWP_FRAC_BITS>(segP1ViewX * segCos + segP1ViewY * segSin) :
+        d_rshift<HIP_TO_LOWP_SHIFT>(seg.offset + FRACUNIT + segTextureOffset - (segP1ViewX * segCos + segP1ViewY * segSin));
 
     // Compute the start top and bottom y values and bring into screenspace
     fixed_t ybCur_frac = yb * vert1.scale + HALF_VIEW_3D_H * FRACUNIT;
@@ -518,7 +542,7 @@ void R_DrawWallPiece(
         // Ignore the column if it is completely offscreen
         if ((ytCur <= VIEW_3D_H) && (ybCur >= 0)) {
             // Compute the 'U' texture coordinate for the column
-            const uint8_t uCur = (isectDiv != 0) ? (uint8_t) d_rshift<8>(isectNum / isectDiv + segStartU) : 0;
+            const uint8_t uCur = (isectDiv != 0) ? (uint8_t) d_rshift<LOWP_FRAC_BITS>(isectNum / isectDiv + segStartU) : 0;
 
             // Some hacky-ish code to clamp the column height to the screen bounds if it gets too big, and to adjust the 'v' texture coords.
             // For the most part the engine relies on the hardware to do it's clipping for vertical columns, but if the offscreen distance
@@ -696,4 +720,28 @@ void R_DrawWallPiece(
         isectNum += isectNumStep;
         isectDiv += isectDivStep;
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the given upper, lower or middle wall piece for a leaf edge.
+// Depending on user settings will either draw in a new PsyDoom specific 'high precision' mode or using the original calculations.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_DrawWallPiece(
+    const leafedge_t& edge,
+    texture_t& tex,
+    const int32_t yt,
+    const int32_t yb,
+    const int32_t vt,
+    const int32_t vb,
+    bool bTransparent
+) noexcept {
+    #if PSYDOOM_MODS
+        if (Config::gbEnhanceWallDrawPrecision) {
+            R_DrawWallPieceImpl<true>(edge, tex, yt, yb, vt, vb, bTransparent);
+        } else {
+            R_DrawWallPieceImpl<false>(edge, tex, yt, yb, vt, vb, bTransparent);
+        }
+    #else
+        R_DrawWallPieceImpl<false>(edge, tex, yt, yb, vt, vb, bTransparent);
+    #endif
 }

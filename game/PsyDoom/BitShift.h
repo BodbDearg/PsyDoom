@@ -28,6 +28,9 @@ static inline constexpr T d_lshift(const T val) noexcept {
     }
 }
 
+template <> inline constexpr int32_t d_lshift<0, int32_t>(const int32_t val) noexcept { return val; }
+template <> inline constexpr int64_t d_lshift<0, int64_t>(const int64_t val) noexcept { return val; }
+
 template <uint32_t Shift, class T>
 static inline constexpr T d_rshift(const T val) noexcept {
     static_assert(std::is_integral_v<T>);
@@ -49,3 +52,6 @@ static inline constexpr T d_rshift(const T val) noexcept {
         return shifted | signExtend;
     }
 }
+
+template <> inline constexpr int32_t d_rshift<0, int32_t>(const int32_t val) noexcept { return val; }
+template <> inline constexpr int64_t d_rshift<0, int64_t>(const int64_t val) noexcept { return val; }

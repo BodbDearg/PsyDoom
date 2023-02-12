@@ -26,6 +26,7 @@ struct Config_Graphics {
     ConfigField     logicalDisplayWidth;
     ConfigField     topOverscanPixels;
     ConfigField     bottomOverscanPixels;
+    ConfigField     enhanceWallDrawPrecision;
     ConfigField     floorRenderGapFix;
     ConfigField     skyLeakFix;
     ConfigField     vulkanBrightenAutomap;

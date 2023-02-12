@@ -377,16 +377,23 @@ static void makeClassicRendererSettingsSection(const int x, const int y) noexcep
     new Fl_Box(FL_NO_BOX, x, y, 580, 30, "Classic renderer");
     new Fl_Box(FL_THIN_DOWN_BOX, x, y + 30, 580, 120, "");
 
+    // Enhance wall draw precision
+    {
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 150, 30, "  Enhance wall draw precision");
+        bindConfigField<Config::gbEnhanceWallDrawPrecision, Config::gbNeedSave_Graphics>(*pCheck);
+        pCheck->tooltip(ConfigSerialization::gConfig_Graphics.enhanceWallDrawPrecision.comment);
+    }
+
     // Floor render gap fix
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 40, 150, 30, "  Use floor render gap fix");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Use floor render gap fix");
         bindConfigField<Config::gbFloorRenderGapFix, Config::gbNeedSave_Graphics>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Graphics.floorRenderGapFix.comment);
     }
 
     // Sky leak fix
     {
-        const auto pCheck = makeFl_Check_Button(x + 20, y + 70, 150, 30, "  Use sky leak fix");
+        const auto pCheck = makeFl_Check_Button(x + 20, y + 100, 150, 30, "  Use sky leak fix");
         bindConfigField<Config::gbSkyLeakFix, Config::gbNeedSave_Graphics>(*pCheck);
         pCheck->tooltip(ConfigSerialization::gConfig_Graphics.skyLeakFix.comment);
 

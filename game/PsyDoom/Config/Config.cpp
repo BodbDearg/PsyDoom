@@ -81,6 +81,7 @@ bool            gbVulkanWidescreenEnabled;
 int32_t         gAAMultisamples;
 int32_t         gTopOverscanPixels;
 int32_t         gBottomOverscanPixels;
+bool            gbEnhanceWallDrawPrecision;
 bool            gbFloorRenderGapFix;
 bool            gbSkyLeakFix;
 bool            gbVulkanBrightenAutomap;
