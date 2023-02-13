@@ -63,6 +63,18 @@ static void patchMap_ForgottenSewers() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Fix issues for MAP04: Hell Keep
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void patchMap_HellKeep() noexcept {
+    if (shouldApplyMapPatches_Visual()) {
+        //Fix door tracks that shouldn't move
+        gpLines[19].flags |= ML_DONTPEGBOTTOM;
+        gpLines[22].flags |= ML_DONTPEGBOTTOM;
+        removeFlagsFromLinedefs(ML_DONTPEGBOTTOM, 95, 104, 136, 144);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Fix issues for MAP05: Slough Of Despair
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void patchMap_SloughOfDespair() noexcept {
@@ -192,6 +204,10 @@ static void patchMap_InfernoOfBlood() noexcept {
 
         // Fix a hidden automap line in the blood river
         unhideLinedefs(888);
+
+        // Fix door track textures that move at start of map
+        gpLines[1014].flags |= ML_DONTPEGBOTTOM;
+        gpLines[1015].flags |= ML_DONTPEGBOTTOM;
     }
 }
 
@@ -233,6 +249,13 @@ static void patchMap_TombOfMalevolence() noexcept {
         [](line_t& line) { line.tag = 31; },
         661, 662, 663, 664
     );
+    
+    if (shouldApplyMapPatches_GamePlay()) {
+        // Adjust the height of the stairs in the middle of the main area, to allow room for the co-op only cyberdemon to teleport.
+        gpSectors[146].floorheight -= 16 * FRACUNIT;
+        gpSectors[149].floorheight -= 32 * FRACUNIT;
+        gpSectors[148].floorheight -= 48 * FRACUNIT;
+    };
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -930,6 +953,7 @@ static void patchMap_Go2It() noexcept {
 static const PatchDef gPatchArray_GEC_ME_Beta3[] = {
     { 122147, 0x794F1DDCA63477CF, 0x7167BA833E4218A9, patchMap_PhobosMissionControl },      // MAP01
     { 120087, 0x6CF71CAD6729761C, 0xB9AADBB88CC49757, patchMap_ForgottenSewers },           // MAP02
+    {  22539, 0x099E3E7CAA75ED61, 0x6469C4CCE5F8A33D, patchMap_HellKeep },                  // MAP04
     {  62640, 0xA68435B9FEA82A74, 0xB539F9DEF881149D, patchMap_SloughOfDespair },           // MAP05
     { 129546, 0x3B2546BA128349AE, 0xC4D9982A6D4C27DD, patchMap_AgainstTheeWickedly },       // MAP07
     { 141963, 0x0505711A9F4FB230, 0x86BDE1AB556902AC, patchMap_AndHellFollowed },           // MAP08
