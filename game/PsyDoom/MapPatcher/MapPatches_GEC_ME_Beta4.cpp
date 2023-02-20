@@ -55,7 +55,7 @@ static void patchMap_UnspeakablePersecution() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Fix missing textures for a floor which raises to block off a pathway (near the start area)
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].bottomtexture = R_TextureNumForName("REDROKX1");
             },
             33, 34, 859
@@ -68,7 +68,7 @@ static void patchMap_UnspeakablePersecution() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix a line which the player should be able to cross to use the teleport it bounds
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 line.special = 97;  // WR Teleport
                 line.tag = 41;
             },
@@ -120,14 +120,14 @@ static void patchMap_IndustrialZone() noexcept {
         // This is a bug introduced by PsyDoom's improved 'use line' logic; the switch should have been technically usable through the bars
         // previously (according to the game rules) but wasn't due to bugs in how the line activation logic worked (a happy coincidence).
         modifySectors(
-            [](sector_t& sector) {
+            [](sector_t& sector) noexcept {
                 sector.floorheight = sector.ceilingheight;
             },
             260
         );
 
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = 0;
                 line.flags |= ML_VOID;
             },
@@ -357,7 +357,7 @@ static void patchMap_Speed() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix the player being able to see past the end of the sky in various places: raise outer walls bordering the sky
         modifySectors(
-            [](sector_t& sector) {
+            [](sector_t& sector) noexcept {
                 sector.floorheight += 16 * FRACUNIT;
                 sector.ceilingheight += 16 * FRACUNIT;
             },
@@ -375,7 +375,7 @@ static void patchMap_Neurosphere() noexcept {
         // The player can bypass a line which raises elevators/platforms (containing chaingunners) which allow escape from the blood area.
         // This bypass can be achieved by hopping up onto a half wall and bypassing the trigger line near the Super Shotgun.
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 // Fix by adding an additional 'W1 Floor Raise To Next Higher Floor' trigger which cannot be bypassed!
                 line.special = 119;
                 line.tag = 7;

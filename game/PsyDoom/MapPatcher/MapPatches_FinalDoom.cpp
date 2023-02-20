@@ -540,13 +540,13 @@ static void patchMap_BaronsLair() noexcept {
 
         // Increase light level for deathmatch start closets
         modifySectors(
-            [](sector_t& sector) { sector.lightlevel = 32; },
+            [](sector_t& sector) noexcept { sector.lightlevel = 32; },
             13, 14, 42, 103, 220, 222, 251, 254
         );
 
         // Align switch textures in deathmatch start closets
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = 0;
             }, 579, 591, 585, 619, 622, 624, 1214, 1226
         );
@@ -568,13 +568,13 @@ static void patchMap_BaronsLair() noexcept {
         // Fix texture alignment
         addFlagsToLinedefs(ML_DONTDRAW, 704, 705, 706, 707, 708, 709);
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 line.flags &= ~ML_DONTPEGTOP;
                 line.flags |= ML_SECRET;
             }, 0, 6, 9, 15, 20, 26, 29, 35, 74, 76, 77, 79
         );
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = -24 * FRACUNIT;
                 line.flags &= ~ML_DONTPEGTOP;
                 line.flags |= ML_SECRET;
@@ -607,7 +607,7 @@ static void patchMap_TheDeathDomain() noexcept {
         gpLines[333].special = 105;     // WR Door Open Wait Close (fast)
 
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 line.special = 117;     // DR Door Open Wait Close (fast)
             },
             603, 604, 606
@@ -664,7 +664,7 @@ static void patchMap_Onslaught() noexcept {
 
         // Fix textures on doors that open when walking into cyberdemon room
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].rowoffset = -8 * FRACUNIT;
                 line.flags &= ~(ML_DONTPEGTOP | ML_DONTPEGBOTTOM);
             },

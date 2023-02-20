@@ -121,7 +121,7 @@ static void patchMap_DeimosAnomaly() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // Add missing textures to back side of wall that lowers around final teleport
         modifyLinedefs(
-            [](line_t& line) { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("BRONZE01"); },
+            [](line_t& line) noexcept { gpSides[line.sidenum[1]].bottomtexture = R_TextureNumForName("BRONZE01"); },
             243, 244
         );
 
@@ -362,7 +362,7 @@ static void patchMap_UnholyCathedral() noexcept {
 
         // Fix a missing upper wall texture when the ceiling closes in the trap room with the BFG
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("MARBLE04");
                 gpSides[line.sidenum[1]].toptexture = R_TextureNumForName("MARBLE04");
             },
@@ -398,7 +398,7 @@ static void patchMap_UnholyCathedral() noexcept {
 
         // Tweak the vertical alignment of the doorway track to the northmost room (adjustments following the 'lower unpegged' fix)
         modifyLinedefs(
-            [](line_t& line) { gpSides[line.sidenum[0]].rowoffset = 16 * FRACUNIT; },
+            [](line_t& line) noexcept { gpSides[line.sidenum[0]].rowoffset = 16 * FRACUNIT; },
             815, 818
         );
 
@@ -624,7 +624,7 @@ static void patchMap_Entryway() noexcept {
     if (shouldApplyMapPatches_PsyDoom()) {
         // Fix grass beyond the sky wall sometimes appearing - don't render it!
         modifySectors(
-            [](sector_t& sector) { sector.floorpic = -1; },
+            [](sector_t& sector) noexcept { sector.floorpic = -1; },
             3, 25
         );
     }
@@ -639,7 +639,7 @@ static void patchMap_Underhalls() noexcept {
     if (shouldApplyMapPatches_GamePlay()) {
         // Fix red door bars; all sides should be the same special and tag
         modifyLinedefs(
-            [](line_t& line) {
+            [](line_t& line) noexcept {
                 line.special = 135;
                 line.tag = 7;
             },
@@ -762,7 +762,7 @@ static void patchMap_RefuelingBase() noexcept {
         // Fix the texture on the hidden door on the northeast room
         removeFlagsFromLinedefs(ML_DONTPEGBOTTOM | ML_DONTPEGTOP, 656);
         modifyLinedefs(
-            [](line_t& line) { gpSides[line.sidenum[0]].rowoffset = -16 * FRACUNIT; },
+            [](line_t& line) noexcept { gpSides[line.sidenum[0]].rowoffset = -16 * FRACUNIT; },
             656
         );
 
@@ -784,9 +784,10 @@ static void patchMap_OofDestruction() noexcept {
         gpSectors[83].ceilingheight = 136 * FRACUNIT;
         gpSectors[83].ceilingpic = R_FlatNumForName("BRN14");
         modifyLinedefs(
-            [](line_t& line) { gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("ROCK06"); },
+            [](line_t& line) noexcept { gpSides[line.sidenum[0]].toptexture = R_TextureNumForName("ROCK06"); },
             374, 375, 376, 377, 378
         );
+
         gpSides[gpLines[793].sidenum[0]].toptexture = R_TextureNumForName("ROCK10");
     }
 }
