@@ -52,7 +52,7 @@ static void patchMap_ToxinRefinery() noexcept {
         // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             // Blue key room
             895, 896, 897
         );
@@ -141,7 +141,7 @@ static void patchMap_ContainmentArea() noexcept {
         // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             // Blue doors hallway
             357, 504,
             // South central hallway
@@ -162,7 +162,7 @@ static void patchMap_Refinery() noexcept {
         // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             69, 70, 217, 366, 367, 451, 495, 496
         );
     }
@@ -183,7 +183,7 @@ static void patchMap_DeimosLab() noexcept {
         // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             187, 200, 267, 641, 554, 555, 556, 622, 100, 130
         );
 
@@ -278,7 +278,7 @@ static void patchMap_HellGate() noexcept {
         // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             72, 87
         );
     }
@@ -345,7 +345,7 @@ static void patchMap_UnholyCathedral() noexcept {
         // Fix various one-sided lines being incorrectly tagged as 'door' lines.
         // In the original game activating these lines could cause a crash.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             // Fix 2 one-sided lines by the north-east teleporter being incorrectly tagged as 'door' lines
             499, 501,
             // Fix another instance of one-sided lines being marked as 'door' lines (the track of the door leading to westernmost room)
@@ -356,7 +356,7 @@ static void patchMap_UnholyCathedral() noexcept {
     if (shouldApplyMapPatches_Visual()) {
         // For the secret door bug above make sure the floor texture matches the outside floor texture (like on PC)
         modifySectors(
-            [](sector_t& sector){ sector.floorpic = gpSectors[30].floorpic; },
+            [](sector_t& sector) noexcept { sector.floorpic = gpSectors[30].floorpic; },
             164, 165
         );
 
@@ -405,7 +405,7 @@ static void patchMap_UnholyCathedral() noexcept {
         // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             426, 431, 538, 550, 819, 820, 1068
         );
     }
@@ -421,7 +421,7 @@ static void patchMap_MtErebus() noexcept {
         // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             48, 66, 246, 247, 248, 293, 325, 333
         );
 
@@ -457,7 +457,7 @@ static void patchMap_Limbo() noexcept {
         // Remove unused actions from linedefs. These were left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             235, 236, 237
         );
     }
@@ -499,7 +499,7 @@ static void patchMap_PerfectHatred() noexcept {
         // Remove unused action from linedef. This was left over from PC Doom, but no longer used.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             117
         );
     }
@@ -703,7 +703,7 @@ static void patchMap_TheCrusher() noexcept {
         // Fix one-sided lines being incorrectly tagged as 'door' lines.
         // In the original game activating these lines could cause a crash.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             // Fix 2 one-sided lines on the red door being incorrectly tagged as 'door' lines
             24, 25
         );
@@ -1133,7 +1133,7 @@ static void patchMap_TheMansion() noexcept {
         // Remove unused actions from linedefs.
         // Note: This does not affect gameplay. This is only used to change how linedefs are displayed on the automap.
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             // Soulsphere platform
             513, 514, 515, 516
         );

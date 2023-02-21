@@ -336,7 +336,7 @@ static void patchMap_WellOfSouls() noexcept {
         // This line special would lower the lift permanently, preventing the player from reaching the exit.
         // It's not needed for anything so just remove the special:
         modifyLinedefs(
-            [](line_t& line) { line.special = 0; },
+            [](line_t& line) noexcept { line.special = 0; },
             590
         );
     }
